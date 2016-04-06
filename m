@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2B9EC7CA0
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 16:10:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9176AAC002
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 14:10:07 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 161567CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 17:23:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DFA0D304032
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 15:23:35 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4XmqZvE38mUUm6eB for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2016 14:10:04 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
+	ESMTP id MR9B177EclsC9uCD for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2016 15:23:33 -0700 (PDT)
+Received: from Liberator.local (erlite [10.0.0.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id AA6BA16C150
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 16:10:03 -0500 (CDT)
-Subject: Re: [PATCH 18/19] mkfs: unit conversions are case insensitive
+	by sandeen.net (Postfix) with ESMTPSA id 327F316C150
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 17:23:33 -0500 (CDT)
+Subject: Re: [PATCH 19/19] mkfs: add optional 'reason' for illegal_option
 References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-19-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-20-git-send-email-jtulak@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <57057B2A.3000100@sandeen.net>
-Date: Wed, 6 Apr 2016 16:10:02 -0500
+Message-ID: <57058C64.2010105@sandeen.net>
+Date: Wed, 6 Apr 2016 17:23:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-19-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1458818136-56043-20-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,59 +38,87 @@ To: xfs@oss.sgi.com
 On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
 > From: Jan Tulak <jtulak@redhat.com>
 > 
-> Solves the question "Should I use 10g or 10G?"
+> Allow us to tell the user what exactly is wrong with his options.
 
-Might be nicer to do it like the cvtnum in libxcmd:
+"with the specified options" ;)
 
-        c = tolower(*sp);
-        switch (c) {
-        case 'b':
-                return i * blocksize;
-...
-
-(hm, why do we have 3 copies of cvtnum?)
- 
+> For example, that the value is too small, instead of just generic
+> "bad option."
+> 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
 > ---
->  mkfs/xfs_mkfs.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+>  mkfs/xfs_mkfs.c | 27 ++++++++++++++++++---------
+>  1 file changed, 18 insertions(+), 9 deletions(-)
 > 
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 2bb3b35..680c6c4 100644
+> index 680c6c4..76e193d 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
-> @@ -3625,17 +3625,17 @@ cvtnum(
->  	if (*sp == 's' && sp[1] == '\0')
->  		return i * sectsize;
->  
-> -	if (*sp == 'k' && sp[1] == '\0')
-> +	if ((*sp == 'k'  || *sp == 'K' ) && sp[1] == '\0')
-                        ^ 1 space is enough, no?
+> @@ -1550,11 +1550,18 @@ static __attribute__((noreturn)) void
+>  illegal_option(
+>  	const char	*value,
+>  	struct opt_params	*opts,
+> -	int		index)
+> +	int		index,
+> +	const char *reason)
+                   ^ tab that out to match.
+>  {
+> -	fprintf(stderr,
+> -		_("Illegal value %s for -%c %s option\n"),
+> -		value, opts->name, opts->subopts[index]);
+> +	if(reason == NULL){
+          ^space          ^space
+> +		fprintf(stderr,
+> +			_("Illegal value %s for -%c %s option\n"),
+> +			value, opts->name, opts->subopts[index]);
+> +	} else {
+> +		fprintf(stderr,
+> +			_("Illegal value %s for -%c %s option: %s\n"),
+> +			value, opts->name, opts->subopts[index], reason);
+> +	}
 
-I guess doing it this way doesn't really bother me, but
-the whitespace is messy and if you're here anyway,
-tolower() might be simpler.
+>  	usage();
+>  }
+> 
+> @@ -1646,16 +1653,18 @@ getnum(
+> 
+>  		c = strtoll(str, &str_end, 0);
+>  		if (c == 0 && str_end == str)
+> -			illegal_option(str, opts, index);
+> +			illegal_option(str, opts, index, NULL);
+>  		if (*str_end != '\0')
+> -			illegal_option(str, opts, index);
+> +			illegal_option(str, opts, index, NULL);
+>  	}
+> 
+>  	/* Validity check the result. */
+> -	if (c < sp->minval || c > sp->maxval)
+> -		illegal_option(str, opts, index);
+> +	if (c < sp->minval)
+> +		illegal_option(str, opts, index, "value is too small");
+> +	else if (c > sp->maxval)
+> +		illegal_option(str, opts, index, "value is too large");
+>  	if (sp->is_power_2 && !ispow2(c))
+> -		illegal_option(str, opts, index);
+> +		illegal_option(str, opts, index, "value has to be power of 2");
+
+                                                 "value must be a power of 2"
+
+
+The "reason" strings should be translatable strings too, right? :  _(" ... ")
 
 -Eric
 
->  		return 1024LL * i;
-> -	if (*sp == 'm' && sp[1] == '\0')
-> +	if ((*sp == 'm'  || *sp == 'M' ) && sp[1] == '\0')
->  		return 1024LL * 1024LL * i;
-> -	if (*sp == 'g' && sp[1] == '\0')
-> +	if ((*sp == 'g'  || *sp == 'G' ) && sp[1] == '\0')
->  		return 1024LL * 1024LL * 1024LL * i;
-> -	if (*sp == 't' && sp[1] == '\0')
-> +	if ((*sp == 't'  || *sp == 'T' ) && sp[1] == '\0')
->  		return 1024LL * 1024LL * 1024LL * 1024LL * i;
-> -	if (*sp == 'p' && sp[1] == '\0')
-> +	if ((*sp == 'p'  || *sp == 'P' ) && sp[1] == '\0')
->  		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
-> -	if (*sp == 'e' && sp[1] == '\0')
-> +	if ((*sp == 'e'  || *sp == 'E' ) && sp[1] == '\0')
->  		return 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * 1024LL * i;
->  	return -1LL;
+>  	return c;
 >  }
+> 
+> --
+> 2.6.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
 
 _______________________________________________
