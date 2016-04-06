@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6DEAF7CB1
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:25 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 670AB7CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 04:23:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0CCCAC003
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:24 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	b7lR4yNUEQNHq5sd for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 22:32:19 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B13D4AC001
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 02:23:38 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	zLOmLPzp1O3LUina for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2016 02:23:33 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p6-T4
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:12 +1000
+	(envelope-from <dave@fromorbit.com>) id 1anjgP-0004C2-1b
+	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:23:29 +1000
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000c2-DB
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1anjft-0006id-Ua
+	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:22:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/11] xfs: xfs_inode_free() isn't RCU safe
-Date: Wed, 13 Apr 2016 15:31:27 +1000
-Message-Id: <1460525492-1170-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/5] xfs; xfs_iflush_cluster vs xfs_reclaim_inode
+Date: Wed,  6 Apr 2016 19:22:49 +1000
+Message-Id: <1459934574-25543-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,89 +35,50 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-The xfs_inode freed in xfs_inode_free() has multiple allocated
-structures attached to it. We free these in xfs_inode_free() before
-we mark the inode as invalid, and before we run call_rcu() to queue
-the structure for freeing.
+There is a problem that RHEL QE tripped over on a long-running
+fsstress test on a RHEL 6.6. Brian did all the hard work of working
+out the initial cause of the GPF that was being tripped, but
+had not yet got past how to fix the issues around xfs_free_inode.
+The code is the same as the current upstream code, so the problem
+still exists....
 
-Unfortunately, this freeing can race with other accesses that are in
-the RCU current grace period that have found the inode in the radix
-tree with a valid state.  This includes xfs_iflush_cluster(), which
-calls xfs_inode_clean(), and that accesses the inode log item on the
-xfs_inode.
+The first patch fixes an obvious (now!) bug in xfs_iflush_cluster
+where it checks the wrong inode after lookup for validity. It still
+kind-of works, because the correct inode number is used for the "are
+we still in the right cluster" check, so it's not quite a hole the
+size of a truck. Still something that should not have slipped
+through 6 years ago and not been discovered until now...
 
-The log item structure is freed in xfs_inode_free(), so there is the
-possibility we can be accessing freed memory in xfs_iflush_cluster()
-after validating the xfs_inode structure as being valid for this RCU
-context. Hence we can get spuriously incorrect clean state returned
-from such checks. This can lead to use thinking the inode is dirty
-when it is, in fact, clean, and so incorrectly attaching it to the
-buffer for IO and completion processing.
+The most important patch (#4) address the use-after-free issues that the
+xfs inode has w.r.t. RCU freeing and the lookup that
+xfs_iflush_cluster is doing under the rcu_read_lock. All the
+structures accessed under the RCU context need to be freed after the
+current RCU grace period expires, as RCU lookups may attempt to
+access them at any time during the grace period. hence we have to
+move them into the RCU callback so that we don't free them
+prematurely.
 
-This then leads to use-after-free situations on the xfs_inode itself
-if the IO completes after the current RCU grace period expires. The
-buffer callbacks will access the xfs_inode and try to do all sorts
-of things it shouldn't with freed memory.
+The rest of the patches are defensive in that they make
+xfs_iflush_cluster only act on relevant inodes and be able to
+guarantee detection inodes that are in the process of being freed.
+While these aren't absolutely necessary, it seems silly to ignore
+these obvious issues while I'm fixing up other issues with the same
+code.
 
-IOWs, xfs_iflush_cluster() only works correctly when racing with
-inode reclaim if the inode log item is present and correctly stating
-the inode is clean. If the inode is being freed, then reclaim has
-already made sure the inode is clean, and hence xfs_iflush_cluster
-can skip it. However, we are accessing the inode inode under RCU
-read lock protection and so also must ensure that all dynamically
-allocated memory we reference in this context is not freed until the
-RCU grace period expires.
+There's some more detail on the fixes in the commit descriptions.
 
-To fix this, move all the potential memory freeing into
-xfs_inode_free_callback() so that we are guarantee RCU protected
-lookup code will always have the memory structures it needs
-available during the RCU grace period that lookup races can occur
-in.
+Brian, I've only run this through xfstests, so I have no real idea
+if it fixes the problem fsstress has uncovered. AIUI it takes 3 or 4
+days to reproduce the issue so this is kind of a pre-emptive strike
+on what I think is the underlying issue based on your description
+and commentary. I figured having code to explain the problems would
+save some time while you sleep....
 
-Discovered-by: Brain Foster <bfoster@redhat.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/xfs_icache.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Comments, thoughts, testing and flames all welcome...
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index bf2d607..0c94cde 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -94,13 +94,6 @@ xfs_inode_free_callback(
- 	struct inode		*inode = container_of(head, struct inode, i_rcu);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 
--	kmem_zone_free(xfs_inode_zone, ip);
--}
--
--void
--xfs_inode_free(
--	struct xfs_inode	*ip)
--{
- 	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFREG:
- 	case S_IFDIR:
-@@ -118,6 +111,13 @@ xfs_inode_free(
- 		ip->i_itemp = NULL;
- 	}
- 
-+	kmem_zone_free(xfs_inode_zone, ip);
-+}
-+
-+void
-+xfs_inode_free(
-+	struct xfs_inode	*ip)
-+{
- 	/*
- 	 * Because we use RCU freeing we need to ensure the inode always
- 	 * appears to be reclaimed with an invalid inode number when in the
--- 
-2.7.0
+-Dave.
 
 _______________________________________________
 xfs mailing list
