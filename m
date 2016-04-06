@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 161567CA0
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 17:23:36 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6DFF87CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 16:42:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DFA0D304032
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 15:23:35 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A5F48F8037
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 14:42:07 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id MR9B177EclsC9uCD for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2016 15:23:33 -0700 (PDT)
-Received: from Liberator.local (erlite [10.0.0.1])
+	ESMTP id ktgL9wRdOSeqPIkc for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2016 14:42:03 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 327F316C150
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 17:23:33 -0500 (CDT)
-Subject: Re: [PATCH 19/19] mkfs: add optional 'reason' for illegal_option
+	by sandeen.net (Postfix) with ESMTPSA id 9EA1E16C150
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 16:42:03 -0500 (CDT)
+Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
 References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-20-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <57058C64.2010105@sandeen.net>
-Date: Wed, 6 Apr 2016 17:23:32 -0500
+Message-ID: <570582AA.9020909@sandeen.net>
+Date: Wed, 6 Apr 2016 16:42:02 -0500
 MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-20-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1458818136-56043-18-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,87 +38,95 @@ To: xfs@oss.sgi.com
 On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
 > From: Jan Tulak <jtulak@redhat.com>
 > 
-> Allow us to tell the user what exactly is wrong with his options.
+> Unify mkfs.xfs behaviour a bit and never truncate files. If the user
+> is trying to mkfs an existing file, we don't want to destroy anything
+> he did with the file before (sparse file, allocations...)
 
-"with the specified options" ;)
+Hm, I guess so ...  What motivated this change?  I see that it
+changes behavior, but I'm not sure what it unifies or fixes - 
+can you explain more?
 
-> For example, that the value is too small, instead of just generic
-> "bad option."
-> 
+a bit more below.
+ 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
 > ---
->  mkfs/xfs_mkfs.c | 27 ++++++++++++++++++---------
->  1 file changed, 18 insertions(+), 9 deletions(-)
+>  libxfs/init.c   |  2 +-
+>  mkfs/xfs_mkfs.c | 18 +++++++++++-------
+>  2 files changed, 12 insertions(+), 8 deletions(-)
 > 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 268136f..5f4b6c4 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -112,7 +112,7 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
+>  
+>  retry:
+>  	flags = (readonly ? O_RDONLY : O_RDWR) | \
+> -		(creat ? (O_CREAT|O_TRUNC) : 0) | \
+> +		(creat ? O_CREAT : 0) | \
+>  		(dio ? O_DIRECT : 0) | \
+>  		(excl ? O_EXCL : 0);
+>  
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 680c6c4..76e193d 100644
+> index 9a6ae2c..2bb3b35 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
-> @@ -1550,11 +1550,18 @@ static __attribute__((noreturn)) void
->  illegal_option(
->  	const char	*value,
->  	struct opt_params	*opts,
-> -	int		index)
-> +	int		index,
-> +	const char *reason)
-                   ^ tab that out to match.
+> @@ -1029,15 +1029,19 @@ check_device_type(
+>  	const char	*optname)
 >  {
-> -	fprintf(stderr,
-> -		_("Illegal value %s for -%c %s option\n"),
-> -		value, opts->name, opts->subopts[index]);
-> +	if(reason == NULL){
-          ^space          ^space
-> +		fprintf(stderr,
-> +			_("Illegal value %s for -%c %s option\n"),
-> +			value, opts->name, opts->subopts[index]);
-> +	} else {
-> +		fprintf(stderr,
-> +			_("Illegal value %s for -%c %s option: %s\n"),
-> +			value, opts->name, opts->subopts[index], reason);
-> +	}
+>  	struct stat64 statbuf;
+> +	int statres;
+>  
+> -	if (*isfile && (no_size || no_name)) {
+> +	statres = stat64(name, &statbuf);
+> +
+> +	if (*isfile && statres != 0 && (no_size || no_name)) {
 
->  	usage();
->  }
-> 
-> @@ -1646,16 +1653,18 @@ getnum(
-> 
->  		c = strtoll(str, &str_end, 0);
->  		if (c == 0 && str_end == str)
-> -			illegal_option(str, opts, index);
-> +			illegal_option(str, opts, index, NULL);
->  		if (*str_end != '\0')
-> -			illegal_option(str, opts, index);
-> +			illegal_option(str, opts, index, NULL);
+statres !=0 doesn't imply ENOENT; it could be EACCES
+or several other errors.  You'd need to check errno to know
+for sure.
+
+>  		fprintf(stderr,
+> -	_("if -%s file then -%s name and -%s size are required\n"),
+> -			optname, optname, optname);
+> +			_("if -%s file and the file does not exists, " \
+
+don't need a "\" there, and should read "does not exist"
+
+> +			"then -%s name and -%s size are required\n"),
+
+Better, just tab it out if possible, though it's a long line... perhaps:
+
+_("-%s file requires -%s name and -%s size for file creation\n");
+
+or something like that.
+
+> +					optname, optname, optname);
+>  		usage();
 >  	}
-> 
->  	/* Validity check the result. */
-> -	if (c < sp->minval || c > sp->maxval)
-> -		illegal_option(str, opts, index);
-> +	if (c < sp->minval)
-> +		illegal_option(str, opts, index, "value is too small");
-> +	else if (c > sp->maxval)
-> +		illegal_option(str, opts, index, "value is too large");
->  	if (sp->is_power_2 && !ispow2(c))
-> -		illegal_option(str, opts, index);
-> +		illegal_option(str, opts, index, "value has to be power of 2");
+>  
+> -	if (stat64(name, &statbuf)) {
+> +	if (statres) {
+>  		if (errno == ENOENT && *isfile) {
+>  			if (create)
+>  				*create = 1;
+> @@ -1059,9 +1063,9 @@ check_device_type(
+>  	}
+>  
+>  	/*
+> -	 * We only want to completely truncate and recreate an existing file if
+> -	 * we were specifically told it was a file. Set the create flag only in
+> -	 * this case to trigger that behaviour.
+> +	 * We only want to create a file only if we were specifically told
+> +	 * we want a file. Set the create flag only in this case to trigger
+> +	 * that behaviour.
 
-                                                 "value must be a power of 2"
++	 * We only want to create a file if we were specifically told it is a
++	 * file. Set the create flag only in this case to trigger that behaviour.
 
-
-The "reason" strings should be translatable strings too, right? :  _(" ... ")
-
--Eric
-
->  	return c;
->  }
-> 
-> --
-> 2.6.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>  	 */
+>  	if (S_ISREG(statbuf.st_mode)) {
+>  		if (!*isfile)
 > 
 
 _______________________________________________
