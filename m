@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6991F7CA6
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:27:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E758304062
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:10 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 3MBQxWvmA5Bzqv2a (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:08 -0700 (PDT)
-Received: from [67.51.76.21] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-	id 1aq6m2-0006AZ-4B
-	for xfs@oss.sgi.com; Tue, 12 Apr 2016 22:27:06 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] iomap: support DAX based zeroing
-Date: Tue, 12 Apr 2016 15:26:48 -0700
-Message-Id: <1460500013-28334-2-git-send-email-hch@lst.de>
-In-Reply-To: <1460500013-28334-1-git-send-email-hch@lst.de>
-References: <1460500013-28334-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 059A07CA1
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 04:23:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB87E304059
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 02:23:38 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	IAC0nuT8D8mkLnKd for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2016 02:23:36 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1anjgP-0004C4-2l
+	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:23:29 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1anjft-0006il-Vk
+	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:22:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/5] xfs: skip stale inodes in xfs_iflush_cluster
+Date: Wed,  6 Apr 2016 19:22:51 +1000
+Message-Id: <1459934574-25543-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1459934574-25543-1-git-send-email-david@fromorbit.com>
+References: <1459934574-25543-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +37,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This avoid needing a separate inefficient get_block based DAX zero_range
-implementation in file systems.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+We don't write back stale inodes, so we should skip them in
+xfS_iflush_cluster, too.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/iomap.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ fs/xfs/xfs_inode.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 28a8fcb..a3e7dea 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -24,6 +24,7 @@
- #include <linux/uio.h>
- #include <linux/backing-dev.h>
- #include <linux/buffer_head.h>
-+#include <linux/dax.h>
- #include "internal.h"
- 
- typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-@@ -264,6 +265,15 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
- 	    	return count;
- 
-+#ifdef CONFIG_FS_DAX
-+	if (IS_DAX(inode)) {
-+		status = dax_clear_sectors(iomap->bdev, iomap->blkno, count);
-+		if (status)
-+			return status;
-+		return count;
-+	}
-+#endif
-+
- 	do {
- 		unsigned offset, bytes;
- 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2718d10..6598104 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3190,10 +3190,11 @@ xfs_iflush_cluster(
+ 		 * because this is an RCU protected lookup, we could find a
+ 		 * recently freed or even reallocated inode during the lookup.
+ 		 * We need to check under the i_flags_lock for a valid inode
+-		 * here. Skip it if it is not valid or the wrong inode.
++		 * here. Skip it if it is not valid, stale or the wrong inode.
+ 		 */
+ 		spin_lock(&cip->i_flags_lock);
+ 		if (!cip->i_ino ||
++		    __xfs_iflags_test(ip, XFS_ISTALE) ||
+ 		    (XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
+ 			spin_unlock(&cip->i_flags_lock);
+ 			continue;
 -- 
-2.1.4
+2.7.0
 
 _______________________________________________
 xfs mailing list
