@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B3F27CA0
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 04:23:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F08AF8F8039
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 02:23:40 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECE007CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 04:23:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B840F30405F
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 02:23:38 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BcnQkeSIklgsX5Oc for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2016 02:23:38 -0700 (PDT)
+	cF0E9cYFERWWw5q2 for <xfs@oss.sgi.com>;
+	Wed, 06 Apr 2016 02:23:35 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1anjgP-0004C6-3d
+	(envelope-from <dave@fromorbit.com>) id 1anjgP-0004C3-2J
 	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:23:29 +1000
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1anjfu-0006iv-0M
-	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:22:58 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1anjft-0006ig-V0
+	for xfs@oss.sgi.com; Wed, 06 Apr 2016 19:22:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] xfs: xfs_inode_free() isn't RCU safe
-Date: Wed,  6 Apr 2016 19:22:53 +1000
-Message-Id: <1459934574-25543-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/5] xfs: fix inode validity check in xfs_iflush_cluster
+Date: Wed,  6 Apr 2016 19:22:50 +1000
+Message-Id: <1459934574-25543-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1459934574-25543-1-git-send-email-david@fromorbit.com>
 References: <1459934574-25543-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,83 +39,173 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The xfs_inode freed in xfs_inode_free() has multiple allocated
-structures attached to it. We free these in xfs_inode_free() before
-we mark the inode as invalid, and before we run call_rcu() to queue
-the structure for freeing.
+Some careless idiot wrote crap code in commit 1a3e8f3 ("xfs: convert
+inode cache lookups to use RCU locking") back in late 2010, and so
+xfs_iflush_cluster checks the wrong inode for whether it is still
+valid under RCU protection. Fix it to lock and check the correct
+inode.
 
-Unfortunately, this freeing can race with other accesses that are in
-the RCU current grace period that have found the inode in the radix
-tree with a valid state.  This includes xfs_iflush_cluster(), which
-calls xfs_inode_clean(), and that accesses the inode log item on the
-xfs_inode.
-
-The log item structure is freed in xfs_inode_free(), so there is the
-possibility we can be accessing freed memory in xfs_iflush_cluster()
-after validating the xfs_inode structure as being valid for this RCU
-context. Hence we can get spuriously incorrect clean state returned
-from such checks. This can lead to use thinking the inode is dirty
-when it is, in fact, clean, and so incorrectly attaching it to the
-buffer for IO and completion processing.
-
-This then leads to use-after-free situations on the xfs_inode itself
-if the IO completes after the current RCU grace period expires. The
-buffer callbacks will access the xfs_inode and try to do all sorts
-of things it shouldn't with freed memory.
-
-IOWs, xfs_iflush_cluster() only works correctly when racing with
-inode reclaim if the inode log item is present and correctly stating
-the inode is clean. If the inode is being freed, then reclaim has
-already made sure the inode is clean, and hence xfs_iflush_cluster
-can skip it. However, we are accessing the inode inode under RCU
-read lock protection and so also must ensure that all dynamically
-allocated memory we reference in this context is not freed until the
-RCU grace period expires.
-
-To fix this, move all the potential memory freeing into
-xfs_inode_free_callback() so that we are guarantee RCU protected
-lookup code will always have the memory structures it needs
-available during the RCU grace period that lookup races can occur
-in.
+Part of the reason for the screwup was the unconventional naming of
+the cluster inode variable - iq - so also rename all the cluster
+inode variables to use a more conventional prefixes to reduce
+potential future confusion (cilist, cilist_size, cip).
 
 Discovered-by: Brain Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_inode.c | 64 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index bf2d607..0c94cde 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -94,13 +94,6 @@ xfs_inode_free_callback(
- 	struct inode		*inode = container_of(head, struct inode, i_rcu);
- 	struct xfs_inode	*ip = XFS_I(inode);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f79ea59..2718d10 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3149,16 +3149,16 @@ out_release_wip:
  
--	kmem_zone_free(xfs_inode_zone, ip);
--}
--
--void
--xfs_inode_free(
--	struct xfs_inode	*ip)
--{
- 	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFREG:
- 	case S_IFDIR:
-@@ -118,6 +111,13 @@ xfs_inode_free(
- 		ip->i_itemp = NULL;
+ STATIC int
+ xfs_iflush_cluster(
+-	xfs_inode_t	*ip,
+-	xfs_buf_t	*bp)
++	struct xfs_inode	*ip,
++	struct xfs_buf		*bp)
+ {
+-	xfs_mount_t		*mp = ip->i_mount;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
+ 	unsigned long		first_index, mask;
+ 	unsigned long		inodes_per_cluster;
+-	int			ilist_size;
+-	xfs_inode_t		**ilist;
+-	xfs_inode_t		*iq;
++	int			cilist_size;
++	struct xfs_inode	**cilist;
++	struct xfs_inode	*cip;
+ 	int			nr_found;
+ 	int			clcount = 0;
+ 	int			bufwasdelwri;
+@@ -3167,23 +3167,23 @@ xfs_iflush_cluster(
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 
+ 	inodes_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
+-	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+-	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
+-	if (!ilist)
++	cilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
++	cilist = kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
++	if (!cilist)
+ 		goto out_put;
+ 
+ 	mask = ~(((mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog)) - 1);
+ 	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+ 	rcu_read_lock();
+ 	/* really need a gang lookup range call here */
+-	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)ilist,
++	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)cilist,
+ 					first_index, inodes_per_cluster);
+ 	if (nr_found == 0)
+ 		goto out_free;
+ 
+ 	for (i = 0; i < nr_found; i++) {
+-		iq = ilist[i];
+-		if (iq == ip)
++		cip = cilist[i];
++		if (cip == ip)
+ 			continue;
+ 
+ 		/*
+@@ -3192,20 +3192,20 @@ xfs_iflush_cluster(
+ 		 * We need to check under the i_flags_lock for a valid inode
+ 		 * here. Skip it if it is not valid or the wrong inode.
+ 		 */
+-		spin_lock(&ip->i_flags_lock);
+-		if (!ip->i_ino ||
+-		    (XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index) {
+-			spin_unlock(&ip->i_flags_lock);
++		spin_lock(&cip->i_flags_lock);
++		if (!cip->i_ino ||
++		    (XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
++			spin_unlock(&cip->i_flags_lock);
+ 			continue;
+ 		}
+-		spin_unlock(&ip->i_flags_lock);
++		spin_unlock(&cip->i_flags_lock);
+ 
+ 		/*
+ 		 * Do an un-protected check to see if the inode is dirty and
+ 		 * is a candidate for flushing.  These checks will be repeated
+ 		 * later after the appropriate locks are acquired.
+ 		 */
+-		if (xfs_inode_clean(iq) && xfs_ipincount(iq) == 0)
++		if (xfs_inode_clean(cip) && xfs_ipincount(cip) == 0)
+ 			continue;
+ 
+ 		/*
+@@ -3213,15 +3213,15 @@ xfs_iflush_cluster(
+ 		 * then this inode cannot be flushed and is skipped.
+ 		 */
+ 
+-		if (!xfs_ilock_nowait(iq, XFS_ILOCK_SHARED))
++		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED))
+ 			continue;
+-		if (!xfs_iflock_nowait(iq)) {
+-			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		if (!xfs_iflock_nowait(cip)) {
++			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+-		if (xfs_ipincount(iq)) {
+-			xfs_ifunlock(iq);
+-			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		if (xfs_ipincount(cip)) {
++			xfs_ifunlock(cip);
++			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+ 
+@@ -3229,18 +3229,18 @@ xfs_iflush_cluster(
+ 		 * arriving here means that this inode can be flushed.  First
+ 		 * re-check that it's dirty before flushing.
+ 		 */
+-		if (!xfs_inode_clean(iq)) {
++		if (!xfs_inode_clean(cip)) {
+ 			int	error;
+-			error = xfs_iflush_int(iq, bp);
++			error = xfs_iflush_int(cip, bp);
+ 			if (error) {
+-				xfs_iunlock(iq, XFS_ILOCK_SHARED);
++				xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 				goto cluster_corrupt_out;
+ 			}
+ 			clcount++;
+ 		} else {
+-			xfs_ifunlock(iq);
++			xfs_ifunlock(cip);
+ 		}
+-		xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		xfs_iunlock(cip, XFS_ILOCK_SHARED);
  	}
  
-+	kmem_zone_free(xfs_inode_zone, ip);
-+}
-+
-+void
-+xfs_inode_free(
-+	struct xfs_inode	*ip)
-+{
+ 	if (clcount) {
+@@ -3250,7 +3250,7 @@ xfs_iflush_cluster(
+ 
+ out_free:
+ 	rcu_read_unlock();
+-	kmem_free(ilist);
++	kmem_free(cilist);
+ out_put:
+ 	xfs_perag_put(pag);
+ 	return 0;
+@@ -3293,8 +3293,8 @@ cluster_corrupt_out:
  	/*
- 	 * Because we use RCU freeing we need to ensure the inode always
- 	 * appears to be reclaimed with an invalid inode number when in the
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(iq, false);
+-	kmem_free(ilist);
++	xfs_iflush_abort(cip, false);
++	kmem_free(cilist);
+ 	xfs_perag_put(pag);
+ 	return -EFSCORRUPTED;
+ }
 -- 
 2.7.0
 
