@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E0E97CA0
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 23:10:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD2B37CA0
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 23:12:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 00FE18F8035
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 21:10:20 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id k3PccW4VowKV8kJx (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Apr 2016 21:10:18 -0700 (PDT)
-From: Eric Sandeen <esandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_quota: print quota id number if the name can't be
-	found
-Message-Id: <99CDF6E9-2812-4D24-BB23-7145AD4ED6DF@redhat.com>
-Date: Thu, 7 Apr 2016 00:10:16 -0400 (EDT)
-References: <1459964353-25151-1-git-send-email-zlang@redhat.com>
-	<570556AE.7080306@redhat.com>
-	<20160407033713.GA2947@dhcp12-237.nay.redhat.com>
-In-Reply-To: <20160407033713.GA2947@dhcp12-237.nay.redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E71B304039
+	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 21:12:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6mLItogzBa72pMkM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 06 Apr 2016 21:12:15 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 581677F6C1
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 04:12:14 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2] xfs_quota: print quota id number if the name can't be found
+Date: Thu,  7 Apr 2016 12:12:11 +0800
+Message-Id: <1460002331-18278-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,81 +27,130 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: sandeen@redhat.com, Zorro Lang <zlang@redhat.com>
 
+When use GETNEXTQUOTA ioctl to report project quota, it always
+report an unexpected quota:
 
+  (null) 0 0 0 00 [--------]
 
-> On Apr 6, 2016, at 10:37 PM, Zorro Lang <zlang@redhat.com> wrote:
-> 
->> 
->> 
->>> +        if (name != NULL)
->>> +            fprintf(fp, "%-10s", name);
->>> +        else
->>> +            fprintf(fp, "#%-10u", d.d_id);
-> 
-> There's one more problem. When we print id number we print #%-10u, but
-> for name we print %-10s. There's one more "#" be printed for number.
-> So if we print name and number both, the output will like this:
-> 
-> User ID          Used       Soft       Hard    Warn/Grace
-> ---------- --------------------------------------------------
-> root           512000          0          0     00 [--------]
-> #1000                0     307200     409600     00 [--------]
-> 
-> You can find the line of #1000 is not align at the line of "root".
-> Because the name print 10 characters, but the number print 10
-> characters + #.
-> 
-> Should we fix this problem?
-> If fix it, should we make name print %-11s, or make number print
-> #%-9u?
+The ID 0 store the default quota, even if no one set default quota,
+it still have quota accounting, but not enforced. So GETNEXTQUOTA
+can find and report this undefined quota.
 
-9u I think.  Leave the existing format unchanged.
+>From this problem, I thought if others' quota name miss, (null) will
+be printed too. e.g.
 
-Thx,
-Eric
+  # xfs_quota -xc "limit -u bsoft=300m bhard=400m test" $mnt
+  # xfs_quota -xc "report -u" $mnt
+  User ID          Used       Soft       Hard    Warn/Grace
+  ---------- --------------------------------------------------
+  root                0          0          0     00 [--------]
+  test                0     307200     409600     00 [--------]
+  # userdel -r test
+  # xfs_quota -xc "report -u" $mnt
+  User ID          Used       Soft       Hard    Warn/Grace
+  ---------- --------------------------------------------------
+  root                0          0          0     00 [--------]
+  (null)              0     307200     409600     00 [--------]
 
-> Thanks,
-> Zorro
-> 
->>>    }
->>> 
->>>    if (form & XFS_BLOCK_QUOTA) {
->>> @@ -571,6 +574,12 @@ report_project_mount(
->>>            id = oid + 1;
->>>        }
->>>    } else {
->> 
->> Comment:
->> 
->> +        /* Print default project quota even if PRID 0 isn't defined */
->> 
->>> +        if (!getprprid(0)) {
->>> +            report_mount(fp, 0, "#0", NULL, form, XFS_PROJ_QUOTA,
->> 
->> If you pass in NULL instead of "#0" does report_mount do the right thing?
->> If so, better to not hard-code "#0" here.
->> 
->> -Eric
->> 
->>> +                         mount, flags);
->>> +            flags |= NO_HEADER_FLAG;
->>> +        }
->>> +
->>>        setprent();
->>>        while ((p = getprent()) != NULL) {
->>>            if (report_mount(fp, p->pr_prid, p->pr_name, NULL,
->> 
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
+So this problem same with above id 0's problem. For deal with this,
+this patch will print id number if the name can't be found.
+
+But if use old GETQUOTA ioctl, it won't print project id 0 quota
+information(if it's not defined). That's different with GETNEXTQUOTA.
+For keep consistent, this patch also print project id 0 when use old
+GETQUOTA.
+
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+
+Hi,
+
+This V2 patch has below change:
+1. Add some comments
+2. Change the xfs_quota man page
+3. For alignment, change "#%-10u" to "#%-9u" when print ID or name
+mixed.
+
+For reduce the impact on xfstests, I didn't change the original
+"#%-10u" when use "report -n":
+
+  if (flags & NO_LOOKUP_FLAG) {
+          fprintf(fp, "#%-10u", d.d_id);
+			
+And didn't change "%-10s" when print quota name:
+
+  fprintf(fp, "%-10s", name);
+
+Thanks,
+Zorro
+
+ man/man8/xfs_quota.8 |  7 +++++--
+ quota/report.c       | 16 +++++++++++++++-
+ 2 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
+index 951252b..dc01804 100644
+--- a/man/man8/xfs_quota.8
++++ b/man/man8/xfs_quota.8
+@@ -357,9 +357,12 @@ option outputs the report to
+ .I file
+ instead of stdout. The
+ .B \-a
+-option reports on all filesystems. The
++option reports on all filesystems. As default, outputs the name of
++the user/group/project. But if no name is defined, outputs the
++numberic ID. The
+ .B \-n
+-option outputs the numeric ID instead of the name. The
++option outputs the numeric ID instead of the name, even the name is
++defined. The
+ .B \-L
+ and
+ .B \-U
+diff --git a/quota/report.c b/quota/report.c
+index 48a3f29..cc422d1 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -389,7 +389,11 @@ report_mount(
+ 					name = p->pr_name;
+ 			}
+ 		}
+-		fprintf(fp, "%-10s", name);
++		/* If no name is found, print the id #num instead of (null) */
++		if (name != NULL)
++			fprintf(fp, "%-10s", name);
++		else
++			fprintf(fp, "#%-9u", d.d_id);
+ 	}
+ 
+ 	if (form & XFS_BLOCK_QUOTA) {
+@@ -571,6 +575,16 @@ report_project_mount(
+ 			id = oid + 1;
+ 		}
+ 	} else {
++		if (!getprprid(0)) {
++			/*
++			 * Print default project quota, even if projid 0
++			 * isn't defined
++			 */
++			report_mount(fp, 0, NULL, NULL, form, XFS_PROJ_QUOTA,
++			             mount, flags);
++			flags |= NO_HEADER_FLAG;
++		}
++
+ 		setprent();
+ 		while ((p = getprent()) != NULL) {
+ 			if (report_mount(fp, p->pr_prid, p->pr_name, NULL,
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
