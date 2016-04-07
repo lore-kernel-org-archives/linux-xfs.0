@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 012EE7CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 05:50:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B448A304039
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 03:50:44 -0700 (PDT)
-Received: from mail-io0-f173.google.com (mail-io0-f173.google.com
-	[209.85.223.173]) by cuda.sgi.com with ESMTP id
-	Cd8KcaPqF610Kj8Q (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 03:50:43 -0700 (PDT)
-Received: by mail-io0-f173.google.com with SMTP id 2so89078963ioy.1
-	for <xfs@oss.sgi.com>; Thu, 07 Apr 2016 03:50:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <57057B2A.3000100@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 27E6F7CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:25:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CA3D88F8033
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 10:25:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id b1pVns0A7OIykNDh for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 10:25:47 -0700 (PDT)
+Received: from Liberator.local (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 7F63116C152
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:25:47 -0500 (CDT)
+Subject: Re: [PATCH 08/19] mkfs: getbool is redundant
 References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-19-git-send-email-jtulak@redhat.com>
-	<57057B2A.3000100@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 7 Apr 2016 12:50:23 +0200
-Message-ID: <CACj3i736w-nnDzBDOiBf39cJ3AUHqeVL9_Y8EbUgaMa9S7PToA@mail.gmail.com>
-Subject: Re: [PATCH 18/19] mkfs: unit conversions are case insensitive
+	<1458818136-56043-9-git-send-email-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5706981A.9090904@sandeen.net>
+Date: Thu, 7 Apr 2016 12:25:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <1458818136-56043-9-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,122 +29,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8968940034323706173=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
-
---===============8968940034323706173==
-Content-Type: multipart/alternative; boundary=001a11427d748f5ed0052fe2d998
-
---001a11427d748f5ed0052fe2d998
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, Apr 6, 2016 at 11:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-
-> On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> > From: Jan Tulak <jtulak@redhat.com>
-> >
-> > Solves the question "Should I use 10g or 10G?"
->
-> Might be nicer to do it like the cvtnum in libxcmd:
->
->         c =3D tolower(*sp);
->         switch (c) {
->         case 'b':
->                 return i * blocksize;
-> ...
->
-=E2=80=8BYeah, changed.
-=E2=80=8B
+To: xfs@oss.sgi.com
 
 
->
-> (hm, why do we have 3 copies of cvtnum?)
->
 
-=E2=80=8BWhere? =E2=80=8B
- =E2=80=8B
+On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> CHANGELOG:
+> o Add description of a new member of opt_params
+> o Fix in the subopts tables
+> o All boolean subopts should use getnum_checked
+> o Edit man8 page where it missed the information about optional value of a flag
+> 
+> getbool() can be replaced with getnum_checked with appropriate
+> min/max values set for the boolean variables. Make boolean
+> arguments consistent - all accept 0 or 1 value now.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  man/man8/mkfs.xfs.8 |  11 ++-
+>  mkfs/xfs_mkfs.c     | 223 ++++++++++++++++++++++++++++++++++++----------------
+>  2 files changed, 164 insertions(+), 70 deletions(-)
+> 
+> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> index 8b068ef..5a2a20a 100644
+> --- a/man/man8/mkfs.xfs.8
+> +++ b/man/man8/mkfs.xfs.8
+> @@ -118,6 +118,9 @@ option or the
+>  option first needs to be added to the command line.
+>  Failure to specify the size of the units will result in illegal value errors
+>  when parameters are quantified in those units.
+> +.PP
+> +Many options allows for optional argument of value 0 or 1, to explicitly
 
-=E2=80=8B$ pwd
-=E2=80=8B/some/path/xfsprogs-dev
+"Many options allow for an optional argument of 0 or 1, ..."
 
-$ grep -r "cvtnum(size_t" . |grep -v "^Binary"
-=E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksize, size_t
-sectorsize, char *s);
-./io/init.h:extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
+> +disable or enable the functionality, in a forward-compatible syntax.
 
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+What does "forward-compatible syntax" mean?  I'm not sure that clarifies
+anything for the reader.
 
---001a11427d748f5ed0052fe2d998
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Otherwise this looks ok to me; Dave explained that it is intentional to
+make every single option accept a value, whether it is now
+boolean or a numeric value, so there is no such thing as a bare "--flag"
+anymore; such flags are always "--flag [0|1]" now, right?
 
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Wed, Ap=
-r 6, 2016 at 11:10 PM, Eric Sandeen </span><span dir=3D"ltr" style=3D"font-=
-family:arial,sans-serif">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=
-=3D"_blank">sandeen@sandeen.net</a>&gt;</span><span style=3D"font-family:ar=
-ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
-ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0p=
-x 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border=
--left-style:solid;padding-left:1ex"><span class=3D"">On 3/24/16 6:15 AM, <a=
- href=3D"mailto:jtulak@redhat.com">jtulak@redhat.com</a> wrote:<br>
-&gt; From: Jan Tulak &lt;<a href=3D"mailto:jtulak@redhat.com">jtulak@redhat=
-.com</a>&gt;<br>
-&gt;<br>
-&gt; Solves the question &quot;Should I use 10g or 10G?&quot;<br>
-<br>
-</span>Might be nicer to do it like the cvtnum in libxcmd:<br>
-<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 c =3D tolower(*sp);<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 switch (c) {<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 case &#39;b&#39;:<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return i * blocksiz=
-e;<br>
-...<br></blockquote><div><div class=3D"gmail_default" style=3D"font-family:=
-arial,helvetica,sans-serif;display:inline">=E2=80=8BYeah, changed.</div></d=
-iv><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,s=
-ans-serif;display:inline">=E2=80=8B</div>=C2=A0</div><blockquote class=3D"g=
-mail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-=
-left-color:rgb(204,204,204);border-left-style:solid;padding-left:1ex">
-<br>
-(hm, why do we have 3 copies of cvtnum?)<br></blockquote><div><br></div><di=
-v><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-se=
-rif;display:inline">=E2=80=8BWhere? =E2=80=8B</div>=C2=A0<span style=3D"fon=
-t-family:arial,helvetica,sans-serif">=E2=80=8B</span></div><div><span style=
-=3D"font-family:arial,helvetica,sans-serif"><br></span></div><div><div clas=
-s=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=
-=8B$ pwd</div><div class=3D"gmail_default" style=3D"font-family:arial,helve=
-tica,sans-serif">=E2=80=8B/some/path/xfsprogs-dev</div><br></div><div>$ gre=
-p -r &quot;cvtnum(size_t&quot; . |grep -v &quot;^Binary&quot;</div><div><di=
-v class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=
-=E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksize, size_t=
- sectorsize, char *s);</div><div class=3D"gmail_default" style=3D"font-fami=
-ly:arial,helvetica,sans-serif">./io/init.h:extern void init_cvtnum(size_t *=
-blocksize, size_t *sectsize);</div><div><br></div></div></div>-- <br><div c=
-lass=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tu=
-lak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@=
-redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan=
-@tulak.me</a></div></div></div></div>
-</div></div>
+> @@ -312,10 +315,12 @@ and
+>  .B swidth
+>  values.
+>  .TP
+> -.BI noalign
+> -This option disables automatic geometry detection and creates the filesystem
+> +.BI noalign[= value ]
+> +If the
+> +.I value
+> +is 1, this option disables automatic geometry detection and creates the filesystem
+>  without stripe geometry alignment even if the underlying storage device provides
+> -this information.
+> +this information. 0 disables this option, that is, enables automatic detection.
+>  .RE
+>  .TP
+>  .B \-f
 
---001a11427d748f5ed0052fe2d998--
+The realtime section of the manpage needs this same fixup now too, I guess.
 
-
---===============8968940034323706173==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8968940034323706173==--
