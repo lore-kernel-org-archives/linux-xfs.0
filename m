@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 530927CA2
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:02:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 601FF7CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 14:08:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1ACCA30405F
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:12 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id UABVoGsTuISsT6nh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:10 -0700 (PDT)
-Subject: [PATCH 1/3] block: invalidate the page cache when issuing BLKZEROOUT.
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 12 Apr 2016 21:01:28 -0700
-Message-ID: <20160413040128.10562.70791.stgit@birch.djwong.org>
-In-Reply-To: <20160413040121.10562.98998.stgit@birch.djwong.org>
-References: <20160413040121.10562.98998.stgit@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 25B6D304039
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:08:56 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id dCFsmYpPZRuVKkYz for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 12:08:55 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 7928816C165
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 14:08:54 -0500 (CDT)
+Subject: Re: [PATCH 11/19] mkfs: table based parsing for converted parameters
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-12-git-send-email-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5706B046.9020500@sandeen.net>
+Date: Thu, 7 Apr 2016 14:08:54 -0500
 MIME-Version: 1.0
+In-Reply-To: <1458818136-56043-12-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,76 +33,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: darrick.wong@oracle.com
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-
-Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
-returning stale cache contents at a later time.
-
-v5: Refactor the 4.4 refactoring of the ioctl code into separate functions.
-Split the page invalidation and the new ioctl into separate patches.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- block/ioctl.c |   29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
+To: xfs@oss.sgi.com
 
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 4ff1f92..52b60b2 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -226,7 +226,9 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg)
- {
- 	uint64_t range[2];
--	uint64_t start, len;
-+	struct address_space *mapping;
-+	uint64_t start, end, len;
-+	int ret;
- 
- 	if (!(mode & FMODE_WRITE))
- 		return -EBADF;
-@@ -236,18 +238,33 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 
- 	start = range[0];
- 	len = range[1];
-+	end = start + len - 1;
- 
- 	if (start & 511)
- 		return -EINVAL;
- 	if (len & 511)
- 		return -EINVAL;
--	start >>= 9;
--	len >>= 9;
--
--	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
-+	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
-+		return -EINVAL;
-+	if (end < start)
- 		return -EINVAL;
- 
--	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
-+	/* Invalidate the page cache, including dirty pages */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
-+
-+	ret = blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
-+				    false);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Invalidate again; if someone wandered in and dirtied a page,
-+	 * the caller will be given -EBUSY.
-+	 */
-+	return invalidate_inode_pages2_range(mapping,
-+					     start >> PAGE_SHIFT,
-+					     end >> PAGE_SHIFT);
- }
- 
- static int put_ushort(unsigned long arg, unsigned short val)
+
+On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> CHANGE:
+> o Change getnum_checked type to long long to prevent int overflow
+> o Add description of new members in opt_params struct.
+> o L_SU maxval was a wrong number, fix it
+> 
+> All the parameters that can be passed as block or sector sizes need
+> to be passed the block and sector sizes that they should be using
+> for conversion. For parameter parsing, it is always the same two
+> variables, so to make things easy just declare them as global
+> variables so we can avoid needing to pass them to getnum_checked().
+> 
+> We also need to mark these parameters are requiring conversion so
+> that we don't need to pass this information manually to
+> getnum_checked(). Further, some of these options are required to
+> have a power of 2 value, so add optional checking for that as well.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 _______________________________________________
 xfs mailing list
