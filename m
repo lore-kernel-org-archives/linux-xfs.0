@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 40ABE7CA0
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 13:10:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A1B47AC002
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 11:10:15 -0700 (PDT)
-Received: from mail-wm0-f42.google.com (mail-wm0-f42.google.com
-	[74.125.82.42]) by cuda.sgi.com with ESMTP id ZOclCF6Tn1H7CjQD
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 05 Apr 2016 11:10:13 -0700 (PDT)
-Received: by mail-wm0-f42.google.com with SMTP id l6so34342204wml.1
-	for <xfs@oss.sgi.com>; Tue, 05 Apr 2016 11:10:12 -0700 (PDT)
-Message-ID: <77693FFEB62A474DA7F039FD92CC5304@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <20150629222651.GG7943@dastard>
-	<F1A27B6A9FB048488A388EC4D9FD71F7@alyakaslap>
-	<20150707000911.GT7943@dastard>
-	<20150707090511.GA21863@infradead.org>
-	<7792DA2A464640B1BC7220973CED41AE@alyakaslap>
-	<20150723230912.GE3902@dastard>
-In-Reply-To: <20150723230912.GE3902@dastard>
-Subject: Re: xfs_iext_realloc_indirect and "XFS: possible memory allocation
-	deadlock"
-Date: Tue, 5 Apr 2016 21:10:06 +0300
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 36B637CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:18:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AF19330404E
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 06:18:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id VYu4DLhZWYO4Pt5Z for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 06:18:19 -0700 (PDT)
+Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
+	<5705BB39.5010003@sandeen.net>
+	<CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <57065E19.9070401@sandeen.net>
+Date: Thu, 7 Apr 2016 08:18:17 -0500
 MIME-Version: 1.0
+In-Reply-To: <CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,70 +26,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Danny Shavit <danny@zadarastorage.com>, Shyam Kaushik <shyam@zadarastorage.com>, bfoster@redhat.com, Yair Hershko <yair@zadarastorage.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hello Dave, Brian, Christoph,
-
-We are still encountering cases, in which different IO patterns beat XFS 
-preallocation schemes, resuling in highly fragmented files, having 100s of 
-thousands and sometimes millions of extents. In these cases XFS tries to 
-allocate large arrays of xfs_ext_irec_t structure with kmalloc, and this 
-often gets into numerous retries, and sometimes triggers hung task panic 
-(due to some other thread wanting to access the same file).
-
-We made a change to call kmem_zalloc_large, which resorts to __vmalloc in 
-case kmalloc fails. kmem_free is already handling vmalloc addresses 
-correctly. The change is only for the allocation done in 
-xfs_iext_realloc_indirect, as this is the only place, in which we have seen 
-the issue.
-
-Final code, as usual, will be in 
-https://github.com/zadarastorage/zadara-xfs-pushback
-
-Thanks,
-Alex.
-
-
------Original Message----- 
-From: Dave Chinner
-Sent: Friday, July 24, 2015 2:09 AM
-To: Alex Lyakas
-Cc: Christoph Hellwig ; Danny Shavit ; bfoster@redhat.com ; Yair Hershko ; 
-Shyam Kaushik ; xfs@oss.sgi.com
-Subject: Re: xfs_iext_realloc_indirect and "XFS: possible memory allocation 
-deadlock"
-
-On Thu, Jul 23, 2015 at 05:39:28PM +0200, Alex Lyakas wrote:
-> Hi Dave,
-> Just for completeness,  XFS speculative preallocation (that is based
-> now upon the size of the last extent) can still grow up to 4Gb-8Gb
-> (depending on which patches we are pulling). As a result, xfs_iozero
-> can still sometimes trigger 1-2GB writes of zeros in one shot. This
-> turns out to be a bit unfriendly to the drives in some
-> configurations. So we have applied a custom patch to limit the
-> speculative preallocation to 32Mb.
-
-It would be much better to change xfs_zero_eof() to convert extents
-beyond EOF to unwritten extents rather than zero them. That way you
-still get the benefits of the large speculative prealloc but without
-the zeroing overhead that wierd sparse write patterns can trigger.
-
-I just haven't got around to doing this because it hasn't been
-reported as a significant problem for anyone until now.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNC83LzE2IDg6MDkgQU0sIEphbiBUdWxhayB3cm90ZToKPiAKLi4uCgo+IE9uIFRodSwgQXBy
+IDcsIDIwMTYgYXQgMzo0MyBBTSwgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0IDxt
+YWlsdG86c2FuZGVlbkBzYW5kZWVuLm5ldD4+IHdyb3RlOgo+IAo+ICAgICA+IEBAIC05ODEsMTEg
+KzEwNzcsMjEgQEAgbWFpbigKPiAgICAgPiAgICAgICBpbnQgICAgICAgICAgICAgICAgICAgICB3
+b3JzdF9mcmVlbGlzdDsKPiAgICAgPiAgICAgICBsaWJ4ZnNfaW5pdF90ICAgICAgICAgICB4aTsK
+PiAgICAgPiAgICAgICBzdHJ1Y3QgZnNfdG9wb2xvZ3kgICAgICBmdDsKPiAgICAgPiAtICAgICBp
+bnQgICAgICAgICAgICAgICAgICAgICBsYXp5X3NiX2NvdW50ZXJzOwo+ICAgICA+IC0gICAgIGlu
+dCAgICAgICAgICAgICAgICAgICAgIGNyY3NfZW5hYmxlZDsKPiAgICAgPiAtICAgICBpbnQgICAg
+ICAgICAgICAgICAgICAgICBmaW5vYnQ7Cj4gICAgID4gLSAgICAgYm9vbCAgICAgICAgICAgICAg
+ICAgICAgZmlub2J0ZmxhZzsKPiAgICAgPiAtICAgICBpbnQgICAgICAgICAgICAgICAgICAgICBz
+cGlub2RlczsKPiAgICAgPiArICAgICBzdHJ1Y3Qgc2JfZmVhdF9hcmdzICAgICBzYl9mZWF0ID0g
+ewo+ICAgICA+ICsgICAgICAgICAgICAgLmZpbm9idCA9IDEsCj4gICAgID4gKyAgICAgICAgICAg
+ICAuZmlub2J0ZmxhZyA9IGZhbHNlLAo+IAo+IAo+ICAgICBzaG91bGQgd2UgcmVhbGx5IGhhdmUg
+ImZpbm9idGZsYWciIGluIHRoaXMgc3RydWN0dXJlPwo+ICAgICBUaGlzIHN0cnVjdHVyZSBzaG91
+bGQgb25seSBjYXJyeSBmZWF0dXJlIHNlbGVjdGlvbnMsIG5vdCBmZWF0dXJlCj4gICAgIHNwZWNp
+ZmljYXRpb24gZmxhZ3MgSSB0aGluay4gIFdoeSBpcyB0aGlzIHRoZSBvbmx5IHN1Y2ggZmxhZwo+
+ICAgICBpbiB0aGUgc3RydWN0dXJlPwo+IAo+ICAgICBQcmV0dHkgc3VyZSBmaW5vYnRmbGFnIHNo
+b3VsZCBzdGF5IGEgdmFyaWFibGUgZm9yIG5vdwo+ICAgICBqdXN0IGxpa2UgbHZmbGFnICh3aGlj
+aCBnb2VzIHdpdGggbG9nX3ZlcnNpb24pLgo+IAo+ICAKPiDigItJdCBtaWdodCBiZSByaWdodCB0
+byBtb3ZlIGl0IG91dOKAiywgYnV0IHRoZSBmbGFnIGlzIHJlbW92ZWQgZmV3Cj4gcGF0Y2hlcyBs
+YXRlciBlbnRpcmVseS4gSXMgaXQgd29ydGggb2YgdGhlIHdvcms/IEkgd291bGQgc2F5IG5haCwg
+bGV0Cj4gaXQgZGllIHdoZXJlIGl0IGlzLiA6LSkKCkdpdmVuIHRoYXQgaXQgZG9lc24ndCBzZWVt
+IHRvIGJlIGEgYnVnLCBJIGd1ZXNzIHRoYXQgbWlnaHQgYmUgb2ssCmJ1dCBpbiBnZW5lcmFsIGlu
+dHJvZHVjaW5nIGluY29ycmVjdCB0aGluZ3MgYW5kIGZpeGluZyB0aGVtIGxhdGVyCmluIHRoZSBz
+ZXJpZXMgaXMgc3Ryb25nbHkgZGlzY291cmFnZWQuLi4KCj4gIAo+IAo+ICAgICAuLi4KPiAKPiAg
+ICAgPiBAQCAtMTUxNyw3ICsxNjE3LDE0IEBAIG1haW4oCj4gICAgID4gICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICBjID0gYXRvaSh2YWx1ZSk7Cj4gICAgID4gICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAoYyA8IDAgfHwgYyA+IDEpCj4gICAgID4g
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlsbGVnYWwodmFs
+dWUsICJtIGNyYyIpOwo+ICAgICA+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgY3Jjc19lbmFibGVkID0gYzsKPiAgICAgPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIGlmIChjICYmIG5mdHlwZSkgewo+ICAgICA+ICsgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBmcHJpbnRmKHN0ZGVyciwKPiAgICAgPiArXygiY2Fu
+bm90IHNwZWNpZnkgYm90aCBjcmMgYW5kIGZ0eXBlXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHVzYWdlKCk7Cj4gCj4gICAgIGhtLCB3
+aHkgaXMgY29uZmxpY3QgY2hlY2tpbmcgYWRkZWQ/ICBJdCdzIG5vdCB3aGF0IHRoZSBjb21taXQg
+c2F5cwo+ICAgICB0aGUgcGF0Y2ggZG9lcy4KPiAKPiAgICAgSXQgYWxzbyByZWdyZXNzZXMgdGhl
+IGJ1ZyBJIGZpeGVkIGluCj4gCj4gICAgIGNvbW1pdCBiOTkwZGU4YmE0ZTJkZjJiYzc2YTE0MDc5
+OWQzZGRiNGEwZWFjNGNlCj4gICAgIEF1dGhvcjogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRl
+ZW4ubmV0IDxtYWlsdG86c2FuZGVlbkBzYW5kZWVuLm5ldD4+Cj4gICAgIERhdGU6ICAgVHVlIEF1
+ZyAxOCAxNzo1MzoxNyAyMDE1ICsxMDAwCj4gCj4gICAgICAgICBta2ZzLnhmczogZml4IGZ0eXBl
+LXZzLWNyYyBvcHRpb24gY29tYmluYXRpb24gdGVzdGluZwo+IAo+ICAgICB3aXRoIHRoaXMgcGF0
+Y2gsIGl0IGlzIGJyb2tlbiBhZ2FpbjoKPiAKPiAgICAgIyBta2ZzL21rZnMueGZzIC1tIGNyYz0w
+IC1uIGZ0eXBlPTEgLWRmaWxlLG5hbWU9ZnNmaWxlLHNpemU9MTZnCj4gICAgIDxzdWNjZXNzPgo+
+ICAgICAgIyBta2ZzL21rZnMueGZzIC1uIGZ0eXBlPTEgLW0gY3JjPTAgLWRmaWxlLG5hbWU9ZnNm
+aWxlLHNpemU9MTZnCj4gICAgIGNhbm5vdCBzcGVjaWZ5IGJvdGggY3JjIGFuZCBmdHlwZQo+ICAg
+ICBVc2FnZTogbWtmcy54ZnMKPiAgICAgLi4uCj4gCj4g4oCLQmVjYXVzZSB0aGUgcGF0Y2ggaXMg
+bXVjaCBvbGRlciB0aGFuIHlvdXIgZml4LCBhbmQgYXQgdGhlIHRpbWUgaXQKPiB3YXMgY3JlYXRl
+ZCwgaXQgaXMgcG9zc2libGUgdGhhdCB0aGVyZSB3YXNuJ3QgYW55IHN1Y2ggY2hlY2suLi4gSQo+
+IHdvdWxkIGNhbGwgaXQgdGhlIHJpc2sgb2YgbmVjcm9tYW5jeS4gOi0p4oCLCgpNb3N0IGxpa2Vs
+eSBhIGZvcndhcmQtcG9ydCBvciBtZXJnZSBlcnJvciBJIHRoaW5rLgoKPiBBbnl3YXksIEkgYWxy
+ZWFkeSBmaXhlZCB0aGlzIGlzc3VlIGluIHRoaXMgY3ljbGUsIGFuZCBhZGRlZCB0aGUgdGhlCj4g
+ZnR5cGUsIGNyYyBvcmRlciBpbnRvIGEgdGVzdCBjaGVja2luZyBmb3Igb3B0aW9ucyBzYW5pdHku
+IEp1c3QgSQo+IGRpZG4ndCBzdWJtaXR0ZWQgdGhlIGNoYW5nZSB5ZXQuCgpPaywgc28gaXQgaXMg
+Zml4ZWQgaW4geW91ciBuZXcgdmVyc2lvbiBvZiB0aGlzIHBhdGNoPwoKPiAKPiAgICAgLi4uCj4g
+Cj4gICAgID4gQEAgLTE4NzksMjMgKzE5ODgsMjUgQEAgXygiMzIgYml0IFByb2plY3QgSURzIGFs
+d2F5cyBlbmFibGVkIG9uIENSQyBlbmFibGVkIGZpbGVzeXRlbXNcbiIpKTsKPiAgICAgPiAgICAg
+ICB9IGVsc2Ugewo+ICAgICA+ICAgICAgICAgICAgICAgLyoKPiAgICAgPiAgICAgICAgICAgICAg
+ICAqIFRoZSBrZXJuZWwgZG9lc24ndCBjdXJyZW50bHkgc3VwcG9ydCBjcmM9MCxmaW5vYnQ9MQo+
+ICAgICA+IC0gICAgICAgICAgICAgICogZmlsZXN5c3RlbXMuIElmIGNyY3MgYXJlIG5vdCBlbmFi
+bGVkIGFuZCB0aGUgdXNlciBoYXMKPiAgICAgPiAtICAgICAgICAgICAgICAqIGV4cGxpY2l0bHkg
+dHVybmVkIHRoZW0gb2ZmIHRoZW4gc2lsZW50bHkgdHVybiB0aGVtIG9mZgo+ICAgICA+IC0gICAg
+ICAgICAgICAgICogdG8gYXZvaWQgYW4gdW5uZWNlc3Nhcnkgd2FybmluZy4gSWYgdGhlIHVzZXIg
+ZXhwbGljaXRseQo+ICAgICA+IC0gICAgICAgICAgICAgICogdHJpZWQgdG8gdXNlIGNyYz0wLGZp
+bm9idD0xLCB0aGVuIGlzc3VlIGEgd2FybmluZyBiZWZvcmUKPiAgICAgPiAtICAgICAgICAgICAg
+ICAqIHR1cm5pbmcgdGhlbSBvZmYuCj4gICAgID4gKyAgICAgICAgICAgICAgKiBmaWxlc3lzdGVt
+cy4gSWYgY3JjcyBhcmUgbm90IGVuYWJsZWQgYW5kIHRoZSB1c2VyIGhhcyBub3QKPiAgICAgPiAr
+ICAgICAgICAgICAgICAqIGV4cGxpY2l0bHkgdHVybmVkIGZpbm9idCBvbiwgdGhlbiBzaWxlbnRs
+eSB0dXJuIGl0IG9mZiB0bwo+ICAgICA+ICsgICAgICAgICAgICAgICogYXZvaWQgYW4gdW5uZWNl
+c3Nhcnkgd2FybmluZy4gSWYgdGhlIHVzZXIgZXhwbGljaXRseSB0cmllZAo+ICAgICA+ICsgICAg
+ICAgICAgICAgICogdG8gdXNlIGNyYz0wLGZpbm9idD0xLCB0aGVuIGlzc3VlIGEgd2FybmluZyBi
+ZWZvcmUgdHVybmluZwo+ICAgICA+ICsgICAgICAgICAgICAgICogdGhlbSBvZmYuCj4gICAgID4g
+ICAgICAgICAgICAgICAgKi8KPiAgICAgPiAtICAgICAgICAgICAgIGlmIChmaW5vYnQgJiYgZmlu
+b2J0ZmxhZykgewo+ICAgICA+IC0gICAgICAgICAgICAgICAgICAgICBmcHJpbnRmKHN0ZGVyciwK
+PiAgICAgPiAtXygid2FybmluZzogZmlub2J0IG5vdCBzdXBwb3J0ZWQgd2l0aG91dCBDUkMgc3Vw
+cG9ydCwgZGlzYWJsZWQuXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAgICBpZiAoc2JfZmVhdC5m
+aW5vYnQpewo+ICAgICA+ICsgICAgICAgICAgICAgICAgICAgICBpZiAoc2JfZmVhdC5maW5vYnRm
+bGFnKSB7Cj4gICAgID4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZnByaW50ZihzdGRl
+cnIsCj4gICAgID4gKyAgICAgXygid2FybmluZzogZmlub2J0IG5vdCBzdXBwb3J0ZWQgd2l0aG91
+dCBDUkMgc3VwcG9ydCwgZGlzYWJsZWQuXG4iKSk7Cj4gICAgID4gKyAgICAgICAgICAgICAgICAg
+ICAgIH0KPiAgICAgPiArICAgICAgICAgICAgICAgICAgICAgc2JfZmVhdC5maW5vYnQgPSAwOwo+
+IAo+ICAgICBsaWtlIEkgbWVudGlvbmVkLCBqdXN0IHRoaXMsIEkgdGhpbmsgKGFzc3VtaW5nIHdl
+IGxpa2UgdGhlIHNpbGVudCB0dXJuaW5nCj4gICAgIG9mZiwgYnV0IHRoYXQgd291bGQgYmUgYSBk
+aWZmZXJlbnQgcGF0Y2gpOgo+IAo+ICAKPiDigItNZXJnaW5nIHRoZSBjb25kaXRpb25zIGlzIGlu
+ZGVlZCBjbGVhbmVyLgo+IAo+IEFuZCBJIHdpbGwgY2hhbmdlIGl0IHRvIGZhaWx1cmUsIGlmIHRo
+ZSBjb25mbGljdGluZyBvcHRpb25zIGFyZSBnaXZlbgo+IGV4cGxpY2l0bHkuIEp1c3QgYSBzbWFs
+bCBwYXRjaCBhZGRpbmcgInVzYWdlKCk7IiBhbmQgcmVtb3ZpbmcKPiAid2FybmluZyIuLi7igIsK
+Ck9rLCBzbyBmb3IgdGhpcyBwYXRjaCwgbm90aGluZyBidXQgdGhlIG1lY2hhbmljYWwgY2hhbmdl
+IG1hdGNoaW5nIGFsbCB0aGUgb3RoZXJzLApyaWdodD8gIElmIHRoZXJlIGlzIGFueSBjaGFuZ2Ug
+aW4gYmVoYXZpb3IgdG8gYmUgZG9uZSwgdGhhdCBzaG91bGQgYmUgYSBkaWZmZXJlbnQgcGF0Y2gu
+CgotRXJpYwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
