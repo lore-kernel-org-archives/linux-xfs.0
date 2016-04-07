@@ -1,22 +1,26 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 85BB17CA0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:34:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 158E9AC003
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 20:34:53 -0700 (PDT)
-Received: from reklamatabg.eu (reklamatabg.eu [37.157.191.235]) by
-	cuda.sgi.com with ESMTP id 4sGlsPe87I7pskHJ for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 20:34:49 -0700 (PDT)
-Received: from 37.157.184.243 by reklamatabg.eu (MDaemon PRO v9.6.1)
-	with ESMTP id md50012627452.msg
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:38:01 +0300
-Subject: =?UTF-8?B?0J3QsNC80LDQu9C10L3QuNC1INC90LAg0KHQtdC60YHQuCDQvdC+0YnQvdC40YbQuCDQuCDQldGA0L7RgtC40YfQvdC4INC80YDQtdC20LXRgdGC0Lgg0YbQtdC70L7QutGD0L/QvdC4INCx0L7QtNC40YLQsCE=?=
-Message-ID: <671fc2b56dd066cba29db983bcd319e7@37.157.184.243>
-Date: Wed, 13 Apr 2016 05:10:49 +0300
-From: "=?UTF-8?B?0J3QldCj0KHQotCe0JjQnNCQLtCx0LM=?="
-	<neustoimabg@reklamatabg.eu>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 918A07CA1
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 13:58:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 65250304039
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 11:58:47 -0700 (PDT)
+Received: from newsletter25.promotebusiness.gr
+	(newsletter25.promotebusiness.gr [62.38.238.209]) by
+	cuda.sgi.com with ESMTP id jlMe01MgvPJpRRuV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 11:58:39 -0700 (PDT)
+Received: from marketing2 (unknown [192.168.1.210])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: newsletter@consulting-learning.eu)
+	by newsletter14.promotebusiness.gr (Postfix) with ESMTPSA id 73705C140B
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 21:58:37 +0300 (EEST)
+Message-ID: <49c952a3ef888a441dbc101c0015dd58@consulting-learning.eu>
+From: "iBcl" <newsletter@consulting-learning.eu>
+Subject: =?windows-1253?Q?=C5=EA=F0=E1=DF=E4=E5=F5=F3=E7_=C5=F1=E3=EF=E4=E7=E3=FE=ED_=D0=E1=F1=E1=E3=F9=E3=DE=F2?=
+Date: Thu, 7 Apr 2016 21:06:26 +0300
 MIME-Version: 1.0
-Reply-To: neustoimabg@reklamatabg.eu
+Reply-To: info@consulting-learning.eu
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,164 +29,1407 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9160650773695691019=="
+Content-Type: multipart/mixed; boundary="===============5859447384097148476=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============9160650773695691019==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-X-MIME-Autoconverted: from 8bit to base64 by userv0021.oracle.com id u3D3lDWn013135
+--===============5859447384097148476==
+Content-Type: text/html;
+	charset="windows-1253"
+Content-Transfer-Encoding: quoted-printable
 
-PG1ldGEgTkFNRT0iR0VORVJBVE9SIiBDb250ZW50PSJNaWNyb3NvZnQgREhUTUwgRWRpdGlu
-ZyBDb250cm9sIj4NCjx0aXRsZT48L3RpdGxlPg0KPC9oZWFkPg0KPGJvZHk+DQo8YnIgLz4N
-Cjx0YWJsZSBjZWxsc3BhY2luZz0iMiIgY2VsbHBhZGRpbmc9IjIiIGJvcmRlcj0iMCIgc3R5
-bGU9IndpZHRoOiA4MDBweDsiPg0KPHRib2R5Pg0KPHRyPg0KPHRkIHZhbGlnbj0idG9wIj4N
-CjxwIGNsYXNzPSJNc29Ob3JtYWwiIHN0eWxlPSJtYXJnaW46IDBjbSAwY20gMTBwdDsiPjxz
-dHJvbmc+PHNwYW4NCnN0eWxlPSJmb250LXNpemU6IDEycHQ7IGZvbnQtZmFtaWx5OiAnVmVy
-ZGFuYScsJ3NhbnMtc2VyaWYnOyBsaW5lLWhlaWdodDoNCjExNSU7Ij48YQ0KaHJlZj0iaHR0
-cDovLzM3LjE1Ny4xODQuMjQzL2VtYXJrZXQvbGluay5waHA/TT0xMTY4OTk4OCZOPTM4NCZM
-PTIwMCZGPUgiPnd3dy5ORVVTVE9JTUEuYmc8L2E+DQotINCf0L7RgNGC0LDQu9GK0YIg0LfQ
-sCDQtNCw0LzRgdC60L4g0JXRgNC+0YLQuNGH0L3QviDQsdC10LvRjNC+INC4DQrQtNGA0LXR
-hdC4INC30LAg0LLRgdC10LrQuCDQstC60YPRgS48L3NwYW4+PC9zdHJvbmc+PC9wPg0KPHAg
-Y2xhc3M9Ik1zb05vcm1hbCIgc3R5bGU9Im1hcmdpbjogMGNtIDBjbSAxMHB0OyI+PHNwYW4g
-c3R5bGU9ImZvbnQtc2l6ZToNCjEycHQ7IGZvbnQtZmFtaWx5OiAnVmVyZGFuYScsJ3NhbnMt
-c2VyaWYnOyBsaW5lLWhlaWdodDogMTE1JTsiPjxzdHJvbmc+PGJyDQovPtCb0Y/RgtC+0YLQ
-viDQvdCw0LHQu9C40LbQsNCy0LAg0LAg0YEg0L3QtdCz0L4g0Lgg0YHRgtGA0LDRgdGC0LjR
-gtC1INGB0LUNCtGA0LDQt9Cz0L7RgNC10YnRj9Cy0LDRgi48L3N0cm9uZz48L3NwYW4+PC9w
-Pg0KPHAgY2xhc3M9Ik1zb05vcm1hbCIgc3R5bGU9Im1hcmdpbjogMGNtIDBjbSAxMHB0OyI+
-PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZToNCjEycHQ7IGZvbnQtZmFtaWx5OiAnVmVyZGFuYScs
-J3NhbnMtc2VyaWYnOyBsaW5lLWhlaWdodDoNCjExNSU7Ij48c3Ryb25nPjxmb250IGNvbG9y
-PSIjZmYwMDAwIj7Ql9Cw0YLQvtCy0LAg0L3QuNC1INCS0LgNCtC/0YDQtdC00LvQsNCz0LDQ
-vNC1INGCPC9mb250Pjwvc3Ryb25nPjwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC1zaXplOiAx
-MnB0Ow0KZm9udC1mYW1pbHk6ICdWZXJkYW5hJywnc2Fucy1zZXJpZic7IGxpbmUtaGVpZ2h0
-OiAxMTUlOyI+PHN0cm9uZz48Zm9udA0KY29sb3I9IiNmZjAwMDAiPtCw0LfQuCDRgdC10LTQ
-vNC40YbQsCZuYnNwO9C90LDQvNCw0LvQtdC90LjQtSDQvdCwDQrQstGB0LjRh9C60Lg8L2Zv
-bnQ+Jm5ic3A7PC9zdHJvbmc+PGEgc3R5bGU9ImZvbnQtZmFtaWx5OiB2ZXJkYW5hLCBnZW5l
-dmE7Ig0KaHJlZj0iaHR0cDovLzM3LjE1Ny4xODQuMjQzL2VtYXJrZXQvbGluay5waHA/TT0x
-MTY4OTk4OCZOPTM4NCZMPTEwOSZGPUgiPjxmb250DQpjb2xvcj0iIzAwMDBmZiIgc2l6ZT0i
-NCIgZmFjZT0iVmVyZGFuYSI+PHN0cm9uZz7QodC10LrRgdC4INC80YDQtdC20LXRgdGC0LgN
-CtGG0LXQu9C+0LrRg9C/0L3QuCDQsdC+0LTQuNGC0LA8L3N0cm9uZz48L2ZvbnQ+PC9hPjxz
-dHJvbmc+Jm5ic3A7IDxmb250DQpjb2xvcj0iI2ZmMDAwMCI+0LgmbmJzcDs8L2ZvbnQ+Jm5i
-c3A7PC9zdHJvbmc+PGEgc3R5bGU9ImZvbnQtZmFtaWx5Og0KdmVyZGFuYSwgZ2VuZXZhOyIN
-CmhyZWY9Imh0dHA6Ly8zNy4xNTcuMTg0LjI0My9lbWFya2V0L2xpbmsucGhwP009MTE2ODk5
-ODgmTj0zODQmTD0xMTEmRj1IIj48Zm9udA0KY29sb3I9IiMwMDAwZmYiIHNpemU9IjQiDQpm
-YWNlPSJWZXJkYW5hIj48c3Ryb25nPtCV0YDQvtGC0LjRh9C90LgmbmJzcDvQvdC+0YnQvdC4
-0YfQutC4INC4DQrRgNC+0LrQu9C40YfQutC4PC9zdHJvbmc+PC9mb250PjwvYT4mbmJzcDs8
-c3Ryb25nPjxmb250DQpjb2xvcj0iI2ZmMDAwMCI+0J3QsNC80LDQu9C10L3QuNC10YLQviDQ
-tSDQstCw0LvQuNC00L3QviDQt9CwINCy0YHQuNGH0LrQuA0K0L/QvtGA0YrRh9C60Lgg0L3Q
-sNC/0YDQsNCy0LXQvdC4INC00L4gMTYuMDQuMjAxNiDQsy4NCtCy0LrQu9GO0YfQuNGC0LXQ
-u9C90L4uPC9mb250Pjwvc3Ryb25nPiA8YnIgLz48L3NwYW4+PC9wPg0KPHAgY2xhc3M9Ik1z
-b05vcm1hbCIgc3R5bGU9Im1hcmdpbjogMGNtIDBjbSAxMHB0OyI+PHNwYW4gc3R5bGU9ImZv
-bnQtc2l6ZToNCjEycHQ7IGZvbnQtZmFtaWx5OiAnVmVyZGFuYScsJ3NhbnMtc2VyaWYnOyBs
-aW5lLWhlaWdodDogMTE1JTsiPjxzcGFuDQpzdHlsZT0iZm9udC1zaXplOiAxMnB0OyBmb250
-LWZhbWlseTogJ1ZlcmRhbmEnLCdzYW5zLXNlcmlmJzsgbGluZS1oZWlnaHQ6DQoxMTUlOyI+
-PHN0cm9uZz7QndCw0L/RgNCw0LLQtdGC0LUg0YHQuCDQtdGA0L7RgtC40YfQtdC9INC/0L7Q
-tNCw0YDRitC6INC30LANCtCS0LDRgSDQuCDQt9CwINCS0LDRiNCw0YLQsCDQv9C+0LvQvtCy
-0LjQvdC60LAhPGJyDQovPjwvc3Ryb25nPjwvc3Bhbj48L3NwYW4+PC9wPg0KPHAgY2xhc3M9
-Ik1zb05vcm1hbCIgc3R5bGU9Im1hcmdpbjogMGNtIDBjbSAxMHB0OyI+PHNwYW4gc3R5bGU9
-ImZvbnQtc2l6ZToNCjEycHQ7IGZvbnQtZmFtaWx5OiAnVmVyZGFuYScsJ3NhbnMtc2VyaWYn
-OyBsaW5lLWhlaWdodDogMTE1JTsiPjwvc3Bhbj48c3Bhbg0Kc3R5bGU9ImZvbnQtc2l6ZTog
-bWVkaXVtOyI+PGZvbnQgZmFjZT0iVmVyZGFuYSI+0KDQsNC30LPQu9C10LTQsNC50YLQtSDQ
-uA0K0LTRgNGD0LPQuNGC0LUg0L3QuCDQs9C+0YDQtdGJ0Lgg0L/RgNC10LTQu9C+0LbQtdC9
-0LjRjyDQt9CwPC9mb250Pjxmb250DQpmYWNlPSJWZXJkYW5hIiBzdHlsZT0iZm9udC1mYW1p
-bHk6IHZlcmRhbmEsIGdlbmV2YTsiPjombmJzcDs8L2ZvbnQ+PGENCmhyZWY9Imh0dHA6Ly8z
-Ny4xNTcuMTg0LjI0My9lbWFya2V0L2xpbmsucGhwP009MTE2ODk5ODgmTj0zODQmTD0xNDQm
-Rj1IIg0Kc3R5bGU9ImZvbnQtZmFtaWx5OiB2ZXJkYW5hLCBnZW5ldmE7Ij48Zm9udCBjb2xv
-cj0iIzAwMDBmZiINCmZhY2U9IlZlcmRhbmEiPjxzdHJvbmc+0JXRgNC+0YLQuNGH0L3QuCDQ
-utC+0YHRgtGO0LzQuCDQuA0K0LrQvtC80L/Qu9C10LrRgtC4PC9zdHJvbmc+IDwvZm9udD48
-L2E+PHN0cm9uZyBzdHlsZT0iZm9udC1mYW1pbHk6IHZlcmRhbmEsDQpnZW5ldmE7Ij48Zm9u
-dCBmYWNlPSJWZXJkYW5hIj4sIDwvZm9udD48L3N0cm9uZz48YQ0KaHJlZj0iaHR0cDovLzM3
-LjE1Ny4xODQuMjQzL2VtYXJrZXQvbGluay5waHA/TT0xMTY4OTk4OCZOPTM4NCZMPTEwOCZG
-PUgiDQpzdHlsZT0iZm9udC1mYW1pbHk6IHZlcmRhbmEsIGdlbmV2YTsiPjxmb250IGNvbG9y
-PSIjMDAwMGZmIg0KZmFjZT0iVmVyZGFuYSI+PHN0cm9uZz7QodC10LrRgdC4INC60L7RgNGB
-0LXRgtC4INC4DQrQsdGO0YHRgtC40LXRgtCwPC9zdHJvbmc+IDwvZm9udD48L2E+PHN0cm9u
-ZyBzdHlsZT0iZm9udC1mYW1pbHk6IHZlcmRhbmEsDQpnZW5ldmE7Ij48Zm9udCBmYWNlPSJW
-ZXJkYW5hIj4sIDwvZm9udD48L3N0cm9uZz48YQ0KaHJlZj0iaHR0cDovLzM3LjE1Ny4xODQu
-MjQzL2VtYXJrZXQvbGluay5waHA/TT0xMTY4OTk4OCZOPTM4NCZMPTEwNyZGPUgiDQpzdHls
-ZT0iZm9udC1mYW1pbHk6IHZlcmRhbmEsIGdlbmV2YTsiPjxmb250IGNvbG9yPSIjMDAwMGZm
-Ig0KZmFjZT0iVmVyZGFuYSI+PHN0cm9uZz7QodC10LrRgdC4INCx0L7QtNC40YLQsDwvc3Ry
-b25nPiA8L2ZvbnQ+PC9hPjxzdHJvbmcNCnN0eWxlPSJmb250LWZhbWlseTogdmVyZGFuYSwg
-Z2VuZXZhOyI+PGZvbnQgZmFjZT0iVmVyZGFuYSI+LA0KPC9mb250Pjwvc3Ryb25nPjxmb250
-IGNvbG9yPSIjMDAwMGZmIiBmYWNlPSJWZXJkYW5hIj48YQ0KaHJlZj0iaHR0cDovLzM3LjE1
-Ny4xODQuMjQzL2VtYXJrZXQvbGluay5waHA/TT0xMTY4OTk4OCZOPTM4NCZMPTExMCZGPUgi
-DQpzdHlsZT0iZm9udC1mYW1pbHk6IHZlcmRhbmEsIGdlbmV2YTsgZm9udC13ZWlnaHQ6IGJv
-bGQ7Ij7QodC10LrRgdC4DQrRh9C+0YDQsNC/0Lgg0Lgg0YfQvtGA0LDQv9C+0LPQsNGJ0Lg8
-L2E+LCZuYnNwOzxhDQpocmVmPSJodHRwOi8vMzcuMTU3LjE4NC4yNDMvZW1hcmtldC9saW5r
-LnBocD9NPTExNjg5OTg4Jk49Mzg0Jkw9MTQ1JkY9SCI+PGZvbnQNCmNvbG9yPSIjMDAwMGZm
-Ij48c3Ryb25nPtCh0LXQutGB0Lgg0L/RgNCw0YjQutC4INC4DQrQsdGA0LDQt9C40LvQuNCw
-0L3QuDwvc3Ryb25nPjwvZm9udD48L2E+PC9mb250Pjwvc3Bhbj48c3Bhbg0Kc3R5bGU9ImZv
-bnQtc2l6ZTogMTJwdDsgZm9udC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7IGxpbmUt
-aGVpZ2h0Og0KMTE1JTsiPiZuYnNwOzxmb250IGZhY2U9IlZlcmRhbmEiPtC4INC+0YnQtSDQ
-vNC90L7Qs9C+INC00YDRg9Cz0LgNCtCw0YDRgtC40LrRg9C70LguJm5ic3A7PC9mb250Pjxz
-dHJvbmc+PHN0cm9uZz48Zm9udA0KZmFjZT0iVmVyZGFuYSI+PHNwYW4+PGJyIC8+Jm5ic3A7
-Jm5ic3A7PGJyDQovPjwvc3Bhbj48L2ZvbnQ+PC9zdHJvbmc+0JLRgdC40YfQutC4INGB0YLQ
-vtC60Lgg0L/RgNC4INC90LDRgSDRgdCwDQrQvdCw0LvQuNGH0L3QuCDRgdGK0YEg0YHRgNC+
-0Log0LfQsCDQtNC+0YHRgtCw0LLQutCwINC00L4gMS0yDQrRgNCw0LHQvtGC0L3QuCZuYnNw
-O9C00L3QuCE8L3N0cm9uZz48L3NwYW4+PHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTogMTJwdDsN
-CmZvbnQtZmFtaWx5OiBWZXJkYW5hLCBzYW5zLXNlcmlmOyBsaW5lLWhlaWdodDogMTE1JTsi
-PjxzcGFuDQpzdHlsZT0iZm9udC1zaXplOiAxMnB0OyBmb250LWZhbWlseTogVmVyZGFuYSwg
-c2Fucy1zZXJpZjsgbGluZS1oZWlnaHQ6DQoxMTUlOyI+PGJyIC8+Jm5ic3A7Jm5ic3A7Jm5i
-c3A7PC9zcGFuPjwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC1zaXplOiAxMnB0Ow0KZm9udC1m
-YW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7IGxpbmUtaGVpZ2h0OiAxMTUlOyI+PGJyIC8+
-PC9zcGFuPjxzcGFuDQpzdHlsZT0iZm9udC1zaXplOiAxMnB0OyBmb250LWZhbWlseTogVmVy
-ZGFuYSwgc2Fucy1zZXJpZjsgbGluZS1oZWlnaHQ6DQoxMTUlOyI+PHN0cm9uZz7Qn9C+0LHR
-itGA0LfQsNC50YLQtSwg0LrQvtC70LjRh9C10YHRgtCy0LDRgtCwINGB0LANCtC+0LPRgNCw
-0L3QuNGH0LXQvdC4Ljwvc3Ryb25nPjxiciAvPjwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC1z
-aXplOiAxMnB0Ow0KZm9udC1mYW1pbHk6ICdWZXJkYW5hJywnc2Fucy1zZXJpZic7IGxpbmUt
-aGVpZ2h0OiAxMTUlOyI+PGJyIC8+Jm5ic3A7DQo8L3NwYW4+PHNwYW4gc3R5bGU9ImZvbnQt
-c2l6ZTogMTJwdDsgZm9udC1mYW1pbHk6ICdWZXJkYW5hJywnc2Fucy1zZXJpZic7DQpsaW5l
-LWhlaWdodDogMTE1JTsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IENhbGlicmk7IG1zby1i
-aWRpLWZvbnQtZmFtaWx5Og0KJ1RpbWVzIE5ldyBSb21hbic7IG1zby1hbnNpLWxhbmd1YWdl
-OiBCRzsgbXNvLWZhcmVhc3QtdGhlbWUtZm9udDoNCm1pbm9yLWxhdGluOyBtc28tZmFyZWFz
-dC1sYW5ndWFnZTogRU4tVVM7IG1zby1iaWRpLXRoZW1lLWZvbnQ6IG1pbm9yLWJpZGk7DQpt
-c28tYmlkaS1sYW5ndWFnZTogQVItU0E7Ij48YnIgLz48L3NwYW4+PGIgc3R5bGU9Im1zby1i
-aWRpLWZvbnQtd2VpZ2h0Og0Kbm9ybWFsOyI+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJm
-b250LXNpemU6IDEycHQ7IGZvbnQtZmFtaWx5Og0KJ1ZlcmRhbmEnLCdzYW5zLXNlcmlmJzsg
-bGluZS1oZWlnaHQ6IDExNSU7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5Og0KQ2FsaWJyaTsg
-bXNvLWJpZGktZm9udC1mYW1pbHk6ICdUaW1lcyBOZXcgUm9tYW4nOyBtc28tYW5zaS1sYW5n
-dWFnZTogRU4tVVM7DQptc28tZmFyZWFzdC10aGVtZS1mb250OiBtaW5vci1sYXRpbjsgbXNv
-LWZhcmVhc3QtbGFuZ3VhZ2U6IEVOLVVTOw0KbXNvLWJpZGktdGhlbWUtZm9udDogbWlub3It
-YmlkaTsgbXNvLWJpZGktbGFuZ3VhZ2U6IEFSLVNBOyI+PGZvbnQNCmNvbG9yPSIjMDAwMGZm
-Ij48YQ0KaHJlZj0iaHR0cDovLzM3LjE1Ny4xODQuMjQzL2VtYXJrZXQvbGluay5waHA/TT0x
-MTY4OTk4OCZOPTM4NCZMPTIwMCZGPUgiPnd3dy5uZXVzdG9pbWEuYmc8L2E+Jm5ic3A7PHNw
-YW4NCnN0eWxlPSJjb2xvcjogIzAwMDAwMDsiPi0mbmJzcDs8Yj7QodC10LrRgdC4INCx0LXQ
-u9GM0L4g0Lgg0LTRgNC10YXQuCDQt9CwDQrQv9C+0LrQsNC30LLQsNC90LUhPC9iPjwvc3Bh
-bj48L2ZvbnQ+PC9zcGFuPjwvYj48L3A+DQo8L3RkPg0KPC90cj4NCjwvdGJvZHk+DQo8L3Rh
-YmxlPg0KPHA+Jm5ic3A7Jm5ic3A7IDxiciAvPiZuYnNwOyA8YnIgLz48c3Bhbj7QodGK0LPQ
-u9Cw0YHQvdC+INCX0LDQutC+0L3QsCDQt9CwDQrQldC70LXQutGC0YDQvtC90L3QsNGC0LAg
-0KLRitGA0LPQvtCy0LjRjyDQktC4INC40L3RhNC+0YDQvNC40YDQsNC80LUsINGH0LUNCtGC
-0L7QstCwINC80L7QttC1INC00LAg0LUg0L3QtdC/0L7QuNGB0LrQsNC90L4g0YLRitGA0LPQ
-vtCy0YHQutC+DQrRgdGK0L7QsdGJ0LXQvdC40LUuIDxiciAvPtCS0LjQtSDQvNC+0LbQtSDQ
-tNCwINCz0L4g0L/RgNC40LXQvNC10YLQtSDQuNC70LgNCtC+0YLRhdCy0YrRgNC70LjRgtC1
-LiA8YnIgLz48c3Bhbj7QndC40LUg0LzQvtC20LUg0LTQsCDRgdC80LUNCtC/0L7Qu9GD0YfQ
-uNC70Lgg0LLQsNGI0LjRjyDQuNC80LXQudC7INC+0YIg0JLQsNGBLCDQvtGCINCS0LDRiA0K
-0L/QsNGA0YLQvdGM0L7RgCDQuNC70Lgg0L7RgiDQv9GD0LHQu9C40YfQvdC+0YLQvg0K0L/R
-gNC+0YHRgtGA0LDQvdGB0YLQstC+LiZuYnNwOzwvc3Bhbj4mbmJzcDs8L3NwYW4+PGJyIC8+
-PHNwYW4+0JDQutC+INC90LUNCtC20LXQu9Cw0LXRgtC1INC00LAg0L/QvtC70YPRh9Cw0LLQ
-sNGC0LUg0L/QvtCy0LXRh9C1INC40L3RhNC+0YDQvNCw0YbQuNGPDQrQvtGCICI8c3Ryb25n
-Pk5ldXN0b2ltYS5iZzwvc3Ryb25nPiIsINC80L7Qu9GPJm5ic3A7PGENCmhyZWY9Imh0dHA6
-Ly8zNy4xNTcuMTg0LjI0My9lbWFya2V0L3Vuc3Vic2NyaWJlLnBocD9NPTExNjg5OTg4JkM9
-NDNlMTA4M2MwYTAzMThiMmI1YjBiZDExODI0MTBhMTAmTD0yODAmTj0zODQiPjxzdHJvbmc+
-0J7QotCf0JjQqNCV0KLQlQ0K0KHQlSDQntCiINCi0KPQmjwvc3Ryb25nPjwvYT48L3NwYW4+
-PHNwYW4+PGJyIC8+0Lgg0YnQtQ0K0L/RgNC10YPRgdGC0LDQvdC+0LLQuNC8INC40LfQv9GA
-0LDRidCw0L3QtdGC0L4g0L3QsCDRgtGK0YDQs9C+0LLRgdC60LgNCtGB0YrQvtCx0YnQtdC9
-0LjRjyDQutGK0Lwg0JLQsNGI0LjRj9GCINC40LzQtdC50Lsg0LDQtNGA0LXRgS48L3NwYW4+
-PGJyDQovPjxzcGFuPtCQ0LrQviDRgdC80LUg0JLQuCDQvtCx0LXQt9C/0L7QutC+0LjQu9C4
-LCDQvNC+0LvRjyDQtNCwINC90LgNCtC40LfQstC40L3QuNGC0LUhPC9zcGFuPiZuYnNwOzwv
-cD4NCjxpbWcNCnNyYz0iaHR0cDovLzM3LjE1Ny4xODQuMjQzL2VtYXJrZXQvb3Blbi5waHA/
-TT0xMTY4OTk4OCZMPTI4MCZOPTM4NCZGPUgmaW1hZ2U9LmpwZyINCmhlaWdodD0iMSIgd2lk
-dGg9IjEwIj48L2JvZHk+DQo8L2h0bWw+DQoNCg0K
---===============9160650773695691019==
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head>
+<meta content=3D"text/html; charset=3Dwindows-1253" =
+http-equiv=3DContent-Type>
+<meta name=3DGENERATOR content=3D"MSHTML 8.00.6001.23588"></head>
+<body>
+<div align=3Dcenter><img alt=3D""=20
+src=3D"http://www.google-analytics.com/collect?v=3D1&amp;tid=3DUA-56789953-=
+1&amp;cid=3D3097&amp;t=3Devent&amp;ec=3DEKPERGPARAG&amp;ea=3DSM&amp;el=3Dem=
+ailopen&amp;cd1=3D3097&amp;ni=3D1&amp;dt=3DEKPERGPARAG&amp;dp=3D/email/EKPE=
+RGPARAG&amp;cm1=3D1">=20
+
+<table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 cellPadding=3D0>
+  <tbody>
+  <tr>
+    <td=20
+    style=3D"PADDING-BOTTOM: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; =
+PADDING-TOP: 0px"=20
+    vAlign=3Dtop align=3Dmiddle>
+      <table=20
+      style=3D"BORDER-BOTTOM: #ffffff 18px solid; BORDER-LEFT: #ffffff =
+18px solid; WIDTH: 700px; BORDER-TOP: #ffffff 18px solid; BORDER-RIGHT: =
+#ffffff 18px solid"=20
+      border=3D0 cellSpacing=3D0 cellPadding=3D0 bgColor=3D#ffffff =
+align=3Dcenter>
+        <tbody>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft data-editable=3D"text">
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 4px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft><span=20
+                  style=3D"FONT-STYLE: italic; FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 16px; FONT-WEIGHT: =
+bold"><a=20
+                  =
+href=3D"http://www.consulting-learning.eu/newsletter/relink53.htm"><img=20
+                  alt=3D""=20
+                  =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/logo.png">=
+</a>=20
+                  <br>Turning Training into Learning=20
+          </span></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <div=20
+                  style=3D"BORDER-BOTTOM: #eee5d5 1px solid; LINE-HEIGHT: =
+1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                  style=3D"DISPLAY: block" alt=3D""=20
+                  =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                  width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft data-editable=3D"text">
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 15px"=20
+                vAlign=3Dtop align=3Dleft><span=20
+                  style=3D"FONT-FAMILY: 'Times New Roman',Georgia,Serif; =
+COLOR: #644d37; FONT-SIZE: 28px"><small>=D3=E5=EC=E9=ED=DC=F1=E9=EF=20
+                  </small><br>=C5=CA=D0=C1=C9=C4=C5=D5=D3=C7 =
+=C5=D1=C3=CF=C4=C7=C3=D9=CD=20
+                  =
+=D0=C1=D1=C1=C3=D9=C3=C7=D3<br><small></small></span></td></tr></tbody></ta=
+ble></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 20px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <div=20
+                  style=3D"BORDER-BOTTOM: #eee5d5 1px solid; LINE-HEIGHT: =
+1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                  style=3D"DISPLAY: block" alt=3D""=20
+                  =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                  width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table=20
+                  style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                  border=3D0 cellSpacing=3D0 cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"image">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"BORDER-BOTTOM: #ffffff 10px solid; =
+PADDING-BOTTOM: 1px; MARGIN: 0px; PADDING-LEFT: 1px; PADDING-RIGHT: 1px; =
+BORDER-RIGHT: #ffffff 14px solid; PADDING-TOP: 1px"=20
+                            vAlign=3Dtop align=3Dleft><a=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm"><img=20
+                              style=3D"BORDER-BOTTOM: #ccb07f 1px solid; =
+BORDER-LEFT: #ccb07f 1px solid; DISPLAY: block; BORDER-TOP: #ccb07f 1px =
+solid; BORDER-RIGHT: #ccb07f 1px solid"=20
+                              border=3D0 alt=3D""=20
+                              =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/granazi.jp=
+g"=20
+                              width=3D140 height=3D140>=20
+                    =
+</a></td></tr></tbody></table></td></tr></tbody></table></td>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table border=3D0 cellSpacing=3D0 cellPadding=3D0>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft><span=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 18px; =
+FONT-WEIGHT: bold"=20
+                              data-mce-mark=3D"1">=C1=E8=DE=ED=E1, =
+=D4=F1=DF=F4=E7 17 =CC=E1=DF=EF=F5 (9:30 -=20
+                              17:00),</span> <span=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px"=20
+                              data-mce-mark=3D"1">Crowne Plaza Hotel=20
+                              </span><br><span=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 18px; =
+FONT-WEIGHT: bold"=20
+                              =
+data-mce-mark=3D"1">=C8=E5=F3=F3=E1=EB=EF=ED=DF=EA=E7, =
+=D4=E5=F4=DC=F1=F4=E7 11 =CC=E1=DF=EF=F5=20
+                              (9:30 - 17:00),</span> <span=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px"=20
+                              data-mce-mark=3D"1">Grand Hotel =
+Palace</span>=20
+                          </td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dcenter>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <div=20
+                              style=3D"LINE-HEIGHT: 1px; HEIGHT: 1px; =
+BORDER-TOP: #eee5d5 1px solid"><img=20
+                              style=3D"DISPLAY: block" alt=3D""=20
+                              =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                              width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"TEXT-ALIGN: justify; PADDING-BOTTOM: =
+10px; MARGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: =
+0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <p=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C1=ED=F4=E9=EA=E5=DF=EC=E5=ED=EF=20
+                              =F4=EF=F5 =D3=E5=EC=E9=ED=E1=F1=DF=EF=F5 =
+=E5=DF=ED=E1=E9 =E7 =F0=E1=F1=EF=F7=DE =
+=E5=F6=E1=F1=EC=EF=F3=EC=DD=ED=E7=F2=20
+                              =E5=EA=F0=E1=DF=E4=E5=F5=F3=E7=F2 =EC=E5 =
+workshop, =F0=E1=F1=E1=E4=E5=DF=E3=EC=E1=F4=E1 =EA=E1=E9 role=20
+                              playing =F3=F4=EF=F5=F2 Managers =F4=E7=F2 =
+=F0=F1=FE=F4=E7=F2 =E2=E1=E8=EC=DF=E4=E1=F2 =F0=EF=F5=20
+                              =E5=DF=ED=E1=E9 =EF=E9 =
+=C5=F1=E3=EF=E4=E7=E3=EF=DF, =F0=F1=EF=EA=E5=E9=EC=DD=ED=EF=F5 =ED=E1 =
+=E5=ED=E9=F3=F7=FD=F3=EF=F5=ED =F4=E9=F2=20
+                              =E4=E5=EE=E9=FC=F4=E7=F4=E5=F2 =F0=EF=F5 =
+=E1=F0=E1=E9=F4=EF=FD=ED =EF=E9 =F3=FD=E3=F7=F1=EF=ED=E5=F2 =
+=F3=F5=E3=EA=F5=F1=DF=E5=F2 =E3=E9=E1=20
+                              =F4=EF=ED =F1=FC=EB=EF =F4=EF=F5=F2. =C7 =
+=E5=F4=E1=E9=F1=E5=DF=E1 =EC=E1=F2, =EC=E5 =F4=EF =
+=F3=E5=EC=E9=ED=DC=F1=E9=EF=20
+                              =E1=F5=F4=FC, =F0=F1=EF=F3=F6=DD=F1=E5=E9 =
+=DD=ED=E1 =F3=E7=EC=E1=ED=F4=E9=EA=FC =F0=F1=E1=EA=F4=E9=EA=FC =
+=E2=EF=DE=E8=E7=EC=E1 =E3=E9=E1=20
+                              =F4=E7=ED =E1=ED=E1=E2=DC=E8=EC=E9=F3=E7 =
+=F4=EF=F5 =E5=F1=E3=EF=E4=E7=E3=EF=FD, =FE=F3=F4=E5 =ED=E1 =
+=EB=E5=E9=F4=EF=F5=F1=E3=E5=DF=20
+                              =F9=F2 Manager =
+=E5=F6=E1=F1=EC=FC=E6o=ED=F4=E1=F2 =EC=E5 =E5=F0=E9=F4=F5=F7=DF=E1 =
+=F4=E7=ED =F0=EF=EB=E9=F4=E9=EA=DE=20
+                              =F4=E7=F2 =C4=E9=EF=DF=EA=E7=F3=E7=F2 =
+=EA=E1=E9 =F4=E1=F5=F4=FC=F7=F1=EF=ED=E1 =ED=E1 =
+=E4=E9=E1=F7=E5=E9=F1=DF=E6=E5=F4=E1=E9 =EC=E5=20
+                              =F5=F0=E5=F5=E8=F5=ED=FC=F4=E7=F4=E1 =F4=E1 =
+=F0=F1=EF=E2=EB=DE=EC=E1=F4=E1 =F4=EF=F5 =D0=F1=EF=F3=F9=F0=E9=EA=EF=FD =
+=EA=E1=E9 =F4=F9=ED=20
+                              =CB=E5=E9=F4=EF=F5=F1=E3=E9=FE=ED. =
+=D4=E5=EB=E9=EA=FC =E6=E7=F4=EF=FD=EC=E5=ED=EF =E5=DF=ED=E1=E9 =ED=E1 =
+=E5=F0=E9=EA=EF=E9=ED=F9=ED=E5=DF=20
+                              =E1=F0=EF=F4=E5=EB=E5=F3=EC=E1=F4=E9=EA=DC, =
+=ED=E1 =F0=F1=EF=E3=F1=E1=EC=EC=E1=F4=DF=E6=E5=E9 =DD=F1=E3=E1 =EA=E1=E9=20
+                              =E4=F1=E1=F3=F4=E7=F1=E9=FC=F4=E7=F4=E5=F2 =
+=EC=E5 =F3=F9=F3=F4=DE =E4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =F0=FC=F1=F9=ED -=20
+                              =EA=FC=F3=F4=EF=F5=F2, =ED=E1 =
+=E1=F3=EA=E5=DF =F4=EF=ED =E1=F0=E1=E9=F4=EF=FD=EC=E5=ED=EF =
+=DD=EB=E5=E3=F7=EF =EA=E1=E9=20
+                              =F3=F5=ED=F4=EF=ED=E9=F3=EC=FC =F3=F4=E7=ED =
+=F5=EB=EF=F0=EF=DF=E7=F3=E7 =F4=E7=F2 =EA=DC=E8=E5 =E4=F1=DC=F3=E7=F2 =
+=FE=F3=F4=E5 =ED=E1=20
+                              =E5=F0=E9=F4=F5=E3=F7=DC=ED=E5=E9 =
+=F4=EF=F5=F2 =F3=F4=FC=F7=EF=F5=F2 =F4=E7=F2 =
+=F0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1=F2 =EA=E1=E9=20
+                              =F4=DD=EB=EF=F2 =ED=E1 =
+=E4=E9=E1=EC=EF=F1=F6=FE=ED=E5=E9 =EA=EB=DF=EC=E1 =
+=F0=E1=F1=E1=EA=DF=ED=E7=F3=E7=F2 =F3=F4=EF=20
+                              =F0=F1=EF=F3=F9=F0=E9=EA=FC =E3=E9=E1 =ED=E1 =
+=E4=E9=E1=F7=E5=E9=F1=DF=E6=E5=F4=E1=E9 =
+=E1=F0=EF=F4=E5=EB=E5=F3=EC=E1=F4=E9=EA=DC =F4=EF=ED=20
+                              =D7=F1=FC=ED=EF =EA=E1=E9 =F4=E7=ED =
+=CA=E1=E8=E7=EC=E5=F1=E9=ED=FC=F4=E7=F4=E1.</p>
+                              <p=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=D3=F4=EF=F5=F2=20
+                              =F3=F5=EC=EC=E5=F4=DD=F7=EF=ED=F4=E5=F2 =
+=F0=E1=F1=DD=F7=EF=ED=F4=E1=E9 =F7=F9=F1=DF=F2 =F0=F1=FC=F3=E8=E5=F4=EF =
+=EA=FC=F3=F4=EF=F2 =F4=E1=20
+                              =E5=EE=DE=F2 =C5=F1=E3=E1=EB=E5=DF=E1 =
+(=C5=F6=E1=F1=EC=EF=E3=DD=F2 =F3=E5 Excel):=20
+                              <ol=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F6=E1=F1=EC=EF=E3=DE=20
+                                =E3=E9=E1 =F4=EF=ED =
+=D0=F1=EF=E3=F1=E1=EC=EC=E1=F4=E9=F3=EC=FC =F0=EF=F5 =
+=E2=E1=F3=DF=E6=E5=F4=E1=E9 =F3=F4=E7=ED=20
+                                =EA=E1=F4=DC=F4=E1=EE=E7 =F4=F9=ED =
+=C5=F1=E3=E1=F3=E9=FE=ED =F3=E5 =D3=E7=EC=E1=ED=F4=E9=EA=DD=F2, =EC=E7=20
+                                =D3=E7=EC=E1=ED=F4=E9=EA=DD=F2, =
+=C5=F0=E5=DF=E3=EF=F5=F3=E5=F2 =EA=E1=E9 =EC=E7 =
+=E5=F0=E5=DF=E3=EF=F5=F3=E5=F2</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F6=E1=F1=EC=EF=E3=DE=20
+                                =E3=E9=E1 =F4=EF=ED =
+=F5=F0=EF=EB=EF=E3=E9=F3=EC=FC =F4=EF=F5 =EA=FC=F3=F4=EF=F5=F2 =
+=C5=F1=E3=E1=F3=E9=FE=ED =EA=E1=E9=20
+                                =B8=F1=E3=F9=ED</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=CF=EB=EF=EA=EB=E7=F1=F9=EC=DD=ED=EF=20
+                                =D3=FD=F3=F4=E7=EC=E1 =
+=C4=E9=E1=F7=E5=DF=F1=E9=F3=E7=F2 =B8=F1=E3=F9=ED</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F6=E1=F1=EC=EF=E3=DE=20
+                                =E3=E9=E1 =F4=E7=ED =
+=C5=F3=F9=F4=E5=F1=E9=EA=DE =C5=F0=E9=EA=EF=E9=ED=F9=ED=DF=E1 =EA=E1=E9 =
+=F4=E7 =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7=20
+                                =F4=E7=F2 =
+=CA=E1=E8=E7=EC=E5=F1=E9=ED=FC=F4=E7=F4=E1=F2 </span>
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F6=E1=F1=EC=EF=E3=DE=20
+                                =E3=E9=E1 =F4=E7=ED ABC Analysis</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=CC=EF=ED=F4=DD=EB=E1=20
+                                =D0=F1=FC=E2=EB=E5=F8=E7=F2</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F1=E3=E1=EB=E5=DF=EF=20
+                                =E3=E9=E1 =F4=E7=ED =
+=D0=E1=F1=E1=EA=EF=EB=EF=FD=E8=E7=F3=E7 =F4=F9=ED =C4=E5=E9=EA=F4=FE=ED=20
+                                =
+=D0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1=F2</span> </li></ol>
+                              <p></p>
+                              <p=20
+                              style=3D"TEXT-ALIGN: right; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; FONT-SIZE: 14px"><a=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px; =
+TEXT-DECORATION: underline"=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm">=C4=E5=
+=DF=F4=E5=20
+                              =F0=E5=F1=E9=F3=F3=FC=F4=E5=F1=E1 =BB =
+</a></p><span=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px"></span></td></tr></tbody></table></td></tr></tbody></table></td></tr>=
+</tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 20px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <div=20
+                  style=3D"BORDER-BOTTOM: #eee5d5 1px solid; LINE-HEIGHT: =
+1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                  style=3D"DISPLAY: block" alt=3D""=20
+                  =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                  width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table=20
+                  style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                  border=3D0 cellSpacing=3D0 cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"image">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"BORDER-BOTTOM: #ffffff 10px solid; =
+PADDING-BOTTOM: 1px; MARGIN: 0px; PADDING-LEFT: 1px; PADDING-RIGHT: 1px; =
+BORDER-RIGHT: #ffffff 14px solid; PADDING-TOP: 1px"=20
+                            vAlign=3Dtop align=3Dleft><a=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px; =
+TEXT-DECORATION: underline"=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm"><img=20
+                              style=3D"BORDER-BOTTOM: #ccb07f 1px solid; =
+BORDER-LEFT: #ccb07f 1px solid; DISPLAY: block; BORDER-TOP: #ccb07f 1px =
+solid; BORDER-RIGHT: #ccb07f 1px solid"=20
+                              border=3D0 alt=3D""=20
+                              =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/people.jpg=
+"=20
+                              width=3D140 height=3D140></a>=20
+                    </td></tr></tbody></table></td></tr></tbody></table></td>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table border=3D0 cellSpacing=3D0 cellPadding=3D0>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                            vAlign=3Dtop align=3Dleft><span=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 20px; =
+FONT-WEIGHT: bold">=D0=FE=F2=20
+                              =E8=E1 =E2=EF=E7=E8=E7=E8=EF=FD=ED =EF=E9 =
+=D3=F5=EC=EC=E5=F4=DD=F7=EF=ED=F4=E5=F2=20
+                        </span></td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dcenter=20
+                        data-editable=3D"line">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <div=20
+                              style=3D"LINE-HEIGHT: 1px; HEIGHT: 1px; =
+BORDER-TOP: #eee5d5 1px solid"><img=20
+                              style=3D"DISPLAY: block" alt=3D""=20
+                              =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                              width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"TEXT-ALIGN: justify; PADDING-BOTTOM: =
+0px; MARGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: =
+0px"=20
+                            vAlign=3Dtop align=3Dleft><span=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px"></span>
+                              <ul>
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =DD=F7=EF=F5=ED =F3=F4=E7 =
+=E4=E9=DC=E8=E5=F3=DE =F4=EF=F5=F2 =C5=F1=E3=E1=EB=E5=DF=EF Pareto ABC=20
+                                Analysis =EA=E1=E9 =E8=E1 =
+=E5=EA=F0=E1=E9=E4=E5=F5=F4=EF=FD=ED =F3=F4=EF=ED =
+=EA=E1=E8=EF=F1=E9=F3=EC=FC=20
+                                =F0=F1=EF=F4=E5=F1=E1=E9=EF=F4=DE=F4=F9=ED =
+(=F0=F7. =F3=F4=E7 =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =
+=E1=F0=FE=EB=E5=E9=E1=F2=20
+                                =F7=F1=FC=ED=EF=F5 =CC=E7=F7=E1=ED=FE=ED - =
+=D0=F1=EF=F3=F9=F0=E9=EA=EF=FD).</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =F4=EF=F5=F2 =E4=EF=E8=EF=FD=ED =
+=EA=E1=F4=DC=EB=EB=E7=EB=EF=E9 =E1=EB=E3=FC=F1=E9=E8=EC=EF=E9 =E3=E9=E1 =
+=ED=E1=20
+                                =EC=E5=E9=FE=ED=E5=F4=E1=E9 =F4=EF =
+=EA=FC=F3=F4=EF=F2 set up =F3=F4=E1 =EC=E7=F7=E1=ED=DE=EC=E1=F4=E1,=20
+                                =E2=E5=EB=F4=E9=FE=ED=EF=ED=F4=E1=F2 =
+=F4=E7 =F3=E5=E9=F1=DC =F0=F1=EF=E3=F1=E1=EC=EC=E1=F4=E9=F3=EC=EF=FD =
+=F4=F9=ED=20
+                                =EC=E7=F7=E1=ED=E7=EC=DC=F4=F9=ED.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =EC=F0=EF=F1=EF=FD=ED =ED=E1 =
+=E1=EE=E9=EF=F0=EF=E9=EF=FD=ED =C5=F1=E3=E1=EB=E5=DF=EF Capacity Planning=20
+                                =F0=EF=F5 =DD=F7=E5=E9 =
+=F3=F7=E5=E4=E9=DC=F3=E5=E9 =E7 =E5=F4=E1=E9=F1=DF=E1 =EC=E1=F2 =E3=E9=E1 =
+=F4=EF=ED=20
+                                =D0=F1=EF=E3=F1=E1=EC=EC=E1=F4=E9=F3=EC=FC =
+=CC=E7=F7=E1=ED=E7=EC=DC=F4=F9=ED &amp; =D0=F1=EF=F3=F9=F0=E9=EA=EF=FD =
+=F3=E5=20
+                                =EA=E1=E8=E7=EC=E5=F1=E9=ED=DE =
+=E2=DC=F3=E7.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =E3=ED=F9=F1=DF=F3=EF=F5=ED =F4=E7 =
+=F3=F9=F3=F4=DE =EC=E5=E8=EF=E4=EF=EB=EF=E3=DF=E1 =
+=C4=E5=E9=E3=EC=E1=F4=EF=EB=E7=F8=DF=E1=F2,=20
+                                =E5=DF=F4=E5 =F0=F1=FC=EA=E5=E9=F4=E1=E9 =
+=E3=E9=E1 =EF=EB=EF=EA=EB=E7=F1=F9=EC=DD=ED=E5=F2 =F0=E1=F1=F4=DF=E4=E5=F2 =
+=E5=DF=F4=E5=20
+                                =E3=E9=E1 =
+=F3=F5=ED=E5=F7=E9=E6=FC=EC=E5=ED=E7 =F0=E1=F1=E1=E3=F9=E3=DE =
+=F3=FD=EC=F6=F9=ED=E1 =EC=E5 =F4=E1 =D0=F1=FC=F4=F5=F0=E1=20
+                                ISO 2859 =EA=E1=E9 MIL-STD 1916 =
+=E1=ED=F4=DF=F3=F4=EF=E9=F7=E1.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =DD=F7=EF=F5=ED =F3=F4=E7 =
+=E4=E9=DC=E8=E5=F3=DE =F4=EF=F5=F2 =CF=EB=EF=EA=EB=E7=F1=F9=EC=DD=ED=EF =
+=D3=FD=F3=F4=E7=EC=E1 =E3=E9=E1=20
+                                =F4=E7 =EC=DD=F4=F1=E7=F3=E7 =
+=F0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1=F2.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =F4=EF=F5=F2 =E4=EF=E8=EF=FD=ED =
+=C5=F1=E3=E1=EB=E5=DF=E1 =E3=E9=E1 =F4=EF=ED =
+=F5=F0=EF=EB=EF=E3=E9=F3=EC=FC =F4=E7=F2=20
+                                =EF=E9=EA=EF=ED=EF=EC=E9=EA=DC =
+=DC=F1=E9=F3=F4=E7=F2 =F0=EF=F3=FC=F4=E7=F4=E1=F2 =
+=F0=E1=F1=F4=DF=E4=E1=F2.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =F4=EF=F5=F2 =E4=EF=E8=E5=DF =
+=EF=EB=EF=EA=EB=E7=F1=F9=EC=DD=ED=EF =D3=FD=F3=F4=E7=EC=E1 =F3=E5 Access =
+=E3=E9=E1 =F4=E7=20
+                                =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =
+=D0=F1=EF=E2=EB=E7=EC=DC=F4=F9=ED =EC=E7 =
+=F3=F5=EC=EC=EF=F1=F6=FE=F3=E5=F9=ED =EA=E1=E9=20
+                                =C4=E9=EF=F1=E8=F9=F4=E9=EA=FE=ED =
+=C5=ED=E5=F1=E3=E5=E9=FE=ED.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =E5=EE=EF=E9=EA=E5=E9=F9=E8=EF=FD=ED =
+=EC=E5 =F4=EF=ED =F4=F1=FC=F0=EF =F0=EF=F5 =
+=F5=EB=EF=F0=EF=E9=E5=DF=F4=E1=E9 =F4=EF=20
+                                Validation (=C5=F0=E9=EA=FD=F1=F9=F3=E7 =
+=C9=EA=E1=ED=FC=F4=E7=F4=E1=F2) =EC=E9=E1=F2=20
+                                =E4=E9=E5=F1=E3=E1=F3=DF=E1=F2 =EC=E5 =
+=C1=F3=EA=DE=F3=E5=E9=F2, =D0=E1=F1=E1=E4=E5=DF=E3=EC=E1=F4=E1 =EA=E1=E9=20
+                                =C5=F1=E3=E1=EB=E5=DF=E1.</span>=20
+                                <li><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C8=E1=20
+                                =DD=F7=EF=F5=ED =F3=F5=ED=E5=F7=DE =
+=F5=F0=EF=F3=F4=DE=F1=E9=EE=E7 =E3=E9=E1 =DD=ED=E1 =DD=F4=EF=F2 =
+=EC=E5=F4=DC =F4=EF=20
+                                =F3=E5=EC=E9=ED=DC=F1=E9=EF =F3=F4=E7=ED =
+=E1=EE=E9=EF=F0=EF=DF=E7=F3=E7 =FC=EB=F9=ED =F4=F9=ED =
+=F0=E1=F1=E1=F0=DC=ED=F9=20
+                                =C5=F1=E3=E1=EB=E5=DF=F9=ED.</span> =
+</li></ul>
+                              <p=20
+                              style=3D"TEXT-ALIGN: right; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; FONT-SIZE: 14px"><a=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px; =
+TEXT-DECORATION: underline"=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm">=C4=E5=
+=DF=F4=E5=20
+                              =F0=E5=F1=E9=F3=F3=FC=F4=E5=F1=E1 =BB=20
+                    =
+</a></p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbo=
+dy></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft data-editable=3D"line">
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 20px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <div=20
+                  style=3D"BORDER-BOTTOM: #eee5d5 1px solid; LINE-HEIGHT: =
+1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                  style=3D"DISPLAY: block" alt=3D""=20
+                  =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                  width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table=20
+                  style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                  border=3D0 cellSpacing=3D0 cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"image">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"BORDER-BOTTOM: #ffffff 10px solid; =
+PADDING-BOTTOM: 1px; MARGIN: 0px; PADDING-LEFT: 1px; PADDING-RIGHT: 1px; =
+BORDER-RIGHT: #ffffff 14px solid; PADDING-TOP: 1px"=20
+                            vAlign=3Dtop align=3Dleft><a=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm"><img=20
+                              style=3D"BORDER-BOTTOM: #ccb07f 1px solid; =
+BORDER-LEFT: #ccb07f 1px solid; DISPLAY: block; BORDER-TOP: #ccb07f 1px =
+solid; BORDER-RIGHT: #ccb07f 1px solid"=20
+                              border=3D0 alt=3D""=20
+                              =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/learning.j=
+pg"=20
+                              width=3D140 height=3D140>=20
+                    =
+</a></td></tr></tbody></table></td></tr></tbody></table></td>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table border=3D0 cellSpacing=3D0 cellPadding=3D0>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft><span=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 20px; =
+FONT-WEIGHT: bold">=C5=ED=FC=F4=E7=F4=E5=F2=20
+                              =D3=E5=EC=E9=ED=E1=F1=DF=EF=F5 =
+</span></td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dcenter>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <div=20
+                              style=3D"LINE-HEIGHT: 1px; HEIGHT: 1px; =
+BORDER-TOP: #eee5d5 1px solid"><img=20
+                              style=3D"DISPLAY: block" alt=3D""=20
+                              =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                              width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                        data-editable=3D"text">
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"TEXT-ALIGN: justify; PADDING-BOTTOM: =
+10px; MARGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: =
+0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <ol=20
+                              style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =C4=E9=E1=E4=E9=EA=E1=F3=DF=E1 =F4=E7=F2 =
+=C5=F0=E9=EA=EF=E9=ED=F9=ED=DF=E1=F2, =EA=DC=E8=E5=F4=E1 =EA=E1=E9=20
+                                =EF=F1=E9=E6=FC=ED=F4=E9=E1=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =CC=E5=E8=EF=E4=EF=EB=EF=E3=DF=E1 =
+=E5=F0=DF=EB=F5=F3=E7=F2 =F0=F1=EF=E2=EB=E7=EC=DC=F4=F9=ED=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=D4=E1=20
+                                =F0=DD=ED=F4=E5 =E3=E9=E1=F4=DF =
+=F3=F4=E7=ED =E1=ED=E1=E6=DE=F4=E7=F3=E7 =F4=EF=F5 =
+=E3=E5=ED=E5=F3=E9=EF=F5=F1=E3=EF=FD=20
+                                =E1=E9=F4=DF=EF=F5=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=D4=E1=20
+                                =E5=F0=F4=DC =E2=DE=EC=E1=F4=E1 =F3=F4=E7 =
+=EB=DE=F8=E7 =F4=F9=ED =C1=F0=EF=F6=DC=F3=E5=F9=ED=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =F4=F9=ED =
+=EC=E9=EA=F1=EF=F3=F5=E3=EA=F1=EF=FD=F3=E5=F9=ED =F3=F4=EF =F7=FE=F1=EF =
+=F4=E7=F2=20
+                                =E5=F1=E3=E1=F3=DF=E1=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">Coaching=20
+                                =EA=E1=E9 =F0=E1=F1=E1=EA=DF=ED=E7=F3=E7 =
+=F4=EF=F5 =D0=F1=EF=F3=F9=F0=E9=EA=EF=FD=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=D0=F1=E1=EA=F4=E9=EA=DD=F2=20
+                                =E1=ED=E1=E3=ED=FE=F1=E9=F3=E7=F2 =
+=EA=E1=E9 =E5=F0=E9=E2=F1=DC=E2=E5=F5=F3=E7=F2 =F0=F1=EF=F2 =F4=EF=F5=F2=20
+                                =F5=F6=E9=F3=F4=E1=EC=DD=ED=EF=F5=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =F4=EF=F5 =
+=D7=F1=FC=ED=EF=F5 &amp; =F4=E7=F2 =
+=CA=E1=E8=E7=EC=E5=F1=E9=ED=FC=F4=E7=F4=E1=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C4=E9=E1=F7=E5=DF=F1=E9=F3=E7=20
+                                Stress, =E7 =E2=DC=F3=E7 =E3=E9=E1 =
+=F4=E7=ED =F0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1 =96 =
+=D4=E5=F7=ED=E9=EA=DD=F2=20
+                                =EA=E1=E9 =F0=F1=E1=EA=F4=E9=EA=DD=F2 =
+=C1=F3=EA=DE=F3=E5=E9=F2 =E3=E9=E1 =F4=E7=ED =E1=F0=E1=EB=EB=E1=E3=DE =
+=E1=F0=FC =F4=EF=20
+                                stress=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=CF=E9=20
+                                =EA=E1=EB=DD=F2 =
+=F0=F1=E1=EA=F4=E9=EA=DD=F2 =F0=F1=EF=E3=F1=E1=EC=EC=E1=F4=E9=F3=EC=EF=FD =
+=C5=F1=E3=E1=F3=E9=FE=ED,=20
+                                =D0=E1=F1=E1=E3=F9=E3=DE=F2 =EA=E1=E9 =
+=B8=F1=E3=F9=ED=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">100=20
+                                =CA=F1=DF=F3=E9=EC=E1 =
+=D3=F4=EF=E9=F7=E5=DF=E1 =E3=E9=E1 =F4=E7 =E2=E5=EB=F4=DF=F9=F3=E7 =
+=D5=E3=E5=DF=E1=F2 =EA=E1=E9=20
+                                =C1=F3=F6=DC=EB=E5=E9=E1=F2 =F3=F4=E7=ED =
+=D0=E1=F1=E1=E3=F9=E3=DE=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=CA=E1=ED=FC=ED=E5=F2=20
+                                =E3=E9=E1 =F4=E7 =EC=E5=DF=F9=F3=E7 =
+=CA=FC=F3=F4=EF=F5=F2 =EA=E1=E9 =F4=E7=ED =E2=E5=EB=F4=DF=F9=F3=E7 =
+=F4=E7=F2=20
+                                =
+=D0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =C4=E9=E1=F7=E5=DF=F1=E9=F3=E7 =F4=E7=F2 =
+=D0=EF=E9=FC=F4=E7=F4=E1=F2 =F4=F9=ED =E5=ED=E4=E9=DC=EC=E5=F3=F9=ED =
+=EA=E1=E9=20
+                                =F4=E5=EB=E9=EA=FE=ED =
+=F0=F1=EF=FA=FC=ED=F4=F9=ED =EA=E1=E9 =F5=F0=E7=F1=E5=F3=E9=FE=ED=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=CF=E9=20
+                                =F3=F9=F3=F4=DD=F2 =
+=F0=F1=E1=EA=F4=E9=EA=DD=F2 =C4=E5=E9=E3=EC=E1=F4=EF=EB=E7=F8=DF=E1=F2, =
+=F0=F9=F2 =E5=F0=E9=EB=DD=E3=EF=F5=EC=E5=20
+                                =F4=EF =F3=F9=F3=F4=FC =
+=EC=DD=E3=E5=E8=EF=F2 =C4=E5=DF=E3=EC=E1=F4=EF=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=F1=E3=E1=EB=E5=DF=E1=20
+                                =E2=E5=EB=F4=DF=F9=F3=E7=F2 =F4=F9=ED =
+=C4=E9=E5=F1=E3=E1=F3=E9=FE=ED: Pareto, Control Chart=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =E2=E5=EB=F4=DF=F9=F3=E7 =F4=E7=F2 =
+=E5=F5=F4=E1=EE=DF=E1=F2 =F3=F4=EF=ED =F7=FE=F1=EF =F4=E7=F2 =
+=D0=E1=F1=E1=E3=F9=E3=DE=F2=20
+                                =EA=E1=E9 =F4=F9=ED =
+=C3=F1=E1=F6=E5=DF=F9=ED, =D3=FD=F3=F4=E7=EC=E1 5S. =D0=DF=ED=E1=EA=E1=F2 =
+=EC=E5 =D3=E7=EC=E5=DF=E1=20
+                                =C5=EB=DD=E3=F7=EF=F5=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =EC=DD=F4=F1=E7=F3=E7 =EA=E1=E9 =E7 =
+=E2=E5=EB=F4=DF=F9=F3=E7 =F4=E7=F2 =
+=D0=E1=F1=E1=E3=F9=E3=E9=EA=FC=F4=E7=F4=E1=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px">=C5=ED=F4=EF=F0=E9=F3=EC=FC=F2=20
+                                Bottlenecking =F3=F4=E7 =F1=EF=DE =
+=F4=F9=ED =CB=E5=E9=F4=EF=F5=F1=E3=E9=FE=ED. =D0=FE=F2=20
+                                =E2=E5=EB=F4=E9=FE=ED=EF=F5=EC=E5 =
+=F4=E7=ED =E1=F0=FC=E4=EF=F3=E7 =EC=E9=E1=F2 =C3=F1=E1=EC=EC=DE=F2 =
+=D0=E1=F1=E1=E3=F9=E3=DE=F2=20
+                                <li=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=C7=20
+                                =C4=E9=EF=DF=EA=E7=F3=E7 =F4=EF=F5 =
+=D0=F1=EF=F3=F9=F0=E9=EA=EF=FD =F4=E7=F2 =D0=E1=F1=E1=E3=F9=E3=DE=F2 =
+</li></ol>
+                              <p=20
+                              style=3D"TEXT-ALIGN: right; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; FONT-SIZE: 14px"><a=20
+                              style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px; =
+TEXT-DECORATION: underline"=20
+                              =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm">=C4=E5=
+=DF=F4=E5=20
+                              =E1=ED=E1=EB=F5=F4=E9=EA=DC =F4=E9=F2 =
+=E5=ED=FC=F4=E7=F4=E5=F2 =F4=EF=F5 =D3=E5=EC=E9=ED=E1=F1=DF=EF=F5 =BB=20
+                          =
+</a></p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbo=
+dy></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 20px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <div=20
+                  style=3D"BORDER-BOTTOM: #eee5d5 1px solid; LINE-HEIGHT: =
+1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                  style=3D"DISPLAY: block" alt=3D""=20
+                  =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                  width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+          vAlign=3Dtop align=3Dleft>
+            <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+            align=3Dleft>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0=20
+                  cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+                              align=3Dleft data-editable=3D"image">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"BORDER-BOTTOM: #ffffff 10px =
+solid; PADDING-BOTTOM: 1px; MARGIN: 0px; PADDING-LEFT: 1px; PADDING-RIGHT: =
+1px; BORDER-RIGHT: #ffffff 14px solid; PADDING-TOP: 1px"=20
+                                vAlign=3Dtop align=3Dleft><a=20
+                                =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm"><img=20
+                                style=3D"BORDER-BOTTOM: #ccb07f 1px solid; =
+BORDER-LEFT: #ccb07f 1px solid; DISPLAY: block; BORDER-TOP: #ccb07f 1px =
+solid; BORDER-RIGHT: #ccb07f 1px solid"=20
+                                border=3D0 alt=3D""=20
+                                =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/teacher.jp=
+g"=20
+                                width=3D140 height=3D140>=20
+                              =
+</a></td></tr></tbody></table></td></tr></tbody></table></td>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table border=3D0 cellSpacing=3D0 cellPadding=3D0>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                              data-editable=3D"text">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                                vAlign=3Dtop align=3Dleft><span=20
+                                style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 20px; =
+FONT-WEIGHT: bold">=C5=E9=F3=E7=E3=E7=F4=DE=F2=20
+                                </span><br><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: =
+16px"></span></td></tr></tbody></table></td></tr>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0=20
+                                align=3Dcenter><tbody>
+                                <tr>
+                                <td=20
+                                style=3D"PADDING-BOTTOM: 10px; MARGIN: =
+0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                                vAlign=3Dtop align=3Dleft>
+                                <div=20
+                                style=3D"LINE-HEIGHT: 1px; HEIGHT: 1px; =
+BORDER-TOP: #eee5d5 1px solid"><img=20
+                                style=3D"DISPLAY: block" alt=3D""=20
+                                =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                                width=3D1 height=3D1>=20
+                            </div></td></tr></tbody></table></td></tr>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                              data-editable=3D"text">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"TEXT-ALIGN: justify; =
+PADDING-BOTTOM: 10px; MARGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; =
+PADDING-TOP: 0px"=20
+                                vAlign=3Dtop>
+                                <p=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: =
+14px"><b>=CD=E9=EA=FC=EB=E1=EF=F2=20
+                                =C9. =
+=CC=E9=F7=E1=EB=EF=EB=E9=DC=EA=EF=F2</b>, =C4=E9=E5=F5=E8=FD=ED=F9=ED =
+=D3=FD=EC=E2=EF=F5=EB=EF=F2, =E5=F0=DF 20=20
+                                =F7=F1=FC=ED=E9=E1 =E1=ED=FE=F4=E5=F1=EF =
+=EA=E1=E9 =E1=ED=FE=F4=E1=F4=EF =F3=F4=DD=EB=E5=F7=EF=F2 =
+=EC=E5=E3=DC=EB=F9=ED=20
+                                =E4=E9=E5=E8=ED=FE=ED =EA=E1=E9 =
+=E5=EB=EB=E7=ED=E9=EA=FE=ED =E5=F0=E9=F7=E5=E9=F1=DE=F3=E5=F9=ED (MOTOR =
+OIL,=20
+                                CIBA - GEIGY, NOVARTIS =EA=E1.) =EC=E5 =
+=EC=E5=E3=DC=EB=E7 =E5=EC=F0=E5=E9=F1=DF=E1=20
+                                =F3=E5 =
+=E5=EA=F0=E1=E9=E4=E5=FD=F3=E5=E9=F2 =EA=E1=E9 =F3=E5 =E8=DD=EC=E1=F4=E1 =
+=F0=E1=F1=E1=E3=F9=E3=DE=F2 &amp;=20
+                                =E5=F6=EF=E4=E9=E1=F3=F4=E9=EA=DE=F2 =
+=E1=EB=F5=F3=DF=E4=E1=F2 =F9=F2 =E4=E9=E5=F5=E8=F5=ED=F4=E9=EA=FC =
+=D3=F4=DD=EB=E5=F7=EF=F2=20
+                                =D0=E1=F1=E1=E3=F9=E3=DE=F2. =B8=F7=E5=E9 =
+=E4=E9=EF=E9=EA=DE=F3=E5=E9 =F3=F5=EC=E2=EF=F5=EB=E5=F5=F4=E9=EA=DC =
+=B8=F1=E3=E1 =E3=E9=E1=20
+                                =F4=E7=ED =E1=EE=E9=EF=EB=FC=E3=E7=F3=E7 =
+=EA=E1=E9 =E2=E5=EB=F4=DF=F9=F3=E7 =F4=E7=F2 =F0=EF=E9=FC=F4=E7=F4=E1=F2 =
+=EA=E1=E9=20
+                                =F4=E7=F2 =
+=E1=F0=EF=E4=EF=F4=E9=EA=FC=F4=E7=F4=E1=F2 =F4=F9=ED =E3=F1=E1=EC=EC=FE=ED =
+=F0=E1=F1=E1=E3=F9=E3=DE=F2 =EC=E5=E3=DC=EB=F9=ED=20
+                                =E5=F0=E9=F7=E5=E9=F1=DE=F3=E5=F9=ED =
+=FC=F0=F9=F2 =E7 BIC =C2=C9=CF=CB=C5=CE =EA=E1=E9 =E7 Tosoh =F4=E7=F2=20
+                                MITSUBISHI.</p>
+                                <p=20
+                                style=3D"TEXT-ALIGN: right; =
+BACKGROUND-COLOR: transparent; FONT-STYLE: italic; FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px; TEXT-DECORATION: =
+underline"><a=20
+                                style=3D"BACKGROUND-COLOR: transparent; =
+FONT-STYLE: italic; FONT-FAMILY: 'Times New Roman',Georgia,Serif; COLOR: =
+#d15103; FONT-SIZE: 14px; TEXT-DECORATION: underline"=20
+                                =
+href=3D"http://www.consulting-learning.eu/newsletter/relink52.htm">=C4=E5=
+=DF=F4=E5=20
+                                =F4=EF =E2=E9=EF=E3=F1=E1=F6=E9=EA=FC =
+=F4=EF=F5 =E5=E9=F3=E7=E3=E7=F4=DE =BB</a></p></a>
+                                =
+<p></p></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbod=
+y></table></td></tr>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0=20
+                  cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 20px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <div=20
+                        style=3D"BORDER-BOTTOM: #eee5d5 1px solid; =
+LINE-HEIGHT: 1px; HEIGHT: 1px; BORDER-TOP: #eee5d5 1px solid"><img=20
+                        style=3D"DISPLAY: block" alt=3D""=20
+                        =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                        width=3D1 height=3D1> =
+</div></td></tr></tbody></table></td></tr>
+              <tr>
+                <td=20
+                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: =
+0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                vAlign=3Dtop align=3Dleft>
+                  <table style=3D"WIDTH: 100%" border=3D0 cellSpacing=3D0=20
+                  cellPadding=3D0 align=3Dleft>
+                    <tbody>
+                    <tr>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table=20
+                        style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                        border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table border=3D0 cellSpacing=3D0 =
+cellPadding=3D0=20
+                              align=3Dleft data-editable=3D"image">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"BORDER-BOTTOM: #ffffff 10px =
+solid; PADDING-BOTTOM: 1px; MARGIN: 0px; PADDING-LEFT: 1px; PADDING-RIGHT: =
+1px; BORDER-RIGHT: #ffffff 14px solid; PADDING-TOP: 1px"=20
+                                vAlign=3Dtop align=3Dleft><a=20
+                                =
+href=3D"http://www.consulting-learning.eu/newsletter/relink49.htm"><img=20
+                                style=3D"BORDER-BOTTOM: #ccb07f 1px solid; =
+BORDER-LEFT: #ccb07f 1px solid; DISPLAY: block; BORDER-TOP: #ccb07f 1px =
+solid; BORDER-RIGHT: #ccb07f 1px solid"=20
+                                border=3D0 alt=3D""=20
+                                =
+src=3D"http://www.promotebusiness.gr/articlefiles/newsletterIBCL/room.jpg"=
+=20
+                                width=3D140 height=3D140>=20
+                              =
+</a></td></tr></tbody></table></td></tr></tbody></table></td>
+                      <td=20
+                      style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                      vAlign=3Dtop align=3Dleft>
+                        <table border=3D0 cellSpacing=3D0 cellPadding=3D0>
+                          <tbody>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                              data-editable=3D"text">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                                vAlign=3Dtop align=3Dleft><span=20
+                                style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 20px; =
+FONT-WEIGHT: bold">=D0=EB=E7=F1=EF=F6=EF=F1=DF=E5=F2=20
+                                </span><br><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 14px">=C3=E9=E1=20
+                                =F0=E5=F1=E9=F3=F3=FC=F4=E5=F1=E5=F2 =
+=F0=EB=E7=F1=EF=F6=EF=F1=DF=E5=F2 =E5=F0=E9=EA=EF=E9=ED=F9=ED=DE=F3=F4=E5 =
+=EC=E1=E6=DF =EC=E1=F2=20
+                                =F3=F4=EF 210 8145 518 =DE =F3=F4=EF =
+info(at)ibcl(dot)gr.=20
+                                =D5=F0=E5=FD=E8=F5=ED=E7 =
+=C5=F0=E9=EA=EF=E9=ED=F9=ED=DF=E1=F2: =C5=F5=E3=E5=ED=DF=E1 =
+=CC=E9=F7=E1=EB=EF=F0=EF=FD=EB=EF=F5=20
+                                </span></td></tr></tbody></table></td></tr>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0=20
+                                align=3Dcenter><tbody>
+                                <tr>
+                                <td=20
+                                style=3D"PADDING-BOTTOM: 10px; MARGIN: =
+0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 10px"=20
+                                vAlign=3Dtop align=3Dleft>
+                                <div=20
+                                style=3D"LINE-HEIGHT: 1px; HEIGHT: 1px; =
+BORDER-TOP: #eee5d5 1px solid"><img=20
+                                style=3D"DISPLAY: block" alt=3D""=20
+                                =
+src=3D"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAA=
+EAAAICRAEAOw=3D=3D"=20
+                                width=3D1 height=3D1>=20
+                            </div></td></tr></tbody></table></td></tr>
+                          <tr>
+                            <td=20
+                            style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                            vAlign=3Dtop align=3Dleft>
+                              <table=20
+                              style=3D"PADDING-BOTTOM: 0px; MARGIN: 0px; =
+PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; PADDING-TOP: 0px"=20
+                              border=3D0 cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft=20
+                              data-editable=3D"text">
+                                <tbody>
+                                <tr>
+                                <td=20
+                                style=3D"TEXT-ALIGN: justify; =
+PADDING-BOTTOM: 10px; MARGIN: 0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; =
+PADDING-TOP: 0px"=20
+                                vAlign=3Dtop align=3Dleft><span=20
+                                style=3D"FONT-FAMILY: 'Times New =
+Roman',Georgia,Serif; COLOR: #644d37; FONT-SIZE: 14px">=CA=FC=F3=F4=EF=F2=20
+                                =F3=F5=EC=EC=E5=F4=EF=F7=DE=F2: =
+<strong>450 =C5=F5=F1=FE=20
+                                </strong><br><strong>=B8=EA=F0=F4=F9=F3=E7 =
+20% </strong>=F3=F4=E7=ED=20
+                                =E4=E5=FD=F4=E5=F1=E7,<strong> 30% =
+</strong>=F3=F4=E7=ED =F4=F1=DF=F4=E7 =EA=E1=E9=20
+                                =EA=DC=E8=E5 =E5=F0=FC=EC=E5=ED=E7 =
+=F3=F5=EC=EC=E5=F4=EF=F7=DE.<br>=D4=EF =F3=E5=EC=E9=ED=DC=F1=E9=EF=20
+                                =E5=F0=E9=E4=EF=F4=E5=DF=F4=E1=E9 =
+=EC=DD=F3=F9 =F4=EF=F5 =F0=F1=EF=E3=F1=DC=EC=EC=E1=F4=EF=F2<strong> =
+=CB=C1=C5=CA=20
+                                0,24% =F4=EF=F5 =CF.=C1.=C5.=C4.=20
+                                </strong></span><br><strong><span=20
+                                style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #090405; FONT-SIZE: 20px; =
+FONT-WEIGHT: bold"=20
+                                data-mce-mark=3D"1">=C4=C7=CB=D9=D3=C7 =
+=D3=D5=CC=CC=C5=D4=CF=D7=C7=D3:</span> <a=20
+                                style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 18px; =
+TEXT-DECORATION: underline"=20
+                                =
+href=3D"http://www.consulting-learning.eu/newsletter/relink50.htm">=C1=E8=
+=DE=ED=E1=20
+                                17/5</a> - <a=20
+                                style=3D"FONT-STYLE: italic; FONT-FAMILY: =
+'Times New Roman',Georgia,Serif; COLOR: #d15103; FONT-SIZE: 18px; =
+TEXT-DECORATION: underline"=20
+                                =
+href=3D"http://www.consulting-learning.eu/newsletter/relink51.htm">=C8=E5=
+=F3=F3=E1=EB=EF=ED=DF=EA=E7=20
+                                11/5</a>=20
+                          =
+</strong></td></tr></tbody></table></td></tr></tbody></table></td></tr></tb=
+ody></table></td></tr></tbody></table></td></tr></tbody></table><br>
+      <table style=3D"WIDTH: 500px; BORDER-COLLAPSE: separate" border=3D0=20
+      cellSpacing=3D0 cellPadding=3D0 align=3Dcenter>
+        <tbody>
+        <tr>
+          <td=20
+          style=3D"PADDING-BOTTOM: 10px; MARGIN: 0px; PADDING-LEFT: 0px; =
+PADDING-RIGHT: 0px; FONT-FAMILY: Arial, Helvetica, sans-serif; =
+PADDING-TOP: 10px"=20
+          vAlign=3Dtop>
+            <table style=3D"WIDTH: 500px; BORDER-COLLAPSE: separate" =
+border=3D0=20
+            cellSpacing=3D0 cellPadding=3D0 align=3Dcenter>
+              <tbody>
+              <tr>
+                <td=20
+                style=3D"TEXT-ALIGN: left; PADDING-BOTTOM: 0px; MARGIN: =
+0px; PADDING-LEFT: 0px; PADDING-RIGHT: 0px; FONT-FAMILY: =
+Arial,Helvetica,sans-serif; FONT-SIZE: 12px; PADDING-TOP: 3px"=20
+                vAlign=3Dtop width=3D401 align=3Dright><span=20
+                  style=3D"COLOR: #939598"><strong>Innovative Business =
+Consulting=20
+                  &amp; Learning =96 iBcl =
+</strong><br>=D4=E7=EB=DD=F6=F9=ED=EF: 210 8145 518,=20
+                  Fax: 211 800 1004, e-mail: info(at)ibcl(dot)gr=20
+                  </span><br><br><br><span 10x;?>=D3=E5 =
+=F0=E5=F1=DF=F0=F4=F9=F3=E7 =FC=EC=F9=F2 =F0=EF=F5 =E7=20
+                  =F0=EB=E7=F1=EF=F6=FC=F1=E7=F3=E7 =E1=F5=F4=DE =E4=E5=ED =
+=F3=E1=F2 =E5=ED=E4=E9=E1=F6=DD=F1=E5=E9 =F0=E1=F1=E1=EA=E1=EB=EF=FD=EC=E5 =
+=E1=F0=EB=FE=F2=20
+                  <strong><a=20
+                  =
+href=3D"http://mail.consulting-learning.eu/unsubscribe/unsubscribe.php?emai=
+l=3Dxfs@oss.sgi.com">=F0=E1=F4=DE=F3=F4=E5=20
+                  =E5=E4=FE</a><strong>, =DE =F3=F4=E5=DF=EB=F4=E5 =
+=DD=ED=E1 e-mail =F3=F4=EF info(at)ibcl(dot)gr=20
+                  =EC=E5 =F4=DF=F4=EB=EF <strong>"REMOVE ME"</strong>=20
+                =
+</span></strong></strong></td></tr></tbody></table></td></tr></tbody></table>
+      <div></div><a title=3D"click tracking" =
+href=3D"http://statcounter.com/"=20
+      target=3D_blank><img=20
+      style=3D"BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; =
+BORDER-TOP: medium none; BORDER-RIGHT: medium none"=20
+      alt=3D"click tracking"=20
+      =
+src=3D"http://c.statcounter.com/10150667/0/3a25f3dc/1/"></a></tr></tbody></=
+div></body></html>
+
+
+
+
+--===============5859447384097148476==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============9160650773695691019==--
+--===============5859447384097148476==--
