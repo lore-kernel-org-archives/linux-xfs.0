@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20D9D7CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 19:23:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88FACAC005
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 17:23:48 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	P3puvC4QRg2DZNLV for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2016 17:23:46 -0700 (PDT)
-Date: Fri, 8 Apr 2016 10:09:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
-Message-ID: <20160408000910.GB21804@dastard>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1458818136-56043-18-git-send-email-jtulak@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id F04A17CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 10:45:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D8E8AC004
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:44:58 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id bkRP5RYCNVDCMuFb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 08:44:55 -0700 (PDT)
+Received: from ip-64-134-228-197.public.wayport.net ([64.134.228.197]
+	helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1aoC73-0005EM-Uc
+	for xfs@oss.sgi.com; Thu, 07 Apr 2016 15:44:54 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: fix warning in xfs_finish_page_writeback for non-debug
+	builds
+Date: Thu,  7 Apr 2016 08:44:51 -0700
+Message-Id: <1460043891-5075-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +27,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: jtulak@redhat.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 24, 2016 at 12:15:34PM +0100, jtulak@redhat.com wrote:
-> From: Jan Tulak <jtulak@redhat.com>
-> 
-> Unify mkfs.xfs behaviour a bit and never truncate files. If the user
-> is trying to mkfs an existing file, we don't want to destroy anything
-> he did with the file before (sparse file, allocations...)
+blockmask is unused if ASSERTs are disabled.
 
-Why not? We do that with discard-by-default to block devices,
-O_TRUNC is exactly the same situation with a file - we completely
-re-initialise the file from a known state if mkfs has been asked to
-create the file.
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-
-> @@ -1059,9 +1063,9 @@ check_device_type(
->  	}
->  
->  	/*
-> -	 * We only want to completely truncate and recreate an existing file if
-> -	 * we were specifically told it was a file. Set the create flag only in
-> -	 * this case to trigger that behaviour.
-> +	 * We only want to create a file only if we were specifically told
-> +	 * we want a file. Set the create flag only in this case to trigger
-> +	 * that behaviour.
->  	 */
->  	if (S_ISREG(statbuf.st_mode)) {
->  		if (!*isfile)
-
-i.e. this situation.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 40645a4..1d6eca5 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -94,15 +94,14 @@ xfs_finish_page_writeback(
+ 	struct bio_vec		*bvec,
+ 	int			error)
+ {
+-	unsigned int		blockmask = (1 << inode->i_blkbits) - 1;
+ 	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+ 	struct buffer_head	*head, *bh;
+ 	unsigned int		off = 0;
+ 
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+-	ASSERT((bvec->bv_offset & blockmask) == 0);
++	ASSERT((bvec->bv_offset & ((1 << inode->i_blkbits) - 1)) == 0);
+ 	ASSERT(end < PAGE_SIZE);
+-	ASSERT((bvec->bv_len & blockmask) == 0);
++	ASSERT((bvec->bv_len & ((1 << inode->i_blkbits) - 1)) == 0);
+ 
+ 	bh = head = page_buffers(bvec->bv_page);
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
 _______________________________________________
 xfs mailing list
