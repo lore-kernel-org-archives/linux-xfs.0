@@ -1,18 +1,26 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B82BA7CBB
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 05:40:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38B00AC002
-	for <xfs@oss.sgi.com>; Tue,  1 Mar 2016 03:40:49 -0800 (PST)
-Received: from meng.elmk.net (meng.elmk.net [78.142.18.109]) by cuda.sgi.com
-	with ESMTP id alMosO56wH5RmKZC for <xfs@oss.sgi.com>;
-	Tue, 01 Mar 2016 03:40:47 -0800 (PST)
-Subject: Custom Shaped USB drives with your logo
-Message-ID: <d0adef4bdf188a77a6ce2d6024c47047@swissgear.com>
-Date: Tue, 01 Mar 2016 12:39:53 +0100
-From: "Christina Devlin" <ajondreyy@yahoo.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 012EE7CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 05:50:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B448A304039
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 03:50:44 -0700 (PDT)
+Received: from mail-io0-f173.google.com (mail-io0-f173.google.com
+	[209.85.223.173]) by cuda.sgi.com with ESMTP id
+	Cd8KcaPqF610Kj8Q (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 03:50:43 -0700 (PDT)
+Received: by mail-io0-f173.google.com with SMTP id 2so89078963ioy.1
+	for <xfs@oss.sgi.com>; Thu, 07 Apr 2016 03:50:43 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: borguio@aliyun.com
+In-Reply-To: <57057B2A.3000100@sandeen.net>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-19-git-send-email-jtulak@redhat.com>
+	<57057B2A.3000100@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 7 Apr 2016 12:50:23 +0200
+Message-ID: <CACj3i736w-nnDzBDOiBf39cJ3AUHqeVL9_Y8EbUgaMa9S7PToA@mail.gmail.com>
+Subject: Re: [PATCH 18/19] mkfs: unit conversions are case insensitive
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,48 +29,122 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============8968940034323706173=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hi,
+--===============8968940034323706173==
+Content-Type: multipart/alternative; boundary=001a11427d748f5ed0052fe2d998
 
-I wanted to follow up from last week.  Did you receive the email I sent
-you?
+--001a11427d748f5ed0052fe2d998
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I am looking to reach the person that does your buying of branded
-promotional products for your company?
-Our company manufactures USB Flash Drives, printed with your logo, the
-perfect marketing tool for your business or organization.
+On Wed, Apr 6, 2016 at 11:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
-We offer low minimum quantities, and all memory sizes.
-We are always running a promotion, just ask!  1-888-445-1773
+> On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
+> > From: Jan Tulak <jtulak@redhat.com>
+> >
+> > Solves the question "Should I use 10g or 10G?"
+>
+> Might be nicer to do it like the cvtnum in libxcmd:
+>
+>         c =3D tolower(*sp);
+>         switch (c) {
+>         case 'b':
+>                 return i * blocksize;
+> ...
+>
+=E2=80=8BYeah, changed.
+=E2=80=8B
 
-We can pre-load your media files, images, presentations and files onto the
-drives for you.
-These are ideal handouts for trade shows, branding, corporate gifts and
-employees.
-Our USB Pricing is at an ALL TIME LOW - now is the time to get your USB
-drives.
 
-Let us send you a quote!  We will EARN your business!
-*Please reply back and let me know what quantity and memory size
-you need for a Fast Quote!*
+>
+> (hm, why do we have 3 copies of cvtnum?)
+>
 
-Are you a school or nonprofit?  Please let us know for even further
-discounts.
+=E2=80=8BWhere? =E2=80=8B
+ =E2=80=8B
 
-Thanks!
+=E2=80=8B$ pwd
+=E2=80=8B/some/path/xfsprogs-dev
 
-Christina Devlin
-USB Drive Representative
-Promo / Branded Flash Drives
-1-888-445-1773
-Email: mibernyi@sina.com
+$ grep -r "cvtnum(size_t" . |grep -v "^Binary"
+=E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksize, size_t
+sectorsize, char *s);
+./io/init.h:extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
+
+--=20
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
+
+--001a11427d748f5ed0052fe2d998
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
+lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Wed, Ap=
+r 6, 2016 at 11:10 PM, Eric Sandeen </span><span dir=3D"ltr" style=3D"font-=
+family:arial,sans-serif">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=
+=3D"_blank">sandeen@sandeen.net</a>&gt;</span><span style=3D"font-family:ar=
+ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
+ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0p=
+x 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border=
+-left-style:solid;padding-left:1ex"><span class=3D"">On 3/24/16 6:15 AM, <a=
+ href=3D"mailto:jtulak@redhat.com">jtulak@redhat.com</a> wrote:<br>
+&gt; From: Jan Tulak &lt;<a href=3D"mailto:jtulak@redhat.com">jtulak@redhat=
+.com</a>&gt;<br>
+&gt;<br>
+&gt; Solves the question &quot;Should I use 10g or 10G?&quot;<br>
+<br>
+</span>Might be nicer to do it like the cvtnum in libxcmd:<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 c =3D tolower(*sp);<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 switch (c) {<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 case &#39;b&#39;:<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return i * blocksiz=
+e;<br>
+...<br></blockquote><div><div class=3D"gmail_default" style=3D"font-family:=
+arial,helvetica,sans-serif;display:inline">=E2=80=8BYeah, changed.</div></d=
+iv><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,s=
+ans-serif;display:inline">=E2=80=8B</div>=C2=A0</div><blockquote class=3D"g=
+mail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-=
+left-color:rgb(204,204,204);border-left-style:solid;padding-left:1ex">
+<br>
+(hm, why do we have 3 copies of cvtnum?)<br></blockquote><div><br></div><di=
+v><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-se=
+rif;display:inline">=E2=80=8BWhere? =E2=80=8B</div>=C2=A0<span style=3D"fon=
+t-family:arial,helvetica,sans-serif">=E2=80=8B</span></div><div><span style=
+=3D"font-family:arial,helvetica,sans-serif"><br></span></div><div><div clas=
+s=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=
+=8B$ pwd</div><div class=3D"gmail_default" style=3D"font-family:arial,helve=
+tica,sans-serif">=E2=80=8B/some/path/xfsprogs-dev</div><br></div><div>$ gre=
+p -r &quot;cvtnum(size_t&quot; . |grep -v &quot;^Binary&quot;</div><div><di=
+v class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=
+=E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksize, size_t=
+ sectorsize, char *s);</div><div class=3D"gmail_default" style=3D"font-fami=
+ly:arial,helvetica,sans-serif">./io/init.h:extern void init_cvtnum(size_t *=
+blocksize, size_t *sectsize);</div><div><br></div></div></div>-- <br><div c=
+lass=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tu=
+lak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtulak@=
+redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank">jan=
+@tulak.me</a></div></div></div></div>
+</div></div>
+
+--001a11427d748f5ed0052fe2d998--
+
+
+--===============8968940034323706173==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8968940034323706173==--
