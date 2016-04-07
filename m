@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 966AD7CBA
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 18:38:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6B97F8F8049
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 16:38:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DB9FF7CB7
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 18:38:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A21928F8049
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 16:38:50 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	PZd76iWEuTiWtEhD for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2016 16:38:49 -0700 (PDT)
+	iF8kiVAFjUoA2kzH for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 16:38:48 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aoJVK-0008WV-AD
+	(envelope-from <dave@fromorbit.com>) id 1aoJVK-00004s-Bo
 	for xfs@oss.sgi.com; Fri, 08 Apr 2016 09:38:26 +1000
 Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aoJUo-0006Ft-5m
+	(envelope-from <dave@disappointment.disaster>) id 1aoJUo-0006G8-7l
 	for xfs@oss.sgi.com; Fri, 08 Apr 2016 09:37:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: fix inode validity check in xfs_iflush_cluster
-Date: Fri,  8 Apr 2016 09:37:46 +1000
-Message-Id: <1460072271-23923-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/6] xfs: xfs_iflush_cluster has range issues
+Date: Fri,  8 Apr 2016 09:37:49 +1000
+Message-Id: <1460072271-23923-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1460072271-23923-1-git-send-email-david@fromorbit.com>
 References: <1460072271-23923-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,42 +39,47 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some careless idiot(*) wrote crap code in commit 1a3e8f3 ("xfs:
-convert inode cache lookups to use RCU locking") back in late 2010,
-and so xfs_iflush_cluster checks the wrong inode for whether it is
-still valid under RCU protection. Fix it to lock and check the
-correct inode.
+xfs_iflush_cluster() does a gang lookup on the radix tree, meaning
+it can find inodes beyond the current cluster if there is sparse
+cache population. gang lookups return results in ascending index
+order, so stop trying to cluster inodes once the first inode outside
+the cluster mask is detected.
 
-(*) Careless-idiot: Dave Chinner <dchinner@redhat.com>
-
-Discovered-by: Brain Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_inode.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_inode.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f79ea59..32f11a9 100644
+index 6598104..b984be4 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -3192,13 +3192,13 @@ xfs_iflush_cluster(
- 		 * We need to check under the i_flags_lock for a valid inode
- 		 * here. Skip it if it is not valid or the wrong inode.
+@@ -3194,11 +3194,20 @@ xfs_iflush_cluster(
  		 */
--		spin_lock(&ip->i_flags_lock);
--		if (!ip->i_ino ||
-+		spin_lock(&iq->i_flags_lock);
-+		if (!iq->i_ino ||
- 		    (XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index) {
--			spin_unlock(&ip->i_flags_lock);
-+			spin_unlock(&iq->i_flags_lock);
+ 		spin_lock(&cip->i_flags_lock);
+ 		if (!cip->i_ino ||
+-		    __xfs_iflags_test(ip, XFS_ISTALE) ||
+-		    (XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
++		    __xfs_iflags_test(ip, XFS_ISTALE)) {
+ 			spin_unlock(&cip->i_flags_lock);
  			continue;
  		}
--		spin_unlock(&ip->i_flags_lock);
-+		spin_unlock(&iq->i_flags_lock);
++
++		/*
++		 * Once we fall off the end of the cluster, no point checking
++		 * any more inodes in the list because they will also all be
++		 * outside the cluster.
++		 */
++		if ((XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
++			spin_unlock(&cip->i_flags_lock);
++			break;
++		}
+ 		spin_unlock(&cip->i_flags_lock);
  
  		/*
- 		 * Do an un-protected check to see if the inode is dirty and
 -- 
 2.7.0
 
