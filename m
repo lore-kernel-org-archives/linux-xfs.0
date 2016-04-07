@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B47F37CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 20:16:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 64048304059
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 18:16:33 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id efxK50ijjAUMfb5x (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Apr 2016 18:16:30 -0700 (PDT)
-Date: Mon, 11 Apr 2016 18:16:26 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: bmap btree changes should update rmap btree
-Message-ID: <20160412011626.GA11156@birch.djwong.org>
-References: <1459201425-31773-1-git-send-email-david@fromorbit.com>
-	<20160411233407.GA7967@birch.djwong.org>
-	<20160412000901.GI567@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id F2F057CB3
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 18:50:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CBA91304039
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 16:50:45 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ovamOmzEU6jm1gaK (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 16:50:44 -0700 (PDT)
+Date: Thu, 7 Apr 2016 16:50:43 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: Don't wrap growfs AGFL indexes
+Message-ID: <20160407235043.GB1439@infradead.org>
+References: <1459836310-12619-1-git-send-email-david@fromorbit.com>
+	<1459836310-12619-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160412000901.GI567@dastard>
+In-Reply-To: <1459836310-12619-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,167 +31,40 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-[should have kicked this onto the lists...]
-
-(This is a thread that started from a reposting of one of the rmap patches
-("xfs: bmap btree changes should update rmap btree"), with the change that
-xfs_rmap_intent should use list_head instead of an open-coded list.)
-
-On Tue, Apr 12, 2016 at 10:09:01AM +1000, Dave Chinner wrote:
-> On Mon, Apr 11, 2016 at 04:34:07PM -0700, Darrick J. Wong wrote:
-> > On Tue, Mar 29, 2016 at 08:43:45AM +1100, Dave Chinner wrote:
-> > > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > > 
-> > > Any update to a file's bmap should make the corresponding change to
-> > > the rmapbt.  On a reflink filesystem, this is absolutely required
-> > > because a given (file data) physical block can have multiple owners
-> > > and the only sane way to find an rmap given a bmap is if there is a
-> > > 1:1 correspondence.
-> > > 
-> > > (At some point we can optimize this for non-reflink filesystems
-> > > because regular merge still works there.)
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_alloc.c |  73 +++++---
-> > >  fs/xfs/libxfs/xfs_alloc.h |   3 +
-> > >  fs/xfs/libxfs/xfs_rmap.c  | 467 +++++++++++++++++++++++++++++++++++++++++++++-
-> > >  3 files changed, 512 insertions(+), 31 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > index 585ebfa..1d82e65 100644
-> > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > @@ -2766,35 +2766,30 @@ error0:
-> > >  	return error;
-> > >  }
-> > >  
-> > > -/*
-> > > - * Free an extent.
-> > > - * Just break up the extent address and hand off to xfs_free_ag_extent
-> > > - * after fixing up the freelist.
-> > > - */
-> > > -int				/* error */
-> > > -xfs_free_extent(
-> > > -	xfs_trans_t	*tp,	/* transaction pointer */
-> > > -	xfs_fsblock_t	bno,	/* starting block number of extent */
-> > > -	xfs_extlen_t	len,	/* length of extent */
-> > > -	struct xfs_owner_info	*oinfo)	/* extent owner */
-> > > +int
-> > > +xfs_free_extent_fix_freelist(
-> > > +	struct xfs_trans	*tp,
-> > > +	xfs_agnumber_t		agno,
-> > > +	xfs_agblock_t		agbno,
-> > > +	xfs_extlen_t		len,
-> > > +	struct xfs_buf		**agbp)
-> > 
-> > Does xfs_alloc_fix_freelist() need to have args.agbno set?  AFAICT it doesn't,
-> > and the function works fine if we leave out agbno/len args and keep the
-> > range checks in xfs_free_extent.
+On Tue, Apr 05, 2016 at 04:05:07PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> It doesn't right now, but it could conceivably be used as a target
-> block for allocation that adds blocks to the free list. There are
-> also other functions that the args are passed through to, so I'd
-> prefer to have the agbno set than have code that assumes it is valid
-> do something unexpected....
+> Commit 96f859d ("libxfs: pack the agfl header structure so
+> XFS_AGFL_SIZE is correct") allowed the freelist to use the empty
+> slot at the end of the freelist on 64 bit systems that was not
+> being used due to sizeof() rounding up the structure size.
 > 
-> > OTOH maybe we want the checks to happen before we touch anything?
+> This has caused versions of xfs_repair prior to 4.5.0 (which also
+> has the fix) to report this as a corruption once the filesystem has
+> been grown. Older kernels can also have problems (seen from a whacky
+> container/vm management environment) mounting filesystems grown on a
+> system with a newer kernel than the vm/container it is deployed on.
 > 
-> That too.
-> 
-> > > -	/* Not yet implemented, just cancel until implemented */
-> > > +	struct xfs_rmap_intent	*free = NULL;
-> > > +	struct xfs_btree_cur	*rcur = NULL;
-> > > +	struct xfs_buf		*agbp = NULL;
-> > > +	int			error = 0;
-> > > +	xfs_agnumber_t		agno;
-> > > +
-> > > +	if (rlist->rl_count == 0)
-> > > +		return 0;
-> > > +
-> > > +	/* sort the list into ascending AG order */
-> > > +	list_sort(mp, &rlist->rl_list, xfs_rmap_free_list_cmp);
-> > > +
-> > > +	while (list_empty(&rlist->rl_list)) {
-> .....
-> > > @@ -599,7 +1059,6 @@ __xfs_rmap_add(
-> > >  	*new = *ri;
-> > >  	INIT_LIST_HEAD(&new->ri_list);
-> > >  
-> > > -	/* XXX: ordering will be needed */
-> > >  	list_add(&new->ri_list, &rlist->rl_list);
-> > 
-> > This needs to be list_add_tail so that the rmap operations happen in order.
-> 
-> Ah, no, it doesn't. The list_sort() before we process it destroys
-> any order we create here.
+> To avoid this problem, change the initial free list indexes not to
+> wrap across the end of the AGFL, hence avoiding the initialisation
+> of agf_fllast to the last index in the AGFL.
 
-I think list_sort() is supposed to maintain list order if the compare fn
-returns zero.  From lib/list_sort.c:
+I have to admit that it's been a while that I looked at the AGFL
+code, but I simply don't understand what's happening in this patch.
+Diff slightly reorder:
 
-/*
-<snip>
- * The comparison function @cmp must return a negative value if @a
- * should sort before @b, and a positive value if @a should sort after
- * @b. If @a and @b are equivalent, and their original relative
- * ordering is to be preserved, @cmp must return 0.
- */
+> -		agf->agf_flfirst = 0;
+> +		agf->agf_flfirst = cpu_to_be32(1);
 
->From my (admittedly flimsy) testing of list_sort() it looks like it does
-preserve the order of rmap_intents that have the same agno.  I looked at
-the source code and I think that assertion should hold.
+So flfirst moves from 0 to 1.
 
-I could be wrong about that, however...
+> -		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+> +		agf->agf_fllast = 0;
 
-> > If
-> > we do a collapse range of 2 blocks at offset 32, say, then we end up with
-> > unmap($pblk, $ino, 32, 16) and map($pblk-2, $ino, 30, 16) in the deferred list.
-> > We don't want the map to happen before the unmap because that results in two
-> > rmaps covering the same range of logical offset, which causes problems in
-> > generic/145.
-
-I forgot to mention this, but the ordering requirement only applies within a
-single rmapbt -- if the map/unmap operations apply to different AGs, no
-confusion will result from out-of-order execution.
-
-> Then we have a problem here, because now you have two dimensions of
-> ordering - by agno and by operational order. There were no comments
-> about this list requiring operational ordering, so I didn't take
-> that into account when changing the way this worked.
-
-To be fair, the ordering requirement didn't exist until I got rid of the
-'rmap mirrors bmbt' thing a couple of days ago.  I hadn't planned out how
-this thing would work until after the last patch posting, so it's no wonder
-that neither of us were aware. :)
-
-> I'd suggest that the list_sort compare function could take this into
-> account, and order overlapping operations appropriately (e.g. unmap
-> before map). You could even put a sequence number in the rmap list
-> entry so that when sorting we know what order they were added to the
-> rmap list and then overlaps could be resolved in the sort function
-> easily...
-
-I /think/ we're fine with just the list_add_tail...
-
-...if not, /me wonders if we could skip the list_sort and just roll the
-transaction every time we have to go from a higher AG to a lower AG.  I think
-the rmap update intent log items will help us to redo the metadata operations
-if we crash.
-
-<shrug> Doesn't /seem/ to be causing any extra problems with the test suite.
-Anyway I'll keep squinting at list_sort.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+And last from size - 1 to 0.  In my naive reading this introduces
+wrapping and doesn't remove it.  What do I miss?
 
 _______________________________________________
 xfs mailing list
