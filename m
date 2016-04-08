@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 361BA7CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:27:29 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CF6EA7CA6
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 05:51:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CE8A530404E
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 06:27:28 -0700 (PDT)
-Received: from mail-ig0-f180.google.com (mail-ig0-f180.google.com
-	[209.85.213.180]) by cuda.sgi.com with ESMTP id
-	slEfjRQn2qAdjG8L (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 06:27:26 -0700 (PDT)
-Received: by mail-ig0-f180.google.com with SMTP id gy3so13284819igb.1
-	for <xfs@oss.sgi.com>; Thu, 07 Apr 2016 06:27:26 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 71B6B304039
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 03:51:16 -0700 (PDT)
+Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
+	[74.125.82.47]) by cuda.sgi.com with ESMTP id d2FNvqrBfGCApjbB
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 08 Apr 2016 03:51:04 -0700 (PDT)
+Received: by mail-wm0-f47.google.com with SMTP id 191so14241551wmq.0
+	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 03:51:04 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	6457b1d9de271ec6cca6bc2626aac161@mail.gmail.com
+	91068979ae9a5999b4774a06b8f1d14c@mail.gmail.com
+In-Reply-To: 91068979ae9a5999b4774a06b8f1d14c@mail.gmail.com
 MIME-Version: 1.0
-In-Reply-To: <57065E19.9070401@sandeen.net>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
-	<5705BB39.5010003@sandeen.net>
-	<CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
-	<57065E19.9070401@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 7 Apr 2016 15:27:06 +0200
-Message-ID: <CACj3i73VP0WCgqE6gzn7dbZBc53PU-NtFj6kxStUUU00oC-wqw@mail.gmail.com>
-Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
+Date: Fri, 8 Apr 2016 16:21:02 +0530
+Message-ID: <232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
+	disk failure/recovery
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,446 +31,376 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0287178948099930389=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: david@fromorbit.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: Alex Lyakas <alex@zadarastorage.com>
 
---===============0287178948099930389==
-Content-Type: multipart/alternative; boundary=089e01538da0048bf5052fe50a4d
+Hi Dave, Brian, Carlos,
 
---089e01538da0048bf5052fe50a4d
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+While trying to reproduce this issue I have been running into different
+issues that are similar. Underlying issue remains the same when backend to
+XFS is failed & we unmount XFS, we run into hung-task timeout (180-secs)
+with stack like
 
-On Thu, Apr 7, 2016 at 3:18 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+kernel: [14952.671131]  [<ffffffffc06a5f59>]
+xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+kernel: [14952.671139]  [<ffffffff810b26b0>] ?
+prepare_to_wait_event+0x110/0x110
+kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
+[xfs]
 
-> On 4/7/16 8:09 AM, Jan Tulak wrote:
-> >
-> ...
+while running trace-events, XFS ail push keeps looping around
+
+   xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
+253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-21143 [001] ...2 17878.555138: xfs_iunlock: dev 253:10
+ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-21143 [001] ...2 17878.555138: xfs_ail_push: dev 253:10
+lip 0xffff880031f6ae40 lsn 1/73448 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-21143 [001] ...2 17878.605136: xfs_ilock_nowait: dev
+253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-21143 [001] ...2 17878.605141: xfs_iunlock: dev 253:10
+ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-21143 [001] ...2 17878.605142: xfs_ail_push: dev 253:10
+lip 0xffff880031f6ae40 lsn 1/73448 type XFS_LI_INODE flags IN_AIL
+
+observe ino==0x0 (its a freed inode) but the corresponding lip stays with
+xfsaild push. I had run a systemtap when this problem happened & the
+following keeps repeating.
+
+xfs_inode_item_push() - inode:0xffff88003d8ca000 m_flags:0x420118
+flags:0x1
+xfs_iflush() - inode:ffff88003d8ca000 aborting for forced shutdown
+xfs_iflush_abort() - iip:0x0
+
+xfs_inode_item_push() is doing xfs_iflush() but it sees FS_SHUTDOWN flag
+marked & does an xfs_iflush_abort().xfs_iflush_abort() sees i_itemp==NULL
+on the lip & doesn't do anything. So we have this stale lip that is not
+associated to inode anymore that keeps xfs_ail_push_all_sync() busy.
+
+On few other occurrences, i have had NULL pointer/dereference or other
+sorts of crashes at this line
+
+	xfsaild_push()
+		lock_result = lip->li_ops->iop_push(lip,
+&ailp->xa_buf_list);
+
+with debug prints, in one of the occurrence lip->li_ops was NULL & in
+another lip->li_ops was pointing to a bad pointer that subsequent
+dereference crashed it. This also indicates that a bad/freed lip was
+inserted that xfsaild_push() is working.
+
+I hit upon Dave's patch "xfs: xfs_inode_free() isn't RCU safe" & realized
+that this could explain the above issue where a lip that has been freed is
+wrongly referenced & later we could even have the inode disconnected. What
+do you think?
+
+In any case I uploaded the full xfs trace events before this issue started
+& till the end. It is at
+https://www.dropbox.com/s/21qstz4ld1gn8yi/xfs_trace_pipe.gz?dl=0
+
+Pls let me know. Thanks.
+
+--Shyam
+
+-----Original Message-----
+From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
+Sent: 23 March 2016 15:23
+To: 'Brian Foster'
+Cc: 'xfs@oss.sgi.com'; Alex Lyakas
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+
+Hi Carlos,
+
+w.r.t. your question below
+
+>>> Shyam, after you reconnected the disks, the messages about failed
+async metadata
+>>> writes stops to be logged?
+
+After I reconnect the disks, messages about failed async metadata writes
+stops to be logged. But the key thing is messages like
+
+XFS (dm-29): xfs_log_force: error -5 returned
+
+Keeps repeating every 30-secs which indicates that there is some buf/io
+error status that is being carried forward.
+
+>>> Any chance you can reliably reproduce it?
+
+Yes I have a way to reproduce it, but its not reliable. What I do is setup
+a dm-linear over a disk. Create XFS, mount & trigger few copy threads to
+copy varying sized files into the FS. At this point pull out the drive
+(with scsi-remove-single-device in /proc/scsi/scsi) & in a short-while
+convert the dm-linear to dm-ioerror. Then I bring back the underlying
+drive, convert back dm-ioerror to dm-linear & try to unmount XFS.
+
+This problem somehow happens on a newly created XFS. If I copy several
+files into XFS/delete them & then copy them again, repeat the drive
+failure/recovery experiment it doesn't reproduce.
+
+Thanks.
+
+--Shyam
+
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+From: Carlos Maiolino <cmaiolino@xxxxxxxxxx>
+Date: Tue, 22 Mar 2016 16:38:25 +0100
+In-reply-to: <20160322140345.GA54245@bfoster.bfoster>
+Mail-followup-to: xfs@xxxxxxxxxxx
+User-agent: Mutt/1.5.24 (2015-08-30)
+
+Hi Brian,
+
+These traces, and the stack trace presented, looks quite similar with the
+one we were discussing a few days ago, using a dm-thin snapshot.
+
+Looks like with the same bug I've been hunting and Shyam confirmed my
+hypothesis
+of this bug be able to be reproduced with a regular device.
+
+If it's the same bug, yes, I reproduced it using upstream kernel.
+
+The difference between both (this bug and the one I've been working on) is
+how
+xfs actually behaves when async metadata writes fail. Other than that, it
+pretty
+much looks the same.
+
+Trying to unmount the filesystem hungs in xfs_log_force(), well, basically
+the
+reason I submitted the patch to include the caller into xfs_log_force
+trace. I'd
+like to see ftrace traces from this system with that patch if possible.
+
+I didn't have time to keep working on this for the past few days, but
+looks like
+it's time to come back to it.
+
+Shyam, after you reconnected the disks, the messages about failed async
+metadata
+writes stops to be logged?
+
+Any chance you can reliably reproduce it?
+
+I'm not a xfs journal expert, but it looks like the writeback of items in
+AIL
+got stuck due the IO errors, and were never completed, but I don't know
+what I
+should expect after the disk is reconnected.
+
+In my case though, with upstream kernel, I didn't get a XFS_SHUTDOWN until
+I
+tried to unmount the filesystem, which differs from this case, where xfs
+looks
+to have shutdown the filesystem after a few tries to writeback the
+metadata.
+
+Anyway, I can dig more into it this week, if nobody knows what is going on
+before I do it :)
+
+-----Original Message-----
+From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
+Sent: 22 March 2016 18:32
+To: 'Brian Foster'
+Cc: 'xfs@oss.sgi.com'; Alex Lyakas
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+
+Hi Brian,
+
+Thanks for your quick reply. I repeated the test & trace-pipe is
+constantly filled with this:
+
+   xfsaild/dm-10-3335  [003] ...2 24890.546491: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.546492: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.546493: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.596491: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.596492: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.596494: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.646497: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.646498: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.646500: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.696467: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.746548: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.796479: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 24890.846467: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 24890.846468: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+
+
+while regular activity seems to happen on other inodes/kworker threads
+
+    kworker/u8:4-27691 [001] ...1 24895.811474: xfs_writepage: dev 253:10
+ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811477: xfs_invalidatepage: dev
+253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811478: xfs_releasepage: dev
+253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811482: xfs_writepage: dev 253:10
+ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811482: xfs_invalidatepage: dev
+253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811483: xfs_releasepage: dev
+253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811485: xfs_writepage: dev 253:10
+ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811486: xfs_invalidatepage: dev
+253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.811486: xfs_releasepage: dev
+253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+delalloc 0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812381: xfs_writepage: dev 253:10
+ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812382: xfs_invalidatepage: dev
+253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 1000
+delalloc 1 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812382: xfs_releasepage: dev
+253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc
+0 unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812385: xfs_writepage: dev 253:10
+ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+unwritten 0
+    kworker/u8:4-27691 [001] ...1 24895.812385: xfs_invalidatepage: dev
+253:10 ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 1000
+delalloc 1 unwritten 0
+
+
+looks like xfsaild is not able to take lock until hung-task timeout kicks
+in
+
+   xfsaild/dm-10-3335  [003] ...2 25247.649468: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 25247.699478: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.699516: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.699517: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+   xfsaild/dm-10-3335  [003] ...2 25247.749471: xfs_ilock_nowait: dev
+253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.749478: xfs_iunlock: dev 253:10
+ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+   xfsaild/dm-10-3335  [003] ...2 25247.749479: xfs_ail_flushing: dev
+253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+
+Please let me know how to debug this further. Thanks.
+
+--Shyam
+-----Original Message-----
+From: Brian Foster [mailto:bfoster@redhat.com]
+Sent: 22 March 2016 17:49
+To: Shyam Kaushik
+Cc: xfs@oss.sgi.com; Alex Lyakas
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+
+On Tue, Mar 22, 2016 at 04:51:39PM +0530, Shyam Kaushik wrote:
+> Hi XFS developers,
 >
-> > On Thu, Apr 7, 2016 at 3:43 AM, Eric Sandeen <sandeen@sandeen.net
-> <mailto:sandeen@sandeen.net>> wrote:
-> >
-> >     > @@ -981,11 +1077,21 @@ main(
-> >     >       int                     worst_freelist;
-> >     >       libxfs_init_t           xi;
-> >     >       struct fs_topology      ft;
-> >     > -     int                     lazy_sb_counters;
-> >     > -     int                     crcs_enabled;
-> >     > -     int                     finobt;
-> >     > -     bool                    finobtflag;
-> >     > -     int                     spinodes;
-> >     > +     struct sb_feat_args     sb_feat =3D {
-> >     > +             .finobt =3D 1,
-> >     > +             .finobtflag =3D false,
-> >
-> >
-> >     should we really have "finobtflag" in this structure?
-> >     This structure should only carry feature selections, not feature
-> >     specification flags I think.  Why is this the only such flag
-> >     in the structure?
-> >
-> >     Pretty sure finobtflag should stay a variable for now
-> >     just like lvflag (which goes with log_version).
-> >
-> >
-> > =E2=80=8BIt might be right to move it out=E2=80=8B, but the flag is rem=
-oved few
-> > patches later entirely. Is it worth of the work? I would say nah, let
-> > it die where it is. :-)
+> We are seeing the following issue with XFS on kernel 3.18.19.
 >
-> Given that it doesn't seem to be a bug, I guess that might be ok,
-> but in general introducing incorrect things and fixing them later
-> in the series is strongly discouraged...
+> We have XFS mounted over a raw disk. Disk was pulled out manually. There
+> were async writes on files that were errored like this
 >
-> >
-> >
-> >     ...
-> >
-> >     > @@ -1517,7 +1617,14 @@ main(
-> >     >                                       c =3D atoi(value);
-> >     >                                       if (c < 0 || c > 1)
-> >     >                                               illegal(value, "m
-> crc");
-> >     > -                                     crcs_enabled =3D c;
-> >     > +                                     if (c && nftype) {
-> >     > +                                             fprintf(stderr,
-> >     > +_("cannot specify both crc and ftype\n"));
-> >     > +                                             usage();
-> >
-> >     hm, why is conflict checking added?  It's not what the commit says
-> >     the patch does.
-> >
-> >     It also regresses the bug I fixed in
-> >
-> >     commit b990de8ba4e2df2bc76a140799d3ddb4a0eac4ce
-> >     Author: Eric Sandeen <sandeen@sandeen.net <mailto:
-> sandeen@sandeen.net>>
-> >     Date:   Tue Aug 18 17:53:17 2015 +1000
-> >
-> >         mkfs.xfs: fix ftype-vs-crc option combination testing
-> >
-> >     with this patch, it is broken again:
-> >
-> >     # mkfs/mkfs.xfs -m crc=3D0 -n ftype=3D1 -dfile,name=3Dfsfile,size=
-=3D16g
-> >     <success>
-> >      # mkfs/mkfs.xfs -n ftype=3D1 -m crc=3D0 -dfile,name=3Dfsfile,size=
-=3D16g
-> >     cannot specify both crc and ftype
-> >     Usage: mkfs.xfs
-> >     ...
-> >
-> > =E2=80=8BBecause the patch is much older than your fix, and at the time=
- it
-> > was created, it is possible that there wasn't any such check... I
-> > would call it the risk of necromancy. :-)=E2=80=8B
+...
 >
-> Most likely a forward-port or merge error I think.
+> And XFS hit metadata & Log IO errors that it decides to shutdown:
 >
-> > Anyway, I already fixed this issue in this cycle, and added the the
-> > ftype, crc order into a test checking for options sanity. Just I
-> > didn't submitted the change yet.
+> Mar 16 16:03:22 host0 kernel: [ 4637.351841] XFS (dm-29): metadata I/O
+> error: block 0x3a27fbd0 ("xlog_iodone") error 5 numblks 64
+> Mar 16 16:03:22 host0 kernel: [ 4637.352820] XFS(dm-29): SHUTDOWN!!!
+> old_flags=0x0 new_flags=0x2
+> Mar 16 16:03:22 host0 kernel: [ 4637.353187] XFS (dm-29): Log I/O Error
+> Detected.  Shutting down filesystem
+...
+> Later the drive was re-inserted back. After the drive was re-inserted,
+XFS
+> was attempted to be unmounted
 >
-> Ok, so it is fixed in your new version of this patch?
+> Mar 16 16:16:53 host0 controld: [2557] [     ] umount[202]
+> : umount(/sdisk/vol5b0, xfs)
+>
+> But nothing happens except for the 30-secs xfs_log_force errors that
+keeps
+> repeating
+>
+...
+>
+> This problem doesn't happen consistently, but happens periodically with
+a
+> drive failure/recovery followed by XFS unmount. I couldn't find this
+issue
+> fixed in later kernels. Can you please suggest how I can debug this
+issue
+> further?
 >
 
-=E2=80=8BYes.
-=E2=80=8B
+Similar problems have been reproduced due to racy/incorrect EFI/EFD
+object tracking, which are internal data structures associated with
+freeing extents.
 
+What happens if you enable tracepoints while the fs is in this hung
+unmount state?
 
+# trace-cmd start -e "xfs:*"
+# cat /sys/kernel/debug/tracing/trace_pipe
+
+Brian
+
+> Thanks!
 >
-> >
-> >     ...
-> >
-> >     > @@ -1879,23 +1988,25 @@ _("32 bit Project IDs always enabled on
-> CRC enabled filesytems\n"));
-> >     >       } else {
-> >     >               /*
-> >     >                * The kernel doesn't currently support
-> crc=3D0,finobt=3D1
-> >     > -              * filesystems. If crcs are not enabled and the use=
-r
-> has
-> >     > -              * explicitly turned them off then silently turn
-> them off
-> >     > -              * to avoid an unnecessary warning. If the user
-> explicitly
-> >     > -              * tried to use crc=3D0,finobt=3D1, then issue a wa=
-rning
-> before
-> >     > -              * turning them off.
-> >     > +              * filesystems. If crcs are not enabled and the use=
-r
-> has not
-> >     > +              * explicitly turned finobt on, then silently turn
-> it off to
-> >     > +              * avoid an unnecessary warning. If the user
-> explicitly tried
-> >     > +              * to use crc=3D0,finobt=3D1, then issue a warning
-> before turning
-> >     > +              * them off.
-> >     >                */
-> >     > -             if (finobt && finobtflag) {
-> >     > -                     fprintf(stderr,
-> >     > -_("warning: finobt not supported without CRC support,
-> disabled.\n"));
-> >     > +             if (sb_feat.finobt){
-> >     > +                     if (sb_feat.finobtflag) {
-> >     > +                             fprintf(stderr,
-> >     > +     _("warning: finobt not supported without CRC support,
-> disabled.\n"));
-> >     > +                     }
-> >     > +                     sb_feat.finobt =3D 0;
-> >
-> >     like I mentioned, just this, I think (assuming we like the silent
-> turning
-> >     off, but that would be a different patch):
-> >
-> >
-> > =E2=80=8BMerging the conditions is indeed cleaner.
-> >
-> > And I will change it to failure, if the conflicting options are given
-> > explicitly. Just a small patch adding "usage();" and removing
-> > "warning"...=E2=80=8B
->
-> Ok, so for this patch, nothing but the mechanical change matching all the
-> others,
-> right?  If there is any change in behavior to be done, that should be a
-> different patch.
->
-
-=E2=80=8BExactly.
-=E2=80=8B
-
-
->
-> -Eric
+> --Shyam
 >
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
->
-
-
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---089e01538da0048bf5052fe50a4d
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Thu, Ap=
-r 7, 2016 at 3:18 PM, Eric Sandeen </span><span dir=3D"ltr" style=3D"font-f=
-amily:arial,sans-serif">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=
-=3D"_blank">sandeen@sandeen.net</a>&gt;</span><span style=3D"font-family:ar=
-ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
-ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 =
-.8ex;border-left:1px #ccc solid;padding-left:1ex">On 4/7/16 8:09 AM, Jan Tu=
-lak wrote:<br>
-&gt;<br>
-...<br>
-<span class=3D""><br>
-&gt; On Thu, Apr 7, 2016 at 3:43 AM, Eric Sandeen &lt;<a href=3D"mailto:san=
-deen@sandeen.net">sandeen@sandeen.net</a> &lt;mailto:<a href=3D"mailto:sand=
-een@sandeen.net">sandeen@sandeen.net</a>&gt;&gt; wrote:<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; @@ -981,11 +1077,21 @@ main(<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0worst_freelist;<=
-br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0libxfs_init_t=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0xi;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct fs_topology=
-=C2=A0 =C2=A0 =C2=A0 ft;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0lazy_sb_counters;<br=
->
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0crcs_enabled;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0finobt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0bool=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 finobtflag;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spinodes;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0struct sb_feat_args=C2=A0=
- =C2=A0 =C2=A0sb_feat =3D {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0.finobt =3D 1,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0.finobtflag =3D false,<br>
-&gt;<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0should we really have &quot;finobtflag&quot; in thi=
-s structure?<br>
-&gt;=C2=A0 =C2=A0 =C2=A0This structure should only carry feature selections=
-, not feature<br>
-&gt;=C2=A0 =C2=A0 =C2=A0specification flags I think.=C2=A0 Why is this the =
-only such flag<br>
-&gt;=C2=A0 =C2=A0 =C2=A0in the structure?<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0Pretty sure finobtflag should stay a variable for n=
-ow<br>
-&gt;=C2=A0 =C2=A0 =C2=A0just like lvflag (which goes with log_version).<br>
-&gt;<br>
-&gt;<br>
-&gt; =E2=80=8BIt might be right to move it out=E2=80=8B, but the flag is re=
-moved few<br>
-&gt; patches later entirely. Is it worth of the work? I would say nah, let<=
-br>
-&gt; it die where it is. :-)<br>
-<br>
-</span>Given that it doesn&#39;t seem to be a bug, I guess that might be ok=
-,<br>
-but in general introducing incorrect things and fixing them later<br>
-in the series is strongly discouraged...<br>
-<span class=3D""><br>
-&gt;<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0...<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; @@ -1517,7 +1617,14 @@ main(<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0c =3D atoi(value);<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0if (c &lt; 0 || c &gt; 1)<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0illegal(value, &quot;m crc&=
-quot;);<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0crcs_enabled =3D c;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0if (c &amp;&amp; nftype) {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fprintf(stderr,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +_(&quot;cannot specify both crc and ftype\n&q=
-uot;));<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0usage();<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0hm, why is conflict checking added?=C2=A0 It&#39;s =
-not what the commit says<br>
-&gt;=C2=A0 =C2=A0 =C2=A0the patch does.<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0It also regresses the bug I fixed in<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0commit b990de8ba4e2df2bc76a140799d3ddb4a0eac4ce<br>
-</span>&gt;=C2=A0 =C2=A0 =C2=A0Author: Eric Sandeen &lt;<a href=3D"mailto:s=
-andeen@sandeen.net">sandeen@sandeen.net</a> &lt;mailto:<a href=3D"mailto:sa=
-ndeen@sandeen.net">sandeen@sandeen.net</a>&gt;&gt;<br>
-<span class=3D"">&gt;=C2=A0 =C2=A0 =C2=A0Date:=C2=A0 =C2=A0Tue Aug 18 17:53=
-:17 2015 +1000<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mkfs.xfs: fix ftype-vs-crc option com=
-bination testing<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0with this patch, it is broken again:<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0# mkfs/mkfs.xfs -m crc=3D0 -n ftype=3D1 -dfile,name=
-=3Dfsfile,size=3D16g<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&lt;success&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 # mkfs/mkfs.xfs -n ftype=3D1 -m crc=3D0 -dfile,nam=
-e=3Dfsfile,size=3D16g<br>
-&gt;=C2=A0 =C2=A0 =C2=A0cannot specify both crc and ftype<br>
-&gt;=C2=A0 =C2=A0 =C2=A0Usage: mkfs.xfs<br>
-&gt;=C2=A0 =C2=A0 =C2=A0...<br>
-&gt;<br>
-&gt; =E2=80=8BBecause the patch is much older than your fix, and at the tim=
-e it<br>
-&gt; was created, it is possible that there wasn&#39;t any such check... I<=
-br>
-&gt; would call it the risk of necromancy. :-)=E2=80=8B<br>
-<br>
-</span>Most likely a forward-port or merge error I think.<br>
-<span class=3D""><br>
-&gt; Anyway, I already fixed this issue in this cycle, and added the the<br=
->
-&gt; ftype, crc order into a test checking for options sanity. Just I<br>
-&gt; didn&#39;t submitted the change yet.<br>
-<br>
-</span>Ok, so it is fixed in your new version of this patch?<br></blockquot=
-e><div><br></div><div><div class=3D"gmail_default" style=3D"font-family:ari=
-al,helvetica,sans-serif;display:inline">=E2=80=8BYes.</div></div><div><div =
-class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;dis=
-play:inline">=E2=80=8B</div>=C2=A0</div><blockquote class=3D"gmail_quote" s=
-tyle=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div><div class=3D"im trimless-h5 trimless-content"><br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0...<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; @@ -1879,23 +1988,25 @@ _(&quot;32 bit Project=
- IDs always enabled on CRC enabled filesytems\n&quot;));<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0} else {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0/*<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 * The kernel doesn&#39;t currently support crc=3D0,finobt=3D1<br=
->
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * filesystems. If crcs are not enabled and the user has<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * explicitly turned them off then silently turn them off<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * to avoid an unnecessary warning. If the user explicitly<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * tried to use crc=3D0,finobt=3D1, then issue a warning before<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * turning them off.<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * filesystems. If crcs are not enabled and the user has not<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * explicitly turned finobt on, then silently turn it off to<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * avoid an unnecessary warning. If the user explicitly tried<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * to use crc=3D0,finobt=3D1, then issue a warning before turning<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * them off.<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 */<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0if (finobt &amp;&amp; finobtflag) {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fprintf(stderr,<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; -_(&quot;warning: finobt not supported without=
- CRC support, disabled.\n&quot;));<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0if (sb_feat.finobt){<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sb_feat.finobtflag) {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fprintf(stderr,<=
-br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0_(&quot;warning: finobt n=
-ot supported without CRC support, disabled.\n&quot;));<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
-&gt;=C2=A0 =C2=A0 =C2=A0&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sb_feat.finobt =3D 0;<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0like I mentioned, just this, I think (assuming we l=
-ike the silent turning<br>
-&gt;=C2=A0 =C2=A0 =C2=A0off, but that would be a different patch):<br>
-&gt;<br>
-&gt;<br>
-&gt; =E2=80=8BMerging the conditions is indeed cleaner.<br>
-&gt;<br>
-&gt; And I will change it to failure, if the conflicting options are given<=
-br>
-&gt; explicitly. Just a small patch adding &quot;usage();&quot; and removin=
-g<br>
-&gt; &quot;warning&quot;...=E2=80=8B<br>
-<br>
-</div></div>Ok, so for this patch, nothing but the mechanical change matchi=
-ng all the others,<br>
-right?=C2=A0 If there is any change in behavior to be done, that should be =
-a different patch.<br></blockquote><div><br></div><div><div class=3D"gmail_=
-default" style=3D"font-family:arial,helvetica,sans-serif;display:inline">=
-=E2=80=8BExactly.</div></div><div><div class=3D"gmail_default" style=3D"fon=
-t-family:arial,helvetica,sans-serif;display:inline">=E2=80=8B</div>=C2=A0</=
-div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-lef=
-t:1px #ccc solid;padding-left:1ex">
-<div class=3D"HOEnZb"><div class=3D"im trimless-h5 trimless-content"><br>
--Eric<br>
-<br>
-_______________________________________________<br>
-xfs mailing list<br>
-<a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-<a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer" targ=
-et=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
-</div></div></blockquote></div><br><br clear=3D"all"><div><br></div>-- <br>=
-<div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><div>=
-Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">j=
-tulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blan=
-k">jan@tulak.me</a></div></div></div></div>
-</div></div>
-
---089e01538da0048bf5052fe50a4d--
-
-
---===============0287178948099930389==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0287178948099930389==--
