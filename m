@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 50FDE7CA1
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 04:09:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 24C128F8039
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 02:09:11 -0700 (PDT)
-Received: from mail-io0-f182.google.com (mail-io0-f182.google.com
-	[209.85.223.182]) by cuda.sgi.com with ESMTP id
-	F3YKNhHdfWAA9tnx (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BF5107CA3
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 05:07:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3FA0AAC002
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 03:06:57 -0700 (PDT)
+Received: from mail-io0-f175.google.com (mail-io0-f175.google.com
+	[209.85.223.175]) by cuda.sgi.com with ESMTP id
+	C0Gb9wfBeYHV2Cjh (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 02:09:09 -0700 (PDT)
-Received: by mail-io0-f182.google.com with SMTP id q128so124735041iof.3
-	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 02:09:09 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 03:06:56 -0700 (PDT)
+Received: by mail-io0-f175.google.com with SMTP id q128so126110273iof.3
+	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 03:06:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160408010318.GA567@dastard>
+In-Reply-To: <20160408000910.GB21804@dastard>
 References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-19-git-send-email-jtulak@redhat.com>
-	<57057B2A.3000100@sandeen.net>
-	<CACj3i736w-nnDzBDOiBf39cJ3AUHqeVL9_Y8EbUgaMa9S7PToA@mail.gmail.com>
-	<5706FE56.7060308@sandeen.net> <20160408010318.GA567@dastard>
+	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
+	<20160408000910.GB21804@dastard>
 From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 8 Apr 2016 11:08:49 +0200
-Message-ID: <CACj3i70EaLeECkmPUCUtpOeiMxWhgPPahs69yzWd0b_5Fy4sPQ@mail.gmail.com>
-Subject: Re: [PATCH 18/19] mkfs: unit conversions are case insensitive
+Date: Fri, 8 Apr 2016 12:06:35 +0200
+Message-ID: <CACj3i73f_v=70pGrrLkRpHB-6UwiOOM2F9Sbu2aZMaJGmBLeiQ@mail.gmail.com>
+Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,141 +29,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4007934412430431712=="
+Content-Type: multipart/mixed; boundary="===============6834151922592098578=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============4007934412430431712==
-Content-Type: multipart/alternative; boundary=001a11427d742950a9052ff58cc1
+--===============6834151922592098578==
+Content-Type: multipart/alternative; boundary=001a113ebe20cd6509052ff65a7d
 
---001a11427d742950a9052ff58cc1
+--001a113ebe20cd6509052ff65a7d
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 8, 2016 at 3:03 AM, Dave Chinner <david@fromorbit.com> wrote:
+On Fri, Apr 8, 2016 at 2:09 AM, Dave Chinner <david@fromorbit.com> wrote:
 
-> On Thu, Apr 07, 2016 at 07:41:58PM -0500, Eric Sandeen wrote:
-> > On 4/7/16 5:50 AM, Jan Tulak wrote:
-> > > On Wed, Apr 6, 2016 at 11:10 PM, Eric Sandeen <sandeen@sandeen.net
-> <mailto:sandeen@sandeen.net>>wrote:
-> > >     (hm, why do we have 3 copies of cvtnum?)
-> > >
-> > >
-> > > =E2=80=8BWhere? =E2=80=8B
-> > >  =E2=80=8B
-> > >
-> > > =E2=80=8B$ pwd
-> > > =E2=80=8B/some/path/xfsprogs-dev
-> > >
-> > > $ grep -r "cvtnum(size_t" . |grep -v "^Binary"
-> > > =E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksize, =
-size_t
-> sectorsize, char *s);
-> > > ./io/init.h:extern void init_cvtnum(size_t *blocksize, size_t
-> *sectsize);
+> On Thu, Mar 24, 2016 at 12:15:34PM +0100, jtulak@redhat.com wrote:
+> > From: Jan Tulak <jtulak@redhat.com>
 > >
-> >   File                Line
-> > 0 estimate/xfs_estimate.c   29 cvtnum(char *s)
-> > 1 libxcmd/input.c          147 cvtnum(
-> > 2 mkfs/xfs_mkfs.c         3618 cvtnum(
+> > Unify mkfs.xfs behaviour a bit and never truncate files. If the user
+> > is trying to mkfs an existing file, we don't want to destroy anything
+> > he did with the file before (sparse file, allocations...)
 >
-> FWIW, here's why we put the function name at the start of the line,
-> rather than the way that it is typically done in the kernel code
-> (i.e. after the return type specification):
+> Why not? We do that with discard-by-default to block devices,
+> O_TRUNC is exactly the same situation with a file - we completely
+> re-initialise the file from a known state if mkfs has been asked to
+> create the file.
 >
-> $ git grep ^cvtnum
-> estimate/xfs_estimate.c:cvtnum(char *s)
-> libxcmd/input.c:cvtnum(
-> mkfs/xfs_mkfs.c:cvtnum(
->
->
-=E2=80=8BAh, I see. A nice trick. :-)
+> =E2=80=8BBut AFAIK, we don't zero-out entire spindle devices, we don't as=
+k if the
+drive skips some blocks (i.e. because they are bad),=E2=80=8B and we don't =
+care
+about what an underlaying layer (like LVM) did with the block device. From
+this point of view, we shouldn't care about the file either.
 
-It might be good to merge the three functions, but I think it can wait for
-when this patchset is done - or there is always going to be something more
-to add...
+I can be missing something, though.
 
-Thanks,
-Jan =E2=80=8B
+
+> > @@ -1059,9 +1063,9 @@ check_device_type(
+> >       }
+> >
+> >       /*
+> > -      * We only want to completely truncate and recreate an existing
+> file if
+> > -      * we were specifically told it was a file. Set the create flag
+> only in
+> > -      * this case to trigger that behaviour.
+> > +      * We only want to create a file only if we were specifically tol=
+d
+> > +      * we want a file. Set the create flag only in this case to trigg=
+er
+> > +      * that behaviour.
+> >        */
+> >       if (S_ISREG(statbuf.st_mode)) {
+> >               if (!*isfile)
+>
+> i.e. this situation.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+
 
 --=20
 Jan Tulak
 jtulak@redhat.com / jan@tulak.me
 
---001a11427d742950a9052ff58cc1
+--001a113ebe20cd6509052ff65a7d
 Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
 <div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
 lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Fri, Ap=
-r 8, 2016 at 3:03 AM, Dave Chinner </span><span dir=3D"ltr" style=3D"font-f=
+r 8, 2016 at 2:09 AM, Dave Chinner </span><span dir=3D"ltr" style=3D"font-f=
 amily:arial,sans-serif">&lt;<a href=3D"mailto:david@fromorbit.com" target=
 =3D"_blank">david@fromorbit.com</a>&gt;</span><span style=3D"font-family:ar=
 ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
 ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 =
 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"">On Thu, =
-Apr 07, 2016 at 07:41:58PM -0500, Eric Sandeen wrote:<br>
-&gt; On 4/7/16 5:50 AM, Jan Tulak wrote:<br>
-&gt; &gt; On Wed, Apr 6, 2016 at 11:10 PM, Eric Sandeen &lt;<a href=3D"mail=
-to:sandeen@sandeen.net">sandeen@sandeen.net</a> &lt;mailto:<a href=3D"mailt=
-o:sandeen@sandeen.net">sandeen@sandeen.net</a>&gt;&gt;wrote:<br>
-</span><span class=3D"">&gt; &gt;=C2=A0 =C2=A0 =C2=A0(hm, why do we have 3 =
-copies of cvtnum?)<br>
-&gt; &gt;<br>
-&gt; &gt;<br>
-&gt; &gt; =E2=80=8BWhere? =E2=80=8B<br>
-&gt; &gt;=C2=A0 =E2=80=8B<br>
-&gt; &gt;<br>
-&gt; &gt; =E2=80=8B$ pwd<br>
-&gt; &gt; =E2=80=8B/some/path/xfsprogs-dev<br>
-&gt; &gt;<br>
-&gt; &gt; $ grep -r &quot;cvtnum(size_t&quot; . |grep -v &quot;^Binary&quot=
-;<br>
-&gt; &gt; =E2=80=8B./include/input.h:extern long long cvtnum(size_t blocksi=
-ze, size_t sectorsize, char *s);<br>
-&gt; &gt; ./io/init.h:extern void init_cvtnum(size_t *blocksize, size_t *se=
-ctsize);<br>
+Mar 24, 2016 at 12:15:34PM +0100, <a href=3D"mailto:jtulak@redhat.com">jtul=
+ak@redhat.com</a> wrote:<br>
+&gt; From: Jan Tulak &lt;<a href=3D"mailto:jtulak@redhat.com">jtulak@redhat=
+.com</a>&gt;<br>
 &gt;<br>
-&gt;=C2=A0 =C2=A0File=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 Line<br>
-&gt; 0 estimate/xfs_estimate.c=C2=A0 =C2=A029 cvtnum(char *s)<br>
-&gt; 1 libxcmd/input.c=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 147 cvtnum(<br>
-&gt; 2 mkfs/xfs_mkfs.c=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A03618 cvtnum(<br>
+&gt; Unify mkfs.xfs behaviour a bit and never truncate files. If the user<b=
+r>
+&gt; is trying to mkfs an existing file, we don&#39;t want to destroy anyth=
+ing<br>
+&gt; he did with the file before (sparse file, allocations...)<br>
 <br>
-</span>FWIW, here&#39;s why we put the function name at the start of the li=
-ne,<br>
-rather than the way that it is typically done in the kernel code<br>
-(i.e. after the return type specification):<br>
+</span>Why not? We do that with discard-by-default to block devices,<br>
+O_TRUNC is exactly the same situation with a file - we completely<br>
+re-initialise the file from a known state if mkfs has been asked to<br>
+create the file.<br>
+<span class=3D""><br></span></blockquote><div><div class=3D"gmail_default" =
+style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BBut AFAIK, we don=
+&#39;t zero-out entire spindle devices, we don&#39;t ask if the drive skips=
+ some blocks (i.e. because they are bad),=E2=80=8B and we don&#39;t care ab=
+out what an underlaying layer (like LVM) did with the block device. From th=
+is point of view, we shouldn&#39;t care about the file either.</div><div cl=
+ass=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"><br>=
+</div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,san=
+s-serif">I can be missing something, though.</div></div><div><br></div><blo=
+ckquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #c=
+cc solid;padding-left:1ex"><span class=3D"">
 <br>
-$ git grep ^cvtnum<br>
-estimate/xfs_estimate.c:cvtnum(char *s)<br>
-libxcmd/input.c:cvtnum(<br>
-mkfs/xfs_mkfs.c:cvtnum(<br>
-<br></blockquote><div><br></div><div><div class=3D"gmail_default" style=3D"=
-font-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BAh, I see. =
-A nice trick. :-)</div></div><div><div class=3D"gmail_default" style=3D"fon=
-t-family:arial,helvetica,sans-serif;display:inline"><br></div></div><div><d=
-iv class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;=
-display:inline">It might be good to merge the three functions, but I think =
-it can wait for when this patchset is done - or there is always going to be=
- something more to add...=C2=A0</div></div><div><div class=3D"gmail_default=
-" style=3D"font-family:arial,helvetica,sans-serif;display:inline"><br></div=
-></div><div><div class=3D"gmail_default" style=3D"font-family:arial,helveti=
-ca,sans-serif;display:inline">Thanks,</div></div><div><div class=3D"gmail_d=
-efault" style=3D"font-family:arial,helvetica,sans-serif;display:inline">Jan=
- =E2=80=8B</div>=C2=A0</div></div>-- <br><div class=3D"gmail_signature"><di=
-v dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mail=
-to:jtulak@redhat.com" target=3D"_blank">jtulak@redhat.com</a>=C2=A0/ <a hre=
-f=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me</a></div></div></d=
-iv></div>
+&gt; @@ -1059,9 +1063,9 @@ check_device_type(<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0/*<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 * We only want to completely truncate and recrea=
+te an existing file if<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 * we were specifically told it was a file. Set t=
+he create flag only in<br>
+&gt; -=C2=A0 =C2=A0 =C2=A0 * this case to trigger that behaviour.<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * We only want to create a file only if we were =
+specifically told<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * we want a file. Set the create flag only in th=
+is case to trigger<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 * that behaviour.<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0if (S_ISREG(statbuf.st_mode)) {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!*isfile)<br=
+>
+<br>
+</span>i.e. this situation.<br>
+<br>
+Cheers,<br>
+<br>
+Dave.<br>
+<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</font></span></blockquote></div><br><br clear=3D"all"><div><br></div>-- <b=
+r><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"ltr"><di=
+v>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank"=
+>jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_bl=
+ank">jan@tulak.me</a></div></div></div></div>
 </div></div>
 
---001a11427d742950a9052ff58cc1--
+--001a113ebe20cd6509052ff65a7d--
 
 
---===============4007934412430431712==
+--===============6834151922592098578==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -176,4 +187,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4007934412430431712==--
+--===============6834151922592098578==--
