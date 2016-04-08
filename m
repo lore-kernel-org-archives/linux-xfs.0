@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E1EF97CA7
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 17:47:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FF4FAC001
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:47:08 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tAr0jdVr5ClR9LgO for <xfs@oss.sgi.com>;
-	Fri, 08 Apr 2016 15:47:05 -0700 (PDT)
-Date: Sat, 9 Apr 2016 08:46:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
-	after disk failure/recovery
-Message-ID: <20160408224648.GD567@dastard>
-References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
-	<20160322121922.GA53693@bfoster.bfoster>
-	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BA7A27CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 19:32:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8D51D8F804C
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 17:32:39 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id TWyCEWUFYpMfAe8C for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 17:32:37 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 9D860481A
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 19:32:36 -0500 (CDT)
+Subject: Re: [PATCH 15/19] mkfs: don't treat files as though they are block
+	devices
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-16-git-send-email-jtulak@redhat.com>
+	<5706FA7C.7020103@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5706FC23.9050507@sandeen.net>
+Date: Thu, 7 Apr 2016 19:32:35 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
+In-Reply-To: <5706FA7C.7020103@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,63 +35,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shyam Kaushik <shyam@zadarastorage.com>
-Cc: Brian Foster <bfoster@redhat.com>, Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
-> Hi Dave, Brian, Carlos,
+
+
+On 4/7/16 7:25 PM, Eric Sandeen wrote:
+>> @@ -1299,15 +1370,23 @@ zero_old_xfs_structures(
+>> >  	}
+>> >  	memset(buf, 0, new_sb->sb_sectsize);
+>> >  
+>> > -	tmp = pread(xi->dfd, buf, new_sb->sb_sectsize, 0);
+>> > -	if (tmp < 0) {
+>> > +	off = pread(xi->dfd, buf, new_sb->sb_sectsize, 0);
+>> > +	if (off < 0) {
+>> >  		fprintf(stderr, _("existing superblock read failed: %s\n"),
+>> >  			strerror(errno));
+>> >  		goto done;
+>> >  	}
+>> > -	if (tmp != new_sb->sb_sectsize) {
+>> > -		fprintf(stderr,
+>> > -	_("warning: could not read existing superblock, skip zeroing\n"));
+>> > +	/*
+>> > +	 * If we are creating an image file, it might be of zero length at this
+>> > +	 * point in time. Hence reading the existing superblock is going to
+>> > +	 * return zero bytes. It's not a failure we need to warn about in this
+>> > +	 * case.
+>> > +	 */
+> except you already did "if (off < 0) fail" above this.
+
+(oh, right, < 0 is different than == 0, sorry; so that part is ok)
+
+Possibly better as:
+
+if (off < 0 || (tmp != new_sb->sb_sectsize && !xi->disfile))
+	fprintf("error reading existing superblock ...")
+
+I still think this patch might need a reset though :)
+
+Thanks,
+-Eric
+
+> Ok, at this point I think it might be best to revert to Dave's original version.
 > 
-> While trying to reproduce this issue I have been running into different
-> issues that are similar. Underlying issue remains the same when backend to
-> XFS is failed & we unmount XFS, we run into hung-task timeout (180-secs)
-> with stack like
+> If there were specific problems you were trying to address, can you point them out?
 > 
-> kernel: [14952.671131]  [<ffffffffc06a5f59>]
-> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
-> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
-> prepare_to_wait_event+0x110/0x110
-> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
-> [xfs]
+> Thanks,
+> -Eric
 > 
-> while running trace-events, XFS ail push keeps looping around
-> 
->    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
-> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
-
-Looks like either a stale inode (which should never reach the AIL)
-or it's an inode that's been reclaimed and this is a use after free
-situation. Given that we are failing IOs here, I'd suggest it's more
-likely to be an IO failure that's caused a writeback problem, not an
-interaction with stale inodes.
-
-So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
-inode by calling xfs_iflush_abort(), which will also remove it from
-the AIL. This can also happen on reclaim of a dirty inode, and if so
-we'll still reclaim the inode because reclaim assumes xfs_iflush()
-cleans up properly.
-
-Which, apparently, it doesn't:
-
-        /*
-         * Get the buffer containing the on-disk inode.
-         */
-        error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK, 0);
-        if (error || !bp) {
-                xfs_ifunlock(ip);
-                return error;
-        }
-
-This looks like a bug - xfs_iflush hasn't aborted the inode
-writeback on failure - it's just unlocked the flush lock. Hence it
-has left the inode dirty in the AIL, and then the inode has probably
-then been reclaimed, setting the inode number to zero.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
