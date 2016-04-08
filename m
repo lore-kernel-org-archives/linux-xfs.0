@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 204A47CA1
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 15:20:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 20D9D7CA0
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 19:23:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E57FD8F8035
-	for <xfs@oss.sgi.com>; Wed,  6 Apr 2016 13:20:32 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	J7o6W0MSTTtJTRY3 for <xfs@oss.sgi.com>;
-	Wed, 06 Apr 2016 13:20:26 -0700 (PDT)
-Date: Thu, 7 Apr 2016 06:20:23 +1000
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88FACAC005
+	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 17:23:48 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	P3puvC4QRg2DZNLV for <xfs@oss.sgi.com>;
+	Thu, 07 Apr 2016 17:23:46 -0700 (PDT)
+Date: Fri, 8 Apr 2016 10:09:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: use named array initializers for log item dumping
-Message-ID: <20160406202023.GA13574@dastard>
-References: <20160406105657.GA30644@mwanda>
+Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
+Message-ID: <20160408000910.GB21804@dastard>
+References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
+	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160406105657.GA30644@mwanda>
+In-Reply-To: <1458818136-56043-18-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: xfs@oss.sgi.com, darrick.wong@oracle.com
+To: jtulak@redhat.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Apr 06, 2016 at 01:56:57PM +0300, Dan Carpenter wrote:
-> Hello Darrick J. Wong,
+On Thu, Mar 24, 2016 at 12:15:34PM +0100, jtulak@redhat.com wrote:
+> From: Jan Tulak <jtulak@redhat.com>
 > 
-> The patch 5110cd82ca90: "xfs: use named array initializers for log
-> item dumping" from Mar 7, 2016, leads to the following static checker
-> warning:
-> 
-> 	fs/xfs/xfs_log.c:2085 xlog_print_tic_res()
-> 	error: buffer overflow 'trans_type_str' 43 <= 43
-> 
-> fs/xfs/xfs_log.c
->   2080  
->   2081          xfs_warn(mp, "xlog_write: reservation summary:");
->   2082          xfs_warn(mp, "  trans type  = %s (%u)",
->   2083                   ((ticket->t_trans_type <= 0 ||
->   2084                     ticket->t_trans_type > XFS_TRANS_TYPE_MAX) ?
->                                                 ^
-> Should be >=.  Why is zero invalid?
-> 
->   2085                    "bad-trans-type" : trans_type_str[ticket->t_trans_type]),
->   2086                   ticket->t_trans_type);
->   2087          xfs_warn(mp, "  unit res    = %d bytes",
+> Unify mkfs.xfs behaviour a bit and never truncate files. If the user
+> is trying to mkfs an existing file, we don't want to destroy anything
+> he did with the file before (sparse file, allocations...)
 
-I just pushed patches to the for-next branch (i.e. linux-next) that
-remove this code.
+Why not? We do that with discard-by-default to block devices,
+O_TRUNC is exactly the same situation with a file - we completely
+re-initialise the file from a known state if mkfs has been asked to
+create the file.
 
-https://git.kernel.org/cgit/linux/kernel/git/dgc/linux-xfs.git/commit/?h=for-next&id=710b1e2c2948c1e5d0499def5273ecbc6472342d
+
+> @@ -1059,9 +1063,9 @@ check_device_type(
+>  	}
+>  
+>  	/*
+> -	 * We only want to completely truncate and recreate an existing file if
+> -	 * we were specifically told it was a file. Set the create flag only in
+> -	 * this case to trigger that behaviour.
+> +	 * We only want to create a file only if we were specifically told
+> +	 * we want a file. Set the create flag only in this case to trigger
+> +	 * that behaviour.
+>  	 */
+>  	if (S_ISREG(statbuf.st_mode)) {
+>  		if (!*isfile)
+
+i.e. this situation.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
