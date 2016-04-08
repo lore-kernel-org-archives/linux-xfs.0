@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C0AC87CCC
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 12:49:03 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1AF647CCC
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 12:51:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 829708F8033
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:49:03 -0700 (PDT)
-Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
-	[74.125.82.53]) by cuda.sgi.com with ESMTP id CdLs5qyDA5VJs5UH
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CFDF3304048
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:51:35 -0700 (PDT)
+Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com
+	[74.125.82.44]) by cuda.sgi.com with ESMTP id tpJpgmUWNAn2F257
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 08 Apr 2016 10:48:45 -0700 (PDT)
-Received: by mail-wm0-f53.google.com with SMTP id u206so31421744wme.1
-	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 10:48:45 -0700 (PDT)
+	Fri, 08 Apr 2016 10:51:29 -0700 (PDT)
+Received: by mail-wm0-f44.google.com with SMTP id v188so25537836wme.1
+	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 10:51:29 -0700 (PDT)
 From: Shyam Kaushik <shyam@zadarastorage.com>
 References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
 	<20160322121922.GA53693@bfoster.bfoster>
 	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
 	<20160408131658.GB30614@bfoster.bfoster>
 	98e40e83fabf331b114fd6f41084d282@mail.gmail.com
-In-Reply-To: 98e40e83fabf331b114fd6f41084d282@mail.gmail.com
+	becf3ca9bb578795adb60e1c2f2bbbba@mail.gmail.com
+In-Reply-To: becf3ca9bb578795adb60e1c2f2bbbba@mail.gmail.com
 MIME-Version: 1.0
-Date: Fri, 8 Apr 2016 23:18:42 +0530
-Message-ID: <becf3ca9bb578795adb60e1c2f2bbbba@mail.gmail.com>
+Date: Fri, 8 Apr 2016 23:21:27 +0530
+Message-ID: <c3fca81732e5aaf5194b8ad78ff85dec@mail.gmail.com>
 Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
 	disk failure/recovery
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,6 +39,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+
+Specific problematic flow in xfs_buf_iodone_callbacks() is this
+
+        if (XFS_BUF_ISASYNC(bp)) {
+                xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+
+                if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+                        bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+                                       XBF_DONE | XBF_WRITE_FAIL;
+                        xfs_buf_submit(bp);
+                } else {
+                        xfs_buf_relse(bp);
+                }
+
+That in the else part we just do xfs_buf_relse(). I am not sure if this is
+alright. Pls let me know. Thanks.
+
+--Shyam
+
+-----Original Message-----
+From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
+Sent: 08 April 2016 23:19
+To: 'Brian Foster'
+Cc: 'david@fromorbit.com'; 'xfs@oss.sgi.com'; Alex Lyakas
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
 
 Hi Dave, Brian, Carlos,
 
