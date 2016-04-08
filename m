@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A8A237CA0
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 22:32:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3225AAC001
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:32:01 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id qUPNGOnUVQ5juVgo
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:31:59 -0700 (PDT)
-Received: from mail-yw0-f180.google.com ([209.85.161.180])
-	by youngberry.canonical.com with esmtpsa
-	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
-	(envelope-from <ming.lei@canonical.com>) id 1apSZx-0004cx-C2
-	for xfs@oss.sgi.com; Mon, 11 Apr 2016 03:31:57 +0000
-Received: by mail-yw0-f180.google.com with SMTP id o66so102802122ywc.3
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:31:57 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7B8077CB2
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 06:37:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E386304048
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 04:37:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lFbr8vFWY0ZTRZCs (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 04:37:11 -0700 (PDT)
+Date: Fri, 8 Apr 2016 07:37:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/6 v2] xfs: xfs_iflush_cluster vs xfs_reclaim_inode
+Message-ID: <20160408113709.GA30614@bfoster.bfoster>
+References: <1460072271-23923-1-git-send-email-david@fromorbit.com>
+	<20160408032841.GW10345@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
-References: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
-Date: Mon, 11 Apr 2016 11:31:56 +0800
-Message-ID: <CACVXFVOK7Mw7pGfT=iaUJCt=QTREfJuXuN+-beW3G-q6HF3KXA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/8] block: prepare for multipage bvecs
-From: Ming Lei <ming.lei@canonical.com>
+Content-Disposition: inline
+In-Reply-To: <20160408032841.GW10345@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,62 +30,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 4, 2016 at 2:56 PM, Ming Lei <ming.lei@canonical.com> wrote:
-> Hi,
->
-> Interests[1] have been shown in multipage bvecs, so this patchset
-> try to prepare for the support and do two things:
->
-> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
-> then we can drop the non-standard way for iterating bvec, which
-> can be thought as a good cleanup for lib/iov_iter.c
->
-> 2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
-> one user for each. Once multipage bvecs is introduced, one bio
-> may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
-> which should be introduced in future and is similiar with current
-> BIO_MAX_PAGES.
->
-> xfstests(-a auto) have been run and no regression found by this
-> patchset against linus v4.6-rc1-next-20160329.
->
-> V3:
->         - include kenrel.h & bug.h in bvec.h for fix comiling failure on arm
->         as reported by 0day ktest
->         - build test on arm & arm64
->
-> V2:
->         - rename bvec_iter.h as bvec.h
->         - always include bvec.h into blk_types.h as suggested by Christoph
->
-> V1:
->         - don't move BIO_MAX_* to bvec_iter.h as pointed out by Christoph
->         - run xfstests against v4.6-rc1-next-20160329
->         - add Reviewed-by
->         - for 1,4 and 5, Reviewd-by not added, Christoph still expressed
->         'this looks fine to me.'
->
->  drivers/block/drbd/drbd_int.h |  4 +-
->  fs/xfs/xfs_buf.c              |  4 +-
->  include/linux/bio.h           | 52 -----------------------
->  include/linux/blk_types.h     | 22 +---------
->  include/linux/bvec.h          | 96 +++++++++++++++++++++++++++++++++++++++++++
->  lib/iov_iter.c                | 30 +++++---------
->  6 files changed, 110 insertions(+), 98 deletions(-)
+On Fri, Apr 08, 2016 at 11:28:41AM +0800, Eryu Guan wrote:
+> On Fri, Apr 08, 2016 at 09:37:45AM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > This is the second version of this patch set, first posted and
+> > described here:
+> > 
+> > http://oss.sgi.com/archives/xfs/2016-04/msg00069.html
+> 
+> Just a quick note here, I'm testing the v1 patchset right now, v4.6-rc2
+> kernel + v1 patch, config file is based on rhel7 debug kernel config.
+> 
+> The test is the same as the original reproducer (long term fsstress run
+> on XFS, exported from NFS). The test on x86_64 host has been running for
+> two days and everything looks fine. Test on ppc64 host has been running
+> for a few hours and I noticed a lock issue and a few warnings, not sure
+> if it's related to the patches or even to XFS yet(I need to run test on
+> stock -rc2 kernel to be sure), but just post the logs here for reference
+> 
 
-Gentle ping...
+Had the original problem ever been reproduced on an upstream kernel?
 
-Thanks,
+FWIW, my rhel kernel based test is still running well approaching ~48
+hours. I've seen some lockdep messages (bad unlock balance), but IIRC
+I've been seeing those from the start so I haven't been paying much
+attention to it while digging into the core problem.
 
->
->
+> [ 1911.626286] ======================================================
+> [ 1911.626291] [ INFO: possible circular locking dependency detected ]
+> [ 1911.626297] 4.6.0-rc2.debug+ #1 Not tainted
+> [ 1911.626301] -------------------------------------------------------
+> [ 1911.626306] nfsd/7402 is trying to acquire lock:
+> [ 1911.626311]  (&s->s_sync_lock){+.+.+.}, at: [<c0000000003585f0>] .sync_inodes_sb+0xe0/0x230
+> [ 1911.626327]
+> [ 1911.626327] but task is already holding lock:
+> [ 1911.626333]  (sb_internal){.+.+.+}, at: [<c00000000031a780>] .__sb_start_write+0x90/0x130
+> [ 1911.626346]
+> [ 1911.626346] which lock already depends on the new lock.
+> [ 1911.626346]
+> [ 1911.626353]
+> [ 1911.626353] the existing dependency chain (in reverse order) is:
+> [ 1911.626358]
+...
+> [ 1911.627134]  Possible unsafe locking scenario:
+> [ 1911.627134]
+> [ 1911.627139]        CPU0                    CPU1
+> [ 1911.627143]        ----                    ----
+> [ 1911.627147]   lock(sb_internal);
+> [ 1911.627153]                                lock(&s->s_sync_lock);
+> [ 1911.627160]                                lock(sb_internal);
+> [ 1911.627166]   lock(&s->s_sync_lock);
+> [ 1911.627172]
+> [ 1911.627172]  *** DEADLOCK ***
+> [ 1911.627172]
+...
+
+We actually have a report of this one on the list:
+
+http://oss.sgi.com/archives/xfs/2016-04/msg00001.html
+
+... so I don't think it's related to this series. I believe I've seen
+this once or twice when testing something completely unrelated, as well.
+
+> [ 2046.852739] kworker/dying (399) used greatest stack depth: 4352 bytes left
+> [ 2854.687381] XFS: Assertion failed: buffer_mapped(bh), file: fs/xfs/xfs_aops.c, line: 780
+> [ 2854.687434] ------------[ cut here ]------------
+> [ 2854.687488] WARNING: CPU: 5 PID: 28924 at fs/xfs/xfs_message.c:105 .asswarn+0x2c/0x40 [xfs]
+...
+> [ 2854.687997] ---[ end trace 872ac2709186f780 ]---
+
+These asserts look new to me, however. It would be interesting to see if
+these reproduce independently.
+
+Brian
+
+> [ 2854.688001] XFS: Assertion failed: buffer_mapped(bh), file: fs/xfs/xfs_aops.c, line: 780
+> [ 2854.688022] ------------[ cut here ]------------
+> [ 2854.688072] WARNING: CPU: 5 PID: 28924 at fs/xfs/xfs_message.c:105 .asswarn+0x2c/0x40 [xfs]
+> [ 2854.688076] Modules linked in: rpcsec_gss_krb5 nfsv4 dns_resolver nfs fscache dm_mod loop sg pseries_rng nfsd auth_rpcgss nfs_acl lockd sunrpc grace ip_tables xfs libcrc32c sd_mod ibmvscsi ibmveth scsi_transport_srp
+> [ 2854.688110] CPU: 5 PID: 28924 Comm: kworker/u32:4 Tainted: G        W       4.6.0-rc2.debug+ #1
+> [ 2854.688116] Workqueue: writeback .wb_workfn (flush-253:0)
+> [ 2854.688121] task: c0000001e6d28380 ti: c0000000fe3ac000 task.ti: c0000000fe3ac000
+> [ 2854.688126] NIP: d0000000066ddafc LR: d0000000066ddafc CTR: c0000000004dd880
+> [ 2854.688131] REGS: c0000000fe3aeeb0 TRAP: 0700   Tainted: G        W        (4.6.0-rc2.debug+)
+> [ 2854.688135] MSR: 8000000100029032 <SF,EE,ME,IR,DR,RI,TM[E]>  CR: 48002048  XER: 0000000d
+> [ 2854.688153] CFAR: d0000000066dd890 SOFTE: 1
+> GPR00: d0000000066ddafc c0000000fe3af130 d000000006765850 ffffffffffffffea
+> GPR04: 000000000000000a c0000000fe3aef50 00000000000000d1 ffffffffffffffc0
+> GPR08: 0000000000000000 0000000000000021 00000000ffffffd1 d000000006741dc0
+> GPR12: c0000000004dd880 c00000000e822d00 c0000000fe3af4e0 0000000000000001
+> GPR16: c0000000fe3af6f0 0000000000000002 0000000000000000 0000000000000007
+> GPR20: 0000000000000003 c0000000fe3af4f0 0000000000000000 c0000000fe3af210
+> GPR24: 0000000000000004 0000000000001000 0000000000160000 f000000000f0e100
+> GPR28: c0000004055d18c8 c000000016cde430 0000000000158000 c0000004055d1588
+> [ 2854.688268] NIP [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs]
+> [ 2854.688318] LR [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs]
+> [ 2854.688321] Call Trace:
+> [ 2854.688369] [c0000000fe3af130] [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs] (unreliable)
+> [ 2854.688423] [c0000000fe3af1a0] [d0000000066a9104] .xfs_do_writepage+0x414/0x930 [xfs]
+> [ 2854.688430] [c0000000fe3af2b0] [c00000000025df6c] .write_cache_pages+0x5fc/0x820
+> [ 2854.688481] [c0000000fe3af470] [d0000000066a8a5c] .xfs_vm_writepages+0x8c/0xd0 [xfs]
+> [ 2854.688487] [c0000000fe3af540] [c00000000025f62c] .do_writepages+0x3c/0x70
+> [ 2854.688493] [c0000000fe3af5b0] [c00000000035b1ec] .__writeback_single_inode+0x5bc/0xd50
+> [ 2854.688499] [c0000000fe3af680] [c00000000035c3c0] .writeback_sb_inodes+0x380/0x730
+> [ 2854.688505] [c0000000fe3af7f0] [c00000000035ca44] .wb_writeback+0x194/0x920
+> [ 2854.688510] [c0000000fe3af960] [c00000000035ddcc] .wb_workfn+0x19c/0xa40
+> [ 2854.688516] [c0000000fe3afad0] [c0000000000dfc74] .process_one_work+0x264/0x8f0
+> [ 2854.688522] [c0000000fe3afbc0] [c0000000000e0388] .worker_thread+0x88/0x520
+> [ 2854.688528] [c0000000fe3afcb0] [c0000000000e9ac4] .kthread+0x114/0x140
+> [ 2854.688534] [c0000000fe3afe30] [c000000000009578] .ret_from_kernel_thread+0x58/0x60
+> [ 2854.688539] Instruction dump:
+> [ 2854.688543] 60420000 7c0802a6 3d420000 7c691b78 7c862378 e88abe38 7ca72b78 38600000
+> [ 2854.688555] 7d254b78 f8010010 f821ff91 4bfffcf9 <0fe00000> 38210070 e8010010 7c0803a6
+> [ 2854.688568] ---[ end trace 872ac2709186f781 ]---
+> 
+> [then the XFS warning repeated for a few times triggered by different
+> pid]
+> 
 > Thanks,
-> Ming
->
->
+> Eryu
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
