@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CFF547CBB
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:52:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52870AC002
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 08:52:48 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 23FC47CBB
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:51:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D24EAC004
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 08:51:58 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KJqHOABIwCNwiREr for <xfs@oss.sgi.com>;
-	Fri, 08 Apr 2016 08:52:46 -0700 (PDT)
+	ESMTP id 8jJ7lhKvtiEgI9C1 for <xfs@oss.sgi.com>;
+	Fri, 08 Apr 2016 08:51:56 -0700 (PDT)
 Received: from [10.0.0.4] (liberator [10.0.0.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id CAE5216C16D
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:52:46 -0500 (CDT)
-Subject: Re: [PATCH 09/19] mkfs: use getnum_checked for all ranged parameters
+	by sandeen.net (Postfix) with ESMTPSA id A3CFA16C16D
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 10:51:56 -0500 (CDT)
+Subject: Re: [PATCH 18/19] mkfs: unit conversions are case insensitive
 References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-10-git-send-email-jtulak@redhat.com>
-	<5706AEC9.7030002@sandeen.net>
-	<CACj3i73peJznTYx6xS6mtD=bBNbLz1o=giNvz-QJE48oVV1y_w@mail.gmail.com>
+	<1458818136-56043-19-git-send-email-jtulak@redhat.com>
+	<57057B2A.3000100@sandeen.net>
+	<CACj3i736w-nnDzBDOiBf39cJ3AUHqeVL9_Y8EbUgaMa9S7PToA@mail.gmail.com>
+	<5706FE56.7060308@sandeen.net> <20160408010318.GA567@dastard>
+	<CACj3i70EaLeECkmPUCUtpOeiMxWhgPPahs69yzWd0b_5Fy4sPQ@mail.gmail.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5707D3CE.1010305@sandeen.net>
-Date: Fri, 8 Apr 2016 10:52:46 -0500
+Message-ID: <5707D39C.20504@sandeen.net>
+Date: Fri, 8 Apr 2016 10:51:56 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACj3i73peJznTYx6xS6mtD=bBNbLz1o=giNvz-QJE48oVV1y_w@mail.gmail.com>
+In-Reply-To: <CACj3i70EaLeECkmPUCUtpOeiMxWhgPPahs69yzWd0b_5Fy4sPQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,21 +39,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-CgpPbiA0LzgvMTYgNTo0NyBBTSwgSmFuIFR1bGFrIHdyb3RlOgo+IE9uIFRodSwgQXByIDcsIDIw
-MTYgYXQgOTowMiBQTSwgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0IDxtYWlsdG86
-c2FuZGVlbkBzYW5kZWVuLm5ldD4+d3JvdGU6Cj4gCj4gCj4gCj4gICAgIE9uIDMvMjQvMTYgNjox
-NSBBTSwganR1bGFrQHJlZGhhdC5jb20gPG1haWx0bzpqdHVsYWtAcmVkaGF0LmNvbT4gd3JvdGU6
-Cj4gICAgID4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tIDxtYWlsdG86
-ZGNoaW5uZXJAcmVkaGF0LmNvbT4+Cj4gICAgID4KPiAgICAgPiBOb3cgdGhhdCBnZXRudW1fY2hl
-Y2tlZCBjYW4gaGFuZGxlIG1pbi9tYXggY2hlY2tpbmcsIHVzZSB0aGlzIGZvcgo+ICAgICA+IGFs
-bCBwYXJhbWV0ZXJzIHRoYXQgdGFrZSBzdHJhaWdodCBudW1iZXJzIGFuZCBkb24ndCByZXF1aXJl
-IHVuaXQKPiAgICAgPiBjb252ZXJzaW9ucy4KPiAgICAgPgo+ICAgICA+IFNpZ25lZC1vZmYtYnk6
-IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbSA8bWFpbHRvOmRjaGlubmVyQHJlZGhh
-dC5jb20+Pgo+ICAgICA+IFNpZ25lZC1vZmYtYnk6IEphbiBUdWxhayA8anR1bGFrQHJlZGhhdC5j
-b20gPG1haWx0bzpqdHVsYWtAcmVkaGF0LmNvbT4+Cj4gCj4gICAgIExvb2tzIG9rLgo+IAo+ICAg
-ICBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVkaGF0LmNvbSA8bWFpbHRv
-OnNhbmRlZW5AcmVkaGF0LmNvbT4+Cj4gCj4gCj4g4oCLT3IgUmV2aWV3ZWQtYnk/IDotKQoKWWVz
-LCB0aGF0IDopCgpSZXZpZXdlZC1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+T24gNC84LzE2IDQ6MDggQU0sIEphbiBUdWxhayB3cm90ZToKPiBPbiBGcmksIEFwciA4LCAyMDE2
+IGF0IDM6MDMgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbSA8bWFpbHRvOmRh
+dmlkQGZyb21vcmJpdC5jb20+Pndyb3RlOgo+IAoKLi4uCgo+ICAgICAkIGdpdCBncmVwIF5jdnRu
+dW0KPiAgICAgZXN0aW1hdGUveGZzX2VzdGltYXRlLmM6Y3Z0bnVtKGNoYXIgKnMpCj4gICAgIGxp
+YnhjbWQvaW5wdXQuYzpjdnRudW0oCj4gICAgIG1rZnMveGZzX21rZnMuYzpjdnRudW0oCj4gCj4g
+Cj4g4oCLQWgsIEkgc2VlLiBBIG5pY2UgdHJpY2suIDotKQo+IAo+IEl0IG1pZ2h0IGJlIGdvb2Qg
+dG8gbWVyZ2UgdGhlIHRocmVlIGZ1bmN0aW9ucywgYnV0IEkgdGhpbmsgaXQgY2FuCj4gd2FpdCBm
+b3Igd2hlbiB0aGlzIHBhdGNoc2V0IGlzIGRvbmUgLSBvciB0aGVyZSBpcyBhbHdheXMgZ29pbmcg
+dG8gYmUKPiBzb21ldGhpbmcgbW9yZSB0byBhZGQuLi4KClllYWgsIHNvcnJ5LCB0aGF0IHdhcyBh
+IHRhbmdlbnQuICBKdXN0IHNvbWV0aGluZyB0byBjbGVhbiB1cCBzb21lIGRheS4KCi1FcmljCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
