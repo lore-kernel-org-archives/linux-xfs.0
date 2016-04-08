@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1BEB57CA7
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:43:31 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 508667CA7
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:44:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E6E8B304059
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:43:30 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AAE16AC003
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:44:02 -0700 (PDT)
 Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id EW6BXC6iCVs6jIPi (version=TLSv1.2
+	cuda.sgi.com with ESMTP id M3zlXr8I5aCiU3ua (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 13:43:27 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 13:43:57 -0700 (PDT)
 Received: from localhost.localdomain (localhost [127.0.0.1])
-	by smtp.gentoo.org (Postfix) with ESMTP id 78DFC3405D5
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 20:43:26 +0000 (UTC)
+	by smtp.gentoo.org (Postfix) with ESMTP id 1E0EB3405D5
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 20:43:57 +0000 (UTC)
 From: Mike Frysinger <vapier@gentoo.org>
-Subject: [PATCH xfsprogs] po: respect LINGUAS build setting
-Date: Fri,  8 Apr 2016 16:43:23 -0400
-Message-Id: <1460148203-32442-1-git-send-email-vapier@gentoo.org>
+Subject: [PATCH xfsprogs] configure: add mailing list contact
+Date: Fri,  8 Apr 2016 16:43:55 -0400
+Message-Id: <1460148235-32611-1-git-send-email-vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +31,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-It is common gettext practice to limit the translations a particular
-package will include by setting the LINGUAS environment variable.
-
 Signed-off-by: Mike Frysinger <vapier@gentoo.org>
 ---
- po/Makefile | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/po/Makefile b/po/Makefile
-index edf92ad..a5250b3 100644
---- a/po/Makefile
-+++ b/po/Makefile
-@@ -6,7 +6,10 @@ TOPDIR = ..
- include $(TOPDIR)/include/builddefs
- 
- POTHEAD = $(PKG_NAME).pot
--LINGUAS = de pl
-+# If the user has requested a specific set of translations, only build those.
-+SUPPORTED_LINGUAS = $(patsubst %.po,%,$(wildcard *.po))
-+LINGUAS ?= $(SUPPORTED_LINGUAS)
-+LINGUAS := $(filter $(SUPPORTED_LINGUAS),$(LINGUAS))
- LSRCFILES = $(LINGUAS:%=%.po)
- LDIRT = $(POTHEAD)
- 
+diff --git a/configure.ac b/configure.ac
+index d44438f..7d4b155 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1,4 +1,4 @@
+-AC_INIT([xfsprogs], [4.5.0])
++AC_INIT([xfsprogs], [4.5.0], [xfs@oss.sgi.com])
+ AC_PREREQ(2.50)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
 -- 
 2.7.4
 
