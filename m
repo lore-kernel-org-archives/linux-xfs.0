@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 968227CB8
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 17:17:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6B5C68F8052
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:17:12 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E1EF97CA7
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 17:47:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FF4FAC001
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:47:08 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	dM13wEBZvDynvQ1l for <xfs@oss.sgi.com>;
-	Fri, 08 Apr 2016 15:17:08 -0700 (PDT)
-Date: Sat, 9 Apr 2016 08:17:06 +1000
+	tAr0jdVr5ClR9LgO for <xfs@oss.sgi.com>;
+	Fri, 08 Apr 2016 15:47:05 -0700 (PDT)
+Date: Sat, 9 Apr 2016 08:46:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/6 v2] xfs: xfs_iflush_cluster vs xfs_reclaim_inode
-Message-ID: <20160408221706.GB567@dastard>
-References: <1460072271-23923-1-git-send-email-david@fromorbit.com>
-	<20160408171843.GC30614@bfoster.bfoster>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160408224648.GD567@dastard>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160408171843.GC30614@bfoster.bfoster>
+In-Reply-To: <232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,78 +32,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: Brian Foster <bfoster@redhat.com>, Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-On Fri, Apr 08, 2016 at 01:18:44PM -0400, Brian Foster wrote:
-> On Fri, Apr 08, 2016 at 09:37:45AM +1000, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This is the second version of this patch set, first posted and
-> > described here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2016-04/msg00069.html
-> > 
-> > The only change from the first version is splitting up the first
-> > patch into two as Christoph requested - one for the bug fix, the
-> > other for the variable renaming.
-> > 
+On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
+> Hi Dave, Brian, Carlos,
 > 
-> Did your xfstests testing for this series include generic/233? I'm
-> seeing a consistently reproducible test hang. The test is hanging on a
-> "xfs_quota -x -c off -ug /mnt/scratch" command. The stack is as follows:
+> While trying to reproduce this issue I have been running into different
+> issues that are similar. Underlying issue remains the same when backend to
+> XFS is failed & we unmount XFS, we run into hung-task timeout (180-secs)
+> with stack like
 > 
-> [<ffffffffa0772306>] xfs_qm_dquot_walk.isra.8+0x196/0x1b0 [xfs]
-> [<ffffffffa0774a98>] xfs_qm_dqpurge_all+0x78/0x80 [xfs]
-> [<ffffffffa07713e8>] xfs_qm_scall_quotaoff+0x148/0x640 [xfs]
-> [<ffffffffa077733d>] xfs_quota_disable+0x3d/0x50 [xfs]
-> [<ffffffff812c27e3>] SyS_quotactl+0x3b3/0x8c0
-> [<ffffffff81003e17>] do_syscall_64+0x67/0x190
-> [<ffffffff81763f7f>] return_from_SYSCALL_64+0x0/0x7a
-> [<ffffffffffffffff>] 0xffffffffffffffff
+> kernel: [14952.671131]  [<ffffffffc06a5f59>]
+> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
+> prepare_to_wait_event+0x110/0x110
+> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
+> [xfs]
 > 
-> ... and it looks like the kernel is spinning somehow or another between
-> inode reclaim and xfsaild:
+> while running trace-events, XFS ail push keeps looping around
 > 
->     ...
->      kworker/1:2-210   [001] ...1   895.750591: xfs_perag_get_tag: dev 253:3 agno 1 refcount 1 caller xfs_reclaim_inodes_ag [xfs]
->      kworker/1:2-210   [001] ...1   895.750609: xfs_perag_put: dev 253:3 agno 1 refcount 0 caller xfs_reclaim_inodes_ag [xfs]
->      kworker/1:2-210   [001] ...1   895.750609: xfs_perag_get_tag: dev 253:3 agno 2 refcount 5 caller xfs_reclaim_inodes_ag [xfs]
->      kworker/1:2-210   [001] ...1   895.750611: xfs_perag_put: dev 253:3 agno 2 refcount 4 caller xfs_reclaim_inodes_ag [xfs]
->      kworker/1:2-210   [001] ...1   895.750612: xfs_perag_get_tag: dev 253:3 agno 3 refcount 1 caller xfs_reclaim_inodes_ag [xfs]
->      kworker/1:2-210   [001] ...1   895.750613: xfs_perag_put: dev 253:3 agno 3 refcount 0 caller xfs_reclaim_inodes_ag [xfs]
->     xfsaild/dm-3-12406 [003] ...2   895.760588: xfs_ail_locked: dev 253:3 lip 0xffff8801f8e65d80 lsn 2/5709 type XFS_LI_QUOTAOFF flags IN_AIL
->     xfsaild/dm-3-12406 [003] ...2   895.810595: xfs_ail_locked: dev 253:3 lip 0xffff8801f8e65d80 lsn 2/5709 type XFS_LI_QUOTAOFF flags IN_AIL
->     xfsaild/dm-3-12406 [003] ...2   895.860586: xfs_ail_locked: dev 253:3 lip 0xffff8801f8e65d80 lsn 2/5709 type XFS_LI_QUOTAOFF flags IN_AIL
->     xfsaild/dm-3-12406 [003] ...2   895.910596: xfs_ail_locked: dev 253:3 lip 0xffff8801f8e65d80 lsn 2/5709 type XFS_LI_QUOTAOFF flags IN_AIL
->     ...
+>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
+> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
 
-No deadlock involving the AIL - it doesn't remove the
-XFS_LI_QUOTAOFF from the AIL - the quota code committing the
-quotaoff-end transactions is what removes that. IOWs, the dquot walk
-has not completed, so quotaoff has not completed, so the
-XFS_LI_QUOTAOFF is still in the AIL.
+Looks like either a stale inode (which should never reach the AIL)
+or it's an inode that's been reclaimed and this is a use after free
+situation. Given that we are failing IOs here, I'd suggest it's more
+likely to be an IO failure that's caused a writeback problem, not an
+interaction with stale inodes.
 
-IOWs, this looks like xfs_qm_dquot_walk() is skipping dquots because
-xfs_qm_dqpurge is hitting this:
+So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
+inode by calling xfs_iflush_abort(), which will also remove it from
+the AIL. This can also happen on reclaim of a dirty inode, and if so
+we'll still reclaim the inode because reclaim assumes xfs_iflush()
+cleans up properly.
 
-        xfs_dqlock(dqp);
-        if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0) {
-                xfs_dqunlock(dqp);
-                return -EAGAIN;
+Which, apparently, it doesn't:
+
+        /*
+         * Get the buffer containing the on-disk inode.
+         */
+        error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK, 0);
+        if (error || !bp) {
+                xfs_ifunlock(ip);
+                return error;
         }
 
-So that means we've got an inode that probably hasn't been
-reclaimed, because the last thing that happens during reclaim is the
-dquots are detatched from the inode and hence the reference counts
-are dropped.
-
-> FWIW, this only occurs with patch 6 applied. The test and scratch
-> devices are both 10GB lvm volumes formatted with mkfs defaults (v5).
-
-I can't see how patch 6 would prevent an inode from being reclaimed,
-as all the changes occur *after* the reclaim decision has been made.
-More investigation needed, I guess...
+This looks like a bug - xfs_iflush hasn't aborted the inode
+writeback on failure - it's just unlocked the flush lock. Hence it
+has left the inode dirty in the AIL, and then the inode has probably
+then been reclaimed, setting the inode number to zero.
 
 Cheers,
 
