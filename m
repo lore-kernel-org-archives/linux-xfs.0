@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7B8077CB2
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 06:37:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9C3E47CA1
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 08:17:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E386304048
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 04:37:13 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FE07304032
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 06:17:03 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lFbr8vFWY0ZTRZCs (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3ITHoAia15oG6JMj (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 04:37:11 -0700 (PDT)
-Date: Fri, 8 Apr 2016 07:37:09 -0400
+	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 06:17:01 -0700 (PDT)
+Date: Fri, 8 Apr 2016 09:16:59 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/6 v2] xfs: xfs_iflush_cluster vs xfs_reclaim_inode
-Message-ID: <20160408113709.GA30614@bfoster.bfoster>
-References: <1460072271-23923-1-git-send-email-david@fromorbit.com>
-	<20160408032841.GW10345@eguan.usersys.redhat.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160408131658.GB30614@bfoster.bfoster>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160408032841.GW10345@eguan.usersys.redhat.com>
+In-Reply-To: <232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,129 +32,394 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-On Fri, Apr 08, 2016 at 11:28:41AM +0800, Eryu Guan wrote:
-> On Fri, Apr 08, 2016 at 09:37:45AM +1000, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This is the second version of this patch set, first posted and
-> > described here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2016-04/msg00069.html
+On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
+> Hi Dave, Brian, Carlos,
 > 
-> Just a quick note here, I'm testing the v1 patchset right now, v4.6-rc2
-> kernel + v1 patch, config file is based on rhel7 debug kernel config.
+> While trying to reproduce this issue I have been running into different
+> issues that are similar. Underlying issue remains the same when backend to
+> XFS is failed & we unmount XFS, we run into hung-task timeout (180-secs)
+> with stack like
 > 
-> The test is the same as the original reproducer (long term fsstress run
-> on XFS, exported from NFS). The test on x86_64 host has been running for
-> two days and everything looks fine. Test on ppc64 host has been running
-> for a few hours and I noticed a lock issue and a few warnings, not sure
-> if it's related to the patches or even to XFS yet(I need to run test on
-> stock -rc2 kernel to be sure), but just post the logs here for reference
+> kernel: [14952.671131]  [<ffffffffc06a5f59>]
+> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
+> prepare_to_wait_event+0x110/0x110
+> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
+> [xfs]
+> 
+> while running trace-events, XFS ail push keeps looping around
+> 
+>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
+> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-21143 [001] ...2 17878.555138: xfs_iunlock: dev 253:10
+> ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-21143 [001] ...2 17878.555138: xfs_ail_push: dev 253:10
+> lip 0xffff880031f6ae40 lsn 1/73448 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-21143 [001] ...2 17878.605136: xfs_ilock_nowait: dev
+> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-21143 [001] ...2 17878.605141: xfs_iunlock: dev 253:10
+> ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-21143 [001] ...2 17878.605142: xfs_ail_push: dev 253:10
+> lip 0xffff880031f6ae40 lsn 1/73448 type XFS_LI_INODE flags IN_AIL
+> 
+> observe ino==0x0 (its a freed inode) but the corresponding lip stays with
+> xfsaild push. I had run a systemtap when this problem happened & the
+> following keeps repeating.
 > 
 
-Had the original problem ever been reproduced on an upstream kernel?
+That's interesting, and looks different from the original report in
+terms of the inode number being cleared. The original report looks like
+it has a valid inode and there's some problematic sequence where it's
+not being removed from the AIL in the event of errors.
 
-FWIW, my rhel kernel based test is still running well approaching ~48
-hours. I've seen some lockdep messages (bad unlock balance), but IIRC
-I've been seeing those from the start so I haven't been paying much
-attention to it while digging into the core problem.
+I think at this point we know that XFS attempts to retry these I/Os
+indefinitely. Dave has outstanding patches to deal with this issue. The
+question Dave raised above was whether the filesystem shut down, and if
+not, why (as a failed log I/O should cause a shutdown)? Carlos was
+looking into this it appears...
 
-> [ 1911.626286] ======================================================
-> [ 1911.626291] [ INFO: possible circular locking dependency detected ]
-> [ 1911.626297] 4.6.0-rc2.debug+ #1 Not tainted
-> [ 1911.626301] -------------------------------------------------------
-> [ 1911.626306] nfsd/7402 is trying to acquire lock:
-> [ 1911.626311]  (&s->s_sync_lock){+.+.+.}, at: [<c0000000003585f0>] .sync_inodes_sb+0xe0/0x230
-> [ 1911.626327]
-> [ 1911.626327] but task is already holding lock:
-> [ 1911.626333]  (sb_internal){.+.+.+}, at: [<c00000000031a780>] .__sb_start_write+0x90/0x130
-> [ 1911.626346]
-> [ 1911.626346] which lock already depends on the new lock.
-> [ 1911.626346]
-> [ 1911.626353]
-> [ 1911.626353] the existing dependency chain (in reverse order) is:
-> [ 1911.626358]
-...
-> [ 1911.627134]  Possible unsafe locking scenario:
-> [ 1911.627134]
-> [ 1911.627139]        CPU0                    CPU1
-> [ 1911.627143]        ----                    ----
-> [ 1911.627147]   lock(sb_internal);
-> [ 1911.627153]                                lock(&s->s_sync_lock);
-> [ 1911.627160]                                lock(sb_internal);
-> [ 1911.627166]   lock(&s->s_sync_lock);
-> [ 1911.627172]
-> [ 1911.627172]  *** DEADLOCK ***
-> [ 1911.627172]
-...
+> xfs_inode_item_push() - inode:0xffff88003d8ca000 m_flags:0x420118
+> flags:0x1
+> xfs_iflush() - inode:ffff88003d8ca000 aborting for forced shutdown
+> xfs_iflush_abort() - iip:0x0
+> 
+> xfs_inode_item_push() is doing xfs_iflush() but it sees FS_SHUTDOWN flag
+> marked & does an xfs_iflush_abort().xfs_iflush_abort() sees i_itemp==NULL
+> on the lip & doesn't do anything. So we have this stale lip that is not
+> associated to inode anymore that keeps xfs_ail_push_all_sync() busy.
+> 
+> On few other occurrences, i have had NULL pointer/dereference or other
+> sorts of crashes at this line
+> 
+> 	xfsaild_push()
+> 		lock_result = lip->li_ops->iop_push(lip,
+> &ailp->xa_buf_list);
+> 
+> with debug prints, in one of the occurrence lip->li_ops was NULL & in
+> another lip->li_ops was pointing to a bad pointer that subsequent
+> dereference crashed it. This also indicates that a bad/freed lip was
+> inserted that xfsaild_push() is working.
+> 
+> I hit upon Dave's patch "xfs: xfs_inode_free() isn't RCU safe" & realized
+> that this could explain the above issue where a lip that has been freed is
+> wrongly referenced & later we could even have the inode disconnected. What
+> do you think?
+> 
+> In any case I uploaded the full xfs trace events before this issue started
+> & till the end. It is at
+> https://www.dropbox.com/s/21qstz4ld1gn8yi/xfs_trace_pipe.gz?dl=0
+> 
 
-We actually have a report of this one on the list:
-
-http://oss.sgi.com/archives/xfs/2016-04/msg00001.html
-
-... so I don't think it's related to this series. I believe I've seen
-this once or twice when testing something completely unrelated, as well.
-
-> [ 2046.852739] kworker/dying (399) used greatest stack depth: 4352 bytes left
-> [ 2854.687381] XFS: Assertion failed: buffer_mapped(bh), file: fs/xfs/xfs_aops.c, line: 780
-> [ 2854.687434] ------------[ cut here ]------------
-> [ 2854.687488] WARNING: CPU: 5 PID: 28924 at fs/xfs/xfs_message.c:105 .asswarn+0x2c/0x40 [xfs]
-...
-> [ 2854.687997] ---[ end trace 872ac2709186f780 ]---
-
-These asserts look new to me, however. It would be interesting to see if
-these reproduce independently.
+It seems like it could be related. I didn't catch anything obvious from
+the trace, but there's a lot of data there. The RCU-unsafe issue was
+difficult to track down without instrumentation.. I'm not sure that will
+be evident from the trace. The best thing to do wrt to that might be to
+try with Dave's patches, as that so far appears to address the problem.
+(In fact, it might be worth it to try Dave's shutdown on umount patch
+he referred to up-thread to address the original problem as well).
 
 Brian
 
-> [ 2854.688001] XFS: Assertion failed: buffer_mapped(bh), file: fs/xfs/xfs_aops.c, line: 780
-> [ 2854.688022] ------------[ cut here ]------------
-> [ 2854.688072] WARNING: CPU: 5 PID: 28924 at fs/xfs/xfs_message.c:105 .asswarn+0x2c/0x40 [xfs]
-> [ 2854.688076] Modules linked in: rpcsec_gss_krb5 nfsv4 dns_resolver nfs fscache dm_mod loop sg pseries_rng nfsd auth_rpcgss nfs_acl lockd sunrpc grace ip_tables xfs libcrc32c sd_mod ibmvscsi ibmveth scsi_transport_srp
-> [ 2854.688110] CPU: 5 PID: 28924 Comm: kworker/u32:4 Tainted: G        W       4.6.0-rc2.debug+ #1
-> [ 2854.688116] Workqueue: writeback .wb_workfn (flush-253:0)
-> [ 2854.688121] task: c0000001e6d28380 ti: c0000000fe3ac000 task.ti: c0000000fe3ac000
-> [ 2854.688126] NIP: d0000000066ddafc LR: d0000000066ddafc CTR: c0000000004dd880
-> [ 2854.688131] REGS: c0000000fe3aeeb0 TRAP: 0700   Tainted: G        W        (4.6.0-rc2.debug+)
-> [ 2854.688135] MSR: 8000000100029032 <SF,EE,ME,IR,DR,RI,TM[E]>  CR: 48002048  XER: 0000000d
-> [ 2854.688153] CFAR: d0000000066dd890 SOFTE: 1
-> GPR00: d0000000066ddafc c0000000fe3af130 d000000006765850 ffffffffffffffea
-> GPR04: 000000000000000a c0000000fe3aef50 00000000000000d1 ffffffffffffffc0
-> GPR08: 0000000000000000 0000000000000021 00000000ffffffd1 d000000006741dc0
-> GPR12: c0000000004dd880 c00000000e822d00 c0000000fe3af4e0 0000000000000001
-> GPR16: c0000000fe3af6f0 0000000000000002 0000000000000000 0000000000000007
-> GPR20: 0000000000000003 c0000000fe3af4f0 0000000000000000 c0000000fe3af210
-> GPR24: 0000000000000004 0000000000001000 0000000000160000 f000000000f0e100
-> GPR28: c0000004055d18c8 c000000016cde430 0000000000158000 c0000004055d1588
-> [ 2854.688268] NIP [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs]
-> [ 2854.688318] LR [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs]
-> [ 2854.688321] Call Trace:
-> [ 2854.688369] [c0000000fe3af130] [d0000000066ddafc] .asswarn+0x2c/0x40 [xfs] (unreliable)
-> [ 2854.688423] [c0000000fe3af1a0] [d0000000066a9104] .xfs_do_writepage+0x414/0x930 [xfs]
-> [ 2854.688430] [c0000000fe3af2b0] [c00000000025df6c] .write_cache_pages+0x5fc/0x820
-> [ 2854.688481] [c0000000fe3af470] [d0000000066a8a5c] .xfs_vm_writepages+0x8c/0xd0 [xfs]
-> [ 2854.688487] [c0000000fe3af540] [c00000000025f62c] .do_writepages+0x3c/0x70
-> [ 2854.688493] [c0000000fe3af5b0] [c00000000035b1ec] .__writeback_single_inode+0x5bc/0xd50
-> [ 2854.688499] [c0000000fe3af680] [c00000000035c3c0] .writeback_sb_inodes+0x380/0x730
-> [ 2854.688505] [c0000000fe3af7f0] [c00000000035ca44] .wb_writeback+0x194/0x920
-> [ 2854.688510] [c0000000fe3af960] [c00000000035ddcc] .wb_workfn+0x19c/0xa40
-> [ 2854.688516] [c0000000fe3afad0] [c0000000000dfc74] .process_one_work+0x264/0x8f0
-> [ 2854.688522] [c0000000fe3afbc0] [c0000000000e0388] .worker_thread+0x88/0x520
-> [ 2854.688528] [c0000000fe3afcb0] [c0000000000e9ac4] .kthread+0x114/0x140
-> [ 2854.688534] [c0000000fe3afe30] [c000000000009578] .ret_from_kernel_thread+0x58/0x60
-> [ 2854.688539] Instruction dump:
-> [ 2854.688543] 60420000 7c0802a6 3d420000 7c691b78 7c862378 e88abe38 7ca72b78 38600000
-> [ 2854.688555] 7d254b78 f8010010 f821ff91 4bfffcf9 <0fe00000> 38210070 e8010010 7c0803a6
-> [ 2854.688568] ---[ end trace 872ac2709186f781 ]---
+> Pls let me know. Thanks.
 > 
-> [then the XFS warning repeated for a few times triggered by different
-> pid]
+> --Shyam
 > 
-> Thanks,
-> Eryu
+> -----Original Message-----
+> From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
+> Sent: 23 March 2016 15:23
+> To: 'Brian Foster'
+> Cc: 'xfs@oss.sgi.com'; Alex Lyakas
+> Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+> after disk failure/recovery
+> 
+> Hi Carlos,
+> 
+> w.r.t. your question below
+> 
+> >>> Shyam, after you reconnected the disks, the messages about failed
+> async metadata
+> >>> writes stops to be logged?
+> 
+> After I reconnect the disks, messages about failed async metadata writes
+> stops to be logged. But the key thing is messages like
+> 
+> XFS (dm-29): xfs_log_force: error -5 returned
+> 
+> Keeps repeating every 30-secs which indicates that there is some buf/io
+> error status that is being carried forward.
+> 
+> >>> Any chance you can reliably reproduce it?
+> 
+> Yes I have a way to reproduce it, but its not reliable. What I do is setup
+> a dm-linear over a disk. Create XFS, mount & trigger few copy threads to
+> copy varying sized files into the FS. At this point pull out the drive
+> (with scsi-remove-single-device in /proc/scsi/scsi) & in a short-while
+> convert the dm-linear to dm-ioerror. Then I bring back the underlying
+> drive, convert back dm-ioerror to dm-linear & try to unmount XFS.
+> 
+> This problem somehow happens on a newly created XFS. If I copy several
+> files into XFS/delete them & then copy them again, repeat the drive
+> failure/recovery experiment it doesn't reproduce.
+> 
+> Thanks.
+> 
+> --Shyam
+> 
+> Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+> after disk failure/recovery
+> From: Carlos Maiolino <cmaiolino@xxxxxxxxxx>
+> Date: Tue, 22 Mar 2016 16:38:25 +0100
+> In-reply-to: <20160322140345.GA54245@bfoster.bfoster>
+> Mail-followup-to: xfs@xxxxxxxxxxx
+> User-agent: Mutt/1.5.24 (2015-08-30)
+> 
+> Hi Brian,
+> 
+> These traces, and the stack trace presented, looks quite similar with the
+> one we were discussing a few days ago, using a dm-thin snapshot.
+> 
+> Looks like with the same bug I've been hunting and Shyam confirmed my
+> hypothesis
+> of this bug be able to be reproduced with a regular device.
+> 
+> If it's the same bug, yes, I reproduced it using upstream kernel.
+> 
+> The difference between both (this bug and the one I've been working on) is
+> how
+> xfs actually behaves when async metadata writes fail. Other than that, it
+> pretty
+> much looks the same.
+> 
+> Trying to unmount the filesystem hungs in xfs_log_force(), well, basically
+> the
+> reason I submitted the patch to include the caller into xfs_log_force
+> trace. I'd
+> like to see ftrace traces from this system with that patch if possible.
+> 
+> I didn't have time to keep working on this for the past few days, but
+> looks like
+> it's time to come back to it.
+> 
+> Shyam, after you reconnected the disks, the messages about failed async
+> metadata
+> writes stops to be logged?
+> 
+> Any chance you can reliably reproduce it?
+> 
+> I'm not a xfs journal expert, but it looks like the writeback of items in
+> AIL
+> got stuck due the IO errors, and were never completed, but I don't know
+> what I
+> should expect after the disk is reconnected.
+> 
+> In my case though, with upstream kernel, I didn't get a XFS_SHUTDOWN until
+> I
+> tried to unmount the filesystem, which differs from this case, where xfs
+> looks
+> to have shutdown the filesystem after a few tries to writeback the
+> metadata.
+> 
+> Anyway, I can dig more into it this week, if nobody knows what is going on
+> before I do it :)
+> 
+> -----Original Message-----
+> From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
+> Sent: 22 March 2016 18:32
+> To: 'Brian Foster'
+> Cc: 'xfs@oss.sgi.com'; Alex Lyakas
+> Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+> after disk failure/recovery
+> 
+> Hi Brian,
+> 
+> Thanks for your quick reply. I repeated the test & trace-pipe is
+> constantly filled with this:
+> 
+>    xfsaild/dm-10-3335  [003] ...2 24890.546491: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.546492: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.546493: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.596491: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.596492: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.596494: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.646497: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.646498: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.646500: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.696467: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.696468: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.746548: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.746550: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.796479: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.796480: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 24890.846467: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 24890.846468: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+> 
+> 
+> while regular activity seems to happen on other inodes/kworker threads
+> 
+>     kworker/u8:4-27691 [001] ...1 24895.811474: xfs_writepage: dev 253:10
+> ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+> unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811477: xfs_invalidatepage: dev
+> 253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+> delalloc 1 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811478: xfs_releasepage: dev
+> 253:10 ino 0x1801061 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+> delalloc 0 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811482: xfs_writepage: dev 253:10
+> ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+> unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811482: xfs_invalidatepage: dev
+> 253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+> delalloc 1 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811483: xfs_releasepage: dev
+> 253:10 ino 0x4017bdf pgoff 0x29000 size 0x1aebbc offset 0 length 0
+> delalloc 0 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811485: xfs_writepage: dev 253:10
+> ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0 delalloc 1
+> unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811486: xfs_invalidatepage: dev
+> 253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 1000
+> delalloc 1 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.811486: xfs_releasepage: dev
+> 253:10 ino 0x68048c3 pgoff 0x29000 size 0x1aebbc offset 0 length 0
+> delalloc 0 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.812381: xfs_writepage: dev 253:10
+> ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+> unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.812382: xfs_invalidatepage: dev
+> 253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 1000
+> delalloc 1 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.812382: xfs_releasepage: dev
+> 253:10 ino 0x1805e37 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc
+> 0 unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.812385: xfs_writepage: dev 253:10
+> ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 0 delalloc 1
+> unwritten 0
+>     kworker/u8:4-27691 [001] ...1 24895.812385: xfs_invalidatepage: dev
+> 253:10 ino 0x4019c95 pgoff 0x29000 size 0x68470 offset 0 length 1000
+> delalloc 1 unwritten 0
+> 
+> 
+> looks like xfsaild is not able to take lock until hung-task timeout kicks
+> in
+> 
+>    xfsaild/dm-10-3335  [003] ...2 25247.649468: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.649469: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 25247.699478: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.699516: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.699517: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+>    xfsaild/dm-10-3335  [003] ...2 25247.749471: xfs_ilock_nowait: dev
+> 253:10 ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.749478: xfs_iunlock: dev 253:10
+> ino 0xc0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+>    xfsaild/dm-10-3335  [003] ...2 25247.749479: xfs_ail_flushing: dev
+> 253:10 lip 0xffff8800a9f437b8 lsn 1/38624 type XFS_LI_INODE flags IN_AIL
+> 
+> Please let me know how to debug this further. Thanks.
+> 
+> --Shyam
+> -----Original Message-----
+> From: Brian Foster [mailto:bfoster@redhat.com]
+> Sent: 22 March 2016 17:49
+> To: Shyam Kaushik
+> Cc: xfs@oss.sgi.com; Alex Lyakas
+> Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+> after disk failure/recovery
+> 
+> On Tue, Mar 22, 2016 at 04:51:39PM +0530, Shyam Kaushik wrote:
+> > Hi XFS developers,
+> >
+> > We are seeing the following issue with XFS on kernel 3.18.19.
+> >
+> > We have XFS mounted over a raw disk. Disk was pulled out manually. There
+> > were async writes on files that were errored like this
+> >
+> ...
+> >
+> > And XFS hit metadata & Log IO errors that it decides to shutdown:
+> >
+> > Mar 16 16:03:22 host0 kernel: [ 4637.351841] XFS (dm-29): metadata I/O
+> > error: block 0x3a27fbd0 ("xlog_iodone") error 5 numblks 64
+> > Mar 16 16:03:22 host0 kernel: [ 4637.352820] XFS(dm-29): SHUTDOWN!!!
+> > old_flags=0x0 new_flags=0x2
+> > Mar 16 16:03:22 host0 kernel: [ 4637.353187] XFS (dm-29): Log I/O Error
+> > Detected.  Shutting down filesystem
+> ...
+> > Later the drive was re-inserted back. After the drive was re-inserted,
+> XFS
+> > was attempted to be unmounted
+> >
+> > Mar 16 16:16:53 host0 controld: [2557] [     ] umount[202]
+> > : umount(/sdisk/vol5b0, xfs)
+> >
+> > But nothing happens except for the 30-secs xfs_log_force errors that
+> keeps
+> > repeating
+> >
+> ...
+> >
+> > This problem doesn't happen consistently, but happens periodically with
+> a
+> > drive failure/recovery followed by XFS unmount. I couldn't find this
+> issue
+> > fixed in later kernels. Can you please suggest how I can debug this
+> issue
+> > further?
+> >
+> 
+> Similar problems have been reproduced due to racy/incorrect EFI/EFD
+> object tracking, which are internal data structures associated with
+> freeing extents.
+> 
+> What happens if you enable tracepoints while the fs is in this hung
+> unmount state?
+> 
+> # trace-cmd start -e "xfs:*"
+> # cat /sys/kernel/debug/tracing/trace_pipe
+> 
+> Brian
+> 
+> > Thanks!
+> >
+> > --Shyam
+> >
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 > 
 > _______________________________________________
 > xfs mailing list
