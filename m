@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FE247CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 06:06:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89D79AC008
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 04:06:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 99o5yGLVYnEZwMVN (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 04:06:48 -0700 (PDT)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfs/259: handle minimum block size more precisely
-Date: Thu,  7 Apr 2016 19:05:55 +0800
-Message-Id: <1460027155-4222-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1BACA7CA7
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:49:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E3BB98F8052
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:49:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id HNjM8SQHYsHARC2R for <xfs@oss.sgi.com>;
+	Fri, 08 Apr 2016 13:49:18 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id A411316C16D
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:49:17 -0500 (CDT)
+Subject: Re: Use latest xfs_repair on older file systems
+References: <CAD4UnC8M32_GO1+2rfi=v6f3R02T70dhxQJeZtnGFi_muL2z9g@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5708194D.4080406@sandeen.net>
+Date: Fri, 8 Apr 2016 15:49:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAD4UnC8M32_GO1+2rfi=v6f3R02T70dhxQJeZtnGFi_muL2z9g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,72 +28,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Currently xfs/259 checks $TEST_DIR for CRC support status to determine
-if 512 block size should be tested. But this doesn't always work. For
-example, when TEST_DEV is mkfs'ed with "-m crc=0" mkfs option, using
-mkfs.xfs binary with CRC being the default.
+On 4/8/16 3:37 PM, Chris M Moser wrote:
+> Hello,
+> 
+> I have a file system that experienced issues and would not mount. The
+> system would not boot either as this file system was listed in
+> /etc/fstab. I booted to a debian image with xfsprogs 3.2.1 and ran
+> xfs_repair
+> 
+> The host OS now boots and the file system mounts but has only a
+> handful of the original files. I unmounted and ran xfs_repair 2.9.4
+> form the host OS a few more times. (I read somewhere that running
+> xfs_repair multiple times can find more files) I still see the same
+> handful of files.
+> 
+> A previous thread
+> (http://oss.sgi.com/archives/xfs/2014-06/msg00204.html) suggests
+> running the latest xfs_repair as it may be able to reattach more
+> files.
+> 
+> I booted to a fedora 23 live image and updated xfsprogs to 4.5.0.
+> (openSUSE Tumbleweed has xfsprogs 4.5.0 but I was not able to get
+> their live image working) When running xfs_repair on the file system
+> it complains: xfs_repair: V1 inodes unsupported. Please try an older
+> xfsporgs.
+> 
+> Is it reasonable to assume that xfs_repair has done all it can and I
+> should now use photorec from the testdisk package to recover what I
+> can?
 
-What should be really checked is whether mkfs.xfs creates CRC enabled
-XFS by default. So introduce a new flag XFS_MKFS_CRC_DEFAULT for this
-purpose, and do the check based on it in xfs/259.
+Yes, unfortunately.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
+In general, using the latest xfs_repair is a good idea.  And in general,
+a single pass of xfs_repair should be enough.
 
-This is actually the second attempt to fix this issue, because Christoph was
-not satisfied with the first attempt, and me either (after thinking about it
-more :-)). Hope it works this time.
+In some cases, there are features which only newer xfs_repair understands - 
+but older versions should simply refuse to run in that case.
 
- common/config | 8 ++++++++
- tests/xfs/259 | 4 +---
- 2 files changed, 9 insertions(+), 3 deletions(-)
+Obsolete features do occasionally get dropped upstream, as well - witness
+your V1 inode message.  However, that was likely just some other form of
+corruption, seen as V1 inodes, unless this really was a very, very old
+filesystem (created prior to 2007), which seems unlikely.
 
-diff --git a/common/config b/common/config
-index cacd815..13bd307 100644
---- a/common/config
-+++ b/common/config
-@@ -270,8 +270,16 @@ $MKFS_XFS_PROG -N -d file,name=/tmp/crc_check.img,size=32m -m crc=0 \
- if [ $? -ne 0 ]; then
- 	XFS_MKFS_HAS_NO_META_SUPPORT=true
- fi
-+# check if v5 xfs is default
-+XFS_MKFS_CRC_DEFAULT=0
-+$MKFS_XFS_PROG -N -d file,name=/tmp/crc_check.img,size=32m 2>&1 | grep -q crc=1
-+if [ $? -eq 0 ]; then
-+	XFS_MKFS_CRC_DEFAULT=1
-+fi
- rm -f /tmp/crc_check.img
-+
- export XFS_MKFS_HAS_NO_META_SUPPORT
-+export XFS_MKFS_CRC_DEFAULT
- 
- # new doesn't need config file parsed, we can stop here
- if [ "$iam" == "new" ]; then
-diff --git a/tests/xfs/259 b/tests/xfs/259
-index 16c1935..3150ff3 100755
---- a/tests/xfs/259
-+++ b/tests/xfs/259
-@@ -51,9 +51,7 @@ testfile=$TEST_DIR/259.image
- # Test various sizes slightly less than 4 TB. Need to handle different
- # minimum block sizes for CRC enabled filesystems, but use a small log so we
- # don't write lots of zeros unnecessarily.
--xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
--. $tmp.mkfs
--if [ $_fs_has_crcs -eq 1 ]; then
-+if [ $XFS_MKFS_CRC_DEFAULT -eq 1 ]; then
- 	blocksize=1024
- 	sizes_to_check="1024 2048 4096"
- 	echo "Trying to make (4 TB - 512) B long xfs fs image"
--- 
-2.5.5
+It sounds like you experienced some very severe corruption; if that is the
+case, you might start by making sure your storage devices are in decent
+shape.
+
+Oh, and look in lost+found, if most files seem to be "gone" - they may
+be there.
+
+-Eric
+
+> Thank you for your feedback.
+> 
+> -Chris
+> 
+> -- 
+> Christopher M Moser
+> 
+> Seagate Technology LLC
+> Cluster Lab Administrator
+> NRM Bldg A/A1-3
+> chris.m.moser@seagate.com <mailto:chris.m.moser@seagate.com>
+> 952-402-8269
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
