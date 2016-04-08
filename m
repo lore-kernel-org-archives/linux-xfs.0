@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FD447CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 14:15:52 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B727B7CA1
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:37:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A673EAC004
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 12:15:48 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id H4qxbxp0uqCYMRFW for <xfs@oss.sgi.com>;
-	Mon, 11 Apr 2016 12:15:42 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 3D61C142F
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 14:15:42 -0500 (CDT)
-Subject: Re: BUG: unable to handle kernel paging request at ffffffff82200000
-	(xlog_recover_buffer_pass2)
-References: <565EA0DF.609@oracle.com> <56FAA2B9.9060606@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <570BF7DD.8070309@sandeen.net>
-Date: Mon, 11 Apr 2016 14:15:41 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DC4A304032
+	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:37:15 -0700 (PDT)
+Received: from mx0b-00003501.pphosted.com (mx0b-00003501.pphosted.com
+	[67.231.152.68]) by cuda.sgi.com with ESMTP id b7JE1Q39dTC12CRM
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 08 Apr 2016 13:37:13 -0700 (PDT)
+Received: from pps.filterd (m0075033.ppops.net [127.0.0.1])
+	by mx0b-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id
+	u38KXhZg032926 for <xfs@oss.sgi.com>; Fri, 8 Apr 2016 16:37:13 -0400
+Received: from mail-io0-f170.google.com (mail-io0-f170.google.com
+	[209.85.223.170])
+	by mx0b-00003501.pphosted.com with ESMTP id 226ksgg1c2-3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NOT) for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 16:37:13 -0400
+Received: by mail-io0-f170.google.com with SMTP id g185so145497547ioa.2
+	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 13:37:13 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <56FAA2B9.9060606@gmail.com>
+Date: Fri, 8 Apr 2016 15:37:12 -0500
+Message-ID: <CAD4UnC8M32_GO1+2rfi=v6f3R02T70dhxQJeZtnGFi_muL2z9g@mail.gmail.com>
+Subject: Use latest xfs_repair on older file systems
+From: Chris M Moser <chris.m.moser@seagate.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,119 +33,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============8809094124423313391=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RldJVywgdGVzdGluZyBpdCBvbiA0LjYuMC1yYzEgcGFzc2VzIGZvciBtZS4KClsxMDc1Ni41NDg1
-NzhdIFhGUyAobG9vcDApOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtClsxMDc1Ni41NTUxMDldIFhG
-UyAobG9vcDApOiBUb3JuIHdyaXRlIChDUkMgZmFpbHVyZSkgZGV0ZWN0ZWQgYXQgbG9nIGJsb2Nr
-IDB4Mi4gVHJ1bmNhdGluZyBoZWFkIGJsb2NrIGZyb20gMHg5LgpbMTA3NTYuNTgzNTYxXSBYRlMg
-KGxvb3AwKTogTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfaW5vZGVfYnVmX3Zl
-cmlmeSsweDhlLzB4MTYwIFt4ZnNdLCB4ZnNfaW5vZGUgYmxvY2sgMHgyNWMwClsxMDc1Ni41OTQy
-NDVdIFhGUyAobG9vcDApOiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgpbMTA3NTYuNTk5MTE3
-XSBYRlMgKGxvb3AwKTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1ldGFkYXRhIGJ1ZmZl
-cjoKWzEwNzU2LjYwNTU0NV0gZmZmZjg4MDE4OTQ1ZjAwMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KWzEwNzU2LjYxNDIy
-NV0gZmZmZjg4MDE4OTQ1ZjAxMDogMDAgMDEgNzggMjUgYjcgMzMgOTQgYjYgNDEgZGQgOGYgZTQg
-OWYgZjYgYWYgZWYgIC4ueCUuMy4uQS4uLi4uLi4KWzEwNzU2LjYyMjkwNl0gZmZmZjg4MDE4OTQ1
-ZjAyMDogMDIgODIgNDkgNGUgNDEgZWQgMDIgMDEgMDAgMDAgMDAgMDAgMDAgMDMgMDAgMDAgIC4u
-SU5BLi4uLi4uLi4uLi4KWzEwNzU2LjYzMTU4Nl0gZmZmZjg4MDE4OTQ1ZjAzMDogMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDEgNTYgNWUgMTUgNGYgMDMgMTQgIC4uLi4uLi4uLi5WXi5PLi4K
-WzEwNzU2LjY0MDI2N10gWEZTIChsb29wMCk6IGJhZCBpbm9kZSBtYWdpYy92c24gZGFkZHIgOTY2
-NCAjMCAobWFnaWM9MCkKPHJlcGVhdHM+ClsxMDc1OC42MDQ3NjddIFhGUyAobG9vcDApOiBEZXRl
-Y3RlZCBib2d1cyB6ZXJvIG5leHRfdW5saW5rZWQgZmllbGQgaW4gaW5vZGUgNSBidWZmZXIgMHgy
-NWMwLgpbMTA3NTguNjEzMDMyXSBYRlMgKGxvb3AwKTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9j
-ayAweDI1YzAgKCJ4ZnNfdHJhbnNfcmVhZF9idWZfbWFwIikgZXJyb3IgMTE3IG51bWJsa3MgMTYK
-WzEwNzU4LjYyMjYwMV0gWEZTIChsb29wMCk6IHhmc19pbWFwX3RvX2JwOiB4ZnNfdHJhbnNfcmVh
-ZF9idWYoKSByZXR1cm5lZCBlcnJvciAtMTE3LgpbMTA3NTguNjMwMTYyXSBYRlMgKGxvb3AwKTog
-ZmFpbGVkIHRvIHJlYWQgcm9vdCBpbm9kZQoKLUVyaWMKCk9uIDMvMjkvMTYgMTA6NDMgQU0sIEpp
-YSBIZSB3cm90ZToKPiBIaSBWZWdhcmQKPiBEb2VzIHRoaXMgY29tbWl0IGZpeCB0aGUgY3Jhc2g/
-Cj4gCj4gY29tbWl0ICAgIDcwODhjNDEzNmZhMWNiYTI2NTMxZmRlNDBiZGNmY2YzZDJjY2Q1MzMg
-KHBhdGNoKQo+IHhmczogZGV0ZWN0IGFuZCB0cmltIHRvcm4gd3JpdGVzIGR1cmluZyBsb2cgcmVj
-b3ZlcnkKPiAKPiBCLlIuCj4gCj4gCj4g5ZyoIDEyLzIvMTUgMzo0MiBQTSwgVmVnYXJkIE5vc3N1
-bSDlhpnpgZM6Cj4+IEhpLAo+Pgo+PiBNb3VudGluZyB0aGUgYXR0YWNoZWQgWEZTIGltYWdlIChm
-dXp6ZWQpIGdpdmVzIG1lIHRoZSBmb2xsb3dpbmcgaW52YWxpZAo+PiBtZW1vcnkgZGVyZWZlcmVu
-Y2Ugb24gbGF0ZXN0IGxpbnVzL21hc3RlcjoKPj4KPj4gWEZTICh2ZGEpOiBNb3VudGluZyBWNCBG
-aWxlc3lzdGVtCj4+IFhGUyAodmRhKTogU3RhcnRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50ZXJu
-YWwpCj4+IFhGUyAodmRhKTogbG9nIHJlY29yZCBDUkMgbWlzbWF0Y2g6IGZvdW5kIDB4OWY1MzQ5
-NjQsIGV4cGVjdGVkIDB4ZDQ2ZDU5Y2UuCj4+IGZmZmZjOTAwMDA0NDIwMDA6IDAwIDAwIDAwIDAx
-IDAwIDAwIDAwIDAwIDY5IDAxIDAwIDAwIGU2IDMzIDE4IDE5IC4uLi4uLi4uaS4uLi4zLi4KPj4g
-ZmZmZmM5MDAwMDQ0MjAxMDogMDAgMDAgMDAgMTAgNjkgMDAgMDAgMDAgNGUgNDEgNTIgNTQgMmEg
-MDAgMDAgMDAgLi4uLmkuLi5OQVJUKi4uLgo+PiBYRlMgKHZkYSk6IGxvZyByZWNvcmQgQ1JDIG1p
-c21hdGNoOiBmb3VuZCAweGVkYmEyOGUsIGV4cGVjdGVkIDB4OWYwMTliNzMuCj4+IGZmZmZjOTAw
-MDA0NDIwMDA6IDAwIDAwIDAwIDAxIDAwIDAwIDAwIDAwIDY5IDAxIDAwIDAwIDVjIDQ3IDg4IDFl
-IC4uLi4uLi4uaS4uLlxHLi4KPj4gZmZmZmM5MDAwMDQ0MjAxMDogMDAgMDAgMDAgMTAgNjkgMDAg
-MDAgMDAgNGUgNDEgNTIgNTQgMmEgMDAgMDAgMDAgLi4uLmkuLi5OQVJUKi4uLgo+PiBYRlMgKHZk
-YSk6IGxvZyByZWNvcmQgQ1JDIG1pc21hdGNoOiBmb3VuZCAweDlmNTM0OTY0LCBleHBlY3RlZCAw
-eGQ0NmQ1OWNlLgo+PiBmZmZmYzkwMDAwNDRhMDAwOiAwMCAwMCAwMCAwMSAwMCAwMCAwMCAwMCA2
-OSAwMSAwMCAwMCBlNiAzMyAxOCAxOSAuLi4uLi4uLmkuLi4uMy4uCj4+IGZmZmZjOTAwMDA0NGEw
-MTA6IDAwIDAwIDAwIDEwIDY5IDAwIDAwIDAwIDRlIDQxIDUyIDU0IDJhIDAwIDAwIDAwIC4uLi5p
-Li4uTkFSVCouLi4KPj4gQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVz
-dCBhdCBmZmZmZmZmZjgyMjAwMDAwCj4+IElQOiBbPGZmZmZmZmZmODE0NzU2MTY+XSBtZW1jcHlf
-ZXJtcysweDYvMHgxMAo+PiBQR0QgMWUxMDA2NyBQVUQgMWUxMTA2MyBQTUQgMAo+PiBPb3BzOiAw
-MDAwIFsjMV0gU01QIEtBU0FOCj4+IENQVTogMCBQSUQ6IDEgQ29tbTogc3dhcHBlci8wIE5vdCB0
-YWludGVkIDQuNC4wLXJjMysgIzI0NQo+PiB0YXNrOiBmZmZmODgwMDE2ZTI4MDAwIHRpOiBmZmZm
-ODgwMDE2ZTMwMDAwIHRhc2sudGk6IGZmZmY4ODAwMTZlMzAwMDAKPj4gUklQOiAwMDEwOls8ZmZm
-ZmZmZmY4MTQ3NTYxNj5dICBbPGZmZmZmZmZmODE0NzU2MTY+XSBtZW1jcHlfZXJtcysweDYvMHgx
-MAo+PiBSU1A6IDAwMDA6ZmZmZjg4MDAxNmUzNzdiOCAgRUZMQUdTOiAwMDAxMDI4Nwo+PiBSQVg6
-IGZmZmY4ODAwMTQ5NGUzODAgUkJYOiAwMDAwMDAwMDAwMDAwMDI3IFJDWDogZmZmZmZmZmY4MDI4
-NTc2MQo+PiBSRFg6IGZmZmZmZmZmODExNTA0MDAgUlNJOiBmZmZmZmZmZjgyMjAwMDAwIFJESTog
-ZmZmZjg4MDAxNTgxOTAxZgo+PiBSQlA6IGZmZmY4ODAwMTZlMzc4MDggUjA4OiBmZmZmODgwMDE2
-NDI5YmE4IFIwOTogMDAwMDAwMDAwMDAwMDAxOAo+PiBSMTA6IDAwMDAwMDAwMDAwMDAwMDAgUjEx
-OiAwMDAwMDAwMDAwMDAwMDAwIFIxMjogZmZmZjg4MDAxNjQyOWI5MAo+PiBSMTM6IDAwMDAwMDAw
-MDAwMDAwMDIgUjE0OiAwMDAwMDAwMGZmMDIyYTA4IFIxNTogZmZmZmZmZmY4MTMzNTM2MQo+PiBG
-UzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4MDAxNzIwMDAwMCgwMDAwKSBrbmxH
-UzowMDAwMDAwMDAwMDAwMDAwCj4+IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAw
-MDAwMDAwODAwNTAwMzMKPj4gQ1IyOiBmZmZmZmZmZjgyMjAwMDAwIENSMzogMDAwMDAwMDAwMWUw
-ZjAwMCBDUjQ6IDAwMDAwMDAwMDAxNDA2YjAKPj4gU3RhY2s6Cj4+ICBmZmZmZmZmZjgxMzNlYjc0
-IGZmZmY4ODAwMDAwNzliODAgZmZmZjg4MDAxNWJmNmU0MCBmZmZmODgwMDE2NDI5YmE0Cj4+ICBm
-ZmZmODgwMDAwMTA4NDcwIGZmZmY4ODAwMTY0MjliOTAgZmZmZjg4MDAxNGMyNjI5MCBmZmZmODgw
-MDE1YmY2ZTQwCj4+ICBmZmZmODgwMDAwMTA4NDUwIGZmZmY4ODAwMDAwNzliODAgZmZmZjg4MDAx
-NmUzNzg3MCBmZmZmZmZmZjgxMzNmMDJhCj4+IENhbGwgVHJhY2U6Cj4+ICBbPGZmZmZmZmZmODEz
-M2ViNzQ+XSA/IHhsb2dfcmVjb3Zlcl9kb19yZWdfYnVmZmVyLmlzcmEuMjMrMHgxMjQvMHgxYjAK
-Pj4gIFs8ZmZmZmZmZmY4MTMzZjAyYT5dIHhsb2dfcmVjb3Zlcl9idWZmZXJfcGFzczIrMHgzNWEv
-MHg0NTAKPj4gIFs8ZmZmZmZmZmY4MTM0MGMwOT5dIHhsb2dfcmVjb3Zlcl9jb21taXRfcGFzczIr
-MHhlOS8weDE2MAo+PiAgWzxmZmZmZmZmZjgxMzQwY2JjPl0geGxvZ19yZWNvdmVyX2l0ZW1zX3Bh
-c3MyKzB4M2MvMHg2MAo+PiAgWzxmZmZmZmZmZjgxMzQwZWU2Pl0geGxvZ19yZWNvdmVyX2NvbW1p
-dF90cmFucysweDIwNi8weDIzMAo+PiAgWzxmZmZmZmZmZjgxMzQwZjhhPl0geGxvZ19yZWNvdmVy
-eV9wcm9jZXNzX3RyYW5zKzB4N2EvMHhiMAo+PiAgWzxmZmZmZmZmZjgxMzQxMDFlPl0geGxvZ19y
-ZWNvdmVyX3Byb2Nlc3Nfb3BoZHIrMHg1ZS8weGMwCj4+ICBbPGZmZmZmZmZmODEzNDExMWE+XSB4
-bG9nX3JlY292ZXJfcHJvY2Vzc19kYXRhKzB4OWEvMHhjMAo+PiAgWzxmZmZmZmZmZjgxMzQxNTgw
-Pl0geGxvZ19kb19yZWNvdmVyeV9wYXNzKzB4NDQwLzB4NTQwCj4+ICBbPGZmZmZmZmZmODExNTM4
-NGY+XSA/IGthc2FuX3BvaXNvbl9zaGFkb3crMHgyZi8weDQwCj4+ICBbPGZmZmZmZmZmODEzNDE2
-Zjk+XSB4bG9nX2RvX2xvZ19yZWNvdmVyeSsweDc5LzB4YzAKPj4gIFs8ZmZmZmZmZmY4MTM0MTc1
-MT5dIHhsb2dfZG9fcmVjb3ZlcisweDExLzB4ZTAKPj4gIFs8ZmZmZmZmZmY4MTM0MjU1Mz5dIHhs
-b2dfcmVjb3ZlcisweGEzLzB4MTQwCj4+ICBbPGZmZmZmZmZmODEzMzcxOGU+XSB4ZnNfbG9nX21v
-dW50KzB4MjRlLzB4MmMwCj4+ICBbPGZmZmZmZmZmODEzMmYyMDk+XSB4ZnNfbW91bnRmcysweDQ5
-OS8weDdkMAo+PiAgWzxmZmZmZmZmZjgxMzJmZjkxPl0gPyB4ZnNfbXJ1X2NhY2hlX2NyZWF0ZSsw
-eDEyMS8weDE4MAo+PiAgWzxmZmZmZmZmZjgxMzMxZTJkPl0geGZzX2ZzX2ZpbGxfc3VwZXIrMHgz
-OGQvMHg0YTAKPj4gIFs8ZmZmZmZmZmY4MTE1ZGViNT5dIG1vdW50X2JkZXYrMHgxODUvMHgxYzAK
-Pj4gIFs8ZmZmZmZmZmY4MTMzMWFhMD5dID8geGZzX3BhcnNlYXJncysweGFhMC8weGFhMAo+PiAg
-WzxmZmZmZmZmZjgxMzMwNTgwPl0geGZzX2ZzX21vdW50KzB4MTAvMHgyMAo+PiAgWzxmZmZmZmZm
-ZjgxMTVlMGU0Pl0gbW91bnRfZnMrMHgzNC8weDE2MAo+PiAgWzxmZmZmZmZmZjgxMTI0MGIwPl0g
-PyBfX2FsbG9jX3BlcmNwdSsweDEwLzB4MjAKPj4gIFs8ZmZmZmZmZmY4MTE3OGEyMj5dIHZmc19r
-ZXJuX21vdW50KzB4NjIvMHgxMTAKPj4gIFs8ZmZmZmZmZmY4MTE3OWU2Yj5dIGRvX21vdW50KzB4
-MjFiLzB4ZGQwCj4+Cj4+ICQgYWRkcjJsaW5lIC1lIHZtbGludXggLWkgZmZmZmZmZmY4MTQ3NTYx
-NiAjIG1lbWNweV9lcm1zKzB4Ni8weDEwCj4+IGFyY2gveDg2L2xpYi9tZW1jcHlfNjQuUzo1MAo+
-Pgo+PiAkIGFkZHIybGluZSAtZSB2bWxpbnV4IC1pIGZmZmZmZmZmODEzM2ViNzQgIyB4bG9nX3Jl
-Y292ZXJfZG9fcmVnX2J1ZmZlci5pc3JhLjIzKzB4MTI0LzB4MWIwCj4+IGZzL3hmcy94ZnNfbG9n
-X3JlY292ZXIuYzoyMjM4Cj4+Cj4+ICQgYWRkcjJsaW5lIC1lIHZtbGludXggLWkgZmZmZmZmZmY4
-MTMzZjAyYSAjIHhsb2dfcmVjb3Zlcl9idWZmZXJfcGFzczIrMHgzNWEvMHg0NTAKPj4gZnMveGZz
-L3hmc19sb2dfcmVjb3Zlci5jOjIzOTcKPj4KPj4gd2hpY2ggaXMgdGhpcyBiaXQ6Cj4+Cj4+ICAg
-ICBtZW1jcHkoeGZzX2J1Zl9vZmZzZXQoYnAsCj4+ICAgICAgICAgICAgICh1aW50KWJpdCA8PCBY
-RlNfQkxGX1NISUZUKSwgICAgLyogZGVzdCAqLwo+PiAgICAgICAgICAgICBpdGVtLT5yaV9idWZb
-aV0uaV9hZGRyLCAgICAgICAgIC8qIHNvdXJjZSAqLwo+PiAgICAgICAgICAgICBuYml0czw8WEZT
-X0JMRl9TSElGVCk7ICAgICAgICAgIC8qIGxlbmd0aCAqLwo+Pgo+PiBCZWNhdXNlIG9mIHRoZSBt
-ZW1vcnkgY29ycnVwdGlvbiB0aGUgYnVnIG1hbmlmZXN0cyBpbiBkaWZmZXJlbnQgd2F5cywKPj4g
-YnV0IHRoZSBzdGFja3RyYWNlIGFib3ZlIGlzIGJ5IGZhciB0aGUgbW9zdCBjb21tb24uCj4+Cj4+
-IEkgY2FuIHRlc3QgcGF0Y2hlcy4gVGhhbmtzLAo+Pgo+Pgo+PiBWZWdhcmQKPj4KPj4KPj4gX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4geGZzIG1haWxp
-bmcgbGlzdAo+PiB4ZnNAb3NzLnNnaS5jb20KPj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+--===============8809094124423313391==
+Content-Type: multipart/alternative; boundary=001a113f2b4ce3ffd8052fff285a
+
+--001a113f2b4ce3ffd8052fff285a
+Content-Type: text/plain; charset=UTF-8
+
+Hello,
+
+I have a file system that experienced issues and would not mount. The
+system would not boot either as this file system was listed in /etc/fstab.
+I booted to a debian image with xfsprogs 3.2.1 and ran xfs_repair
+
+The host OS now boots and the file system mounts but has only a handful of
+the original files.
+I unmounted and ran xfs_repair 2.9.4 form the host OS a few more times. (I
+read somewhere that running xfs_repair multiple times can find more files)
+I still see the same handful of files.
+
+A previous thread (http://oss.sgi.com/archives/xfs/2014-06/msg00204.html)
+suggests running the latest xfs_repair as it may be able to reattach more
+files.
+
+I booted to a fedora 23 live image and updated xfsprogs to 4.5.0. (openSUSE
+Tumbleweed has xfsprogs 4.5.0 but I was not able to get their live image
+working) When running xfs_repair on the file system it complains: xfs_repair:
+V1 inodes unsupported. Please try an older xfsporgs.
+
+Is it reasonable to assume that xfs_repair has done all it can and I should
+now use photorec from the testdisk package to recover what I can?
+
+Thank you for your feedback.
+
+-Chris
+
+-- 
+Christopher M Moser
+
+Seagate Technology LLC
+Cluster Lab Administrator
+NRM Bldg A/A1-3
+chris.m.moser@seagate.com
+952-402-8269
+
+--001a113f2b4ce3ffd8052fff285a
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div><div><div><div><div><div>Hello,<br><br></div>I h=
+ave a file system that experienced issues and would not mount. The system w=
+ould not boot either as this file system was listed in /etc/fstab.<br></div=
+>I booted to a debian image with xfsprogs 3.2.1 and ran xfs_repair<br><br><=
+/div>The host OS now boots and the file system mounts but has only a handfu=
+l of the original files.<br></div>I unmounted and ran xfs_repair 2.9.4 form=
+ the host OS a few more times. (I read somewhere that running xfs_repair mu=
+ltiple times can find more files) I still see the same handful of files.<br=
+></div><br></div>A previous thread (<a href=3D"http://oss.sgi.com/archives/=
+xfs/2014-06/msg00204.html">http://oss.sgi.com/archives/xfs/2014-06/msg00204=
+.html</a>) suggests running the latest xfs_repair as it may be able to reat=
+tach more files.<br><br></div>I booted to a fedora 23 live image and update=
+d xfsprogs to 4.5.0. (openSUSE Tumbleweed has xfsprogs 4.5.0 but I was not =
+able to get their live image working) When running xfs_repair on the file s=
+ystem it complains: <span dir=3D"ltr" style=3D"text-align:left" id=3D":5x.c=
+o" class=3D"">xfs_repair: V1 inodes unsupported. Please try an older xfspor=
+gs.</span><div><div><div><div><div><div><div><div><div><br></div><div>Is it=
+ reasonable to assume that xfs_repair has done all it can and I should now =
+use photorec from the testdisk package to recover what I can?<br><br></div>=
+<div>Thank you for your feedback.<br><br></div><div>-Chris<br></div><div><b=
+r></div><div>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><d=
+iv><div><span style=3D"color:rgb(102,102,102)">Christopher M Moser<br></spa=
+n></div><span style=3D"color:rgb(102,102,102)"><br>Seagate Technology LLC<b=
+r>Cluster Lab Administrator<br></span></div><span style=3D"color:rgb(102,10=
+2,102)">NRM Bldg A/A1-3<br></span></div><span style=3D"color:rgb(102,102,10=
+2)"><a href=3D"mailto:chris.m.moser@seagate.com" target=3D"_blank">chris.m.=
+moser@seagate.com</a><br>952-402-8269</span><br><div><div><div><div><div><b=
+r></div></div></div></div></div></div></div>
+</div></div></div></div></div></div></div></div></div></div>
+
+--001a113f2b4ce3ffd8052fff285a--
+
+
+--===============8809094124423313391==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8809094124423313391==--
