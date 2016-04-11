@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 115A97CA0
-	for <xfs@oss.sgi.com>; Sat,  9 Apr 2016 12:55:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D8F698F8037
-	for <xfs@oss.sgi.com>; Sat,  9 Apr 2016 10:55:40 -0700 (PDT)
-Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
-	[74.125.82.43]) by cuda.sgi.com with ESMTP id 3WRgjqHwb4EgzkHK
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 09 Apr 2016 10:55:38 -0700 (PDT)
-Received: by mail-wm0-f43.google.com with SMTP id v188so45941329wme.1
-	for <xfs@oss.sgi.com>; Sat, 09 Apr 2016 10:55:38 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A8A237CA0
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 22:32:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3225AAC001
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:32:01 -0700 (PDT)
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id qUPNGOnUVQ5juVgo
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:31:59 -0700 (PDT)
+Received: from mail-yw0-f180.google.com ([209.85.161.180])
+	by youngberry.canonical.com with esmtpsa
+	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
+	(envelope-from <ming.lei@canonical.com>) id 1apSZx-0004cx-C2
+	for xfs@oss.sgi.com; Mon, 11 Apr 2016 03:31:57 +0000
+Received: by mail-yw0-f180.google.com with SMTP id o66so102802122ywc.3
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:31:57 -0700 (PDT)
 MIME-Version: 1.0
-Date: Sat, 9 Apr 2016 18:55:36 +0100
-Message-ID: <CAK1feJAybrn3SGJK4u4-eNA-bSm68f6Kw2BrxKSQnL9PT8VSAQ@mail.gmail.com>
-Subject: Apparently successful xfs_copy gives "-9" returncode
-From: Richard C <mailing-lists@racitup.com>
+In-Reply-To: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
+References: <1459752994-2205-1-git-send-email-ming.lei@canonical.com>
+Date: Mon, 11 Apr 2016 11:31:56 +0800
+Message-ID: <CACVXFVOK7Mw7pGfT=iaUJCt=QTREfJuXuN+-beW3G-q6HF3KXA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/8] block: prepare for multipage bvecs
+From: Ming Lei <ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,70 +31,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6898341462013499142=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <boaz@plexistor.com>, Philipp Reisner <philipp.reisner@linbit.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Lars Ellenberg <lars.ellenberg@linbit.com>, Anton Altaparmakov <anton@tuxera.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
 
---===============6898341462013499142==
-Content-Type: multipart/alternative; boundary=089e01493bbccf288a053011044f
+On Mon, Apr 4, 2016 at 2:56 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> Hi,
+>
+> Interests[1] have been shown in multipage bvecs, so this patchset
+> try to prepare for the support and do two things:
+>
+> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
+> then we can drop the non-standard way for iterating bvec, which
+> can be thought as a good cleanup for lib/iov_iter.c
+>
+> 2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
+> one user for each. Once multipage bvecs is introduced, one bio
+> may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
+> which should be introduced in future and is similiar with current
+> BIO_MAX_PAGES.
+>
+> xfstests(-a auto) have been run and no regression found by this
+> patchset against linus v4.6-rc1-next-20160329.
+>
+> V3:
+>         - include kenrel.h & bug.h in bvec.h for fix comiling failure on arm
+>         as reported by 0day ktest
+>         - build test on arm & arm64
+>
+> V2:
+>         - rename bvec_iter.h as bvec.h
+>         - always include bvec.h into blk_types.h as suggested by Christoph
+>
+> V1:
+>         - don't move BIO_MAX_* to bvec_iter.h as pointed out by Christoph
+>         - run xfstests against v4.6-rc1-next-20160329
+>         - add Reviewed-by
+>         - for 1,4 and 5, Reviewd-by not added, Christoph still expressed
+>         'this looks fine to me.'
+>
+>  drivers/block/drbd/drbd_int.h |  4 +-
+>  fs/xfs/xfs_buf.c              |  4 +-
+>  include/linux/bio.h           | 52 -----------------------
+>  include/linux/blk_types.h     | 22 +---------
+>  include/linux/bvec.h          | 96 +++++++++++++++++++++++++++++++++++++++++++
+>  lib/iov_iter.c                | 30 +++++---------
+>  6 files changed, 110 insertions(+), 98 deletions(-)
 
---089e01493bbccf288a053011044f
-Content-Type: text/plain; charset=UTF-8
+Gentle ping...
 
-Hi all,
+Thanks,
 
-I'm writing a script that helps with hard disk cloning and am running into
-a problem whereby xfs_copy is returning -9 when there is nothing in the log
-and no indication on stdout or stderr, example below.
-
-I've had a search and couldn't find anything mentioned. Can anyone shed any
-light, maybe which version I should try if you suspect this has already
-been fixed?
-Dist: Ubuntu Trusty
-xfsprogs: 3.1.9
-
-$ losetup /dev/loop2 ./disk.img
-$ xfs_copy /dev/loop1p6 /dev/loop2
- 0%  ... 10%  ... 20%  ... 30%  ... 40%  ... 50%  ... 60%  ... 70%  ... 80%
- ... 90%  ... 100%
-All copies completed.
-$ echo $?
--9
-
-Cheers,
-Richard
-
---089e01493bbccf288a053011044f
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi all,<div><br></div><div>I&#39;m writing a script that h=
-elps with hard disk cloning and am running into a problem whereby xfs_copy =
-is returning -9 when there is nothing in the log and no indication on stdou=
-t or stderr, example below.</div><div><br></div><div>I&#39;ve had a search =
-and couldn&#39;t find anything mentioned. Can anyone shed any light, maybe =
-which version I should try if you suspect this has already been fixed?</div=
-><div>Dist: Ubuntu Trusty</div><div>xfsprogs: 3.1.9</div><div><br></div><di=
-v>$ losetup /dev/loop2 ./disk.img</div><div>$ xfs_copy /dev/loop1p6 /dev/lo=
-op2</div><div><div>=C2=A00% =C2=A0... 10% =C2=A0... 20% =C2=A0... 30% =C2=
-=A0... 40% =C2=A0... 50% =C2=A0... 60% =C2=A0... 70% =C2=A0... 80% =C2=A0..=
-. 90% =C2=A0... 100%</div><div><div>All copies completed.</div></div><div>$=
- echo $?</div><div>-9</div><div><br></div></div><div>Cheers,</div><div>Rich=
-ard</div></div>
-
---089e01493bbccf288a053011044f--
-
-
---===============6898341462013499142==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>
+>
+> Thanks,
+> Ming
+>
+>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6898341462013499142==--
