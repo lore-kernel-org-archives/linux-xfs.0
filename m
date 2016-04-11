@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E18207CC5
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 14:17:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69023AC004
-	for <xfs@oss.sgi.com>; Fri,  1 Apr 2016 12:17:55 -0700 (PDT)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	aB2CpdyACCcHzGvI for <xfs@oss.sgi.com>;
-	Fri, 01 Apr 2016 12:17:54 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH 4/5] dax: use sb_issue_zerout instead of calling
-	dax_clear_sectors
-Date: Fri, 1 Apr 2016 19:17:52 +0000
-Message-ID: <1459538265.23200.8.camel@intel.com>
-References: <1458861450-17705-1-git-send-email-vishal.l.verma@intel.com>
-	<1458861450-17705-5-git-send-email-vishal.l.verma@intel.com>
-	<CAPcyv4iKK=1Nhz4QqEkhc4gum+UvUS4a=+Sza2zSa1Kyrth41w@mail.gmail.com>
-	<1458939796.5501.8.camel@intel.com>
-	<CAPcyv4jWqVcav7dQPh7WHpqB6QDrCezO5jbd9QW9xH3zsU4C1w@mail.gmail.com>
-	<1459195288.15523.3.camel@intel.com>
-	<CAPcyv4jFwh679arTNoUzLZpJCSoR+KhMdEmwqddCU1RWOrjD=Q@mail.gmail.com>
-	<1459277829.6412.3.camel@intel.com>
-	<20160330074926.GC12776@quack.suse.cz>
-In-Reply-To: <20160330074926.GC12776@quack.suse.cz>
-Content-Language: en-US
-Content-ID: <BCDA0CA9B9E5EA4C9093399005FC4758@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2348D7CA1
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 19:05:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FD93AC003
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 17:04:57 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	q17WUd7ZIK6et1jw for <xfs@oss.sgi.com>;
+	Sun, 10 Apr 2016 17:04:54 -0700 (PDT)
+Date: Mon, 11 Apr 2016 10:02:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs/259: handle minimum block size more precisely
+Message-ID: <20160411000238.GB9088@dastard>
+References: <1460027155-4222-1-git-send-email-eguan@redhat.com>
+	<20160407213231.GD761@dastard>
+	<20160407234837.GA1439@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160407234837.GA1439@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,35 +27,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "jack@suse.cz" <jack@suse.cz>
-Cc: "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox, Matthew
-	R" <matthew.r.wilcox@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-T24gV2VkLCAyMDE2LTAzLTMwIGF0IDA5OjQ5ICswMjAwLCBKYW4gS2FyYSB3cm90ZToNCj4gT24g
-VHVlIDI5LTAzLTE2IDE4OjU3OjE2LCBWZXJtYSwgVmlzaGFsIEwgd3JvdGU6DQo+ID4gDQo+ID4g
-T24gTW9uLCAyMDE2LTAzLTI4IGF0IDE2OjM0IC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
-ID4gDQo+ID4gPD4NCj4gPiANCj4gPiA+IA0KPiA+ID4gU2VlbXMga2luZCBvZiBzYWQgdG8gZmFp
-bCB0aGUgZmF1bHQgZHVlIHRvIGEgYmFkIGJsb2NrIHdoZW4gd2UNCj4gPiA+IHdlcmUNCj4gPiA+
-IGdvaW5nIHRvIHplcm8gaXQgYW55d2F5LCByaWdodD/CoMKgSSdtIG5vdCBzZWVpbmcgYSBjb21w
-ZWxsaW5nDQo+ID4gPiByZWFzb24gdG8NCj4gPiA+IGtlZXAgYW55IHplcm9pbmcgaW4gZnMvZGF4
-LmMuDQo+ID4gQWdyZWVkIC0gYnV0IGhvdyBkbyB3ZSBkbyB0aGlzPyBjbGVhcl9wbWVtIG5lZWRz
-IHRvIGJlIGFibGUgdG8gY2xlYXINCj4gPiBhbg0KPiA+IGFyYml0cmFyeSBudW1iZXIgb2YgYnl0
-ZXMsIGJ1dCB0byBnbyB0aHJvdWdoIHRoZSBkcml2ZXIsIHdlJ2QgbmVlZA0KPiA+IHRvDQo+ID4g
-c2VuZCBkb3duIGEgYmlvPyBJZiBvbmx5IHRoZSBkcml2ZXIgaGFkIGFuIHJ3X2J5dGVzIGxpa2Ug
-aW50ZXJmYWNlDQo+ID4gdGhhdA0KPiA+IGNvdWxkIGJlIHVzZWQgYnkgYW55b25lLi4uIDopDQo+
-IEFjdHVhbGx5LCBteSBwYXRjaGVzIGZvciBwYWdlIGZhdWx0IGxvY2tpbmcgcmVtb3ZlIHplcm9p
-bmcgZnJvbQ0KPiBkYXhfaW5zZXJ0X21hcHBpbmcoKSBhbmQgX19kYXhfcG1kX2ZhdWx0KCkgLSB0
-aGUgemVyb2luZyBub3cgaGFwcGVucw0KPiBmcm9tDQo+IHRoZSBmaWxlc3lzdGVtIG9ubHkgYW5k
-IHRoZSB6ZXJvaW5nIGluIHRob3NlIHR3byBmdW5jdGlvbnMgaXMganVzdCBhDQo+IGRlYWQNCj4g
-Y29kZS4uLg0KDQpUaGF0IHNob3VsZCBtYWtlIHRoaW5ncyBlYXNpZXIhIERvIHlvdSBoYXZlIGEg
-dHJlZSBJIGNvdWxkIG1lcmdlIGluIHRvDQpnZXQgdGhpcz8gKFdJUCBpcyBvayBhcyB3ZSBrbm93
-IHRoYXQgbXkgc2VyaWVzIHdpbGwgZGVwZW5kIG9uIHlvdXJzLi4pDQpvciwgaWYgeW91IGNhbiBk
-aXN0aWxsIG91dCB0aGF0IHBhdGNoIG9uIGEgNC42LXJjMSBiYXNlLCBJIGNvdWxkIGNhcnJ5DQpp
-dCBpbiBteSBzZXJpZXMgdG9vICh5b3VyIHYyJ3MgMy8xMCBkb2Vzbid0IGFwcGx5IG9uIDQuNi1y
-YzEuLikNCg0KVGhhbmtzLA0KCS1WaXNoYWwKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Apr 07, 2016 at 04:48:37PM -0700, Christoph Hellwig wrote:
+> On Fri, Apr 08, 2016 at 07:32:31AM +1000, Dave Chinner wrote:
+> > > diff --git a/tests/xfs/259 b/tests/xfs/259
+> > > index 16c1935..3150ff3 100755
+> > > --- a/tests/xfs/259
+> > > +++ b/tests/xfs/259
+> > > @@ -51,9 +51,7 @@ testfile=$TEST_DIR/259.image
+> > >  # Test various sizes slightly less than 4 TB. Need to handle different
+> > >  # minimum block sizes for CRC enabled filesystems, but use a small log so we
+> > >  # don't write lots of zeros unnecessarily.
+> > > -xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
+> > > -. $tmp.mkfs
+> > 
+> > This tests the configuration of the test device, which is not
+> > controlled by the test harness, so can be different to the
+> > configuration being used for the scratch device.
+> > 
+> > > -if [ $_fs_has_crcs -eq 1 ]; then
+> > > +if [ $XFS_MKFS_CRC_DEFAULT -eq 1 ]; then
+> > 
+> > IOWs, this is not an not equivalent test.
+> 
+> And I think that's the whole point of this change :)
+> 
+> Previously it tested what the TEST_DIR did, which was wrong for this
+> test.  Now it tests what mkfs does by default (including for the scratch
+> dev), which is what we really want here.
+
+Which is not at all clear from the patch description.
+
+Seriously, though, this does not belong in common/config. We already
+have a helper function to check what mkfs supports (i.e.
+ _scratch_mkfs_xfs_supported()), and if we just want a bare check
+then factor this into a _mkfs_xfs_supported() and supply the
+parameters specific to the test.
+
+Indeed, this is basically what we do with _require_xfs_mkfs_crc();
+the same thing should be done, but without the "notrun" if -m crc
+s not supported...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
