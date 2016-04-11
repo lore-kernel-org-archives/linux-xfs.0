@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B727B7CA1
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:37:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DC4A304032
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:37:15 -0700 (PDT)
-Received: from mx0b-00003501.pphosted.com (mx0b-00003501.pphosted.com
-	[67.231.152.68]) by cuda.sgi.com with ESMTP id b7JE1Q39dTC12CRM
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 08 Apr 2016 13:37:13 -0700 (PDT)
-Received: from pps.filterd (m0075033.ppops.net [127.0.0.1])
-	by mx0b-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id
-	u38KXhZg032926 for <xfs@oss.sgi.com>; Fri, 8 Apr 2016 16:37:13 -0400
-Received: from mail-io0-f170.google.com (mail-io0-f170.google.com
-	[209.85.223.170])
-	by mx0b-00003501.pphosted.com with ESMTP id 226ksgg1c2-3
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NOT) for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 16:37:13 -0400
-Received: by mail-io0-f170.google.com with SMTP id g185so145497547ioa.2
-	for <xfs@oss.sgi.com>; Fri, 08 Apr 2016 13:37:13 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 873377CA0
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:21:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 59CC8304048
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 18:21:41 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	pSs4ZWi084PqySfG for <xfs@oss.sgi.com>;
+	Sun, 10 Apr 2016 18:21:38 -0700 (PDT)
+Date: Mon, 11 Apr 2016 11:21:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+	after disk failure/recovery
+Message-ID: <20160411012127.GF567@dastard>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
+	<20160408224648.GD567@dastard>
+	<CAOcd+r0s3FfahxaqfJKuZ_D+0FbUHaKqi8b_bwGbXekCN3w_oQ@mail.gmail.com>
 MIME-Version: 1.0
-Date: Fri, 8 Apr 2016 15:37:12 -0500
-Message-ID: <CAD4UnC8M32_GO1+2rfi=v6f3R02T70dhxQJeZtnGFi_muL2z9g@mail.gmail.com>
-Subject: Use latest xfs_repair on older file systems
-From: Chris M Moser <chris.m.moser@seagate.com>
+Content-Disposition: inline
+In-Reply-To: <CAOcd+r0s3FfahxaqfJKuZ_D+0FbUHaKqi8b_bwGbXekCN3w_oQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,100 +30,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8809094124423313391=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Shyam Kaushik <shyam@zadarastorage.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
---===============8809094124423313391==
-Content-Type: multipart/alternative; boundary=001a113f2b4ce3ffd8052fff285a
+On Sun, Apr 10, 2016 at 09:40:29PM +0300, Alex Lyakas wrote:
+> Hello Dave,
+> 
+> On Sat, Apr 9, 2016 at 1:46 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
+> >> Hi Dave, Brian, Carlos,
+> >>
+> >> While trying to reproduce this issue I have been running into different
+> >> issues that are similar. Underlying issue remains the same when backend to
+> >> XFS is failed & we unmount XFS, we run into hung-task timeout (180-secs)
+> >> with stack like
+> >>
+> >> kernel: [14952.671131]  [<ffffffffc06a5f59>]
+> >> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+> >> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
+> >> prepare_to_wait_event+0x110/0x110
+> >> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
+> >> [xfs]
+> >>
+> >> while running trace-events, XFS ail push keeps looping around
+> >>
+> >>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
+> >> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+> >
+> > Looks like either a stale inode (which should never reach the AIL)
+> > or it's an inode that's been reclaimed and this is a use after free
+> > situation. Given that we are failing IOs here, I'd suggest it's more
+> > likely to be an IO failure that's caused a writeback problem, not an
+> > interaction with stale inodes.
+> >
+> > So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
+> > inode by calling xfs_iflush_abort(), which will also remove it from
+> > the AIL. This can also happen on reclaim of a dirty inode, and if so
+> > we'll still reclaim the inode because reclaim assumes xfs_iflush()
+> > cleans up properly.
+> >
+> > Which, apparently, it doesn't:
+> >
+> >         /*
+> >          * Get the buffer containing the on-disk inode.
+> >          */
+> >         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK, 0);
+> >         if (error || !bp) {
+> >                 xfs_ifunlock(ip);
+> >                 return error;
+> >         }
+> >
+> > This looks like a bug - xfs_iflush hasn't aborted the inode
+> > writeback on failure - it's just unlocked the flush lock. Hence it
+> > has left the inode dirty in the AIL, and then the inode has probably
+> > then been reclaimed, setting the inode number to zero.
+> In our case, we do not reach this call, because XFS is already marked
+> as "shutdown", so in our case we do:
+>     /*
+>      * This may have been unpinned because the filesystem is shutting
+>      * down forcibly. If that's the case we must not write this inode
+>      * to disk, because the log record didn't make it to disk.
+>      *
+>      * We also have to remove the log item from the AIL in this case,
+>      * as we wait for an empty AIL as part of the unmount process.
+>      */
+>     if (XFS_FORCED_SHUTDOWN(mp)) {
+>         error = -EIO;
+>         goto abort_out;
+>     }
+> 
+> So we call xfs_iflush_abort, but due to "iip" being NULL (as Shyam
+> mentioned earlier in this thread), we proceed directly to
+> xfs_ifunlock(ip), which now becomes the same situation as you
+> described above.
 
---001a113f2b4ce3ffd8052fff285a
-Content-Type: text/plain; charset=UTF-8
+If you are getting this occuring, something else has already gone
+wrong as you can't have a dirty inode without a log item attached to
+it. So it appears to me that you are reporting a symptom of a
+problem after it has occured, not the root cause. Maybe it is the
+same root cause, maybe not. Either way, it doesn't help us solve any
+problem.
 
-Hello,
+> The comment clearly says "We also have to remove the log item from the
+> AIL in this case, as we wait for an empty AIL as part of the unmount
+> process." Could you perhaps point us at the code that is supposed to
+> remove the log item from the AIL? Apparently this is not happening.
 
-I have a file system that experienced issues and would not mount. The
-system would not boot either as this file system was listed in /etc/fstab.
-I booted to a debian image with xfsprogs 3.2.1 and ran xfs_repair
+xfs_iflush_abort or xfs_iflush_done does that work. 
 
-The host OS now boots and the file system mounts but has only a handful of
-the original files.
-I unmounted and ran xfs_repair 2.9.4 form the host OS a few more times. (I
-read somewhere that running xfs_repair multiple times can find more files)
-I still see the same handful of files.
-
-A previous thread (http://oss.sgi.com/archives/xfs/2014-06/msg00204.html)
-suggests running the latest xfs_repair as it may be able to reattach more
-files.
-
-I booted to a fedora 23 live image and updated xfsprogs to 4.5.0. (openSUSE
-Tumbleweed has xfsprogs 4.5.0 but I was not able to get their live image
-working) When running xfs_repair on the file system it complains: xfs_repair:
-V1 inodes unsupported. Please try an older xfsporgs.
-
-Is it reasonable to assume that xfs_repair has done all it can and I should
-now use photorec from the testdisk package to recover what I can?
-
-Thank you for your feedback.
-
--Chris
-
+-Dave.
 -- 
-Christopher M Moser
-
-Seagate Technology LLC
-Cluster Lab Administrator
-NRM Bldg A/A1-3
-chris.m.moser@seagate.com
-952-402-8269
-
---001a113f2b4ce3ffd8052fff285a
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div><div><div><div><div><div><div>Hello,<br><br></div>I h=
-ave a file system that experienced issues and would not mount. The system w=
-ould not boot either as this file system was listed in /etc/fstab.<br></div=
->I booted to a debian image with xfsprogs 3.2.1 and ran xfs_repair<br><br><=
-/div>The host OS now boots and the file system mounts but has only a handfu=
-l of the original files.<br></div>I unmounted and ran xfs_repair 2.9.4 form=
- the host OS a few more times. (I read somewhere that running xfs_repair mu=
-ltiple times can find more files) I still see the same handful of files.<br=
-></div><br></div>A previous thread (<a href=3D"http://oss.sgi.com/archives/=
-xfs/2014-06/msg00204.html">http://oss.sgi.com/archives/xfs/2014-06/msg00204=
-.html</a>) suggests running the latest xfs_repair as it may be able to reat=
-tach more files.<br><br></div>I booted to a fedora 23 live image and update=
-d xfsprogs to 4.5.0. (openSUSE Tumbleweed has xfsprogs 4.5.0 but I was not =
-able to get their live image working) When running xfs_repair on the file s=
-ystem it complains: <span dir=3D"ltr" style=3D"text-align:left" id=3D":5x.c=
-o" class=3D"">xfs_repair: V1 inodes unsupported. Please try an older xfspor=
-gs.</span><div><div><div><div><div><div><div><div><div><br></div><div>Is it=
- reasonable to assume that xfs_repair has done all it can and I should now =
-use photorec from the testdisk package to recover what I can?<br><br></div>=
-<div>Thank you for your feedback.<br><br></div><div>-Chris<br></div><div><b=
-r></div><div>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><d=
-iv><div><span style=3D"color:rgb(102,102,102)">Christopher M Moser<br></spa=
-n></div><span style=3D"color:rgb(102,102,102)"><br>Seagate Technology LLC<b=
-r>Cluster Lab Administrator<br></span></div><span style=3D"color:rgb(102,10=
-2,102)">NRM Bldg A/A1-3<br></span></div><span style=3D"color:rgb(102,102,10=
-2)"><a href=3D"mailto:chris.m.moser@seagate.com" target=3D"_blank">chris.m.=
-moser@seagate.com</a><br>952-402-8269</span><br><div><div><div><div><div><b=
-r></div></div></div></div></div></div></div>
-</div></div></div></div></div></div></div></div></div></div>
-
---001a113f2b4ce3ffd8052fff285a--
-
-
---===============8809094124423313391==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8809094124423313391==--
