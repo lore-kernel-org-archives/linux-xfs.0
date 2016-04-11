@@ -1,36 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 075B07CA0
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 08:03:54 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8FC1B7CA0
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 22:13:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4F88CAC002
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 06:03:50 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 099AEAC001
+	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:13:04 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Qe8mj4ttrTLJTocz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id KMwmVZW8RVVK3QEi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Apr 2016 06:03:47 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id DA9CC804E2
-	for <xfs@oss.sgi.com>; Tue,  5 Apr 2016 13:03:46 +0000 (UTC)
-Received: from redhat.com (gfs-i24c-02.mpc.lab.eng.bos.redhat.com
-	[10.16.144.214])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u35D3iEu013700
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>; Tue, 5 Apr 2016 09:03:46 -0400
-Date: Tue, 5 Apr 2016 09:03:44 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: allocate log vector buffers outside CIL context
-	lock
-Message-ID: <20160405130344.GA56593@redhat.com>
-References: <1459836310-12619-1-git-send-email-david@fromorbit.com>
-	<1459836310-12619-3-git-send-email-david@fromorbit.com>
+	<xfs@oss.sgi.com>; Sun, 10 Apr 2016 20:13:00 -0700 (PDT)
+Date: Mon, 11 Apr 2016 11:12:58 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs/259: handle minimum block size more precisely
+Message-ID: <20160411031258.GA10345@eguan.usersys.redhat.com>
+References: <1460027155-4222-1-git-send-email-eguan@redhat.com>
+	<20160407213231.GD761@dastard>
+	<20160407234837.GA1439@infradead.org>
+	<20160411000238.GB9088@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1459836310-12619-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <20160411000238.GB9088@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,506 +32,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-This make sense to me, but knowledge in xfs logging is not good enough yet to
-properly acknowledge this, so, I'll just leave it to someone else with better
-knowledge of how xfs log works.
+On Mon, Apr 11, 2016 at 10:02:38AM +1000, Dave Chinner wrote:
+> On Thu, Apr 07, 2016 at 04:48:37PM -0700, Christoph Hellwig wrote:
+> > On Fri, Apr 08, 2016 at 07:32:31AM +1000, Dave Chinner wrote:
+> > > > diff --git a/tests/xfs/259 b/tests/xfs/259
+> > > > index 16c1935..3150ff3 100755
+> > > > --- a/tests/xfs/259
+> > > > +++ b/tests/xfs/259
+> > > > @@ -51,9 +51,7 @@ testfile=$TEST_DIR/259.image
+> > > >  # Test various sizes slightly less than 4 TB. Need to handle different
+> > > >  # minimum block sizes for CRC enabled filesystems, but use a small log so we
+> > > >  # don't write lots of zeros unnecessarily.
+> > > > -xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
+> > > > -. $tmp.mkfs
+> > > 
+> > > This tests the configuration of the test device, which is not
+> > > controlled by the test harness, so can be different to the
+> > > configuration being used for the scratch device.
+> > > 
+> > > > -if [ $_fs_has_crcs -eq 1 ]; then
+> > > > +if [ $XFS_MKFS_CRC_DEFAULT -eq 1 ]; then
+> > > 
+> > > IOWs, this is not an not equivalent test.
+> > 
+> > And I think that's the whole point of this change :)
+> > 
+> > Previously it tested what the TEST_DIR did, which was wrong for this
+> > test.  Now it tests what mkfs does by default (including for the scratch
+> > dev), which is what we really want here.
+> 
+> Which is not at all clear from the patch description.
+> 
+> Seriously, though, this does not belong in common/config. We already
+> have a helper function to check what mkfs supports (i.e.
+>  _scratch_mkfs_xfs_supported()), and if we just want a bare check
+> then factor this into a _mkfs_xfs_supported() and supply the
+> parameters specific to the test.
 
-Cheers
+Will do.
 
-On Tue, Apr 05, 2016 at 04:05:08PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
 > 
-> One of the problems we currently have with delayed logging is that
-> under serious memory pressure we can deadlock memory reclaim. THis
-> occurs when memory reclaim (such as run by kswapd) is reclaiming XFS
-> inodes and issues a log force to unpin inodes that are dirty in the
-> CIL.
-> 
-> The CIL is pushed, but this will only occur once it gets the CIL
-> context lock to ensure that all committing transactions are complete
-> and no new transactions start being committed to the CIL while the
-> push switches to a new context.
-> 
-> The deadlock occurs when the CIL context lock is held by a
-> committing process that is doing memory allocation for log vector
-> buffers, and that allocation is then blocked on memory reclaim
-> making progress. Memory reclaim, however, is blocked waiting for
-> a log force to make progress, and so we effectively deadlock at this
-> point.
-> 
-> To solve this problem, we have to move the CIL log vector buffer
-> allocation outside of the context lock so that memory reclaim can
-> always make progress when it needs to force the log. The problem
-> with doing this is that a CIL push can take place while we are
-> determining if we need to allocate a new log vector buffer for
-> an item and hence the current log vector may go away without
-> warning. That means we canot rely on the existing log vector being
-> present when we finally grab the context lock and so we must have a
-> replacement buffer ready to go at all times.
-> 
-> To ensure this, introduce a "shadow log vector" buffer that is
-> always guaranteed to be present when we gain the CIL context lock
-> and format the item. This shadow buffer may or may not be used
-> during the formatting, but if the log item does not have an existing
-> log vector buffer or that buffer is too small for the new
-> modifications, we swap it for the new shadow buffer and format
-> the modifications into that new log vector buffer.
-> 
-> The result of this is that for any object we modify more than once
-> in a given CIL checkpoint, we double the memory required
-> to track dirty regions in the log. For single modifications then
-> we consume the shadow log vectorwe allocate on commit, and that gets
-> consumed by the checkpoint. However, if we make multiple
-> modifications, then the second transaction commit will allocate a
-> shadow log vector and hence we will end up with double the memory
-> usage as only one of the log vectors is consumed by the CIL
-> checkpoint. The remaining shadow vector will be freed when th elog
-> item is freed.
-> 
-> This can probably be optimised in future - access to the shadow log
-> vector is serialised by the object lock (as opposited to the active
-> log vector, which is controlled by the CIL context lock) and so we
-> can probably free shadow log vector from some objects when the log
-> item is marked clean on removal from the AIL.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c     |   1 +
->  fs/xfs/xfs_dquot.c        |   1 +
->  fs/xfs/xfs_dquot_item.c   |   2 +
->  fs/xfs/xfs_extfree_item.c |   2 +
->  fs/xfs/xfs_inode_item.c   |   1 +
->  fs/xfs/xfs_log_cil.c      | 258 ++++++++++++++++++++++++++++++++++------------
->  fs/xfs/xfs_trans.h        |   1 +
->  7 files changed, 202 insertions(+), 64 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index d613e7f..55b5ad0 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -949,6 +949,7 @@ xfs_buf_item_free(
->  	xfs_buf_log_item_t	*bip)
->  {
->  	xfs_buf_item_free_format(bip);
-> +	kmem_free(bip->bli_item.li_lv_shadow);
->  	kmem_zone_free(xfs_buf_item_zone, bip);
->  }
->  
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 8f51370..df4a70a 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -74,6 +74,7 @@ xfs_qm_dqdestroy(
->  {
->  	ASSERT(list_empty(&dqp->q_lru));
->  
-> +	kmem_free(dqp->q_logitem.qli_item.li_lv_shadow);
->  	mutex_destroy(&dqp->q_qlock);
->  
->  	XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot);
-> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> index 814cff9..2c7a162 100644
-> --- a/fs/xfs/xfs_dquot_item.c
-> +++ b/fs/xfs/xfs_dquot_item.c
-> @@ -370,6 +370,8 @@ xfs_qm_qoffend_logitem_committed(
->  	spin_lock(&ailp->xa_lock);
->  	xfs_trans_ail_delete(ailp, &qfs->qql_item, SHUTDOWN_LOG_IO_ERROR);
->  
-> +	kmem_free(qfs->qql_item.li_lv_shadow);
-> +	kmem_free(lip->li_lv_shadow);
->  	kmem_free(qfs);
->  	kmem_free(qfe);
->  	return (xfs_lsn_t)-1;
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 4aa0153..ab77946 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -40,6 +40,7 @@ void
->  xfs_efi_item_free(
->  	struct xfs_efi_log_item	*efip)
->  {
-> +	kmem_free(efip->efi_item.li_lv_shadow);
->  	if (efip->efi_format.efi_nextents > XFS_EFI_MAX_FAST_EXTENTS)
->  		kmem_free(efip);
->  	else
-> @@ -300,6 +301,7 @@ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
->  STATIC void
->  xfs_efd_item_free(struct xfs_efd_log_item *efdp)
->  {
-> +	kmem_free(efdp->efd_item.li_lv_shadow);
->  	if (efdp->efd_format.efd_nextents > XFS_EFD_MAX_FAST_EXTENTS)
->  		kmem_free(efdp);
->  	else
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index d02cbab..77799e1 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -651,6 +651,7 @@ void
->  xfs_inode_item_destroy(
->  	xfs_inode_t	*ip)
->  {
-> +	kmem_free(ip->i_itemp->ili_item.li_lv_shadow);
->  	kmem_zone_free(xfs_ili_zone, ip->i_itemp);
->  }
->  
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 4e76493..ebb9ea9 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -79,6 +79,157 @@ xlog_cil_init_post_recovery(
->  	log->l_cilp->xc_ctx->sequence = 1;
->  }
->  
-> +static inline int
-> +xlog_cil_iovec_space(
-> +	uint	niovecs)
-> +{
-> +	return round_up((sizeof(struct xfs_log_vec) +
-> +					niovecs * sizeof(struct xfs_log_iovec)),
-> +			sizeof(uint64_t));
-> +}
-> +
-> +/*
-> + * Allocate or pin log vector buffers for CIL insertion.
-> + *
-> + * The CIL currently uses disposable buffers for copying a snapshot of the
-> + * modified items into the log during a push. The biggest problem with this is
-> + * the requirement to allocate the disposable buffer during the commit if:
-> + *	a) does not exist; or
-> + *	b) it is too small
-> + *
-> + * If we do this allocation within xlog_cil_insert_format_items(), it is done
-> + * under the xc_ctx_lock, which means that a CIL push cannot occur during
-> + * the memory allocation. This means that we have a potential deadlock situation
-> + * under low memory conditions when we have lots of dirty metadata pinned in
-> + * the CIL and we need a CIL commit to occur to free memory.
-> + *
-> + * To avoid this, we need to move the memory allocation outside the
-> + * xc_ctx_lock(), but because the log vector buffers are disposable, that opens
-> + * up a TOCTOU race condition w.r.t. the CIL commiting and removing the log
-> + * vector buffers between the check and the formatting of the item into the
-> + * log vector buffer within the xc_ctx_lock.
-> + *
-> + * Because the log vector buffer needs to be unchanged during the CIL push
-> + * process, we cannot share the buffer between the transaction commit (which
-> + * modifies the buffer) and the CIL push context that is writing the changes
-> + * into the log. This means skipping preallocation of buffer space is
-> + * unreliable, but we most definitely do not want to be allocating and freeing
-> + * buffers unnecessarily during commits when overwrites can be done safely.
-> + *
-> + * The simplest solution to this problem is to allocate a shadow buffer when a
-> + * log item is committed for the second time, and then to only use this buffer
-> + * if necessary. The buffer can remain attached to the log item until such time
-> + * it is needed, and this is the buffer that is reallocated to match the size of
-> + * the incoming modification. Then during the formatting of the item we can swap
-> + * the active buffer with the new one if we can't reuse the existing buffer. We
-> + * don't free the old buffer as it may be reused on the next modification if
-> + * it's size is right, otherwise we'll free and reallocate it at that point.
-> + *
-> + * This function builds a vector for the changes in each log item in the
-> + * transaction. It then works out the length of the buffer needed for each log
-> + * item, allocates them and attaches the vector to the log item in preparation
-> + * for the formatting step which occurs under the xc_ctx_lock.
-> + *
-> + * While this means the memory footprint goes up, it avoids the repeated
-> + * alloc/free pattern that repeated modifications of an item would otherwise
-> + * cause, and hence minimises the CPU overhead of such behaviour.
-> + */
-> +static void
-> +xlog_cil_alloc_shadow_bufs(
-> +	struct xlog		*log,
-> +	struct xfs_trans	*tp)
-> +{
-> +	struct xfs_log_item_desc *lidp;
-> +
-> +	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-> +		struct xfs_log_item *lip = lidp->lid_item;
-> +		struct xfs_log_vec *lv;
-> +		int	niovecs = 0;
-> +		int	nbytes = 0;
-> +		int	buf_size;
-> +		bool	ordered = false;
-> +
-> +		/* Skip items which aren't dirty in this transaction. */
-> +		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-> +			continue;
-> +
-> +		/* get number of vecs and size of data to be stored */
-> +		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
-> +
-> +		/*
-> +		 * Ordered items need to be tracked but we do not wish to write
-> +		 * them. We need a logvec to track the object, but we do not
-> +		 * need an iovec or buffer to be allocated for copying data.
-> +		 */
-> +		if (niovecs == XFS_LOG_VEC_ORDERED) {
-> +			ordered = true;
-> +			niovecs = 0;
-> +			nbytes = 0;
-> +		}
-> +
-> +		/*
-> +		 * We 64-bit align the length of each iovec so that the start
-> +		 * of the next one is naturally aligned.  We'll need to
-> +		 * account for that slack space here. Then round nbytes up
-> +		 * to 64-bit alignment so that the initial buffer alignment is
-> +		 * easy to calculate and verify.
-> +		 */
-> +		nbytes += niovecs * sizeof(uint64_t);
-> +		nbytes = round_up(nbytes, sizeof(uint64_t));
-> +
-> +		/*
-> +		 * The data buffer needs to start 64-bit aligned, so round up
-> +		 * that space to ensure we can align it appropriately and not
-> +		 * overrun the buffer.
-> +		 */
-> +		buf_size = nbytes + xlog_cil_iovec_space(niovecs);
-> +
-> +		/*
-> +		 * if we have no shadow buffer, or it is too small, we need to
-> +		 * reallocate it.
-> +		 */
-> +		if (!lip->li_lv_shadow ||
-> +		    buf_size > lip->li_lv_shadow->lv_size) {
-> +
-> +			/*
-> +			 * We free and allocate here as a realloc would copy
-> +			 * unecessary data. We don't use kmem_zalloc() for the
-> +			 * same reason - we don't need to zero the data area in
-> +			 * the buffer, only the log vector header and the iovec
-> +			 * storage.
-> +			 */
-> +			kmem_free(lip->li_lv_shadow);
-> +
-> +			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
-> +			memset(lv, 0, xlog_cil_iovec_space(niovecs));
-> +
-> +			lv->lv_item = lip;
-> +			lv->lv_size = buf_size;
-> +			if (ordered)
-> +				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-> +			else
-> +				lv->lv_iovecp = (struct xfs_log_iovec *)&lv[1];
-> +			lip->li_lv_shadow = lv;
-> +		} else {
-> +			/* same or smaller, optimise common overwrite case */
-> +			lv = lip->li_lv_shadow;
-> +			if (ordered)
-> +				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-> +			else
-> +				lv->lv_buf_len = 0;
-> +			lv->lv_bytes = 0;
-> +			lv->lv_next = NULL;
-> +		}
-> +
-> +		/* Ensure the lv is set up according to ->iop_size */
-> +		lv->lv_niovecs = niovecs;
-> +
-> +		/* The allocated data region lies beyond the iovec region */
-> +		lv->lv_buf = (char *)lv + xlog_cil_iovec_space(niovecs);
-> +	}
-> +
-> +}
-> +
->  /*
->   * Prepare the log item for insertion into the CIL. Calculate the difference in
->   * log space and vectors it will consume, and if it is a new item pin it as
-> @@ -101,16 +252,19 @@ xfs_cil_prepare_item(
->  	/*
->  	 * If there is no old LV, this is the first time we've seen the item in
->  	 * this CIL context and so we need to pin it. If we are replacing the
-> -	 * old_lv, then remove the space it accounts for and free it.
-> +	 * old_lv, then remove the space it accounts for and make it the shadow
-> +	 * buffer for later freeing. In both cases we are now switching to the
-> +	 * shadow buffer, so update the the pointer to it appropriately.
->  	 */
-> -	if (!old_lv)
-> +	if (!old_lv) {
->  		lv->lv_item->li_ops->iop_pin(lv->lv_item);
-> -	else if (old_lv != lv) {
-> +		lv->lv_item->li_lv_shadow = NULL;
-> +	} else if (old_lv != lv) {
->  		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
->  
->  		*diff_len -= old_lv->lv_bytes;
->  		*diff_iovecs -= old_lv->lv_niovecs;
-> -		kmem_free(old_lv);
-> +		lv->lv_item->li_lv_shadow = old_lv;
->  	}
->  
->  	/* attach new log vector to log item */
-> @@ -134,11 +288,13 @@ xfs_cil_prepare_item(
->   * write it out asynchronously without needing to relock the object that was
->   * modified at the time it gets written into the iclog.
->   *
-> - * This function builds a vector for the changes in each log item in the
-> - * transaction. It then works out the length of the buffer needed for each log
-> - * item, allocates them and formats the vector for the item into the buffer.
-> - * The buffer is then attached to the log item are then inserted into the
-> - * Committed Item List for tracking until the next checkpoint is written out.
-> + * This function takes the prepared log vectors attached to each log item, and
-> + * formats the changes into the log vector buffer. The buffer it uses is
-> + * dependent on the current state of the vector in the CIL - the shadow lv is
-> + * guaranteed to be large enough for the current modification, but we will only
-> + * use that if we can't reuse the existing lv. If we can't reuse the existing
-> + * lv, then simple swap it out for the shadow lv. We don't free it - that is
-> + * done lazily either by th enext modification or the freeing of the log item.
->   *
->   * We don't set up region headers during this process; we simply copy the
->   * regions into the flat buffer. We can do this because we still have to do a
-> @@ -171,59 +327,29 @@ xlog_cil_insert_format_items(
->  	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
->  		struct xfs_log_item *lip = lidp->lid_item;
->  		struct xfs_log_vec *lv;
-> -		struct xfs_log_vec *old_lv;
-> -		int	niovecs = 0;
-> -		int	nbytes = 0;
-> -		int	buf_size;
-> +		struct xfs_log_vec *old_lv = NULL;
-> +		struct xfs_log_vec *shadow;
->  		bool	ordered = false;
->  
->  		/* Skip items which aren't dirty in this transaction. */
->  		if (!(lidp->lid_flags & XFS_LID_DIRTY))
->  			continue;
->  
-> -		/* get number of vecs and size of data to be stored */
-> -		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
-> -
-> -		/* Skip items that do not have any vectors for writing */
-> -		if (!niovecs)
-> -			continue;
-> -
->  		/*
-> -		 * Ordered items need to be tracked but we do not wish to write
-> -		 * them. We need a logvec to track the object, but we do not
-> -		 * need an iovec or buffer to be allocated for copying data.
-> +		 * The formatting size information is already attached to
-> +		 * the shadow lv on the log item.
->  		 */
-> -		if (niovecs == XFS_LOG_VEC_ORDERED) {
-> +		shadow = lip->li_lv_shadow;
-> +		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
->  			ordered = true;
-> -			niovecs = 0;
-> -			nbytes = 0;
-> -		}
->  
-> -		/*
-> -		 * We 64-bit align the length of each iovec so that the start
-> -		 * of the next one is naturally aligned.  We'll need to
-> -		 * account for that slack space here. Then round nbytes up
-> -		 * to 64-bit alignment so that the initial buffer alignment is
-> -		 * easy to calculate and verify.
-> -		 */
-> -		nbytes += niovecs * sizeof(uint64_t);
-> -		nbytes = round_up(nbytes, sizeof(uint64_t));
-> -
-> -		/* grab the old item if it exists for reservation accounting */
-> -		old_lv = lip->li_lv;
-> -
-> -		/*
-> -		 * The data buffer needs to start 64-bit aligned, so round up
-> -		 * that space to ensure we can align it appropriately and not
-> -		 * overrun the buffer.
-> -		 */
-> -		buf_size = nbytes +
-> -			   round_up((sizeof(struct xfs_log_vec) +
-> -				     niovecs * sizeof(struct xfs_log_iovec)),
-> -				    sizeof(uint64_t));
-> +		/* Skip items that do not have any vectors for writing */
-> +		if (!shadow->lv_niovecs && !ordered)
-> +			continue;
->  
->  		/* compare to existing item size */
-> -		if (lip->li_lv && buf_size <= lip->li_lv->lv_size) {
-> +		old_lv = lip->li_lv;
-> +		if (lip->li_lv && shadow->lv_size <= lip->li_lv->lv_size) {
->  			/* same or smaller, optimise common overwrite case */
->  			lv = lip->li_lv;
->  			lv->lv_next = NULL;
-> @@ -237,32 +363,29 @@ xlog_cil_insert_format_items(
->  			 */
->  			*diff_iovecs -= lv->lv_niovecs;
->  			*diff_len -= lv->lv_bytes;
-> +
-> +			/* Ensure the lv is set up according to ->iop_size */
-> +			lv->lv_niovecs = shadow->lv_niovecs;
-> +
-> +			/* reset the lv buffer information for new formatting */
-> +			lv->lv_buf_len = 0;
-> +			lv->lv_bytes = 0;
-> +			lv->lv_buf = (char *)lv +
-> +					xlog_cil_iovec_space(lv->lv_niovecs);
->  		} else {
-> -			/* allocate new data chunk */
-> -			lv = kmem_zalloc(buf_size, KM_SLEEP|KM_NOFS);
-> +			/* switch to shadow buffer! */
-> +			lv = shadow;
->  			lv->lv_item = lip;
-> -			lv->lv_size = buf_size;
->  			if (ordered) {
->  				/* track as an ordered logvec */
->  				ASSERT(lip->li_lv == NULL);
-> -				lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
->  				goto insert;
->  			}
-> -			lv->lv_iovecp = (struct xfs_log_iovec *)&lv[1];
->  		}
->  
-> -		/* Ensure the lv is set up according to ->iop_size */
-> -		lv->lv_niovecs = niovecs;
-> -
-> -		/* The allocated data region lies beyond the iovec region */
-> -		lv->lv_buf_len = 0;
-> -		lv->lv_bytes = 0;
-> -		lv->lv_buf = (char *)lv + buf_size - nbytes;
->  		ASSERT(IS_ALIGNED((unsigned long)lv->lv_buf, sizeof(uint64_t)));
-> -
->  		lip->li_ops->iop_format(lip, lv);
->  insert:
-> -		ASSERT(lv->lv_buf_len <= nbytes);
->  		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
->  	}
->  }
-> @@ -784,6 +907,13 @@ xfs_log_commit_cil(
->  	struct xlog		*log = mp->m_log;
->  	struct xfs_cil		*cil = log->l_cilp;
->  
-> +	/*
-> +	 * Do all necessary memory allocation before we lock the CIL.
-> +	 * This ensures the allocation does not deadlock with a CIL
-> +	 * push in memory reclaim (e.g. from kswapd).
-> +	 */
-> +	xlog_cil_alloc_shadow_bufs(log, tp);
-> +
->  	/* lock out background commit */
->  	down_read(&cil->xc_ctx_lock);
->  
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index e7c49cf..be7b8e1 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -52,6 +52,7 @@ typedef struct xfs_log_item {
->  	/* delayed logging */
->  	struct list_head		li_cil;		/* CIL pointers */
->  	struct xfs_log_vec		*li_lv;		/* active log vector */
-> +	struct xfs_log_vec		*li_lv_shadow;	/* standby vector */
->  	xfs_lsn_t			li_seq;		/* CIL commit seq */
->  } xfs_log_item_t;
->  
-> -- 
-> 2.7.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Indeed, this is basically what we do with _require_xfs_mkfs_crc();
+> the same thing should be done, but without the "notrun" if -m crc
+> s not supported...
 
--- 
-Carlos
+Thanks for reviewing!
+
+Eryu
 
 _______________________________________________
 xfs mailing list
