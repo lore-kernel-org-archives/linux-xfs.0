@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A97ED7CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:02:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 168DF8F8039
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:06 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id cwCm2Fxx6BmjwwLS (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 08DA57CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CC97D30406B
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:56 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id A9sdyN7gFcoIVCyg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:04 -0700 (PDT)
-Subject: [PATCH 2/3] block: require write_same and discard requests align to
-	logical block size
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 12 Apr 2016 21:01:35 -0700
-Message-ID: <20160413040135.10562.74550.stgit@birch.djwong.org>
-In-Reply-To: <20160413040121.10562.98998.stgit@birch.djwong.org>
-References: <20160413040121.10562.98998.stgit@birch.djwong.org>
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [RFC v2 PATCH 04/10] dm: add methods to set and get reserved space
+Date: Tue, 12 Apr 2016 12:42:47 -0400
+Message-Id: <1460479373-63317-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,83 +23,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: darrick.wong@oracle.com
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
 
-Make sure that the offset and length arguments that we're using to
-construct WRITE SAME and DISCARD requests are actually aligned to the
-logical block size.  Failure to do this causes other errors in other
-parts of the block layer or the SCSI layer because disks don't support
-partial logical block writes.
+From: Mike Snitzer <snitzer@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+[BF: Condensed to single function.]
+
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- block/blk-lib.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/md/dm.c               | 41 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/device-mapper.h |  5 +++++
+ 2 files changed, 46 insertions(+)
 
-
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 9ebf653..9dca6bb 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -49,6 +49,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	struct bio *bio;
- 	int ret = 0;
- 	struct blk_plug plug;
-+	sector_t bs_mask;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index be49057..8f95e78 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -664,6 +664,46 @@ out:
+ 	return r;
+ }
  
- 	if (!q)
- 		return -ENXIO;
-@@ -56,6 +57,10 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	if (!blk_queue_discard(q))
- 		return -EOPNOTSUPP;
- 
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
++/*
++ * FIXME: factor out common helper that can be used by
++ * multiple block_device_operations -> target methods
++ * (including dm_blk_ioctl above)
++ */
 +
- 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
- 	granularity = max(q->limits.discard_granularity >> 9, 1U);
- 	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
-@@ -148,6 +153,7 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	unsigned int max_write_same_sectors;
-+	sector_t bs_mask;
- 	struct bio_batch bb;
- 	struct bio *bio;
- 	int ret = 0;
-@@ -155,6 +161,10 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 	if (!q)
- 		return -ENXIO;
- 
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
++static int dm_blk_reserve_space(struct block_device *bdev, int mode,
++				sector_t offset, sector_t len, sector_t *res)
++{
++	struct mapped_device *md = bdev->bd_disk->private_data;
++	int srcu_idx;
++	struct dm_table *map;
++	struct dm_target *tgt;
++	int r = -EINVAL;
 +
- 	/* Ensure that max_write_same_sectors doesn't overflow bi_size */
- 	max_write_same_sectors = UINT_MAX >> 9;
- 
-@@ -218,9 +228,14 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	int ret;
- 	struct bio *bio;
- 	struct bio_batch bb;
-+	sector_t bs_mask;
- 	unsigned int sz;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
++	map = dm_get_live_table(md, &srcu_idx);
 +
- 	atomic_set(&bb.done, 1);
- 	bb.error = 0;
- 	bb.wait = &wait;
++	if (!map || !dm_table_get_size(map))
++		goto out;
++
++	/* We only support devices that have a single target */
++	if (dm_table_get_num_targets(map) != 1)
++		goto out;
++
++	tgt = dm_table_get_target(map, 0);
++	if (!tgt->type->reserve_space)
++		goto out;
++
++	if (dm_suspended_md(md)) {
++		r = -EAGAIN;
++		goto out;
++	}
++
++	r = tgt->type->reserve_space(tgt, mode, offset, len, res);
++out:
++	dm_put_live_table(md, srcu_idx);
++
++	return r;
++}
++
+ static struct dm_io *alloc_io(struct mapped_device *md)
+ {
+ 	return mempool_alloc(md->io_pool, GFP_NOIO);
+@@ -3723,6 +3763,7 @@ static const struct block_device_operations dm_blk_dops = {
+ 	.ioctl = dm_blk_ioctl,
+ 	.getgeo = dm_blk_getgeo,
+ 	.pr_ops = &dm_pr_ops,
++	.reserve_space = dm_blk_reserve_space,
+ 	.owner = THIS_MODULE
+ };
+ 
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 0830c9e..b4825db 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -116,6 +116,10 @@ typedef void (*dm_io_hints_fn) (struct dm_target *ti,
+  */
+ typedef int (*dm_busy_fn) (struct dm_target *ti);
+ 
++typedef int (*dm_reserve_space_fn) (struct dm_target *ti, int mode,
++				    sector_t offset, sector_t len,
++				    sector_t *res);
++
+ void dm_error(const char *message);
+ 
+ struct dm_dev {
+@@ -162,6 +166,7 @@ struct target_type {
+ 	dm_busy_fn busy;
+ 	dm_iterate_devices_fn iterate_devices;
+ 	dm_io_hints_fn io_hints;
++	dm_reserve_space_fn reserve_space;
+ 
+ 	/* For internal device-mapper use. */
+ 	struct list_head list;
+-- 
+2.4.11
 
 _______________________________________________
 xfs mailing list
