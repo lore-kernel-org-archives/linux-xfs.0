@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 19B137CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 16:11:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7EF0EAC01D
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 14:11:53 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8C6777CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 16:16:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F293304067
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 14:16:23 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xG4K17PNDGRqD2yE for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 14:11:50 -0700 (PDT)
-Date: Wed, 13 Apr 2016 07:11:48 +1000
+	VMs5ARNFOu6Cr71m for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 14:16:20 -0700 (PDT)
+Date: Wed, 13 Apr 2016 07:16:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: xfs_inode_free() isn't RCU safe
-Message-ID: <20160412211148.GJ567@dastard>
-References: <0A92B65A3BF94F60BB36EA3FA716DF1F@alyakaslap>
-	<570CDC0B.3070802@sgi.com>
+Subject: Re: [PATCH] xfs: Abort intent log item in xfs_iflush() upon error to
+	get buf
+Message-ID: <20160412211619.GK567@dastard>
+References: <23e35813cb097c7b15686852500cbf97@mail.gmail.com>
+	<20160412082759.GI9088@dastard>
+	<5e9c99552ae829dce9eb574d72085323@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <570CDC0B.3070802@sgi.com>
+In-Reply-To: <5e9c99552ae829dce9eb574d72085323@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +32,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brent Bice <bbice@sgi.com>
-Cc: Shyam Kaushik <shyam@zadarastorage.com>, Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 12, 2016 at 05:29:15AM -0600, Brent Bice wrote:
->    Could you resend it to be sure? I flagged it for redelivery the
-> day I emailed you so if nobody else has seen it yet then something
-> still didn't work.  I was pretty sure I'd seen it get delivered ok
-> to oss, but... (shrug)
+On Tue, Apr 12, 2016 at 11:10:13PM +0530, Shyam Kaushik wrote:
+> Hi Dave,
+> 
+> Your patch needs a minor correction.
+> 
+> At start of xfs_iflush() either we must initialize "bp = NULL" or else
+> xfs_imap_to_bp() when it hits an error need to set "*bpp = NULL".
+> Otherwise with your patch we are having an uninitialized bp that
+> corrupt_out is trying to do xfs_buf_relse().
 
-No, it didn't, and it's not in the archives, either.
+Ok, I'll check that - I thought that xfs_trans_buf_read_map() was
+initialising it to zero appropriately, but obviously I missed
+something.
 
-It seems that sgi.com is rejecting quite a bit of legitimate mail
-lately. I've seen a couple of people in the past couple of weeks
-send stuff that has reached my private in boxes but not the list.
-Now this one, too.
+Thanks for testing!
 
-If someone is having to micro-manage the list to prevent rejections
-of valid email then that is bad...
+Cheers,
 
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
