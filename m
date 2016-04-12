@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 469AB7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 07:10:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AFB8304053
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:10:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id b48MeyP2nkaBjker (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:10:50 -0700 (PDT)
-Date: Thu, 14 Apr 2016 08:10:49 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 07/11] xfs: mark reclaimed inodes invalid earlier
-Message-ID: <20160414121048.GB20696@bfoster.bfoster>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-	<1460525492-1170-8-git-send-email-david@fromorbit.com>
-	<20160413064900.GP567@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160413064900.GP567@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 605117CA4
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16C59304066
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:30 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id MZM3P0gpR2rWH8Ax (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:27 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/8] fs: move struct iomap from exportfs.h to a separate header
+Date: Tue, 12 Apr 2016 13:52:55 -0700
+Message-Id: <1460494382-14547-2-git-send-email-hch@lst.de>
+In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
+References: <1460494382-14547-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,71 +23,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Apr 13, 2016 at 04:49:00PM +1000, Dave Chinner wrote:
-> On Wed, Apr 13, 2016 at 03:31:28PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The last thing we do before using call_rcu() on an xfs_inode to be
-> > freed is mark it as invalid. This means there is a window between
-> > when we know for certain that the inode is going to be freed and
-> > when we do actually mark it as "freed".
-> > 
-> > This is important in the context of RCU lookups - we can look up the
-> > inode, find that it is valid, and then use it as such not realising
-> > that it is in the final stages of being freed.
-> > 
-> > As such, mark the inode as being invalid the moment we know it is
-> > going to be reclaimed. This can be done while we still hold the
-> > XFS_ILOCK_EXCL and the flush lock in xfs_inode_reclaim, meaning that
-> > it occurs well before we remove it from the radix tree, and that
-> > the i_flags_lock, the XFS_ILOCK and the inode flush lock all act as
-> > synchronisation points for detecting that an inode is about to go
-> > away.
-> > 
-> > For defensive purposes, this allows us to add a further check to
-> > xfs_iflush_cluster to ensure we skip inodes that are being freed
-> > after we grab the XFS_ILOCK_SHARED and the flush lock - we know that
-> > if the inode number if valid while we have these locks held we know
-> > that it has not progressed through reclaim to the point where it is
-> > clean and is about to be freed.
-> > 
-> > [bfoster: fixed __xfs_inode_clear_reclaim() using ip->i_ino after it
-> > 	  had already been zeroed.]
-> 
-> And, of course, in reordering this I dropped this fix because it was
-> handled by the reworking of tagging code to use pag->pag_agno.
-> 
-> So I've brought that small change forward to this patch (using
-> pag->pag_agno instead of deriving it from the ip->i_ino in
-> __xfs_inode_clear_reclaim()).
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/nfsd/blocklayout.c    |  1 +
+ fs/nfsd/blocklayoutxdr.c |  1 +
+ fs/xfs/xfs_pnfs.c        |  1 +
+ include/linux/exportfs.h | 16 +---------------
+ include/linux/iomap.h    | 21 +++++++++++++++++++++
+ 5 files changed, 25 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iomap.h
 
-I don't see any such change in this patch..?
-__xfs_inode_clear_reclaim() still uses ip->i_ino.
-
-Brian
-
-> That means I have to rebase the later cleanup patch too, but the end
-> result of the patch set is identical...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index e55b524..4df16ae 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -2,6 +2,7 @@
+  * Copyright (c) 2014-2016 Christoph Hellwig.
+  */
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/genhd.h>
+ #include <linux/slab.h>
+ #include <linux/pr.h>
+diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
+index 6c3b316..4ebaaf4 100644
+--- a/fs/nfsd/blocklayoutxdr.c
++++ b/fs/nfsd/blocklayoutxdr.c
+@@ -3,6 +3,7 @@
+  */
+ #include <linux/sunrpc/svc.h>
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/nfs4.h>
+ 
+ #include "nfsd.h"
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 3332bae..0a56787 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2014 Christoph Hellwig.
+  */
++#include <linux/iomap.h>
+ #include "xfs.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+index d841450..b03c062 100644
+--- a/include/linux/exportfs.h
++++ b/include/linux/exportfs.h
+@@ -6,6 +6,7 @@
+ struct dentry;
+ struct iattr;
+ struct inode;
++struct iomap;
+ struct super_block;
+ struct vfsmount;
+ 
+@@ -187,21 +188,6 @@ struct fid {
+  *    get_name is not (which is possibly inconsistent)
+  */
+ 
+-/* types of block ranges for multipage write mappings. */
+-#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+-#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+-#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+-#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+-
+-#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+-
+-struct iomap {
+-	sector_t	blkno;	/* first sector of mapping */
+-	loff_t		offset;	/* file offset of mapping, bytes */
+-	u64		length;	/* length of mapping, bytes */
+-	int		type;	/* type of mapping */
+-};
+-
+ struct export_operations {
+ 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
+ 			struct inode *parent);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+new file mode 100644
+index 0000000..1b22197
+--- /dev/null
++++ b/include/linux/iomap.h
+@@ -0,0 +1,21 @@
++#ifndef LINUX_IOMAP_H
++#define LINUX_IOMAP_H 1
++
++#include <linux/types.h>
++
++/* types of block ranges for multipage write mappings. */
++#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
++#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
++#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
++#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
++
++#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
++
++struct iomap {
++	sector_t	blkno;	/* first sector of mapping */
++	loff_t		offset;	/* file offset of mapping, bytes */
++	u64		length;	/* length of mapping, bytes */
++	int		type;	/* type of mapping */
++};
++
++#endif /* LINUX_IOMAP_H */
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
