@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D1A17CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 06:38:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C33417CB7
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 03:28:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 01722AC001
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 04:38:14 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PU8dYPSzkQ0VhhDw (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Apr 2016 04:38:14 -0700 (PDT)
-Date: Mon, 11 Apr 2016 19:38:11 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs/259: handle minimum block size more precisely
-Message-ID: <20160411113811.GH10345@eguan.usersys.redhat.com>
-References: <1460027155-4222-1-git-send-email-eguan@redhat.com>
-	<20160407213231.GD761@dastard>
-	<20160407234837.GA1439@infradead.org>
-	<20160411000238.GB9088@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 78753304039
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:28:04 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	sq8c4h2m8nByIbix for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 01:28:01 -0700 (PDT)
+Date: Tue, 12 Apr 2016 18:28:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Abort intent log item in xfs_iflush() upon error to
+	get buf
+Message-ID: <20160412082759.GI9088@dastard>
+References: <23e35813cb097c7b15686852500cbf97@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160411000238.GB9088@dastard>
+In-Reply-To: <23e35813cb097c7b15686852500cbf97@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,59 +30,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 11, 2016 at 10:02:38AM +1000, Dave Chinner wrote:
-> On Thu, Apr 07, 2016 at 04:48:37PM -0700, Christoph Hellwig wrote:
-> > On Fri, Apr 08, 2016 at 07:32:31AM +1000, Dave Chinner wrote:
-> > > > diff --git a/tests/xfs/259 b/tests/xfs/259
-> > > > index 16c1935..3150ff3 100755
-> > > > --- a/tests/xfs/259
-> > > > +++ b/tests/xfs/259
-> > > > @@ -51,9 +51,7 @@ testfile=$TEST_DIR/259.image
-> > > >  # Test various sizes slightly less than 4 TB. Need to handle different
-> > > >  # minimum block sizes for CRC enabled filesystems, but use a small log so we
-> > > >  # don't write lots of zeros unnecessarily.
-> > > > -xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
-> > > > -. $tmp.mkfs
-> > > 
-> > > This tests the configuration of the test device, which is not
-> > > controlled by the test harness, so can be different to the
-> > > configuration being used for the scratch device.
-> > > 
-> > > > -if [ $_fs_has_crcs -eq 1 ]; then
-> > > > +if [ $XFS_MKFS_CRC_DEFAULT -eq 1 ]; then
-> > > 
-> > > IOWs, this is not an not equivalent test.
-> > 
-> > And I think that's the whole point of this change :)
-> > 
-> > Previously it tested what the TEST_DIR did, which was wrong for this
-> > test.  Now it tests what mkfs does by default (including for the scratch
-> > dev), which is what we really want here.
+On Tue, Apr 12, 2016 at 12:27:30PM +0530, Shyam Kaushik wrote:
+> Looking at xfs_iflush(). If an IO fails, it is supposed to unlock the
+> inode by calling xfs_iflush_abort(), which will also remove it from
+> the AIL. This can also happen on reclaim of a dirty inode, and if so
+> we'll still reclaim the inode because reclaim assumes xfs_iflush()
+> cleans up properly. Which, apparently, it doesn't.
 > 
-> Which is not at all clear from the patch description.
+> Fix xfs_iflush() buf get failure to remove intent log item.
 > 
-> Seriously, though, this does not belong in common/config. We already
-> have a helper function to check what mkfs supports (i.e.
->  _scratch_mkfs_xfs_supported()), and if we just want a bare check
-> then factor this into a _mkfs_xfs_supported() and supply the
-> parameters specific to the test.
-> 
-> Indeed, this is basically what we do with _require_xfs_mkfs_crc();
-> the same thing should be done, but without the "notrun" if -m crc
-> s not supported...
+> Discovered-by: Dave Chinner <dchinner at redhat.com>
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 96f606d..85414a6 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3374,8 +3374,9 @@ xfs_iflush(
+>         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
+> XBF_TRYLOCK,
+>                                0);
+>         if (error || !bp) {
+> -               xfs_ifunlock(ip);
+> -               return error;
+> +               if (!bp)
+> +                       error = -EIO;
+> +               goto abort_out;
 
-Looking into _require_xfs_mkfs_crc() and _scratch_mkfs_xfs_supported(),
-I noticed that they are not the helpers I want. They are testing whether
-mkfs.xfs supports CRC (or other mkfs options), what I want is what's the
-default behavior of mkfs.xfs (CRC enabled or not).
+So that will trigger a failure whenever the underlying buffer is
+busy (i.e. returns -EAGAIN with bp NULL), not just when an IO
+or corruption error occurs. The hammer is too big. ;)
 
-Maybe I can just move the detection code to common/rc?
+Great proof of concept, though, as your testing results tell us you
+have found the root cause of the bug. The patch I wrote earlier
+today takes the EAGAIN case into account - I'm currently testing it,
+and have attached it below. Can you run it through your error
+testing, please, Shyam?
 
-Thanks,
-Eryu
+I'll update all the reported-by, etc attributions before I post it
+for proper review.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: xfs_iflush_cluster fails to abort on error
+
+From: Dave Chinner <dchinner@redhat.com>
+
+When a failure due to an inode buffer occurs, the error handling
+fails to abort the inode writeback correctly. This can result in the
+inode being reclaimed whilst still in the AIL, leading to
+use-after-free situations as well as filesystems that cannot be
+unmounted as the inode log items left in the AIL never get removed.
+
+Fix this by ensuring fatal errors from xfs_imap_to_bp() result in
+the inode flush being aborted correctly.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5b84bbc..e1a8020 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3378,14 +3378,22 @@ xfs_iflush(
+ 	}
+ 
+ 	/*
+-	 * Get the buffer containing the on-disk inode.
++	 * Get the buffer containing the on-disk inode. We are doing a try-lock
++	 * operation here, so we may get  an EAGAIN error. In that case, we
++	 * simply want to return with the inode still dirty.
++	 *
++	 * If we get any other error, we effectively have a corruption situation
++	 * and we cannot flush the inode, so we treat it the same as failing
++	 * xfs_iflush_int().
+ 	 */
+ 	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
+ 			       0);
+-	if (error || !bp) {
++	if (error == -EAGAIN) {
+ 		xfs_ifunlock(ip);
+ 		return error;
+ 	}
++	if (error)
++		goto corrupt_out;
+ 
+ 	/*
+ 	 * First flush out the inode that xfs_iflush was called with.
+@@ -3413,7 +3421,8 @@ xfs_iflush(
+ 	return 0;
+ 
+ corrupt_out:
+-	xfs_buf_relse(bp);
++	if (bp)
++		xfs_buf_relse(bp);
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ cluster_corrupt_out:
+ 	error = -EFSCORRUPTED;
 
 _______________________________________________
 xfs mailing list
