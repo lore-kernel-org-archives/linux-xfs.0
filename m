@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 821777CA2
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 09:19:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 40D4A304062
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 07:19:05 -0700 (PDT)
-Received: from g9t5009.houston.hp.com (g9t5009.houston.hp.com [15.240.92.67])
-	by cuda.sgi.com with ESMTP id w5vkF3rvWbiiDI09 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 07:19:03 -0700 (PDT)
-Message-ID: <1460556627.24985.28.camel@hpe.com>
-Subject: Re: ext4 error
-From: Toshi Kani <toshi.kani@hpe.com>
-Date: Wed, 13 Apr 2016 08:10:27 -0600
-In-Reply-To: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
-References: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AE8807CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:27:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 73F158F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:17 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id 8Vhxnzfwm3TVqUhr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:15 -0700 (PDT)
+Received: from [67.51.76.21] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1aq6m8-0006B4-W9
+	for xfs@oss.sgi.com; Tue, 12 Apr 2016 22:27:13 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/6] xfs: use iomap infrastructure for DAX zeroing
+Date: Tue, 12 Apr 2016 15:26:49 -0700
+Message-Id: <1460500013-28334-3-git-send-email-hch@lst.de>
+In-Reply-To: <1460500013-28334-1-git-send-email-hch@lst.de>
+References: <1460500013-28334-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,33 +27,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Shang <EricShang@zhaoxin.com>, Matthew Wilcox <willy@linux.intel.com>
-Cc: "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: xfs@oss.sgi.com
 
-T24gV2VkLCAyMDE2LTA0LTEzIGF0IDEzOjQ0ICswMDAwLCBFcmljIFNoYW5nIHdyb3RlOgo+IEhJ
-IEFsbDoKPiDCoCBJIG1lZXQgYW4gZXh0NCBlcnJvciwgZm9sbG93aW5nIGlzIHRoZSBlcnJvciBs
-b2cuIEFmdGVyIHBhbmljLCBJIGNoZWNrIHRoZQo+IGVtbWMgYnkgdGhlIHRvb2wgZGVidWZzLCB0
-aGUgaW5vZGUgNjk4NzggaV9ubGluayBpcyBub3QgemVyby4gQW5kIHRoaXMgaW5vZGUKPiBkb24n
-dCBiZWxvbmcgdG8gcGFyZW50IGRpciA2OTg3LCBpdCBiZWxvbmcgdG8gb3RoZXIgZmlsZSh0aGlz
-IGlub2RlIGJlbG9uZyB0bwo+IHR3byBmaWxlcyB3aGVuIGNoZWNrIGJ5IGRlYnVnZnMgbmNoZWNr
-KSwgSSBndWVzcyB0aGFuIHRoaXMgaW5vZGUgaGFzIGJlZWQKPiBkZWxldGVkIGluIG1lbW9yeSBh
-bmQgYWxyZWFkeSB1c2VkIGJ5IG90aGVyIGZpbGUuIEJ1dCB0aGUgcGFyZW50IGRlbnRyeQo+IGJ1
-ZmZfaGVhZCBub3QgZmx1c2ggdG8gZW1tYy4gQnV0IHdoZW4gbG9va3VwIHRoaXMgZGVudHJ5IGNh
-bid0IGZpbmQgaXQnIGluCj4gZGVudHJ5IGNhY2hlLCBhbmQgdGhlbiBsb29rdXBfcmVhbCwgcmVh
-ZCB0aGUgZGVudHJ5IGZyb20gZW1tYywgZ2V0IHRoZSBmaWxlCj4gaW5vZGUgd2hpY2ggYWxyZWFk
-eSBiZSBkZWxldGVkLgo+IMKgIENhbiBhbnkgZ2l2ZSBtZSBzb21lIGhlbHAgaG93IHRvIGNoZWNr
-IHRoaXMgaXNzdWUuIE15IGtlcm5lbCB2ZXJzaW9uIGlzIDMuMTgKPiBmb3JtIEFuZHJvaWQgLiBJ
-IHRoaW5rcyBzb21ldGhpbmcgd3Jvbmcgd2l0aCBkZW50cnkgY2FjaGUgZmx1c2ggYW5kIGRpcnR5
-Cj4gYnVmZl9oZWFkIGZsdXNoIHRvIGVtbWMuIFRoYW5rcyBhbGwhCgpBcmUgeW91IHNvbWVob3cg
-dXNpbmcgREFYIGFuZCBteSBkYXhfZ2V0X3VubWFwcGVkX2FyZWEgcGF0Y2hlcyBpbiB5b3VyIEFu
-ZHJvaWQKMy4xOCBrZXJuZWw/IEkgZG91YnQgdGhpcyBpcyB0aGUgY2FzZSwgYnV0IEkgdGhvdWdo
-dCBJIHNob3VsZCBjaGVjayBzaW5jZSB5b3UKcmVwb3J0ZWQgaXQgdG8gbWUgYW5kIE1hdHRoZXcg
-d2l0aCB0aGUgc2FtZSBjYyBsaXN0LgoKSWYgeW91IGFyZSBzaW1wbHkgdXNpbmcgYSBkaXN0cmli
-dXRlZCBBbmRyb2lkIGtlcm5lbCwgeW91IHNob3VsZCByZXBvcnQgaXQgdG8KQW5kcm9pZCBlbWFp
-bCBsaXN0IG9yIGJ1ZyB0cmFja2VyLgoKLVRvc2hpCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c | 35 +----------------------------------
+ fs/xfs/xfs_iops.c |  9 ++-------
+ 2 files changed, 3 insertions(+), 41 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index bcedd80..bd07913 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -80,34 +80,6 @@ xfs_rw_ilock_demote(
+ 		inode_unlock(VFS_I(ip));
+ }
+ 
+-static int
+-xfs_dax_zero_range(
+-	struct inode		*inode,
+-	loff_t			pos,
+-	size_t			count)
+-{
+-	int			status = 0;
+-
+-	do {
+-		unsigned offset, bytes;
+-
+-		offset = (pos & (PAGE_CACHE_SIZE -1)); /* Within page */
+-		bytes = PAGE_CACHE_SIZE - offset;
+-		if (bytes > count)
+-			bytes = count;
+-
+-		status = dax_zero_page_range(inode, pos, bytes,
+-					     xfs_get_blocks_direct);
+-		if (status)
+-			break;
+-
+-		pos += bytes;
+-		count -= bytes;
+-	} while (count);
+-
+-	return status;
+-}
+-
+ /*
+  * Clear the specified ranges to zero through either the pagecache or DAX.
+  * Holes and unwritten extents will be left as-is as they already are zeroed.
+@@ -118,12 +90,7 @@ xfs_iozero(
+ 	loff_t			pos,
+ 	size_t			count)
+ {
+-	struct inode		*inode = VFS_I(ip);
+-
+-	if (IS_DAX(VFS_I(ip)))
+-		return xfs_dax_zero_range(inode, pos, count);
+-	else
+-		return iomap_zero_range(inode, pos, count, NULL, &xfs_iomap_ops);
++	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 6e3614a..0c744fc 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -819,13 +819,8 @@ xfs_setattr_size(
+ 	if (newsize > oldsize) {
+ 		error = xfs_zero_eof(ip, newsize, oldsize, &did_zeroing);
+ 	} else {
+-		if (IS_DAX(inode)) {
+-			error = dax_truncate_page(inode, newsize,
+-					xfs_get_blocks_direct);
+-		} else {
+-			error = iomap_truncate_page(inode, newsize,
+-					&did_zeroing, &xfs_iomap_ops);
+-		}
++		error = iomap_truncate_page(inode, newsize, &did_zeroing,
++				&xfs_iomap_ops);
+ 	}
+ 
+ 	if (error)
+-- 
+2.1.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
