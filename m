@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E49997CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 22:22:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B51B2304032
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 20:22:19 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id L6i6GtMXSHWxhrGu (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 20:22:17 -0700 (PDT)
-Date: Wed, 13 Apr 2016 23:22:07 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: ext4 error
-Message-ID: <20160414032207.GC16656@thunk.org>
-References: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
+	by oss.sgi.com (Postfix) with ESMTP id B4DE57CA3
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 03:56:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7932D304039
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:32 -0700 (PDT)
+Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
+	[74.125.82.46]) by cuda.sgi.com with ESMTP id hvLY2So6VJaGnPG5
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 01:56:29 -0700 (PDT)
+Received: by mail-wm0-f46.google.com with SMTP id a140so44493210wma.0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:29 -0700 (PDT)
+Message-ID: <B0489CAC12794260BF90FA4C421620CA@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+Subject: RE: [PATCH 4/5] xfs: xfs_inode_free() isn't RCU safe
+Date: Tue, 12 Apr 2016 11:55:41 +0300
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,50 +25,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2020970989843193602=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Shang <EricShang@zhaoxin.com>
-Cc: "jack@suse.cz" <jack@suse.cz>, Toshi Kani <toshi.kani@hpe.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: xfs@oss.sgi.com
+Cc: bbice@sgi.com
 
-On Wed, Apr 13, 2016 at 01:44:55PM +0000, Eric Shang wrote:
-> HI All:
->   I meet an ext4 error, following is the error log. After panic, I check the emmc by the tool debufs, the inode 69878 i_nlink is not zero. And this inode don't belong to parent dir 6987, it belong to other file(this inode belong to two files when check by debugfs ncheck), I guess than this inode has beed deleted in memory and already used by other file. But the parent dentry buff_head not flush to emmc. But when lookup this dentry can't find it' in dentry cache, and then lookup_real, read the dentry from emmc, get the file inode which already be deleted. 
->   Can any give me some help how to check this issue. My kernel version is 3.18 form Android . I thinks something wrong with dentry cache flush and dirty buff_head flush to emmc. Thanks all!
+This is a multi-part message in MIME format.
 
-If I had to guess, this was caused starting with a corrupted file
-system, where the inode allocation bitmap showed that an inode which
-was in use by the file system, was erroneously showing it as free.
-This allowed it to be allocated for use in a second file (which would
-have wiped out the contents for the original file stored at that
-inode).  Later on, the file was deleted via either the older or newer
-pathname, which dropped the ref count to zero, and then an access via
-the other pathname would have resulted in this error.
+--===============2020970989843193602==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_0041_01D194B2.3CBE5090"
 
-After the panic, the on-disk data structures wouldn't have been
-updated from whatever the in-memory data structures might have been
-("Kernel panic - not syncing").  So what you see from using debugfs
-after the crash might not be represenatative of what you saw before
-the crash.
+This is a multi-part message in MIME format.
 
-I'm not sure there's much debugging that can be done, because there
-are any number of sources for the original corruption.  It could be
-caused by a hardware issue in the flash or the memory, or it could be
-caused by a wild pointer corrupting a disk buffer, etc. etc.  The
-panic won't result in a useful stack trace because that's when the
-problem was *noticed*.  But that's very different from where the file
-system corruption was *introduced*.
+------=_NextPart_000_0041_01D194B2.3CBE5090
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If you can reliably reproduce this sort of failure, then it becomes
-possible to try to track it down.  But if it's a one-off event,
-there's not much anyone can do.
+Hello Dave,
 
-Best regards,
+Looking at the patch, I see that now we call xfs_idestroy_fork() in RCU =
+callback. This can do the following chain:
 
-						- Ted
+xfs_iext_destroy =3D> xfs_iext_irec_remove =3D> =
+xfs_iext_realloc_indirect=3D> kmem_realloc =3D> kmem_alloc =3D> =
+kmem_alloc =3D> congestion_wait()
+
+At least according to documentation, the RCU callback cannot block, =
+since it may be called from softirq context. Is this fine?
+
+Thanks,
+Alex.
+
+P.S.: I have submitted a patch called =E2=80=9C[PATCH] xfs: optimize =
+destruction of the indirection array=E2=80=9D, which changes =
+xfs_iext_destroy to call only kmem_free(). But this patch got stuck in =
+the spam filter of the mailing list, and Brent is working to release it =
+from there.
+
+
+ 
+------=_NextPart_000_0041_01D194B2.3CBE5090
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<HTML><HEAD></HEAD>
+<BODY dir=3Dltr>
+<DIV dir=3Dltr>
+<DIV style=3D"FONT-SIZE: 10pt; FONT-FAMILY: 'Verdana'; COLOR: #000000">
+<DIV>Hello Dave,</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>Looking at the patch, I see that now we call xfs_idestroy_fork() in =
+RCU=20
+callback. This can do the following chain:</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>xfs_iext_destroy =3D&gt; xfs_iext_irec_remove =3D&gt;=20
+xfs_iext_realloc_indirect=3D&gt; kmem_realloc =3D&gt; kmem_alloc =3D&gt; =
+kmem_alloc=20
+=3D&gt; congestion_wait()</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>At least according to documentation, the RCU callback cannot block, =
+since=20
+it may be called from softirq context. Is this fine?</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>Thanks,</DIV>
+<DIV>Alex.</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>P.S.: I have submitted a patch called =E2=80=9C[PATCH] xfs: =
+optimize destruction of=20
+the indirection array=E2=80=9D, which changes xfs_iext_destroy to call =
+only kmem_free().=20
+But this patch got stuck in the spam filter of the mailing list, and =
+Brent is=20
+working to release it from there.</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>&nbsp;</DIV><PRE>&nbsp;</PRE></DIV></DIV></BODY></HTML>
+
+------=_NextPart_000_0041_01D194B2.3CBE5090--
+
+
+--===============2020970989843193602==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2020970989843193602==--
