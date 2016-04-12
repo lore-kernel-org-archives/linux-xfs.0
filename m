@@ -1,31 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 333E77CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 15:29:28 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DA38F7CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A6485AC002
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 13:29:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6WNL00FMBocWs0jD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 19 Apr 2016 13:29:26 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 9C6BB7F359
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 20:29:25 +0000 (UTC)
-Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u3JKTOae011824
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 16:29:25 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: fix agf limit error messages
-Message-ID: <57169524.30307@redhat.com>
-Date: Tue, 19 Apr 2016 16:29:24 -0400
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB384304066
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:24 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id PTLSCIQNZxIMuFMW (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:21 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: iomap infrastructure and multipage writes V2
+Date: Tue, 12 Apr 2016 13:52:54 -0700
+Message-Id: <1460494382-14547-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +21,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Today we see errors like
-"fllast 118 in agf 94 too large (max = 118)"
-which makes no sense.
+This series add a new file system I/O path that uses the iomap structure
+introduced for the pNFS support and support multi-page buffered writes.
 
-If we are erroring on X >= Y, Y is clearly not the
-maximum allowable value.
+This was first started by Dave Chinner a long time ago, then I did beat
+it into shape for production runs in a very constrained ARM NAS
+enviroment for Tuxera almost as long ago, and now half a dozen rewrites
+later it's back.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+The basic idea is to avoid the crazy per-block get_blocks overhead
+and make use of extents in the buffered write path by iterating over
+them instead.
 
-diff --git a/repair/agheader.c b/repair/agheader.c
-index bd11ac2..b95cedd 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -94,7 +94,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
- 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
- 		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
- 			be32_to_cpu(agf->agf_flfirst),
--			i, XFS_AGFL_SIZE(mp));
-+			i, XFS_AGFL_SIZE(mp) - 1);
- 		if (!no_modify)
- 			agf->agf_flfirst = cpu_to_be32(0);
- 	}
-@@ -102,7 +102,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
- 	if (be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp))  {
- 		do_warn(_("fllast %d in agf %d too large (max = %zu)\n"),
- 			be32_to_cpu(agf->agf_fllast),
--			i, XFS_AGFL_SIZE(mp));
-+			i, XFS_AGFL_SIZE(mp) - 1);
- 		if (!no_modify)
- 			agf->agf_fllast = cpu_to_be32(0);
- 	}
+Chances since V1:
+ - add support for fiemap
+ - fix a test fail on 1k block sizes
+ - prepare for 64-bit length, this will be used in a follow on patchset
 
 _______________________________________________
 xfs mailing list
