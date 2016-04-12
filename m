@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 08E597CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:54:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E4E8AC008
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:54:05 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id uydD5AEOsNuyvYaf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:54:02 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/8] fs: iomap based fiemap implementation
-Date: Tue, 12 Apr 2016 13:53:01 -0700
-Message-Id: <1460494382-14547-8-git-send-email-hch@lst.de>
-In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
-References: <1460494382-14547-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 03BB97CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 16:04:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BD157304067
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 14:04:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0uBtp10odEM2SUVh (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 14:04:29 -0700 (PDT)
+Date: Tue, 12 Apr 2016 17:04:27 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RFC PATCH] block: wire blkdev_fallocate() to
+	block_device_operations' reserve_space
+Message-ID: <20160412210426.GA1845@redhat.com>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	<20160412200459.GA10730@redhat.com>
+	<20160412203904.GD5812@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160412203904.GD5812@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,143 +28,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, dm-devel@redhat.com, xfs@oss.sgi.com
 
-Add a simple fiemap implementation based on iomap_ops, partially based
-on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
+On Tue, Apr 12 2016 at  4:39pm -0400,
+Darrick J. Wong <darrick.wong@oracle.com> wrote:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 ++
- 2 files changed, 93 insertions(+)
+> On Tue, Apr 12, 2016 at 04:04:59PM -0400, Mike Snitzer wrote:
+> > diff --git a/fs/block_dev.c b/fs/block_dev.c
+> > index 5a2c3ab..b34c07b 100644
+> > --- a/fs/block_dev.c
+> > +++ b/fs/block_dev.c
+> > @@ -1801,17 +1801,13 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
+> >  	struct request_queue *q = bdev_get_queue(bdev);
+> >  	struct address_space *mapping;
+> >  	loff_t end = start + len - 1;
+> > -	loff_t bs_mask, isize;
+> > +	loff_t isize;
+> >  	int error;
+> >  
+> >  	/* We only support zero range and punch hole. */
+> >  	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
+> >  		return -EOPNOTSUPP;
+> >  
+> > -	/* We haven't a primitive for "ensure space exists" right now. */
+> > -	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
+> > -		return -EOPNOTSUPP;
+> > -
+> >  	/* Only punch if the device can do zeroing discard. */
+> >  	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
+> >  	    (!blk_queue_discard(q) || !q->limits.discard_zeroes_data))
+> > @@ -1829,9 +1825,12 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
+> >  			return -EINVAL;
+> >  	}
+> >  
+> > -	/* Don't allow IO that isn't aligned to logical block size */
+> > -	bs_mask = bdev_logical_block_size(bdev) - 1;
+> > -	if ((start | len) & bs_mask)
+> > +	/*
+> > +	 * Don't allow IO that isn't aligned to minimum IO size (io_min)
+> > +	 * - for normal device's io_min is usually logical block size
+> > +	 * - but for more exotic devices (e.g. DM thinp) it may be larger
+> > +	 */
+> > +	if ((start | len) % bdev_io_min(bdev))
+> >  		return -EINVAL;
+> 
+> Noted.  Will update the original patch.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 534cb37..28a8fcb 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -385,3 +385,93 @@ out_unlock:
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
-+
-+struct fiemap_ctx {
-+	struct fiemap_extent_info *fi;
-+	struct iomap prev;
-+};
-+
-+static int iomap_to_fiemap(struct fiemap_extent_info *fi,
-+		struct iomap *iomap, u32 flags)
-+{
-+	switch (iomap->type) {
-+	case IOMAP_HOLE:
-+		/* skip holes */
-+		return 0;
-+	case IOMAP_DELALLOC:
-+		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
-+		break;
-+	case IOMAP_UNWRITTEN:
-+		flags |= FIEMAP_EXTENT_UNWRITTEN;
-+		break;
-+	case IOMAP_MAPPED:
-+		break;
-+	}
-+
-+	return fiemap_fill_next_extent(fi, iomap->offset,
-+			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
-+			iomap->length, flags | FIEMAP_EXTENT_MERGED);
-+
-+}
-+
-+static loff_t
-+iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	struct fiemap_ctx *ctx = data;
-+	loff_t ret = length;
-+
-+	if (iomap->type == IOMAP_HOLE)
-+		return length;
-+
-+	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
-+	ctx->prev = *iomap;
-+	switch (ret) {
-+	case 0:		/* success */
-+		return length;
-+	case 1:		/* extent array full */
-+		return 0;
-+	default:
-+		return ret;
-+	}
-+}
-+
-+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-+		loff_t start, loff_t len, struct iomap_ops *ops)
-+{
-+	struct fiemap_ctx ctx;
-+	loff_t ret;
-+
-+	memset(&ctx, 0, sizeof(ctx));
-+	ctx.fi = fi;
-+	ctx.prev.type = IOMAP_HOLE;
-+
-+	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-+	if (ret)
-+		return ret;
-+
-+	ret = filemap_write_and_wait(inode->i_mapping);
-+	if (ret)
-+		return ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-+				iomap_fiemap_actor);
-+		if (ret < 0)
-+			return ret;
-+		if (ret == 0)
-+			break;
-+
-+		start += ret;
-+		len -= ret;
-+	}
-+
-+	if (ctx.prev.type != IOMAP_HOLE) {
-+		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iomap_fiemap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 854766f..b3deee1 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -3,6 +3,7 @@
- 
- #include <linux/types.h>
- 
-+struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
- struct kiocb;
-@@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
- 		struct iomap_ops *ops);
- int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		struct iomap_ops *ops);
-+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-+		loff_t start, loff_t len, struct iomap_ops *ops);
- 
- #endif /* LINUX_IOMAP_H */
--- 
-2.1.4
+BTW, I just noticed your "block: require write_same and discard requests
+align to logical block size" -- doesn't look right.
+
+But maybe I'm just too hyper-focused on DM thinp's needs (which would
+much prefer these checks be done in terms of minimum_io_size, rather
+than logical_block_size, and _not_ assuming power-of-2 math will work).
+
+But at least for discard: your lbs-based check is fine; since we have
+discard_granularity to cover thinp's more specific requirements.
 
 _______________________________________________
 xfs mailing list
