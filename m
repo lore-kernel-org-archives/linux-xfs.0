@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A3D717CA4
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 00:20:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C1F2AC004
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 22:20:22 -0700 (PDT)
-Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com
-	[74.125.82.44]) by cuda.sgi.com with ESMTP id IQoCvCjGImTZk1jV
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 11 Apr 2016 22:20:08 -0700 (PDT)
-Received: by mail-wm0-f44.google.com with SMTP id f198so171629633wme.0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 22:20:08 -0700 (PDT)
-From: Shyam Kaushik <shyam@zadarastorage.com>
-References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
-	<20160322121922.GA53693@bfoster.bfoster>
-	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
-	<20160408224648.GD567@dastard>
-	<CAOcd+r0s3FfahxaqfJKuZ_D+0FbUHaKqi8b_bwGbXekCN3w_oQ@mail.gmail.com>
-	<20160411012127.GF567@dastard>
-	1aa4e955d78e6932260fdfc55c83bb8e@mail.gmail.com
-In-Reply-To: 1aa4e955d78e6932260fdfc55c83bb8e@mail.gmail.com
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 09DB27CB5
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 02:54:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C195C304053
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 00:54:49 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	REnS2uHCcLEegxrR for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 00:54:45 -0700 (PDT)
+Date: Tue, 12 Apr 2016 17:54:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: list_add corruption after "xfs: mode di_mode to vfs inode"
+Message-ID: <20160412075423.GG9088@dastard>
+References: <56FC9FA6.1080700@stratus.com>
+	<20160401024413.GB2072@devil.localdomain>
 MIME-Version: 1.0
-Date: Tue, 12 Apr 2016 10:50:06 +0530
-Message-ID: <695a5148d01ba43e96cb89736da6c1ad@mail.gmail.com>
-Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
-	disk failure/recovery
+Content-Disposition: inline
+In-Reply-To: <20160401024413.GB2072@devil.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,130 +30,184 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <dchinner@redhat.com>
+Cc: Joe Lawrence <joe.lawrence@stratus.com>, xfs@oss.sgi.com
 
-Hi Carlos,
+On Fri, Apr 01, 2016 at 01:44:13PM +1100, Dave Chinner wrote:
+> On Wed, Mar 30, 2016 at 11:55:18PM -0400, Joe Lawrence wrote:
+> > Hi Dave,
+> > 
+> > Upon loading 4.6-rc1, I noticed a few linked list corruption messages in
+> > dmesg shortly after boot up.  I bisected the kernel, landing on:
+> > 
+> >   [c19b3b05ae440de50fffe2ac2a9b27392a7448e9] xfs: mode di_mode to vfs inode
+> > 
+> > If I revert c19b3b05ae44 from 4.6-rc1, the warnings stop.
+> > 
+> > WARNING: CPU: 35 PID: 6715 at lib/list_debug.c:29 __list_add+0x65/0xc0
+> > list_add corruption. next->prev should be prev (ffff882030928a00), but was ffff88103f00c300. (next=ffff88100fde5ce8).
+> .....
+> >  [<ffffffff812488f0>] ? bdev_test+0x20/0x20
+> >  [<ffffffff813551a5>] __list_add+0x65/0xc0
+> >  [<ffffffff81249bd8>] bd_acquire+0xc8/0xd0
+> >  [<ffffffff8124aa59>] blkdev_open+0x39/0x70
+> >  [<ffffffff8120bc27>] do_dentry_open+0x227/0x320
+> >  [<ffffffff8124aa20>] ? blkdev_get_by_dev+0x50/0x50
+> >  [<ffffffff8120d057>] vfs_open+0x57/0x60
+> >  [<ffffffff8121c9fa>] path_openat+0x1ba/0x1340
+> >  [<ffffffff8121eff1>] do_filp_open+0x91/0x100
+> >  [<ffffffff8122c806>] ? __alloc_fd+0x46/0x180
+> >  [<ffffffff8120d3b4>] do_sys_open+0x124/0x210
+> >  [<ffffffff8120d4be>] SyS_open+0x1e/0x20
+> >  [<ffffffff81003c12>] do_syscall_64+0x62/0x110
+> >  [<ffffffff8169ade1>] entry_SYSCALL64_slow_path+0x25/0x25
+> ....
+> > According to the bd_acquire+0xc8 offset, we're in bd_acquire()
+> > attempting the list add:
+> ....
+> >  713         bdev = bdget(inode->i_rdev);
+> >  714         if (bdev) {
+> >  715                 spin_lock(&bdev_lock);
+> >  716                 if (!inode->i_bdev) {
+> >  717                         /*
+> >  718                          * We take an additional reference to bd_inode,
+> >  719                          * and it's released in clear_inode() of inode.
+> >  720                          * So, we can access it via ->i_mapping always
+> >  721                          * without igrab().
+> >  722                          */
+> >  723                         bdgrab(bdev);
+> >  724                         inode->i_bdev = bdev;
+> >  725                         inode->i_mapping = bdev->bd_inode->i_mapping;
+> >  726                         list_add(&inode->i_devices, &bdev->bd_inodes);
+> 
+> So the bdev->bd_inodes list is corrupt, and this call trace is
+> just the messenger.
+....
+> > I'm not really sure why the bisect landed on c19b3b05ae44 "xfs: mode
+> > di_mode to vfs inode", but as I mentioned, reverting it made the list
+> > warnings go away.
+> 
+> Neither am I at this point as it's the bdev inode (not an xfs
+> inode) that has a corrupted list. I'll have to try to reproduce this.
 
-xfs.stap that I have been using is here
-(https://www.dropbox.com/s/dluse4s3a1c7dj3/xfs.stap?dl=0). It has
-line-numbers matching xfs with printks I added. You will have to tweak it
-a bit.
+Patch below should fix the problem. Smoke tested only at this point.
 
-Thanks.
+Cheers,
 
---Shyam
-
------Original Message-----
-From: Carlos Maiolino
-Sent: Fri Apr 8 09:31:31 CDT 2016
-
-> Hi Shyam,
->
-> do you mind to share your systemtap script with us?
->
-> I'd like to take a look on it, and probably Brian will be interested to.
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com]
-Sent: 11 April 2016 06:51
-To: Alex Lyakas
-Cc: Shyam Kaushik; Brian Foster; xfs@oss.sgi.com
-Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
-after disk failure/recovery
-
-On Sun, Apr 10, 2016 at 09:40:29PM +0300, Alex Lyakas wrote:
-> Hello Dave,
->
-> On Sat, Apr 9, 2016 at 1:46 AM, Dave Chinner <david@fromorbit.com>
-wrote:
-> > On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
-> >> Hi Dave, Brian, Carlos,
-> >>
-> >> While trying to reproduce this issue I have been running into
-different
-> >> issues that are similar. Underlying issue remains the same when
-backend to
-> >> XFS is failed & we unmount XFS, we run into hung-task timeout
-(180-secs)
-> >> with stack like
-> >>
-> >> kernel: [14952.671131]  [<ffffffffc06a5f59>]
-> >> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
-> >> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
-> >> prepare_to_wait_event+0x110/0x110
-> >> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
-> >> [xfs]
-> >>
-> >> while running trace-events, XFS ail push keeps looping around
-> >>
-> >>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
-> >> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
-> >
-> > Looks like either a stale inode (which should never reach the AIL)
-> > or it's an inode that's been reclaimed and this is a use after free
-> > situation. Given that we are failing IOs here, I'd suggest it's more
-> > likely to be an IO failure that's caused a writeback problem, not an
-> > interaction with stale inodes.
-> >
-> > So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
-> > inode by calling xfs_iflush_abort(), which will also remove it from
-> > the AIL. This can also happen on reclaim of a dirty inode, and if so
-> > we'll still reclaim the inode because reclaim assumes xfs_iflush()
-> > cleans up properly.
-> >
-> > Which, apparently, it doesn't:
-> >
-> >         /*
-> >          * Get the buffer containing the on-disk inode.
-> >          */
-> >         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
-XBF_TRYLOCK, 0);
-> >         if (error || !bp) {
-> >                 xfs_ifunlock(ip);
-> >                 return error;
-> >         }
-> >
-> > This looks like a bug - xfs_iflush hasn't aborted the inode
-> > writeback on failure - it's just unlocked the flush lock. Hence it
-> > has left the inode dirty in the AIL, and then the inode has probably
-> > then been reclaimed, setting the inode number to zero.
-> In our case, we do not reach this call, because XFS is already marked
-> as "shutdown", so in our case we do:
->     /*
->      * This may have been unpinned because the filesystem is shutting
->      * down forcibly. If that's the case we must not write this inode
->      * to disk, because the log record didn't make it to disk.
->      *
->      * We also have to remove the log item from the AIL in this case,
->      * as we wait for an empty AIL as part of the unmount process.
->      */
->     if (XFS_FORCED_SHUTDOWN(mp)) {
->         error = -EIO;
->         goto abort_out;
->     }
->
-> So we call xfs_iflush_abort, but due to "iip" being NULL (as Shyam
-> mentioned earlier in this thread), we proceed directly to
-> xfs_ifunlock(ip), which now becomes the same situation as you
-> described above.
-
-If you are getting this occuring, something else has already gone
-wrong as you can't have a dirty inode without a log item attached to
-it. So it appears to me that you are reporting a symptom of a
-problem after it has occured, not the root cause. Maybe it is the
-same root cause, maybe not. Either way, it doesn't help us solve any
-problem.
-
-> The comment clearly says "We also have to remove the log item from the
-> AIL in this case, as we wait for an empty AIL as part of the unmount
-> process." Could you perhaps point us at the code that is supposed to
-> remove the log item from the AIL? Apparently this is not happening.
-
-xfs_iflush_abort or xfs_iflush_done does that work.
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: we don't need no steekin ->evict_inode
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Joe Lawrence reported a list_add corruption with 4.6-rc1 when
+testing some custom md administration code that made it's own
+block device nodes for the md array. The simple test loop of:
+
+for i in {0..100}; do
+	mknod --mode=0600 $tmp/tmp_node b $MAJOR $MINOR
+	mdadm --detail --export $tmp/tmp_node > /dev/null
+	rm -f $tmp/tmp_node
+done
+
+
+Would produce this warning in bd_acquire() when mdadm opened the
+device node:
+
+list_add double add: new=ffff88043831c7b8, prev=ffff8804380287d8, next=ffff88043831c7b8.
+
+And then produce this from bd_forget from kdevtmpfs evicting a block
+dev inode:
+
+list_del corruption. prev->next should be ffff8800bb83eb10, but was ffff88043831c7b8
+
+This is a regression caused by commit c19b3b05 ("xfs: mode di_mode
+to vfs inode"). The issue is that xfs_inactive() frees the
+unlinked inode, and the above commit meant that this freeing zeroed
+the mode in the struct inode. The problem is that after evict() has
+called ->evict_inode, it expects the i_mode to be intact so that it
+can call bd_forget() or cd_forget() to drop the reference to the
+block device inode attached to the XFS inode.
+
+In reality, the only thing we do in xfs_fs_evict_inode() that is not
+generic is call xfs_inactive(). We can move the xfs_inactive() call
+to xfs_fs_destroy_inode() without any problems at all, and this
+will leave the VFS inode intact until it is completely done with it.
+
+So, remove xfs_fs_evict_inode(), and do the work it used to do in
+->destroy_inode instead.
+
+Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_super.c | 28 +++++++---------------------
+ 1 file changed, 7 insertions(+), 21 deletions(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b412bb1..d8424f5 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -928,7 +928,7 @@ xfs_fs_alloc_inode(
+ 
+ /*
+  * Now that the generic code is guaranteed not to be accessing
+- * the linux inode, we can reclaim the inode.
++ * the linux inode, we can inactivate and reclaim the inode.
+  */
+ STATIC void
+ xfs_fs_destroy_inode(
+@@ -938,9 +938,14 @@ xfs_fs_destroy_inode(
+ 
+ 	trace_xfs_destroy_inode(ip);
+ 
+-	XFS_STATS_INC(ip->i_mount, vn_reclaim);
++	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
++	XFS_STATS_INC(ip->i_mount, vn_rele);
++	XFS_STATS_INC(ip->i_mount, vn_remove);
++
++	xfs_inactive(ip);
+ 
+ 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
++	XFS_STATS_INC(ip->i_mount, vn_reclaim);
+ 
+ 	/*
+ 	 * We should never get here with one of the reclaim flags already set.
+@@ -987,24 +992,6 @@ xfs_fs_inode_init_once(
+ 		     "xfsino", ip->i_ino);
+ }
+ 
+-STATIC void
+-xfs_fs_evict_inode(
+-	struct inode		*inode)
+-{
+-	xfs_inode_t		*ip = XFS_I(inode);
+-
+-	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
+-
+-	trace_xfs_evict_inode(ip);
+-
+-	truncate_inode_pages_final(&inode->i_data);
+-	clear_inode(inode);
+-	XFS_STATS_INC(ip->i_mount, vn_rele);
+-	XFS_STATS_INC(ip->i_mount, vn_remove);
+-
+-	xfs_inactive(ip);
+-}
+-
+ /*
+  * We do an unlocked check for XFS_IDONTCACHE here because we are already
+  * serialised against cache hits here via the inode->i_lock and igrab() in
+@@ -1673,7 +1660,6 @@ xfs_fs_free_cached_objects(
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+-	.evict_inode		= xfs_fs_evict_inode,
+ 	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
 
 _______________________________________________
 xfs mailing list
