@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0AA537CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:26:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD2AA8F8033
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:26:06 -0700 (PDT)
-Received: from reklamatabg.eu (reklamatabg.eu [37.157.191.235]) by
-	cuda.sgi.com with ESMTP id XlCM2CVBHr4gDTm2 for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:26:03 -0700 (PDT)
-Received: from 94.156.237.35 by reklamatabg.eu (MDaemon PRO v9.6.1)
-	with ESMTP id md50012668207.msg
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:28:36 +0300
-Subject: =?UTF-8?B?0JDQutGC0YPQsNC70L3QviEg0KPQv9GA0LDQstC70LXQvdC40LUg0L3QsCDQv9GA0L7QtdC60YLQuA==?=
-Message-ID: <0b45377a7989c46f3cbc6be3ca9ca10b@94.156.237.35>
-Date: Wed, 13 Apr 2016 12:34:43 +0300
-From: "=?UTF-8?B?0J/RgNC+0LTQttC10LrRgtCw?=" <prodjecta@reklamatabg.eu>
-MIME-Version: 1.0
-Reply-To: obucheniaprojecta@mail.bg
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4D6977CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C5696AC006
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:34 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id YQZxSxxL9r8bkuWH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:30 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/8] fs: introduce iomap infrastructure
+Date: Tue, 12 Apr 2016 13:52:56 -0700
+Message-Id: <1460494382-14547-3-git-send-email-hch@lst.de>
+In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
+References: <1460494382-14547-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,177 +23,668 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0556380050595994455=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
---===============0556380050595994455==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Add infrastructure for multipage buffered writes.  This is implemented
+using an main iterator that applies an actor function to a range that
+can be written.
 
-<html>
-<head>
-<meta NAME="GENERATOR" Content="Microsoft DHTML Editing Control">
-<title></title>
-</head>
-<body>
-<table cellspacing="2" cellpadding="2" border="0" style="width: 800px;">
-<tbody>
-<tr>
-<td valign="top">
-<p style="text-align: justify;"><span style="font-family: verdana, geneva;
-font-size: medium;">Здравейте,<br />&nbsp; <br />Станете
-експерти в Управлението на проекти с
-<strong>най-успешните обучения</strong><strong>
-</strong><strong><span style="font-weight: normal;">и се
-възползвайте от
-</span></strong><strong>безвъзмездно финансиране.
-<br />&nbsp; <br /> </strong><strong>Регистирайте се сега
-с <span style="background: yellow;">отстъпка до
-40%</span></strong>:</span></p>
-<p style="text-align: justify; margin-left: 1cm;"><span style="font-family:
-verdana, geneva; font-size: medium;">&nbsp; <br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=500&F=H"
-target="_blank"><font color="#0000ff">"Управление на
-проекти - Подготовка за успех",
-18-20.05.2016</font></a>&nbsp;- <strong>най-успешното
-</strong>обучение по Управление на проекти в
-България, проведено до сега повече<strong>
-от 120 пъти!<br />&nbsp; <br /> </strong><strong>- </strong><a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=499&F=H"
-target="_blank"><font color="#0000ff">"Разработване на
-проекти по програмите на&nbsp;ЕС",
-12-14.05.2016</font></a><strong>&nbsp;</strong>-
-<strong>най-пълното и най-подробно</strong>
-обучение по темата, с представяне на
-<strong>реални проекти<br />&nbsp; <br /> </strong>- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=494&F=H"
-target="_blank"><font color="#0000ff">Сертифициране по
-управление на проекти PRINCE2&reg; Foundation,
-20-22.06.2016</font></a>&nbsp;- близо <strong>100%</strong> успех
-на изпита<br />&nbsp; <br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=495&F=H"
-target="_blank"><font color="#0000ff">Сертифициране
-PRINCE2&reg; Practitioner</font></a> с изпит на 22.06.2016&nbsp;<br
-/>&nbsp; <br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=496&F=H"
-target="_blank"><font color="#0000ff">Подготовка за
-сертификати Project Management Professional
-(PMP&reg;)/CAPM&reg;, 15-18.06.2016</font></a> -
-<strong>най-добрият</strong> подготвителен курс
-за PMP&reg;<br />&nbsp; <br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=497&F=H"
-target="_blank"><font color="#0000ff">Сертифициране Agile
-Project Management (AgilePM&reg;), 29.06-01.07.2016</font></a> -
-<strong>100%</strong> успех на изпита до момента<br
-/>&nbsp; <br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=501&F=H"
-target="_blank"><font color="#0000ff">Подготовка за
-сертификати на Международната асоциация
-по управление на проекти (IPMA)</font></a><br />&nbsp;
-<br />- <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=498&F=H"
-target="_blank"><font color="#0000ff">"Зелен пояс по
-Изготвяне и изпълнение на проекти по
-програмите на ЕС (2014-2020)"</font></a> -
-единствената сертификационна програма
-по темата</span><o:p></o:p></p>
-<p class="MsoNormal" style="margin: 18pt 0cm 0pt;"><span
-style="font-family: verdana, geneva; font-size: medium;">&nbsp; <br
-/><u>Актуални процедури за <b
-style="mso-bidi-font-weight: normal;">безвъзмездно
-финансиране от ЕС</b>, по които работим в
-момента. Свържете се с нас за безплатна
-консултация, за да разберете какви са
-вашите шансове за финансиране:<br />
-<o:p></o:p></u>&nbsp;</span></p>
-<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
--17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
-geneva; font-size: medium;"><span style="mso-list: Ignore;">-<span
-style="font-style: normal; font-variant: normal; font-weight: normal;
-font-stretch: normal; line-height:
-normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span>Процедура &bdquo;<span lang="EN-US">Подкрепа
-за разработване на иновации от
-стартиращи предприятия</span>&ldquo;<br /></span></p>
-<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
--17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
-geneva; font-size: medium;"><span lang="EN-US"><span style="mso-list:
-Ignore;">-<span style="font-style: normal; font-variant: normal;
-font-weight: normal; font-stretch: normal; line-height:
-normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span>Процедура &bdquo;Добри и
-безопасни условия на труд&ldquo;<br /> </span></p>
-<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
--17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
-geneva; font-size: medium;"><span style="mso-list: Ignore;">-<span
-style="font-style: normal; font-variant: normal; font-weight: normal;
-font-stretch: normal; line-height:
-normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span>Процедура "Енергийна ефективност
-в МСП" <o:p></o:p></span></p>
-<p></p>
-<p><span style="font-family: verdana, geneva; font-size: medium;"><em><span
-style="font-style: normal;"> &nbsp;</span></em></span></p>
-<p><span style="font-family: verdana, geneva; font-size: medium;"><em><span
-style="font-style: normal;">С пожелание за успешни
-проекти,</span></em><i style="mso-bidi-font-style:
-normal;"><o:p></o:p></i></span></p>
-<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
-font-size: medium;"><em><span style="font-style: normal;">
-&nbsp;</span></em></span></p>
-<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
-font-size: medium;"><em><span style="font-style:
-normal;">ПРОДЖЕКТА ООД</span></em><i
-style="mso-bidi-font-style: normal;"> <o:p></o:p></i></span></p>
-<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
-font-size: medium;">Намери ни на <a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=502&F=H"
-target="_blank"><font
-color="#0000ff">Facebook.com/UpravlenieNaProekti</font></a><o:p></o:p></span></p>
-<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
-font-size: medium;"><a
-href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=493&F=H"
-target="_blank"><font color="#0000ff">Запознай се с нас за
-2 минути. Виж нашето ЗАБАВНО
-видео!</font></a></span><o:p></o:p></p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="MsoNormal" style="text-align: justify; margin: 0cm 0cm
-0pt;"></p>
-<pre>  <br />  <br />  <br />Съглaсно закона за
-електрoнна търговия Чл. 6, ал. 1 Ви
-уведомяваме, че е възможно това да е
-непoискано търгoвско съобщeние.    <br />То е
-eднократно изпрaтено писмо до Вaшия e-mail
-адрес, който е взет от публичнoто
-прoстранство.    <br />Извиняваме се за
-причиненото неудобство, ако сме Ви
-притеснили с нашето предложение.    <br
-/><strong>Ако не желаете да пoлучавaте
-съoбщeния от "ПРОДЖЕКТА", моля кликнете <a
-href="http://94.156.237.35/marketing/unsubscribe.php?M=14386554&C=2e2d7d04bb08ae8000d866239b4a9195&L=357&N=445">ОТПИСВАНЕ</a>
-за автоматично отписване!</strong></pre>
-<pre><br /><br /></pre>
-<img
-src="http://94.156.237.35/marketing/open.php?M=14386554&L=357&N=445&F=H&image=.jpg"
-height="1" width="10"></body>
-</html>
+This infrastucture is used to implement a buffered write helper, one
+to zero file ranges and one to implement the ->page_mkwrite VM
+operations.  All of them borrow a fair amount of code from fs/buffers.
+for now by using an internal version of __block_write_begin that
+gets passed an iomap and builds the corresponding buffer head.
 
+The file system is gets a set of paired ->iomap_begin and ->iomap_end
+calls which allow it to map/reserve a range and get a notification
+once the write code is finished with it.
 
+Based on earlier code from Dave Chinner.
 
---===============0556380050595994455==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/Kconfig            |   3 +
+ fs/Makefile           |   1 +
+ fs/buffer.c           |  76 +++++++++-
+ fs/internal.h         |   3 +
+ fs/iomap.c            | 387 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  56 +++++++-
+ 6 files changed, 516 insertions(+), 10 deletions(-)
+ create mode 100644 fs/iomap.c
+
+diff --git a/fs/Kconfig b/fs/Kconfig
+index 6725f59..276fcfb 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -10,6 +10,9 @@ config DCACHE_WORD_ACCESS
+ 
+ if BLOCK
+ 
++config FS_IOMAP
++	bool
++
+ source "fs/ext2/Kconfig"
+ source "fs/ext4/Kconfig"
+ source "fs/jbd2/Kconfig"
+diff --git a/fs/Makefile b/fs/Makefile
+index 85b6e13..ed2b632 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -49,6 +49,7 @@ obj-$(CONFIG_COREDUMP)		+= coredump.o
+ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
+ 
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
++obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 33be296..a003fd4 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -21,6 +21,7 @@
+ #include <linux/kernel.h>
+ #include <linux/syscalls.h>
+ #include <linux/fs.h>
++#include <linux/iomap.h>
+ #include <linux/mm.h>
+ #include <linux/percpu.h>
+ #include <linux/slab.h>
+@@ -1891,8 +1892,62 @@ void page_zero_new_buffers(struct page *page, unsigned from, unsigned to)
+ }
+ EXPORT_SYMBOL(page_zero_new_buffers);
+ 
+-int __block_write_begin(struct page *page, loff_t pos, unsigned len,
+-		get_block_t *get_block)
++static void
++iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
++		struct iomap *iomap)
++{
++	loff_t offset = block << inode->i_blkbits;
++
++	bh->b_bdev = iomap->bdev;
++
++	/*
++	 * Block points to offset in file we need to map, iomap contains
++	 * the offset at which the map starts. If the map ends before the
++	 * current block, then do not map the buffer and let the caller
++	 * handle it.
++	 */
++	BUG_ON(offset >= iomap->offset + iomap->length);
++
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/*
++		 * If the buffer is not up to date or beyond the current EOF,
++		 * we need to mark it as new to ensure sub-block zeroing is
++		 * executed if necessary.
++		 */
++		if (!buffer_uptodate(bh) ||
++		    (offset >= i_size_read(inode)))
++			set_buffer_new(bh);
++		break;
++	case IOMAP_DELALLOC:
++		if (!buffer_uptodate(bh) ||
++		    (offset >= i_size_read(inode)))
++			set_buffer_new(bh);
++		set_buffer_uptodate(bh);
++		set_buffer_mapped(bh);
++		set_buffer_delay(bh);
++		break;
++	case IOMAP_UNWRITTEN:
++		/*
++		 * For unwritten regions, we always need to ensure that
++		 * sub-block writes cause the regions in the block we are not
++		 * writing to are zeroed. Set the buffer as new to ensre this.
++		 */
++		set_buffer_new(bh);
++		set_buffer_unwritten(bh);
++		/* FALLTHRU */
++	case IOMAP_MAPPED:
++		if (offset >= i_size_read(inode))
++			set_buffer_new(bh);
++		bh->b_blocknr = (iomap->blkno >> (inode->i_blkbits - 9)) +
++				((offset - iomap->offset) >> inode->i_blkbits);
++		set_buffer_mapped(bh);
++		break;
++	}
++}
++
++int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
++		get_block_t *get_block, struct iomap *iomap)
+ {
+ 	unsigned from = pos & (PAGE_CACHE_SIZE - 1);
+ 	unsigned to = from + len;
+@@ -1928,9 +1983,14 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
+ 			clear_buffer_new(bh);
+ 		if (!buffer_mapped(bh)) {
+ 			WARN_ON(bh->b_size != blocksize);
+-			err = get_block(inode, block, bh, 1);
+-			if (err)
+-				break;
++			if (get_block) {
++				err = get_block(inode, block, bh, 1);
++				if (err)
++					break;
++			} else {
++				iomap_to_bh(inode, block, bh, iomap);
++			}
++
+ 			if (buffer_new(bh)) {
+ 				unmap_underlying_metadata(bh->b_bdev,
+ 							bh->b_blocknr);
+@@ -1971,6 +2031,12 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
+ 		page_zero_new_buffers(page, from, to);
+ 	return err;
+ }
++
++int __block_write_begin(struct page *page, loff_t pos, unsigned len,
++		get_block_t *get_block)
++{
++	return __block_write_begin_int(page, pos, len, get_block, NULL);
++}
+ EXPORT_SYMBOL(__block_write_begin);
+ 
+ static int __block_commit_write(struct inode *inode, struct page *page,
+diff --git a/fs/internal.h b/fs/internal.h
+index b71deee..c0c6f49 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -11,6 +11,7 @@
+ 
+ struct super_block;
+ struct file_system_type;
++struct iomap;
+ struct linux_binprm;
+ struct path;
+ struct mount;
+@@ -39,6 +40,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+  * buffer.c
+  */
+ extern void guard_bio_eod(int rw, struct bio *bio);
++extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
++		get_block_t *get_block, struct iomap *iomap);
+ 
+ /*
+  * char_dev.c
+diff --git a/fs/iomap.c b/fs/iomap.c
+new file mode 100644
+index 0000000..534cb37
+--- /dev/null
++++ b/fs/iomap.c
+@@ -0,0 +1,387 @@
++/*
++ * Copyright (C) 2010 Red Hat, Inc.
++ * Copyright (c) 2016 Christoph Hellwig.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++#include <linux/module.h>
++#include <linux/compiler.h>
++#include <linux/fs.h>
++#include <linux/iomap.h>
++#include <linux/uaccess.h>
++#include <linux/gfp.h>
++#include <linux/mm.h>
++#include <linux/swap.h>
++#include <linux/pagemap.h>
++#include <linux/file.h>
++#include <linux/uio.h>
++#include <linux/backing-dev.h>
++#include <linux/buffer_head.h>
++#include "internal.h"
++
++typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
++		void *data, struct iomap *iomap);
++
++/*
++ * Execute a iomap write on a segment of the mapping that spans a
++ * contiguous range of pages that have identical block mapping state.
++ *
++ * This avoids the need to map pages individually, do individual allocations
++ * for each page and most importantly avoid the need for filesystem specific
++ * locking per page. Instead, all the operations are amortised over the entire
++ * range of pages. It is assumed that the filesystems will lock whatever
++ * resources they require in the iomap_begin call, and release them in the
++ * iomap_end call.
++ */
++static loff_t
++iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
++		struct iomap_ops *ops, void *data, iomap_actor_t actor)
++{
++	struct iomap iomap = { 0 };
++	loff_t written = 0, ret;
++
++	/*
++	 * Need to map a range from start position for count bytes. This can
++	 * span multiple pages - it is only guaranteed to return a range of a
++	 * single type of pages (e.g. all into a hole, all mapped or all
++	 * unwritten). Failure at this point has nothing to undo.
++	 *
++	 * If allocation is required for this range, reserve the space now so
++	 * that the allocation is guaranteed to succeed later on. Once we copy
++	 * the data into the page cache pages, then we cannot fail otherwise we
++	 * expose transient stale data. If the reserve fails, we can safely
++	 * back out at this point as there is nothing to undo.
++	 */
++	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
++	if (ret)
++		return ret;
++	if (WARN_ON(iomap.offset > pos))
++		return -EIO;
++
++	/*
++	 * Cut down the length to the one actually provided by the filesystem,
++	 * as it might not be able to give us the whole size that we requested.
++	 */
++	if (iomap.offset + iomap.length < pos + length)
++		length = iomap.offset + iomap.length - pos;
++
++	/*
++	 * Now that we have guaranteed that the space allocation will succeed.
++	 * we can do the copy-in page by page without having to worry about
++	 * failures exposing transient data.
++	 */
++	written = actor(inode, pos, length, data, &iomap);
++
++	/*
++	 * Now the data has been copied, commit the range we've copied.  This
++	 * should not fail unless the filesystem has had a fatal error.
++	 */
++	ret = ops->iomap_end(inode, pos, length, written > 0 ? written : 0,
++			flags, &iomap);
++
++	return written ? written : ret;
++}
++
++static void
++iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
++{
++	loff_t i_size = i_size_read(inode);
++
++	/*
++	 * Only truncate newly allocated pages beyoned EOF, even if the
++	 * write started inside the existing inode size.
++	 */
++	if (pos + len > i_size)
++		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
++}
++
++static int
++iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
++		struct page **pagep, struct iomap *iomap)
++{
++	pgoff_t index = pos >> PAGE_SHIFT;
++	struct page *page;
++	int status = 0;
++
++	BUG_ON(pos + len > iomap->offset + iomap->length);
++
++	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
++	if (!page)
++		return -ENOMEM;
++
++	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	if (unlikely(status)) {
++		unlock_page(page);
++		page_cache_release(page);
++		page = NULL;
++
++		iomap_write_failed(inode, pos, len);
++	}
++
++	*pagep = page;
++	return status;
++}
++
++static int
++iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
++		unsigned copied, struct page *page)
++{
++	int ret;
++
++	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
++			copied, page, NULL);
++	if (ret < len)
++		iomap_write_failed(inode, pos, len);
++	return ret;
++}
++
++static loff_t
++iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct iov_iter *i = data;
++	long status = 0;
++	ssize_t written = 0;
++	unsigned int flags = AOP_FLAG_NOFS;
++
++	/*
++	 * Copies from kernel address space cannot fail (NFSD is a big user).
++	 */
++	if (!iter_is_iovec(i))
++		flags |= AOP_FLAG_UNINTERRUPTIBLE;
++
++	do {
++		struct page *page;
++		unsigned long offset;	/* Offset into pagecache page */
++		unsigned long bytes;	/* Bytes to write to page */
++		size_t copied;		/* Bytes copied from user */
++
++		offset = (pos & (PAGE_SIZE - 1));
++		bytes = min_t(unsigned long, PAGE_SIZE - offset,
++						iov_iter_count(i));
++again:
++		if (bytes > length)
++			bytes = length;
++
++		/*
++		 * Bring in the user page that we will copy from _first_.
++		 * Otherwise there's a nasty deadlock on copying from the
++		 * same page as we're writing to, without it being marked
++		 * up-to-date.
++		 *
++		 * Not only is this an optimisation, but it is also required
++		 * to check that the address is actually valid, when atomic
++		 * usercopies are used, below.
++		 */
++		if (unlikely(iov_iter_fault_in_readable(i, bytes))) {
++			status = -EFAULT;
++			break;
++		}
++
++		status = iomap_write_begin(inode, pos, bytes, flags, &page,
++				iomap);
++		if (unlikely(status))
++			break;
++
++		if (mapping_writably_mapped(inode->i_mapping))
++			flush_dcache_page(page);
++
++		pagefault_disable();
++		copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);
++		pagefault_enable();
++
++		flush_dcache_page(page);
++		mark_page_accessed(page);
++
++		status = iomap_write_end(inode, pos, bytes, copied, page);
++		if (unlikely(status < 0))
++			break;
++		copied = status;
++
++		cond_resched();
++
++		iov_iter_advance(i, copied);
++		if (unlikely(copied == 0)) {
++			/*
++			 * If we were unable to copy any data at all, we must
++			 * fall back to a single segment length write.
++			 *
++			 * If we didn't fallback here, we could livelock
++			 * because not all segments in the iov can be copied at
++			 * once without a pagefault.
++			 */
++			bytes = min_t(unsigned long, PAGE_SIZE - offset,
++						iov_iter_single_seg_count(i));
++			goto again;
++		}
++		pos += copied;
++		written += copied;
++		length -= copied;
++
++		balance_dirty_pages_ratelimited(inode->i_mapping);
++	} while (iov_iter_count(i) && length);
++
++	return written ? written : status;
++}
++
++ssize_t
++iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
++		struct iomap_ops *ops)
++{
++	struct inode *inode = iocb->ki_filp->f_mapping->host;
++	loff_t pos = iocb->ki_pos, ret = 0, written = 0;
++
++	while (iov_iter_count(iter)) {
++		ret = iomap_apply(inode, pos, iov_iter_count(iter),
++				IOMAP_WRITE, ops, iter, iomap_write_actor);
++		if (ret <= 0)
++			break;
++		pos += ret;
++		written += ret;
++	}
++
++	return written ? written : ret;
++}
++EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
++
++static loff_t
++iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
++		void *data, struct iomap *iomap)
++{
++	bool *did_zero = data;
++	struct page *page;
++	int status;
++	loff_t written = 0;
++
++	/* already zeroed?  we're done. */
++	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
++	    	return count;
++
++	do {
++		unsigned offset, bytes;
++
++		offset = pos & (PAGE_SIZE - 1); /* Within page */
++		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
++
++		status = iomap_write_begin(inode, pos, bytes,
++				AOP_FLAG_UNINTERRUPTIBLE | AOP_FLAG_NOFS,
++				&page, iomap);
++		if (status)
++			break;
++
++		zero_user(page, offset, bytes);
++		mark_page_accessed(page);
++
++		status = iomap_write_end(inode, pos, bytes, bytes, page);
++		if (status)
++			break;
++
++		pos += bytes;
++		count -= bytes;
++		written += bytes;
++		if (did_zero)
++			*did_zero = true;
++	} while (count > 0);
++
++	return status ? status : written;
++}
++
++int
++iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
++		struct iomap_ops *ops)
++{
++	loff_t ret;
++
++	while (len > 0) {
++		ret = iomap_apply(inode, pos, len, IOMAP_ZERO,
++				ops, did_zero, iomap_zero_range_actor);
++		if (ret <= 0)
++			return ret;
++
++		pos += ret;
++		len -= ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_zero_range);
++
++int
++iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
++		struct iomap_ops *ops)
++{
++	unsigned blocksize = (1 << inode->i_blkbits);
++	unsigned off = pos & (blocksize - 1);
++
++	/* Block boundary? Nothing to do */
++	if (!off)
++		return 0;
++	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
++}
++EXPORT_SYMBOL_GPL(iomap_truncate_page);
++
++static loff_t
++iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	struct page *page = data;
++	int ret;
++
++	ret = __block_write_begin_int(page, pos & ~PAGE_MASK, length,
++			NULL, iomap);
++	if (ret)
++		return ret;
++
++	block_commit_write(page, 0, length);
++	return length;
++}
++
++int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
++		struct iomap_ops *ops)
++{
++	struct page *page = vmf->page;
++	struct inode *inode = file_inode(vma->vm_file);
++	unsigned long length;
++	loff_t offset, size;
++	ssize_t ret;
++
++	lock_page(page);
++	size = i_size_read(inode);
++	if ((page->mapping != inode->i_mapping) ||
++	    (page_offset(page) > size)) {
++		/* We overload EFAULT to mean page got truncated */
++		ret = -EFAULT;
++		goto out_unlock;
++	}
++
++	/* page is wholly or partially inside EOF */
++	if (((page->index + 1) << PAGE_SHIFT) > size)
++		length = size & ~PAGE_MASK;
++	else
++		length = PAGE_SIZE;
++
++	offset = page_offset(page);
++	while (length > 0) {
++		ret = iomap_apply(inode, offset, length, IOMAP_WRITE,
++				ops, page, iomap_page_mkwrite_actor);
++		if (unlikely(ret <= 0))
++			goto out_unlock;
++		offset += ret;
++		length -= ret;
++	}
++
++	set_page_dirty(page);
++	wait_for_stable_page(page);
++	return 0;
++out_unlock:
++	unlock_page(page);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 1b22197..854766f 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -3,19 +3,65 @@
+ 
+ #include <linux/types.h>
+ 
+-/* types of block ranges for multipage write mappings. */
++struct inode;
++struct iov_iter;
++struct kiocb;
++struct vm_area_struct;
++struct vm_fault;
++
++/*
++ * Types of block ranges for iomap mappings:
++ */
+ #define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+ #define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+ #define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+ #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+ 
++/*
++ * Magic value for blkno:
++ */
+ #define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+ 
+ struct iomap {
+-	sector_t	blkno;	/* first sector of mapping */
+-	loff_t		offset;	/* file offset of mapping, bytes */
+-	u64		length;	/* length of mapping, bytes */
+-	int		type;	/* type of mapping */
++	sector_t		blkno;	/* first sector of mapping, fs blocks */
++	loff_t			offset;	/* file offset of mapping, bytes */
++	u64			length;	/* length of mapping, bytes */
++	int			type;	/* type of mapping */
++	struct block_device	*bdev; /* block device for I/O */
++};
++
++/*
++ * Flags for iomap_begin / iomap_end.  No flag implies a read.
++ */
++#define IOMAP_WRITE		(1 << 0)
++#define IOMAP_ZERO		(1 << 1)
++
++struct iomap_ops {
++	/*
++	 * Return the existing mapping at pos, or reserve space starting at
++	 * pos for up to length, as long as we can do it as a single mapping.
++	 * The actual length is returned in iomap->length.
++	 */
++	int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
++			unsigned flags, struct iomap *iomap);
++
++	/*
++	 * Commit and/or unreserve space previous allocated using iomap_begin.
++	 * Written indicates the length of the successful write operation which
++	 * needs to be commited, while the rest needs to be unreserved.
++	 * Written might be zero if no data was written.
++	 */
++	int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
++			ssize_t written, unsigned flags, struct iomap *iomap);
+ };
+ 
++ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
++		struct iomap_ops *ops);
++int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
++		bool *did_zero, struct iomap_ops *ops);
++int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
++		struct iomap_ops *ops);
++int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
++		struct iomap_ops *ops);
++
+ #endif /* LINUX_IOMAP_H */
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0556380050595994455==--
