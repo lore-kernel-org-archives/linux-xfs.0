@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 83AE37CA2
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 535978F8033
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Cs6d1shbyQ6oQOhV (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC v2 PATCH 01/10] xfs: refactor xfs_reserve_blocks() to handle
-	ENOSPC correctly
-Date: Tue, 12 Apr 2016 12:42:44 -0400
-Message-Id: <1460479373-63317-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id EFE557CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:27:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B66268F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:03 -0700 (PDT)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id lPflTlzoZGFZ7IM9 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:01 -0700 (PDT)
+Received: from [67.51.76.21] (helo=localhost)
+	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1aq6lv-0006AM-26
+	for xfs@oss.sgi.com; Tue, 12 Apr 2016 22:27:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: RFC: use iomap infrastructure for all our zeroing needs
+Date: Tue, 12 Apr 2016 15:26:47 -0700
+Message-Id: <1460500013-28334-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,198 +31,11 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-xfs_reserve_blocks() is responsible to update the XFS reserved block
-pool count at mount time or based on user request. When the caller
-requests to increase the reserve pool, blocks must be allocated from the
-global counters such that they are no longer available for general
-purpose use. If the requested reserve pool size is too large, XFS
-reserves what blocks are available. The implementation requires looking
-at the percpu counters and making an educated guess as to how many
-blocks to try and allocate from xfs_mod_fdblocks(), which can return
--ENOSPC if the guess was not accurate due to counters being modified in
-parallel.
-
-xfs_reserve_blocks() retries the guess in this scenario until the
-allocation succeeds or it is determined that there is no space available
-in the fs. While not easily reproducible in the current form, the retry
-code doesn't actually work correctly if xfs_mod_fdblocks() actually
-fails. The problem is that the percpu calculations use the m_resblks
-counter to determine how many blocks to allocate, but unconditionally
-update m_resblks before the block allocation has actually succeeded.
-Therefore, if xfs_mod_fdblocks() fails, the code jumps to the retry
-label and uses the already updated m_resblks value to determine how many
-blocks to try and allocate. If the percpu counters previously suggested
-that the entire request was available, fdblocks_delta could end up set
-to 0. In that case, m_resblks is updated to the requested value, yet no
-blocks have been reserved at all.
-
-Refactor xfs_reserve_blocks() to use an explicit loop and make the code
-easier to follow. Since we have to drop the spinlock across the
-xfs_mod_fdblocks() call, use a delta value for m_resblks as well and
-only apply the delta once allocation succeeds.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_fsops.c | 105 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 60 insertions(+), 45 deletions(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ee3aaa0a..87d4b1b 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -671,8 +671,11 @@ xfs_reserve_blocks(
- 	__uint64_t              *inval,
- 	xfs_fsop_resblks_t      *outval)
- {
--	__int64_t		lcounter, delta, fdblks_delta;
-+	__int64_t		lcounter, delta;
-+	__int64_t		fdblks_delta = 0;
- 	__uint64_t		request;
-+	__int64_t		free;
-+	int			error = 0;
- 
- 	/* If inval is null, report current values and return */
- 	if (inval == (__uint64_t *)NULL) {
-@@ -686,24 +689,23 @@ xfs_reserve_blocks(
- 	request = *inval;
- 
- 	/*
--	 * With per-cpu counters, this becomes an interesting
--	 * problem. we needto work out if we are freeing or allocation
--	 * blocks first, then we can do the modification as necessary.
-+	 * With per-cpu counters, this becomes an interesting problem. we need
-+	 * to work out if we are freeing or allocation blocks first, then we can
-+	 * do the modification as necessary.
- 	 *
--	 * We do this under the m_sb_lock so that if we are near
--	 * ENOSPC, we will hold out any changes while we work out
--	 * what to do. This means that the amount of free space can
--	 * change while we do this, so we need to retry if we end up
--	 * trying to reserve more space than is available.
-+	 * We do this under the m_sb_lock so that if we are near ENOSPC, we will
-+	 * hold out any changes while we work out what to do. This means that
-+	 * the amount of free space can change while we do this, so we need to
-+	 * retry if we end up trying to reserve more space than is available.
- 	 */
--retry:
- 	spin_lock(&mp->m_sb_lock);
- 
- 	/*
- 	 * If our previous reservation was larger than the current value,
--	 * then move any unused blocks back to the free pool.
-+	 * then move any unused blocks back to the free pool. Modify the resblks
-+	 * counters directly since we shouldn't have any problems unreserving
-+	 * space.
- 	 */
--	fdblks_delta = 0;
- 	if (mp->m_resblks > request) {
- 		lcounter = mp->m_resblks_avail - request;
- 		if (lcounter  > 0) {		/* release unused blocks */
-@@ -711,54 +713,67 @@ retry:
- 			mp->m_resblks_avail -= lcounter;
- 		}
- 		mp->m_resblks = request;
--	} else {
--		__int64_t	free;
-+		if (fdblks_delta) {
-+			spin_unlock(&mp->m_sb_lock);
-+			error = xfs_mod_fdblocks(mp, fdblks_delta, 0);
-+			spin_lock(&mp->m_sb_lock);
-+		}
-+
-+		goto out;
-+	}
- 
-+	/*
-+	 * If the request is larger than the current reservation, reserve the
-+	 * blocks before we update the reserve counters. Sample m_fdblocks and
-+	 * perform a partial reservation if the request exceeds free space.
-+	 */
-+	error = -ENOSPC;
-+	while (error == -ENOSPC) {
- 		free = percpu_counter_sum(&mp->m_fdblocks) -
- 							XFS_ALLOC_SET_ASIDE(mp);
- 		if (!free)
--			goto out; /* ENOSPC and fdblks_delta = 0 */
-+			break;
- 
- 		delta = request - mp->m_resblks;
- 		lcounter = free - delta;
--		if (lcounter < 0) {
-+		if (lcounter < 0)
- 			/* We can't satisfy the request, just get what we can */
--			mp->m_resblks += free;
--			mp->m_resblks_avail += free;
--			fdblks_delta = -free;
--		} else {
--			fdblks_delta = -delta;
--			mp->m_resblks = request;
--			mp->m_resblks_avail += delta;
--		}
--	}
--out:
--	if (outval) {
--		outval->resblks = mp->m_resblks;
--		outval->resblks_avail = mp->m_resblks_avail;
--	}
--	spin_unlock(&mp->m_sb_lock);
-+			fdblks_delta = free;
-+		else
-+			fdblks_delta = delta;
- 
--	if (fdblks_delta) {
- 		/*
--		 * If we are putting blocks back here, m_resblks_avail is
--		 * already at its max so this will put it in the free pool.
--		 *
--		 * If we need space, we'll either succeed in getting it
--		 * from the free block count or we'll get an enospc. If
--		 * we get a ENOSPC, it means things changed while we were
--		 * calculating fdblks_delta and so we should try again to
--		 * see if there is anything left to reserve.
-+		 * We'll either succeed in getting space from the free block
-+		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
-+		 * things changed while we were calculating fdblks_delta and so
-+		 * we should try again to see if there is anything left to
-+		 * reserve.
- 		 *
- 		 * Don't set the reserved flag here - we don't want to reserve
- 		 * the extra reserve blocks from the reserve.....
- 		 */
--		int error;
--		error = xfs_mod_fdblocks(mp, fdblks_delta, 0);
--		if (error == -ENOSPC)
--			goto retry;
-+		spin_unlock(&mp->m_sb_lock);
-+		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
-+		spin_lock(&mp->m_sb_lock);
- 	}
--	return 0;
-+
-+	/*
-+	 * Update the reserve counters if blocks have been successfully
-+	 * allocated.
-+	 */
-+	if (!error && fdblks_delta) {
-+		mp->m_resblks += fdblks_delta;
-+		mp->m_resblks_avail += fdblks_delta;
-+	}
-+
-+out:
-+	if (outval) {
-+		outval->resblks = mp->m_resblks;
-+		outval->resblks_avail = mp->m_resblks_avail;
-+	}
-+
-+	spin_unlock(&mp->m_sb_lock);
-+	return error;
- }
- 
- int
--- 
-2.4.11
+This series uses the new iomap infrastructure to simplify all kinds
+of zeroing operations.  The RFC tag is mostly because the DAX path
+modified in this series hasn't been tested yet, the normal buffered
+path has been tested and works fine.
 
 _______________________________________________
 xfs mailing list
