@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EEED17CA2
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 18:29:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 719BEAC005
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 16:29:46 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	DoOADddo1mTSo9b9 for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 16:29:43 -0700 (PDT)
-Date: Wed, 13 Apr 2016 09:29:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: xfs_inode_free() isn't RCU safe
-Message-ID: <20160412232925.GN567@dastard>
-References: <0A92B65A3BF94F60BB36EA3FA716DF1F@alyakaslap>
+	by oss.sgi.com (Postfix) with ESMTP id A3D717CA4
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 00:20:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C1F2AC004
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 22:20:22 -0700 (PDT)
+Received: from mail-wm0-f44.google.com (mail-wm0-f44.google.com
+	[74.125.82.44]) by cuda.sgi.com with ESMTP id IQoCvCjGImTZk1jV
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 11 Apr 2016 22:20:08 -0700 (PDT)
+Received: by mail-wm0-f44.google.com with SMTP id f198so171629633wme.0
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 22:20:08 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
+	<20160322121922.GA53693@bfoster.bfoster>
+	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
+	<20160408224648.GD567@dastard>
+	<CAOcd+r0s3FfahxaqfJKuZ_D+0FbUHaKqi8b_bwGbXekCN3w_oQ@mail.gmail.com>
+	<20160411012127.GF567@dastard>
+	1aa4e955d78e6932260fdfc55c83bb8e@mail.gmail.com
+In-Reply-To: 1aa4e955d78e6932260fdfc55c83bb8e@mail.gmail.com
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <0A92B65A3BF94F60BB36EA3FA716DF1F@alyakaslap>
+Date: Tue, 12 Apr 2016 10:50:06 +0530
+Message-ID: <695a5148d01ba43e96cb89736da6c1ad@mail.gmail.com>
+Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
+	disk failure/recovery
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +38,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: bbice@sgi.com, Shyam Kaushik <shyam@zadarastorage.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 12, 2016 at 11:56:35AM +0300, Alex Lyakas wrote:
+Hi Carlos,
+
+xfs.stap that I have been using is here
+(https://www.dropbox.com/s/dluse4s3a1c7dj3/xfs.stap?dl=0). It has
+line-numbers matching xfs with printks I added. You will have to tweak it
+a bit.
+
+Thanks.
+
+--Shyam
+
+-----Original Message-----
+From: Carlos Maiolino
+Sent: Fri Apr 8 09:31:31 CDT 2016
+
+> Hi Shyam,
+>
+> do you mind to share your systemtap script with us?
+>
+> I'd like to take a look on it, and probably Brian will be interested to.
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com]
+Sent: 11 April 2016 06:51
+To: Alex Lyakas
+Cc: Shyam Kaushik; Brian Foster; xfs@oss.sgi.com
+Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
+after disk failure/recovery
+
+On Sun, Apr 10, 2016 at 09:40:29PM +0300, Alex Lyakas wrote:
 > Hello Dave,
-> 
-> Looking at the patch, I see that now we call xfs_idestroy_fork() in RCU callback. This can do the following chain:
-> 
-> xfs_iext_destroy => xfs_iext_irec_remove => xfs_iext_realloc_indirect=> kmem_realloc => kmem_alloc => kmem_alloc => congestion_wait()
-> 
-> At least according to documentation, the RCU callback cannot block, since it may be called from softirq context. Is this fine?
+>
+> On Sat, Apr 9, 2016 at 1:46 AM, Dave Chinner <david@fromorbit.com>
+wrote:
+> > On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
+> >> Hi Dave, Brian, Carlos,
+> >>
+> >> While trying to reproduce this issue I have been running into
+different
+> >> issues that are similar. Underlying issue remains the same when
+backend to
+> >> XFS is failed & we unmount XFS, we run into hung-task timeout
+(180-secs)
+> >> with stack like
+> >>
+> >> kernel: [14952.671131]  [<ffffffffc06a5f59>]
+> >> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+> >> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
+> >> prepare_to_wait_event+0x110/0x110
+> >> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
+> >> [xfs]
+> >>
+> >> while running trace-events, XFS ail push keeps looping around
+> >>
+> >>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
+> >> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
+> >
+> > Looks like either a stale inode (which should never reach the AIL)
+> > or it's an inode that's been reclaimed and this is a use after free
+> > situation. Given that we are failing IOs here, I'd suggest it's more
+> > likely to be an IO failure that's caused a writeback problem, not an
+> > interaction with stale inodes.
+> >
+> > So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
+> > inode by calling xfs_iflush_abort(), which will also remove it from
+> > the AIL. This can also happen on reclaim of a dirty inode, and if so
+> > we'll still reclaim the inode because reclaim assumes xfs_iflush()
+> > cleans up properly.
+> >
+> > Which, apparently, it doesn't:
+> >
+> >         /*
+> >          * Get the buffer containing the on-disk inode.
+> >          */
+> >         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
+XBF_TRYLOCK, 0);
+> >         if (error || !bp) {
+> >                 xfs_ifunlock(ip);
+> >                 return error;
+> >         }
+> >
+> > This looks like a bug - xfs_iflush hasn't aborted the inode
+> > writeback on failure - it's just unlocked the flush lock. Hence it
+> > has left the inode dirty in the AIL, and then the inode has probably
+> > then been reclaimed, setting the inode number to zero.
+> In our case, we do not reach this call, because XFS is already marked
+> as "shutdown", so in our case we do:
+>     /*
+>      * This may have been unpinned because the filesystem is shutting
+>      * down forcibly. If that's the case we must not write this inode
+>      * to disk, because the log record didn't make it to disk.
+>      *
+>      * We also have to remove the log item from the AIL in this case,
+>      * as we wait for an empty AIL as part of the unmount process.
+>      */
+>     if (XFS_FORCED_SHUTDOWN(mp)) {
+>         error = -EIO;
+>         goto abort_out;
+>     }
+>
+> So we call xfs_iflush_abort, but due to "iip" being NULL (as Shyam
+> mentioned earlier in this thread), we proceed directly to
+> xfs_ifunlock(ip), which now becomes the same situation as you
+> described above.
 
-Right, I forgot about that. Too many forests. I'll reconstruct your
-patch from the email you appended it to previously and add that to
-the series to test against.
+If you are getting this occuring, something else has already gone
+wrong as you can't have a dirty inode without a log item attached to
+it. So it appears to me that you are reporting a symptom of a
+problem after it has occured, not the root cause. Maybe it is the
+same root cause, maybe not. Either way, it doesn't help us solve any
+problem.
 
-Cheers,
+> The comment clearly says "We also have to remove the log item from the
+> AIL in this case, as we wait for an empty AIL as part of the unmount
+> process." Could you perhaps point us at the code that is supposed to
+> remove the log item from the AIL? Apparently this is not happening.
 
-Dave.
+xfs_iflush_abort or xfs_iflush_done does that work.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
