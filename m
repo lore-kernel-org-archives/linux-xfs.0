@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 988F67CF5
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 17:46:29 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D13257CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:31:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B3B08F8052
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 15:46:29 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	j92L8tfvZwNg5NeS for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2016 15:46:26 -0700 (PDT)
-Date: Wed, 27 Apr 2016 08:46:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_buf_iodone_callbacks to force shutdown & resubmit
-	buf in case of permanent failure
-Message-ID: <20160426224612.GE26977@dastard>
-References: <a71e1aed74b2922e8ed6fb40404899e7@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 48703AC002
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:31:11 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id TXLiO1EDvlfmb2d2 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:31:06 -0700 (PDT)
+Date: Tue, 12 Apr 2016 11:31:05 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: PAGE_CACHE_* removal in 4.6-rc3
+Message-ID: <20160412183105.GA10567@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a71e1aed74b2922e8ed6fb40404899e7@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,85 +27,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shyam Kaushik <shyam@zadarastorage.com>
-Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 26, 2016 at 07:31:59PM +0530, Shyam Kaushik wrote:
-> When XFS underlying disk fails, it could take several milliseconds for the
-> FS to be marked
-> shutdown. xfs_buf_iodone_callbacks() retries buf upon first failure by
-> submitting it once
-> again. But if the buf fails 2nd time before FS is marked for shutdown, it
-> just releases the
-> buf with xfs_buf_relse(). This is flawed that nobody is releasing the
-> XFS_IFLOCK on the inode.
-> Because of this AIL tasks repeated effort to xfs_inode_item_push() will
-> see that xfs_iflock()
-> cannot be acquired. This blocks XFS from being unmounted as
-> xfs_ail_push_all_sync() will keep
-> looping without progress.
+Hi Dave,
 
-Patch formatting first: commit messages should wrap at 68-72
-columns...
-
-> Fix this by marking the FS for shutdown if we have a permanent failure &
-> resubmit the buf.
-> xfs_buf_submit() will see FS marked for shutdown & invoke the callback
-> which releases
-> XFS_IFLOCK.
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 1a6c9b9..6f73ee0 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1100,7 +1100,12 @@ xfs_buf_iodone_callbacks(
->                                        XBF_DONE | XBF_WRITE_FAIL;
->                         xfs_buf_submit(bp);
->                 } else {
-> -                       xfs_buf_relse(bp);
-> +                       /*
-> +                       * if we have the buf fail 2nd time, force a FS
-> shutdown & resubmit
-> +                       * the buf for it to be failed back immediately
-> +                       */
-> +                       xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-> +                       xfs_buf_submit(bp);
->                 }
-> 
->                 return;
-
-... and patches should not be wrapped or have tabs converted to
-spaces. See Documentation/SubmittingPatches.
-
-Ok, so yes, it would seem there is a bug here, but I don't think
-this is correct solution: this will shut down the filesystem
-immediately on inode write IO errors. As i've said *many* times
-before: this is might seem like a fix, but it is incorrect behaviour
-as it does not give transient failures (e.g. multipath failover
-causing timeouts) a chance to be resolved before shutting down the
-filesystem.
-
-That's the reason for all the retry behaviour on XFS metadata - the
-system can continue to run logging new changes even if it can't
-write back the changes immediately. As long as the log writes
-continue to work, the filesystem can continue to function correctly.
-Hence shutting down the filesystem immediately on any metadata write
-error (other than a journal write) is premature and will lead to
-spurious errors causing shutdowns rather than just logging a
-warning.
-
-We are in the process of making this error behaviour configurable -
-Carlos is going to finish off the patchset I originally wrote to do
-this, so the "shutdown immediately" option will be avaialable
-through that set of interfaces. We'll still need to fix the unlock
-case for retry here, though...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+upstream removed the PAGE_CACHE_* macros in 4.6-rc3, which will cause
+all kinds of interesting conflicts for FS work.  Maybe it's a good idea
+to rebase for-next ontop of -rc3 so that we can sort this out early?
 
 _______________________________________________
 xfs mailing list
