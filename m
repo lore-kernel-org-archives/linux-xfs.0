@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1D4DD7CAF
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0F9830405F
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:24 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	GIwkKfsy25KDpC2w for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 22:32:16 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p5-ST
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:11 +1000
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000bx-Cm
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/11] xfs: optimise xfs_iext_destroy
-Date: Wed, 13 Apr 2016 15:31:26 +1000
-Message-Id: <1460525492-1170-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AE1387CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 12:40:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 11E8CAC005
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 10:40:18 -0700 (PDT)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id DacamuThv0oMQB3v
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 10:40:15 -0700 (PDT)
+Received: by mail-wm0-f53.google.com with SMTP id u206so37847586wme.1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 10:40:15 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+References: <23e35813cb097c7b15686852500cbf97@mail.gmail.com>
+	<20160412082759.GI9088@dastard>
+In-Reply-To: <20160412082759.GI9088@dastard>
+MIME-Version: 1.0
+Date: Tue, 12 Apr 2016 23:10:13 +0530
+Message-ID: <5e9c99552ae829dce9eb574d72085323@mail.gmail.com>
+Subject: RE: [PATCH] xfs: Abort intent log item in xfs_iflush() upon error to
+	get buf
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,109 +29,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Alex Lyakas <alex@zadarastorage.com>
+Hi Dave,
 
-When unmounting XFS, we call:
+Your patch needs a minor correction.
 
-xfs_inode_free => xfs_idestroy_fork => xfs_iext_destroy
+At start of xfs_iflush() either we must initialize "bp = NULL" or else
+xfs_imap_to_bp() when it hits an error need to set "*bpp = NULL".
+Otherwise with your patch we are having an uninitialized bp that
+corrupt_out is trying to do xfs_buf_relse().
 
-This goes over the whole indirection array and calls
-xfs_iext_irec_remove for each one of the erps (from the last one to
-the first one). As a result, we keep shrinking (reallocating
-actually) the indirection array until we shrink out all of its
-elements. When we have files with huge numbers of extents, umount
-takes 30-80 sec, depending on the amount of files that XFS loaded
-and the amount of indirection entries of each file. The unmount
-stack looks like:
+I included the above minor change & confirmed your patch works great. So
+pls go ahead & formalize it. Thanks!
 
-[<ffffffffc0b6d200>] xfs_iext_realloc_indirect+0x40/0x60 [xfs]
-[<ffffffffc0b6cd8e>] xfs_iext_irec_remove+0xee/0xf0 [xfs]
-[<ffffffffc0b6cdcd>] xfs_iext_destroy+0x3d/0xb0 [xfs]
-[<ffffffffc0b6cef6>] xfs_idestroy_fork+0xb6/0xf0 [xfs]
-[<ffffffffc0b87002>] xfs_inode_free+0xb2/0xc0 [xfs]
-[<ffffffffc0b87260>] xfs_reclaim_inode+0x250/0x340 [xfs]
-[<ffffffffc0b87583>] xfs_reclaim_inodes_ag+0x233/0x370 [xfs]
-[<ffffffffc0b8823d>] xfs_reclaim_inodes+0x1d/0x20 [xfs]
-[<ffffffffc0b96feb>] xfs_unmountfs+0x7b/0x1a0 [xfs]
-[<ffffffffc0b98e4d>] xfs_fs_put_super+0x2d/0x70 [xfs]
-[<ffffffff811e9e36>] generic_shutdown_super+0x76/0x100
-[<ffffffff811ea207>] kill_block_super+0x27/0x70
-[<ffffffff811ea519>] deactivate_locked_super+0x49/0x60
-[<ffffffff811eaaee>] deactivate_super+0x4e/0x70
-[<ffffffff81207593>] cleanup_mnt+0x43/0x90
-[<ffffffff81207632>] __cleanup_mnt+0x12/0x20
-[<ffffffff8108f8e7>] task_work_run+0xa7/0xe0
-[<ffffffff81014ff7>] do_notify_resume+0x97/0xb0
-[<ffffffff81717c6f>] int_signal+0x12/0x17
+--Shyam
 
-Further, this reallocation prevents us from freeing the extent list
-from a RCU callback as allocation can block. Hence if the extent
-list is in indirect format, optimise the freeing of the extent list
-to only use kmem_free calls by freeing entire extent buffer pages at
-a time, rather than extent by extent.
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com]
+Sent: 12 April 2016 13:58
+To: Shyam Kaushik
+Cc: xfs@oss.sgi.com
+Subject: Re: [PATCH] xfs: Abort intent log item in xfs_iflush() upon error
+to get buf
 
-Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/libxfs/xfs_inode_fork.c | 28 +++++++++++++++++++++-------
- 1 file changed, 21 insertions(+), 7 deletions(-)
+On Tue, Apr 12, 2016 at 12:27:30PM +0530, Shyam Kaushik wrote:
+> Looking at xfs_iflush(). If an IO fails, it is supposed to unlock the
+> inode by calling xfs_iflush_abort(), which will also remove it from
+> the AIL. This can also happen on reclaim of a dirty inode, and if so
+> we'll still reclaim the inode because reclaim assumes xfs_iflush()
+> cleans up properly. Which, apparently, it doesn't.
+>
+> Fix xfs_iflush() buf get failure to remove intent log item.
+>
+> Discovered-by: Dave Chinner <dchinner at redhat.com>
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 96f606d..85414a6 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3374,8 +3374,9 @@ xfs_iflush(
+>         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
+> XBF_TRYLOCK,
+>                                0);
+>         if (error || !bp) {
+> -               xfs_ifunlock(ip);
+> -               return error;
+> +               if (!bp)
+> +                       error = -EIO;
+> +               goto abort_out;
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index d3d1477..27497e1 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -1519,6 +1519,26 @@ xfs_iext_indirect_to_direct(
- }
- 
- /*
-+ * Remove all records from the indirection array.
-+ */
-+STATIC void
-+xfs_iext_irec_remove_all(
-+	struct xfs_ifork *ifp)
-+{
-+	int		nlists;
-+	int		i;
-+
-+	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
-+	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-+	for (i = 0; i < nlists; i++) {
-+		xfs_ext_irec_t *erp = &ifp->if_u1.if_ext_irec[i];
-+		if (erp->er_extbuf)
-+			kmem_free(erp->er_extbuf);
-+	}
-+	kmem_free(ifp->if_u1.if_ext_irec);
-+}
-+
-+/*
-  * Free incore file extents.
-  */
- void
-@@ -1526,13 +1546,7 @@ xfs_iext_destroy(
- 	xfs_ifork_t	*ifp)		/* inode fork pointer */
- {
- 	if (ifp->if_flags & XFS_IFEXTIREC) {
--		int	erp_idx;
--		int	nlists;
--
--		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
--		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
--			xfs_iext_irec_remove(ifp, erp_idx);
--		}
-+		xfs_iext_irec_remove_all(ifp);
- 		ifp->if_flags &= ~XFS_IFEXTIREC;
- 	} else if (ifp->if_real_bytes) {
- 		kmem_free(ifp->if_u1.if_extents);
+So that will trigger a failure whenever the underlying buffer is
+busy (i.e. returns -EAGAIN with bp NULL), not just when an IO
+or corruption error occurs. The hammer is too big. ;)
+
+Great proof of concept, though, as your testing results tell us you
+have found the root cause of the bug. The patch I wrote earlier
+today takes the EAGAIN case into account - I'm currently testing it,
+and have attached it below. Can you run it through your error
+testing, please, Shyam?
+
+I'll update all the reported-by, etc attributions before I post it
+for proper review.
+
+Cheers,
+
+Dave.
 -- 
-2.7.0
+Dave Chinner
+david@fromorbit.com
+
+xfs: xfs_iflush_cluster fails to abort on error
+
+From: Dave Chinner <dchinner@redhat.com>
+
+When a failure due to an inode buffer occurs, the error handling
+fails to abort the inode writeback correctly. This can result in the
+inode being reclaimed whilst still in the AIL, leading to
+use-after-free situations as well as filesystems that cannot be
+unmounted as the inode log items left in the AIL never get removed.
+
+Fix this by ensuring fatal errors from xfs_imap_to_bp() result in
+the inode flush being aborted correctly.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5b84bbc..e1a8020 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3378,14 +3378,22 @@ xfs_iflush(
+ 	}
+
+ 	/*
+-	 * Get the buffer containing the on-disk inode.
++	 * Get the buffer containing the on-disk inode. We are doing a
+try-lock
++	 * operation here, so we may get  an EAGAIN error. In that case,
+we
++	 * simply want to return with the inode still dirty.
++	 *
++	 * If we get any other error, we effectively have a corruption
+situation
++	 * and we cannot flush the inode, so we treat it the same as
+failing
++	 * xfs_iflush_int().
+ 	 */
+ 	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
+XBF_TRYLOCK,
+ 			       0);
+-	if (error || !bp) {
++	if (error == -EAGAIN) {
+ 		xfs_ifunlock(ip);
+ 		return error;
+ 	}
++	if (error)
++		goto corrupt_out;
+
+ 	/*
+ 	 * First flush out the inode that xfs_iflush was called with.
+@@ -3413,7 +3421,8 @@ xfs_iflush(
+ 	return 0;
+
+ corrupt_out:
+-	xfs_buf_relse(bp);
++	if (bp)
++		xfs_buf_relse(bp);
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ cluster_corrupt_out:
+ 	error = -EFSCORRUPTED;
 
 _______________________________________________
 xfs mailing list
