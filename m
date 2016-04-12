@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1A317CB8
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:27 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 64B397CAE
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:48:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 732B4304062
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:27 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	F1Noqkhzc5Efk0Cd for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 22:32:24 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003pA-Up
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:12 +1000
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000cO-F5
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/11] xfs: simplify inode reclaim tagging interfaces
-Date: Wed, 13 Apr 2016 15:31:31 +1000
-Message-Id: <1460525492-1170-11-git-send-email-david@fromorbit.com>
-In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB352AC006
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:48:00 -0700 (PDT)
+Received: from g1t5424.austin.hp.com (g1t5424.austin.hp.com [15.216.225.54])
+	by cuda.sgi.com with ESMTP id JrM3r9Dao9rHoQHg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:47:58 -0700 (PDT)
+From: Toshi Kani <toshi.kani@hpe.com>
+Subject: [PATCH v2 1/5] dax: add dax_get_unmapped_area for pmd mappings
+Date: Tue, 12 Apr 2016 14:39:15 -0600
+Message-Id: <1460493555-31611-2-git-send-email-toshi.kani@hpe.com>
+In-Reply-To: <1460493555-31611-1-git-send-email-toshi.kani@hpe.com>
+References: <1460493555-31611-1-git-send-email-toshi.kani@hpe.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,182 +28,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: akpm@linux-foundation.org, dan.j.williams@intel.com
+Cc: tytso@mit.edu, jack@suse.cz, Toshi Kani <toshi.kani@hpe.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, willy@linux.intel.com, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, kirill.shutemov@linux.intel.com
 
-From: Dave Chinner <dchinner@redhat.com>
+When CONFIG_FS_DAX_PMD is set, DAX supports mmap() using pmd page
+size.  This feature relies on both mmap virtual address and FS
+block (i.e. physical address) to be aligned by the pmd page size.
+Users can use mkfs options to specify FS to align block allocations.
+However, aligning mmap address requires code changes to existing
+applications for providing a pmd-aligned address to mmap().
 
-Inode radix tree tagging for reclaim passes a lot of unnecessary
-variables around. Over time the xfs-perag has grown a xfs_mount
-backpointer, and an internal agno so we don't need to pass other
-variables into the tagging functions to supply this information.
+For instance, fio with "ioengine=mmap" performs I/Os with mmap() [1].
+It calls mmap() with a NULL address, which needs to be changed to
+provide a pmd-aligned address for testing with DAX pmd mappings.
+Changing all applications that call mmap() with NULL is undesirable.
 
-Rework the functions to pass the minimal variable set required
-and simplify the internal logic and flow.
+Add dax_get_unmapped_area(), which can be called by filesystem's
+get_unmapped_area to align an mmap address by the pmd size for
+a DAX file.  It calls the default handler, mm->get_unmapped_area(),
+to find a range and then aligns it for a DAX file.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[1]: https://github.com/axboe/fio/blob/master/engines/mmap.c
+Signed-off-by: Toshi Kani <toshi.kani@hpe.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
 ---
- fs/xfs/xfs_icache.c | 97 +++++++++++++++++++++++++++--------------------------
- 1 file changed, 49 insertions(+), 48 deletions(-)
+ fs/dax.c            |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |    2 ++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a60db43..927e7b0 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -37,8 +37,7 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
--STATIC void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp,
--				struct xfs_perag *pag, struct xfs_inode *ip);
-+STATIC void xfs_inode_clear_reclaim_tag(struct xfs_perag *pag, xfs_ino_t ino);
- 
- /*
-  * Allocate and initialise an xfs_inode.
-@@ -271,7 +270,7 @@ xfs_iget_cache_hit(
- 		 */
- 		ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
- 		ip->i_flags |= XFS_INEW;
--		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
-+		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
- 		inode->i_state = I_NEW;
- 
- 		ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
-@@ -768,29 +767,44 @@ xfs_reclaim_worker(
+diff --git a/fs/dax.c b/fs/dax.c
+index 75ba46d..b54fdb9 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1158,3 +1158,48 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
+ 	return dax_zero_page_range(inode, from, length, get_block);
  }
- 
- static void
--__xfs_inode_set_reclaim_tag(
-+xfs_perag_set_reclaim_tag(
- 	struct xfs_perag	*pag,
--	struct xfs_inode	*ip)
-+	xfs_ino_t		ino)
- {
--	radix_tree_tag_set(&pag->pag_ici_root,
--			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
-+	struct xfs_mount	*mp = pag->pag_mount;
+ EXPORT_SYMBOL_GPL(dax_truncate_page);
 +
-+	ASSERT(spin_is_locked(&pag->pag_ici_lock));
-+	if (pag->pag_ici_reclaimable++)
-+		return;
-+
-+	/* propagate the reclaim tag up into the perag radix tree */
-+	spin_lock(&mp->m_perag_lock);
-+	radix_tree_tag_set(&mp->m_perag_tree, pag->pag_agno,
- 			   XFS_ICI_RECLAIM_TAG);
-+	spin_unlock(&mp->m_perag_lock);
- 
--	if (!pag->pag_ici_reclaimable) {
--		/* propagate the reclaim tag up into the perag radix tree */
--		spin_lock(&ip->i_mount->m_perag_lock);
--		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
--				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
--				XFS_ICI_RECLAIM_TAG);
--		spin_unlock(&ip->i_mount->m_perag_lock);
-+	/* schedule periodic background inode reclaim */
-+	xfs_reclaim_work_queue(mp);
- 
--		/* schedule periodic background inode reclaim */
--		xfs_reclaim_work_queue(ip->i_mount);
-+	trace_xfs_perag_set_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
-+}
- 
--		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
--							-1, _RET_IP_);
--	}
--	pag->pag_ici_reclaimable++;
-+static void
-+xfs_perag_clear_reclaim_tag(
-+	struct xfs_perag	*pag)
++/**
++ * dax_get_unmapped_area - handle get_unmapped_area for a DAX file
++ * @filp: The file being mmap'd, if not NULL
++ * @addr: The mmap address. If NULL, the kernel assigns the address
++ * @len: The mmap size in bytes
++ * @pgoff: The page offset in the file where the mapping starts from.
++ * @flags: The mmap flags
++ *
++ * This function can be called by a filesystem for get_unmapped_area().
++ * When a target file is a DAX file, it aligns the mmap address at the
++ * beginning of the file by the pmd size.
++ *
++ * When the target file is not a DAX file, @addr is specified, the
++ * request is not suitable for pmd mappings, or mm->get_unmapped_area()
++ * failed with extended @len, it simply calls the default handler,
++ * mm->get_unmapped_area(), with the original arguments.
++ */
++unsigned long dax_get_unmapped_area(struct file *filp, unsigned long addr,
++		unsigned long len, unsigned long pgoff, unsigned long flags)
 +{
-+	struct xfs_mount	*mp = pag->pag_mount;
++	unsigned long off, off_end, off_pmd, len_pmd, addr_pmd;
 +
-+	ASSERT(spin_is_locked(&pag->pag_ici_lock));
-+	if (--pag->pag_ici_reclaimable)
-+		return;
++	if (IS_ENABLED(CONFIG_FS_DAX_PMD) &&
++	    filp && !addr && IS_DAX(filp->f_mapping->host)) {
++		off = pgoff << PAGE_SHIFT;
++		off_end = off + len;
++		off_pmd = round_up(off, PMD_SIZE);
 +
-+	/* clear the reclaim tag from the perag radix tree */
-+	spin_lock(&mp->m_perag_lock);
-+	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno,
-+			     XFS_ICI_RECLAIM_TAG);
-+	spin_unlock(&mp->m_perag_lock);
-+	trace_xfs_perag_clear_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
- }
- 
- /*
-@@ -800,48 +814,35 @@ __xfs_inode_set_reclaim_tag(
-  */
- void
- xfs_inode_set_reclaim_tag(
--	xfs_inode_t	*ip)
-+	struct xfs_inode	*ip)
- {
--	struct xfs_mount *mp = ip->i_mount;
--	struct xfs_perag *pag;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_perag	*pag;
- 
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
- 	spin_lock(&pag->pag_ici_lock);
- 	spin_lock(&ip->i_flags_lock);
--	__xfs_inode_set_reclaim_tag(pag, ip);
++		if ((off_end > off_pmd) && ((off_end - off_pmd) >= PMD_SIZE)) {
++			len_pmd = len + PMD_SIZE;
 +
-+	radix_tree_tag_set(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino),
-+			   XFS_ICI_RECLAIM_TAG);
-+	xfs_perag_set_reclaim_tag(pag, ip->i_ino);
- 	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
++			addr_pmd = current->mm->get_unmapped_area(
++					filp, addr, len_pmd, pgoff, flags);
 +
- 	spin_unlock(&ip->i_flags_lock);
- 	spin_unlock(&pag->pag_ici_lock);
- 	xfs_perag_put(pag);
- }
- 
--STATIC void
--__xfs_inode_clear_reclaim(
--	xfs_perag_t	*pag,
--	xfs_inode_t	*ip)
--{
--	pag->pag_ici_reclaimable--;
--	if (!pag->pag_ici_reclaimable) {
--		/* clear the reclaim tag from the perag radix tree */
--		spin_lock(&ip->i_mount->m_perag_lock);
--		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
--				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
--				XFS_ICI_RECLAIM_TAG);
--		spin_unlock(&ip->i_mount->m_perag_lock);
--		trace_xfs_perag_clear_reclaim(ip->i_mount, pag->pag_agno,
--							-1, _RET_IP_);
--	}
--}
- 
- STATIC void
--__xfs_inode_clear_reclaim_tag(
--	xfs_mount_t	*mp,
--	xfs_perag_t	*pag,
--	xfs_inode_t	*ip)
-+xfs_inode_clear_reclaim_tag(
-+	struct xfs_perag	*pag,
-+	xfs_ino_t		ino)
- {
- 	radix_tree_tag_clear(&pag->pag_ici_root,
--			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
--	__xfs_inode_clear_reclaim(pag, ip);
-+			     XFS_INO_TO_AGINO(pag->pag_mount, ino),
-+			     XFS_ICI_RECLAIM_TAG);
-+	xfs_perag_clear_reclaim_tag(pag);
- }
- 
- /*
-@@ -1032,7 +1033,7 @@ reclaim:
- 	if (!radix_tree_delete(&pag->pag_ici_root,
- 				XFS_INO_TO_AGINO(ip->i_mount, ino)))
- 		ASSERT(0);
--	__xfs_inode_clear_reclaim(pag, ip);
-+	xfs_perag_clear_reclaim_tag(pag);
- 	spin_unlock(&pag->pag_ici_lock);
- 
- 	/*
--- 
-2.7.0
++			if (!IS_ERR_VALUE(addr_pmd)) {
++				addr_pmd += (off - addr_pmd) & (PMD_SIZE - 1);
++				return addr_pmd;
++			}
++		}
++	}
++
++	return current->mm->get_unmapped_area(filp, addr, len, pgoff, flags);
++}
++EXPORT_SYMBOL_GPL(dax_get_unmapped_area);
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 636dd59..9d52de0 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -10,6 +10,8 @@ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *, loff_t,
+ int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
++unsigned long dax_get_unmapped_area(struct file *filp, unsigned long addr,
++		unsigned long len, unsigned long pgoff, unsigned long flags);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
+ 		dax_iodone_t);
+ int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
 
 _______________________________________________
 xfs mailing list
