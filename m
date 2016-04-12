@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F8877CAF
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:43:00 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0A93F7CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F1CB6AC001
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CE4C1304070
 	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id duHymG7qnN0Fv41a (version=TLSv1.2
+	cuda.sgi.com with ESMTP id TWkoDGu7Otwt2lqA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC v2 PATCH 03/10] block: add block_device_operations methods to
-	set and get reserved space
-Date: Tue, 12 Apr 2016 12:42:46 -0400
-Message-Id: <1460479373-63317-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+Subject: [RFC v2 PATCH 00/10] dm-thin/xfs: prototype a block reservation
+	allocation model
+Date: Tue, 12 Apr 2016 12:42:43 -0400
+Message-Id: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,43 +28,83 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-From: Mike Snitzer <snitzer@redhat.com>
+Hi all,
 
-[BF:
- - Killed wrapper functions.
- - Condensed to single bdev op.]
+This is v2 of the XFS and block device reservation experiment. The
+significant changes in v2 are that the bdev interface has been condensed
+to a single callback function, the XFS transaction reservation
+management has been reworked to make transactions responsible for
+tracking and releasing excess reservation (for non-delalloc cases) and a
+workaround for the fallocate over-reservation issue is included. Beyond
+that, this version adds a bunch of miscellaneous cleanups and fixes some
+of the nastier locking/leak issues present in the first rfc.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- include/linux/blkdev.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+Patches 1-2 refactor some XFS reserve pool and block accounting code in
+preparation for subsequent patches. Patches 3-5 add block/device-mapper
+reservation support. Patches 6-10 add the core reservation
+infrastructure and management bits to XFS. See the link to the original
+rfc below for instructions and further details around the purpose of
+this series.
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 669e419..6c6ea96 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1650,6 +1650,10 @@ struct blk_dax_ctl {
- 	pfn_t pfn;
- };
- 
-+#define BDEV_RES_GET		0
-+#define BDEV_RES_MOD		(1 << 0)
-+#define BDEV_RES_PROVISION	(1 << 1)
-+
- struct block_device_operations {
- 	int (*open) (struct block_device *, fmode_t);
- 	void (*release) (struct gendisk *, fmode_t);
-@@ -1667,6 +1671,8 @@ struct block_device_operations {
- 	int (*getgeo)(struct block_device *, struct hd_geometry *);
- 	/* this callback is with swap_lock and sometimes page table lock held */
- 	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-+	int (*reserve_space) (struct block_device *, int, sector_t, sector_t,
-+			      sector_t *);
- 	struct module *owner;
- 	const struct pr_ops *pr_ops;
- };
+Finally, note that this is still highly experimental/theoretical and
+should not be used on production systems. Thoughts, reviews, flames
+appreciated.
+
+Brian
+
+rfcv2:
+- Rebased to 4.6.0-rc3.
+- Fix compile warnings reported by kbuild.
+- Fix reservation leakage on fs ENOSPC.
+- Fix mod_fdblocks locking to avoid BUG() (still racy).
+- Fix XFS reserve block ENOSPC handling.
+- Kill block wrappers, condense get/set/provision to a single callback.
+- Update XFS transaction to track reservation, don't release excess on
+  provision.
+- Add transaction noblkres mode, use for fallocate reservation
+  optimization.
+rfc: http://oss.sgi.com/pipermail/xfs/2016-March/047673.html
+
+Brian Foster (7):
+  xfs: refactor xfs_reserve_blocks() to handle ENOSPC correctly
+  xfs: replace xfs_mod_fdblocks() bool param with flags
+  xfs: thin block device reservation mechanism
+  xfs: adopt a reserved allocation model on dm-thin devices
+  xfs: handle bdev reservation ENOSPC correctly from XFS reserved pool
+  xfs: support no block reservation transaction mode
+  xfs: use contiguous bdev reservation for file preallocation
+
+Joe Thornber (1):
+  dm thin: add methods to set and get reserved space
+
+Mike Snitzer (2):
+  block: add block_device_operations methods to set and get reserved
+    space
+  dm: add methods to set and get reserved space
+
+ drivers/md/dm-thin.c          | 181 +++++++++++++++++++++++++++--
+ drivers/md/dm.c               |  41 +++++++
+ fs/xfs/Makefile               |   1 +
+ fs/xfs/libxfs/xfs_alloc.c     |  25 ++++
+ fs/xfs/libxfs/xfs_bmap.c      |  17 ++-
+ fs/xfs/libxfs/xfs_shared.h    |   2 +
+ fs/xfs/xfs_bmap_util.c        |  29 ++++-
+ fs/xfs/xfs_fsops.c            | 128 ++++++++++++++-------
+ fs/xfs/xfs_mount.c            | 106 +++++++++++++++--
+ fs/xfs/xfs_mount.h            |  12 +-
+ fs/xfs/xfs_thin.c             | 260 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_thin.h             |  31 +++++
+ fs/xfs/xfs_trace.h            |  27 +++++
+ fs/xfs/xfs_trans.c            |  94 +++++++++++++--
+ fs/xfs/xfs_trans.h            |   1 +
+ include/linux/blkdev.h        |   6 +
+ include/linux/device-mapper.h |   5 +
+ 17 files changed, 880 insertions(+), 86 deletions(-)
+ create mode 100644 fs/xfs/xfs_thin.c
+ create mode 100644 fs/xfs/xfs_thin.h
+
 -- 
 2.4.11
 
