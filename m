@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 83D5F7CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 01:25:11 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DDB237CA2
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 21:50:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 57DC28F8033
-	for <xfs@oss.sgi.com>; Sun, 10 Apr 2016 23:25:08 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pJWm1buZgqKDJpXU (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 10 Apr 2016 23:25:06 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 008C6804E5
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 06:25:05 +0000 (UTC)
-Date: Mon, 11 Apr 2016 14:25:04 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 0/6 v2] xfs: xfs_iflush_cluster vs xfs_reclaim_inode
-Message-ID: <20160411062504.GD10345@eguan.usersys.redhat.com>
-References: <1460072271-23923-1-git-send-email-david@fromorbit.com>
-	<20160408032841.GW10345@eguan.usersys.redhat.com>
-	<20160408113709.GA30614@bfoster.bfoster>
-	<20160410092235.GZ10345@eguan.usersys.redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A1931304066
+	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 19:50:20 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	jEgZFKXYK9VKNJ2K for <xfs@oss.sgi.com>;
+	Mon, 11 Apr 2016 19:50:14 -0700 (PDT)
+Date: Tue, 12 Apr 2016 12:41:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: bmap btree changes should update rmap btree
+Message-ID: <20160412024135.GF9088@dastard>
+References: <1459201425-31773-1-git-send-email-david@fromorbit.com>
+	<20160411233407.GA7967@birch.djwong.org>
+	<20160412000901.GI567@dastard>
+	<20160412011626.GA11156@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160410092235.GZ10345@eguan.usersys.redhat.com>
+In-Reply-To: <20160412011626.GA11156@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,98 +32,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Sun, Apr 10, 2016 at 05:22:35PM +0800, Eryu Guan wrote:
-> On Fri, Apr 08, 2016 at 07:37:09AM -0400, Brian Foster wrote:
-> > On Fri, Apr 08, 2016 at 11:28:41AM +0800, Eryu Guan wrote:
-> > > On Fri, Apr 08, 2016 at 09:37:45AM +1000, Dave Chinner wrote:
-> > > > Hi folks,
-> > > > 
-> > > > This is the second version of this patch set, first posted and
-> > > > described here:
-> > > > 
-> > > > http://oss.sgi.com/archives/xfs/2016-04/msg00069.html
-> > > 
-> > > Just a quick note here, I'm testing the v1 patchset right now, v4.6-rc2
-> > > kernel + v1 patch, config file is based on rhel7 debug kernel config.
-> > > 
-> > > The test is the same as the original reproducer (long term fsstress run
-> > > on XFS, exported from NFS). The test on x86_64 host has been running for
-> > > two days and everything looks fine. Test on ppc64 host has been running
-> > > for a few hours and I noticed a lock issue and a few warnings, not sure
-> > > if it's related to the patches or even to XFS yet(I need to run test on
-> > > stock -rc2 kernel to be sure), but just post the logs here for reference
-> > > 
+On Mon, Apr 11, 2016 at 06:16:26PM -0700, Darrick J. Wong wrote:
+> [should have kicked this onto the lists...]
+> > > This needs to be list_add_tail so that the rmap operations happen in order.
 > > 
-> > Had the original problem ever been reproduced on an upstream kernel?
+> > Ah, no, it doesn't. The list_sort() before we process it destroys
+> > any order we create here.
 > 
-> No, I've never seen the original problem in my upstream kernel testings.
-> Perhaps that's because I didn't run tests on debug kernels. But I didn't
-> see it in RHEL7 debug kernel testings either.
+> I think list_sort() is supposed to maintain list order if the compare fn
+> returns zero.  From lib/list_sort.c:
 > 
-> > 
-> > FWIW, my rhel kernel based test is still running well approaching ~48
-> > hours. I've seen some lockdep messages (bad unlock balance), but IIRC
-> > I've been seeing those from the start so I haven't been paying much
-> > attention to it while digging into the core problem.
-> > 
-> > > [ 1911.626286] ======================================================
-> > > [ 1911.626291] [ INFO: possible circular locking dependency detected ]
-> > > [ 1911.626297] 4.6.0-rc2.debug+ #1 Not tainted
-> > > [ 1911.626301] -------------------------------------------------------
-> > > [ 1911.626306] nfsd/7402 is trying to acquire lock:
-> > > [ 1911.626311]  (&s->s_sync_lock){+.+.+.}, at: [<c0000000003585f0>] .sync_inodes_sb+0xe0/0x230
-> > > [ 1911.626327]
-> > > [ 1911.626327] but task is already holding lock:
-> > > [ 1911.626333]  (sb_internal){.+.+.+}, at: [<c00000000031a780>] .__sb_start_write+0x90/0x130
-> > > [ 1911.626346]
-> > > [ 1911.626346] which lock already depends on the new lock.
-> > > [ 1911.626346]
-> > > [ 1911.626353]
-> > > [ 1911.626353] the existing dependency chain (in reverse order) is:
-> > > [ 1911.626358]
-> > ...
-> > > [ 1911.627134]  Possible unsafe locking scenario:
-> > > [ 1911.627134]
-> > > [ 1911.627139]        CPU0                    CPU1
-> > > [ 1911.627143]        ----                    ----
-> > > [ 1911.627147]   lock(sb_internal);
-> > > [ 1911.627153]                                lock(&s->s_sync_lock);
-> > > [ 1911.627160]                                lock(sb_internal);
-> > > [ 1911.627166]   lock(&s->s_sync_lock);
-> > > [ 1911.627172]
-> > > [ 1911.627172]  *** DEADLOCK ***
-> > > [ 1911.627172]
-> > ...
-> > 
-> > We actually have a report of this one on the list:
-> > 
-> > http://oss.sgi.com/archives/xfs/2016-04/msg00001.html
-> > 
-> > ... so I don't think it's related to this series. I believe I've seen
-> > this once or twice when testing something completely unrelated, as well.
-> > 
-> > > [ 2046.852739] kworker/dying (399) used greatest stack depth: 4352 bytes left
-> > > [ 2854.687381] XFS: Assertion failed: buffer_mapped(bh), file: fs/xfs/xfs_aops.c, line: 780
-> > > [ 2854.687434] ------------[ cut here ]------------
-> > > [ 2854.687488] WARNING: CPU: 5 PID: 28924 at fs/xfs/xfs_message.c:105 .asswarn+0x2c/0x40 [xfs]
-> > ...
-> > > [ 2854.687997] ---[ end trace 872ac2709186f780 ]---
-> > 
-> > These asserts look new to me, however. It would be interesting to see if
-> > these reproduce independently.
+> /*
+> <snip>
+>  * The comparison function @cmp must return a negative value if @a
+>  * should sort before @b, and a positive value if @a should sort after
+>  * @b. If @a and @b are equivalent, and their original relative
+>  * ordering is to be preserved, @cmp must return 0.
+>  */
 > 
-> I've seen just the assert failures in the same fsstress testing on ppc64
-> host (no lock warnings in the beginning). Will see if it's still
-> reproducible on stock kernel.
+> From my (admittedly flimsy) testing of list_sort() it looks like it does
+> preserve the order of rmap_intents that have the same agno.  I looked at
+> the source code and I think that assertion should hold.
 
-I saw the assert failures on stock kernel (v4.6-rc2) too, so at least
-it's not something introduced by this patchset.
+If what I did is maintaining order, then it's simply by chance, not
+intent.  :/
 
-Thanks,
-Eryu
+> > > we do a collapse range of 2 blocks at offset 32, say, then we end up with
+> > > unmap($pblk, $ino, 32, 16) and map($pblk-2, $ino, 30, 16) in the deferred list.
+> > > We don't want the map to happen before the unmap because that results in two
+> > > rmaps covering the same range of logical offset, which causes problems in
+> > > generic/145.
+> 
+> I forgot to mention this, but the ordering requirement only applies within a
+> single rmapbt -- if the map/unmap operations apply to different AGs, no
+> confusion will result from out-of-order execution.
+
+*nod*
+
+> > I'd suggest that the list_sort compare function could take this into
+> > account, and order overlapping operations appropriately (e.g. unmap
+> > before map). You could even put a sequence number in the rmap list
+> > entry so that when sorting we know what order they were added to the
+> > rmap list and then overlaps could be resolved in the sort function
+> > easily...
+> 
+> I /think/ we're fine with just the list_add_tail...
+
+Yeah, it seems that way, but it'll need "here be dragons" comment
+around it...
+
+> ...if not, /me wonders if we could skip the list_sort and just roll the
+> transaction every time we have to go from a higher AG to a lower AG.  I think
+> the rmap update intent log items will help us to redo the metadata operations
+> if we crash.
+
+I think that would work, but we want to keep the number of
+transactions to a minimum. Trying to keep everything grouped by AG
+definitely helps wiht that. What would be nice to know is how many
+operations we are expecting to see here will actually have extents
+from multiple AGs in them, and hence how many transactions are the
+likely common case...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
