@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B4DE57CA3
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 03:56:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0FD4F7CA3
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 03:56:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7932D304039
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:32 -0700 (PDT)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id hvLY2So6VJaGnPG5
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C50CAC001
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:40 -0700 (PDT)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id 7OV1XhXSsVH5kHhA
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 01:56:29 -0700 (PDT)
-Received: by mail-wm0-f46.google.com with SMTP id a140so44493210wma.0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:29 -0700 (PDT)
-Message-ID: <B0489CAC12794260BF90FA4C421620CA@alyakaslap>
+	Tue, 12 Apr 2016 01:56:38 -0700 (PDT)
+Received: by mail-wm0-f53.google.com with SMTP id l6so178450442wml.1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:56:38 -0700 (PDT)
+Message-ID: <0A92B65A3BF94F60BB36EA3FA716DF1F@alyakaslap>
 From: "Alex Lyakas" <alex@zadarastorage.com>
 Subject: RE: [PATCH 4/5] xfs: xfs_inode_free() isn't RCU safe
-Date: Tue, 12 Apr 2016 11:55:41 +0300
+Date: Tue, 12 Apr 2016 11:56:35 +0300
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,21 +25,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2020970989843193602=="
+Content-Type: multipart/mixed; boundary="===============3416891379630890171=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: bbice@sgi.com
+Cc: bbice@sgi.com, Shyam Kaushik <shyam@zadarastorage.com>
 
 This is a multi-part message in MIME format.
 
---===============2020970989843193602==
+--===============3416891379630890171==
 Content-Type: multipart/alternative;
-	boundary="----=_NextPart_000_0041_01D194B2.3CBE5090"
+	boundary="----=_NextPart_000_0057_01D194B2.5CD57E80"
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0041_01D194B2.3CBE5090
+------=_NextPart_000_0057_01D194B2.5CD57E80
 Content-Type: text/plain;
 	charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
@@ -67,13 +67,19 @@ from there.
 
 
  
-------=_NextPart_000_0041_01D194B2.3CBE5090
+------=_NextPart_000_0057_01D194B2.5CD57E80
 Content-Type: text/html;
 	charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
 <HTML><HEAD></HEAD>
 <BODY dir=3Dltr>
+<DIV dir=3Dltr>
+<DIV style=3D"FONT-SIZE: 10pt; FONT-FAMILY: 'Verdana'; COLOR: #000000">
+<DIV=20
+style=3D'FONT-SIZE: small; TEXT-DECORATION: none; FONT-FAMILY: =
+"Calibri"; FONT-WEIGHT: normal; COLOR: #000000; FONT-STYLE: normal; =
+DISPLAY: inline'>
 <DIV dir=3Dltr>
 <DIV style=3D"FONT-SIZE: 10pt; FONT-FAMILY: 'Verdana'; COLOR: #000000">
 <DIV>Hello Dave,</DIV>
@@ -102,12 +108,13 @@ But this patch got stuck in the spam filter of the mailing list, and =
 Brent is=20
 working to release it from there.</DIV>
 <DIV>&nbsp;</DIV>
-<DIV>&nbsp;</DIV><PRE>&nbsp;</PRE></DIV></DIV></BODY></HTML>
+<DIV>&nbsp;</DIV><PRE>&nbsp;</PRE></DIV></DIV></DIV></DIV></DIV></BODY></=
+HTML>
 
-------=_NextPart_000_0041_01D194B2.3CBE5090--
+------=_NextPart_000_0057_01D194B2.5CD57E80--
 
 
---===============2020970989843193602==
+--===============3416891379630890171==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -118,4 +125,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2020970989843193602==--
+--===============3416891379630890171==--
