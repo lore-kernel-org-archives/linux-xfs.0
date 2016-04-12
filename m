@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E21757CA2
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:02:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 570198F8037
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:13 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id SSs2U9VR7Ln5PfZw (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 5A6857CA2
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DAB08F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FkZB0omXHxm8zUgO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:02:11 -0700 (PDT)
-Subject: [PATCH 3/3] block: implement (some of) fallocate for block devices
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 12 Apr 2016 21:01:42 -0700
-Message-ID: <20160413040142.10562.42269.stgit@birch.djwong.org>
-In-Reply-To: <20160413040121.10562.98998.stgit@birch.djwong.org>
-References: <20160413040121.10562.98998.stgit@birch.djwong.org>
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:56 -0700 (PDT)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [RFC v2 PATCH 06/10] xfs: thin block device reservation mechanism
+Date: Tue, 12 Apr 2016 12:42:49 -0400
+Message-Id: <1460479373-63317-7-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,163 +23,411 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: darrick.wong@oracle.com
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-After much discussion, it seems that the fallocate feature flag
-FALLOC_FL_ZERO_RANGE maps nicely to SCSI WRITE SAME; and the feature
-FALLOC_FL_PUNCH_HOLE maps nicely to the devices that have been
-whitelisted for zeroing SCSI UNMAP.  Punch still requires that
-FALLOC_FL_KEEP_SIZE is set.  A length that goes past the end of the
-device will be clamped to the device size if KEEP_SIZE is set; or will
-return -EINVAL if not.  Both start and length must be aligned to the
-device's logical block size.
+Add block device reservation infrastructure to XFS. This primarily
+consists of wrappers around the associated block device functions. This
+mechanism provides the ability to reserve, release and provision a set
+of blocks in the underlying block device.
 
-Since the semantics of fallocate are fairly well established already,
-wire up the two pieces.  The other fallocate variants (collapse range,
-insert range, and allocate blocks) are not supported.
+Block device reservation enables the filesystem to adopt an allocation
+model that guarantees physical blocks are available for operations on
+block devices where this is currently not the case (i.e., thin devices).
+Without such guarantees, overprovisioning of a thin block device results
+in a read-only state transition and possible shutdown of the fs.
+Reservation allows the fs to detect when space is not available in the
+underlying device, avoid the conditions that lead to read-only state
+transitions and handle the situation gracefully by returning -ENOSPC to
+userspace.
 
-v2: Incorporate feedback from Christoph & Linus.  Tentatively add
-a requirement that the fallocate arguments be aligned to logical block
-size, and put in a few XXX comments ahead of LSF discussion.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/block_dev.c |   87 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/open.c      |    3 +-
- 2 files changed, 89 insertions(+), 1 deletion(-)
+ fs/xfs/Makefile    |   1 +
+ fs/xfs/xfs_mount.h |   5 ++
+ fs/xfs/xfs_thin.c  | 260 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_thin.h  |  31 +++++++
+ fs/xfs/xfs_trace.h |  27 ++++++
+ 5 files changed, 324 insertions(+)
+ create mode 100644 fs/xfs/xfs_thin.c
+ create mode 100644 fs/xfs/xfs_thin.h
 
-
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 20a2c02..5c8eb0c 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -29,6 +29,7 @@
- #include <linux/log2.h>
- #include <linux/cleancache.h>
- #include <linux/dax.h>
-+#include <linux/falloc.h>
- #include <asm/uaccess.h>
- #include "internal.h"
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 3542d94..b394db7 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -88,6 +88,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_super.o \
+ 				   xfs_symlink.o \
+ 				   xfs_sysfs.o \
++				   xfs_thin.o \
+ 				   xfs_trans.o \
+ 				   xfs_xattr.o \
+ 				   kmem.o \
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index bd1043f..8d54c56 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -148,6 +148,11 @@ typedef struct xfs_mount {
+ 	 */
+ 	__uint32_t		m_generation;
  
-@@ -1790,6 +1791,91 @@ static int blkdev_mmap(struct file *file, struct vm_area_struct *vma)
- #define blkdev_mmap generic_file_mmap
- #endif
- 
-+#define	BLKDEV_FALLOC_FL_SUPPORTED					\
-+		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
-+		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
++	bool			m_thin_reserve;
++	struct mutex		m_thin_res_lock;
++	uint32_t		m_thin_sectpb;
++	sector_t		m_thin_res;
 +
-+static long blkdev_fallocate(struct file *file, int mode, loff_t start,
-+			     loff_t len)
+ #ifdef DEBUG
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+diff --git a/fs/xfs/xfs_thin.c b/fs/xfs/xfs_thin.c
+new file mode 100644
+index 0000000..16e9a03
+--- /dev/null
++++ b/fs/xfs/xfs_thin.c
+@@ -0,0 +1,260 @@
++/*
++ * Copyright (c) 2016 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_inode.h"
++#include "xfs_dir2.h"
++#include "xfs_ialloc.h"
++#include "xfs_alloc.h"
++#include "xfs_rtalloc.h"
++#include "xfs_bmap.h"
++#include "xfs_trans.h"
++#include "xfs_trans_priv.h"
++#include "xfs_log.h"
++#include "xfs_error.h"
++#include "xfs_quota.h"
++#include "xfs_fsops.h"
++#include "xfs_trace.h"
++#include "xfs_icache.h"
++#include "xfs_sysfs.h"
++/* XXX: above copied from xfs_mount.c */
++#include "xfs_thin.h"
++
++/*
++ * Notes/Issues:
++ *
++ * - Reservation support depends on the '-o discard' mount option so freed
++ *   extents are returned to the pool. Note that online discard has not been
++ *   totally reliable in terms of returning freed space to the thin pool. Use
++ *   fstrim as a workaround.
++ * - The bdev reservation API receives an absolute value reservation from the
++ *   caller as opposed to a delta value. The latter is probably more ideal, but
++ *   the former helps us use the XFS reserve pool as a broad protection layer
++ *   for any potential leaks. For example, free list blocks used for btree
++ *   growth are currently not reserved. With a delta API, _any_ unreserved
++ *   allocations from the fs will slowly and permanently leak the reservation as
++ *   tracked by the bdev. The abs value mechanism covers this kind of slop based
++ *   on the locally maintained reservation.
++ *   	- What might be ideal to support a delta reservation API is a model (or
++ *   	test mode) that requires a reservation to be attached or somehow
++ *   	associated with every bdev allocation when the reserve feature is
++ *   	enabled (or one that disables allocation via writes altogether in favor
++ *   	of provision calls). Otherwise, any unreserved allocation returns an I/O
++ *   	error. Such deterministic behavior helps ensure general testing detects
++ *   	problems more reliably.
++ * - Worst case reservation means each XFS filesystem block is considered a new
++ *   dm block allocation. This translates to a significant amount of space given
++ *   larger dm block sizes. For example, 4k XFS blocks to 64k dm blocks means
++ *   we'll hit ENOSPC sooner and more frequently than typically expected.
++ * - The xfs_mod_fdblocks() implementation means the XFS reserve pool blocks are
++ *   also reserved from the thin pool. XFS defaults to 8192 reserve pool blocks
++ *   in most cases, which translates to 512MB of reserved space. This can be
++ *   tuned with: 'xfs_io -xc "resblks <blks>" <mnt>'. Note that insufficient
++ *   reserves will result in errors in unexpected areas of code (e.g., page
++ *   discards on writeback, inode unlinked list removal failures, etc.).
++ */
++
++static inline int
++bdev_reserve_space(
++	struct xfs_mount			*mp,
++	int					mode,
++	sector_t				offset,
++	sector_t				len,
++	sector_t				*res)
 +{
-+	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
-+	struct request_queue *q = bdev_get_queue(bdev);
-+	struct address_space *mapping;
-+	loff_t end = start + len - 1;
-+	loff_t isize;
-+	int error;
++	struct block_device			*bdev;
++	const struct block_device_operations	*ops;
 +
-+	/* Fail if we don't recognize the flags. */
-+	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
-+		return -EOPNOTSUPP;
++	bdev = mp->m_ddev_targp->bt_bdev;
++	ops = bdev->bd_disk->fops;
 +
-+	/* Don't go off the end of the device. */
-+	isize = i_size_read(bdev->bd_inode);
-+	if (start >= isize)
-+		return -EINVAL;
-+	if (end > isize) {
-+		if (mode & FALLOC_FL_KEEP_SIZE) {
-+			len = isize - start;
-+			end = start + len - 1;
-+		} else
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * Don't allow IO that isn't aligned to logical block size.
-+	 * XXX: Should zero and punch write zeroes through the page cache
-+	 *      if start or end aren't lbs aligned?
-+	 * XXX: What about thinp which prefers io_min alignment?
-+	 */
-+	if ((start | len) & bdev_logical_block_size(bdev) - 1)
-+		return -EINVAL;
-+
-+	/* Invalidate the page cache, including dirty pages. */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
-+
-+	switch (mode) {
-+	case FALLOC_FL_ZERO_RANGE:
-+	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
-+		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
-+					    GFP_KERNEL, false);
-+		if (error)
-+			return error;
-+		break;
-+	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
-+		/* Only punch if the device can do zeroing discard. */
-+		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
-+			return -EOPNOTSUPP;
-+		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
-+					     GFP_KERNEL, 0);
-+		if (error)
-+			return error;
-+		break;
-+	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
-+		/*
-+		 * XXX: a well known search engine vendor interprets this
-+		 * flag (in other circumstances) to mean "I don't care if
-+		 * we can read stale contents later".  Is it appropriate
-+		 * to wire this up to the non-zeroing discard?
-+		 */
-+		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
-+					     GFP_KERNEL, 0);
-+		if (error)
-+			return error;
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+
-+	/*
-+	 * Invalidate again; if someone wandered in and dirtied a page,
-+	 * the caller will be given -EBUSY;
-+	 */
-+	return invalidate_inode_pages2_range(mapping,
-+					     start >> PAGE_SHIFT,
-+					     end >> PAGE_SHIFT);
++	return ops->reserve_space(bdev, mode, offset, len, res);
 +}
 +
- const struct file_operations def_blk_fops = {
- 	.open		= blkdev_open,
- 	.release	= blkdev_close,
-@@ -1804,6 +1890,7 @@ const struct file_operations def_blk_fops = {
- #endif
- 	.splice_read	= generic_file_splice_read,
- 	.splice_write	= iter_file_splice_write,
-+	.fallocate	= blkdev_fallocate,
- };
++/*
++ * Reserve blocks from the underlying block device.
++ */
++int
++xfs_thin_reserve(
++	struct xfs_mount	*mp,
++	sector_t		bb)
++{
++	int			error;
++	sector_t		res;
++
++	mutex_lock(&mp->m_thin_res_lock);
++
++	res = mp->m_thin_res + bb;
++	error = bdev_reserve_space(mp, BDEV_RES_MOD, 0, 0, &res);
++	if (error) {
++		if (error == -ENOSPC)
++			trace_xfs_thin_reserve_enospc(mp, mp->m_thin_res, bb);
++		goto out;
++	}
++
++	trace_xfs_thin_reserve(mp, mp->m_thin_res, bb);
++	mp->m_thin_res += bb;
++
++out:
++	mutex_unlock(&mp->m_thin_res_lock);
++	return error;
++}
++
++static int
++__xfs_thin_unreserve(
++	struct xfs_mount	*mp,
++	sector_t		bb)
++{
++	int			error;
++	sector_t		res;
++
++	if (bb > mp->m_thin_res) {
++		WARN(1, "unres (%llu) exceeds current res (%llu)",
++		     (uint64_t) bb, (uint64_t) mp->m_thin_res);
++		bb = mp->m_thin_res;
++	}
++
++	res = mp->m_thin_res - bb;
++	error = bdev_reserve_space(mp, BDEV_RES_MOD, 0, 0, &res);
++	if (error)
++		return error;;
++
++	trace_xfs_thin_unreserve(mp, mp->m_thin_res, bb);
++	mp->m_thin_res -= bb;
++
++	return error;
++}
++
++/*
++ * Release a reservation back to the block device.
++ */
++int
++xfs_thin_unreserve(
++	struct xfs_mount	*mp,
++	sector_t		res)
++{
++	int			error;
++
++	mutex_lock(&mp->m_thin_res_lock);
++	error = __xfs_thin_unreserve(mp, res);
++	mutex_unlock(&mp->m_thin_res_lock);
++
++	return error;
++}
++
++/*
++ * Given a recently allocated extent, ask the block device to provision the
++ * underlying space.
++ */
++int
++xfs_thin_provision(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		offset,
++	xfs_fsblock_t		len,
++	sector_t		*res)
++{
++	sector_t		ores = *res;
++	sector_t		bbstart, bblen;
++	int			error;
++
++	bbstart = XFS_FSB_TO_DADDR(mp, offset);
++	bbstart = round_down(bbstart, mp->m_thin_sectpb);
++	bblen = XFS_FSB_TO_BB(mp, len);
++	bblen = round_up(bblen, mp->m_thin_sectpb);
++
++	mutex_lock(&mp->m_thin_res_lock);
++
++	WARN_ON(bblen > mp->m_thin_res);
++
++	error = bdev_reserve_space(mp, BDEV_RES_PROVISION, bbstart, bblen,
++				   res);
++	if (error)
++		goto out;
++	ASSERT(ores >= *res);
++
++	trace_xfs_thin_provision(mp, mp->m_thin_res, ores - *res);
++
++	/*
++	 * Update the local reservation based on the blocks that were actually
++	 * allocated.
++	 */
++	mp->m_thin_res -= (ores - *res);
++out:
++	mutex_unlock(&mp->m_thin_res_lock);
++	return error;
++}
++
++int
++xfs_thin_init(
++	struct xfs_mount			*mp)
++{
++	struct block_device			*bdev;
++	const struct block_device_operations	*ops;
++	sector_t				res;
++	int					error;
++	unsigned int				io_opt;
++
++	bdev = mp->m_ddev_targp->bt_bdev;
++	ops = bdev->bd_disk->fops;
++
++	mp->m_thin_reserve = false;
++	mutex_init(&mp->m_thin_res_lock);
++
++	if (!ops->reserve_space)
++		goto out;
++	if (!(mp->m_flags & XFS_MOUNT_DISCARD))
++		goto out;
++
++	/* use optimal I/O size as dm-thin block size */
++	io_opt = bdev_io_opt(mp->m_super->s_bdev);
++	if ((io_opt % BBSIZE) || (io_opt < mp->m_sb.sb_blocksize))
++		goto out;
++	mp->m_thin_sectpb = io_opt / BBSIZE;
++
++	/* warn about any preexisting reservation */
++	error = bdev_reserve_space(mp, BDEV_RES_GET, 0, 0, &res);
++	if (error)
++		goto out;
++	if (res) {
++		/* force res count to 0 */
++		xfs_warn(mp, "Reset non-zero (%llu sectors) block reservation.",
++			 (uint64_t) res);
++		res = 0;
++		error = bdev_reserve_space(mp, BDEV_RES_MOD, 0, 0, &res);
++		if (error)
++			goto out;
++	}
++
++	mp->m_thin_reserve = true;
++out:
++	xfs_notice(mp, "Thin pool reservation %s", mp->m_thin_reserve ?
++							"enabled" : "disabled");
++	if (mp->m_thin_reserve)
++		xfs_notice(mp, "Thin reserve blocksize: %u sectors",
++			   mp->m_thin_sectpb);
++	return 0;
++}
+diff --git a/fs/xfs/xfs_thin.h b/fs/xfs/xfs_thin.h
+new file mode 100644
+index 0000000..6d995a0
+--- /dev/null
++++ b/fs/xfs/xfs_thin.h
+@@ -0,0 +1,31 @@
++#ifndef __XFS_THIN_H__
++#define __XFS_THIN_H__
++
++/*
++ * Convert an fsb count to a sector reservation.
++ */
++static inline sector_t
++xfs_fsb_res(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsb,
++	bool			contig)
++{
++	sector_t		bb;
++
++       if (contig) {
++		bb = XFS_FSB_TO_BB(mp, fsb);
++		bb += (2 * mp->m_thin_sectpb);
++		bb = round_up(bb, mp->m_thin_sectpb);
++	} else
++		bb = fsb * mp->m_thin_sectpb;
++
++	return bb;
++}
++
++int xfs_thin_init(struct xfs_mount *);
++int xfs_thin_reserve(struct xfs_mount *, sector_t);
++int xfs_thin_unreserve(struct xfs_mount *, sector_t);
++int xfs_thin_provision(struct xfs_mount *, xfs_fsblock_t, xfs_fsblock_t,
++		       sector_t *);
++
++#endif	/* __XFS_THIN_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c8d5842..a7733a1 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2184,6 +2184,33 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
+ DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+ DEFINE_DISCARD_EVENT(xfs_discard_busy);
  
- int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
-diff --git a/fs/open.c b/fs/open.c
-index 17cb6b1..f9ebe32 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -289,7 +289,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	 * Let individual file system decide if it supports preallocation
- 	 * for directories or not.
- 	 */
--	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
-+	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
-+	    !S_ISBLK(inode->i_mode))
- 		return -ENODEV;
++DECLARE_EVENT_CLASS(xfs_thin_class,
++	TP_PROTO(struct xfs_mount *mp, sector_t total, sector_t res),
++	TP_ARGS(mp, total, res),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(uint64_t, total)
++		__field(uint64_t, res)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->total = total;
++		__entry->res = res;
++	),
++	TP_printk("dev %d:%d total %llu res %llu",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->total,
++		  __entry->res)
++)
++
++#define DEFINE_THIN_EVENT(name) \
++DEFINE_EVENT(xfs_thin_class, name, \
++	TP_PROTO(struct xfs_mount *mp, sector_t total, sector_t res), \
++	TP_ARGS(mp, total, res))
++DEFINE_THIN_EVENT(xfs_thin_reserve);
++DEFINE_THIN_EVENT(xfs_thin_reserve_enospc);
++DEFINE_THIN_EVENT(xfs_thin_unreserve);
++DEFINE_THIN_EVENT(xfs_thin_provision);
++
+ #endif /* _TRACE_XFS_H */
  
- 	/* Check for wrap through zero too */
+ #undef TRACE_INCLUDE_PATH
+-- 
+2.4.11
 
 _______________________________________________
 xfs mailing list
