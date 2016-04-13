@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EFC3F7CA7
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:27:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 62236AC005
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:27:10 -0700 (PDT)
-Received: from mail-yw0-f193.google.com (mail-yw0-f193.google.com
-	[209.85.161.193]) by cuda.sgi.com with ESMTP id
-	J7aKGALXZ779out6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:27:07 -0700 (PDT)
-Received: by mail-yw0-f193.google.com with SMTP id h6so7592097ywc.1
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:27:07 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5BFCF7CA4
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:16:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 90D90AC003
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:16:26 -0700 (PDT)
+Received: from na01-bl2-obe.outbound.protection.outlook.com
+	(mail-eopbgr640114.outbound.protection.outlook.com
+	[40.107.64.114]) by cuda.sgi.com with ESMTP id 42WGfqFDw2AQpOoK
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 13 Apr 2016 10:16:23 -0700 (PDT)
+Subject: Re: list_add corruption after "xfs: mode di_mode to vfs inode"
+References: <56FC9FA6.1080700@stratus.com>
+	<20160401024413.GB2072@devil.localdomain>
+	<20160412075423.GG9088@dastard>
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Message-ID: <570E7EE0.2020004@stratus.com>
+Date: Wed, 13 Apr 2016 13:16:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160412213118.GM567@dastard>
-References: <CAG=-QKovDGUdLXv9AekeK1o4Dd_bwWNfTTTEcq3VoszBgbmXeQ@mail.gmail.com>
-	<20160411231056.GD9088@dastard>
-	<CAG=-QKoptGYwyAg3VntWFxz5R9+Q3i-G9iQCcbYJKcZT7OSjSw@mail.gmail.com>
-	<20160412213118.GM567@dastard>
-Date: Thu, 14 Apr 2016 01:27:07 +0800
-Message-ID: <CAG=-QKoWEDsqGC-cvsv+3sYRvv74YCXEviteaqPw7MhJFaKn0g@mail.gmail.com>
-Subject: Re: about the xfs performance
-From: Songbo Wang <hack.coo@gmail.com>
+In-Reply-To: <20160412075423.GG9088@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,169 +28,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7899678672283224358=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, dchinner@redhat.com
 
---===============7899678672283224358==
-Content-Type: multipart/alternative; boundary=001a11c015ba44ce260530611642
+On 04/12/2016 03:54 AM, Dave Chinner wrote:
+> On Fri, Apr 01, 2016 at 01:44:13PM +1100, Dave Chinner wrote:
+>> On Wed, Mar 30, 2016 at 11:55:18PM -0400, Joe Lawrence wrote:
+>>> Hi Dave,
+>>>
+>>> Upon loading 4.6-rc1, I noticed a few linked list corruption messages in
+>>> dmesg shortly after boot up.  I bisected the kernel, landing on:
+>>>
+>>>   [c19b3b05ae440de50fffe2ac2a9b27392a7448e9] xfs: mode di_mode to vfs inode
+>>>
+>>> If I revert c19b3b05ae44 from 4.6-rc1, the warnings stop.
+>>>
+>>> WARNING: CPU: 35 PID: 6715 at lib/list_debug.c:29 __list_add+0x65/0xc0
+>>> list_add corruption. next->prev should be prev (ffff882030928a00), but was ffff88103f00c300. (next=ffff88100fde5ce8).
+>> .....
+>>>  [<ffffffff812488f0>] ? bdev_test+0x20/0x20
+>>>  [<ffffffff813551a5>] __list_add+0x65/0xc0
+>>>  [<ffffffff81249bd8>] bd_acquire+0xc8/0xd0
+>>>  [<ffffffff8124aa59>] blkdev_open+0x39/0x70
+>>>  [<ffffffff8120bc27>] do_dentry_open+0x227/0x320
+>>>  [<ffffffff8124aa20>] ? blkdev_get_by_dev+0x50/0x50
+>>>  [<ffffffff8120d057>] vfs_open+0x57/0x60
+>>>  [<ffffffff8121c9fa>] path_openat+0x1ba/0x1340
+>>>  [<ffffffff8121eff1>] do_filp_open+0x91/0x100
+>>>  [<ffffffff8122c806>] ? __alloc_fd+0x46/0x180
+>>>  [<ffffffff8120d3b4>] do_sys_open+0x124/0x210
+>>>  [<ffffffff8120d4be>] SyS_open+0x1e/0x20
+>>>  [<ffffffff81003c12>] do_syscall_64+0x62/0x110
+>>>  [<ffffffff8169ade1>] entry_SYSCALL64_slow_path+0x25/0x25
+>> ....
+>>> According to the bd_acquire+0xc8 offset, we're in bd_acquire()
+>>> attempting the list add:
+>> ....
+>>>  713         bdev = bdget(inode->i_rdev);
+>>>  714         if (bdev) {
+>>>  715                 spin_lock(&bdev_lock);
+>>>  716                 if (!inode->i_bdev) {
+>>>  717                         /*
+>>>  718                          * We take an additional reference to bd_inode,
+>>>  719                          * and it's released in clear_inode() of inode.
+>>>  720                          * So, we can access it via ->i_mapping always
+>>>  721                          * without igrab().
+>>>  722                          */
+>>>  723                         bdgrab(bdev);
+>>>  724                         inode->i_bdev = bdev;
+>>>  725                         inode->i_mapping = bdev->bd_inode->i_mapping;
+>>>  726                         list_add(&inode->i_devices, &bdev->bd_inodes);
+>>
+>> So the bdev->bd_inodes list is corrupt, and this call trace is
+>> just the messenger.
+> ....
+>>> I'm not really sure why the bisect landed on c19b3b05ae44 "xfs: mode
+>>> di_mode to vfs inode", but as I mentioned, reverting it made the list
+>>> warnings go away.
+>>
+>> Neither am I at this point as it's the bdev inode (not an xfs
+>> inode) that has a corrupted list. I'll have to try to reproduce this.
+> 
+> Patch below should fix the problem. Smoke tested only at this point.
 
---001a11c015ba44ce260530611642
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Thanks Dave, this looks good on both the QEMU and on the originating
+hardware instances.
 
-Hi Dave,
+Let me know if there are any additional tests that I can run, otherwise
+consider this Tested-by.
 
-Thank you for your suggestion,  and very appreciate for your reply!
+BTW, cuda.sgi.com is rejecting my mail to the list (even though I
+subscribed), so apologies for this not making it out to xfs@oss.sgi.com.
 
-2016-04-13 5:31 GMT+08:00 Dave Chinner <david@fromorbit.com>:
+Thanks again,
 
-> On Tue, Apr 12, 2016 at 10:07:45PM +0800, Songbo Wang wrote:
-> > Hi Dave,
-> >
-> > Thank you for your reply. I did some test today and described those as
-> > follows:
-> >
-> > Delete the existing test file , and redo the test : fio -ioengine=3Dlib=
-aio
-> > -bs=3D4k -direct=3D1 -thread -rw=3Drandwrite -size=3D50G -filename=3D/m=
-nt/test
-> > -name=3D"EBS 4KB randwrite test" -iodepth=3D64 -runtime=3D60
-> > The iops resultes is 19k=C4=85(per second);  I continue to fio this tes=
-t file
-> > untill it was filled to the full. Then I did another test using the sam=
-e
-> > test case, the results was 210k=C4=85(per second).(The results mentione=
-d
->
-> Yup, that's when the workload goes from allocation bound to being an
-> overwrite workload when there is no allocation occurring.
->
-> Perhaps you should preallocate the file using the fallocate=3Dposix
-> option. This will move the initial overhead to IO completion, so
-> won't block submission, and the file will not end up a fragmented
-> mess as the written areas will merge back into large single extents
-> as more of the file is written.
->
-> > yesterday was partial.  I used the same test file several times, the
-> > results degraded because of the test file was not fill to the full)
-> >
-> > I try to remake the filesystem using the following command to increase
-> the
-> > internal log size , inode size and agcount num:
-> > mkfs.xfs /dev/hioa2 -f -n size=3D64k -i size=3D2048,align=3D1 -d agcoun=
-t=3D2045
-> -l
-> > size=3D512m
-> > but it has no help to the result.
->
-> Of course it won't. Turning random knobs without knowing what they
-> do will not solve the problem. Indeed, if you're workload is
-> performance limited because it is running out of log space, then
-> *reducing the log size* will not solve the issue.
->
-> Users who tweaking knobs without understanding what they do or how
-> they affect the application is the leading cause of filesystem
-> performance and reliability issues on XFS. Just don't do it - all
-> you'll do is cause something to go wrong when you can least afford
-> it to happen.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-
---001a11c015ba44ce260530611642
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi Dave,<div>=C2=A0 =C2=A0</div><div>Thank you for your su=
-ggestion, =C2=A0and very appreciate for your reply!</div></div><div class=
-=3D"gmail_extra"><br><div class=3D"gmail_quote">2016-04-13 5:31 GMT+08:00 D=
-ave Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" ta=
-rget=3D"_blank">david@fromorbit.com</a>&gt;</span>:<br><blockquote class=3D=
-"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding=
--left:1ex"><span class=3D"">On Tue, Apr 12, 2016 at 10:07:45PM +0800, Songb=
-o Wang wrote:<br>
-&gt; Hi Dave,<br>
-&gt;<br>
-&gt; Thank you for your reply. I did some test today and described those as=
-<br>
-&gt; follows:<br>
-&gt;<br>
-&gt; Delete the existing test file , and redo the test : fio -ioengine=3Dli=
-baio<br>
-&gt; -bs=3D4k -direct=3D1 -thread -rw=3Drandwrite -size=3D50G -filename=3D/=
-mnt/test<br>
-&gt; -name=3D&quot;EBS 4KB randwrite test&quot; -iodepth=3D64 -runtime=3D60=
-<br>
-</span>&gt; The iops resultes is 19k=C4=85(per second);=C2=A0 I continue to=
- fio this test file<br>
-<span class=3D"">&gt; untill it was filled to the full. Then I did another =
-test using the same<br>
-</span>&gt; test case, the results was 210k=C4=85(per second).(The results =
-mentioned<br>
-<br>
-Yup, that&#39;s when the workload goes from allocation bound to being an<br=
->
-overwrite workload when there is no allocation occurring.<br>
-<br>
-Perhaps you should preallocate the file using the fallocate=3Dposix<br>
-option. This will move the initial overhead to IO completion, so<br>
-won&#39;t block submission, and the file will not end up a fragmented<br>
-mess as the written areas will merge back into large single extents<br>
-as more of the file is written.<br>
-<span class=3D""><br>
-&gt; yesterday was partial.=C2=A0 I used the same test file several times, =
-the<br>
-&gt; results degraded because of the test file was not fill to the full)<br=
->
-&gt;<br>
-&gt; I try to remake the filesystem using the following command to increase=
- the<br>
-&gt; internal log size , inode size and agcount num:<br>
-&gt; mkfs.xfs /dev/hioa2 -f -n size=3D64k -i size=3D2048,align=3D1 -d agcou=
-nt=3D2045 -l<br>
-&gt; size=3D512m<br>
-&gt; but it has no help to the result.<br>
-<br>
-</span>Of course it won&#39;t. Turning random knobs without knowing what th=
-ey<br>
-do will not solve the problem. Indeed, if you&#39;re workload is<br>
-performance limited because it is running out of log space, then<br>
-*reducing the log size* will not solve the issue.<br>
-<br>
-Users who tweaking knobs without understanding what they do or how<br>
-they affect the application is the leading cause of filesystem<br>
-performance and reliability issues on XFS. Just don&#39;t do it - all<br>
-you&#39;ll do is cause something to go wrong when you can least afford<br>
-it to happen.<br>
-<div class=3D"HOEnZb"><div class=3D"h5"><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</div></div></blockquote></div><br></div>
-
---001a11c015ba44ce260530611642--
-
-
---===============7899678672283224358==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- Joe
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7899678672283224358==--
