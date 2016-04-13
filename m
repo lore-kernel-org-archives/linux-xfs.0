@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1D6FE7CB1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 01:59:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C44AF304039
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 23:59:55 -0700 (PDT)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id 4Yvevth7DPn34mxt
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 11 Apr 2016 23:59:49 -0700 (PDT)
-Received: by mail-wm0-f46.google.com with SMTP id u206so14550884wme.1
-	for <xfs@oss.sgi.com>; Mon, 11 Apr 2016 23:59:49 -0700 (PDT)
-From: Shyam Kaushik <shyam@zadarastorage.com>
-References: <f049419a2ab10f8e3c4fef0e4f4ca1ba@mail.gmail.com>
-	<20160322121922.GA53693@bfoster.bfoster>
-	<232dd85fde11d4ef1625f070eabfd167@mail.gmail.com>
-	<20160408224648.GD567@dastard>
-	<CAOcd+r0s3FfahxaqfJKuZ_D+0FbUHaKqi8b_bwGbXekCN3w_oQ@mail.gmail.com>
-	<20160411012127.GF567@dastard>
-In-Reply-To: <20160411012127.GF567@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2A5297CA2
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 19:12:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 938D7AC005
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:12:49 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id fRmOn0yYAYqx4Ltf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:12:47 -0700 (PDT)
+Date: Tue, 12 Apr 2016 17:12:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] block: wire blkdev_fallocate() to
+	block_device_operations' reserve_space
+Message-ID: <20160413001243.GA25280@birch.djwong.org>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	<20160412200459.GA10730@redhat.com>
+	<20160412203904.GD5812@birch.djwong.org>
+	<20160412210426.GA1845@redhat.com>
 MIME-Version: 1.0
-Date: Tue, 12 Apr 2016 12:29:48 +0530
-Message-ID: <0cfd6b7bfb3ef9dbac02a19a1f8fe568@mail.gmail.com>
-Subject: RE: XFS hung task in xfs_ail_push_all_sync() when unmounting FS after
-	disk failure/recovery
+Content-Disposition: inline
+In-Reply-To: <20160412210426.GA1845@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,124 +33,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Alex Lyakas <alex@zadarastorage.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, dm-devel@redhat.com, xfs@oss.sgi.com
 
-Hi Dave,
+On Tue, Apr 12, 2016 at 05:04:27PM -0400, Mike Snitzer wrote:
+> On Tue, Apr 12 2016 at  4:39pm -0400,
+> Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> 
+> > On Tue, Apr 12, 2016 at 04:04:59PM -0400, Mike Snitzer wrote:
+> > > diff --git a/fs/block_dev.c b/fs/block_dev.c
+> > > index 5a2c3ab..b34c07b 100644
+> > > --- a/fs/block_dev.c
+> > > +++ b/fs/block_dev.c
+> > > @@ -1801,17 +1801,13 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
+> > >  	struct request_queue *q = bdev_get_queue(bdev);
+> > >  	struct address_space *mapping;
+> > >  	loff_t end = start + len - 1;
+> > > -	loff_t bs_mask, isize;
+> > > +	loff_t isize;
+> > >  	int error;
+> > >  
+> > >  	/* We only support zero range and punch hole. */
+> > >  	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
+> > >  		return -EOPNOTSUPP;
+> > >  
+> > > -	/* We haven't a primitive for "ensure space exists" right now. */
+> > > -	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
+> > > -		return -EOPNOTSUPP;
+> > > -
+> > >  	/* Only punch if the device can do zeroing discard. */
+> > >  	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
+> > >  	    (!blk_queue_discard(q) || !q->limits.discard_zeroes_data))
+> > > @@ -1829,9 +1825,12 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
+> > >  			return -EINVAL;
+> > >  	}
+> > >  
+> > > -	/* Don't allow IO that isn't aligned to logical block size */
+> > > -	bs_mask = bdev_logical_block_size(bdev) - 1;
+> > > -	if ((start | len) & bs_mask)
+> > > +	/*
+> > > +	 * Don't allow IO that isn't aligned to minimum IO size (io_min)
+> > > +	 * - for normal device's io_min is usually logical block size
+> > > +	 * - but for more exotic devices (e.g. DM thinp) it may be larger
+> > > +	 */
+> > > +	if ((start | len) % bdev_io_min(bdev))
 
-I posted the patch.
+I started by noticing the 64-bit division.  However, in researching alignment
+requirements for fallocate, I noticed that nothing says that we can return
+-EINVAL for unaligned offset/len for allocate or punch.  For file allocations
+ext4 and xfs simply enlarge the range so that the ends are aligned to the
+logical block size; for punch they both shrink the range to deallocate until
+the ends are aligned, and write zeroes to the partial blocks.
 
-After applying this patch & your use-after-free patch,
-xfs_ail_push_all_sync() processing intent-logs that are no longer relevant
-upon disk failure/recovery doesn't happen anymore. I tried several times
-to recreate and the issue doesn't show up.
+At least for user-visible fallocate we should do likewise, but for the internal
+blkdev_ helpers I think it makes more sense to check lbs alignment and let the
+lower level driver reject the IO if min_io alignment is a hard requirement.
+Documentation/block/queue-sysfs.txt says that the min_io is the smallest
+/preferred/ size.
 
-Thanks.
+But, before that, I'll push out some new fallocate patches for -rc3.
 
---Shyam
+> > >  		return -EINVAL;
+> > 
+> > Noted.  Will update the original patch.
+> 
+> BTW, I just noticed your "block: require write_same and discard requests
+> align to logical block size" -- doesn't look right.
 
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com]
-Sent: 11 April 2016 06:51
-To: Alex Lyakas
-Cc: Shyam Kaushik; Brian Foster; xfs@oss.sgi.com
-Subject: Re: XFS hung task in xfs_ail_push_all_sync() when unmounting FS
-after disk failure/recovery
+What happens if we pass a request to thinp that isn't aligned to
+minimum_io_size?  Does it reject the command?
 
-On Sun, Apr 10, 2016 at 09:40:29PM +0300, Alex Lyakas wrote:
-> Hello Dave,
->
-> On Sat, Apr 9, 2016 at 1:46 AM, Dave Chinner <david@fromorbit.com>
-wrote:
-> > On Fri, Apr 08, 2016 at 04:21:02PM +0530, Shyam Kaushik wrote:
-> >> Hi Dave, Brian, Carlos,
-> >>
-> >> While trying to reproduce this issue I have been running into
-different
-> >> issues that are similar. Underlying issue remains the same when
-backend to
-> >> XFS is failed & we unmount XFS, we run into hung-task timeout
-(180-secs)
-> >> with stack like
-> >>
-> >> kernel: [14952.671131]  [<ffffffffc06a5f59>]
-> >> xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
-> >> kernel: [14952.671139]  [<ffffffff810b26b0>] ?
-> >> prepare_to_wait_event+0x110/0x110
-> >> kernel: [14952.671181]  [<ffffffffc0690111>] xfs_unmountfs+0x61/0x1a0
-> >> [xfs]
-> >>
-> >> while running trace-events, XFS ail push keeps looping around
-> >>
-> >>    xfsaild/dm-10-21143 [001] ...2 17878.555133: xfs_ilock_nowait: dev
-> >> 253:10 ino 0x0 flags ILOCK_SHARED caller xfs_inode_item_push [xfs]
-> >
-> > Looks like either a stale inode (which should never reach the AIL)
-> > or it's an inode that's been reclaimed and this is a use after free
-> > situation. Given that we are failing IOs here, I'd suggest it's more
-> > likely to be an IO failure that's caused a writeback problem, not an
-> > interaction with stale inodes.
-> >
-> > So, look at xfs_iflush. If an IO fails, it is supposed to unlock the
-> > inode by calling xfs_iflush_abort(), which will also remove it from
-> > the AIL. This can also happen on reclaim of a dirty inode, and if so
-> > we'll still reclaim the inode because reclaim assumes xfs_iflush()
-> > cleans up properly.
-> >
-> > Which, apparently, it doesn't:
-> >
-> >         /*
-> >          * Get the buffer containing the on-disk inode.
-> >          */
-> >         error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp,
-XBF_TRYLOCK, 0);
-> >         if (error || !bp) {
-> >                 xfs_ifunlock(ip);
-> >                 return error;
-> >         }
-> >
-> > This looks like a bug - xfs_iflush hasn't aborted the inode
-> > writeback on failure - it's just unlocked the flush lock. Hence it
-> > has left the inode dirty in the AIL, and then the inode has probably
-> > then been reclaimed, setting the inode number to zero.
-> In our case, we do not reach this call, because XFS is already marked
-> as "shutdown", so in our case we do:
->     /*
->      * This may have been unpinned because the filesystem is shutting
->      * down forcibly. If that's the case we must not write this inode
->      * to disk, because the log record didn't make it to disk.
->      *
->      * We also have to remove the log item from the AIL in this case,
->      * as we wait for an empty AIL as part of the unmount process.
->      */
->     if (XFS_FORCED_SHUTDOWN(mp)) {
->         error = -EIO;
->         goto abort_out;
->     }
->
-> So we call xfs_iflush_abort, but due to "iip" being NULL (as Shyam
-> mentioned earlier in this thread), we proceed directly to
-> xfs_ifunlock(ip), which now becomes the same situation as you
-> described above.
+> But maybe I'm just too hyper-focused on DM thinp's needs (which would
+> much prefer these checks be done in terms of minimum_io_size, rather
+> than logical_block_size, and _not_ assuming power-of-2 math will work).
+> 
+> But at least for discard: your lbs-based check is fine; since we have
+> discard_granularity to cover thinp's more specific requirements.
 
-If you are getting this occuring, something else has already gone
-wrong as you can't have a dirty inode without a log item attached to
-it. So it appears to me that you are reporting a symptom of a
-problem after it has occured, not the root cause. Maybe it is the
-same root cause, maybe not. Either way, it doesn't help us solve any
-problem.
-
-> The comment clearly says "We also have to remove the log item from the
-> AIL in this case, as we wait for an empty AIL as part of the unmount
-> process." Could you perhaps point us at the code that is supposed to
-> remove the log item from the AIL? Apparently this is not happening.
-
-xfs_iflush_abort or xfs_iflush_done does that work.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
 
 _______________________________________________
 xfs mailing list
