@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4F0267CB3
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 13:34:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0662C304039
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:33:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id u8VT3sI98bXvcRh1 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:33:55 -0700 (PDT)
-Date: Wed, 13 Apr 2016 14:33:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC v2 PATCH 05/10] dm thin: add methods to set and get
-	reserved space
-Message-ID: <20160413183352.GB2775@bfoster.bfoster>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-	<1460479373-63317-6-git-send-email-bfoster@redhat.com>
-	<20160413174442.GD18517@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 699E17CA7
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 13:30:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3BF548F8039
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:30:27 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id DoAPjizLfBFMJGGO for <xfs@oss.sgi.com>;
+	Wed, 13 Apr 2016 11:30:25 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id A3BCF14A15
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 13:30:25 -0500 (CDT)
+Subject: Re: [PATCH] xfs: group quota is still enforced if mount v5 xfs with
+	gqnoenforce and pqnoenforce
+References: <1460571772-20285-1-git-send-email-zlang@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <570E9040.8010409@sandeen.net>
+Date: Wed, 13 Apr 2016 13:30:24 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160413174442.GD18517@birch.djwong.org>
+In-Reply-To: <1460571772-20285-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,187 +33,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: snitzer@redhat.com, Joe Thornber <ejt@redhat.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Wed, Apr 13, 2016 at 10:44:42AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 12, 2016 at 12:42:48PM -0400, Brian Foster wrote:
-> > From: Joe Thornber <ejt@redhat.com>
-> > 
-> > Experimental reserve interface for XFS guys to play with.
-> > 
-> > I have big reservations (no pun intended) about this patch.
-> > 
-> > [BF:
-> >  - Support for reservation reduction.
-> >  - Support for space provisioning.
-> >  - Condensed to a single function.]
-> > 
-> > Not-Signed-off-by: Joe Thornber <ejt@redhat.com>
-> > Not-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > ---
-> >  drivers/md/dm-thin.c | 181 ++++++++++++++++++++++++++++++++++++++++++++++++---
-> >  1 file changed, 171 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-> > index 92237b6..32bc5bd 100644
-> > --- a/drivers/md/dm-thin.c
-> > +++ b/drivers/md/dm-thin.c
-...
-> > @@ -4271,6 +4343,94 @@ static void thin_io_hints(struct dm_target *ti, struct queue_limits *limits)
-> >  	limits->max_discard_sectors = 2048 * 1024 * 16; /* 16G */
-> >  }
-> >  
-> > +static int thin_provision_space(struct dm_target *ti, sector_t offset,
-> > +				sector_t len, sector_t *res)
-> > +{
-> > +	struct thin_c *tc = ti->private;
-> > +	struct pool *pool = tc->pool;
-> > +	sector_t end;
-> > +	dm_block_t pblock;
-> > +	dm_block_t vblock;
-> > +	int error;
-> > +	struct dm_thin_lookup_result lookup;
-> > +
-> > +	if (!is_factor(offset, pool->sectors_per_block))
-> > +		return -EINVAL;
-> > +
-> > +	if (!len || !is_factor(len, pool->sectors_per_block))
-> > +		return -EINVAL;
-> > +
-> > +	if (res && !is_factor(*res, pool->sectors_per_block))
-> > +		return -EINVAL;
-> > +
-> > +	end = offset + len;
-> > +
-> > +	while (offset < end) {
-> > +		vblock = offset;
-> > +		do_div(vblock, pool->sectors_per_block);
-> > +
-> > +		error = dm_thin_find_block(tc->td, vblock, true, &lookup);
-> > +		if (error == 0)
-> > +			goto next;
-> > +		if (error != -ENODATA)
-> > +			return error;
-> > +
-> > +		error = alloc_data_block(tc, &pblock);
+This looks fine, but I think Eryu already sent this patch on 3/31:
+
+[PATCH] xfs: add missing break in xfs_parseargs()
+
+-Eric
+
+On 4/13/16 1:22 PM, Zorro Lang wrote:
+> This's a regression bug caused by:
 > 
-> So this means that if fallocate wants to BDEV_RES_PROVISION N blocks, it must
-> first increase the reservation (BDEV_RES_MOD) by N blocks to avoid using up
-> space that was previously reserved by some other caller.  I think?
+>   2e74af0 xfs: convert mount option parsing to tokens
 > 
-
-Yes, assuming this is being called from a filesystem using the
-reservation mechanism.
-
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		error = dm_thin_insert_block(tc->td, vblock, pblock);
+> xfstests xfs/299 can reproduce this bug, it will fail when do
+> gpnoenforce test, the error output as below(diff with 299.out):
 > 
-> Having reserved and mapped blocks, what happens when we try to read them?
-> Do we actually get zeroes, or does the read go straight through to whatever
-> happens to be in the disk blocks?  I don't think it's correct that we could
-> BDEV_RES_PROVISION and end up with stale credit card numbers from some other
-> thin device.
+>  *** push past the soft block limit
+>   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+>   -[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
+>   +[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
 > 
-
-Agree, but I'm not really sure how this works in thinp tbh. fallocate
-wasn't really on my mind when doing this. I was simply trying to cobble
-together what I could to facilitate making progress on the fs parts
-(e.g., I just needed a call that allocated blocks and consumed
-reservation in the process).
-
-Skimming through the dm-thin code, it looks like a (configurable) block
-zeroing mechanism can be triggered from somewhere around
-provision_block()->schedule_zero(), depending on whether the incoming
-write overwrites the newly allocated block. If that's the case, then I
-suspect that means reads would just fall through to the block and return
-whatever was on disk. This code would probably need to tie into that
-zeroing mechanism one way or another to deal with that issue. (Though
-somebody who actually knows something about dm-thin should verify that.
-:)
-
-Brian
-
-> (PS: I don't know enough about thinp to know if this has already been taken
-> care of.  I didn't see anything, but who knows what I missed. :))
+>  *** push past the hard inode limit (expect EDQUOT)
+>   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+>   -[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
+>   +[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
 > 
-> --D
+>  *** push past the hard block limit (expect EDQUOT)
+>   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+>   -[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
+>   +[NAME] 500 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
 > 
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		if (res && *res)
-> > +			*res -= pool->sectors_per_block;
-> > +next:
-> > +		offset += pool->sectors_per_block;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int thin_reserve_space(struct dm_target *ti, int mode, sector_t offset,
-> > +			      sector_t len, sector_t *res)
-> > +{
-> > +	struct thin_c *tc = ti->private;
-> > +	struct pool *pool = tc->pool;
-> > +	sector_t blocks;
-> > +	unsigned long flags;
-> > +	int error;
-> > +
-> > +	if (mode == BDEV_RES_PROVISION)
-> > +		return thin_provision_space(ti, offset, len, res);
-> > +
-> > +	/* res required for get/set */
-> > +	error = -EINVAL;
-> > +	if (!res)
-> > +		return error;
-> > +
-> > +	if (mode == BDEV_RES_GET) {
-> > +		spin_lock_irqsave(&tc->pool->lock, flags);
-> > +		*res = tc->reserve_count * pool->sectors_per_block;
-> > +		spin_unlock_irqrestore(&tc->pool->lock, flags);
-> > +		error = 0;
-> > +	} else if (mode == BDEV_RES_MOD) {
-> > +		/*
-> > +		* @res must always be a factor of the pool's blocksize; upper
-> > +		* layers can rely on the bdev's minimum_io_size for this.
-> > +		*/
-> > +		if (!is_factor(*res, pool->sectors_per_block))
-> > +			return error;
-> > +
-> > +		blocks = *res;
-> > +		(void) sector_div(blocks, pool->sectors_per_block);
-> > +
-> > +		error = set_reserve_count(tc, blocks);
-> > +	}
-> > +
-> > +	return error;
-> > +}
-> > +
-> >  static struct target_type thin_target = {
-> >  	.name = "thin",
-> >  	.version = {1, 18, 0},
-> > @@ -4285,6 +4445,7 @@ static struct target_type thin_target = {
-> >  	.status = thin_status,
-> >  	.iterate_devices = thin_iterate_devices,
-> >  	.io_hints = thin_io_hints,
-> > +	.reserve_space = thin_reserve_space,
-> >  };
-> >  
-> >  /*----------------------------------------------------------------*/
-> > -- 
-> > 2.4.11
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It shows that group quota is still enforced. But this bug only can
+> be reproduced when mount v5 xfs with gqnoenforce and pqnoenforce
+> options. The reason as I found is a missed "break" in xfs_parseargs()
+> function.
+> 
+> After deal with "pqnoenforce", it should break. But the code keep
+> running into "gquota/grpquota" lines, and make gquota enforced.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> This's a tiny bug(only one line patch). But it's belong to
+> regression bug and take me a few hours to find the problem.
+> So I hope it can be fixed:)
+> 
+> Thanks,
+> Zorro
+> 
+>  fs/xfs/xfs_super.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 187e14b..f3c0ffc 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -350,6 +350,7 @@ xfs_parseargs(
+>  		case Opt_pqnoenforce:
+>  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+>  			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
+> +			break;
+>  		case Opt_gquota:
+>  		case Opt_grpquota:
+>  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+> 
 
 _______________________________________________
 xfs mailing list
