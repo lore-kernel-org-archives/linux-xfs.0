@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69C407CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:45:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 298C4304059
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 09:45:13 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id K0OVX1AAKqd0BQdA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 09:45:11 -0700 (PDT)
-Date: Wed, 13 Apr 2016 09:45:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 05/11] xfs: optimise xfs_iext_destroy
-Message-ID: <20160413164510.GC8475@infradead.org>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-	<1460525492-1170-6-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 78B497CA4
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 16:54:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0A03AC004
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:54:47 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	qT00MRysuyyfZRDE for <xfs@oss.sgi.com>;
+	Wed, 13 Apr 2016 14:54:44 -0700 (PDT)
+Date: Thu, 14 Apr 2016 07:54:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: iomap infrastructure and multipage writes V2
+Message-ID: <20160413215442.GS567@dastard>
+References: <1460494382-14547-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1460525492-1170-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +29,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
->  /*
-> + * Remove all records from the indirection array.
-> + */
-> +STATIC void
-> +xfs_iext_irec_remove_all(
-> +	struct xfs_ifork *ifp)
-> +{
-> +	int		nlists;
-> +	int		i;
-> +
-> +	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
-> +	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-> +	for (i = 0; i < nlists; i++) {
-> +		xfs_ext_irec_t *erp = &ifp->if_u1.if_ext_irec[i];
+On Tue, Apr 12, 2016 at 01:52:54PM -0700, Christoph Hellwig wrote:
+> This series add a new file system I/O path that uses the iomap structure
+> introduced for the pNFS support and support multi-page buffered writes.
+> 
+> This was first started by Dave Chinner a long time ago, then I did beat
+> it into shape for production runs in a very constrained ARM NAS
+> enviroment for Tuxera almost as long ago, and now half a dozen rewrites
+> later it's back.
+> 
+> The basic idea is to avoid the crazy per-block get_blocks overhead
+> and make use of extents in the buffered write path by iterating over
+> them instead.
+> 
+> Chances since V1:
+>  - add support for fiemap
+>  - fix a test fail on 1k block sizes
+>  - prepare for 64-bit length, this will be used in a follow on patchset
 
-Can we avoid the typedef for new code?
+This appears to pass xfstests on all my test setups without any
+regressions. I haven't tested RT devices yet, but we can ignore that
+for now. I guess now it's time to look harder at the code.
 
-> +		if (erp->er_extbuf)
-> +			kmem_free(erp->er_extbuf);
+Christoph, have you done any perf testing of this patchset yet to
+check that it does indeed reduce the CPU overhead of large write
+operations? I'd also be interested to know if there is any change in
+overhead for single page (4k) IOs as well, even though I suspect
+there won't be.
 
-no need to check for NULL before a kmem_free, e.g. this whole loop could
-just be:
+Cheers,
 
-	for (i = 0; i < nlists; i++)
-		kmem_free(ifp->if_u1.if_ext_irec[i].er_extbuf);
-
->  {
->  	if (ifp->if_flags & XFS_IFEXTIREC) {
-> -		int	erp_idx;
-> -		int	nlists;
-> -
-> -		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
-> -		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
-> -			xfs_iext_irec_remove(ifp, erp_idx);
-> -		}
-> +		xfs_iext_irec_remove_all(ifp);
->  		ifp->if_flags &= ~XFS_IFEXTIREC;
-
-I'd be tempted to just move clearing of the flag into
-xfs_iext_irec_remove_all if we change the patch anyway.
-
-Otherwise this looks fine to me.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
