@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 91DD97CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:47:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FA22304067
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:47:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lV4dtHHd4OfaSd2R (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:47:01 -0700 (PDT)
-Date: Tue, 12 Apr 2016 16:46:58 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH] block: wire blkdev_fallocate() to
-	block_device_operations' reserve_space
-Message-ID: <20160412204658.GA1759@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-	<20160412200459.GA10730@redhat.com>
-	<20160412203904.GD5812@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160412203904.GD5812@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 870287CB7
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 39A6530405F
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:27 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	TzGGSLxFz317R66t for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 22:32:24 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p9-UN
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:12 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000cJ-Eh
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 09/11] xfs: rename variables in xfs_iflush_cluster for clarity
+Date: Wed, 13 Apr 2016 15:31:30 +1000
+Message-Id: <1460525492-1170-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,191 +30,205 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, dm-devel@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 12 2016 at  4:39pm -0400,
-Darrick J. Wong <darrick.wong@oracle.com> wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-> On Tue, Apr 12, 2016 at 04:04:59PM -0400, Mike Snitzer wrote:
-> > On Tue, Apr 12 2016 at 12:42P -0400,
-> > Brian Foster <bfoster@redhat.com> wrote:
-> > 
-> > > Hi all,
-> > > 
-> > > This is v2 of the XFS and block device reservation experiment. The
-> > > significant changes in v2 are that the bdev interface has been condensed
-> > > to a single callback function, the XFS transaction reservation
-> > > management has been reworked to make transactions responsible for
-> > > tracking and releasing excess reservation (for non-delalloc cases) and a
-> > > workaround for the fallocate over-reservation issue is included. Beyond
-> > > that, this version adds a bunch of miscellaneous cleanups and fixes some
-> > > of the nastier locking/leak issues present in the first rfc.
-> > > 
-> > > Patches 1-2 refactor some XFS reserve pool and block accounting code in
-> > > preparation for subsequent patches. Patches 3-5 add block/device-mapper
-> > > reservation support. Patches 6-10 add the core reservation
-> > > infrastructure and management bits to XFS. See the link to the original
-> > > rfc below for instructions and further details around the purpose of
-> > > this series.
-> > > 
-> > > Finally, note that this is still highly experimental/theoretical and
-> > > should not be used on production systems. Thoughts, reviews, flames
-> > > appreciated.
-> > 
-> > Thanks for carrying on with this work Brian.
-> > 
-> > I've started to review your patchset and Darrick's fallocate patchset.
-> > I've pushed a branch to linux-dm.git that combines the 2, see:
-> > https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/log/?h=dm-fallocate
-> > 
-> > and then added this RFC patch, at the end, which relies on both of your
-> > patchsets -- you'll see blkdev_ensure_space_exists() has a FIXME which
-> > implies it isn't much more than simply stubbed out at this point
-> > (completely untested):
-> 
-> Hmm, ok, but -rc3 broke a bunch of stuff.  Guess I should repost with all
-> the PAGE_CACHE_ -> PAGE_ stuff fixed. :)
+The cluster inode variable uses unconventional naming - iq - which
+makes it hard to distinguish it between the inode passed into the
+function - ip - and that is a vector for mistakes to be made.
+Rename all the cluster inode variables to use a more conventional
+prefixes to reduce potential future confusion (cilist, cilist_size,
+cip).
 
-Yeah, the kernel.org kbuild robots just spammed us about that same exact
-breakage.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/xfs_inode.c | 74 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 37 insertions(+), 37 deletions(-)
 
-> > From: Mike Snitzer <snitzer@redhat.com>
-> > Date: Tue, 12 Apr 2016 15:54:31 -0400
-> > Subject: [RFC PATCH] block: wire blkdev_fallocate() to block_device_operations' reserve_space
-> > 
-> > This effectively exposes the primitive for "ensure space exists".  It
-> > relies on block_device_operations' reserve_space method.
-> > 
-> > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > ---
-> >  block/blk-lib.c        | 26 ++++++++++++++++++++++++++
-> >  fs/block_dev.c         | 20 +++++++++++---------
-> >  include/linux/blkdev.h |  2 ++
-> >  3 files changed, 39 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/block/blk-lib.c b/block/blk-lib.c
-> > index 9dca6bb..5042a84 100644
-> > --- a/block/blk-lib.c
-> > +++ b/block/blk-lib.c
-> > @@ -314,3 +314,29 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
-> >  	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
-> >  }
-> >  EXPORT_SYMBOL(blkdev_issue_zeroout);
-> > +
-> > +/**
-> > + * blkdev_ensure_space_exists - preallocate a block range
-> > + * @bdev:	blockdev to preallocate space for
-> > + * @sector:	start sector
-> > + * @nr_sects:	number of sectors to preallocate
-> > + * @gfp_mask:	memory allocation flags (for bio_alloc)
-> > + * @flags:	FALLOC_FL_* to control behaviour
-> > + *
-> > + * Description:
-> > + *    Ensure space exists, or is preallocated, for the sectors in question.
-> > + */
-> > +int blkdev_ensure_space_exists(struct block_device *bdev, sector_t sector,
-> > +		sector_t nr_sects, unsigned long flags)
-> > +{
-> > +	sector_t res;
-> > +	const struct block_device_operations *ops = bdev->bd_disk->fops;
-> > +
-> > +	if (!ops->reserve_space)
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	// FIXME: check with Brian Foster on whether it makes sense to
-> > +	// use BDEV_RES_GET/BDEV_RES_MOD instead of BDEV_RES_PROVISION?
-> > +	return ops->reserve_space(bdev, BDEV_RES_PROVISION, sector, nr_sects, &res);
-> 
-> /me thinks BDEV_RES_PROVISION is correct here, because regular-mode file
-> fallocate (for ext4/xfs anyway) allocates blocks and maps them to specific file
-> offsets as unwritten extents.  afaict RES_PROVISION -> thin_provision_space()
-> and thin_provision_space() seems to allocate blocks and map them to the
-> device's LBAs.
-> 
-> If I'm reading the patches correctly, RES_GET/RES_MOD seem to reserve N blocks
-> but doesn't map them to any specific LBA.
-
-Right that is how I read it too.  I just put that FIXME in to cover my
-ass incase I was being an idiot ;)
-
-> > +}
-> > +EXPORT_SYMBOL(blkdev_ensure_space_exists);
-> > diff --git a/fs/block_dev.c b/fs/block_dev.c
-> > index 5a2c3ab..b34c07b 100644
-> > --- a/fs/block_dev.c
-> > +++ b/fs/block_dev.c
-> > @@ -1801,17 +1801,13 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
-> >  	struct request_queue *q = bdev_get_queue(bdev);
-> >  	struct address_space *mapping;
-> >  	loff_t end = start + len - 1;
-> > -	loff_t bs_mask, isize;
-> > +	loff_t isize;
-> >  	int error;
-> >  
-> >  	/* We only support zero range and punch hole. */
-> >  	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
-> >  		return -EOPNOTSUPP;
-> >  
-> > -	/* We haven't a primitive for "ensure space exists" right now. */
-> > -	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
-> > -		return -EOPNOTSUPP;
-> > -
-> >  	/* Only punch if the device can do zeroing discard. */
-> >  	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
-> >  	    (!blk_queue_discard(q) || !q->limits.discard_zeroes_data))
-> > @@ -1829,9 +1825,12 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
-> >  			return -EINVAL;
-> >  	}
-> >  
-> > -	/* Don't allow IO that isn't aligned to logical block size */
-> > -	bs_mask = bdev_logical_block_size(bdev) - 1;
-> > -	if ((start | len) & bs_mask)
-> > +	/*
-> > +	 * Don't allow IO that isn't aligned to minimum IO size (io_min)
-> > +	 * - for normal device's io_min is usually logical block size
-> > +	 * - but for more exotic devices (e.g. DM thinp) it may be larger
-> > +	 */
-> > +	if ((start | len) % bdev_io_min(bdev))
-> >  		return -EINVAL;
-> 
-> Noted.  Will update the original patch.
-
-OK, thanks.
-
-Once your new patchset is available I'll rebase my 'dm-fallocate' test
-branch accordingly.
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 26f22cb..ee6799e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3149,16 +3149,16 @@ out_release_wip:
  
-> >  	/* Invalidate the page cache, including dirty pages. */
-> > @@ -1839,7 +1838,10 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
-> >  	truncate_inode_pages_range(mapping, start, end);
-> >  
-> >  	error = -EINVAL;
-> > -	if (mode & FALLOC_FL_ZERO_RANGE)
-> > +	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
-> > +		error = blkdev_ensure_space_exists(bdev, start >> 9, len >> 9,
-> > +						   mode);
-> > +	else if (mode & FALLOC_FL_ZERO_RANGE)
-> 
-> This whole thing got converted to a switch statement due to some feedback
-> from hch.
-> 
-> Anyway, will try to have a new blockdev fallocate patchset done by the end
-> of the day.
-> 
-> (Is there a test case for this?)
-
-No, but once my patch is in place to join your patchset with Brian's
-then any basic fallocate tests against a DM thinp volume _should_ work.
-
-/me assumes xfstests has such tests?  Only missing bit would be to layer
-the filesystem ontop of DM thinp?  Or extend the tests your added to
-test DM thinp devices directly.  I think Eric Sandeen (now cc'd) made
-xfstests capable or creating DM thinp volumes for certain tests.
+ STATIC int
+ xfs_iflush_cluster(
+-	xfs_inode_t	*ip,
+-	xfs_buf_t	*bp)
++	struct xfs_inode	*ip,
++	struct xfs_buf		*bp)
+ {
+-	xfs_mount_t		*mp = ip->i_mount;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_perag	*pag;
+ 	unsigned long		first_index, mask;
+ 	unsigned long		inodes_per_cluster;
+-	int			ilist_size;
+-	xfs_inode_t		**ilist;
+-	xfs_inode_t		*iq;
++	int			cilist_size;
++	struct xfs_inode	**cilist;
++	struct xfs_inode	*cip;
+ 	int			nr_found;
+ 	int			clcount = 0;
+ 	int			bufwasdelwri;
+@@ -3167,23 +3167,23 @@ xfs_iflush_cluster(
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 
+ 	inodes_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
+-	ilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
+-	ilist = kmem_alloc(ilist_size, KM_MAYFAIL|KM_NOFS);
+-	if (!ilist)
++	cilist_size = inodes_per_cluster * sizeof(xfs_inode_t *);
++	cilist = kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
++	if (!cilist)
+ 		goto out_put;
+ 
+ 	mask = ~(((mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog)) - 1);
+ 	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+ 	rcu_read_lock();
+ 	/* really need a gang lookup range call here */
+-	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)ilist,
++	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)cilist,
+ 					first_index, inodes_per_cluster);
+ 	if (nr_found == 0)
+ 		goto out_free;
+ 
+ 	for (i = 0; i < nr_found; i++) {
+-		iq = ilist[i];
+-		if (iq == ip)
++		cip = cilist[i];
++		if (cip == ip)
+ 			continue;
+ 
+ 		/*
+@@ -3192,10 +3192,10 @@ xfs_iflush_cluster(
+ 		 * We need to check under the i_flags_lock for a valid inode
+ 		 * here. Skip it if it is not valid or the wrong inode.
+ 		 */
+-		spin_lock(&iq->i_flags_lock);
+-		if (!iq->i_ino ||
+-		    __xfs_iflags_test(iq, XFS_ISTALE)) {
+-			spin_unlock(&iq->i_flags_lock);
++		spin_lock(&cip->i_flags_lock);
++		if (!cip->i_ino ||
++		    __xfs_iflags_test(cip, XFS_ISTALE)) {
++			spin_unlock(&cip->i_flags_lock);
+ 			continue;
+ 		}
+ 
+@@ -3204,18 +3204,18 @@ xfs_iflush_cluster(
+ 		 * any more inodes in the list because they will also all be
+ 		 * outside the cluster.
+ 		 */
+-		if ((XFS_INO_TO_AGINO(mp, iq->i_ino) & mask) != first_index) {
+-			spin_unlock(&iq->i_flags_lock);
++		if ((XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
++			spin_unlock(&cip->i_flags_lock);
+ 			break;
+ 		}
+-		spin_unlock(&iq->i_flags_lock);
++		spin_unlock(&cip->i_flags_lock);
+ 
+ 		/*
+ 		 * Do an un-protected check to see if the inode is dirty and
+ 		 * is a candidate for flushing.  These checks will be repeated
+ 		 * later after the appropriate locks are acquired.
+ 		 */
+-		if (xfs_inode_clean(iq) && xfs_ipincount(iq) == 0)
++		if (xfs_inode_clean(cip) && xfs_ipincount(cip) == 0)
+ 			continue;
+ 
+ 		/*
+@@ -3223,15 +3223,15 @@ xfs_iflush_cluster(
+ 		 * then this inode cannot be flushed and is skipped.
+ 		 */
+ 
+-		if (!xfs_ilock_nowait(iq, XFS_ILOCK_SHARED))
++		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED))
+ 			continue;
+-		if (!xfs_iflock_nowait(iq)) {
+-			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		if (!xfs_iflock_nowait(cip)) {
++			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+-		if (xfs_ipincount(iq)) {
+-			xfs_ifunlock(iq);
+-			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		if (xfs_ipincount(cip)) {
++			xfs_ifunlock(cip);
++			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+ 
+@@ -3242,9 +3242,9 @@ xfs_iflush_cluster(
+ 		 * in that function for more information as to why the initial
+ 		 * check is not sufficient.
+ 		 */
+-		if (!iq->i_ino) {
+-			xfs_ifunlock(iq);
+-			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		if (!cip->i_ino) {
++			xfs_ifunlock(cip);
++			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+ 
+@@ -3252,18 +3252,18 @@ xfs_iflush_cluster(
+ 		 * arriving here means that this inode can be flushed.  First
+ 		 * re-check that it's dirty before flushing.
+ 		 */
+-		if (!xfs_inode_clean(iq)) {
++		if (!xfs_inode_clean(cip)) {
+ 			int	error;
+-			error = xfs_iflush_int(iq, bp);
++			error = xfs_iflush_int(cip, bp);
+ 			if (error) {
+-				xfs_iunlock(iq, XFS_ILOCK_SHARED);
++				xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 				goto cluster_corrupt_out;
+ 			}
+ 			clcount++;
+ 		} else {
+-			xfs_ifunlock(iq);
++			xfs_ifunlock(cip);
+ 		}
+-		xfs_iunlock(iq, XFS_ILOCK_SHARED);
++		xfs_iunlock(cip, XFS_ILOCK_SHARED);
+ 	}
+ 
+ 	if (clcount) {
+@@ -3273,7 +3273,7 @@ xfs_iflush_cluster(
+ 
+ out_free:
+ 	rcu_read_unlock();
+-	kmem_free(ilist);
++	kmem_free(cilist);
+ out_put:
+ 	xfs_perag_put(pag);
+ 	return 0;
+@@ -3316,8 +3316,8 @@ cluster_corrupt_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(iq, false);
+-	kmem_free(ilist);
++	xfs_iflush_abort(cip, false);
++	kmem_free(cilist);
+ 	xfs_perag_put(pag);
+ 	return -EFSCORRUPTED;
+ }
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
