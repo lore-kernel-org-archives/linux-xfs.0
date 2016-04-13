@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0C8BB7CA6
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:59 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7EB9D7CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:04:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 962758F8035
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id F6JInF6ITs0FzCaf (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA4DDAC003
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:04:58 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 4FPc83W3UoAAqf1E (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC v2 PATCH 07/10] xfs: adopt a reserved allocation model on
-	dm-thin devices
-Date: Tue, 12 Apr 2016 12:42:50 -0400
-Message-Id: <1460479373-63317-8-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:04:55 -0700 (PDT)
+Date: Tue, 12 Apr 2016 21:04:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 4/3] block: test fallocate for block devices
+Message-ID: <20160413040421.GB25280@birch.djwong.org>
+References: <20160413040121.10562.98998.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160413040121.10562.98998.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,445 +25,467 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
+To: darrick.wong@oracle.com
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
-Adopt a reservation-based block allocation model when XFS runs on top of
-a dm-thin device with accompanying support. As of today, the filesystem
-has no indication of available space in the underlying device. If the
-thin pool is depleted, the filesystem has no recourse but to handle the
-read-only state change of the device. This results in unexpected higher
-level behavior, error returns and can result in data loss if the
-filesystem is ultimately shutdown before more space is provisioned to
-the pool.
+Now that we're wiring up fallocate's PUNCH_HOLE and ZERO_RANGE
+features for block devices, add some tests to make sure they
+work correctly.
 
-The reservation model enables XFS to manage thin pool space similar to
-how delayed allocation blocks are managed today. Delalloc blocks are
-reserved up front (e.g., at write time) to guarantee physical space is
-available at writeback time and thus prevent data loss due to
-overprovisioning. Similarly, block device reservation allows XFS to
-reserve space for various operations in advance and thus guarantee an
-operation will not fail for lack of space, or otherwise return an error
-to the user.
+v2: Update tests to reflect EOD clamping suggested by Linus.
+Note that the VFS fallocate makes us play some weird games wrt
+MAX_LFS_FILESIZE.
 
-To accomplish this, tie in the device block reservation calls to the
-existing filesystem reservation mechanism. Each transaction now reserves
-physical space in the underlying thin pool along with other such
-reserved resources (e.g., filesystem blocks, log space). Delayed
-allocation blocks are similarly reserved in the thin device when the
-associated filesystem blocks are reserved. If a reservation cannot be
-satisfied, the associated operation returns -ENOSPC as if the filesystem
-itself were out of space.
-
-Note that this is proof-of-concept and highly experimental. The purpose
-is to explore the potential effectiveness of such a scheme between the
-filesystem and a thinly provisioned device. As such, the implementation
-is hacky, broken and geared towards proof-of-concept over correctness or
-completeness.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |  25 +++++++++++
- fs/xfs/xfs_mount.c        | 103 +++++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_mount.h        |   3 ++
- fs/xfs/xfs_trans.c        |  77 +++++++++++++++++++++++++++++++---
- fs/xfs/xfs_trans.h        |   1 +
- 5 files changed, 193 insertions(+), 16 deletions(-)
+ common/scsi_debug     |    6 ++
+ tests/generic/705     |   89 ++++++++++++++++++++++++++++++++++
+ tests/generic/705.out |   11 ++++
+ tests/generic/706     |   86 ++++++++++++++++++++++++++++++++
+ tests/generic/706.out |   10 ++++
+ tests/generic/707     |  130 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/707.out |   32 ++++++++++++
+ tests/generic/group   |    3 +
+ 8 files changed, 366 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/705
+ create mode 100644 tests/generic/705.out
+ create mode 100755 tests/generic/706
+ create mode 100644 tests/generic/706.out
+ create mode 100755 tests/generic/707
+ create mode 100644 tests/generic/707.out
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a708e38..af21c93 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -35,6 +35,7 @@
- #include "xfs_trans.h"
- #include "xfs_buf_item.h"
- #include "xfs_log.h"
-+#include "xfs_thin.h"
+diff --git a/common/scsi_debug b/common/scsi_debug
+index eb08126..74c3802 100644
+--- a/common/scsi_debug
++++ b/common/scsi_debug
+@@ -40,13 +40,17 @@ _get_scsi_debug_dev()
+ 	logical=${2-512}
+ 	unaligned=${3-0}
+ 	size=${4-128}
++	test -n "$4" && shift
++	test -n "$3" && shift
++	test -n "$2" && shift
++	test -n "$1" && shift
  
- struct workqueue_struct *xfs_alloc_wq;
- 
-@@ -652,6 +653,30 @@ xfs_alloc_ag_vextent(
- 				 XFS_TRANS_SB_RES_FDBLOCKS :
- 				 XFS_TRANS_SB_FDBLOCKS,
- 				 -((long)(args->len)));
+ 	phys_exp=0
+ 	while [ $logical -lt $physical ]; do
+ 		let physical=physical/2
+ 		let phys_exp=phys_exp+1
+ 	done
+-	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size"
++	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size $@"
+ 	echo "scsi_debug options $opts" >> $seqres.full
+ 	modprobe scsi_debug $opts
+ 	[ $? -eq 0 ] || _fail "scsi_debug modprobe failed"
+diff --git a/tests/generic/705 b/tests/generic/705
+new file mode 100755
+index 0000000..f30f2c3
+--- /dev/null
++++ b/tests/generic/705
+@@ -0,0 +1,89 @@
++#! /bin/bash
++# FS QA Test No. 705
++#
++# Test fallocate(ZERO_RANGE) on a block device, which should be able to
++# WRITE SAME (or equivalent) the range.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+		if (args->mp->m_thin_reserve) {
-+			sector_t	res;
-+			xfs_fsblock_t	fsbno = XFS_AGB_TO_FSB(args->mp,
-+							       args->agno,
-+							       args->agbno);
-+			if (args->wasdel)
-+				res = xfs_fsb_res(args->mp, args->len, false);
-+			else
-+				res = args->tp->t_blk_thin_res;
-+			error = xfs_thin_provision(args->mp, fsbno, args->len,
-+						   &res);
-+			WARN_ON(error);
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+			if (args->wasdel) {
-+				if (res)
-+					error = xfs_thin_unreserve(args->mp, res);
-+				WARN_ON(error);
-+			} else if (args->tp) {
-+				args->tp->t_blk_thin_res = res;
-+			}
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
 +
-+			error = 0;
-+		}
- 	}
- 
- 	XFS_STATS_INC(args->mp, xs_allocx);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 50a6ccc..d2d9c85 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -41,6 +41,7 @@
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- #include "xfs_sysfs.h"
-+#include "xfs_thin.h"
- 
- 
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
-@@ -929,6 +930,8 @@ xfs_mountfs(
- 		xfs_qm_mount_quotas(mp);
- 	}
- 
-+	xfs_thin_init(mp);
-+
- 	/*
- 	 * Now we are mounted, reserve a small amount of unused space for
- 	 * privileged transactions. This is needed so that transaction
-@@ -1147,7 +1150,7 @@ xfs_mod_ifree(
-  */
- #define XFS_FDBLOCKS_BATCH	1024
- int
--xfs_mod_fdblocks(
-+__xfs_mod_fdblocks(
- 	struct xfs_mount	*mp,
- 	int64_t			delta,
- 	uint32_t		flags)
-@@ -1156,13 +1159,27 @@ xfs_mod_fdblocks(
- 	long long		res_used;
- 	s32			batch;
- 	bool			rsvd = (flags & XFS_FDBLOCKS_RSVD);
-+	bool			blkres = (flags & XFS_BLK_RES);
-+	int			error;
-+	int64_t			res_delta = 0;
-+
-+	ASSERT(!(rsvd && !blkres && delta < 0));
- 
- 	if (delta > 0) {
- 		/*
--		 * If the reserve pool is depleted, put blocks back into it
--		 * first. Most of the time the pool is full.
-+		 * If the reserve pool is full (the typical case), return the
-+		 * blocks to the general fs pool. Otherwise, return what we can
-+		 * to the reserve pool first.
- 		 */
- 		if (likely(mp->m_resblks == mp->m_resblks_avail)) {
-+main_pool:
-+			if (mp->m_thin_reserve && blkres) {
-+				error = xfs_thin_unreserve(mp,
-+						xfs_fsb_res(mp, delta, false));
-+				if (error)
-+					return error;
-+			}
-+
- 			percpu_counter_add(&mp->m_fdblocks, delta);
- 			return 0;
- 		}
-@@ -1170,17 +1187,69 @@ xfs_mod_fdblocks(
- 		spin_lock(&mp->m_sb_lock);
- 		res_used = (long long)(mp->m_resblks - mp->m_resblks_avail);
- 
--		if (res_used > delta) {
--			mp->m_resblks_avail += delta;
-+		/*
-+		 * The reserve pool is not full. Blocks in the reserve pool must
-+		 * hold a bdev reservation which means we may need to re-reserve
-+		 * blocks depending on what the caller is giving us.
-+		 *
-+		 * If the blocks are already reserved (i.e., via a transaction
-+		 * reservation), simply update the reserve pool counter. If not,
-+		 * reserve as many blocks as we can, return those to the reserve
-+		 * pool, and then jump back above to return whatever is left
-+		 * back to the general filesystem pool.
-+		 */
-+		if (!blkres) {
-+			while (delta) {
-+				if (res_delta >= res_used)
-+					break;
-+
-+				spin_unlock(&mp->m_sb_lock);
-+
-+				/*
-+				 * XXX: This is racy/leaky. Somebody else could
-+				 * replenish m_resblks_avail once we've dropped
-+				 * the lock.
-+				 */
-+				error = xfs_thin_reserve(mp,
-+						xfs_fsb_res(mp, 1, false));
-+				if (error) {
-+					spin_lock(&mp->m_sb_lock);
-+					break;
-+				}
-+
-+				spin_lock(&mp->m_sb_lock);
-+
-+				res_delta++;
-+				delta--;
-+				res_used = (long long)(mp->m_resblks -
-+							mp->m_resblks_avail);
-+			}
- 		} else {
--			delta -= res_used;
--			mp->m_resblks_avail = mp->m_resblks;
--			percpu_counter_add(&mp->m_fdblocks, delta);
-+			res_delta = min(delta, res_used);
-+			delta -= res_delta;
- 		}
-+
-+		if (res_used > res_delta)
-+			mp->m_resblks_avail += res_delta;
-+		else
-+			mp->m_resblks_avail = mp->m_resblks;
- 		spin_unlock(&mp->m_sb_lock);
-+		if (delta)
-+			goto main_pool;
- 		return 0;
- 	}
- 
-+	/* res calls take positive value */
-+	if (mp->m_thin_reserve && blkres) {
-+		error = xfs_thin_reserve(mp, xfs_fsb_res(mp, -delta, false));
-+		if (error == -ENOSPC && rsvd) {
-+			spin_lock(&mp->m_sb_lock);
-+			goto fdblocks_rsvd;
-+		}
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * Taking blocks away, need to be more accurate the closer we
- 	 * are to zero.
-@@ -1203,14 +1272,17 @@ xfs_mod_fdblocks(
- 	}
- 
- 	/*
--	 * lock up the sb for dipping into reserves before releasing the space
--	 * that took us to ENOSPC.
-+	 * Release bdev reservation then lock up the sb for dipping into local
-+	 * reserves before releasing the space that took us to ENOSPC.
- 	 */
-+	if (mp->m_thin_reserve && blkres)
-+		error = xfs_thin_unreserve(mp, xfs_fsb_res(mp, -delta, false));
- 	spin_lock(&mp->m_sb_lock);
- 	percpu_counter_add(&mp->m_fdblocks, -delta);
- 	if (!rsvd)
- 		goto fdblocks_enospc;
- 
-+fdblocks_rsvd:
- 	lcounter = (long long)mp->m_resblks_avail + delta;
- 	if (lcounter >= 0) {
- 		mp->m_resblks_avail = lcounter;
-@@ -1227,6 +1299,17 @@ fdblocks_enospc:
- }
- 
- int
-+xfs_mod_fdblocks(
-+	struct xfs_mount	*mp,
-+	int64_t			delta,
-+	uint32_t		flags)
++_cleanup()
 +{
-+	/* unres is the common case */
-+	flags |= XFS_BLK_RES;
-+	return __xfs_mod_fdblocks(mp, delta, flags);
++    cd /
++    rm -rf $tmp.*
 +}
 +
-+int
- xfs_mod_frextents(
- 	struct xfs_mount	*mp,
- 	int64_t			delta)
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 8d54c56..958f815 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -354,6 +354,9 @@ extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
- extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
- 
- #define	XFS_FDBLOCKS_RSVD	(1 << 0)
-+#define XFS_BLK_RES		(1 << 1)
-+extern int	__xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
-+				   uint32_t flags);
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
- 				 uint32_t flags);
- extern int	xfs_mod_frextents(struct xfs_mount *mp, int64_t delta);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8aa9d9a..26e6288 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -31,6 +31,7 @@
- #include "xfs_log.h"
- #include "xfs_trace.h"
- #include "xfs_error.h"
-+#include "xfs_thin.h"
- 
- kmem_zone_t	*xfs_trans_zone;
- kmem_zone_t	*xfs_log_item_desc_zone;
-@@ -174,6 +175,7 @@ xfs_trans_reserve(
- {
- 	int			error = 0;
- 	int			flags = 0;
-+	struct xfs_mount	*mp = tp->t_mountp;
- 
- 	if (tp->t_flags & XFS_TRANS_RESERVE)
- 		flags |= XFS_FDBLOCKS_RSVD;
-@@ -187,13 +189,14 @@ xfs_trans_reserve(
- 	 * fail if the count would go below zero.
- 	 */
- 	if (blocks > 0) {
--		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks),
--					 flags);
-+		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), flags);
- 		if (error != 0) {
- 			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
- 			return -ENOSPC;
- 		}
- 		tp->t_blk_res += blocks;
-+		if (mp->m_thin_res)
-+			tp->t_blk_thin_res += xfs_fsb_res(mp, blocks, false);
- 	}
- 
- 	/*
-@@ -265,6 +268,8 @@ undo_blocks:
- 	if (blocks > 0) {
- 		xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), flags);
- 		tp->t_blk_res = 0;
-+		if (tp->t_blk_thin_res)
-+			tp->t_blk_thin_res = 0;
- 	}
- 
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-@@ -551,6 +556,7 @@ xfs_trans_unreserve_and_mod_sb(
- 	int64_t			rtxdelta = 0;
- 	int64_t			idelta = 0;
- 	int64_t			ifreedelta = 0;
-+	int64_t			resdelta = 0;
- 	int			error;
- 	int			flags = 0;
- 
-@@ -558,8 +564,41 @@ xfs_trans_unreserve_and_mod_sb(
- 		flags |= XFS_FDBLOCKS_RSVD;
- 
- 	/* calculate deltas */
--	if (tp->t_blk_res > 0)
--		blkdelta = tp->t_blk_res;
-+	if (tp->t_blk_res > 0) {
-+		/*
-+		 * The transaction may have some number of unused fs blocks and
-+		 * unused bdev reservation. It might also have non-reserved free
-+		 * blocks (i.e., freed extents) that need to make it back into
-+		 * the fs general pool. We need to distinguish between these
-+		 * cases when unwinding the unused resources.
-+		 *
-+		 * We do this as follows:
-+		 *
-+		 * - resdelta - For every unused fs block and bdev reservation
-+		 *   combination, account one fs+bdev reserved block that can be
-+		 *   returned to the fs. These are blocks that can go directly
-+		 *   back into the XFS reserve pool, if necessary, because they
-+		 *   are already reserved. If the reserve pool is full, they are
-+		 *   unreserved and returned to the general pool.
-+		 * - blkdelta - Freed filesystem blocks without any bdev
-+		 *   reservation. These can get into the XFS reserve pool as
-+		 *   well, but they are reserved from the bdev first. If
-+		 *   reservation fails, they are returned to the general pool.
-+		 * - t_blk_thin_res - Unused bdev reservation from the
-+		 *   transaction. Extra bdev reservation remains when newly
-+		 *   allocated fs blocks might have already been provisioned in
-+		 *   the bdev (due to larger bdev blocks). This reservation is
-+		 *   returned directly to the bdev.
-+		 */
-+		blkdelta = tp->t_blk_res - tp->t_blk_res_used;
-+		while (blkdelta && tp->t_blk_thin_res) {
-+			tp->t_blk_thin_res -= xfs_fsb_res(mp, 1, false);
-+			blkdelta--;
-+			resdelta++;
-+		}
-+		blkdelta = tp->t_blk_res - resdelta;
-+	}
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
 +
- 	if ((tp->t_fdblocks_delta != 0) &&
- 	    (xfs_sb_version_haslazysbcount(&mp->m_sb) ||
- 	     (tp->t_flags & XFS_TRANS_SB_DIRTY)))
-@@ -578,11 +617,34 @@ xfs_trans_unreserve_and_mod_sb(
- 	}
- 
- 	/* apply the per-cpu counters */
--	if (blkdelta) {
--		error = xfs_mod_fdblocks(mp, blkdelta, flags);
-+	if (resdelta) {
-+		error = __xfs_mod_fdblocks(mp, resdelta, flags | XFS_BLK_RES);
- 		if (error)
- 			goto out;
- 	}
-+	/*
-+	 * Return any bdev reservation that hasn't been returned in the form of
-+	 * reserved blocks above. Do this before returning unreserved blocks to
-+	 * improve the chance that bdev reservation is available if the XFS
-+	 * reserve pool must be replenished.
-+	 *
-+	 * XXX: This logic is kind of wonky now that the bdev res. is tracked
-+	 * separately. If we have a bunch of freed blocks, can't we just return
-+	 * however many we have reservation for as 'reserved blocks?' Also need
-+	 * to fix up the code above to kill the while loop.
-+	 */
-+	if (tp->t_blk_thin_res) {
-+		error = xfs_thin_unreserve(mp, tp->t_blk_thin_res);
-+		if (error)
-+			goto out_undo_resblocks;
-+		tp->t_blk_thin_res = 0;
-+	}
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "fzero"
 +
-+	if (blkdelta) {
-+		error = __xfs_mod_fdblocks(mp, blkdelta, flags);
-+		if (error)
-+			goto out_undo_resblocks;
-+	}
- 
- 	if (idelta) {
- 		error = xfs_mod_icount(mp, idelta);
-@@ -688,6 +750,9 @@ out_undo_icount:
- out_undo_fdblocks:
- 	if (blkdelta)
- 		xfs_mod_fdblocks(mp, -blkdelta, flags);
-+out_undo_resblocks:
-+	if (resdelta)
-+		xfs_mod_fdblocks(mp, -resdelta, flags);
- out:
- 	ASSERT(error == 0);
- 	return;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index e7c49cf..18685d9 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -95,6 +95,7 @@ typedef struct xfs_trans {
- 	unsigned int		t_log_count;	/* count for perm log res */
- 	unsigned int		t_blk_res;	/* # of blocks resvd */
- 	unsigned int		t_blk_res_used;	/* # of resvd blocks used */
-+	unsigned int		t_blk_thin_res;
- 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
- 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
--- 
-2.4.11
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++
++echo "Zero range"
++$XFS_IO_PROG -c "fzero -k 512k 1m" $dev
++
++echo "Zero range without keep_size"
++$XFS_IO_PROG -c "fzero 384k 64k" $dev
++
++echo "Zero range past EOD"
++$XFS_IO_PROG -c "fzero -k 3m 4m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Zero range to MAX_LFS_FILESIZE"
++# zod = MAX_LFS_FILESIZE
++case "$(getconf LONG_BIT)" in
++"32")
++	zod=$(( ($(getconf PAGE_SIZE) << ($(getconf LONG_BIT) - 1) ) - 1))
++	;;
++"64")
++	zod=9223372036854775807
++	;;
++*)
++	_fail "sizeof(long) == $(getconf LONG_BIT)?"
++	;;
++esac
++$XFS_IO_PROG -c "fzero -k 0 $zod" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/705.out b/tests/generic/705.out
+new file mode 100644
+index 0000000..86d0317
+--- /dev/null
++++ b/tests/generic/705.out
+@@ -0,0 +1,11 @@
++QA output created by 705
++Create and format
++Zero range
++Zero range without keep_size
++Zero range past EOD
++Check contents
++f0cb9070c098aa347f664bead3a219d9  SCSI_DEBUG_DEV
++Zero range to MAX_LFS_FILESIZE
++Check contents
++b5cfa9d6c8febd618f91ac2843d50a1c  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/706 b/tests/generic/706
+new file mode 100755
+index 0000000..dd502e2
+--- /dev/null
++++ b/tests/generic/706
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FS QA Test No. 706
++#
++# Test fallocate(PUNCH_HOLE) on a block device, which should be able to
++# zero-TRIM (or equivalent) the range.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "fpunch"
++
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++
++echo "Zero punch"
++$XFS_IO_PROG -c "fpunch 512k 1m" $dev
++
++echo "Punch range past EOD"
++$XFS_IO_PROG -c "fpunch 3m 4m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Punch to MAX_LFS_FILESIZE"
++# zod = MAX_LFS_FILESIZE
++case "$(getconf LONG_BIT)" in
++"32")
++	zod=$(( ($(getconf PAGE_SIZE) << ($(getconf LONG_BIT) - 1) ) - 1))
++	;;
++"64")
++	zod=9223372036854775807
++	;;
++*)
++	_fail "sizeof(long) == $(getconf LONG_BIT)?"
++	;;
++esac
++$XFS_IO_PROG -c "fpunch 0 $zod" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/706.out b/tests/generic/706.out
+new file mode 100644
+index 0000000..de8de0c
+--- /dev/null
++++ b/tests/generic/706.out
+@@ -0,0 +1,10 @@
++QA output created by 706
++Create and format
++Zero punch
++Punch range past EOD
++Check contents
++8c6a3fd51601141b56eaebbab3746156  SCSI_DEBUG_DEV
++Punch to MAX_LFS_FILESIZE
++Check contents
++b5cfa9d6c8febd618f91ac2843d50a1c  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/707 b/tests/generic/707
+new file mode 100755
+index 0000000..229b152
+--- /dev/null
++++ b/tests/generic/707
+@@ -0,0 +1,130 @@
++#! /bin/bash
++# FS QA Test No. 707
++#
++# Test the unsupported fallocate flags on a block device.  No collapse
++# or insert range, no regular fallocate, no forgetting keep-space on
++# zero range, no punching past EOD, no requests that aren't aligned
++# with the logicalsector size, and make sure the fallbacks work for
++# devices that don't support write_same or discard.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/scsi_debug
++
++# real QA test starts here
++_supported_os Linux
++_require_scsi_debug
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "fzero"
++_require_xfs_io_command "fpunch"
++
++
++echo "Create and format"
++dev=$(_get_scsi_debug_dev 4096 4096 0 4 "lbpws=1 lbpws10=1")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++$XFS_IO_PROG -c "fsync" $dev
++
++echo "Regular fallocate"
++$XFS_IO_PROG -c "falloc 64k 64k" $dev
++
++echo "Insert range"
++$XFS_IO_PROG -c "finsert 128k 64k" $dev
++
++echo "Collapse range"
++$XFS_IO_PROG -c "fcollapse 256k 64k" $dev
++
++echo "Unaligned zero range"
++$XFS_IO_PROG -c "fzero -k 512 512" $dev
++
++echo "Unaligned punch"
++$XFS_IO_PROG -c "fpunch 512 512" $dev
++
++echo "Zero range past MAX_LFS_FILESIZE keep size"
++# zod = MAX_LFS_FILESIZE
++case "$(getconf LONG_BIT)" in
++"32")
++	zod=$(( ($(getconf PAGE_SIZE) << ($(getconf LONG_BIT) - 1) ) - 1))
++	;;
++"64")
++	zod=9223372036854775807
++	;;
++*)
++	_fail "sizeof(long) == $(getconf LONG_BIT)?"
++	;;
++esac
++$XFS_IO_PROG -c "fzero -k 512k $zod" $dev
++
++echo "Zero range past MAX_LFS_FILESIZE"
++$XFS_IO_PROG -c "fzero 512k $zod" $dev
++
++echo "Zero range to MAX_LFS_FILESIZE fail w/o keepsize"
++$XFS_IO_PROG -c "fzero 0 $zod" $dev
++
++echo "Zero range starts past EOD"
++$XFS_IO_PROG -c "fzero -k 900m 1m" $dev
++
++echo "Punch starts past EOD"
++$XFS_IO_PROG -c "fpunch 900m 1m" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++echo "Create w/o unmap or writesame and format"
++dev=$(_get_scsi_debug_dev 512 512 0 4 "lbpws=0 lbpws10=0 lbpu=0 write_same_length=0 unmap_max_blocks=0")
++_pwrite_byte 0x62 0 4m $dev >> $seqres.full
++$XFS_IO_PROG -c "fsync" $dev
++
++echo "Zero punch, no fallback available"
++$XFS_IO_PROG -c "fpunch 512k 512k" $dev
++
++echo "Zero range, write fallback"
++$XFS_IO_PROG -c "fzero -k 1536k 512k" $dev
++
++echo "Check contents"
++md5sum $dev | sed -e "s|$dev|SCSI_DEBUG_DEV|g"
++
++echo "Destroy device"
++_put_scsi_debug_dev
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/707.out b/tests/generic/707.out
+new file mode 100644
+index 0000000..a520221
+--- /dev/null
++++ b/tests/generic/707.out
+@@ -0,0 +1,32 @@
++QA output created by 707
++Create and format
++Regular fallocate
++fallocate: Operation not supported
++Insert range
++fallocate: Operation not supported
++Collapse range
++fallocate: Operation not supported
++Unaligned zero range
++fallocate: Invalid argument
++Unaligned punch
++fallocate: Invalid argument
++Zero range past MAX_LFS_FILESIZE keep size
++fallocate: File too large
++Zero range past MAX_LFS_FILESIZE
++fallocate: File too large
++Zero range to MAX_LFS_FILESIZE fail w/o keepsize
++fallocate: Invalid argument
++Zero range starts past EOD
++fallocate: Invalid argument
++Punch starts past EOD
++fallocate: Invalid argument
++Check contents
++b83f9394092e15bdcda585cd8e776dc6  SCSI_DEBUG_DEV
++Destroy device
++Create w/o unmap or writesame and format
++Zero punch, no fallback available
++fallocate: Operation not supported
++Zero range, write fallback
++Check contents
++0fc6bc93cd0cd97e3cde5ea39ea1185d  SCSI_DEBUG_DEV
++Destroy device
+diff --git a/tests/generic/group b/tests/generic/group
+index ef1a423..cc14c80 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -345,3 +345,6 @@
+ 340 auto
+ 341 auto quick metadata
+ 342 auto quick metadata
++705 blockdev quick rw
++706 blockdev quick rw
++707 blockdev quick rw
 
 _______________________________________________
 xfs mailing list
