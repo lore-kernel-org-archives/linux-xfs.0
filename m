@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8CC037CA0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:05:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id ACDAA7CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 01:49:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FE118F8037
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:05:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0LDzpe8YOqSI5g7d (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:05:03 -0700 (PDT)
-Date: Tue, 12 Apr 2016 16:04:59 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RFC PATCH] block: wire blkdev_fallocate() to
-	block_device_operations' reserve_space
-Message-ID: <20160412200459.GA10730@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 798528F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:49:05 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	D4kfsfnoyiK85i8m for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 23:49:02 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1aqEbk-0003yb-MW
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 16:49:00 +1000
+Date: Wed, 13 Apr 2016 16:49:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/11] xfs: mark reclaimed inodes invalid earlier
+Message-ID: <20160413064900.GP567@dastard>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+	<1460525492-1170-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1460525492-1170-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,159 +33,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 12 2016 at 12:42P -0400,
-Brian Foster <bfoster@redhat.com> wrote:
-
-> Hi all,
+On Wed, Apr 13, 2016 at 03:31:28PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This is v2 of the XFS and block device reservation experiment. The
-> significant changes in v2 are that the bdev interface has been condensed
-> to a single callback function, the XFS transaction reservation
-> management has been reworked to make transactions responsible for
-> tracking and releasing excess reservation (for non-delalloc cases) and a
-> workaround for the fallocate over-reservation issue is included. Beyond
-> that, this version adds a bunch of miscellaneous cleanups and fixes some
-> of the nastier locking/leak issues present in the first rfc.
+> The last thing we do before using call_rcu() on an xfs_inode to be
+> freed is mark it as invalid. This means there is a window between
+> when we know for certain that the inode is going to be freed and
+> when we do actually mark it as "freed".
 > 
-> Patches 1-2 refactor some XFS reserve pool and block accounting code in
-> preparation for subsequent patches. Patches 3-5 add block/device-mapper
-> reservation support. Patches 6-10 add the core reservation
-> infrastructure and management bits to XFS. See the link to the original
-> rfc below for instructions and further details around the purpose of
-> this series.
+> This is important in the context of RCU lookups - we can look up the
+> inode, find that it is valid, and then use it as such not realising
+> that it is in the final stages of being freed.
 > 
-> Finally, note that this is still highly experimental/theoretical and
-> should not be used on production systems. Thoughts, reviews, flames
-> appreciated.
+> As such, mark the inode as being invalid the moment we know it is
+> going to be reclaimed. This can be done while we still hold the
+> XFS_ILOCK_EXCL and the flush lock in xfs_inode_reclaim, meaning that
+> it occurs well before we remove it from the radix tree, and that
+> the i_flags_lock, the XFS_ILOCK and the inode flush lock all act as
+> synchronisation points for detecting that an inode is about to go
+> away.
+> 
+> For defensive purposes, this allows us to add a further check to
+> xfs_iflush_cluster to ensure we skip inodes that are being freed
+> after we grab the XFS_ILOCK_SHARED and the flush lock - we know that
+> if the inode number if valid while we have these locks held we know
+> that it has not progressed through reclaim to the point where it is
+> clean and is about to be freed.
+> 
+> [bfoster: fixed __xfs_inode_clear_reclaim() using ip->i_ino after it
+> 	  had already been zeroed.]
 
-Thanks for carrying on with this work Brian.
+And, of course, in reordering this I dropped this fix because it was
+handled by the reworking of tagging code to use pag->pag_agno.
 
-I've started to review your patchset and Darrick's fallocate patchset.
-I've pushed a branch to linux-dm.git that combines the 2, see:
-https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/log/?h=dm-fallocate
+So I've brought that small change forward to this patch (using
+pag->pag_agno instead of deriving it from the ip->i_ino in
+__xfs_inode_clear_reclaim()).
 
-and then added this RFC patch, at the end, which relies on both of your
-patchsets -- you'll see blkdev_ensure_space_exists() has a FIXME which
-implies it isn't much more than simply stubbed out at this point
-(completely untested):
+That means I have to rebase the later cleanup patch too, but the end
+result of the patch set is identical...
 
-From: Mike Snitzer <snitzer@redhat.com>
-Date: Tue, 12 Apr 2016 15:54:31 -0400
-Subject: [RFC PATCH] block: wire blkdev_fallocate() to block_device_operations' reserve_space
+Cheers,
 
-This effectively exposes the primitive for "ensure space exists".  It
-relies on block_device_operations' reserve_space method.
-
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- block/blk-lib.c        | 26 ++++++++++++++++++++++++++
- fs/block_dev.c         | 20 +++++++++++---------
- include/linux/blkdev.h |  2 ++
- 3 files changed, 39 insertions(+), 9 deletions(-)
-
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 9dca6bb..5042a84 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -314,3 +314,29 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	return __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask);
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
-+
-+/**
-+ * blkdev_ensure_space_exists - preallocate a block range
-+ * @bdev:	blockdev to preallocate space for
-+ * @sector:	start sector
-+ * @nr_sects:	number of sectors to preallocate
-+ * @gfp_mask:	memory allocation flags (for bio_alloc)
-+ * @flags:	FALLOC_FL_* to control behaviour
-+ *
-+ * Description:
-+ *    Ensure space exists, or is preallocated, for the sectors in question.
-+ */
-+int blkdev_ensure_space_exists(struct block_device *bdev, sector_t sector,
-+		sector_t nr_sects, unsigned long flags)
-+{
-+	sector_t res;
-+	const struct block_device_operations *ops = bdev->bd_disk->fops;
-+
-+	if (!ops->reserve_space)
-+		return -EOPNOTSUPP;
-+
-+	// FIXME: check with Brian Foster on whether it makes sense to
-+	// use BDEV_RES_GET/BDEV_RES_MOD instead of BDEV_RES_PROVISION?
-+	return ops->reserve_space(bdev, BDEV_RES_PROVISION, sector, nr_sects, &res);
-+}
-+EXPORT_SYMBOL(blkdev_ensure_space_exists);
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 5a2c3ab..b34c07b 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1801,17 +1801,13 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	struct address_space *mapping;
- 	loff_t end = start + len - 1;
--	loff_t bs_mask, isize;
-+	loff_t isize;
- 	int error;
- 
- 	/* We only support zero range and punch hole. */
- 	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
- 		return -EOPNOTSUPP;
- 
--	/* We haven't a primitive for "ensure space exists" right now. */
--	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
--		return -EOPNOTSUPP;
--
- 	/* Only punch if the device can do zeroing discard. */
- 	if ((mode & FALLOC_FL_PUNCH_HOLE) &&
- 	    (!blk_queue_discard(q) || !q->limits.discard_zeroes_data))
-@@ -1829,9 +1825,12 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
- 			return -EINVAL;
- 	}
- 
--	/* Don't allow IO that isn't aligned to logical block size */
--	bs_mask = bdev_logical_block_size(bdev) - 1;
--	if ((start | len) & bs_mask)
-+	/*
-+	 * Don't allow IO that isn't aligned to minimum IO size (io_min)
-+	 * - for normal device's io_min is usually logical block size
-+	 * - but for more exotic devices (e.g. DM thinp) it may be larger
-+	 */
-+	if ((start | len) % bdev_io_min(bdev))
- 		return -EINVAL;
- 
- 	/* Invalidate the page cache, including dirty pages. */
-@@ -1839,7 +1838,10 @@ long blkdev_fallocate(struct file *file, int mode, loff_t start, loff_t len)
- 	truncate_inode_pages_range(mapping, start, end);
- 
- 	error = -EINVAL;
--	if (mode & FALLOC_FL_ZERO_RANGE)
-+	if (!(mode & ~FALLOC_FL_KEEP_SIZE))
-+		error = blkdev_ensure_space_exists(bdev, start >> 9, len >> 9,
-+						   mode);
-+	else if (mode & FALLOC_FL_ZERO_RANGE)
- 		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
- 					    GFP_KERNEL, false);
- 	else if (mode & FALLOC_FL_PUNCH_HOLE)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6c6ea96..4147af2 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1132,6 +1132,8 @@ extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, bool discard);
-+extern int blkdev_ensure_space_exists(struct block_device *bdev, sector_t sector,
-+		sector_t nr_sects, unsigned long flags);
- static inline int sb_issue_discard(struct super_block *sb, sector_t block,
- 		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
- {
+Dave.
 -- 
-2.6.4 (Apple Git-63)
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
