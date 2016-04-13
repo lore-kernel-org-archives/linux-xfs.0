@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B58517CA4
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 16:38:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 87BFD8F8033
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:38:06 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0HnMLAvR6j6r8VLJ for <xfs@oss.sgi.com>;
-	Wed, 13 Apr 2016 14:38:00 -0700 (PDT)
-Date: Thu, 14 Apr 2016 07:37:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
-Message-ID: <20160413213758.GR567@dastard>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
-	<20160408000910.GB21804@dastard>
-	<CACj3i73f_v=70pGrrLkRpHB-6UwiOOM2F9Sbu2aZMaJGmBLeiQ@mail.gmail.com>
-	<20160408230843.GE567@dastard>
-	<CACj3i71Grs8deYRtTaGmTmgBTrge-VKQKpn1Azj_y8=KQHWbgg@mail.gmail.com>
-	<570E7129.3080900@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <570E7129.3080900@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 7352E7D54
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3110C8F8035
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id LKxtnn3GRBmwGpMK (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:47 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 31/42] block: convert merge/insert code to check for REQ_OPs.
+Date: Wed, 13 Apr 2016 14:36:17 -0500
+Message-Id: <1460576188-5751-32-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,35 +23,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-T24gV2VkLCBBcHIgMTMsIDIwMTYgYXQgMTE6MTc6NDVBTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IE9uIDQvMTMvMTYgMTA6MDggQU0sIEphbiBUdWxhayB3cm90ZToKPiAKPiAuLi4KPiAK
-PiA+IEFsbCByaWdodOKAiywgSSB3aWxsIGtlZXAgdGhlIE9fVFJVTkMgdGhlcmUuIEhvd2V2ZXIs
-IHNob3VsZCBpdAo+ID4gdHJ1bmNhdGUgdGhlIGZpbGUgZXZlcnkgdGltZSwgb3Igc2hvdWxkIHdl
-IG9mZmVyIGEgd2F5IGhvdyB0byBhdm9pZAo+ID4gdGhlIGZpbGUgdHJ1bmNhdGluZz8gVW50aWwg
-bm93LCBta2ZzIGJlaGF2ZWQgZGlmZmVyZW50bHkgYmFzZWQgb24KPiA+IHdoZXRoZXIgLWQgZmls
-ZSB3YXMgZ2l2ZW4sIG9yIG5vdC4gWW91ciBleHBsYW5hdGlvbiBzdWdnZXN0cyB0aGF0IHdlCj4g
-PiBzaG91bGQgdHJ1bmNhdGUgZXZlcnkgdGltZSwgcmlnaHQ/Cj4gCj4gVGhlcmUgYXJlIHByb2Jh
-Ymx5IHZhbGlkIHJlYXNvbnMgdG8ga2VlcCBzaXplIGFzIHdlbGwgYXMgdG8gdHJ1bmNhdGU7Cj4g
-aXQncyBub3QgaW1tZWRpYXRlbHkgY2xlYXIgdG8gbWUgaG93IHdlIHNob3VsZCBoYW5kbGUgaXQu
-CgpUaGF0J3MgZWFzeTogZG9uJ3Qgc3BlY2lmeSAtZGZpbGUgb3IgLWRzaXplLCBhbmQgaW5zdGVh
-ZCBsZXQgbWtmcwpkZXRlY3QgdGhhdCBpdCBpcyBmaWxlIGF1dG9tYXRpY2FsbHkuIEJlY2F1c2Ug
-aXQncyBub3QgZ2l2ZW4gYSBzaXplLApvciB0aGF0IGl0J3Mgc3VwcG9zZWQgdG8gYmUgYSBmaWxl
-LCBpdCBzaG91bGQgbm90IGF0dGVtcHQgdG8gY2hhbmdlCnRoZSAiZGV2aWNlIiBpbiBhbnkgd2F5
-LgoKV2hlbiBibG9jayBkZXZpY2VzIGdyb3cgZmFsbG9jYXRlIHN1cHBvcnQsIHdlIGNhbiB1bmlm
-eSB0aGUgZGlzY2FyZApiZWhhdmlvdXIgdG8gYmUgYSBob2xlIHB1bmNoLCBhbmQgdGhlbiBpdCB3
-aWxsIHdvcmsgaWRlbnRpY2FsbHkgb24KZGV2aWNlcyBhbmQgZmlsZXMgdHJlYXRlZCB0aGlzIHdh
-eS4KCj4gSG9uZXN0bHksIGF0IHRoaXMgcG9pbnQsIGluIHRoZSBpbnRlcmVzdCBvZiBnZXR0aW5n
-IHRoZSBvdGhlciBmaXhlcyBpbiwKPiBJIHRoaW5rIEkgbWlnaHQgcmF0aGVyIHNlZSB0aGUgdHJ1
-bmNhdGluZyBiZWhhdmlvciB1bmNoYW5nZWQgZnJvbSB3aGF0Cj4gd2UgaGF2ZSB0b2RheTsgd2Ug
-Y2FuIHRhY2tsZSB0aGF0IGFzIGEgc2VwYXJhdGUgcHJvYmxlbSBhdCBhIGxhdGVyIGRhdGUuCgpZ
-dXAsIGRvbid0IGNoYW5nZSBpdCBpbiB0aGlzIHBhdGNoIHNlcmllcy4KCkNoZWVycywKCkRhdmUu
-Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Mike Christie <mchristi@redhat.com>
+
+This patch converts the block layer merging code to use separate variables
+for the operation and flags, and to check request->op for the REQ_OP.
+
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-core.c       |  2 +-
+ block/blk-merge.c      | 10 ++++++----
+ include/linux/blkdev.h | 20 ++++++++++----------
+ 3 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 3ec1310..5632cd1 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2175,7 +2175,7 @@ EXPORT_SYMBOL(submit_bio);
+ static int blk_cloned_rq_check_limits(struct request_queue *q,
+ 				      struct request *rq)
+ {
+-	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
++	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->op)) {
+ 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+ 		return -EIO;
+ 	}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2613531..c02371f 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -649,7 +649,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	if (!rq_mergeable(req) || !rq_mergeable(next))
+ 		return 0;
+ 
+-	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
++	if (!blk_check_merge_flags(req->cmd_flags, req->op, next->cmd_flags,
++				   next->op))
+ 		return 0;
+ 
+ 	/*
+@@ -663,7 +664,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	    || req_no_special_merge(next))
+ 		return 0;
+ 
+-	if (req->cmd_flags & REQ_WRITE_SAME &&
++	if (req->op == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(req->bio, next->bio))
+ 		return 0;
+ 
+@@ -751,7 +752,8 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+ 		return false;
+ 
+-	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
++	if (!blk_check_merge_flags(rq->cmd_flags, rq->op, bio->bi_rw,
++				   bio->bi_op))
+ 		return false;
+ 
+ 	/* different data direction or already started, don't merge */
+@@ -767,7 +769,7 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 		return false;
+ 
+ 	/* must be using the same buffer */
+-	if (rq->cmd_flags & REQ_WRITE_SAME &&
++	if (rq->op == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(rq->bio, bio))
+ 		return false;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e2b2881..39df8ef 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -660,16 +660,16 @@ static inline bool rq_mergeable(struct request *rq)
+ 	return true;
+ }
+ 
+-static inline bool blk_check_merge_flags(unsigned int flags1,
+-					 unsigned int flags2)
++static inline bool blk_check_merge_flags(unsigned int flags1, unsigned int op1,
++					 unsigned int flags2, unsigned int op2)
+ {
+-	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
++	if ((op1 == REQ_OP_DISCARD) != (op2 == REQ_OP_DISCARD))
+ 		return false;
+ 
+ 	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
+ 		return false;
+ 
+-	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
++	if ((op1 == REQ_OP_WRITE_SAME) != (op2 == REQ_OP_WRITE_SAME))
+ 		return false;
+ 
+ 	return true;
+@@ -870,12 +870,12 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ }
+ 
+ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+-						     unsigned int cmd_flags)
++						     int op)
+ {
+-	if (unlikely(cmd_flags & REQ_DISCARD))
++	if (unlikely(op == REQ_OP_DISCARD))
+ 		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+ 
+-	if (unlikely(cmd_flags & REQ_WRITE_SAME))
++	if (unlikely(op == REQ_OP_WRITE_SAME))
+ 		return q->limits.max_write_same_sectors;
+ 
+ 	return q->limits.max_sectors;
+@@ -902,11 +902,11 @@ static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+ 	if (unlikely(rq->cmd_type != REQ_TYPE_FS))
+ 		return q->limits.max_hw_sectors;
+ 
+-	if (!q->limits.chunk_sectors || (rq->cmd_flags & REQ_DISCARD))
+-		return blk_queue_get_max_sectors(q, rq->cmd_flags);
++	if (!q->limits.chunk_sectors || (rq->op == REQ_OP_DISCARD))
++		return blk_queue_get_max_sectors(q, rq->op);
+ 
+ 	return min(blk_max_size_offset(q, blk_rq_pos(rq)),
+-			blk_queue_get_max_sectors(q, rq->cmd_flags));
++			blk_queue_get_max_sectors(q, rq->op));
+ }
+ 
+ static inline unsigned int blk_rq_count_bios(struct request *rq)
+-- 
+2.7.2
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
