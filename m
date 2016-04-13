@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 605117CA4
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 16C59304066
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:30 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id MZM3P0gpR2rWH8Ax (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:27 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/8] fs: move struct iomap from exportfs.h to a separate header
-Date: Tue, 12 Apr 2016 13:52:55 -0700
-Message-Id: <1460494382-14547-2-git-send-email-hch@lst.de>
-In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
-References: <1460494382-14547-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0AA537CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:26:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD2AA8F8033
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:26:06 -0700 (PDT)
+Received: from reklamatabg.eu (reklamatabg.eu [37.157.191.235]) by
+	cuda.sgi.com with ESMTP id XlCM2CVBHr4gDTm2 for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:26:03 -0700 (PDT)
+Received: from 94.156.237.35 by reklamatabg.eu (MDaemon PRO v9.6.1)
+	with ESMTP id md50012668207.msg
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:28:36 +0300
+Subject: =?UTF-8?B?0JDQutGC0YPQsNC70L3QviEg0KPQv9GA0LDQstC70LXQvdC40LUg0L3QsCDQv9GA0L7QtdC60YLQuA==?=
+Message-ID: <0b45377a7989c46f3cbc6be3ca9ca10b@94.156.237.35>
+Date: Wed, 13 Apr 2016 12:34:43 +0300
+From: "=?UTF-8?B?0J/RgNC+0LTQttC10LrRgtCw?=" <prodjecta@reklamatabg.eu>
+MIME-Version: 1.0
+Reply-To: obucheniaprojecta@mail.bg
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,125 +25,177 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0556380050595994455=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/nfsd/blocklayout.c    |  1 +
- fs/nfsd/blocklayoutxdr.c |  1 +
- fs/xfs/xfs_pnfs.c        |  1 +
- include/linux/exportfs.h | 16 +---------------
- include/linux/iomap.h    | 21 +++++++++++++++++++++
- 5 files changed, 25 insertions(+), 15 deletions(-)
- create mode 100644 include/linux/iomap.h
+--===============0556380050595994455==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index e55b524..4df16ae 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -2,6 +2,7 @@
-  * Copyright (c) 2014-2016 Christoph Hellwig.
-  */
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/genhd.h>
- #include <linux/slab.h>
- #include <linux/pr.h>
-diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-index 6c3b316..4ebaaf4 100644
---- a/fs/nfsd/blocklayoutxdr.c
-+++ b/fs/nfsd/blocklayoutxdr.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/sunrpc/svc.h>
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/nfs4.h>
- 
- #include "nfsd.h"
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 3332bae..0a56787 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2014 Christoph Hellwig.
-  */
-+#include <linux/iomap.h>
- #include "xfs.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index d841450..b03c062 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -6,6 +6,7 @@
- struct dentry;
- struct iattr;
- struct inode;
-+struct iomap;
- struct super_block;
- struct vfsmount;
- 
-@@ -187,21 +188,6 @@ struct fid {
-  *    get_name is not (which is possibly inconsistent)
-  */
- 
--/* types of block ranges for multipage write mappings. */
--#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
--#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
--
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
--
--struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
--};
--
- struct export_operations {
- 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
- 			struct inode *parent);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-new file mode 100644
-index 0000000..1b22197
---- /dev/null
-+++ b/include/linux/iomap.h
-@@ -0,0 +1,21 @@
-+#ifndef LINUX_IOMAP_H
-+#define LINUX_IOMAP_H 1
-+
-+#include <linux/types.h>
-+
-+/* types of block ranges for multipage write mappings. */
-+#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
-+#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+
-+#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+
-+struct iomap {
-+	sector_t	blkno;	/* first sector of mapping */
-+	loff_t		offset;	/* file offset of mapping, bytes */
-+	u64		length;	/* length of mapping, bytes */
-+	int		type;	/* type of mapping */
-+};
-+
-+#endif /* LINUX_IOMAP_H */
--- 
-2.1.4
+<html>
+<head>
+<meta NAME="GENERATOR" Content="Microsoft DHTML Editing Control">
+<title></title>
+</head>
+<body>
+<table cellspacing="2" cellpadding="2" border="0" style="width: 800px;">
+<tbody>
+<tr>
+<td valign="top">
+<p style="text-align: justify;"><span style="font-family: verdana, geneva;
+font-size: medium;">Здравейте,<br />&nbsp; <br />Станете
+експерти в Управлението на проекти с
+<strong>най-успешните обучения</strong><strong>
+</strong><strong><span style="font-weight: normal;">и се
+възползвайте от
+</span></strong><strong>безвъзмездно финансиране.
+<br />&nbsp; <br /> </strong><strong>Регистирайте се сега
+с <span style="background: yellow;">отстъпка до
+40%</span></strong>:</span></p>
+<p style="text-align: justify; margin-left: 1cm;"><span style="font-family:
+verdana, geneva; font-size: medium;">&nbsp; <br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=500&F=H"
+target="_blank"><font color="#0000ff">"Управление на
+проекти - Подготовка за успех",
+18-20.05.2016</font></a>&nbsp;- <strong>най-успешното
+</strong>обучение по Управление на проекти в
+България, проведено до сега повече<strong>
+от 120 пъти!<br />&nbsp; <br /> </strong><strong>- </strong><a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=499&F=H"
+target="_blank"><font color="#0000ff">"Разработване на
+проекти по програмите на&nbsp;ЕС",
+12-14.05.2016</font></a><strong>&nbsp;</strong>-
+<strong>най-пълното и най-подробно</strong>
+обучение по темата, с представяне на
+<strong>реални проекти<br />&nbsp; <br /> </strong>- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=494&F=H"
+target="_blank"><font color="#0000ff">Сертифициране по
+управление на проекти PRINCE2&reg; Foundation,
+20-22.06.2016</font></a>&nbsp;- близо <strong>100%</strong> успех
+на изпита<br />&nbsp; <br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=495&F=H"
+target="_blank"><font color="#0000ff">Сертифициране
+PRINCE2&reg; Practitioner</font></a> с изпит на 22.06.2016&nbsp;<br
+/>&nbsp; <br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=496&F=H"
+target="_blank"><font color="#0000ff">Подготовка за
+сертификати Project Management Professional
+(PMP&reg;)/CAPM&reg;, 15-18.06.2016</font></a> -
+<strong>най-добрият</strong> подготвителен курс
+за PMP&reg;<br />&nbsp; <br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=497&F=H"
+target="_blank"><font color="#0000ff">Сертифициране Agile
+Project Management (AgilePM&reg;), 29.06-01.07.2016</font></a> -
+<strong>100%</strong> успех на изпита до момента<br
+/>&nbsp; <br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=501&F=H"
+target="_blank"><font color="#0000ff">Подготовка за
+сертификати на Международната асоциация
+по управление на проекти (IPMA)</font></a><br />&nbsp;
+<br />- <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=498&F=H"
+target="_blank"><font color="#0000ff">"Зелен пояс по
+Изготвяне и изпълнение на проекти по
+програмите на ЕС (2014-2020)"</font></a> -
+единствената сертификационна програма
+по темата</span><o:p></o:p></p>
+<p class="MsoNormal" style="margin: 18pt 0cm 0pt;"><span
+style="font-family: verdana, geneva; font-size: medium;">&nbsp; <br
+/><u>Актуални процедури за <b
+style="mso-bidi-font-weight: normal;">безвъзмездно
+финансиране от ЕС</b>, по които работим в
+момента. Свържете се с нас за безплатна
+консултация, за да разберете какви са
+вашите шансове за финансиране:<br />
+<o:p></o:p></u>&nbsp;</span></p>
+<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
+-17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
+geneva; font-size: medium;"><span style="mso-list: Ignore;">-<span
+style="font-style: normal; font-variant: normal; font-weight: normal;
+font-stretch: normal; line-height:
+normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Процедура &bdquo;<span lang="EN-US">Подкрепа
+за разработване на иновации от
+стартиращи предприятия</span>&ldquo;<br /></span></p>
+<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
+-17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
+geneva; font-size: medium;"><span lang="EN-US"><span style="mso-list:
+Ignore;">-<span style="font-style: normal; font-variant: normal;
+font-weight: normal; font-stretch: normal; line-height:
+normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span>Процедура &bdquo;Добри и
+безопасни условия на труд&ldquo;<br /> </span></p>
+<p class="MsoListParagraph" style="margin: 6pt 0cm 6pt 35.7pt; text-indent:
+-17.85pt; mso-list: l0 level1 lfo1;"><span style="font-family: verdana,
+geneva; font-size: medium;"><span style="mso-list: Ignore;">-<span
+style="font-style: normal; font-variant: normal; font-weight: normal;
+font-stretch: normal; line-height:
+normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span>Процедура "Енергийна ефективност
+в МСП" <o:p></o:p></span></p>
+<p></p>
+<p><span style="font-family: verdana, geneva; font-size: medium;"><em><span
+style="font-style: normal;"> &nbsp;</span></em></span></p>
+<p><span style="font-family: verdana, geneva; font-size: medium;"><em><span
+style="font-style: normal;">С пожелание за успешни
+проекти,</span></em><i style="mso-bidi-font-style:
+normal;"><o:p></o:p></i></span></p>
+<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
+font-size: medium;"><em><span style="font-style: normal;">
+&nbsp;</span></em></span></p>
+<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
+font-size: medium;"><em><span style="font-style:
+normal;">ПРОДЖЕКТА ООД</span></em><i
+style="mso-bidi-font-style: normal;"> <o:p></o:p></i></span></p>
+<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
+font-size: medium;">Намери ни на <a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=502&F=H"
+target="_blank"><font
+color="#0000ff">Facebook.com/UpravlenieNaProekti</font></a><o:p></o:p></span></p>
+<p style="margin: 0cm 0cm 0pt;"><span style="font-family: verdana, geneva;
+font-size: medium;"><a
+href="http://94.156.237.35/marketing/link.php?M=14386554&N=445&L=493&F=H"
+target="_blank"><font color="#0000ff">Запознай се с нас за
+2 минути. Виж нашето ЗАБАВНО
+видео!</font></a></span><o:p></o:p></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="MsoNormal" style="text-align: justify; margin: 0cm 0cm
+0pt;"></p>
+<pre>  <br />  <br />  <br />Съглaсно закона за
+електрoнна търговия Чл. 6, ал. 1 Ви
+уведомяваме, че е възможно това да е
+непoискано търгoвско съобщeние.    <br />То е
+eднократно изпрaтено писмо до Вaшия e-mail
+адрес, който е взет от публичнoто
+прoстранство.    <br />Извиняваме се за
+причиненото неудобство, ако сме Ви
+притеснили с нашето предложение.    <br
+/><strong>Ако не желаете да пoлучавaте
+съoбщeния от "ПРОДЖЕКТА", моля кликнете <a
+href="http://94.156.237.35/marketing/unsubscribe.php?M=14386554&C=2e2d7d04bb08ae8000d866239b4a9195&L=357&N=445">ОТПИСВАНЕ</a>
+за автоматично отписване!</strong></pre>
+<pre><br /><br /></pre>
+<img
+src="http://94.156.237.35/marketing/open.php?M=14386554&L=357&N=445&F=H&image=.jpg"
+height="1" width="10"></body>
+</html>
+
+
+
+--===============0556380050595994455==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0556380050595994455==--
