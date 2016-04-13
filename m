@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A7347CBB
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:27:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E6914304062
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:36 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id ZJiJxbxBpkkcRpXX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:33 -0700 (PDT)
-Received: from [67.51.76.21] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-	id 1aq6mR-0006CH-UL
-	for xfs@oss.sgi.com; Tue, 12 Apr 2016 22:27:32 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] kill xfs_zero_remaining_bytes
-Date: Tue, 12 Apr 2016 15:26:53 -0700
-Message-Id: <1460500013-28334-7-git-send-email-hch@lst.de>
-In-Reply-To: <1460500013-28334-1-git-send-email-hch@lst.de>
-References: <1460500013-28334-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C0D77CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 08:45:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D4F6DAC004
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:45:43 -0700 (PDT)
+Received: from ZXSHCAS02.zhaoxin.com ([180.169.121.82]) by cuda.sgi.com with
+	ESMTP id wBBX6oIiByc1Hk4I (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:45:38 -0700 (PDT)
+From: Eric Shang <EricShang@zhaoxin.com>
+Subject: ext4 error 
+Date: Wed, 13 Apr 2016 13:44:55 +0000
+Message-ID: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
+Content-Language: zh-CN
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,179 +23,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Matthew Wilcox <willy@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>
+Cc: "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
----
- fs/xfs/xfs_bmap_util.c | 133 ++++++-------------------------------------------
- 1 file changed, 14 insertions(+), 119 deletions(-)
+HI All:
+  I meet an ext4 error, following is the error log. After panic, I check the emmc by the tool debufs, the inode 69878 i_nlink is not zero. And this inode don't belong to parent dir 6987, it belong to other file(this inode belong to two files when check by debugfs ncheck), I guess than this inode has beed deleted in memory and already used by other file. But the parent dentry buff_head not flush to emmc. But when lookup this dentry can't find it' in dentry cache, and then lookup_real, read the dentry from emmc, get the file inode which already be deleted. 
+  Can any give me some help how to check this issue. My kernel version is 3.18 form Android . I thinks something wrong with dentry cache flush and dirty buff_head flush to emmc. Thanks all!
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5d030b0..0efabc1 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1096,101 +1096,6 @@ error1:	/* Just cancel transaction */
- 	return error;
- }
- 
--/*
-- * Zero file bytes between startoff and endoff inclusive.
-- * The iolock is held exclusive and no blocks are buffered.
-- *
-- * This function is used by xfs_free_file_space() to zero
-- * partial blocks when the range to free is not block aligned.
-- * When unreserving space with boundaries that are not block
-- * aligned we round up the start and round down the end
-- * boundaries and then use this function to zero the parts of
-- * the blocks that got dropped during the rounding.
-- */
--STATIC int
--xfs_zero_remaining_bytes(
--	xfs_inode_t		*ip,
--	xfs_off_t		startoff,
--	xfs_off_t		endoff)
--{
--	xfs_bmbt_irec_t		imap;
--	xfs_fileoff_t		offset_fsb;
--	xfs_off_t		lastoffset;
--	xfs_off_t		offset;
--	xfs_buf_t		*bp;
--	xfs_mount_t		*mp = ip->i_mount;
--	int			nimap;
--	int			error = 0;
--
--	/*
--	 * Avoid doing I/O beyond eof - it's not necessary
--	 * since nothing can read beyond eof.  The space will
--	 * be zeroed when the file is extended anyway.
--	 */
--	if (startoff >= XFS_ISIZE(ip))
--		return 0;
--
--	if (endoff > XFS_ISIZE(ip))
--		endoff = XFS_ISIZE(ip);
--
--	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
--		uint lock_mode;
--
--		offset_fsb = XFS_B_TO_FSBT(mp, offset);
--		nimap = 1;
--
--		lock_mode = xfs_ilock_data_map_shared(ip);
--		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
--		xfs_iunlock(ip, lock_mode);
--
--		if (error || nimap < 1)
--			break;
--		ASSERT(imap.br_blockcount >= 1);
--		ASSERT(imap.br_startoff == offset_fsb);
--		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
--
--		if (imap.br_startblock == HOLESTARTBLOCK ||
--		    imap.br_state == XFS_EXT_UNWRITTEN) {
--			/* skip the entire extent */
--			lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff +
--						      imap.br_blockcount) - 1;
--			continue;
--		}
--
--		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
--		if (lastoffset > endoff)
--			lastoffset = endoff;
--
--		/* DAX can just zero the backing device directly */
--		if (IS_DAX(VFS_I(ip))) {
--			error = dax_zero_page_range(VFS_I(ip), offset,
--						    lastoffset - offset + 1,
--						    xfs_get_blocks_direct);
--			if (error)
--				return error;
--			continue;
--		}
--
--		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
--				mp->m_rtdev_targp : mp->m_ddev_targp,
--				xfs_fsb_to_db(ip, imap.br_startblock),
--				BTOBB(mp->m_sb.sb_blocksize),
--				0, &bp, NULL);
--		if (error)
--			return error;
--
--		memset(bp->b_addr +
--				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
--		       0, lastoffset - offset + 1);
--
--		error = xfs_bwrite(bp);
--		xfs_buf_relse(bp);
--		if (error)
--			return error;
--	}
--	return error;
--}
--
- static int
- xfs_unmap_extent(
- 	struct xfs_inode	*ip,
-@@ -1316,7 +1221,7 @@ xfs_free_file_space(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_fileoff_t		endoffset_fsb;
--	int			done, error;
-+	int			done = 0, error;
- 
- 	trace_xfs_free_file_space(ip);
- 
-@@ -1348,31 +1253,21 @@ xfs_free_file_space(
- 			return error;
- 	}
- 
--	if ((done = (endoffset_fsb <= startoffset_fsb)))
--		/*
--		 * One contiguous piece to clear
--		 */
--		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
--	else {
--		/*
--		 * Some full blocks, possibly two pieces to clear
--		 */
--		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
--			error = xfs_zero_remaining_bytes(ip, offset,
--				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
--		if (!error &&
--		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
--			error = xfs_zero_remaining_bytes(ip,
--				XFS_FSB_TO_B(mp, endoffset_fsb),
--				offset + len - 1);
--	}
--
--	while (!error && !done) {
--		error = xfs_unmap_extent(ip, startoffset_fsb,
--				endoffset_fsb - startoffset_fsb, &done);
-+	if (endoffset_fsb > startoffset_fsb) {
-+		while (!done) {
-+			error = xfs_unmap_extent(ip, startoffset_fsb,
-+					endoffset_fsb - startoffset_fsb, &done);
-+			if (error)
-+				return error;
-+		}
- 	}
- 
--	return error;
-+	/*
-+	 * Now that we've unmap all full blocks we'll have to zero out any
-+	 * partial block at the beginning and/or end.  xfs_zero_range is
-+	 * smart enough to skip any holes, including those we just created.
-+	 */
-+	return xfs_zero_range(ip, offset, len, NULL);
- }
- 
- /*
--- 
-2.1.4
+:Sending Trackball (ACTION_MOVE): 0:(-[44802.841647] EXT4-fs error (device mmcblk0p16): ext4_lookup:1417: inode #69877: comm installd: deleted inode referenced: 69878
+5.0[44802.853210] Aborting journal on device mmcblk0p16-8.
+,2.[44802.858345] Kernel panic - not syncing: EXT4-fs (device mmcblk0p16): panic forced after error
+[44802.858345] 
+[44802.868322] CPU: 1 PID: 216 Comm: installd Tainted: P           O   3.18.0-94.02.04 #1
+[44802.876223] [<c0016874>] (unwind_backtrace) from [<c00123e8>] (show_stack+0x10/0x14)
+[44802.883927] [<c00123e8>] (show_stack) from [<c07af1b0>] (dump_stack+0x70/0xbc)
+[44802.891117] [<c07af1b0>] (dump_stack) from [<c07ab328>] (panic+0xa4/0x218)
+[44802.897965] [<c07ab328>] (panic) from [<c01c2fa4>] (ext4_handle_error+0x6c/0xa8)
+[44802.905330] [<c01c2fa4>] (ext4_handle_error) from [<c01c323c>] (__ext4_error_inode+0x6c/0x114)
+[44802.913909] [<c01c323c>] (__ext4_error_inode) from [<c01b2e18>] (ext4_lookup+0xf0/0x148)
+[44802.921970] [<c01b2e18>] (ext4_lookup) from [<c0130148>] (lookup_real+0x20/0x50)
+[44802.929336] [<c0130148>] (lookup_real) from [<c0130c60>] (__lookup_hash+0x34/0x44)
+[44802.936873] [<c0130c60>] (__lookup_hash) from [<c0131f98>] (lookup_slow+0x38/0x9c)
+[44802.944414] [<c0131f98>] (lookup_slow) from [<c0132a34>] (path_lookupat+0x228/0x728)
+[44802.952127] [<c0132a34>] (path_lookupat) from [<c0132f54>] (filename_lookup+0x20/0xbc)
+[44802.960013] [<c0132f54>] (filename_lookup) from [<c0136128>] (user_path_at_empty+0x50/0x78)
+[44802.968334] [<c0136128>] (user_path_at_empty) from [<c0136164>] (user_path_at+0x14/0x1c)
+[44802.976394] [<c0136164>] (user_path_at) from [<c012c52c>] (vfs_fstatat+0x48/0x8c)
+[44802.983847] [<c012c52c>] (vfs_fstatat) from [<c012c820>] (SyS_fstatat64+0x14/0x30)
+[44802.991389] [<c012c820>] (SyS_fstatat64) from [<c000eae0>] (ret_fast_syscall+0x0/0x48)
+
+Best Regards
+EricShang	
 
 _______________________________________________
 xfs mailing list
