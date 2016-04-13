@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 538087CB3
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 17:27:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1EE017CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1953830405F
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:22 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id JWP3RI68ln9IxkHS (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:27:19 -0700 (PDT)
-Received: from [67.51.76.21] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-	id 1aq6mE-0006BW-A8
-	for xfs@oss.sgi.com; Tue, 12 Apr 2016 22:27:18 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/6] xfs: handle 64-bit length in xfs_iozero
-Date: Tue, 12 Apr 2016 15:26:50 -0700
-Message-Id: <1460500013-28334-4-git-send-email-hch@lst.de>
-In-Reply-To: <1460500013-28334-1-git-send-email-hch@lst.de>
-References: <1460500013-28334-1-git-send-email-hch@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D670F30405F
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:16 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Ngguo8SAf4rR23h4 for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 22:32:14 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p0-Q5
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:11 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000bZ-A4
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 00/11 v3] xfs: inode reclaim vs the world
+Date: Wed, 13 Apr 2016 15:31:21 +1000
+Message-Id: <1460525492-1170-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +35,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We'll want to use this code for large offsets now that we're skipping holes
-and unwritten extents efficiently.  Also rename it to xfs_zero_range to be
-a bit more descriptive, and tell the caller if we actually did any zeroing.
+Hi folks,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 11 ++++++-----
- fs/xfs/xfs_inode.h |  3 ++-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+The inode reclaim patchset has grown somewhat larger with all the
+fixes I've accrued over the past couple of days for issues that have
+been reported. I've just re-ordered the patchset to have all the bug
+fixes that need to go into 4.6-rc up front, followed by other bug
+fixes, followed by all the cleanups I wrote as I went along fixing
+things. I want to get this out before LSFMM, so I'm posting this
+before I've done a full verification that I've got the patches
+correct, and they are still running through xfstests right now.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bd07913..85369a9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -85,10 +85,11 @@ xfs_rw_ilock_demote(
-  * Holes and unwritten extents will be left as-is as they already are zeroed.
-  */
- int
--xfs_iozero(
-+xfs_zero_range(
- 	struct xfs_inode	*ip,
--	loff_t			pos,
--	size_t			count)
-+	xfs_off_t		pos,
-+	xfs_off_t		count,
-+	bool			*did_zero)
- {
- 	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
- }
-@@ -419,7 +420,7 @@ xfs_zero_last_block(
- 	if (isize + zero_len > offset)
- 		zero_len = offset - isize;
- 	*did_zeroing = true;
--	return xfs_iozero(ip, isize, zero_len);
-+	return xfs_zero_range(ip, isize, zero_len, NULL);
- }
- 
- /*
-@@ -518,7 +519,7 @@ xfs_zero_eof(
- 		if ((zero_off + zero_len) > offset)
- 			zero_len = offset - zero_off;
- 
--		error = xfs_iozero(ip, zero_off, zero_len);
-+		error = xfs_zero_range(ip, zero_off, zero_len, NULL);
- 		if (error)
- 			return error;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index e52d7c7..dbb0bcf 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -434,7 +434,8 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- 				  enum xfs_prealloc_flags flags);
- int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
--int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
-+int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
-+		bool *did_zero);
- loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
- 			     loff_t eof, int whence);
- 
--- 
-2.1.4
+Patch 1 is new - it fixes a regression introduced in 4.6-rc1 and is
+caused by clearing the vfs inode i_mode in ->evict_inode, when there
+is code in evict() that requires the mode to be intact until
+->destroy_inode.
+
+Patch 2 is new - if fixes the inode log item leak that left a dirty
+log item on the AIL after the inode had been reclaimed, resulting in
+unmountable filesystems and a couple of use-after-free vectors.
+
+Patch 3 is the original fix for the xfs_iflush_cluster lookup
+validity checks that were incorect
+
+Patch 4 is the original fix for avoiding flushing stale inodes.
+
+Patch 5 is new, and comes from Alex @ Zadara to avoid having to
+reallocate memory when tearing down the inode extent lists. This is
+a necessary pre-requisite for patch 6.
+
+Patch 6 is the original patch that pushed all the inode memory
+freeing into the RCU callback, so that xfs_iflush_cluster didn't
+reference freed memory when racing with reclaim.
+
+Patch 7 is the original patch that made reclaim races eaasier to
+detect.
+
+Patch 8 is the original patch that drops out of xfs-iflush_cluster
+on the first inode beyond the end of the current cluster.
+
+Patch 9 is the original patch that renames the variables in
+xfs_iflush_cluster().
+
+Patch 10 and 11 are new patches that simplify the inode reclaim
+tagging interfaces to remove dependencies on the struct xfs_inode
+and the inode number where they are not actually required.
+
+-Dave.
 
 _______________________________________________
 xfs mailing list
