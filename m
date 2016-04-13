@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E6ECB7D0D
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:38:06 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 44B1D7CFE
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 66280AC007
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:38:06 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B2872AC00A
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Bsnq3QFcTonx2AtC (version=TLSv1.2
+	cuda.sgi.com with ESMTP id LRdBDZSKoiKAert0 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:38:05 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:07 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 38/42] block, fs: remove old REQ definitions.
-Date: Wed, 13 Apr 2016 14:36:24 -0500
-Message-Id: <1460576188-5751-39-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 14/42] hfsplus: set bi_op to REQ_OP
+Date: Wed, 13 Apr 2016 14:36:00 -0500
+Message-Id: <1460576188-5751-15-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,141 +33,133 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-We no longer use REQ_WRITE. REQ_WRITE_SAME and REQ_DISCARD,
-so this patch removes them.
+This patch has hfsplus use bio->bi_op for REQ_OPs and rq_flag_bits
+to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/blk_types.h   | 21 ++++++---------------
- include/linux/fs.h          | 21 +++++++++++----------
- include/trace/events/f2fs.h |  1 -
- 3 files changed, 17 insertions(+), 26 deletions(-)
+ fs/hfsplus/hfsplus_fs.h |  2 +-
+ fs/hfsplus/part_tbl.c   |  5 +++--
+ fs/hfsplus/super.c      |  6 ++++--
+ fs/hfsplus/wrapper.c    | 15 +++++++++------
+ 4 files changed, 17 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 6e49c91..b4251ed 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -151,7 +151,6 @@ struct bio {
-  */
- enum rq_flag_bits {
- 	/* common flags */
--	__REQ_WRITE,		/* not set, read. set, write */
- 	__REQ_FAILFAST_DEV,	/* no driver retries of device errors */
- 	__REQ_FAILFAST_TRANSPORT, /* no driver retries of transport errors */
- 	__REQ_FAILFAST_DRIVER,	/* no driver retries of driver errors */
-@@ -159,9 +158,7 @@ enum rq_flag_bits {
- 	__REQ_SYNC,		/* request is sync (sync write or read) */
- 	__REQ_META,		/* metadata io request */
- 	__REQ_PRIO,		/* boost priority in cfq */
--	__REQ_DISCARD,		/* request to discard sectors */
--	__REQ_SECURE,		/* secure discard (used with __REQ_DISCARD) */
--	__REQ_WRITE_SAME,	/* write same block many times */
-+	__REQ_SECURE,		/* secure discard (used with REQ_OP_DISCARD) */
+diff --git a/fs/hfsplus/hfsplus_fs.h b/fs/hfsplus/hfsplus_fs.h
+index f91a1fa..80154aa 100644
+--- a/fs/hfsplus/hfsplus_fs.h
++++ b/fs/hfsplus/hfsplus_fs.h
+@@ -525,7 +525,7 @@ int hfsplus_compare_dentry(const struct dentry *parent,
  
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
-@@ -197,28 +194,22 @@ enum rq_flag_bits {
- 	__REQ_NR_BITS,		/* stops here */
- };
+ /* wrapper.c */
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector, void *buf,
+-		       void **data, int rw);
++		       void **data, int op, int op_flags);
+ int hfsplus_read_wrapper(struct super_block *sb);
  
--#define REQ_WRITE		(1ULL << __REQ_WRITE)
- #define REQ_FAILFAST_DEV	(1ULL << __REQ_FAILFAST_DEV)
- #define REQ_FAILFAST_TRANSPORT	(1ULL << __REQ_FAILFAST_TRANSPORT)
- #define REQ_FAILFAST_DRIVER	(1ULL << __REQ_FAILFAST_DRIVER)
- #define REQ_SYNC		(1ULL << __REQ_SYNC)
- #define REQ_META		(1ULL << __REQ_META)
- #define REQ_PRIO		(1ULL << __REQ_PRIO)
--#define REQ_DISCARD		(1ULL << __REQ_DISCARD)
--#define REQ_WRITE_SAME		(1ULL << __REQ_WRITE_SAME)
- #define REQ_NOIDLE		(1ULL << __REQ_NOIDLE)
- #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
+ /* time macros */
+diff --git a/fs/hfsplus/part_tbl.c b/fs/hfsplus/part_tbl.c
+index eb355d8..63164eb 100644
+--- a/fs/hfsplus/part_tbl.c
++++ b/fs/hfsplus/part_tbl.c
+@@ -112,7 +112,8 @@ static int hfs_parse_new_pmap(struct super_block *sb, void *buf,
+ 		if ((u8 *)pm - (u8 *)buf >= buf_size) {
+ 			res = hfsplus_submit_bio(sb,
+ 						 *part_start + HFS_PMAP_BLK + i,
+-						 buf, (void **)&pm, READ);
++						 buf, (void **)&pm, REQ_OP_READ,
++						 0);
+ 			if (res)
+ 				return res;
+ 		}
+@@ -136,7 +137,7 @@ int hfs_part_find(struct super_block *sb,
+ 		return -ENOMEM;
  
- #define REQ_FAILFAST_MASK \
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
--	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
--	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
--	 REQ_SECURE | REQ_INTEGRITY)
-+	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
-+	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
+ 	res = hfsplus_submit_bio(sb, *part_start + HFS_PMAP_BLK,
+-				 buf, &data, READ);
++				 buf, &data, REQ_OP_READ, 0);
+ 	if (res)
+ 		goto out;
  
--#define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)
--
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
- 	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-@@ -250,9 +241,9 @@ enum rq_flag_bits {
+diff --git a/fs/hfsplus/super.c b/fs/hfsplus/super.c
+index c359113..d3646c2 100644
+--- a/fs/hfsplus/super.c
++++ b/fs/hfsplus/super.c
+@@ -219,7 +219,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
  
- enum req_op {
- 	REQ_OP_READ,
--	REQ_OP_WRITE		= REQ_WRITE,
--	REQ_OP_DISCARD		= REQ_DISCARD,
--	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
-+	REQ_OP_WRITE,
-+	REQ_OP_DISCARD,		/* request to discard sectors */
-+	REQ_OP_WRITE_SAME,	/* write same block many times */
- };
+ 	error2 = hfsplus_submit_bio(sb,
+ 				   sbi->part_start + HFSPLUS_VOLHEAD_SECTOR,
+-				   sbi->s_vhdr_buf, NULL, WRITE_SYNC);
++				   sbi->s_vhdr_buf, NULL, REQ_OP_WRITE,
++				   WRITE_SYNC);
+ 	if (!error)
+ 		error = error2;
+ 	if (!write_backup)
+@@ -227,7 +228,8 @@ static int hfsplus_sync_fs(struct super_block *sb, int wait)
  
- typedef unsigned int blk_qc_t;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 9becf20..509e21f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -153,9 +153,10 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
- #define CHECK_IOVEC_ONLY -1
- 
- /*
-- * The below are the various read and write types that we support. Some of
-+ * The below are the various read and write flags that we support. Some of
-  * them include behavioral modifiers that send information down to the
-- * block layer and IO scheduler. Terminology:
-+ * block layer and IO scheduler. They should be used along with a req_op.
-+ * Terminology:
+ 	error2 = hfsplus_submit_bio(sb,
+ 				  sbi->part_start + sbi->sect_count - 2,
+-				  sbi->s_backup_vhdr_buf, NULL, WRITE_SYNC);
++				  sbi->s_backup_vhdr_buf, NULL, REQ_OP_WRITE,
++				  WRITE_SYNC);
+ 	if (!error)
+ 		error2 = error;
+ out:
+diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
+index d026bb3..c5c916d 100644
+--- a/fs/hfsplus/wrapper.c
++++ b/fs/hfsplus/wrapper.c
+@@ -30,7 +30,8 @@ struct hfsplus_wd {
+  * @sector: block to read or write, for blocks of HFSPLUS_SECTOR_SIZE bytes
+  * @buf: buffer for I/O
+  * @data: output pointer for location of requested data
+- * @rw: direction of I/O
++ * @op: direction of I/O
++ * @op_flags: request op flags
   *
-  *	The block layer uses device plugging to defer IO a little bit, in
-  *	the hope that we will see more IO very shortly. This increases
-@@ -194,19 +195,19 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
-  *			non-volatile media on completion.
-  *
+  * The unit of I/O is hfsplus_min_io_size(sb), which may be bigger than
+  * HFSPLUS_SECTOR_SIZE, and @buf must be sized accordingly. On reads
+@@ -44,7 +45,7 @@ struct hfsplus_wd {
+  * will work correctly.
   */
--#define RW_MASK			REQ_WRITE
-+#define RW_MASK			REQ_OP_WRITE
- #define RWA_MASK		REQ_RAHEAD
+ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+-		void *buf, void **data, int rw)
++		       void *buf, void **data, int op, int op_flags)
+ {
+ 	struct bio *bio;
+ 	int ret = 0;
+@@ -65,9 +66,10 @@ int hfsplus_submit_bio(struct super_block *sb, sector_t sector,
+ 	bio = bio_alloc(GFP_NOIO, 1);
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_bdev = sb->s_bdev;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
  
--#define READ			0
-+#define READ			REQ_OP_READ
- #define WRITE			RW_MASK
- #define READA			RWA_MASK
+-	if (!(rw & WRITE) && data)
++	if (op != WRITE && data)
+ 		*data = (u8 *)buf + offset;
  
--#define READ_SYNC		(READ | REQ_SYNC)
--#define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE)
--#define WRITE_ODIRECT		(WRITE | REQ_SYNC)
--#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
--#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FUA)
--#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define READ_SYNC		REQ_SYNC
-+#define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
-+#define WRITE_ODIRECT		REQ_SYNC
-+#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
-+#define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
-+#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
+ 	while (io_size > 0) {
+@@ -182,7 +184,7 @@ int hfsplus_read_wrapper(struct super_block *sb)
+ reread:
+ 	error = hfsplus_submit_bio(sb, part_start + HFSPLUS_VOLHEAD_SECTOR,
+ 				   sbi->s_vhdr_buf, (void **)&sbi->s_vhdr,
+-				   READ);
++				   REQ_OP_READ, 0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
  
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index db75d69..20f708e 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -31,7 +31,6 @@ TRACE_DEFINE_ENUM(BG_GC);
- TRACE_DEFINE_ENUM(LFS);
- TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
--TRACE_DEFINE_ENUM(__REQ_WRITE);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
- TRACE_DEFINE_ENUM(__REQ_FLUSH);
+@@ -214,7 +216,8 @@ reread:
+ 
+ 	error = hfsplus_submit_bio(sb, part_start + part_size - 2,
+ 				   sbi->s_backup_vhdr_buf,
+-				   (void **)&sbi->s_backup_vhdr, READ);
++				   (void **)&sbi->s_backup_vhdr, REQ_OP_READ,
++				   0);
+ 	if (error)
+ 		goto out_free_backup_vhdr;
+ 
 -- 
 2.7.2
 
