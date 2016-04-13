@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 430707CAE
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:43:00 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7C9157CA0
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 23:51:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EC0078F8035
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:56 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QqI09FiwZ2lBjidi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC v2 PATCH 08/10] xfs: handle bdev reservation ENOSPC correctly
-	from XFS reserved pool
-Date: Tue, 12 Apr 2016 12:42:51 -0400
-Message-Id: <1460479373-63317-9-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 211258F8037
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 21:51:36 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	jave1Q0dEiGiWl4i for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 21:51:33 -0700 (PDT)
+Date: Wed, 13 Apr 2016 14:51:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair fails after trying to format log cycle?
+Message-ID: <20160413045129.GO567@dastard>
+References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
+	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
+	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <570DB6CD.1000007@shaw.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,102 +27,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
+To: Andrew Ryder <tireman@shaw.ca>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-The XFS reserved block pool holds blocks from general allocation for
-internal purposes. When enabled, these blocks shall also carry a
-reservation from the block device to guarantee they are usable.
+On Tue, Apr 12, 2016 at 11:02:37PM -0400, Andrew Ryder wrote:
+> Is it possible the location its searching for at block
+> 
+> 02:34:43.887528 pread64(4, 0x7fb8f53e0200, 2097152, 3001552175104) =
+> -1 EIO (Input/output error)
 
-The reserved pool allocation code currently uses a retry algorithm based
-on the available space estimation. It assumes that an inability to
-allocate blocks based on the estimation is a transient problem. Now that
-block allocation attempts bdev reservation, however, an ENOSPC could
-originate from the block device and might not be transient.
+so offset is 3001552175104, or roughly around the 3TB mark. Given
+the log i always placed int eh middle of the filesystem and you have
+a 6TB device, then the above definitely looks like a valid place to
+be reading from the log.
 
-Because the retry algorithm cannot distinguish between fs block
-allocation and bdev reservation, separate the two operations in this
-particular case. If the bdev reservation fails, back off the reservation
-delta until something can be reserved or return ENOSPC to the caller.
-Once a bdev reservation is made, attempt to allocate blocks from the fs
-and return to the original retry algorithm based on the free space
-estimation. This prevents infinite retries in the event of a reserved
-pool allocation request that cannot be satisfied from a bdev that
-supports reservation.
+> xfs_logprint:
+>     data device: 0x902
+>     log device: 0x902 daddr: 5860130880 length: 4173824
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_fsops.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+daddr converted to offset is 5860130880 * 512 = 3001552175104, which
+tells us that the above pread64 failure was definitely coming from
+an attempt to read the log.
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 87d4b1b..79ae408 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -40,6 +40,7 @@
- #include "xfs_trace.h"
- #include "xfs_log.h"
- #include "xfs_filestream.h"
-+#include "xfs_thin.h"
- 
- /*
-  * File system operations
-@@ -676,6 +677,7 @@ xfs_reserve_blocks(
- 	__uint64_t		request;
- 	__int64_t		free;
- 	int			error = 0;
-+	sector_t		res = 0;
- 
- 	/* If inval is null, report current values and return */
- 	if (inval == (__uint64_t *)NULL) {
-@@ -743,6 +745,28 @@ xfs_reserve_blocks(
- 			fdblks_delta = delta;
- 
- 		/*
-+		 * Reserve pool blocks must carry a block device reservation (if
-+		 * enabled). The block device could be much closer to ENOSPC
-+		 * than the fs (i.e., a thin or snap device), so try to reserve
-+		 * the bdev space first.
-+		 */
-+		spin_unlock(&mp->m_sb_lock);
-+		if (mp->m_thin_reserve) {
-+			while (fdblks_delta) {
-+				res = xfs_fsb_res(mp, fdblks_delta, false);
-+				error = xfs_thin_reserve(mp, res);
-+				if (error != -ENOSPC)
-+					break;
-+
-+				fdblks_delta >>= 1;
-+			}
-+			if (!fdblks_delta || error) {
-+				spin_lock(&mp->m_sb_lock);
-+				break;
-+			}
-+		}
-+
-+		/*
- 		 * We'll either succeed in getting space from the free block
- 		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
- 		 * things changed while we were calculating fdblks_delta and so
-@@ -752,8 +776,9 @@ xfs_reserve_blocks(
- 		 * Don't set the reserved flag here - we don't want to reserve
- 		 * the extra reserve blocks from the reserve.....
- 		 */
--		spin_unlock(&mp->m_sb_lock);
--		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
-+		error = __xfs_mod_fdblocks(mp, -fdblks_delta, 0);
-+		if (error && mp->m_thin_reserve)
-+			xfs_thin_unreserve(mp, res);
- 		spin_lock(&mp->m_sb_lock);
- 	}
- 
+That this is coming from the block device from userspace indicates a
+problem below XFS. There is something going wrong with your
+underlying block device and/or hardware here; AFAICT it's not
+related to XFS at all.
+
+> >GNU Parted 3.2
+> >Using /dev/sdk
+> >Welcome to GNU Parted! Type 'help' to view a list of commands.
+> >(parted) p
+> >Model: ATA ST2000DL001-9VT1 (scsi)
+> >Disk /dev/sdk: 2000GB
+> >Sector size (logical/physical): 512B/512B
+> >Partition Table: msdos
+> >Disk Flags:
+> >
+> >Number  Start  End     Size    Type     File system  Flags
+> >  1      512B   2000GB  2000GB  primary               raid
+> >Number  Start  End          Size         Type     File system  Flags
+> >  1      1s     3907029167s  3907029167s  primary               raid
+
+Compared to the other devices, it has a different start sector, a
+different size, and an msdos partition table rather than gpt.
+Definitely a red flag...
+
+> >>>This all began when the RR2722 driver running under 3.18.15
+> >>>complained and
+
+Reported physical IO errors to a write command. Really, this looks
+like a hardware issue, not something that can be fixed by running
+xfs_repair...
+
+Cheers,
+
+Dave.
 -- 
-2.4.11
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
