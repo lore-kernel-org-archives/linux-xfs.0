@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 52DC47D41
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B53E0AC004
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:34 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0fFskz678jy3Myy0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:33 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 25/42] target: set bi_op to REQ_OP
-Date: Wed, 13 Apr 2016 14:36:11 -0500
-Message-Id: <1460576188-5751-26-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 597047CB0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 05DDD8F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:18 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	6fE5cfEBExS2Q868 for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 22:32:16 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p1-QU
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:11 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000bd-Aq
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 01/11] xfs: we don't need no steekin ->evict_inode
+Date: Wed, 13 Apr 2016 15:31:22 +1000
+Message-Id: <1460525492-1170-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,138 +35,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: xfs@oss.sgi.com
 
-From: Mike Christie <mchristi@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-This patch has the target modules use bio->bi_op for REQ_OPs and rq_flag_bits
-to bio->bi_rw.
+Joe Lawrence reported a list_add corruption with 4.6-rc1 when
+testing some custom md administration code that made it's own
+block device nodes for the md array. The simple test loop of:
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+for i in {0..100}; do
+	mknod --mode=0600 $tmp/tmp_node b $MAJOR $MINOR
+	mdadm --detail --export $tmp/tmp_node > /dev/null
+	rm -f $tmp/tmp_node
+done
+
+
+Would produce this warning in bd_acquire() when mdadm opened the
+device node:
+
+list_add double add: new=ffff88043831c7b8, prev=ffff8804380287d8, next=ffff88043831c7b8.
+
+And then produce this from bd_forget from kdevtmpfs evicting a block
+dev inode:
+
+list_del corruption. prev->next should be ffff8800bb83eb10, but was ffff88043831c7b8
+
+This is a regression caused by commit c19b3b05 ("xfs: mode di_mode
+to vfs inode"). The issue is that xfs_inactive() frees the
+unlinked inode, and the above commit meant that this freeing zeroed
+the mode in the struct inode. The problem is that after evict() has
+called ->evict_inode, it expects the i_mode to be intact so that it
+can call bd_forget() or cd_forget() to drop the reference to the
+block device inode attached to the XFS inode.
+
+In reality, the only thing we do in xfs_fs_evict_inode() that is not
+generic is call xfs_inactive(). We can move the xfs_inactive() call
+to xfs_fs_destroy_inode() without any problems at all, and this
+will leave the VFS inode intact until it is completely done with it.
+
+So, remove xfs_fs_evict_inode(), and do the work it used to do in
+->destroy_inode instead.
+
+Reported-by: Joe Lawrence <joe.lawrence@stratus.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- drivers/target/target_core_iblock.c | 38 +++++++++++++++++++++----------------
- drivers/target/target_core_pscsi.c  |  2 +-
- 2 files changed, 23 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_super.c | 28 +++++++---------------------
+ 1 file changed, 7 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index c887f7d..fb1543b 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -312,7 +312,8 @@ static void iblock_bio_done(struct bio *bio)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index e2f0f52..416421d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -928,7 +928,7 @@ xfs_fs_alloc_inode(
+ 
+ /*
+  * Now that the generic code is guaranteed not to be accessing
+- * the linux inode, we can reclaim the inode.
++ * the linux inode, we can inactivate and reclaim the inode.
+  */
+ STATIC void
+ xfs_fs_destroy_inode(
+@@ -938,9 +938,14 @@ xfs_fs_destroy_inode(
+ 
+ 	trace_xfs_destroy_inode(ip);
+ 
+-	XFS_STATS_INC(ip->i_mount, vn_reclaim);
++	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
++	XFS_STATS_INC(ip->i_mount, vn_rele);
++	XFS_STATS_INC(ip->i_mount, vn_remove);
++
++	xfs_inactive(ip);
+ 
+ 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
++	XFS_STATS_INC(ip->i_mount, vn_reclaim);
+ 
+ 	/*
+ 	 * We should never get here with one of the reclaim flags already set.
+@@ -987,24 +992,6 @@ xfs_fs_inode_init_once(
+ 		     "xfsino", ip->i_ino);
  }
  
- static struct bio *
--iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
-+iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
-+	       int op_flags)
- {
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
- 	struct bio *bio;
-@@ -334,7 +335,8 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
- 	bio->bi_private = cmd;
- 	bio->bi_end_io = &iblock_bio_done;
- 	bio->bi_iter.bi_sector = lba;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 
- 	return bio;
- }
-@@ -480,7 +482,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		goto fail;
- 	cmd->priv = ibr;
- 
--	bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-@@ -493,7 +495,8 @@ iblock_execute_write_same(struct se_cmd *cmd)
- 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
- 				!= sg->length) {
- 
--			bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
-+			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
-+					     0);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-@@ -679,8 +682,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	struct scatterlist *sg;
- 	u32 sg_num = sgl_nents;
- 	unsigned bio_cnt;
--	int rw = 0;
--	int i;
-+	int i, op, op_flags = 0;
- 
- 	if (data_direction == DMA_TO_DEVICE) {
- 		struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
-@@ -690,17 +692,20 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		 * is not enabled, or if initiator set the Force Unit Access bit.
- 		 */
- 		if (q->flush_flags & REQ_FUA) {
--			if (cmd->se_cmd_flags & SCF_FUA)
--				rw = WRITE_FUA;
--			else if (!(q->flush_flags & REQ_FLUSH))
--				rw = WRITE_FUA;
--			else
--				rw = WRITE;
-+			if (cmd->se_cmd_flags & SCF_FUA) {
-+				op = REQ_OP_WRITE;
-+				op_flags = WRITE_FUA;
-+			} else if (!(q->flush_flags & REQ_FLUSH)) {
-+				op = REQ_OP_WRITE;
-+				op_flags = WRITE_FUA;
-+			} else {
-+				op = REQ_OP_WRITE;
-+			}
- 		} else {
--			rw = WRITE;
-+			op = REQ_OP_WRITE;
- 		}
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
- 
- 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
-@@ -714,7 +719,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 		return 0;
- 	}
- 
--	bio = iblock_get_bio(cmd, block_lba, sgl_nents, rw);
-+	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
- 	if (!bio)
- 		goto fail_free_ibr;
- 
-@@ -738,7 +743,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 				bio_cnt = 0;
- 			}
- 
--			bio = iblock_get_bio(cmd, block_lba, sg_num, rw);
-+			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
-+					     op_flags);
- 			if (!bio)
- 				goto fail_put_bios;
- 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index de18790..2cf915c 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 					goto fail;
- 
- 				if (rw)
--					bio->bi_rw |= REQ_WRITE;
-+					bio->bi_op = REQ_OP_WRITE;
- 
- 				pr_debug("PSCSI: Allocated bio: %p,"
- 					" dir: %s nr_vecs: %d\n", bio,
+-STATIC void
+-xfs_fs_evict_inode(
+-	struct inode		*inode)
+-{
+-	xfs_inode_t		*ip = XFS_I(inode);
+-
+-	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
+-
+-	trace_xfs_evict_inode(ip);
+-
+-	truncate_inode_pages_final(&inode->i_data);
+-	clear_inode(inode);
+-	XFS_STATS_INC(ip->i_mount, vn_rele);
+-	XFS_STATS_INC(ip->i_mount, vn_remove);
+-
+-	xfs_inactive(ip);
+-}
+-
+ /*
+  * We do an unlocked check for XFS_IDONTCACHE here because we are already
+  * serialised against cache hits here via the inode->i_lock and igrab() in
+@@ -1673,7 +1660,6 @@ xfs_fs_free_cached_objects(
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+-	.evict_inode		= xfs_fs_evict_inode,
+ 	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
 -- 
-2.7.2
+2.7.0
 
 _______________________________________________
 xfs mailing list
