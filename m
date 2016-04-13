@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3D49F7CBB
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:47:20 -0500 (CDT)
-From: Troy McCorkell <tdm@sgi.com>
-Subject: RE: list_add corruption after "xfs: mode di_mode to vfs inode"
-Date: Wed, 13 Apr 2016 17:46:52 +0000
-Message-ID: <DF733A1EC32F124D86BC1188068FECB101A7292E0D@P-EXMB4-DC21.corp.sgi.com>
-References: <56FC9FA6.1080700@stratus.com>
-	<20160401024413.GB2072@devil.localdomain>
-	<20160412075423.GG9088@dastard>,<570E7EE0.2020004@stratus.com>
-In-Reply-To: <570E7EE0.2020004@stratus.com>
-Content-Language: en-US
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6733E7CB3
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:44:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CF775AC005
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:44:53 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id zxUdMGD9eIuA9H0f (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:44:50 -0700 (PDT)
+Date: Wed, 13 Apr 2016 10:44:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC v2 PATCH 05/10] dm thin: add methods to set and get
+	reserved space
+Message-ID: <20160413174442.GD18517@birch.djwong.org>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	<1460479373-63317-6-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1460479373-63317-6-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,97 +31,315 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Joe Lawrence <joe.lawrence@stratus.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "dchinner@redhat.com" <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: snitzer@redhat.com, Joe Thornber <ejt@redhat.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
+On Tue, Apr 12, 2016 at 12:42:48PM -0400, Brian Foster wrote:
+> From: Joe Thornber <ejt@redhat.com>
+> 
+> Experimental reserve interface for XFS guys to play with.
+> 
+> I have big reservations (no pun intended) about this patch.
+> 
+> [BF:
+>  - Support for reservation reduction.
+>  - Support for space provisioning.
+>  - Condensed to a single function.]
+> 
+> Not-Signed-off-by: Joe Thornber <ejt@redhat.com>
+> Not-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> ---
+>  drivers/md/dm-thin.c | 181 ++++++++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 171 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+> index 92237b6..32bc5bd 100644
+> --- a/drivers/md/dm-thin.c
+> +++ b/drivers/md/dm-thin.c
+> @@ -271,6 +271,8 @@ struct pool {
+>  	process_mapping_fn process_prepared_discard;
+>  
+>  	struct dm_bio_prison_cell **cell_sort_array;
+> +
+> +	dm_block_t reserve_count;
+>  };
+>  
+>  static enum pool_mode get_pool_mode(struct pool *pool);
+> @@ -318,6 +320,8 @@ struct thin_c {
+>  	 */
+>  	atomic_t refcount;
+>  	struct completion can_destroy;
+> +
+> +	dm_block_t reserve_count;
+>  };
+>  
+>  /*----------------------------------------------------------------*/
+> @@ -1359,24 +1363,19 @@ static void check_low_water_mark(struct pool *pool, dm_block_t free_blocks)
+>  	}
+>  }
+>  
+> -static int alloc_data_block(struct thin_c *tc, dm_block_t *result)
+> +static int get_free_blocks(struct pool *pool, dm_block_t *free_blocks)
+>  {
+>  	int r;
+> -	dm_block_t free_blocks;
+> -	struct pool *pool = tc->pool;
+> -
+> -	if (WARN_ON(get_pool_mode(pool) != PM_WRITE))
+> -		return -EINVAL;
+>  
+> -	r = dm_pool_get_free_block_count(pool->pmd, &free_blocks);
+> +	r = dm_pool_get_free_block_count(pool->pmd, free_blocks);
+>  	if (r) {
+>  		metadata_operation_failed(pool, "dm_pool_get_free_block_count", r);
+>  		return r;
+>  	}
+>  
+> -	check_low_water_mark(pool, free_blocks);
+> +	check_low_water_mark(pool, *free_blocks);
+>  
+> -	if (!free_blocks) {
+> +	if (!*free_blocks) {
+>  		/*
+>  		 * Try to commit to see if that will free up some
+>  		 * more space.
+> @@ -1385,7 +1384,7 @@ static int alloc_data_block(struct thin_c *tc, dm_block_t *result)
+>  		if (r)
+>  			return r;
+>  
+> -		r = dm_pool_get_free_block_count(pool->pmd, &free_blocks);
+> +		r = dm_pool_get_free_block_count(pool->pmd, free_blocks);
+>  		if (r) {
+>  			metadata_operation_failed(pool, "dm_pool_get_free_block_count", r);
+>  			return r;
+> @@ -1397,6 +1396,76 @@ static int alloc_data_block(struct thin_c *tc, dm_block_t *result)
+>  		}
+>  	}
+>  
+> +	return r;
+> +}
+> +
+> +/*
+> + * Returns true iff either:
+> + * i) decrement succeeded (ie. there was reserve left)
+> + * ii) there is extra space in the pool
+> + */
+> +static bool dec_reserve_count(struct thin_c *tc, dm_block_t free_blocks)
+> +{
+> +	bool r = false;
+> +	unsigned long flags;
+> +
+> +	if (!free_blocks)
+> +		return false;
+> +
+> +	spin_lock_irqsave(&tc->pool->lock, flags);
+> +	if (tc->reserve_count > 0) {
+> +		tc->reserve_count--;
+> +		tc->pool->reserve_count--;
+> +		r = true;
+> +	} else {
+> +		if (free_blocks > tc->pool->reserve_count)
+> +			r = true;
+> +	}
+> +	spin_unlock_irqrestore(&tc->pool->lock, flags);
+> +
+> +	return r;
+> +}
+> +
+> +static int set_reserve_count(struct thin_c *tc, dm_block_t count)
+> +{
+> +	int r;
+> +	dm_block_t free_blocks;
+> +	int64_t delta;
+> +	unsigned long flags;
+> +
+> +	r = get_free_blocks(tc->pool, &free_blocks);
+> +	if (r)
+> +		return r;
+> +
+> +	spin_lock_irqsave(&tc->pool->lock, flags);
+> +	delta = count - tc->reserve_count;
+> +	if (tc->pool->reserve_count + delta > free_blocks)
+> +		r = -ENOSPC;
+> +	else {
+> +		tc->reserve_count = count;
+> +		tc->pool->reserve_count += delta;
+> +	}
+> +	spin_unlock_irqrestore(&tc->pool->lock, flags);
+> +
+> +	return r;
+> +}
+> +
+> +static int alloc_data_block(struct thin_c *tc, dm_block_t *result)
+> +{
+> +	int r;
+> +	dm_block_t free_blocks;
+> +	struct pool *pool = tc->pool;
+> +
+> +	if (WARN_ON(get_pool_mode(pool) != PM_WRITE))
+> +		return -EINVAL;
+> +
+> +	r = get_free_blocks(tc->pool, &free_blocks);
+> +	if (r)
+> +		return r;
+> +
+> +	if (!dec_reserve_count(tc, free_blocks))
+> +		return -ENOSPC;
+> +
+>  	r = dm_pool_alloc_data_block(pool->pmd, result);
+>  	if (r) {
+>  		metadata_operation_failed(pool, "dm_pool_alloc_data_block", r);
+> @@ -2880,6 +2949,7 @@ static struct pool *pool_create(struct mapped_device *pool_md,
+>  	pool->last_commit_jiffies = jiffies;
+>  	pool->pool_md = pool_md;
+>  	pool->md_dev = metadata_dev;
+> +	pool->reserve_count = 0;
+>  	__pool_table_insert(pool);
+>  
+>  	return pool;
+> @@ -3936,6 +4006,7 @@ static void thin_dtr(struct dm_target *ti)
+>  
+>  	spin_lock_irqsave(&tc->pool->lock, flags);
+>  	list_del_rcu(&tc->list);
+> +	tc->pool->reserve_count -= tc->reserve_count;
+>  	spin_unlock_irqrestore(&tc->pool->lock, flags);
+>  	synchronize_rcu();
+>  
+> @@ -4074,6 +4145,7 @@ static int thin_ctr(struct dm_target *ti, unsigned argc, char **argv)
+>  	init_completion(&tc->can_destroy);
+>  	list_add_tail_rcu(&tc->list, &tc->pool->active_thins);
+>  	spin_unlock_irqrestore(&tc->pool->lock, flags);
+> +	tc->reserve_count = 0;
+>  	/*
+>  	 * This synchronize_rcu() call is needed here otherwise we risk a
+>  	 * wake_worker() call finding no bios to process (because the newly
+> @@ -4271,6 +4343,94 @@ static void thin_io_hints(struct dm_target *ti, struct queue_limits *limits)
+>  	limits->max_discard_sectors = 2048 * 1024 * 16; /* 16G */
+>  }
+>  
+> +static int thin_provision_space(struct dm_target *ti, sector_t offset,
+> +				sector_t len, sector_t *res)
+> +{
+> +	struct thin_c *tc = ti->private;
+> +	struct pool *pool = tc->pool;
+> +	sector_t end;
+> +	dm_block_t pblock;
+> +	dm_block_t vblock;
+> +	int error;
+> +	struct dm_thin_lookup_result lookup;
+> +
+> +	if (!is_factor(offset, pool->sectors_per_block))
+> +		return -EINVAL;
+> +
+> +	if (!len || !is_factor(len, pool->sectors_per_block))
+> +		return -EINVAL;
+> +
+> +	if (res && !is_factor(*res, pool->sectors_per_block))
+> +		return -EINVAL;
+> +
+> +	end = offset + len;
+> +
+> +	while (offset < end) {
+> +		vblock = offset;
+> +		do_div(vblock, pool->sectors_per_block);
+> +
+> +		error = dm_thin_find_block(tc->td, vblock, true, &lookup);
+> +		if (error == 0)
+> +			goto next;
+> +		if (error != -ENODATA)
+> +			return error;
+> +
+> +		error = alloc_data_block(tc, &pblock);
 
-Joe,
-I'll forward your email to our IT group to update the spam filters.
-Sorry for the inconvenience.
--Troy
+So this means that if fallocate wants to BDEV_RES_PROVISION N blocks, it must
+first increase the reservation (BDEV_RES_MOD) by N blocks to avoid using up
+space that was previously reserved by some other caller.  I think?
 
-________________________________________
-From: xfs-bounces@oss.sgi.com [xfs-bounces@oss.sgi.com] on behalf of Joe Lawrence [joe.lawrence@stratus.com]
-Sent: Wednesday, April 13, 2016 12:16 PM
-To: xfs@oss.sgi.com; dchinner@redhat.com
-Subject: Re: list_add corruption after "xfs: mode di_mode to vfs inode"
+> +		if (error)
+> +			return error;
+> +
+> +		error = dm_thin_insert_block(tc->td, vblock, pblock);
 
-On 04/12/2016 03:54 AM, Dave Chinner wrote:
-> On Fri, Apr 01, 2016 at 01:44:13PM +1100, Dave Chinner wrote:
->> On Wed, Mar 30, 2016 at 11:55:18PM -0400, Joe Lawrence wrote:
->>> Hi Dave,
->>>
->>> Upon loading 4.6-rc1, I noticed a few linked list corruption messages in
->>> dmesg shortly after boot up.  I bisected the kernel, landing on:
->>>
->>>   [c19b3b05ae440de50fffe2ac2a9b27392a7448e9] xfs: mode di_mode to vfs inode
->>>
->>> If I revert c19b3b05ae44 from 4.6-rc1, the warnings stop.
->>>
->>> WARNING: CPU: 35 PID: 6715 at lib/list_debug.c:29 __list_add+0x65/0xc0
->>> list_add corruption. next->prev should be prev (ffff882030928a00), but was ffff88103f00c300. (next=ffff88100fde5ce8).
->> .....
->>>  [<ffffffff812488f0>] ? bdev_test+0x20/0x20
->>>  [<ffffffff813551a5>] __list_add+0x65/0xc0
->>>  [<ffffffff81249bd8>] bd_acquire+0xc8/0xd0
->>>  [<ffffffff8124aa59>] blkdev_open+0x39/0x70
->>>  [<ffffffff8120bc27>] do_dentry_open+0x227/0x320
->>>  [<ffffffff8124aa20>] ? blkdev_get_by_dev+0x50/0x50
->>>  [<ffffffff8120d057>] vfs_open+0x57/0x60
->>>  [<ffffffff8121c9fa>] path_openat+0x1ba/0x1340
->>>  [<ffffffff8121eff1>] do_filp_open+0x91/0x100
->>>  [<ffffffff8122c806>] ? __alloc_fd+0x46/0x180
->>>  [<ffffffff8120d3b4>] do_sys_open+0x124/0x210
->>>  [<ffffffff8120d4be>] SyS_open+0x1e/0x20
->>>  [<ffffffff81003c12>] do_syscall_64+0x62/0x110
->>>  [<ffffffff8169ade1>] entry_SYSCALL64_slow_path+0x25/0x25
->> ....
->>> According to the bd_acquire+0xc8 offset, we're in bd_acquire()
->>> attempting the list add:
->> ....
->>>  713         bdev = bdget(inode->i_rdev);
->>>  714         if (bdev) {
->>>  715                 spin_lock(&bdev_lock);
->>>  716                 if (!inode->i_bdev) {
->>>  717                         /*
->>>  718                          * We take an additional reference to bd_inode,
->>>  719                          * and it's released in clear_inode() of inode.
->>>  720                          * So, we can access it via ->i_mapping always
->>>  721                          * without igrab().
->>>  722                          */
->>>  723                         bdgrab(bdev);
->>>  724                         inode->i_bdev = bdev;
->>>  725                         inode->i_mapping = bdev->bd_inode->i_mapping;
->>>  726                         list_add(&inode->i_devices, &bdev->bd_inodes);
->>
->> So the bdev->bd_inodes list is corrupt, and this call trace is
->> just the messenger.
-> ....
->>> I'm not really sure why the bisect landed on c19b3b05ae44 "xfs: mode
->>> di_mode to vfs inode", but as I mentioned, reverting it made the list
->>> warnings go away.
->>
->> Neither am I at this point as it's the bdev inode (not an xfs
->> inode) that has a corrupted list. I'll have to try to reproduce this.
->
-> Patch below should fix the problem. Smoke tested only at this point.
+Having reserved and mapped blocks, what happens when we try to read them?
+Do we actually get zeroes, or does the read go straight through to whatever
+happens to be in the disk blocks?  I don't think it's correct that we could
+BDEV_RES_PROVISION and end up with stale credit card numbers from some other
+thin device.
 
-Thanks Dave, this looks good on both the QEMU and on the originating
-hardware instances.
+(PS: I don't know enough about thinp to know if this has already been taken
+care of.  I didn't see anything, but who knows what I missed. :))
 
-Let me know if there are any additional tests that I can run, otherwise
-consider this Tested-by.
+--D
 
-BTW, cuda.sgi.com is rejecting my mail to the list (even though I
-subscribed), so apologies for this not making it out to xfs@oss.sgi.com.
-
-Thanks again,
-
--- Joe
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> +		if (error)
+> +			return error;
+> +
+> +		if (res && *res)
+> +			*res -= pool->sectors_per_block;
+> +next:
+> +		offset += pool->sectors_per_block;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int thin_reserve_space(struct dm_target *ti, int mode, sector_t offset,
+> +			      sector_t len, sector_t *res)
+> +{
+> +	struct thin_c *tc = ti->private;
+> +	struct pool *pool = tc->pool;
+> +	sector_t blocks;
+> +	unsigned long flags;
+> +	int error;
+> +
+> +	if (mode == BDEV_RES_PROVISION)
+> +		return thin_provision_space(ti, offset, len, res);
+> +
+> +	/* res required for get/set */
+> +	error = -EINVAL;
+> +	if (!res)
+> +		return error;
+> +
+> +	if (mode == BDEV_RES_GET) {
+> +		spin_lock_irqsave(&tc->pool->lock, flags);
+> +		*res = tc->reserve_count * pool->sectors_per_block;
+> +		spin_unlock_irqrestore(&tc->pool->lock, flags);
+> +		error = 0;
+> +	} else if (mode == BDEV_RES_MOD) {
+> +		/*
+> +		* @res must always be a factor of the pool's blocksize; upper
+> +		* layers can rely on the bdev's minimum_io_size for this.
+> +		*/
+> +		if (!is_factor(*res, pool->sectors_per_block))
+> +			return error;
+> +
+> +		blocks = *res;
+> +		(void) sector_div(blocks, pool->sectors_per_block);
+> +
+> +		error = set_reserve_count(tc, blocks);
+> +	}
+> +
+> +	return error;
+> +}
+> +
+>  static struct target_type thin_target = {
+>  	.name = "thin",
+>  	.version = {1, 18, 0},
+> @@ -4285,6 +4445,7 @@ static struct target_type thin_target = {
+>  	.status = thin_status,
+>  	.iterate_devices = thin_iterate_devices,
+>  	.io_hints = thin_io_hints,
+> +	.reserve_space = thin_reserve_space,
+>  };
+>  
+>  /*----------------------------------------------------------------*/
+> -- 
+> 2.4.11
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
