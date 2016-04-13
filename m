@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B81AC7CA4
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C61E8F8050
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:45 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id EHpSbEhtFz8RSiqC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:42 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/8] xfs: reorder zeroing and flushing sequence in truncate
-Date: Tue, 12 Apr 2016 13:52:58 -0700
-Message-Id: <1460494382-14547-5-git-send-email-hch@lst.de>
-In-Reply-To: <1460494382-14547-1-git-send-email-hch@lst.de>
-References: <1460494382-14547-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0A9DB7CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 06:56:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B5BD0304062
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:56:31 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zENNsJgSFI13fEtp (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 04:56:30 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH v2] xfs/259: test more block sizes and handle minimum block
+	size correctly
+Date: Wed, 13 Apr 2016 19:56:21 +0800
+Message-Id: <1460548581-26505-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,95 +27,125 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-Currently zeroing out blocks and waiting for writeout is a bit of a mess in
-truncate.  This patch gives it a clear order in preparation for the iomap
-path:
+Currently xfs/259 tests against TEST_DIR for CRC support status to
+decide whether 512 block size should be tested, which is wrong for this
+test, because configuration of TEST_DIR is not controlled by test
+harness and can be different to the configuration being used in the
+test.
 
- (1) we first wait for any direct I/O to complete to prevent any races for it
- (2) we then perform the actual zeroing, and only use the truncate_page helpers
-     for truncating down.  The truncate up case already is handled by the
-     separate call to xfs_zero_eof.
- (3) only then we write back dirty data, as zeroing block may cause dirty pages
-     when using either xfs_zero_eof or the new iomap infrastructure.
+Fix it by reversing the block size order that's tested and capture the
+output of the actual mkfs command that is being tested, and determine if
+512 byte block sizes should be tested based on that output.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+While we're at it, I think the test matrix can be enlarged as well, 4k,
+2k, 1k and 512 block size can be tested in each fs size boundary, not
+only the minimum block size.
+
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/xfs/xfs_iops.c | 33 +++++++++++++++++++--------------
- 1 file changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index c5d4eba..1e2086d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -801,20 +801,35 @@ xfs_setattr_size(
- 		return error;
- 
- 	/*
-+	 * Wait for all direct I/O to complete.
-+	 */
-+	inode_dio_wait(inode);
-+
-+	/*
- 	 * File data changes must be complete before we start the transaction to
- 	 * modify the inode.  This needs to be done before joining the inode to
- 	 * the transaction because the inode cannot be unlocked once it is a
- 	 * part of the transaction.
- 	 *
--	 * Start with zeroing any data block beyond EOF that we may expose on
--	 * file extension.
-+	 * Start with zeroing any data beyond EOF that we may expose on file
-+	 & extension, or zeroing out the rest of the block on a downward
-+	 * truncate.
- 	 */
- 	if (newsize > oldsize) {
- 		error = xfs_zero_eof(ip, newsize, oldsize, &did_zeroing);
--		if (error)
--			return error;
-+	} else {
-+		if (IS_DAX(inode)) {
-+			error = dax_truncate_page(inode, newsize,
-+					xfs_get_blocks_direct);
-+		} else {
-+			error = block_truncate_page(inode->i_mapping, newsize,
-+					xfs_get_blocks);
-+		}
- 	}
- 
-+	if (error)
-+		return error;
-+
- 	/*
- 	 * We are going to log the inode size change in this transaction so
- 	 * any previous writes that are beyond the on disk EOF and the new
-@@ -831,9 +846,6 @@ xfs_setattr_size(
- 			return error;
- 	}
- 
--	/* Now wait for all direct I/O to complete. */
--	inode_dio_wait(inode);
+v2:
+- take Dave's suggestion, and make changes only to xfs/259. Thanks Dave and
+  Christoph for spending their time on such a corner case.
+- test more block sizes
+
+ tests/xfs/259     | 47 ++++++++++++++++++++++++-----------------------
+ tests/xfs/259.out | 20 ++++++++++++++++----
+ 2 files changed, 40 insertions(+), 27 deletions(-)
+
+diff --git a/tests/xfs/259 b/tests/xfs/259
+index 16c1935..17f3c6d 100755
+--- a/tests/xfs/259
++++ b/tests/xfs/259
+@@ -51,32 +51,33 @@ testfile=$TEST_DIR/259.image
+ # Test various sizes slightly less than 4 TB. Need to handle different
+ # minimum block sizes for CRC enabled filesystems, but use a small log so we
+ # don't write lots of zeros unnecessarily.
+-xfs_info $TEST_DIR | _filter_mkfs 2> $tmp.mkfs > /dev/null
+-. $tmp.mkfs
+-if [ $_fs_has_crcs -eq 1 ]; then
+-	blocksize=1024
+-	sizes_to_check="1024 2048 4096"
+-	echo "Trying to make (4 TB - 512) B long xfs fs image"
+-else
+-	blocksize=512
+-	sizes_to_check="512 1024 2048 4096"
+-fi
 -
- 	/*
- 	 * We've already locked out new page faults, so now we can safely remove
- 	 * pages from the page cache knowing they won't get refaulted until we
-@@ -851,13 +863,6 @@ xfs_setattr_size(
- 	 * to hope that the caller sees ENOMEM and retries the truncate
- 	 * operation.
- 	 */
--	if (IS_DAX(inode))
--		error = dax_truncate_page(inode, newsize, xfs_get_blocks_direct);
--	else
--		error = block_truncate_page(inode->i_mapping, newsize,
--					    xfs_get_blocks);
--	if (error)
--		return error;
- 	truncate_setsize(inode, newsize);
++sizes_to_check="4096 2048 1024 512"
++blocksizes="4096 2048 1024 512"
+ four_TB=$(_math "2^42")
++# The initial value of _fs_has_crcs is not important, because we start testing
++# with 4096 block size, it only matters for 512 block size test
++_fs_has_crcs=0
+ for del in $sizes_to_check; do
+-	ddseek=$(_math "$four_TB - $del")
+-	echo "Trying to make (4 TB - $del) B long xfs fs image"
+-	rm -f "$testfile"
+-	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$ddseek \
+-					>/dev/null 2>&1 || echo "dd failed"
+-	lofile=$(losetup -f)
+-	losetup $lofile "$testfile"
+-	"$MKFS_XFS_PROG" -l size=32m -b size=$blocksize $lofile \
+-					>/dev/null || echo "mkfs failed!"
+-	sync
+-	losetup -d $lofile
++	for bs in $blocksizes; do
++		echo "Trying to make (4TB - ${del}B) long xfs, block size $bs"
++		# skip tests with 512 block size if the fs created has crc
++		# enabled by default
++		if [ $_fs_has_crcs -eq 1 -a $bs -eq 512 ]; then
++			break;
++		fi
++		ddseek=$(_math "$four_TB - $del")
++		rm -f "$testfile"
++		dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$ddseek \
++			>/dev/null 2>&1 || echo "dd failed"
++		lofile=$(losetup -f)
++		losetup $lofile "$testfile"
++		$MKFS_XFS_PROG -l size=32m -b size=$bs $lofile |  _filter_mkfs \
++			>/dev/null 2> $tmp.mkfs || echo "mkfs failed!"
++		. $tmp.mkfs
++		sync
++		losetup -d $lofile
++	done
+ done
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+ status=0
+-
+ exit
+diff --git a/tests/xfs/259.out b/tests/xfs/259.out
+index 6e0be9a..9fc4920 100644
+--- a/tests/xfs/259.out
++++ b/tests/xfs/259.out
+@@ -1,5 +1,17 @@
+ QA output created by 259
+-Trying to make (4 TB - 512) B long xfs fs image
+-Trying to make (4 TB - 1024) B long xfs fs image
+-Trying to make (4 TB - 2048) B long xfs fs image
+-Trying to make (4 TB - 4096) B long xfs fs image
++Trying to make (4TB - 4096B) long xfs, block size 4096
++Trying to make (4TB - 4096B) long xfs, block size 2048
++Trying to make (4TB - 4096B) long xfs, block size 1024
++Trying to make (4TB - 4096B) long xfs, block size 512
++Trying to make (4TB - 2048B) long xfs, block size 4096
++Trying to make (4TB - 2048B) long xfs, block size 2048
++Trying to make (4TB - 2048B) long xfs, block size 1024
++Trying to make (4TB - 2048B) long xfs, block size 512
++Trying to make (4TB - 1024B) long xfs, block size 4096
++Trying to make (4TB - 1024B) long xfs, block size 2048
++Trying to make (4TB - 1024B) long xfs, block size 1024
++Trying to make (4TB - 1024B) long xfs, block size 512
++Trying to make (4TB - 512B) long xfs, block size 4096
++Trying to make (4TB - 512B) long xfs, block size 2048
++Trying to make (4TB - 512B) long xfs, block size 1024
++Trying to make (4TB - 512B) long xfs, block size 512
 -- 
-2.1.4
+2.5.5
 
 _______________________________________________
 xfs mailing list
