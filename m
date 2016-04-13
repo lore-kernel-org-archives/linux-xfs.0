@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4473F7CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:17:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1421A304062
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 09:17:49 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id olGo2ShGLYCOr3AM for <xfs@oss.sgi.com>;
-	Wed, 13 Apr 2016 09:17:47 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9FC5F14A15
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:17:46 -0500 (CDT)
-Subject: Re: [PATCH 17/19] xfsprogs: disable truncating of files
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-18-git-send-email-jtulak@redhat.com>
-	<20160408000910.GB21804@dastard>
-	<CACj3i73f_v=70pGrrLkRpHB-6UwiOOM2F9Sbu2aZMaJGmBLeiQ@mail.gmail.com>
-	<20160408230843.GE567@dastard>
-	<CACj3i71Grs8deYRtTaGmTmgBTrge-VKQKpn1Azj_y8=KQHWbgg@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <570E7129.3080900@sandeen.net>
-Date: Wed, 13 Apr 2016 11:17:45 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACj3i71Grs8deYRtTaGmTmgBTrge-VKQKpn1Azj_y8=KQHWbgg@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 728557D14
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1592E8F8049
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XX6WHRNiyDSFNkEH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:16 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 18/42] pm: set bi_op to REQ_OP
+Date: Wed, 13 Apr 2016 14:36:04 -0500
+Message-Id: <1460576188-5751-19-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,25 +23,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-T24gNC8xMy8xNiAxMDowOCBBTSwgSmFuIFR1bGFrIHdyb3RlOgoKLi4uCgo+IEFsbCByaWdodOKA
-iywgSSB3aWxsIGtlZXAgdGhlIE9fVFJVTkMgdGhlcmUuIEhvd2V2ZXIsIHNob3VsZCBpdAo+IHRy
-dW5jYXRlIHRoZSBmaWxlIGV2ZXJ5IHRpbWUsIG9yIHNob3VsZCB3ZSBvZmZlciBhIHdheSBob3cg
-dG8gYXZvaWQKPiB0aGUgZmlsZSB0cnVuY2F0aW5nPyBVbnRpbCBub3csIG1rZnMgYmVoYXZlZCBk
-aWZmZXJlbnRseSBiYXNlZCBvbgo+IHdoZXRoZXIgLWQgZmlsZSB3YXMgZ2l2ZW4sIG9yIG5vdC4g
-WW91ciBleHBsYW5hdGlvbiBzdWdnZXN0cyB0aGF0IHdlCj4gc2hvdWxkIHRydW5jYXRlIGV2ZXJ5
-IHRpbWUsIHJpZ2h0PwoKVGhlcmUgYXJlIHByb2JhYmx5IHZhbGlkIHJlYXNvbnMgdG8ga2VlcCBz
-aXplIGFzIHdlbGwgYXMgdG8gdHJ1bmNhdGU7Cml0J3Mgbm90IGltbWVkaWF0ZWx5IGNsZWFyIHRv
-IG1lIGhvdyB3ZSBzaG91bGQgaGFuZGxlIGl0LgoKSG9uZXN0bHksIGF0IHRoaXMgcG9pbnQsIGlu
-IHRoZSBpbnRlcmVzdCBvZiBnZXR0aW5nIHRoZSBvdGhlciBmaXhlcyBpbiwKSSB0aGluayBJIG1p
-Z2h0IHJhdGhlciBzZWUgdGhlIHRydW5jYXRpbmcgYmVoYXZpb3IgdW5jaGFuZ2VkIGZyb20gd2hh
-dAp3ZSBoYXZlIHRvZGF5OyB3ZSBjYW4gdGFja2xlIHRoYXQgYXMgYSBzZXBhcmF0ZSBwcm9ibGVt
-IGF0IGEgbGF0ZXIgZGF0ZS4KCldoYXQgZG8geW91IHRoaW5rPwoKLUVyaWMKCj4gCj4g4oCLQ2hl
-ZXJzLAo+IEphbuKAiwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Mike Christie <mchristi@redhat.com>
+
+This patch has the pm code use bio->bi_op for REQ_OPs and rq_flag_bits
+to bio->bi_rw.
+
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ kernel/power/swap.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/kernel/power/swap.c b/kernel/power/swap.c
+index 4d050eb..adbcb1b 100644
+--- a/kernel/power/swap.c
++++ b/kernel/power/swap.c
+@@ -250,7 +250,7 @@ static void hib_end_io(struct bio *bio)
+ 	bio_put(bio);
+ }
+ 
+-static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
++static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
+ 		struct hib_bio_batch *hb)
+ {
+ 	struct page *page = virt_to_page(addr);
+@@ -260,7 +260,8 @@ static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
+ 	bio = bio_alloc(__GFP_RECLAIM | __GFP_HIGH, 1);
+ 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
+ 	bio->bi_bdev = hib_resume_bdev;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
+ 
+ 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
+ 		printk(KERN_ERR "PM: Adding page to bio failed at %llu\n",
+@@ -296,7 +297,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
+ {
+ 	int error;
+ 
+-	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
++	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
++		      swsusp_header, NULL);
+ 	if (!memcmp("SWAP-SPACE",swsusp_header->sig, 10) ||
+ 	    !memcmp("SWAPSPACE2",swsusp_header->sig, 10)) {
+ 		memcpy(swsusp_header->orig_sig,swsusp_header->sig, 10);
+@@ -305,8 +307,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
+ 		swsusp_header->flags = flags;
+ 		if (flags & SF_CRC32_MODE)
+ 			swsusp_header->crc32 = handle->crc32;
+-		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
+-					swsusp_header, NULL);
++		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++				      swsusp_resume_block, swsusp_header, NULL);
+ 	} else {
+ 		printk(KERN_ERR "PM: Swap header not found!\n");
+ 		error = -ENODEV;
+@@ -379,7 +381,7 @@ static int write_page(void *buf, sector_t offset, struct hib_bio_batch *hb)
+ 	} else {
+ 		src = buf;
+ 	}
+-	return hib_submit_io(WRITE_SYNC, offset, src, hb);
++	return hib_submit_io(REQ_OP_WRITE, WRITE_SYNC, offset, src, hb);
+ }
+ 
+ static void release_swap_writer(struct swap_map_handle *handle)
+@@ -982,7 +984,8 @@ static int get_swap_reader(struct swap_map_handle *handle,
+ 			return -ENOMEM;
+ 		}
+ 
+-		error = hib_submit_io(READ_SYNC, offset, tmp->map, NULL);
++		error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset,
++				      tmp->map, NULL);
+ 		if (error) {
+ 			release_swap_reader(handle);
+ 			return error;
+@@ -1006,7 +1009,7 @@ static int swap_read_page(struct swap_map_handle *handle, void *buf,
+ 	offset = handle->cur->entries[handle->k];
+ 	if (!offset)
+ 		return -EFAULT;
+-	error = hib_submit_io(READ_SYNC, offset, buf, hb);
++	error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset, buf, hb);
+ 	if (error)
+ 		return error;
+ 	if (++handle->k >= MAP_PAGE_ENTRIES) {
+@@ -1508,7 +1511,8 @@ int swsusp_check(void)
+ 	if (!IS_ERR(hib_resume_bdev)) {
+ 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
+ 		clear_page(swsusp_header);
+-		error = hib_submit_io(READ_SYNC, swsusp_resume_block,
++		error = hib_submit_io(REQ_OP_READ, READ_SYNC,
++					swsusp_resume_block,
+ 					swsusp_header, NULL);
+ 		if (error)
+ 			goto put;
+@@ -1516,7 +1520,8 @@ int swsusp_check(void)
+ 		if (!memcmp(HIBERNATE_SIG, swsusp_header->sig, 10)) {
+ 			memcpy(swsusp_header->sig, swsusp_header->orig_sig, 10);
+ 			/* Reset swap signature now */
+-			error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
++			error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++						swsusp_resume_block,
+ 						swsusp_header, NULL);
+ 		} else {
+ 			error = -EINVAL;
+@@ -1560,10 +1565,12 @@ int swsusp_unmark(void)
+ {
+ 	int error;
+ 
+-	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
++	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
++		      swsusp_header, NULL);
+ 	if (!memcmp(HIBERNATE_SIG,swsusp_header->sig, 10)) {
+ 		memcpy(swsusp_header->sig,swsusp_header->orig_sig, 10);
+-		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
++		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
++					swsusp_resume_block,
+ 					swsusp_header, NULL);
+ 	} else {
+ 		printk(KERN_ERR "PM: Cannot find swsusp signature!\n");
+-- 
+2.7.2
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
