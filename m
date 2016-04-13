@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 08A8A7CBD
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D11DB8F8049
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:50 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3lH3Hk8yZCMqAMpE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:49 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 32/42] block: convert is_sync helpers to use REQ_OPs.
-Date: Wed, 13 Apr 2016 14:36:18 -0500
-Message-Id: <1460576188-5751-33-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D15597CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 16:20:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3FDE1AC003
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:20:48 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	vB9uMwfuxGrHxasd for <xfs@oss.sgi.com>;
+	Wed, 13 Apr 2016 14:20:45 -0700 (PDT)
+Date: Thu, 14 Apr 2016 07:20:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/11] xfs: we don't need no steekin ->evict_inode
+Message-ID: <20160413212041.GQ567@dastard>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+	<1460525492-1170-2-git-send-email-david@fromorbit.com>
+	<20160413164110.GA8475@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160413164110.GA8475@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,136 +27,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-From: Mike Christie <mchristi@redhat.com>
+On Wed, Apr 13, 2016 at 09:41:10AM -0700, Christoph Hellwig wrote:
+> Al has been very unhappy about our destroy_inode abuse, and I'd
+> reluctant to make it worse.
 
-This patch converts the is_sync helpers to use separate variables
-for the operation and flags.
+I don't have any problems with it at all. The VFS doesn't care
+how we manage inode allocation or destruction, so I don't see
+any problem with what we do outside the visibility of the VFS inode
+life cycle.
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-core.c       | 6 +++---
- block/blk-mq.c         | 8 ++++----
- block/cfq-iosched.c    | 2 +-
- include/linux/blkdev.h | 6 +++---
- 4 files changed, 11 insertions(+), 11 deletions(-)
+> Why do we need to play games with i_mode when freeing?
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 5632cd1..a240657 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
- static void freed_request(struct request_list *rl, int op, unsigned int flags)
- {
- 	struct request_queue *q = rl->q;
--	int sync = rw_is_sync(op | flags);
-+	int sync = rw_is_sync(op, flags);
- 
- 	q->nr_rqs[sync]--;
- 	rl->count[sync]--;
-@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
- 	struct elevator_type *et = q->elevator->type;
- 	struct io_context *ioc = rq_ioc(bio);
- 	struct io_cq *icq = NULL;
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	int may_queue;
- 
- 	if (unlikely(blk_queue_dying(q)))
-@@ -1246,7 +1246,7 @@ static struct request *get_request(struct request_queue *q, int op,
- 				   int op_flags, struct bio *bio,
- 				   gfp_t gfp_mask)
- {
--	const bool is_sync = rw_is_sync(op | op_flags) != 0;
-+	const bool is_sync = rw_is_sync(op, op_flags) != 0;
- 	DEFINE_WAIT(wait);
- 	struct request_list *rl;
- 	struct request *rq;
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4843c0b..64d61be 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -206,7 +206,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
- 	rq->end_io_data = NULL;
- 	rq->next_rq = NULL;
- 
--	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
-+	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
- }
- 
- static struct request *
-@@ -1181,7 +1181,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
- 	ctx = blk_mq_get_ctx(q);
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
--	if (rw_is_sync(bio->bi_op | bio->bi_rw))
-+	if (rw_is_sync(bio->bi_op, bio->bi_rw))
- 		op_flags |= REQ_SYNC;
- 
- 	trace_block_getrq(q, bio, op);
-@@ -1249,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
-  */
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
-@@ -1346,7 +1346,7 @@ done:
-  */
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op, bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 0dfa2dd..2fd5bcf 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
- 	if (!cic)
- 		return ELV_MQUEUE_MAY;
- 
--	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
-+	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
- 	if (cfqq) {
- 		cfq_init_prio_data(cfqq, cic);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 39df8ef..550b371 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -618,14 +618,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
- /*
-  * We regard a request as sync, if either a read or a sync write
-  */
--static inline bool rw_is_sync(unsigned int rw_flags)
-+static inline bool rw_is_sync(int op, unsigned int rw_flags)
- {
--	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
-+	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
- }
- 
- static inline bool rq_is_sync(struct request *rq)
- {
--	return rw_is_sync(rq->cmd_flags);
-+	return rw_is_sync(rq->op, rq->cmd_flags);
- }
- 
- static inline bool blk_rl_full(struct request_list *rl, bool sync)
+Because the inode cache lookup XFS code uses i_mode == 0 to detect a
+freed inode. i.e.  in xfs_iget_cache_miss/xfs_iget_cache_hit this is
+used to allow XFS_IGET_CREATE to return a freed inodes still in the
+cache during inode allocation. This is the only case where we are
+allowed to find a freed inode in the cache lookup, so we have to be
+able to detect it somehow.
+
+Similarly, I'm pretty sure there are assumptions all through the XFS
+code (both kernel and userspace) that i_mode = 0 means the inode is
+free/unallocated. xfs_repair, for example, makes this assumption,
+and so we have to zero the mode when freeing the inode...
+
+Cheers,
+
+Dave.
 -- 
-2.7.2
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
