@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 45D417CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 13:23:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B004CAC005
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:22:58 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2F40D7D4B
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CF93AC004
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QchlQSyeWM9aunie (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BFLiDwILtSF5Ne9N (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 11:22:57 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs: group quota is still enforced if mount v5 xfs with
-	gqnoenforce and pqnoenforce
-Date: Thu, 14 Apr 2016 02:22:52 +0800
-Message-Id: <1460571772-20285-1-git-send-email-zlang@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:35 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 26/42] block: copy bio op to request op
+Date: Wed, 13 Apr 2016 14:36:12 -0500
+Message-Id: <1460576188-5751-27-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +28,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, sandeen@redhat.com, Zorro Lang <zlang@redhat.com>
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-This's a regression bug caused by:
+From: Mike Christie <mchristi@redhat.com>
 
-  2e74af0 xfs: convert mount option parsing to tokens
+The bio users should now always be setting up the bio->bi_op. This patch
+has us copy that to the struct request op field.
 
-xfstests xfs/299 can reproduce this bug, it will fail when do
-gpnoenforce test, the error output as below(diff with 299.out):
-
- *** push past the soft block limit
-  [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-  -[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-  +[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-
- *** push past the hard inode limit (expect EDQUOT)
-  [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-  -[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-  +[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-
- *** push past the hard block limit (expect EDQUOT)
-  [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-  -[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-  +[NAME] 500 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-
-It shows that group quota is still enforced. But this bug only can
-be reproduced when mount v5 xfs with gqnoenforce and pqnoenforce
-options. The reason as I found is a missed "break" in xfs_parseargs()
-function.
-
-After deal with "pqnoenforce", it should break. But the code keep
-running into "gquota/grpquota" lines, and make gquota enforced.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
+ block/blk-core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hi,
-
-This's a tiny bug(only one line patch). But it's belong to
-regression bug and take me a few hours to find the problem.
-So I hope it can be fixed:)
-
-Thanks,
-Zorro
-
- fs/xfs/xfs_super.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 187e14b..f3c0ffc 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -350,6 +350,7 @@ xfs_parseargs(
- 		case Opt_pqnoenforce:
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
- 			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
-+			break;
- 		case Opt_gquota:
- 		case Opt_grpquota:
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6bcc22e..4224775 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2990,6 +2990,7 @@ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ {
+ 	/* tmp compat. Allow users to set bi_op or bi_rw */
+ 	rq->cmd_flags |= bio_data_dir(bio);
++	rq->op = bio->bi_op;
+ 
+ 	if (bio_has_data(bio))
+ 		rq->nr_phys_segments = bio_phys_segments(q, bio);
+@@ -3074,6 +3075,7 @@ EXPORT_SYMBOL_GPL(blk_rq_unprep_clone);
+ static void __blk_rq_prep_clone(struct request *dst, struct request *src)
+ {
+ 	dst->cpu = src->cpu;
++	dst->op = src->op;
+ 	dst->cmd_flags |= (src->cmd_flags & REQ_CLONE_MASK) | REQ_NOMERGE;
+ 	dst->cmd_type = src->cmd_type;
+ 	dst->__sector = blk_rq_pos(src);
 -- 
-2.5.5
+2.7.2
 
 _______________________________________________
 xfs mailing list
