@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 60BFF7CCB
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17EA28F8035
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nkcErdLgjH7PWUlT (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 5A7097CA7
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 10:03:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 261C28F8033
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 08:03:43 -0700 (PDT)
+Received: from g4t3428.houston.hp.com (g4t3428.houston.hp.com [15.201.208.56])
+	by cuda.sgi.com with ESMTP id 0MSYW1Emo8kSGmYQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:58 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 36/42] ide cd: do not set REQ_WRITE on requests.
-Date: Wed, 13 Apr 2016 14:36:22 -0500
-Message-Id: <1460576188-5751-37-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 08:03:35 -0700 (PDT)
+Message-ID: <1460559303.24985.52.camel@hpe.com>
+Subject: Re: [PATCH v2 1/5] dax: add dax_get_unmapped_area for pmd mappings
+From: Toshi Kani <toshi.kani@hpe.com>
+Date: Wed, 13 Apr 2016 08:55:03 -0600
+In-Reply-To: <20160413031801.GO2781@linux.intel.com>
+References: <1460493555-31611-1-git-send-email-toshi.kani@hpe.com>
+	<1460493555-31611-2-git-send-email-toshi.kani@hpe.com>
+	<20160413031801.GO2781@linux.intel.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +26,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, adilger.kernel@dilger.ca, kirill.shutemov@linux.intel.com, linux-fsdevel@vger.kernel.org, tytso@mit.edu, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, dan.j.williams@intel.com, viro@zeniv.linux.org.uk
 
-From: Mike Christie <mchristi@redhat.com>
-
-The block layer will set the correct READ/WRITE operation flags/fields
-when creating a request, so there is not need for drivers to set the
-REQ_WRITE flag.
-
-This patch is compile tested only.
-
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ide/ide-cd_ioctl.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 474173e..5887a7a 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -459,9 +459,6 @@ int ide_cdrom_packet(struct cdrom_device_info *cdi,
- 	   layer. the packet must be complete, as we do not
- 	   touch it at all. */
- 
--	if (cgc->data_direction == CGC_DATA_WRITE)
--		flags |= REQ_WRITE;
--
- 	if (cgc->sense)
- 		memset(cgc->sense, 0, sizeof(struct request_sense));
- 
--- 
-2.7.2
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCAyMDE2LTA0LTEyIGF0IDIzOjE4IC0wNDAwLCBNYXR0aGV3IFdpbGNveCB3cm90ZToK
+PiBPbiBUdWUsIEFwciAxMiwgMjAxNiBhdCAwMjozOToxNVBNIC0wNjAwLCBUb3NoaSBLYW5pIHdy
+b3RlOgo+ID4gCj4gPiArICogV2hlbiB0aGUgdGFyZ2V0IGZpbGUgaXMgbm90IGEgREFYIGZpbGUs
+IEBhZGRyIGlzIHNwZWNpZmllZCwgdGhlCj4gPiArICogcmVxdWVzdCBpcyBub3Qgc3VpdGFibGUg
+Zm9yIHBtZCBtYXBwaW5ncywgb3IgbW0tCj4gPiA+Z2V0X3VubWFwcGVkX2FyZWEoKQo+ID4gKyAq
+IGZhaWxlZCB3aXRoIGV4dGVuZGVkIEBsZW4sIGl0IHNpbXBseSBjYWxscyB0aGUgZGVmYXVsdCBo
+YW5kbGVyLAo+ID4gKyAqIG1tLT5nZXRfdW5tYXBwZWRfYXJlYSgpLCB3aXRoIHRoZSBvcmlnaW5h
+bCBhcmd1bWVudHMuCj4KPiBJIHRoaW5rIHlvdSBjYW4gbG9zZSB0aGlzIHBhcmFncmFwaC7CoMKg
+SXQgZGVzY3JpYmVzIHdoYXQgdGhlIGZ1bmN0aW9uCj4gZG9lcywgbm90IHdoeSBpdCBkb2VzIGl0
+IC4uLiBhbmQgd2UgY2FuIHNlZSB3aGF0IHRoZSBmdW5jdGlvbiBkb2VzIGZyb20KPiByZWFkaW5n
+IHRoZSBjb2RlLgoKQWdyZWVkLiDCoEkgd2lsbCByZW1vdmUgdGhpcyBwYXJhZ3JhcGguCgo+IEkg
+dGhpbmsgdGhpcyBpcyBvbmUgb2YgdGhvc2UgZnVuY3Rpb25zIHdoaWNoIGlzIGFjdHVhbGx5IGlt
+cHJvdmVkIHdpdGgKPiBnb3RvcywgcHVyZWx5IHRvIHJlZHVjZSB0aGUgaW5kZW50YXRpb24gbGV2
+ZWwuCj4gCj4gdW5zaWduZWQgbG9uZyBkYXhfZ2V0X3VubWFwcGVkX2FyZWEoc3RydWN0IGZpbGUg
+KmZpbHAsIHVuc2lnbmVkIGxvbmcKPiBhZGRyLAo+IAkJdW5zaWduZWQgbG9uZyBsZW4sIHVuc2ln
+bmVkIGxvbmcgcGdvZmYsIHVuc2lnbmVkIGxvbmcKPiBmbGFncykKPiB7Cj4gCXVuc2lnbmVkIGxv
+bmcgb2ZmLCBvZmZfZW5kLCBvZmZfcG1kLCBsZW5fcG1kLCBhZGRyX3BtZDsKPiAKPiAJaWYgKCFJ
+U19FTkFCTEVEKENPTkZJR19GU19EQVhfUE1EKSB8fAo+IAnCoMKgwqDCoCFmaWxwIHx8IGFkZHIg
+fHwgIUlTX0RBWChmaWxwLT5mX21hcHBpbmctPmhvc3QpKQo+IAkJZ290byBvdXQ7Cj4gCj4gCW9m
+ZiA9IHBnb2ZmIDw8IFBBR0VfU0hJRlQ7Cj4gCW9mZl9lbmQgPSBvZmYgKyBsZW47Cj4gCW9mZl9w
+bWQgPSByb3VuZF91cChvZmYsIFBNRF9TSVpFKTsKPiAJaWYgKChvZmZfZW5kIDw9IG9mZl9wbWQp
+IHx8ICgob2ZmX2VuZCAtIG9mZl9wbWQpIDwgUE1EX1NJWkUpKQo+IAkJZ290byBvdXQ7Cj4gCj4g
+CWxlbl9wbWQgPSBsZW4gKyBQTURfU0laRTsKPiAJYWRkcl9wbWQgPSBjdXJyZW50LT5tbS0+Z2V0
+X3VubWFwcGVkX2FyZWEoZmlscCwgYWRkciwgbGVuX3BtZCwKPiAJCQkJCQkJcGdvZmYsIGZsYWdz
+KTsKPiAKPiAJaWYgKCFJU19FUlJfVkFMVUUoYWRkcl9wbWQpKSB7Cj4gCQlhZGRyX3BtZCArPSAo
+b2ZmIC0gYWRkcl9wbWQpICYgKFBNRF9TSVpFIC0gMSk7Cj4gCQlyZXR1cm4gYWRkcl9wbWQ7Cj4g
+CX0KPiAKPiDCoG91dDoKPiAJcmV0dXJuIGN1cnJlbnQtPm1tLT5nZXRfdW5tYXBwZWRfYXJlYShm
+aWxwLCBhZGRyLCBsZW4sIHBnb2ZmLAo+IGZsYWdzKTsKPiB9CgpTb3VuZHMgZ29vZC4KCj4gTm93
+IC4uLiBiYWNrIHRvIHRoZSBvcmlnaW5hbCB2ZXJzaW9uLCBzb21lIHF1ZXN0aW9uczoKPiAKPiA+
+IAo+ID4gK3Vuc2lnbmVkIGxvbmcgZGF4X2dldF91bm1hcHBlZF9hcmVhKHN0cnVjdCBmaWxlICpm
+aWxwLCB1bnNpZ25lZCBsb25nCj4gPiBhZGRyLAo+ID4gKwkJdW5zaWduZWQgbG9uZyBsZW4sIHVu
+c2lnbmVkIGxvbmcgcGdvZmYsIHVuc2lnbmVkIGxvbmcKPiA+IGZsYWdzKQo+ID4gK3sKPiA+ICsJ
+dW5zaWduZWQgbG9uZyBvZmYsIG9mZl9lbmQsIG9mZl9wbWQsIGxlbl9wbWQsIGFkZHJfcG1kOwo+
+ID4gKwo+ID4gKwlpZiAoSVNfRU5BQkxFRChDT05GSUdfRlNfREFYX1BNRCkgJiYKPiA+ICsJwqDC
+oMKgwqBmaWxwICYmICFhZGRyICYmIElTX0RBWChmaWxwLT5mX21hcHBpbmctPmhvc3QpKSB7Cj4g
+PiArCQlvZmYgPSBwZ29mZiA8PCBQQUdFX1NISUZUOwo+ID4gKwkJb2ZmX2VuZCA9IG9mZiArIGxl
+bjsKPgo+IENhbiBvZmYgKyBsZW4gd3JhcCBoZXJlLCBvciBkaWQgdGhhdCBnZXQgY2hlY2tlZCBl
+YXJsaWVyPwoKWWVzLCBkb19tbWFwKCkgaGFzIGNoZWNrZWQgdGhpcyBjb25kaXRpb24gZWFybGll
+ci4gwqBCdXQsIEkgdGhpbmsgSSBuZWVkIHRvCmNoZWNrIGl0IGZvciAob2ZmICsgbGVuX3BtZCku
+Cgo+ID4gCj4gPiArCQlvZmZfcG1kID0gcm91bmRfdXAob2ZmLCBQTURfU0laRSk7Cj4gPiArCj4g
+PiArCQlpZiAoKG9mZl9lbmQgPiBvZmZfcG1kKSAmJiAoKG9mZl9lbmQgLSBvZmZfcG1kKSA+PQo+
+ID4gUE1EX1NJWkUpKSB7Cj4KPiBXZSdyZSBvbmx5IGdvaW5nIHRvIGxvb2sgZm9yIGEgUE1ELWFs
+aWduZWQgbWFwcGluZyBpZiB0aGUgbWFwcGluZyBpcyBhdAo+IGxlYXN0IGRvdWJsZSBQTURfU0la
+RT/CoMKgSSBkb24ndCB1bmRlcnN0YW5kIHRoYXQgZGVjaXNpb24uwqDCoFNlZW1zIHRvIG1lCj4g
+dGhhdCBpZiBJIGFzayB0byBtYXAgb2Zmc2V0IDRNQiwgbGVuZ3RoIDJNQiwgSSBzaG91bGQgZ2V0
+IGEgUE1ELWFsaWduZWQKPiBtYXBwaW5nLgoKSXQgY2hlY2tzIGlmIHRoaXMgcmVxdWVzdCBjYW4g
+YmUgY292ZXJlZCBieSBhIFBNRCBwYWdlLsKgwqAnb2ZmX3BtZCcgaXMgdGhlCmZpcnN0IFBNRC1h
+bGlnbmVkIG9mZnNldC7CoMKgVGhlcmUgbmVlZHMgdG8gYmUgYXQgbGVhc3QgMk1CIGZyb20gdGhp
+cyBvZmZzZXQKdG8gdGhlIGVuZCwgJ29mZl9lbmQnLCBpbiBvcmRlciB0byBjb3ZlciB3aXRoIGEg
+UE1EIHBhZ2UuCgpJbiB5b3VyIGV4YW1wbGUsICdvZmZfcG1kJyBpcyBzdGlsbCA0TUIsIHdoaWNo
+IGhhcyAyTUIgdG8gdGhlIGVuZC7CoMKgU28sIHNvCnRoaXMgcmVxdWVzdCBjYW4gYmUgY292ZXJl
+ZCBieSBhIFBNRCBwYWdlLgoKQW5vdGhlciBleGFtcGxlLCBzYXksIG9mZnNldCA0S0IgYW5kIGxl
+bmd0aCAyTUIuIMKgJ29mZl9wbWQnIGlzIDJNQiwgd2hpY2gKaGFzIG9ubHkgNEtCIHRvIHRoZSBl
+bmQuwqDCoFNvLCB0aGlzIHJlcXVlc3QgY2Fubm90IGJlIGNvdmVyZWQgYnkgYSBQTUQgcGFnZS4K
+Cj4gU3BlYWtpbmcgb2Ygb2Zmc2V0LCB3ZSBkb24ndCBoYXZlIGFueSBjaGVja3MgdGhhdCBvZmZz
+ZXQgaXMgYSBtdWx0aXBsZQo+IG9mIFBNRF9TSVpFLsKgwqBJIGtub3cgdGhhdCB0aGVvcmV0aWNh
+bGx5IHdlIGNvdWxkIG1hcCBvZmZzZXQgMS41TUIsIGxlbmd0aAo+IDNNQiBhbmQgc2VlIHRoZSBm
+aXJzdCAwLjVNQiBmaWxsZWQgd2l0aCBzbWFsbCBwYWdlcywgdGhlbiB0aGUgbmV4dCAyTUIKPiBm
+aWxsZWQgd2l0aCBvbmUgbGFyZ2UgcGFnZSwgYW5kIHRoZSB0YWlsIGZpbGxlZCB3aXRoIHNtYWxs
+IHBhZ2VzLCBidXQgSQo+IHRoaW5rIHdlJ3JlIGJldHRlciBvZmYgb25seSBsb29raW5nIGZvciBQ
+TUQtYWxpZ25tZW50IGlmIHRoZSB1c2VyIGFza2VkCj4gZm9yIGFuIGFsaWduZWQgb2Zmc2V0IGlu
+IHRoZSBmaWxlLgoKWWVzLCB0aGF0J3Mgd2hhdCBpdCBjaGVja3MuIMKgSW4gdGhpcyBjYXNlLCAn
+b2ZmX3BtZCcgaXMgc2V0IHRvIDJNQiwgd2hpY2gKaGFzIDIuNU1CIHRvIHRoZSBlbmQuIMKgU28s
+IGl0IGNhbiBiZSBjb3ZlcmVkIGJ5IGEgUE1EIHBhZ2UuIMKgVGhlIG9mZnNldAppdHNlbGYgZG9l
+cyBub3QgaGF2ZSB0byBiZSBhbGlnbmVkIGJ5IDJNQi4KCgo+ID4gKwkJCWxlbl9wbWQgPSBsZW4g
+KyBQTURfU0laRTsKPiA+ICsKPiA+ICsJCQlhZGRyX3BtZCA9IGN1cnJlbnQtPm1tLT5nZXRfdW5t
+YXBwZWRfYXJlYSgKPiA+ICsJCQkJCWZpbHAsIGFkZHIsIGxlbl9wbWQsIHBnb2ZmLAo+ID4gZmxh
+Z3MpOwo+ID4gKwo+ID4gKwkJCWlmICghSVNfRVJSX1ZBTFVFKGFkZHJfcG1kKSkgewo+ID4gKwkJ
+CQlhZGRyX3BtZCArPSAob2ZmIC0gYWRkcl9wbWQpICYKPiA+IChQTURfU0laRSAtIDEpOwo+Cj4g
+Li4uIHRoZW4geW91IHdvdWxkbid0IG5lZWQgdGhpcyBjYWxjdWxhdGlvbiA7LSkKCkFwcGxpY2F0
+aW9ucyBzaG91bGQgbm90IGJlIHJlcXVpcmVkIHRvIHByb3ZpZGUgYSAyTUItYWxpZ25lZCBvZmZz
+ZXQuCgpUaGFua3MsCi1Ub3NoaQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
