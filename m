@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2787A7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 18:31:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 724E3AC001
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 16:31:08 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	oQUFYJbo7Vru3xQK for <xfs@oss.sgi.com>;
-	Thu, 14 Apr 2016 16:31:04 -0700 (PDT)
-Date: Fri, 15 Apr 2016 09:31:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/11] xfs: mark reclaimed inodes invalid earlier
-Message-ID: <20160414233101.GY567@dastard>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-	<1460525492-1170-8-git-send-email-david@fromorbit.com>
-	<20160413064900.GP567@dastard>
-	<20160414121048.GB20696@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160414121048.GB20696@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id 74CA47CE5
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:36:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BBB9CAC007
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HxDgBDvA6ubBK8sA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:51 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 07/42] btrfs: have submit_one_bio users setup bio bi_op
+Date: Wed, 13 Apr 2016 14:35:53 -0500
+Message-Id: <1460576188-5751-8-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,65 +23,339 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-On Thu, Apr 14, 2016 at 08:10:49AM -0400, Brian Foster wrote:
-> On Wed, Apr 13, 2016 at 04:49:00PM +1000, Dave Chinner wrote:
-> > On Wed, Apr 13, 2016 at 03:31:28PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > The last thing we do before using call_rcu() on an xfs_inode to be
-> > > freed is mark it as invalid. This means there is a window between
-> > > when we know for certain that the inode is going to be freed and
-> > > when we do actually mark it as "freed".
-> > > 
-> > > This is important in the context of RCU lookups - we can look up the
-> > > inode, find that it is valid, and then use it as such not realising
-> > > that it is in the final stages of being freed.
-> > > 
-> > > As such, mark the inode as being invalid the moment we know it is
-> > > going to be reclaimed. This can be done while we still hold the
-> > > XFS_ILOCK_EXCL and the flush lock in xfs_inode_reclaim, meaning that
-> > > it occurs well before we remove it from the radix tree, and that
-> > > the i_flags_lock, the XFS_ILOCK and the inode flush lock all act as
-> > > synchronisation points for detecting that an inode is about to go
-> > > away.
-> > > 
-> > > For defensive purposes, this allows us to add a further check to
-> > > xfs_iflush_cluster to ensure we skip inodes that are being freed
-> > > after we grab the XFS_ILOCK_SHARED and the flush lock - we know that
-> > > if the inode number if valid while we have these locks held we know
-> > > that it has not progressed through reclaim to the point where it is
-> > > clean and is about to be freed.
-> > > 
-> > > [bfoster: fixed __xfs_inode_clear_reclaim() using ip->i_ino after it
-> > > 	  had already been zeroed.]
-> > 
-> > And, of course, in reordering this I dropped this fix because it was
-> > handled by the reworking of tagging code to use pag->pag_agno.
-> > 
-> > So I've brought that small change forward to this patch (using
-> > pag->pag_agno instead of deriving it from the ip->i_ino in
-> > __xfs_inode_clear_reclaim()).
-> > 
-> 
-> I don't see any such change in this patch..?
-> __xfs_inode_clear_reclaim() still uses ip->i_ino.
+From: Mike Christie <mchristi@redhat.com>
 
-I meant that I realised that I'd screwed it up and so I'd changed my
-local copy after I sent this.
+This patch has btrfs's submit_one_bio callers set the bio->bi_op to a
+REQ_OP and the bi_rw to rq_flag_bits.
 
-Cheers,
+The next patches will continue to convert btrfs,
+so submit_bio_hook and merge_bio_hook
+related code will be modified to take only the bio. I did
+not do it in this patch to try and keep it smaller.
 
-Dave.
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/btrfs/extent_io.c | 88 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 45 insertions(+), 43 deletions(-)
+
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index fdeb8fa..45fa3be 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -2377,7 +2377,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
+ 	int read_mode;
+ 	int ret;
+ 
+-	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
++	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
+ 
+ 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
+ 	if (ret)
+@@ -2403,6 +2403,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
+ 		free_io_failure(inode, failrec);
+ 		return -EIO;
+ 	}
++	bio->bi_op = REQ_OP_READ;
++	bio->bi_rw = read_mode;
+ 
+ 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
+ 		 read_mode, failrec->this_mirror, failrec->in_validation);
+@@ -2714,8 +2716,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
+ }
+ 
+ 
+-static int __must_check submit_one_bio(int rw, struct bio *bio,
+-				       int mirror_num, unsigned long bio_flags)
++static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
++				       unsigned long bio_flags)
+ {
+ 	int ret = 0;
+ 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
+@@ -2726,12 +2728,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
+ 	start = page_offset(page) + bvec->bv_offset;
+ 
+ 	bio->bi_private = NULL;
+-	bio->bi_rw = rw;
+ 	bio_get(bio);
+ 
+ 	if (tree->ops && tree->ops->submit_bio_hook)
+-		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
+-					   mirror_num, bio_flags, start);
++		ret = tree->ops->submit_bio_hook(page->mapping->host,
++						 bio->bi_rw, bio, mirror_num,
++						 bio_flags, start);
+ 	else
+ 		btrfsic_submit_bio(bio);
+ 
+@@ -2739,20 +2741,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
+ 	return ret;
+ }
+ 
+-static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
++static int merge_bio(struct extent_io_tree *tree, struct page *page,
+ 		     unsigned long offset, size_t size, struct bio *bio,
+ 		     unsigned long bio_flags)
+ {
+ 	int ret = 0;
+ 	if (tree->ops && tree->ops->merge_bio_hook)
+-		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
+-						bio_flags);
++		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
++						bio, bio_flags);
+ 	BUG_ON(ret < 0);
+ 	return ret;
+ 
+ }
+ 
+-static int submit_extent_page(int rw, struct extent_io_tree *tree,
++static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
+ 			      struct writeback_control *wbc,
+ 			      struct page *page, sector_t sector,
+ 			      size_t size, unsigned long offset,
+@@ -2780,10 +2782,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 
+ 		if (prev_bio_flags != bio_flags || !contig ||
+ 		    force_bio_submit ||
+-		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
++		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
+ 		    bio_add_page(bio, page, page_size, offset) < page_size) {
+-			ret = submit_one_bio(rw, bio, mirror_num,
+-					     prev_bio_flags);
++			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
+ 			if (ret < 0) {
+ 				*bio_ret = NULL;
+ 				return ret;
+@@ -2804,6 +2805,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 	bio_add_page(bio, page, page_size, offset);
+ 	bio->bi_end_io = end_io_func;
+ 	bio->bi_private = tree;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
+ 	if (wbc) {
+ 		wbc_init_bio(wbc, bio);
+ 		wbc_account_io(wbc, page, page_size);
+@@ -2812,7 +2815,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
+ 	if (bio_ret)
+ 		*bio_ret = bio;
+ 	else
+-		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
++		ret = submit_one_bio(bio, mirror_num, bio_flags);
+ 
+ 	return ret;
+ }
+@@ -2876,7 +2879,7 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 			 get_extent_t *get_extent,
+ 			 struct extent_map **em_cached,
+ 			 struct bio **bio, int mirror_num,
+-			 unsigned long *bio_flags, int rw,
++			 unsigned long *bio_flags, int read_flags,
+ 			 u64 *prev_em_start)
+ {
+ 	struct inode *inode = page->mapping->host;
+@@ -3059,8 +3062,8 @@ static int __do_readpage(struct extent_io_tree *tree,
+ 		}
+ 
+ 		pnr -= page->index;
+-		ret = submit_extent_page(rw, tree, NULL, page,
+-					 sector, disk_io_size, pg_offset,
++		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
++					 page, sector, disk_io_size, pg_offset,
+ 					 bdev, bio, pnr,
+ 					 end_bio_extent_readpage, mirror_num,
+ 					 *bio_flags,
+@@ -3091,7 +3094,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
+ 					     get_extent_t *get_extent,
+ 					     struct extent_map **em_cached,
+ 					     struct bio **bio, int mirror_num,
+-					     unsigned long *bio_flags, int rw,
++					     unsigned long *bio_flags,
+ 					     u64 *prev_em_start)
+ {
+ 	struct inode *inode;
+@@ -3112,7 +3115,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
+ 
+ 	for (index = 0; index < nr_pages; index++) {
+ 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
+-			      mirror_num, bio_flags, rw, prev_em_start);
++			      mirror_num, bio_flags, 0, prev_em_start);
+ 		put_page(pages[index]);
+ 	}
+ }
+@@ -3122,7 +3125,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 			       int nr_pages, get_extent_t *get_extent,
+ 			       struct extent_map **em_cached,
+ 			       struct bio **bio, int mirror_num,
+-			       unsigned long *bio_flags, int rw,
++			       unsigned long *bio_flags,
+ 			       u64 *prev_em_start)
+ {
+ 	u64 start = 0;
+@@ -3144,7 +3147,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 						  index - first_index, start,
+ 						  end, get_extent, em_cached,
+ 						  bio, mirror_num, bio_flags,
+-						  rw, prev_em_start);
++						  prev_em_start);
+ 			start = page_start;
+ 			end = start + PAGE_SIZE - 1;
+ 			first_index = index;
+@@ -3155,7 +3158,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
+ 		__do_contiguous_readpages(tree, &pages[first_index],
+ 					  index - first_index, start,
+ 					  end, get_extent, em_cached, bio,
+-					  mirror_num, bio_flags, rw,
++					  mirror_num, bio_flags,
+ 					  prev_em_start);
+ }
+ 
+@@ -3163,7 +3166,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
+ 				   struct page *page,
+ 				   get_extent_t *get_extent,
+ 				   struct bio **bio, int mirror_num,
+-				   unsigned long *bio_flags, int rw)
++				   unsigned long *bio_flags, int read_flags)
+ {
+ 	struct inode *inode = page->mapping->host;
+ 	struct btrfs_ordered_extent *ordered;
+@@ -3183,7 +3186,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
+ 	}
+ 
+ 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
+-			    bio_flags, rw, NULL);
++			    bio_flags, read_flags, NULL);
+ 	return ret;
+ }
+ 
+@@ -3195,9 +3198,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
+ 	int ret;
+ 
+ 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
+-				      &bio_flags, READ);
++				      &bio_flags, 0);
+ 	if (bio)
+-		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
++		ret = submit_one_bio(bio, mirror_num, bio_flags);
+ 	return ret;
+ }
+ 
+@@ -3438,7 +3441,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
+ 				       page->index, cur, end);
+ 			}
+ 
+-			ret = submit_extent_page(write_flags, tree, wbc, page,
++			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
++						 tree, wbc, page,
+ 						 sector, iosize, pg_offset,
+ 						 bdev, &epd->bio, max_nr,
+ 						 end_bio_extent_writepage,
+@@ -3478,13 +3482,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
+ 	size_t pg_offset = 0;
+ 	loff_t i_size = i_size_read(inode);
+ 	unsigned long end_index = i_size >> PAGE_SHIFT;
+-	int write_flags;
++	int write_flags = 0;
+ 	unsigned long nr_written = 0;
+ 
+ 	if (wbc->sync_mode == WB_SYNC_ALL)
+ 		write_flags = WRITE_SYNC;
+-	else
+-		write_flags = WRITE;
+ 
+ 	trace___extent_writepage(page, inode, wbc);
+ 
+@@ -3728,7 +3730,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
+ 	u64 offset = eb->start;
+ 	unsigned long i, num_pages;
+ 	unsigned long bio_flags = 0;
+-	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
++	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
+ 	int ret = 0;
+ 
+ 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
+@@ -3742,9 +3744,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
+ 
+ 		clear_page_dirty_for_io(p);
+ 		set_page_writeback(p);
+-		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
+-					 PAGE_SIZE, 0, bdev, &epd->bio,
+-					 -1, end_bio_extent_buffer_writepage,
++		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
++					 p, offset >> 9, PAGE_SIZE, 0, bdev,
++					 &epd->bio, -1,
++					 end_bio_extent_buffer_writepage,
+ 					 0, epd->bio_flags, bio_flags, false);
+ 		epd->bio_flags = bio_flags;
+ 		if (ret) {
+@@ -4054,13 +4057,13 @@ retry:
+ static void flush_epd_write_bio(struct extent_page_data *epd)
+ {
+ 	if (epd->bio) {
+-		int rw = WRITE;
+ 		int ret;
+ 
++		epd->bio->bi_op = REQ_OP_WRITE;
+ 		if (epd->sync_io)
+-			rw = WRITE_SYNC;
++			epd->bio->bi_rw = WRITE_SYNC;
+ 
+-		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
++		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
+ 		BUG_ON(ret < 0); /* -ENOMEM */
+ 		epd->bio = NULL;
+ 	}
+@@ -4187,19 +4190,19 @@ int extent_readpages(struct extent_io_tree *tree,
+ 		if (nr < ARRAY_SIZE(pagepool))
+ 			continue;
+ 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
+-				   &bio, 0, &bio_flags, READ, &prev_em_start);
++				   &bio, 0, &bio_flags, &prev_em_start);
+ 		nr = 0;
+ 	}
+ 	if (nr)
+ 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
+-				   &bio, 0, &bio_flags, READ, &prev_em_start);
++				   &bio, 0, &bio_flags, &prev_em_start);
+ 
+ 	if (em_cached)
+ 		free_extent_map(em_cached);
+ 
+ 	BUG_ON(!list_empty(pages));
+ 	if (bio)
+-		return submit_one_bio(READ, bio, 0, bio_flags);
++		return submit_one_bio(bio, 0, bio_flags);
+ 	return 0;
+ }
+ 
+@@ -5221,7 +5224,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
+ 			err = __extent_read_full_page(tree, page,
+ 						      get_extent, &bio,
+ 						      mirror_num, &bio_flags,
+-						      READ | REQ_META);
++						      REQ_META);
+ 			if (err)
+ 				ret = err;
+ 		} else {
+@@ -5230,8 +5233,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
+ 	}
+ 
+ 	if (bio) {
+-		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
+-				     bio_flags);
++		err = submit_one_bio(bio, mirror_num, bio_flags);
+ 		if (err)
+ 			return err;
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.2
 
 _______________________________________________
 xfs mailing list
