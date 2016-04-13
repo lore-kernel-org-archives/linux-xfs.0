@@ -1,18 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA38F7CA0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 15:53:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AB384304066
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:24 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id PTLSCIQNZxIMuFMW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 13:53:21 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: iomap infrastructure and multipage writes V2
-Date: Tue, 12 Apr 2016 13:52:54 -0700
-Message-Id: <1460494382-14547-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 9228B7CA0
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 45883304062
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:21 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	D5eZzzmhTy1bBsbl for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 22:32:18 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p7-TU
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:12 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000c8-Dr
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 07/11] xfs: mark reclaimed inodes invalid earlier
+Date: Wed, 13 Apr 2016 15:31:28 +1000
+Message-Id: <1460525492-1170-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +36,154 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-This series add a new file system I/O path that uses the iomap structure
-introduced for the pNFS support and support multi-page buffered writes.
+From: Dave Chinner <dchinner@redhat.com>
 
-This was first started by Dave Chinner a long time ago, then I did beat
-it into shape for production runs in a very constrained ARM NAS
-enviroment for Tuxera almost as long ago, and now half a dozen rewrites
-later it's back.
+The last thing we do before using call_rcu() on an xfs_inode to be
+freed is mark it as invalid. This means there is a window between
+when we know for certain that the inode is going to be freed and
+when we do actually mark it as "freed".
 
-The basic idea is to avoid the crazy per-block get_blocks overhead
-and make use of extents in the buffered write path by iterating over
-them instead.
+This is important in the context of RCU lookups - we can look up the
+inode, find that it is valid, and then use it as such not realising
+that it is in the final stages of being freed.
 
-Chances since V1:
- - add support for fiemap
- - fix a test fail on 1k block sizes
- - prepare for 64-bit length, this will be used in a follow on patchset
+As such, mark the inode as being invalid the moment we know it is
+going to be reclaimed. This can be done while we still hold the
+XFS_ILOCK_EXCL and the flush lock in xfs_inode_reclaim, meaning that
+it occurs well before we remove it from the radix tree, and that
+the i_flags_lock, the XFS_ILOCK and the inode flush lock all act as
+synchronisation points for detecting that an inode is about to go
+away.
+
+For defensive purposes, this allows us to add a further check to
+xfs_iflush_cluster to ensure we skip inodes that are being freed
+after we grab the XFS_ILOCK_SHARED and the flush lock - we know that
+if the inode number if valid while we have these locks held we know
+that it has not progressed through reclaim to the point where it is
+clean and is about to be freed.
+
+[bfoster: fixed __xfs_inode_clear_reclaim() using ip->i_ino after it
+	  had already been zeroed.]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 40 ++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_inode.c  | 13 +++++++++++++
+ 2 files changed, 45 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0c94cde..a60db43 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -114,6 +114,18 @@ xfs_inode_free_callback(
+ 	kmem_zone_free(xfs_inode_zone, ip);
+ }
+ 
++static void
++__xfs_inode_free(
++	struct xfs_inode	*ip)
++{
++	/* asserts to verify all state is correct here */
++	ASSERT(atomic_read(&ip->i_pincount) == 0);
++	ASSERT(!xfs_isiflocked(ip));
++	XFS_STATS_DEC(ip->i_mount, vn_active);
++
++	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
++}
++
+ void
+ xfs_inode_free(
+ 	struct xfs_inode	*ip)
+@@ -129,12 +141,7 @@ xfs_inode_free(
+ 	ip->i_ino = 0;
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+-	/* asserts to verify all state is correct here */
+-	ASSERT(atomic_read(&ip->i_pincount) == 0);
+-	ASSERT(!xfs_isiflocked(ip));
+-	XFS_STATS_DEC(ip->i_mount, vn_active);
+-
+-	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
++	__xfs_inode_free(ip);
+ }
+ 
+ /*
+@@ -929,6 +936,7 @@ xfs_reclaim_inode(
+ 	int			sync_mode)
+ {
+ 	struct xfs_buf		*bp = NULL;
++	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
+ 	int			error;
+ 
+ restart:
+@@ -993,6 +1001,22 @@ restart:
+ 
+ 	xfs_iflock(ip);
+ reclaim:
++	/*
++	 * Because we use RCU freeing we need to ensure the inode always appears
++	 * to be reclaimed with an invalid inode number when in the free state.
++	 * We do this as early as possible under the ILOCK and flush lock so
++	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
++	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
++	 * locked both the XFS_ILOCK and the flush lock that it will see either
++	 * a valid, flushable inode that will serialise correctly against the
++	 * locks below, or it will see a clean (and invalid) inode that it can
++	 * skip.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	ip->i_flags = XFS_IRECLAIM;
++	ip->i_ino = 0;
++	spin_unlock(&ip->i_flags_lock);
++
+ 	xfs_ifunlock(ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+@@ -1006,7 +1030,7 @@ reclaim:
+ 	 */
+ 	spin_lock(&pag->pag_ici_lock);
+ 	if (!radix_tree_delete(&pag->pag_ici_root,
+-				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino)))
++				XFS_INO_TO_AGINO(ip->i_mount, ino)))
+ 		ASSERT(0);
+ 	__xfs_inode_clear_reclaim(pag, ip);
+ 	spin_unlock(&pag->pag_ici_lock);
+@@ -1023,7 +1047,7 @@ reclaim:
+ 	xfs_qm_dqdetach(ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+-	xfs_inode_free(ip);
++	__xfs_inode_free(ip);
+ 	return error;
+ 
+ out_ifunlock:
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ad0ad8d..8931375 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3226,6 +3226,19 @@ xfs_iflush_cluster(
+ 			continue;
+ 		}
+ 
++
++		/*
++		 * Check the inode number again, just to be certain we are not
++		 * racing with freeing in xfs_reclaim_inode(). See the comments
++		 * in that function for more information as to why the initial
++		 * check is not sufficient.
++		 */
++		if (!iq->i_ino) {
++			xfs_ifunlock(iq);
++			xfs_iunlock(iq, XFS_ILOCK_SHARED);
++			continue;
++		}
++
+ 		/*
+ 		 * arriving here means that this inode can be flushed.  First
+ 		 * re-check that it's dirty before flushing.
+-- 
+2.7.0
 
 _______________________________________________
 xfs mailing list
