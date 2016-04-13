@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0A93F7CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 11:42:57 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1D4DD7CAF
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CE4C1304070
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:56 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TWkoDGu7Otwt2lqA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Apr 2016 09:42:55 -0700 (PDT)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC v2 PATCH 00/10] dm-thin/xfs: prototype a block reservation
-	allocation model
-Date: Tue, 12 Apr 2016 12:42:43 -0400
-Message-Id: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E0F9830405F
+	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	GIwkKfsy25KDpC2w for <xfs@oss.sgi.com>;
+	Tue, 12 Apr 2016 22:32:16 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p5-ST
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:11 +1000
+Received: from dave by disappointment with local (Exim 4.86)
+	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000bx-Cm
+	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 05/11] xfs: optimise xfs_iext_destroy
+Date: Wed, 13 Apr 2016 15:31:26 +1000
+Message-Id: <1460525492-1170-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,85 +36,103 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com
 
-Hi all,
+From: Alex Lyakas <alex@zadarastorage.com>
 
-This is v2 of the XFS and block device reservation experiment. The
-significant changes in v2 are that the bdev interface has been condensed
-to a single callback function, the XFS transaction reservation
-management has been reworked to make transactions responsible for
-tracking and releasing excess reservation (for non-delalloc cases) and a
-workaround for the fallocate over-reservation issue is included. Beyond
-that, this version adds a bunch of miscellaneous cleanups and fixes some
-of the nastier locking/leak issues present in the first rfc.
+When unmounting XFS, we call:
 
-Patches 1-2 refactor some XFS reserve pool and block accounting code in
-preparation for subsequent patches. Patches 3-5 add block/device-mapper
-reservation support. Patches 6-10 add the core reservation
-infrastructure and management bits to XFS. See the link to the original
-rfc below for instructions and further details around the purpose of
-this series.
+xfs_inode_free => xfs_idestroy_fork => xfs_iext_destroy
 
-Finally, note that this is still highly experimental/theoretical and
-should not be used on production systems. Thoughts, reviews, flames
-appreciated.
+This goes over the whole indirection array and calls
+xfs_iext_irec_remove for each one of the erps (from the last one to
+the first one). As a result, we keep shrinking (reallocating
+actually) the indirection array until we shrink out all of its
+elements. When we have files with huge numbers of extents, umount
+takes 30-80 sec, depending on the amount of files that XFS loaded
+and the amount of indirection entries of each file. The unmount
+stack looks like:
 
-Brian
+[<ffffffffc0b6d200>] xfs_iext_realloc_indirect+0x40/0x60 [xfs]
+[<ffffffffc0b6cd8e>] xfs_iext_irec_remove+0xee/0xf0 [xfs]
+[<ffffffffc0b6cdcd>] xfs_iext_destroy+0x3d/0xb0 [xfs]
+[<ffffffffc0b6cef6>] xfs_idestroy_fork+0xb6/0xf0 [xfs]
+[<ffffffffc0b87002>] xfs_inode_free+0xb2/0xc0 [xfs]
+[<ffffffffc0b87260>] xfs_reclaim_inode+0x250/0x340 [xfs]
+[<ffffffffc0b87583>] xfs_reclaim_inodes_ag+0x233/0x370 [xfs]
+[<ffffffffc0b8823d>] xfs_reclaim_inodes+0x1d/0x20 [xfs]
+[<ffffffffc0b96feb>] xfs_unmountfs+0x7b/0x1a0 [xfs]
+[<ffffffffc0b98e4d>] xfs_fs_put_super+0x2d/0x70 [xfs]
+[<ffffffff811e9e36>] generic_shutdown_super+0x76/0x100
+[<ffffffff811ea207>] kill_block_super+0x27/0x70
+[<ffffffff811ea519>] deactivate_locked_super+0x49/0x60
+[<ffffffff811eaaee>] deactivate_super+0x4e/0x70
+[<ffffffff81207593>] cleanup_mnt+0x43/0x90
+[<ffffffff81207632>] __cleanup_mnt+0x12/0x20
+[<ffffffff8108f8e7>] task_work_run+0xa7/0xe0
+[<ffffffff81014ff7>] do_notify_resume+0x97/0xb0
+[<ffffffff81717c6f>] int_signal+0x12/0x17
 
-rfcv2:
-- Rebased to 4.6.0-rc3.
-- Fix compile warnings reported by kbuild.
-- Fix reservation leakage on fs ENOSPC.
-- Fix mod_fdblocks locking to avoid BUG() (still racy).
-- Fix XFS reserve block ENOSPC handling.
-- Kill block wrappers, condense get/set/provision to a single callback.
-- Update XFS transaction to track reservation, don't release excess on
-  provision.
-- Add transaction noblkres mode, use for fallocate reservation
-  optimization.
-rfc: http://oss.sgi.com/pipermail/xfs/2016-March/047673.html
+Further, this reallocation prevents us from freeing the extent list
+from a RCU callback as allocation can block. Hence if the extent
+list is in indirect format, optimise the freeing of the extent list
+to only use kmem_free calls by freeing entire extent buffer pages at
+a time, rather than extent by extent.
 
-Brian Foster (7):
-  xfs: refactor xfs_reserve_blocks() to handle ENOSPC correctly
-  xfs: replace xfs_mod_fdblocks() bool param with flags
-  xfs: thin block device reservation mechanism
-  xfs: adopt a reserved allocation model on dm-thin devices
-  xfs: handle bdev reservation ENOSPC correctly from XFS reserved pool
-  xfs: support no block reservation transaction mode
-  xfs: use contiguous bdev reservation for file preallocation
+Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
 
-Joe Thornber (1):
-  dm thin: add methods to set and get reserved space
-
-Mike Snitzer (2):
-  block: add block_device_operations methods to set and get reserved
-    space
-  dm: add methods to set and get reserved space
-
- drivers/md/dm-thin.c          | 181 +++++++++++++++++++++++++++--
- drivers/md/dm.c               |  41 +++++++
- fs/xfs/Makefile               |   1 +
- fs/xfs/libxfs/xfs_alloc.c     |  25 ++++
- fs/xfs/libxfs/xfs_bmap.c      |  17 ++-
- fs/xfs/libxfs/xfs_shared.h    |   2 +
- fs/xfs/xfs_bmap_util.c        |  29 ++++-
- fs/xfs/xfs_fsops.c            | 128 ++++++++++++++-------
- fs/xfs/xfs_mount.c            | 106 +++++++++++++++--
- fs/xfs/xfs_mount.h            |  12 +-
- fs/xfs/xfs_thin.c             | 260 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_thin.h             |  31 +++++
- fs/xfs/xfs_trace.h            |  27 +++++
- fs/xfs/xfs_trans.c            |  94 +++++++++++++--
- fs/xfs/xfs_trans.h            |   1 +
- include/linux/blkdev.h        |   6 +
- include/linux/device-mapper.h |   5 +
- 17 files changed, 880 insertions(+), 86 deletions(-)
- create mode 100644 fs/xfs/xfs_thin.c
- create mode 100644 fs/xfs/xfs_thin.h
-
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index d3d1477..27497e1 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -1519,6 +1519,26 @@ xfs_iext_indirect_to_direct(
+ }
+ 
+ /*
++ * Remove all records from the indirection array.
++ */
++STATIC void
++xfs_iext_irec_remove_all(
++	struct xfs_ifork *ifp)
++{
++	int		nlists;
++	int		i;
++
++	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
++	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
++	for (i = 0; i < nlists; i++) {
++		xfs_ext_irec_t *erp = &ifp->if_u1.if_ext_irec[i];
++		if (erp->er_extbuf)
++			kmem_free(erp->er_extbuf);
++	}
++	kmem_free(ifp->if_u1.if_ext_irec);
++}
++
++/*
+  * Free incore file extents.
+  */
+ void
+@@ -1526,13 +1546,7 @@ xfs_iext_destroy(
+ 	xfs_ifork_t	*ifp)		/* inode fork pointer */
+ {
+ 	if (ifp->if_flags & XFS_IFEXTIREC) {
+-		int	erp_idx;
+-		int	nlists;
+-
+-		nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-		for (erp_idx = nlists - 1; erp_idx >= 0 ; erp_idx--) {
+-			xfs_iext_irec_remove(ifp, erp_idx);
+-		}
++		xfs_iext_irec_remove_all(ifp);
+ 		ifp->if_flags &= ~XFS_IFEXTIREC;
+ 	} else if (ifp->if_real_bytes) {
+ 		kmem_free(ifp->if_u1.if_extents);
 -- 
-2.4.11
+2.7.0
 
 _______________________________________________
 xfs mailing list
