@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 15EC37CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 01:34:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DBFC0304032
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:34:30 -0700 (PDT)
-Received: from ZXSHCAS02.zhaoxin.com ([180.169.121.82]) by cuda.sgi.com with
-	ESMTP id i8oPf93mso50rvN7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:34:27 -0700 (PDT)
-From: Eric Shang <EricShang@zhaoxin.com>
-Subject: =?gb2312?B?tPC4tDogZXh0NCBlcnJvcg==?=
-Date: Thu, 14 Apr 2016 06:33:42 +0000
-Message-ID: <0255994B402DE243B1DFC1057A00655201AEFE@ZXSHMBX02.zhaoxin.com>
-References: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
-	<20160414032207.GC16656@thunk.org>
-In-Reply-To: <20160414032207.GC16656@thunk.org>
-Content-Language: zh-CN
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B709B7CBA
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:36:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E3E88F8035
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:37 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kegU7Le23PljXDiI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:35 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 00/42] v5: separate operations from flags in the bio/request
+	structs
+Date: Wed, 13 Apr 2016 14:35:46 -0500
+Message-Id: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,88 +22,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "jack@suse.cz" <jack@suse.cz>, Toshi Kani <toshi.kani@hpe.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-SGkgVGhlb2RvcmWjug0KCVRoYW5rcyBzbyBtdWNoISBUaGUgaXNzdWUgaXMgdmVyeSByYW5kb20s
-IGJ1dCBjYW4gcmVwcm9kdWNlIG1heSBpbiBzdHJlc3MgZm9yIDEyIGhvdXIsIEkgd2FudCB0byBk
-byBzb21lIGZpbGUgc3lzdGVtIHN0cmVzcywgYnV0IG5lZWQgdG8gZmluZCBvdXQgdGhlIG1haW5s
-eSBjYXVzZSBvciBzdGVwcyBvZiB0aGlzIGlzc3VlIGZpcnN0LiBJIHJlcHJvZHVjZSB0aGlzIHBh
-bmljIGJ5IHRoZSBwcm9jZXNzIHlvdSBtZW50aW9uZWQgd2l0aCB0aGUgZm9sbG93aW5nIHN0ZXBz
-LiBCdXQgc3RpbGwgdW5rbm93biBpcyB0aGlzIHRoZSByb290IGNhdXNlLg0KCTEpIGZvcmNlIGZy
-ZWUgYSBpbm9kZSB3aXRoIHVzZWQgYnkgb25lIGZpbGUgYnkgZGVidWdmcyBmcmVlaSBjb21tb25k
-IChib290IGZyb20gYW5vdGhlciBmaWxlc3lzdGVtIGZyb20gc2RjYXJkKS4NCgkyKSBib290IHRo
-ZSBzeXN0ZW0sIGNyZWF0ZSBvbmUgbmV3IGZpbGUuIFRoZSBmaWxlIHdpbGwgdXNlIHRoZSBzYW1l
-IGlub2RlIHdoaWNoIEkgZnJlZWQuDQoJMykgZGVsZXRlZCB0aGUgbmV3IGNyZWF0ZWQgZmlsZS4g
-VGhlbiBkcm9wIHRoZSBjYWNoZSBieSAjZWNobyAzID4gL3Byb2Mvc3lzL3ZtL2Ryb3BfY2FjaGVz
-DQoJNCkgcnVuICNscyBhbmQgaXQgd2lsbCBjYXVzZSBleHQ0IGVycm9yIGFuZCBrZXJuZWwgcGFu
-aWMuDQoNCiAgICBCdXQgSSBzdGlsbCBoYXZlIHNvbWUgcXVlc3Rpb25zLCBiZWNhdXNlIGVhY2gg
-Ym9vdCB1cCBvZiB0aGUgc3lzdGVtLCB3aWxsIHJ1biBmc2NrLCBpZiB0aGUgZmlsZXN5c3RlbSBp
-cyBjb3JydXB0ZWQsIEkgdGhpbmsgaXQgd2lsbCBmaXggaXQuIEJ1dCBsb29rcyBsaWtlIGFmdGVy
-IGRvIHRoZSBzdGVwIDEpIHdoZW4gYm9vdCB1cCBmc2NrIGNhbiBmaW5kIHRoaXMgZnJlZSBidXQg
-dXNlZCBpbm9kZSBlcnJvci4gVW5sZXNzIEkgcnVuIGZzY2suZXh0NCB3aXRoIC1mLiB3ZSBvZnRl
-biBzaG93ZG93biB0aGUgcG93ZXIgZGlyZWN0bHksIHRoaXMgY2FuIGNhdXNlIGRpcnR5IGlub2Rl
-IGJpdCBtYXA/DQogICAgSSBjaGVjayB0aGUga2VybmVsIGZzIGNvZGUsIGl0J3MgdmVyeSBjb21w
-bGV4LCB3aGVuIGRlbGV0ZSBhIGZpbGUgZnJvbSBwYXJlbnQgZGVudHJ5LCB3aWxsIHVzZSBhIGJo
-IHRvIHJlYWQgdGhlIGRlbnRyeSBhbmQgdGhlbiBkZWxldGUgdGhlIGVudHJ5IG9mIHRoZSBmaWxl
-IGluIGJoLCBhbmQgdGhlbiBtYXJrIHRoZSBiaCBkaXJ0eS4gV2FpdCBmb3Igdm0gZmx1c2ggdGhp
-cyBkaXJ0eSBwYWdlIHRvIGJsb2NrIGRldmljZSg/KS4gYnV0IG9uIHRoZSBvdGhlciBzaWRlIHBh
-cmVudCBkZW50cnkgY2FjaGUgbWF5IHB1dCBpbiB1bnVzZWQgbHJ1IGxpc3QsIHdoaWNoIG1heSBi
-ZSBmcmVlZCB3aGVuIG1lbW9yeSBwcmVzc3VyZS4gSXMgdGhlcmUgYW55IHN5bmNocm9ub3VzIHdp
-dGggZGlydHkgcGFnZSBmbHVzaCBhbmQgZGNhY2hlIGZsdXNoPyBUaGFua3MhDQoNCkJlc3QgUmVn
-YXJkcw0KRXJpY1NoYW5nDQoNCg0KLS0tLS3Tyrz+1K28/i0tLS0tDQq3orz+yMs6IFRoZW9kb3Jl
-IFRzJ28gW21haWx0bzp0eXRzb0BtaXQuZWR1XSANCreiy83KsbzkOiAyMDE2xOo01MIxNMjVIDEx
-OjIyDQrK1bz+yMs6IEVyaWMgU2hhbmcNCrOty806IE1hdHRoZXcgV2lsY294OyBUb3NoaSBLYW5p
-OyBha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnOyBkYW4uai53aWxsaWFtc0BpbnRlbC5jb207IHZp
-cm9AemVuaXYubGludXgub3JnLnVrOyByb3NzLnp3aXNsZXJAbGludXguaW50ZWwuY29tOyBraXJp
-bGwuc2h1dGVtb3ZAbGludXguaW50ZWwuY29tOyBkYXZpZEBmcm9tb3JiaXQuY29tOyBqYWNrQHN1
-c2UuY3o7IGFkaWxnZXIua2VybmVsQGRpbGdlci5jYTsgbGludXgtbnZkaW1tQGxpc3RzLjAxLm9y
-ZzsgbGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwu
-b3JnOyB4ZnNAb3NzLnNnaS5jb207IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCtb3zOI6
-IFJlOiBleHQ0IGVycm9yDQoNCk9uIFdlZCwgQXByIDEzLCAyMDE2IGF0IDAxOjQ0OjU1UE0gKzAw
-MDAsIEVyaWMgU2hhbmcgd3JvdGU6DQo+IEhJIEFsbDoNCj4gICBJIG1lZXQgYW4gZXh0NCBlcnJv
-ciwgZm9sbG93aW5nIGlzIHRoZSBlcnJvciBsb2cuIEFmdGVyIHBhbmljLCBJIGNoZWNrIHRoZSBl
-bW1jIGJ5IHRoZSB0b29sIGRlYnVmcywgdGhlIGlub2RlIDY5ODc4IGlfbmxpbmsgaXMgbm90IHpl
-cm8uIEFuZCB0aGlzIGlub2RlIGRvbid0IGJlbG9uZyB0byBwYXJlbnQgZGlyIDY5ODcsIGl0IGJl
-bG9uZyB0byBvdGhlciBmaWxlKHRoaXMgaW5vZGUgYmVsb25nIHRvIHR3byBmaWxlcyB3aGVuIGNo
-ZWNrIGJ5IGRlYnVnZnMgbmNoZWNrKSwgSSBndWVzcyB0aGFuIHRoaXMgaW5vZGUgaGFzIGJlZWQg
-ZGVsZXRlZCBpbiBtZW1vcnkgYW5kIGFscmVhZHkgdXNlZCBieSBvdGhlciBmaWxlLiBCdXQgdGhl
-IHBhcmVudCBkZW50cnkgYnVmZl9oZWFkIG5vdCBmbHVzaCB0byBlbW1jLiBCdXQgd2hlbiBsb29r
-dXAgdGhpcyBkZW50cnkgY2FuJ3QgZmluZCBpdCcgaW4gZGVudHJ5IGNhY2hlLCBhbmQgdGhlbiBs
-b29rdXBfcmVhbCwgcmVhZCB0aGUgZGVudHJ5IGZyb20gZW1tYywgZ2V0IHRoZSBmaWxlIGlub2Rl
-IHdoaWNoIGFscmVhZHkgYmUgZGVsZXRlZC4gDQo+ICAgQ2FuIGFueSBnaXZlIG1lIHNvbWUgaGVs
-cCBob3cgdG8gY2hlY2sgdGhpcyBpc3N1ZS4gTXkga2VybmVsIHZlcnNpb24gaXMgMy4xOCBmb3Jt
-IEFuZHJvaWQgLiBJIHRoaW5rcyBzb21ldGhpbmcgd3Jvbmcgd2l0aCBkZW50cnkgY2FjaGUgZmx1
-c2ggYW5kIGRpcnR5IGJ1ZmZfaGVhZCBmbHVzaCB0byBlbW1jLiBUaGFua3MgYWxsIQ0KDQpJZiBJ
-IGhhZCB0byBndWVzcywgdGhpcyB3YXMgY2F1c2VkIHN0YXJ0aW5nIHdpdGggYSBjb3JydXB0ZWQg
-ZmlsZSBzeXN0ZW0sIHdoZXJlIHRoZSBpbm9kZSBhbGxvY2F0aW9uIGJpdG1hcCBzaG93ZWQgdGhh
-dCBhbiBpbm9kZSB3aGljaCB3YXMgaW4gdXNlIGJ5IHRoZSBmaWxlIHN5c3RlbSwgd2FzIGVycm9u
-ZW91c2x5IHNob3dpbmcgaXQgYXMgZnJlZS4NClRoaXMgYWxsb3dlZCBpdCB0byBiZSBhbGxvY2F0
-ZWQgZm9yIHVzZSBpbiBhIHNlY29uZCBmaWxlICh3aGljaCB3b3VsZCBoYXZlIHdpcGVkIG91dCB0
-aGUgY29udGVudHMgZm9yIHRoZSBvcmlnaW5hbCBmaWxlIHN0b3JlZCBhdCB0aGF0IGlub2RlKS4g
-IExhdGVyIG9uLCB0aGUgZmlsZSB3YXMgZGVsZXRlZCB2aWEgZWl0aGVyIHRoZSBvbGRlciBvciBu
-ZXdlciBwYXRobmFtZSwgd2hpY2ggZHJvcHBlZCB0aGUgcmVmIGNvdW50IHRvIHplcm8sIGFuZCB0
-aGVuIGFuIGFjY2VzcyB2aWEgdGhlIG90aGVyIHBhdGhuYW1lIHdvdWxkIGhhdmUgcmVzdWx0ZWQg
-aW4gdGhpcyBlcnJvci4NCg0KQWZ0ZXIgdGhlIHBhbmljLCB0aGUgb24tZGlzayBkYXRhIHN0cnVj
-dHVyZXMgd291bGRuJ3QgaGF2ZSBiZWVuIHVwZGF0ZWQgZnJvbSB3aGF0ZXZlciB0aGUgaW4tbWVt
-b3J5IGRhdGEgc3RydWN0dXJlcyBtaWdodCBoYXZlIGJlZW4gKCJLZXJuZWwgcGFuaWMgLSBub3Qg
-c3luY2luZyIpLiAgU28gd2hhdCB5b3Ugc2VlIGZyb20gdXNpbmcgZGVidWdmcyBhZnRlciB0aGUg
-Y3Jhc2ggbWlnaHQgbm90IGJlIHJlcHJlc2VuYXRhdGl2ZSBvZiB3aGF0IHlvdSBzYXcgYmVmb3Jl
-IHRoZSBjcmFzaC4NCg0KSSdtIG5vdCBzdXJlIHRoZXJlJ3MgbXVjaCBkZWJ1Z2dpbmcgdGhhdCBj
-YW4gYmUgZG9uZSwgYmVjYXVzZSB0aGVyZSBhcmUgYW55IG51bWJlciBvZiBzb3VyY2VzIGZvciB0
-aGUgb3JpZ2luYWwgY29ycnVwdGlvbi4gIEl0IGNvdWxkIGJlIGNhdXNlZCBieSBhIGhhcmR3YXJl
-IGlzc3VlIGluIHRoZSBmbGFzaCBvciB0aGUgbWVtb3J5LCBvciBpdCBjb3VsZCBiZSBjYXVzZWQg
-YnkgYSB3aWxkIHBvaW50ZXIgY29ycnVwdGluZyBhIGRpc2sgYnVmZmVyLCBldGMuIGV0Yy4gIFRo
-ZSBwYW5pYyB3b24ndCByZXN1bHQgaW4gYSB1c2VmdWwgc3RhY2sgdHJhY2UgYmVjYXVzZSB0aGF0
-J3Mgd2hlbiB0aGUgcHJvYmxlbSB3YXMgKm5vdGljZWQqLiAgQnV0IHRoYXQncyB2ZXJ5IGRpZmZl
-cmVudCBmcm9tIHdoZXJlIHRoZSBmaWxlIHN5c3RlbSBjb3JydXB0aW9uIHdhcyAqaW50cm9kdWNl
-ZCouDQoNCklmIHlvdSBjYW4gcmVsaWFibHkgcmVwcm9kdWNlIHRoaXMgc29ydCBvZiBmYWlsdXJl
-LCB0aGVuIGl0IGJlY29tZXMgcG9zc2libGUgdG8gdHJ5IHRvIHRyYWNrIGl0IGRvd24uICBCdXQg
-aWYgaXQncyBhIG9uZS1vZmYgZXZlbnQsIHRoZXJlJ3Mgbm90IG11Y2ggYW55b25lIGNhbiBkby4N
-Cg0KQmVzdCByZWdhcmRzLA0KDQoJCQkJCQktIFRlZA0KX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+The following patches begin to cleanup the request->cmd_flags and
+bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+attributes and state of the request. For bi_rw we use it for similar
+info and also the priority but then also have another bi_flags field
+for state. At some point, we abused them so much we just made cmd_flags
+64 bits, so we could add more.
+
+The following patches seperate the operation (read, write discard,
+flush, etc) from cmd_flags/bi_rw.
+
+This patchset was made against linux-next from today April 13
+(git tag next-20160413).
+
+I put a git tree here:
+https://github.com/mikechristie/linux-kernel.git
+The patches are in the op branch.
+
+v5:
+1. Missed crypto fs submit_bio_wait call.
+2. Change nfs bi_rw check to bi_op.
+3. btrfs. Convert finish_parity_scrub.
+4. Reworked against Jens's QUEUE_FLAG patches so I could drop my similar
+code.
+5. Separated the core block layer change into multiple patches for
+merging, elevator, stats, mq and non mq request allocation to try
+and make it easier to read.
+
+v4:
+1. Rebased to current linux-next tree.
+
+v3:
+
+1. Used "=" instead of "|="  to setup bio bi_rw.
+2. Removed __get_request cmd_flags compat code.
+3. Merged initial dm related changes requested by Mike Snitzer.
+4. Fixed ubd kbuild errors in flush related patches.
+5. Fix 80 char col issues in several patches.
+6. Fix issue with one of the btrfs patches where it looks like I reverted
+a patch when trying to fix a merge error.
+
+v2
+
+1. Dropped arguments from submit_bio, and had callers setup
+bio.
+2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
+to REQ_PREFLUSH for make_request_fn users.
+3. Dropped bio/rq_data_dir functions, and added a op_is_write
+function instead.
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
