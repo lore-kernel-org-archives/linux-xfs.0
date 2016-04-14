@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A638F7CD5
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:37:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 911D67CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 07:58:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 11845AC005
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:06 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04F75AC003
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:58:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9sqni9F0W2pJPGxq (version=TLSv1.2
+	cuda.sgi.com with ESMTP id AoOhO0L5xes9PdTy (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:37:05 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 13/42] xfs: set bi_op to REQ_OP
-Date: Wed, 13 Apr 2016 14:35:59 -0500
-Message-Id: <1460576188-5751-14-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:58:16 -0700 (PDT)
+Date: Thu, 14 Apr 2016 08:58:14 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/8] xfs: implement iomap based buffered write path
+Message-ID: <20160414125814.GE20696@bfoster.bfoster>
+References: <1460494382-14547-1-git-send-email-hch@lst.de>
+	<1460494382-14547-6-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1460494382-14547-6-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,124 +26,182 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Mike Christie <mchristi@redhat.com>
+On Tue, Apr 12, 2016 at 01:52:59PM -0700, Christoph Hellwig wrote:
+> Convert XFS to use the new iomap based multipage write path. This involves
+> implementing the ->iomap_begin and ->iomap_end methods, and switching the
+> buffered file write, page_mkwrite and xfs_iozero paths to the new iomap
+> helpers.
+> 
+> With this change __xfs_get_blocks will never be used for buffered writes,
+> and the code handling them can be removed.
+> 
+> Based on earlier code from Dave Chinner.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/Kconfig     |   1 +
+>  fs/xfs/xfs_aops.c  | 212 -----------------------------------------------------
+>  fs/xfs/xfs_file.c  |  71 ++++++++----------
+>  fs/xfs/xfs_iomap.c | 144 ++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_iomap.h |   5 +-
+>  fs/xfs/xfs_iops.c  |   9 ++-
+>  fs/xfs/xfs_trace.h |   3 +
+>  7 files changed, 187 insertions(+), 258 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 2f37194..73de1ec 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -967,3 +967,147 @@ xfs_bmbt_to_iomap(
+...
+> +static int
+> +xfs_file_iomap_end_delalloc(
+> +	struct xfs_inode	*ip,
+> +	loff_t			offset,
+> +	loff_t			length,
+> +	ssize_t			written)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_fileoff_t		start_fsb;
+> +	xfs_fileoff_t		end_fsb;
+> +	int			error = 0;
+> +
+> +	start_fsb = XFS_B_TO_FSB(mp, offset + written);
+> +	end_fsb = XFS_B_TO_FSB(mp, offset + length - written);
+> +
 
-This patch has xfs use bio->bi_op for REQ_OPs and rq_flag_bits to bio->bi_rw.
+Just skimming over this series... but shouldn't this be offset + length?
+Why walk back from the end of the allocated range?
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c |  3 +--
- fs/xfs/xfs_buf.c  | 27 +++++++++++++++------------
- 2 files changed, 16 insertions(+), 14 deletions(-)
+Brian
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 5852c5a..6c20336 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -439,10 +439,9 @@ xfs_submit_ioend(
- 
- 	ioend->io_bio->bi_private = ioend;
- 	ioend->io_bio->bi_end_io = xfs_end_bio;
-+	ioend->io_bio->bi_op = REQ_OP_WRITE;
- 	if (wbc->sync_mode)
- 		ioend->io_bio->bi_rw = WRITE_SYNC;
--	else
--		ioend->io_bio->bi_rw = WRITE;
- 	/*
- 	 * If we are failing the IO now, just mark the ioend with an
- 	 * error and finish it. This will run IO completion immediately
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 079bb77..917774e 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1131,7 +1131,8 @@ xfs_buf_ioapply_map(
- 	int		map,
- 	int		*buf_offset,
- 	int		*count,
--	int		rw)
-+	int		op,
-+	int		op_flags)
- {
- 	int		page_index;
- 	int		total_nr_pages = bp->b_page_count;
-@@ -1170,7 +1171,8 @@ next_chunk:
- 	bio->bi_iter.bi_sector = sector;
- 	bio->bi_end_io = xfs_buf_bio_end_io;
- 	bio->bi_private = bp;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 
- 	for (; size && nr_pages; nr_pages--, page_index++) {
- 		int	rbytes, nbytes = PAGE_SIZE - offset;
-@@ -1214,7 +1216,8 @@ _xfs_buf_ioapply(
- 	struct xfs_buf	*bp)
- {
- 	struct blk_plug	plug;
--	int		rw;
-+	int		op;
-+	int		op_flags = 0;
- 	int		offset;
- 	int		size;
- 	int		i;
-@@ -1233,14 +1236,13 @@ _xfs_buf_ioapply(
- 		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
- 
- 	if (bp->b_flags & XBF_WRITE) {
-+		op = REQ_OP_WRITE;
- 		if (bp->b_flags & XBF_SYNCIO)
--			rw = WRITE_SYNC;
--		else
--			rw = WRITE;
-+			op_flags = WRITE_SYNC;
- 		if (bp->b_flags & XBF_FUA)
--			rw |= REQ_FUA;
-+			op_flags |= REQ_FUA;
- 		if (bp->b_flags & XBF_FLUSH)
--			rw |= REQ_FLUSH;
-+			op_flags |= REQ_FLUSH;
- 
- 		/*
- 		 * Run the write verifier callback function if it exists. If
-@@ -1270,13 +1272,14 @@ _xfs_buf_ioapply(
- 			}
- 		}
- 	} else if (bp->b_flags & XBF_READ_AHEAD) {
--		rw = READA;
-+		op = REQ_OP_READ;
-+		op_flags = REQ_RAHEAD;
- 	} else {
--		rw = READ;
-+		op = REQ_OP_READ;
- 	}
- 
- 	/* we only use the buffer cache for meta-data */
--	rw |= REQ_META;
-+	op_flags |= REQ_META;
- 
- 	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
-@@ -1288,7 +1291,7 @@ _xfs_buf_ioapply(
- 	size = BBTOB(bp->b_io_length);
- 	blk_start_plug(&plug);
- 	for (i = 0; i < bp->b_map_count; i++) {
--		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
-+		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
- 		if (bp->b_error)
- 			break;
- 		if (size <= 0)
--- 
-2.7.2
+> +	/*
+> +	 * Trim back delalloc blocks if we didn't manage to write the whole
+> +	 * range reserved.
+> +	 *
+> +	 * We don't need to care about racing delalloc as we hold i_mutex
+> +	 * across the reserve/allocate/unreserve calls. If there are delalloc
+> +	 * blocks in the range, they are ours.
+> +	 */
+> +	if (start_fsb < end_fsb) {
+> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+> +					       end_fsb - start_fsb);
+> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
+> +			xfs_alert(mp, "%s: unable to clean up ino %lld",
+> +				__func__, ip->i_ino);
+> +			return error;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int
+> +xfs_file_iomap_end(
+> +	struct inode		*inode,
+> +	loff_t			offset,
+> +	loff_t			length,
+> +	ssize_t			written,
+> +	unsigned		flags,
+> +	struct iomap		*iomap)
+> +{
+> +	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
+> +		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
+> +				length, written);
+> +	return 0;
+> +}
+> +
+> +struct iomap_ops xfs_iomap_ops = {
+> +	.iomap_begin		= xfs_file_iomap_begin,
+> +	.iomap_end		= xfs_file_iomap_end,
+> +};
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index 718f07c..e066d04 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -18,7 +18,8 @@
+>  #ifndef __XFS_IOMAP_H__
+>  #define __XFS_IOMAP_H__
+>  
+> -struct iomap;
+> +#include <linux/iomap.h>
+> +
+>  struct xfs_inode;
+>  struct xfs_bmbt_irec;
+>  
+> @@ -33,4 +34,6 @@ int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
+>  void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+>  		struct xfs_bmbt_irec *);
+>  
+> +extern struct iomap_ops xfs_iomap_ops;
+> +
+>  #endif /* __XFS_IOMAP_H__*/
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 1e2086d..6dfa10c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -38,6 +38,7 @@
+>  #include "xfs_dir2.h"
+>  #include "xfs_trans_space.h"
+>  #include "xfs_pnfs.h"
+> +#include "xfs_iomap.h"
+>  
+>  #include <linux/capability.h>
+>  #include <linux/xattr.h>
+> @@ -822,8 +823,8 @@ xfs_setattr_size(
+>  			error = dax_truncate_page(inode, newsize,
+>  					xfs_get_blocks_direct);
+>  		} else {
+> -			error = block_truncate_page(inode->i_mapping, newsize,
+> -					xfs_get_blocks);
+> +			error = iomap_truncate_page(inode, newsize,
+> +					&did_zeroing, &xfs_iomap_ops);
+>  		}
+>  	}
+>  
+> @@ -838,8 +839,8 @@ xfs_setattr_size(
+>  	 * problem. Note that this includes any block zeroing we did above;
+>  	 * otherwise those blocks may not be zeroed after a crash.
+>  	 */
+> -	if (newsize > ip->i_d.di_size &&
+> -	    (oldsize != ip->i_d.di_size || did_zeroing)) {
+> +	if (did_zeroing ||
+> +	    (newsize > ip->i_d.di_size && oldsize != ip->i_d.di_size)) {
+>  		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+>  						      ip->i_d.di_size, newsize);
+>  		if (error)
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 840d52e..86fb345 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1296,6 +1296,9 @@ DEFINE_IOMAP_EVENT(xfs_map_blocks_alloc);
+>  DEFINE_IOMAP_EVENT(xfs_get_blocks_found);
+>  DEFINE_IOMAP_EVENT(xfs_get_blocks_alloc);
+>  DEFINE_IOMAP_EVENT(xfs_get_blocks_map_direct);
+> +DEFINE_IOMAP_EVENT(xfs_iomap_alloc);
+> +DEFINE_IOMAP_EVENT(xfs_iomap_found);
+> +DEFINE_IOMAP_EVENT(xfs_iomap_not_found);
+>  
+>  DECLARE_EVENT_CLASS(xfs_simple_io_class,
+>  	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
