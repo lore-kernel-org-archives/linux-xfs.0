@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B709B7CBA
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:36:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E3E88F8035
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kegU7Le23PljXDiI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:35 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 00/42] v5: separate operations from flags in the bio/request
-	structs
-Date: Wed, 13 Apr 2016 14:35:46 -0500
-Message-Id: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5EC637CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 01:09:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 25A07304062
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:09:40 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id CJFC5LyhBVAROErt (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:09:35 -0700 (PDT)
+Subject: Re: [PATCH 00/42] v5: separate operations from flags in the
+	bio/request structs
+References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <570F341A.2040108@suse.de>
+Date: Thu, 14 Apr 2016 08:09:30 +0200
+MIME-Version: 1.0
+In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,62 +25,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-The following patches begin to cleanup the request->cmd_flags and
-bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-attributes and state of the request. For bi_rw we use it for similar
-info and also the priority but then also have another bi_flags field
-for state. At some point, we abused them so much we just made cmd_flags
-64 bits, so we could add more.
+On 04/13/2016 09:35 PM, mchristi@redhat.com wrote:
+> The following patches begin to cleanup the request->cmd_flags and
+> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+> attributes and state of the request. For bi_rw we use it for similar
+> info and also the priority but then also have another bi_flags field
+> for state. At some point, we abused them so much we just made cmd_flags
+> 64 bits, so we could add more.
+> =
 
-The following patches seperate the operation (read, write discard,
-flush, etc) from cmd_flags/bi_rw.
+> The following patches seperate the operation (read, write discard,
+> flush, etc) from cmd_flags/bi_rw.
+> =
 
-This patchset was made against linux-next from today April 13
-(git tag next-20160413).
+> This patchset was made against linux-next from today April 13
+> (git tag next-20160413).
+> =
 
-I put a git tree here:
-https://github.com/mikechristie/linux-kernel.git
-The patches are in the op branch.
+> I put a git tree here:
+> https://github.com/mikechristie/linux-kernel.git
+> The patches are in the op branch.
+> =
 
-v5:
-1. Missed crypto fs submit_bio_wait call.
-2. Change nfs bi_rw check to bi_op.
-3. btrfs. Convert finish_parity_scrub.
-4. Reworked against Jens's QUEUE_FLAG patches so I could drop my similar
-code.
-5. Separated the core block layer change into multiple patches for
-merging, elevator, stats, mq and non mq request allocation to try
-and make it easier to read.
+A round of applause for you.
 
-v4:
-1. Rebased to current linux-next tree.
+For the entire series:
 
-v3:
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-1. Used "=" instead of "|="  to setup bio bi_rw.
-2. Removed __get_request cmd_flags compat code.
-3. Merged initial dm related changes requested by Mike Snitzer.
-4. Fixed ubd kbuild errors in flush related patches.
-5. Fix 80 char col issues in several patches.
-6. Fix issue with one of the btrfs patches where it looks like I reverted
-a patch when trying to fix a merge error.
+Cheers,
 
-v2
+Hannes
+-- =
 
-1. Dropped arguments from submit_bio, and had callers setup
-bio.
-2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
-to REQ_PREFLUSH for make_request_fn users.
-3. Dropped bio/rq_data_dir functions, and added a op_is_write
-function instead.
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
 
 _______________________________________________
 xfs mailing list
