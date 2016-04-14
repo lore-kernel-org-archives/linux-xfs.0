@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 15A197CA7
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:07:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DB206304059
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:07:04 -0700 (PDT)
-Received: from mail-yw0-f180.google.com (mail-yw0-f180.google.com
-	[209.85.161.180]) by cuda.sgi.com with ESMTP id
-	Cpz4tCXS5Plv5yGr (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:07:02 -0700 (PDT)
-Received: by mail-yw0-f180.google.com with SMTP id d68so80619098ywe.1
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:07:02 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 15EC37CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 01:34:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DBFC0304032
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:34:30 -0700 (PDT)
+Received: from ZXSHCAS02.zhaoxin.com ([180.169.121.82]) by cuda.sgi.com with
+	ESMTP id i8oPf93mso50rvN7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 23:34:27 -0700 (PDT)
+From: Eric Shang <EricShang@zhaoxin.com>
+Subject: =?gb2312?B?tPC4tDogZXh0NCBlcnJvcg==?=
+Date: Thu, 14 Apr 2016 06:33:42 +0000
+Message-ID: <0255994B402DE243B1DFC1057A00655201AEFE@ZXSHMBX02.zhaoxin.com>
+References: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
+	<20160414032207.GC16656@thunk.org>
+In-Reply-To: <20160414032207.GC16656@thunk.org>
+Content-Language: zh-CN
 MIME-Version: 1.0
-In-Reply-To: <570E9040.8010409@sandeen.net>
-References: <1460571772-20285-1-git-send-email-zlang@redhat.com>
-	<570E9040.8010409@sandeen.net>
-Date: Thu, 14 Apr 2016 03:07:01 +0800
-Message-ID: <CADVQ27rzngphemi8N1mhNxnYThgyFibgieqMJgRBs=XL2KbSTg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: group quota is still enforced if mount v5 xfs with
-	gqnoenforce and pqnoenforce
-From: Zorro Lang <zorro.lang@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,236 +26,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4696188548989173348=="
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: "jack@suse.cz" <jack@suse.cz>, Toshi Kani <toshi.kani@hpe.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
 
---===============4696188548989173348==
-Content-Type: multipart/alternative; boundary=001a11413da89389100530627b34
-
---001a11413da89389100530627b34
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-2016=E5=B9=B44=E6=9C=8814=E6=97=A5 02:30=EF=BC=8C"Eric Sandeen" <sandeen@sa=
-ndeen.net>=E5=86=99=E9=81=93=EF=BC=9A
->
-> This looks fine, but I think Eryu already sent this patch on 3/31:
->
-> [PATCH] xfs: add missing break in xfs_parseargs()
-
-Hi,
-
-Sorry for this duplicate patch... I think I missed that patch email from
-mail list. Please ignore this DUP patch.
-
-Thanks,
-Zorro
-
->
-> -Eric
->
-> On 4/13/16 1:22 PM, Zorro Lang wrote:
-> > This's a regression bug caused by:
-> >
-> >   2e74af0 xfs: convert mount option parsing to tokens
-> >
-> > xfstests xfs/299 can reproduce this bug, it will fail when do
-> > gpnoenforce test, the error output as below(diff with 299.out):
-> >
-> >  *** push past the soft block limit
-> >   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-> >   -[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00
-[--------]
-> >   +[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00
-[--------]
-> >
-> >  *** push past the hard inode limit (expect EDQUOT)
-> >   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-> >   -[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00
-[--------]
-> >   +[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00
-[--------]
-> >
-> >  *** push past the hard block limit (expect EDQUOT)
-> >   [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-> >   -[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00
-[--------]
-> >   +[NAME] 500 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00
-[--------]
-> >
-> > It shows that group quota is still enforced. But this bug only can
-> > be reproduced when mount v5 xfs with gqnoenforce and pqnoenforce
-> > options. The reason as I found is a missed "break" in xfs_parseargs()
-> > function.
-> >
-> > After deal with "pqnoenforce", it should break. But the code keep
-> > running into "gquota/grpquota" lines, and make gquota enforced.
-> >
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> >
-> > Hi,
-> >
-> > This's a tiny bug(only one line patch). But it's belong to
-> > regression bug and take me a few hours to find the problem.
-> > So I hope it can be fixed:)
-> >
-> > Thanks,
-> > Zorro
-> >
-> >  fs/xfs/xfs_super.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 187e14b..f3c0ffc 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -350,6 +350,7 @@ xfs_parseargs(
-> >               case Opt_pqnoenforce:
-> >                       mp->m_qflags |=3D (XFS_PQUOTA_ACCT |
-XFS_PQUOTA_ACTIVE);
-> >                       mp->m_qflags &=3D ~XFS_PQUOTA_ENFD;
-> > +                     break;
-> >               case Opt_gquota:
-> >               case Opt_grpquota:
-> >                       mp->m_qflags |=3D (XFS_GQUOTA_ACCT |
-XFS_GQUOTA_ACTIVE |
-> >
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
---001a11413da89389100530627b34
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<p dir=3D"ltr"><br>
-2016=E5=B9=B44=E6=9C=8814=E6=97=A5 02:30=EF=BC=8C&quot;Eric Sandeen&quot; &=
-lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@sandeen.net</a>&gt;=E5=86=
-=99=E9=81=93=EF=BC=9A<br>
-&gt;<br>
-&gt; This looks fine, but I think Eryu already sent this patch on 3/31:<br>
-&gt;<br>
-&gt; [PATCH] xfs: add missing break in xfs_parseargs()</p>
-<p dir=3D"ltr">Hi,</p>
-<p dir=3D"ltr">Sorry for this duplicate patch... I think I missed that patc=
-h email from mail list. Please ignore this DUP patch.</p>
-<p dir=3D"ltr">Thanks,<br>
-Zorro</p>
-<p dir=3D"ltr">&gt;<br>
-&gt; -Eric<br>
-&gt;<br>
-&gt; On 4/13/16 1:22 PM, Zorro Lang wrote:<br>
-&gt; &gt; This&#39;s a regression bug caused by:<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 =C2=A02e74af0 xfs: convert mount option parsing to tokens<b=
-r>
-&gt; &gt;<br>
-&gt; &gt; xfstests xfs/299 can reproduce this bug, it will fail when do<br>
-&gt; &gt; gpnoenforce test, the error output as below(diff with 299.out):<b=
-r>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 *** push past the soft block limit<br>
-&gt; &gt;=C2=A0 =C2=A0[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 =
-00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0-[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------=
-] 0 0 0 00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0+[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] =
-0 0 0 00 [--------]<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 *** push past the hard inode limit (expect EDQUOT)<br>
-&gt; &gt;=C2=A0 =C2=A0[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 =
-00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0-[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none-=
--] 0 0 0 00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0+[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0=
- 0 0 00 [--------]<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 *** push past the hard block limit (expect EDQUOT)<br>
-&gt; &gt;=C2=A0 =C2=A0[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 =
-00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0-[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none-=
--] 0 0 0 00 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0+[NAME] 500 100 500 00 [7 days] 10 4 10 00 [7 days] 0=
- 0 0 00 [--------]<br>
-&gt; &gt;<br>
-&gt; &gt; It shows that group quota is still enforced. But this bug only ca=
-n<br>
-&gt; &gt; be reproduced when mount v5 xfs with gqnoenforce and pqnoenforce<=
-br>
-&gt; &gt; options. The reason as I found is a missed &quot;break&quot; in x=
-fs_parseargs()<br>
-&gt; &gt; function.<br>
-&gt; &gt;<br>
-&gt; &gt; After deal with &quot;pqnoenforce&quot;, it should break. But the=
- code keep<br>
-&gt; &gt; running into &quot;gquota/grpquota&quot; lines, and make gquota e=
-nforced.<br>
-&gt; &gt;<br>
-&gt; &gt; Signed-off-by: Zorro Lang &lt;<a href=3D"mailto:zlang@redhat.com"=
->zlang@redhat.com</a>&gt;<br>
-&gt; &gt; ---<br>
-&gt; &gt;<br>
-&gt; &gt; Hi,<br>
-&gt; &gt;<br>
-&gt; &gt; This&#39;s a tiny bug(only one line patch). But it&#39;s belong t=
-o<br>
-&gt; &gt; regression bug and take me a few hours to find the problem.<br>
-&gt; &gt; So I hope it can be fixed:)<br>
-&gt; &gt;<br>
-&gt; &gt; Thanks,<br>
-&gt; &gt; Zorro<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 fs/xfs/xfs_super.c | 1 +<br>
-&gt; &gt;=C2=A0 1 file changed, 1 insertion(+)<br>
-&gt; &gt;<br>
-&gt; &gt; diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c<br>
-&gt; &gt; index 187e14b..f3c0ffc 100644<br>
-&gt; &gt; --- a/fs/xfs/xfs_super.c<br>
-&gt; &gt; +++ b/fs/xfs/xfs_super.c<br>
-&gt; &gt; @@ -350,6 +350,7 @@ xfs_parseargs(<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0case Opt_pq=
-noenforce:<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0mp-&gt;m_qflags |=3D (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)=
-;<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0mp-&gt;m_qflags &amp;=3D ~XFS_PQUOTA_ENFD;<br>
-&gt; &gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0break;<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0case Opt_gq=
-uota:<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0case Opt_gr=
-pquota:<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0mp-&gt;m_qflags |=3D (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE =
-|<br>
-&gt; &gt;<br>
-&gt;<br>
-&gt; _______________________________________________<br>
-&gt; xfs mailing list<br>
-&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com=
-/mailman/listinfo/xfs</a><br>
-</p>
-
---001a11413da89389100530627b34--
-
-
---===============4696188548989173348==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4696188548989173348==--
+SGkgVGhlb2RvcmWjug0KCVRoYW5rcyBzbyBtdWNoISBUaGUgaXNzdWUgaXMgdmVyeSByYW5kb20s
+IGJ1dCBjYW4gcmVwcm9kdWNlIG1heSBpbiBzdHJlc3MgZm9yIDEyIGhvdXIsIEkgd2FudCB0byBk
+byBzb21lIGZpbGUgc3lzdGVtIHN0cmVzcywgYnV0IG5lZWQgdG8gZmluZCBvdXQgdGhlIG1haW5s
+eSBjYXVzZSBvciBzdGVwcyBvZiB0aGlzIGlzc3VlIGZpcnN0LiBJIHJlcHJvZHVjZSB0aGlzIHBh
+bmljIGJ5IHRoZSBwcm9jZXNzIHlvdSBtZW50aW9uZWQgd2l0aCB0aGUgZm9sbG93aW5nIHN0ZXBz
+LiBCdXQgc3RpbGwgdW5rbm93biBpcyB0aGlzIHRoZSByb290IGNhdXNlLg0KCTEpIGZvcmNlIGZy
+ZWUgYSBpbm9kZSB3aXRoIHVzZWQgYnkgb25lIGZpbGUgYnkgZGVidWdmcyBmcmVlaSBjb21tb25k
+IChib290IGZyb20gYW5vdGhlciBmaWxlc3lzdGVtIGZyb20gc2RjYXJkKS4NCgkyKSBib290IHRo
+ZSBzeXN0ZW0sIGNyZWF0ZSBvbmUgbmV3IGZpbGUuIFRoZSBmaWxlIHdpbGwgdXNlIHRoZSBzYW1l
+IGlub2RlIHdoaWNoIEkgZnJlZWQuDQoJMykgZGVsZXRlZCB0aGUgbmV3IGNyZWF0ZWQgZmlsZS4g
+VGhlbiBkcm9wIHRoZSBjYWNoZSBieSAjZWNobyAzID4gL3Byb2Mvc3lzL3ZtL2Ryb3BfY2FjaGVz
+DQoJNCkgcnVuICNscyBhbmQgaXQgd2lsbCBjYXVzZSBleHQ0IGVycm9yIGFuZCBrZXJuZWwgcGFu
+aWMuDQoNCiAgICBCdXQgSSBzdGlsbCBoYXZlIHNvbWUgcXVlc3Rpb25zLCBiZWNhdXNlIGVhY2gg
+Ym9vdCB1cCBvZiB0aGUgc3lzdGVtLCB3aWxsIHJ1biBmc2NrLCBpZiB0aGUgZmlsZXN5c3RlbSBp
+cyBjb3JydXB0ZWQsIEkgdGhpbmsgaXQgd2lsbCBmaXggaXQuIEJ1dCBsb29rcyBsaWtlIGFmdGVy
+IGRvIHRoZSBzdGVwIDEpIHdoZW4gYm9vdCB1cCBmc2NrIGNhbiBmaW5kIHRoaXMgZnJlZSBidXQg
+dXNlZCBpbm9kZSBlcnJvci4gVW5sZXNzIEkgcnVuIGZzY2suZXh0NCB3aXRoIC1mLiB3ZSBvZnRl
+biBzaG93ZG93biB0aGUgcG93ZXIgZGlyZWN0bHksIHRoaXMgY2FuIGNhdXNlIGRpcnR5IGlub2Rl
+IGJpdCBtYXA/DQogICAgSSBjaGVjayB0aGUga2VybmVsIGZzIGNvZGUsIGl0J3MgdmVyeSBjb21w
+bGV4LCB3aGVuIGRlbGV0ZSBhIGZpbGUgZnJvbSBwYXJlbnQgZGVudHJ5LCB3aWxsIHVzZSBhIGJo
+IHRvIHJlYWQgdGhlIGRlbnRyeSBhbmQgdGhlbiBkZWxldGUgdGhlIGVudHJ5IG9mIHRoZSBmaWxl
+IGluIGJoLCBhbmQgdGhlbiBtYXJrIHRoZSBiaCBkaXJ0eS4gV2FpdCBmb3Igdm0gZmx1c2ggdGhp
+cyBkaXJ0eSBwYWdlIHRvIGJsb2NrIGRldmljZSg/KS4gYnV0IG9uIHRoZSBvdGhlciBzaWRlIHBh
+cmVudCBkZW50cnkgY2FjaGUgbWF5IHB1dCBpbiB1bnVzZWQgbHJ1IGxpc3QsIHdoaWNoIG1heSBi
+ZSBmcmVlZCB3aGVuIG1lbW9yeSBwcmVzc3VyZS4gSXMgdGhlcmUgYW55IHN5bmNocm9ub3VzIHdp
+dGggZGlydHkgcGFnZSBmbHVzaCBhbmQgZGNhY2hlIGZsdXNoPyBUaGFua3MhDQoNCkJlc3QgUmVn
+YXJkcw0KRXJpY1NoYW5nDQoNCg0KLS0tLS3Tyrz+1K28/i0tLS0tDQq3orz+yMs6IFRoZW9kb3Jl
+IFRzJ28gW21haWx0bzp0eXRzb0BtaXQuZWR1XSANCreiy83KsbzkOiAyMDE2xOo01MIxNMjVIDEx
+OjIyDQrK1bz+yMs6IEVyaWMgU2hhbmcNCrOty806IE1hdHRoZXcgV2lsY294OyBUb3NoaSBLYW5p
+OyBha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnOyBkYW4uai53aWxsaWFtc0BpbnRlbC5jb207IHZp
+cm9AemVuaXYubGludXgub3JnLnVrOyByb3NzLnp3aXNsZXJAbGludXguaW50ZWwuY29tOyBraXJp
+bGwuc2h1dGVtb3ZAbGludXguaW50ZWwuY29tOyBkYXZpZEBmcm9tb3JiaXQuY29tOyBqYWNrQHN1
+c2UuY3o7IGFkaWxnZXIua2VybmVsQGRpbGdlci5jYTsgbGludXgtbnZkaW1tQGxpc3RzLjAxLm9y
+ZzsgbGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwu
+b3JnOyB4ZnNAb3NzLnNnaS5jb207IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCtb3zOI6
+IFJlOiBleHQ0IGVycm9yDQoNCk9uIFdlZCwgQXByIDEzLCAyMDE2IGF0IDAxOjQ0OjU1UE0gKzAw
+MDAsIEVyaWMgU2hhbmcgd3JvdGU6DQo+IEhJIEFsbDoNCj4gICBJIG1lZXQgYW4gZXh0NCBlcnJv
+ciwgZm9sbG93aW5nIGlzIHRoZSBlcnJvciBsb2cuIEFmdGVyIHBhbmljLCBJIGNoZWNrIHRoZSBl
+bW1jIGJ5IHRoZSB0b29sIGRlYnVmcywgdGhlIGlub2RlIDY5ODc4IGlfbmxpbmsgaXMgbm90IHpl
+cm8uIEFuZCB0aGlzIGlub2RlIGRvbid0IGJlbG9uZyB0byBwYXJlbnQgZGlyIDY5ODcsIGl0IGJl
+bG9uZyB0byBvdGhlciBmaWxlKHRoaXMgaW5vZGUgYmVsb25nIHRvIHR3byBmaWxlcyB3aGVuIGNo
+ZWNrIGJ5IGRlYnVnZnMgbmNoZWNrKSwgSSBndWVzcyB0aGFuIHRoaXMgaW5vZGUgaGFzIGJlZWQg
+ZGVsZXRlZCBpbiBtZW1vcnkgYW5kIGFscmVhZHkgdXNlZCBieSBvdGhlciBmaWxlLiBCdXQgdGhl
+IHBhcmVudCBkZW50cnkgYnVmZl9oZWFkIG5vdCBmbHVzaCB0byBlbW1jLiBCdXQgd2hlbiBsb29r
+dXAgdGhpcyBkZW50cnkgY2FuJ3QgZmluZCBpdCcgaW4gZGVudHJ5IGNhY2hlLCBhbmQgdGhlbiBs
+b29rdXBfcmVhbCwgcmVhZCB0aGUgZGVudHJ5IGZyb20gZW1tYywgZ2V0IHRoZSBmaWxlIGlub2Rl
+IHdoaWNoIGFscmVhZHkgYmUgZGVsZXRlZC4gDQo+ICAgQ2FuIGFueSBnaXZlIG1lIHNvbWUgaGVs
+cCBob3cgdG8gY2hlY2sgdGhpcyBpc3N1ZS4gTXkga2VybmVsIHZlcnNpb24gaXMgMy4xOCBmb3Jt
+IEFuZHJvaWQgLiBJIHRoaW5rcyBzb21ldGhpbmcgd3Jvbmcgd2l0aCBkZW50cnkgY2FjaGUgZmx1
+c2ggYW5kIGRpcnR5IGJ1ZmZfaGVhZCBmbHVzaCB0byBlbW1jLiBUaGFua3MgYWxsIQ0KDQpJZiBJ
+IGhhZCB0byBndWVzcywgdGhpcyB3YXMgY2F1c2VkIHN0YXJ0aW5nIHdpdGggYSBjb3JydXB0ZWQg
+ZmlsZSBzeXN0ZW0sIHdoZXJlIHRoZSBpbm9kZSBhbGxvY2F0aW9uIGJpdG1hcCBzaG93ZWQgdGhh
+dCBhbiBpbm9kZSB3aGljaCB3YXMgaW4gdXNlIGJ5IHRoZSBmaWxlIHN5c3RlbSwgd2FzIGVycm9u
+ZW91c2x5IHNob3dpbmcgaXQgYXMgZnJlZS4NClRoaXMgYWxsb3dlZCBpdCB0byBiZSBhbGxvY2F0
+ZWQgZm9yIHVzZSBpbiBhIHNlY29uZCBmaWxlICh3aGljaCB3b3VsZCBoYXZlIHdpcGVkIG91dCB0
+aGUgY29udGVudHMgZm9yIHRoZSBvcmlnaW5hbCBmaWxlIHN0b3JlZCBhdCB0aGF0IGlub2RlKS4g
+IExhdGVyIG9uLCB0aGUgZmlsZSB3YXMgZGVsZXRlZCB2aWEgZWl0aGVyIHRoZSBvbGRlciBvciBu
+ZXdlciBwYXRobmFtZSwgd2hpY2ggZHJvcHBlZCB0aGUgcmVmIGNvdW50IHRvIHplcm8sIGFuZCB0
+aGVuIGFuIGFjY2VzcyB2aWEgdGhlIG90aGVyIHBhdGhuYW1lIHdvdWxkIGhhdmUgcmVzdWx0ZWQg
+aW4gdGhpcyBlcnJvci4NCg0KQWZ0ZXIgdGhlIHBhbmljLCB0aGUgb24tZGlzayBkYXRhIHN0cnVj
+dHVyZXMgd291bGRuJ3QgaGF2ZSBiZWVuIHVwZGF0ZWQgZnJvbSB3aGF0ZXZlciB0aGUgaW4tbWVt
+b3J5IGRhdGEgc3RydWN0dXJlcyBtaWdodCBoYXZlIGJlZW4gKCJLZXJuZWwgcGFuaWMgLSBub3Qg
+c3luY2luZyIpLiAgU28gd2hhdCB5b3Ugc2VlIGZyb20gdXNpbmcgZGVidWdmcyBhZnRlciB0aGUg
+Y3Jhc2ggbWlnaHQgbm90IGJlIHJlcHJlc2VuYXRhdGl2ZSBvZiB3aGF0IHlvdSBzYXcgYmVmb3Jl
+IHRoZSBjcmFzaC4NCg0KSSdtIG5vdCBzdXJlIHRoZXJlJ3MgbXVjaCBkZWJ1Z2dpbmcgdGhhdCBj
+YW4gYmUgZG9uZSwgYmVjYXVzZSB0aGVyZSBhcmUgYW55IG51bWJlciBvZiBzb3VyY2VzIGZvciB0
+aGUgb3JpZ2luYWwgY29ycnVwdGlvbi4gIEl0IGNvdWxkIGJlIGNhdXNlZCBieSBhIGhhcmR3YXJl
+IGlzc3VlIGluIHRoZSBmbGFzaCBvciB0aGUgbWVtb3J5LCBvciBpdCBjb3VsZCBiZSBjYXVzZWQg
+YnkgYSB3aWxkIHBvaW50ZXIgY29ycnVwdGluZyBhIGRpc2sgYnVmZmVyLCBldGMuIGV0Yy4gIFRo
+ZSBwYW5pYyB3b24ndCByZXN1bHQgaW4gYSB1c2VmdWwgc3RhY2sgdHJhY2UgYmVjYXVzZSB0aGF0
+J3Mgd2hlbiB0aGUgcHJvYmxlbSB3YXMgKm5vdGljZWQqLiAgQnV0IHRoYXQncyB2ZXJ5IGRpZmZl
+cmVudCBmcm9tIHdoZXJlIHRoZSBmaWxlIHN5c3RlbSBjb3JydXB0aW9uIHdhcyAqaW50cm9kdWNl
+ZCouDQoNCklmIHlvdSBjYW4gcmVsaWFibHkgcmVwcm9kdWNlIHRoaXMgc29ydCBvZiBmYWlsdXJl
+LCB0aGVuIGl0IGJlY29tZXMgcG9zc2libGUgdG8gdHJ5IHRvIHRyYWNrIGl0IGRvd24uICBCdXQg
+aWYgaXQncyBhIG9uZS1vZmYgZXZlbnQsIHRoZXJlJ3Mgbm90IG11Y2ggYW55b25lIGNhbiBkby4N
+Cg0KQmVzdCByZWdhcmRzLA0KDQoJCQkJCQktIFRlZA0KX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
+aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
