@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 508667CA7
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 15:44:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AAE16AC003
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 13:44:02 -0700 (PDT)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id M3zlXr8I5aCiU3ua (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 369AB7CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 12:15:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BA713AC007
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 10:15:06 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id NGEa3Tf3qxDdOIA1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Apr 2016 13:43:57 -0700 (PDT)
-Received: from localhost.localdomain (localhost [127.0.0.1])
-	by smtp.gentoo.org (Postfix) with ESMTP id 1E0EB3405D5
-	for <xfs@oss.sgi.com>; Fri,  8 Apr 2016 20:43:57 +0000 (UTC)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: [PATCH xfsprogs] configure: add mailing list contact
-Date: Fri,  8 Apr 2016 16:43:55 -0400
-Message-Id: <1460148235-32611-1-git-send-email-vapier@gentoo.org>
+	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 10:15:06 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 9385C2202D
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 17:15:05 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH] build: make librt optional for some platforms
+Date: Thu, 14 Apr 2016 19:14:59 +0200
+Message-Id: <1460654099-6397-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +33,83 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+The functions that we use from librt on Linux are in other libraries
+on OS X. So make it possible to disable librt.
+
+The hardcoded librt dependency was added in 0caa2bae.
+
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- configure.ac | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ configure.ac     |  7 +++++--
+ doc/INSTALL      |  6 +++++-
+ m4/package_rt.m4 | 12 ++++++++++++
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+ create mode 100644 m4/package_rt.m4
 
 diff --git a/configure.ac b/configure.ac
-index d44438f..7d4b155 100644
+index 6d012ce..ed67e74 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1,4 +1,4 @@
--AC_INIT([xfsprogs], [4.5.0])
-+AC_INIT([xfsprogs], [4.5.0], [xfs@oss.sgi.com])
- AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
+@@ -56,8 +56,10 @@ AC_ARG_ENABLE(lib64,
+ 	enable_lib64=yes)
+ AC_SUBST(enable_lib64)
+ 
+-librt="-lrt"
+-AC_SUBST(librt)
++AC_ARG_ENABLE(librt,
++[ --enable-librt=[yes/no] Enable librt support [default=yes]],,
++	enable_librt=yes)
++AC_SUBST(enable_librt)
+ 
+ #
+ # If the user specified a libdir ending in lib64 do not append another
+@@ -103,6 +105,7 @@ AC_SUBST(LOCALIZED_FILES)
+ AC_PACKAGE_GLOBALS(xfsprogs)
+ AC_PACKAGE_UTILITIES(xfsprogs)
+ AC_MULTILIB($enable_lib64)
++AC_RT($enable_librt)
+ 
+ AC_PACKAGE_NEED_UUID_H
+ AC_PACKAGE_NEED_UUIDCOMPARE
+diff --git a/doc/INSTALL b/doc/INSTALL
+index b0443a3..0879612 100644
+--- a/doc/INSTALL
++++ b/doc/INSTALL
+@@ -89,7 +89,11 @@ Mac OS X Instructions
+ 	TAR=/usr/bin/gnutar
+ 	LIBTOOL=/usr/bin/glibtool
+ 	INSTALL_GROUP=wheel
+-	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no"
++	LOCAL_CONFIGURE_OPTIONS="\
++				 --enable-gettext=no\
++				 --enable-blkid=no\
++				 --enable-librt=no\
++				 "
+ 
+ 	$ make
+ 	$ su root
+diff --git a/m4/package_rt.m4 b/m4/package_rt.m4
+new file mode 100644
+index 0000000..9ad1009
+--- /dev/null
++++ b/m4/package_rt.m4
+@@ -0,0 +1,12 @@
++# Check if the platform has librt
++#
++
++AC_DEFUN([AC_RT],
++[
++  if test "$enable_librt" = "yes"; then
++    librt="-lrt"
++  else
++    librt=""
++  fi
++  AC_SUBST(librt)
++])
 -- 
-2.7.4
+2.6.0
 
 _______________________________________________
 xfs mailing list
