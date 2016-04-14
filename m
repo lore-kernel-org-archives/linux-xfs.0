@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 74CA47CE5
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 14:36:54 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5F41D7CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 07:11:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BBB9CAC007
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:53 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CE588F8033
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:10:58 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HxDgBDvA6ubBK8sA (version=TLSv1.2
+	cuda.sgi.com with ESMTP id f37IwkQSWZGt7HvX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 12:36:51 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 07/42] btrfs: have submit_one_bio users setup bio bi_op
-Date: Wed, 13 Apr 2016 14:35:53 -0500
-Message-Id: <1460576188-5751-8-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
-References: <1460576188-5751-1-git-send-email-mchristi@redhat.com>
+	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 05:10:57 -0700 (PDT)
+Date: Thu, 14 Apr 2016 08:10:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 10/11] xfs: simplify inode reclaim tagging interfaces
+Message-ID: <20160414121055.GC20696@bfoster.bfoster>
+References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+	<1460525492-1170-11-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1460525492-1170-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,339 +26,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Mike Christie <mchristi@redhat.com>
+On Wed, Apr 13, 2016 at 03:31:31PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Inode radix tree tagging for reclaim passes a lot of unnecessary
+> variables around. Over time the xfs-perag has grown a xfs_mount
+> backpointer, and an internal agno so we don't need to pass other
+> variables into the tagging functions to supply this information.
+> 
+> Rework the functions to pass the minimal variable set required
+> and simplify the internal logic and flow.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c | 97 +++++++++++++++++++++++++++--------------------------
+>  1 file changed, 49 insertions(+), 48 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index a60db43..927e7b0 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -37,8 +37,7 @@
+>  #include <linux/kthread.h>
+>  #include <linux/freezer.h>
+>  
+> -STATIC void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp,
+> -				struct xfs_perag *pag, struct xfs_inode *ip);
+> +STATIC void xfs_inode_clear_reclaim_tag(struct xfs_perag *pag, xfs_ino_t ino);
+>  
+>  /*
+>   * Allocate and initialise an xfs_inode.
+> @@ -271,7 +270,7 @@ xfs_iget_cache_hit(
+>  		 */
+>  		ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
+>  		ip->i_flags |= XFS_INEW;
+> -		__xfs_inode_clear_reclaim_tag(mp, pag, ip);
+> +		xfs_inode_clear_reclaim_tag(pag, ip->i_ino);
+>  		inode->i_state = I_NEW;
+>  
+>  		ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
+> @@ -768,29 +767,44 @@ xfs_reclaim_worker(
+>  }
+>  
+>  static void
+> -__xfs_inode_set_reclaim_tag(
+> +xfs_perag_set_reclaim_tag(
+>  	struct xfs_perag	*pag,
+> -	struct xfs_inode	*ip)
+> +	xfs_ino_t		ino)
 
-This patch has btrfs's submit_one_bio callers set the bio->bi_op to a
-REQ_OP and the bi_rw to rq_flag_bits.
+No need to pass the inode number here. Otherwise looks good:
 
-The next patches will continue to convert btrfs,
-so submit_bio_hook and merge_bio_hook
-related code will be modified to take only the bio. I did
-not do it in this patch to try and keep it smaller.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/btrfs/extent_io.c | 88 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 45 insertions(+), 43 deletions(-)
-
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index fdeb8fa..45fa3be 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2377,7 +2377,7 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 	int read_mode;
- 	int ret;
- 
--	BUG_ON(failed_bio->bi_rw & REQ_WRITE);
-+	BUG_ON(failed_bio->bi_op == REQ_OP_WRITE);
- 
- 	ret = btrfs_get_io_failure_record(inode, start, end, &failrec);
- 	if (ret)
-@@ -2403,6 +2403,8 @@ static int bio_readpage_error(struct bio *failed_bio, u64 phy_offset,
- 		free_io_failure(inode, failrec);
- 		return -EIO;
- 	}
-+	bio->bi_op = REQ_OP_READ;
-+	bio->bi_rw = read_mode;
- 
- 	pr_debug("Repair Read Error: submitting new read[%#x] to this_mirror=%d, in_validation=%d\n",
- 		 read_mode, failrec->this_mirror, failrec->in_validation);
-@@ -2714,8 +2716,8 @@ struct bio *btrfs_io_bio_alloc(gfp_t gfp_mask, unsigned int nr_iovecs)
- }
- 
- 
--static int __must_check submit_one_bio(int rw, struct bio *bio,
--				       int mirror_num, unsigned long bio_flags)
-+static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
-+				       unsigned long bio_flags)
- {
- 	int ret = 0;
- 	struct bio_vec *bvec = bio->bi_io_vec + bio->bi_vcnt - 1;
-@@ -2726,12 +2728,12 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	start = page_offset(page) + bvec->bv_offset;
- 
- 	bio->bi_private = NULL;
--	bio->bi_rw = rw;
- 	bio_get(bio);
- 
- 	if (tree->ops && tree->ops->submit_bio_hook)
--		ret = tree->ops->submit_bio_hook(page->mapping->host, rw, bio,
--					   mirror_num, bio_flags, start);
-+		ret = tree->ops->submit_bio_hook(page->mapping->host,
-+						 bio->bi_rw, bio, mirror_num,
-+						 bio_flags, start);
- 	else
- 		btrfsic_submit_bio(bio);
- 
-@@ -2739,20 +2741,20 @@ static int __must_check submit_one_bio(int rw, struct bio *bio,
- 	return ret;
- }
- 
--static int merge_bio(int rw, struct extent_io_tree *tree, struct page *page,
-+static int merge_bio(struct extent_io_tree *tree, struct page *page,
- 		     unsigned long offset, size_t size, struct bio *bio,
- 		     unsigned long bio_flags)
- {
- 	int ret = 0;
- 	if (tree->ops && tree->ops->merge_bio_hook)
--		ret = tree->ops->merge_bio_hook(rw, page, offset, size, bio,
--						bio_flags);
-+		ret = tree->ops->merge_bio_hook(bio->bi_op, page, offset, size,
-+						bio, bio_flags);
- 	BUG_ON(ret < 0);
- 	return ret;
- 
- }
- 
--static int submit_extent_page(int rw, struct extent_io_tree *tree,
-+static int submit_extent_page(int op, int op_flags, struct extent_io_tree *tree,
- 			      struct writeback_control *wbc,
- 			      struct page *page, sector_t sector,
- 			      size_t size, unsigned long offset,
-@@ -2780,10 +2782,9 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 
- 		if (prev_bio_flags != bio_flags || !contig ||
- 		    force_bio_submit ||
--		    merge_bio(rw, tree, page, offset, page_size, bio, bio_flags) ||
-+		    merge_bio(tree, page, offset, page_size, bio, bio_flags) ||
- 		    bio_add_page(bio, page, page_size, offset) < page_size) {
--			ret = submit_one_bio(rw, bio, mirror_num,
--					     prev_bio_flags);
-+			ret = submit_one_bio(bio, mirror_num, prev_bio_flags);
- 			if (ret < 0) {
- 				*bio_ret = NULL;
- 				return ret;
-@@ -2804,6 +2805,8 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	bio_add_page(bio, page, page_size, offset);
- 	bio->bi_end_io = end_io_func;
- 	bio->bi_private = tree;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 	if (wbc) {
- 		wbc_init_bio(wbc, bio);
- 		wbc_account_io(wbc, page, page_size);
-@@ -2812,7 +2815,7 @@ static int submit_extent_page(int rw, struct extent_io_tree *tree,
- 	if (bio_ret)
- 		*bio_ret = bio;
- 	else
--		ret = submit_one_bio(rw, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 
- 	return ret;
- }
-@@ -2876,7 +2879,7 @@ static int __do_readpage(struct extent_io_tree *tree,
- 			 get_extent_t *get_extent,
- 			 struct extent_map **em_cached,
- 			 struct bio **bio, int mirror_num,
--			 unsigned long *bio_flags, int rw,
-+			 unsigned long *bio_flags, int read_flags,
- 			 u64 *prev_em_start)
- {
- 	struct inode *inode = page->mapping->host;
-@@ -3059,8 +3062,8 @@ static int __do_readpage(struct extent_io_tree *tree,
- 		}
- 
- 		pnr -= page->index;
--		ret = submit_extent_page(rw, tree, NULL, page,
--					 sector, disk_io_size, pg_offset,
-+		ret = submit_extent_page(REQ_OP_READ, read_flags, tree, NULL,
-+					 page, sector, disk_io_size, pg_offset,
- 					 bdev, bio, pnr,
- 					 end_bio_extent_readpage, mirror_num,
- 					 *bio_flags,
-@@ -3091,7 +3094,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 					     get_extent_t *get_extent,
- 					     struct extent_map **em_cached,
- 					     struct bio **bio, int mirror_num,
--					     unsigned long *bio_flags, int rw,
-+					     unsigned long *bio_flags,
- 					     u64 *prev_em_start)
- {
- 	struct inode *inode;
-@@ -3112,7 +3115,7 @@ static inline void __do_contiguous_readpages(struct extent_io_tree *tree,
- 
- 	for (index = 0; index < nr_pages; index++) {
- 		__do_readpage(tree, pages[index], get_extent, em_cached, bio,
--			      mirror_num, bio_flags, rw, prev_em_start);
-+			      mirror_num, bio_flags, 0, prev_em_start);
- 		put_page(pages[index]);
- 	}
- }
-@@ -3122,7 +3125,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 			       int nr_pages, get_extent_t *get_extent,
- 			       struct extent_map **em_cached,
- 			       struct bio **bio, int mirror_num,
--			       unsigned long *bio_flags, int rw,
-+			       unsigned long *bio_flags,
- 			       u64 *prev_em_start)
- {
- 	u64 start = 0;
-@@ -3144,7 +3147,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 						  index - first_index, start,
- 						  end, get_extent, em_cached,
- 						  bio, mirror_num, bio_flags,
--						  rw, prev_em_start);
-+						  prev_em_start);
- 			start = page_start;
- 			end = start + PAGE_SIZE - 1;
- 			first_index = index;
-@@ -3155,7 +3158,7 @@ static void __extent_readpages(struct extent_io_tree *tree,
- 		__do_contiguous_readpages(tree, &pages[first_index],
- 					  index - first_index, start,
- 					  end, get_extent, em_cached, bio,
--					  mirror_num, bio_flags, rw,
-+					  mirror_num, bio_flags,
- 					  prev_em_start);
- }
- 
-@@ -3163,7 +3166,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 				   struct page *page,
- 				   get_extent_t *get_extent,
- 				   struct bio **bio, int mirror_num,
--				   unsigned long *bio_flags, int rw)
-+				   unsigned long *bio_flags, int read_flags)
- {
- 	struct inode *inode = page->mapping->host;
- 	struct btrfs_ordered_extent *ordered;
-@@ -3183,7 +3186,7 @@ static int __extent_read_full_page(struct extent_io_tree *tree,
- 	}
- 
- 	ret = __do_readpage(tree, page, get_extent, NULL, bio, mirror_num,
--			    bio_flags, rw, NULL);
-+			    bio_flags, read_flags, NULL);
- 	return ret;
- }
- 
-@@ -3195,9 +3198,9 @@ int extent_read_full_page(struct extent_io_tree *tree, struct page *page,
- 	int ret;
- 
- 	ret = __extent_read_full_page(tree, page, get_extent, &bio, mirror_num,
--				      &bio_flags, READ);
-+				      &bio_flags, 0);
- 	if (bio)
--		ret = submit_one_bio(READ, bio, mirror_num, bio_flags);
-+		ret = submit_one_bio(bio, mirror_num, bio_flags);
- 	return ret;
- }
- 
-@@ -3438,7 +3441,8 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
- 				       page->index, cur, end);
- 			}
- 
--			ret = submit_extent_page(write_flags, tree, wbc, page,
-+			ret = submit_extent_page(REQ_OP_WRITE, write_flags,
-+						 tree, wbc, page,
- 						 sector, iosize, pg_offset,
- 						 bdev, &epd->bio, max_nr,
- 						 end_bio_extent_writepage,
-@@ -3478,13 +3482,11 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
- 	size_t pg_offset = 0;
- 	loff_t i_size = i_size_read(inode);
- 	unsigned long end_index = i_size >> PAGE_SHIFT;
--	int write_flags;
-+	int write_flags = 0;
- 	unsigned long nr_written = 0;
- 
- 	if (wbc->sync_mode == WB_SYNC_ALL)
- 		write_flags = WRITE_SYNC;
--	else
--		write_flags = WRITE;
- 
- 	trace___extent_writepage(page, inode, wbc);
- 
-@@ -3728,7 +3730,7 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 	u64 offset = eb->start;
- 	unsigned long i, num_pages;
- 	unsigned long bio_flags = 0;
--	int rw = (epd->sync_io ? WRITE_SYNC : WRITE) | REQ_META;
-+	int write_flags = (epd->sync_io ? WRITE_SYNC : 0) | REQ_META;
- 	int ret = 0;
- 
- 	clear_bit(EXTENT_BUFFER_WRITE_ERR, &eb->bflags);
-@@ -3742,9 +3744,10 @@ static noinline_for_stack int write_one_eb(struct extent_buffer *eb,
- 
- 		clear_page_dirty_for_io(p);
- 		set_page_writeback(p);
--		ret = submit_extent_page(rw, tree, wbc, p, offset >> 9,
--					 PAGE_SIZE, 0, bdev, &epd->bio,
--					 -1, end_bio_extent_buffer_writepage,
-+		ret = submit_extent_page(REQ_OP_WRITE, write_flags, tree, wbc,
-+					 p, offset >> 9, PAGE_SIZE, 0, bdev,
-+					 &epd->bio, -1,
-+					 end_bio_extent_buffer_writepage,
- 					 0, epd->bio_flags, bio_flags, false);
- 		epd->bio_flags = bio_flags;
- 		if (ret) {
-@@ -4054,13 +4057,13 @@ retry:
- static void flush_epd_write_bio(struct extent_page_data *epd)
- {
- 	if (epd->bio) {
--		int rw = WRITE;
- 		int ret;
- 
-+		epd->bio->bi_op = REQ_OP_WRITE;
- 		if (epd->sync_io)
--			rw = WRITE_SYNC;
-+			epd->bio->bi_rw = WRITE_SYNC;
- 
--		ret = submit_one_bio(rw, epd->bio, 0, epd->bio_flags);
-+		ret = submit_one_bio(epd->bio, 0, epd->bio_flags);
- 		BUG_ON(ret < 0); /* -ENOMEM */
- 		epd->bio = NULL;
- 	}
-@@ -4187,19 +4190,19 @@ int extent_readpages(struct extent_io_tree *tree,
- 		if (nr < ARRAY_SIZE(pagepool))
- 			continue;
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 		nr = 0;
- 	}
- 	if (nr)
- 		__extent_readpages(tree, pagepool, nr, get_extent, &em_cached,
--				   &bio, 0, &bio_flags, READ, &prev_em_start);
-+				   &bio, 0, &bio_flags, &prev_em_start);
- 
- 	if (em_cached)
- 		free_extent_map(em_cached);
- 
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		return submit_one_bio(READ, bio, 0, bio_flags);
-+		return submit_one_bio(bio, 0, bio_flags);
- 	return 0;
- }
- 
-@@ -5221,7 +5224,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 			err = __extent_read_full_page(tree, page,
- 						      get_extent, &bio,
- 						      mirror_num, &bio_flags,
--						      READ | REQ_META);
-+						      REQ_META);
- 			if (err)
- 				ret = err;
- 		} else {
-@@ -5230,8 +5233,7 @@ int read_extent_buffer_pages(struct extent_io_tree *tree,
- 	}
- 
- 	if (bio) {
--		err = submit_one_bio(READ | REQ_META, bio, mirror_num,
--				     bio_flags);
-+		err = submit_one_bio(bio, mirror_num, bio_flags);
- 		if (err)
- 			return err;
- 	}
--- 
-2.7.2
+>  {
+> -	radix_tree_tag_set(&pag->pag_ici_root,
+> -			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+> +	struct xfs_mount	*mp = pag->pag_mount;
+> +
+> +	ASSERT(spin_is_locked(&pag->pag_ici_lock));
+> +	if (pag->pag_ici_reclaimable++)
+> +		return;
+> +
+> +	/* propagate the reclaim tag up into the perag radix tree */
+> +	spin_lock(&mp->m_perag_lock);
+> +	radix_tree_tag_set(&mp->m_perag_tree, pag->pag_agno,
+>  			   XFS_ICI_RECLAIM_TAG);
+> +	spin_unlock(&mp->m_perag_lock);
+>  
+> -	if (!pag->pag_ici_reclaimable) {
+> -		/* propagate the reclaim tag up into the perag radix tree */
+> -		spin_lock(&ip->i_mount->m_perag_lock);
+> -		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
+> -				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+> -				XFS_ICI_RECLAIM_TAG);
+> -		spin_unlock(&ip->i_mount->m_perag_lock);
+> +	/* schedule periodic background inode reclaim */
+> +	xfs_reclaim_work_queue(mp);
+>  
+> -		/* schedule periodic background inode reclaim */
+> -		xfs_reclaim_work_queue(ip->i_mount);
+> +	trace_xfs_perag_set_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
+> +}
+>  
+> -		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
+> -							-1, _RET_IP_);
+> -	}
+> -	pag->pag_ici_reclaimable++;
+> +static void
+> +xfs_perag_clear_reclaim_tag(
+> +	struct xfs_perag	*pag)
+> +{
+> +	struct xfs_mount	*mp = pag->pag_mount;
+> +
+> +	ASSERT(spin_is_locked(&pag->pag_ici_lock));
+> +	if (--pag->pag_ici_reclaimable)
+> +		return;
+> +
+> +	/* clear the reclaim tag from the perag radix tree */
+> +	spin_lock(&mp->m_perag_lock);
+> +	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno,
+> +			     XFS_ICI_RECLAIM_TAG);
+> +	spin_unlock(&mp->m_perag_lock);
+> +	trace_xfs_perag_clear_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
+>  }
+>  
+>  /*
+> @@ -800,48 +814,35 @@ __xfs_inode_set_reclaim_tag(
+>   */
+>  void
+>  xfs_inode_set_reclaim_tag(
+> -	xfs_inode_t	*ip)
+> +	struct xfs_inode	*ip)
+>  {
+> -	struct xfs_mount *mp = ip->i_mount;
+> -	struct xfs_perag *pag;
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_perag	*pag;
+>  
+>  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+>  	spin_lock(&pag->pag_ici_lock);
+>  	spin_lock(&ip->i_flags_lock);
+> -	__xfs_inode_set_reclaim_tag(pag, ip);
+> +
+> +	radix_tree_tag_set(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ip->i_ino),
+> +			   XFS_ICI_RECLAIM_TAG);
+> +	xfs_perag_set_reclaim_tag(pag, ip->i_ino);
+>  	__xfs_iflags_set(ip, XFS_IRECLAIMABLE);
+> +
+>  	spin_unlock(&ip->i_flags_lock);
+>  	spin_unlock(&pag->pag_ici_lock);
+>  	xfs_perag_put(pag);
+>  }
+>  
+> -STATIC void
+> -__xfs_inode_clear_reclaim(
+> -	xfs_perag_t	*pag,
+> -	xfs_inode_t	*ip)
+> -{
+> -	pag->pag_ici_reclaimable--;
+> -	if (!pag->pag_ici_reclaimable) {
+> -		/* clear the reclaim tag from the perag radix tree */
+> -		spin_lock(&ip->i_mount->m_perag_lock);
+> -		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
+> -				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+> -				XFS_ICI_RECLAIM_TAG);
+> -		spin_unlock(&ip->i_mount->m_perag_lock);
+> -		trace_xfs_perag_clear_reclaim(ip->i_mount, pag->pag_agno,
+> -							-1, _RET_IP_);
+> -	}
+> -}
+>  
+>  STATIC void
+> -__xfs_inode_clear_reclaim_tag(
+> -	xfs_mount_t	*mp,
+> -	xfs_perag_t	*pag,
+> -	xfs_inode_t	*ip)
+> +xfs_inode_clear_reclaim_tag(
+> +	struct xfs_perag	*pag,
+> +	xfs_ino_t		ino)
+>  {
+>  	radix_tree_tag_clear(&pag->pag_ici_root,
+> -			XFS_INO_TO_AGINO(mp, ip->i_ino), XFS_ICI_RECLAIM_TAG);
+> -	__xfs_inode_clear_reclaim(pag, ip);
+> +			     XFS_INO_TO_AGINO(pag->pag_mount, ino),
+> +			     XFS_ICI_RECLAIM_TAG);
+> +	xfs_perag_clear_reclaim_tag(pag);
+>  }
+>  
+>  /*
+> @@ -1032,7 +1033,7 @@ reclaim:
+>  	if (!radix_tree_delete(&pag->pag_ici_root,
+>  				XFS_INO_TO_AGINO(ip->i_mount, ino)))
+>  		ASSERT(0);
+> -	__xfs_inode_clear_reclaim(pag, ip);
+> +	xfs_perag_clear_reclaim_tag(pag);
+>  	spin_unlock(&pag->pag_ici_lock);
+>  
+>  	/*
+> -- 
+> 2.7.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
