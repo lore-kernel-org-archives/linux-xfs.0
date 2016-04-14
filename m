@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 55F2E7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 04:49:36 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 861EB7CA0
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 10:10:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 241A08F8035
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 02:49:36 -0700 (PDT)
-Received: from mail-ig0-f178.google.com (mail-ig0-f178.google.com
-	[209.85.213.178]) by cuda.sgi.com with ESMTP id
-	SYvkWOe3DttvxrGX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 02:49:34 -0700 (PDT)
-Received: by mail-ig0-f178.google.com with SMTP id kb1so1862932igb.0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 02:49:34 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 52960304032
+	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 08:10:21 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id POmxiMQ7PcLlwBYV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 08:10:17 -0700 (PDT)
+Date: Thu, 14 Apr 2016 11:10:14 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RFC v2 PATCH 05/10] dm thin: add methods to set and get
+	reserved space
+Message-ID: <20160414151014.GA13074@redhat.com>
+References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
+	<1460479373-63317-6-git-send-email-bfoster@redhat.com>
+	<20160413174442.GD18517@birch.djwong.org>
+	<20160413183352.GB2775@bfoster.bfoster>
+	<20160413204117.GA6870@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i73JEzCj-4kp3=H9mjXCKYgcOUYCOyq-aZSWZFXUih+0MA@mail.gmail.com>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-16-git-send-email-jtulak@redhat.com>
-	<5706FA7C.7020103@sandeen.net>
-	<CACj3i73JEzCj-4kp3=H9mjXCKYgcOUYCOyq-aZSWZFXUih+0MA@mail.gmail.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 14 Apr 2016 11:49:14 +0200
-Message-ID: <CACj3i722h=WVW-637__y6fi4EekAxxB=cwL8y+F1r1LFk-Z5rw@mail.gmail.com>
-Subject: Re: [PATCH 15/19] mkfs: don't treat files as though they are block
-	devices
+Content-Disposition: inline
+In-Reply-To: <20160413204117.GA6870@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,141 +30,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1515491942979797515=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, dm-devel@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, Joe Thornber <ejt@redhat.com>, linux-fsdevel@vger.kernel.org
 
---===============1515491942979797515==
-Content-Type: multipart/alternative; boundary=089e01538da0c6a8a905306ecf8d
+On Wed, Apr 13 2016 at  4:41pm -0400,
+Brian Foster <bfoster@redhat.com> wrote:
 
---089e01538da0c6a8a905306ecf8d
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+> On Wed, Apr 13, 2016 at 02:33:52PM -0400, Brian Foster wrote:
+> > On Wed, Apr 13, 2016 at 10:44:42AM -0700, Darrick J. Wong wrote:
+> > > On Tue, Apr 12, 2016 at 12:42:48PM -0400, Brian Foster wrote:
+> > > > From: Joe Thornber <ejt@redhat.com>
+> > > > 
+> > > > Experimental reserve interface for XFS guys to play with.
+> > > > 
+> > > > I have big reservations (no pun intended) about this patch.
+> > > > 
+> > > > [BF:
+> > > >  - Support for reservation reduction.
+> > > >  - Support for space provisioning.
+> > > >  - Condensed to a single function.]
+> > > > 
+> > > > Not-Signed-off-by: Joe Thornber <ejt@redhat.com>
+> > > > Not-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> > > > ---
+> > > >  drivers/md/dm-thin.c | 181 ++++++++++++++++++++++++++++++++++++++++++++++++---
+> > > >  1 file changed, 171 insertions(+), 10 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
+> > > > index 92237b6..32bc5bd 100644
+> > > > --- a/drivers/md/dm-thin.c
+> > > > +++ b/drivers/md/dm-thin.c
+> > ...
+> > > > @@ -4271,6 +4343,94 @@ static void thin_io_hints(struct dm_target *ti, struct queue_limits *limits)
+> > > >  	limits->max_discard_sectors = 2048 * 1024 * 16; /* 16G */
+> > > >  }
+> > > >  
+> > > > +static int thin_provision_space(struct dm_target *ti, sector_t offset,
+> > > > +				sector_t len, sector_t *res)
+> > > > +{
+> > > > +	struct thin_c *tc = ti->private;
+> > > > +	struct pool *pool = tc->pool;
+> > > > +	sector_t end;
+> > > > +	dm_block_t pblock;
+> > > > +	dm_block_t vblock;
+> > > > +	int error;
+> > > > +	struct dm_thin_lookup_result lookup;
+> > > > +
+> > > > +	if (!is_factor(offset, pool->sectors_per_block))
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	if (!len || !is_factor(len, pool->sectors_per_block))
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	if (res && !is_factor(*res, pool->sectors_per_block))
+> > > > +		return -EINVAL;
+> > > > +
+> > > > +	end = offset + len;
+> > > > +
+> > > > +	while (offset < end) {
+> > > > +		vblock = offset;
+> > > > +		do_div(vblock, pool->sectors_per_block);
+> > > > +
+> > > > +		error = dm_thin_find_block(tc->td, vblock, true, &lookup);
+> > > > +		if (error == 0)
+> > > > +			goto next;
+> > > > +		if (error != -ENODATA)
+> > > > +			return error;
+> > > > +
+> > > > +		error = alloc_data_block(tc, &pblock);
+> > > 
+> > > So this means that if fallocate wants to BDEV_RES_PROVISION N blocks, it must
+> > > first increase the reservation (BDEV_RES_MOD) by N blocks to avoid using up
+> > > space that was previously reserved by some other caller.  I think?
+> > > 
+> > 
+> > Yes, assuming this is being called from a filesystem using the
+> > reservation mechanism.
 
-On Fri, Apr 8, 2016 at 4:58 PM, Jan Tulak <jtulak@redhat.com> wrote:
+Brian, I need to circle back with you to understand why XFS even needs
+reservation as opposed to just using something like fallocate (which
+would provision the space before you actually initiate the IO that would
+use it).  But we can discuss that in person and then report back to the
+list if it makes it easier...
+ 
+> > > > +		if (error)
+> > > > +			return error;
+> > > > +
+> > > > +		error = dm_thin_insert_block(tc->td, vblock, pblock);
+> > > 
+> > > Having reserved and mapped blocks, what happens when we try to read them?
+> > > Do we actually get zeroes, or does the read go straight through to whatever
+> > > happens to be in the disk blocks?  I don't think it's correct that we could
+> > > BDEV_RES_PROVISION and end up with stale credit card numbers from some other
+> > > thin device.
+> > > 
+> > 
+> > Agree, but I'm not really sure how this works in thinp tbh. fallocate
+> > wasn't really on my mind when doing this. I was simply trying to cobble
+> > together what I could to facilitate making progress on the fs parts
+> > (e.g., I just needed a call that allocated blocks and consumed
+> > reservation in the process).
+> > 
+> > Skimming through the dm-thin code, it looks like a (configurable) block
+> > zeroing mechanism can be triggered from somewhere around
+> > provision_block()->schedule_zero(), depending on whether the incoming
+> > write overwrites the newly allocated block. If that's the case, then I
+> > suspect that means reads would just fall through to the block and return
+> > whatever was on disk. This code would probably need to tie into that
+> > zeroing mechanism one way or another to deal with that issue. (Though
+> > somebody who actually knows something about dm-thin should verify that.
+> > :)
+> > 
+> 
+> BTW, if that mechanism is in fact doing I/O, that might not be the
+> appropriate solution for fallocate. Perhaps we'd have to consider an
+> unwritten flag or some such in dm-thin, if possible.
 
-> On Fri, Apr 8, 2016 at 2:25 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
-[
->> =E2=80=8Bsnip]=E2=80=8B
->>
->> I still think this patch might need a reset though :)
->>
->> Thanks,
->> -Eric
->>
->>
-> =E2=80=8BOn few places, the original patch looked as if files had direct =
-IO still
-> enabled=E2=80=8B (using platform_findsize...), and I think it was causing=
- some
-> failures - fixing issues is why I did most of the changes.
->
-> I will revert to the original version and see what exactly fails. But wit=
-h
-> being Friday late afternoon, the results will be available the next week
-> (Wednesday and further, all my courses at university are stuffed in
-> Mon/Tue).
->
->
-=E2=80=8BAll right. So I run the tests on the set with both this and the or=
-iginal
-version of this patch and there is no change in results. Here and there
-some tests failed on one run, but on other runs they are ok and I can't get
-them to fail again (namely, xfs/033, 073 and 085 did this).
+DM thinp defaults to enabling 'zero_new_blocks' (can be disabled using
+the 'skip_block_zeroing' feature when loading the DM table for the
+thin-pool).  With block-zeroing any blocks that are provisioned _will_
+be overwritten with zeroes (using dm-kcopyd which is trained to use
+WRITE_SAME if supported).
 
-It looks like whatever the issues were to start the changes, they are
-already resolved. Thus, I will send the original patch in the next batch.
+But yeah, for fallocate.. certainly not something we want as it defeats
+the point of fallocate being cheap.
 
+So we probably would need a flag comparable to the
+ext4-stale-flag-that-shall-not-be-named ;)
 
-Cheers,
-=E2=80=8BJan=E2=80=8B
-
-
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---089e01538da0c6a8a905306ecf8d
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Fri, Ap=
-r 8, 2016 at 4:58 PM, Jan Tulak </span><span dir=3D"ltr" style=3D"font-fami=
-ly:arial,sans-serif">&lt;<a href=3D"mailto:jtulak@redhat.com" target=3D"_bl=
-ank">jtulak@redhat.com</a>&gt;</span><span style=3D"font-family:arial,sans-=
-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div class=3D"gma=
-il_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;bord=
-er-left:1px #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div><div><div st=
-yle=3D"font-family:arial,helvetica,sans-serif"><span style=3D"font-family:a=
-rial,sans-serif">On Fri, Apr 8, 2016 at 2:25 AM, Eric Sandeen </span><span =
-dir=3D"ltr" style=3D"font-family:arial,sans-serif">&lt;<a href=3D"mailto:sa=
-ndeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a>&gt;</span><spa=
-n style=3D"font-family:arial,sans-serif"> wrote:</span><span style=3D"font-=
-family:arial,sans-serif;color:rgb(34,34,34)">=C2=A0</span><span style=3D"fo=
-nt-family:arial,sans-serif;color:rgb(34,34,34)">=C2=A0</span></div></div></=
-div></div></blockquote><blockquote class=3D"gmail_quote" style=3D"margin:0p=
-x 0px 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);bo=
-rder-left-style:solid;padding-left:1ex"><div dir=3D"ltr"><div class=3D"gmai=
-l_extra"><div class=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=
-=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;border-left-color:rgb(20=
-4,204,204);border-left-style:solid;padding-left:1ex"><div><div><span>[<div =
-class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif;dis=
-play:inline">=E2=80=8Bsnip]=E2=80=8B</div><br style=3D"color:rgb(34,34,34)"=
-><span style=3D"color:rgb(34,34,34)">I still think this patch might need a =
-reset though :)</span><br style=3D"color:rgb(34,34,34)"><br style=3D"color:=
-rgb(34,34,34)"><span style=3D"color:rgb(34,34,34)">Thanks,</span><br style=
-=3D"color:rgb(34,34,34)"><span style=3D"color:rgb(34,34,34)">-Eric</span><b=
-r style=3D"color:rgb(34,34,34)"></span><span style=3D"color:rgb(34,34,34)">=
-<span><br></span></span></div></div></blockquote><div><br></div><div style=
-=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BOn few places, the ori=
-ginal patch looked as if files had direct IO still enabled=E2=80=8B (using =
-platform_findsize...), and I think it was causing some failures - fixing is=
-sues is why I did most of the changes.</div><div style=3D"font-family:arial=
-,helvetica,sans-serif"><br></div><div style=3D"font-family:arial,helvetica,=
-sans-serif">I will revert to the original version and see what exactly fail=
-s. But with being Friday late afternoon, the results will be available the =
-next week (Wednesday and further, all my courses at university are stuffed =
-in Mon/Tue).</div><div style=3D"font-family:arial,helvetica,sans-serif"><br=
-></div></div></div></div></blockquote><div><br></div><div><div class=3D"gma=
-il_default" style=3D"font-family:arial,helvetica,sans-serif;display:inline"=
->=E2=80=8BAll right. So I run the tests on the set with both this and the o=
-riginal version of this patch and there is no change in results. Here and t=
-here some tests failed on one run, but on other runs they are ok and I can&=
-#39;t get them to fail again (namely, xfs/033, 073 and 085 did this).</div>=
-</div><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetic=
-a,sans-serif;display:inline"><br></div></div><div><div class=3D"gmail_defau=
-lt" style=3D"font-family:arial,helvetica,sans-serif;display:inline">It look=
-s like whatever the issues were to start the changes, they are already reso=
-lved. Thus, I will send the original patch in the next batch.</div><br></di=
-v><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sa=
-ns-serif;display:inline"><br></div></div><div><div class=3D"gmail_default" =
-style=3D"font-family:arial,helvetica,sans-serif;display:inline">Cheers,</di=
-v></div><div><div class=3D"gmail_default" style=3D"font-family:arial,helvet=
-ica,sans-serif">=E2=80=8BJan=E2=80=8B</div><br></div></div><br clear=3D"all=
-"><div><br></div>-- <br><div><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Ja=
-n Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"_blank">jtu=
-lak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=3D"_blank"=
->jan@tulak.me</a></div></div></div></div>
-</div></div>
-
---089e01538da0c6a8a905306ecf8d--
-
-
---===============1515491942979797515==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Mike
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1515491942979797515==--
