@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EDBD67CBA
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 06:48:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BC49E8F8033
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 04:48:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BqRkNZ3Wxaxh1bQL (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 04:48:14 -0700 (PDT)
-Date: Fri, 15 Apr 2016 07:48:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC v2 PATCH 05/10] dm thin: add methods to set and get
-	reserved space
-Message-ID: <20160415114811.GA36382@bfoster.bfoster>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-	<1460479373-63317-6-git-send-email-bfoster@redhat.com>
-	<20160413174442.GD18517@birch.djwong.org>
-	<20160413183352.GB2775@bfoster.bfoster>
-	<20160413204117.GA6870@bfoster.bfoster>
-	<20160414151014.GA13074@redhat.com>
-	<20160414162344.GG20696@bfoster.bfoster>
-	<20160414201812.GA14466@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CD09B7CA2
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 21:03:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 418F6AC005
+	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 19:03:13 -0700 (PDT)
+Received: from ZXSHCAS01.zhaoxin.com ([180.169.121.82]) by cuda.sgi.com with
+	ESMTP id 5H5agdSEmPv2aWqj (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Apr 2016 19:02:59 -0700 (PDT)
+From: Eric Shang <EricShang@zhaoxin.com>
+Subject: =?utf-8?B?562U5aSNOiBleHQ0IGVycm9y?=
+Date: Thu, 14 Apr 2016 02:02:18 +0000
+Message-ID: <0255994B402DE243B1DFC1057A00655201AE84@ZXSHMBX02.zhaoxin.com>
+References: <0255994B402DE243B1DFC1057A00655201AC6F@ZXSHMBX02.zhaoxin.com>
+	<1460556627.24985.28.camel@hpe.com>
+In-Reply-To: <1460556627.24985.28.camel@hpe.com>
+Content-Language: zh-CN
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160414201812.GA14466@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,147 +26,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Joe Thornber <ejt@redhat.com>, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: Toshi Kani <toshi.kani@hpe.com>, Matthew Wilcox <willy@linux.intel.com>
+Cc: "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-On Thu, Apr 14, 2016 at 04:18:12PM -0400, Mike Snitzer wrote:
-> On Thu, Apr 14 2016 at 12:23pm -0400,
-> Brian Foster <bfoster@redhat.com> wrote:
-> 
-> > On Thu, Apr 14, 2016 at 11:10:14AM -0400, Mike Snitzer wrote:
-> > > 
-> > > Brian, I need to circle back with you to understand why XFS even needs
-> > > reservation as opposed to just using something like fallocate (which
-> > > would provision the space before you actually initiate the IO that would
-> > > use it).  But we can discuss that in person and then report back to the
-> > > list if it makes it easier...
-> > >  
-> > 
-> > The primary reason is delayed allocation. Buffered writes to the fs copy
-> > data into the pagecache before the physical space has been allocated.
-> > E.g., we only modify the free blocks counters at write() time in order
-> > to guarantee that we have space somewhere in the fs. The physical
-> > extents aren't allocated until later at writeback time.
-> > 
-> > So reservation from dm-thin basically extends the mechanism to also
-> > guarantee that the underlying thin volume has space for writes that
-> > we've received but haven't written back yet.
-> 
-> OK, so even if/when we have bdev_fallocate support that would be more
-> rigid than XFS would like.
-> 
-
-Yeah, fallocate is still useful on its own. For example, we could still
-invoke bdev_fallocate() in response to userspace fallocate to ensure the
-space is physically allocated (i.e., provide the no -ENOSPC guarantee).
-
-That just doesn't help us avoid the overprovisioned situation where we
-have data in pagecache and nowhere to write it back to (w/o setting the
-volume read-only). The only way I'm aware of to handle that is to
-account for the space at write time.
-
-> As you've said, the XFS established reservation is larger than is really
-> needed.  Whereas regularly provisioning more than is actually needed is
-> a recipe for disaster.
-> 
-
-Indeed, this prototype ties right into XFS' existing transaction
-reservation mechanism. It basically adds bdev reservation to the blocks
-that we already locally reserve during creation of a transaction or a
-delalloc write. This already does worst case reservation. What's
-interesting is that the worst case 1-1 fs-dm block reservation doesn't
-appear to be as much of a functional impediment as anticipated. I think
-that's because XFS is already designed for such worst case reservations
-and has mechanisms in place to handle it in appropriate situations.
-
-For example, if an incoming write fails to reserve blocks due to too
-much outstanding reservation, xfs_file_buffered_aio_write() will do
-things like flush inodes and run our post-eof (for speculatively
-preallocated space) scanner to reclaim some of that space and retry
-before it gives up.
-
-I'm sure there's a performance issue in there somewhere when that whole
-sequence occurs more frequently than normal due to the amplified
-reservation (a 4k fs block reserving 64k or more in the dm vol), but I
-don't think that's necessarily a disaster scenario.
-
-Brian
-
-
-> > > > > > > +		if (error)
-> > > > > > > +			return error;
-> > > > > > > +
-> > > > > > > +		error = dm_thin_insert_block(tc->td, vblock, pblock);
-> > > > > > 
-> > > > > > Having reserved and mapped blocks, what happens when we try to read them?
-> > > > > > Do we actually get zeroes, or does the read go straight through to whatever
-> > > > > > happens to be in the disk blocks?  I don't think it's correct that we could
-> > > > > > BDEV_RES_PROVISION and end up with stale credit card numbers from some other
-> > > > > > thin device.
-> > > > > > 
-> > > > > 
-> > > > > Agree, but I'm not really sure how this works in thinp tbh. fallocate
-> > > > > wasn't really on my mind when doing this. I was simply trying to cobble
-> > > > > together what I could to facilitate making progress on the fs parts
-> > > > > (e.g., I just needed a call that allocated blocks and consumed
-> > > > > reservation in the process).
-> > > > > 
-> > > > > Skimming through the dm-thin code, it looks like a (configurable) block
-> > > > > zeroing mechanism can be triggered from somewhere around
-> > > > > provision_block()->schedule_zero(), depending on whether the incoming
-> > > > > write overwrites the newly allocated block. If that's the case, then I
-> > > > > suspect that means reads would just fall through to the block and return
-> > > > > whatever was on disk. This code would probably need to tie into that
-> > > > > zeroing mechanism one way or another to deal with that issue. (Though
-> > > > > somebody who actually knows something about dm-thin should verify that.
-> > > > > :)
-> > > > > 
-> > > > 
-> > > > BTW, if that mechanism is in fact doing I/O, that might not be the
-> > > > appropriate solution for fallocate. Perhaps we'd have to consider an
-> > > > unwritten flag or some such in dm-thin, if possible.
-> > > 
-> > > DM thinp defaults to enabling 'zero_new_blocks' (can be disabled using
-> > > the 'skip_block_zeroing' feature when loading the DM table for the
-> > > thin-pool).  With block-zeroing any blocks that are provisioned _will_
-> > > be overwritten with zeroes (using dm-kcopyd which is trained to use
-> > > WRITE_SAME if supported).
-> > > 
-> > 
-> > Ok, thanks.
-> > 
-> > > But yeah, for fallocate.. certainly not something we want as it defeats
-> > > the point of fallocate being cheap.
-> > > 
-> > 
-> > Indeed.
-> > 
-> > > So we probably would need a flag comparable to the
-> > > ext4-stale-flag-that-shall-not-be-named ;)
-> > > 
-> > 
-> > Any chance to support an unwritten flag for all blocks that are
-> > allocated via fallocate? E.g., subsequent reads detect the flag and
-> > return zeroes as if the block wasn't there and a subsequent write clears
-> > the flag (doing any partial block zeroing that might be necessary as
-> > well).
-> 
-> Yeah, I've already started talking to Joe about doing exactly that.
-> Without it we cannot securely provide fallocate support in DM thinp.
-> 
-> I'll keep discussing with Joe... he doesn't like this requirement but
-> we'll work through it.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgVG9zaGk6DQoJVGhhbmtzISBJIHRoaW5rIHRoaXMgbm90IHJlbGF0ZSB0byBEQVggYW5kIGRh
+eF9nZXRfdW5tYXBwZWRfYXJlYSwgSSBhbSBhIGp1bmlvciBrZXJuZWwgbWFpbnRhaW5lciBmb3Ig
+b3VyIGNvbXBhbnkuIFRoaXMgaXNzdWUgYm90aGVyIG1lIGxvbmcgdGltZSwgbG9va3MgbGlrZSBr
+ZXJuZWwgZXh0NCBpc3N1ZSBvciBvdXIgZW1tYyBkcml2ZXIgaXNzdWUsIEkgd2lsbCBkaWcgaXQg
+b3V0LCBUaGFua3MhDQoNCkJlc3QgUmVnYXJkcw0KRXJpY1NoYW5nDQoNCg0KLS0tLS3pgq7ku7bl
+jp/ku7YtLS0tLQ0K5Y+R5Lu25Lq6OiBUb3NoaSBLYW5pIFttYWlsdG86dG9zaGkua2FuaUBocGUu
+Y29tXSANCuWPkemAgeaXtumXtDogMjAxNuW5tDTmnIgxM+aXpSAyMjoxMA0K5pS25Lu25Lq6OiBF
+cmljIFNoYW5nOyBNYXR0aGV3IFdpbGNveA0K5oqE6YCBOiBha3BtQGxpbnV4LWZvdW5kYXRpb24u
+b3JnOyBkYW4uai53aWxsaWFtc0BpbnRlbC5jb207IHZpcm9AemVuaXYubGludXgub3JnLnVrOyBy
+b3NzLnp3aXNsZXJAbGludXguaW50ZWwuY29tOyBraXJpbGwuc2h1dGVtb3ZAbGludXguaW50ZWwu
+Y29tOyBkYXZpZEBmcm9tb3JiaXQuY29tOyBqYWNrQHN1c2UuY3o7IHR5dHNvQG1pdC5lZHU7IGFk
+aWxnZXIua2VybmVsQGRpbGdlci5jYTsgbGludXgtbnZkaW1tQGxpc3RzLjAxLm9yZzsgbGludXgt
+ZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWV4dDRAdmdlci5rZXJuZWwub3JnOyB4ZnNA
+b3NzLnNnaS5jb207IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCuS4u+mimDogUmU6IGV4
+dDQgZXJyb3INCg0KT24gV2VkLCAyMDE2LTA0LTEzIGF0IDEzOjQ0ICswMDAwLCBFcmljIFNoYW5n
+IHdyb3RlOg0KPiBISSBBbGw6DQo+IMKgIEkgbWVldCBhbiBleHQ0IGVycm9yLCBmb2xsb3dpbmcg
+aXMgdGhlIGVycm9yIGxvZy4gQWZ0ZXIgcGFuaWMsIEkgDQo+IGNoZWNrIHRoZSBlbW1jIGJ5IHRo
+ZSB0b29sIGRlYnVmcywgdGhlIGlub2RlIDY5ODc4IGlfbmxpbmsgaXMgbm90IA0KPiB6ZXJvLiBB
+bmQgdGhpcyBpbm9kZSBkb24ndCBiZWxvbmcgdG8gcGFyZW50IGRpciA2OTg3LCBpdCBiZWxvbmcg
+dG8gDQo+IG90aGVyIGZpbGUodGhpcyBpbm9kZSBiZWxvbmcgdG8gdHdvIGZpbGVzIHdoZW4gY2hl
+Y2sgYnkgZGVidWdmcyANCj4gbmNoZWNrKSwgSSBndWVzcyB0aGFuIHRoaXMgaW5vZGUgaGFzIGJl
+ZWQgZGVsZXRlZCBpbiBtZW1vcnkgYW5kIA0KPiBhbHJlYWR5IHVzZWQgYnkgb3RoZXIgZmlsZS4g
+QnV0IHRoZSBwYXJlbnQgZGVudHJ5IGJ1ZmZfaGVhZCBub3QgZmx1c2ggDQo+IHRvIGVtbWMuIEJ1
+dCB3aGVuIGxvb2t1cCB0aGlzIGRlbnRyeSBjYW4ndCBmaW5kIGl0JyBpbiBkZW50cnkgY2FjaGUs
+IA0KPiBhbmQgdGhlbiBsb29rdXBfcmVhbCwgcmVhZCB0aGUgZGVudHJ5IGZyb20gZW1tYywgZ2V0
+IHRoZSBmaWxlIGlub2RlIHdoaWNoIGFscmVhZHkgYmUgZGVsZXRlZC4NCj4gwqAgQ2FuIGFueSBn
+aXZlIG1lIHNvbWUgaGVscCBob3cgdG8gY2hlY2sgdGhpcyBpc3N1ZS4gTXkga2VybmVsIHZlcnNp
+b24gDQo+IGlzIDMuMTggZm9ybSBBbmRyb2lkIC4gSSB0aGlua3Mgc29tZXRoaW5nIHdyb25nIHdp
+dGggZGVudHJ5IGNhY2hlIA0KPiBmbHVzaCBhbmQgZGlydHkgYnVmZl9oZWFkIGZsdXNoIHRvIGVt
+bWMuIFRoYW5rcyBhbGwhDQoNCkFyZSB5b3Ugc29tZWhvdyB1c2luZyBEQVggYW5kIG15IGRheF9n
+ZXRfdW5tYXBwZWRfYXJlYSBwYXRjaGVzIGluIHlvdXIgQW5kcm9pZA0KMy4xOCBrZXJuZWw/IEkg
+ZG91YnQgdGhpcyBpcyB0aGUgY2FzZSwgYnV0IEkgdGhvdWdodCBJIHNob3VsZCBjaGVjayBzaW5j
+ZSB5b3UgcmVwb3J0ZWQgaXQgdG8gbWUgYW5kIE1hdHRoZXcgd2l0aCB0aGUgc2FtZSBjYyBsaXN0
+Lg0KDQpJZiB5b3UgYXJlIHNpbXBseSB1c2luZyBhIGRpc3RyaWJ1dGVkIEFuZHJvaWQga2VybmVs
+LCB5b3Ugc2hvdWxkIHJlcG9ydCBpdCB0byBBbmRyb2lkIGVtYWlsIGxpc3Qgb3IgYnVnIHRyYWNr
+ZXIuDQoNCi1Ub3NoaQ0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
