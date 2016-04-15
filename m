@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 84A7A7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 15:18:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8778E7CA6
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:16:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4934B8F8037
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 13:18:16 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DEEF1AC003
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:16:28 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wS59uCJWzhzCbBrO (version=TLSv1.2
+	cuda.sgi.com with ESMTP id IqwEsgxqv4HaLTEB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 13:18:14 -0700 (PDT)
-Date: Thu, 14 Apr 2016 16:18:12 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC v2 PATCH 05/10] dm thin: add methods to set and get
-	reserved space
-Message-ID: <20160414201812.GA14466@redhat.com>
-References: <1460479373-63317-1-git-send-email-bfoster@redhat.com>
-	<1460479373-63317-6-git-send-email-bfoster@redhat.com>
-	<20160413174442.GD18517@birch.djwong.org>
-	<20160413183352.GB2775@bfoster.bfoster>
-	<20160413204117.GA6870@bfoster.bfoster>
-	<20160414151014.GA13074@redhat.com>
-	<20160414162344.GG20696@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160414162344.GG20696@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:16:27 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 02/42] block: add REQ_OP definitions and bi_op/op fields
+Date: Fri, 15 Apr 2016 14:15:37 -0500
+Message-Id: <1460747777-8479-3-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,105 +23,192 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, dm-devel@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, Joe Thornber <ejt@redhat.com>, linux-fsdevel@vger.kernel.org
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-On Thu, Apr 14 2016 at 12:23pm -0400,
-Brian Foster <bfoster@redhat.com> wrote:
+From: Mike Christie <mchristi@redhat.com>
 
-> On Thu, Apr 14, 2016 at 11:10:14AM -0400, Mike Snitzer wrote:
-> > 
-> > Brian, I need to circle back with you to understand why XFS even needs
-> > reservation as opposed to just using something like fallocate (which
-> > would provision the space before you actually initiate the IO that would
-> > use it).  But we can discuss that in person and then report back to the
-> > list if it makes it easier...
-> >  
-> 
-> The primary reason is delayed allocation. Buffered writes to the fs copy
-> data into the pagecache before the physical space has been allocated.
-> E.g., we only modify the free blocks counters at write() time in order
-> to guarantee that we have space somewhere in the fs. The physical
-> extents aren't allocated until later at writeback time.
-> 
-> So reservation from dm-thin basically extends the mechanism to also
-> guarantee that the underlying thin volume has space for writes that
-> we've received but haven't written back yet.
+The following patches separate the operation (write, read, discard,
+etc) from the rq_flag_bits flags. This patch adds definitions for
+request/bio operations, adds fields to the request/bio to set them, and
+some temporary compat code so the kernel/modules can use either one. In
+the final patches this compat code will be removed when everything is converted.
 
-OK, so even if/when we have bdev_fallocate support that would be more
-rigid than XFS would like.
+In this patch the REQ_OPs match the REQ rq_flag_bits ones
+for compat reasons while all the code is converted in this set. In the
+last patches that will abe removed and the bi_op field will be
+shrunk.
 
-As you've said, the XFS established reservation is larger than is really
-needed.  Whereas regularly provisioning more than is actually needed is
-a recipe for disaster.
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ block/blk-core.c          | 19 ++++++++++++++++---
+ include/linux/blk_types.h | 15 ++++++++++++++-
+ include/linux/blkdev.h    |  1 +
+ include/linux/fs.h        | 37 +++++++++++++++++++++++++++++++++++--
+ 4 files changed, 66 insertions(+), 6 deletions(-)
 
-> > > > > > +		if (error)
-> > > > > > +			return error;
-> > > > > > +
-> > > > > > +		error = dm_thin_insert_block(tc->td, vblock, pblock);
-> > > > > 
-> > > > > Having reserved and mapped blocks, what happens when we try to read them?
-> > > > > Do we actually get zeroes, or does the read go straight through to whatever
-> > > > > happens to be in the disk blocks?  I don't think it's correct that we could
-> > > > > BDEV_RES_PROVISION and end up with stale credit card numbers from some other
-> > > > > thin device.
-> > > > > 
-> > > > 
-> > > > Agree, but I'm not really sure how this works in thinp tbh. fallocate
-> > > > wasn't really on my mind when doing this. I was simply trying to cobble
-> > > > together what I could to facilitate making progress on the fs parts
-> > > > (e.g., I just needed a call that allocated blocks and consumed
-> > > > reservation in the process).
-> > > > 
-> > > > Skimming through the dm-thin code, it looks like a (configurable) block
-> > > > zeroing mechanism can be triggered from somewhere around
-> > > > provision_block()->schedule_zero(), depending on whether the incoming
-> > > > write overwrites the newly allocated block. If that's the case, then I
-> > > > suspect that means reads would just fall through to the block and return
-> > > > whatever was on disk. This code would probably need to tie into that
-> > > > zeroing mechanism one way or another to deal with that issue. (Though
-> > > > somebody who actually knows something about dm-thin should verify that.
-> > > > :)
-> > > > 
-> > > 
-> > > BTW, if that mechanism is in fact doing I/O, that might not be the
-> > > appropriate solution for fallocate. Perhaps we'd have to consider an
-> > > unwritten flag or some such in dm-thin, if possible.
-> > 
-> > DM thinp defaults to enabling 'zero_new_blocks' (can be disabled using
-> > the 'skip_block_zeroing' feature when loading the DM table for the
-> > thin-pool).  With block-zeroing any blocks that are provisioned _will_
-> > be overwritten with zeroes (using dm-kcopyd which is trained to use
-> > WRITE_SAME if supported).
-> > 
-> 
-> Ok, thanks.
-> 
-> > But yeah, for fallocate.. certainly not something we want as it defeats
-> > the point of fallocate being cheap.
-> > 
-> 
-> Indeed.
-> 
-> > So we probably would need a flag comparable to the
-> > ext4-stale-flag-that-shall-not-be-named ;)
-> > 
-> 
-> Any chance to support an unwritten flag for all blocks that are
-> allocated via fallocate? E.g., subsequent reads detect the flag and
-> return zeroes as if the block wasn't there and a subsequent write clears
-> the flag (doing any partial block zeroing that might be necessary as
-> well).
-
-Yeah, I've already started talking to Joe about doing exactly that.
-Without it we cannot securely provide fallocate support in DM thinp.
-
-I'll keep discussing with Joe... he doesn't like this requirement but
-we'll work through it.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index e953407..3b238ef 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1698,7 +1698,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+ {
+ 	req->cmd_type = REQ_TYPE_FS;
+ 
+-	req->cmd_flags |= bio->bi_rw & REQ_COMMON_MASK;
++	/* tmp compat. Allow users to set bi_op or bi_rw */
++	req->cmd_flags |= (bio->bi_rw | bio->bi_op) & REQ_COMMON_MASK;
+ 	if (bio->bi_rw & REQ_RAHEAD)
+ 		req->cmd_flags |= REQ_FAILFAST_MASK;
+ 
+@@ -2034,6 +2035,12 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	struct bio_list bio_list_on_stack;
+ 	blk_qc_t ret = BLK_QC_T_NONE;
+ 
++	/* tmp compat. Allow users to set either one or both.
++	 * This will be removed when we have converted
++	 * everyone in the next patches.
++	 */
++	bio->bi_rw |= bio->bi_op;
++
+ 	if (!generic_make_request_checks(bio))
+ 		goto out;
+ 
+@@ -2103,6 +2110,12 @@ EXPORT_SYMBOL(generic_make_request);
+  */
+ blk_qc_t submit_bio(struct bio *bio)
+ {
++	/* tmp compat. Allow users to set either one or both.
++	 * This will be removed when we have converted
++	 * everyone in the next patches.
++	 */
++	bio->bi_rw |= bio->bi_op;
++
+ 	/*
+ 	 * If it's a regular read/write or a barrier with data attached,
+ 	 * go through the normal accounting stuff before submission.
+@@ -2976,8 +2989,8 @@ EXPORT_SYMBOL_GPL(__blk_end_request_err);
+ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 		     struct bio *bio)
+ {
+-	/* Bit 0 (R/W) is identical in rq->cmd_flags and bio->bi_rw */
+-	rq->cmd_flags |= bio->bi_rw & REQ_WRITE;
++	/* tmp compat. Allow users to set bi_op or bi_rw */
++	rq->cmd_flags |= bio_data_dir(bio);
+ 
+ 	if (bio_has_data(bio))
+ 		rq->nr_phys_segments = bio_phys_segments(q, bio);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 86a38ea..6e49c91 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,9 +48,15 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
++	unsigned long		bi_rw;		/* bottom bits rq_flags_bits
+ 						 * top bits priority
+ 						 */
++	/*
++	 * this will be a u8 in the next patches and bi_rw can be shrunk to
++	 * a u32. For compat in these transistional patches op is a int here.
++	 */
++	int			bi_op;		/* REQ_OP */
++
+ 
+ 	struct bvec_iter	bi_iter;
+ 
+@@ -242,6 +248,13 @@ enum rq_flag_bits {
+ #define REQ_HASHED		(1ULL << __REQ_HASHED)
+ #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
+ 
++enum req_op {
++	REQ_OP_READ,
++	REQ_OP_WRITE		= REQ_WRITE,
++	REQ_OP_DISCARD		= REQ_DISCARD,
++	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
++};
++
+ typedef unsigned int blk_qc_t;
+ #define BLK_QC_T_NONE	-1U
+ #define BLK_QC_T_SHIFT	16
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 57c0859..bce32e2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -96,6 +96,7 @@ struct request {
+ 	struct request_queue *q;
+ 	struct blk_mq_ctx *mq_ctx;
+ 
++	int op;
+ 	u64 cmd_flags;
+ 	unsigned cmd_type;
+ 	unsigned long atomic_flags;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 69bdd03..96ace0f 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2452,15 +2452,48 @@ extern void make_bad_inode(struct inode *);
+ extern bool is_bad_inode(struct inode *);
+ 
+ #ifdef CONFIG_BLOCK
++
++static inline bool op_is_write(int op)
++{
++	switch (op) {
++	case REQ_OP_WRITE:
++	case REQ_OP_WRITE_SAME:
++	case REQ_OP_DISCARD:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ /*
+  * return READ, READA, or WRITE
+  */
+-#define bio_rw(bio)		((bio)->bi_rw & (RW_MASK | RWA_MASK))
++static inline int bio_rw(struct bio *bio)
++{
++	/*
++	 * tmp cpmpat. Allow users to set either op or rw, until
++	 * all code is converted in the next patches.
++	 */
++	if (op_is_write(bio->bi_op))
++		return WRITE;
++
++	return bio->bi_rw & (RW_MASK | RWA_MASK);
++}
+ 
+ /*
+  * return data direction, READ or WRITE
+  */
+-#define bio_data_dir(bio)	((bio)->bi_rw & 1)
++static inline int bio_data_dir(struct bio *bio)
++{
++	/*
++	 * tmp cpmpat. Allow users to set either op or rw, until
++	 * all code is converted in the next patches.
++	 */
++	if (op_is_write(bio->bi_op))
++		return WRITE;
++
++	return bio->bi_rw & 1;
++}
+ 
+ extern void check_disk_size_change(struct gendisk *disk,
+ 				   struct block_device *bdev);
+-- 
+2.7.2
 
 _______________________________________________
 xfs mailing list
