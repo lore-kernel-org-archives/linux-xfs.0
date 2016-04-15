@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 35E367CA2
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 13:56:24 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 57C0E7D1F
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:44:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F7E3AC001
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:56:23 -0700 (PDT)
-Received: from mail-oi0-f41.google.com (mail-oi0-f41.google.com
-	[209.85.218.41]) by cuda.sgi.com with ESMTP id 8Q38gvsP70bCdeQu
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Apr 2016 11:56:21 -0700 (PDT)
-Received: by mail-oi0-f41.google.com with SMTP id r78so1213959oie.0
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:56:21 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 195518F8033
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:44:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id J9baw26FBrGNMeiU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:44:35 -0700 (PDT)
+Date: Fri, 15 Apr 2016 15:44:32 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/42] v7: separate operations from flags in the
+	bio/request structs
+Message-ID: <20160415194432.GA30077@redhat.com>
+References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <x494mb2ivcl.fsf@segfault.boston.devel.redhat.com>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<1460739288.3012.3.camel@intel.com>
-	<x49potq6bm2.fsf@segfault.boston.devel.redhat.com>
-	<1460741821.3012.11.camel@intel.com>
-	<CAPcyv4hemNM4uQYCPBXyH+DWTOLvyBNBeMYstKbPdad_Cw48HQ@mail.gmail.com>
-	<x49lh4e6928.fsf@segfault.boston.devel.redhat.com>
-	<CAPcyv4hRQj2ZsFj7Xa_=OwcHrzP9_5yUpt3LQ+bPH4PcLe7UCQ@mail.gmail.com>
-	<x494mb2ivcl.fsf@segfault.boston.devel.redhat.com>
-Date: Fri, 15 Apr 2016 11:56:20 -0700
-Message-ID: <CAPcyv4jcPDDcru1ySJLY7SzDQQWFXbfHm493N0twa1vHBEc6aQ@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,22 +30,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+To: mchristi@redhat.com
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
-On Fri, Apr 15, 2016 at 11:24 AM, Jeff Moyer <jmoyer@redhat.com> wrote:
->> Moreover, we're going to do the full badblocks lookup anyway when we
->> call ->direct_access().  If we had that information earlier we can
->> avoid this fallback dance.
->
-> None of the proposed approaches looks clean to me.  I'll go along with
-> whatever you guys think is best.  I am in favor of wrapping up all that
-> duplicated code, though.
+On Fri, Apr 15 2016 at  3:15pm -0400,
+mchristi@redhat.com <mchristi@redhat.com> wrote:
 
-Christoph originally pushed for open coding this fallback decision
-per-filesystem.  I agree with you on the "none the above" options are
-clean.
+> The following patches begin to cleanup the request->cmd_flags and
+> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
+> attributes and state of the request. For bi_rw we use it for similar
+> info and also the priority but then also have another bi_flags field
+> for state. At some point, we abused them so much we just made cmd_flags
+> 64 bits, so we could add more.
+> 
+> The following patches seperate the operation (read, write discard,
+> flush, etc) from cmd_flags/bi_rw.
+> 
+> This patchset was made against linux-next from today April 15
+> (git tag next-20160415).
+> 
+> I put a git tree here:
+> https://github.com/mikechristie/linux-kernel.git
+> The patches are in the op branch.
+> 
+> v7:
+> 1. Fix broken feature_flush/fua use.
+> 
+> v6 and maybe hopfully the last version:
+> 1. Adapt patch 41 to Jens's QUEUE_FLAG_WC/FUA patchset.
+
+Why are you blasting out the entire patchset for updates to individual
+patches at the end of the series?
+
+Mail is cheap but look at how wide you're repeatedly spamming this
+series.
+
+Also, look at what you've done to the dm-devel patchwork:
+https://patchwork.kernel.org/project/dm-devel/list/?state=*
+
+Just sayin'... ;)
 
 _______________________________________________
 xfs mailing list
