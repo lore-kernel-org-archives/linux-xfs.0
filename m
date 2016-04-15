@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F7707CB8
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:17:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 737A57CD3
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:17:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D7CC5304032
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:18 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DAE9BAC002
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:20 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rycijZ8brzJcLk6N (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BWKblN99oPiZavlA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:17 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:19 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 24/42] xen: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 14:15:59 -0500
-Message-Id: <1460747777-8479-25-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 25/42] target: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 14:16:00 -0500
+Message-Id: <1460747777-8479-26-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,128 +33,126 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch has the xen block driver use bio->bi_op for REQ_OPs and rq_flag_bits
-to bio->bi_rw.
+This patch has the target modules use bio->bi_op for REQ_OPs and
+rq_flag_bits to bio->bi_rw.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/block/xen-blkback/blkback.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ drivers/target/target_core_iblock.c | 30 +++++++++++++++---------------
+ drivers/target/target_core_pscsi.c  |  2 +-
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/block/xen-blkback/blkback.c b/drivers/block/xen-blkback/blkback.c
-index 79fe493..854ecca 100644
---- a/drivers/block/xen-blkback/blkback.c
-+++ b/drivers/block/xen-blkback/blkback.c
-@@ -501,7 +501,7 @@ static int xen_vbd_translate(struct phys_req *req, struct xen_blkif *blkif,
- 	struct xen_vbd *vbd = &blkif->vbd;
- 	int rc = -EACCES;
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index c25109c..5e60dbc 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -312,7 +312,8 @@ static void iblock_bio_done(struct bio *bio)
+ }
  
--	if ((operation != READ) && vbd->readonly)
-+	if ((operation != REQ_OP_READ) && vbd->readonly)
- 		goto out;
+ static struct bio *
+-iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
++iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int op,
++	       int op_flags)
+ {
+ 	struct iblock_dev *ib_dev = IBLOCK_DEV(cmd->se_dev);
+ 	struct bio *bio;
+@@ -334,7 +335,8 @@ iblock_get_bio(struct se_cmd *cmd, sector_t lba, u32 sg_num, int rw)
+ 	bio->bi_private = cmd;
+ 	bio->bi_end_io = &iblock_bio_done;
+ 	bio->bi_iter.bi_sector = lba;
+-	bio->bi_rw = rw;
++	bio->bi_op = op;
++	bio->bi_rw = op_flags;
  
- 	if (likely(req->nr_sects)) {
-@@ -1014,7 +1014,7 @@ static int dispatch_discard_io(struct xen_blkif_ring *ring,
- 	preq.sector_number = req->u.discard.sector_number;
- 	preq.nr_sects      = req->u.discard.nr_sectors;
+ 	return bio;
+ }
+@@ -480,7 +482,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		goto fail;
+ 	cmd->priv = ibr;
  
--	err = xen_vbd_translate(&preq, blkif, WRITE);
-+	err = xen_vbd_translate(&preq, blkif, REQ_OP_WRITE);
- 	if (err) {
- 		pr_warn("access denied: DISCARD [%llu->%llu] on dev=%04x\n",
- 			preq.sector_number,
-@@ -1229,6 +1229,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	struct bio **biolist = pending_req->biolist;
- 	int i, nbio = 0;
- 	int operation;
-+	int operation_flags = 0;
- 	struct blk_plug plug;
- 	bool drain = false;
- 	struct grant_page **pages = pending_req->segments;
-@@ -1247,17 +1248,19 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	switch (req_operation) {
- 	case BLKIF_OP_READ:
- 		ring->st_rd_req++;
--		operation = READ;
-+		operation = REQ_OP_READ;
- 		break;
- 	case BLKIF_OP_WRITE:
- 		ring->st_wr_req++;
--		operation = WRITE_ODIRECT;
-+		operation = REQ_OP_WRITE;
-+		operation_flags = WRITE_ODIRECT;
- 		break;
- 	case BLKIF_OP_WRITE_BARRIER:
- 		drain = true;
- 	case BLKIF_OP_FLUSH_DISKCACHE:
- 		ring->st_f_req++;
--		operation = WRITE_FLUSH;
-+		operation = REQ_OP_WRITE;
-+		operation_flags = WRITE_FLUSH;
- 		break;
- 	default:
- 		operation = 0; /* make gcc happy */
-@@ -1269,7 +1272,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	nseg = req->operation == BLKIF_OP_INDIRECT ?
- 	       req->u.indirect.nr_segments : req->u.rw.nr_segments;
+-	bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
++	bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE, 0);
+ 	if (!bio)
+ 		goto fail_free_ibr;
  
--	if (unlikely(nseg == 0 && operation != WRITE_FLUSH) ||
-+	if (unlikely(nseg == 0 && operation_flags != WRITE_FLUSH) ||
- 	    unlikely((req->operation != BLKIF_OP_INDIRECT) &&
- 		     (nseg > BLKIF_MAX_SEGMENTS_PER_REQUEST)) ||
- 	    unlikely((req->operation == BLKIF_OP_INDIRECT) &&
-@@ -1310,7 +1313,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
+@@ -493,7 +495,8 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+ 				!= sg->length) {
  
- 	if (xen_vbd_translate(&preq, ring->blkif, operation) != 0) {
- 		pr_debug("access denied: %s of [%llu,%llu] on dev=%04x\n",
--			 operation == READ ? "read" : "write",
-+			 operation == REQ_OP_READ ? "read" : "write",
- 			 preq.sector_number,
- 			 preq.sector_number + preq.nr_sects,
- 			 ring->blkif->vbd.pdevice);
-@@ -1369,7 +1372,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 			bio->bi_private = pending_req;
- 			bio->bi_end_io  = end_block_io_op;
- 			bio->bi_iter.bi_sector  = preq.sector_number;
--			bio->bi_rw	= operation;
-+			bio->bi_op	= operation;
-+			bio->bi_rw	= operation_flags;
+-			bio = iblock_get_bio(cmd, block_lba, 1, WRITE);
++			bio = iblock_get_bio(cmd, block_lba, 1, REQ_OP_WRITE,
++					     0);
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+@@ -679,8 +682,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	struct scatterlist *sg;
+ 	u32 sg_num = sgl_nents;
+ 	unsigned bio_cnt;
+-	int rw = 0;
+-	int i;
++	int i, op, op_flags = 0;
+ 
+ 	if (data_direction == DMA_TO_DEVICE) {
+ 		struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
+@@ -689,18 +691,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		 * Force writethrough using WRITE_FUA if a volatile write cache
+ 		 * is not enabled, or if initiator set the Force Unit Access bit.
+ 		 */
++		op = REQ_OP_WRITE;
+ 		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+ 			if (cmd->se_cmd_flags & SCF_FUA)
+-				rw = WRITE_FUA;
++				op_flags = WRITE_FUA;
+ 			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+-				rw = WRITE_FUA;
+-			else
+-				rw = WRITE;
+-		} else {
+-			rw = WRITE;
++				op_flags = WRITE_FUA;
  		}
- 
- 		preq.sector_number += seg[i].nsec;
-@@ -1377,7 +1381,7 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 
- 	/* This will be hit if the operation was a flush or discard. */
- 	if (!bio) {
--		BUG_ON(operation != WRITE_FLUSH);
-+		BUG_ON(operation_flags != WRITE_FLUSH);
- 
- 		bio = bio_alloc(GFP_KERNEL, 0);
- 		if (unlikely(bio == NULL))
-@@ -1387,7 +1391,8 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 		bio->bi_bdev    = preq.bdev;
- 		bio->bi_private = pending_req;
- 		bio->bi_end_io  = end_block_io_op;
--		bio->bi_rw	= operation;
-+		bio->bi_op	= operation;
-+		bio->bi_rw	= operation_flags;
+ 	} else {
+-		rw = READ;
++		op = REQ_OP_READ;
  	}
  
- 	atomic_set(&pending_req->pendcnt, nbio);
-@@ -1399,9 +1404,9 @@ static int dispatch_rw_block_io(struct xen_blkif_ring *ring,
- 	/* Let the I/Os go.. */
- 	blk_finish_plug(&plug);
+ 	ibr = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
+@@ -714,7 +713,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 		return 0;
+ 	}
  
--	if (operation == READ)
-+	if (operation == REQ_OP_READ)
- 		ring->st_rd_sect += preq.nr_sects;
--	else if (operation & WRITE)
-+	else if (operation == REQ_OP_WRITE)
- 		ring->st_wr_sect += preq.nr_sects;
+-	bio = iblock_get_bio(cmd, block_lba, sgl_nents, rw);
++	bio = iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
+ 	if (!bio)
+ 		goto fail_free_ibr;
  
- 	return 0;
+@@ -738,7 +737,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 				bio_cnt = 0;
+ 			}
+ 
+-			bio = iblock_get_bio(cmd, block_lba, sg_num, rw);
++			bio = iblock_get_bio(cmd, block_lba, sg_num, op,
++					     op_flags);
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index de18790..2cf915c 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 					goto fail;
+ 
+ 				if (rw)
+-					bio->bi_rw |= REQ_WRITE;
++					bio->bi_op = REQ_OP_WRITE;
+ 
+ 				pr_debug("PSCSI: Allocated bio: %p,"
+ 					" dir: %s nr_vecs: %d\n", bio,
 -- 
 2.7.2
 
