@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 272F67CA4
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 05:41:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2BC3C7CE8
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 05:41:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EEA398F8039
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:41:11 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F1B49304048
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:41:13 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZWHTC1HPGvOu2oEh (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 1nMegDsNGTq45hMQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:41:10 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:41:13 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 28/42] block: prepare mq request creation to use REQ_OPs
-Date: Fri, 15 Apr 2016 05:39:48 -0500
-Message-Id: <1460716802-2294-29-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 29/42] block: prepare elevator to use REQ_OPs.
+Date: Fri, 15 Apr 2016 05:39:49 -0500
+Message-Id: <1460716802-2294-30-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,147 +33,105 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch modifies the blk mq request creation code to use
-separate variables for the operation and flags, because in the
-the next patches the struct request users will be converted like
-was done for bios. request->op will be used for the REQ_OP and
-request->cmd_flags for the rq_flag_bits.
-
-Like the non mq patch there is some temporary compat code in
-blk_mq_rq_ctx_init to allow users to read the operation from the
-cmd_flags. This will be deleted in one of the last patches when all
-drivers have been converted.
+This patch converts the elevator code to use separate variables
+for the operation and flags, and to check request->op for the REQ_OP.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-mq.c | 38 +++++++++++++++++++++-----------------
- 1 file changed, 21 insertions(+), 17 deletions(-)
+ block/blk-core.c         | 2 +-
+ block/cfq-iosched.c      | 4 ++--
+ block/elevator.c         | 7 +++----
+ include/linux/elevator.h | 4 ++--
+ 4 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 1699baf..4843c0b 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -159,16 +159,19 @@ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
- EXPORT_SYMBOL(blk_mq_can_queue);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 3168962..a796b35 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1081,7 +1081,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+ 	if (unlikely(blk_queue_dying(q)))
+ 		return ERR_PTR(-ENODEV);
  
- static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
--			       struct request *rq, unsigned int rw_flags)
-+			       struct request *rq, int op,
-+			       unsigned int op_flags)
- {
- 	if (blk_queue_io_stat(q))
--		rw_flags |= REQ_IO_STAT;
-+		op_flags |= REQ_IO_STAT;
+-	may_queue = elv_may_queue(q, op | op_flags);
++	may_queue = elv_may_queue(q, op, op_flags);
+ 	if (may_queue == ELV_MQUEUE_NO)
+ 		goto rq_starved;
  
- 	INIT_LIST_HEAD(&rq->queuelist);
- 	/* csd/requeue_work/fifo_time is initialized before use */
- 	rq->q = q;
- 	rq->mq_ctx = ctx;
--	rq->cmd_flags |= rw_flags;
-+	rq->op = op;
-+	/* tmp compat - allow users to check either one for the op */
-+	rq->cmd_flags |= op | op_flags;
- 	/* do not touch atomic flags, it needs atomic ops against the timer */
- 	rq->cpu = -1;
- 	INIT_HLIST_NODE(&rq->hash);
-@@ -203,11 +206,11 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
- 	rq->end_io_data = NULL;
- 	rq->next_rq = NULL;
- 
--	ctx->rq_dispatched[rw_is_sync(rw_flags)]++;
-+	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 4a34978..3fcc598 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4285,7 +4285,7 @@ static inline int __cfq_may_queue(struct cfq_queue *cfqq)
+ 	return ELV_MQUEUE_MAY;
  }
  
- static struct request *
--__blk_mq_alloc_request(struct blk_mq_alloc_data *data, int rw)
-+__blk_mq_alloc_request(struct blk_mq_alloc_data *data, int op, int op_flags)
+-static int cfq_may_queue(struct request_queue *q, int rw)
++static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
  {
- 	struct request *rq;
- 	unsigned int tag;
-@@ -222,7 +225,7 @@ __blk_mq_alloc_request(struct blk_mq_alloc_data *data, int rw)
- 		}
+ 	struct cfq_data *cfqd = q->elevator->elevator_data;
+ 	struct task_struct *tsk = current;
+@@ -4302,7 +4302,7 @@ static int cfq_may_queue(struct request_queue *q, int rw)
+ 	if (!cic)
+ 		return ELV_MQUEUE_MAY;
  
- 		rq->tag = tag;
--		blk_mq_rq_ctx_init(data->q, data->ctx, rq, rw);
-+		blk_mq_rq_ctx_init(data->q, data->ctx, rq, op, op_flags);
- 		return rq;
- 	}
+-	cfqq = cic_to_cfqq(cic, rw_is_sync(rw));
++	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
+ 	if (cfqq) {
+ 		cfq_init_prio_data(cfqq, cic);
  
-@@ -246,7 +249,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 	blk_mq_set_alloc_data(&alloc_data, q, flags, ctx, hctx);
+diff --git a/block/elevator.c b/block/elevator.c
+index c3555c9..6a282bf 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -366,8 +366,7 @@ void elv_dispatch_sort(struct request_queue *q, struct request *rq)
+ 	list_for_each_prev(entry, &q->queue_head) {
+ 		struct request *pos = list_entry_rq(entry);
  
--	rq = __blk_mq_alloc_request(&alloc_data, rw);
-+	rq = __blk_mq_alloc_request(&alloc_data, rw, 0);
- 	if (!rq && !(flags & BLK_MQ_REQ_NOWAIT)) {
- 		__blk_mq_run_hw_queue(hctx);
- 		blk_mq_put_ctx(ctx);
-@@ -254,7 +257,7 @@ struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
- 		ctx = blk_mq_get_ctx(q);
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 		blk_mq_set_alloc_data(&alloc_data, q, flags, ctx, hctx);
--		rq =  __blk_mq_alloc_request(&alloc_data, rw);
-+		rq =  __blk_mq_alloc_request(&alloc_data, rw, 0);
- 		ctx = alloc_data.ctx;
- 	}
- 	blk_mq_put_ctx(ctx);
-@@ -1170,28 +1173,29 @@ static struct request *blk_mq_map_request(struct request_queue *q,
- 	struct blk_mq_hw_ctx *hctx;
- 	struct blk_mq_ctx *ctx;
- 	struct request *rq;
--	int rw = bio_data_dir(bio);
-+	int op = bio_data_dir(bio);
-+	int op_flags = 0;
- 	struct blk_mq_alloc_data alloc_data;
+-		if ((rq->cmd_flags & REQ_DISCARD) !=
+-		    (pos->cmd_flags & REQ_DISCARD))
++		if ((rq->op == REQ_OP_DISCARD) != (pos->op == REQ_OP_DISCARD))
+ 			break;
+ 		if (rq_data_dir(rq) != rq_data_dir(pos))
+ 			break;
+@@ -717,12 +716,12 @@ void elv_put_request(struct request_queue *q, struct request *rq)
+ 		e->type->ops.elevator_put_req_fn(rq);
+ }
  
- 	blk_queue_enter_live(q);
- 	ctx = blk_mq_get_ctx(q);
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
--	if (rw_is_sync(bio->bi_rw))
--		rw |= REQ_SYNC;
-+	if (rw_is_sync(bio->bi_op | bio->bi_rw))
-+		op_flags |= REQ_SYNC;
- 
--	trace_block_getrq(q, bio, rw);
-+	trace_block_getrq(q, bio, op);
- 	blk_mq_set_alloc_data(&alloc_data, q, BLK_MQ_REQ_NOWAIT, ctx, hctx);
--	rq = __blk_mq_alloc_request(&alloc_data, rw);
-+	rq = __blk_mq_alloc_request(&alloc_data, op, op_flags);
- 	if (unlikely(!rq)) {
- 		__blk_mq_run_hw_queue(hctx);
- 		blk_mq_put_ctx(ctx);
--		trace_block_sleeprq(q, bio, rw);
-+		trace_block_sleeprq(q, bio, op);
- 
- 		ctx = blk_mq_get_ctx(q);
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 		blk_mq_set_alloc_data(&alloc_data, q, 0, ctx, hctx);
--		rq = __blk_mq_alloc_request(&alloc_data, rw);
-+		rq = __blk_mq_alloc_request(&alloc_data, op, op_flags);
- 		ctx = alloc_data.ctx;
- 		hctx = alloc_data.hctx;
- 	}
-@@ -1245,7 +1249,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
-  */
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+-int elv_may_queue(struct request_queue *q, int rw)
++int elv_may_queue(struct request_queue *q, int op, int op_flags)
  {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
-@@ -1342,7 +1346,7 @@ done:
-  */
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
--	const int is_sync = rw_is_sync(bio->bi_rw);
-+	const int is_sync = rw_is_sync(bio->bi_op | bio->bi_rw);
- 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
+ 	struct elevator_queue *e = q->elevator;
+ 
+ 	if (e->type->ops.elevator_may_queue_fn)
+-		return e->type->ops.elevator_may_queue_fn(q, rw);
++		return e->type->ops.elevator_may_queue_fn(q, op, op_flags);
+ 
+ 	return ELV_MQUEUE_MAY;
+ }
+diff --git a/include/linux/elevator.h b/include/linux/elevator.h
+index 638b324..953d286 100644
+--- a/include/linux/elevator.h
++++ b/include/linux/elevator.h
+@@ -26,7 +26,7 @@ typedef int (elevator_dispatch_fn) (struct request_queue *, int);
+ typedef void (elevator_add_req_fn) (struct request_queue *, struct request *);
+ typedef struct request *(elevator_request_list_fn) (struct request_queue *, struct request *);
+ typedef void (elevator_completed_req_fn) (struct request_queue *, struct request *);
+-typedef int (elevator_may_queue_fn) (struct request_queue *, int);
++typedef int (elevator_may_queue_fn) (struct request_queue *, int, int);
+ 
+ typedef void (elevator_init_icq_fn) (struct io_cq *);
+ typedef void (elevator_exit_icq_fn) (struct io_cq *);
+@@ -134,7 +134,7 @@ extern struct request *elv_former_request(struct request_queue *, struct request
+ extern struct request *elv_latter_request(struct request_queue *, struct request *);
+ extern int elv_register_queue(struct request_queue *q);
+ extern void elv_unregister_queue(struct request_queue *q);
+-extern int elv_may_queue(struct request_queue *, int);
++extern int elv_may_queue(struct request_queue *, int, int);
+ extern void elv_completed_request(struct request_queue *, struct request *);
+ extern int elv_set_request(struct request_queue *q, struct request *rq,
+ 			   struct bio *bio, gfp_t gfp_mask);
 -- 
 2.7.2
 
