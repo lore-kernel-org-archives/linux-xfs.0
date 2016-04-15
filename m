@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 97B4C7CA0
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 13:28:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5429B8F8033
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:28:31 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2843D7CA0
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:13:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9F2B8F8037
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:13:30 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OABPTB1qpon8aHC3 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 9OawgQjgRrARsUDu (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:28:30 -0700 (PDT)
-Date: Fri, 15 Apr 2016 14:28:28 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: buffer ->bi_end_io function requires irq-safe lock
-Message-ID: <20160415182828.GA39792@bfoster.bfoster>
-References: <1460736519-39428-1-git-send-email-bfoster@redhat.com>
-	<20160415180820.GA20260@infradead.org>
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:13:30 -0700 (PDT)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<1460739288.3012.3.camel@intel.com>
+	<x49potq6bm2.fsf@segfault.boston.devel.redhat.com>
+	<1460741821.3012.11.camel@intel.com>
+	<CAPcyv4hemNM4uQYCPBXyH+DWTOLvyBNBeMYstKbPdad_Cw48HQ@mail.gmail.com>
+	<x49lh4e6928.fsf@segfault.boston.devel.redhat.com>
+	<CAPcyv4hRQj2ZsFj7Xa_=OwcHrzP9_5yUpt3LQ+bPH4PcLe7UCQ@mail.gmail.com>
+	<x494mb2ivcl.fsf@segfault.boston.devel.redhat.com>
+	<CAPcyv4jcPDDcru1ySJLY7SzDQQWFXbfHm493N0twa1vHBEc6aQ@mail.gmail.com>
+Date: Fri, 15 Apr 2016 15:13:26 -0400
+In-Reply-To: <CAPcyv4jcPDDcru1ySJLY7SzDQQWFXbfHm493N0twa1vHBEc6aQ@mail.gmail.com>
+	(Dan Williams's message of "Fri, 15 Apr 2016 11:56:20 -0700")
+Message-ID: <x49r3e6hei1.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160415180820.GA20260@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +39,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
 
-On Fri, Apr 15, 2016 at 11:08:20AM -0700, Christoph Hellwig wrote:
-> How about just doing a cmpxchg on bi_error?
+Dan Williams <dan.j.williams@intel.com> writes:
 
-Hmm, good idea. Something like this I take it..?
+> On Fri, Apr 15, 2016 at 11:24 AM, Jeff Moyer <jmoyer@redhat.com> wrote:
+>>> Moreover, we're going to do the full badblocks lookup anyway when we
+>>> call ->direct_access().  If we had that information earlier we can
+>>> avoid this fallback dance.
+>>
+>> None of the proposed approaches looks clean to me.  I'll go along with
+>> whatever you guys think is best.  I am in favor of wrapping up all that
+>> duplicated code, though.
+>
+> Christoph originally pushed for open coding this fallback decision
+> per-filesystem.  I agree with you on the "none the above" options are
+> clean.
 
-	if (bio->bi_error)
-		cmpxchg(&bp->b_io_error, 0, bio->bi_error);
+I don't recall him saying "open code".  Rather, the sentiment was to
+leave the fallback to the callers.  That doesn't mean you can't wrap it
+up in a convenience function.
 
-Brian
+Cheers,
+Jeff
 
 _______________________________________________
 xfs mailing list
