@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3848A7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 17:22:41 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E62467CA0
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:57:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F13268F8033
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 15:22:37 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id vjZA4fxEYEAnHiga
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 15:22:35 -0700 (PDT)
-Received: from mail-yw0-f176.google.com ([209.85.161.176])
-	by youngberry.canonical.com with esmtpsa
-	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
-	(envelope-from <ming.lei@canonical.com>) id 1aqpek-0005Ia-1V
-	for xfs@oss.sgi.com; Thu, 14 Apr 2016 22:22:34 +0000
-Received: by mail-yw0-f176.google.com with SMTP id i84so119137511ywc.2
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 15:22:33 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AE9A18F8033
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 10:57:33 -0700 (PDT)
+Received: from mail-ob0-f177.google.com (mail-ob0-f177.google.com
+	[209.85.214.177]) by cuda.sgi.com with ESMTP id
+	kcGRfE3u9K2zrCgJ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 10:57:28 -0700 (PDT)
+Received: by mail-ob0-f177.google.com with SMTP id tz8so68273370obc.0
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 10:57:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <570FA4F7.6020301@kernel.dk>
-References: <1460634438-26530-1-git-send-email-ming.lei@canonical.com>
-	<570FA4F7.6020301@kernel.dk>
-Date: Fri, 15 Apr 2016 06:22:33 +0800
-Message-ID: <CACVXFVN5ifhRiyW8ovugYrwVE_p8DOsLXW_fZ95WV0+54w0mGw@mail.gmail.com>
-Subject: Re: [PATCH v4 0/8] block: prepare for multipage bvecs
-From: Ming Lei <ming.lei@canonical.com>
+In-Reply-To: <1460741821.3012.11.camel@intel.com>
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<1460739288.3012.3.camel@intel.com>
+	<x49potq6bm2.fsf@segfault.boston.devel.redhat.com>
+	<1460741821.3012.11.camel@intel.com>
+Date: Fri, 15 Apr 2016 10:57:27 -0700
+Message-ID: <CAPcyv4hemNM4uQYCPBXyH+DWTOLvyBNBeMYstKbPdad_Cw48HQ@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,44 +36,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Jens Axboe <axboe@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
 
-On Thu, Apr 14, 2016 at 10:11 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 04/14/2016 05:46 AM, Ming Lei wrote:
+On Fri, Apr 15, 2016 at 10:37 AM, Verma, Vishal L
+<vishal.l.verma@intel.com> wrote:
+> On Fri, 2016-04-15 at 13:11 -0400, Jeff Moyer wrote:
+[..]
+>> >
+>> > But, how does _EIOCBQUEUED work? Maybe we need an exception for it?
+>> For async direct I/O, only the setup phase of the I/O is performed
+>> and
+>> then we return to the caller.  -EIOCBQUEUED signifies this.
 >>
->> Hi,
+>> You're heading towards code that looks like this:
 >>
->> Interests[1] have been shown in multipage bvecs, so this patchset
->> try to prepare for the support and do two things:
+>>         if (IS_DAX(inode)) {
+>>                 ret = dax_do_io(iocb, inode, iter, offset,
+>> blkdev_get_block,
+>>                                 NULL, DIO_SKIP_DIO_COUNT);
+>>                 if (ret == -EIO && (iov_iter_rw(iter) == WRITE))
+>>                         ret_saved = ret;
+>>                 else
+>>                         return ret;
+>>         }
 >>
->> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
->> then we can drop the non-standard way for iterating bvec, which
->> can be thought as a good cleanup for lib/iov_iter.c
+>>         ret = __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter,
+>> offset,
+>>                                     blkdev_get_block, NULL, NULL,
+>>                                     DIO_SKIP_DIO_COUNT);
+>>         if (ret < 0 && ret != -EIOCBQUEUED && ret_saved)
+>>                 return ret_saved;
 >>
->> 2) remove BIO_MAX_SECTORS & BIO_MAX_SIZE, and now there is only
->> one user for each. Once multipage bvecs is introduced, one bio
->> may hold lots of sectors, and we should always use sort of BIO_MAX_VECS
->> which should be introduced in future and is similiar with current
->> BIO_MAX_PAGES.
->>
->> xfstests(-a auto) have been run over ext4/xfs and no regression found
->> by this patchset.
+>> There's a lot of special casing here, so you might consider adding
+>> comments.
 >
->
-> We've had too many disasters in the block layer the last few series, I'm
-> making the 4.7 round a nice and small one. I don't mind taking prep patches
-> for the multipage bvecs, if they are simple and clean, but that's about the
-> extent of it.
->
-> Just a heads up.
+> Correct - maybe we should reconsider wrapper-izing this? :)
 
-Jens, thanks for your response, and understood your concerns.
-
-Please hold on this patchset, and I will check it further and make it
-better.
-
-Thanks,
+Another option is just to skip dax_do_io() and this special casing
+fallback entirely if errors are present.  I.e. only attempt dax_do_io
+when: IS_DAX() && gendisk->bb && bb->count == 0.
 
 _______________________________________________
 xfs mailing list
