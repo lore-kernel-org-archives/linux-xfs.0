@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D68AD7CA1
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:56:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3449DAC002
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 07:56:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5DF4C7CA2
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:11:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B9EBDAC004
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:11:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VA7QOYHLU9zCSD1x (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ZBcgGhY6M5San2Nf (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 07:56:13 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:11:40 -0700 (PDT)
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v2 3/5] dax: enable dax in the presence of known media
-	errors (badblocks)
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
 References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-4-git-send-email-vishal.l.verma@intel.com>
-Date: Fri, 15 Apr 2016 10:56:10 -0400
-In-Reply-To: <1459303190-20072-4-git-send-email-vishal.l.verma@intel.com>
-	(Vishal Verma's message of "Tue, 29 Mar 2016 19:59:48 -0600")
-Message-ID: <x4937qm7wfp.fsf@segfault.boston.devel.redhat.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+Date: Fri, 15 Apr 2016 12:11:36 -0400
+In-Reply-To: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	(Vishal Verma's message of "Tue, 29 Mar 2016 19:59:50 -0600")
+Message-ID: <x49twj26edj.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -36,64 +35,189 @@ Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, linux-nvdimm
 
 Vishal Verma <vishal.l.verma@intel.com> writes:
 
-> From: Dan Williams <dan.j.williams@intel.com>
->
-> 1/ If a mapping overlaps a bad sector fail the request.
->
-> 2/ Do not opportunistically report more dax-capable capacity than is
->    requested when errors present.
->
-> [vishal: fix a conflict with system RAM collision patches]
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> dax_do_io (called for read() or write() for a dax file system) may fail
+> in the presence of bad blocks or media errors. Since we expect that a
+> write should clear media errors on nvdimms, make dax_do_io fall back to
+> the direct_IO path, which will send down a bio to the driver, which can
+> then attempt to clear the error.
 
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+[snip]
 
-> ---
->  block/ioctl.c         | 9 ---------
->  drivers/nvdimm/pmem.c | 8 ++++++++
->  2 files changed, 8 insertions(+), 9 deletions(-)
->
-> diff --git a/block/ioctl.c b/block/ioctl.c
-> index d8996bb..cd7f392 100644
-> --- a/block/ioctl.c
-> +++ b/block/ioctl.c
-> @@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
->  			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
->  		return false;
+> +	if (IS_DAX(inode)) {
+> +		ret = dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
+>  				NULL, DIO_SKIP_DIO_COUNT);
+> -	return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
+> +		if (ret == -EIO && (iov_iter_rw(iter) == WRITE))
+> +			ret_saved = ret;
+> +		else
+> +			return ret;
+> +	}
+> +
+> +	ret = __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
+>  				    blkdev_get_block, NULL, NULL,
+>  				    DIO_SKIP_DIO_COUNT);
+> +	if (ret < 0 && ret_saved)
+> +		return ret_saved;
+> +
+
+Hmm, did you just break async DIO?  I think you did!  :)
+__blockdev_direct_IO can return -EIOCBQUEUED, and you've now turned that
+into -EIO.  Really, I don't see a reason to save that first -EIO.  The
+same applies to all instances in this patch.
+
+Cheers,
+Jeff
+
+
+> +	return ret;
+>  }
 >  
-> -	/*
-> -	 * If the device has known bad blocks, force all I/O through the
-> -	 * driver / page cache.
-> -	 *
-> -	 * TODO: support finer grained dax error handling
-> -	 */
-> -	if (disk->bb && disk->bb->count)
-> -		return false;
+>  int __sync_blockdev(struct block_device *bdev, int wait)
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 824f249..64792c6 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -859,14 +859,22 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+>  	struct address_space *mapping = file->f_mapping;
+>  	struct inode *inode = mapping->host;
+>  	size_t count = iov_iter_count(iter);
+> -	ssize_t ret;
+> +	ssize_t ret, ret_saved = 0;
+>  
+> -	if (IS_DAX(inode))
+> -		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block, NULL,
+> -				DIO_LOCKING);
+> -	else
+> -		ret = blockdev_direct_IO(iocb, inode, iter, offset,
+> -					 ext2_get_block);
+> +	if (IS_DAX(inode)) {
+> +		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block,
+> +				NULL, DIO_LOCKING | DIO_SKIP_HOLES);
+> +		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
+> +			ret_saved = ret;
+> +		else
+> +			goto out;
+> +	}
+> +
+> +	ret = blockdev_direct_IO(iocb, inode, iter, offset, ext2_get_block);
+> +	if (ret < 0 && ret_saved)
+> +		ret = ret_saved;
+> +
+> + out:
+>  	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+>  		ext2_write_failed(mapping, offset + count);
+>  	return ret;
+> diff --git a/fs/ext4/indirect.c b/fs/ext4/indirect.c
+> index 3027fa6..798f341 100644
+> --- a/fs/ext4/indirect.c
+> +++ b/fs/ext4/indirect.c
+> @@ -716,14 +716,22 @@ retry:
+>  						   NULL, NULL, 0);
+>  		inode_dio_end(inode);
+>  	} else {
+> +		ssize_t ret_saved = 0;
+> +
+>  locked:
+> -		if (IS_DAX(inode))
+> +		if (IS_DAX(inode)) {
+>  			ret = dax_do_io(iocb, inode, iter, offset,
+>  					ext4_dio_get_block, NULL, DIO_LOCKING);
+> -		else
+> -			ret = blockdev_direct_IO(iocb, inode, iter, offset,
+> -						 ext4_dio_get_block);
 > -
->  	return true;
->  }
+> +			if (ret == -EIO && iov_iter_rw(iter) == WRITE)
+> +				ret_saved = ret;
+> +			else
+> +				goto skip_dio;
+> +		}
+> +		ret = blockdev_direct_IO(iocb, inode, iter, offset,
+> +					 ext4_get_block);
+> +		if (ret < 0 && ret_saved)
+> +			ret = ret_saved;
+> +skip_dio:
+>  		if (unlikely(iov_iter_rw(iter) == WRITE && ret < 0)) {
+>  			loff_t isize = i_size_read(inode);
+>  			loff_t end = offset + count;
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index dab84a2..27f07c2 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3341,7 +3341,7 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
+>  {
+>  	struct file *file = iocb->ki_filp;
+>  	struct inode *inode = file->f_mapping->host;
+> -	ssize_t ret;
+> +	ssize_t ret, ret_saved = 0;
+>  	size_t count = iov_iter_count(iter);
+>  	int overwrite = 0;
+>  	get_block_t *get_block_func = NULL;
+> @@ -3401,15 +3401,22 @@ static ssize_t ext4_ext_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
+>  #ifdef CONFIG_EXT4_FS_ENCRYPTION
+>  	BUG_ON(ext4_encrypted_inode(inode) && S_ISREG(inode->i_mode));
 >  #endif
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index da10554..eac5f93 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -174,9 +174,17 @@ static long pmem_direct_access(struct block_device *bdev,
->  	struct pmem_device *pmem = bdev->bd_disk->private_data;
->  	resource_size_t offset = sector * 512 + pmem->data_offset;
+> -	if (IS_DAX(inode))
+> +	if (IS_DAX(inode)) {
+>  		ret = dax_do_io(iocb, inode, iter, offset, get_block_func,
+>  				ext4_end_io_dio, dio_flags);
+> -	else
+> -		ret = __blockdev_direct_IO(iocb, inode,
+> -					   inode->i_sb->s_bdev, iter, offset,
+> -					   get_block_func,
+> -					   ext4_end_io_dio, NULL, dio_flags);
+> +		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
+> +			ret_saved = ret;
+> +		else
+> +			goto skip_dio;
+> +	}
 >  
-> +	if (unlikely(is_bad_pmem(&pmem->bb, sector, dax->size)))
-> +		return -EIO;
->  	dax->addr = pmem->virt_addr + offset;
->  	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
+> +	ret = __blockdev_direct_IO(iocb, inode,
+> +				   inode->i_sb->s_bdev, iter, offset,
+> +				   get_block_func,
+> +				   ext4_end_io_dio, NULL, dio_flags);
+> +	if (ret < 0 && ret_saved)
+> +		ret = ret_saved;
+> + skip_dio:
+>  	if (ret > 0 && !overwrite && ext4_test_inode_state(inode,
+>  						EXT4_STATE_DIO_UNWRITTEN)) {
+>  		int err;
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index d445a64..7cfcf86 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1413,6 +1413,7 @@ xfs_vm_direct_IO(
+>  	dio_iodone_t		*endio = NULL;
+>  	int			flags = 0;
+>  	struct block_device	*bdev;
+> +	ssize_t 		ret, ret_saved = 0;
 >  
-> +	/*
-> +	 * If badblocks are present, limit known good range to the
-> +	 * requested range.
-> +	 */
-> +	if (unlikely(pmem->bb.count))
-> +		return dax->size;
->  	return pmem->size - pmem->pfn_pad - offset;
+>  	if (iov_iter_rw(iter) == WRITE) {
+>  		endio = xfs_end_io_direct_write;
+> @@ -1420,13 +1421,22 @@ xfs_vm_direct_IO(
+>  	}
+>  
+>  	if (IS_DAX(inode)) {
+> -		return dax_do_io(iocb, inode, iter, offset,
+> +		ret = dax_do_io(iocb, inode, iter, offset,
+>  				 xfs_get_blocks_direct, endio, 0);
+> +		if (ret == -EIO && iov_iter_rw(iter) == WRITE)
+> +			ret_saved = ret;
+> +		else
+> +			return ret;
+>  	}
+>  
+>  	bdev = xfs_find_bdev_for_inode(inode);
+> -	return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+> +	ret = __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+>  			xfs_get_blocks_direct, endio, NULL, flags);
+> +
+> +	if (ret < 0 && ret_saved)
+> +		ret = ret_saved;
+> +
+> +	return ret;
 >  }
+>  
+>  /*
 
 _______________________________________________
 xfs mailing list
