@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 513777CA2
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:08:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 22E948F8035
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:08:42 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A6CF77CA0
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:11:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B0AA8F8037
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 10:11:21 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id b8gbm7Ns2BxzgLze (version=TLSv1.2
+	cuda.sgi.com with ESMTP id OTUXB4wFrCfomNNS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 09:08:41 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 33D2AD2ED6
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 16:08:41 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-148.bos.redhat.com [10.18.41.148])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u3FG8eiO025126
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:08:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: buffer ->bi_end_io function requires irq-safe lock
-Date: Fri, 15 Apr 2016 12:08:39 -0400
-Message-Id: <1460736519-39428-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 10:11:21 -0700 (PDT)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<1460739288.3012.3.camel@intel.com>
+Date: Fri, 15 Apr 2016 13:11:17 -0400
+In-Reply-To: <1460739288.3012.3.camel@intel.com> (Vishal L. Verma's message of
+	"Fri, 15 Apr 2016 16:54:48 +0000")
+Message-ID: <x49potq6bm2.fsf@segfault.boston.devel.redhat.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,94 +28,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
+	Matthew R" <matthew.r.wilcox@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-Reports have surfaced of a lockdep splat complaining about an irq-safe
--> irq-unsafe locking order in the xfs_buf_bio_end_io() bio completion
-handler. This only occurs when I/O errors are present because bp->b_lock
-is only acquired in this context to protect setting an error on the
-buffer. The problem is that this lock can be acquired with the
-(request_queue) q->queue_lock held. See scsi_end_request() or
-ata_qc_schedule_eh(), for example.
-
-Replace bp->b_lock with a new irq-safe lock for use in bio completion.
-This avoids the bad lock ordering and should be otherwise low impact as
-the lock is only acquired on I/O error.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-Hi all,
-
-I'm not totally sure this is a real issue, but the fix seemed simple
-enough...
-
-Brian
-
- fs/xfs/xfs_buf.c | 10 ++++++----
- fs/xfs/xfs_buf.h |  1 +
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 9a2191b..aa0ce4a 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -174,6 +174,7 @@ _xfs_buf_alloc(
- 	RB_CLEAR_NODE(&bp->b_rbnode);
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
- 	spin_lock_init(&bp->b_lock);
-+	spin_lock_init(&bp->b_error_lock);
- 	XB_SET_OWNER(bp);
- 	bp->b_target = target;
- 	bp->b_flags = flags;
-@@ -1100,21 +1101,22 @@ xfs_bwrite(
- 	return error;
- }
- 
--STATIC void
-+static void
- xfs_buf_bio_end_io(
- 	struct bio		*bio)
- {
--	xfs_buf_t		*bp = (xfs_buf_t *)bio->bi_private;
-+	struct xfs_buf		*bp = (struct xfs_buf *)bio->bi_private;
-+	unsigned long		flags;
- 
- 	/*
- 	 * don't overwrite existing errors - otherwise we can lose errors on
- 	 * buffers that require multiple bios to complete.
- 	 */
- 	if (bio->bi_error) {
--		spin_lock(&bp->b_lock);
-+		spin_lock_irqsave(&bp->b_error_lock, flags);
- 		if (!bp->b_io_error)
- 			bp->b_io_error = bio->bi_error;
--		spin_unlock(&bp->b_lock);
-+		spin_unlock_irqrestore(&bp->b_error_lock, flags);
- 	}
- 
- 	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 4eb89bd..c84529c 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -161,6 +161,7 @@ typedef struct xfs_buf {
- 	spinlock_t		b_lock;		/* internal state lock */
- 	unsigned int		b_state;	/* internal state flags */
- 	int			b_io_error;	/* internal IO error state */
-+	spinlock_t		b_error_lock;	/* irq-safe IO error lock */
- 	wait_queue_head_t	b_waiters;	/* unpin waiters */
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
--- 
-2.4.11
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+IlZlcm1hLCBWaXNoYWwgTCIgPHZpc2hhbC5sLnZlcm1hQGludGVsLmNvbT4gd3JpdGVzOgoKPiBP
+biBGcmksIDIwMTYtMDQtMTUgYXQgMTI6MTEgLTA0MDAsIEplZmYgTW95ZXIgd3JvdGU6Cj4+IFZp
+c2hhbCBWZXJtYSA8dmlzaGFsLmwudmVybWFAaW50ZWwuY29tPiB3cml0ZXM6Cj4+ID4gKwlpZiAo
+SVNfREFYKGlub2RlKSkgewo+PiA+ICsJCXJldCA9IGRheF9kb19pbyhpb2NiLCBpbm9kZSwgaXRl
+ciwgb2Zmc2V0LAo+PiA+IGJsa2Rldl9nZXRfYmxvY2ssCj4+ID4gwqAJCQkJTlVMTCwgRElPX1NL
+SVBfRElPX0NPVU5UKTsKPj4gPiAtCXJldHVybiBfX2Jsb2NrZGV2X2RpcmVjdF9JTyhpb2NiLCBp
+bm9kZSwgSV9CREVWKGlub2RlKSwKPj4gPiBpdGVyLCBvZmZzZXQsCj4+ID4gKwkJaWYgKHJldCA9
+PSAtRUlPICYmIChpb3ZfaXRlcl9ydyhpdGVyKSA9PSBXUklURSkpCj4+ID4gKwkJCXJldF9zYXZl
+ZCA9IHJldDsKPj4gPiArCQllbHNlCj4+ID4gKwkJCXJldHVybiByZXQ7Cj4+ID4gKwl9Cj4+ID4g
+Kwo+PiA+ICsJcmV0ID0gX19ibG9ja2Rldl9kaXJlY3RfSU8oaW9jYiwgaW5vZGUsIElfQkRFVihp
+bm9kZSksCj4+ID4gaXRlciwgb2Zmc2V0LAo+PiA+IMKgCQkJCcKgwqDCoMKgYmxrZGV2X2dldF9i
+bG9jaywgTlVMTCwgTlVMTCwKPj4gPiDCoAkJCQnCoMKgwqDCoERJT19TS0lQX0RJT19DT1VOVCk7
+Cj4+ID4gKwlpZiAocmV0IDwgMCAmJiByZXRfc2F2ZWQpCj4+ID4gKwkJcmV0dXJuIHJldF9zYXZl
+ZDsKPj4gPiArCj4+IEhtbSwgZGlkIHlvdSBqdXN0IGJyZWFrIGFzeW5jIERJTz/CoMKgSSB0aGlu
+ayB5b3UgZGlkIcKgwqA6KQo+PiBfX2Jsb2NrZGV2X2RpcmVjdF9JTyBjYW4gcmV0dXJuIC1FSU9D
+QlFVRVVFRCwgYW5kIHlvdSd2ZSBub3cgdHVybmVkCj4+IHRoYXQKPj4gaW50byAtRUlPLsKgwqBS
+ZWFsbHksIEkgZG9uJ3Qgc2VlIGEgcmVhc29uIHRvIHNhdmUgdGhhdCBmaXJzdAo+PiAtRUlPLsKg
+wqBUaGUKPj4gc2FtZSBhcHBsaWVzIHRvIGFsbCBpbnN0YW5jZXMgaW4gdGhpcyBwYXRjaC4KPgo+
+IFRoZSByZWFzb24gSSBzYXZlZCBpdCB3YXMgaWYgX19ibG9ja2Rldl9kaXJlY3RfSU8gZmFpbHMg
+Zm9yIHNvbWUKPiByZWFzb24sIHdlIHNob3VsZCByZXR1cm4gdGhlIG9yaWdpbmFsIGNhdXNlIG8g
+dGhlIGVycm9yLCB3aGljaCB3YXMgYW4KPiBFSU8uLiBpLmUuIHdlIHNob3VsZG4ndCBiZSBoaWRp
+bmcgdGhlIEVJTyBpZiB0aGUgZGlyZWN0X0lPIGZhaWxzIHdpdGgKPiBzb21ldGhpbmcgZWxzZS4u
+CgpPSy4KCj4gQnV0LCBob3cgZG9lcyBfRUlPQ0JRVUVVRUQgd29yaz8gTWF5YmUgd2UgbmVlZCBh
+biBleGNlcHRpb24gZm9yIGl0PwoKRm9yIGFzeW5jIGRpcmVjdCBJL08sIG9ubHkgdGhlIHNldHVw
+IHBoYXNlIG9mIHRoZSBJL08gaXMgcGVyZm9ybWVkIGFuZAp0aGVuIHdlIHJldHVybiB0byB0aGUg
+Y2FsbGVyLiAgLUVJT0NCUVVFVUVEIHNpZ25pZmllcyB0aGlzLgoKWW91J3JlIGhlYWRpbmcgdG93
+YXJkcyBjb2RlIHRoYXQgbG9va3MgbGlrZSB0aGlzOgoKICAgICAgICBpZiAoSVNfREFYKGlub2Rl
+KSkgewogICAgICAgICAgICAgICAgcmV0ID0gZGF4X2RvX2lvKGlvY2IsIGlub2RlLCBpdGVyLCBv
+ZmZzZXQsIGJsa2Rldl9nZXRfYmxvY2ssCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+TlVMTCwgRElPX1NLSVBfRElPX0NPVU5UKTsKICAgICAgICAgICAgICAgIGlmIChyZXQgPT0gLUVJ
+TyAmJiAoaW92X2l0ZXJfcncoaXRlcikgPT0gV1JJVEUpKQogICAgICAgICAgICAgICAgICAgICAg
+ICByZXRfc2F2ZWQgPSByZXQ7CiAgICAgICAgICAgICAgICBlbHNlCiAgICAgICAgICAgICAgICAg
+ICAgICAgIHJldHVybiByZXQ7CiAgICAgICAgfQoKICAgICAgICByZXQgPSBfX2Jsb2NrZGV2X2Rp
+cmVjdF9JTyhpb2NiLCBpbm9kZSwgSV9CREVWKGlub2RlKSwgaXRlciwgb2Zmc2V0LAogICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBibGtkZXZfZ2V0X2Jsb2NrLCBOVUxMLCBOVUxM
+LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBESU9fU0tJUF9ESU9fQ09VTlQp
+OwogICAgICAgIGlmIChyZXQgPCAwICYmIHJldCAhPSAtRUlPQ0JRVUVVRUQgJiYgcmV0X3NhdmVk
+KQogICAgICAgICAgICAgICAgcmV0dXJuIHJldF9zYXZlZDsKClRoZXJlJ3MgYSBsb3Qgb2Ygc3Bl
+Y2lhbCBjYXNpbmcgaGVyZSwgc28geW91IG1pZ2h0IGNvbnNpZGVyIGFkZGluZwpjb21tZW50cy4K
+CkNoZWVycywKSmVmZgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
