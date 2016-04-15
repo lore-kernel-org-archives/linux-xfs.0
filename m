@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9EF697CA0
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 05:40:09 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0E01D7CA4
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 05:40:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2398AAC005
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:40:08 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8516AAC005
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:40:15 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GP5TD65gly2YFcY8 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id GqQNdH8WZQEvQPoG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:40:07 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 03:40:13 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 00/42] v6: separate operations from flags in the bio/request
-	structs
-Date: Fri, 15 Apr 2016 05:39:20 -0500
-Message-Id: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 03/42] block, fs, mm, drivers: set bi_op to REQ_OP
+Date: Fri, 15 Apr 2016 05:39:23 -0500
+Message-Id: <1460716802-2294-4-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
+References: <1460716802-2294-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,252 +29,472 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-The following patches begin to cleanup the request->cmd_flags and
-bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-attributes and state of the request. For bi_rw we use it for similar
-info and also the priority but then also have another bi_flags field
-for state. At some point, we abused them so much we just made cmd_flags
-64 bits, so we could add more.
+From: Mike Christie <mchristi@redhat.com>
 
-The following patches seperate the operation (read, write discard,
-flush, etc) from cmd_flags/bi_rw.
+This patch converts the simple bi_rw use cases in the block,
+drivers, mm and fs code to set the bio->bi_op to a REQ_OP.
 
-This patchset was made against linux-next from today April 15
-(git tag next-20160415).
-
-I put a git tree here:
-https://github.com/mikechristie/linux-kernel.git
-The patches are in the op branch.
-
-v6 and maybe hopfully the last version:
-1. Adapt patch 41 to Jens's QUEUE_FLAG_WC/FUA patchset.
+These should be simple one liner cases, so I just did them
+in one patch. The next patches handle the more complicated
+cases in a module per patch.
 
 v5:
-1. Missed crypto fs submit_bio_wait call.
+1. Add missed crypto call.
 2. Change nfs bi_rw check to bi_op.
-3. btrfs. Convert finish_parity_scrub.
-4. Reworked against Jens's QUEUE_FLAG patches so I could drop my similar
-code.
-5. Separated the core block layer change into multiple patches for
-merging, elevator, stats, mq and non mq request allocation to try
-and make it easier to read.
 
-v4:
-1. Rebased to current linux-next tree.
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-v3:
+---
+ block/bio.c                      |  8 +++++---
+ block/blk-flush.c                |  1 +
+ block/blk-lib.c                  |  7 ++++---
+ block/blk-map.c                  |  2 +-
+ drivers/block/floppy.c           |  2 +-
+ drivers/block/pktcdvd.c          |  4 ++--
+ drivers/lightnvm/rrpc.c          |  4 ++--
+ drivers/scsi/osd/osd_initiator.c |  8 ++++----
+ fs/crypto/crypto.c               |  2 +-
+ fs/exofs/ore.c                   |  2 +-
+ fs/ext4/crypto.c                 |  2 +-
+ fs/ext4/page-io.c                |  8 +++++---
+ fs/ext4/readpage.c               |  2 +-
+ fs/jfs/jfs_logmgr.c              |  2 ++
+ fs/jfs/jfs_metapage.c            |  4 ++--
+ fs/logfs/dev_bdev.c              | 12 ++++++------
+ fs/nfs/blocklayout/blocklayout.c |  4 ++--
+ mm/page_io.c                     |  4 ++--
+ 18 files changed, 43 insertions(+), 35 deletions(-)
 
-1. Used "=" instead of "|="  to setup bio bi_rw.
-2. Removed __get_request cmd_flags compat code.
-3. Merged initial dm related changes requested by Mike Snitzer.
-4. Fixed ubd kbuild errors in flush related patches.
-5. Fix 80 char col issues in several patches.
-6. Fix issue with one of the btrfs patches where it looks like I reverted
-a patch when trying to fix a merge error.
-
-v2
-
-1. Dropped arguments from submit_bio, and had callers setup
-bio.
-2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
-to REQ_PREFLUSH for make_request_fn users.
-3. Dropped bio/rq_data_dir functions, and added a op_is_write
-function instead.
-
-
-Diffstat for the set:
-
- Documentation/block/writeback_cache_control.txt | 28 ++++----
- Documentation/device-mapper/log-writes.txt      | 10 +--
- arch/um/drivers/ubd_kern.c                      |  2 +-
- block/bio.c                                     | 21 +++---
- block/blk-core.c                                | 92 +++++++++++++------------
- block/blk-flush.c                               | 23 ++++---
- block/blk-lib.c                                 | 12 ++--
- block/blk-map.c                                 |  2 +-
- block/blk-merge.c                               | 24 ++++---
- block/blk-mq.c                                  | 41 ++++++-----
- block/cfq-iosched.c                             | 53 ++++++++------
- block/elevator.c                                |  7 +-
- drivers/ata/libata-scsi.c                       |  2 +-
- drivers/block/brd.c                             |  2 +-
- drivers/block/drbd/drbd_actlog.c                | 33 +++++----
- drivers/block/drbd/drbd_bitmap.c                |  8 +--
- drivers/block/drbd/drbd_int.h                   |  4 +-
- drivers/block/drbd/drbd_main.c                  | 20 +++---
- drivers/block/drbd/drbd_protocol.h              |  2 +-
- drivers/block/drbd/drbd_receiver.c              | 37 ++++++----
- drivers/block/drbd/drbd_req.c                   |  2 +-
- drivers/block/drbd/drbd_worker.c                |  7 +-
- drivers/block/floppy.c                          |  3 +-
- drivers/block/loop.c                            | 14 ++--
- drivers/block/mtip32xx/mtip32xx.c               |  2 +-
- drivers/block/nbd.c                             |  4 +-
- drivers/block/osdblk.c                          |  2 +-
- drivers/block/pktcdvd.c                         |  4 +-
- drivers/block/ps3disk.c                         |  4 +-
- drivers/block/rbd.c                             |  4 +-
- drivers/block/rsxx/dma.c                        |  2 +-
- drivers/block/skd_main.c                        | 11 ++-
- drivers/block/umem.c                            |  2 +-
- drivers/block/virtio_blk.c                      |  2 +-
- drivers/block/xen-blkback/blkback.c             | 29 +++++---
- drivers/block/xen-blkfront.c                    | 65 ++++++++---------
- drivers/block/zram/zram_drv.c                   |  2 +-
- drivers/ide/ide-cd_ioctl.c                      |  3 -
- drivers/ide/ide-disk.c                          |  2 +-
- drivers/ide/ide-floppy.c                        |  2 +-
- drivers/lightnvm/rrpc.c                         |  6 +-
- drivers/md/bcache/btree.c                       |  2 +
- drivers/md/bcache/debug.c                       |  8 ++-
- drivers/md/bcache/io.c                          |  2 +-
- drivers/md/bcache/journal.c                     |  9 +--
- drivers/md/bcache/movinggc.c                    |  2 +-
- drivers/md/bcache/request.c                     | 27 ++++----
- drivers/md/bcache/super.c                       | 26 ++++---
- drivers/md/bcache/writeback.c                   |  4 +-
- drivers/md/bitmap.c                             |  6 +-
- drivers/md/dm-bufio.c                           |  9 ++-
- drivers/md/dm-cache-target.c                    | 18 ++---
- drivers/md/dm-crypt.c                           |  8 ++-
- drivers/md/dm-era-target.c                      |  4 +-
- drivers/md/dm-flakey.c                          |  2 +-
- drivers/md/dm-io.c                              | 58 +++++++++-------
- drivers/md/dm-kcopyd.c                          | 25 ++++---
- drivers/md/dm-log-writes.c                      | 13 ++--
- drivers/md/dm-log.c                             |  5 +-
- drivers/md/dm-raid.c                            |  5 +-
- drivers/md/dm-raid1.c                           | 22 +++---
- drivers/md/dm-region-hash.c                     |  6 +-
- drivers/md/dm-snap-persistent.c                 | 24 ++++---
- drivers/md/dm-snap.c                            |  6 +-
- drivers/md/dm-stats.c                           |  9 ++-
- drivers/md/dm-stripe.c                          |  6 +-
- drivers/md/dm-thin.c                            | 25 ++++---
- drivers/md/dm.c                                 | 44 ++++++------
- drivers/md/linear.c                             |  4 +-
- drivers/md/md.c                                 | 21 ++++--
- drivers/md/md.h                                 |  5 +-
- drivers/md/multipath.c                          |  2 +-
- drivers/md/raid0.c                              |  4 +-
- drivers/md/raid1.c                              | 40 ++++++-----
- drivers/md/raid10.c                             | 54 ++++++++-------
- drivers/md/raid5-cache.c                        | 34 +++++----
- drivers/md/raid5.c                              | 63 +++++++++--------
- drivers/mmc/card/block.c                        | 10 ++-
- drivers/mmc/card/queue.c                        |  6 +-
- drivers/mmc/card/queue.h                        |  5 +-
- drivers/mtd/mtd_blkdevs.c                       |  4 +-
- drivers/nvme/host/core.c                        |  4 +-
- drivers/nvme/host/nvme.h                        |  2 +-
- drivers/nvme/host/pci.c                         |  2 +-
- drivers/scsi/osd/osd_initiator.c                | 12 ++--
- drivers/scsi/sd.c                               | 20 ++++--
- drivers/staging/lustre/lustre/llite/lloop.c     |  6 +-
- drivers/target/target_core_iblock.c             | 42 +++++------
- drivers/target/target_core_pscsi.c              |  2 +-
- fs/btrfs/check-integrity.c                      | 61 ++++++++--------
- fs/btrfs/check-integrity.h                      |  6 +-
- fs/btrfs/compression.c                          | 17 +++--
- fs/btrfs/ctree.h                                |  2 +-
- fs/btrfs/disk-io.c                              | 44 ++++++------
- fs/btrfs/disk-io.h                              |  2 +-
- fs/btrfs/extent-tree.c                          |  2 +-
- fs/btrfs/extent_io.c                            | 91 ++++++++++++------------
- fs/btrfs/extent_io.h                            |  8 +--
- fs/btrfs/inode.c                                | 71 ++++++++++---------
- fs/btrfs/raid56.c                               | 17 +++--
- fs/btrfs/scrub.c                                | 16 +++--
- fs/btrfs/volumes.c                              | 91 ++++++++++++------------
- fs/btrfs/volumes.h                              |  6 +-
- fs/buffer.c                                     | 70 ++++++++++---------
- fs/crypto/crypto.c                              |  3 +-
- fs/direct-io.c                                  | 36 ++++++----
- fs/exofs/ore.c                                  |  2 +-
- fs/ext4/balloc.c                                |  2 +-
- fs/ext4/crypto.c                                |  3 +-
- fs/ext4/ialloc.c                                |  2 +-
- fs/ext4/inode.c                                 |  8 +--
- fs/ext4/mmp.c                                   |  4 +-
- fs/ext4/namei.c                                 |  3 +-
- fs/ext4/page-io.c                               |  9 ++-
- fs/ext4/readpage.c                              |  9 +--
- fs/ext4/super.c                                 |  2 +-
- fs/f2fs/checkpoint.c                            | 10 +--
- fs/f2fs/data.c                                  | 40 +++++++----
- fs/f2fs/f2fs.h                                  |  5 +-
- fs/f2fs/gc.c                                    |  9 ++-
- fs/f2fs/inline.c                                |  3 +-
- fs/f2fs/node.c                                  |  8 ++-
- fs/f2fs/segment.c                               | 16 +++--
- fs/f2fs/trace.c                                 |  7 +-
- fs/fat/misc.c                                   |  2 +-
- fs/gfs2/bmap.c                                  |  4 +-
- fs/gfs2/dir.c                                   |  2 +-
- fs/gfs2/log.c                                   |  8 +--
- fs/gfs2/lops.c                                  | 13 ++--
- fs/gfs2/lops.h                                  |  2 +-
- fs/gfs2/meta_io.c                               | 19 ++---
- fs/gfs2/ops_fstype.c                            |  4 +-
- fs/gfs2/quota.c                                 |  2 +-
- fs/hfsplus/hfsplus_fs.h                         |  2 +-
- fs/hfsplus/part_tbl.c                           |  5 +-
- fs/hfsplus/super.c                              |  6 +-
- fs/hfsplus/wrapper.c                            | 16 +++--
- fs/isofs/compress.c                             |  2 +-
- fs/jbd2/commit.c                                |  6 +-
- fs/jbd2/journal.c                               | 10 +--
- fs/jbd2/recovery.c                              |  4 +-
- fs/jfs/jfs_logmgr.c                             |  8 ++-
- fs/jfs/jfs_metapage.c                           | 10 +--
- fs/logfs/dev_bdev.c                             | 17 +++--
- fs/mpage.c                                      | 42 +++++------
- fs/nfs/blocklayout/blocklayout.c                | 22 +++---
- fs/nilfs2/btnode.c                              |  6 +-
- fs/nilfs2/btnode.h                              |  2 +-
- fs/nilfs2/btree.c                               |  6 +-
- fs/nilfs2/gcinode.c                             |  5 +-
- fs/nilfs2/mdt.c                                 | 11 +--
- fs/nilfs2/segbuf.c                              | 19 ++---
- fs/ntfs/aops.c                                  |  6 +-
- fs/ntfs/compress.c                              |  2 +-
- fs/ntfs/file.c                                  |  2 +-
- fs/ntfs/logfile.c                               |  2 +-
- fs/ntfs/mft.c                                   |  4 +-
- fs/ocfs2/aops.c                                 |  2 +-
- fs/ocfs2/buffer_head_io.c                       |  8 +--
- fs/ocfs2/cluster/heartbeat.c                    | 15 ++--
- fs/ocfs2/super.c                                |  2 +-
- fs/reiserfs/inode.c                             |  4 +-
- fs/reiserfs/journal.c                           | 14 ++--
- fs/reiserfs/stree.c                             |  4 +-
- fs/reiserfs/super.c                             |  2 +-
- fs/squashfs/block.c                             |  4 +-
- fs/udf/dir.c                                    |  2 +-
- fs/udf/directory.c                              |  2 +-
- fs/udf/inode.c                                  |  2 +-
- fs/ufs/balloc.c                                 |  2 +-
- fs/ufs/util.c                                   |  2 +-
- fs/xfs/xfs_aops.c                               | 14 ++--
- fs/xfs/xfs_buf.c                                | 29 ++++----
- include/linux/bio.h                             | 30 ++++----
- include/linux/blk-cgroup.h                      | 13 ++--
- include/linux/blk_types.h                       | 36 +++++-----
- include/linux/blkdev.h                          | 32 +++++----
- include/linux/blktrace_api.h                    |  2 +-
- include/linux/buffer_head.h                     | 11 +--
- include/linux/dm-io.h                           |  3 +-
- include/linux/elevator.h                        |  4 +-
- include/linux/fs.h                              | 57 ++++++++++-----
- include/trace/events/bcache.h                   | 12 ++--
- include/trace/events/block.h                    | 31 ++++++---
- include/trace/events/f2fs.h                     | 37 ++++++----
- kernel/power/swap.c                             | 34 +++++----
- kernel/trace/blktrace.c                         | 58 +++++++++-------
- mm/page_io.c                                    | 10 +--
- 188 files changed, 1529 insertions(+), 1217 deletions(-)
-
+diff --git a/block/bio.c b/block/bio.c
+index f319b78..921de2e 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -587,6 +587,7 @@ void __bio_clone_fast(struct bio *bio, struct bio *bio_src)
+ 	 */
+ 	bio->bi_bdev = bio_src->bi_bdev;
+ 	bio_set_flag(bio, BIO_CLONED);
++	bio->bi_op = bio_src->bi_op;
+ 	bio->bi_rw = bio_src->bi_rw;
+ 	bio->bi_iter = bio_src->bi_iter;
+ 	bio->bi_io_vec = bio_src->bi_io_vec;
+@@ -669,6 +670,7 @@ struct bio *bio_clone_bioset(struct bio *bio_src, gfp_t gfp_mask,
+ 		return NULL;
+ 
+ 	bio->bi_bdev		= bio_src->bi_bdev;
++	bio->bi_op		= bio_src->bi_op;
+ 	bio->bi_rw		= bio_src->bi_rw;
+ 	bio->bi_iter.bi_sector	= bio_src->bi_iter.bi_sector;
+ 	bio->bi_iter.bi_size	= bio_src->bi_iter.bi_size;
+@@ -1177,7 +1179,7 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
+ 		goto out_bmd;
+ 
+ 	if (iter->type & WRITE)
+-		bio->bi_rw |= REQ_WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 
+ 	ret = 0;
+ 
+@@ -1347,7 +1349,7 @@ struct bio *bio_map_user_iov(struct request_queue *q,
+ 	 * set data direction, and check if mapped pages need bouncing
+ 	 */
+ 	if (iter->type & WRITE)
+-		bio->bi_rw |= REQ_WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 
+ 	bio_set_flag(bio, BIO_USER_MAPPED);
+ 
+@@ -1540,7 +1542,7 @@ struct bio *bio_copy_kern(struct request_queue *q, void *data, unsigned int len,
+ 		bio->bi_private = data;
+ 	} else {
+ 		bio->bi_end_io = bio_copy_kern_endio;
+-		bio->bi_rw |= REQ_WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 	}
+ 
+ 	return bio;
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index 3af4a5a..6611bcb 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -485,6 +485,7 @@ int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
+ 
+ 	bio = bio_alloc(gfp_mask, 0);
+ 	bio->bi_bdev = bdev;
++	bio->bi_op = REQ_OP_WRITE;
+ 	bio->bi_rw = WRITE_FLUSH;
+ 
+ 	ret = submit_bio_wait(bio);
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 87e3de4..d01b5f2 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -42,7 +42,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ {
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	struct request_queue *q = bdev_get_queue(bdev);
+-	int type = REQ_WRITE | REQ_DISCARD;
++	int type = 0;
+ 	unsigned int granularity;
+ 	int alignment;
+ 	struct bio_batch bb;
+@@ -102,6 +102,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		bio->bi_end_io = bio_batch_end_io;
+ 		bio->bi_bdev = bdev;
+ 		bio->bi_private = &bb;
++		bio->bi_op = REQ_OP_DISCARD;
+ 		bio->bi_rw = type;
+ 
+ 		bio->bi_iter.bi_size = req_sects << 9;
+@@ -178,7 +179,7 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 		bio->bi_io_vec->bv_page = page;
+ 		bio->bi_io_vec->bv_offset = 0;
+ 		bio->bi_io_vec->bv_len = bdev_logical_block_size(bdev);
+-		bio->bi_rw = REQ_WRITE | REQ_WRITE_SAME;
++		bio->bi_op = REQ_OP_WRITE_SAME;
+ 
+ 		if (nr_sects > max_write_same_sectors) {
+ 			bio->bi_iter.bi_size = max_write_same_sectors << 9;
+@@ -240,7 +241,7 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 		bio->bi_bdev   = bdev;
+ 		bio->bi_end_io = bio_batch_end_io;
+ 		bio->bi_private = &bb;
+-		bio->bi_rw = WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 
+ 		while (nr_sects != 0) {
+ 			sz = min((sector_t) PAGE_SIZE >> 9 , nr_sects);
+diff --git a/block/blk-map.c b/block/blk-map.c
+index a54f054..c489ecd 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -255,7 +255,7 @@ int blk_rq_map_kern(struct request_queue *q, struct request *rq, void *kbuf,
+ 		return PTR_ERR(bio);
+ 
+ 	if (!reading)
+-		bio->bi_rw |= REQ_WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 
+ 	if (do_copy)
+ 		rq->cmd_flags |= REQ_COPY_USER;
+diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+index 73ded25..84b1584 100644
+--- a/drivers/block/floppy.c
++++ b/drivers/block/floppy.c
+@@ -3822,7 +3822,7 @@ static int __floppy_read_block_0(struct block_device *bdev, int drive)
+ 	bio.bi_flags |= (1 << BIO_QUIET);
+ 	bio.bi_private = &cbdata;
+ 	bio.bi_end_io = floppy_rb0_cb;
+-	bio.bi_rw = READ;
++	bio.bi_op = REQ_OP_READ;
+ 
+ 	submit_bio(&bio);
+ 	process_fd_request();
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index d06c62e..a4ecbd3 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -1074,7 +1074,7 @@ static void pkt_gather_data(struct pktcdvd_device *pd, struct packet_data *pkt)
+ 			BUG();
+ 
+ 		atomic_inc(&pkt->io_wait);
+-		bio->bi_rw = READ;
++		bio->bi_op = REQ_OP_READ;
+ 		pkt_queue_bio(pd, bio);
+ 		frames_read++;
+ 	}
+@@ -1336,7 +1336,7 @@ static void pkt_start_write(struct pktcdvd_device *pd, struct packet_data *pkt)
+ 
+ 	/* Start the write request */
+ 	atomic_set(&pkt->io_wait, 1);
+-	pkt->w_bio->bi_rw = WRITE;
++	pkt->w_bio->bi_op = REQ_OP_WRITE;
+ 	pkt_queue_bio(pd, pkt->w_bio);
+ }
+ 
+diff --git a/drivers/lightnvm/rrpc.c b/drivers/lightnvm/rrpc.c
+index 3ab6495..fd9b629 100644
+--- a/drivers/lightnvm/rrpc.c
++++ b/drivers/lightnvm/rrpc.c
+@@ -342,7 +342,7 @@ try:
+ 
+ 		/* Perform read to do GC */
+ 		bio->bi_iter.bi_sector = rrpc_get_sector(rev->addr);
+-		bio->bi_rw = READ;
++		bio->bi_op = REQ_OP_READ;
+ 		bio->bi_private = &wait;
+ 		bio->bi_end_io = rrpc_end_sync_bio;
+ 
+@@ -364,7 +364,7 @@ try:
+ 		reinit_completion(&wait);
+ 
+ 		bio->bi_iter.bi_sector = rrpc_get_sector(rev->addr);
+-		bio->bi_rw = WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 		bio->bi_private = &wait;
+ 		bio->bi_end_io = rrpc_end_sync_bio;
+ 
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index 3b11aad..edcba56 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -726,7 +726,7 @@ static int _osd_req_list_objects(struct osd_request *or,
+ 		return PTR_ERR(bio);
+ 	}
+ 
+-	bio->bi_rw &= ~REQ_WRITE;
++	bio->bi_op = REQ_OP_READ;
+ 	or->in.bio = bio;
+ 	or->in.total_bytes = bio->bi_iter.bi_size;
+ 	return 0;
+@@ -839,7 +839,7 @@ int osd_req_write_kern(struct osd_request *or,
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
+-	bio->bi_rw |= REQ_WRITE; /* FIXME: bio_set_dir() */
++	bio->bi_op = REQ_OP_WRITE;
+ 	osd_req_write(or, obj, offset, bio, len);
+ 	return 0;
+ }
+@@ -956,7 +956,7 @@ static int _osd_req_finalize_cdb_cont(struct osd_request *or, const u8 *cap_key)
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
+-	bio->bi_rw |= REQ_WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 
+ 	/* integrity check the continuation before the bio is linked
+ 	 * with the other data segments since the continuation
+@@ -1077,7 +1077,7 @@ int osd_req_write_sg_kern(struct osd_request *or,
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
+-	bio->bi_rw |= REQ_WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 	osd_req_write_sg(or, obj, bio, sglist, numentries);
+ 
+ 	return 0;
+diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
+index 5b75856..4bb62fe 100644
+--- a/fs/crypto/crypto.c
++++ b/fs/crypto/crypto.c
+@@ -318,7 +318,7 @@ int fscrypt_zeroout_range(struct inode *inode, pgoff_t lblk,
+ 		bio->bi_bdev = inode->i_sb->s_bdev;
+ 		bio->bi_iter.bi_sector =
+ 			pblk << (inode->i_sb->s_blocksize_bits - 9);
+-		bio->bi_rw = WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 		ret = bio_add_page(bio, ciphertext_page,
+ 					inode->i_sb->s_blocksize, 0);
+ 		if (ret != inode->i_sb->s_blocksize) {
+diff --git a/fs/exofs/ore.c b/fs/exofs/ore.c
+index 7bd8ac8..c40ed74 100644
+--- a/fs/exofs/ore.c
++++ b/fs/exofs/ore.c
+@@ -878,7 +878,7 @@ static int _write_mirror(struct ore_io_state *ios, int cur_comp)
+ 			} else {
+ 				bio = master_dev->bio;
+ 				/* FIXME: bio_set_dir() */
+-				bio->bi_rw |= REQ_WRITE;
++				bio->bi_op = REQ_OP_WRITE;
+ 			}
+ 
+ 			osd_req_write(or, _ios_obj(ios, cur_comp),
+diff --git a/fs/ext4/crypto.c b/fs/ext4/crypto.c
+index 811bd5d..f08d860 100644
+--- a/fs/ext4/crypto.c
++++ b/fs/ext4/crypto.c
+@@ -428,7 +428,7 @@ int ext4_encrypted_zeroout(struct inode *inode, ext4_lblk_t lblk,
+ 		bio->bi_bdev = inode->i_sb->s_bdev;
+ 		bio->bi_iter.bi_sector =
+ 			pblk << (inode->i_sb->s_blocksize_bits - 9);
+-		bio->bi_rw = WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 		ret = bio_add_page(bio, ciphertext_page,
+ 				   inode->i_sb->s_blocksize, 0);
+ 		if (ret != inode->i_sb->s_blocksize) {
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index e945b31..43655e9 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -340,10 +340,12 @@ void ext4_io_submit(struct ext4_io_submit *io)
+ 	struct bio *bio = io->io_bio;
+ 
+ 	if (bio) {
+-		int io_op = io->io_wbc->sync_mode == WB_SYNC_ALL ?
+-			    WRITE_SYNC : WRITE;
++		int io_op_flags = io->io_wbc->sync_mode == WB_SYNC_ALL ?
++				WRITE_SYNC : 0;
++
+ 		bio_get(io->io_bio);
+-		io->io_bio->bi_rw = io_op;
++		io->io_bio->bi_op = REQ_OP_WRITE;
++		io->io_bio->bi_rw = io_op_flags;
+ 		submit_bio(io->io_bio);
+ 		bio_put(io->io_bio);
+ 	}
+diff --git a/fs/ext4/readpage.c b/fs/ext4/readpage.c
+index 130bd45..7452ecf 100644
+--- a/fs/ext4/readpage.c
++++ b/fs/ext4/readpage.c
+@@ -294,7 +294,7 @@ int ext4_mpage_readpages(struct address_space *mapping,
+ 			bio->bi_iter.bi_sector = blocks[0] << (blkbits - 9);
+ 			bio->bi_end_io = mpage_end_io;
+ 			bio->bi_private = ctx;
+-			bio->bi_rw = READ;
++			bio->bi_op = REQ_OP_READ;
+ 		}
+ 
+ 		length = first_hole << blkbits;
+diff --git a/fs/jfs/jfs_logmgr.c b/fs/jfs/jfs_logmgr.c
+index 3ee3f32..d315c1e 100644
+--- a/fs/jfs/jfs_logmgr.c
++++ b/fs/jfs/jfs_logmgr.c
+@@ -2002,6 +2002,7 @@ static int lbmRead(struct jfs_log * log, int pn, struct lbuf ** bpp)
+ 
+ 	bio->bi_end_io = lbmIODone;
+ 	bio->bi_private = bp;
++	bio->bi_op = REQ_OP_READ;
+ 	bio->bi_rw = READ_SYNC;
+ 	/*check if journaling to disk has been disabled*/
+ 	if (log->no_integrity) {
+@@ -2146,6 +2147,7 @@ static void lbmStartIO(struct lbuf * bp)
+ 
+ 	bio->bi_end_io = lbmIODone;
+ 	bio->bi_private = bp;
++	bio->bi_op = REQ_OP_WRITE;
+ 	bio->bi_rw = WRITE_SYNC;
+ 
+ 	/* check if journaling to disk has been disabled */
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index 9725443..048342f 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -434,7 +434,7 @@ static int metapage_writepage(struct page *page, struct writeback_control *wbc)
+ 		bio->bi_iter.bi_sector = pblock << (inode->i_blkbits - 9);
+ 		bio->bi_end_io = metapage_write_end_io;
+ 		bio->bi_private = page;
+-		bio->bi_rw = WRITE;
++		bio->bi_op = REQ_OP_WRITE;
+ 
+ 		/* Don't call bio_add_page yet, we may add to this vec */
+ 		bio_offset = offset;
+@@ -515,7 +515,7 @@ static int metapage_readpage(struct file *fp, struct page *page)
+ 				pblock << (inode->i_blkbits - 9);
+ 			bio->bi_end_io = metapage_read_end_io;
+ 			bio->bi_private = page;
+-			bio->bi_rw = READ;
++			bio->bi_op = REQ_OP_READ;
+ 			len = xlen << inode->i_blkbits;
+ 			offset = block_offset << inode->i_blkbits;
+ 			if (bio_add_page(bio, page, len, offset) < len)
+diff --git a/fs/logfs/dev_bdev.c b/fs/logfs/dev_bdev.c
+index 29704bd..5c02271 100644
+--- a/fs/logfs/dev_bdev.c
++++ b/fs/logfs/dev_bdev.c
+@@ -14,7 +14,7 @@
+ 
+ #define PAGE_OFS(ofs) ((ofs) & (PAGE_SIZE-1))
+ 
+-static int sync_request(struct page *page, struct block_device *bdev, int rw)
++static int sync_request(struct page *page, struct block_device *bdev, int op)
+ {
+ 	struct bio bio;
+ 	struct bio_vec bio_vec;
+@@ -29,7 +29,7 @@ static int sync_request(struct page *page, struct block_device *bdev, int rw)
+ 	bio.bi_bdev = bdev;
+ 	bio.bi_iter.bi_sector = page->index * (PAGE_SIZE >> 9);
+ 	bio.bi_iter.bi_size = PAGE_SIZE;
+-	bio.bi_rw = rw;
++	bio.bi_op = op;
+ 
+ 	return submit_bio_wait(&bio);
+ }
+@@ -96,7 +96,7 @@ static int __bdev_writeseg(struct super_block *sb, u64 ofs, pgoff_t index,
+ 			bio->bi_iter.bi_sector = ofs >> 9;
+ 			bio->bi_private = sb;
+ 			bio->bi_end_io = writeseg_end_io;
+-			bio->bi_rw = WRITE;
++			bio->bi_op = REQ_OP_WRITE;
+ 			atomic_inc(&super->s_pending_writes);
+ 			submit_bio(bio);
+ 
+@@ -124,7 +124,7 @@ static int __bdev_writeseg(struct super_block *sb, u64 ofs, pgoff_t index,
+ 	bio->bi_iter.bi_sector = ofs >> 9;
+ 	bio->bi_private = sb;
+ 	bio->bi_end_io = writeseg_end_io;
+-	bio->bi_rw = WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 	atomic_inc(&super->s_pending_writes);
+ 	submit_bio(bio);
+ 	return 0;
+@@ -188,7 +188,7 @@ static int do_erase(struct super_block *sb, u64 ofs, pgoff_t index,
+ 			bio->bi_iter.bi_sector = ofs >> 9;
+ 			bio->bi_private = sb;
+ 			bio->bi_end_io = erase_end_io;
+-			bio->bi_rw = WRITE;
++			bio->bi_op = REQ_OP_WRITE;
+ 			atomic_inc(&super->s_pending_writes);
+ 			submit_bio(bio);
+ 
+@@ -210,7 +210,7 @@ static int do_erase(struct super_block *sb, u64 ofs, pgoff_t index,
+ 	bio->bi_iter.bi_sector = ofs >> 9;
+ 	bio->bi_private = sb;
+ 	bio->bi_end_io = erase_end_io;
+-	bio->bi_rw = WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 	atomic_inc(&super->s_pending_writes);
+ 	submit_bio(bio);
+ 	return 0;
+diff --git a/fs/nfs/blocklayout/blocklayout.c b/fs/nfs/blocklayout/blocklayout.c
+index 4c79f4d..7b6af2e 100644
+--- a/fs/nfs/blocklayout/blocklayout.c
++++ b/fs/nfs/blocklayout/blocklayout.c
+@@ -107,7 +107,7 @@ bl_submit_bio(struct bio *bio)
+ 	if (bio) {
+ 		get_parallel(bio->bi_private);
+ 		dprintk("%s submitting %s bio %u@%llu\n", __func__,
+-			bio->bi_rw == READ ? "read" : "write",
++			bio->bi_op == READ ? "read" : "write",
+ 			bio->bi_iter.bi_size,
+ 			(unsigned long long)bio->bi_iter.bi_sector);
+ 		submit_bio(bio);
+@@ -175,7 +175,7 @@ retry:
+ 				disk_addr >> SECTOR_SHIFT, end_io, par);
+ 		if (!bio)
+ 			return ERR_PTR(-ENOMEM);
+-		bio->bi_rw = rw;
++		bio->bi_op = rw;
+ 	}
+ 	if (bio_add_page(bio, page, *len, offset) < *len) {
+ 		bio = bl_submit_bio(bio);
+diff --git a/mm/page_io.c b/mm/page_io.c
+index 85cc7e1..24da235 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -317,7 +317,7 @@ int __swap_writepage(struct page *page, struct writeback_control *wbc,
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	bio->bi_rw = WRITE;
++	bio->bi_op = REQ_OP_WRITE;
+ 	if (wbc->sync_mode == WB_SYNC_ALL)
+ 		bio->bi_rw |= REQ_SYNC;
+ 	count_vm_event(PSWPOUT);
+@@ -370,7 +370,7 @@ int swap_readpage(struct page *page)
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-	bio->bi_rw = READ;
++	bio->bi_op = REQ_OP_READ;
+ 	count_vm_event(PSWPIN);
+ 	submit_bio(bio);
+ out:
+-- 
+2.7.2
 
 _______________________________________________
 xfs mailing list
