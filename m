@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E8B097CA0
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 16:31:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AE7CE8F8035
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 14:31:13 -0700 (PDT)
-Received: from mail-yw0-f196.google.com (mail-yw0-f196.google.com
-	[209.85.161.196]) by cuda.sgi.com with ESMTP id
-	wfn7Pedma8d7RBCW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 17 Apr 2016 14:31:11 -0700 (PDT)
-Received: by mail-yw0-f196.google.com with SMTP id u62so2426291ywe.3
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 14:31:11 -0700 (PDT)
-From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v5 5/8] fs: xfs: replace BIO_MAX_SECTORS with BIO_MAX_PAGES
-Date: Mon, 18 Apr 2016 05:29:54 +0800
-Message-Id: <1460928615-20894-6-git-send-email-ming.lei@canonical.com>
-In-Reply-To: <1460928615-20894-1-git-send-email-ming.lei@canonical.com>
-References: <1460928615-20894-1-git-send-email-ming.lei@canonical.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0C0267CA1
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 13:43:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 671BAAC002
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:43:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id s6tCUs72hjNpTKMR (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 11:43:12 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 50026C062C94
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 18:43:11 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-148.bos.redhat.com [10.18.41.148])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3FIhBeO006868
+	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:43:11 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2] xfs: buffer ->bi_end_io function requires irq-safe lock
+Date: Fri, 15 Apr 2016 14:43:09 -0400
+Message-Id: <1460745789-42073-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,35 +36,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Ming Lei <ming.lei@canonical.com>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: xfs@oss.sgi.com
 
-BIO_MAX_PAGES is used as maximum count of bvecs, so
-replace BIO_MAX_SECTORS with BIO_MAX_PAGES since
-BIO_MAX_SECTORS is to be removed.
+Reports have surfaced of a lockdep splat complaining about an irq-safe
+-> irq-unsafe locking order in the xfs_buf_bio_end_io() bio completion
+handler. This only occurs when I/O errors are present because bp->b_lock
+is only acquired in this context to protect setting an error on the
+buffer. The problem is that this lock can be acquired with the
+(request_queue) q->queue_lock held. See scsi_end_request() or
+ata_qc_schedule_eh(), for example.
 
-Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Replace the locked test/set of b_io_error with a cmpxchg() call. This
+eliminates the need for the lock and thus the lock ordering problem goes
+away.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_buf.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+
+v2:
+- Use cmpxchg() instead of lock. [hch]
+v1: http://oss.sgi.com/pipermail/xfs/2016-April/048384.html
+
+ fs/xfs/xfs_buf.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 9a2191b..b9ecb2d 100644
+index 9a2191b..e71cfbd 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1161,9 +1161,7 @@ xfs_buf_ioapply_map(
+@@ -1100,22 +1100,18 @@ xfs_bwrite(
+ 	return error;
+ }
  
- next_chunk:
- 	atomic_inc(&bp->b_io_remaining);
--	nr_pages = BIO_MAX_SECTORS >> (PAGE_SHIFT - BBSHIFT);
--	if (nr_pages > total_nr_pages)
--		nr_pages = total_nr_pages;
-+	nr_pages = min(total_nr_pages, BIO_MAX_PAGES);
+-STATIC void
++static void
+ xfs_buf_bio_end_io(
+ 	struct bio		*bio)
+ {
+-	xfs_buf_t		*bp = (xfs_buf_t *)bio->bi_private;
++	struct xfs_buf		*bp = (struct xfs_buf *)bio->bi_private;
  
- 	bio = bio_alloc(GFP_NOIO, nr_pages);
- 	bio->bi_bdev = bp->b_target->bt_bdev;
+ 	/*
+ 	 * don't overwrite existing errors - otherwise we can lose errors on
+ 	 * buffers that require multiple bios to complete.
+ 	 */
+-	if (bio->bi_error) {
+-		spin_lock(&bp->b_lock);
+-		if (!bp->b_io_error)
+-			bp->b_io_error = bio->bi_error;
+-		spin_unlock(&bp->b_lock);
+-	}
++	if (bio->bi_error)
++		cmpxchg(&bp->b_io_error, 0, bio->bi_error);
+ 
+ 	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+ 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
 -- 
-1.9.1
+2.4.11
 
 _______________________________________________
 xfs mailing list
