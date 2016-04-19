@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 369AB7CA0
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 12:15:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BA713AC007
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 10:15:06 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 333E77CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 15:29:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6485AC002
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 13:29:27 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NGEa3Tf3qxDdOIA1 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 6WNL00FMBocWs0jD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Apr 2016 10:15:06 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 19 Apr 2016 13:29:26 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 9385C2202D
-	for <xfs@oss.sgi.com>; Thu, 14 Apr 2016 17:15:05 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH] build: make librt optional for some platforms
-Date: Thu, 14 Apr 2016 19:14:59 +0200
-Message-Id: <1460654099-6397-1-git-send-email-jtulak@redhat.com>
+	by mx1.redhat.com (Postfix) with ESMTPS id 9C6BB7F359
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 20:29:25 +0000 (UTC)
+Received: from Liberator.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3JKTOae011824
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 16:29:25 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: fix agf limit error messages
+Message-ID: <57169524.30307@redhat.com>
+Date: Tue, 19 Apr 2016 16:29:24 -0400
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,89 +34,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Tulak <jtulak@redhat.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-The functions that we use from librt on Linux are in other libraries
-on OS X. So make it possible to disable librt.
+Today we see errors like
+"fllast 118 in agf 94 too large (max = 118)"
+which makes no sense.
 
-The hardcoded librt dependency was added in 0caa2bae.
+If we are erroring on X >= Y, Y is clearly not the
+maximum allowable value.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- configure.ac     |  7 +++++--
- doc/INSTALL      |  6 +++++-
- m4/package_rt.m4 | 12 ++++++++++++
- 3 files changed, 22 insertions(+), 3 deletions(-)
- create mode 100644 m4/package_rt.m4
 
-diff --git a/configure.ac b/configure.ac
-index 6d012ce..ed67e74 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -56,8 +56,10 @@ AC_ARG_ENABLE(lib64,
- 	enable_lib64=yes)
- AC_SUBST(enable_lib64)
- 
--librt="-lrt"
--AC_SUBST(librt)
-+AC_ARG_ENABLE(librt,
-+[ --enable-librt=[yes/no] Enable librt support [default=yes]],,
-+	enable_librt=yes)
-+AC_SUBST(enable_librt)
- 
- #
- # If the user specified a libdir ending in lib64 do not append another
-@@ -103,6 +105,7 @@ AC_SUBST(LOCALIZED_FILES)
- AC_PACKAGE_GLOBALS(xfsprogs)
- AC_PACKAGE_UTILITIES(xfsprogs)
- AC_MULTILIB($enable_lib64)
-+AC_RT($enable_librt)
- 
- AC_PACKAGE_NEED_UUID_H
- AC_PACKAGE_NEED_UUIDCOMPARE
-diff --git a/doc/INSTALL b/doc/INSTALL
-index b0443a3..0879612 100644
---- a/doc/INSTALL
-+++ b/doc/INSTALL
-@@ -89,7 +89,11 @@ Mac OS X Instructions
- 	TAR=/usr/bin/gnutar
- 	LIBTOOL=/usr/bin/glibtool
- 	INSTALL_GROUP=wheel
--	LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no"
-+	LOCAL_CONFIGURE_OPTIONS="\
-+				 --enable-gettext=no\
-+				 --enable-blkid=no\
-+				 --enable-librt=no\
-+				 "
- 
- 	$ make
- 	$ su root
-diff --git a/m4/package_rt.m4 b/m4/package_rt.m4
-new file mode 100644
-index 0000000..9ad1009
---- /dev/null
-+++ b/m4/package_rt.m4
-@@ -0,0 +1,12 @@
-+# Check if the platform has librt
-+#
-+
-+AC_DEFUN([AC_RT],
-+[
-+  if test "$enable_librt" = "yes"; then
-+    librt="-lrt"
-+  else
-+    librt=""
-+  fi
-+  AC_SUBST(librt)
-+])
--- 
-2.6.0
+diff --git a/repair/agheader.c b/repair/agheader.c
+index bd11ac2..b95cedd 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -94,7 +94,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+ 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
+ 		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
+ 			be32_to_cpu(agf->agf_flfirst),
+-			i, XFS_AGFL_SIZE(mp));
++			i, XFS_AGFL_SIZE(mp) - 1);
+ 		if (!no_modify)
+ 			agf->agf_flfirst = cpu_to_be32(0);
+ 	}
+@@ -102,7 +102,7 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+ 	if (be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp))  {
+ 		do_warn(_("fllast %d in agf %d too large (max = %zu)\n"),
+ 			be32_to_cpu(agf->agf_fllast),
+-			i, XFS_AGFL_SIZE(mp));
++			i, XFS_AGFL_SIZE(mp) - 1);
+ 		if (!no_modify)
+ 			agf->agf_fllast = cpu_to_be32(0);
+ 	}
 
 _______________________________________________
 xfs mailing list
