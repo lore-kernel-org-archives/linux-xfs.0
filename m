@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E78EA7D01
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:17:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 29E8AAC002
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iDP2wSj18ymv8fpD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:17:01 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 17/42] ocfs2: set bi_op to REQ_OP
-Date: Fri, 15 Apr 2016 14:15:52 -0500
-Message-Id: <1460747777-8479-18-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C0D287CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 15:59:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79A2930404E
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 13:59:29 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id FoGp5S9SJa8u5jVU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Apr 2016 13:59:27 -0700 (PDT)
+Date: Wed, 20 Apr 2016 13:59:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+Message-ID: <20160420205923.GA24797@infradead.org>
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <x49twj26edj.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,71 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-block@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-nvdimm@ml01.01.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
 
-From: Mike Christie <mchristi@redhat.com>
+On Fri, Apr 15, 2016 at 12:11:36PM -0400, Jeff Moyer wrote:
+> > +	if (IS_DAX(inode)) {
+> > +		ret = dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
+> >  				NULL, DIO_SKIP_DIO_COUNT);
+> > +		if (ret == -EIO && (iov_iter_rw(iter) == WRITE))
+> > +			ret_saved = ret;
+> > +		else
+> > +			return ret;
+> > +	}
+> > +
+> > +	ret = __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
+> >  				    blkdev_get_block, NULL, NULL,
+> >  				    DIO_SKIP_DIO_COUNT);
+> > +	if (ret < 0 && ret_saved)
+> > +		return ret_saved;
+> > +
+> 
+> Hmm, did you just break async DIO?  I think you did!  :)
+> __blockdev_direct_IO can return -EIOCBQUEUED, and you've now turned that
+> into -EIO.  Really, I don't see a reason to save that first -EIO.  The
+> same applies to all instances in this patch.
 
-This patch has ocfs2 use bio->bi_op for REQ_OPs and rq_flag_bits
-to bio->bi_rw.
+Yes, there is no point in saving the earlier error - just return the
+second error all the time.
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- fs/ocfs2/cluster/heartbeat.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+E.g.
 
-diff --git a/fs/ocfs2/cluster/heartbeat.c b/fs/ocfs2/cluster/heartbeat.c
-index e37373d..0619a20 100644
---- a/fs/ocfs2/cluster/heartbeat.c
-+++ b/fs/ocfs2/cluster/heartbeat.c
-@@ -530,7 +530,8 @@ static void o2hb_bio_end_io(struct bio *bio)
- static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
- 				      struct o2hb_bio_wait_ctxt *wc,
- 				      unsigned int *current_slot,
--				      unsigned int max_slots, int rw)
-+				      unsigned int max_slots, int op,
-+				      int op_flags)
- {
- 	int len, current_page;
- 	unsigned int vec_len, vec_start;
-@@ -556,7 +557,8 @@ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
- 	bio->bi_bdev = reg->hr_bdev;
- 	bio->bi_private = wc;
- 	bio->bi_end_io = o2hb_bio_end_io;
--	bio->bi_rw = rw;
-+	bio->bi_op = op;
-+	bio->bi_rw = op_flags;
- 
- 	vec_start = (cs << bits) % PAGE_SIZE;
- 	while(cs < max_slots) {
-@@ -593,7 +595,7 @@ static int o2hb_read_slots(struct o2hb_region *reg,
- 
- 	while(current_slot < max_slots) {
- 		bio = o2hb_setup_one_bio(reg, &wc, &current_slot, max_slots,
--					 READ);
-+					 REQ_OP_READ, 0);
- 		if (IS_ERR(bio)) {
- 			status = PTR_ERR(bio);
- 			mlog_errno(status);
-@@ -625,7 +627,8 @@ static int o2hb_issue_node_write(struct o2hb_region *reg,
- 
- 	slot = o2nm_this_node();
- 
--	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, WRITE_SYNC);
-+	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, REQ_OP_WRITE,
-+				 WRITE_SYNC);
- 	if (IS_ERR(bio)) {
- 		status = PTR_ERR(bio);
- 		mlog_errno(status);
--- 
-2.7.2
+	ret = dax_io();
+	if (dax_need_dio_retry(ret))
+		ret = direct_IO();
 
 _______________________________________________
 xfs mailing list
