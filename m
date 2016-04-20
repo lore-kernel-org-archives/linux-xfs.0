@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A1C27CA0
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 09:33:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D0C948F8033
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 07:33:29 -0700 (PDT)
-Received: from mail-qg0-f47.google.com (mail-qg0-f47.google.com
-	[209.85.192.47]) by cuda.sgi.com with ESMTP id 02AHZEIDyTBlDrPy
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 17 Apr 2016 07:33:28 -0700 (PDT)
-Received: by mail-qg0-f47.google.com with SMTP id f105so104371754qge.2
-	for <xfs@oss.sgi.com>; Sun, 17 Apr 2016 07:33:28 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C51F77CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 15:13:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 700758F8035
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 13:13:40 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ggSFFdVQ29AkzyY4 for <xfs@oss.sgi.com>;
+	Wed, 20 Apr 2016 13:13:37 -0700 (PDT)
+Received: from Liberator.local (unknown [74.203.127.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 55FC92A60
+	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 15:13:37 -0500 (CDT)
+Subject: Re: xfs_repair couldn't verify primary superblock
+References: <d738a94784a0426e97752f92f38325a0@ul-exc-pr-mbx11.ulaval.ca>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5717E2EF.1080902@sandeen.net>
+Date: Wed, 20 Apr 2016 16:13:35 -0400
 MIME-Version: 1.0
-Date: Sun, 17 Apr 2016 09:33:27 -0500
-Message-ID: <CACo5E_6fz+BV7prpyo35jzH2_dwgswZ4ZkZ26XP9czbdT3g6vw@mail.gmail.com>
-Subject: "xfs_log_force: error 5 returned." for drive that was removed.
-From: Joe Wendt <wendtwerks@gmail.com>
+In-Reply-To: <d738a94784a0426e97752f92f38325a0@ul-exc-pr-mbx11.ulaval.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,70 +28,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1457787667490259530=="
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============1457787667490259530==
-Content-Type: multipart/alternative; boundary=001a11393a909149e00530af2080
+On 4/20/16 1:50 PM, St=E9phane Larose wrote:
+> Hello,
+> =
 
---001a11393a909149e00530af2080
-Content-Type: text/plain; charset=UTF-8
+>  =
 
-Hello! This may be a silly question or an interesting one...
+> =
 
-We had a drive fail in a production server, which spawned this error in the
-logs:
-XFS (sde1): xfs_log_force: error 5 returned.
+> When I try to mount a cleany unmounted XFS filesystem, I get those errors=
+ in the log :
+> =
 
-The dead array was lazy-unmounted, and the drive was hot-swapped, but when
-the RAID array was rebuilt, it came online as /dev/sdk instead of /dev/sde.
+> =
 
-Now /dev/sde1 doesn't exist in the system, but we still see this message
-every 30 seconds. I'm assuming a reboot will clear out whatever is still
-trying to access sde1, but I'm trying to avoid that if possible. Could
-someone point me in the direction of what XFS might still be trying to do
-with that device?
+> [1650856.121229] XFS (dm-24): Mounting V4 Filesystem
+> [1650856.135455] XFS (dm-24): Log inconsistent or not a log (last=3D=3D0,=
+ first!=3D1)
+> [1650856.135461] XFS (dm-24): empty log check failed
+> [1650856.135463] XFS (dm-24): log mount/recovery failed: error 22
+> [1650856.135495] XFS (dm-24): log mount failed
 
-lsof hasn't given me any clues. I can't run xfs_repair on a volume that
-isn't there. I haven't been able to find anything similar yet online. Any
-help would be greatly appreciated!
+You could maybe use xfs_logdump to see what's there, but...
 
-Thanks,
-Joe
+> I have tried xfs_repair but=85
+> =
 
---001a11393a909149e00530af2080
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+> manitou:~ # xfs_repair /dev/dm-24
+> =
 
-<div dir=3D"ltr">Hello! This may be a silly question or an interesting one.=
-..<div><br></div><div>We had a drive fail in a production server, which spa=
-wned this error in the logs:=C2=A0</div><div>XFS (sde1): xfs_log_force: err=
-or 5 returned.</div><div><br></div><div>The dead array was lazy-unmounted, =
-and the drive was hot-swapped, but when the RAID array was rebuilt, it came=
- online as /dev/sdk instead of /dev/sde.</div><div><br></div><div>Now /dev/=
-sde1 doesn&#39;t exist in the system, but we still see this message every 3=
-0 seconds. I&#39;m assuming a reboot will clear out whatever is still tryin=
-g to access sde1, but I&#39;m trying to avoid that if possible. Could someo=
-ne point me in the direction of what XFS might still be trying to do with t=
-hat device?=C2=A0</div><div><br></div><div>lsof hasn&#39;t given me any clu=
-es. I can&#39;t run xfs_repair on a volume that isn&#39;t there. I haven&#3=
-9;t been able to find anything similar yet online. Any help would be greatl=
-y appreciated!</div><div><br></div><div>Thanks,</div><div>Joe</div></div>
+> Phase 1 - find and verify superblock...
+> couldn't verify primary superblock - not enough secondary superblocks wit=
+h matching geometry !!!
+> =
 
---001a11393a909149e00530af2080--
+> attempting to find secondary superblock...
+> ........................................
+
+> After a lot of dots, xfs_repair can=92t find secondary superblocks.
+> =
+
+> This is where my knowledge of XFS filesystem stops. Looking at the superb=
+lock information, I have a feeling that the primary superblock is fine but =
+not the secondary superblocks (strange blocksize and dblocks numbers). Is t=
+here any way to copy the primary superblock to the secondary superblocks? M=
+aybe this is not a good idea?
+> =
+
+> Thank you for any help!
+> =
 
 
---===============1457787667490259530==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+... the stated locations of the backup supers certainly don't contain good =
+data:
+
+> xfs_db> sb 1
+> xfs_db> p
+> magicnum =3D 0xf6b89fbf
+> blocksize =3D 1483932129
+> dblocks =3D 15694009933101722137
+> rblocks =3D 11068626756016902811
+> rextents =3D 1593063622148300128
+...
+> xfs_db> sb 2
+> xfs_db> p
+> magicnum =3D 0x41474341
+> blocksize =3D 1195590471
+> dblocks =3D 4847921951085253716
+> rblocks =3D 4846789398308864835
+> rextents =3D 4702132125296707412
+...
+
+which is why it couldn't find any valid/matching backups.  The stated AG si=
+ze
+does look correct, though, for the overall size of the filesystem as stated
+in SB 0.
+
+Is there more to this story?  Did something "interesting" happen with the
+underlying storage?  Or with the filesystem prior to this problem?
+
+does "blkid /dev/dm-24" say anything other than "xfs filesystem?"
+
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1457787667490259530==--
