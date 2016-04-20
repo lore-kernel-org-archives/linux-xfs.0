@@ -1,141 +1,235 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 54B487CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 06:24:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F16968F8039
-	for <xfs@oss.sgi.com>; Wed, 20 Apr 2016 04:24:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fau9Jjkar65TPAVb (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Apr 2016 04:24:48 -0700 (PDT)
-Date: Wed, 20 Apr 2016 07:24:45 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [XFS] Any process to a particular XFS device hung in D state
-	forever.
-Message-ID: <20160420112445.GA2773@laptop.bfoster>
-References: <CAJBkf_egQ1WdYHm5iRXCt4=CgraN4A=HfLvvsZxJEi7g4sUf5A@mail.gmail.com>
-	<20160419113038.GA2649@laptop.bfoster>
-	<CAJBkf_dEDTE-2qCObaHPZgmu50nW3HP-DPFNAPyaMfuLJX+7NQ@mail.gmail.com>
-	<20160419193435.GA2667@laptop.bfoster>
-	<CAJBkf_cNm3Xoun+PnzgdKEGz0zQx2JGNhS4KoTuDYjPm=78w+g@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111]) by
+ oss.sgi.com (Postfix) with ESMTP id A945B7CA0 for <xfs@oss.sgi.com>; Tue, 19
+ Apr 2016 21:33:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11]) by
+ relay1.corp.sgi.com (Postfix) with ESMTP id 48F208F8035 for
+ <xfs@oss.sgi.com>; Tue, 19 Apr 2016 19:33:47 -0700 (PDT)
+Received: from mail163-133.dm.aliyun.com (mail163-133.dm.aliyun.com
+ [42.120.163.133]) by cuda.sgi.com with ESMTP id 82WAIxtYdDQWedgB for
+ <xfs@oss.sgi.com>; Tue, 19 Apr 2016 19:33:44 -0700 (PDT)
+LIST-HELP: <mailto:xfs-request@oss.sgi.com?subject=help>
+LIST-SUBSCRIBE: <http://oss.sgi.com/mailman/listinfo/xfs>,
+ <mailto:xfs-request@oss.sgi.com?subject=subscribe>
+LIST-UNSUBSCRIBE: <http://oss.sgi.com/mailman/options/xfs>,
+ <mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+LIST-POST: <mailto:xfs@oss.sgi.com>
+ERRORS-TO: xfs-bounces@oss.sgi.com
+LIST-ARCHIVE: <http://oss.sgi.com/pipermail/xfs>
+LIST-ID: XFS Filesystem from SGI <xfs.oss.sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJBkf_cNm3Xoun+PnzgdKEGz0zQx2JGNhS4KoTuDYjPm=78w+g@mail.gmail.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
+Message-ID: <20160420023346.F4014A420A4@cuda.sgi.com>
+Date: Tue, 19 Apr 2016 19:33:31 -0700 (PDT)
+From: "david@chinafivestar.net" <david@fence0501.w77-e1.ezcname.com>
 Sender: xfs-bounces@oss.sgi.com
-To: Hugo Kuo <hugo@swiftstack.com>
-Cc: Darrell Bishop <darrell@swiftstack.com>, xfs@oss.sgi.com
+Subject: RE: Galvanized wire factory Price
+Reply-To: david@fence0501.w77-e1.ezcname.com
+Content-Type: multipart/mixed;
+ boundary="__14611240494167098abhmp0018.oracle.com"
+To: xfs@oss.sgi.com
 
-On Wed, Apr 20, 2016 at 01:49:49PM +0800, Hugo Kuo wrote:
-> Hi XFS team,
-> 
-> 
-> Here's the lsof output of the grouped result of any openfile happens on
-> problematic disks. The full log of xfs_repair -n is included in this gist
-> as well. The xfs_repair recommend to contact xfs mailing list in the end of
-> the command.
-> 
-> https://gist.github.com/HugoKuo/95613d7864aa0a1343615642b3309451
-> 
-> Perhaps I should go ahead to reboot the machine and run the xfs_repair
-> again.  Please find my answers inlines.
-> 
+--__14611240494167098abhmp0018.oracle.com
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
-Yes, repair is crashing in this case. Best to try xfs_repair after
-you've rebooted and mounted/umounted the fs to replay the log. If it's
-still crashing at that point, we'll probably want a metadata image of
-the fs, if possible (though there's a good chance a newer xfsprogs has
-the problem fixed).
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
+Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
+bnQ9Ik1TSFRNTCAxMS4wMC45NjAwLjE4MjgzIj48L0hFQUQ+DQo8Qk9EWT4NCjxESVYgDQpzdHls
+ZT0iV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JN
+OiBub25lOyBDT0xPUjogcmdiKDAsMCwwKTsgRk9OVDogMTBwdCBWZXJkYW5hOyBXSURPV1M6IDE7
+IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1
+NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+RGVh
+ciANCk1hbmFnZXI8U1BBTiBjbGFzcz1BcHBsZS1jb252ZXJ0ZWQtc3BhY2U+Jm5ic3A7PC9TUEFO
+PjxTUEFOIGxhbmc9RU4tVVMgDQpzdHlsZT0iRk9OVC1GQU1JTFk6IFZlcmRhbmEiPjxGT05UIHN0
+eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBDYWxpYnJpIiANCnNpemU9MSBmYWNl
+PSIiPiw8L0ZPTlQ+PC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+IFZlcmRhbmEiPjw/eG1sOm5hbWVzcGFjZSBwcmVmaXggPSAibyIgLz48bzpwPjxGT05UIA0Kc3R5
+bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IENhbGlicmkiIHNpemU9MSANCmZhY2U9
+IiI+Jm5ic3A7PC9GT05UPjwvbzpwPjwvU1BBTj48L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUt
+U1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBD
+T0xPUjogcmdiKDAsMCwwKTsgRk9OVDogMTRweCAmIzM5O2x1Y2lkYSBHcmFuZGUmIzM5OywgVmVy
+ZGFuYTsgV0lET1dTOiAxOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9S
+OiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tl
+LXdpZHRoOiAwcHgiPg0KPERJVj4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJGT05ULVNJ
+WkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBDYWxpYnJpOyBNQVJHSU46IDBjbSAwY20gMHB0Ij48U1BB
+TiANCmxhbmc9RU4tVVMgc3R5bGU9IkZPTlQtRkFNSUxZOiBWZXJkYW5hIj48bzpwPjxGT05UIA0K
+c3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IENhbGlicmkiIHNpemU9MSANCmZh
+Y2U9IiI+PC9GT05UPjwvbzpwPjwvU1BBTj4mbmJzcDs8L1A+PFNQQU4gbGFuZz1FTi1VUyANCnN0
+eWxlPSJGT05ULUZBTUlMWTogVmVyZGFuYSI+PEZPTlQgc2l6ZT0zPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IENhbGlicmk7IEZPTlQtV0VJR0hUOiBub3JtYWwi
+Pg0KPFAgY2xhc3M9cDAgc3R5bGU9Ik1BUkdJTi1CT1RUT006IDBwdDsgTUFSR0lOLVRPUDogMHB0
+Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBDYWxpYnJpIj5H
+bGFkIHRvIGtub3cgeW91IGFyZSBpbiB0aGUgbWFya2V0IA0Kb2Y8U1BBTiBjbGFzcz1BcHBsZS1j
+b252ZXJ0ZWQtc3BhY2U+Jm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkNPTE9SOiByZ2IoMCww
+LDI1NSkiPldpcmUsIEdhbHZhbml6ZWQgV2lyZSwgQmxhY2sgV2lyZSwgV2lyZSBNZXNoIA0KUHJv
+dWRjdHMuPC9TUEFOPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1wMCBzdHlsZT0iTUFSR0lOLUJPVFRP
+TTogMHB0OyBNQVJHSU4tVE9QOiAwcHQiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsg
+Rk9OVC1GQU1JTFk6IENhbGlicmkiPjwvU1BBTj4mbmJzcDs8L1A+DQo8UCBjbGFzcz1wMCBzdHls
+ZT0iTUFSR0lOLUJPVFRPTTogMHB0OyBNQVJHSU4tVE9QOiAwcHQiPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IENhbGlicmkiPldlIGFyZTxTUEFOIA0KY2xhc3M9
+QXBwbGUtY29udmVydGVkLXNwYWNlPiZuYnNwOzwvU1BBTj48U1BBTiANCnN0eWxlPSJDT0xPUjog
+cmdiKDAsMCwyNTUpIj5kaXJlY3QgZmFjdG9yeTxTUEFOIA0KY2xhc3M9QXBwbGUtY29udmVydGVk
+LXNwYWNlPiZuYnNwOzwvU1BBTj48L1NQQU4+bG9jYXRlZCBpbiBBbnBpbmcsQ2hpbmEsIGNvdWxk
+IA0Kb2ZmZXIgeW91PFNQQU4gc3R5bGU9IkNPTE9SOiByZ2IoMCwwLDI1NSkiPjxTUEFOIA0KY2xh
+c3M9QXBwbGUtY29udmVydGVkLXNwYWNlPiZuYnNwOzwvU1BBTj5iZXR0ZXIgcHJpY2UgYW5kIA0K
+c2VydmljZTwvU1BBTj48L1NQQU4+PC9QPg0KPFAgY2xhc3M9cDAgc3R5bGU9Ik1BUkdJTi1CT1RU
+T006IDBwdDsgTUFSR0lOLVRPUDogMHB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7
+IEZPTlQtRkFNSUxZOiBDYWxpYnJpOyBDT0xPUjogcmdiKDAsMCwyNTUpIj50aGFuIHRoZSANCnRy
+YWRlcnMuPC9TUEFOPjwvUD4NCjxQIGNsYXNzPXAwIHN0eWxlPSJNQVJHSU4tQk9UVE9NOiAwcHQ7
+IE1BUkdJTi1UT1A6IDBwdCI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZB
+TUlMWTogQ2FsaWJyaSI+PC9TUEFOPiZuYnNwOzwvUD4NCjxQIGNsYXNzPXAwIHN0eWxlPSJNQVJH
+SU4tQk9UVE9NOiAwcHQ7IE1BUkdJTi1UT1A6IDBwdCI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpF
+OiAxMnB0OyBGT05ULUZBTUlMWTogQ2FsaWJyaSI+Q29udGFjdCBtZSBpZiB5b3UgbmVlZCBvdXIg
+DQpwcmljZS48L1NQQU4+PC9QPg0KPFAgY2xhc3M9cDAgc3R5bGU9Ik1BUkdJTi1CT1RUT006IDBw
+dDsgTUFSR0lOLVRPUDogMHB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQt
+RkFNSUxZOiBDYWxpYnJpIj48L1NQQU4+Jm5ic3A7PC9QPg0KPFAgY2xhc3M9cDAgc3R5bGU9Ik1B
+UkdJTi1CT1RUT006IDBwdDsgTUFSR0lOLVRPUDogMHB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJ
+WkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBDYWxpYnJpIj5XYWl0aW5nIGZvciB5b3VyIA0KcmVwbHku
+PC9TUEFOPjwvU1BBTj48L0ZPTlQ+PC9QPg0KPFA+PC9QPg0KPFAgY2xhc3M9TXNvTm9ybWFsIHN0
+eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0Ij48U1BBTiBsYW5nPUVOLVVTIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiBWZXJkYW5hIj48Rk9OVCBzdHlsZT0iRk9OVC1TSVpFOiAxMHB0IiBzaXplPTE+PC9G
+T05UPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBDYWxpYnJpIj48U1BBTiBzdHlsZT0iRk9O
+VC1TSVpFOiAxMXB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQiPkJlc3QgDQpSZWdh
+cmRzPC9TUEFOPjwvU1BBTj48L1NQQU4+PC9TUEFOPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+
+PEZPTlQgDQpzaXplPSswPjwvRk9OVD48U1BBTj48L1NQQU4+PC9QPjxTUEFOPjwvU1BBTj48U1BB
+Tj48L1NQQU4+PFNQQU4+PC9TUEFOPjxGT05UIA0Kc2l6ZT0rMD48L0ZPTlQ+PFNQQU4+PC9TUEFO
+PjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PFNQQU4+PC9TUEFOPjxTUEFOPjwvU1BBTj4NCjxQ
+IGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCI+PFNQQU4+PC9TUEFO
+PjxTUEFOPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgc3R5bGU9Ik1BUkdJTjogMGNt
+IDBjbSAwcHQiPjxGT05UIA0Kc2l6ZT0rMD48L0ZPTlQ+PFNQQU4+PC9TUEFOPjwvUD4NCjxQIGNs
+YXNzPU1zb05vcm1hbCANCnN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0Ij48U1BBTj48L1NQQU4+
+PFNQQU4+PC9TUEFOPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNv
+Tm9ybWFsIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0Ij48U1BBTj48L1NQQU4+PFNQQU4+PC9T
+UEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCI+
+PEZPTlQgDQpzaXplPSswPjwvRk9OVD48U1BBTj48L1NQQU4+PC9QPg0KPEhSIHN0eWxlPSJIRUlH
+SFQ6IDFweDsgV0lEVEg6IDIxMHB4IiBhbGlnbj1sZWZ0IGNvbG9yPSNiNWM0ZGYgU0laRT0xPg0K
+DQo8UD48L1A+DQo8UD48L1A+DQo8UD48L1A+PC9TUEFOPjwvRElWPjwvRElWPg0KPERJViANCnN0
+eWxlPSJXSElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZP
+Uk06IG5vbmU7IENPTE9SOiByZ2IoMCwwLDApOyBGT05UOiAxMnB0IENhbGlicmk7IFdJRE9XUzog
+MTsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUs
+MjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48
+U1BBTj4NCjxESVY+PC9ESVY+DQo8RElWPjwvRElWPg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5
+bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PFNQQU4+
+PC9TUEFOPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PFNQQU4+PC9TUEFOPjxTUEFOPjwvU1BB
+Tj48U1BBTj48L1NQQU4+PFNQQU4+PC9TUEFOPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PFNQ
+QU4+PC9TUEFOPjxTUEFOPjwvU1BBTj48U1BBTj48L1NQQU4+PFNQQU4gDQpsYW5nPUVOLVVTIHN0
+eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBWZXJkYW5hIj48U1BBTiANCnN0eWxl
+PSJGT05ULVNJWkU6IDExcHQiPjwvU1BBTj48L1NQQU4+PC9QPg0KPFRBQkxFIGNsYXNzPW1jZUl0
+ZW1UYWJsZSANCnN0eWxlPSJURVhULURFQ09SQVRJT046IG5vbmU7IFdJRFRIOiBhdXRvOyBXSElU
+RS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7
+IENPTE9SOiByZ2IoMCwwLDApOyBGT05UOiAxMXB4IHZlcmRhbmEsIGdlbmV2YSwgc2Fucy1zZXJp
+ZjsgV0lET1dTOiAxOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiBy
+Z2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdp
+ZHRoOiAwcHg7IGZvbnQtc3RyZXRjaDogbm9ybWFsIiANCmNlbGxTcGFjaW5nPTAgY2VsbFBhZGRp
+bmc9MyANCmRhdGEtbWNlLXN0eWxlPSJ3aWR0aDogYXV0bzsgZm9udC1mYW1pbHk6IHZlcmRhbmEg
+LCBnZW5ldmEgLCBzYW5zLXNlcmlmOyBmb250LXNpemU6IDExLjBweDsgdGV4dC1kZWNvcmF0aW9u
+OiBub25lOyI+DQogIDxUQk9EWT48L1RCT0RZPjwvVEFCTEU+PFNQQU4gc3R5bGU9IkZPTlQtU0la
+RTogMThweCIgDQpkYXRhLW1jZS1zdHlsZT0iZm9udC1zaXplOiAxOC4wcHg7Ij4NCjxESVY+PFNQ
+QU4gc3R5bGU9IkZPTlQtRkFNSUxZOiBDYWxpYnJpIj48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAx
+OHB4IiANCmRhdGEtbWNlLXN0eWxlPSJmb250LXNpemU6IDE4LjBweDsiPjxTUEFOIHN0eWxlPSJG
+T05ULUZBTUlMWTogQ2FsaWJyaSI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMXB0OyBGT05U
+LVdFSUdIVDogbm9ybWFsOyBGT05ULVNUWUxFOiBub3JtYWwiPkRhdmlkJm5ic3A7Jm5ic3A7Jm5i
+c3A7Jm5ic3A7PC9TUEFOPjwvU1BBTj48L1NQQU4+PC9TUEFOPjwvRElWPg0KPERJVj48U1BBTiBz
+dHlsZT0iRk9OVC1GQU1JTFk6IENhbGlicmkiPjxTUEFOIHN0eWxlPSJGT05ULVNJWkU6IDE4cHgi
+IA0KZGF0YS1tY2Utc3R5bGU9ImZvbnQtc2l6ZTogMTguMHB4OyI+PFNQQU4gc3R5bGU9IkZPTlQt
+RkFNSUxZOiBDYWxpYnJpIj48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDExcHQ7IEZPTlQtV0VJ
+R0hUOiBub3JtYWw7IEZPTlQtU1RZTEU6IG5vcm1hbCI+PC9TUEFOPjwvU1BBTj48L1NQQU4+PC9T
+UEFOPiZuYnNwOzwvRElWPg0KPERJVj48U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6IENhbGlicmki
+PjwvU1BBTj48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxOHB4IiANCmRhdGEtbWNlLXN0eWxlPSJm
+b250LXNpemU6IDE4LjBweDsiPjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQ2Fs
+aWJyaSI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMXB0OyBGT05ULVdFSUdIVDogbm9ybWFs
+OyBGT05ULVNUWUxFOiBub3JtYWwiPjxJTUcgDQpzdHlsZT0iQk9SREVSLVRPUDogbWVkaXVtIG5v
+bmU7IEhFSUdIVDogMzRweDsgQk9SREVSLVJJR0hUOiBtZWRpdW0gbm9uZTsgV0lEVEg6IDE4OXB4
+OyBWRVJUSUNBTC1BTElHTjogbWlkZGxlOyBCT1JERVItQk9UVE9NOiBtZWRpdW0gbm9uZTsgQk9S
+REVSLUxFRlQ6IG1lZGl1bSBub25lIiANCnNyYz0iY2lkOmltZzAuanBnIiB3aWR0aD0zNjQgaGVp
+Z2h0PTc2PjwvU1BBTj48L1NQQU4+PC9ESVY+PC9TUEFOPjwvU1BBTj48U1RST05HPjxFTT48Rk9O
+VCANCnNpemU9NT48Rk9OVCBmYWNlPUFyaWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTFw
+dDsgQk9SREVSLVRPUDogMHB4OyBGT05ULUZBTUlMWTogQ2FsaWJyaTsgQk9SREVSLVJJR0hUOiAw
+cHg7IEJPUkRFUi1CT1RUT006IDBweDsgQ09MT1I6IHJnYigwLDAsMTI4KTsgT1VUTElORS1XSURU
+SDogMHB4OyBQQURESU5HLUJPVFRPTTogMHB4OyBQQURESU5HLVRPUDogMHB4OyBPVVRMSU5FLVNU
+WUxFOiBub25lOyBQQURESU5HLUxFRlQ6IDBweDsgTUFSR0lOOiAwcHg7IEJPUkRFUi1MRUZUOiAw
+cHg7IE9VVExJTkUtQ09MT1I6IGludmVydDsgTElORS1IRUlHSFQ6IDEuNTsgUEFERElORy1SSUdI
+VDogMHB4Ij5GSVZFIA0KU1Q8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMXB0OyBC
+T1JERVItVE9QOiAwcHg7IEZPTlQtRkFNSUxZOiBDYWxpYnJpOyBCT1JERVItUklHSFQ6IDBweDsg
+Qk9SREVSLUJPVFRPTTogMHB4OyBDT0xPUjogcmdiKDI1NSwwLDApOyBPVVRMSU5FLVdJRFRIOiAw
+cHg7IFBBRERJTkctQk9UVE9NOiAwcHg7IFBBRERJTkctVE9QOiAwcHg7IE9VVExJTkUtU1RZTEU6
+IG5vbmU7IFBBRERJTkctTEVGVDogMHB4OyBNQVJHSU46IDBweDsgQk9SREVSLUxFRlQ6IDBweDsg
+T1VUTElORS1DT0xPUjogaW52ZXJ0OyBMSU5FLUhFSUdIVDogMS41OyBQQURESU5HLVJJR0hUOiAw
+cHgiPkE8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMXB0OyBCT1JERVItVE9QOiAw
+cHg7IEZPTlQtRkFNSUxZOiBDYWxpYnJpOyBCT1JERVItUklHSFQ6IDBweDsgQk9SREVSLUJPVFRP
+TTogMHB4OyBDT0xPUjogcmdiKDAsMCwxMjgpOyBPVVRMSU5FLVdJRFRIOiAwcHg7IFBBRERJTkct
+Qk9UVE9NOiAwcHg7IFBBRERJTkctVE9QOiAwcHg7IE9VVExJTkUtU1RZTEU6IG5vbmU7IFBBRERJ
+TkctTEVGVDogMHB4OyBNQVJHSU46IDBweDsgQk9SREVSLUxFRlQ6IDBweDsgT1VUTElORS1DT0xP
+UjogaW52ZXJ0OyBMSU5FLUhFSUdIVDogMS41OyBQQURESU5HLVJJR0hUOiAwcHgiPlIgDQpHUk9V
+UCAvPFNQQU4gY2xhc3M9QXBwbGUtY29udmVydGVkLXNwYWNlIA0Kc3R5bGU9IkZPTlQtU0laRTog
+MTFwdDsgRk9OVC1GQU1JTFk6IENhbGlicmkiPiZuYnNwOzwvU1BBTj48L1NQQU4+PC9GT05UPjwv
+Rk9OVD48L0VNPjwvU1RST05HPjxBIA0Kc3R5bGU9IkZPTlQtU0laRTogMTFwdDsgVEVYVC1ERUNP
+UkFUSU9OOiBub25lOyBGT05ULUZBTUlMWTogQ2FsaWJyaTsgQ09MT1I6IHJnYig0MCw1Myw3NSk7
+IE9VVExJTkUtV0lEVEg6IG1lZGl1bTsgT1VUTElORS1TVFlMRTogbm9uZTsgT1VUTElORS1DT0xP
+UjogaW52ZXJ0IiANCmhyZWY9Imh0dHA6Ly9mc3dpcmVtZXNoLmVuLmFsaWJhYmEuY29tLyIgdGFy
+Z2V0PV9ibGFuayANCmRhdGEtbWNlLXN0eWxlPSJ0ZXh0LWRlY29yYXRpb246IG5vbmU7IiANCmRh
+dGEtbWNlLWhyZWY9Imh0dHA6Ly9mc3dpcmVtZXNoLmVuLmFsaWJhYmEuY29tLyI+QW5waW5nIEZp
+dmUgU3RhciBXaXJlIE1lc2ggDQpDby4sIEx0ZC48L0E+PFNQQU4gY2xhc3M9QXBwbGUtY29udmVy
+dGVkLXNwYWNlPiZuYnNwOzwvU1BBTj48Rk9OVCBzaXplPTI+IA0KPERJViANCnN0eWxlPSJGT05U
+LVNJWkU6IDEwcHQ7IEZPTlQtRkFNSUxZOiBDYWxpYnJpIj5NOis4Ni0xNTkzMzk2MzgyMDxTVFJP
+Tkc+PEVNPjxGT05UIA0Kc3R5bGU9IkZPTlQtU0laRTogMTBwdDsgRk9OVC1GQU1JTFk6IENhbGli
+cmkiIHNpemU9MSANCmZhY2U9IiI+KHdoYXRzYXBwKTwvRk9OVD48L0VNPjwvU1RST05HPjxTUEFO
+IGNsYXNzPUFwcGxlLWNvbnZlcnRlZC1zcGFjZSANCnN0eWxlPSJGT05ULVNJWkU6IDEwcHQ7IEZP
+TlQtRkFNSUxZOiBDYWxpYnJpIj4mbmJzcDs8L1NQQU4+RjorODYtMzExLTg5MTgwNDMyPC9ESVY+
+PC9GT05UPiZuYnNwO0U6PFNQQU4gDQpjbGFzcz1BcHBsZS1jb252ZXJ0ZWQtc3BhY2UgDQpzdHls
+ZT0iRk9OVC1TSVpFOiAxMHB0OyBGT05ULUZBTUlMWTogQ2FsaWJyaSI+Jm5ic3A7PEEgDQpocmVm
+PSJtYWlsdG86ZGF2aWRAY2hpbmFmaXZlc3Rhci5uZXQiPmRhdmlkQGNoaW5hZml2ZXN0YXIubmV0
+PC9BPiA8L1NQQU4+Jm5ic3A7IA0KPERJViBzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBGT05ULUZB
+TUlMWTogQ2FsaWJyaTsgQ09MT1I6IHJnYigwLDAsMCkiPlc6PFNQQU4gDQpjbGFzcz1BcHBsZS1j
+b252ZXJ0ZWQtc3BhY2UgDQpzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBGT05ULUZBTUlMWTogQ2Fs
+aWJyaTsgQ09MT1I6IHJnYigwLDAsMCkiPiZuYnNwOzwvU1BBTj48QSANCnN0eWxlPSJURVhULURF
+Q09SQVRJT046IHVuZGVybGluZTsgQ09MT1I6IHJnYig0MCw1Myw3NSk7IE9VVExJTkUtV0lEVEg6
+IG1lZGl1bTsgT1VUTElORS1TVFlMRTogbm9uZTsgT1VUTElORS1DT0xPUjogaW52ZXJ0IiANCmhy
+ZWY9Imh0dHA6Ly93d3cuY2hpbmFmaXZlc3Rhci5uZXQvI2RhdmlkIiB0YXJnZXQ9X2JsYW5rIA0K
+ZGF0YS1tY2UtaHJlZj0iaHR0cDovL3d3dy5jaGluYWZpdmVzdGFyLm5ldC8jZGF2aWQiPjxTUEFO
+IA0Kc3R5bGU9IkZPTlQtU0laRTogMTBwdDsgRk9OVC1GQU1JTFk6IENhbGlicmk7IENPTE9SOiBy
+Z2IoMCwwLDApIiANCmRhdGEtbWNlLXN0eWxlPSJmb250LXNpemU6IDExcHQ7Ij5odHRwOi8vd3d3
+LmNoaW5hZml2ZXN0YXIubmV0LyNkYXZpZDwvU1BBTj48L0E+PC9ESVY+DQo8RElWPjxTUEFOPjxT
+UEFOIHN0eWxlPSJDT0xPUjogcmdiKDAsMCwwKSI+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTBw
+dCI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBGT05ULUZBTUlMWTogQ2FsaWJyaSI+
+Jm5ic3A7Jm5ic3A7Jm5ic3A7ICZuYnNwOzxTUEFOIA0KY2xhc3M9QXBwbGUtY29udmVydGVkLXNw
+YWNlPiZuYnNwOzwvU1BBTj48QSANCnN0eWxlPSJURVhULURFQ09SQVRJT046IHVuZGVybGluZTsg
+Q09MT1I6IHJnYig0MCw1Myw3NSk7IE9VVExJTkUtV0lEVEg6IG1lZGl1bTsgT1VUTElORS1TVFlM
+RTogbm9uZTsgT1VUTElORS1DT0xPUjogaW52ZXJ0IiANCmhyZWY9Imh0dHA6Ly9jaGluYXdlbGRl
+ZG1lc2gubmV0LyNkYXZpZCIgdGFyZ2V0PV9ibGFuaz48L0E+PFNQQU4+PFNQQU4gDQpzdHlsZT0i
+Q09MT1I6IHJnYigwLDAsMCkiPjxTUEFOIHN0eWxlPSJGT05ULVNJWkU6IDEwcHQiPjxTUEFOIA0K
+c3R5bGU9IkZPTlQtU0laRTogMTBwdDsgRk9OVC1GQU1JTFk6IENhbGlicmkiPjxGT05UIA0Kc3R5
+bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlMWTogQ2FsaWJyaSIgY29sb3I9IzAwNjZj
+YyBzaXplPTEgZmFjZT0iIj48QSANCnN0eWxlPSJURVhULURFQ09SQVRJT046IHVuZGVybGluZTsg
+Q09MT1I6IHJnYig0MCw1Myw3NSk7IE9VVExJTkUtV0lEVEg6IG1lZGl1bTsgT1VUTElORS1TVFlM
+RTogbm9uZTsgT1VUTElORS1DT0xPUjogaW52ZXJ0IiANCmhyZWY9Imh0dHA6Ly9jaGluYXdlbGRl
+ZG1lc2gubmV0LyNkYXZpZCIgDQp0YXJnZXQ9X2JsYW5rPmh0dHA6Ly9jaGluYTxXQlI+d2VsZGVk
+bWVzaC5uPFdCUj5ldC8jZGF2aWQ8L0E+PC9GT05UPjwvU1BBTj48L1NQQU4+PC9TUEFOPjwvU1BB
+Tj48L1NQQU4+PC9TUEFOPjwvU1BBTj48L1NQQU4+PEEgDQpzdHlsZT0iVEVYVC1ERUNPUkFUSU9O
+OiB1bmRlcmxpbmU7IENPTE9SOiByZ2IoNDAsNTMsNzUpOyBPVVRMSU5FLVdJRFRIOiBtZWRpdW07
+IE9VVExJTkUtU1RZTEU6IG5vbmU7IE9VVExJTkUtQ09MT1I6IGludmVydCI+PC9BPjwvRElWPiZu
+YnNwOyZuYnNwOyZuYnNwOzxTUEFOIA0KY2xhc3M9QXBwbGUtY29udmVydGVkLXNwYWNlPiZuYnNw
+OzwvU1BBTj48QSANCnN0eWxlPSJGT05ULVNJWkU6IDEwcHQ7IFRFWFQtREVDT1JBVElPTjogbm9u
+ZTsgRk9OVC1GQU1JTFk6IENhbGlicmk7IENPTE9SOiByZ2IoNDAsNTMsNzUpOyBPVVRMSU5FLVdJ
+RFRIOiBtZWRpdW07IE9VVExJTkUtU1RZTEU6IG5vbmU7IE9VVExJTkUtQ09MT1I6IGludmVydCIg
+DQpocmVmPSJodHRwOi8vZnN3aXJlbWVzaC5lbi5hbGliYWJhLmNvbS8iIHRhcmdldD1fYmxhbmsg
+DQpkYXRhLW1jZS1zdHlsZT0idGV4dC1kZWNvcmF0aW9uOiBub25lOyIgDQpkYXRhLW1jZS1ocmVm
+PSJodHRwOi8vZnN3aXJlbWVzaC5lbi5hbGliYWJhLmNvbS8iPlByb2R1Y3RzIFNob3dyb29tIG9u
+IA0KQWxpYmFiYS5jb208L0E+PC9ESVY+DQo8UD48QSBocmVmPSJtYWlsdG86I1Vuc3Vic2NyaWJl
+TWFpbCMiPklmIHlvdSB3aXNoIHRvIHVuc3Vic2NyaWJlIHRvIHRoaXMgYW5kIGFsbCANCmZ1dHVy
+ZSBlbWFpbHMgLHBsZWFzZSBjbGljayBoZXJlPC9BPiA8L1A+PC9CT0RZPjwvSFRNTD4NCg0K
 
-> 
-> On Wed, Apr 20, 2016 at 3:34 AM, Brian Foster <bfoster@redhat.com> wrote:
-> 
-> >
-> > So there's definitely some traces waiting on AGF locks and whatnot, but
-> > also many traces that appear to be waiting on I/O. For example:
-> >
-> 
-> Yes, those I/O waiting is the original problem of this thread. It looks
-> like the disk was locked. All these I/O waiting for same disk (a multipath
-> entry).
-> 
-> 
-> >
-> > kernel: swift-object- D 0000000000000008     0  2096   1605 0x00000000
-> > kernel: ffff8877cc2378b8 0000000000000082 ffff8877cc237818 ffff887ff016eb68
-> > kernel: ffff883fd4ab6b28 0000000000000046 ffff883fd4bd9400 00000001e7ea49d0
-> > kernel: ffff8877cc237848 ffffffff812735d1 ffff885fa2e4a5f8 ffff8877cc237fd8
-> > kernel: Call Trace:
-> > kernel: [<ffffffff812735d1>] ? __blk_run_queue+0x31/0x40
-> > kernel: [<ffffffff81539455>] schedule_timeout+0x215/0x2e0
-> > kernel: [<ffffffff812757c9>] ? blk_peek_request+0x189/0x210
-> > kernel: [<ffffffff8126d9b3>] ? elv_queue_empty+0x33/0x40
-> > kernel: [<ffffffffa00040a0>] ? dm_request_fn+0x240/0x340 [dm_mod]
-> > kernel: [<ffffffff815390d3>] wait_for_common+0x123/0x180
-> > kernel: [<ffffffff810672b0>] ? default_wake_function+0x0/0x20
-> > kernel: [<ffffffffa0001036>] ? dm_unplug_all+0x36/0x50 [dm_mod]
-> > kernel: [<ffffffffa0415b56>] ? _xfs_buf_read+0x46/0x60 [xfs]
-> > kernel: [<ffffffffa040b417>] ? xfs_trans_read_buf+0x197/0x410 [xfs]
-> > kernel: [<ffffffff815391ed>] wait_for_completion+0x1d/0x20
-> > kernel: [<ffffffffa041503b>] xfs_buf_iowait+0x9b/0x100 [xfs]
-> > kernel: [<ffffffffa040b417>] ? xfs_trans_read_buf+0x197/0x410 [xfs]
-> > kernel: [<ffffffffa0415b56>] _xfs_buf_read+0x46/0x60 [xfs]
-> > kernel: [<ffffffffa0415c1b>] xfs_buf_read+0xab/0x100 [xfs]
-> >
-> >
-> > Are all of these swift processes running against independent storage, or
-> > one big array? Also, can you tell (e.g., with iotop) whether progress is
-> > being made here, albiet very slowly, or if the storage is indeed locked
-> > up..?
-> >
-> > There're 240+ swift processes in running.
-> All stuck swift processes were attempting to access same disk.  I can
-> confirm it's indeed locked rather than slowly. By monitoring io via iotop.
-> There's 0 activity one the problematic mount point.
-> 
-> 
-> > In any event, given the I/O hangs, the fact that you're on an old distro
-> > kernel and you have things like multipath enabled, it might be
-> > worthwhile to see if you can rule out any multipath issues.
-> >
-> >
-> To upgrade the kernel for CentOS6.5 may not the option for the time being
-> but it definitely worth to give it try by picking up one of nodes for
-> testing later. As for the multipath, yes I did suspect some mystery problem
-> with multipath + XFS under a certain loading. But it's more like a XFS and
-> inode related hence I start to investigate from XFS. If there's no chance
-> to move forward in XFS, I might break the multipath and observe the result
-> for awhile.
-> 
 
-It's hard to pinpoint something to the fs when there's a bunch of hung
-I/Os. You probably want to track down the source of those problems
-first.
-
-Brian
-
-> 
-> >
-> > 'umount -l' doesn't necessarily force anything. It just lazily unmounts
-> > the fs from the namespace and cleans up the mount once all references
-> > are dropped. I suspect the fs is still mounted internally.
-> >
-> > Brian
-> >
-> >
-> Thanks // Hugo
+--__14611240494167098abhmp0018.oracle.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--__14611240494167098abhmp0018.oracle.com--
