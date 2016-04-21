@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 428A97D1E
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 19:11:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BDDBAC003
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 17:11:46 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	tXdcXWoMHlGjetJR for <xfs@oss.sgi.com>;
-	Fri, 29 Apr 2016 17:11:42 -0700 (PDT)
-Date: Sat, 30 Apr 2016 10:11:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] scop GFP_NOFS api
-Message-ID: <20160430001138.GO26977@dastard>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<8737q5ugcx.fsf@notabene.neil.brown.name>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <8737q5ugcx.fsf@notabene.neil.brown.name>
+	by oss.sgi.com (Postfix) with ESMTP id 41BA57CAE
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A8EC0AC002
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id L3WyR3CODu8OAWzH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:06 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 14F4B64067
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:06 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0P007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:05 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 12/19] mkfs: merge getnum
+Date: Thu, 21 Apr 2016 11:39:46 +0200
+Message-Id: <1461231593-31294-13-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,145 +33,606 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: NeilBrown <mr@neil.brown.name>
-Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Michal Hocko <mhocko@kernel.org>, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, logfs@logfs.org, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
+To: xfs@oss.sgi.com
 
-On Fri, Apr 29, 2016 at 03:35:42PM +1000, NeilBrown wrote:
-> On Tue, Apr 26 2016, Michal Hocko wrote:
-> 
-> > Hi,
-> > we have discussed this topic at LSF/MM this year. There was a general
-> > interest in the scope GFP_NOFS allocation context among some FS
-> > developers. For those who are not aware of the discussion or the issue
-> > I am trying to sort out (or at least start in that direction) please
-> > have a look at patch 1 which adds memalloc_nofs_{save,restore} api
-> > which basically copies what we have for the scope GFP_NOIO allocation
-> > context. I haven't converted any of the FS myself because that is way
-> > beyond my area of expertise but I would be happy to help with further
-> > changes on the MM front as well as in some more generic code paths.
-> >
-> > Dave had an idea on how to further improve the reclaim context to be
-> > less all-or-nothing wrt. GFP_NOFS. In short he was suggesting an opaque
-> > and FS specific cookie set in the FS allocation context and consumed
-> > by the FS reclaim context to allow doing some provably save actions
-> > that would be skipped due to GFP_NOFS normally.  I like this idea and
-> > I believe we can go that direction regardless of the approach taken here.
-> > Many filesystems simply need to cleanup their NOFS usage first before
-> > diving into a more complex changes.>
-> 
-> This strikes me as over-engineering to work around an unnecessarily
-> burdensome interface.... but without details it is hard to be certain.
-> 
-> Exactly what things happen in "FS reclaim context" which may, or may
-> not, be safe depending on the specific FS allocation context?  Do they
-> need to happen at all?
-> 
-> My research suggests that for most filesystems the only thing that
-> happens in reclaim context that is at all troublesome is the final
-> 'evict()' on an inode.  This needs to flush out dirty pages and sync the
-> inode to storage.  Some time ago we moved most dirty-page writeout out
-> of the reclaim context and into kswapd.  I think this was an excellent
-> advance in simplicity.
+From: Dave Chinner <dchinner@redhat.com>
 
-No, we didn't move dirty page writeout to kswapd - we moved it back
-to the background writeback threads where it can be done
-efficiently.  kswapd should almost never do single page writeback
-because of how inefficient it is from an IO perspective, even though
-it can. i.e. if we are doing any significant amount of dirty page
-writeback from memory reclaim (direct, kswapd or otherwise) then
-we've screwed something up.
+getnum() is now only called by getnum_checked(). Move the two
+together into a single getnum() function and change all the callers
+back to getnum().
 
-> If we could similarly move evict() into kswapd (and I believe we can)
-> then most file systems would do nothing in reclaim context that
-> interferes with allocation context.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/xfs_multidisk.h |   4 +-
+ mkfs/proto.c            |  20 +++++
+ mkfs/xfs_mkfs.c         | 213 ++++++++++++++++++++++--------------------------
+ 3 files changed, 119 insertions(+), 118 deletions(-)
 
-When lots of GFP_NOFS allocation is being done, this already
-happens. The shrinkers that can't run due to context accumulate the
-work on the shrinker structure, and when the shrinker can next run
-(e.g. run from kswapd) it runs all the deferred work from GFP_NOFS
-reclaim contexts.
-
-IOWs, we already move shrinker work from direct reclaim to kswapd
-when appropriate.
-
-> The exceptions include:
->  - nfs and any filesystem using fscache can block for up to 1 second
->    in ->releasepage().  They used to block waiting for some IO, but that
->    caused deadlocks and wasn't really needed.  I left the timeout because
->    it seemed likely that some throttling would help.  I suspect that a
->    careful analysis will show that there is sufficient throttling
->    elsewhere.
-> 
->  - xfs_qm_shrink_scan is nearly unique among shrinkers in that it waits
->    for IO so it can free some quotainfo things. 
-
-No it's not. evict() can block on IO - waiting for data or inode
-writeback to complete, or even for filesystems to run transactions
-on the inode. Hence the superblock shrinker can and does block in
-inode cache reclaim.
-
-Indeed, blocking the superblock shrinker in reclaim is a key part of
-balancing inode cache pressure in XFS. If the shrinker starts
-hitting dirty inodes, it blocks on cleaning them, thereby slowing
-the rate of allocation to that which inodes can be cleaned and
-reclaimed. There are also background threads that walk ahead freeing
-clean inodes, but we have to throttle direct reclaim in this manner
-otherwise the allocation pressure vastly outweighs the ability to
-reclaim inodes. if we don't balance this, inode allocation triggers
-the OOM killer because reclaim keeps reporting "no progress being
-made" because dirty inodes are skipped. BY blocking on such inodes,
-the shrinker makes progress (slowly) and reclaim sees that memory is
-being freed and so continues without invoking the OOM killer...
-
->    If it could be changed
->    to just schedule the IO without waiting for it then I think this
->    would be safe to be called in any FS allocation context.  It already
->    uses a 'trylock' in xfs_dqlock_nowait() to avoid deadlocking
->    if the lock is held.
-
-We could, but then we have the same problem as the inode cache -
-there's no indication of progress going back to the memory reclaim
-subsystem, nor is reclaim able to throttle memory allocation back to
-the rate at which reclaim is making progress.
-
-There's feedback loops all throughout the XFS reclaim code - it's
-designed specifically that way - I made changes to the shrinker
-infrastructure years ago to enable this. It's no different to the
-dirty page throttling that was done at roughly the same time -
-that's also one big feedback loop controlled by the rate at which
-pages can be cleaned. Indeed, it was designed was based on the same
-premise as all the XFS shrinker code: in steady state conditions
-we can't allocate a resource faster than we can reclaim it, so we
-need to make reclaim as efficient at possible...
-
-> I think you/we would end up with a much simpler system if instead of
-> focussing on the places where GFP_NOFS is used, we focus on places where
-> __GFP_FS is tested, and try to remove them.  If we get rid of enough of
-> them the remainder could just use __GFP_IO.
-
-The problem with this is that a single kswapd thread can't keep up
-with all of the allocation pressure that occurs. e.g. a 20-core
-intel CPU with local memory will be seen as a single node and so
-will have a single kswapd thread to do reclaim. There's a massive
-imbalance between maximum reclaim rate and maximum allocation rate
-in situations like this. If we want memory reclaim to run faster,
-we to be able to do more work *now*, not defer it to a context with
-limited execution resources.
-
-i.e. IMO deferring more work to a single reclaim thread per node is
-going to limit memory reclaim scalability and performance, not
-improve it.
-
-Cheers,
-
-Dave.
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index ecc8f0a..fe3e98f 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -57,8 +57,8 @@
+ #define XFS_NOMULTIDISK_AGLOG		2	/* 4 AGs */
+ #define XFS_MULTIDISK_AGCOUNT		(1 << XFS_MULTIDISK_AGLOG)
+ 
+-extern long long getnum(const char *str, unsigned int blocksize,
+-			unsigned int sectorsize, bool convert);
++extern long long cvtnum(unsigned int blksize, unsigned int sectsize,
++			const char *str);
+ 
+ /* proto.c */
+ extern char *setup_proto (char *fname);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 19943cb..09a9439 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -43,6 +43,26 @@ static long filesize(int fd);
+ 	((uint)(MKFS_BLOCKRES_INODE + XFS_DA_NODE_MAXDEPTH + \
+ 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
+ 
++static long long
++getnum(
++	const char	*str,
++	unsigned int	blksize,
++	unsigned int	sectsize,
++	bool		convert)
++{
++	long long	i;
++	char		*sp;
++
++	if (convert)
++		return cvtnum(blksize, sectsize, str);
++
++	i = strtoll(str, &sp, 0);
++	if (i == 0 && sp == str)
++		return -1LL;
++	if (*sp != '\0')
++		return -1LL; /* trailing garbage */
++	return i;
++}
+ 
+ char *
+ setup_proto(
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8551b09..a45dc7f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -45,9 +45,6 @@ static void respec(char opt, char *tab[], int idx);
+ static void unknown(char opt, char *s);
+ static int  ispow2(unsigned int i);
+ 
+-static long long cvtnum(unsigned int blocksize,
+-			unsigned int sectorsize, const char *s);
+-
+ /*
+  * The configured block and sector sizes are defined as global variables so
+  * that they don't need to be passed to functions that require them.
+@@ -1381,27 +1378,6 @@ sb_set_features(
+ 
+ }
+ 
+-long long
+-getnum(
+-	const char	*str,
+-	unsigned int	blksize,
+-	unsigned int	sectsize,
+-	bool		convert)
+-{
+-	long long	i;
+-	char		*sp;
+-
+-	if (convert)
+-		return cvtnum(blksize, sectsize, str);
+-
+-	i = strtoll(str, &sp, 0);
+-	if (i == 0 && sp == str)
+-		return -1LL;
+-	if (*sp != '\0')
+-		return -1LL; /* trailing garbage */
+-	return i;
+-}
+-
+ static __attribute__((noreturn)) void
+ illegal_option(
+ 	const char	*value,
+@@ -1415,7 +1391,7 @@ illegal_option(
+ }
+ 
+ static long long
+-getnum_checked(
++getnum(
+ 	const char		*str,
+ 	struct opt_params	*opts,
+ 	int			index)
+@@ -1435,6 +1411,7 @@ getnum_checked(
+ 		respec(opts->name, (char **)opts->subopts, index);
+ 	sp->seen = true;
+ 
++	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+ 		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+@@ -1449,7 +1426,25 @@ getnum_checked(
+ 		exit(1);
+ 	}
+ 
+-	c = getnum(str, blocksize, sectorsize, sp->convert);
++	/*
++	 * Some values are pure numbers, others can have suffixes that define
++	 * the units of the number. Those get passed to cvtnum(), otherwise we
++	 * convert it ourselves to guarantee there is no trailing garbage in the
++	 * number.
++	 */
++	if (sp->convert)
++		c = cvtnum(blocksize, sectorsize, str);
++	else {
++		char		*str_end;
++
++		c = strtoll(str, &str_end, 0);
++		if (c == 0 && str_end == str)
++			illegal_option(str, opts, index);
++		if (*str_end != '\0')
++			illegal_option(str, opts, index);
++	}
++
++	/* Validity check the result. */
+ 	if (c < sp->minval || c > sp->maxval)
+ 		illegal_option(str, opts, index);
+ 	if (sp->is_power_2 && !ispow2(c))
+@@ -1614,8 +1609,7 @@ main(
+ 					if (bsflag)
+ 						conflict('b', subopts, B_SIZE,
+ 							 B_LOG);
+-					blocklog = getnum_checked(value, &bopts,
+-								  B_LOG);
++					blocklog = getnum(value, &bopts, B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
+ 					break;
+@@ -1623,8 +1617,8 @@ main(
+ 					if (blflag)
+ 						conflict('b', subopts, B_LOG,
+ 							 B_SIZE);
+-					blocksize = getnum_checked(value, &bopts,
+-								  B_SIZE);
++					blocksize = getnum(value, &bopts,
++							   B_SIZE);
+ 					blocklog = libxfs_highbit32(blocksize);
+ 					bsflag = 1;
+ 					break;
+@@ -1642,18 +1636,17 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case D_AGCOUNT:
+-					agcount = getnum_checked(value, &dopts,
+-								 D_AGCOUNT);
++					agcount = getnum(value, &dopts,
++							 D_AGCOUNT);
+ 					daflag = 1;
+ 					break;
+ 				case D_AGSIZE:
+-					agsize = getnum_checked(value, &dopts,
+-								 D_AGSIZE);
++					agsize = getnum(value, &dopts, D_AGSIZE);
+ 					dasize = 1;
+ 					break;
+ 				case D_FILE:
+-					xi.disfile = getnum_checked(value,
+-								&dopts, D_FILE);
++					xi.disfile = getnum(value, &dopts,
++							    D_FILE);
+ 					if (xi.disfile && !Nflag)
+ 						xi.dcreat = 1;
+ 					break;
+@@ -1675,33 +1668,30 @@ main(
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SUNIT);
+-					dsunit = getnum_checked(value, &dopts,
+-								 D_SUNIT);
++					dsunit = getnum(value, &dopts, D_SUNIT);
+ 					break;
+ 				case D_SWIDTH:
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SWIDTH);
+-					dswidth = getnum_checked(value, &dopts,
+-								 D_SWIDTH);
++					dswidth = getnum(value, &dopts,
++							 D_SWIDTH);
+ 					break;
+ 				case D_SU:
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SU);
+-					dsu = getnum_checked(value, &dopts,
+-								 D_SU);
++					dsu = getnum(value, &dopts, D_SU);
+ 					break;
+ 				case D_SW:
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SW);
+-					dsw = getnum_checked(value, &dopts,
+-								 D_SW);
++					dsw = getnum(value, &dopts, D_SW);
+ 					break;
+ 				case D_NOALIGN:
+-					nodsflag = getnum_checked(value,
+-								&dopts, D_NOALIGN);
++					nodsflag = getnum(value, &dopts,
++							 	D_NOALIGN);
+ 					if (nodsflag) {
+ 						if (dsu)
+ 							conflict('d', subopts, D_SU,
+@@ -1721,8 +1711,8 @@ main(
+ 					if (ssflag)
+ 						conflict('d', subopts, D_SECTSIZE,
+ 							 D_SECTLOG);
+-					sectorlog = getnum_checked(value, &dopts,
+-								   D_SECTLOG);
++					sectorlog = getnum(value, &dopts,
++							   D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
+ 					break;
+@@ -1730,28 +1720,27 @@ main(
+ 					if (slflag)
+ 						conflict('d', subopts, D_SECTLOG,
+ 							 D_SECTSIZE);
+-					sectorsize = getnum_checked(value,
+-							&dopts, D_SECTSIZE);
++					sectorsize = getnum(value, &dopts,
++							    D_SECTSIZE);
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+ 					ssflag = 1;
+ 					break;
+ 				case D_RTINHERIT:
+-					c = getnum_checked(value, &dopts,
+-							   D_RTINHERIT);
++					c = getnum(value, &dopts, D_RTINHERIT);
+ 					if (c)
+ 						fsx.fsx_xflags |=
+ 							XFS_DIFLAG_RTINHERIT;
+ 					break;
+ 				case D_PROJINHERIT:
+-					fsx.fsx_projid = getnum_checked(value,
+-							&dopts, D_PROJINHERIT);
++					fsx.fsx_projid = getnum(value, &dopts,
++								D_PROJINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_PROJINHERIT;
+ 					break;
+ 				case D_EXTSZINHERIT:
+-					fsx.fsx_extsize = getnum_checked(value,
+-							&dopts, D_EXTSZINHERIT);
++					fsx.fsx_extsize = getnum(value, &dopts,
++								 D_EXTSZINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_EXTSZINHERIT;
+ 					break;
+@@ -1769,8 +1758,8 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case I_ALIGN:
+-					sb_feat.inode_align = getnum_checked(
+-							value, &iopts, I_ALIGN);
++					sb_feat.inode_align = getnum(value,
++								&iopts, I_ALIGN);
+ 					break;
+ 				case I_LOG:
+ 					if (ipflag)
+@@ -1779,14 +1768,13 @@ main(
+ 					if (isflag)
+ 						conflict('i', subopts, I_SIZE,
+ 							 I_LOG);
+-					inodelog = getnum_checked(value, &iopts,
+-								  I_LOG);
++					inodelog = getnum(value, &iopts, I_LOG);
+ 					isize = 1 << inodelog;
+ 					ilflag = 1;
+ 					break;
+ 				case I_MAXPCT:
+-					imaxpct = getnum_checked(value, &iopts,
+-								 I_MAXPCT);
++					imaxpct = getnum(value, &iopts,
++							 I_MAXPCT);
+ 					imflag = 1;
+ 					break;
+ 				case I_PERBLOCK:
+@@ -1796,8 +1784,8 @@ main(
+ 					if (isflag)
+ 						conflict('i', subopts, I_SIZE,
+ 							 I_PERBLOCK);
+-					inopblock = getnum_checked(value, &iopts,
+-								   I_PERBLOCK);
++					inopblock = getnum(value, &iopts,
++							   I_PERBLOCK);
+ 					ipflag = 1;
+ 					break;
+ 				case I_SIZE:
+@@ -1807,23 +1795,22 @@ main(
+ 					if (ipflag)
+ 						conflict('i', subopts, I_PERBLOCK,
+ 							 I_SIZE);
+-					isize = getnum_checked(value, &iopts,
+-							       I_SIZE);
++					isize = getnum(value, &iopts, I_SIZE);
+ 					inodelog = libxfs_highbit32(isize);
+ 					isflag = 1;
+ 					break;
+ 				case I_ATTR:
+-					sb_feat.attr_version = getnum_checked(
+-							value, &iopts, I_ATTR);
++					sb_feat.attr_version =
++						getnum(value, &iopts, I_ATTR);
+ 					break;
+ 				case I_PROJID32BIT:
+ 					sb_feat.projid16bit =
+-						!getnum_checked(value, &iopts,
+-								I_PROJID32BIT);
++						!getnum(value, &iopts,
++							I_PROJID32BIT);
+ 					break;
+ 				case I_SPINODES:
+ 					sb_feat.spinodes =
+-						getnum_checked(value, &iopts,
++						getnum(value, &iopts,
+ 								I_SPINODES);
+ 					break;
+ 				default:
+@@ -1842,13 +1829,12 @@ main(
+ 				case L_AGNUM:
+ 					if (ldflag)
+ 						conflict('l', subopts, L_AGNUM, L_DEV);
+-					logagno = getnum_checked(value, &lopts,
+-								 L_AGNUM);
++					logagno = getnum(value, &lopts, L_AGNUM);
+ 					laflag = 1;
+ 					break;
+ 				case L_FILE:
+-					xi.lisfile = getnum_checked(value,
+-								&lopts, L_FILE);
++					xi.lisfile = getnum(value, &lopts,
++							    L_FILE);
+ 					if (xi.lisfile && loginternal)
+ 						conflict('l', subopts, L_INTERNAL,
+ 							 L_FILE);
+@@ -1862,18 +1848,16 @@ main(
+ 						conflict('l', subopts, L_FILE,
+ 							 L_INTERNAL);
+ 
+-					loginternal = getnum_checked(value,
+-							&lopts, L_INTERNAL);
++					loginternal = getnum(value, &lopts,
++							     L_INTERNAL);
+ 					liflag = 1;
+ 					break;
+ 				case L_SU:
+-					lsu = getnum_checked(value, &lopts,
+-								 L_SU);
++					lsu = getnum(value, &lopts, L_SU);
+ 					lsuflag = 1;
+ 					break;
+ 				case L_SUNIT:
+-					lsunit = getnum_checked(value, &lopts,
+-								 L_SUNIT);
++					lsunit = getnum(value, &lopts, L_SUNIT);
+ 					lsunitflag = 1;
+ 					break;
+ 				case L_NAME:
+@@ -1893,8 +1877,7 @@ main(
+ 					break;
+ 				case L_VERSION:
+ 					sb_feat.log_version =
+-						getnum_checked(value, &lopts,
+-							       L_VERSION);
++						getnum(value, &lopts, L_VERSION);
+ 					lvflag = 1;
+ 					break;
+ 				case L_SIZE:
+@@ -1909,8 +1892,8 @@ main(
+ 					if (lssflag)
+ 						conflict('l', subopts, L_SECTSIZE,
+ 							 L_SECTLOG);
+-					lsectorlog = getnum_checked(value,
+-							&lopts, L_SECTLOG);
++					lsectorlog = getnum(value, &lopts,
++							    L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
+ 					break;
+@@ -1918,15 +1901,15 @@ main(
+ 					if (lslflag)
+ 						conflict('l', subopts, L_SECTLOG,
+ 							 L_SECTSIZE);
+-					lsectorsize = getnum_checked(value,
+-							&lopts, L_SECTSIZE);
++					lsectorsize = getnum(value, &lopts,
++							     L_SECTSIZE);
+ 					lsectorlog =
+ 						libxfs_highbit32(lsectorsize);
+ 					lssflag = 1;
+ 					break;
+ 				case L_LAZYSBCNTR:
+ 					sb_feat.lazy_sb_counters =
+-						getnum_checked(value, &lopts,
++							getnum(value, &lopts,
+ 							       L_LAZYSBCNTR);
+ 					break;
+ 				default:
+@@ -1949,13 +1932,12 @@ main(
+ 						  &value)) {
+ 				case M_CRC:
+ 					sb_feat.crcs_enabled =
+-						getnum_checked(value, &mopts,
+-							       M_CRC);
++						getnum(value, &mopts, M_CRC);
+ 					if (sb_feat.crcs_enabled)
+ 						sb_feat.dirftype = true;
+ 					break;
+ 				case M_FINOBT:
+-					sb_feat.finobt = getnum_checked(
++					sb_feat.finobt = getnum(
+ 						value, &mopts, M_FINOBT);
+ 					break;
+ 				case M_UUID:
+@@ -1981,8 +1963,8 @@ main(
+ 					if (nsflag)
+ 						conflict('n', subopts, N_SIZE,
+ 							 N_LOG);
+-					dirblocklog = getnum_checked(value,
+-								&nopts, N_LOG);
++					dirblocklog = getnum(value, &nopts,
++							     N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
+ 					break;
+@@ -1990,8 +1972,8 @@ main(
+ 					if (nlflag)
+ 						conflict('n', subopts, N_LOG,
+ 							 N_SIZE);
+-					dirblocksize = getnum_checked(value,
+-								&nopts, N_SIZE);
++					dirblocksize = getnum(value, &nopts,
++							      N_SIZE);
+ 					dirblocklog =
+ 						libxfs_highbit32(dirblocksize);
+ 					nsflag = 1;
+@@ -2006,15 +1988,14 @@ main(
+ 						sb_feat.nci = true;
+ 					} else {
+ 						sb_feat.dir_version =
+-							getnum_checked(value,
+-								&nopts,
+-								N_VERSION);
++							getnum(value, &nopts,
++							       N_VERSION);
+ 					}
+ 					nvflag = 1;
+ 					break;
+ 				case N_FTYPE:
+-					sb_feat.dirftype = getnum_checked(value,
+-								&nopts, N_FTYPE);
++					sb_feat.dirftype = getnum(value, &nopts,
++								  N_FTYPE);
+ 					break;
+ 				default:
+ 					unknown('n', value);
+@@ -2051,8 +2032,8 @@ main(
+ 					rtextsize = value;
+ 					break;
+ 				case R_FILE:
+-					xi.risfile = getnum_checked(value,
+-								&ropts, R_FILE);
++					xi.risfile = getnum(value, &ropts,
++							    R_FILE);
+ 					if (xi.risfile)
+ 						xi.rcreat = 1;
+ 					break;
+@@ -2072,8 +2053,8 @@ main(
+ 					rtsize = value;
+ 					break;
+ 				case R_NOALIGN:
+-					norsflag = getnum_checked(value,
+-								&ropts, R_NOALIGN);
++					norsflag = getnum(value, &ropts,
++								R_NOALIGN);
+ 					break;
+ 				default:
+ 					unknown('r', value);
+@@ -2093,8 +2074,8 @@ main(
+ 					if (ssflag || lssflag)
+ 						conflict('s', subopts,
+ 							 S_SECTSIZE, S_SECTLOG);
+-					sectorlog = getnum_checked(value, &sopts,
+-								   S_SECTLOG);
++					sectorlog = getnum(value, &sopts,
++							   S_SECTLOG);
+ 					lsectorlog = sectorlog;
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+@@ -2105,8 +2086,8 @@ main(
+ 					if (slflag || lslflag)
+ 						conflict('s', subopts, S_SECTLOG,
+ 							 S_SECTSIZE);
+-					sectorsize = getnum_checked(value,
+-							&sopts, S_SECTSIZE);
++					sectorsize = getnum(value, &sopts,
++							    S_SECTSIZE);
+ 					lsectorsize = sectorsize;
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+@@ -2335,7 +2316,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
+ 	if (dsize) {
+ 		__uint64_t dbytes;
+ 
+-		dbytes = getnum_checked(dsize, &dopts, D_SIZE);
++		dbytes = getnum(dsize, &dopts, D_SIZE);
+ 		if (dbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal data length %lld, not a multiple of %d\n"),
+@@ -2372,7 +2353,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
+ 	if (logsize) {
+ 		__uint64_t logbytes;
+ 
+-		logbytes = getnum_checked(logsize, &lopts, L_SIZE);
++		logbytes = getnum(logsize, &lopts, L_SIZE);
+ 		if (logbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal log length %lld, not a multiple of %d\n"),
+@@ -2394,7 +2375,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
+ 	if (rtsize) {
+ 		__uint64_t rtbytes;
+ 
+-		rtbytes = getnum_checked(rtsize, &ropts, R_SIZE);
++		rtbytes = getnum(rtsize, &ropts, R_SIZE);
+ 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+ 			fprintf(stderr,
+ 			_("illegal rt length %lld, not a multiple of %d\n"),
+@@ -2414,7 +2395,7 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
+ 	if (rtextsize) {
+ 		__uint64_t rtextbytes;
+ 
+-		rtextbytes = getnum_checked(rtextsize, &ropts, R_EXTSIZE);
++		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
+ 		if (rtextbytes % blocksize) {
+ 			fprintf(stderr,
+ 		_("illegal rt extent size %lld, not a multiple of %d\n"),
+@@ -3517,8 +3498,8 @@ unknown(
+ 
+ long long
+ cvtnum(
+-	unsigned int	blocksize,
+-	unsigned int	sectorsize,
++	unsigned int	blksize,
++	unsigned int	sectsize,
+ 	const char	*s)
+ {
+ 	long long	i;
+@@ -3531,9 +3512,9 @@ cvtnum(
+ 		return i;
+ 
+ 	if (*sp == 'b' && sp[1] == '\0')
+-		return i * blocksize;
++		return i * blksize;
+ 	if (*sp == 's' && sp[1] == '\0')
+-		return i * sectorsize;
++		return i * sectsize;
+ 
+ 	if (*sp == 'k' && sp[1] == '\0')
+ 		return 1024LL * i;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.0
 
 _______________________________________________
 xfs mailing list
