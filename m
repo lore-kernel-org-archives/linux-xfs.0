@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3C5DD7D69
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 14:30:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A01DBAC001
-	for <xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:30:46 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id H67FSCQJR615m1Vq (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 133407CA6
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5812DAC006
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:39:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dYoOB010S6OPbnR9 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Apr 2016 12:30:44 -0700 (PDT)
-Date: Fri, 15 Apr 2016 12:29:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: XFS reverse-mapping, reflink, and online fs scrub update
-Message-ID: <20160415192935.GF18517@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:39:58 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 82DC162646
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:39:57 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0F007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:39:57 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 02/19] mkfs: sanitise ftype parameter values.
+Date: Thu, 21 Apr 2016 11:39:36 +0200
+Message-Id: <1461231593-31294-3-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +33,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-ext4 <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Since LSF is next week, I've pushed the rmap+reflink patches to github.
-The kernel patches are against 4.6-rc3, the xfsprogs patches against
-for-next, and xfstests patches are against master.
+From: Dave Chinner <dchinner@redhat.com>
 
-The djwong-devel branches in the kernel/xfsprogs/xfstests repositories should
-be fairly stable.  The djwong-experimental branches contain all the patches to
-implement "multiple bmaps become one rmap" and the beginnings of deferring
-rmaps across transaction rolls via redo intent items to maintain atomicity.
-Unfortunately I didn't get that part done in time for LSF and there's some
-bug that (I think) happens when we're deleting records from the rmapbt on
-reflink filesystems that causes test failures.
+Because passing "-n ftype=2" should fail.
 
-So, basically, djwong-devel if you want to run code, and djwong-experimental
-if you don't mind HBD and bugs everywhere.  This is basically a code dump.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Also, the online scrub patches (kernel and userspace) are tacked on the
-end of the -devel branches now.
+---
+UPDATE:
+* Remove a check for crc enabled with ftype - there is another one later on.
+  As it was in the ftype handling, it failed if -m crc=0 was after ftype.
+---
+ mkfs/xfs_mkfs.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Maybe see you all at LSF.  I get to fly through Denver in the middle of a
-snow storm tomorrow!  Oh boy! <grumble> <crap flight options>
-
---D
-
-Semi-sane:
-https://github.com/djwong/linux/commits/djwong-devel
-https://github.com/djwong/xfsprogs/commits/djwong-devel
-https://github.com/djwong/xfstests/commits/djwong-devel
-https://github.com/djwong/xfs-documentation/commits/djwong-devel
-https://github.com/djwong/man-pages/commits/djwong-devel
-
-HBD:
-https://github.com/djwong/linux/commits/djwong-experimental
-https://github.com/djwong/xfsprogs/commits/djwong-experimental
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 5527b87..4be14da 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1597,7 +1597,10 @@ main(
+ 						reqval('n', nopts, N_FTYPE);
+ 					if (nftype)
+ 						respec('n', nopts, N_FTYPE);
+-					dirftype = atoi(value);
++					c = atoi(value);
++					if (c < 0 || c > 1)
++						illegal(value, "n ftype");
++					dirftype = c;
+ 					nftype = 1;
+ 					break;
+ 				default:
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
