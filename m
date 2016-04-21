@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7E7A17CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 15:13:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DE0B3AC003
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 13:13:30 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id n37b4ocevn7Gpemd for <xfs@oss.sgi.com>;
-	Tue, 19 Apr 2016 13:13:27 -0700 (PDT)
-Received: from Liberator.local (unknown [74.203.127.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 21BD87CB4
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C69578F8050
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ji787N8AoqAdbksf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:01 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id BB11B9E
-	for <xfs@oss.sgi.com>; Tue, 19 Apr 2016 15:13:26 -0500 (CDT)
-Subject: Re: [PATCH 1/4] xfs: Don't wrap growfs AGFL indexes
-References: <1459836310-12619-1-git-send-email-david@fromorbit.com>
-	<1459836310-12619-2-git-send-email-david@fromorbit.com>
-	<20160407235043.GB1439@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <57169165.8020005@sandeen.net>
-Date: Tue, 19 Apr 2016 16:13:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160407235043.GB1439@infradead.org>
+	by mx1.redhat.com (Postfix) with ESMTPS id EB60A72D24
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:00 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0J007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:00 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 06/19] mkfs: validate logarithmic parameters sanely
+Date: Thu, 21 Apr 2016 11:39:40 +0200
+Message-Id: <1461231593-31294-7-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,77 +33,200 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+From: Dave Chinner <dchinner@redhat.com>
 
+Testing logarithmic paramters like "-n log=<num>" shows that we do a
+terrible job of validating such input. e.g.:
 
-On 4/7/16 7:50 PM, Christoph Hellwig wrote:
-> On Tue, Apr 05, 2016 at 04:05:07PM +1000, Dave Chinner wrote:
->> From: Dave Chinner <dchinner@redhat.com>
->>
->> Commit 96f859d ("libxfs: pack the agfl header structure so
->> XFS_AGFL_SIZE is correct") allowed the freelist to use the empty
->> slot at the end of the freelist on 64 bit systems that was not
->> being used due to sizeof() rounding up the structure size.
->>
->> This has caused versions of xfs_repair prior to 4.5.0 (which also
->> has the fix) to report this as a corruption once the filesystem has
->> been grown. Older kernels can also have problems (seen from a whacky
->> container/vm management environment) mounting filesystems grown on a
->> system with a newer kernel than the vm/container it is deployed on.
->>
->> To avoid this problem, change the initial free list indexes not to
->> wrap across the end of the AGFL, hence avoiding the initialisation
->> of agf_fllast to the last index in the AGFL.
-> 
-> I have to admit that it's been a while that I looked at the AGFL
-> code, but I simply don't understand what's happening in this patch.
-> Diff slightly reorder:
-> 
->> -		agf->agf_flfirst = 0;
->> +		agf->agf_flfirst = cpu_to_be32(1);
-> 
-> So flfirst moves from 0 to 1.
-> 
->> -		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
->> +		agf->agf_fllast = 0;
-> 
-> And last from size - 1 to 0.  In my naive reading this introduces
-> wrapping and doesn't remove it.  What do I miss?
+.....
+naming   =version 2              bsize=65536  ascii-ci=0 ftype=0
+....
 
-I'm confused by this too.  I think this fixes it because regardless
-of XFS_AGFL_SIZE under any kernel, when we follow the circular list
-we'll wrap around at the "right" limit, if we start out wrapped
-as above, rather than potentially filling in a number for last which
-doesn't match the running code?
+Yeah, I just asked for a block size of 2^456858480, and it didn't
+get rejected. Great, isn't it?
 
-Anyway, it does fix the testcase of "mkfs with
-old xfsprogs; grow under new kernel; repair with old progs" which
-used to complain about i.e. "fllast 118 in agf 94 too large (max = 118)"
-A growfs under a new kernel, and a mount under an old kernel
-showed the same problems; this should fix that as well.
+So, factor out the parsing of logarithmic parameters, and pass in
+the maximum valid value that they can take. These maximum values
+might not be completely accurate (e.g. block/sector sizes will
+affect the eventual valid maximum) but we can get rid of all the
+overflows and stupidities before we get to fine-grained validity
+checking later in mkfs once things like block and sector sizes have
+been finalised.
 
-We seem to have a few problems introduced
-by the AGFL header packing; we have checks (in xfs_agf_verify(), for example,
-and xfs_repair's verify_set_agf()) which depend on the size of this structure.
-If the size moves in the "wrong" way the checks fire off as corruption.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 79 +++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 51 insertions(+), 28 deletions(-)
 
-It seems to me that now, mismatches between userspace/kernelspace versions
-will cause these size checks to fail; that seems much more common (and worse)
-than the original problem of migrating a filesystem between 32 and 64 bit
-machines.
-
-I'm trying to convince myself that we don't have a lot more of these lurking
-with all the combinations of old/new kernels & old/new userspace, or filesystems
-migrated between old/new kernels, etc.  This patch is ok for initialization but
-isn't it still quite possible to end up with an fllast set at runtime
-which is outside the valid range for older userspace or kernel code?
-
--Eric
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 94ae7e2..09370d8 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1023,6 +1023,27 @@ getbool(
+ 	return c ? true : false;
+ }
+ 
++static int
++getnum_checked(
++	const char	*str,
++	long long	min_val,
++	long long	max_val,
++	const char	*illegal_str,
++	char		reqval_char,
++	char		*reqval_opts[],
++	int		reqval_optind)
++{
++	long long	c;
++
++	if (!str || *str == '\0')
++		reqval(reqval_char, reqval_opts, reqval_optind);
++
++	c = getnum(str, 0, 0, false);
++	if (c < min_val || c > max_val)
++		illegal(str, illegal_str);
++	return c;
++}
++
+ int
+ main(
+ 	int			argc,
+@@ -1180,16 +1201,16 @@ main(
+ 
+ 				switch (getsubopt(&p, (constpp)bopts, &value)) {
+ 				case B_LOG:
+-					if (!value || *value == '\0')
+-						reqval('b', bopts, B_LOG);
+ 					if (blflag)
+ 						respec('b', bopts, B_LOG);
+ 					if (bsflag)
+ 						conflict('b', bopts, B_SIZE,
+ 							 B_LOG);
+-					blocklog = getnum(value, 0, 0, false);
+-					if (blocklog <= 0)
+-						illegal(value, "b log");
++					blocklog = getnum_checked(value,
++							XFS_MIN_BLOCKSIZE_LOG,
++							XFS_MAX_BLOCKSIZE_LOG,
++							"b log", 'b', bopts,
++							B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
+ 					break;
+@@ -1326,16 +1347,16 @@ main(
+ 					nodsflag = 1;
+ 					break;
+ 				case D_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('d', dopts, D_SECTLOG);
+ 					if (slflag)
+ 						respec('d', dopts, D_SECTLOG);
+ 					if (ssflag)
+ 						conflict('d', dopts, D_SECTSIZE,
+ 							 D_SECTLOG);
+-					sectorlog = getnum(value, 0, 0, false);
+-					if (sectorlog <= 0)
+-						illegal(value, "d sectlog");
++					sectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"d sectlog", 'd', dopts,
++							D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
+ 					break;
+@@ -1400,9 +1421,11 @@ main(
+ 					if (isflag)
+ 						conflict('i', iopts, I_SIZE,
+ 							 I_LOG);
+-					inodelog = getnum(value, 0, 0, false);
+-					if (inodelog <= 0)
+-						illegal(value, "i log");
++					inodelog = getnum_checked(value,
++							XFS_DINODE_MIN_LOG,
++							XFS_DINODE_MAX_LOG,
++							"i log", 'i', iopts,
++							I_LOG);
+ 					isize = 1 << inodelog;
+ 					ilflag = 1;
+ 					break;
+@@ -1568,16 +1591,16 @@ main(
+ 					lsflag = 1;
+ 					break;
+ 				case L_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('l', lopts, L_SECTLOG);
+ 					if (lslflag)
+ 						respec('l', lopts, L_SECTLOG);
+ 					if (lssflag)
+ 						conflict('l', lopts, L_SECTSIZE,
+ 							 L_SECTLOG);
+-					lsectorlog = getnum(value, 0, 0, false);
+-					if (lsectorlog <= 0)
+-						illegal(value, "l sectlog");
++					lsectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"l sectlog", 'l', lopts,
++							L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
+ 					break;
+@@ -1648,16 +1671,16 @@ main(
+ 
+ 				switch (getsubopt(&p, (constpp)nopts, &value)) {
+ 				case N_LOG:
+-					if (!value || *value == '\0')
+-						reqval('n', nopts, N_LOG);
+ 					if (nlflag)
+ 						respec('n', nopts, N_LOG);
+ 					if (nsflag)
+ 						conflict('n', nopts, N_SIZE,
+ 							 N_LOG);
+-					dirblocklog = getnum(value, 0, 0, false);
+-					if (dirblocklog <= 0)
+-						illegal(value, "n log");
++					dirblocklog = getnum_checked(value,
++							XFS_MIN_REC_DIRSIZE,
++							XFS_MAX_BLOCKSIZE_LOG,
++							"n log", 'n', nopts,
++							N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
+ 					break;
+@@ -1771,16 +1794,16 @@ main(
+ 				switch (getsubopt(&p, (constpp)sopts, &value)) {
+ 				case S_LOG:
+ 				case S_SECTLOG:
+-					if (!value || *value == '\0')
+-						reqval('s', sopts, S_SECTLOG);
+ 					if (slflag || lslflag)
+ 						respec('s', sopts, S_SECTLOG);
+ 					if (ssflag || lssflag)
+ 						conflict('s', sopts, S_SECTSIZE,
+ 							 S_SECTLOG);
+-					sectorlog = getnum(value, 0, 0, false);
+-					if (sectorlog <= 0)
+-						illegal(value, "s sectlog");
++					sectorlog = getnum_checked(value,
++							XFS_MIN_SECTORSIZE_LOG,
++							XFS_MAX_SECTORSIZE_LOG,
++							"s sectlog", 's', sopts,
++							S_SECTLOG);
+ 					lsectorlog = sectorlog;
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
