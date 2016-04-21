@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 631327CD4
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 16:51:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C93C4AC002
-	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 14:51:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Z2sSBeDJAmJgfmBW for <xfs@oss.sgi.com>;
-	Thu, 28 Apr 2016 14:51:47 -0700 (PDT)
-Date: Fri, 29 Apr 2016 07:51:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
-	explicitly from memalloc_no{fs,io}_{save,restore} context
-Message-ID: <20160428215145.GM26977@dastard>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
-	<20160426225845.GF26977@dastard>
-	<20160428081759.GA31489@dhcp22.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160428081759.GA31489@dhcp22.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id 67A6B7CD4
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D4DEAC002
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GtCDBYwnAPM4KqTq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:07 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id E797C78230
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:06 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0Q007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:06 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 13/19] mkfs: encode conflicts into parsing table
+Date: Thu, 21 Apr 2016 11:39:47 +0200
+Message-Id: <1461231593-31294-14-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +33,765 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-On Thu, Apr 28, 2016 at 10:17:59AM +0200, Michal Hocko wrote:
-> [Trim the CC list]
-> On Wed 27-04-16 08:58:45, Dave Chinner wrote:
-> [...]
-> > Often these are to silence lockdep warnings (e.g. commit b17cb36
-> > ("xfs: fix missing KM_NOFS tags to keep lockdep happy")) because
-> > lockdep gets very unhappy about the same functions being called with
-> > different reclaim contexts. e.g.  directory block mapping might
-> > occur from readdir (no transaction context) or within transactions
-> > (create/unlink). hence paths like this are tagged with GFP_NOFS to
-> > stop lockdep emitting false positive warnings....
-> 
-> As already said in other email, I have tried to revert the above
-> commit and tried to run it with some fs workloads but didn't manage
-> to hit any lockdep splats (after I fixed my bug in the patch 1.2). I
-> have tried to find reports which led to this commit but didn't succeed
-> much. Everything is from much earlier or later. Do you happen to
-> remember which loads triggered them, what they looked like or have an
-> idea what to try to reproduce them? So far I was trying heavy parallel
-> fs_mark, kernbench inside a tiny virtual machine so any of those have
-> triggered direct reclaim all the time.
+From: Dave Chinner <dchinner@redhat.com>
 
-Most of those issues were reported by users and not reproducable by
-any obvious means. They may have been fixed since, but I'm sceptical
-of that because, generally speaking, developer testing only catches
-the obvious lockdep issues. i.e. it's users that report all the
-really twisty issues, and they are generally not reproducable except
-under their production workloads...
+Many options conflict, so we need to specify which options conflict
+with each other in a generic manner. We already have a "seen"
+variable used for respecification detection, so we can also use this
+code conflict detection. Hence add a "conflicts" array to the sub
+options parameter definition.
 
-IOWs, the absence of reports in your testing does not mean there
-isn't a problem, and that is one of the biggest problems with
-lockdep annotations - we have no way of ever knowing if they are
-still necessary or not without exposing users to regressions and
-potential deadlocks.....
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 258 +++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 134 insertions(+), 124 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index a45dc7f..83ccab5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -54,6 +54,9 @@ unsigned int		sectorsize;
+ 
+ #define MAX_SUBOPTS	16
+ #define SUBOPT_NEEDS_VAL	(-1LL)
++#define MAX_CONFLICTS	8
++#define LAST_CONFLICT	(-1)
++
+ /*
+  * Table for parsing mkfs parameters.
+  *
+@@ -89,6 +92,11 @@ unsigned int		sectorsize;
+  *     An optional flag for subopts where the given value has to be a power
+  *     of two.
+  *
++ *   conflicts MANDATORY
++ *     If your subopt is in a conflict with some other option, specify it.
++ *     Accepts the .index values of the conflicting subopts and the last
++ *     member of this list has to be LAST_CONFLICT.
++ *
+  *   minval, maxval OPTIONAL
+  *     These options are used for automatic range check and they have to be
+  *     always used together in pair. If you don't want to limit the max value,
+@@ -118,6 +126,7 @@ struct opt_params {
+ 		bool		seen;
+ 		bool		convert;
+ 		bool		is_power_2;
++		int		conflicts[MAX_CONFLICTS];
+ 		long long	minval;
+ 		long long	maxval;
+ 		long long	defaultval;
+@@ -135,6 +144,8 @@ struct opt_params bopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = B_LOG,
++		  .conflicts = { B_SIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -142,6 +153,8 @@ struct opt_params bopts = {
+ 		{ .index = B_SIZE,
+ 		  .convert = true,
+ 		  .is_power_2 = true,
++		  .conflicts = { B_LOG,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_BLOCKSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -186,57 +199,84 @@ struct opt_params dopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = D_AGCOUNT,
++		  .conflicts = { D_AGSIZE,
++				 LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = XFS_MAX_AGNUMBER,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = D_NAME,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SIZE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = LLONG_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
++		  .conflicts = { D_NOALIGN,
++				 D_SU,
++				 D_SW,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
++		  .conflicts = { D_NOALIGN,
++				 D_SU,
++				 D_SW,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
++		  .conflicts = { D_AGCOUNT,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_AG_MIN_BYTES,
+ 		  .maxval = XFS_AG_MAX_BYTES,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
++		  .conflicts = { D_NOALIGN,
++				 D_SUNIT,
++				 D_SWIDTH,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
++		  .conflicts = { D_NOALIGN,
++				 D_SUNIT,
++				 D_SWIDTH,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
++		  .conflicts = { D_SECTSIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTSIZE,
++		  .conflicts = { D_SECTLOG,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+@@ -244,21 +284,29 @@ struct opt_params dopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_NOALIGN,
++		  .conflicts = { D_SU,
++				 D_SW,
++				 D_SUNIT,
++				 D_SWIDTH,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = D_PROJINHERIT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -290,43 +338,57 @@ struct opt_params iopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = I_ALIGN,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = I_LOG,
++		  .conflicts = { I_PERBLOCK,
++				 I_SIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_DINODE_MIN_LOG,
+ 		  .maxval = XFS_DINODE_MAX_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 100,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
++		  .conflicts = { I_LOG,
++				 I_SIZE,
++				 LAST_CONFLICT },
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_INODE_PERBLOCK,
+ 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
++		  .conflicts = { I_PERBLOCK,
++				 I_LOG,
++				 LAST_CONFLICT },
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_DINODE_MIN_SIZE,
+ 		  .maxval = XFS_DINODE_MAX_SIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = I_SPINODES,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+@@ -365,46 +427,64 @@ struct opt_params lopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = L_AGNUM,
++		  .conflicts = { L_DEV,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
++		  .conflicts = { L_FILE,
++				 L_DEV,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = L_SIZE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 		  .maxval = XFS_MAX_LOG_BYTES,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 1,
+ 		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
++		  .conflicts = { L_SU,
++				 LAST_CONFLICT },
+ 		  .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
+ 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
++		  .conflicts = { L_SUNIT,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
++		  .conflicts = { L_AGNUM,
++				 L_INTERNAL,
++				 LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTLOG,
++		  .conflicts = { L_SECTSIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTSIZE,
++		  .conflicts = { L_SECTLOG,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+@@ -412,14 +492,20 @@ struct opt_params lopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_FILE,
++		  .conflicts = { L_INTERNAL,
++				 LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = L_NAME,
++		  .conflicts = { L_AGNUM,
++				 L_INTERNAL,
++				 LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_LAZYSBCNTR,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+@@ -442,11 +528,15 @@ struct opt_params nopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = N_LOG,
++		  .conflicts = { N_SIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_SIZE,
++		  .conflicts = { N_LOG,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .is_power_2 = true,
+ 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+@@ -454,11 +544,13 @@ struct opt_params nopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 2,
+ 		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+@@ -485,32 +577,38 @@ struct opt_params ropts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = R_EXTSIZE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = XFS_MIN_RTEXTSIZE,
+ 		  .maxval = XFS_MAX_RTEXTSIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_SIZE,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .minval = 0,
+ 		  .maxval = LLONG_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
++		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 		{ .index = R_NAME,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
++		  .conflicts = { LAST_CONFLICT },
+ 		},
+ 	},
+ };
+@@ -530,16 +628,25 @@ struct opt_params sopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = S_LOG,
++		  .conflicts = { S_SIZE,
++				 S_SECTSIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTLOG,
++		  .conflicts = { S_SIZE,
++				 S_SECTSIZE,
++				 LAST_CONFLICT },
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SIZE,
++		  .conflicts = { S_LOG,
++				 S_SECTLOG,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+@@ -547,6 +654,9 @@ struct opt_params sopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTSIZE,
++		  .conflicts = { S_LOG,
++				 S_SECTLOG,
++				 LAST_CONFLICT },
+ 		  .convert = true,
+ 		  .is_power_2 = true,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+@@ -569,16 +679,19 @@ struct opt_params mopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = M_CRC,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = M_FINOBT,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .minval = 0,
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = M_UUID,
++		  .conflicts = { LAST_CONFLICT },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+@@ -620,30 +733,14 @@ calc_stripe_factors(
+ 	int		*lsunit)
+ {
+ 	/* Handle data sunit/swidth options */
+-	if (*dsunit || *dswidth) {
+-		if (dsu || dsw) {
+-			fprintf(stderr,
+-				_("data su/sw must not be used in "
+-				"conjunction with data sunit/swidth\n"));
+-			usage();
+-		}
+-
+-		if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
+-			fprintf(stderr,
+-				_("both data sunit and data swidth options "
+-				"must be specified\n"));
+-			usage();
+-		}
++	if ((*dsunit && !*dswidth) || (!*dsunit && *dswidth)) {
++		fprintf(stderr,
++			_("both data sunit and data swidth options "
++			"must be specified\n"));
++		usage();
+ 	}
+ 
+ 	if (dsu || dsw) {
+-		if (*dsunit || *dswidth) {
+-			fprintf(stderr,
+-				_("data sunit/swidth must not be used in "
+-				"conjunction with data su/sw\n"));
+-			usage();
+-		}
+-
+ 		if ((dsu && !dsw) || (!dsu && dsw)) {
+ 			fprintf(stderr,
+ 				_("both data su and data sw options "
+@@ -671,24 +768,8 @@ calc_stripe_factors(
+ 
+ 	/* Handle log sunit options */
+ 
+-	if (*lsunit) {
+-		if (lsu) {
+-			fprintf(stderr,
+-				_("log su should not be used in "
+-				"conjunction with log sunit\n"));
+-			usage();
+-		}
+-	}
+-
+-	if (lsu) {
+-		if (*lsunit) {
+-			fprintf(stderr,
+-				_("log sunit should not be used in "
+-				"conjunction with log su\n"));
+-			usage();
+-		}
++	if (lsu)
+ 		*lsunit = (int)BTOBBT(lsu);
+-	}
+ }
+ 
+ /*
+@@ -1411,6 +1492,17 @@ getnum(
+ 		respec(opts->name, (char **)opts->subopts, index);
+ 	sp->seen = true;
+ 
++	/* check for conflicts with the option */
++	for (c = 0; c < MAX_CONFLICTS; c++) {
++		int conflict_opt = sp->conflicts[c];
++
++		if (conflict_opt == LAST_CONFLICT)
++			break;
++		if (opts->subopt_params[conflict_opt].seen)
++			conflict(opts->name, (char **)opts->subopts,
++				 conflict_opt, index);
++	}
++
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+ 		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+@@ -1606,17 +1698,11 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case B_LOG:
+-					if (bsflag)
+-						conflict('b', subopts, B_SIZE,
+-							 B_LOG);
+ 					blocklog = getnum(value, &bopts, B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
+ 					break;
+ 				case B_SIZE:
+-					if (blflag)
+-						conflict('b', subopts, B_LOG,
+-							 B_SIZE);
+ 					blocksize = getnum(value, &bopts,
+ 							   B_SIZE);
+ 					blocklog = libxfs_highbit32(blocksize);
+@@ -1665,61 +1751,29 @@ main(
+ 					dsize = value;
+ 					break;
+ 				case D_SUNIT:
+-					if (nodsflag)
+-						conflict('d', subopts, D_NOALIGN,
+-							 D_SUNIT);
+ 					dsunit = getnum(value, &dopts, D_SUNIT);
+ 					break;
+ 				case D_SWIDTH:
+-					if (nodsflag)
+-						conflict('d', subopts, D_NOALIGN,
+-							 D_SWIDTH);
+ 					dswidth = getnum(value, &dopts,
+ 							 D_SWIDTH);
+ 					break;
+ 				case D_SU:
+-					if (nodsflag)
+-						conflict('d', subopts, D_NOALIGN,
+-							 D_SU);
+ 					dsu = getnum(value, &dopts, D_SU);
+ 					break;
+ 				case D_SW:
+-					if (nodsflag)
+-						conflict('d', subopts, D_NOALIGN,
+-							 D_SW);
+ 					dsw = getnum(value, &dopts, D_SW);
+ 					break;
+ 				case D_NOALIGN:
+ 					nodsflag = getnum(value, &dopts,
+-							 	D_NOALIGN);
+-					if (nodsflag) {
+-						if (dsu)
+-							conflict('d', subopts, D_SU,
+-								D_NOALIGN);
+-						if (dsunit)
+-							conflict('d', subopts, D_SUNIT,
+-								D_NOALIGN);
+-						if (dsw)
+-							conflict('d', subopts, D_SW,
+ 								D_NOALIGN);
+-						if (dswidth)
+-							conflict('d', subopts, D_SWIDTH,
+-								D_NOALIGN);
+-					}
+ 					break;
+ 				case D_SECTLOG:
+-					if (ssflag)
+-						conflict('d', subopts, D_SECTSIZE,
+-							 D_SECTLOG);
+ 					sectorlog = getnum(value, &dopts,
+ 							   D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
+ 					break;
+ 				case D_SECTSIZE:
+-					if (slflag)
+-						conflict('d', subopts, D_SECTLOG,
+-							 D_SECTSIZE);
+ 					sectorsize = getnum(value, &dopts,
+ 							    D_SECTSIZE);
+ 					sectorlog =
+@@ -1762,12 +1816,6 @@ main(
+ 								&iopts, I_ALIGN);
+ 					break;
+ 				case I_LOG:
+-					if (ipflag)
+-						conflict('i', subopts, I_PERBLOCK,
+-							 I_LOG);
+-					if (isflag)
+-						conflict('i', subopts, I_SIZE,
+-							 I_LOG);
+ 					inodelog = getnum(value, &iopts, I_LOG);
+ 					isize = 1 << inodelog;
+ 					ilflag = 1;
+@@ -1778,23 +1826,11 @@ main(
+ 					imflag = 1;
+ 					break;
+ 				case I_PERBLOCK:
+-					if (ilflag)
+-						conflict('i', subopts, I_LOG,
+-							 I_PERBLOCK);
+-					if (isflag)
+-						conflict('i', subopts, I_SIZE,
+-							 I_PERBLOCK);
+ 					inopblock = getnum(value, &iopts,
+ 							   I_PERBLOCK);
+ 					ipflag = 1;
+ 					break;
+ 				case I_SIZE:
+-					if (ilflag)
+-						conflict('i', subopts, I_LOG,
+-							 I_SIZE);
+-					if (ipflag)
+-						conflict('i', subopts, I_PERBLOCK,
+-							 I_SIZE);
+ 					isize = getnum(value, &iopts, I_SIZE);
+ 					inodelog = libxfs_highbit32(isize);
+ 					isflag = 1;
+@@ -1809,9 +1845,8 @@ main(
+ 							I_PROJID32BIT);
+ 					break;
+ 				case I_SPINODES:
+-					sb_feat.spinodes =
+-						getnum(value, &iopts,
+-								I_SPINODES);
++					sb_feat.spinodes = getnum(value,
++							&iopts, I_SPINODES);
+ 					break;
+ 				default:
+ 					unknown('i', value);
+@@ -1827,8 +1862,6 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case L_AGNUM:
+-					if (ldflag)
+-						conflict('l', subopts, L_AGNUM, L_DEV);
+ 					logagno = getnum(value, &lopts, L_AGNUM);
+ 					laflag = 1;
+ 					break;
+@@ -1842,12 +1875,6 @@ main(
+ 						xi.lcreat = 1;
+ 					break;
+ 				case L_INTERNAL:
+-					if (ldflag)
+-						conflict('l', subopts, L_INTERNAL, L_DEV);
+-					if (xi.lisfile)
+-						conflict('l', subopts, L_FILE,
+-							 L_INTERNAL);
+-
+ 					loginternal = getnum(value, &lopts,
+ 							     L_INTERNAL);
+ 					liflag = 1;
+@@ -1889,18 +1916,12 @@ main(
+ 					lsflag = 1;
+ 					break;
+ 				case L_SECTLOG:
+-					if (lssflag)
+-						conflict('l', subopts, L_SECTSIZE,
+-							 L_SECTLOG);
+ 					lsectorlog = getnum(value, &lopts,
+ 							    L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
+ 					break;
+ 				case L_SECTSIZE:
+-					if (lslflag)
+-						conflict('l', subopts, L_SECTLOG,
+-							 L_SECTSIZE);
+ 					lsectorsize = getnum(value, &lopts,
+ 							     L_SECTSIZE);
+ 					lsectorlog =
+@@ -1960,18 +1981,12 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case N_LOG:
+-					if (nsflag)
+-						conflict('n', subopts, N_SIZE,
+-							 N_LOG);
+ 					dirblocklog = getnum(value, &nopts,
+ 							     N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
+ 					break;
+ 				case N_SIZE:
+-					if (nlflag)
+-						conflict('n', subopts, N_LOG,
+-							 N_SIZE);
+ 					dirblocksize = getnum(value, &nopts,
+ 							      N_SIZE);
+ 					dirblocklog =
+@@ -2071,7 +2086,7 @@ main(
+ 						  &value)) {
+ 				case S_LOG:
+ 				case S_SECTLOG:
+-					if (ssflag || lssflag)
++					if (lssflag)
+ 						conflict('s', subopts,
+ 							 S_SECTSIZE, S_SECTLOG);
+ 					sectorlog = getnum(value, &sopts,
+@@ -2083,7 +2098,7 @@ main(
+ 					break;
+ 				case S_SIZE:
+ 				case S_SECTSIZE:
+-					if (slflag || lslflag)
++					if (lslflag)
+ 						conflict('s', subopts, S_SECTLOG,
+ 							 S_SECTSIZE);
+ 					sectorsize = getnum(value, &sopts,
+@@ -2302,11 +2317,6 @@ _("warning: sparse inodes not supported without CRC support, disabled.\n"));
+ 		dirblocksize = 1 << dirblocklog;
+ 	}
+ 
+-	if (daflag && dasize) {
+-		fprintf(stderr,
+-	_("both -d agcount= and agsize= specified, use one or the other\n"));
+-		usage();
+-	}
+ 
+ 	if (xi.disfile && (!dsize || !xi.dname)) {
+ 		fprintf(stderr,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.0
 
 _______________________________________________
 xfs mailing list
