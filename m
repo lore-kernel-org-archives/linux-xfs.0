@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 719D67CA1
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 14:06:23 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0BA827CB9
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8821AC002
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:06:19 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id mG1FFsU9BJUZtgkD for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2016 12:06:13 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D2B3A30405F
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id pvg3MTXCVgba7nYr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:04 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id A752F16C165
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 14:06:12 -0500 (CDT)
-Subject: Re: [PATCH 10/19] mkfs: add respecification detection to generic
-	parsing
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-11-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5706AFA4.2060105@sandeen.net>
-Date: Thu, 7 Apr 2016 14:06:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-11-git-send-email-jtulak@redhat.com>
+	by mx1.redhat.com (Postfix) with ESMTPS id 95C7BBDD2
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:03 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0M007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:03 -0400
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 09/19] mkfs: use getnum_checked for all ranged parameters
+Date: Thu, 21 Apr 2016 11:39:43 +0200
+Message-Id: <1461231593-31294-10-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,284 +33,396 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> CHANGE:
-> o Add description of new members in opt_params struct.
-> o Drop "const" from struct opt_params - a previous patch was changed to
->   not create it as const.
-> 
-> Add flags to the generic input parameter tables so that
-> respecification can be detected in a generic manner.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
+Now that getnum_checked can handle min/max checking, use this for
+all parameters that take straight numbers and don't require unit
+conversions.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/xfs_multidisk.h |   5 +-
+ mkfs/xfs_mkfs.c         | 146 ++++++++++++++++++++++++------------------------
+ 2 files changed, 76 insertions(+), 75 deletions(-)
 
-> ---
->  mkfs/xfs_mkfs.c | 64 ++++++++++++++++-----------------------------------------
->  1 file changed, 18 insertions(+), 46 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 021d682..a8dd304 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -72,6 +72,10 @@ static long long cvtnum(unsigned int blocksize,
->   *     it is. The index has to be the same as is the order in subopts list,
->   *     so we can access the right item both in subopt_param and subopts.
->   *
-> + *   seen INTERNAL
-> + *     Do not set this flag when definning a subopt. It is used to remeber that
-> + *     this subopt was already seen, for example for conflicts detection.
-> + *
->   *   minval, maxval OPTIONAL
->   *     These options are used for automatic range check and they have to be
->   *     always used together in pair. If you don't want to limit the max value,
-> @@ -95,8 +99,10 @@ static long long cvtnum(unsigned int blocksize,
->  struct opt_params {
->  	const char	name;
->  	const char	*subopts[MAX_SUBOPTS];
-> +
->  	struct subopt_param {
->  		int		index;
-> +		bool		seen;
->  		long long	minval;
->  		long long	maxval;
->  		long long	defaultval;
-> @@ -1227,7 +1233,6 @@ struct sb_feat_args {
->  	int	dir_version;
->  	int	spinodes;
->  	int	finobt;
-> -	bool	finobtflag;
->  	bool	inode_align;
->  	bool	nci;
->  	bool	lazy_sb_counters;
-> @@ -1363,7 +1368,7 @@ getnum_checked(
->  	struct opt_params	*opts,
->  	int			index)
->  {
-> -	const struct subopt_param *sp = &opts->subopt_params[index];
-> +	struct subopt_param *sp = &opts->subopt_params[index];
->  	long long		c;
->  
->  	if (sp->index != index) {
-> @@ -1373,6 +1378,11 @@ getnum_checked(
->  		reqval(opts->name, (char **)opts->subopts, index);
->  	}
->  
-> +	/* check for respecification of the option */
-> +	if (sp->seen)
-> +		respec(opts->name, (char **)opts->subopts, index);
-> +	sp->seen = true;
-> +
->  	if (!str || *str == '\0') {
->  		if (sp->defaultval == SUBOPT_NEEDS_VAL)
->  			reqval(opts->name, (char **)opts->subopts, index);
-> @@ -1490,7 +1500,6 @@ main(
->  	struct fs_topology	ft;
->  	struct sb_feat_args	sb_feat = {
->  		.finobt = 1,
-> -		.finobtflag = false,
->  		.spinodes = 0,
->  		.log_version = 2,
->  		.attr_version = 2,
-> @@ -1552,8 +1561,6 @@ main(
->  				switch (getsubopt(&p, (constpp)subopts,
->  						  &value)) {
->  				case B_LOG:
-> -					if (blflag)
-> -						respec('b', subopts, B_LOG);
->  					if (bsflag)
->  						conflict('b', subopts, B_SIZE,
->  							 B_LOG);
-> @@ -1592,9 +1599,6 @@ main(
->  				switch (getsubopt(&p, (constpp)subopts,
->  						  &value)) {
->  				case D_AGCOUNT:
-> -					if (daflag)
-> -						respec('d', subopts, D_AGCOUNT);
-> -
->  					agcount = getnum_checked(value, &dopts,
->  								 D_AGCOUNT);
->  					daflag = 1;
-> @@ -1631,8 +1635,6 @@ main(
->  					dsize = value;
->  					break;
->  				case D_SUNIT:
-> -					if (dsunit)
-> -						respec('d', subopts, D_SUNIT);
->  					if (nodsflag)
->  						conflict('d', subopts, D_NOALIGN,
->  							 D_SUNIT);
-> @@ -1640,8 +1642,6 @@ main(
->  								 D_SUNIT);
->  					break;
->  				case D_SWIDTH:
-> -					if (dswidth)
-> -						respec('d', subopts, D_SWIDTH);
->  					if (nodsflag)
->  						conflict('d', subopts, D_NOALIGN,
->  							 D_SWIDTH);
-> @@ -1662,8 +1662,6 @@ main(
->  						illegal(value, "d su");
->  					break;
->  				case D_SW:
-> -					if (dsw)
-> -						respec('d', subopts, D_SW);
->  					if (nodsflag)
->  						conflict('d', subopts, D_NOALIGN,
->  							 D_SW);
-> @@ -1689,8 +1687,6 @@ main(
->  					}
->  					break;
->  				case D_SECTLOG:
-> -					if (slflag)
-> -						respec('d', subopts, D_SECTLOG);
->  					if (ssflag)
->  						conflict('d', subopts, D_SECTSIZE,
->  							 D_SECTLOG);
-> @@ -1753,8 +1749,6 @@ main(
->  							value, &iopts, I_ALIGN);
->  					break;
->  				case I_LOG:
-> -					if (ilflag)
-> -						respec('i', subopts, I_LOG);
->  					if (ipflag)
->  						conflict('i', subopts, I_PERBLOCK,
->  							 I_LOG);
-> @@ -1767,18 +1761,14 @@ main(
->  					ilflag = 1;
->  					break;
->  				case I_MAXPCT:
-> -					if (imflag)
-> -						respec('i', subopts, I_MAXPCT);
-> -					imaxpct = getnum_checked(
-> -							value, &iopts, I_MAXPCT);
-> +					imaxpct = getnum_checked(value, &iopts,
-> +								 I_MAXPCT);
->  					imflag = 1;
->  					break;
->  				case I_PERBLOCK:
->  					if (ilflag)
->  						conflict('i', subopts, I_LOG,
->  							 I_PERBLOCK);
-> -					if (ipflag)
-> -						respec('i', subopts, I_PERBLOCK);
->  					if (isflag)
->  						conflict('i', subopts, I_SIZE,
->  							 I_PERBLOCK);
-> @@ -1795,8 +1785,6 @@ main(
->  					if (ipflag)
->  						conflict('i', subopts, I_PERBLOCK,
->  							 I_SIZE);
-> -					if (isflag)
-> -						respec('i', subopts, I_SIZE);
->  					isize = getnum_checked(value, &iopts,
->  							       I_SIZE);
->  					if (!ispow2(isize))
-> @@ -1832,8 +1820,6 @@ main(
->  				switch (getsubopt(&p, (constpp)subopts,
->  						  &value)) {
->  				case L_AGNUM:
-> -					if (laflag)
-> -						respec('l', subopts, L_AGNUM);
->  					if (ldflag)
->  						conflict('l', subopts, L_AGNUM, L_DEV);
->  					logagno = getnum_checked(value, &lopts,
-> @@ -1855,8 +1841,6 @@ main(
->  					if (xi.lisfile)
->  						conflict('l', subopts, L_FILE,
->  							 L_INTERNAL);
-> -					if (liflag)
-> -						respec('l', subopts, L_INTERNAL);
->  
->  					loginternal = getnum_checked(value,
->  							&lopts, L_INTERNAL);
-> @@ -1874,8 +1858,6 @@ main(
->  					lsuflag = 1;
->  					break;
->  				case L_SUNIT:
-> -					if (lsunit)
-> -						respec('l', subopts, L_SUNIT);
->  					lsunit = getnum_checked(value, &lopts,
->  								 L_SUNIT);
->  					lsunitflag = 1;
-> @@ -1896,10 +1878,9 @@ main(
->  					xi.logname = value;
->  					break;
->  				case L_VERSION:
-> -					if (lvflag)
-> -						respec('l', subopts, L_VERSION);
-> -					sb_feat.log_version = getnum_checked(
-> -						value, &lopts, L_VERSION);
-> +					sb_feat.log_version =
-> +						getnum_checked(value, &lopts,
-> +							       L_VERSION);
->  					lvflag = 1;
->  					break;
->  				case L_SIZE:
-> @@ -1911,8 +1892,6 @@ main(
->  					lsflag = 1;
->  					break;
->  				case L_SECTLOG:
-> -					if (lslflag)
-> -						respec('l', subopts, L_SECTLOG);
->  					if (lssflag)
->  						conflict('l', subopts, L_SECTSIZE,
->  							 L_SECTLOG);
-> @@ -1974,7 +1953,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
->  						sb_feat.dirftype = true;
->  					break;
->  				case M_FINOBT:
-> -					sb_feat.finobtflag = true;
->  					sb_feat.finobt = getnum_checked(
->  						value, &mopts, M_FINOBT);
->  					break;
-> @@ -1998,8 +1976,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
->  				switch (getsubopt(&p, (constpp)subopts,
->  						  &value)) {
->  				case N_LOG:
-> -					if (nlflag)
-> -						respec('n', subopts, N_LOG);
->  					if (nsflag)
->  						conflict('n', subopts, N_SIZE,
->  							 N_LOG);
-> @@ -2042,8 +2018,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
->  					nvflag = 1;
->  					break;
->  				case N_FTYPE:
-> -					if (nftype)
-> -						respec('n', subopts, N_FTYPE);
->  					if (sb_feat.crcs_enabled) {
->  						fprintf(stderr,
->  _("cannot specify both -m crc=1 and -n ftype\n"));
-> @@ -2127,8 +2101,6 @@ _("cannot specify both -m crc=1 and -n ftype\n"));
->  						  &value)) {
->  				case S_LOG:
->  				case S_SECTLOG:
-> -					if (slflag || lslflag)
-> -						respec('s', subopts, S_SECTLOG);
->  					if (ssflag || lssflag)
->  						conflict('s', subopts,
->  							 S_SECTSIZE, S_SECTLOG);
-> @@ -2340,7 +2312,7 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
->  		 * them off.
->  		 */
->  		if (sb_feat.finobt){
-> -			if (sb_feat.finobtflag) {
-> +			if (mopts.subopt_params[M_FINOBT].seen) {
->  				fprintf(stderr,
->  	_("warning: finobt not supported without CRC support, disabled.\n"));
->  			}
-> 
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index 3e892d5..ecc8f0a 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -42,8 +42,9 @@
+ 
+ #define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
+ #define	XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
+-#define XFS_AG_MIN_BLOCKS(blog)	((XFS_AG_BYTES(15)) >> (blog))
+-#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_BYTES(31) - 1) >> (blog))
++#define	XFS_AG_MAX_BYTES	((XFS_AG_BYTES(31)))	/* 1 TB */
++#define XFS_AG_MIN_BLOCKS(blog)	(XFS_AG_MIN_BYTES >> (blog))
++#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_MAX_BYTES - 1) >> (blog))
+ 
+ #define XFS_MAX_AGNUMBER	((xfs_agnumber_t)(NULLAGNUMBER - 1))
+ 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2f76b67..f3d0165 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -163,6 +163,8 @@ struct opt_params dopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = D_AGCOUNT,
++		  .minval = 1,
++		  .maxval = XFS_MAX_AGNUMBER,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
+@@ -177,18 +179,26 @@ struct opt_params dopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
++		  .minval = XFS_AG_MIN_BYTES,
++		  .maxval = XFS_AG_MAX_BYTES,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
+@@ -207,12 +217,18 @@ struct opt_params dopts = {
+ 		  .defaultval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
+-		  .defaultval = SUBOPT_NEEDS_VAL,
++		  .minval = 1,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = D_PROJINHERIT,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+@@ -252,15 +268,23 @@ struct opt_params iopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
++		  .minval = 0,
++		  .maxval = 100,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
++		  .minval = XFS_MIN_INODE_PERBLOCK,
++		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
++		  .minval = XFS_DINODE_MIN_SIZE,
++		  .maxval = XFS_DINODE_MAX_SIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
++		  .minval = 0,
++		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
+@@ -307,6 +331,8 @@ struct opt_params lopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = L_AGNUM,
++		  .minval = 0,
++		  .maxval = UINT_MAX,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
+@@ -318,9 +344,13 @@ struct opt_params lopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
++		  .minval = 1,
++		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
++		  .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
++		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
+@@ -380,6 +410,8 @@ struct opt_params nopts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
++		  .minval = 2,
++		  .maxval = 2,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
+@@ -1561,13 +1593,11 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case D_AGCOUNT:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_AGCOUNT);
+ 					if (daflag)
+ 						respec('d', subopts, D_AGCOUNT);
+-					agcount = getnum(value, 0, 0, false);
+-					if ((__int64_t)agcount <= 0)
+-						illegal(value, "d agcount");
++
++					agcount = getnum_checked(value, &dopts,
++								 D_AGCOUNT);
+ 					daflag = 1;
+ 					break;
+ 				case D_AGSIZE:
+@@ -1602,28 +1632,22 @@ main(
+ 					dsize = value;
+ 					break;
+ 				case D_SUNIT:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_SUNIT);
+ 					if (dsunit)
+ 						respec('d', subopts, D_SUNIT);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SUNIT);
+-					dsunit = getnum(value, 0, 0, false);
+-					if (dsunit < 0)
+-						illegal(value, "d sunit");
++					dsunit = getnum_checked(value, &dopts,
++								 D_SUNIT);
+ 					break;
+ 				case D_SWIDTH:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_SWIDTH);
+ 					if (dswidth)
+ 						respec('d', subopts, D_SWIDTH);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SWIDTH);
+-					dswidth = getnum(value, 0, 0, false);
+-					if (dswidth < 0)
+-						illegal(value, "d swidth");
++					dswidth = getnum_checked(value, &dopts,
++								 D_SWIDTH);
+ 					break;
+ 				case D_SU:
+ 					if (!value || *value == '\0')
+@@ -1639,16 +1663,13 @@ main(
+ 						illegal(value, "d su");
+ 					break;
+ 				case D_SW:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_SW);
+ 					if (dsw)
+ 						respec('d', subopts, D_SW);
+ 					if (nodsflag)
+ 						conflict('d', subopts, D_NOALIGN,
+ 							 D_SW);
+-					dsw = getnum(value, 0, 0, false);
+-					if (dsw < 0)
+-						illegal(value, "d sw");
++					dsw = getnum_checked(value, &dopts,
++								 D_SW);
+ 					break;
+ 				case D_NOALIGN:
+ 					nodsflag = getnum_checked(value,
+@@ -1697,21 +1718,22 @@ main(
+ 					ssflag = 1;
+ 					break;
+ 				case D_RTINHERIT:
+-					fsx.fsx_xflags |= \
+-						XFS_DIFLAG_RTINHERIT;
++					c = getnum_checked(value, &dopts,
++							   D_RTINHERIT);
++					if (c)
++						fsx.fsx_xflags |=
++							XFS_DIFLAG_RTINHERIT;
+ 					break;
+ 				case D_PROJINHERIT:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_PROJINHERIT);
+-					fsx.fsx_projid = atoi(value);
+-					fsx.fsx_xflags |= \
++					fsx.fsx_projid = getnum_checked(value,
++							&dopts, D_PROJINHERIT);
++					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_PROJINHERIT;
+ 					break;
+ 				case D_EXTSZINHERIT:
+-					if (!value || *value == '\0')
+-						reqval('d', subopts, D_EXTSZINHERIT);
+-					fsx.fsx_extsize = atoi(value);
+-					fsx.fsx_xflags |= \
++					fsx.fsx_extsize = getnum_checked(value,
++							&dopts, D_EXTSZINHERIT);
++					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_EXTSZINHERIT;
+ 					break;
+ 				default:
+@@ -1746,18 +1768,13 @@ main(
+ 					ilflag = 1;
+ 					break;
+ 				case I_MAXPCT:
+-					if (!value || *value == '\0')
+-						reqval('i', subopts, I_MAXPCT);
+ 					if (imflag)
+ 						respec('i', subopts, I_MAXPCT);
+-					imaxpct = getnum(value, 0, 0, false);
+-					if (imaxpct < 0 || imaxpct > 100)
+-						illegal(value, "i maxpct");
++					imaxpct = getnum_checked(
++							value, &iopts, I_MAXPCT);
+ 					imflag = 1;
+ 					break;
+ 				case I_PERBLOCK:
+-					if (!value || *value == '\0')
+-						reqval('i', subopts, I_PERBLOCK);
+ 					if (ilflag)
+ 						conflict('i', subopts, I_LOG,
+ 							 I_PERBLOCK);
+@@ -1766,16 +1783,13 @@ main(
+ 					if (isflag)
+ 						conflict('i', subopts, I_SIZE,
+ 							 I_PERBLOCK);
+-					inopblock = getnum(value, 0, 0, false);
+-					if (inopblock <
+-						XFS_MIN_INODE_PERBLOCK ||
+-					    !ispow2(inopblock))
++					inopblock = getnum_checked(value, &iopts,
++								   I_PERBLOCK);
++					if (!ispow2(inopblock))
+ 						illegal(value, "i perblock");
+ 					ipflag = 1;
+ 					break;
+ 				case I_SIZE:
+-					if (!value || *value == '\0')
+-						reqval('i', subopts, I_SIZE);
+ 					if (ilflag)
+ 						conflict('i', subopts, I_LOG,
+ 							 I_SIZE);
+@@ -1784,19 +1798,16 @@ main(
+ 							 I_SIZE);
+ 					if (isflag)
+ 						respec('i', subopts, I_SIZE);
+-					isize = getnum(value, 0, 0, true);
+-					if (isize <= 0 || !ispow2(isize))
++					isize = getnum_checked(value, &iopts,
++							       I_SIZE);
++					if (!ispow2(isize))
+ 						illegal(value, "i size");
+ 					inodelog = libxfs_highbit32(isize);
+ 					isflag = 1;
+ 					break;
+ 				case I_ATTR:
+-					if (!value || *value == '\0')
+-						reqval('i', subopts, I_ATTR);
+-					c = getnum(value, 0, 0, false);
+-					if (c < 0 || c > 2)
+-						illegal(value, "i attr");
+-					sb_feat.attr_version = c;
++					sb_feat.attr_version = getnum_checked(
++							value, &iopts, I_ATTR);
+ 					break;
+ 				case I_PROJID32BIT:
+ 					sb_feat.projid16bit =
+@@ -1822,15 +1833,12 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case L_AGNUM:
+-					if (!value || *value == '\0')
+-						reqval('l', subopts, L_AGNUM);
+ 					if (laflag)
+ 						respec('l', subopts, L_AGNUM);
+ 					if (ldflag)
+ 						conflict('l', subopts, L_AGNUM, L_DEV);
+-					logagno = getnum(value, 0, 0, false);
+-					if ((__int64_t)logagno < 0)
+-						illegal(value, "l agno");
++					logagno = getnum_checked(value, &lopts,
++								 L_AGNUM);
+ 					laflag = 1;
+ 					break;
+ 				case L_FILE:
+@@ -1867,13 +1875,10 @@ main(
+ 					lsuflag = 1;
+ 					break;
+ 				case L_SUNIT:
+-					if (!value || *value == '\0')
+-						reqval('l', subopts, L_SUNIT);
+ 					if (lsunit)
+ 						respec('l', subopts, L_SUNIT);
+-					lsunit = getnum(value, 0, 0, false);
+-					if (lsunit < 0)
+-						illegal(value, "l sunit");
++					lsunit = getnum_checked(value, &lopts,
++								 L_SUNIT);
+ 					lsunitflag = 1;
+ 					break;
+ 				case L_NAME:
+@@ -1892,14 +1897,10 @@ main(
+ 					xi.logname = value;
+ 					break;
+ 				case L_VERSION:
+-					if (!value || *value == '\0')
+-						reqval('l', subopts, L_VERSION);
+ 					if (lvflag)
+ 						respec('l', subopts, L_VERSION);
+-					c = getnum(value, 0, 0, false);
+-					if (c < 1 || c > 2)
+-						illegal(value, "l version");
+-					sb_feat.log_version = c;
++					sb_feat.log_version = getnum_checked(
++						value, &lopts, L_VERSION);
+ 					lvflag = 1;
+ 					break;
+ 				case L_SIZE:
+@@ -2029,11 +2030,10 @@ main(
+ 						/* ASCII CI mode */
+ 						sb_feat.nci = true;
+ 					} else {
+-						c = getnum(value, 0, 0, false);
+-						if (c != 2)
+-							illegal(value,
+-								"n version");
+-						sb_feat.dir_version = c;
++						sb_feat.dir_version =
++							getnum_checked(value,
++								&nopts,
++								N_VERSION);
+ 					}
+ 					nvflag = 1;
+ 					break;
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
