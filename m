@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9228B7CA0
-	for <xfs@oss.sgi.com>; Wed, 13 Apr 2016 00:32:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 45883304062
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:32:21 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	D5eZzzmhTy1bBsbl for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 22:32:18 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1aqDPP-0003p7-TU
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:32:12 +1000
-Received: from dave by disappointment with local (Exim 4.86)
-	(envelope-from <dave@disappointment.disaster>) id 1aqDOq-0000c8-Dr
-	for xfs@oss.sgi.com; Wed, 13 Apr 2016 15:31:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/11] xfs: mark reclaimed inodes invalid earlier
-Date: Wed, 13 Apr 2016 15:31:28 +1000
-Message-Id: <1460525492-1170-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1460525492-1170-1-git-send-email-david@fromorbit.com>
-References: <1460525492-1170-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 722F37CA0
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 08:08:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 41B4A304039
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 06:08:15 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id B3EObM61nz6Wm8vP (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 06:08:14 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 3F70937E72
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 13:08:13 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfsdump: fix race condition between lseek() and read()/write()
+Date: Thu, 21 Apr 2016 21:06:56 +0800
+Message-Id: <1461244016-7373-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,154 +33,171 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+There's a race condition in the [get|put]_invtrecord() routines, because
+a lseek() followed by a read()/write() is not atmoic, the file offset
+might be changed before read()/write().
 
-The last thing we do before using call_rcu() on an xfs_inode to be
-freed is mark it as invalid. This means there is a window between
-when we know for certain that the inode is going to be freed and
-when we do actually mark it as "freed".
+xfs/302 catches this failure as:
+xfsdump: drive 1: INV : Unknown version 0 - Expected version 1
+xfsdump: inv_core.c:66: get_counters: Assertion `((invt_counter_t *)(*cntpp))->ic_vernum == (inv_version_t) 1' failed.
 
-This is important in the context of RCU lookups - we can look up the
-inode, find that it is valid, and then use it as such not realising
-that it is in the final stages of being freed.
+And it can be reproduced by running multi-stream dump in a tight loop
+  mount /dev/<dev> /mnt/xfs
+  mkdir /mnt/xfs/dumpdir
+  # populate dumpdir here
+  while xfsdump -M l1 -M l2 -f d1 -f d2 -L ses /mnt/xfs -s dumpdir; do
+  	:
+  done
 
-As such, mark the inode as being invalid the moment we know it is
-going to be reclaimed. This can be done while we still hold the
-XFS_ILOCK_EXCL and the flush lock in xfs_inode_reclaim, meaning that
-it occurs well before we remove it from the radix tree, and that
-the i_flags_lock, the XFS_ILOCK and the inode flush lock all act as
-synchronisation points for detecting that an inode is about to go
-away.
+Fix it by replacing the "lseek(); read()/write()" sequence by
+pread()/pwrite(), which make the seek and I/O an atomic operation.
 
-For defensive purposes, this allows us to add a further check to
-xfs_iflush_cluster to ensure we skip inodes that are being freed
-after we grab the XFS_ILOCK_SHARED and the flush lock - we know that
-if the inode number if valid while we have these locks held we know
-that it has not progressed through reclaim to the point where it is
-clean and is about to be freed.
+Also convert and remove all *_SEEKCUR routines to "SEEK_SET" variants,
+because they depend on the maintenance of current file offset, but
+pread()/pwrite() don't change file offset.
 
-[bfoster: fixed __xfs_inode_clear_reclaim() using ip->i_ino after it
-	  had already been zeroed.]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 40 ++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_inode.c  | 13 +++++++++++++
- 2 files changed, 45 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0c94cde..a60db43 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -114,6 +114,18 @@ xfs_inode_free_callback(
- 	kmem_zone_free(xfs_inode_zone, ip);
- }
- 
-+static void
-+__xfs_inode_free(
-+	struct xfs_inode	*ip)
-+{
-+	/* asserts to verify all state is correct here */
-+	ASSERT(atomic_read(&ip->i_pincount) == 0);
-+	ASSERT(!xfs_isiflocked(ip));
-+	XFS_STATS_DEC(ip->i_mount, vn_active);
-+
-+	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
-+}
-+
- void
- xfs_inode_free(
- 	struct xfs_inode	*ip)
-@@ -129,12 +141,7 @@ xfs_inode_free(
- 	ip->i_ino = 0;
- 	spin_unlock(&ip->i_flags_lock);
- 
--	/* asserts to verify all state is correct here */
--	ASSERT(atomic_read(&ip->i_pincount) == 0);
--	ASSERT(!xfs_isiflocked(ip));
--	XFS_STATS_DEC(ip->i_mount, vn_active);
--
--	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
-+	__xfs_inode_free(ip);
- }
- 
- /*
-@@ -929,6 +936,7 @@ xfs_reclaim_inode(
- 	int			sync_mode)
- {
- 	struct xfs_buf		*bp = NULL;
-+	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
- 	int			error;
- 
- restart:
-@@ -993,6 +1001,22 @@ restart:
- 
- 	xfs_iflock(ip);
- reclaim:
-+	/*
-+	 * Because we use RCU freeing we need to ensure the inode always appears
-+	 * to be reclaimed with an invalid inode number when in the free state.
-+	 * We do this as early as possible under the ILOCK and flush lock so
-+	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
-+	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
-+	 * locked both the XFS_ILOCK and the flush lock that it will see either
-+	 * a valid, flushable inode that will serialise correctly against the
-+	 * locks below, or it will see a clean (and invalid) inode that it can
-+	 * skip.
-+	 */
-+	spin_lock(&ip->i_flags_lock);
-+	ip->i_flags = XFS_IRECLAIM;
-+	ip->i_ino = 0;
-+	spin_unlock(&ip->i_flags_lock);
-+
- 	xfs_ifunlock(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
-@@ -1006,7 +1030,7 @@ reclaim:
- 	 */
- 	spin_lock(&pag->pag_ici_lock);
- 	if (!radix_tree_delete(&pag->pag_ici_root,
--				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino)))
-+				XFS_INO_TO_AGINO(ip->i_mount, ino)))
- 		ASSERT(0);
- 	__xfs_inode_clear_reclaim(pag, ip);
- 	spin_unlock(&pag->pag_ici_lock);
-@@ -1023,7 +1047,7 @@ reclaim:
- 	xfs_qm_dqdetach(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
--	xfs_inode_free(ip);
-+	__xfs_inode_free(ip);
- 	return error;
- 
- out_ifunlock:
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ad0ad8d..8931375 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3226,6 +3226,19 @@ xfs_iflush_cluster(
- 			continue;
+Tested via the reproducer and xfstests "-g dump" run, with both v4 and v5 XFS.
+
+I'm not sure if this is the right fix, perhaps what should be fixed is the
+"INVLOCK()", which is now implemented by flock(2), and doesn't work in
+multi-thread env, if what it's meant to protect is concurrent accesses from
+different threads, not processes.
+
+If so, it seems to me that making INVLOCK() a pthread rw lock could fix the
+race condition as well. But the INVLOCK calls are almost everywhere, I didn't
+find a simple way to try it.
+
+ common/inventory.c   |  4 ++--
+ inventory/inv_api.c  |  5 ++---
+ inventory/inv_core.c | 24 ++++--------------------
+ inventory/inv_idx.c  |  4 ++--
+ inventory/inv_priv.h |  9 ---------
+ 5 files changed, 10 insertions(+), 36 deletions(-)
+
+diff --git a/common/inventory.c b/common/inventory.c
+index d1b810c..0e9c256 100644
+--- a/common/inventory.c
++++ b/common/inventory.c
+@@ -471,8 +471,8 @@ inv_stream_close(
+ 	}
+ 			
+ 	if (dowrite) {
+-		rval = PUT_REC_NOLOCK_SEEKCUR( fd, &strm, sizeof( invt_stream_t ),
+-					       (off64_t) -(sizeof( invt_stream_t )) );
++		rval = PUT_REC_NOLOCK(fd, &strm, sizeof(invt_stream_t),
++				      tok->md_stream_off);
+ 	}
+  end:
+ 	INVLOCK( fd, LOCK_UN );
+diff --git a/inventory/inv_api.c b/inventory/inv_api.c
+index acca40b..46fdde8 100644
+--- a/inventory/inv_api.c
++++ b/inventory/inv_api.c
+@@ -409,9 +409,8 @@ inv_stream_close(
  		}
+ 			
+ 		if (dowrite) {
+-			rval = PUT_REC_NOLOCK_SEEKCUR( fd, &strm, 
+-			             sizeof( invt_stream_t ),
+-				     -(off64_t)(sizeof( invt_stream_t )) );
++			rval = PUT_REC_NOLOCK(fd, &strm, sizeof(invt_stream_t),
++					      tok->md_stream_off);
+ 		}
+ 	}
  
-+
-+		/*
-+		 * Check the inode number again, just to be certain we are not
-+		 * racing with freeing in xfs_reclaim_inode(). See the comments
-+		 * in that function for more information as to why the initial
-+		 * check is not sufficient.
-+		 */
-+		if (!iq->i_ino) {
-+			xfs_ifunlock(iq);
-+			xfs_iunlock(iq, XFS_ILOCK_SHARED);
-+			continue;
-+		}
-+
- 		/*
- 		 * arriving here means that this inode can be flushed.  First
- 		 * re-check that it's dirty before flushing.
+diff --git a/inventory/inv_core.c b/inventory/inv_core.c
+index a17c2c9..42d0ac4 100644
+--- a/inventory/inv_core.c
++++ b/inventory/inv_core.c
+@@ -121,19 +121,10 @@ get_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
+ 	if ( dolock ) 
+ 		INVLOCK( fd, LOCK_SH );
+ 
+-	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
+-		INV_PERROR( _("Error in reading inventory record "
+-			      "(lseek failed): ") );
+-		if ( dolock ) 
+-			INVLOCK( fd, LOCK_UN );
+-		return -1;
+-	}
+-	
+-	nread = read( fd, buf, bufsz );
+-
++	nread = pread(fd, buf, bufsz, (off_t)off);
+ 	if (  nread != (int) bufsz ) {
+ 		INV_PERROR( _("Error in reading inventory record :") );
+-		if ( dolock ) 
++		if ( dolock )
+ 			INVLOCK( fd, LOCK_UN );
+ 		return -1;
+ 	}
+@@ -162,15 +153,8 @@ put_invtrecord( int fd, void *buf, size_t bufsz, off64_t off,
+ 	if ( dolock )
+ 		INVLOCK( fd, LOCK_EX );
+ 	
+-	if ( lseek( fd, (off_t)off, whence ) < 0 ) {
+-		INV_PERROR( _("Error in writing inventory record "
+-			      "(lseek failed): ") );
+-		if ( dolock ) 
+-			INVLOCK( fd, LOCK_UN );
+-		return -1;
+-	}
+-	
+-	if (( nwritten = write( fd, buf, bufsz ) ) != (int) bufsz ) {
++	nwritten = pwrite(fd, buf, bufsz, (off_t)off);
++	if (nwritten != (int) bufsz ) {
+ 		INV_PERROR( _("Error in writing inventory record :") );
+ 		if ( dolock )
+ 			INVLOCK( fd, LOCK_UN );
+diff --git a/inventory/inv_idx.c b/inventory/inv_idx.c
+index 95529e8..cd9b9cb 100644
+--- a/inventory/inv_idx.c
++++ b/inventory/inv_idx.c
+@@ -341,8 +341,8 @@ idx_put_sesstime( inv_sestoken_t tok, bool_t whichtime)
+ 			      ent.ie_timeperiod.tp_start,
+ 			      ent.ie_timeperiod.tp_end );
+ #endif
+-	rval = PUT_REC_NOLOCK_SEEKCUR( fd, &ent, sizeof( invt_entry_t ),
+-				      -(off64_t)(sizeof( invt_entry_t )));
++	rval = PUT_REC_NOLOCK(fd, &ent, sizeof(invt_entry_t),
++			      tok->sd_invtok->d_invindex_off);
+ 	
+ #ifdef INVT_DEBUG
+ 	{
+diff --git a/inventory/inv_priv.h b/inventory/inv_priv.h
+index 1690271..cd1b527 100644
+--- a/inventory/inv_priv.h
++++ b/inventory/inv_priv.h
+@@ -303,9 +303,6 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
+ #define GET_REC_NOLOCK( fd, buf, sz, off )  \
+                  get_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
+ 
+-#define GET_REC_SEEKCUR( fd, buf, sz, off )  \
+-                 get_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
+-
+ #define GET_ALLHDRS_N_CNTS( fd, h, c, hsz, csz ) \
+                  get_headerinfo( fd, h, c, hsz, csz, INVT_DOLOCK )
+ 
+@@ -318,12 +315,6 @@ typedef bool_t (*search_callback_t) (int, invt_seshdr_t *, void *, void *);
+ #define PUT_REC_NOLOCK( fd, buf, sz, off )  \
+                  put_invtrecord( fd, buf, sz, off, SEEK_SET, INVT_DONTLOCK )
+ 
+-#define PUT_REC_SEEKCUR( fd, buf, sz, off )  \
+-                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DOLOCK )
+-
+-#define PUT_REC_NOLOCK_SEEKCUR( fd, buf, sz, off )  \
+-                 put_invtrecord( fd, buf, sz, off, SEEK_CUR, INVT_DONTLOCK )
+-
+ 
+ #define GET_COUNTERS( fd, cnt ) get_counters( fd, (void **)(cnt), \
+ 					      sizeof(invt_counter_t) )
 -- 
-2.7.0
+2.5.5
 
 _______________________________________________
 xfs mailing list
