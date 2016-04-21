@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 807707CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 08:09:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED46DAC004
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 06:09:30 -0700 (PDT)
-Received: from mail-ig0-f172.google.com (mail-ig0-f172.google.com
-	[209.85.213.172]) by cuda.sgi.com with ESMTP id
-	TGRtHRthDNZzZmLW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Apr 2016 06:09:25 -0700 (PDT)
-Received: by mail-ig0-f172.google.com with SMTP id gy3so101168080igb.0
-	for <xfs@oss.sgi.com>; Thu, 07 Apr 2016 06:09:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5705BB39.5010003@sandeen.net>
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-4-git-send-email-jtulak@redhat.com>
-	<5705BB39.5010003@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E9A247CB7
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AF08130404E
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xsxLhW985mAlVL78 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:03 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id BF0AC3E70A7
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:02 +0000 (UTC)
+Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u3L9ds0L007155
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:02 -0400
 From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 7 Apr 2016 15:09:04 +0200
-Message-ID: <CACj3i72K0JHkGKES8eintQ=+rbN7hrSQc3+BNQ2eHfZtm7ik4g@mail.gmail.com>
-Subject: Re: [PATCH 03/19] mkfs: Sanitise the superblock feature macros
+Subject: [PATCH 08/19] mkfs: getbool is redundant
+Date: Thu, 21 Apr 2016 11:39:42 +0200
+Message-Id: <1461231593-31294-9-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,424 +33,605 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8031118902877015907=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============8031118902877015907==
-Content-Type: multipart/alternative; boundary=089e01538da08ed1e6052fe4c993
+From: Dave Chinner <dchinner@redhat.com>
 
---089e01538da08ed1e6052fe4c993
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+getbool() can be replaced with getnum_checked with appropriate
+min/max values set for the boolean variables. Make boolean
+arguments consistent - all accept 0 or 1 value now.
 
-=E2=80=8B=E2=80=8B
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Apr 7, 2016 at 2:12 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+---
+CHANGES:
+* man page fixes
+---
+ man/man8/mkfs.xfs.8 |  19 +++--
+ mkfs/xfs_mkfs.c     | 219 +++++++++++++++++++++++++++++++++++++---------------
+ 2 files changed, 169 insertions(+), 69 deletions(-)
 
-> On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> > @@ -1262,10 +1358,11 @@ main(
-> >                               switch (getsubopt(&p, (constpp)iopts,
-> &value)) {
-> >                               case I_ALIGN:
-> >                                       if (!value || *value =3D=3D '\0')
-> > -                                             value =3D "1";
-> > -                                     iaflag =3D atoi(value);
-> > -                                     if (iaflag < 0 || iaflag > 1)
-> > +                                             reqval('i', iopts,
-> I_ALIGN);
-> > +                                     c =3D atoi(value);
-> > +                                     if (c < 0 || c > 1)
-> >                                               illegal(value, "i align")=
-;
-> > +                                     sb_feat.inode_align =3D c ? true =
-:
-> false;
-> >                                       break;
-> >                               case I_LOG:
-> >                                       if (!value || *value =3D=3D '\0')
->
->
-> Hm, this seems wrong, as well - per the man page:
->
-> "If the value is omitted, 1 is assumed."
->
-> but this change with the reqval() removes that, doesn't it?  Why?
-> (it's fixed later, but there is no reason to break it mid-series...)
-
-=E2=80=8B
-Changed back to default 1. =E2=80=8BAs for the origin of the change, most l=
-ikely a
-copy&paste from some other place, where wasn't a default value, or it was
-there since I took over the patchset.
-
-On Thu, Apr 7, 2016 at 3:43 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> > @@ -981,11 +1077,21 @@ main(
-> >       int                     worst_freelist;
-> >       libxfs_init_t           xi;
-> >       struct fs_topology      ft;
-> > -     int                     lazy_sb_counters;
-> > -     int                     crcs_enabled;
-> > -     int                     finobt;
-> > -     bool                    finobtflag;
-> > -     int                     spinodes;
-> > +     struct sb_feat_args     sb_feat =3D {
-> > +             .finobt =3D 1,
-> > +             .finobtflag =3D false,
->
->
-> should we really have "finobtflag" in this structure?
-> This structure should only carry feature selections, not feature
-> specification flags I think.  Why is this the only such flag
-> in the structure?
->
-> Pretty sure finobtflag should stay a variable for now
-> just like lvflag (which goes with log_version).
->
->
-=E2=80=8BIt might be right to move it out=E2=80=8B, but the flag is removed=
- few patches
-later entirely. Is it worth of the work? I would say nah, let it die where
-it is. :-)
-
-
-
-> ...
->
-> > @@ -1517,7 +1617,14 @@ main(
-> >                                       c =3D atoi(value);
-> >                                       if (c < 0 || c > 1)
-> >                                               illegal(value, "m crc");
-> > -                                     crcs_enabled =3D c;
-> > +                                     if (c && nftype) {
-> > +                                             fprintf(stderr,
-> > +_("cannot specify both crc and ftype\n"));
-> > +                                             usage();
->
-> hm, why is conflict checking added?  It's not what the commit says
-> the patch does.
->
-> It also regresses the bug I fixed in
->
-> commit b990de8ba4e2df2bc76a140799d3ddb4a0eac4ce
-> Author: Eric Sandeen <sandeen@sandeen.net>
-> Date:   Tue Aug 18 17:53:17 2015 +1000
->
->     mkfs.xfs: fix ftype-vs-crc option combination testing
->
-> with this patch, it is broken again:
->
-> # mkfs/mkfs.xfs -m crc=3D0 -n ftype=3D1 -dfile,name=3Dfsfile,size=3D16g
-> <success>
->  # mkfs/mkfs.xfs -n ftype=3D1 -m crc=3D0 -dfile,name=3Dfsfile,size=3D16g
-> cannot specify both crc and ftype
-> Usage: mkfs.xfs
-> ...
->
-> =E2=80=8BBecause the patch is much older than your fix, and at the time i=
-t was
-created, it is possible that there wasn't any such check... I would call it
-the risk of necromancy. :-)=E2=80=8B
-
-Anyway, I already fixed this issue in this cycle, and added the the ftype,
-crc order into a test checking for options sanity. Just I didn't submitted
-the change yet.
-
-...
->
-> > @@ -1879,23 +1988,25 @@ _("32 bit Project IDs always enabled on CRC
-> enabled filesytems\n"));
-> >       } else {
-> >               /*
-> >                * The kernel doesn't currently support crc=3D0,finobt=3D=
-1
-> > -              * filesystems. If crcs are not enabled and the user has
-> > -              * explicitly turned them off then silently turn them off
-> > -              * to avoid an unnecessary warning. If the user explicitl=
-y
-> > -              * tried to use crc=3D0,finobt=3D1, then issue a warning =
-before
-> > -              * turning them off.
-> > +              * filesystems. If crcs are not enabled and the user has
-> not
-> > +              * explicitly turned finobt on, then silently turn it off
-> to
-> > +              * avoid an unnecessary warning. If the user explicitly
-> tried
-> > +              * to use crc=3D0,finobt=3D1, then issue a warning before
-> turning
-> > +              * them off.
-> >                */
-> > -             if (finobt && finobtflag) {
-> > -                     fprintf(stderr,
-> > -_("warning: finobt not supported without CRC support, disabled.\n"));
-> > +             if (sb_feat.finobt){
-> > +                     if (sb_feat.finobtflag) {
-> > +                             fprintf(stderr,
-> > +     _("warning: finobt not supported without CRC support,
-> disabled.\n"));
-> > +                     }
-> > +                     sb_feat.finobt =3D 0;
->
-> like I mentioned, just this, I think (assuming we like the silent turning
-> off, but that would be a different patch):
->
-
-=E2=80=8BMerging the conditions is indeed cleaner.
-
-And I will change it to failure, if the conflicting options are given
-explicitly. Just a small patch adding "usage();" and removing "warning"...=
-=E2=80=8B
-
-Cheers,
-Jan
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---089e01538da08ed1e6052fe4c993
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><br></div><div class=3D"gmail_extra"><div class=3D"gmai=
-l_default" style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8B=E2=80=
-=8B</div><br><div class=3D"gmail_quote">On Thu, Apr 7, 2016 at 2:12 AM, Eri=
-c Sandeen=C2=A0<span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net"=
- target=3D"_blank">sandeen@sandeen.net</a>&gt;</span>=C2=A0wrote:<br><block=
-quote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-w=
-idth:1px;border-left-color:rgb(204,204,204);border-left-style:solid;padding=
--left:1ex"><span class=3D"">On 3/24/16 6:15 AM,=C2=A0<a href=3D"mailto:jtul=
-ak@redhat.com">jtulak@redhat.com</a>=C2=A0wrote:<br></span><span class=3D""=
->&gt; @@ -1262,10 +1358,11 @@ main(<br>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0switch (getsubopt(&amp;p, (constpp)iopts, &amp;value)) {<br>&gt;=C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0case I_ALIGN:<br>&gt;=C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!value || *value =3D=3D &#=
-39;\0&#39;)<br>&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0value =3D &quot;1&quot;;<br>&gt; -=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0iaflag =3D atoi(value);=
-<br>&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ia=
-flag &lt; 0 || iaflag &gt; 1)<br>&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0reqval(&#39;i&#39;, iop=
-ts, I_ALIGN);<br>&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0c =3D atoi(value);<br>&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0if (c &lt; 0 || c &gt; 1)<br>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0illega=
-l(value, &quot;i align&quot;);<br>&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0sb_feat.inode_align =3D c ? true : false;<br>&gt;=
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0break;<br=
->&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0case I_LOG:<br>&gt;=C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!value || *value =
-=3D=3D &#39;\0&#39;)<br><br><br></span>Hm, this seems wrong, as well - per =
-the man page:<br><br>&quot;If the value is omitted, 1 is assumed.&quot;<br>=
-<br>but this change with the reqval() removes that, doesn&#39;t it?=C2=A0 W=
-hy?<br>(it&#39;s fixed later, but there is no reason to break it mid-series=
-...)</blockquote></div><div class=3D"gmail_default" style=3D"font-family:ar=
-ial,helvetica,sans-serif">=E2=80=8B</div><div class=3D"gmail_default" style=
-=3D"font-family:arial,helvetica,sans-serif">Changed back to default 1. =E2=
-=80=8BAs for the origin of the change, most likely a copy&amp;paste from so=
-me other place, where wasn&#39;t a default value, or it was there since I t=
-ook over the patchset.=C2=A0</div><br><div class=3D"gmail_quote">On Thu, Ap=
-r 7, 2016 at 3:43 AM, Eric Sandeen <span dir=3D"ltr">&lt;<a href=3D"mailto:=
-sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a>&gt;</span> w=
-rote:<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;bo=
-rder-left-width:1px;border-left-color:rgb(204,204,204);border-left-style:so=
-lid;padding-left:1ex"><span class=3D"">
-&gt; @@ -981,11 +1077,21 @@ main(<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0worst_freelist;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0libxfs_init_t=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0xi;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct fs_topology=C2=A0 =C2=A0 =C2=A0 ft;<b=
-r>
-&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0lazy_sb_counters;<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0crcs_enabled;<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0finobt;<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0bool=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 finobtflag;<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0int=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spinodes;<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0struct sb_feat_args=C2=A0 =C2=A0 =C2=A0sb_feat =
-=3D {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.finobt =3D 1,<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.finobtflag =3D false=
-,<br>
-<br>
-<br>
-</span>should we really have &quot;finobtflag&quot; in this structure?<br>
-This structure should only carry feature selections, not feature<br>
-specification flags I think.=C2=A0 Why is this the only such flag<br>
-in the structure?<br>
-<br>
-Pretty sure finobtflag should stay a variable for now<br>
-just like lvflag (which goes with log_version).<br><span class=3D""><br></s=
-pan></blockquote><div>=C2=A0</div><div><div class=3D"gmail_default" style=
-=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BIt might be right to m=
-ove it out=E2=80=8B, but the flag is removed few patches later entirely. Is=
- it worth of the work? I would say nah, let it die where it is. :-)</div><b=
-r></div><div>=C2=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:=
-0px 0px 0px 0.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);=
-border-left-style:solid;padding-left:1ex"><span class=3D"">
-</span>...<br>
-<span class=3D""><br>
-&gt; @@ -1517,7 +1617,14 @@ main(<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0c =3D =
-atoi(value);<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (c =
-&lt; 0 || c &gt; 1)<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0illegal(value, &quot;m crc&quot;);<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0crcs_enabled=
- =3D c;<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (c &amp;&=
-amp; nftype) {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0fprintf(stderr,<br>
-&gt; +_(&quot;cannot specify both crc and ftype\n&quot;));<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0usage();<br>
-<br>
-</span>hm, why is conflict checking added?=C2=A0 It&#39;s not what the comm=
-it says<br>
-the patch does.<br>
-<br>
-It also regresses the bug I fixed in<br>
-<br>
-commit b990de8ba4e2df2bc76a140799d3ddb4a0eac4ce<br>
-Author: Eric Sandeen &lt;<a href=3D"mailto:sandeen@sandeen.net">sandeen@san=
-deen.net</a>&gt;<br>
-Date:=C2=A0 =C2=A0Tue Aug 18 17:53:17 2015 +1000<br>
-<br>
-=C2=A0 =C2=A0 mkfs.xfs: fix ftype-vs-crc option combination testing<br>
-<br>
-with this patch, it is broken again:<br>
-<br>
-# mkfs/mkfs.xfs -m crc=3D0 -n ftype=3D1 -dfile,name=3Dfsfile,size=3D16g<br>
-&lt;success&gt;<br>
-=C2=A0# mkfs/mkfs.xfs -n ftype=3D1 -m crc=3D0 -dfile,name=3Dfsfile,size=3D1=
-6g<br>
-<span class=3D"">cannot specify both crc and ftype<br>
-</span>Usage: mkfs.xfs<br>
-...<br>
-<span class=3D""><br></span></blockquote><div><div class=3D"gmail_default" =
-style=3D"font-family:arial,helvetica,sans-serif">=E2=80=8BBecause the patch=
- is much older than your fix, and at the time it was created, it is possibl=
-e that there wasn&#39;t any such check... I would call it the risk of necro=
-mancy. :-)=E2=80=8B</div><div class=3D"gmail_default" style=3D"font-family:=
-arial,helvetica,sans-serif"><br></div><div class=3D"gmail_default" style=3D=
-"font-family:arial,helvetica,sans-serif">Anyway, I already fixed this issue=
- in this cycle, and added the the ftype, crc order into a test checking for=
- options sanity. Just I didn&#39;t submitted the change yet.</div></div><di=
-v class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">=
-<br></div><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8=
-ex;border-left-width:1px;border-left-color:rgb(204,204,204);border-left-sty=
-le:solid;padding-left:1ex">...<br>
-<span class=3D""><br>
-&gt; @@ -1879,23 +1988,25 @@ _(&quot;32 bit Project IDs always enabled on C=
-RC enabled filesytems\n&quot;));<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0} else {<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/*<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * The kernel do=
-esn&#39;t currently support crc=3D0,finobt=3D1<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * filesystems. If cr=
-cs are not enabled and the user has<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * explicitly turned =
-them off then silently turn them off<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * to avoid an unnece=
-ssary warning. If the user explicitly<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * tried to use crc=
-=3D0,finobt=3D1, then issue a warning before<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * turning them off.<=
-br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * filesystems. If cr=
-cs are not enabled and the user has not<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * explicitly turned =
-finobt on, then silently turn it off to<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * avoid an unnecessa=
-ry warning. If the user explicitly tried<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * to use crc=3D0,fin=
-obt=3D1, then issue a warning before turning<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * them off.<br>
-&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (finobt &amp;&amp;=
- finobtflag) {<br>
-&gt; -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0fprintf(stderr,<br>
-&gt; -_(&quot;warning: finobt not supported without CRC support, disabled.\=
-n&quot;));<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sb_feat.finobt){<=
-br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0if (sb_feat.finobtflag) {<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fprintf(stderr,<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0_(&quot;warning: finobt not supported without CRC=
- support, disabled.\n&quot;));<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0}<br>
-&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0sb_feat.finobt =3D 0;<br>
-<br>
-</span>like I mentioned, just this, I think (assuming we like the silent tu=
-rning<br>
-off, but that would be a different patch):<br></blockquote><div>=C2=A0</div=
-><div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,san=
-s-serif">=E2=80=8BMerging the conditions is indeed cleaner.</div><div class=
-=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"><br></d=
-iv><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-s=
-erif">And I will change it to failure, if the conflicting options are given=
- explicitly. Just a small patch adding &quot;usage();&quot; and removing &q=
-uot;warning&quot;...=E2=80=8B</div></div><div class=3D"gmail_default" style=
-=3D"font-family:arial,helvetica,sans-serif"><br></div><div class=3D"gmail_d=
-efault" style=3D"font-family:arial,helvetica,sans-serif">Cheers,</div><div =
-class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">Ja=
-n</div></div><div><br></div>-- <br><div class=3D"gmail_signature"><div dir=
-=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"mailto:jt=
-ulak@redhat.com" target=3D"_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"=
-mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me</a></div></div></div></=
-div>
-</div></div>
-
---089e01538da08ed1e6052fe4c993--
-
-
---===============8031118902877015907==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 8b068ef..be3d1a0 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -118,6 +118,9 @@ option or the
+ option first needs to be added to the command line.
+ Failure to specify the size of the units will result in illegal value errors
+ when parameters are quantified in those units.
++.PP
++Many options allows for optional argument of value 0 or 1, to explicitly
++disable or enable the functionality.
+ .SH OPTIONS
+ .TP
+ .BI \-b " block_size_options"
+@@ -312,10 +315,12 @@ and
+ .B swidth
+ values.
+ .TP
+-.BI noalign
+-This option disables automatic geometry detection and creates the filesystem
++.BI noalign[= value ]
++If the
++.I value
++is 1, this option disables automatic geometry detection and creates the filesystem
+ without stripe geometry alignment even if the underlying storage device provides
+-this information.
++this information. 0 disables this option, that is, enables automatic detection.
+ .RE
+ .TP
+ .B \-f
+@@ -805,9 +810,11 @@ This suboption is only needed if the real-time section of the
+ filesystem should occupy less space than the size of the partition
+ or logical volume containing the section.
+ .TP
+-.BI noalign
+-This option disables stripe size detection, enforcing a realtime device with no
+-stripe geometry.
++.BI noalign[= value ]
++If the
++.I value
++is 1, then the option disables stripe size detection, enforcing a realtime
++device with no stripe geometry. 0 will enable stripe size detection.
+ .RE
+ .TP
+ .BI \-s " sector_size"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 86cfb7b..2f76b67 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -49,6 +49,7 @@ static long long cvtnum(unsigned int blocksize,
+ 			unsigned int sectorsize, const char *s);
+ 
+ #define MAX_SUBOPTS	16
++#define SUBOPT_NEEDS_VAL	(-1LL)
+ /*
+  * Table for parsing mkfs parameters.
+  *
+@@ -83,6 +84,13 @@ static long long cvtnum(unsigned int blocksize,
+  *     (Said in another way, you can't have minval and maxval both equal
+  *     to zero. But if one value is different: minval=0 and maxval=1,
+  *     then it is OK.)
++ *
++ *   defaultval MANDATORY
++ *     The value used if user specifies the subopt, but no value.
++ *     If the subopt accepts some values (-d file=[1|0]), then this
++ *     sets what is used with simple specifying the subopt (-d file).
++ *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
++ *     value in any case.
+  */
+ struct opt_params {
+ 	const char	name;
+@@ -91,6 +99,7 @@ struct opt_params {
+ 		int		index;
+ 		long long	minval;
+ 		long long	maxval;
++		long long	defaultval;
+ 	}		subopt_params[MAX_SUBOPTS];
+ };
+ 
+@@ -107,10 +116,12 @@ struct opt_params bopts = {
+ 		{ .index = B_LOG,
+ 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = B_SIZE,
+ 		  .minval = XFS_MIN_BLOCKSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -152,38 +163,57 @@ struct opt_params dopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = D_AGCOUNT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_FILE,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = D_NAME,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SUNIT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SWIDTH,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_AGSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SU,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SW,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTLOG,
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_SECTSIZE,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_NOALIGN,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = D_RTINHERIT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_PROJINHERIT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = D_EXTSZINHERIT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -212,22 +242,36 @@ struct opt_params iopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = I_ALIGN,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = I_LOG,
+ 		  .minval = XFS_DINODE_MIN_LOG,
+ 		  .maxval = XFS_DINODE_MAX_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_MAXPCT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PERBLOCK,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_SIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_ATTR,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = I_PROJID32BIT,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = I_SPINODES,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 	},
+ };
+@@ -263,32 +307,50 @@ struct opt_params lopts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = L_AGNUM,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_INTERNAL,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = L_SIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_VERSION,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SUNIT,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SU,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTLOG,
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_SECTSIZE,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_FILE,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = L_NAME,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_LAZYSBCNTR,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 	},
+ };
+@@ -310,14 +372,20 @@ struct opt_params nopts = {
+ 		{ .index = N_LOG,
+ 		  .minval = XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_SIZE,
+ 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 		  .maxval = XFS_MAX_BLOCKSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_VERSION,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = N_FTYPE,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 	},
+ };
+@@ -341,16 +409,26 @@ struct opt_params ropts = {
+ 	},
+ 	.subopt_params = {
+ 		{ .index = R_EXTSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_SIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 		{ .index = R_NAME,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
+ 		},
+ 	},
+ };
+@@ -372,18 +450,22 @@ struct opt_params sopts = {
+ 		{ .index = S_LOG,
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTLOG,
+ 		  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SIZE,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = S_SECTSIZE,
+ 		  .minval = XFS_MIN_SECTORSIZE,
+ 		  .maxval = XFS_MAX_SECTORSIZE,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -394,13 +476,24 @@ struct opt_params mopts = {
+ #define	M_CRC		0
+ 		"crc",
+ #define M_FINOBT	1
+-	"finobt",
++		"finobt",
+ #define M_UUID		2
+ 		"uuid",
+ 		NULL
+ 	},
+ 	.subopt_params = {
+ 		{ .index = M_CRC,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
++		{ .index = M_FINOBT,
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
++		{ .index = M_UUID,
++		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 	},
+ };
+@@ -1221,22 +1314,6 @@ getnum(
+ 	return i;
+ }
+ 
+-static bool
+-getbool(
+-	const char	*str,
+-	const char	*illegal_str,
+-	bool		default_val)
+-{
+-	long long	c;
+-
+-	if (!str || *str == '\0')
+-		return default_val;
+-	c = getnum(str, 0, 0, false);
+-	if (c < 0 || c > 1)
+-		illegal(str, illegal_str);
+-	return c ? true : false;
+-}
+-
+ static __attribute__((noreturn)) void
+ illegal_option(
+ 	const char	*value,
+@@ -1251,17 +1328,27 @@ illegal_option(
+ 
+ static int
+ getnum_checked(
+-	const char	*str,
++	const char		*str,
+ 	struct opt_params	*opts,
+-	int		index)
++	int			index)
+ {
+-	long long	c;
++	const struct subopt_param *sp = &opts->subopt_params[index];
++	long long		c;
+ 
+-	if (!str || *str == '\0')
++	if (sp->index != index) {
++		fprintf(stderr,
++	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
++			sp->index, index);
+ 		reqval(opts->name, (char **)opts->subopts, index);
++	}
++
++	if (!str || *str == '\0') {
++		if (sp->defaultval == SUBOPT_NEEDS_VAL)
++			reqval(opts->name, (char **)opts->subopts, index);
++		return sp->defaultval;
++	}
+ 
+-	if (opts->subopt_params[index].minval == 0 &&
+-	    opts->subopt_params[index].maxval == 0) {
++	if (sp->minval == 0 && sp->maxval == 0) {
+ 		fprintf(stderr,
+ 			_("Option -%c %s has undefined minval/maxval."
+ 			  "Can't verify value range. This is a bug.\n"),
+@@ -1270,8 +1357,7 @@ getnum_checked(
+ 	}
+ 
+ 	c = getnum(str, 0, 0, false);
+-	if (c < opts->subopt_params[index].minval ||
+-	    c > opts->subopt_params[index].maxval)
++	if (c < sp->minval || c > sp->maxval)
+ 		illegal_option(str, opts, index);
+ 	return c;
+ }
+@@ -1496,8 +1582,8 @@ main(
+ 					dasize = 1;
+ 					break;
+ 				case D_FILE:
+-					xi.disfile = getbool(value, "d file",
+-							     true);
++					xi.disfile = getnum_checked(value,
++								&dopts, D_FILE);
+ 					if (xi.disfile && !Nflag)
+ 						xi.dcreat = 1;
+ 					break;
+@@ -1565,19 +1651,22 @@ main(
+ 						illegal(value, "d sw");
+ 					break;
+ 				case D_NOALIGN:
+-					if (dsu)
+-						conflict('d', subopts, D_SU,
+-							 D_NOALIGN);
+-					if (dsunit)
+-						conflict('d', subopts, D_SUNIT,
+-							 D_NOALIGN);
+-					if (dsw)
+-						conflict('d', subopts, D_SW,
+-							 D_NOALIGN);
+-					if (dswidth)
+-						conflict('d', subopts, D_SWIDTH,
+-							 D_NOALIGN);
+-					nodsflag = 1;
++					nodsflag = getnum_checked(value,
++								&dopts, D_NOALIGN);
++					if (nodsflag) {
++						if (dsu)
++							conflict('d', subopts, D_SU,
++								D_NOALIGN);
++						if (dsunit)
++							conflict('d', subopts, D_SUNIT,
++								D_NOALIGN);
++						if (dsw)
++							conflict('d', subopts, D_SW,
++								D_NOALIGN);
++						if (dswidth)
++							conflict('d', subopts, D_SWIDTH,
++								D_NOALIGN);
++					}
+ 					break;
+ 				case D_SECTLOG:
+ 					if (slflag)
+@@ -1639,8 +1728,8 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case I_ALIGN:
+-					sb_feat.inode_align = getbool(
+-							value, "i align", true);
++					sb_feat.inode_align = getnum_checked(
++							value, &iopts, I_ALIGN);
+ 					break;
+ 				case I_LOG:
+ 					if (ilflag)
+@@ -1710,12 +1799,14 @@ main(
+ 					sb_feat.attr_version = c;
+ 					break;
+ 				case I_PROJID32BIT:
+-					sb_feat.projid16bit = !getbool(value,
+-							"i projid32bit", false);
++					sb_feat.projid16bit =
++						!getnum_checked(value, &iopts,
++								I_PROJID32BIT);
+ 					break;
+ 				case I_SPINODES:
+-					sb_feat.spinodes = getbool(value,
+-							"i spinodes", true);
++					sb_feat.spinodes =
++						getnum_checked(value, &iopts,
++								I_SPINODES);
+ 					break;
+ 				default:
+ 					unknown('i', value);
+@@ -1743,11 +1834,11 @@ main(
+ 					laflag = 1;
+ 					break;
+ 				case L_FILE:
+-					if (loginternal)
++					xi.lisfile = getnum_checked(value,
++								&lopts, L_FILE);
++					if (xi.lisfile && loginternal)
+ 						conflict('l', subopts, L_INTERNAL,
+ 							 L_FILE);
+-					xi.lisfile = getbool(value, "l file",
+-							     true);
+ 					if (xi.lisfile)
+ 						xi.lcreat = 1;
+ 					break;
+@@ -1760,8 +1851,8 @@ main(
+ 					if (liflag)
+ 						respec('l', subopts, L_INTERNAL);
+ 
+-					loginternal = getbool(value,
+-							"l internal", true);
++					loginternal = getnum_checked(value,
++							&lopts, L_INTERNAL);
+ 					liflag = 1;
+ 					break;
+ 				case L_SU:
+@@ -1848,9 +1939,9 @@ main(
+ 					lssflag = 1;
+ 					break;
+ 				case L_LAZYSBCNTR:
+-					sb_feat.lazy_sb_counters = getbool(
+-							value, "l lazy-count",
+-							true);
++					sb_feat.lazy_sb_counters =
++						getnum_checked(value, &lopts,
++							       L_LAZYSBCNTR);
+ 					break;
+ 				default:
+ 					unknown('l', value);
+@@ -1871,15 +1962,16 @@ main(
+ 				switch (getsubopt(&p, (constpp)subopts,
+ 						  &value)) {
+ 				case M_CRC:
+-					sb_feat.crcs_enabled = getbool(
+-							value, "m crc", true);
++					sb_feat.crcs_enabled =
++						getnum_checked(value, &mopts,
++							       M_CRC);
+ 					if (sb_feat.crcs_enabled)
+ 						sb_feat.dirftype = true;
+ 					break;
+ 				case M_FINOBT:
+ 					sb_feat.finobtflag = true;
+-					sb_feat.finobt = getbool(
+-						value, "m finobt", true);
++					sb_feat.finobt = getnum_checked(
++						value, &mopts, M_FINOBT);
+ 					break;
+ 				case M_UUID:
+ 					if (!value || *value == '\0')
+@@ -1948,8 +2040,8 @@ main(
+ 				case N_FTYPE:
+ 					if (nftype)
+ 						respec('n', subopts, N_FTYPE);
+-					sb_feat.dirftype = getbool(value,
+-							     "n ftype", true);
++					sb_feat.dirftype = getnum_checked(value,
++								&nopts, N_FTYPE);
+ 					nftype = 1;
+ 					break;
+ 				default:
+@@ -1987,8 +2079,8 @@ main(
+ 					rtextsize = value;
+ 					break;
+ 				case R_FILE:
+-					xi.risfile = getbool(value,
+-							     "r file", true);
++					xi.risfile = getnum_checked(value,
++								&ropts, R_FILE);
+ 					if (xi.risfile)
+ 						xi.rcreat = 1;
+ 					break;
+@@ -2008,7 +2100,8 @@ main(
+ 					rtsize = value;
+ 					break;
+ 				case R_NOALIGN:
+-					norsflag = 1;
++					norsflag = getnum_checked(value,
++								&ropts, R_NOALIGN);
+ 					break;
+ 				default:
+ 					unknown('r', value);
+-- 
+2.5.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8031118902877015907==--
