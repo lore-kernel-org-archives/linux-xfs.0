@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BDA3B7D01
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 18:09:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9063F8F8037
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 16:09:52 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dDPL5NyRLoVryQ3W for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2016 16:09:50 -0700 (PDT)
-Date: Wed, 27 Apr 2016 09:09:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: development APIs for used/free blocks information
-Message-ID: <20160426230925.GH26977@dastard>
-References: <97A4F433DEE099488FE21C1718A641D2139E86F5@wmsexchsvr01.winmagic.local>
-	<20160426222129.GD26977@dastard> <571FF0F6.2030202@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DD5787CA0
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:42:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 518A1AC001
+	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 07:42:50 -0700 (PDT)
+Received: from exch-spam02.ulaval.ca (exch-spam02.ulaval.ca [132.203.244.24])
+	by cuda.sgi.com with ESMTP id t3LqzWVwi3d5ovlG (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Apr 2016 07:42:47 -0700 (PDT)
+From: =?utf-8?B?U3TDqXBoYW5lIExhcm9zZQ==?= <Stephane.Larose@ibis.ulaval.ca>
+Subject: RE: xfs_repair couldn't verify primary superblock
+Date: Thu, 21 Apr 2016 14:42:45 +0000
+Message-ID: <7ce740a1888c4bb28ce3c30fcedbe703@ul-exc-pr-mbx11.ulaval.ca>
+References: <d738a94784a0426e97752f92f38325a0@ul-exc-pr-mbx11.ulaval.ca>
+	<5717E2EF.1080902@sandeen.net>
+In-Reply-To: <5717E2EF.1080902@sandeen.net>
+Content-Language: fr-FR
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <571FF0F6.2030202@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,50 +26,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Apr 26, 2016 at 05:51:34PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 4/26/16 5:21 PM, Dave Chinner wrote:
-> > On Tue, Apr 26, 2016 at 08:51:10PM +0000, Benjamin Wirth wrote:
-> >> Hello,
-> >>
-> >> I was looking for development APIs for XFS. The contents of
-> >> xfsprogs-devel seem to only contain a few IOCTL commands, mostly
-> >> file/inode based operations.
-> >>
-> >> I need to query free/used blocks of an entire XFS filesystem and
-> >> was hoping to find some user-space APIs for this.
-> > 
-> > $ man 2 statvfs
-> 
-> I was assuming that he was interested in the actual used/free block
-> locations, not just the total count.  But maybe I was wrong!
-
-Maybe I'm wrong, but asking for free/used blocks is ambiguous to say
-the least. If he wants free/used blocks, then we just need to
-forward port this kernel branch:
-
-https://git.kernel.org/cgit/linux/kernel/git/dgc/linux-xfs.git/log/?h=fiemapfs
-
-And this xfsprogs branch:
-
-https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/log/?h=spaceman
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgRXJpYywNCg0KTm90aGluZyBtb3JlIGludGVyZXN0aW5nLiBGcm9tIHRoZSBsb2c6DQoNCjIw
+MTYtMDQtMDRUMTQ6NDg6NDguNzM1NzM4LTA0OjAwIG1hbml0b3Uga2VybmVsOiBbMjcxMjExLjU0
+ODg3OF0gWEZTIChkbS0yNCk6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0NCjIwMTYtMDQtMDRUMTQ6
+NDg6NDguODgyNzM4LTA0OjAwIG1hbml0b3Uga2VybmVsOiBbMjcxMjExLjY5NDI0Ml0gWEZTIChk
+bS0yNCk6IEVuZGluZyBjbGVhbiBtb3VudA0KDQpUaGVuIG5vIG1vcmUgbG9ncyBhYm91dCBkbS0y
+NC4NCg0KQWxzbyBubyBlcnJvcnMgZnJvbSB0aGUgdW5kZXJseWluZyBzdG9yYWdlICh2ZXJpZmll
+ZCBpbiBTQU50cmljaXR5KSB3aGljaCBpcyBhbiBJUzUwMDAuIFRoZSBmaWxlc3lzdGVtIHdhcyBu
+ZXcsIHRoZSBmaXJzdCBtb3VudCB3YXMgb24gMjAxNi0wNC0wNC4NCg0KbWFuaXRvdTp+ICMgYmxr
+aWQgL2Rldi9kbS0yNA0KL2Rldi9kbS0yNDogVVVJRD0iMWRhMjJhZTItYTU3Mi00ZGI3LWIxNzct
+YjkwMDIxYTIwODYzIiBUWVBFPSJ4ZnMiDQoNClRoYW5rIHlvdSBmb3IgeW91ciBoZWxwLA0KDQpT
+dMOpcGhhbmUNCg0KLS0tLS1NZXNzYWdlIGQnb3JpZ2luZS0tLS0tDQpEZcKgOiBFcmljIFNhbmRl
+ZW4gW21haWx0bzpzYW5kZWVuQHNhbmRlZW4ubmV0XSANCkVudm95w6nCoDogMjAgYXZyaWwgMjAx
+NiAxNjoxNA0Kw4DCoDogU3TDqXBoYW5lIExhcm9zZSA8U3RlcGhhbmUuTGFyb3NlQGliaXMudWxh
+dmFsLmNhPg0KT2JqZXTCoDogUmU6IHhmc19yZXBhaXIgY291bGRuJ3QgdmVyaWZ5IHByaW1hcnkg
+c3VwZXJibG9jaw0KDQpPbiA0LzIwLzE2IDE6NTAgUE0sIFN0w6lwaGFuZSBMYXJvc2Ugd3JvdGU6
+DQo+IEhlbGxvLA0KPiANCj4gIA0KPiANCj4gV2hlbiBJIHRyeSB0byBtb3VudCBhIGNsZWFueSB1
+bm1vdW50ZWQgWEZTIGZpbGVzeXN0ZW0sIEkgZ2V0IHRob3NlIGVycm9ycyBpbiB0aGUgbG9nIDoN
+Cj4gDQo+IA0KPiBbMTY1MDg1Ni4xMjEyMjldIFhGUyAoZG0tMjQpOiBNb3VudGluZyBWNCBGaWxl
+c3lzdGVtIFsxNjUwODU2LjEzNTQ1NV0gDQo+IFhGUyAoZG0tMjQpOiBMb2cgaW5jb25zaXN0ZW50
+IG9yIG5vdCBhIGxvZyAobGFzdD09MCwgZmlyc3QhPTEpIA0KPiBbMTY1MDg1Ni4xMzU0NjFdIFhG
+UyAoZG0tMjQpOiBlbXB0eSBsb2cgY2hlY2sgZmFpbGVkIFsxNjUwODU2LjEzNTQ2M10gDQo+IFhG
+UyAoZG0tMjQpOiBsb2cgbW91bnQvcmVjb3ZlcnkgZmFpbGVkOiBlcnJvciAyMiBbMTY1MDg1Ni4x
+MzU0OTVdIFhGUyANCj4gKGRtLTI0KTogbG9nIG1vdW50IGZhaWxlZA0KDQpZb3UgY291bGQgbWF5
+YmUgdXNlIHhmc19sb2dkdW1wIHRvIHNlZSB3aGF0J3MgdGhlcmUsIGJ1dC4uLg0KDQo+IEkgaGF2
+ZSB0cmllZCB4ZnNfcmVwYWlyIGJ1dOKApg0KPiANCj4gbWFuaXRvdTp+ICMgeGZzX3JlcGFpciAv
+ZGV2L2RtLTI0DQo+IA0KPiBQaGFzZSAxIC0gZmluZCBhbmQgdmVyaWZ5IHN1cGVyYmxvY2suLi4N
+Cj4gY291bGRuJ3QgdmVyaWZ5IHByaW1hcnkgc3VwZXJibG9jayAtIG5vdCBlbm91Z2ggc2Vjb25k
+YXJ5IHN1cGVyYmxvY2tzIHdpdGggbWF0Y2hpbmcgZ2VvbWV0cnkgISEhDQo+IA0KPiBhdHRlbXB0
+aW5nIHRvIGZpbmQgc2Vjb25kYXJ5IHN1cGVyYmxvY2suLi4NCj4gLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLg0KDQo+IEFmdGVyIGEgbG90IG9mIGRvdHMsIHhmc19yZXBh
+aXIgY2Fu4oCZdCBmaW5kIHNlY29uZGFyeSBzdXBlcmJsb2Nrcy4NCj4gDQo+IFRoaXMgaXMgd2hl
+cmUgbXkga25vd2xlZGdlIG9mIFhGUyBmaWxlc3lzdGVtIHN0b3BzLiBMb29raW5nIGF0IHRoZSBz
+dXBlcmJsb2NrIGluZm9ybWF0aW9uLCBJIGhhdmUgYSBmZWVsaW5nIHRoYXQgdGhlIHByaW1hcnkg
+c3VwZXJibG9jayBpcyBmaW5lIGJ1dCBub3QgdGhlIHNlY29uZGFyeSBzdXBlcmJsb2NrcyAoc3Ry
+YW5nZSBibG9ja3NpemUgYW5kIGRibG9ja3MgbnVtYmVycykuIElzIHRoZXJlIGFueSB3YXkgdG8g
+Y29weSB0aGUgcHJpbWFyeSBzdXBlcmJsb2NrIHRvIHRoZSBzZWNvbmRhcnkgc3VwZXJibG9ja3M/
+IE1heWJlIHRoaXMgaXMgbm90IGEgZ29vZCBpZGVhPw0KPiANCj4gVGhhbmsgeW91IGZvciBhbnkg
+aGVscCENCj4gDQoNCi4uLiB0aGUgc3RhdGVkIGxvY2F0aW9ucyBvZiB0aGUgYmFja3VwIHN1cGVy
+cyBjZXJ0YWlubHkgZG9uJ3QgY29udGFpbiBnb29kIGRhdGE6DQoNCj4geGZzX2RiPiBzYiAxDQo+
+IHhmc19kYj4gcA0KPiBtYWdpY251bSA9IDB4ZjZiODlmYmYNCj4gYmxvY2tzaXplID0gMTQ4Mzkz
+MjEyOQ0KPiBkYmxvY2tzID0gMTU2OTQwMDk5MzMxMDE3MjIxMzcNCj4gcmJsb2NrcyA9IDExMDY4
+NjI2NzU2MDE2OTAyODExDQo+IHJleHRlbnRzID0gMTU5MzA2MzYyMjE0ODMwMDEyOA0KLi4uDQo+
+IHhmc19kYj4gc2IgMg0KPiB4ZnNfZGI+IHANCj4gbWFnaWNudW0gPSAweDQxNDc0MzQxDQo+IGJs
+b2Nrc2l6ZSA9IDExOTU1OTA0NzENCj4gZGJsb2NrcyA9IDQ4NDc5MjE5NTEwODUyNTM3MTYNCj4g
+cmJsb2NrcyA9IDQ4NDY3ODkzOTgzMDg4NjQ4MzUNCj4gcmV4dGVudHMgPSA0NzAyMTMyMTI1Mjk2
+NzA3NDEyDQouLi4NCg0Kd2hpY2ggaXMgd2h5IGl0IGNvdWxkbid0IGZpbmQgYW55IHZhbGlkL21h
+dGNoaW5nIGJhY2t1cHMuICBUaGUgc3RhdGVkIEFHIHNpemUgZG9lcyBsb29rIGNvcnJlY3QsIHRo
+b3VnaCwgZm9yIHRoZSBvdmVyYWxsIHNpemUgb2YgdGhlIGZpbGVzeXN0ZW0gYXMgc3RhdGVkIGlu
+IFNCIDAuDQoNCklzIHRoZXJlIG1vcmUgdG8gdGhpcyBzdG9yeT8gIERpZCBzb21ldGhpbmcgImlu
+dGVyZXN0aW5nIiBoYXBwZW4gd2l0aCB0aGUgdW5kZXJseWluZyBzdG9yYWdlPyAgT3Igd2l0aCB0
+aGUgZmlsZXN5c3RlbSBwcmlvciB0byB0aGlzIHByb2JsZW0/DQoNCmRvZXMgImJsa2lkIC9kZXYv
+ZG0tMjQiIHNheSBhbnl0aGluZyBvdGhlciB0aGFuICJ4ZnMgZmlsZXN5c3RlbT8iDQoNCi1Fcmlj
+DQoNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
