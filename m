@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DADF7CA7
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:03 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2067B7CBA
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E0698F8033
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:03 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D0D08304032
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:01 -0700 (PDT)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id J9IkHkYXF0zifk82 for
-	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:02 -0700 (PDT)
+	cuda.sgi.com with ESMTP id nPJPSr8cYMhd9Wa3 for
+	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:00 -0700 (PDT)
 From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v3 3/7] dax: enable dax in the presence of known media errors
-	(badblocks)
-Date: Sat, 23 Apr 2016 13:13:38 -0600
-Message-Id: <1461438822-3592-4-git-send-email-vishal.l.verma@intel.com>
+Subject: [PATCH v3 2/7] dax: fallback from pmd to pte on error
+Date: Sat, 23 Apr 2016 13:13:37 -0600
+Message-Id: <1461438822-3592-3-git-send-email-vishal.l.verma@intel.com>
 In-Reply-To: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
 References: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,60 +32,31 @@ Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linu
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-1/ If a mapping overlaps a bad sector fail the request.
+In preparation for consulting a badblocks list in pmem_direct_access(),
+teach dax_pmd_fault() to fallback rather than fail immediately upon
+encountering an error.  The thought being that reducing the span of the
+dax request may avoid the error region.
 
-2/ Do not opportunistically report more dax-capable capacity than is
-   requested when errors present.
-
-[vishal: fix a conflict with system RAM collision patches]
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- block/ioctl.c         | 9 ---------
- drivers/nvdimm/pmem.c | 8 ++++++++
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ fs/dax.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 4ff1f92..bf80bfd 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
- 			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
- 		return false;
+diff --git a/fs/dax.c b/fs/dax.c
+index 5a34f08..52f0044 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1111,8 +1111,8 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 		long length = dax_map_atomic(bdev, &dax);
  
--	/*
--	 * If the device has known bad blocks, force all I/O through the
--	 * driver / page cache.
--	 *
--	 * TODO: support finer grained dax error handling
--	 */
--	if (disk->bb && disk->bb->count)
--		return false;
--
- 	return true;
- }
- #endif
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index f72733c..4567d9a 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -188,9 +188,17 @@ static long pmem_direct_access(struct block_device *bdev,
- 	struct pmem_device *pmem = bdev->bd_disk->private_data;
- 	resource_size_t offset = sector * 512 + pmem->data_offset;
- 
-+	if (unlikely(is_bad_pmem(&pmem->bb, sector, dax->size)))
-+		return -EIO;
- 	dax->addr = pmem->virt_addr + offset;
- 	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
- 
-+	/*
-+	 * If badblocks are present, limit known good range to the
-+	 * requested range.
-+	 */
-+	if (unlikely(pmem->bb.count))
-+		return dax->size;
- 	return pmem->size - pmem->pfn_pad - offset;
- }
- 
+ 		if (length < 0) {
+-			result = VM_FAULT_SIGBUS;
+-			goto out;
++			dax_pmd_dbg(&bh, address, "dax-error fallback");
++			goto fallback;
+ 		}
+ 		if (length < PMD_SIZE) {
+ 			dax_pmd_dbg(&bh, address, "dax-length too small");
 -- 
 2.5.5
 
