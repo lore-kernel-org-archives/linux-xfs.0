@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D614D7CAE
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:01 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4DADF7CA7
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A99528F8033
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:13:58 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E0698F8033
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:03 -0700 (PDT)
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id 5HE7BBZLtDYGgShO for
-	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:13:57 -0700 (PDT)
+	cuda.sgi.com with ESMTP id J9IkHkYXF0zifk82 for
+	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:02 -0700 (PDT)
 From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v3 0/7] dax: handling media errors
-Date: Sat, 23 Apr 2016 13:13:35 -0600
-Message-Id: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
+Subject: [PATCH v3 3/7] dax: enable dax in the presence of known media errors
+	(badblocks)
+Date: Sat, 23 Apr 2016 13:13:38 -0600
+Message-Id: <1461438822-3592-4-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
+References: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,77 +29,64 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-Until now, dax has been disabled if media errors were found on
-any device. This series attempts to address that.
+From: Dan Williams <dan.j.williams@intel.com>
 
-The first three patches from Dan re-enable dax even when media
-errors are present.
+1/ If a mapping overlaps a bad sector fail the request.
 
-The fourth patch from Matthew removes the
-zeroout path from dax entirely, making zeroout operations always
-go through the driver (The motivation is that if a backing device
-has media errors, and we create a sparse file on it, we don't
-want the initial zeroing to happen via dax, we want to give the
-block driver a chance to clear the errors).
+2/ Do not opportunistically report more dax-capable capacity than is
+   requested when errors present.
 
-The fifth patch changes the behaviour of dax_do_io by adding a
-wrapper around it that is passed all the arguments also needed by
-__blockdev_do_direct_IO. If (the new) __dax_do_io fails with -EIO
-due to a bad block, we simply retry with the direct_IO path which
-forces the IO to go through the block driver, and can attempt to
-clear the error.
+[vishal: fix a conflict with system RAM collision patches]
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ block/ioctl.c         | 9 ---------
+ drivers/nvdimm/pmem.c | 8 ++++++++
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-Patch 6 reduces our calls to clear_pmem from dax in the
-truncate/hole-punch cases. We check if the range being truncated
-is sector aligned/sized, and if so, send blkdev_issue_zeroout
-instead of clear_pmem so that errors can be handled better by
-the driver.
-
-Patch 7 fixes a redundant comment in DAX and is mostly unrelated
-to the rest of this series.
-
-This series also depends on/is based on Jan Kara's DAX Locking
-fixes series [1].
-
-
-[1]: http://www.spinics.net/lists/linux-mm/msg105819.html
-
-v3:
- - Wrapper-ize the direct_IO fallback again and make an exception
-   for -EIOCBQUEUED (Jeff, Dan)
- - Reduce clear_pmem usage in DAX to the minimum
-
-Dan Williams (3):
-  block, dax: pass blk_dax_ctl through to drivers
-  dax: fallback from pmd to pte on error
-  dax: enable dax in the presence of known media errors (badblocks)
-
-Matthew Wilcox (1):
-  dax: use sb_issue_zerout instead of calling dax_clear_sectors
-
-Vishal Verma (3):
-  dax: handle media errors in dax_do_io
-  dax: for truncate/hole-punch, do zeroing through the driver if
-    possible
-  dax: fix a comment in dax_zero_page_range and dax_truncate_page
-
- arch/powerpc/sysdev/axonram.c | 10 +++---
- block/ioctl.c                 |  9 -----
- drivers/block/brd.c           |  9 ++---
- drivers/nvdimm/pmem.c         | 17 +++++++---
- drivers/s390/block/dcssblk.c  | 12 +++----
- fs/block_dev.c                |  7 ++--
- fs/dax.c                      | 78 +++++++++++++++----------------------------
- fs/ext2/inode.c               | 12 +++----
- fs/ext4/inode.c               |  5 +--
- fs/xfs/xfs_aops.c             |  8 ++---
- fs/xfs/xfs_bmap_util.c        | 15 +++------
- include/linux/blkdev.h        |  3 +-
- include/linux/dax.h           | 31 ++++++++++++++++-
- 13 files changed, 108 insertions(+), 108 deletions(-)
-
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 4ff1f92..bf80bfd 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
+ 			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
+ 		return false;
+ 
+-	/*
+-	 * If the device has known bad blocks, force all I/O through the
+-	 * driver / page cache.
+-	 *
+-	 * TODO: support finer grained dax error handling
+-	 */
+-	if (disk->bb && disk->bb->count)
+-		return false;
+-
+ 	return true;
+ }
+ #endif
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index f72733c..4567d9a 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -188,9 +188,17 @@ static long pmem_direct_access(struct block_device *bdev,
+ 	struct pmem_device *pmem = bdev->bd_disk->private_data;
+ 	resource_size_t offset = sector * 512 + pmem->data_offset;
+ 
++	if (unlikely(is_bad_pmem(&pmem->bb, sector, dax->size)))
++		return -EIO;
+ 	dax->addr = pmem->virt_addr + offset;
+ 	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
+ 
++	/*
++	 * If badblocks are present, limit known good range to the
++	 * requested range.
++	 */
++	if (unlikely(pmem->bb.count))
++		return dax->size;
+ 	return pmem->size - pmem->pfn_pad - offset;
+ }
+ 
 -- 
 2.5.5
 
