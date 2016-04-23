@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 441FF7D33
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 17:55:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 09F5F304051
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 15:55:20 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cFoyFyicvwHPBMkI for <xfs@oss.sgi.com>;
-	Wed, 27 Apr 2016 15:55:17 -0700 (PDT)
-Date: Thu, 28 Apr 2016 08:55:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
-	explicitly from memalloc_no{fs,io}_{save,restore} context
-Message-ID: <20160427225514.GJ26977@dastard>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
-	<20160426225845.GF26977@dastard>
-	<20160427080311.GC2179@dhcp22.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160427080311.GC2179@dhcp22.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ACD247CA7
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 80A518F8033
+	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:00 -0700 (PDT)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id T5KoyQKbKln9USgH for
+	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:13:59 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v3 1/7] block, dax: pass blk_dax_ctl through to drivers
+Date: Sat, 23 Apr 2016 13:13:36 -0600
+Message-Id: <1461438822-3592-2-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
+References: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,100 +22,179 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Wed, Apr 27, 2016 at 10:03:11AM +0200, Michal Hocko wrote:
-> On Wed 27-04-16 08:58:45, Dave Chinner wrote:
-> > On Tue, Apr 26, 2016 at 01:56:12PM +0200, Michal Hocko wrote:
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > 
-> > > THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
-> > > 
-> > > It is desirable to reduce the direct GFP_NO{FS,IO} usage at minimum and
-> > > prefer scope usage defined by memalloc_no{fs,io}_{save,restore} API.
-> > > 
-> > > Let's help this process and add a debugging tool to catch when an
-> > > explicit allocation request for GFP_NO{FS,IO} is done from the scope
-> > > context. The printed stacktrace should help to identify the caller
-> > > and evaluate whether it can be changed to use a wider context or whether
-> > > it is called from another potentially dangerous context which needs
-> > > a scope protection as well.
-> > 
-> > You're going to get a large number of these from XFS. There are call
-> > paths in XFs that get called both inside and outside transaction
-> > context, and many of them are marked with GFP_NOFS to prevent issues
-> > that have cropped up in the past.
-> > 
-> > Often these are to silence lockdep warnings (e.g. commit b17cb36
-> > ("xfs: fix missing KM_NOFS tags to keep lockdep happy")) because
-> > lockdep gets very unhappy about the same functions being called with
-> > different reclaim contexts. e.g.  directory block mapping might
-> > occur from readdir (no transaction context) or within transactions
-> > (create/unlink). hence paths like this are tagged with GFP_NOFS to
-> > stop lockdep emitting false positive warnings....
-> 
-> I would much rather see lockdep being fixed than abusing GFP_NOFS to
-> workaround its limitations. GFP_NOFS has a real consequences to the
-> memory reclaim. I will go and check the commit you mentioned and try
-> to understand why that is a problem. From what you described above
-> I would like to get rid of exactly this kind of usage which is not
-> really needed for the recursion protection.
+From: Dan Williams <dan.j.williams@intel.com>
 
-The problem is that every time we come across this, the answer is
-"use lockdep annotations". Our lockdep annotations are freakin'
-complex because of this, and more often than not lockdep false
-positives occur due to bugs in the annotations. e.g. see
-fs/xfs/xfs_inode.h for all the inode locking annotations we have to
-use and the hoops we have to jump through because we are limited to
-8 subclasses and we have to be able to annotate nested inode locks
-5 deep in places (RENAME_WHITEOUT, thanks).
+This is in preparation for doing badblocks checking against the
+requested sector range in the driver.  Currently we opportunistically
+return as much data that can be "dax'd" starting at the given sector.
+When errors are present we want to limit that range to the first
+encountered error, or fail the dax request if the range encompasses an
+error.
 
-At one point, we had to reset lockdep classes for inodes in reclaim
-so that they didn't throw lockdep false positives the moment an
-inode was locked in a memory reclaim context. We had to change
-locking to remove that problem (commit 4f59af7 ("xfs: remove iolock
-lock classes"). Then there were all the problems with reclaim
-triggering lockdep warnings on directory inodes - we had to add a
-separate directory inode class for them, and even then we still need
-GFP_NOFS in places to minimise reclaim noise (as per the above
-commit).
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ arch/powerpc/sysdev/axonram.c | 10 +++++-----
+ drivers/block/brd.c           |  9 +++++----
+ drivers/nvdimm/pmem.c         |  9 +++++----
+ drivers/s390/block/dcssblk.c  | 12 ++++++------
+ fs/block_dev.c                |  2 +-
+ include/linux/blkdev.h        |  3 +--
+ 6 files changed, 23 insertions(+), 22 deletions(-)
 
-Put simply: we've had to resort to designing locking and allocation
-strategies around the limitations of lockdep annotations, as opposed
-to what is actually possible or even optimal. i.e. when the choice
-is a 2 minute fix to add GFP_NOFS in cases like this, versus another
-week long effort to rewrite the inode annotations (again) like this
-one last year:
-
-commit 0952c8183c1575a78dc416b5e168987ff98728bb
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Wed Aug 19 10:32:49 2015 +1000
-
-    xfs: clean up inode lockdep annotations
-    
-    Lockdep annotations are a maintenance nightmare. Locking has to be
-    modified to suit the limitations of the annotations, and we're
-    always having to fix the annotations because they are unable to
-    express the complexity of locking heirarchies correctly.
-.....
-
-It's a no-brainer to see why GFP_NOFS will be added to the
-allocation in question. I've been saying for years that I consider
-lockdep harmful - if you want to get rid of GFP_NOFS, then you're
-going to need to sort out the lockdep reclaim annotation mess at the
-same time...
-
-Cheers,
-
-Dave.
+diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
+index 0d112b9..d85673f 100644
+--- a/arch/powerpc/sysdev/axonram.c
++++ b/arch/powerpc/sysdev/axonram.c
+@@ -139,17 +139,17 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
+ 
+ /**
+  * axon_ram_direct_access - direct_access() method for block device
+- * @device, @sector, @data: see block_device_operations method
++ * @dax: see block_device_operations method
+  */
+ static long
+-axon_ram_direct_access(struct block_device *device, sector_t sector,
+-		       void __pmem **kaddr, pfn_t *pfn)
++axon_ram_direct_access(struct block_device *device, struct blk_dax_ctl *dax)
+ {
++	sector_t sector = get_start_sect(device) + dax->sector;
+ 	struct axon_ram_bank *bank = device->bd_disk->private_data;
+ 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
+ 
+-	*kaddr = (void __pmem __force *) bank->io_addr + offset;
+-	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
++	dax->addr = (void __pmem __force *) bank->io_addr + offset;
++	dax->pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
+ 	return bank->size - offset;
+ }
+ 
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 51a071e..71521c1 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -380,9 +380,10 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
+ }
+ 
+ #ifdef CONFIG_BLK_DEV_RAM_DAX
+-static long brd_direct_access(struct block_device *bdev, sector_t sector,
+-			void __pmem **kaddr, pfn_t *pfn)
++static long brd_direct_access(struct block_device *bdev,
++		struct blk_dax_ctl *dax)
+ {
++	sector_t sector = get_start_sect(bdev) + dax->sector;
+ 	struct brd_device *brd = bdev->bd_disk->private_data;
+ 	struct page *page;
+ 
+@@ -391,8 +392,8 @@ static long brd_direct_access(struct block_device *bdev, sector_t sector,
+ 	page = brd_insert_page(brd, sector);
+ 	if (!page)
+ 		return -ENOSPC;
+-	*kaddr = (void __pmem *)page_address(page);
+-	*pfn = page_to_pfn_t(page);
++	dax->addr = (void __pmem *)page_address(page);
++	dax->pfn = page_to_pfn_t(page);
+ 
+ 	return PAGE_SIZE;
+ }
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index f798899..f72733c 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -181,14 +181,15 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
+ 	return rc;
+ }
+ 
+-static long pmem_direct_access(struct block_device *bdev, sector_t sector,
+-		      void __pmem **kaddr, pfn_t *pfn)
++static long pmem_direct_access(struct block_device *bdev,
++		struct blk_dax_ctl *dax)
+ {
++	sector_t sector = get_start_sect(bdev) + dax->sector;
+ 	struct pmem_device *pmem = bdev->bd_disk->private_data;
+ 	resource_size_t offset = sector * 512 + pmem->data_offset;
+ 
+-	*kaddr = pmem->virt_addr + offset;
+-	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
++	dax->addr = pmem->virt_addr + offset;
++	dax->pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
+ 
+ 	return pmem->size - pmem->pfn_pad - offset;
+ }
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index b839086..613f587 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -30,8 +30,8 @@ static int dcssblk_open(struct block_device *bdev, fmode_t mode);
+ static void dcssblk_release(struct gendisk *disk, fmode_t mode);
+ static blk_qc_t dcssblk_make_request(struct request_queue *q,
+ 						struct bio *bio);
+-static long dcssblk_direct_access(struct block_device *bdev, sector_t secnum,
+-			 void __pmem **kaddr, pfn_t *pfn);
++static long dcssblk_direct_access(struct block_device *bdev,
++		struct blk_dax_ctl *dax)
+ 
+ static char dcssblk_segments[DCSSBLK_PARM_LEN] = "\0";
+ 
+@@ -883,9 +883,9 @@ fail:
+ }
+ 
+ static long
+-dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
+-			void __pmem **kaddr, pfn_t *pfn)
++dcssblk_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
+ {
++	sector_t secnum = get_start_sect(bdev) + dax->sector;
+ 	struct dcssblk_dev_info *dev_info;
+ 	unsigned long offset, dev_sz;
+ 
+@@ -894,8 +894,8 @@ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
+ 		return -ENODEV;
+ 	dev_sz = dev_info->end - dev_info->start;
+ 	offset = secnum * 512;
+-	*kaddr = (void __pmem *) (dev_info->start + offset);
+-	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
++	dax->addr = (void __pmem *) (dev_info->start + offset);
++	dax->pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
+ 
+ 	return dev_sz - offset;
+ }
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index b25bb23..79defba 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
+ 	sector += get_start_sect(bdev);
+ 	if (sector % (PAGE_SIZE / 512))
+ 		return -EINVAL;
+-	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
++	avail = ops->direct_access(bdev, dax);
+ 	if (!avail)
+ 		return -ERANGE;
+ 	if (avail > 0 && avail & ~PAGE_MASK)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 669e419..9d8c6d5 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1656,8 +1656,7 @@ struct block_device_operations {
+ 	int (*rw_page)(struct block_device *, sector_t, struct page *, int rw);
+ 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+-	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+-			pfn_t *);
++	long (*direct_access)(struct block_device *, struct blk_dax_ctl *dax);
+ 	unsigned int (*check_events) (struct gendisk *disk,
+ 				      unsigned int clearing);
+ 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.5
 
 _______________________________________________
 xfs mailing list
