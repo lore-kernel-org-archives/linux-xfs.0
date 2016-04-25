@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 465C37CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 17:15:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F20CF304032
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 15:15:18 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
-	cuda.sgi.com with ESMTP id jU63neR0HxvgE3fZ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Apr 2016 15:15:16 -0700 (PDT)
-Subject: Bug#822369: xfsprogs: FTBFS: error: redefinition of 'struct fsxattr'
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.822369.B822369.146162246118545@bugs.debian.org>
-Date: Tue, 26 Apr 2016 08:14:03 +1000
+	by oss.sgi.com (Postfix) with ESMTP id 3D7607CA0
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 18:09:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 03D4E304039
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 16:09:25 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	3KquPuu23frOQb7N for <xfs@oss.sgi.com>;
+	Mon, 25 Apr 2016 16:09:19 -0700 (PDT)
+Date: Tue, 26 Apr 2016 09:08:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Message-ID: <20160425221403.GB18496@dastard>
-References: <20160423205226.67773120316@dl580gen9-02.hlinux>
-	<20160423210831.GA19384@jirafa.cyrius.com>
+Subject: Re: [PATCH] xfs: idle aild if the AIL is pushed up to the target LSN
+Message-ID: <20160425230833.GC18496@dastard>
+References: <1461570163-4083-1-git-send-email-dev@lynxeye.de>
+	<20160425142444.GC33882@bfoster.bfoster>
+	<1461607897.2364.27.camel@lynxeye.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160423210831.GA19384@jirafa.cyrius.com>
-Reply-To: Dave Chinner <david@fromorbit.com>, 822369@bugs.debian.org
+In-Reply-To: <1461607897.2364.27.camel@lynxeye.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +31,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Michlmayr <tbm@hpe.com>, 822369@bugs.debian.org
-Cc: submit@bugs.debian.org
+To: Lucas Stach <dev@lynxeye.de>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Apr 23, 2016 at 02:08:31PM -0700, Martin Michlmayr wrote:
-> Package: xfsprogs
-> Version: 4.3.0+nmu1
-> Severity: serious
-> 
-> This package fails to build in unstable:
-> 
-> > sbuild (Debian sbuild) 0.68.0 (15 Jan 2016) on dl580gen9-02.hlinux
-> ...
-> >     [CC]     fiemap.o
-> > In file included from ../include/xfs.h:58:0,
-> >                  from io.h:19,
-> >                  from fiemap.c:24:
-> > ../include/xfs/xfs_fs.h:42:8: error: redefinition of 'struct fsxattr'
-> >  struct fsxattr {
-> >         ^
-> > In file included from fiemap.c:22:0:
-> > /usr/include/linux/fs.h:155:8: note: originally defined here
-> >  struct fsxattr {
-> >         ^
-> > ../include/buildrules:59: recipe for target 'fiemap.o' failed
-> > make[3]: *** [fiemap.o] Error 1
-> > include/buildrules:35: recipe for target 'io' failed
+On Mon, Apr 25, 2016 at 08:11:37PM +0200, Lucas Stach wrote:
+> Am Montag, den 25.04.2016, 10:24 -0400 schrieb Brian Foster:
+> > On Mon, Apr 25, 2016 at 09:42:43AM +0200, Lucas Stach wrote:
+> > > 
+> > > The current logic only idles aild if the AIL is empty, rescheduling
+> > > the worker with a timeout of 50ms otherwise. If the target LSN
+> > > isn't
+> > > moved forward, the worker will not make any progress as it only
+> > > pushes the AIL up to the target LSN, leading to the empty AIL
+> > > condition to only be met after the log worker pushed the complete
+> > > AIL. As the log worker runs on the scale of minutes, this leaves
+> > > aild in the "no progress, 50ms timeout" state for extended periods
+> > > of
+> > > time, causing many unecessary wakeups.
+> > > 
+> > Where do you get the "scale of minutes" from? I believe the default
+> > log
+> > worker interval is 30s, though it can be increased by the admin.
+> > 
+> Uh, right. It's 30s, which is still a very long time when we consider
+> that new items can be added to the AIL right after the log worker
+> forced it out.
 
-Kernel uapi change in 4.5 caused it. Upgrade to xfsprogs 4.5.0.
+Standard writeback timeout for data and metadata.
+
+> > The other thing to note is that the AIL target is also driven by
+> > demand
+> > on log space. E.g., see xlog_grant_push_ail(), which executes when a
+> > transaction attempts to reserve log space that isn't currently
+> > available
+> > in the log.
+> > 
+> And that's where I think the problem stems from: the above function
+> pushes the AIL only up to a target LSN to make room for the required
+> log space. Only the log worker empties the AIL completely by issuing a
+> xfs_ail_push_all_sync().
+
+xfs_ail_push_all(), actually, and the log worker runs every 30s by
+default. i.e. we move the target to the end to the AIL to try to
+empty it completely every 30s.
+
+> > That said, I'm not sure whether there's a notable benefit of idling
+> > for
+> > 50ms over just scheduling out when we've hit the target lsn. It seems
+> > like that anybody who pushes the target forward again is going to
+> > wake
+> > up the thread anyways. On the other hand, if the fs is idle the
+> > thread
+> > will eventually schedule out indefinitely. 
+> 
+> Is this a problem? The patch tries to do exactly that: schedule out
+> aild indefinitely when there is no more work to do as nobody is pushing
+> the target LSN forward.
+
+If the filesystem is slowly being dirtied, then the aild should't
+really idle at all.i
+
+Keep in mind that the xfsaild has multiple functions, one of which
+is a watchdog that catches log space stalls that would otherwise
+hang the filesystem. Every time we've removed the watchdog function
+(i.e.  agressively idle the aild) we've had users report random,
+unreproducable hangs/stalls that have gone away when the watchdog
+function (i.e. don't idle until the log is covered and completely
+idle) was re-instated...
+
+> On an idle FS this will stop aild when the target LSN is hit, will wake
+> it up again as soon as the log worker requests the complete AIL to be
+> pushed out, then it goes back to sleep indefinitely until the log fills
+> up again.
+
+The behaviour suggests that your filesystem is not idle. The
+filesystem takes up to 90s to be marked idle (log needs to be
+covered, state machine takes 3x30s cycles to transition to idle
+"covered" state.
+
+If you want the filesytsem to idle quickly, then run the log worker
+more frequently to get the target updated more quickly. This will
+also speed up the log covering state machine as well.
 
 Cheers,
 
