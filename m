@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5B5777CA0
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2016 02:46:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 21B608F8033
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2016 00:46:53 -0700 (PDT)
-Received: from mail-io0-f181.google.com (mail-io0-f181.google.com
-	[209.85.223.181]) by cuda.sgi.com with ESMTP id
-	5Kgq0TESbwF3PvB7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Apr 2016 00:46:49 -0700 (PDT)
-Received: by mail-io0-f181.google.com with SMTP id u185so111069064iod.3
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2016 00:46:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <57193483.8000700@sandeen.net>
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-	<1461231593-31294-16-git-send-email-jtulak@redhat.com>
-	<CACj3i73aW53YyEsZERZnSWHJ3y9cW85sA15KdoesCbx9wKsbPg@mail.gmail.com>
-	<57193483.8000700@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 22 Apr 2016 09:46:29 +0200
-Message-ID: <CACj3i72t8Ed3Mv3wBMCr_K_GQabKNmoQQRyW8Pz7Es6WNj09ng@mail.gmail.com>
-Subject: Re: [PATCH 15/19] mkfs: don't treat files as though they are block
-	devices
+	by oss.sgi.com (Postfix) with ESMTP id 44A4E7CA0
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 13:11:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19D9B8F8033
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 11:11:44 -0700 (PDT)
+Received: from lynxeye.de (ns.lynxeye.de [87.118.118.114]) by cuda.sgi.com
+	with ESMTP id qot6rW0x7aRhTxNX for <xfs@oss.sgi.com>;
+	Mon, 25 Apr 2016 11:11:41 -0700 (PDT)
+Message-ID: <1461607897.2364.27.camel@lynxeye.de>
+Subject: Re: [PATCH] xfs: idle aild if the AIL is pushed up to the target LSN
+From: Lucas Stach <dev@lynxeye.de>
+Date: Mon, 25 Apr 2016 20:11:37 +0200
+In-Reply-To: <20160425142444.GC33882@bfoster.bfoster>
+References: <1461570163-4083-1-git-send-email-dev@lynxeye.de>
+	<20160425142444.GC33882@bfoster.bfoster>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,175 +24,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6973141819828140211=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
---===============6973141819828140211==
-Content-Type: multipart/alternative; boundary=001a113ecdbe8410de05310e07f3
-
---001a113ecdbe8410de05310e07f3
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Apr 21, 2016 at 10:13 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-
->
->
-> On 4/21/16 8:43 AM, Jan Tulak wrote:
-> > On Thu, Apr 21, 2016 at 11:39 AM, Jan Tulak <jtulak@redhat.com <mailto:
-> jtulak@redhat.com>>wrote:
-> >
-> >     From: Dave Chinner <dchinner@redhat.com <mailto:dchinner@redhat.com
-> >>
-> >
-> >     THIS PATCH HAS KNOWN ISSUES - it fails xfs/206 and xfs/216 tests, a=
-s
-> it
-> >     shrinks a file instead just not using it entirely, when -d size is
-> used.
-> >
-> >
-> > =E2=80=8BSo the shrinking is happening here:
-> > 3127        /*
-> > 3128         * If the data area is a file, then grow it out to its fina=
-l
-> size
-> > 3129         * so that the reads for the end of the device in the mount
-> code
-> > 3130         * will succeed.
-> > 3131         */
-> > 3132        if (xi.disfile && ftruncate64(xi.dfd, dblocks * blocksize) =
-<
-> 0) {=E2=80=8B
-> >
-> >
-> > Before the patch, xi.disfile was 0 and so it didn't shrink the file
-> > to the size of the new FS. Now, what is the correct solve to this?
-> > Tests are written for the old behaviour, but this shrinking seems to
-> > be an intentional thing. It seems that the FS works ok even when this
-> > truncating is not applied, so I think that I should remove this chunk
-> > (or change it to xi.dcreate=3D1 only), and keep the old behaviour.
-> >
-> > What do you think about it, guys?
->
-> Can't remove it; that would break the other side of things, if you try
-> to mkfs.xfs -d size=3D2g on an existing 1g file... mount tries to do
-> IO to the last block, and if it's not truncated out, that will fail
-> (as the comment says).
->
-> I suppose the simple way to fix it is to only truncate up, never down.
->
-> i.e. truncate to max(dblocks * blocksize, st_size) or
-> if (xi.disfile && st_size <  dblocks * blocksize) { truncate ... }
->
-
-All right, it seems that I should have read the man page, and not just
- look on the first sentence or two... <emoticon of me hitting a wall with
-my head repeatedly>.
-
-Now it works, thanks.
-
-Jan
-
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---001a113ecdbe8410de05310e07f3
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Thu, Ap=
-r 21, 2016 at 10:13 PM, Eric Sandeen </span><span dir=3D"ltr" style=3D"font=
--family:arial,sans-serif">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=
-=3D"_blank">sandeen@sandeen.net</a>&gt;</span><span style=3D"font-family:ar=
-ial,sans-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div cla=
-ss=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 =
-.8ex;border-left:1px #ccc solid;padding-left:1ex"><br>
-<br>
-On 4/21/16 8:43 AM, Jan Tulak wrote:<br>
-&gt; On Thu, Apr 21, 2016 at 11:39 AM, Jan Tulak &lt;<a href=3D"mailto:jtul=
-ak@redhat.com">jtulak@redhat.com</a> &lt;mailto:<a href=3D"mailto:jtulak@re=
-dhat.com">jtulak@redhat.com</a>&gt;&gt;wrote:<br>
-&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0From: Dave Chinner &lt;<a href=3D"mailto:dchinner@r=
-edhat.com">dchinner@redhat.com</a> &lt;mailto:<a href=3D"mailto:dchinner@re=
-dhat.com">dchinner@redhat.com</a>&gt;&gt;<br>
-<span class=3D"">&gt;<br>
-&gt;=C2=A0 =C2=A0 =C2=A0THIS PATCH HAS KNOWN ISSUES - it fails xfs/206 and =
-xfs/216 tests, as it<br>
-&gt;=C2=A0 =C2=A0 =C2=A0shrinks a file instead just not using it entirely, =
-when -d size is used.<br>
-&gt;<br>
-&gt;<br>
-&gt; =E2=80=8BSo the shrinking is happening here:<br>
-&gt; 3127=C2=A0 =C2=A0 =C2=A0 =C2=A0 /*<br>
-&gt; 3128=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* If the data area is a file, th=
-en grow it out to its final size<br>
-&gt; 3129=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* so that the reads for the end =
-of the device in the mount code<br>
-&gt; 3130=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0* will succeed.<br>
-&gt; 3131=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0*/<br>
-&gt; 3132=C2=A0 =C2=A0 =C2=A0 =C2=A0 if (xi.disfile &amp;&amp; ftruncate64(=
-xi.dfd, dblocks * blocksize) &lt; 0) {=E2=80=8B<br>
-&gt;<br>
-&gt;<br>
-&gt; Before the patch, xi.disfile was 0 and so it didn&#39;t shrink the fil=
-e<br>
-&gt; to the size of the new FS. Now, what is the correct solve to this?<br>
-&gt; Tests are written for the old behaviour, but this shrinking seems to<b=
-r>
-&gt; be an intentional thing. It seems that the FS works ok even when this<=
-br>
-&gt; truncating is not applied, so I think that I should remove this chunk<=
-br>
-&gt; (or change it to xi.dcreate=3D1 only), and keep the old behaviour.<br>
-&gt;<br>
-&gt; What do you think about it, guys?<br>
-<br>
-</span>Can&#39;t remove it; that would break the other side of things, if y=
-ou try<br>
-to mkfs.xfs -d size=3D2g on an existing 1g file... mount tries to do<br>
-IO to the last block, and if it&#39;s not truncated out, that will fail<br>
-(as the comment says).<br>
-<br>
-I suppose the simple way to fix it is to only truncate up, never down.<br>
-<br>
-i.e. truncate to max(dblocks * blocksize, st_size) or<br>
-if (xi.disfile &amp;&amp; st_size &lt;=C2=A0 dblocks * blocksize) { truncat=
-e ... }<br></blockquote><div><br></div><div><div class=3D"gmail_default" st=
-yle=3D"font-family:arial,helvetica,sans-serif">All right, it seems that I s=
-hould have read the man page, and not just =C2=A0look on the first sentence=
- or two... &lt;emoticon of me hitting a wall with my head repeatedly&gt;.=
-=C2=A0</div><div class=3D"gmail_default" style=3D"font-family:arial,helveti=
-ca,sans-serif"><br></div><div class=3D"gmail_default" style=3D"font-family:=
-arial,helvetica,sans-serif">Now it works, thanks.</div><div class=3D"gmail_=
-default" style=3D"font-family:arial,helvetica,sans-serif"><br></div><div cl=
-ass=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">Jan<=
-/div><br></div><div>=C2=A0</div></div>-- <br><div class=3D"gmail_signature"=
-><div dir=3D"ltr"><div><div dir=3D"ltr"><div>Jan Tulak<br></div><a href=3D"=
-mailto:jtulak@redhat.com" target=3D"_blank">jtulak@redhat.com</a>=C2=A0/ <a=
- href=3D"mailto:jan@tulak.me" target=3D"_blank">jan@tulak.me</a></div></div=
-></div></div>
-</div></div>
-
---001a113ecdbe8410de05310e07f3--
-
-
---===============6973141819828140211==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6973141819828140211==--
+QW0gTW9udGFnLCBkZW4gMjUuMDQuMjAxNiwgMTA6MjQgLTA0MDAgc2NocmllYiBCcmlhbiBGb3N0
+ZXI6Cj4gT24gTW9uLCBBcHIgMjUsIDIwMTYgYXQgMDk6NDI6NDNBTSArMDIwMCwgTHVjYXMgU3Rh
+Y2ggd3JvdGU6Cj4gPiAKPiA+IFRoZSBjdXJyZW50IGxvZ2ljIG9ubHkgaWRsZXMgYWlsZCBpZiB0
+aGUgQUlMIGlzIGVtcHR5LCByZXNjaGVkdWxpbmcKPiA+IHRoZSB3b3JrZXIgd2l0aCBhIHRpbWVv
+dXQgb2YgNTBtcyBvdGhlcndpc2UuIElmIHRoZSB0YXJnZXQgTFNOCj4gPiBpc24ndAo+ID4gbW92
+ZWQgZm9yd2FyZCwgdGhlIHdvcmtlciB3aWxsIG5vdCBtYWtlIGFueSBwcm9ncmVzcyBhcyBpdCBv
+bmx5Cj4gPiBwdXNoZXMgdGhlIEFJTCB1cCB0byB0aGUgdGFyZ2V0IExTTiwgbGVhZGluZyB0byB0
+aGUgZW1wdHkgQUlMCj4gPiBjb25kaXRpb24gdG8gb25seSBiZSBtZXQgYWZ0ZXIgdGhlIGxvZyB3
+b3JrZXIgcHVzaGVkIHRoZSBjb21wbGV0ZQo+ID4gQUlMLiBBcyB0aGUgbG9nIHdvcmtlciBydW5z
+IG9uIHRoZSBzY2FsZSBvZiBtaW51dGVzLCB0aGlzIGxlYXZlcwo+ID4gYWlsZCBpbiB0aGUgIm5v
+IHByb2dyZXNzLCA1MG1zIHRpbWVvdXQiIHN0YXRlIGZvciBleHRlbmRlZCBwZXJpb2RzCj4gPiBv
+Zgo+ID4gdGltZSwgY2F1c2luZyBtYW55IHVuZWNlc3Nhcnkgd2FrZXVwcy4KPiA+IAo+IFdoZXJl
+IGRvIHlvdSBnZXQgdGhlICJzY2FsZSBvZiBtaW51dGVzIiBmcm9tPyBJIGJlbGlldmUgdGhlIGRl
+ZmF1bHQKPiBsb2cKPiB3b3JrZXIgaW50ZXJ2YWwgaXMgMzBzLCB0aG91Z2ggaXQgY2FuIGJlIGlu
+Y3JlYXNlZCBieSB0aGUgYWRtaW4uCj4gClVoLCByaWdodC4gSXQncyAzMHMsIHdoaWNoIGlzIHN0
+aWxsIGEgdmVyeSBsb25nIHRpbWUgd2hlbiB3ZSBjb25zaWRlcgp0aGF0IG5ldyBpdGVtcyBjYW4g
+YmUgYWRkZWQgdG8gdGhlIEFJTCByaWdodCBhZnRlciB0aGUgbG9nIHdvcmtlcgpmb3JjZWQgaXQg
+b3V0LgoKPiBUaGUgb3RoZXIgdGhpbmcgdG8gbm90ZSBpcyB0aGF0IHRoZSBBSUwgdGFyZ2V0IGlz
+IGFsc28gZHJpdmVuIGJ5Cj4gZGVtYW5kCj4gb24gbG9nIHNwYWNlLiBFLmcuLCBzZWUgeGxvZ19n
+cmFudF9wdXNoX2FpbCgpLCB3aGljaCBleGVjdXRlcyB3aGVuIGEKPiB0cmFuc2FjdGlvbiBhdHRl
+bXB0cyB0byByZXNlcnZlIGxvZyBzcGFjZSB0aGF0IGlzbid0IGN1cnJlbnRseQo+IGF2YWlsYWJs
+ZQo+IGluIHRoZSBsb2cuCj4gCkFuZCB0aGF0J3Mgd2hlcmUgSSB0aGluayB0aGUgcHJvYmxlbSBz
+dGVtcyBmcm9tOiB0aGUgYWJvdmUgZnVuY3Rpb24KcHVzaGVzIHRoZSBBSUwgb25seSB1cCB0byBh
+IHRhcmdldCBMU04gdG8gbWFrZSByb29tIGZvciB0aGUgcmVxdWlyZWQKbG9nIHNwYWNlLiBPbmx5
+IHRoZSBsb2cgd29ya2VyIGVtcHRpZXMgdGhlIEFJTCBjb21wbGV0ZWx5IGJ5IGlzc3VpbmcgYQp4
+ZnNfYWlsX3B1c2hfYWxsX3N5bmMoKS4KCj4gVGhhdCBzYWlkLCBJJ20gbm90IHN1cmUgd2hldGhl
+ciB0aGVyZSdzIGEgbm90YWJsZSBiZW5lZml0IG9mIGlkbGluZwo+IGZvcgo+IDUwbXMgb3ZlciBq
+dXN0IHNjaGVkdWxpbmcgb3V0IHdoZW4gd2UndmUgaGl0IHRoZSB0YXJnZXQgbHNuLiBJdCBzZWVt
+cwo+IGxpa2UgdGhhdCBhbnlib2R5IHdobyBwdXNoZXMgdGhlIHRhcmdldCBmb3J3YXJkIGFnYWlu
+IGlzIGdvaW5nIHRvCj4gd2FrZQo+IHVwIHRoZSB0aHJlYWQgYW55d2F5cy4gT24gdGhlIG90aGVy
+IGhhbmQsIGlmIHRoZSBmcyBpcyBpZGxlIHRoZQo+IHRocmVhZAo+IHdpbGwgZXZlbnR1YWxseSBz
+Y2hlZHVsZSBvdXQgaW5kZWZpbml0ZWx5LiAKCklzIHRoaXMgYSBwcm9ibGVtPyBUaGUgcGF0Y2gg
+dHJpZXMgdG8gZG8gZXhhY3RseSB0aGF0OiBzY2hlZHVsZSBvdXQKYWlsZCBpbmRlZmluaXRlbHkg
+d2hlbiB0aGVyZSBpcyBubyBtb3JlIHdvcmsgdG8gZG8gYXMgbm9ib2R5IGlzIHB1c2hpbmcKdGhl
+IHRhcmdldCBMU04gZm9yd2FyZC4KCk9uIGFuIGlkbGUgRlMgdGhpcyB3aWxsIHN0b3AgYWlsZCB3
+aGVuIHRoZSB0YXJnZXQgTFNOIGlzIGhpdCwgd2lsbCB3YWtlCml0IHVwIGFnYWluIGFzIHNvb24g
+YXMgdGhlIGxvZyB3b3JrZXIgcmVxdWVzdHMgdGhlIGNvbXBsZXRlIEFJTCB0byBiZQpwdXNoZWQg
+b3V0LCB0aGVuIGl0IGdvZXMgYmFjayB0byBzbGVlcCBpbmRlZmluaXRlbHkgdW50aWwgdGhlIGxv
+ZyBmaWxscwp1cCBhZ2Fpbi4KCj4gSGF2ZSB5b3Ugb2JzZXJ2ZWQgcHJvYmxlbWF0aWMKPiBiZWhh
+dmlvciBkdWUgdG8gdGhlIGN1cnJlbnQgaGV1cmlzdGljPwo+IApZZXMuIE9uIGEgRlMgd2l0aCBh
+IGxvdywgYnV0IGNvbnN0YW50IG1ldGFkYXRhIHdvcmtsb2FkIEkgd291bGQgZXhwZWN0CmFpbGQg
+dG8gYmUgc2NoZWR1bGVkIG9ubHkgd2hlbiB0aGUgbG9nIHNwYWNlIGlzIHJ1bm5pbmcgb3V0IGFu
+ZC9vciB0aGUKbG9nIHdvcmtlciBmb3JjZXMgYSBzeW5jLgpXaGF0IGN1cnJlbnRseSBoYXBwZW5z
+IGlzIHRoYXQgYWlsZCBzdGF5cyBpbiB0aGUgInRhcmdldCBMU04gaGl0IC0+IG5vCndvcmsgdG8g
+ZG8sIHNjaGVkdWxlIGEgdGltZW91dCBlYWNoIDUwbXMiIHN0YXRlIGZvciBhbG1vc3QgdGhlIGVu
+dGlyZQpydW50aW1lIG9mIHRoZSBzeXN0ZW0uIFRoaXMgY2F1c2VzIGFib3V0IDIwIENQVSB3YWtl
+dXBzIHBlciBzZWNvbmQgcGVyCm1vdW50cG9pbnQsIG1vc3Qgb2Ygd2hpY2ggYXJlIGNvbXBsZXRl
+bHkgd2FzdGVkLCBhcyB0aGVyZSBpcyBubyB3b3JrIHRvCmRvLgoKTXkgdXNlIGNhc2UgbWF5IGJl
+IGF0eXBpY2FsLCBhcyBJJ20gdXNpbmcgWEZTIG9uIGEgbGFwdG9wLCBidXQgaW4gdGhhdApjYXNl
+IHRoZSBYRlMgYWlsZCBpcyBhY3R1YWxseSBjYXVzaW5nIG1vc3Qgb2YgdGhlIENQVSB3YWtldXBz
+IGluIGFuCm90aGVyd2lzZSBpZGxlIHN5c3RlbSwgd2hpY2ggaXMgY2xlYXJseSB1bmRlc2lyYWJs
+ZSwgYXMgdGhvc2Ugd2FrZXVwcwphcmVuJ3QgcmVhbGx5IG5lZWRlZCBhcyB0aGV5IGRvbid0IGxl
+YWQgdG8gYWN0dWFsIHdvcmsgZ2V0dGluZyBkb25lLgoKPiA+IAo+ID4gRml4IHRoaXMgYnkgaWRs
+aW5nIGFpbGQgYXMgc29vbiBhcyB0aGUgQUlMIGlzIHB1c2hlZCB1cCB0byB0aGUKPiA+IHRhcmdl
+dAo+ID4gTFNOLiBBbGwgY29kZSBwYXRocyB0aGF0IG1vdmUgdGhlIHRhcmdldCBMU04gZm9yd2Fy
+ZCBhbHJlYWR5IGVuc3VyZQo+ID4gdGhhdCBhaWxkIGlzIHdva2VuIHVwIGFnYWluIHdoZW4gbmVl
+ZGVkLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBMdWNhcyBTdGFjaCA8ZGV2QGx5bnhleWUuZGU+
+Cj4gPiAtLS0KPiA+IEknbSBwcmV0dHkgc3VyZSB0aGF0IHRoZSBhYm92ZSBkZWR1Y3Rpb24gaXMg
+Y29ycmVjdCwgYnV0IGFzIHRoaXMgbXkKPiA+IGZpcnN0IHJlYWwgZW5jb3VudGVyIHdpdGggdGhl
+IFhGUyBjb2RlIGJhc2UsIHNvbWVvbmUgd2l0aCBhIGJpdAo+ID4gbW9yZQo+ID4ga25vd2xlZGdl
+IHRoYW4gbWUgc2hvdWxkIGdpdmUgdGhpcyBzb21lIHRob3VnaHQuCj4gPiAtLS0KPiA+IMKgZnMv
+eGZzL3hmc190cmFuc19haWwuYyB8IDcgKysrKystLQo+ID4gwqAxIGZpbGUgY2hhbmdlZCwgNSBp
+bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZmIC0tZ2l0IGEvZnMveGZz
+L3hmc190cmFuc19haWwuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfYWlsLmMKPiA+IGluZGV4IGQ2Yzlj
+M2UuLjdlY2E4NTIgMTAwNjQ0Cj4gPiAtLS0gYS9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCj4gPiAr
+KysgYi9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCj4gPiBAQCAtNDk1LDYgKzQ5NSw3IEBAIHhmc2Fp
+bGQoCj4gPiDCoHsKPiA+IMKgCXN0cnVjdCB4ZnNfYWlsCSphaWxwID0gZGF0YTsKPiA+IMKgCWxv
+bmcJCXRvdXQgPSAwOwkvKiBtaWxsaXNlY29uZHMgKi8KPiA+ICsJc3RydWN0IHhmc19sb2dfaXRl
+bSAqbGlwOwo+ID4gwqAKPiA+IMKgCWN1cnJlbnQtPmZsYWdzIHw9IFBGX01FTUFMTE9DOwo+ID4g
+wqAJc2V0X2ZyZWV6YWJsZSgpOwo+ID4gQEAgLTUwOCw3ICs1MDksOCBAQCB4ZnNhaWxkKAo+ID4g
+wqAJCXNwaW5fbG9jaygmYWlscC0+eGFfbG9jayk7Cj4gPiDCoAo+ID4gwqAJCS8qCj4gPiAtCQnC
+oCogSWRsZSBpZiB0aGUgQUlMIGlzIGVtcHR5IGFuZCB3ZSBhcmUgbm90IHJhY2luZwo+ID4gd2l0
+aCBhIHRhcmdldAo+ID4gKwkJwqAqIElkbGUgaWYgdGhlIEFJTCBpcyBlbXB0eSBvciBwdXNoZWQg
+dXAgdG8gdGhlCj4gPiByZXF1ZXN0ZWQKPiA+ICsJCcKgKiB0YXJnZXQgTFNOIGFuZCB3ZSBhcmUg
+bm90IHJhY2luZyB3aXRoIGEgdGFyZ2V0Cj4gPiDCoAkJwqAqIHVwZGF0ZS4gV2UgY2hlY2sgdGhl
+IEFJTCBhZnRlciB3ZSBzZXQgdGhlIHRhc2sKPiA+IHRvIGEgc2xlZXAKPiA+IMKgCQnCoCogc3Rh
+dGUgdG8gZ3VhcmFudGVlIHRoYXQgd2UgZWl0aGVyIGNhdGNoIGFuCj4gPiB4YV90YXJnZXQgdXBk
+YXRlCj4gPiDCoAkJwqAqIG9yIHRoYXQgYSB3YWtlX3VwIHJlc2V0cyB0aGUgc3RhdGUgdG8KPiA+
+IFRBU0tfUlVOTklORy4KPiA+IEBAIC01MTcsNyArNTE5LDggQEAgeGZzYWlsZCgKPiA+IMKgCQnC
+oCogVGhlIGJhcnJpZXIgbWF0Y2hlcyB0aGUgeGFfdGFyZ2V0IHVwZGF0ZSBpbgo+ID4geGZzX2Fp
+bF9wdXNoKCkuCj4gPiDCoAkJwqAqLwo+ID4gwqAJCXNtcF9ybWIoKTsKPiA+IC0JCWlmICgheGZz
+X2FpbF9taW4oYWlscCkgJiYKPiA+ICsJCWxpcCA9IHhmc19haWxfbWluKGFpbHApOwo+ID4gKwkJ
+aWYgKCghbGlwIHx8IFhGU19MU05fQ01QKGxpcC0+bGlfbHNuLCBhaWxwLQo+ID4gPnhhX3Rhcmdl
+dCkgPj0gMCkgJiYKPiBJIHRoaW5rIHlvdSdkIHdhbnQgdG8gdXNlID4gMCwgYXMgPT0gMCBzdWdn
+ZXN0cyB5b3UgaGF2ZSBhbiBpdGVtIHRoYXQKPiBtYXRjaGVzIHRoZSB0YXJnZXQuCj4gClRoaXMg
+Y2hlY2sganVzdCBtaXJyb3JzIHdoYXQgaXMgZG9uZSBpbsKgeGZzYWlsZF9wdXNoKCkgdG8gY2hl
+Y2sgaWYgdGhlCnRhcmdldCBoYXMgYmVlbiBoaXQuIEVpdGhlciBib3RoIHNpdGVzIHNob3VsZCBi
+ZSBjaGFuZ2VkICh3aGljaCB3b3VsZAphc3N1bWUgdGhlIHRhcmdldCBMU04gaXMgaW5jbHVzaXZl
+IGFuZCB3ZSBzaG91bGQgcHVzaCB0aGUgQUlMIHRvIGF0CmxlYXN0IHRoZSB0YXJnZXQpIG9yIGxl
+ZnQgYXMgaXMgKGFzc3VtaW5nIHRoZSB0YXJnZXQgTFNOKSBpcyBleGNsdXNpdmUKYW5kIHdlIHNo
+b3VsZCBwdXNoIHVwIHRvIHRoZSB0YXJnZXQpLgoKPiBGV0lXLCBhbm90aGVyIG9wdGlvbiBtaWdo
+dCBiZSB0byBpbmNyZWFzZSB0aGUgdGltZW91dCB0byBzb21ldGhpbmcKPiBtdWNoCj4gbGFyZ2Vy
+IHRoYW4gdGhlIGN1cnJlbnQgNTBtcyB3aGVuIHdlJ3ZlIGhpdCB0aGUgdGFyZ2V0LgoKSSBkb24n
+dCB0aGluayB3ZSB3YW50IHRvIGV4dGVuZCB0aGUgdGltZW91dCBpZiBzb21lb25lIGFscmVhZHkg
+cHVzaGVkCnRoZSB0YXJnZXQgTFNOIGZvcndhcmQsIHNvIHdlIHdvdWxkIG5lZWQgdG8gbWlycm9y
+IHRoZSBjaGVjayBmb3IgdGhlCnRhcmdldCBMU04gcmFjZSBoZXJlLiBJIGJlbGlldmUgbXkgY2hh
+bmdlIGlzIGxlc3MgaW50cnVzaXZlLgoKUmVnYXJkcywKTHVjYXMKCj4gIFNlZSB0b3dhcmRzIHRo
+ZQo+IGVuZCBvZiB4ZnNhaWxkX3B1c2goKSB3aGVyZSB0b3V0IGlzIGRldGVybWluZWQgYmFzZWQg
+b24gdGhlIHN0YXRlIG9mCj4gdGhlCj4gcHVzaCAoYW5kIHdlIGFscmVhZHkgaGF2ZSBsb2dpYyB0
+byBjaGVjayBhZ2FpbnN0IHhhX3RhcmdldCkuCj4gCj4gQnJpYW4KPiAKPiA+IAo+ID4gwqAJCcKg
+wqDCoMKgYWlscC0+eGFfdGFyZ2V0ID09IGFpbHAtPnhhX3RhcmdldF9wcmV2KSB7Cj4gPiDCoAkJ
+CXNwaW5fdW5sb2NrKCZhaWxwLT54YV9sb2NrKTsKPiA+IMKgCQkJZnJlZXphYmxlX3NjaGVkdWxl
+KCk7CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
