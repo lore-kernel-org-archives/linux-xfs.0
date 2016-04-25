@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44A4E7CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 13:11:48 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0A8967CA0
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 11:51:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 19D9B8F8033
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 11:11:44 -0700 (PDT)
-Received: from lynxeye.de (ns.lynxeye.de [87.118.118.114]) by cuda.sgi.com
-	with ESMTP id qot6rW0x7aRhTxNX for <xfs@oss.sgi.com>;
-	Mon, 25 Apr 2016 11:11:41 -0700 (PDT)
-Message-ID: <1461607897.2364.27.camel@lynxeye.de>
-Subject: Re: [PATCH] xfs: idle aild if the AIL is pushed up to the target LSN
-From: Lucas Stach <dev@lynxeye.de>
-Date: Mon, 25 Apr 2016 20:11:37 +0200
-In-Reply-To: <20160425142444.GC33882@bfoster.bfoster>
-References: <1461570163-4083-1-git-send-email-dev@lynxeye.de>
-	<20160425142444.GC33882@bfoster.bfoster>
-Mime-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CECB78F8035
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 09:51:36 -0700 (PDT)
+Received: from mail-wm0-f41.google.com (mail-wm0-f41.google.com
+	[74.125.82.41]) by cuda.sgi.com with ESMTP id h6Tw1hJycndmVpjk
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Apr 2016 09:51:33 -0700 (PDT)
+Received: by mail-wm0-f41.google.com with SMTP id u206so137290612wme.1
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 09:51:33 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+MIME-Version: 1.0
+Date: Mon, 25 Apr 2016 22:21:30 +0530
+Message-ID: <88e4a059c1428cb1f944b7e786cf8ed9@mail.gmail.com>
+Subject: Metadata corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,115 +25,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Alex Lyakas <alex@zadarastorage.com>
 
-QW0gTW9udGFnLCBkZW4gMjUuMDQuMjAxNiwgMTA6MjQgLTA0MDAgc2NocmllYiBCcmlhbiBGb3N0
-ZXI6Cj4gT24gTW9uLCBBcHIgMjUsIDIwMTYgYXQgMDk6NDI6NDNBTSArMDIwMCwgTHVjYXMgU3Rh
-Y2ggd3JvdGU6Cj4gPiAKPiA+IFRoZSBjdXJyZW50IGxvZ2ljIG9ubHkgaWRsZXMgYWlsZCBpZiB0
-aGUgQUlMIGlzIGVtcHR5LCByZXNjaGVkdWxpbmcKPiA+IHRoZSB3b3JrZXIgd2l0aCBhIHRpbWVv
-dXQgb2YgNTBtcyBvdGhlcndpc2UuIElmIHRoZSB0YXJnZXQgTFNOCj4gPiBpc24ndAo+ID4gbW92
-ZWQgZm9yd2FyZCwgdGhlIHdvcmtlciB3aWxsIG5vdCBtYWtlIGFueSBwcm9ncmVzcyBhcyBpdCBv
-bmx5Cj4gPiBwdXNoZXMgdGhlIEFJTCB1cCB0byB0aGUgdGFyZ2V0IExTTiwgbGVhZGluZyB0byB0
-aGUgZW1wdHkgQUlMCj4gPiBjb25kaXRpb24gdG8gb25seSBiZSBtZXQgYWZ0ZXIgdGhlIGxvZyB3
-b3JrZXIgcHVzaGVkIHRoZSBjb21wbGV0ZQo+ID4gQUlMLiBBcyB0aGUgbG9nIHdvcmtlciBydW5z
-IG9uIHRoZSBzY2FsZSBvZiBtaW51dGVzLCB0aGlzIGxlYXZlcwo+ID4gYWlsZCBpbiB0aGUgIm5v
-IHByb2dyZXNzLCA1MG1zIHRpbWVvdXQiIHN0YXRlIGZvciBleHRlbmRlZCBwZXJpb2RzCj4gPiBv
-Zgo+ID4gdGltZSwgY2F1c2luZyBtYW55IHVuZWNlc3Nhcnkgd2FrZXVwcy4KPiA+IAo+IFdoZXJl
-IGRvIHlvdSBnZXQgdGhlICJzY2FsZSBvZiBtaW51dGVzIiBmcm9tPyBJIGJlbGlldmUgdGhlIGRl
-ZmF1bHQKPiBsb2cKPiB3b3JrZXIgaW50ZXJ2YWwgaXMgMzBzLCB0aG91Z2ggaXQgY2FuIGJlIGlu
-Y3JlYXNlZCBieSB0aGUgYWRtaW4uCj4gClVoLCByaWdodC4gSXQncyAzMHMsIHdoaWNoIGlzIHN0
-aWxsIGEgdmVyeSBsb25nIHRpbWUgd2hlbiB3ZSBjb25zaWRlcgp0aGF0IG5ldyBpdGVtcyBjYW4g
-YmUgYWRkZWQgdG8gdGhlIEFJTCByaWdodCBhZnRlciB0aGUgbG9nIHdvcmtlcgpmb3JjZWQgaXQg
-b3V0LgoKPiBUaGUgb3RoZXIgdGhpbmcgdG8gbm90ZSBpcyB0aGF0IHRoZSBBSUwgdGFyZ2V0IGlz
-IGFsc28gZHJpdmVuIGJ5Cj4gZGVtYW5kCj4gb24gbG9nIHNwYWNlLiBFLmcuLCBzZWUgeGxvZ19n
-cmFudF9wdXNoX2FpbCgpLCB3aGljaCBleGVjdXRlcyB3aGVuIGEKPiB0cmFuc2FjdGlvbiBhdHRl
-bXB0cyB0byByZXNlcnZlIGxvZyBzcGFjZSB0aGF0IGlzbid0IGN1cnJlbnRseQo+IGF2YWlsYWJs
-ZQo+IGluIHRoZSBsb2cuCj4gCkFuZCB0aGF0J3Mgd2hlcmUgSSB0aGluayB0aGUgcHJvYmxlbSBz
-dGVtcyBmcm9tOiB0aGUgYWJvdmUgZnVuY3Rpb24KcHVzaGVzIHRoZSBBSUwgb25seSB1cCB0byBh
-IHRhcmdldCBMU04gdG8gbWFrZSByb29tIGZvciB0aGUgcmVxdWlyZWQKbG9nIHNwYWNlLiBPbmx5
-IHRoZSBsb2cgd29ya2VyIGVtcHRpZXMgdGhlIEFJTCBjb21wbGV0ZWx5IGJ5IGlzc3VpbmcgYQp4
-ZnNfYWlsX3B1c2hfYWxsX3N5bmMoKS4KCj4gVGhhdCBzYWlkLCBJJ20gbm90IHN1cmUgd2hldGhl
-ciB0aGVyZSdzIGEgbm90YWJsZSBiZW5lZml0IG9mIGlkbGluZwo+IGZvcgo+IDUwbXMgb3ZlciBq
-dXN0IHNjaGVkdWxpbmcgb3V0IHdoZW4gd2UndmUgaGl0IHRoZSB0YXJnZXQgbHNuLiBJdCBzZWVt
-cwo+IGxpa2UgdGhhdCBhbnlib2R5IHdobyBwdXNoZXMgdGhlIHRhcmdldCBmb3J3YXJkIGFnYWlu
-IGlzIGdvaW5nIHRvCj4gd2FrZQo+IHVwIHRoZSB0aHJlYWQgYW55d2F5cy4gT24gdGhlIG90aGVy
-IGhhbmQsIGlmIHRoZSBmcyBpcyBpZGxlIHRoZQo+IHRocmVhZAo+IHdpbGwgZXZlbnR1YWxseSBz
-Y2hlZHVsZSBvdXQgaW5kZWZpbml0ZWx5LiAKCklzIHRoaXMgYSBwcm9ibGVtPyBUaGUgcGF0Y2gg
-dHJpZXMgdG8gZG8gZXhhY3RseSB0aGF0OiBzY2hlZHVsZSBvdXQKYWlsZCBpbmRlZmluaXRlbHkg
-d2hlbiB0aGVyZSBpcyBubyBtb3JlIHdvcmsgdG8gZG8gYXMgbm9ib2R5IGlzIHB1c2hpbmcKdGhl
-IHRhcmdldCBMU04gZm9yd2FyZC4KCk9uIGFuIGlkbGUgRlMgdGhpcyB3aWxsIHN0b3AgYWlsZCB3
-aGVuIHRoZSB0YXJnZXQgTFNOIGlzIGhpdCwgd2lsbCB3YWtlCml0IHVwIGFnYWluIGFzIHNvb24g
-YXMgdGhlIGxvZyB3b3JrZXIgcmVxdWVzdHMgdGhlIGNvbXBsZXRlIEFJTCB0byBiZQpwdXNoZWQg
-b3V0LCB0aGVuIGl0IGdvZXMgYmFjayB0byBzbGVlcCBpbmRlZmluaXRlbHkgdW50aWwgdGhlIGxv
-ZyBmaWxscwp1cCBhZ2Fpbi4KCj4gSGF2ZSB5b3Ugb2JzZXJ2ZWQgcHJvYmxlbWF0aWMKPiBiZWhh
-dmlvciBkdWUgdG8gdGhlIGN1cnJlbnQgaGV1cmlzdGljPwo+IApZZXMuIE9uIGEgRlMgd2l0aCBh
-IGxvdywgYnV0IGNvbnN0YW50IG1ldGFkYXRhIHdvcmtsb2FkIEkgd291bGQgZXhwZWN0CmFpbGQg
-dG8gYmUgc2NoZWR1bGVkIG9ubHkgd2hlbiB0aGUgbG9nIHNwYWNlIGlzIHJ1bm5pbmcgb3V0IGFu
-ZC9vciB0aGUKbG9nIHdvcmtlciBmb3JjZXMgYSBzeW5jLgpXaGF0IGN1cnJlbnRseSBoYXBwZW5z
-IGlzIHRoYXQgYWlsZCBzdGF5cyBpbiB0aGUgInRhcmdldCBMU04gaGl0IC0+IG5vCndvcmsgdG8g
-ZG8sIHNjaGVkdWxlIGEgdGltZW91dCBlYWNoIDUwbXMiIHN0YXRlIGZvciBhbG1vc3QgdGhlIGVu
-dGlyZQpydW50aW1lIG9mIHRoZSBzeXN0ZW0uIFRoaXMgY2F1c2VzIGFib3V0IDIwIENQVSB3YWtl
-dXBzIHBlciBzZWNvbmQgcGVyCm1vdW50cG9pbnQsIG1vc3Qgb2Ygd2hpY2ggYXJlIGNvbXBsZXRl
-bHkgd2FzdGVkLCBhcyB0aGVyZSBpcyBubyB3b3JrIHRvCmRvLgoKTXkgdXNlIGNhc2UgbWF5IGJl
-IGF0eXBpY2FsLCBhcyBJJ20gdXNpbmcgWEZTIG9uIGEgbGFwdG9wLCBidXQgaW4gdGhhdApjYXNl
-IHRoZSBYRlMgYWlsZCBpcyBhY3R1YWxseSBjYXVzaW5nIG1vc3Qgb2YgdGhlIENQVSB3YWtldXBz
-IGluIGFuCm90aGVyd2lzZSBpZGxlIHN5c3RlbSwgd2hpY2ggaXMgY2xlYXJseSB1bmRlc2lyYWJs
-ZSwgYXMgdGhvc2Ugd2FrZXVwcwphcmVuJ3QgcmVhbGx5IG5lZWRlZCBhcyB0aGV5IGRvbid0IGxl
-YWQgdG8gYWN0dWFsIHdvcmsgZ2V0dGluZyBkb25lLgoKPiA+IAo+ID4gRml4IHRoaXMgYnkgaWRs
-aW5nIGFpbGQgYXMgc29vbiBhcyB0aGUgQUlMIGlzIHB1c2hlZCB1cCB0byB0aGUKPiA+IHRhcmdl
-dAo+ID4gTFNOLiBBbGwgY29kZSBwYXRocyB0aGF0IG1vdmUgdGhlIHRhcmdldCBMU04gZm9yd2Fy
-ZCBhbHJlYWR5IGVuc3VyZQo+ID4gdGhhdCBhaWxkIGlzIHdva2VuIHVwIGFnYWluIHdoZW4gbmVl
-ZGVkLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBMdWNhcyBTdGFjaCA8ZGV2QGx5bnhleWUuZGU+
-Cj4gPiAtLS0KPiA+IEknbSBwcmV0dHkgc3VyZSB0aGF0IHRoZSBhYm92ZSBkZWR1Y3Rpb24gaXMg
-Y29ycmVjdCwgYnV0IGFzIHRoaXMgbXkKPiA+IGZpcnN0IHJlYWwgZW5jb3VudGVyIHdpdGggdGhl
-IFhGUyBjb2RlIGJhc2UsIHNvbWVvbmUgd2l0aCBhIGJpdAo+ID4gbW9yZQo+ID4ga25vd2xlZGdl
-IHRoYW4gbWUgc2hvdWxkIGdpdmUgdGhpcyBzb21lIHRob3VnaHQuCj4gPiAtLS0KPiA+IMKgZnMv
-eGZzL3hmc190cmFuc19haWwuYyB8IDcgKysrKystLQo+ID4gwqAxIGZpbGUgY2hhbmdlZCwgNSBp
-bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZmIC0tZ2l0IGEvZnMveGZz
-L3hmc190cmFuc19haWwuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfYWlsLmMKPiA+IGluZGV4IGQ2Yzlj
-M2UuLjdlY2E4NTIgMTAwNjQ0Cj4gPiAtLS0gYS9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCj4gPiAr
-KysgYi9mcy94ZnMveGZzX3RyYW5zX2FpbC5jCj4gPiBAQCAtNDk1LDYgKzQ5NSw3IEBAIHhmc2Fp
-bGQoCj4gPiDCoHsKPiA+IMKgCXN0cnVjdCB4ZnNfYWlsCSphaWxwID0gZGF0YTsKPiA+IMKgCWxv
-bmcJCXRvdXQgPSAwOwkvKiBtaWxsaXNlY29uZHMgKi8KPiA+ICsJc3RydWN0IHhmc19sb2dfaXRl
-bSAqbGlwOwo+ID4gwqAKPiA+IMKgCWN1cnJlbnQtPmZsYWdzIHw9IFBGX01FTUFMTE9DOwo+ID4g
-wqAJc2V0X2ZyZWV6YWJsZSgpOwo+ID4gQEAgLTUwOCw3ICs1MDksOCBAQCB4ZnNhaWxkKAo+ID4g
-wqAJCXNwaW5fbG9jaygmYWlscC0+eGFfbG9jayk7Cj4gPiDCoAo+ID4gwqAJCS8qCj4gPiAtCQnC
-oCogSWRsZSBpZiB0aGUgQUlMIGlzIGVtcHR5IGFuZCB3ZSBhcmUgbm90IHJhY2luZwo+ID4gd2l0
-aCBhIHRhcmdldAo+ID4gKwkJwqAqIElkbGUgaWYgdGhlIEFJTCBpcyBlbXB0eSBvciBwdXNoZWQg
-dXAgdG8gdGhlCj4gPiByZXF1ZXN0ZWQKPiA+ICsJCcKgKiB0YXJnZXQgTFNOIGFuZCB3ZSBhcmUg
-bm90IHJhY2luZyB3aXRoIGEgdGFyZ2V0Cj4gPiDCoAkJwqAqIHVwZGF0ZS4gV2UgY2hlY2sgdGhl
-IEFJTCBhZnRlciB3ZSBzZXQgdGhlIHRhc2sKPiA+IHRvIGEgc2xlZXAKPiA+IMKgCQnCoCogc3Rh
-dGUgdG8gZ3VhcmFudGVlIHRoYXQgd2UgZWl0aGVyIGNhdGNoIGFuCj4gPiB4YV90YXJnZXQgdXBk
-YXRlCj4gPiDCoAkJwqAqIG9yIHRoYXQgYSB3YWtlX3VwIHJlc2V0cyB0aGUgc3RhdGUgdG8KPiA+
-IFRBU0tfUlVOTklORy4KPiA+IEBAIC01MTcsNyArNTE5LDggQEAgeGZzYWlsZCgKPiA+IMKgCQnC
-oCogVGhlIGJhcnJpZXIgbWF0Y2hlcyB0aGUgeGFfdGFyZ2V0IHVwZGF0ZSBpbgo+ID4geGZzX2Fp
-bF9wdXNoKCkuCj4gPiDCoAkJwqAqLwo+ID4gwqAJCXNtcF9ybWIoKTsKPiA+IC0JCWlmICgheGZz
-X2FpbF9taW4oYWlscCkgJiYKPiA+ICsJCWxpcCA9IHhmc19haWxfbWluKGFpbHApOwo+ID4gKwkJ
-aWYgKCghbGlwIHx8IFhGU19MU05fQ01QKGxpcC0+bGlfbHNuLCBhaWxwLQo+ID4gPnhhX3Rhcmdl
-dCkgPj0gMCkgJiYKPiBJIHRoaW5rIHlvdSdkIHdhbnQgdG8gdXNlID4gMCwgYXMgPT0gMCBzdWdn
-ZXN0cyB5b3UgaGF2ZSBhbiBpdGVtIHRoYXQKPiBtYXRjaGVzIHRoZSB0YXJnZXQuCj4gClRoaXMg
-Y2hlY2sganVzdCBtaXJyb3JzIHdoYXQgaXMgZG9uZSBpbsKgeGZzYWlsZF9wdXNoKCkgdG8gY2hl
-Y2sgaWYgdGhlCnRhcmdldCBoYXMgYmVlbiBoaXQuIEVpdGhlciBib3RoIHNpdGVzIHNob3VsZCBi
-ZSBjaGFuZ2VkICh3aGljaCB3b3VsZAphc3N1bWUgdGhlIHRhcmdldCBMU04gaXMgaW5jbHVzaXZl
-IGFuZCB3ZSBzaG91bGQgcHVzaCB0aGUgQUlMIHRvIGF0CmxlYXN0IHRoZSB0YXJnZXQpIG9yIGxl
-ZnQgYXMgaXMgKGFzc3VtaW5nIHRoZSB0YXJnZXQgTFNOKSBpcyBleGNsdXNpdmUKYW5kIHdlIHNo
-b3VsZCBwdXNoIHVwIHRvIHRoZSB0YXJnZXQpLgoKPiBGV0lXLCBhbm90aGVyIG9wdGlvbiBtaWdo
-dCBiZSB0byBpbmNyZWFzZSB0aGUgdGltZW91dCB0byBzb21ldGhpbmcKPiBtdWNoCj4gbGFyZ2Vy
-IHRoYW4gdGhlIGN1cnJlbnQgNTBtcyB3aGVuIHdlJ3ZlIGhpdCB0aGUgdGFyZ2V0LgoKSSBkb24n
-dCB0aGluayB3ZSB3YW50IHRvIGV4dGVuZCB0aGUgdGltZW91dCBpZiBzb21lb25lIGFscmVhZHkg
-cHVzaGVkCnRoZSB0YXJnZXQgTFNOIGZvcndhcmQsIHNvIHdlIHdvdWxkIG5lZWQgdG8gbWlycm9y
-IHRoZSBjaGVjayBmb3IgdGhlCnRhcmdldCBMU04gcmFjZSBoZXJlLiBJIGJlbGlldmUgbXkgY2hh
-bmdlIGlzIGxlc3MgaW50cnVzaXZlLgoKUmVnYXJkcywKTHVjYXMKCj4gIFNlZSB0b3dhcmRzIHRo
-ZQo+IGVuZCBvZiB4ZnNhaWxkX3B1c2goKSB3aGVyZSB0b3V0IGlzIGRldGVybWluZWQgYmFzZWQg
-b24gdGhlIHN0YXRlIG9mCj4gdGhlCj4gcHVzaCAoYW5kIHdlIGFscmVhZHkgaGF2ZSBsb2dpYyB0
-byBjaGVjayBhZ2FpbnN0IHhhX3RhcmdldCkuCj4gCj4gQnJpYW4KPiAKPiA+IAo+ID4gwqAJCcKg
-wqDCoMKgYWlscC0+eGFfdGFyZ2V0ID09IGFpbHAtPnhhX3RhcmdldF9wcmV2KSB7Cj4gPiDCoAkJ
-CXNwaW5fdW5sb2NrKCZhaWxwLT54YV9sb2NrKTsKPiA+IMKgCQkJZnJlZXphYmxlX3NjaGVkdWxl
-KCk7CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+Hi Dave et al,
+
+We are periodically hitting the below metadata corruption with XFS over a
+raw disk running several file copies with xattr operations on kernel
+3.18.19. Unmounting & running xfs_repair doesn't report any corruption. I
+see that this was last reported here
+http://oss.sgi.com/archives/xfs/2015-12/msg00224.html
+
+Unfortunately we dont have a reproducer, but this issue happens
+periodically. We can add more debug prints & allow this issue to happen
+again. Can you pls suggest any options to debug this further? Thanks
+
+Apr 20 21:58:03 node1 kernel: [16736.286370] XFS (dm-26): Metadata
+corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100 [xfs], block
+0x19c5c728
+Apr 20 21:58:03 node1 kernel: [16736.289084] XFS (dm-26): Unmount and run
+xfs_repair
+Apr 20 21:58:03 node1 kernel: [16736.290257] XFS (dm-26): First 64 bytes
+of corrupted metadata buffer:
+Apr 20 21:58:03 node1 kernel: [16736.291797] ffff880123668000: 00 00 00 00
+00 00 00 00 fb ee 00 00 00 00 00 00  ................
+Apr 20 21:58:03 node1 kernel: [16736.293823] ffff880123668010: 10 00 00 00
+00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+Apr 20 21:58:03 node1 kernel: [16736.297504] ffff880123668020: 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00  ................
+Apr 20 21:58:03 node1 kernel: [16736.299343] ffff880123668030: 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00  ................
+Apr 20 21:58:03 node1 kernel: [16736.301465] XFS (dm-26):
+xfs_do_force_shutdown(0x8) called from line 1244 of file fs/xfs/xfs_buf.c.
+Return address = 0xffffffffc095cee0
+Apr 20 21:58:03 node1 kernel: [16736.301469] ------------[ cut here
+]------------
+Apr 20 21:58:03 node1 kernel: [16736.301551] XFS(dm-26): SHUTDOWN!!!
+old_flags=0x0 new_flags=0x8
+Apr 20 21:58:03 node1 kernel: [16736.301703] CPU: 1 PID: 7857 Comm:
+xfsaild/dm-26 Tainted: G           OE  3.18.19 #1
+Apr 20 21:58:03 node1 kernel: [16736.301705] Hardware name: Bochs Bochs,
+BIOS Bochs 01/01/2011
+Apr 20 21:58:03 node1 kernel: [16736.301707]  0000000000000009
+ffff88020c5ffb38 ffffffff81710c85 0000000000000000
+Apr 20 21:58:03 node1 kernel: [16736.301711]  ffff88020c5ffb88
+ffff88020c5ffb78 ffffffff81072df1 2e2e202030302030
+Apr 20 21:58:03 node1 kernel: [16736.301715]  0000000000000000
+0000000000000008 ffff88020c127000 0000000000000000
+Apr 20 21:58:03 node1 kernel: [16736.301718] Call Trace:
+Apr 20 21:58:03 node1 kernel: [16736.301769]  [<ffffffff81710c85>]
+dump_stack+0x4e/0x71
+Apr 20 21:58:03 node1 kernel: [16736.301780]  [<ffffffff81072df1>]
+warn_slowpath_common+0x81/0xa0
+Apr 20 21:58:03 node1 kernel: [16736.301784]  [<ffffffff81072e56>]
+warn_slowpath_fmt+0x46/0x50
+Apr 20 21:58:03 node1 kernel: [16736.301860]  [<ffffffffc09693f3>]
+xfs_do_force_shutdown+0x33/0x170 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.301921]  [<ffffffffc095cee0>] ?
+_xfs_buf_ioapply+0xa0/0x430 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.301951]  [<ffffffffc095ee4b>] ?
+__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302066]  [<ffffffffc095cee0>]
+_xfs_buf_ioapply+0xa0/0x430 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302137]  [<ffffffff8109e260>] ?
+wake_up_state+0x20/0x20
+Apr 20 21:58:03 node1 kernel: [16736.302162]  [<ffffffffc095ee4b>] ?
+__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302183]  [<ffffffffc095ea78>]
+xfs_buf_submit+0x68/0x210 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302241]  [<ffffffffc095ee4b>]
+__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302267]  [<ffffffffc095fc60>] ?
+xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302291]  [<ffffffffc098f440>] ?
+xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302308]  [<ffffffffc095fc60>]
+xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302333]  [<ffffffffc098f66b>]
+xfsaild+0x22b/0x630 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302513]  [<ffffffffc098f440>] ?
+xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
+Apr 20 21:58:03 node1 kernel: [16736.302518]  [<ffffffff810911b9>]
+kthread+0xc9/0xe0
+Apr 20 21:58:03 node1 kernel: [16736.302522]  [<ffffffff810910f0>] ?
+kthread_create_on_node+0x180/0x180
+Apr 20 21:58:03 node1 kernel: [16736.302530]  [<ffffffff81717918>]
+ret_from_fork+0x58/0x90
+Apr 20 21:58:03 node1 kernel: [16736.302549]  [<ffffffff810910f0>] ?
+kthread_create_on_node+0x180/0x180
+Apr 20 21:58:03 node1 kernel: [16736.302551] ---[ end trace
+0bb81b88fdd6a298 ]---
+
+--Shyam
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
