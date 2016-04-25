@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6983D7D29
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 14:43:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 26D1F7CA1
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 12:21:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B47F304051
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 12:43:52 -0700 (PDT)
-Received: from mail-wm0-f65.google.com (mail-wm0-f65.google.com
-	[74.125.82.65]) by cuda.sgi.com with ESMTP id NCAXCvoWUtzPrJNH
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 835BAAC001
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 10:21:47 -0700 (PDT)
+Received: from mail-oi0-f54.google.com (mail-oi0-f54.google.com
+	[209.85.218.54]) by cuda.sgi.com with ESMTP id tOLrOUNvTFlUES3O
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 Apr 2016 12:43:50 -0700 (PDT)
-Received: by mail-wm0-f65.google.com with SMTP id e201so16108705wme.2
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 12:43:50 -0700 (PDT)
-Date: Wed, 27 Apr 2016 21:43:47 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1.1/2] xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
-Message-ID: <20160427194347.GA22544@dhcp22.suse.cz>
-References: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
-	<1461758075-21815-1-git-send-email-mhocko@kernel.org>
-	<04798BA8-2157-4611-B4EA-B8BCBA88AEC3@dilger.ca>
+	Mon, 25 Apr 2016 10:21:45 -0700 (PDT)
+Received: by mail-oi0-f54.google.com with SMTP id r78so183828937oie.0
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 10:21:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <04798BA8-2157-4611-B4EA-B8BCBA88AEC3@dilger.ca>
+In-Reply-To: <1461604476.3106.12.camel@intel.com>
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<20160420205923.GA24797@infradead.org>
+	<1461434916.3695.7.camel@intel.com>
+	<20160425083114.GA27556@infradead.org>
+	<1461604476.3106.12.camel@intel.com>
+Date: Mon, 25 Apr 2016 10:21:44 -0700
+Message-ID: <CAPcyv4ijf=LDLytVRn_UptVVi5G=7r9bkTkkJHYgBF78tffh9w@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +37,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel <cluster-devel@redhat.com>, Linux MM <linux-mm@kvack.org>, linux-mtd@lists.infradead.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, XFS Developers <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
+To: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-On Wed 27-04-16 11:41:51, Andreas Dilger wrote:
-> On Apr 27, 2016, at 5:54 AM, Michal Hocko <mhocko@kernel.org> wrote:
-[...]
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -80,13 +80,13 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> > 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
-> > 	 * the filesystem here and potentially deadlocking.
-> > 	 */
-> > -	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
-> > +	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
-> > 		noio_flag = memalloc_noio_save();
-> > 
-> > 	lflags = kmem_flags_convert(flags);
-> > 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
-> > 
-> > -	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
-> > +	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
-> > 		memalloc_noio_restore(noio_flag);
-> 
-> Not really the fault of this patch, but it brings this nasty bit of code into
-> the light.  Is all of this machinery still needed given that __vmalloc() can
-> accept GFP flags?  If yes, wouldn't it be better to fix __vmalloc() to honor
-> the GFP flags instead of working around it in the filesystem code?
+On Mon, Apr 25, 2016 at 10:14 AM, Verma, Vishal L
+<vishal.l.verma@intel.com> wrote:
+> On Mon, 2016-04-25 at 01:31 -0700, hch@infradead.org wrote:
+>> On Sat, Apr 23, 2016 at 06:08:37PM +0000, Verma, Vishal L wrote:
+>> >
+>> > direct_IO might fail with -EINVAL due to misalignment, or -ENOMEM
+>> > due
+>> > to some allocation failing, and I thought we should return the
+>> > original
+>> > -EIO in such cases so that the application doesn't lose the
+>> > information
+>> > that the bad block is actually causing the error.
+>> EINVAL is a concern here.  Not due to the right error reported, but
+>> because it means your current scheme is fundamentally broken - we
+>> need to support I/O at any alignment for DAX I/O, and not fail due to
+>> alignbment concernes for a highly specific degraded case.
+>>
+>> I think this whole series need to go back to the drawing board as I
+>> don't think it can actually rely on using direct I/O as the EIO
+>> fallback.
+>>
+> Agreed that DAX I/O can happen with any size/alignment, but how else do
+> we send an IO through the driver without alignment restrictions? Also,
+> the granularity at which we store badblocks is 512B sectors, so it
+> seems natural that to clear such a sector, you'd expect to send a write
+> to the whole sector.
+>
+> The expected usage flow is:
+>
+> - Application hits EIO doing dax_IO or load/store io
+>
+> - It checks badblocks and discovers it's files have lost data
+>
+> - It write()s those sectors (possibly converted to file offsets using
+> fiemap)
+>     * This triggers the fallback path, but if the application is doing
+> this level of recovery, it will know the sector is bad, and write the
+> entire sector
+>
+> - Or it replaces the entire file from backup also using write() (not
+> mmap+stores)
+>     * This just frees the fs block, and the next time the block is
+> reallocated by the fs, it will likely be zeroed first, and that will be
+> done through the driver and will clear errors
+>
+>
+> I think if we want to keep allowing arbitrary alignments for the
+> dax_do_io path, we'd need:
+> 1. To represent badblocks at a finer granularity (likely cache lines)
+> 2. To allow the driver to do IO to a *block device* at sub-sector
+> granularity
 
-This is not that easy. __vmalloc can accept gfp flags but it doesn't
-honor __GFP_IO 100%. IIRC some paths like page table allocations are
-hardcoded GFP_KERNEL. Besides that I would like to have GFP_NOIO used
-via memalloc_noio_{save,restore} API as well for the similar reasons as
-GFP_NOFS - it is just easier to explain scope than particular code paths
-which might be shared.
--- 
-Michal Hocko
-SUSE Labs
+3. Arrange for O_DIRECT to bypass dax_do_io(), and leave the
+optimization only for the dax "buffered I/O" case.
+
+4. Skip dax_do_io() entirely in the presence of errors
+
+I think 3 is the most closely aligned with the typical block device
+model.  In the typical case a buffered write may fail due to a
+badblock read when filling the page cache, but an O_DIRECT write would
+bypass the page cache and potentially clear the error / cause the
+block to be reallocated internally to the drive.
 
 _______________________________________________
 xfs mailing list
