@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ADDDD7CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 19:42:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 73E4D8F8033
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 17:42:02 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	OFMnqMkHXTDGsjAA for <xfs@oss.sgi.com>;
-	Mon, 25 Apr 2016 17:41:58 -0700 (PDT)
-Date: Tue, 26 Apr 2016 10:41:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160426004155.GF18496@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 71D907CA6
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 20:45:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27A3C8F8037
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 18:45:13 -0700 (PDT)
+Received: from mail-oi0-f53.google.com (mail-oi0-f53.google.com
+	[209.85.218.53]) by cuda.sgi.com with ESMTP id JlUwVXAziXTexUzb
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Apr 2016 18:45:09 -0700 (PDT)
+Received: by mail-oi0-f53.google.com with SMTP id k142so639669oib.1
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 18:45:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160426001157.GE18496@dastard>
 References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
 	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
@@ -21,10 +22,12 @@ References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 	<20160425083114.GA27556@infradead.org>
 	<1461604476.3106.12.camel@intel.com>
 	<20160425232552.GD18496@dastard>
-	<1461628381.1421.24.camel@intel.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1461628381.1421.24.camel@intel.com>
+	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
+	<20160426001157.GE18496@dastard>
+Date: Mon, 25 Apr 2016 18:45:08 -0700
+Message-ID: <CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,150 +36,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
+	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-On Mon, Apr 25, 2016 at 11:53:13PM +0000, Verma, Vishal L wrote:
-> On Tue, 2016-04-26 at 09:25 +1000, Dave Chinner wrote:
-> >=A0
-> <>
-> =
+On Mon, Apr 25, 2016 at 5:11 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Apr 25, 2016 at 04:43:14PM -0700, Dan Williams wrote:
+[..]
+>> Maybe I missed something, but all these assumptions are already
+>> present for typical block devices, i.e. sectors may go bad and a write
+>> may make the sector usable again.
+>
+> The assumption we make about sectors going bad on SSDs or SRDs is
+> that the device is about to die and needs replacing ASAP.
 
-> > > =
+Similar assumptions here.  Storage media is experiencing errors and
+past a certain threshold it may be time to decommission the device.
 
-> > > - It checks badblocks and discovers it's files have lost data
-> > Lots of hand-waving here. How does the application map a bad
-> > "sector" to a file without scanning the entire filesystem to find
-> > the owner of the bad sector?
-> =
+You can see definitions for SMART / media health commands from various
+vendors at these links, and yes, hopefully these are standardized /
+unified at some point down the road:
 
-> Yes this was hand-wavey, but we talked about this a bit at LSF..
-> The idea is that a per-block-device badblocks list is available at
-> /sys/block/<pmemX>/badblocks. The application (or a suitable yet-to-be-
-> written library function) does a fiemap to figure out the sectors its
-> files are using, and correlates the two lists.
-> We can also look into providing an easier-to-use interface from the
-> kernel, in the form of an fiemap flag to report only the bad sectors, or
-> a SEEK_BAD flag..
-> The application doesn't have to scan the entire filesystem, but
-> presumably it knows what files it 'owns', and does a fiemap for those.
+http://pmem.io/documents/NVDIMM_DSM_Interface_Example.pdf
+https://github.com/HewlettPackard/hpe-nvm/blob/master/Documentation/NFIT_DSM_DDR4_NVDIMM-N_v84s.pdf
+https://msdn.microsoft.com/en-us/library/windows/hardware/mt604717(v=vs.85).aspx
 
-You're assuming that only the DAX aware application accesses it's
-files.  users, backup programs, data replicators, fileystem
-re-organisers (e.g.  defragmenters) etc all may access the files and
-they may throw errors. What then?
 
-> > > - It write()s those sectors (possibly converted to file offsets
-> > > using
-> > > fiemap)
-> > > =A0 =A0 * This triggers the fallback path, but if the application is
-> > > doing
-> > > this level of recovery, it will know the sector is bad, and write
-> > > the
-> > > entire sector
-> > Where does the application find the data that was lost to be able to
-> > rewrite it?
-> =
+> Then
+> RAID takes care of the rebuild completely transparently. i.e.
+> handling and correcting bad sectors is typically done completely
+> transparently /below/ the filesytem like so:
 
-> The data that was lost is gone -- this assumes the application has some
-> ability to recover using a journal/log or other redundancy - yes, at the
-> application layer. If it doesn't have this sort of capability, the only
-> option is to restore files from a backup/mirror.
+Again, same for an NVDIMM.  Use the pmem block-device as a RAID-member device.
 
-So the architecture has a built in assumption that only userspace
-can handle data loss?
+>> This patch series is extending that
+>> out to the DAX-mmap case, but it's the same principle of "write to
+>> clear error" that we live with in the block-I/O path.  What
+>> clarification are you looking for beyond that point?
+>
+> I'm asking for an actual design document that explains how moving
+> all the redundancy and bad sector correction stuff from the LBA
+> layer up into application space is supposed to work when
+> applications have no clue about LBA mappings, nor tend to keep
+> redundant data around. i.e. you're proposing this:
 
-What about filesytsems like NOVA, that use log structured design to
-provide DAX w/ update atomicity and can potentially also provide
-redundancy/repair through the same mechanisms? Won't pmem native
-filesystems with built in data protection features like this remove
-the need for adding all this to userspace applications?
+These patches are not proposing *new* / general infrastructure for
+moving redundancy and bad sector correction handling to userspace.  If
+an existing app is somehow dealing with raw (without RAID) device
+errors on disk storage media today it should not need to change to
+handle errors on an NVDIMM.  My expectation is that very few if any
+applications handle this today and just fail in the presence of media
+errors.
 
-If so, shouldn't that be the focus of development rahter than
-placing the burden on userspace apps to handle storage repair
-situations?
+> Application
+> Application data redundancy/correction
+> Filesystem
+> Block
+> [LBA mapping/redundancy/correction driver e.g. md/dm]
+> driver
+> hardware
+>
+> And somehow all the error information from the hardware layer needs
+> to be propagated up to the application layer, along with all the
+> mapping information from the filesystem and block layers for the
+> application to make sense of the hardware reported errors.
+>
+> I see assumptions this this "just works" but we don't have any of
+> the relevant APIs or infrastructure to enable the application to do
+> the hardware error->file+offset namespace mapping (i.e. filesystem
+> reverse mapping for for file offsets and directory paths, and
+> reverse mapping for the the block layer remapping drivers).
 
-> > > - Or it replaces the entire file from backup also using write() (not
-> > > mmap+stores)
-> > > =A0 =A0 * This just frees the fs block, and the next time the block is
-> > > reallocated by the fs, it will likely be zeroed first, and that will
-> > > be
-> > > done through the driver and will clear errors
-> > There's an implicit assumption that applications will keep redundant
-> > copies of their data at the /application layer/ and be able to
-> > automatically repair it? And then there's the implicit assumption
-> > that it will unlink and free the entire file before writing a new
-> > copy, and that then assumes the the filesystem will zero blocks if
-> > they get reused to clear errors on that LBA sector mapping before
-> > they are accessible again to userspace..
-> > =
+If an application expects errors to be handled beneath the filesystem
+then it should forgo DAX and arrange for the NVDIMM devices to be
+RAIDed.  Otherwise, if an application wants to use DAX then it might
+need to be prepared to handle media errors itself same as the
+un-RAIDed disk case.  Yes, at an administrative level without
+reverse-mapping support from a filesystem there's presently no way to
+ask "which files on this fs are impacted by media errors", and we're
+aware that reverse-mapping capabilities are nascent for current
+DAX-aware filesystems.  The forward lookup path, as impractical as it
+is for large numbers of files, is available if an application wanted
+to know if a specific file was impacted.  We've discussed possibly
+extending fiemap() to return bad blocks in a file rather than
+consulting sysfs, or extending lseek() with something like SEEK_ERROR
+to return offsets of bad areas in a file.
 
-> > It seems to me that there are a number of assumptions being made
-> > across multiple layers here. Maybe I've missed something - can you
-> > point me to the design/architecture description so I can see how
-> > "app does data recovery itself" dance is supposed to work?
-> =
+> I haven't seen any design/documentation for infrastructure at the
+> application layer to handle redundant data and correctly
+> transparently so I don't have any idea what the technical
+> requirements this different IO stack places on filesystems may be.
+> Hence I'm asking for some kind of architecture/design documentation
+> that I can read to understand exactly what is being proposed here...
 
-> There isn't a document other than the flow in my head :) - but maybe I
-> could write one up..
-> I wasn't thinking the application itself maintains and restores from
-> backup copy of the file.. The application hits either a SIGBUS or EIO
-> depending on how it accesses the data, and crashes or raises some alarm.
-> The recovery is then done out-of-band, by a sysadmin or such (i.e.
-> delete the file, replace with a known good copy, restart application).
-> =
+I think this is a discussion for a solution that would build on top of
+this basic "here are the errors, re-write them with good data if you
+can; otherwise, best of luck" foundation.  Something like a DAX-aware
+device mapper layer that duplicates data tagged with REQ_META so at
+least we have a recovery path when a sector error lands in critical
+filesystem-metadata.  However, anything we come up with to make NVDIMM
+errors more survivable should be directly applicable to traditional
+disk storage as well.  Along these lines we had a BoF session at Vault
+where drive vendors we're wondering if the sysfs bad sectors list
+could help software recover from the loss of a disk-head, or other
+errors that only take down part of the drive.  An I/O hint that flags
+data that should be stored redundantly might be useful there as well.
 
-> To summarize, the two cases we want to handle are:
-> 1. Application has inbuilt recovery:
-> =A0 - hits badblock
-> =A0 - figures out it is able to recover the data
-> =A0 - handles SIGBUS or EIO
-> =A0 - does a (sector aligned) write() to restore the data
-
-The "figures out" step here is where >95% of the work we'd have to
-do is. And that's in filesystem and block layer code, not
-userspace, and userspace can't do that work in a signal handler.
-And it  can still fall down to the second case when the application
-doesn't have another copy of the data somewhere.
-
-FWIW, we don't have a DAX enabled filesystem that can do
-reverse block mapping, so we're a year or two away from this being a
-workable production solution from the filesystem perspective. And
-AFAICT, it's not even on the roadmap for dm/md layers.
-
-> 2. Application doesn't have any inbuilt recovery mechanism
-> =A0 - hits badblock
-> =A0 - gets SIGBUS (or EIO) and crashes
-> =A0 - Sysadmin restores file from backup
-
-Which is no different to an existing non-DAX application getting an
-EIO/sigbus from current storage technologies.
-
-Except: in the existing storage stack, redundancy and correction has
-already had to have failed for the application to see such an error.
-Hence this is normally considered a DR case as there's had to be
-cascading failures (e.g.  multiple disk failures in a RAID) to get
-to this stage, not a single error in a single sector in
-non-redundant storage.
-
-We need some form of redundancy and correction in the PMEM stack to
-prevent single sector errors from taking down services until an
-administrator can correct the problem. I'm trying to understand
-where this is supposed to fit into the picture - at this point I
-really don't think userspace applications are going to be able to do
-this reliably....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+By the way, your presence was sorely missed at LSF/MM!
 
 _______________________________________________
 xfs mailing list
