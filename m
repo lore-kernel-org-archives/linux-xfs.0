@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 27E6F7CA0
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:25:54 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 988F67CF5
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 17:46:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA3D88F8033
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 10:25:50 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id b1pVns0A7OIykNDh for <xfs@oss.sgi.com>;
-	Thu, 07 Apr 2016 10:25:47 -0700 (PDT)
-Received: from Liberator.local (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 7F63116C152
-	for <xfs@oss.sgi.com>; Thu,  7 Apr 2016 12:25:47 -0500 (CDT)
-Subject: Re: [PATCH 08/19] mkfs: getbool is redundant
-References: <1458818136-56043-1-git-send-email-jtulak@redhat.com>
-	<1458818136-56043-9-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5706981A.9090904@sandeen.net>
-Date: Thu, 7 Apr 2016 12:25:46 -0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B3B08F8052
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 15:46:29 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	j92L8tfvZwNg5NeS for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2016 15:46:26 -0700 (PDT)
+Date: Wed, 27 Apr 2016 08:46:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_buf_iodone_callbacks to force shutdown & resubmit
+	buf in case of permanent failure
+Message-ID: <20160426224612.GE26977@dastard>
+References: <a71e1aed74b2922e8ed6fb40404899e7@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1458818136-56043-9-git-send-email-jtulak@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <a71e1aed74b2922e8ed6fb40404899e7@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,74 +30,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Shyam Kaushik <shyam@zadarastorage.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
+On Tue, Apr 26, 2016 at 07:31:59PM +0530, Shyam Kaushik wrote:
+> When XFS underlying disk fails, it could take several milliseconds for the
+> FS to be marked
+> shutdown. xfs_buf_iodone_callbacks() retries buf upon first failure by
+> submitting it once
+> again. But if the buf fails 2nd time before FS is marked for shutdown, it
+> just releases the
+> buf with xfs_buf_relse(). This is flawed that nobody is releasing the
+> XFS_IFLOCK on the inode.
+> Because of this AIL tasks repeated effort to xfs_inode_item_push() will
+> see that xfs_iflock()
+> cannot be acquired. This blocks XFS from being unmounted as
+> xfs_ail_push_all_sync() will keep
+> looping without progress.
 
+Patch formatting first: commit messages should wrap at 68-72
+columns...
 
-On 3/24/16 6:15 AM, jtulak@redhat.com wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+> Fix this by marking the FS for shutdown if we have a permanent failure &
+> resubmit the buf.
+> xfs_buf_submit() will see FS marked for shutdown & invoke the callback
+> which releases
+> XFS_IFLOCK.
 > 
-> CHANGELOG:
-> o Add description of a new member of opt_params
-> o Fix in the subopts tables
-> o All boolean subopts should use getnum_checked
-> o Edit man8 page where it missed the information about optional value of a flag
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 1a6c9b9..6f73ee0 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1100,7 +1100,12 @@ xfs_buf_iodone_callbacks(
+>                                        XBF_DONE | XBF_WRITE_FAIL;
+>                         xfs_buf_submit(bp);
+>                 } else {
+> -                       xfs_buf_relse(bp);
+> +                       /*
+> +                       * if we have the buf fail 2nd time, force a FS
+> shutdown & resubmit
+> +                       * the buf for it to be failed back immediately
+> +                       */
+> +                       xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+> +                       xfs_buf_submit(bp);
+>                 }
 > 
-> getbool() can be replaced with getnum_checked with appropriate
-> min/max values set for the boolean variables. Make boolean
-> arguments consistent - all accept 0 or 1 value now.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  man/man8/mkfs.xfs.8 |  11 ++-
->  mkfs/xfs_mkfs.c     | 223 ++++++++++++++++++++++++++++++++++++----------------
->  2 files changed, 164 insertions(+), 70 deletions(-)
-> 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 8b068ef..5a2a20a 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -118,6 +118,9 @@ option or the
->  option first needs to be added to the command line.
->  Failure to specify the size of the units will result in illegal value errors
->  when parameters are quantified in those units.
-> +.PP
-> +Many options allows for optional argument of value 0 or 1, to explicitly
+>                 return;
 
-"Many options allow for an optional argument of 0 or 1, ..."
+... and patches should not be wrapped or have tabs converted to
+spaces. See Documentation/SubmittingPatches.
 
-> +disable or enable the functionality, in a forward-compatible syntax.
+Ok, so yes, it would seem there is a bug here, but I don't think
+this is correct solution: this will shut down the filesystem
+immediately on inode write IO errors. As i've said *many* times
+before: this is might seem like a fix, but it is incorrect behaviour
+as it does not give transient failures (e.g. multipath failover
+causing timeouts) a chance to be resolved before shutting down the
+filesystem.
 
-What does "forward-compatible syntax" mean?  I'm not sure that clarifies
-anything for the reader.
+That's the reason for all the retry behaviour on XFS metadata - the
+system can continue to run logging new changes even if it can't
+write back the changes immediately. As long as the log writes
+continue to work, the filesystem can continue to function correctly.
+Hence shutting down the filesystem immediately on any metadata write
+error (other than a journal write) is premature and will lead to
+spurious errors causing shutdowns rather than just logging a
+warning.
 
-Otherwise this looks ok to me; Dave explained that it is intentional to
-make every single option accept a value, whether it is now
-boolean or a numeric value, so there is no such thing as a bare "--flag"
-anymore; such flags are always "--flag [0|1]" now, right?
+We are in the process of making this error behaviour configurable -
+Carlos is going to finish off the patchset I originally wrote to do
+this, so the "shutdown immediately" option will be avaialable
+through that set of interfaces. We'll still need to fix the unlock
+case for retry here, though...
 
-> @@ -312,10 +315,12 @@ and
->  .B swidth
->  values.
->  .TP
-> -.BI noalign
-> -This option disables automatic geometry detection and creates the filesystem
-> +.BI noalign[= value ]
-> +If the
-> +.I value
-> +is 1, this option disables automatic geometry detection and creates the filesystem
->  without stripe geometry alignment even if the underlying storage device provides
-> -this information.
-> +this information. 0 disables this option, that is, enables automatic detection.
->  .RE
->  .TP
->  .B \-f
+Cheers,
 
-The realtime section of the manpage needs this same fixup now too, I guess.
-
-Thanks,
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
