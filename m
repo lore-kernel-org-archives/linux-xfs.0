@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E2F757CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 07:43:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3AD8304062
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:43:42 -0700 (PDT)
-Received: from mail-ig0-f170.google.com (mail-ig0-f170.google.com
-	[209.85.213.170]) by cuda.sgi.com with ESMTP id
-	vtdYr4fOQvSt7285 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:43:41 -0700 (PDT)
-Received: by mail-ig0-f170.google.com with SMTP id g8so80057177igr.0
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:43:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1461231593-31294-16-git-send-email-jtulak@redhat.com>
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-	<1461231593-31294-16-git-send-email-jtulak@redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 21 Apr 2016 14:43:21 +0200
-Message-ID: <CACj3i73aW53YyEsZERZnSWHJ3y9cW85sA15KdoesCbx9wKsbPg@mail.gmail.com>
-Subject: Re: [PATCH 15/19] mkfs: don't treat files as though they are block
-	devices
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9D1DD7CDD
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 06:56:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 21E47AC001
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 04:56:27 -0700 (PDT)
+Received: from mail-wm0-f68.google.com (mail-wm0-f68.google.com
+	[74.125.82.68]) by cuda.sgi.com with ESMTP id pBpezTCBymw9iDxi
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2016 04:56:23 -0700 (PDT)
+Received: by mail-wm0-f68.google.com with SMTP id n3so4244001wmn.1
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 04:56:23 -0700 (PDT)
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 1/2] mm: add PF_MEMALLOC_NOFS
+Date: Tue, 26 Apr 2016 13:56:11 +0200
+Message-Id: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
+In-Reply-To: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,122 +26,341 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0398753435667369347=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, Chris Mason <clm@fb.com>, Michal Hocko <mhocko@suse.com>, linux-mtd@lists.infradead.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
---===============0398753435667369347==
-Content-Type: multipart/alternative; boundary=089e0116076e59f7680530fe0ffe
+From: Michal Hocko <mhocko@suse.com>
 
---089e0116076e59f7680530fe0ffe
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+GFP_NOFS context is used for the following 4 reasons currently
+	- to prevent from deadlocks when the lock held by the allocation
+	  context would be needed during the memory reclaim
+	- to prevent from stack overflows during the reclaim because
+	  the allocation is performed from a deep context already
+	- to prevent lockups when the allocation context depends on
+	  other reclaimers to make a forward progress indirectly
+	- just in case because this would be safe from the fs POV
 
-On Thu, Apr 21, 2016 at 11:39 AM, Jan Tulak <jtulak@redhat.com> wrote:
+Unfortunately overuse of this allocation context brings some problems
+to the MM. Memory reclaim is much weaker (especially during heavy FS
+metadata workloads), OOM killer cannot be invoked because the MM layer
+doesn't have enough information about how much memory is freeable by the
+FS layer.
 
-> From: Dave Chinner <dchinner@redhat.com>
->
-> THIS PATCH HAS KNOWN ISSUES - it fails xfs/206 and xfs/216 tests, as it
-> shrinks a file instead just not using it entirely, when -d size is used.
->
+In many cases it is far from clear why the weaker context is even used
+and so it might be used unnecessarily. We would like to get rid of
+those as much as possible. One way to do that is to use the flag in the
+scopes rather than isolated cases. Such a scope is declared when really
+necessary, tracked per task and all the allocation requests from within
+the context will simply inherit the GFP_NOFS semantic.
 
-=E2=80=8BSo the shrinking is happening here:
-3127        /*
-3128         * If the data area is a file, then grow it out to its final
-size
-3129         * so that the reads for the end of the device in the mount cod=
-e
-3130         * will succeed.
-3131         */
-3132        if (xi.disfile && ftruncate64(xi.dfd, dblocks * blocksize) < 0)
-{=E2=80=8B
+Not only this is easier to understand and maintain because there are
+much less problematic contexts than specific allocation requests, this
+also helps code paths where FS layer interacts with other layers (e.g.
+crypto, security modules, MM etc...) and there is no easy way to convey
+the allocation context between the layers.
 
+Introduce PF_MEMALLOC_NOFS task specific flag and memalloc_nofs_{save,restore}
+API to control the scope. This is basically copying
+memalloc_noio_{save,restore} API we have for other restricted allocation
+context GFP_NOIO.
 
-Before the patch, xi.disfile was 0 and so it didn't shrink the file to the
-size of the new FS.
-Now, what is the correct solve to this? Tests are written for the old
-behaviour, but this shrinking seems to be an intentional thing.
-It seems that the FS works ok even when this truncating is not applied, so
-I think that I should remove this chunk (or change it to xi.dcreate=3D1
-only), and keep the old behaviour.
+Xfs has already had a similar functionality as PF_FSTRANS so let's just
+give it a more generic name and make it usable for others as well and
+move the GFP_NOFS context tracking to the page allocator. Xfs has its
+own accessor functions but let's keep them for now to reduce this patch
+as minimum.
 
-What do you think about it, guys?
+This patch shouldn't introduce any functional changes. Xfs code paths
+preserve their semantic. kmem_flags_convert() doesn't need to evaluate
+the flag anymore because it is the page allocator to care about the
+flag. memalloc_noio_flags is renamed to current_gfp_context because it
+now cares about both PF_MEMALLOC_NOFS and PF_MEMALLOC_NOIO contexts.
 
-Cheers,
-Jan
+Let's hope that filesystems will drop direct GFP_NOFS (resp. ~__GFP_FS)
+usage as much and possible and only use a properly documented
+memalloc_nofs_{save,restore} checkpoints where they are appropriate.
 
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c             |  4 ++--
+ fs/xfs/kmem.h             |  2 +-
+ fs/xfs/libxfs/xfs_btree.c |  2 +-
+ fs/xfs/xfs_aops.c         |  6 +++---
+ fs/xfs/xfs_trans.c        | 12 ++++++------
+ include/linux/gfp.h       |  8 ++++++++
+ include/linux/sched.h     | 32 ++++++++++++++++++++++++++------
+ mm/page_alloc.c           |  8 +++++---
+ mm/vmscan.c               |  4 ++--
+ 9 files changed, 54 insertions(+), 24 deletions(-)
 
-
---=20
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
-
---089e0116076e59f7680530fe0ffe
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-family:arial,he=
-lvetica,sans-serif"><span style=3D"font-family:arial,sans-serif">On Thu, Ap=
-r 21, 2016 at 11:39 AM, Jan Tulak </span><span dir=3D"ltr" style=3D"font-fa=
-mily:arial,sans-serif">&lt;<a href=3D"mailto:jtulak@redhat.com" target=3D"_=
-blank">jtulak@redhat.com</a>&gt;</span><span style=3D"font-family:arial,san=
-s-serif"> wrote:</span><br></div><div class=3D"gmail_extra"><div class=3D"g=
-mail_quote"><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0=
-.8ex;border-left-width:1px;border-left-color:rgb(204,204,204);border-left-s=
-tyle:solid;padding-left:1ex">From: Dave Chinner &lt;<a href=3D"mailto:dchin=
-ner@redhat.com">dchinner@redhat.com</a>&gt;<br>
-<br>
-THIS PATCH HAS KNOWN ISSUES - it fails xfs/206 and xfs/216 tests, as it<br>
-shrinks a file instead just not using it entirely, when -d size is used.<br=
-></blockquote><div><br></div><div><div class=3D"gmail_default" style=3D"fon=
-t-family:arial,helvetica,sans-serif;display:inline">=E2=80=8BSo the shrinki=
-ng is happening here:</div></div><div><font face=3D"arial, helvetica, sans-=
-serif">3127 =C2=A0 =C2=A0 =C2=A0 =C2=A0/*</font></div><div><font face=3D"ar=
-ial, helvetica, sans-serif">3128 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * If the data =
-area is a file, then grow it out to its final size</font></div><div><font f=
-ace=3D"arial, helvetica, sans-serif">3129 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * so =
-that the reads for the end of the device in the mount code</font></div><div=
-><font face=3D"arial, helvetica, sans-serif">3130 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 * will succeed.</font></div><div><font face=3D"arial, helvetica, sans-s=
-erif">3131 =C2=A0 =C2=A0 =C2=A0 =C2=A0 */</font></div><div><div class=3D"gm=
-ail_default" style=3D"display:inline"><font face=3D"arial, helvetica, sans-=
-serif">3132 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (xi.disfile &amp;&amp; ftruncate6=
-4(xi.dfd, dblocks * blocksize) &lt; 0) {=E2=80=8B</font></div>=C2=A0</div><=
-div><br></div><div><div class=3D"gmail_default" style=3D"font-family:arial,=
-helvetica,sans-serif">Before the patch, xi.disfile was 0 and so it didn&#39=
-;t shrink the file to the size of the new FS.</div><div class=3D"gmail_defa=
-ult" style=3D"font-family:arial,helvetica,sans-serif">Now, what is the corr=
-ect solve to this? Tests are written for the old behaviour, but this shrink=
-ing seems to be an intentional thing.</div><div class=3D"gmail_default" sty=
-le=3D"font-family:arial,helvetica,sans-serif">It seems that the FS works ok=
- even when this truncating is not applied, so I think that I should remove =
-this chunk (or change it to xi.dcreate=3D1 only), and keep the old behaviou=
-r.</div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,s=
-ans-serif"><br></div><div class=3D"gmail_default" style=3D"font-family:aria=
-l,helvetica,sans-serif">What do you think about it, guys?</div><div class=
-=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"><br></d=
-iv><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-s=
-erif">Cheers,</div><div class=3D"gmail_default" style=3D"font-family:arial,=
-helvetica,sans-serif">Jan</div><br></div><div><br></div></div><div><br></di=
-v>-- <br><div class=3D"gmail_signature"><div dir=3D"ltr"><div><div dir=3D"l=
-tr"><div>Jan Tulak<br></div><a href=3D"mailto:jtulak@redhat.com" target=3D"=
-_blank">jtulak@redhat.com</a>=C2=A0/ <a href=3D"mailto:jan@tulak.me" target=
-=3D"_blank">jan@tulak.me</a></div></div></div></div>
-</div></div>
-
---089e0116076e59f7680530fe0ffe--
-
-
---===============0398753435667369347==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 686ba6fb20dd..73f6ab59c664 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -80,13 +80,13 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+ 	 * the filesystem here and potentially deadlocking.
+ 	 */
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		noio_flag = memalloc_noio_save();
+ 
+ 	lflags = kmem_flags_convert(flags);
+ 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+ 
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		memalloc_noio_restore(noio_flag);
+ 
+ 	return ptr;
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index d1c66e465ca5..b35688a54c9a 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -50,7 +50,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ 		lflags = GFP_ATOMIC | __GFP_NOWARN;
+ 	} else {
+ 		lflags = GFP_KERNEL | __GFP_NOWARN;
+-		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++		if (flags & KM_NOFS)
+ 			lflags &= ~__GFP_FS;
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index a0eb18ce3ad3..326566f4a131 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2540,7 +2540,7 @@ xfs_btree_split_worker(
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
++	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
+ 
+ 	/*
+ 	 * we are in a transaction context here, but may also be doing work
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index d12dfcfd0cc8..6d816ff0b763 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -124,7 +124,7 @@ xfs_setfilesize_trans_alloc(
+ 	 * We hand off the transaction to the completion thread now, so
+ 	 * clear the flag here.
+ 	 */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	return 0;
+ }
+ 
+@@ -169,7 +169,7 @@ xfs_setfilesize_ioend(
+ 	 * thus we need to mark ourselves as being in a transaction manually.
+ 	 * Similarly for freeze protection.
+ 	 */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+ 
+ 	/* we abort the update if there was an IO error */
+@@ -979,7 +979,7 @@ xfs_vm_writepage(
+ 	 * Given that we do not allow direct reclaim to call us, we should
+ 	 * never be called while in a filesystem transaction.
+ 	 */
+-	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
++	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+ 		goto redirty;
+ 
+ 	/* Is this page beyond the end of the file? */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 748b16aff45a..1d247366c733 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -176,7 +176,7 @@ xfs_trans_reserve(
+ 	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+ 
+ 	/* Mark this thread as being in a transaction */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	/*
+ 	 * Attempt to reserve the needed disk blocks by decrementing
+@@ -186,7 +186,7 @@ xfs_trans_reserve(
+ 	if (blocks > 0) {
+ 		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
+ 		if (error != 0) {
+-			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 			return -ENOSPC;
+ 		}
+ 		tp->t_blk_res += blocks;
+@@ -263,7 +263,7 @@ xfs_trans_reserve(
+ 		tp->t_blk_res = 0;
+ 	}
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	return error;
+ }
+@@ -921,7 +921,7 @@ __xfs_trans_commit(
+ 
+ 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free(tp);
+ 
+ 	/*
+@@ -951,7 +951,7 @@ __xfs_trans_commit(
+ 		if (commit_lsn == -1 && !error)
+ 			error = -EIO;
+ 	}
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
+ 	xfs_trans_free(tp);
+ 
+@@ -1005,7 +1005,7 @@ xfs_trans_cancel(
+ 		xfs_log_done(mp, tp->t_ticket, NULL, false);
+ 
+ 	/* mark this thread as no longer being in a transaction */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
+ 	xfs_trans_free(tp);
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index 570383a41853..3ebdbdff44b4 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -210,8 +210,16 @@ struct vm_area_struct;
+  *
+  * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
+  *   that do not require the starting of any physical IO.
++ *   Please try to avoid using this flag directly and instead use
++ *   memalloc_noio_{save,restore} to mark the whole scope which cannot
++ *   perform any IO with a short explanation why. All allocation requests
++ *   will inherit GFP_NOIO implicitly.
+  *
+  * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
++ *   Please try to avoid using this flag directly and instead use
++ *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
++ *   recurse into the FS layer with a short explanation why. All allocation
++ *   requests will inherit GFP_NOFS implicitly.
+  *
+  * GFP_USER is for userspace allocations that also need to be directly
+  *   accessibly by the kernel or hardware. It is typically used by hardware
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index acfc32b30704..e9521dc0475f 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -2102,9 +2102,9 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+ #define PF_USED_ASYNC	0x00004000	/* used async_schedule*(), used by module init */
+ #define PF_NOFREEZE	0x00008000	/* this thread should not be frozen */
+ #define PF_FROZEN	0x00010000	/* frozen for system suspend */
+-#define PF_FSTRANS	0x00020000	/* inside a filesystem transaction */
+-#define PF_KSWAPD	0x00040000	/* I am kswapd */
+-#define PF_MEMALLOC_NOIO 0x00080000	/* Allocating memory without IO involved */
++#define PF_KSWAPD	0x00020000	/* I am kswapd */
++#define PF_MEMALLOC_NOFS 0x00040000	/* All allocation requests will inherit GFP_NOFS */
++#define PF_MEMALLOC_NOIO 0x00080000	/* All allocation requests will inherit GFP_NOIO */
+ #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
+ #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
+ #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
+@@ -2140,13 +2140,21 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+ #define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
+ #define used_math() tsk_used_math(current)
+ 
+-/* __GFP_IO isn't allowed if PF_MEMALLOC_NOIO is set in current->flags
+- * __GFP_FS is also cleared as it implies __GFP_IO.
++/*
++ * Applies per-task gfp context to the given allocation flags.
++ * PF_MEMALLOC_NOIO implies GFP_NOIO
++ * PF_MEMALLOC_NOFS implies GFP_NOFS
+  */
+-static inline gfp_t memalloc_noio_flags(gfp_t flags)
++static inline gfp_t current_gfp_context(gfp_t flags)
+ {
++	/*
++	 * NOIO implies both NOIO and NOFS and it is a weaker context
++	 * so always make sure it makes precendence
++	 */
+ 	if (unlikely(current->flags & PF_MEMALLOC_NOIO))
+ 		flags &= ~(__GFP_IO | __GFP_FS);
++	else if (unlikely(current->flags & PF_MEMALLOC_NOFS))
++		flags &= ~__GFP_FS;
+ 	return flags;
+ }
+ 
+@@ -2162,6 +2170,18 @@ static inline void memalloc_noio_restore(unsigned int flags)
+ 	current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
+ }
+ 
++static inline unsigned int memalloc_nofs_save(void)
++{
++	unsigned int flags = current->flags & PF_MEMALLOC_NOFS;
++	current->flags |= PF_MEMALLOC_NOFS;
++	return flags;
++}
++
++static inline void memalloc_nofs_restore(unsigned int flags)
++{
++	current->flags = (current->flags & ~PF_MEMALLOC_NOFS) | flags;
++}
++
+ /* Per-process atomic flags. */
+ #define PFA_NO_NEW_PRIVS 0	/* May not gain new privileges. */
+ #define PFA_SPREAD_PAGE  1      /* Spread page cache over cpuset */
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 0e2bb8f4ec0b..86bb5d6ddd7d 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3801,10 +3801,12 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 		goto out;
+ 
+ 	/*
+-	 * Runtime PM, block IO and its error handling path can deadlock
+-	 * because I/O on the device might not complete.
++	 * Apply scoped allocation constrains. This is mainly about
++	 * GFP_NOFS resp. GFP_NOIO which has to be inherited for all
++	 * allocation requests from a particular context which has
++	 * been marked by memalloc_no{fs,io}_{save,restore}
+ 	 */
+-	alloc_mask = memalloc_noio_flags(gfp_mask);
++	alloc_mask = current_gfp_context(gfp_mask);
+ 	ac.spread_dirty_pages = false;
+ 
+ 	page = __alloc_pages_slowpath(alloc_mask, order, &ac);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index c4a2f4512fca..cfb74de1efa3 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2808,7 +2808,7 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 	unsigned long nr_reclaimed;
+ 	struct scan_control sc = {
+ 		.nr_to_reclaim = SWAP_CLUSTER_MAX,
+-		.gfp_mask = (gfp_mask = memalloc_noio_flags(gfp_mask)),
++		.gfp_mask = (gfp_mask = current_gfp_context(gfp_mask)),
+ 		.order = order,
+ 		.nodemask = nodemask,
+ 		.priority = DEF_PRIORITY,
+@@ -3656,7 +3656,7 @@ static int __zone_reclaim(struct zone *zone, gfp_t gfp_mask, unsigned int order)
+ 	struct reclaim_state reclaim_state;
+ 	struct scan_control sc = {
+ 		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+-		.gfp_mask = (gfp_mask = memalloc_noio_flags(gfp_mask)),
++		.gfp_mask = (gfp_mask = current_gfp_context(gfp_mask)),
+ 		.order = order,
+ 		.priority = ZONE_RECLAIM_PRIORITY,
+ 		.may_writepage = !!(zone_reclaim_mode & RECLAIM_WRITE),
+-- 
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0398753435667369347==--
