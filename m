@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7140D7CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 18:53:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 410D8304032
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 16:53:16 -0700 (PDT)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id x9QTK3trjaDBSGdJ for
-	<xfs@oss.sgi.com>; Mon, 25 Apr 2016 16:53:15 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 640D47CA0
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 19:13:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1C28030404E
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 17:13:05 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	EhCTfgd8o4FyjIUQ for <xfs@oss.sgi.com>;
+	Mon, 25 Apr 2016 17:12:59 -0700 (PDT)
+Date: Tue, 26 Apr 2016 10:11:57 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Date: Mon, 25 Apr 2016 23:53:13 +0000
-Message-ID: <1461628381.1421.24.camel@intel.com>
+Message-ID: <20160426001157.GE18496@dastard>
 References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
 	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
@@ -20,10 +21,10 @@ References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
 	<20160425083114.GA27556@infradead.org>
 	<1461604476.3106.12.camel@intel.com>
 	<20160425232552.GD18496@dastard>
-In-Reply-To: <20160425232552.GD18496@dastard>
-Content-Language: en-US
-Content-ID: <7502BB94DF2B3F4BBDDD7D995E54F60F@intel.com>
+	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,82 +33,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "david@fromorbit.com" <david@fromorbit.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew
-	R" <matthew.r.wilcox@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
+	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-T24gVHVlLCAyMDE2LTA0LTI2IGF0IDA5OjI1ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-wqANCjw+DQoNCj4gPiANCj4gPiAtIEl0IGNoZWNrcyBiYWRibG9ja3MgYW5kIGRpc2NvdmVycyBp
-dCdzIGZpbGVzIGhhdmUgbG9zdCBkYXRhDQo+IExvdHMgb2YgaGFuZC13YXZpbmcgaGVyZS4gSG93
-IGRvZXMgdGhlIGFwcGxpY2F0aW9uIG1hcCBhIGJhZA0KPiAic2VjdG9yIiB0byBhIGZpbGUgd2l0
-aG91dCBzY2FubmluZyB0aGUgZW50aXJlIGZpbGVzeXN0ZW0gdG8gZmluZA0KPiB0aGUgb3duZXIg
-b2YgdGhlIGJhZCBzZWN0b3I/DQoNClllcyB0aGlzIHdhcyBoYW5kLXdhdmV5LCBidXQgd2UgdGFs
-a2VkIGFib3V0IHRoaXMgYSBiaXQgYXQgTFNGLi4NClRoZSBpZGVhIGlzIHRoYXQgYSBwZXItYmxv
-Y2stZGV2aWNlIGJhZGJsb2NrcyBsaXN0IGlzIGF2YWlsYWJsZSBhdA0KL3N5cy9ibG9jay88cG1l
-bVg+L2JhZGJsb2Nrcy4gVGhlIGFwcGxpY2F0aW9uIChvciBhIHN1aXRhYmxlIHlldC10by1iZS0N
-CndyaXR0ZW4gbGlicmFyeSBmdW5jdGlvbikgZG9lcyBhIGZpZW1hcCB0byBmaWd1cmUgb3V0IHRo
-ZSBzZWN0b3JzIGl0cw0KZmlsZXMgYXJlIHVzaW5nLCBhbmQgY29ycmVsYXRlcyB0aGUgdHdvIGxp
-c3RzLg0KV2UgY2FuIGFsc28gbG9vayBpbnRvIHByb3ZpZGluZyBhbiBlYXNpZXItdG8tdXNlIGlu
-dGVyZmFjZSBmcm9tIHRoZQ0Ka2VybmVsLCBpbiB0aGUgZm9ybSBvZiBhbiBmaWVtYXAgZmxhZyB0
-byByZXBvcnQgb25seSB0aGUgYmFkIHNlY3RvcnMsIG9yDQphIFNFRUtfQkFEIGZsYWcuLg0KVGhl
-IGFwcGxpY2F0aW9uIGRvZXNuJ3QgaGF2ZSB0byBzY2FuIHRoZSBlbnRpcmUgZmlsZXN5c3RlbSwg
-YnV0DQpwcmVzdW1hYmx5IGl0IGtub3dzIHdoYXQgZmlsZXMgaXQgJ293bnMnLCBhbmQgZG9lcyBh
-IGZpZW1hcCBmb3IgdGhvc2UuDQoNCj4gDQo+ID4gDQo+ID4gLSBJdCB3cml0ZSgpcyB0aG9zZSBz
-ZWN0b3JzIChwb3NzaWJseSBjb252ZXJ0ZWQgdG8gZmlsZSBvZmZzZXRzDQo+ID4gdXNpbmcNCj4g
-PiBmaWVtYXApDQo+ID4gwqAgwqAgKiBUaGlzIHRyaWdnZXJzIHRoZSBmYWxsYmFjayBwYXRoLCBi
-dXQgaWYgdGhlIGFwcGxpY2F0aW9uIGlzDQo+ID4gZG9pbmcNCj4gPiB0aGlzIGxldmVsIG9mIHJl
-Y292ZXJ5LCBpdCB3aWxsIGtub3cgdGhlIHNlY3RvciBpcyBiYWQsIGFuZCB3cml0ZQ0KPiA+IHRo
-ZQ0KPiA+IGVudGlyZSBzZWN0b3INCj4gV2hlcmUgZG9lcyB0aGUgYXBwbGljYXRpb24gZmluZCB0
-aGUgZGF0YSB0aGF0IHdhcyBsb3N0IHRvIGJlIGFibGUgdG8NCj4gcmV3cml0ZSBpdD8NCg0KVGhl
-IGRhdGEgdGhhdCB3YXMgbG9zdCBpcyBnb25lIC0tIHRoaXMgYXNzdW1lcyB0aGUgYXBwbGljYXRp
-b24gaGFzIHNvbWUNCmFiaWxpdHkgdG8gcmVjb3ZlciB1c2luZyBhIGpvdXJuYWwvbG9nIG9yIG90
-aGVyIHJlZHVuZGFuY3kgLSB5ZXMsIGF0IHRoZQ0KYXBwbGljYXRpb24gbGF5ZXIuIElmIGl0IGRv
-ZXNuJ3QgaGF2ZSB0aGlzIHNvcnQgb2YgY2FwYWJpbGl0eSwgdGhlIG9ubHkNCm9wdGlvbiBpcyB0
-byByZXN0b3JlIGZpbGVzIGZyb20gYSBiYWNrdXAvbWlycm9yLg0KDQo+IA0KPiA+IA0KPiA+IC0g
-T3IgaXQgcmVwbGFjZXMgdGhlIGVudGlyZSBmaWxlIGZyb20gYmFja3VwIGFsc28gdXNpbmcgd3Jp
-dGUoKSAobm90DQo+ID4gbW1hcCtzdG9yZXMpDQo+ID4gwqAgwqAgKiBUaGlzIGp1c3QgZnJlZXMg
-dGhlIGZzIGJsb2NrLCBhbmQgdGhlIG5leHQgdGltZSB0aGUgYmxvY2sgaXMNCj4gPiByZWFsbG9j
-YXRlZCBieSB0aGUgZnMsIGl0IHdpbGwgbGlrZWx5IGJlIHplcm9lZCBmaXJzdCwgYW5kIHRoYXQg
-d2lsbA0KPiA+IGJlDQo+ID4gZG9uZSB0aHJvdWdoIHRoZSBkcml2ZXIgYW5kIHdpbGwgY2xlYXIg
-ZXJyb3JzDQo+IFRoZXJlJ3MgYW4gaW1wbGljaXQgYXNzdW1wdGlvbiB0aGF0IGFwcGxpY2F0aW9u
-cyB3aWxsIGtlZXAgcmVkdW5kYW50DQo+IGNvcGllcyBvZiB0aGVpciBkYXRhIGF0IHRoZSAvYXBw
-bGljYXRpb24gbGF5ZXIvIGFuZCBiZSBhYmxlIHRvDQo+IGF1dG9tYXRpY2FsbHkgcmVwYWlyIGl0
-PyBBbmQgdGhlbiB0aGVyZSdzIHRoZSBpbXBsaWNpdCBhc3N1bXB0aW9uDQo+IHRoYXQgaXQgd2ls
-bCB1bmxpbmsgYW5kIGZyZWUgdGhlIGVudGlyZSBmaWxlIGJlZm9yZSB3cml0aW5nIGEgbmV3DQo+
-IGNvcHksIGFuZCB0aGF0IHRoZW4gYXNzdW1lcyB0aGUgdGhlIGZpbGVzeXN0ZW0gd2lsbCB6ZXJv
-IGJsb2NrcyBpZg0KPiB0aGV5IGdldCByZXVzZWQgdG8gY2xlYXIgZXJyb3JzIG9uIHRoYXQgTEJB
-IHNlY3RvciBtYXBwaW5nIGJlZm9yZQ0KPiB0aGV5IGFyZSBhY2Nlc3NpYmxlIGFnYWluIHRvIHVz
-ZXJzcGFjZS4uDQo+IA0KPiBJdCBzZWVtcyB0byBtZSB0aGF0IHRoZXJlIGFyZSBhIG51bWJlciBv
-ZiBhc3N1bXB0aW9ucyBiZWluZyBtYWRlDQo+IGFjcm9zcyBtdWx0aXBsZSBsYXllcnMgaGVyZS4g
-TWF5YmUgSSd2ZSBtaXNzZWQgc29tZXRoaW5nIC0gY2FuIHlvdQ0KPiBwb2ludCBtZSB0byB0aGUg
-ZGVzaWduL2FyY2hpdGVjdHVyZSBkZXNjcmlwdGlvbiBzbyBJIGNhbiBzZWUgaG93DQo+ICJhcHAg
-ZG9lcyBkYXRhIHJlY292ZXJ5IGl0c2VsZiIgZGFuY2UgaXMgc3VwcG9zZWQgdG8gd29yaz8NCg0K
-VGhlcmUgaXNuJ3QgYSBkb2N1bWVudCBvdGhlciB0aGFuIHRoZSBmbG93IGluIG15IGhlYWQgOikg
-LSBidXQgbWF5YmUgSQ0KY291bGQgd3JpdGUgb25lIHVwLi4NCkkgd2Fzbid0IHRoaW5raW5nIHRo
-ZSBhcHBsaWNhdGlvbiBpdHNlbGYgbWFpbnRhaW5zIGFuZCByZXN0b3JlcyBmcm9tDQpiYWNrdXAg
-Y29weSBvZiB0aGUgZmlsZS4uIFRoZSBhcHBsaWNhdGlvbiBoaXRzIGVpdGhlciBhIFNJR0JVUyBv
-ciBFSU8NCmRlcGVuZGluZyBvbiBob3cgaXQgYWNjZXNzZXMgdGhlIGRhdGEsIGFuZCBjcmFzaGVz
-IG9yIHJhaXNlcyBzb21lIGFsYXJtLg0KVGhlIHJlY292ZXJ5IGlzIHRoZW4gZG9uZSBvdXQtb2Yt
-YmFuZCwgYnkgYSBzeXNhZG1pbiBvciBzdWNoIChpLmUuDQpkZWxldGUgdGhlIGZpbGUsIHJlcGxh
-Y2Ugd2l0aCBhIGtub3duIGdvb2QgY29weSwgcmVzdGFydCBhcHBsaWNhdGlvbikuDQoNClRvIHN1
-bW1hcml6ZSwgdGhlIHR3byBjYXNlcyB3ZSB3YW50IHRvIGhhbmRsZSBhcmU6DQoxLiBBcHBsaWNh
-dGlvbiBoYXMgaW5idWlsdCByZWNvdmVyeToNCsKgIC0gaGl0cyBiYWRibG9jaw0KwqAgLSBmaWd1
-cmVzIG91dCBpdCBpcyBhYmxlIHRvIHJlY292ZXIgdGhlIGRhdGENCsKgIC0gaGFuZGxlcyBTSUdC
-VVMgb3IgRUlPDQrCoCAtIGRvZXMgYSAoc2VjdG9yIGFsaWduZWQpIHdyaXRlKCkgdG8gcmVzdG9y
-ZSB0aGUgZGF0YQ0KMi4gQXBwbGljYXRpb24gZG9lc24ndCBoYXZlIGFueSBpbmJ1aWx0IHJlY292
-ZXJ5IG1lY2hhbmlzbQ0KwqAgLSBoaXRzIGJhZGJsb2NrDQrCoCAtIGdldHMgU0lHQlVTIChvciBF
-SU8pIGFuZCBjcmFzaGVzDQrCoCAtIFN5c2FkbWluIHJlc3RvcmVzIGZpbGUgZnJvbSBiYWNrdXAN
-Cg0KQ2FzZSAxIGlzIGhhbmRsZWQgYnkgZWl0aGVyIGEgZmFsbGJhY2sgdG8gZGlyZWN0X0lPIGZy
-b20gZGF4X2RvX2lvLCBvcg0KYWx3YXlzIF9hY3R1YWxseV8gZG9pbmcgZGlyZWN0X0lPIHdoZW4g
-d2UncmUgb3BlbmVkIHdpdGggT19ESVJFQ1QgaW4NCnNwaXRlIG9mIGRheCAod2hhdCBEYW4gc3Vn
-Z2VzdGVkKS4gQ3VycmVudGx5IGlmIHdlJ3JlIG1vdW50ZWQgd2l0aCBkYXgsDQphbGwgSU8gT19E
-SVJFQ1Qgb3Igb3RoZXJ3aXNlIHdpbGwgZ28gdGhyb3VnaCBkYXhfZG9faW8uDQpDYXNlIDIgaXMg
-aGFuZGxlZCBieSBwYXRjaCA0IG9mIHRoZSBzZXJpZXM6DQrCoCDCoCBkYXg6IHVzZSBzYl9pc3N1
-ZV96ZXJvdXQgaW5zdGVhZCBvZiBjYWxsaW5nIGRheF9jbGVhcl9zZWN0b3JzDQoNCj4gDQo+IENo
-ZWVycywNCj4gDQo+IERhdmUuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Apr 25, 2016 at 04:43:14PM -0700, Dan Williams wrote:
+> On Mon, Apr 25, 2016 at 4:25 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Apr 25, 2016 at 05:14:36PM +0000, Verma, Vishal L wrote:
+> >> On Mon, 2016-04-25 at 01:31 -0700, hch@infradead.org wrote:
+> >> > On Sat, Apr 23, 2016 at 06:08:37PM +0000, Verma, Vishal L wrote:
+> >> > >
+> >> > > direct_IO might fail with -EINVAL due to misalignment, or -ENOMEM
+> >> > > due
+> >> > > to some allocation failing, and I thought we should return the
+> >> > > original
+> >> > > -EIO in such cases so that the application doesn't lose the
+> >> > > information
+> >> > > that the bad block is actually causing the error.
+> >> > EINVAL is a concern here.  Not due to the right error reported, but
+> >> > because it means your current scheme is fundamentally broken - we
+> >> > need to support I/O at any alignment for DAX I/O, and not fail due to
+> >> > alignbment concernes for a highly specific degraded case.
+> >> >
+> >> > I think this whole series need to go back to the drawing board as I
+> >> > don't think it can actually rely on using direct I/O as the EIO
+> >> > fallback.
+> >> >
+> >> Agreed that DAX I/O can happen with any size/alignment, but how else do
+> >> we send an IO through the driver without alignment restrictions? Also,
+> >> the granularity at which we store badblocks is 512B sectors, so it
+> >> seems natural that to clear such a sector, you'd expect to send a write
+> >> to the whole sector.
+> >>
+> >> The expected usage flow is:
+> >>
+> >> - Application hits EIO doing dax_IO or load/store io
+> >>
+> >> - It checks badblocks and discovers it's files have lost data
+> >
+> > Lots of hand-waving here. How does the application map a bad
+> > "sector" to a file without scanning the entire filesystem to find
+> > the owner of the bad sector?
+> >
+> >> - It write()s those sectors (possibly converted to file offsets using
+> >> fiemap)
+> >>     * This triggers the fallback path, but if the application is doing
+> >> this level of recovery, it will know the sector is bad, and write the
+> >> entire sector
+> >
+> > Where does the application find the data that was lost to be able to
+> > rewrite it?
+> >
+> >> - Or it replaces the entire file from backup also using write() (not
+> >> mmap+stores)
+> >>     * This just frees the fs block, and the next time the block is
+> >> reallocated by the fs, it will likely be zeroed first, and that will be
+> >> done through the driver and will clear errors
+> >
+> > There's an implicit assumption that applications will keep redundant
+> > copies of their data at the /application layer/ and be able to
+> > automatically repair it? And then there's the implicit assumption
+> > that it will unlink and free the entire file before writing a new
+> > copy, and that then assumes the the filesystem will zero blocks if
+> > they get reused to clear errors on that LBA sector mapping before
+> > they are accessible again to userspace..
+> >
+> > It seems to me that there are a number of assumptions being made
+> > across multiple layers here. Maybe I've missed something - can you
+> > point me to the design/architecture description so I can see how
+> > "app does data recovery itself" dance is supposed to work?
+> >
+> 
+> Maybe I missed something, but all these assumptions are already
+> present for typical block devices, i.e. sectors may go bad and a write
+> may make the sector usable again.
+
+The assumption we make about sectors going bad on SSDs or SRDs is
+that the device is about to die and needs replacing ASAP. Then
+RAID takes care of the rebuild completely transparently. i.e.
+handling and correcting bad sectors is typically done completely
+transparently /below/ the filesytem like so:
+
+Application
+Filesystem
+block
+[LBA mapping/redundancy/correction driver e.g. md/dm]
+driver
+hardware
+[LBA redundancy/correction e.g h/w RAID]
+
+In the case of filesystems with their own RAID/redundancy code (e.g.
+btrfs), then it looks like this:
+
+Application
+Filesystem
+mapping/redundancy/correction driver
+block
+driver
+hardware
+[LBA redundancy/correction e.g h/w RAID]
+
+> This patch series is extending that
+> out to the DAX-mmap case, but it's the same principle of "write to
+> clear error" that we live with in the block-I/O path.  What
+> clarification are you looking for beyond that point?
+
+I'm asking for an actual design document that explains how moving
+all the redundancy and bad sector correction stuff from the LBA
+layer up into application space is supposed to work when
+applications have no clue about LBA mappings, nor tend to keep
+redundant data around. i.e. you're proposing this:
+
+Application
+Application data redundancy/correction
+Filesystem
+Block
+[LBA mapping/redundancy/correction driver e.g. md/dm]
+driver
+hardware
+
+And somehow all the error information from the hardware layer needs
+to be propagated up to the application layer, along with all the
+mapping information from the filesystem and block layers for the
+application to make sense of the hardware reported errors.
+
+I see assumptions this this "just works" but we don't have any of
+the relevant APIs or infrastructure to enable the application to do
+the hardware error->file+offset namespace mapping (i.e. filesystem
+reverse mapping for for file offsets and directory paths, and
+reverse mapping for the the block layer remapping drivers).
+
+I haven't seen any design/documentation for infrastructure at the
+application layer to handle redundant data and correctly
+transparently so I don't have any idea what the technical
+requirements this different IO stack places on filesystems may be.
+Hence I'm asking for some kind of architecture/design documentation
+that I can read to understand exactly what is being proposed here...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
