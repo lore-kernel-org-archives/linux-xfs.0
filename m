@@ -1,34 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AC1A27CE7
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 12:16:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2CCFDAC002
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 10:16:29 -0700 (PDT)
-Received: from mail-ob0-f172.google.com (mail-ob0-f172.google.com
-	[209.85.214.172]) by cuda.sgi.com with ESMTP id
-	VIb1m5c6XZQC0AtI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Apr 2016 10:16:23 -0700 (PDT)
-Received: by mail-ob0-f172.google.com with SMTP id bg3so10217840obb.1
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 10:16:23 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 440C47CF9
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 15:51:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 154808F8052
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 13:51:15 -0700 (PDT)
+Received: from mail1.bemta12.messagelabs.com (mail1.bemta12.messagelabs.com
+	[216.82.251.14]) by cuda.sgi.com with ESMTP id 44KheuETMDz1gFWD
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 13:51:13 -0700 (PDT)
+From: Benjamin Wirth <Benjamin.Wirth@winmagic.com>
+Subject: development APIs for used/free blocks information
+Date: Tue, 26 Apr 2016 20:51:10 +0000
+Message-ID: <97A4F433DEE099488FE21C1718A641D2139E86F5@wmsexchsvr01.winmagic.local>
+Content-Language: en-US
 MIME-Version: 1.0
-In-Reply-To: <20160426153118.GI27612@quack2.suse.cz>
-References: <20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
-	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
-	<20160426001157.GE18496@dastard>
-	<CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
-	<20160426025645.GG18496@dastard>
-	<CAPcyv4hg6O3nvD7aXuFm_GAB-1GJxqfNn=RZswj47COa9bVygA@mail.gmail.com>
-	<20160426082711.GC26977@dastard>
-	<CAPcyv4h19Cp93f+vQXapnmXLEXHE2RZGyQVo7dCnAqcmnW1GEg@mail.gmail.com>
-	<20160426153118.GI27612@quack2.suse.cz>
-Date: Tue, 26 Apr 2016 10:16:22 -0700
-Message-ID: <CAPcyv4ghC3YCeZJ4UuSGjVLJ-9gmopZrkrdzZPgdJ5H9rH3fTA@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,74 +22,161 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5916649050155557855=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: "axboe@fb.com" <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, "hch@infradead.org" <hch@infradead.org>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Apr 26, 2016 at 8:31 AM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 26-04-16 07:59:10, Dan Williams wrote:
->> On Tue, Apr 26, 2016 at 1:27 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Mon, Apr 25, 2016 at 09:18:42PM -0700, Dan Williams wrote:
->> [..]
->> > It seems to me you are focussing on code/technologies that exist
->> > today instead of trying to define an architecture that is more
->> > optimal for pmem storage systems. Yes, working code is great, but if
->> > you can't tell people how things like robust error handling and
->> > redundancy are going to work in future then it's going to take
->> > forever for everyone else to handle such errors robustly through the
->> > storage stack...
->>
->> Precisely because higher order redundancy is built on top this baseline.
->>
->> MD-RAID can't do it's error recovery if we don't have -EIO and
->> clear-error-on-write.  On the other hand, you're absolutely right that
->> we have a gaping hole on top of the SIGBUS recovery model, and don't
->> have a kernel layer we can interpose on top of DAX to provide some
->> semblance of redundancy.
->>
->> In the meantime, a handful of applications with a team of full-time
->> site-reliability-engineers may be able to plug in external redundancy
->> infrastructure on top of what is defined in these patches.  For
->> everyone else, the hard problem, we need to do a lot more thinking
->> about a trap and recover solution.
+--===============5916649050155557855==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_97A4F433DEE099488FE21C1718A641D2139E86F5wmsexchsvr01win_"
+
+--_000_97A4F433DEE099488FE21C1718A641D2139E86F5wmsexchsvr01win_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+I was looking for development APIs for XFS. The contents of xfsprogs-devel =
+seem to only contain a few IOCTL commands, mostly file/inode based operatio=
+ns.
+
+I need to query free/used blocks of an entire XFS filesystem and was hoping=
+ to find some user-space APIs for this. I have done the same task for EXT f=
+ilesystem which seemed fairly easy as it provided simple open/query/close A=
+PIs. I know that XFS is a bit different as it manages free extents in two B=
++ trees per AG, but is this free/used block/extent information externalized=
+ somehow for developers to use? Am I not looking in the right place or thes=
+e functionalities are simply not provided to application developers?
+
+Any help/pointers would be greatly appreciated.
+
+Regards,
+
+Benjamin Wirth | Senior Software Developer
+WinMagic Inc.
+5600A Cancross Court
+Mississauga, ON  |  L5R 3E9 |  Canada
+
+
+--_000_97A4F433DEE099488FE21C1718A641D2139E86F5wmsexchsvr01win_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
 >
-> So we could actually implement some kind of redundancy with DAX with
-> reasonable effort. We already do track dirty storage PFNs in the radix
-> tree. After DAX locking patches get merged we also have a reliable way to
-> write-protect them when we decide to do 'writeback' (translates to flushing
-> CPU caches) for them. When we do that, we have all the infrastructure in
-> place to provide 'stable pages' while some mirroring or other redundancy
-> mechanism in kernel works with the data.
->
-> But as Dave said, we should do some writeup of how this is all supposed to
-> work and e.g. which layer is going to be responsible for the redundancy. Do
-> we want to have that in DAX code? Or just provide stable page guarantees
-> from DAX and do the redundancy from device mapper? This needs more
-> thought...
->
+<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+	{mso-style-priority:99;
+	mso-style-link:"Balloon Text Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	font-size:8.0pt;
+	font-family:"Tahoma","sans-serif";}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+span.BalloonTextChar
+	{mso-style-name:"Balloon Text Char";
+	mso-style-priority:99;
+	mso-style-link:"Balloon Text";
+	font-family:"Tahoma","sans-serif";}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"blue" vlink=3D"purple">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">Hello,<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">I was looking for development APIs for XFS. The cont=
+ents of xfsprogs-devel seem to only contain a few IOCTL commands, mostly fi=
+le/inode based operations.<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">I need to query free/used blocks of an entire XFS fi=
+lesystem and was hoping to find some user-space APIs for this. I have done =
+the same task for EXT filesystem which seemed fairly easy as it provided si=
+mple open/query/close APIs. I know
+ that XFS is a bit different as it manages free extents in two B&#43; trees=
+ per AG, but is this free/used block/extent information externalized someho=
+w for developers to use? Am I not looking in the right place or these funct=
+ionalities are simply not provided to
+ application developers?<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Any help/pointers would be greatly appreciated.<o:p>=
+</o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Regards,<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal"><b>Benjamin Wirth </b>| Senior Software Developer<sp=
+an style=3D"font-size:8.0pt">
+<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><b><span style=3D"color:#002060">WinMagic Inc.<br>
+</span></b>5600A Cancross Court <span style=3D"font-size:9.0pt"><o:p></o:p>=
+</span></p>
+<p class=3D"MsoNormal">Mississauga, ON&nbsp; |&nbsp; L5R 3E9 |&nbsp; Canada=
+<span style=3D"font-size:8.0pt">
+</span><o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+</div>
+</body>
+</html>
 
-[ adding Mike, since his ears are likely burning by this point ]
+--_000_97A4F433DEE099488FE21C1718A641D2139E86F5wmsexchsvr01win_--
 
-If we had the ability to specify a range or list of ranges to
-blkdev_issue_flush() that would allow the driver level to implement
-redundancy at sync time.  And no, before someone flies off the handle,
-this isn't rehashing the same argument I lost about where to track
-dirty pfns.  Rather this relies on the radix to track dirty pfns, but
-asks the driver to do the flush operation.  In the nominal case this
-is a clflush / clwb loop or wbinvd in the pmem driver, in the
-redundancy case the pmem driver is swapped out for a driver that uses
-the flush request as a trigger point to synchronize redundant data.
 
-We want this at the driver level to take advantage of standard
-asynchronous completions, and make it administratively equivalent to
-the dm/md layering people are used to using.
+--===============5916649050155557855==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5916649050155557855==--
