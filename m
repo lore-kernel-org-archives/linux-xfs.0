@@ -1,25 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4BB367CD2
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 05:40:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FDB8AC001
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 03:40:44 -0700 (PDT)
-Received: from mail-wm0-f51.google.com (mail-wm0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id XOp29bI4HW4MkXlG
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7F8DB7CB1
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 23:18:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 35F69304032
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 21:18:45 -0700 (PDT)
+Received: from mail-oi0-f47.google.com (mail-oi0-f47.google.com
+	[209.85.218.47]) by cuda.sgi.com with ESMTP id UHdCzFhgTkJaXJPY
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2016 03:40:39 -0700 (PDT)
-Received: by mail-wm0-f51.google.com with SMTP id v188so119254911wme.1
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 03:40:39 -0700 (PDT)
-From: Shyam Kaushik <shyam@zadarastorage.com>
-References: 88e4a059c1428cb1f944b7e786cf8ed9@mail.gmail.com
-In-Reply-To: 88e4a059c1428cb1f944b7e786cf8ed9@mail.gmail.com
+	Mon, 25 Apr 2016 21:18:42 -0700 (PDT)
+Received: by mail-oi0-f47.google.com with SMTP id k142so3158387oib.1
+	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 21:18:42 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 26 Apr 2016 16:10:37 +0530
-Message-ID: <7c2c798d9a484eb28ec0cc36c1e2a062@mail.gmail.com>
-Subject: RE: Metadata corruption detected at
-	xfs_attr3_leaf_write_verify+0xe5/0x100
+In-Reply-To: <20160426025645.GG18496@dastard>
+References: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<20160420205923.GA24797@infradead.org>
+	<1461434916.3695.7.camel@intel.com>
+	<20160425083114.GA27556@infradead.org>
+	<1461604476.3106.12.camel@intel.com>
+	<20160425232552.GD18496@dastard>
+	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
+	<20160426001157.GE18496@dastard>
+	<CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
+	<20160426025645.GG18496@dastard>
+Date: Mon, 25 Apr 2016 21:18:42 -0700
+Message-ID: <CAPcyv4hg6O3nvD7aXuFm_GAB-1GJxqfNn=RZswj47COa9bVygA@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,144 +41,135 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
+	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
 
-Hi Eric,
-
-Yes this is a non-CRC FS. The workload is we a custom application that
-does several (16 threads) file create/read/writes/update xattrs on a XFS
-mounted over raw disk.
-
-There is no messages prior to this & we hit this once in a few days (like
-every 4-5 days). I will try your suggestion of running with xfs_attr_*
-tracepoints all the time so that when we hit this error we have better
-info. Please let me know if you prefer to add further debug prints.
-Thanks.
-
---Shyam
-
-> Eric Sandeen sandeen at sandeen.net wrote:
-> On Mon Apr 25 16:57:11 CDT 2016
+On Mon, Apr 25, 2016 at 7:56 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Apr 25, 2016 at 06:45:08PM -0700, Dan Williams wrote:
+[..]
+>> Otherwise, if an application wants to use DAX then it might
+>> need to be prepared to handle media errors itself same as the
+>> un-RAIDed disk case.  Yes, at an administrative level without
+>> reverse-mapping support from a filesystem there's presently no way to
+>> ask "which files on this fs are impacted by media errors", and we're
+>> aware that reverse-mapping capabilities are nascent for current
+>> DAX-aware filesystems.
 >
-> Is this a non-crc filesystem?
->
->
-> XFS_ATTR_LEAF_MAGIC is ok (if it's a non-crc filesystem)
->
-> Looks the same as the other report, tripping on:
->
->        if (ichdr.count == 0)
->                return false;
->
-> A reproducer would be super here.  At least maybe a description of the
-> workload that hits it?
->
-> Count is manipulated in things like attr leaf compaction...
-> Any other messages prior to this?
->
-> How often do you hit it?
->
-> You could also turn on xfs_attr_* tracepoints, maybe.
->
-> -Eric
+> Precisely my point - suggestions are being proposed which assume
+> use of infrastructure that *does not exist yet* and has not been
+> discussed or documented. If we're expecting such infrastructure to
+> be implemented in the filesystems and block device drivers, then we
+> need to determine that the error model actually works first...
 
------Original Message-----
-From: Shyam Kaushik [mailto:shyam@zadarastorage.com]
-Sent: 25 April 2016 22:22
-To: 'xfs@oss.sgi.com'
-Cc: Alex Lyakas
-Subject: Metadata corruption detected at
-xfs_attr3_leaf_write_verify+0xe5/0x100
+These patches only assume the clear-error-on write-model, and that
+*maybe* the sysfs bad blocks list is useful if the filesystem has a
+reverse-map, or if the application can compare the list against the
+results of fiemap().  Beyond that, this is the same perennial "we
+should really have better error coordination between block device and
+filesystems" discussions that we have at LSF.
 
-Hi Dave et al,
+>
+>> The forward lookup path, as impractical as it
+>> is for large numbers of files, is available if an application wanted
+>> to know if a specific file was impacted.  We've discussed possibly
+>> extending fiemap() to return bad blocks in a file rather than
+>> consulting sysfs, or extending lseek() with something like SEEK_ERROR
+>> to return offsets of bad areas in a file.
+>
+> Via what infrastructure will the filesystem use for finding out
+> whether a file has bad blocks in it? And if the file does have bad
+> blocks, what are you expecting the filesystem to do with that
+> information?
 
-We are periodically hitting the below metadata corruption with XFS over a
-raw disk running several file copies with xattr operations on kernel
-3.18.19. Unmounting & running xfs_repair doesn't report any corruption. I
-see that this was last reported here
-http://oss.sgi.com/archives/xfs/2015-12/msg00224.html
+We currently have no expectation that the filesystem does anything
+with the bad blocks list.  However, if a filesystem had btrfs-like
+capabilities to recover data from a redundant location we'd be looking
+to plug into that infrastructure.
 
-Unfortunately we dont have a reproducer, but this issue happens
-periodically. We can add more debug prints & allow this issue to happen
-again. Can you pls suggest any options to debug this further? Thanks
+>> > I haven't seen any design/documentation for infrastructure at the
+>> > application layer to handle redundant data and correctly
+>> > transparently so I don't have any idea what the technical
+>> > requirements this different IO stack places on filesystems may be.
+>> > Hence I'm asking for some kind of architecture/design documentation
+>> > that I can read to understand exactly what is being proposed here...
+>>
+>> I think this is a discussion for a solution that would build on top of
+>> this basic "here are the errors, re-write them with good data if you
+>> can; otherwise, best of luck" foundation.  Something like a DAX-aware
+>> device mapper layer that duplicates data tagged with REQ_META so at
+>> least we have a recovery path when a sector error lands in critical
+>> filesystem-metadata.
+>
+> Filesytsem metadata is not the topic of discussion here - it's
+> user data that throws an error on a DAX load/store that is the
+> issue.
 
-Apr 20 21:58:03 node1 kernel: [16736.286370] XFS (dm-26): Metadata
-corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100 [xfs], block
-0x19c5c728
-Apr 20 21:58:03 node1 kernel: [16736.289084] XFS (dm-26): Unmount and run
-xfs_repair
-Apr 20 21:58:03 node1 kernel: [16736.290257] XFS (dm-26): First 64 bytes
-of corrupted metadata buffer:
-Apr 20 21:58:03 node1 kernel: [16736.291797] ffff880123668000: 00 00 00 00
-00 00 00 00 fb ee 00 00 00 00 00 00  ................
-Apr 20 21:58:03 node1 kernel: [16736.293823] ffff880123668010: 10 00 00 00
-00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-Apr 20 21:58:03 node1 kernel: [16736.297504] ffff880123668020: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Apr 20 21:58:03 node1 kernel: [16736.299343] ffff880123668030: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Apr 20 21:58:03 node1 kernel: [16736.301465] XFS (dm-26):
-xfs_do_force_shutdown(0x8) called from line 1244 of file fs/xfs/xfs_buf.c.
-Return address = 0xffffffffc095cee0
-Apr 20 21:58:03 node1 kernel: [16736.301469] ------------[ cut here
-]------------
-Apr 20 21:58:03 node1 kernel: [16736.301551] XFS(dm-26): SHUTDOWN!!!
-old_flags=0x0 new_flags=0x8
-Apr 20 21:58:03 node1 kernel: [16736.301703] CPU: 1 PID: 7857 Comm:
-xfsaild/dm-26 Tainted: G           OE  3.18.19 #1
-Apr 20 21:58:03 node1 kernel: [16736.301705] Hardware name: Bochs Bochs,
-BIOS Bochs 01/01/2011
-Apr 20 21:58:03 node1 kernel: [16736.301707]  0000000000000009
-ffff88020c5ffb38 ffffffff81710c85 0000000000000000
-Apr 20 21:58:03 node1 kernel: [16736.301711]  ffff88020c5ffb88
-ffff88020c5ffb78 ffffffff81072df1 2e2e202030302030
-Apr 20 21:58:03 node1 kernel: [16736.301715]  0000000000000000
-0000000000000008 ffff88020c127000 0000000000000000
-Apr 20 21:58:03 node1 kernel: [16736.301718] Call Trace:
-Apr 20 21:58:03 node1 kernel: [16736.301769]  [<ffffffff81710c85>]
-dump_stack+0x4e/0x71
-Apr 20 21:58:03 node1 kernel: [16736.301780]  [<ffffffff81072df1>]
-warn_slowpath_common+0x81/0xa0
-Apr 20 21:58:03 node1 kernel: [16736.301784]  [<ffffffff81072e56>]
-warn_slowpath_fmt+0x46/0x50
-Apr 20 21:58:03 node1 kernel: [16736.301860]  [<ffffffffc09693f3>]
-xfs_do_force_shutdown+0x33/0x170 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.301921]  [<ffffffffc095cee0>] ?
-_xfs_buf_ioapply+0xa0/0x430 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.301951]  [<ffffffffc095ee4b>] ?
-__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302066]  [<ffffffffc095cee0>]
-_xfs_buf_ioapply+0xa0/0x430 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302137]  [<ffffffff8109e260>] ?
-wake_up_state+0x20/0x20
-Apr 20 21:58:03 node1 kernel: [16736.302162]  [<ffffffffc095ee4b>] ?
-__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302183]  [<ffffffffc095ea78>]
-xfs_buf_submit+0x68/0x210 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302241]  [<ffffffffc095ee4b>]
-__xfs_buf_delwri_submit+0x22b/0x290 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302267]  [<ffffffffc095fc60>] ?
-xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302291]  [<ffffffffc098f440>] ?
-xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302308]  [<ffffffffc095fc60>]
-xfs_buf_delwri_submit_nowait+0x20/0x30 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302333]  [<ffffffffc098f66b>]
-xfsaild+0x22b/0x630 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302513]  [<ffffffffc098f440>] ?
-xfs_trans_ail_cursor_first+0x90/0x90 [xfs]
-Apr 20 21:58:03 node1 kernel: [16736.302518]  [<ffffffff810911b9>]
-kthread+0xc9/0xe0
-Apr 20 21:58:03 node1 kernel: [16736.302522]  [<ffffffff810910f0>] ?
-kthread_create_on_node+0x180/0x180
-Apr 20 21:58:03 node1 kernel: [16736.302530]  [<ffffffff81717918>]
-ret_from_fork+0x58/0x90
-Apr 20 21:58:03 node1 kernel: [16736.302549]  [<ffffffff810910f0>] ?
-kthread_create_on_node+0x180/0x180
-Apr 20 21:58:03 node1 kernel: [16736.302551] ---[ end trace
-0bb81b88fdd6a298 ]---
+Which is not a new problem since volatile DRAM in the non-DAX case can
+throw the exact same error.  The current recovery model there is crash
+the kernel (without MCE recovery), or crash the application and hope
+the kernel maps out the page or the application knows how to restart
+after SIGBUS.  Memory mirroring is meant to make this a bit less
+harsh, but there's no mechanism to make this available outside the
+kernel.
 
---Shyam
+>> However, anything we come up with to make NVDIMM
+>> errors more survivable should be directly applicable to traditional
+>> disk storage as well.
+>
+> I'm not sure it does. DAX implies that traditional block layer RAID
+> infrastructure is not possible, nor are data CRCs, nor are any other
+> sort of data transformations that are needed for redundancy at the
+> device layers. Anything that relies on copying/modifying/stable data to
+> provide redundancies needs to do such work at a place where it can
+> stall userspace page faults.
+>
+> This is where pmem native filesystem designs like NOVA take over
+> from traditional block based filesystems - they are designed around
+> the ability to do atomic page-based operations for data protection
+> and recovery operations. It is this mechanism that allows stable
+> pages to be committed to permanent storage and as such, allow
+> redundancy operations such as mirroring to be performed before
+> operations are marked as "stable".
+>
+> I'm missing the bigger picture that is being aimed at here - what's the
+> point of DAX if we have to turn it off if we want any sort of
+> failure protection? What's the big plan for fully enabling DAX with
+> robust error correction? Where is this all supposed to be leading
+> to?
+>
+
+NOVA and other solutions are free and encouraged to do a coherent
+bottoms-up rethink of error handling on top of persistent memory
+devices, in the meantime applications can only expect the legacy
+SIGBUS and -EIO mechanisms are available.  So I'm still trying to
+connect how the "What would NOVA do?" discussion is anything but
+orthogonal to hooking up SIGBUS and -EIO for traditional-filesystem
+DAX.  It's the only error model an application can expect because it's
+the only one that currently exists.
+
+>> Along these lines we had a BoF session at Vault
+>> where drive vendors we're wondering if the sysfs bad sectors list
+>> could help software recover from the loss of a disk-head, or other
+>> errors that only take down part of the drive.
+>
+> Right, but as I've said elsewhere, loss of a disk head implies
+> terabyte scale data loss. That is not something we can automatically
+> recovery from at the filesystem level. Low level raid recovery could
+> handle that sort of loss, but at the higher layers it's a disaster
+> similar to multiple disk RAID failure.  It's a completely different
+> scale to a single sector/page loss we are talking about here, and so
+> I don't see there as being much (if any) overlap here.
+>
+>> An I/O hint that flags
+>> data that should be stored redundantly might be useful there as well.
+>
+> DAX doesn't have an IO path to hint with... :/
+
+...I was thinking traditional filesystem metadata operations through
+the block layer.  NOVA could of course do something better since it
+always indirects userspace access through a filesystem managed page.
 
 _______________________________________________
 xfs mailing list
