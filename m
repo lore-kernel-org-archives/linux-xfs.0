@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B976F7CCD
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 03:32:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 23BCDAC003
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 01:32:17 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 0VY9TDMIuUzyyBGh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Apr 2016 01:32:14 -0700 (PDT)
-Date: Tue, 26 Apr 2016 01:32:10 -0700
-From: "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160426083210.GA364@infradead.org>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<x49r3dt7lhj.fsf@segfault.boston.devel.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id A3F907CFF
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 18:07:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E844AC006
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 16:07:19 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	yTOxNG2awycjmdMO for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2016 16:07:16 -0700 (PDT)
+Date: Wed, 27 Apr 2016 09:07:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] mm: add PF_MEMALLOC_NOFS
+Message-ID: <20160426230702.GG26977@dastard>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<1461671772-1269-2-git-send-email-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <x49r3dt7lhj.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,24 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, Michal Hocko <mhocko@suse.com>, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-On Mon, Apr 25, 2016 at 11:32:08AM -0400, Jeff Moyer wrote:
-> > EINVAL is a concern here.  Not due to the right error reported, but
-> > because it means your current scheme is fundamentally broken - we
-> > need to support I/O at any alignment for DAX I/O, and not fail due to
-> > alignbment concernes for a highly specific degraded case.
-> >
-> > I think this whole series need to go back to the drawing board as I
-> > don't think it can actually rely on using direct I/O as the EIO
-> > fallback.
+On Tue, Apr 26, 2016 at 01:56:11PM +0200, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> The only callers of dax_do_io are direct_IO methods.
+> GFP_NOFS context is used for the following 4 reasons currently
+> 	- to prevent from deadlocks when the lock held by the allocation
+> 	  context would be needed during the memory reclaim
+> 	- to prevent from stack overflows during the reclaim because
+> 	  the allocation is performed from a deep context already
+> 	- to prevent lockups when the allocation context depends on
+> 	  other reclaimers to make a forward progress indirectly
+> 	- just in case because this would be safe from the fs POV
 
-They are because the DAX I/O pass is a mess, but that doesn't mean
-the user specific O_DIRECT on the open nessecarily.
+- silencing lockdep false positives
+
+> Introduce PF_MEMALLOC_NOFS task specific flag and memalloc_nofs_{save,restore}
+> API to control the scope. This is basically copying
+> memalloc_noio_{save,restore} API we have for other restricted allocation
+> context GFP_NOIO.
+> 
+> Xfs has already had a similar functionality as PF_FSTRANS so let's just
+> give it a more generic name and make it usable for others as well and
+> move the GFP_NOFS context tracking to the page allocator. Xfs has its
+> own accessor functions but let's keep them for now to reduce this patch
+> as minimum.
+
+Can you split this into two patches? The first simply does this:
+
+#define PF_MEMALLOC_NOFS PF_FSTRANS
+
+and changes only the XFS code to use PF_MEMALLOC_NOFS.
+
+The second patch can then do the rest of the mm API changes that we
+don't actually care about in XFS at all.  That way I can carry all
+the XFS changes in the XFS tree and not have to worry about when
+this stuff gets merged or conflicts with the rest of the work that
+is being done to the mm/ code and whatever tree that eventually
+lands in...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
