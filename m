@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5256A7CE5
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 10:31:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BDA3B7D01
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 18:09:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0A17D304051
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 08:31:25 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id mxCvKPxZDoEEJVSe (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Apr 2016 08:31:22 -0700 (PDT)
-Date: Tue, 26 Apr 2016 17:31:18 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160426153118.GI27612@quack2.suse.cz>
-References: <20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
-	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
-	<20160426001157.GE18496@dastard>
-	<CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
-	<20160426025645.GG18496@dastard>
-	<CAPcyv4hg6O3nvD7aXuFm_GAB-1GJxqfNn=RZswj47COa9bVygA@mail.gmail.com>
-	<20160426082711.GC26977@dastard>
-	<CAPcyv4h19Cp93f+vQXapnmXLEXHE2RZGyQVo7dCnAqcmnW1GEg@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9063F8F8037
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 16:09:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	dDPL5NyRLoVryQ3W for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2016 16:09:50 -0700 (PDT)
+Date: Wed, 27 Apr 2016 09:09:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: development APIs for used/free blocks information
+Message-ID: <20160426230925.GH26977@dastard>
+References: <97A4F433DEE099488FE21C1718A641D2139E86F5@wmsexchsvr01.winmagic.local>
+	<20160426222129.GD26977@dastard> <571FF0F6.2030202@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4h19Cp93f+vQXapnmXLEXHE2RZGyQVo7dCnAqcmnW1GEg@mail.gmail.com>
+In-Reply-To: <571FF0F6.2030202@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,55 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Tue 26-04-16 07:59:10, Dan Williams wrote:
-> On Tue, Apr 26, 2016 at 1:27 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Apr 25, 2016 at 09:18:42PM -0700, Dan Williams wrote:
-> [..]
-> > It seems to me you are focussing on code/technologies that exist
-> > today instead of trying to define an architecture that is more
-> > optimal for pmem storage systems. Yes, working code is great, but if
-> > you can't tell people how things like robust error handling and
-> > redundancy are going to work in future then it's going to take
-> > forever for everyone else to handle such errors robustly through the
-> > storage stack...
+On Tue, Apr 26, 2016 at 05:51:34PM -0500, Eric Sandeen wrote:
 > 
-> Precisely because higher order redundancy is built on top this baseline.
 > 
-> MD-RAID can't do it's error recovery if we don't have -EIO and
-> clear-error-on-write.  On the other hand, you're absolutely right that
-> we have a gaping hole on top of the SIGBUS recovery model, and don't
-> have a kernel layer we can interpose on top of DAX to provide some
-> semblance of redundancy.
+> On 4/26/16 5:21 PM, Dave Chinner wrote:
+> > On Tue, Apr 26, 2016 at 08:51:10PM +0000, Benjamin Wirth wrote:
+> >> Hello,
+> >>
+> >> I was looking for development APIs for XFS. The contents of
+> >> xfsprogs-devel seem to only contain a few IOCTL commands, mostly
+> >> file/inode based operations.
+> >>
+> >> I need to query free/used blocks of an entire XFS filesystem and
+> >> was hoping to find some user-space APIs for this.
+> > 
+> > $ man 2 statvfs
 > 
-> In the meantime, a handful of applications with a team of full-time
-> site-reliability-engineers may be able to plug in external redundancy
-> infrastructure on top of what is defined in these patches.  For
-> everyone else, the hard problem, we need to do a lot more thinking
-> about a trap and recover solution.
+> I was assuming that he was interested in the actual used/free block
+> locations, not just the total count.  But maybe I was wrong!
 
-So we could actually implement some kind of redundancy with DAX with
-reasonable effort. We already do track dirty storage PFNs in the radix
-tree. After DAX locking patches get merged we also have a reliable way to
-write-protect them when we decide to do 'writeback' (translates to flushing
-CPU caches) for them. When we do that, we have all the infrastructure in
-place to provide 'stable pages' while some mirroring or other redundancy
-mechanism in kernel works with the data.
+Maybe I'm wrong, but asking for free/used blocks is ambiguous to say
+the least. If he wants free/used blocks, then we just need to
+forward port this kernel branch:
 
-But as Dave said, we should do some writeup of how this is all supposed to
-work and e.g. which layer is going to be responsible for the redundancy. Do
-we want to have that in DAX code? Or just provide stable page guarantees
-from DAX and do the redundancy from device mapper? This needs more
-thought...
+https://git.kernel.org/cgit/linux/kernel/git/dgc/linux-xfs.git/log/?h=fiemapfs
 
-								Honza
+And this xfsprogs branch:
+
+https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/log/?h=spaceman
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
