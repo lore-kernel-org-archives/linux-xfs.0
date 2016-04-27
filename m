@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 640D47CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 19:13:05 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A35487D23
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 08:07:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1C28030404E
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 17:13:05 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	EhCTfgd8o4FyjIUQ for <xfs@oss.sgi.com>;
-	Mon, 25 Apr 2016 17:12:59 -0700 (PDT)
-Date: Tue, 26 Apr 2016 10:11:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160426001157.GE18496@dastard>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
-	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 28013AC002
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 06:07:18 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id xNE8UN4NR9p3Tc3m
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 06:07:15 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id n129so3560011wmn.1
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 06:07:15 -0700 (PDT)
+Date: Wed, 27 Apr 2016 15:07:12 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1.2/2] mm: introduce memalloc_nofs_{save,restore} API
+Message-ID: <20160427130712.GK2179@dhcp22.suse.cz>
+References: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
+	<1461758075-21815-1-git-send-email-mhocko@kernel.org>
+	<1461758075-21815-2-git-send-email-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
+In-Reply-To: <1461758075-21815-2-git-send-email-mhocko@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,150 +34,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, Chris Mason <clm@fb.com>, linux-mtd@lists.infradead.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-On Mon, Apr 25, 2016 at 04:43:14PM -0700, Dan Williams wrote:
-> On Mon, Apr 25, 2016 at 4:25 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Apr 25, 2016 at 05:14:36PM +0000, Verma, Vishal L wrote:
-> >> On Mon, 2016-04-25 at 01:31 -0700, hch@infradead.org wrote:
-> >> > On Sat, Apr 23, 2016 at 06:08:37PM +0000, Verma, Vishal L wrote:
-> >> > >
-> >> > > direct_IO might fail with -EINVAL due to misalignment, or -ENOMEM
-> >> > > due
-> >> > > to some allocation failing, and I thought we should return the
-> >> > > original
-> >> > > -EIO in such cases so that the application doesn't lose the
-> >> > > information
-> >> > > that the bad block is actually causing the error.
-> >> > EINVAL is a concern here.  Not due to the right error reported, but
-> >> > because it means your current scheme is fundamentally broken - we
-> >> > need to support I/O at any alignment for DAX I/O, and not fail due to
-> >> > alignbment concernes for a highly specific degraded case.
-> >> >
-> >> > I think this whole series need to go back to the drawing board as I
-> >> > don't think it can actually rely on using direct I/O as the EIO
-> >> > fallback.
-> >> >
-> >> Agreed that DAX I/O can happen with any size/alignment, but how else do
-> >> we send an IO through the driver without alignment restrictions? Also,
-> >> the granularity at which we store badblocks is 512B sectors, so it
-> >> seems natural that to clear such a sector, you'd expect to send a write
-> >> to the whole sector.
-> >>
-> >> The expected usage flow is:
-> >>
-> >> - Application hits EIO doing dax_IO or load/store io
-> >>
-> >> - It checks badblocks and discovers it's files have lost data
-> >
-> > Lots of hand-waving here. How does the application map a bad
-> > "sector" to a file without scanning the entire filesystem to find
-> > the owner of the bad sector?
-> >
-> >> - It write()s those sectors (possibly converted to file offsets using
-> >> fiemap)
-> >>     * This triggers the fallback path, but if the application is doing
-> >> this level of recovery, it will know the sector is bad, and write the
-> >> entire sector
-> >
-> > Where does the application find the data that was lost to be able to
-> > rewrite it?
-> >
-> >> - Or it replaces the entire file from backup also using write() (not
-> >> mmap+stores)
-> >>     * This just frees the fs block, and the next time the block is
-> >> reallocated by the fs, it will likely be zeroed first, and that will be
-> >> done through the driver and will clear errors
-> >
-> > There's an implicit assumption that applications will keep redundant
-> > copies of their data at the /application layer/ and be able to
-> > automatically repair it? And then there's the implicit assumption
-> > that it will unlink and free the entire file before writing a new
-> > copy, and that then assumes the the filesystem will zero blocks if
-> > they get reused to clear errors on that LBA sector mapping before
-> > they are accessible again to userspace..
-> >
-> > It seems to me that there are a number of assumptions being made
-> > across multiple layers here. Maybe I've missed something - can you
-> > point me to the design/architecture description so I can see how
-> > "app does data recovery itself" dance is supposed to work?
-> >
+On Wed 27-04-16 13:54:35, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> Maybe I missed something, but all these assumptions are already
-> present for typical block devices, i.e. sectors may go bad and a write
-> may make the sector usable again.
 
-The assumption we make about sectors going bad on SSDs or SRDs is
-that the device is about to die and needs replacing ASAP. Then
-RAID takes care of the rebuild completely transparently. i.e.
-handling and correcting bad sectors is typically done completely
-transparently /below/ the filesytem like so:
+Ups missed Dave's note about:
 
-Application
-Filesystem
-block
-[LBA mapping/redundancy/correction driver e.g. md/dm]
-driver
-hardware
-[LBA redundancy/correction e.g h/w RAID]
+> GFP_NOFS context is used for the following 4 reasons currently
+> 	- to prevent from deadlocks when the lock held by the allocation
+> 	  context would be needed during the memory reclaim
+> 	- to prevent from stack overflows during the reclaim because
+> 	  the allocation is performed from a deep context already
+> 	- to prevent lockups when the allocation context depends on
+> 	  other reclaimers to make a forward progress indirectly
+> 	- just in case because this would be safe from the fs POV
 
-In the case of filesystems with their own RAID/redundancy code (e.g.
-btrfs), then it looks like this:
-
-Application
-Filesystem
-mapping/redundancy/correction driver
-block
-driver
-hardware
-[LBA redundancy/correction e.g h/w RAID]
-
-> This patch series is extending that
-> out to the DAX-mmap case, but it's the same principle of "write to
-> clear error" that we live with in the block-I/O path.  What
-> clarification are you looking for beyond that point?
-
-I'm asking for an actual design document that explains how moving
-all the redundancy and bad sector correction stuff from the LBA
-layer up into application space is supposed to work when
-applications have no clue about LBA mappings, nor tend to keep
-redundant data around. i.e. you're proposing this:
-
-Application
-Application data redundancy/correction
-Filesystem
-Block
-[LBA mapping/redundancy/correction driver e.g. md/dm]
-driver
-hardware
-
-And somehow all the error information from the hardware layer needs
-to be propagated up to the application layer, along with all the
-mapping information from the filesystem and block layers for the
-application to make sense of the hardware reported errors.
-
-I see assumptions this this "just works" but we don't have any of
-the relevant APIs or infrastructure to enable the application to do
-the hardware error->file+offset namespace mapping (i.e. filesystem
-reverse mapping for for file offsets and directory paths, and
-reverse mapping for the the block layer remapping drivers).
-
-I haven't seen any design/documentation for infrastructure at the
-application layer to handle redundant data and correctly
-transparently so I don't have any idea what the technical
-requirements this different IO stack places on filesystems may be.
-Hence I'm asking for some kind of architecture/design documentation
-that I can read to understand exactly what is being proposed here...
-
-Cheers,
-
-Dave.
+	- silence lockdep false positives
 -- 
-Dave Chinner
-david@fromorbit.com
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
