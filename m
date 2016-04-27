@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D1DD7CDD
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 06:56:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 21E47AC001
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 04:56:27 -0700 (PDT)
-Received: from mail-wm0-f68.google.com (mail-wm0-f68.google.com
-	[74.125.82.68]) by cuda.sgi.com with ESMTP id pBpezTCBymw9iDxi
+	by oss.sgi.com (Postfix) with ESMTP id ED2637D1B
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 06:54:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 57B1BAC002
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 04:54:51 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id IZ9NuFdhz5kDioho
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Apr 2016 04:56:23 -0700 (PDT)
-Received: by mail-wm0-f68.google.com with SMTP id n3so4244001wmn.1
-	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 04:56:23 -0700 (PDT)
+	Wed, 27 Apr 2016 04:54:48 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id e201so12240962wme.2
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 04:54:48 -0700 (PDT)
 From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 1/2] mm: add PF_MEMALLOC_NOFS
-Date: Tue, 26 Apr 2016 13:56:11 +0200
-Message-Id: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
-In-Reply-To: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+Subject: [PATCH 1.2/2] mm: introduce memalloc_nofs_{save,restore} API
+Date: Wed, 27 Apr 2016 13:54:35 +0200
+Message-Id: <1461758075-21815-2-git-send-email-mhocko@kernel.org>
+In-Reply-To: <1461758075-21815-1-git-send-email-mhocko@kernel.org>
+References: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
+	<1461758075-21815-1-git-send-email-mhocko@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -64,22 +65,21 @@ also helps code paths where FS layer interacts with other layers (e.g.
 crypto, security modules, MM etc...) and there is no easy way to convey
 the allocation context between the layers.
 
-Introduce PF_MEMALLOC_NOFS task specific flag and memalloc_nofs_{save,restore}
-API to control the scope. This is basically copying
+Introduce memalloc_nofs_{save,restore} API to control the scope
+of GFP_NOFS allocation context. This is basically copying
 memalloc_noio_{save,restore} API we have for other restricted allocation
-context GFP_NOIO.
+context GFP_NOIO. The PF_MEMALLOC_NOFS flag already exists and it is
+just an alias for PF_FSTRANS which has been xfs specific until recently.
+There are no more PF_FSTRANS users anymore so let's just drop it.
 
-Xfs has already had a similar functionality as PF_FSTRANS so let's just
-give it a more generic name and make it usable for others as well and
-move the GFP_NOFS context tracking to the page allocator. Xfs has its
-own accessor functions but let's keep them for now to reduce this patch
-as minimum.
+PF_MEMALLOC_NOFS is now checked in the MM layer and drops __GFP_FS
+implicitly same as PF_MEMALLOC_NOIO drops __GFP_IO. memalloc_noio_flags
+is renamed to current_gfp_context because it now cares about both
+PF_MEMALLOC_NOFS and PF_MEMALLOC_NOIO contexts. Xfs code paths preserve
+their semantic. kmem_flags_convert() doesn't need to evaluate the flag
+anymore.
 
-This patch shouldn't introduce any functional changes. Xfs code paths
-preserve their semantic. kmem_flags_convert() doesn't need to evaluate
-the flag anymore because it is the page allocator to care about the
-flag. memalloc_noio_flags is renamed to current_gfp_context because it
-now cares about both PF_MEMALLOC_NOFS and PF_MEMALLOC_NOIO contexts.
+This patch shouldn't introduce any functional changes.
 
 Let's hope that filesystems will drop direct GFP_NOFS (resp. ~__GFP_FS)
 usage as much and possible and only use a properly documented
@@ -87,152 +87,26 @@ memalloc_nofs_{save,restore} checkpoints where they are appropriate.
 
 Signed-off-by: Michal Hocko <mhocko@suse.com>
 ---
- fs/xfs/kmem.c             |  4 ++--
- fs/xfs/kmem.h             |  2 +-
- fs/xfs/libxfs/xfs_btree.c |  2 +-
- fs/xfs/xfs_aops.c         |  6 +++---
- fs/xfs/xfs_trans.c        | 12 ++++++------
- include/linux/gfp.h       |  8 ++++++++
- include/linux/sched.h     | 32 ++++++++++++++++++++++++++------
- mm/page_alloc.c           |  8 +++++---
- mm/vmscan.c               |  4 ++--
- 9 files changed, 54 insertions(+), 24 deletions(-)
+ fs/xfs/kmem.h         |  2 +-
+ include/linux/gfp.h   |  8 ++++++++
+ include/linux/sched.h | 34 ++++++++++++++++++++++++++--------
+ mm/page_alloc.c       |  8 +++++---
+ mm/vmscan.c           |  4 ++--
+ 5 files changed, 42 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 686ba6fb20dd..73f6ab59c664 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -80,13 +80,13 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
- 	 * the filesystem here and potentially deadlocking.
- 	 */
--	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
-+	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
- 		noio_flag = memalloc_noio_save();
- 
- 	lflags = kmem_flags_convert(flags);
- 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
- 
--	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
-+	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
- 		memalloc_noio_restore(noio_flag);
- 
- 	return ptr;
 diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index d1c66e465ca5..b35688a54c9a 100644
+index 0d83f332e5c2..b35688a54c9a 100644
 --- a/fs/xfs/kmem.h
 +++ b/fs/xfs/kmem.h
 @@ -50,7 +50,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
  		lflags = GFP_ATOMIC | __GFP_NOWARN;
  	} else {
  		lflags = GFP_KERNEL | __GFP_NOWARN;
--		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
+-		if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
 +		if (flags & KM_NOFS)
  			lflags &= ~__GFP_FS;
  	}
  
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index a0eb18ce3ad3..326566f4a131 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2540,7 +2540,7 @@ xfs_btree_split_worker(
- 	struct xfs_btree_split_args	*args = container_of(work,
- 						struct xfs_btree_split_args, work);
- 	unsigned long		pflags;
--	unsigned long		new_pflags = PF_FSTRANS;
-+	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
- 
- 	/*
- 	 * we are in a transaction context here, but may also be doing work
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d12dfcfd0cc8..6d816ff0b763 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -124,7 +124,7 @@ xfs_setfilesize_trans_alloc(
- 	 * We hand off the transaction to the completion thread now, so
- 	 * clear the flag here.
- 	 */
--	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	return 0;
- }
- 
-@@ -169,7 +169,7 @@ xfs_setfilesize_ioend(
- 	 * thus we need to mark ourselves as being in a transaction manually.
- 	 * Similarly for freeze protection.
- 	 */
--	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
- 
- 	/* we abort the update if there was an IO error */
-@@ -979,7 +979,7 @@ xfs_vm_writepage(
- 	 * Given that we do not allow direct reclaim to call us, we should
- 	 * never be called while in a filesystem transaction.
- 	 */
--	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
-+	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
- 		goto redirty;
- 
- 	/* Is this page beyond the end of the file? */
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 748b16aff45a..1d247366c733 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -176,7 +176,7 @@ xfs_trans_reserve(
- 	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
- 
- 	/* Mark this thread as being in a transaction */
--	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 
- 	/*
- 	 * Attempt to reserve the needed disk blocks by decrementing
-@@ -186,7 +186,7 @@ xfs_trans_reserve(
- 	if (blocks > 0) {
- 		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
- 		if (error != 0) {
--			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 			return -ENOSPC;
- 		}
- 		tp->t_blk_res += blocks;
-@@ -263,7 +263,7 @@ xfs_trans_reserve(
- 		tp->t_blk_res = 0;
- 	}
- 
--	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 
- 	return error;
- }
-@@ -921,7 +921,7 @@ __xfs_trans_commit(
- 
- 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
- 
--	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	xfs_trans_free(tp);
- 
- 	/*
-@@ -951,7 +951,7 @@ __xfs_trans_commit(
- 		if (commit_lsn == -1 && !error)
- 			error = -EIO;
- 	}
--	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
- 	xfs_trans_free(tp);
- 
-@@ -1005,7 +1005,7 @@ xfs_trans_cancel(
- 		xfs_log_done(mp, tp->t_ticket, NULL, false);
- 
- 	/* mark this thread as no longer being in a transaction */
--	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-+	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 
- 	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
- 	xfs_trans_free(tp);
 diff --git a/include/linux/gfp.h b/include/linux/gfp.h
 index 570383a41853..3ebdbdff44b4 100644
 --- a/include/linux/gfp.h
@@ -255,7 +129,7 @@ index 570383a41853..3ebdbdff44b4 100644
   * GFP_USER is for userspace allocations that also need to be directly
   *   accessibly by the kernel or hardware. It is typically used by hardware
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index acfc32b30704..e9521dc0475f 100644
+index 820db8f98bfc..e9521dc0475f 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
 @@ -2102,9 +2102,9 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
@@ -271,7 +145,16 @@ index acfc32b30704..e9521dc0475f 100644
  #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
  #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
  #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
-@@ -2140,13 +2140,21 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+@@ -2115,8 +2115,6 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+ #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
+ #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
+ 
+-#define PF_MEMALLOC_NOFS PF_FSTRANS	/* Transition to a more generic GFP_NOFS scope semantic */
+-
+ /*
+  * Only the _current_ task can read/write to tsk->flags, but other
+  * tasks can access tsk->flags in readonly mode for example
+@@ -2142,13 +2140,21 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
  #define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
  #define used_math() tsk_used_math(current)
  
@@ -296,7 +179,7 @@ index acfc32b30704..e9521dc0475f 100644
  	return flags;
  }
  
-@@ -2162,6 +2170,18 @@ static inline void memalloc_noio_restore(unsigned int flags)
+@@ -2164,6 +2170,18 @@ static inline void memalloc_noio_restore(unsigned int flags)
  	current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
  }
  
