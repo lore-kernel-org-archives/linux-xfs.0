@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BB5DF7CA0
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 22:18:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 695B6304066
-	for <xfs@oss.sgi.com>; Tue, 12 Apr 2016 20:18:05 -0700 (PDT)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	7zZtFlOmsjxgphO9 for <xfs@oss.sgi.com>;
-	Tue, 12 Apr 2016 20:18:04 -0700 (PDT)
-Date: Tue, 12 Apr 2016 23:18:01 -0400
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH v2 1/5] dax: add dax_get_unmapped_area for pmd mappings
-Message-ID: <20160413031801.GO2781@linux.intel.com>
-References: <1460493555-31611-1-git-send-email-toshi.kani@hpe.com>
-	<1460493555-31611-2-git-send-email-toshi.kani@hpe.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3848A7D07
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 23:59:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F1F318F8037
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 21:59:34 -0700 (PDT)
+Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
+	[74.125.82.43]) by cuda.sgi.com with ESMTP id qktuBErbb5R0KrXC
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 26 Apr 2016 21:59:31 -0700 (PDT)
+Received: by mail-wm0-f43.google.com with SMTP id n129so10141883wmn.1
+	for <xfs@oss.sgi.com>; Tue, 26 Apr 2016 21:59:31 -0700 (PDT)
+From: Shyam Kaushik <shyam@zadarastorage.com>
+References: <a71e1aed74b2922e8ed6fb40404899e7@mail.gmail.com>
+	<20160426224612.GE26977@dastard>
+In-Reply-To: <20160426224612.GE26977@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1460493555-31611-2-git-send-email-toshi.kani@hpe.com>
+Date: Wed, 27 Apr 2016 10:29:29 +0530
+Message-ID: <cbaec1d0ddb8505a9d35084291d33f37@mail.gmail.com>
+Subject: RE: [PATCH] xfs_buf_iodone_callbacks to force shutdown & resubmit buf
+	in case of permanent failure
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,119 +33,102 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Toshi Kani <toshi.kani@hpe.com>
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, adilger.kernel@dilger.ca, kirill.shutemov@linux.intel.com, linux-fsdevel@vger.kernel.org, tytso@mit.edu, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, dan.j.williams@intel.com, viro@zeniv.linux.org.uk
+To: Dave Chinner <david@fromorbit.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-On Tue, Apr 12, 2016 at 02:39:15PM -0600, Toshi Kani wrote:
-> + * When the target file is not a DAX file, @addr is specified, the
-> + * request is not suitable for pmd mappings, or mm->get_unmapped_area()
-> + * failed with extended @len, it simply calls the default handler,
-> + * mm->get_unmapped_area(), with the original arguments.
+Hi Dave,
 
-I think you can lose this paragraph.  It describes what the function
-does, not why it does it ... and we can see what the function does from
-reading the code.
+I am not sure how to do lock release in this code path. Is it possible
+that you can take over this bug/patch? Thanks.
 
-> +unsigned long dax_get_unmapped_area(struct file *filp, unsigned long addr,
-> +		unsigned long len, unsigned long pgoff, unsigned long flags)
-> +{
-> +	unsigned long off, off_end, off_pmd, len_pmd, addr_pmd;
-> +
-> +	if (IS_ENABLED(CONFIG_FS_DAX_PMD) &&
-> +	    filp && !addr && IS_DAX(filp->f_mapping->host)) {
-> +		off = pgoff << PAGE_SHIFT;
-> +		off_end = off + len;
-> +		off_pmd = round_up(off, PMD_SIZE);
-> +
-> +		if ((off_end > off_pmd) && ((off_end - off_pmd) >= PMD_SIZE)) {
-> +			len_pmd = len + PMD_SIZE;
-> +
-> +			addr_pmd = current->mm->get_unmapped_area(
-> +					filp, addr, len_pmd, pgoff, flags);
-> +
-> +			if (!IS_ERR_VALUE(addr_pmd)) {
-> +				addr_pmd += (off - addr_pmd) & (PMD_SIZE - 1);
-> +				return addr_pmd;
-> +			}
-> +		}
-> +	}
-> +
-> +	return current->mm->get_unmapped_area(filp, addr, len, pgoff, flags);
-> +}
+--Shyam
 
-I think this is one of those functions which is actually improved with
-gotos, purely to reduce the indentation level.
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com]
+Sent: 27 April 2016 04:16
+To: Shyam Kaushik
+Cc: xfs@oss.sgi.com; Alex Lyakas
+Subject: Re: [PATCH] xfs_buf_iodone_callbacks to force shutdown & resubmit
+buf in case of permanent failure
 
-unsigned long dax_get_unmapped_area(struct file *filp, unsigned long addr,
-		unsigned long len, unsigned long pgoff, unsigned long flags)
-{
-	unsigned long off, off_end, off_pmd, len_pmd, addr_pmd;
+On Tue, Apr 26, 2016 at 07:31:59PM +0530, Shyam Kaushik wrote:
+> When XFS underlying disk fails, it could take several milliseconds for
+the
+> FS to be marked
+> shutdown. xfs_buf_iodone_callbacks() retries buf upon first failure by
+> submitting it once
+> again. But if the buf fails 2nd time before FS is marked for shutdown,
+it
+> just releases the
+> buf with xfs_buf_relse(). This is flawed that nobody is releasing the
+> XFS_IFLOCK on the inode.
+> Because of this AIL tasks repeated effort to xfs_inode_item_push() will
+> see that xfs_iflock()
+> cannot be acquired. This blocks XFS from being unmounted as
+> xfs_ail_push_all_sync() will keep
+> looping without progress.
 
-	if (!IS_ENABLED(CONFIG_FS_DAX_PMD) ||
-	    !filp || addr || !IS_DAX(filp->f_mapping->host))
-		goto out;
+Patch formatting first: commit messages should wrap at 68-72
+columns...
 
-	off = pgoff << PAGE_SHIFT;
-	off_end = off + len;
-	off_pmd = round_up(off, PMD_SIZE);
-	if ((off_end <= off_pmd) || ((off_end - off_pmd) < PMD_SIZE))
-		goto out;
+> Fix this by marking the FS for shutdown if we have a permanent failure &
+> resubmit the buf.
+> xfs_buf_submit() will see FS marked for shutdown & invoke the callback
+> which releases
+> XFS_IFLOCK.
+>
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 1a6c9b9..6f73ee0 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1100,7 +1100,12 @@ xfs_buf_iodone_callbacks(
+>                                        XBF_DONE | XBF_WRITE_FAIL;
+>                         xfs_buf_submit(bp);
+>                 } else {
+> -                       xfs_buf_relse(bp);
+> +                       /*
+> +                       * if we have the buf fail 2nd time, force a FS
+> shutdown & resubmit
+> +                       * the buf for it to be failed back immediately
+> +                       */
+> +                       xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+> +                       xfs_buf_submit(bp);
+>                 }
+>
+>                 return;
 
-	len_pmd = len + PMD_SIZE;
-	addr_pmd = current->mm->get_unmapped_area(filp, addr, len_pmd,
-							pgoff, flags);
+... and patches should not be wrapped or have tabs converted to
+spaces. See Documentation/SubmittingPatches.
 
-	if (!IS_ERR_VALUE(addr_pmd)) {
-		addr_pmd += (off - addr_pmd) & (PMD_SIZE - 1);
-		return addr_pmd;
-	}
+Ok, so yes, it would seem there is a bug here, but I don't think
+this is correct solution: this will shut down the filesystem
+immediately on inode write IO errors. As i've said *many* times
+before: this is might seem like a fix, but it is incorrect behaviour
+as it does not give transient failures (e.g. multipath failover
+causing timeouts) a chance to be resolved before shutting down the
+filesystem.
 
- out:
-	return current->mm->get_unmapped_area(filp, addr, len, pgoff, flags);
-}
+That's the reason for all the retry behaviour on XFS metadata - the
+system can continue to run logging new changes even if it can't
+write back the changes immediately. As long as the log writes
+continue to work, the filesystem can continue to function correctly.
+Hence shutting down the filesystem immediately on any metadata write
+error (other than a journal write) is premature and will lead to
+spurious errors causing shutdowns rather than just logging a
+warning.
 
-Now ... back to the original version, some questions:
+We are in the process of making this error behaviour configurable -
+Carlos is going to finish off the patchset I originally wrote to do
+this, so the "shutdown immediately" option will be avaialable
+through that set of interfaces. We'll still need to fix the unlock
+case for retry here, though...
 
-> +unsigned long dax_get_unmapped_area(struct file *filp, unsigned long addr,
-> +		unsigned long len, unsigned long pgoff, unsigned long flags)
-> +{
-> +	unsigned long off, off_end, off_pmd, len_pmd, addr_pmd;
-> +
-> +	if (IS_ENABLED(CONFIG_FS_DAX_PMD) &&
-> +	    filp && !addr && IS_DAX(filp->f_mapping->host)) {
-> +		off = pgoff << PAGE_SHIFT;
-> +		off_end = off + len;
+Cheers,
 
-Can off + len wrap here, or did that get checked earlier?
-
-> +		off_pmd = round_up(off, PMD_SIZE);
-> +
-> +		if ((off_end > off_pmd) && ((off_end - off_pmd) >= PMD_SIZE)) {
-
-We're only going to look for a PMD-aligned mapping if the mapping is at
-least double PMD_SIZE?  I don't understand that decision.  Seems to me
-that if I ask to map offset 4MB, length 2MB, I should get a PMD-aligned
-mapping.
-
-Speaking of offset, we don't have any checks that offset is a multiple
-of PMD_SIZE.  I know that theoretically we could map offset 1.5MB, length
-3MB and see the first 0.5MB filled with small pages, then the next 2MB
-filled with one large page, and the tail filled with small pages, but I
-think we're better off only looking for PMD-alignment if the user asked
-for an aligned offset in the file.
-
-> +			len_pmd = len + PMD_SIZE;
-> +
-> +			addr_pmd = current->mm->get_unmapped_area(
-> +					filp, addr, len_pmd, pgoff, flags);
-> +
-> +			if (!IS_ERR_VALUE(addr_pmd)) {
-> +				addr_pmd += (off - addr_pmd) & (PMD_SIZE - 1);
-
-... then you wouldn't need this calculation ;-)
-
-> +				return addr_pmd;
-> +			}
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
