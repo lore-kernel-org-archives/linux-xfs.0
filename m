@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71CC77CA0
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 18:35:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42910304039
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 16:35:12 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id v9cgIqGwUS6S7OVH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Apr 2016 16:35:10 -0700 (PDT)
-Date: Mon, 25 Apr 2016 16:34:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160425233429.GH18517@birch.djwong.org>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 762487D1F
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 17:30:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36C958F8039
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 15:30:00 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	cAK37qvg2ybAxhuW for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 15:29:53 -0700 (PDT)
+Date: Thu, 28 Apr 2016 08:29:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: idle aild if the AIL is pushed up to the target LSN
+Message-ID: <20160427222950.GI26977@dastard>
+References: <1461570163-4083-1-git-send-email-dev@lynxeye.de>
+	<20160425142444.GC33882@bfoster.bfoster>
+	<1461607897.2364.27.camel@lynxeye.de>
+	<20160425230833.GC18496@dastard>
+	<1461781898.2516.10.camel@lynxeye.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160425232552.GD18496@dastard>
+In-Reply-To: <1461781898.2516.10.camel@lynxeye.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,121 +33,86 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: Lucas Stach <dev@lynxeye.de>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Apr 26, 2016 at 09:25:52AM +1000, Dave Chinner wrote:
-> On Mon, Apr 25, 2016 at 05:14:36PM +0000, Verma, Vishal L wrote:
-> > On Mon, 2016-04-25 at 01:31 -0700, hch@infradead.org wrote:
-> > > On Sat, Apr 23, 2016 at 06:08:37PM +0000, Verma, Vishal L wrote:
+On Wed, Apr 27, 2016 at 08:31:38PM +0200, Lucas Stach wrote:
+> Am Dienstag, den 26.04.2016, 09:08 +1000 schrieb Dave Chinner:
+> [...]
+> > > =
+
 > > > > =
 
-> > > > direct_IO might fail with -EINVAL due to misalignment, or -ENOMEM
-> > > > due
-> > > > to some allocation failing, and I thought we should return the
-> > > > original
-> > > > -EIO in such cases so that the application doesn't lose the
-> > > > information
-> > > > that the bad block is actually causing the error.
-> > > EINVAL is a concern here.=A0=A0Not due to the right error reported, b=
-ut
-> > > because it means your current scheme is fundamentally broken - we
-> > > need to support I/O at any alignment for DAX I/O, and not fail due to
-> > > alignbment concernes for a highly specific degraded case.
-> > > =
-
-> > > I think this whole series need to go back to the drawing board as I
-> > > don't think it can actually rely on using direct I/O as the EIO
-> > > fallback.
-> > > =
-
-> > Agreed that DAX I/O can happen with any size/alignment, but how else do
-> > we send an IO through the driver without alignment restrictions? Also,
-> > the granularity at which we store badblocks is 512B sectors, so it
-> > seems natural that to clear such a sector, you'd expect to send a write
-> > to the whole sector.
+> > > > That said, I'm not sure whether there's a notable benefit of
+> > > > idling
+> > > > for
+> > > > 50ms over just scheduling out when we've hit the target lsn. It
+> > > > seems
+> > > > like that anybody who pushes the target forward again is going to
+> > > > wake
+> > > > up the thread anyways. On the other hand, if the fs is idle the
+> > > > thread
+> > > > will eventually schedule out indefinitely.=A0
+> > > Is this a problem? The patch tries to do exactly that: schedule out
+> > > aild indefinitely when there is no more work to do as nobody is
+> > > pushing
+> > > the target LSN forward.
+> > If the filesystem is slowly being dirtied, then the aild should't
+> > really idle at all.i
 > > =
 
-> > The expected usage flow is:
+> > Keep in mind that the xfsaild has multiple functions, one of which
+> > is a watchdog that catches log space stalls that would otherwise
+> > hang the filesystem. Every time we've removed the watchdog function
+> > (i.e.=A0=A0agressively idle the aild) we've had users report random,
+> > unreproducable hangs/stalls that have gone away when the watchdog
+> > function (i.e. don't idle until the log is covered and completely
+> > idle) was re-instated...
 > > =
 
-> > - Application hits EIO doing dax_IO or load/store io
-> > =
+> I can only see=A0xfsaild_push() doing any work after it has hit the
+> target LSN if something moves the target LSN forward. You say that
+> aggressively idling aild might produce log stalls, which would imply
+> there are races in the code where a code path that moves the target LSN
+> forward doesn't properly wake up aild.
 
-> > - It checks badblocks and discovers it's files have lost data
-> =
+Well, yes. The code is horrifically complex, there's a heap of
+lockless operations along with cross-subsystem co-ordinated
+operations done under different locks amongst other things to
+provide scalability. History tells me that no matter whether we
+*think* we've got it right, there's always another bug lurking.
 
-> Lots of hand-waving here. How does the application map a bad
-> "sector" to a file without scanning the entire filesystem to find
-> the owner of the bad sector?
+> Wouldn't this problem also be present when doing non-aggressive idle of
+> aild, just the probability of hitting the issue being reduced
+> significantly?
 
-FWIW there was some discussion @ LSF about using (XFS) rmap to figure out
-which parts of a file (on XFS) have gone bad.  Chris Mason said that he'd
-like to collaborate on having a common getfsmap ioctl between btrfs and
-XFS since they have a backref index that could be hooked up to it for them.
+Welcome to Risk Management 101.
 
-Obviously the app still has to coordinate stopping file IO and calling
-GETFSMAP since the fs won't do that on its own.  There's also the question
-of how to handle LBA translation if there's other stuff like dm in the way.
-I don't think device-mapper or md do reverse mapping, so things get murky
-from here.
+I've got better things to do with my time than remove a safety net
+and the be forced to spend days or even weeks trying to solve all
+the subtle, deeply hidden problems that have been around for 20
+years that are now exposed to users. That's not a productive use of
+the limited amount of XFS developer's time we have available. If you
+want to go ahead and do all this, I'll be happy to spend a year
+teaching you about how all the log space reservation code works...
 
-Guess I should get on pushing out a getfsmap patch for review. :)
+> The commit that re-enabled non-aggressive aild idle
+> especially mentions some races that have been fixed and I think those
+> fixes should allow for agressive aild idle. If they are insufficient it
+> wouldn't be safe to idle aild at all, right?
 
---D
+No - the log state machine that covers (idles) the log is the one we
+really care about and it guarantees that the AIL is empty. i.e. The
+AIL has active items in it until the log is covered and hence, by
+definition, it can't be idle until the log is covered.
 
-(/me doesn't have answers to any of your other questions.)
+Cheers,
 
-> > - It write()s those sectors (possibly converted to file offsets using
-> > fiemap)
-> > =A0 =A0 * This triggers the fallback path, but if the application is do=
-ing
-> > this level of recovery, it will know the sector is bad, and write the
-> > entire sector
-> =
+Dave.
+-- =
 
-> Where does the application find the data that was lost to be able to
-> rewrite it?
-> =
-
-> > - Or it replaces the entire file from backup also using write() (not
-> > mmap+stores)
-> > =A0 =A0 * This just frees the fs block, and the next time the block is
-> > reallocated by the fs, it will likely be zeroed first, and that will be
-> > done through the driver and will clear errors
-> =
-
-> There's an implicit assumption that applications will keep redundant
-> copies of their data at the /application layer/ and be able to
-> automatically repair it? And then there's the implicit assumption
-> that it will unlink and free the entire file before writing a new
-> copy, and that then assumes the the filesystem will zero blocks if
-> they get reused to clear errors on that LBA sector mapping before
-> they are accessible again to userspace..
-> =
-
-> It seems to me that there are a number of assumptions being made
-> across multiple layers here. Maybe I've missed something - can you
-> point me to the design/architecture description so I can see how
-> "app does data recovery itself" dance is supposed to work?
-> =
-
-> Cheers,
-> =
-
-> Dave.
-> -- =
-
-> Dave Chinner
-> david@fromorbit.com
-> =
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
