@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 771057CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 13:34:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F0F65AC005
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 11:34:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 8LJvXyUn5CSEfoUd for <xfs@oss.sgi.com>;
-	Thu, 21 Apr 2016 11:34:12 -0700 (PDT)
-Received: from Liberator.local (unknown [74.203.127.200])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 269049F
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 13:34:11 -0500 (CDT)
-Subject: Re: xfs_repair couldn't verify primary superblock
-References: <d738a94784a0426e97752f92f38325a0@ul-exc-pr-mbx11.ulaval.ca>
-	<5717E2EF.1080902@sandeen.net>
-	<7ce740a1888c4bb28ce3c30fcedbe703@ul-exc-pr-mbx11.ulaval.ca>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <57191D20.7020402@sandeen.net>
-Date: Thu, 21 Apr 2016 14:34:08 -0400
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8BA07D21
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 07:54:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8F103304039
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 05:54:30 -0700 (PDT)
+Received: from mail1.bemta8.messagelabs.com (mail1.bemta8.messagelabs.com
+	[216.82.243.197]) by cuda.sgi.com with ESMTP id
+	od3NQ4ExYRGAm5ER for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 05:54:28 -0700 (PDT)
+From: Benjamin Wirth <Benjamin.Wirth@winmagic.com>
+Subject: RE: development APIs for used/free blocks information
+Date: Wed, 27 Apr 2016 12:54:24 +0000
+Message-ID: <97A4F433DEE099488FE21C1718A641D2139E972E@wmsexchsvr01.winmagic.local>
+References: <97A4F433DEE099488FE21C1718A641D2139E86F5@wmsexchsvr01.winmagic.local>
+	<20160426222129.GD26977@dastard>
+In-Reply-To: <20160426222129.GD26977@dastard>
+Content-Language: en-US
 MIME-Version: 1.0
-In-Reply-To: <7ce740a1888c4bb28ce3c30fcedbe703@ul-exc-pr-mbx11.ulaval.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +26,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gNC8yMS8xNiAxMDo0MiBBTSwgU3TDqXBoYW5lIExhcm9zZSB3cm90ZToKPiBIaSBFcmljLAo+
-IAo+IE5vdGhpbmcgbW9yZSBpbnRlcmVzdGluZy4gRnJvbSB0aGUgbG9nOgo+IAo+IDIwMTYtMDQt
-MDRUMTQ6NDg6NDguNzM1NzM4LTA0OjAwIG1hbml0b3Uga2VybmVsOiBbMjcxMjExLjU0ODg3OF0g
-WEZTIChkbS0yNCk6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiAyMDE2LTA0LTA0VDE0OjQ4OjQ4
-Ljg4MjczOC0wNDowMCBtYW5pdG91IGtlcm5lbDogWzI3MTIxMS42OTQyNDJdIFhGUyAoZG0tMjQp
-OiBFbmRpbmcgY2xlYW4gbW91bnQKPiAKPiBUaGVuIG5vIG1vcmUgbG9ncyBhYm91dCBkbS0yNC4K
-PiAKPiBBbHNvIG5vIGVycm9ycyBmcm9tIHRoZSB1bmRlcmx5aW5nIHN0b3JhZ2UgKHZlcmlmaWVk
-IGluIFNBTnRyaWNpdHkpCj4gd2hpY2ggaXMgYW4gSVM1MDAwLiBUaGUgZmlsZXN5c3RlbSB3YXMg
-bmV3LCB0aGUgZmlyc3QgbW91bnQgd2FzIG9uCj4gMjAxNi0wNC0wNC4KPiAKPiBtYW5pdG91On4g
-IyBibGtpZCAvZGV2L2RtLTI0Cj4gL2Rldi9kbS0yNDogVVVJRD0iMWRhMjJhZTItYTU3Mi00ZGI3
-LWIxNzctYjkwMDIxYTIwODYzIiBUWVBFPSJ4ZnMiCj4gCj4gVGhhbmsgeW91IGZvciB5b3VyIGhl
-bHAsCgpBbnkgY2hhbmNlIHRoYXQgc29tZSBvdGhlciBob3N0IGlzIGFjY2Vzc2luZyB0aGUgc2Ft
-ZSBMVU4gb24gdGhlIFNBTj8KClRoaXMgcmVhbGx5IGxvb2tzIGxpa2Ugc29tZXRoaW5nIGV4dGVy
-bmFsIGNvcnJ1cHRlZCB0aGUgZmlsZXN5c3RlbQpieSB3cml0aW5nIG92ZXIgaXQuLi4KCi1Fcmlj
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+Hello Dave,
+
+Thanks for your response.
+
+And I apologize, reading back my email I wasn't clear about what I was looking for.
+
+I want to be able to query which blocks are free or used, not just the counts. In EXT I was able to use ext2fs_test_block_bitmap() for that. XFS has a BTree with the free extents ordered by block number which I was hoping to be able to access from user-space, but couldn't find any APIs for it (or the headers containing the structure definitions) in the xfsprogs-devel package. Am I trying to do something impossible here?
+
+Thanks,
+Ben
+
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com] 
+Sent: Tuesday, April 26, 2016 6:21 PM
+To: Benjamin Wirth
+Cc: xfs@oss.sgi.com
+Subject: Re: development APIs for used/free blocks information
+
+On Tue, Apr 26, 2016 at 08:51:10PM +0000, Benjamin Wirth wrote:
+> Hello,
+> 
+> I was looking for development APIs for XFS. The contents of 
+> xfsprogs-devel seem to only contain a few IOCTL commands, mostly 
+> file/inode based operations.
+> 
+> I need to query free/used blocks of an entire XFS filesystem and was 
+> hoping to find some user-space APIs for this.
+
+$ man 2 statvfs
+
+Cheers,
+
+Dave.
+--
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
