@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A62B7CCB
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 14:14:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C4436AC001
-	for <xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:10 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id 36xDuAEIGnZfGrX9 for
-	<xfs@oss.sgi.com>; Sat, 23 Apr 2016 12:14:09 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v3 7/7] dax: fix a comment in dax_zero_page_range and
-	dax_truncate_page
-Date: Sat, 23 Apr 2016 13:13:42 -0600
-Message-Id: <1461438822-3592-8-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
-References: <1461438822-3592-1-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6BFD97D15
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 03:03:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E5698F8037
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 01:03:19 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id QdurwVjnN7UBSwd3
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 01:03:14 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id n129so1065618wmn.1
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 01:03:14 -0700 (PDT)
+Date: Wed, 27 Apr 2016 10:03:11 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
+	explicitly from memalloc_no{fs,io}_{save,restore} context
+Message-ID: <20160427080311.GC2179@dhcp22.suse.cz>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
+	<20160426225845.GF26977@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160426225845.GF26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,61 +31,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
+On Wed 27-04-16 08:58:45, Dave Chinner wrote:
+> On Tue, Apr 26, 2016 at 01:56:12PM +0200, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
+> > 
+> > It is desirable to reduce the direct GFP_NO{FS,IO} usage at minimum and
+> > prefer scope usage defined by memalloc_no{fs,io}_{save,restore} API.
+> > 
+> > Let's help this process and add a debugging tool to catch when an
+> > explicit allocation request for GFP_NO{FS,IO} is done from the scope
+> > context. The printed stacktrace should help to identify the caller
+> > and evaluate whether it can be changed to use a wider context or whether
+> > it is called from another potentially dangerous context which needs
+> > a scope protection as well.
+> 
+> You're going to get a large number of these from XFS. There are call
+> paths in XFs that get called both inside and outside transaction
+> context, and many of them are marked with GFP_NOFS to prevent issues
+> that have cropped up in the past.
+> 
+> Often these are to silence lockdep warnings (e.g. commit b17cb36
+> ("xfs: fix missing KM_NOFS tags to keep lockdep happy")) because
+> lockdep gets very unhappy about the same functions being called with
+> different reclaim contexts. e.g.  directory block mapping might
+> occur from readdir (no transaction context) or within transactions
+> (create/unlink). hence paths like this are tagged with GFP_NOFS to
+> stop lockdep emitting false positive warnings....
 
-09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
-macros
+I would much rather see lockdep being fixed than abusing GFP_NOFS to
+workaround its limitations. GFP_NOFS has a real consequences to the
+memory reclaim. I will go and check the commit you mentioned and try
+to understand why that is a problem. From what you described above
+I would like to get rid of exactly this kind of usage which is not
+really needed for the recursion protection.
 
-The comments for the above functions described a distinction between
-those, that is now redundant, so remove those paragraphs
-
-Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/dax.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index d8c974e..b8fa85a 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1221,12 +1221,6 @@ static bool dax_range_is_aligned(struct block_device *bdev,
-  * page in a DAX file.  This is intended for hole-punch operations.  If
-  * you are truncating a file, the helper function dax_truncate_page() may be
-  * more convenient.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 							get_block_t get_block)
-@@ -1279,12 +1273,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
-  *
-  * Similar to block_truncate_page(), this function can be called by a
-  * filesystem when it is truncating a DAX file to handle the partial page.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- {
+Thanks!
 -- 
-2.5.5
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
