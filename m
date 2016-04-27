@@ -1,31 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E9BBF7CB8
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 21:56:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DD04AC002
-	for <xfs@oss.sgi.com>; Mon, 25 Apr 2016 19:56:53 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	T0xiG7EIkZrdSMVu for <xfs@oss.sgi.com>;
-	Mon, 25 Apr 2016 19:56:49 -0700 (PDT)
-Date: Tue, 26 Apr 2016 12:56:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Message-ID: <20160426025645.GG18496@dastard>
-References: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
-	<CAPcyv4i6iwm1iY2mQ5yRbYfRexQroUX_R0B-db4ROU837fratw@mail.gmail.com>
-	<20160426001157.GE18496@dastard>
-	<CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 431897D0C
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 02:51:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FACAAC001
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 00:51:07 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id OwThVJS57N0soD6E
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 00:51:04 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id e201so10262253wme.2
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 00:51:04 -0700 (PDT)
+Date: Wed, 27 Apr 2016 09:51:02 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1/2] mm: add PF_MEMALLOC_NOFS
+Message-ID: <20160427075102.GB2179@dhcp22.suse.cz>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<1461671772-1269-2-git-send-email-mhocko@kernel.org>
+	<20160426230702.GG26977@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4i0qnCrzsTQT-v84OhnhjmVBFJ8gKoyu6XkuUwH0babfQ@mail.gmail.com>
+In-Reply-To: <20160426230702.GG26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,158 +34,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "hch@infradead.org" <hch@infradead.org>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "Wilcox,
-	Matthew R" <matthew.r.wilcox@intel.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-On Mon, Apr 25, 2016 at 06:45:08PM -0700, Dan Williams wrote:
-> On Mon, Apr 25, 2016 at 5:11 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Apr 25, 2016 at 04:43:14PM -0700, Dan Williams wrote:
-> [..]
-> >> Maybe I missed something, but all these assumptions are already
-> >> present for typical block devices, i.e. sectors may go bad and a write
-> >> may make the sector usable again.
-> >
-> > The assumption we make about sectors going bad on SSDs or SRDs is
-> > that the device is about to die and needs replacing ASAP.
+On Wed 27-04-16 09:07:02, Dave Chinner wrote:
+> On Tue, Apr 26, 2016 at 01:56:11PM +0200, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > GFP_NOFS context is used for the following 4 reasons currently
+> > 	- to prevent from deadlocks when the lock held by the allocation
+> > 	  context would be needed during the memory reclaim
+> > 	- to prevent from stack overflows during the reclaim because
+> > 	  the allocation is performed from a deep context already
+> > 	- to prevent lockups when the allocation context depends on
+> > 	  other reclaimers to make a forward progress indirectly
+> > 	- just in case because this would be safe from the fs POV
 > 
-> Similar assumptions here.  Storage media is experiencing errors and
-> past a certain threshold it may be time to decommission the device.
+> - silencing lockdep false positives
 > 
-> You can see definitions for SMART / media health commands from various
-> vendors at these links, and yes, hopefully these are standardized /
-> unified at some point down the road:
+> > Introduce PF_MEMALLOC_NOFS task specific flag and memalloc_nofs_{save,restore}
+> > API to control the scope. This is basically copying
+> > memalloc_noio_{save,restore} API we have for other restricted allocation
+> > context GFP_NOIO.
+> > 
+> > Xfs has already had a similar functionality as PF_FSTRANS so let's just
+> > give it a more generic name and make it usable for others as well and
+> > move the GFP_NOFS context tracking to the page allocator. Xfs has its
+> > own accessor functions but let's keep them for now to reduce this patch
+> > as minimum.
 > 
-> http://pmem.io/documents/NVDIMM_DSM_Interface_Example.pdf
-> https://github.com/HewlettPackard/hpe-nvm/blob/master/Documentation/NFIT_DSM_DDR4_NVDIMM-N_v84s.pdf
-> https://msdn.microsoft.com/en-us/library/windows/hardware/mt604717(v=vs.85).aspx
+> Can you split this into two patches? The first simply does this:
 > 
+> #define PF_MEMALLOC_NOFS PF_FSTRANS
 > 
-> > Then
-> > RAID takes care of the rebuild completely transparently. i.e.
-> > handling and correcting bad sectors is typically done completely
-> > transparently /below/ the filesytem like so:
+> and changes only the XFS code to use PF_MEMALLOC_NOFS.
 > 
-> Again, same for an NVDIMM.  Use the pmem block-device as a RAID-member device.
+> The second patch can then do the rest of the mm API changes that we
+> don't actually care about in XFS at all.  That way I can carry all
+> the XFS changes in the XFS tree and not have to worry about when
+> this stuff gets merged or conflicts with the rest of the work that
+> is being done to the mm/ code and whatever tree that eventually
+> lands in...
 
-Which means we're not using DAX and so the existing storage model
-applies. I understand how this works.
+Sure I will do that
 
-What I'm asking about the redundancy/error correction model /when
-using DAX/ and a userspace DAX load/store throws the MCE.
-
-> > And somehow all the error information from the hardware layer needs
-> > to be propagated up to the application layer, along with all the
-> > mapping information from the filesystem and block layers for the
-> > application to make sense of the hardware reported errors.
-> >
-> > I see assumptions this this "just works" but we don't have any of
-> > the relevant APIs or infrastructure to enable the application to do
-> > the hardware error->file+offset namespace mapping (i.e. filesystem
-> > reverse mapping for for file offsets and directory paths, and
-> > reverse mapping for the the block layer remapping drivers).
-> 
-> If an application expects errors to be handled beneath the filesystem
-> then it should forgo DAX and arrange for the NVDIMM devices to be
-> RAIDed.
-
-See above: I'm asking about the DAX-enabled error handling model,
-not the traditional error handling model.
-
-> Otherwise, if an application wants to use DAX then it might
-> need to be prepared to handle media errors itself same as the
-> un-RAIDed disk case.  Yes, at an administrative level without
-> reverse-mapping support from a filesystem there's presently no way to
-> ask "which files on this fs are impacted by media errors", and we're
-> aware that reverse-mapping capabilities are nascent for current
-> DAX-aware filesystems.
-
-Precisely my point - suggestions are being proposed which assume
-use of infrastructure that *does not exist yet* and has not been
-discussed or documented. If we're expecting such infrastructure to
-be implemented in the filesystems and block device drivers, then we
-need to determine that the error model actually works first...
-
-> The forward lookup path, as impractical as it
-> is for large numbers of files, is available if an application wanted
-> to know if a specific file was impacted.  We've discussed possibly
-> extending fiemap() to return bad blocks in a file rather than
-> consulting sysfs, or extending lseek() with something like SEEK_ERROR
-> to return offsets of bad areas in a file.
-
-Via what infrastructure will the filesystem use for finding out
-whether a file has bad blocks in it? And if the file does have bad
-blocks, what are you expecting the filesystem to do with that
-information?
-
-> > I haven't seen any design/documentation for infrastructure at the
-> > application layer to handle redundant data and correctly
-> > transparently so I don't have any idea what the technical
-> > requirements this different IO stack places on filesystems may be.
-> > Hence I'm asking for some kind of architecture/design documentation
-> > that I can read to understand exactly what is being proposed here...
-> 
-> I think this is a discussion for a solution that would build on top of
-> this basic "here are the errors, re-write them with good data if you
-> can; otherwise, best of luck" foundation.  Something like a DAX-aware
-> device mapper layer that duplicates data tagged with REQ_META so at
-> least we have a recovery path when a sector error lands in critical
-> filesystem-metadata. 
-
-Filesytsem metadata is not the topic of discussion here - it's
-user data that throws an error on a DAX load/store that is the
-issue.
-
-> However, anything we come up with to make NVDIMM
-> errors more survivable should be directly applicable to traditional
-> disk storage as well.
-
-I'm not sure it does. DAX implies that traditional block layer RAID
-infrastructure is not possible, nor are data CRCs, nor are any other
-sort of data transformations that are needed for redundancy at the
-device layers. Anything that relies on copying/modifying/stable data to
-provide redundancies needs to do such work at a place where it can
-stall userspace page faults.
-
-This is where pmem native filesystem designs like NOVA take over
-from traditional block based filesystems - they are designed around
-the ability to do atomic page-based operations for data protection
-and recovery operations. It is this mechanism that allows stable
-pages to be committed to permanent storage and as such, allow
-redundancy operations such as mirroring to be performed before
-operations are marked as "stable".
-
-I'm missing the bigger picture that is being aimed at here - what's the
-point of DAX if we have to turn it off if we want any sort of
-failure protection? What's the big plan for fully enabling DAX with
-robust error correction? Where is this all supposed to be leading
-to?
-
-> Along these lines we had a BoF session at Vault
-> where drive vendors we're wondering if the sysfs bad sectors list
-> could help software recover from the loss of a disk-head, or other
-> errors that only take down part of the drive.
-
-Right, but as I've said elsewhere, loss of a disk head implies
-terabyte scale data loss. That is not something we can automatically
-recovery from at the filesystem level. Low level raid recovery could
-handle that sort of loss, but at the higher layers it's a disaster
-similar to multiple disk RAID failure.  It's a completely different
-scale to a single sector/page loss we are talking about here, and so
-I don't see there as being much (if any) overlap here.
-
-> An I/O hint that flags
-> data that should be stored redundantly might be useful there as well.
-
-DAX doesn't have an IO path to hint with... :/
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
