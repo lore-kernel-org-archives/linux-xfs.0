@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D6797CA0
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2016 08:53:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 00B8CAC001
-	for <xfs@oss.sgi.com>; Fri, 22 Apr 2016 06:53:13 -0700 (PDT)
-Received: from exch-spam02.ulaval.ca (exch-spam02.ulaval.ca [132.203.244.24])
-	by cuda.sgi.com with ESMTP id gauXRoFmS9zOjCYr (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 22 Apr 2016 06:53:10 -0700 (PDT)
-From: =?utf-8?B?U3TDqXBoYW5lIExhcm9zZQ==?= <Stephane.Larose@ibis.ulaval.ca>
-Subject: RE: xfs_repair couldn't verify primary superblock
-Date: Fri, 22 Apr 2016 13:53:08 +0000
-Message-ID: <73782a0bcaa6496f9906ba3e11d46d11@ul-exc-pr-mbx11.ulaval.ca>
-References: <d738a94784a0426e97752f92f38325a0@ul-exc-pr-mbx11.ulaval.ca>
-	<5717E2EF.1080902@sandeen.net>
-	<7ce740a1888c4bb28ce3c30fcedbe703@ul-exc-pr-mbx11.ulaval.ca>
-	<57191D20.7020402@sandeen.net>
-In-Reply-To: <57191D20.7020402@sandeen.net>
-Content-Language: fr-FR
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 591367D29
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 16:14:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D083304039
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 14:14:20 -0700 (PDT)
+Received: from mail-wm0-f66.google.com (mail-wm0-f66.google.com
+	[74.125.82.66]) by cuda.sgi.com with ESMTP id 035KkpzS8nNeMkcp
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 14:14:17 -0700 (PDT)
+Received: by mail-wm0-f66.google.com with SMTP id n129so7523000wmn.1
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 14:14:17 -0700 (PDT)
+Date: Wed, 27 Apr 2016 23:14:14 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1.2/2] mm: introduce memalloc_nofs_{save,restore} API
+Message-ID: <20160427211414.GA24919@dhcp22.suse.cz>
+References: <1461671772-1269-2-git-send-email-mhocko@kernel.org>
+	<1461758075-21815-1-git-send-email-mhocko@kernel.org>
+	<1461758075-21815-2-git-send-email-mhocko@kernel.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1461758075-21815-2-git-send-email-mhocko@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +30,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, Chris Mason <clm@fb.com>, linux-mtd@lists.infradead.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-SGkgRXJpYywNCg0KWWVzLCB0aGF0IGNvdWxkIGJlIHRoZSBwcm9ibGVtLiBJIGhhdmUgYW5vdGhl
-ciBob3N0IHRoYXQgaGF2ZSBhY2Nlc3MgdG8gdGhlIHNhbWUgTFVOLiBPbiB0aGUgb3RoZXIgaG9z
-dCwgSSBoYWQgYSBwcm9ibGVtIGRvaW5nIGEgbGl2ZSBleHRlbmQgb2YgYW4gZXh0MyBmaWxlc3lz
-dGVtIGluIHRoZSBzYW1lIExWTSBWb2x1bWUgR3JvdXAuIE1heWJlIHRoaXMgY29ycnVwdGVkIHRo
-ZSBYRlMgZmlsZXN5c3RlbS4gQW55d2F5LCB3ZSBkZWNpZGVkIHRoaXMgbW9ybmluZyB0byBkZWxl
-dGUgdGhlIHBhcnRpdGlvbiBhbmQgcmVjcmVhdGUgdGhlIGZpbGVzeXN0ZW0uIFdlIHdpbGwgYmUg
-YWJsZSB0byByZWdlbmVyYXRlIHRoZSBkYXRhIHRoYXQgd2FzIG9uIGl0Lg0KDQpUaGFua3MsDQoN
-ClN0w6lwaGFuZQ0KDQotLS0tLU1lc3NhZ2UgZCdvcmlnaW5lLS0tLS0NCkRlwqA6IHhmcy1ib3Vu
-Y2VzQG9zcy5zZ2kuY29tIFttYWlsdG86eGZzLWJvdW5jZXNAb3NzLnNnaS5jb21dIERlIGxhIHBh
-cnQgZGUgRXJpYyBTYW5kZWVuDQpFbnZvecOpwqA6IDIxIGF2cmlsIDIwMTYgMTQ6MzQNCsOAwqA6
-IHhmc0Bvc3Muc2dpLmNvbQ0KT2JqZXTCoDogUmU6IHhmc19yZXBhaXIgY291bGRuJ3QgdmVyaWZ5
-IHByaW1hcnkgc3VwZXJibG9jaw0KDQpPbiA0LzIxLzE2IDEwOjQyIEFNLCBTdMOpcGhhbmUgTGFy
-b3NlIHdyb3RlOg0KPiBIaSBFcmljLA0KPiANCj4gTm90aGluZyBtb3JlIGludGVyZXN0aW5nLiBG
-cm9tIHRoZSBsb2c6DQo+IA0KPiAyMDE2LTA0LTA0VDE0OjQ4OjQ4LjczNTczOC0wNDowMCBtYW5p
-dG91IGtlcm5lbDogWzI3MTIxMS41NDg4NzhdIFhGUyANCj4gKGRtLTI0KTogTW91bnRpbmcgVjQg
-RmlsZXN5c3RlbQ0KPiAyMDE2LTA0LTA0VDE0OjQ4OjQ4Ljg4MjczOC0wNDowMCBtYW5pdG91IGtl
-cm5lbDogWzI3MTIxMS42OTQyNDJdIFhGUyANCj4gKGRtLTI0KTogRW5kaW5nIGNsZWFuIG1vdW50
-DQo+IA0KPiBUaGVuIG5vIG1vcmUgbG9ncyBhYm91dCBkbS0yNC4NCj4gDQo+IEFsc28gbm8gZXJy
-b3JzIGZyb20gdGhlIHVuZGVybHlpbmcgc3RvcmFnZSAodmVyaWZpZWQgaW4gU0FOdHJpY2l0eSkg
-DQo+IHdoaWNoIGlzIGFuIElTNTAwMC4gVGhlIGZpbGVzeXN0ZW0gd2FzIG5ldywgdGhlIGZpcnN0
-IG1vdW50IHdhcyBvbiANCj4gMjAxNi0wNC0wNC4NCj4gDQo+IG1hbml0b3U6fiAjIGJsa2lkIC9k
-ZXYvZG0tMjQNCj4gL2Rldi9kbS0yNDogVVVJRD0iMWRhMjJhZTItYTU3Mi00ZGI3LWIxNzctYjkw
-MDIxYTIwODYzIiBUWVBFPSJ4ZnMiDQo+IA0KPiBUaGFuayB5b3UgZm9yIHlvdXIgaGVscCwNCg0K
-QW55IGNoYW5jZSB0aGF0IHNvbWUgb3RoZXIgaG9zdCBpcyBhY2Nlc3NpbmcgdGhlIHNhbWUgTFVO
-IG9uIHRoZSBTQU4/DQoNClRoaXMgcmVhbGx5IGxvb2tzIGxpa2Ugc29tZXRoaW5nIGV4dGVybmFs
-IGNvcnJ1cHRlZCB0aGUgZmlsZXN5c3RlbSBieSB3cml0aW5nIG92ZXIgaXQuLi4NCg0KLUVyaWMN
-Cg0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCnhmcyBt
-YWlsaW5nIGxpc3QNCnhmc0Bvc3Muc2dpLmNvbQ0KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+OK, so the lockdep splats I was seeing [1] were much easier to fix than
+I originally thought. So the following should be folded into the
+original patch. I will send the full patch later on.
+
+[1] http://lkml.kernel.org/r/20160427200927.GC22544@dhcp22.suse.cz
+---
+>From 1968c0a8ace4090a9deca8f4c1a206ee546e595a Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Wed, 27 Apr 2016 22:32:57 +0200
+Subject: [PATCH] fold me "mm: introduce memalloc_nofs_{save,restore} API"
+
+Lockdep infrastructure is hooked into early hot paths of the allocator
+so __lockdep_trace_alloc has to check for PF_MEMALLOC_NOFS directly and
+do not rely on current_gfp_context
+
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+
+---
+ kernel/locking/lockdep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 716547fdb873..f60124d0871c 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -2750,7 +2750,7 @@ static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
+ 		return;
+ 
+ 	/* We're only interested __GFP_FS allocations for now */
+-	if (!(gfp_mask & __GFP_FS))
++	if (!(gfp_mask & __GFP_FS) || (curr->flags & PF_MEMALLOC_NOFS))
+ 		return;
+ 
+ 	/*
+-- 
+2.8.0.rc3
+
+-- 
+Michal Hocko
+SUSE Labs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
