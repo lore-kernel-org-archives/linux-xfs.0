@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DD057D06
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 18:40:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 01A23AC005
-	for <xfs@oss.sgi.com>; Fri, 29 Apr 2016 16:40:18 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	VjuvM39pyjnccLIF for <xfs@oss.sgi.com>;
-	Fri, 29 Apr 2016 16:40:11 -0700 (PDT)
-Date: Sat, 30 Apr 2016 09:40:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
-	explicitly from memalloc_no{fs,io}_{save,restore} context
-Message-ID: <20160429234008.GN26977@dastard>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
-	<20160426225845.GF26977@dastard>
-	<20160428081759.GA31489@dhcp22.suse.cz>
-	<20160428215145.GM26977@dastard>
-	<20160429121219.GL21977@dhcp22.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160429121219.GL21977@dhcp22.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F39BB7D27
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 13:31:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9B7518F8033
+	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 11:31:47 -0700 (PDT)
+Received: from lynxeye.de (ns.lynxeye.de [87.118.118.114]) by cuda.sgi.com
+	with ESMTP id HBZfxAfxn7QGSPKL for <xfs@oss.sgi.com>;
+	Wed, 27 Apr 2016 11:31:44 -0700 (PDT)
+Message-ID: <1461781898.2516.10.camel@lynxeye.de>
+Subject: Re: [PATCH] xfs: idle aild if the AIL is pushed up to the target LSN
+From: Lucas Stach <dev@lynxeye.de>
+Date: Wed, 27 Apr 2016 20:31:38 +0200
+In-Reply-To: <20160425230833.GC18496@dastard>
+References: <1461570163-4083-1-git-send-email-dev@lynxeye.de>
+	<20160425142444.GC33882@bfoster.bfoster>
+	<1461607897.2364.27.camel@lynxeye.de> <20160425230833.GC18496@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,119 +25,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Apr 29, 2016 at 02:12:20PM +0200, Michal Hocko wrote:
-> On Fri 29-04-16 07:51:45, Dave Chinner wrote:
-> > On Thu, Apr 28, 2016 at 10:17:59AM +0200, Michal Hocko wrote:
-> > > [Trim the CC list]
-> > > On Wed 27-04-16 08:58:45, Dave Chinner wrote:
-> > > [...]
-> > > > Often these are to silence lockdep warnings (e.g. commit b17cb36
-> > > > ("xfs: fix missing KM_NOFS tags to keep lockdep happy")) because
-> > > > lockdep gets very unhappy about the same functions being called with
-> > > > different reclaim contexts. e.g.  directory block mapping might
-> > > > occur from readdir (no transaction context) or within transactions
-> > > > (create/unlink). hence paths like this are tagged with GFP_NOFS to
-> > > > stop lockdep emitting false positive warnings....
-> > > 
-> > > As already said in other email, I have tried to revert the above
-> > > commit and tried to run it with some fs workloads but didn't manage
-> > > to hit any lockdep splats (after I fixed my bug in the patch 1.2). I
-> > > have tried to find reports which led to this commit but didn't succeed
-> > > much. Everything is from much earlier or later. Do you happen to
-> > > remember which loads triggered them, what they looked like or have an
-> > > idea what to try to reproduce them? So far I was trying heavy parallel
-> > > fs_mark, kernbench inside a tiny virtual machine so any of those have
-> > > triggered direct reclaim all the time.
-> > 
-> > Most of those issues were reported by users and not reproducable by
-> > any obvious means.
-> 
-> I would really appreciate a reference to some of those (my google-fu has
-> failed me) or at least a pattern of those splats
-
-If you can't find them with google, then I won't. Google is mostly
-useless as a patch/mailing list search tool these days. You can try
-looking through this list:
-
-https://www.google.com.au/search?q=XFS+lockdep+site:oss.sgi.com+-splice
-
-but I'm not seeing anything particularly relevant in that list -
-there isn't a single reclaim related lockdep report in that...
-
-> - was it 
-> "inconsistent {RECLAIM_FS-ON-[RW]} -> {IN-RECLAIM_FS-[WR]} usage"
-> or a different class reports?
-
-Typically that was involved, but it quite often there'd be a number
-of locks and sometimes even interrupt stacks in an interaction
-between 5 or 6 different processes. Lockdep covers all sorts of
-stuff now (like fs freeze annotations as well as locks and memory
-reclaim) so sometimes the only thing we can do is remove the
-reclaim context from the stack and see if that makes it go away...
-> 
-> > They may have been fixed since, but I'm sceptical
-> > of that because, generally speaking, developer testing only catches
-> > the obvious lockdep issues. i.e. it's users that report all the
-> > really twisty issues, and they are generally not reproducable except
-> > under their production workloads...
-> > 
-> > IOWs, the absence of reports in your testing does not mean there
-> > isn't a problem, and that is one of the biggest problems with
-> > lockdep annotations - we have no way of ever knowing if they are
-> > still necessary or not without exposing users to regressions and
-> > potential deadlocks.....
-> 
-> I understand your points here but if we are sure that those lockdep
-> reports are just false positives then we should rather provide an api to
-> silence lockdep for those paths
-
-I agree with this - please provide such infrastructure before we
-need it...
-
-> than abusing GFP_NOFS which a) hurts
-> the overal reclaim healthiness
-
-Which doesn't actually seem to be a problem for the vast majority of
-users.
-
-> and b) works around a non-existing
-> problem with lockdep disabled which is the vast majority of
-> configurations.
-
-But the moment we have a lockdep problem, we get bug reports from
-all over the place and people complaining about it, so we are
-*required* to silence them one way or another. And, like I said,
-when the choice is simply adding GFP_NOFS or spending a week or two
-completely reworking complex code that has functioned correctly for
-15 years, the risk/reward *always* falls on the side of "just add
-GFP_NOFS".
-
-Please keep in mind that there is as much code in fs/xfs as there is
-in the mm/ subsystem, and XFS has twice that in userspace as well.
-I say this, because we have only have 3-4 full time developers to do
-all the work required on this code base, unlike the mm/ subsystem
-which had 30-40 full time MM developers attending LSFMM. This is why
-I push back on suggestions that require significant redesign of
-subsystem code to handle memory allocation/reclaim quirks - most
-subsystems simply don't have the resources available to do such
-work, and so will always look for the quick 2 minute fix when it is
-available....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gRGllbnN0YWcsIGRlbiAyNi4wNC4yMDE2LCAwOTowOCArMTAwMCBzY2hyaWViIERhdmUgQ2hp
+bm5lcjoKWy4uLl0KPiA+IAo+ID4gPiAKPiA+ID4gVGhhdCBzYWlkLCBJJ20gbm90IHN1cmUgd2hl
+dGhlciB0aGVyZSdzIGEgbm90YWJsZSBiZW5lZml0IG9mCj4gPiA+IGlkbGluZwo+ID4gPiBmb3IK
+PiA+ID4gNTBtcyBvdmVyIGp1c3Qgc2NoZWR1bGluZyBvdXQgd2hlbiB3ZSd2ZSBoaXQgdGhlIHRh
+cmdldCBsc24uIEl0Cj4gPiA+IHNlZW1zCj4gPiA+IGxpa2UgdGhhdCBhbnlib2R5IHdobyBwdXNo
+ZXMgdGhlIHRhcmdldCBmb3J3YXJkIGFnYWluIGlzIGdvaW5nIHRvCj4gPiA+IHdha2UKPiA+ID4g
+dXAgdGhlIHRocmVhZCBhbnl3YXlzLiBPbiB0aGUgb3RoZXIgaGFuZCwgaWYgdGhlIGZzIGlzIGlk
+bGUgdGhlCj4gPiA+IHRocmVhZAo+ID4gPiB3aWxsIGV2ZW50dWFsbHkgc2NoZWR1bGUgb3V0IGlu
+ZGVmaW5pdGVseS7CoAo+ID4gSXMgdGhpcyBhIHByb2JsZW0/IFRoZSBwYXRjaCB0cmllcyB0byBk
+byBleGFjdGx5IHRoYXQ6IHNjaGVkdWxlIG91dAo+ID4gYWlsZCBpbmRlZmluaXRlbHkgd2hlbiB0
+aGVyZSBpcyBubyBtb3JlIHdvcmsgdG8gZG8gYXMgbm9ib2R5IGlzCj4gPiBwdXNoaW5nCj4gPiB0
+aGUgdGFyZ2V0IExTTiBmb3J3YXJkLgo+IElmIHRoZSBmaWxlc3lzdGVtIGlzIHNsb3dseSBiZWlu
+ZyBkaXJ0aWVkLCB0aGVuIHRoZSBhaWxkIHNob3VsZCd0Cj4gcmVhbGx5IGlkbGUgYXQgYWxsLmkK
+PiAKPiBLZWVwIGluIG1pbmQgdGhhdCB0aGUgeGZzYWlsZCBoYXMgbXVsdGlwbGUgZnVuY3Rpb25z
+LCBvbmUgb2Ygd2hpY2gKPiBpcyBhIHdhdGNoZG9nIHRoYXQgY2F0Y2hlcyBsb2cgc3BhY2Ugc3Rh
+bGxzIHRoYXQgd291bGQgb3RoZXJ3aXNlCj4gaGFuZyB0aGUgZmlsZXN5c3RlbS4gRXZlcnkgdGlt
+ZSB3ZSd2ZSByZW1vdmVkIHRoZSB3YXRjaGRvZyBmdW5jdGlvbgo+IChpLmUuwqDCoGFncmVzc2l2
+ZWx5IGlkbGUgdGhlIGFpbGQpIHdlJ3ZlIGhhZCB1c2VycyByZXBvcnQgcmFuZG9tLAo+IHVucmVw
+cm9kdWNhYmxlIGhhbmdzL3N0YWxscyB0aGF0IGhhdmUgZ29uZSBhd2F5IHdoZW4gdGhlIHdhdGNo
+ZG9nCj4gZnVuY3Rpb24gKGkuZS4gZG9uJ3QgaWRsZSB1bnRpbCB0aGUgbG9nIGlzIGNvdmVyZWQg
+YW5kIGNvbXBsZXRlbHkKPiBpZGxlKSB3YXMgcmUtaW5zdGF0ZWQuLi4KPiAKSSBjYW4gb25seSBz
+ZWXCoHhmc2FpbGRfcHVzaCgpIGRvaW5nIGFueSB3b3JrIGFmdGVyIGl0IGhhcyBoaXQgdGhlCnRh
+cmdldCBMU04gaWYgc29tZXRoaW5nIG1vdmVzIHRoZSB0YXJnZXQgTFNOIGZvcndhcmQuIFlvdSBz
+YXkgdGhhdAphZ2dyZXNzaXZlbHkgaWRsaW5nIGFpbGQgbWlnaHQgcHJvZHVjZSBsb2cgc3RhbGxz
+LCB3aGljaCB3b3VsZCBpbXBseQp0aGVyZSBhcmUgcmFjZXMgaW4gdGhlIGNvZGUgd2hlcmUgYSBj
+b2RlIHBhdGggdGhhdCBtb3ZlcyB0aGUgdGFyZ2V0IExTTgpmb3J3YXJkIGRvZXNuJ3QgcHJvcGVy
+bHkgd2FrZSB1cCBhaWxkLgoKV291bGRuJ3QgdGhpcyBwcm9ibGVtIGFsc28gYmUgcHJlc2VudCB3
+aGVuIGRvaW5nIG5vbi1hZ2dyZXNzaXZlIGlkbGUgb2YKYWlsZCwganVzdCB0aGUgcHJvYmFiaWxp
+dHkgb2YgaGl0dGluZyB0aGUgaXNzdWUgYmVpbmcgcmVkdWNlZApzaWduaWZpY2FudGx5PyBUaGUg
+Y29tbWl0IHRoYXQgcmUtZW5hYmxlZCBub24tYWdncmVzc2l2ZSBhaWxkIGlkbGUKZXNwZWNpYWxs
+eSBtZW50aW9ucyBzb21lIHJhY2VzIHRoYXQgaGF2ZSBiZWVuIGZpeGVkIGFuZCBJIHRoaW5rIHRo
+b3NlCmZpeGVzIHNob3VsZCBhbGxvdyBmb3IgYWdyZXNzaXZlIGFpbGQgaWRsZS4gSWYgdGhleSBh
+cmUgaW5zdWZmaWNpZW50IGl0CndvdWxkbid0IGJlIHNhZmUgdG8gaWRsZSBhaWxkIGF0IGFsbCwg
+cmlnaHQ/CgpSZWdhcmRzLApMdWNhcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
