@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 431897D0C
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 02:51:11 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5E1FA7CE7
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 16:17:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FACAAC001
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 00:51:07 -0700 (PDT)
-Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
-	[74.125.82.67]) by cuda.sgi.com with ESMTP id OwThVJS57N0soD6E
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 Apr 2016 00:51:04 -0700 (PDT)
-Received: by mail-wm0-f67.google.com with SMTP id e201so10262253wme.2
-	for <xfs@oss.sgi.com>; Wed, 27 Apr 2016 00:51:04 -0700 (PDT)
-Date: Wed, 27 Apr 2016 09:51:02 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] mm: add PF_MEMALLOC_NOFS
-Message-ID: <20160427075102.GB2179@dhcp22.suse.cz>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<1461671772-1269-2-git-send-email-mhocko@kernel.org>
-	<20160426230702.GG26977@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160426230702.GG26977@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B87EEAC002
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 14:17:21 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	5lnVjDFH9TCBzX6T for <xfs@oss.sgi.com>;
+	Thu, 28 Apr 2016 14:17:20 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v4 0/7] dax: handling media errors
+Date: Thu, 28 Apr 2016 15:16:51 -0600
+Message-Id: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +20,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <matthew@wil.cx>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Wed 27-04-16 09:07:02, Dave Chinner wrote:
-> On Tue, Apr 26, 2016 at 01:56:11PM +0200, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > GFP_NOFS context is used for the following 4 reasons currently
-> > 	- to prevent from deadlocks when the lock held by the allocation
-> > 	  context would be needed during the memory reclaim
-> > 	- to prevent from stack overflows during the reclaim because
-> > 	  the allocation is performed from a deep context already
-> > 	- to prevent lockups when the allocation context depends on
-> > 	  other reclaimers to make a forward progress indirectly
-> > 	- just in case because this would be safe from the fs POV
-> 
-> - silencing lockdep false positives
-> 
-> > Introduce PF_MEMALLOC_NOFS task specific flag and memalloc_nofs_{save,restore}
-> > API to control the scope. This is basically copying
-> > memalloc_noio_{save,restore} API we have for other restricted allocation
-> > context GFP_NOIO.
-> > 
-> > Xfs has already had a similar functionality as PF_FSTRANS so let's just
-> > give it a more generic name and make it usable for others as well and
-> > move the GFP_NOFS context tracking to the page allocator. Xfs has its
-> > own accessor functions but let's keep them for now to reduce this patch
-> > as minimum.
-> 
-> Can you split this into two patches? The first simply does this:
-> 
-> #define PF_MEMALLOC_NOFS PF_FSTRANS
-> 
-> and changes only the XFS code to use PF_MEMALLOC_NOFS.
-> 
-> The second patch can then do the rest of the mm API changes that we
-> don't actually care about in XFS at all.  That way I can carry all
-> the XFS changes in the XFS tree and not have to worry about when
-> this stuff gets merged or conflicts with the rest of the work that
-> is being done to the mm/ code and whatever tree that eventually
-> lands in...
+Until now, dax has been disabled if media errors were found on
+any device. This series attempts to address that.
 
-Sure I will do that
+The first three patches from Dan re-enable dax even when media
+errors are present.
+
+The fourth patch from Matthew removes the zeroout path from dax
+entirely, making zeroout operations always go through the driver
+(The motivation is that if a backing device has media errors,
+and we create a sparse file on it, we don't want the initial
+zeroing to happen via dax, we want to give the block driver a
+chance to clear the errors).
+
+The fifth patch changes how DAX IO is re-routed as direct IO.
+We add a new iocb flag for DAX to distinguish it from actual
+direct IO, and if we're in O_DIRECT, use the regular direct_IO
+path instead of DAX. This gives us an opportunity to do recovery
+by doing O_DIRECT writes that will go through the driver to clear
+errors from bad sectors.
+
+Patch 6 reduces our calls to clear_pmem from dax in the
+truncate/hole-punch cases. We check if the range being truncated
+is sector aligned/sized, and if so, send blkdev_issue_zeroout
+instead of clear_pmem so that errors can be handled better by
+the driver.
+
+Patch 7 fixes a redundant comment in DAX and is mostly unrelated
+to the rest of this series.
+
+This series also depends on/is based on Jan Kara's DAX Locking
+fixes series [1].
+
+
+[1]: http://www.spinics.net/lists/linux-mm/msg105819.html
+
+v4:
+ - Remove the dax->direct_IO fallbacks entirely. Instead, go through
+   the usual direct_IO path when we're in O_DIRECT, and use dax_IO
+   for other, non O_DIRECT IO. (Dan, Christoph)
+
+v3:
+ - Wrapper-ize the direct_IO fallback again and make an exception
+   for -EIOCBQUEUED (Jeff, Dan)
+ - Reduce clear_pmem usage in DAX to the minimum
+
+
+Dan Williams (3):
+  block, dax: pass blk_dax_ctl through to drivers
+  dax: fallback from pmd to pte on error
+  dax: enable dax in the presence of known media errors (badblocks)
+
+Matthew Wilcox (1):
+  dax: use sb_issue_zerout instead of calling dax_clear_sectors
+
+Vishal Verma (3):
+  fs: prioritize and separate direct_io from dax_io
+  dax: for truncate/hole-punch, do zeroing through the driver if
+    possible
+  dax: fix a comment in dax_zero_page_range and dax_truncate_page
+
+ arch/powerpc/sysdev/axonram.c | 10 +++---
+ block/ioctl.c                 |  9 -----
+ drivers/block/brd.c           |  9 ++---
+ drivers/block/loop.c          |  2 +-
+ drivers/nvdimm/pmem.c         | 17 +++++++---
+ drivers/s390/block/dcssblk.c  | 12 +++----
+ fs/block_dev.c                | 19 ++++++++---
+ fs/dax.c                      | 78 +++++++++++++++----------------------------
+ fs/ext2/inode.c               | 23 ++++++++-----
+ fs/ext4/file.c                |  2 +-
+ fs/ext4/inode.c               | 19 +++++++----
+ fs/xfs/xfs_aops.c             | 20 +++++++----
+ fs/xfs/xfs_bmap_util.c        | 15 +++------
+ fs/xfs/xfs_file.c             |  4 +--
+ include/linux/blkdev.h        |  3 +-
+ include/linux/dax.h           |  1 -
+ include/linux/fs.h            | 15 +++++++--
+ mm/filemap.c                  |  4 +--
+ 18 files changed, 134 insertions(+), 128 deletions(-)
 
 -- 
-Michal Hocko
-SUSE Labs
+2.5.5
 
 _______________________________________________
 xfs mailing list
