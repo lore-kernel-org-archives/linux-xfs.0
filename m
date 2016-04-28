@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 21BD87CB4
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 04:40:03 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 631327CD4
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 16:51:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C69578F8050
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ji787N8AoqAdbksf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Apr 2016 02:40:01 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id EB60A72D24
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 09:40:00 +0000 (UTC)
-Received: from jtulak.brq.redhat.com (jtulak.brq.redhat.com [10.34.26.85])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u3L9ds0J007155
-	for <xfs@oss.sgi.com>; Thu, 21 Apr 2016 05:40:00 -0400
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 06/19] mkfs: validate logarithmic parameters sanely
-Date: Thu, 21 Apr 2016 11:39:40 +0200
-Message-Id: <1461231593-31294-7-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C93C4AC002
+	for <xfs@oss.sgi.com>; Thu, 28 Apr 2016 14:51:49 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Z2sSBeDJAmJgfmBW for <xfs@oss.sgi.com>;
+	Thu, 28 Apr 2016 14:51:47 -0700 (PDT)
+Date: Fri, 29 Apr 2016 07:51:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
+	explicitly from memalloc_no{fs,io}_{save,restore} context
+Message-ID: <20160428215145.GM26977@dastard>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
+	<20160426225845.GF26977@dastard>
+	<20160428081759.GA31489@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160428081759.GA31489@dhcp22.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,200 +29,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Apr 28, 2016 at 10:17:59AM +0200, Michal Hocko wrote:
+> [Trim the CC list]
+> On Wed 27-04-16 08:58:45, Dave Chinner wrote:
+> [...]
+> > Often these are to silence lockdep warnings (e.g. commit b17cb36
+> > ("xfs: fix missing KM_NOFS tags to keep lockdep happy")) because
+> > lockdep gets very unhappy about the same functions being called with
+> > different reclaim contexts. e.g.  directory block mapping might
+> > occur from readdir (no transaction context) or within transactions
+> > (create/unlink). hence paths like this are tagged with GFP_NOFS to
+> > stop lockdep emitting false positive warnings....
+> 
+> As already said in other email, I have tried to revert the above
+> commit and tried to run it with some fs workloads but didn't manage
+> to hit any lockdep splats (after I fixed my bug in the patch 1.2). I
+> have tried to find reports which led to this commit but didn't succeed
+> much. Everything is from much earlier or later. Do you happen to
+> remember which loads triggered them, what they looked like or have an
+> idea what to try to reproduce them? So far I was trying heavy parallel
+> fs_mark, kernbench inside a tiny virtual machine so any of those have
+> triggered direct reclaim all the time.
 
-Testing logarithmic paramters like "-n log=<num>" shows that we do a
-terrible job of validating such input. e.g.:
+Most of those issues were reported by users and not reproducable by
+any obvious means. They may have been fixed since, but I'm sceptical
+of that because, generally speaking, developer testing only catches
+the obvious lockdep issues. i.e. it's users that report all the
+really twisty issues, and they are generally not reproducable except
+under their production workloads...
 
-.....
-naming   =version 2              bsize=65536  ascii-ci=0 ftype=0
-....
+IOWs, the absence of reports in your testing does not mean there
+isn't a problem, and that is one of the biggest problems with
+lockdep annotations - we have no way of ever knowing if they are
+still necessary or not without exposing users to regressions and
+potential deadlocks.....
 
-Yeah, I just asked for a block size of 2^456858480, and it didn't
-get rejected. Great, isn't it?
+Cheers,
 
-So, factor out the parsing of logarithmic parameters, and pass in
-the maximum valid value that they can take. These maximum values
-might not be completely accurate (e.g. block/sector sizes will
-affect the eventual valid maximum) but we can get rid of all the
-overflows and stupidities before we get to fine-grained validity
-checking later in mkfs once things like block and sector sizes have
-been finalised.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
----
- mkfs/xfs_mkfs.c | 79 +++++++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 51 insertions(+), 28 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 94ae7e2..09370d8 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1023,6 +1023,27 @@ getbool(
- 	return c ? true : false;
- }
- 
-+static int
-+getnum_checked(
-+	const char	*str,
-+	long long	min_val,
-+	long long	max_val,
-+	const char	*illegal_str,
-+	char		reqval_char,
-+	char		*reqval_opts[],
-+	int		reqval_optind)
-+{
-+	long long	c;
-+
-+	if (!str || *str == '\0')
-+		reqval(reqval_char, reqval_opts, reqval_optind);
-+
-+	c = getnum(str, 0, 0, false);
-+	if (c < min_val || c > max_val)
-+		illegal(str, illegal_str);
-+	return c;
-+}
-+
- int
- main(
- 	int			argc,
-@@ -1180,16 +1201,16 @@ main(
- 
- 				switch (getsubopt(&p, (constpp)bopts, &value)) {
- 				case B_LOG:
--					if (!value || *value == '\0')
--						reqval('b', bopts, B_LOG);
- 					if (blflag)
- 						respec('b', bopts, B_LOG);
- 					if (bsflag)
- 						conflict('b', bopts, B_SIZE,
- 							 B_LOG);
--					blocklog = getnum(value, 0, 0, false);
--					if (blocklog <= 0)
--						illegal(value, "b log");
-+					blocklog = getnum_checked(value,
-+							XFS_MIN_BLOCKSIZE_LOG,
-+							XFS_MAX_BLOCKSIZE_LOG,
-+							"b log", 'b', bopts,
-+							B_LOG);
- 					blocksize = 1 << blocklog;
- 					blflag = 1;
- 					break;
-@@ -1326,16 +1347,16 @@ main(
- 					nodsflag = 1;
- 					break;
- 				case D_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('d', dopts, D_SECTLOG);
- 					if (slflag)
- 						respec('d', dopts, D_SECTLOG);
- 					if (ssflag)
- 						conflict('d', dopts, D_SECTSIZE,
- 							 D_SECTLOG);
--					sectorlog = getnum(value, 0, 0, false);
--					if (sectorlog <= 0)
--						illegal(value, "d sectlog");
-+					sectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"d sectlog", 'd', dopts,
-+							D_SECTLOG);
- 					sectorsize = 1 << sectorlog;
- 					slflag = 1;
- 					break;
-@@ -1400,9 +1421,11 @@ main(
- 					if (isflag)
- 						conflict('i', iopts, I_SIZE,
- 							 I_LOG);
--					inodelog = getnum(value, 0, 0, false);
--					if (inodelog <= 0)
--						illegal(value, "i log");
-+					inodelog = getnum_checked(value,
-+							XFS_DINODE_MIN_LOG,
-+							XFS_DINODE_MAX_LOG,
-+							"i log", 'i', iopts,
-+							I_LOG);
- 					isize = 1 << inodelog;
- 					ilflag = 1;
- 					break;
-@@ -1568,16 +1591,16 @@ main(
- 					lsflag = 1;
- 					break;
- 				case L_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('l', lopts, L_SECTLOG);
- 					if (lslflag)
- 						respec('l', lopts, L_SECTLOG);
- 					if (lssflag)
- 						conflict('l', lopts, L_SECTSIZE,
- 							 L_SECTLOG);
--					lsectorlog = getnum(value, 0, 0, false);
--					if (lsectorlog <= 0)
--						illegal(value, "l sectlog");
-+					lsectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"l sectlog", 'l', lopts,
-+							L_SECTLOG);
- 					lsectorsize = 1 << lsectorlog;
- 					lslflag = 1;
- 					break;
-@@ -1648,16 +1671,16 @@ main(
- 
- 				switch (getsubopt(&p, (constpp)nopts, &value)) {
- 				case N_LOG:
--					if (!value || *value == '\0')
--						reqval('n', nopts, N_LOG);
- 					if (nlflag)
- 						respec('n', nopts, N_LOG);
- 					if (nsflag)
- 						conflict('n', nopts, N_SIZE,
- 							 N_LOG);
--					dirblocklog = getnum(value, 0, 0, false);
--					if (dirblocklog <= 0)
--						illegal(value, "n log");
-+					dirblocklog = getnum_checked(value,
-+							XFS_MIN_REC_DIRSIZE,
-+							XFS_MAX_BLOCKSIZE_LOG,
-+							"n log", 'n', nopts,
-+							N_LOG);
- 					dirblocksize = 1 << dirblocklog;
- 					nlflag = 1;
- 					break;
-@@ -1771,16 +1794,16 @@ main(
- 				switch (getsubopt(&p, (constpp)sopts, &value)) {
- 				case S_LOG:
- 				case S_SECTLOG:
--					if (!value || *value == '\0')
--						reqval('s', sopts, S_SECTLOG);
- 					if (slflag || lslflag)
- 						respec('s', sopts, S_SECTLOG);
- 					if (ssflag || lssflag)
- 						conflict('s', sopts, S_SECTSIZE,
- 							 S_SECTLOG);
--					sectorlog = getnum(value, 0, 0, false);
--					if (sectorlog <= 0)
--						illegal(value, "s sectlog");
-+					sectorlog = getnum_checked(value,
-+							XFS_MIN_SECTORSIZE_LOG,
-+							XFS_MAX_SECTORSIZE_LOG,
-+							"s sectlog", 's', sopts,
-+							S_SECTLOG);
- 					lsectorlog = sectorlog;
- 					sectorsize = 1 << sectorlog;
- 					lsectorsize = sectorsize;
+Dave.
 -- 
-2.5.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
