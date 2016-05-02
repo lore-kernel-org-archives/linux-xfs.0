@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E3C2D7CED
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7CFF8F8039
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:41 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 8cO9PfTN1iThV76G (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:40 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/14] xfs: handle 64-bit length in xfs_iozero
-Date: Tue,  3 May 2016 23:29:04 +0200
-Message-Id: <1462310947-16132-12-git-send-email-hch@lst.de>
-In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
-References: <1462310947-16132-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DC4707D06
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:11:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A2882304032
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 16:11:44 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id gwW5zSu9NoTvLA70 for <xfs@oss.sgi.com>;
+	Mon, 02 May 2016 16:11:42 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 4D7C5545
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:11:42 -0500 (CDT)
+Subject: Re: [PATCH 14/19] mkfs: add string options to generic parsing
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+	<1461231593-31294-15-git-send-email-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8145c82c-400a-c6f6-ee16-eda073fe7c4f@sandeen.net>
+Date: Mon, 2 May 2016 18:11:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <1461231593-31294-15-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,77 +29,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-We'll want to use this code for large offsets now that we're skipping holes
-and unwritten extents efficiently.  Also rename it to xfs_zero_range to be
-a bit more descriptive, and tell the caller if we actually did any zeroing.
+fix alignment on two-line logic statement; align 2nd line
+with first conditional, not tabbed in.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 11 ++++++-----
- fs/xfs/xfs_inode.h |  3 ++-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+Eric Sandeen <sandeen@redaht.com>: whitespace fixup
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bd07913..85369a9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -85,10 +85,11 @@ xfs_rw_ilock_demote(
-  * Holes and unwritten extents will be left as-is as they already are zeroed.
-  */
- int
--xfs_iozero(
-+xfs_zero_range(
- 	struct xfs_inode	*ip,
--	loff_t			pos,
--	size_t			count)
-+	xfs_off_t		pos,
-+	xfs_off_t		count,
-+	bool			*did_zero)
- {
- 	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
- }
-@@ -419,7 +420,7 @@ xfs_zero_last_block(
- 	if (isize + zero_len > offset)
- 		zero_len = offset - isize;
- 	*did_zeroing = true;
--	return xfs_iozero(ip, isize, zero_len);
-+	return xfs_zero_range(ip, isize, zero_len, NULL);
- }
- 
- /*
-@@ -518,7 +519,7 @@ xfs_zero_eof(
- 		if ((zero_off + zero_len) > offset)
- 			zero_len = offset - zero_off;
- 
--		error = xfs_iozero(ip, zero_off, zero_len);
-+		error = xfs_zero_range(ip, zero_off, zero_len, NULL);
- 		if (error)
- 			return error;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index e52d7c7..dbb0bcf 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -434,7 +434,8 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- 				  enum xfs_prealloc_flags flags);
- int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
--int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
-+int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
-+		bool *did_zero);
- loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
- 			     loff_t eof, int whence);
- 
--- 
-2.1.4
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4186e98..f14fdff 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1520,7 +1520,7 @@ check_opt(
+ 		if (conflict_opt == LAST_CONFLICT)
+ 			break;
+ 		if (opts->subopt_params[conflict_opt].seen ||
+-			opts->subopt_params[conflict_opt].str_seen)
++		    opts->subopt_params[conflict_opt].str_seen)
+ 			conflict(opts->name, (char **)opts->subopts,
+ 				 conflict_opt, index);
+ 	}
+
 
 _______________________________________________
 xfs mailing list
