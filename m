@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E52C7CA4
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 17:37:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BEED8AC002
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 15:37:08 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 35FF37CF8
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:09:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A0BDBAC003
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 16:09:42 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 7deGNfiwPvGeZouF for <xfs@oss.sgi.com>;
-	Mon, 23 May 2016 15:37:07 -0700 (PDT)
+	ESMTP id Hy7oiU8omTKT4o48 for <xfs@oss.sgi.com>;
+	Mon, 02 May 2016 16:09:40 -0700 (PDT)
 Received: from [10.0.0.4] (liberator [10.0.0.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id F0803B55
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 17:37:06 -0500 (CDT)
-Subject: Re: [PATCH] xfs: define XFS_IOC_FREEZE even if FIFREEZE is defined
-References: <1464016039-26416-1-git-send-email-hch@lst.de>
+	by sandeen.net (Postfix) with ESMTPSA id A52A1545
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:09:40 -0500 (CDT)
+Subject: Re: [PATCH 11/19] mkfs: table based parsing for converted parameters
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+	<1461231593-31294-12-git-send-email-jtulak@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ac5d15fd-d9ef-6855-90bc-43b545ccac47@sandeen.net>
-Date: Mon, 23 May 2016 17:37:06 -0500
+Message-ID: <40f1a322-bbd4-5da3-dc02-ac68122d404a@sandeen.net>
+Date: Mon, 2 May 2016 18:09:40 -0500
 MIME-Version: 1.0
-In-Reply-To: <1464016039-26416-1-git-send-email-hch@lst.de>
+In-Reply-To: <1461231593-31294-12-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,41 +35,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+The kernel enforces a max of XLOG_MAX_RECORD_BSIZE,
+and it should match the limits in L_SUNIT after all ...
 
+Eric Sandeen <sandeen@redhat.com>: fix min/max for "-l su"
+---
 
-On 5/23/16 10:07 AM, Christoph Hellwig wrote:
-> And the same for XFS_IOC_THAW.  Just because we now have a common
-> version of the ioctl we still need to provide the old name for it
-> for anyone using those.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+su and sunit are ultimately setting the same parameter; their
+limits should be the same.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0d28a84..3ffae42 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -395,8 +395,8 @@ struct opt_params lopts = {
+ 		},
+ 		{ .index = L_SU,
+ 		  .convert = true,
+-		  .minval = 0,
+-		  .maxval = UINT_MAX,
++		  .minval = XLOG_MIN_RECORD_BSIZE,
++		  .maxval = XLOG_MAX_RECORD_BSIZE,
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = L_DEV,
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/libxfs/xfs_fs.h | 8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 85727c4..3413699 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -591,12 +591,8 @@ typedef struct xfs_swapext
->  #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
->  /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
->  
-> -/*	XFS_IOC_FREEZE		  -- FIFREEZE   119	 */
-> -/*	XFS_IOC_THAW		  -- FITHAW     120	 */
-> -#ifndef FIFREEZE
-> -#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
-> -#define XFS_IOC_THAW		     _IOWR('X', 120, int)
-> -#endif
-> +#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)	/* aka FIFREEZE */
-> +#define XFS_IOC_THAW		     _IOWR('X', 120, int)	/* aka FITHAW */
->  
->  #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
->  #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
-> 
 
 _______________________________________________
 xfs mailing list
