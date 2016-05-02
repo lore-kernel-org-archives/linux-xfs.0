@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 876937CB8
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 10:18:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5855D304066
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 08:18:41 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xOxgwA8ZkXikWs8J (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 May 2016 08:18:40 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com> <20160425232552.GD18496@dastard>
-	<1461628381.1421.24.camel@intel.com> <20160426004155.GF18496@dastard>
-Date: Mon, 02 May 2016 11:18:36 -0400
-In-Reply-To: <20160426004155.GF18496@dastard> (Dave Chinner's message of "Tue,
-	26 Apr 2016 10:41:55 +1000")
-Message-ID: <x49pot4ebeb.fsf@segfault.boston.devel.redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E344A7CCA
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 10:42:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 24B7DAC002
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 08:42:01 -0700 (PDT)
+Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
+	[74.125.82.43]) by cuda.sgi.com with ESMTP id r16GMyq9ibju01jo
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 May 2016 08:41:55 -0700 (PDT)
+Received: by mail-wm0-f43.google.com with SMTP id n129so112505831wmn.1
+	for <xfs@oss.sgi.com>; Mon, 02 May 2016 08:41:55 -0700 (PDT)
+Message-ID: <5727753F.6090104@plexistor.com>
+Date: Mon, 02 May 2016 18:41:51 +0300
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
+References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
+	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,108 +28,336 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, "Dan J. Williams" <dan.j.williams@intel.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+To: Vishal Verma <vishal.l.verma@intel.com>, linux-nvdimm@lists.01.org
+Cc: linux-block@vger.kernel.org, Jan Kara <jack@suse.cz>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Jens Axboe <axboe@fb.com>, linux-mm@kvack.org, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org
 
-RGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cml0ZXM6Cgo+IE9uIE1vbiwgQXBy
-IDI1LCAyMDE2IGF0IDExOjUzOjEzUE0gKzAwMDAsIFZlcm1hLCBWaXNoYWwgTCB3cm90ZToKPj4g
-T24gVHVlLCAyMDE2LTA0LTI2IGF0IDA5OjI1ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-WW91J3JlIGFzc3VtaW5nIHRoYXQgb25seSB0aGUgREFYIGF3YXJlIGFwcGxpY2F0aW9uIGFjY2Vz
-c2VzIGl0J3MKPiBmaWxlcy4gIHVzZXJzLCBiYWNrdXAgcHJvZ3JhbXMsIGRhdGEgcmVwbGljYXRv
-cnMsIGZpbGV5c3RlbQo+IHJlLW9yZ2FuaXNlcnMgKGUuZy4gIGRlZnJhZ21lbnRlcnMpIGV0YyBh
-bGwgbWF5IGFjY2VzcyB0aGUgZmlsZXMgYW5kCj4gdGhleSBtYXkgdGhyb3cgZXJyb3JzLiBXaGF0
-IHRoZW4/CgpJJ20gbm90IHN1cmUgaG93IHRoaXMgaXMgYW55IGRpZmZlcmVudCBmcm9tIHJlZ3Vs
-YXIgc3RvcmFnZS4gIElmIGFuCmFwcGxpY2F0aW9uIGdldHMgRUlPLCBpdCdzIHVwIHRvIHRoZSBh
-cHAgdG8gZGVjaWRlIHdoYXQgdG8gZG8gd2l0aCB0aGF0LgoKPj4gPiBXaGVyZSBkb2VzIHRoZSBh
-cHBsaWNhdGlvbiBmaW5kIHRoZSBkYXRhIHRoYXQgd2FzIGxvc3QgdG8gYmUgYWJsZSB0bwo+PiA+
-IHJld3JpdGUgaXQ/Cj4+IAo+PiBUaGUgZGF0YSB0aGF0IHdhcyBsb3N0IGlzIGdvbmUgLS0gdGhp
-cyBhc3N1bWVzIHRoZSBhcHBsaWNhdGlvbiBoYXMgc29tZQo+PiBhYmlsaXR5IHRvIHJlY292ZXIg
-dXNpbmcgYSBqb3VybmFsL2xvZyBvciBvdGhlciByZWR1bmRhbmN5IC0geWVzLCBhdCB0aGUKPj4g
-YXBwbGljYXRpb24gbGF5ZXIuIElmIGl0IGRvZXNuJ3QgaGF2ZSB0aGlzIHNvcnQgb2YgY2FwYWJp
-bGl0eSwgdGhlIG9ubHkKPj4gb3B0aW9uIGlzIHRvIHJlc3RvcmUgZmlsZXMgZnJvbSBhIGJhY2t1
-cC9taXJyb3IuCj4KPiBTbyB0aGUgYXJjaGl0ZWN0dXJlIGhhcyBhIGJ1aWx0IGluIGFzc3VtcHRp
-b24gdGhhdCBvbmx5IHVzZXJzcGFjZQo+IGNhbiBoYW5kbGUgZGF0YSBsb3NzPwoKUmVtZW1iZXIg
-dGhhdCB0aGUgcHJvcG9zZWQgcHJvZ3JhbW1pbmcgbW9kZWwgY29tcGxldGVseSBieXBhc3NlcyB0
-aGUKa2VybmVsLCBzbyB5ZXMsIGl0IGlzIGV4cGVjdGVkIHRoYXQgdXNlci1zcGFjZSB3aWxsIGhh
-dmUgdG8gZGVhbCB3aXRoCnRoZSBwcm9ibGVtLgoKPiBXaGF0IGFib3V0IGZpbGVzeXRzZW1zIGxp
-a2UgTk9WQSwgdGhhdCB1c2UgbG9nIHN0cnVjdHVyZWQgZGVzaWduIHRvCj4gcHJvdmlkZSBEQVgg
-dy8gdXBkYXRlIGF0b21pY2l0eSBhbmQgY2FuIHBvdGVudGlhbGx5IGFsc28gcHJvdmlkZQo+IHJl
-ZHVuZGFuY3kvcmVwYWlyIHRocm91Z2ggdGhlIHNhbWUgbWVjaGFuaXNtcz8gV29uJ3QgcG1lbSBu
-YXRpdmUKPiBmaWxlc3lzdGVtcyB3aXRoIGJ1aWx0IGluIGRhdGEgcHJvdGVjdGlvbiBmZWF0dXJl
-cyBsaWtlIHRoaXMgcmVtb3ZlCj4gdGhlIG5lZWQgZm9yIGFkZGluZyBhbGwgdGhpcyB0byB1c2Vy
-c3BhY2UgYXBwbGljYXRpb25zPwoKSSBkb24ndCB0aGluayB3ZSdsbCAvb25seS8gc3VwcG9ydCBO
-T1ZBIGZvciBwbWVtLiAgU28gd2UnbGwgaGF2ZSB0byBkZWFsCndpdGggdGhpcyBmb3IgZXhpc3Rp
-bmcgZmlsZSBzeXN0ZW1zLCByaWdodD8KCj4gSWYgc28sIHNob3VsZG4ndCB0aGF0IGJlIHRoZSBm
-b2N1cyBvZiBkZXZlbG9wbWVudCByYWh0ZXIgdGhhbgo+IHBsYWNpbmcgdGhlIGJ1cmRlbiBvbiB1
-c2Vyc3BhY2UgYXBwcyB0byBoYW5kbGUgc3RvcmFnZSByZXBhaXIKPiBzaXR1YXRpb25zPwoKSXQg
-cmVhbGx5IGRlcGVuZHMgb24gdGhlIHByb2dyYW1taW5nIG1vZGVsLiAgSW4gdGhlIG1vZGVsIFZp
-c2hhbCBpcwp0YWxraW5nIGFib3V0LCBlaXRoZXIgdGhlIGFwcGxpY2F0aW9ucyB0aGVtc2VsdmVz
-IG9yIHRoZSBsaWJyYXJpZXMgdGhleQpsaW5rIHRvIGFyZSBleHBlY3RlZCB0byBpbXBsZW1lbnQg
-dGhlIHJlZHVuZGFuY2llcyB3aGVyZSBuZWNlc3NhcnkuCgo+PiA+IFRoZXJlJ3MgYW4gaW1wbGlj
-aXQgYXNzdW1wdGlvbiB0aGF0IGFwcGxpY2F0aW9ucyB3aWxsIGtlZXAgcmVkdW5kYW50Cj4+ID4g
-Y29waWVzIG9mIHRoZWlyIGRhdGEgYXQgdGhlIC9hcHBsaWNhdGlvbiBsYXllci8gYW5kIGJlIGFi
-bGUgdG8KPj4gPiBhdXRvbWF0aWNhbGx5IHJlcGFpciBpdD8KClRoYXQncyBvbmUgd2F5IHRvIGRv
-IHRoaW5ncy4gIEl0IHJlYWxseSBkZXBlbmRzIG9uIHRoZSBhcHBsaWNhdGlvbiB3aGF0Cml0IHdp
-bGwgZG8gZm9yIHJlY292ZXJ5LgoKPj4gPiBBbmQgdGhlbiB0aGVyZSdzIHRoZSBpbXBsaWNpdCBh
-c3N1bXB0aW9uIHRoYXQgaXQgd2lsbCB1bmxpbmsgYW5kCj4+ID4gZnJlZSB0aGUgZW50aXJlIGZp
-bGUgYmVmb3JlIHdyaXRpbmcgYSBuZXcgY29weQoKSSB0aGluayBWaXNoYWwgd2FzIHJlZmVycmlu
-ZyB0byByZXN0b3JpbmcgZnJvbSBiYWNrdXAuICBjcCBpdHNlbGYgd2lsbAp0cnVuY2F0ZSB0aGUg
-ZmlsZSBiZWZvcmUgb3ZlcndyaXRpbmcsIGlpcmMuCgo+PiBUbyBzdW1tYXJpemUsIHRoZSB0d28g
-Y2FzZXMgd2Ugd2FudCB0byBoYW5kbGUgYXJlOgo+PiAxLiBBcHBsaWNhdGlvbiBoYXMgaW5idWls
-dCByZWNvdmVyeToKPj4gwqAgLSBoaXRzIGJhZGJsb2NrCj4+IMKgIC0gZmlndXJlcyBvdXQgaXQg
-aXMgYWJsZSB0byByZWNvdmVyIHRoZSBkYXRhCj4+IMKgIC0gaGFuZGxlcyBTSUdCVVMgb3IgRUlP
-Cj4+IMKgIC0gZG9lcyBhIChzZWN0b3IgYWxpZ25lZCkgd3JpdGUoKSB0byByZXN0b3JlIHRoZSBk
-YXRhCj4KPiBUaGUgImZpZ3VyZXMgb3V0IiBzdGVwIGhlcmUgaXMgd2hlcmUgPjk1JSBvZiB0aGUg
-d29yayB3ZSdkIGhhdmUgdG8KPiBkbyBpcy4gQW5kIHRoYXQncyBpbiBmaWxlc3lzdGVtIGFuZCBi
-bG9jayBsYXllciBjb2RlLCBub3QKPiB1c2Vyc3BhY2UsIGFuZCB1c2Vyc3BhY2UgY2FuJ3QgZG8g
-dGhhdCB3b3JrIGluIGEgc2lnbmFsIGhhbmRsZXIuCj4gQW5kIGl0ICBjYW4gc3RpbGwgZmFsbCBk
-b3duIHRvIHRoZSBzZWNvbmQgY2FzZSB3aGVuIHRoZSBhcHBsaWNhdGlvbgo+IGRvZXNuJ3QgaGF2
-ZSBhbm90aGVyIGNvcHkgb2YgdGhlIGRhdGEgc29tZXdoZXJlLgoKSSByZWFkIHRoYXQgImZpZ3Vy
-ZXMgb3V0IiBzdGVwIGFzIHRoZSBhcHBsaWNhdGlvbiBkZXRlcm1pbmluZyB3aGV0aGVyIG9yCm5v
-dCBpdCBoYWQgYSByZWR1bmRhbnQgY29weS4KCj4gRldJVywgd2UgZG9uJ3QgaGF2ZSBhIERBWCBl
-bmFibGVkIGZpbGVzeXN0ZW0gdGhhdCBjYW4gZG8KPiByZXZlcnNlIGJsb2NrIG1hcHBpbmcsIHNv
-IHdlJ3JlIGEgeWVhciBvciB0d28gYXdheSBmcm9tIHRoaXMgYmVpbmcgYQo+IHdvcmthYmxlIHBy
-b2R1Y3Rpb24gc29sdXRpb24gZnJvbSB0aGUgZmlsZXN5c3RlbSBwZXJzcGVjdGl2ZS4gQW5kCj4g
-QUZBSUNULCBpdCdzIG5vdCBldmVuIG9uIHRoZSByb2FkbWFwIGZvciBkbS9tZCBsYXllcnMuCgpE
-byB3ZSBldmVuIG5lZWQgdGhhdD8gIFdoYXQgaWYgd2UgYWRkZWQgYW4gRklFTUFQIGZsYWcgZm9y
-IGRldGVybWluaW5nCmJhZCBibG9ja3MuICBUaGUgZmlsZSBzeXN0ZW0gY291bGQgc2ltcGx5IHdh
-bGsgdGhlIGxpc3Qgb2YgZXh0ZW50cyBmb3IKdGhlIGZpbGUgYW5kIGNoZWNrIHRoZSBjb3JyZXNw
-b25kaW5nIGRpc2sgYmxvY2tzLiAgTm8gcmV2ZXJzZSBtYXBwaW5nCnJlcXVpcmVkLiAgQWxzbyBu
-b3RlIHRoYXQgRE0vTUQgZG9uJ3Qgc3VwcG9ydCBkaXJlY3RfYWNjZXNzKCksIGVpdGhlciwKc28g
-SSBkb24ndCB0aGluayB0aGV5J3JlIHJlbGV2YW50IGZvciB0aGlzIGRpc2N1c3Npb24uCgo+PiAy
-LiBBcHBsaWNhdGlvbiBkb2Vzbid0IGhhdmUgYW55IGluYnVpbHQgcmVjb3ZlcnkgbWVjaGFuaXNt
-Cj4+IMKgIC0gaGl0cyBiYWRibG9jawo+PiDCoCAtIGdldHMgU0lHQlVTIChvciBFSU8pIGFuZCBj
-cmFzaGVzCj4+IMKgIC0gU3lzYWRtaW4gcmVzdG9yZXMgZmlsZSBmcm9tIGJhY2t1cAo+Cj4gV2hp
-Y2ggaXMgbm8gZGlmZmVyZW50IHRvIGFuIGV4aXN0aW5nIG5vbi1EQVggYXBwbGljYXRpb24gZ2V0
-dGluZyBhbgo+IEVJTy9zaWdidXMgZnJvbSBjdXJyZW50IHN0b3JhZ2UgdGVjaG5vbG9naWVzLgo+
-Cj4gRXhjZXB0OiBpbiB0aGUgZXhpc3Rpbmcgc3RvcmFnZSBzdGFjaywgcmVkdW5kYW5jeSBhbmQg
-Y29ycmVjdGlvbiBoYXMKPiBhbHJlYWR5IGhhZCB0byBoYXZlIGZhaWxlZCBmb3IgdGhlIGFwcGxp
-Y2F0aW9uIHRvIHNlZSBzdWNoIGFuIGVycm9yLgo+IEhlbmNlIHRoaXMgaXMgbm9ybWFsbHkgY29u
-c2lkZXJlZCBhIERSIGNhc2UgYXMgdGhlcmUncyBoYWQgdG8gYmUKPiBjYXNjYWRpbmcgZmFpbHVy
-ZXMgKGUuZy4gIG11bHRpcGxlIGRpc2sgZmFpbHVyZXMgaW4gYSBSQUlEKSB0byBnZXQKPiB0byB0
-aGlzIHN0YWdlLCBub3QgYSBzaW5nbGUgZXJyb3IgaW4gYSBzaW5nbGUgc2VjdG9yIGluCj4gbm9u
-LXJlZHVuZGFudCBzdG9yYWdlLgo+Cj4gV2UgbmVlZCBzb21lIGZvcm0gb2YgcmVkdW5kYW5jeSBh
-bmQgY29ycmVjdGlvbiBpbiB0aGUgUE1FTSBzdGFjayB0bwo+IHByZXZlbnQgc2luZ2xlIHNlY3Rv
-ciBlcnJvcnMgZnJvbSB0YWtpbmcgZG93biBzZXJ2aWNlcyB1bnRpbCBhbgo+IGFkbWluaXN0cmF0
-b3IgY2FuIGNvcnJlY3QgdGhlIHByb2JsZW0uIEknbSB0cnlpbmcgdG8gdW5kZXJzdGFuZAo+IHdo
-ZXJlIHRoaXMgaXMgc3VwcG9zZWQgdG8gZml0IGludG8gdGhlIHBpY3R1cmUgLSBhdCB0aGlzIHBv
-aW50IEkKPiByZWFsbHkgZG9uJ3QgdGhpbmsgdXNlcnNwYWNlIGFwcGxpY2F0aW9ucyBhcmUgZ29p
-bmcgdG8gYmUgYWJsZSB0byBkbwo+IHRoaXMgcmVsaWFibHkuLi4uCgpOb3QgYWxsIHN0b3JhZ2Ug
-aXMgY29uZmlndXJlZCBpbnRvIGEgUkFJRCB2b2x1bWUsIGFuZCBpbiBzb21lIGluc3RhbmNlcywK
-dGhlIGFwcGxpY2F0aW9uIGlzIGJldHRlciBwb3NpdGlvbmVkIHRvIHJlY292ZXIgdGhlIGRhdGEg
-KGdsdXN0ZXIvY2VwaCwKZm9yIGV4YW1wbGUpLiAgSXQgcmVhbGx5IGNvbWVzIGRvd24gdG8gd2hl
-dGhlciBhcHBsaWNhdGlvbnMgb3IgbGlicmFyaWVzCndpbGwgd2FudCB0byBpbXBsZW1lbnQgcmVk
-dW5kYW5jeSB0aGVtc2VsdmVzIGluIG9yZGVyIHRvIGdldCBhIGJ1bXAgaW4KcGVyZm9ybWFuY2Ug
-Ynkgbm90IGdvaW5nIHRocm91Z2ggdGhlIGtlcm5lbC4gIEFuZCBJIHRoaW5rIEkga25vdyB3aGF0
-CnlvdXIgb3BpbmlvbiBpcyBvbiB0aGF0IGZyb250LiAgOi0pCgpTcGVha2luZyBvZiB3aGljaCwg
-ZGlkIHlvdSBzZWUgdGhlIG51bWJlcnMgRGFuIHNoYXJlZCBhdCBMU0Ygb24gaG93IG11Y2gKb3Zl
-cmhlYWQgdGhlcmUgaXMgaW4gY2FsbGluZyBpbnRvIHRoZSBrZXJuZWwgZm9yIHN5bmNpbmc/ICBE
-YW4sIGNhbi9kaWQKeW91IHB1Ymxpc2ggdGhhdCBzcHJlYWRzaGVldCBzb21ld2hlcmU/CgpDaGVl
-cnMsCkplZmYKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+On 04/29/2016 12:16 AM, Vishal Verma wrote:
+> All IO in a dax filesystem used to go through dax_do_io, which cannot
+> handle media errors, and thus cannot provide a recovery path that can
+> send a write through the driver to clear errors.
+> 
+> Add a new iocb flag for DAX, and set it only for DAX mounts. In the IO
+> path for DAX filesystems, use the same direct_IO path for both DAX and
+> direct_io iocbs, but use the flags to identify when we are in O_DIRECT
+> mode vs non O_DIRECT with DAX, and for O_DIRECT, use the conventional
+> direct_IO path instead of DAX.
+> 
+
+Really? What are your thinking here?
+
+What about all the current users of O_DIRECT, you have just made them
+4 times slower and "less concurrent*" then "buffred io" users. Since
+direct_IO path will queue an IO request and all.
+(And if it is not so slow then why do we need dax_do_io at all? [Rhetorical])
+
+I hate it that you overload the semantics of a known and expected
+O_DIRECT flag, for special pmem quirks. This is an incompatible
+and unrelated overload of the semantics of O_DIRECT.
+
+> This allows us a recovery path in the form of opening the file with
+> O_DIRECT and writing to it with the usual O_DIRECT semantics (sector
+> alignment restrictions).
+> 
+
+I understand that you want a sector aligned IO, right? for the
+clear of errors. But I hate it that you forced all O_DIRECT IO
+to be slow for this.
+Can you not make dax_do_io handle media errors? At least for the
+parts of the IO that are aligned.
+(And your recovery path application above can use only aligned
+ IO to make sure)
+
+Please look for another solution. Even a special IOCTL_DAX_CLEAR_ERROR
+
+[*"less concurrent" because of the queuing done in bdev. Note how
+  pmem is not even multi-queue, and even if it was it will be much
+  slower then DAX because of the code depth and all the locks and task
+  switches done in the block layer. In DAX the final memcpy is done directly
+  on the user-mode thread]
+
+Thanks
+Boaz
+
+> Cc: Matthew Wilcox <matthew@wil.cx>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jens Axboe <axboe@fb.com>
+> Cc: Al Viro <viro@zeniv.linux.org.uk>
+> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+> ---
+>  drivers/block/loop.c |  2 +-
+>  fs/block_dev.c       | 17 +++++++++++++----
+>  fs/ext2/inode.c      | 16 ++++++++++++----
+>  fs/ext4/file.c       |  2 +-
+>  fs/ext4/inode.c      | 19 +++++++++++++------
+>  fs/xfs/xfs_aops.c    | 20 +++++++++++++-------
+>  fs/xfs/xfs_file.c    |  4 ++--
+>  include/linux/fs.h   | 15 ++++++++++++---
+>  mm/filemap.c         |  4 ++--
+>  9 files changed, 69 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+> index 80cf8ad..c0a24c3 100644
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -568,7 +568,7 @@ struct switch_request {
+>  
+>  static inline void loop_update_dio(struct loop_device *lo)
+>  {
+> -	__loop_update_dio(lo, io_is_direct(lo->lo_backing_file) |
+> +	__loop_update_dio(lo, (lo->lo_backing_file->f_flags & O_DIRECT) |
+>  			lo->use_dio);
+>  }
+>  
+> diff --git a/fs/block_dev.c b/fs/block_dev.c
+> index 79defba..97a1f5f 100644
+> --- a/fs/block_dev.c
+> +++ b/fs/block_dev.c
+> @@ -167,12 +167,21 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+>  	struct file *file = iocb->ki_filp;
+>  	struct inode *inode = bdev_file_inode(file);
+>  
+> -	if (IS_DAX(inode))
+> +	if (iocb_is_direct(iocb))
+> +		return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter,
+> +					    offset, blkdev_get_block, NULL,
+> +					    NULL, DIO_SKIP_DIO_COUNT);
+> +	else if (iocb_is_dax(iocb))
+>  		return dax_do_io(iocb, inode, iter, offset, blkdev_get_block,
+>  				NULL, DIO_SKIP_DIO_COUNT);
+> -	return __blockdev_direct_IO(iocb, inode, I_BDEV(inode), iter, offset,
+> -				    blkdev_get_block, NULL, NULL,
+> -				    DIO_SKIP_DIO_COUNT);
+> +	else {
+> +		/*
+> +		 * If we're in the direct_IO path, either the IOCB_DIRECT or
+> +		 * IOCB_DAX flags must be set.
+> +		 */
+> +		WARN_ONCE(1, "Kernel Bug with iocb flags\n");
+> +		return -ENXIO;
+> +	}
+>  }
+>  
+>  int __sync_blockdev(struct block_device *bdev, int wait)
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 35f2b0bf..45f2b51 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -861,12 +861,20 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter, loff_t offset)
+>  	size_t count = iov_iter_count(iter);
+>  	ssize_t ret;
+>  
+> -	if (IS_DAX(inode))
+> -		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block, NULL,
+> -				DIO_LOCKING);
+> -	else
+> +	if (iocb_is_direct(iocb))
+>  		ret = blockdev_direct_IO(iocb, inode, iter, offset,
+>  					 ext2_get_block);
+> +	else if (iocb_is_dax(iocb))
+> +		ret = dax_do_io(iocb, inode, iter, offset, ext2_get_block, NULL,
+> +				DIO_LOCKING);
+> +	else {
+> +		/*
+> +		 * If we're in the direct_IO path, either the IOCB_DIRECT or
+> +		 * IOCB_DAX flags must be set.
+> +		 */
+> +		WARN_ONCE(1, "Kernel Bug with iocb flags\n");
+> +		return -ENXIO;
+> +	}
+>  	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+>  		ext2_write_failed(mapping, offset + count);
+>  	return ret;
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 2e9aa49..165a0b8 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -94,7 +94,7 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	struct file *file = iocb->ki_filp;
+>  	struct inode *inode = file_inode(iocb->ki_filp);
+>  	struct blk_plug plug;
+> -	int o_direct = iocb->ki_flags & IOCB_DIRECT;
+> +	int o_direct = iocb->ki_flags & (IOCB_DIRECT | IOCB_DAX);
+>  	int unaligned_aio = 0;
+>  	int overwrite = 0;
+>  	ssize_t ret;
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 6d5d5c1..0b6d77a 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3410,15 +3410,22 @@ static ssize_t ext4_direct_IO_write(struct kiocb *iocb, struct iov_iter *iter,
+>  #ifdef CONFIG_EXT4_FS_ENCRYPTION
+>  	BUG_ON(ext4_encrypted_inode(inode) && S_ISREG(inode->i_mode));
+>  #endif
+> -	if (IS_DAX(inode)) {
+> -		ret = dax_do_io(iocb, inode, iter, offset, get_block_func,
+> -				ext4_end_io_dio, dio_flags);
+> -	} else
+> +	if (iocb_is_direct(iocb))
+>  		ret = __blockdev_direct_IO(iocb, inode,
+>  					   inode->i_sb->s_bdev, iter, offset,
+>  					   get_block_func,
+>  					   ext4_end_io_dio, NULL, dio_flags);
+> -
+> +	else if (iocb_is_dax(iocb))
+> +		ret = dax_do_io(iocb, inode, iter, offset, get_block_func,
+> +				ext4_end_io_dio, dio_flags);
+> +	else {
+> +		/*
+> +		 * If we're in the direct_IO path, either the IOCB_DIRECT or
+> +		 * IOCB_DAX flags must be set.
+> +		 */
+> +		WARN_ONCE(1, "Kernel Bug with iocb flags\n");
+> +		return -ENXIO;
+> +	}
+>  	if (ret > 0 && !overwrite && ext4_test_inode_state(inode,
+>  						EXT4_STATE_DIO_UNWRITTEN)) {
+>  		int err;
+> @@ -3503,7 +3510,7 @@ static ssize_t ext4_direct_IO_read(struct kiocb *iocb, struct iov_iter *iter,
+>  		else
+>  			unlocked = 1;
+>  	}
+> -	if (IS_DAX(inode)) {
+> +	if (iocb_is_dax(iocb)) {
+>  		ret = dax_do_io(iocb, inode, iter, offset, ext4_dio_get_block,
+>  				NULL, unlocked ? 0 : DIO_LOCKING);
+>  	} else {
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index e49b240..8134e99 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1412,21 +1412,27 @@ xfs_vm_direct_IO(
+>  	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+>  	dio_iodone_t		*endio = NULL;
+>  	int			flags = 0;
+> -	struct block_device	*bdev;
+> +	struct block_device     *bdev = xfs_find_bdev_for_inode(inode);
+>  
+>  	if (iov_iter_rw(iter) == WRITE) {
+>  		endio = xfs_end_io_direct_write;
+>  		flags = DIO_ASYNC_EXTEND;
+>  	}
+>  
+> -	if (IS_DAX(inode)) {
+> +	if (iocb_is_direct(iocb))
+> +		return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+> +				xfs_get_blocks_direct, endio, NULL, flags);
+> +	else if (iocb_is_dax(iocb))
+>  		return dax_do_io(iocb, inode, iter, offset,
+> -				 xfs_get_blocks_direct, endio, 0);
+> +				xfs_get_blocks_direct, endio, 0);
+> +	else {
+> +		/*
+> +		 * If we're in the direct_IO path, either the IOCB_DIRECT or
+> +		 * IOCB_DAX flags must be set.
+> +		 */
+> +		WARN_ONCE(1, "Kernel Bug with iocb flags\n");
+> +		return -ENXIO;
+>  	}
+> -
+> -	bdev = xfs_find_bdev_for_inode(inode);
+> -	return  __blockdev_direct_IO(iocb, inode, bdev, iter, offset,
+> -			xfs_get_blocks_direct, endio, NULL, flags);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index c2946f4..3d5d3c2 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -300,7 +300,7 @@ xfs_file_read_iter(
+>  
+>  	XFS_STATS_INC(mp, xs_read_calls);
+>  
+> -	if (unlikely(iocb->ki_flags & IOCB_DIRECT))
+> +	if (unlikely(iocb->ki_flags & (IOCB_DIRECT | IOCB_DAX)))
+>  		ioflags |= XFS_IO_ISDIRECT;
+>  	if (file->f_mode & FMODE_NOCMTIME)
+>  		ioflags |= XFS_IO_INVIS;
+> @@ -898,7 +898,7 @@ xfs_file_write_iter(
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+>  		return -EIO;
+>  
+> -	if ((iocb->ki_flags & IOCB_DIRECT) || IS_DAX(inode))
+> +	if ((iocb->ki_flags & (IOCB_DIRECT | IOCB_DAX)))
+>  		ret = xfs_file_dio_aio_write(iocb, from);
+>  	else
+>  		ret = xfs_file_buffered_aio_write(iocb, from);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 9f28130..adca1d8 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -322,6 +322,7 @@ struct writeback_control;
+>  #define IOCB_APPEND		(1 << 1)
+>  #define IOCB_DIRECT		(1 << 2)
+>  #define IOCB_HIPRI		(1 << 3)
+> +#define IOCB_DAX		(1 << 4)
+>  
+>  struct kiocb {
+>  	struct file		*ki_filp;
+> @@ -2930,9 +2931,15 @@ extern int generic_show_options(struct seq_file *m, struct dentry *root);
+>  extern void save_mount_options(struct super_block *sb, char *options);
+>  extern void replace_mount_options(struct super_block *sb, char *options);
+>  
+> -static inline bool io_is_direct(struct file *filp)
+> +static inline bool iocb_is_dax(struct kiocb *iocb)
+>  {
+> -	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
+> +	return IS_DAX(file_inode(iocb->ki_filp)) &&
+> +		(iocb->ki_flags & IOCB_DAX);
+> +}
+> +
+> +static inline bool iocb_is_direct(struct kiocb *iocb)
+> +{
+> +	return iocb->ki_flags & IOCB_DIRECT;
+>  }
+>  
+>  static inline int iocb_flags(struct file *file)
+> @@ -2940,8 +2947,10 @@ static inline int iocb_flags(struct file *file)
+>  	int res = 0;
+>  	if (file->f_flags & O_APPEND)
+>  		res |= IOCB_APPEND;
+> -	if (io_is_direct(file))
+> +	if (file->f_flags & O_DIRECT)
+>  		res |= IOCB_DIRECT;
+> +	if (IS_DAX(file_inode(file)))
+> +		res |= IOCB_DAX;
+>  	return res;
+>  }
+>  
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 3effd5c..b959acf 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -1849,7 +1849,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
+>  	if (!count)
+>  		goto out; /* skip atime */
+>  
+> -	if (iocb->ki_flags & IOCB_DIRECT) {
+> +	if (iocb->ki_flags & (IOCB_DIRECT | IOCB_DAX)) {
+>  		struct address_space *mapping = file->f_mapping;
+>  		struct inode *inode = mapping->host;
+>  		loff_t size;
+> @@ -2719,7 +2719,7 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>  	if (err)
+>  		goto out;
+>  
+> -	if (iocb->ki_flags & IOCB_DIRECT) {
+> +	if (iocb->ki_flags & (IOCB_DIRECT | IOCB_DAX)) {
+>  		loff_t pos, endbyte;
+>  
+>  		written = generic_file_direct_write(iocb, from, iocb->ki_pos);
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
