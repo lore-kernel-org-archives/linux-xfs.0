@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 64B3F7CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 10:35:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 56ECC7D16
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:44:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A129304051
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 08:35:03 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LbzBe0LJMn2949sp for <xfs@oss.sgi.com>;
-	Tue, 31 May 2016 08:35:01 -0700 (PDT)
-Subject: Re: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback
-	path
-References: <1458128681-10869-1-git-send-email-hch@lst.de>
-	<1458128681-10869-4-git-send-email-hch@lst.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b8d49db2-131d-0735-c803-adec326f43bb@sandeen.net>
-Date: Tue, 31 May 2016 10:35:01 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1BECF30404E
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 16:44:36 -0700 (PDT)
+Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com
+	[66.111.4.29]) by cuda.sgi.com with ESMTP id CUcCT3AKraGMEM67
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 May 2016 16:44:34 -0700 (PDT)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id C1ECF20B0B
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 19:44:33 -0400 (EDT)
+Date: Mon, 2 May 2016 16:44:32 -0700
+From: Greg KH <greg@kroah.com>
+Subject: Re: XFS hole punch races
+Message-ID: <20160502234432.GB14806@kroah.com>
+References: <20160322155740.GB28772@quack.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <1458128681-10869-4-git-send-email-hch@lst.de>
+Content-Disposition: inline
+In-Reply-To: <20160322155740.GB28772@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,78 +33,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
+To: Jan Kara <jack@suse.cz>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On 3/16/16 6:44 AM, Christoph Hellwig wrote:
-> This patch implements two closely related changes:  First it embedds a
-> bio the ioend structure so that we don't have to allocate one separately.
-> Second it uses the block layer bio chaining mechanism to chain additional
-> bios off this first one if needed instead of manually accouting for
-> multiple bio completions in the ioend structure.  Together this removes a
-> memory allocation per ioend and greatly simplifies the ioend setup and
-> I/O completion path.
+On Tue, Mar 22, 2016 at 04:57:40PM +0100, Jan Kara wrote:
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c  | 247 ++++++++++++++++++++++++-----------------------------
->  fs/xfs/xfs_aops.h  |  15 ++--
->  fs/xfs/xfs_super.c |  26 ++----
->  3 files changed, 123 insertions(+), 165 deletions(-)
+> similarly to ext4 also XFS had races between hole punching and page faults
+> which could result in data corruption. The fixes were merged in 4.1-rc1 but
+> it might make sense to backport them to older stable releases given the
+> nature of the issue.
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 5928770..42e7368 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -124,18 +124,25 @@ next_bh:
->   */
->  STATIC void
->  xfs_destroy_ioend(
-> -	struct xfs_ioend	*ioend)
-> +	struct xfs_ioend	*ioend,
-> +	int			error)
->  {
->  	struct inode		*inode = ioend->io_inode;
-> -	int			error = ioend->io_error;
-> +	struct bio		*last = ioend->io_bio;
->  	struct bio		*bio, *next;
->  
-> -	for (bio = ioend->io_bio_done; bio; bio = next) {
-> +	for (bio = &ioend->io_inline_bio; bio; bio = next) {
->  		struct bio_vec	*bvec;
->  		int		i;
->  
-> -		next = bio->bi_private;
-> -		bio->bi_private = NULL;
-> +		/*
-> +		 * For the last bio, bi_private points to the ioend, so we
-> +		 * need to explicitly end the iteration here.
-> +		 */
-> +		if (bio == last)
-> +			next = NULL;
-> +		else
-> +			next = bio->bi_private;
->  
->  		/* walk each page on bio, ending page IO on them */
->  		bio_for_each_segment_all(bvec, bio, i)
-> @@ -143,8 +150,6 @@ xfs_destroy_ioend(
->  
->  		bio_put(bio);
+> Relevant fixes are:
+> 
+> de0e8c20ba3a65b0f15040aabbefdc1999876e6b
+> 075a924d45cc69c75a35f20b4912b85aa98b180a
+> e8e9ad42c1f1e1bfbe0e8c32c8cac02e9ebfb7ef
+> 0f9160b444e4de33b65dfcd3b901358a3129461a
+> 723cac48473358939759885a18e8df113ea96138
+> ec56b1f1fdc69599963574ce94cc5693d535dd64
 
-Coverity thinks this is problematic, calling it a
-"Free of address-of expression (BAD_FREE)"
-
-CID 1362192
-
-The issue is that if bio still == io_inline_bio, we are freeing
-memory which was not allocated.  Maybe this needs a:
-
-if (bio != &ioend->io_inline_bio)
-	bio_put(bio);
-
-or is there a better way?
+None of these apply to 3.14-stable, so I'm not going to worry about them
+:)
 
 thanks,
--Eric
+
+greg k-h
 
 _______________________________________________
 xfs mailing list
