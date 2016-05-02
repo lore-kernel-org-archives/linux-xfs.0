@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AC49A7CD3
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 13:10:29 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 555897CDA
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 13:23:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 12916AC008
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 11:10:25 -0700 (PDT)
-Received: from mail-oi0-f46.google.com (mail-oi0-f46.google.com
-	[209.85.218.46]) by cuda.sgi.com with ESMTP id CwsgZCPBZ2OFDh6H
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 May 2016 11:10:22 -0700 (PDT)
-Received: by mail-oi0-f46.google.com with SMTP id x201so200661767oif.3
-	for <xfs@oss.sgi.com>; Mon, 02 May 2016 11:10:22 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1B97930404E
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 11:23:45 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id kC7xMushWPhDfZYz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 02 May 2016 11:23:43 -0700 (PDT)
+Date: Mon, 2 May 2016 20:23:41 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: iomap infrastructure and multipage writes V2
+Message-ID: <20160502182341.GA7077@lst.de>
+References: <1460494382-14547-1-git-send-email-hch@lst.de>
+	<20160413215442.GS567@dastard>
 MIME-Version: 1.0
-In-Reply-To: <572791E1.7000103@plexistor.com>
-References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
-	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
-	<5727753F.6090104@plexistor.com>
-	<CAPcyv4jWPTDbbw6uMFEEt2Kazgw+wb5Pfwroej--uQPE+AtUbA@mail.gmail.com>
-	<57277EDA.9000803@plexistor.com>
-	<CAPcyv4jnz69a3S+XZgLaLojHZmpfoVXGDkJkt_1Q=8kk0gik9w@mail.gmail.com>
-	<572791E1.7000103@plexistor.com>
-Date: Mon, 2 May 2016 11:10:21 -0700
-Message-ID: <CAPcyv4hGV07gpADT32xn=3brEq75P4RJA592vp-1A+jXMQCeOQ@mail.gmail.com>
-Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
-From: Dan Williams <dan.j.williams@intel.com>
+Content-Disposition: inline
+In-Reply-To: <20160413215442.GS567@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,127 +30,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <boaz@plexistor.com>
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <matthew@wil.cx>, Vishal Verma <vishal.l.verma@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, May 2, 2016 at 10:44 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
-> On 05/02/2016 07:49 PM, Dan Williams wrote:
->> On Mon, May 2, 2016 at 9:22 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
->>> On 05/02/2016 07:01 PM, Dan Williams wrote:
->>>> On Mon, May 2, 2016 at 8:41 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
->>>>> On 04/29/2016 12:16 AM, Vishal Verma wrote:
->>>>>> All IO in a dax filesystem used to go through dax_do_io, which cannot
->>>>>> handle media errors, and thus cannot provide a recovery path that can
->>>>>> send a write through the driver to clear errors.
->>>>>>
->>>>>> Add a new iocb flag for DAX, and set it only for DAX mounts. In the IO
->>>>>> path for DAX filesystems, use the same direct_IO path for both DAX and
->>>>>> direct_io iocbs, but use the flags to identify when we are in O_DIRECT
->>>>>> mode vs non O_DIRECT with DAX, and for O_DIRECT, use the conventional
->>>>>> direct_IO path instead of DAX.
->>>>>>
->>>>>
->>>>> Really? What are your thinking here?
->>>>>
->>>>> What about all the current users of O_DIRECT, you have just made them
->>>>> 4 times slower and "less concurrent*" then "buffred io" users. Since
->>>>> direct_IO path will queue an IO request and all.
->>>>> (And if it is not so slow then why do we need dax_do_io at all? [Rhetorical])
->>>>>
->>>>> I hate it that you overload the semantics of a known and expected
->>>>> O_DIRECT flag, for special pmem quirks. This is an incompatible
->>>>> and unrelated overload of the semantics of O_DIRECT.
->>>>
->>>> I think it is the opposite situation, it us undoing the premature
->>>> overloading of O_DIRECT that went in without performance numbers.
->>>
->>> We have tons of measurements. Is not hard to imagine the results though.
->>> Specially the 1000 threads case
->>>
->>>> This implementation clarifies that dax_do_io() handles the lack of a
->>>> page cache for buffered I/O and O_DIRECT behaves as it nominally would
->>>> by sending an I/O to the driver.
->>>
->>>> It has the benefit of matching the
->>>> error semantics of a typical block device where a buffered write could
->>>> hit an error filling the page cache, but an O_DIRECT write potentially
->>>> triggers the drive to remap the block.
->>>>
->>>
->>> I fail to see how in writes the device error semantics regarding remapping of
->>> blocks is any different between buffered and direct IO. As far as the block
->>> device it is the same exact code path. All The big difference is higher in the
->>> VFS.
->>>
->>> And ... So you are willing to sacrifice the 99% hotpath for the sake of the
->>> 1% error path? and piggybacking on poor O_DIRECT.
->>>
->>> Again there are tons of O_DIRECT apps out there, why are you forcing them to
->>> change if they want true pmem performance?
->>
->> This isn't forcing them to change.  This is the path of least surprise
->> as error semantics are identical to a typical block device.  Yes, an
->> application can go faster by switching to the "buffered" / dax_do_io()
->> path it can go even faster to switch to mmap() I/O and use DAX
->> directly.  If we can later optimize the O_DIRECT path to bring it's
->> performance more in line with dax_do_io(), great, but the
->> implementation should be correct first and optimized later.
->>
->
-> Why does it need to be either or. Why not both?
-> And also I disagree if you are correct and dax_do_io is bad and needs fixing
-> than you have broken applications. Because in current model:
->
-> read => -EIO, write-bufferd, sync()
-> gives you the same error semantics as: read => -EIO, write-direct-io
-> In fact this is what the delete, restore from backup model does today.
-> Who said it uses / must direct IO. Actually I think it does not.
+Hi Dave,
 
-The semantic I am talking about preserving is:
+sorry for taking forever to get back to this - travel to LSF and some
+other meetings and a dealine last week didn't leave me any time for
+XFS work.
 
-buffered / unaligned write of a bad sector => -EIO on reading into the
-page cache
+On Thu, Apr 14, 2016 at 07:54:42AM +1000, Dave Chinner wrote:
+> Christoph, have you done any perf testing of this patchset yet to
+> check that it does indeed reduce the CPU overhead of large write
+> operations? I'd also be interested to know if there is any change in
+> overhead for single page (4k) IOs as well, even though I suspect
+> there won't be.
 
-...and that the only guaranteed way to clear an error (assuming the
-block device supports it) is an O_DIRECT write.
+I've done a lot of testing earlier, and this version also looks very
+promising.  On the sort of hardware I have access to now, the 4k
+numbers don't change much, but with 1M writes we both increase the
+write bandwith a little bit and significantly lower the cpu usage.
 
->
-> Two things I can think of which are better:
-> [1]
-> Why not go deeper into the dax io loops, and for any WRITE
-> failed page call bdev_rw_page() to let the pmem.c clear / relocate
-> the error page.
+The simple test that demonstrates this is this, the runs are from
+a 4p VM with 4G of RAM, access to a fast NVMe SSD and a small enough
+data size so that writeback shouldn't throttle the buffered write
+path:
 
-Where do you get the rest of the data to complete a full page write?
+MNT=/mnt
+PERF="perf_3.16"        # soo smart to have tools in the kernel tree..
 
-> So reads return -EIO - is what you wanted no?
+#BS=4k
+#COUNT=65536
+BS=1M
+COUNT=256
 
-That's well understood.  What we are debating is the method to clear
-errors / ask the storage device to remap bad blocks.
+$PERF stat dd if=/dev/zero of=$MNT/testfile bs=$BS count=$COUNT
 
-> writes get a memory error and retry with bdev_rw_page() to let the bdev
-> relocate / clear the error - is what you wanted no?
->
-> In the partial page WRITE case on bad sectors. we can carefully read-modify-write
-> sector-by-sector and zero-out the bad-sectors that could not be read, what else?
-> (Or enhance the bdev_rw_page() API)
+with the baseline for-next tree I get the following bandwith and
+cpu utilization:
 
-See all the previous discussions on why the fallback path is
-problematic to implement.
+BS=4k: ~600MB/s			0.856 CPUs utilized ( +-  0.32% )
+BS=1M: 1.45GB/s			0.820 CPUs utilized ( +-  0.77% )
 
->
-> [2]
-> Only switch to slow O_DIRECT, on presence of errors like you wanted. But I still
-> hate that you overload error semantics with O_DIRECT which does not exist today
-> see above
+with all patches applied:
 
-I still think we're talking past each other on this point.  This patch
-set is not overloading error semantics, it's fixing the error handling
-problem that was introduced in this commit:
+BS=4k:	~610MB/s		0.848 CPUs utilized ( +-  0.36% )
+BS=1M:	~1.55GB/s		0.615 CPUs utilized ( +-  0.80% )
 
-   d475c6346a38 dax,ext2: replace XIP read and write with DAX I/O
+This is also visible in the walltime
 
-...where we started overloading O_DIRECT and dax_do_io() semantics.
+baseline, 4k:
+
+real	0m0.540s
+user	0m0.000s
+sys	0m0.533s
+
+baseline, 1M:
+
+real	0m0.310s
+user	0m0.000s
+sys	0m0.313s
+
+multipage, 4k:
+
+real	0m0.541s
+user	0m0.010s
+sys	0m0.527s
+
+multipage, 1M:
+
+real	0m0.272s
+user	0m0.000s
+sys	0m0.263s
 
 _______________________________________________
 xfs mailing list
