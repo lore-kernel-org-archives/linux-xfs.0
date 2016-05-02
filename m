@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 503297CBA
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 09:57:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 118C68F8035
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 07:57:55 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 5SjYtBsBqE2dIaLw (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 May 2016 07:57:53 -0700 (PDT)
-Date: Mon, 2 May 2016 07:57:46 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v5 5/8] fs: xfs: replace BIO_MAX_SECTORS with BIO_MAX_PAGES
-Message-ID: <20160502145746.GH20589@infradead.org>
-References: <1460928615-20894-1-git-send-email-ming.lei@canonical.com>
-	<1460928615-20894-6-git-send-email-ming.lei@canonical.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 876937CB8
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 10:18:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5855D304066
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 08:18:41 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xOxgwA8ZkXikWs8J (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 02 May 2016 08:18:40 -0700 (PDT)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
+	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
+	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
+	<20160420205923.GA24797@infradead.org>
+	<1461434916.3695.7.camel@intel.com>
+	<20160425083114.GA27556@infradead.org>
+	<1461604476.3106.12.camel@intel.com> <20160425232552.GD18496@dastard>
+	<1461628381.1421.24.camel@intel.com> <20160426004155.GF18496@dastard>
+Date: Mon, 02 May 2016 11:18:36 -0400
+In-Reply-To: <20160426004155.GF18496@dastard> (Dave Chinner's message of "Tue,
+	26 Apr 2016 10:41:55 +1000")
+Message-ID: <x49pot4ebeb.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1460928615-20894-6-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +32,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ming Lei <ming.lei@canonical.com>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, Jens Axboe <axboe@fb.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Dave Chinner <david@fromorbit.com>, "Dan J. Williams" <dan.j.williams@intel.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "Verma,
+	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
 
-On Mon, Apr 18, 2016 at 05:29:54AM +0800, Ming Lei wrote:
-> BIO_MAX_PAGES is used as maximum count of bvecs, so
-> replace BIO_MAX_SECTORS with BIO_MAX_PAGES since
-> BIO_MAX_SECTORS is to be removed.
-> 
-> Signed-off-by: Ming Lei <ming.lei@canonical.com>
-
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cml0ZXM6Cgo+IE9uIE1vbiwgQXBy
+IDI1LCAyMDE2IGF0IDExOjUzOjEzUE0gKzAwMDAsIFZlcm1hLCBWaXNoYWwgTCB3cm90ZToKPj4g
+T24gVHVlLCAyMDE2LTA0LTI2IGF0IDA5OjI1ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+WW91J3JlIGFzc3VtaW5nIHRoYXQgb25seSB0aGUgREFYIGF3YXJlIGFwcGxpY2F0aW9uIGFjY2Vz
+c2VzIGl0J3MKPiBmaWxlcy4gIHVzZXJzLCBiYWNrdXAgcHJvZ3JhbXMsIGRhdGEgcmVwbGljYXRv
+cnMsIGZpbGV5c3RlbQo+IHJlLW9yZ2FuaXNlcnMgKGUuZy4gIGRlZnJhZ21lbnRlcnMpIGV0YyBh
+bGwgbWF5IGFjY2VzcyB0aGUgZmlsZXMgYW5kCj4gdGhleSBtYXkgdGhyb3cgZXJyb3JzLiBXaGF0
+IHRoZW4/CgpJJ20gbm90IHN1cmUgaG93IHRoaXMgaXMgYW55IGRpZmZlcmVudCBmcm9tIHJlZ3Vs
+YXIgc3RvcmFnZS4gIElmIGFuCmFwcGxpY2F0aW9uIGdldHMgRUlPLCBpdCdzIHVwIHRvIHRoZSBh
+cHAgdG8gZGVjaWRlIHdoYXQgdG8gZG8gd2l0aCB0aGF0LgoKPj4gPiBXaGVyZSBkb2VzIHRoZSBh
+cHBsaWNhdGlvbiBmaW5kIHRoZSBkYXRhIHRoYXQgd2FzIGxvc3QgdG8gYmUgYWJsZSB0bwo+PiA+
+IHJld3JpdGUgaXQ/Cj4+IAo+PiBUaGUgZGF0YSB0aGF0IHdhcyBsb3N0IGlzIGdvbmUgLS0gdGhp
+cyBhc3N1bWVzIHRoZSBhcHBsaWNhdGlvbiBoYXMgc29tZQo+PiBhYmlsaXR5IHRvIHJlY292ZXIg
+dXNpbmcgYSBqb3VybmFsL2xvZyBvciBvdGhlciByZWR1bmRhbmN5IC0geWVzLCBhdCB0aGUKPj4g
+YXBwbGljYXRpb24gbGF5ZXIuIElmIGl0IGRvZXNuJ3QgaGF2ZSB0aGlzIHNvcnQgb2YgY2FwYWJp
+bGl0eSwgdGhlIG9ubHkKPj4gb3B0aW9uIGlzIHRvIHJlc3RvcmUgZmlsZXMgZnJvbSBhIGJhY2t1
+cC9taXJyb3IuCj4KPiBTbyB0aGUgYXJjaGl0ZWN0dXJlIGhhcyBhIGJ1aWx0IGluIGFzc3VtcHRp
+b24gdGhhdCBvbmx5IHVzZXJzcGFjZQo+IGNhbiBoYW5kbGUgZGF0YSBsb3NzPwoKUmVtZW1iZXIg
+dGhhdCB0aGUgcHJvcG9zZWQgcHJvZ3JhbW1pbmcgbW9kZWwgY29tcGxldGVseSBieXBhc3NlcyB0
+aGUKa2VybmVsLCBzbyB5ZXMsIGl0IGlzIGV4cGVjdGVkIHRoYXQgdXNlci1zcGFjZSB3aWxsIGhh
+dmUgdG8gZGVhbCB3aXRoCnRoZSBwcm9ibGVtLgoKPiBXaGF0IGFib3V0IGZpbGVzeXRzZW1zIGxp
+a2UgTk9WQSwgdGhhdCB1c2UgbG9nIHN0cnVjdHVyZWQgZGVzaWduIHRvCj4gcHJvdmlkZSBEQVgg
+dy8gdXBkYXRlIGF0b21pY2l0eSBhbmQgY2FuIHBvdGVudGlhbGx5IGFsc28gcHJvdmlkZQo+IHJl
+ZHVuZGFuY3kvcmVwYWlyIHRocm91Z2ggdGhlIHNhbWUgbWVjaGFuaXNtcz8gV29uJ3QgcG1lbSBu
+YXRpdmUKPiBmaWxlc3lzdGVtcyB3aXRoIGJ1aWx0IGluIGRhdGEgcHJvdGVjdGlvbiBmZWF0dXJl
+cyBsaWtlIHRoaXMgcmVtb3ZlCj4gdGhlIG5lZWQgZm9yIGFkZGluZyBhbGwgdGhpcyB0byB1c2Vy
+c3BhY2UgYXBwbGljYXRpb25zPwoKSSBkb24ndCB0aGluayB3ZSdsbCAvb25seS8gc3VwcG9ydCBO
+T1ZBIGZvciBwbWVtLiAgU28gd2UnbGwgaGF2ZSB0byBkZWFsCndpdGggdGhpcyBmb3IgZXhpc3Rp
+bmcgZmlsZSBzeXN0ZW1zLCByaWdodD8KCj4gSWYgc28sIHNob3VsZG4ndCB0aGF0IGJlIHRoZSBm
+b2N1cyBvZiBkZXZlbG9wbWVudCByYWh0ZXIgdGhhbgo+IHBsYWNpbmcgdGhlIGJ1cmRlbiBvbiB1
+c2Vyc3BhY2UgYXBwcyB0byBoYW5kbGUgc3RvcmFnZSByZXBhaXIKPiBzaXR1YXRpb25zPwoKSXQg
+cmVhbGx5IGRlcGVuZHMgb24gdGhlIHByb2dyYW1taW5nIG1vZGVsLiAgSW4gdGhlIG1vZGVsIFZp
+c2hhbCBpcwp0YWxraW5nIGFib3V0LCBlaXRoZXIgdGhlIGFwcGxpY2F0aW9ucyB0aGVtc2VsdmVz
+IG9yIHRoZSBsaWJyYXJpZXMgdGhleQpsaW5rIHRvIGFyZSBleHBlY3RlZCB0byBpbXBsZW1lbnQg
+dGhlIHJlZHVuZGFuY2llcyB3aGVyZSBuZWNlc3NhcnkuCgo+PiA+IFRoZXJlJ3MgYW4gaW1wbGlj
+aXQgYXNzdW1wdGlvbiB0aGF0IGFwcGxpY2F0aW9ucyB3aWxsIGtlZXAgcmVkdW5kYW50Cj4+ID4g
+Y29waWVzIG9mIHRoZWlyIGRhdGEgYXQgdGhlIC9hcHBsaWNhdGlvbiBsYXllci8gYW5kIGJlIGFi
+bGUgdG8KPj4gPiBhdXRvbWF0aWNhbGx5IHJlcGFpciBpdD8KClRoYXQncyBvbmUgd2F5IHRvIGRv
+IHRoaW5ncy4gIEl0IHJlYWxseSBkZXBlbmRzIG9uIHRoZSBhcHBsaWNhdGlvbiB3aGF0Cml0IHdp
+bGwgZG8gZm9yIHJlY292ZXJ5LgoKPj4gPiBBbmQgdGhlbiB0aGVyZSdzIHRoZSBpbXBsaWNpdCBh
+c3N1bXB0aW9uIHRoYXQgaXQgd2lsbCB1bmxpbmsgYW5kCj4+ID4gZnJlZSB0aGUgZW50aXJlIGZp
+bGUgYmVmb3JlIHdyaXRpbmcgYSBuZXcgY29weQoKSSB0aGluayBWaXNoYWwgd2FzIHJlZmVycmlu
+ZyB0byByZXN0b3JpbmcgZnJvbSBiYWNrdXAuICBjcCBpdHNlbGYgd2lsbAp0cnVuY2F0ZSB0aGUg
+ZmlsZSBiZWZvcmUgb3ZlcndyaXRpbmcsIGlpcmMuCgo+PiBUbyBzdW1tYXJpemUsIHRoZSB0d28g
+Y2FzZXMgd2Ugd2FudCB0byBoYW5kbGUgYXJlOgo+PiAxLiBBcHBsaWNhdGlvbiBoYXMgaW5idWls
+dCByZWNvdmVyeToKPj4gwqAgLSBoaXRzIGJhZGJsb2NrCj4+IMKgIC0gZmlndXJlcyBvdXQgaXQg
+aXMgYWJsZSB0byByZWNvdmVyIHRoZSBkYXRhCj4+IMKgIC0gaGFuZGxlcyBTSUdCVVMgb3IgRUlP
+Cj4+IMKgIC0gZG9lcyBhIChzZWN0b3IgYWxpZ25lZCkgd3JpdGUoKSB0byByZXN0b3JlIHRoZSBk
+YXRhCj4KPiBUaGUgImZpZ3VyZXMgb3V0IiBzdGVwIGhlcmUgaXMgd2hlcmUgPjk1JSBvZiB0aGUg
+d29yayB3ZSdkIGhhdmUgdG8KPiBkbyBpcy4gQW5kIHRoYXQncyBpbiBmaWxlc3lzdGVtIGFuZCBi
+bG9jayBsYXllciBjb2RlLCBub3QKPiB1c2Vyc3BhY2UsIGFuZCB1c2Vyc3BhY2UgY2FuJ3QgZG8g
+dGhhdCB3b3JrIGluIGEgc2lnbmFsIGhhbmRsZXIuCj4gQW5kIGl0ICBjYW4gc3RpbGwgZmFsbCBk
+b3duIHRvIHRoZSBzZWNvbmQgY2FzZSB3aGVuIHRoZSBhcHBsaWNhdGlvbgo+IGRvZXNuJ3QgaGF2
+ZSBhbm90aGVyIGNvcHkgb2YgdGhlIGRhdGEgc29tZXdoZXJlLgoKSSByZWFkIHRoYXQgImZpZ3Vy
+ZXMgb3V0IiBzdGVwIGFzIHRoZSBhcHBsaWNhdGlvbiBkZXRlcm1pbmluZyB3aGV0aGVyIG9yCm5v
+dCBpdCBoYWQgYSByZWR1bmRhbnQgY29weS4KCj4gRldJVywgd2UgZG9uJ3QgaGF2ZSBhIERBWCBl
+bmFibGVkIGZpbGVzeXN0ZW0gdGhhdCBjYW4gZG8KPiByZXZlcnNlIGJsb2NrIG1hcHBpbmcsIHNv
+IHdlJ3JlIGEgeWVhciBvciB0d28gYXdheSBmcm9tIHRoaXMgYmVpbmcgYQo+IHdvcmthYmxlIHBy
+b2R1Y3Rpb24gc29sdXRpb24gZnJvbSB0aGUgZmlsZXN5c3RlbSBwZXJzcGVjdGl2ZS4gQW5kCj4g
+QUZBSUNULCBpdCdzIG5vdCBldmVuIG9uIHRoZSByb2FkbWFwIGZvciBkbS9tZCBsYXllcnMuCgpE
+byB3ZSBldmVuIG5lZWQgdGhhdD8gIFdoYXQgaWYgd2UgYWRkZWQgYW4gRklFTUFQIGZsYWcgZm9y
+IGRldGVybWluaW5nCmJhZCBibG9ja3MuICBUaGUgZmlsZSBzeXN0ZW0gY291bGQgc2ltcGx5IHdh
+bGsgdGhlIGxpc3Qgb2YgZXh0ZW50cyBmb3IKdGhlIGZpbGUgYW5kIGNoZWNrIHRoZSBjb3JyZXNw
+b25kaW5nIGRpc2sgYmxvY2tzLiAgTm8gcmV2ZXJzZSBtYXBwaW5nCnJlcXVpcmVkLiAgQWxzbyBu
+b3RlIHRoYXQgRE0vTUQgZG9uJ3Qgc3VwcG9ydCBkaXJlY3RfYWNjZXNzKCksIGVpdGhlciwKc28g
+SSBkb24ndCB0aGluayB0aGV5J3JlIHJlbGV2YW50IGZvciB0aGlzIGRpc2N1c3Npb24uCgo+PiAy
+LiBBcHBsaWNhdGlvbiBkb2Vzbid0IGhhdmUgYW55IGluYnVpbHQgcmVjb3ZlcnkgbWVjaGFuaXNt
+Cj4+IMKgIC0gaGl0cyBiYWRibG9jawo+PiDCoCAtIGdldHMgU0lHQlVTIChvciBFSU8pIGFuZCBj
+cmFzaGVzCj4+IMKgIC0gU3lzYWRtaW4gcmVzdG9yZXMgZmlsZSBmcm9tIGJhY2t1cAo+Cj4gV2hp
+Y2ggaXMgbm8gZGlmZmVyZW50IHRvIGFuIGV4aXN0aW5nIG5vbi1EQVggYXBwbGljYXRpb24gZ2V0
+dGluZyBhbgo+IEVJTy9zaWdidXMgZnJvbSBjdXJyZW50IHN0b3JhZ2UgdGVjaG5vbG9naWVzLgo+
+Cj4gRXhjZXB0OiBpbiB0aGUgZXhpc3Rpbmcgc3RvcmFnZSBzdGFjaywgcmVkdW5kYW5jeSBhbmQg
+Y29ycmVjdGlvbiBoYXMKPiBhbHJlYWR5IGhhZCB0byBoYXZlIGZhaWxlZCBmb3IgdGhlIGFwcGxp
+Y2F0aW9uIHRvIHNlZSBzdWNoIGFuIGVycm9yLgo+IEhlbmNlIHRoaXMgaXMgbm9ybWFsbHkgY29u
+c2lkZXJlZCBhIERSIGNhc2UgYXMgdGhlcmUncyBoYWQgdG8gYmUKPiBjYXNjYWRpbmcgZmFpbHVy
+ZXMgKGUuZy4gIG11bHRpcGxlIGRpc2sgZmFpbHVyZXMgaW4gYSBSQUlEKSB0byBnZXQKPiB0byB0
+aGlzIHN0YWdlLCBub3QgYSBzaW5nbGUgZXJyb3IgaW4gYSBzaW5nbGUgc2VjdG9yIGluCj4gbm9u
+LXJlZHVuZGFudCBzdG9yYWdlLgo+Cj4gV2UgbmVlZCBzb21lIGZvcm0gb2YgcmVkdW5kYW5jeSBh
+bmQgY29ycmVjdGlvbiBpbiB0aGUgUE1FTSBzdGFjayB0bwo+IHByZXZlbnQgc2luZ2xlIHNlY3Rv
+ciBlcnJvcnMgZnJvbSB0YWtpbmcgZG93biBzZXJ2aWNlcyB1bnRpbCBhbgo+IGFkbWluaXN0cmF0
+b3IgY2FuIGNvcnJlY3QgdGhlIHByb2JsZW0uIEknbSB0cnlpbmcgdG8gdW5kZXJzdGFuZAo+IHdo
+ZXJlIHRoaXMgaXMgc3VwcG9zZWQgdG8gZml0IGludG8gdGhlIHBpY3R1cmUgLSBhdCB0aGlzIHBv
+aW50IEkKPiByZWFsbHkgZG9uJ3QgdGhpbmsgdXNlcnNwYWNlIGFwcGxpY2F0aW9ucyBhcmUgZ29p
+bmcgdG8gYmUgYWJsZSB0byBkbwo+IHRoaXMgcmVsaWFibHkuLi4uCgpOb3QgYWxsIHN0b3JhZ2Ug
+aXMgY29uZmlndXJlZCBpbnRvIGEgUkFJRCB2b2x1bWUsIGFuZCBpbiBzb21lIGluc3RhbmNlcywK
+dGhlIGFwcGxpY2F0aW9uIGlzIGJldHRlciBwb3NpdGlvbmVkIHRvIHJlY292ZXIgdGhlIGRhdGEg
+KGdsdXN0ZXIvY2VwaCwKZm9yIGV4YW1wbGUpLiAgSXQgcmVhbGx5IGNvbWVzIGRvd24gdG8gd2hl
+dGhlciBhcHBsaWNhdGlvbnMgb3IgbGlicmFyaWVzCndpbGwgd2FudCB0byBpbXBsZW1lbnQgcmVk
+dW5kYW5jeSB0aGVtc2VsdmVzIGluIG9yZGVyIHRvIGdldCBhIGJ1bXAgaW4KcGVyZm9ybWFuY2Ug
+Ynkgbm90IGdvaW5nIHRocm91Z2ggdGhlIGtlcm5lbC4gIEFuZCBJIHRoaW5rIEkga25vdyB3aGF0
+CnlvdXIgb3BpbmlvbiBpcyBvbiB0aGF0IGZyb250LiAgOi0pCgpTcGVha2luZyBvZiB3aGljaCwg
+ZGlkIHlvdSBzZWUgdGhlIG51bWJlcnMgRGFuIHNoYXJlZCBhdCBMU0Ygb24gaG93IG11Y2gKb3Zl
+cmhlYWQgdGhlcmUgaXMgaW4gY2FsbGluZyBpbnRvIHRoZSBrZXJuZWwgZm9yIHN5bmNpbmc/ICBE
+YW4sIGNhbi9kaWQKeW91IHB1Ymxpc2ggdGhhdCBzcHJlYWRzaGVldCBzb21ld2hlcmU/CgpDaGVl
+cnMsCkplZmYKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
+bWFuL2xpc3RpbmZvL3hmcwo=
