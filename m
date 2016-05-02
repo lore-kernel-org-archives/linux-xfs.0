@@ -1,33 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 851797CD7
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 12:53:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DEE85AC002
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 10:53:28 -0700 (PDT)
-Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
-	[209.85.218.49]) by cuda.sgi.com with ESMTP id PjWAuY4gCUIPnHw6
+	by oss.sgi.com (Postfix) with ESMTP id AC49A7CD3
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 13:10:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12916AC008
+	for <xfs@oss.sgi.com>; Mon,  2 May 2016 11:10:25 -0700 (PDT)
+Received: from mail-oi0-f46.google.com (mail-oi0-f46.google.com
+	[209.85.218.46]) by cuda.sgi.com with ESMTP id CwsgZCPBZ2OFDh6H
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 May 2016 10:53:26 -0700 (PDT)
-Received: by mail-oi0-f49.google.com with SMTP id x201so199989214oif.3
-	for <xfs@oss.sgi.com>; Mon, 02 May 2016 10:53:26 -0700 (PDT)
+	Mon, 02 May 2016 11:10:22 -0700 (PDT)
+Received: by mail-oi0-f46.google.com with SMTP id x201so200661767oif.3
+	for <xfs@oss.sgi.com>; Mon, 02 May 2016 11:10:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <x49pot4ebeb.fsf@segfault.boston.devel.redhat.com>
-References: <1459303190-20072-1-git-send-email-vishal.l.verma@intel.com>
-	<1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard>
-	<1461628381.1421.24.camel@intel.com>
-	<20160426004155.GF18496@dastard>
-	<x49pot4ebeb.fsf@segfault.boston.devel.redhat.com>
-Date: Mon, 2 May 2016 10:53:25 -0700
-Message-ID: <CAPcyv4jfUVXoge5D+cBY1Ph=t60165sp6sF_QFZUbFv+cNcdHg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
+In-Reply-To: <572791E1.7000103@plexistor.com>
+References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
+	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
+	<5727753F.6090104@plexistor.com>
+	<CAPcyv4jWPTDbbw6uMFEEt2Kazgw+wb5Pfwroej--uQPE+AtUbA@mail.gmail.com>
+	<57277EDA.9000803@plexistor.com>
+	<CAPcyv4jnz69a3S+XZgLaLojHZmpfoVXGDkJkt_1Q=8kk0gik9w@mail.gmail.com>
+	<572791E1.7000103@plexistor.com>
+Date: Mon, 2 May 2016 11:10:21 -0700
+Message-ID: <CAPcyv4hGV07gpADT32xn=3brEq75P4RJA592vp-1A+jXMQCeOQ@mail.gmail.com>
+Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
 From: Dan Williams <dan.j.williams@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -41,54 +37,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "Verma,
-	Vishal L" <vishal.l.verma@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+To: Boaz Harrosh <boaz@plexistor.com>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <matthew@wil.cx>, Vishal Verma <vishal.l.verma@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Mon, May 2, 2016 at 8:18 AM, Jeff Moyer <jmoyer@redhat.com> wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-[..]
->> We need some form of redundancy and correction in the PMEM stack to
->> prevent single sector errors from taking down services until an
->> administrator can correct the problem. I'm trying to understand
->> where this is supposed to fit into the picture - at this point I
->> really don't think userspace applications are going to be able to do
->> this reliably....
+On Mon, May 2, 2016 at 10:44 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
+> On 05/02/2016 07:49 PM, Dan Williams wrote:
+>> On Mon, May 2, 2016 at 9:22 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
+>>> On 05/02/2016 07:01 PM, Dan Williams wrote:
+>>>> On Mon, May 2, 2016 at 8:41 AM, Boaz Harrosh <boaz@plexistor.com> wrote:
+>>>>> On 04/29/2016 12:16 AM, Vishal Verma wrote:
+>>>>>> All IO in a dax filesystem used to go through dax_do_io, which cannot
+>>>>>> handle media errors, and thus cannot provide a recovery path that can
+>>>>>> send a write through the driver to clear errors.
+>>>>>>
+>>>>>> Add a new iocb flag for DAX, and set it only for DAX mounts. In the IO
+>>>>>> path for DAX filesystems, use the same direct_IO path for both DAX and
+>>>>>> direct_io iocbs, but use the flags to identify when we are in O_DIRECT
+>>>>>> mode vs non O_DIRECT with DAX, and for O_DIRECT, use the conventional
+>>>>>> direct_IO path instead of DAX.
+>>>>>>
+>>>>>
+>>>>> Really? What are your thinking here?
+>>>>>
+>>>>> What about all the current users of O_DIRECT, you have just made them
+>>>>> 4 times slower and "less concurrent*" then "buffred io" users. Since
+>>>>> direct_IO path will queue an IO request and all.
+>>>>> (And if it is not so slow then why do we need dax_do_io at all? [Rhetorical])
+>>>>>
+>>>>> I hate it that you overload the semantics of a known and expected
+>>>>> O_DIRECT flag, for special pmem quirks. This is an incompatible
+>>>>> and unrelated overload of the semantics of O_DIRECT.
+>>>>
+>>>> I think it is the opposite situation, it us undoing the premature
+>>>> overloading of O_DIRECT that went in without performance numbers.
+>>>
+>>> We have tons of measurements. Is not hard to imagine the results though.
+>>> Specially the 1000 threads case
+>>>
+>>>> This implementation clarifies that dax_do_io() handles the lack of a
+>>>> page cache for buffered I/O and O_DIRECT behaves as it nominally would
+>>>> by sending an I/O to the driver.
+>>>
+>>>> It has the benefit of matching the
+>>>> error semantics of a typical block device where a buffered write could
+>>>> hit an error filling the page cache, but an O_DIRECT write potentially
+>>>> triggers the drive to remap the block.
+>>>>
+>>>
+>>> I fail to see how in writes the device error semantics regarding remapping of
+>>> blocks is any different between buffered and direct IO. As far as the block
+>>> device it is the same exact code path. All The big difference is higher in the
+>>> VFS.
+>>>
+>>> And ... So you are willing to sacrifice the 99% hotpath for the sake of the
+>>> 1% error path? and piggybacking on poor O_DIRECT.
+>>>
+>>> Again there are tons of O_DIRECT apps out there, why are you forcing them to
+>>> change if they want true pmem performance?
+>>
+>> This isn't forcing them to change.  This is the path of least surprise
+>> as error semantics are identical to a typical block device.  Yes, an
+>> application can go faster by switching to the "buffered" / dax_do_io()
+>> path it can go even faster to switch to mmap() I/O and use DAX
+>> directly.  If we can later optimize the O_DIRECT path to bring it's
+>> performance more in line with dax_do_io(), great, but the
+>> implementation should be correct first and optimized later.
+>>
 >
-> Not all storage is configured into a RAID volume, and in some instances,
-> the application is better positioned to recover the data (gluster/ceph,
-> for example).  It really comes down to whether applications or libraries
-> will want to implement redundancy themselves in order to get a bump in
-> performance by not going through the kernel.  And I think I know what
-> your opinion is on that front.  :-)
+> Why does it need to be either or. Why not both?
+> And also I disagree if you are correct and dax_do_io is bad and needs fixing
+> than you have broken applications. Because in current model:
 >
-> Speaking of which, did you see the numbers Dan shared at LSF on how much
-> overhead there is in calling into the kernel for syncing?  Dan, can/did
-> you publish that spreadsheet somewhere?
+> read => -EIO, write-bufferd, sync()
+> gives you the same error semantics as: read => -EIO, write-direct-io
+> In fact this is what the delete, restore from backup model does today.
+> Who said it uses / must direct IO. Actually I think it does not.
 
-Here it is:
+The semantic I am talking about preserving is:
 
-https://docs.google.com/spreadsheets/d/1pwr9psy6vtB9DOsc2bUdXevJRz5Guf6laZ4DaZlkhoo/edit?usp=sharing
+buffered / unaligned write of a bad sector => -EIO on reading into the
+page cache
 
-On the "Filtered" tab I have some of the comparisons where:
+...and that the only guaranteed way to clear an error (assuming the
+block device supports it) is an O_DIRECT write.
 
-noop => don't call msync and don't flush caches in userspace
+>
+> Two things I can think of which are better:
+> [1]
+> Why not go deeper into the dax io loops, and for any WRITE
+> failed page call bdev_rw_page() to let the pmem.c clear / relocate
+> the error page.
 
-persist => cache flushing only in userspace and only on individual cache lines
+Where do you get the rest of the data to complete a full page write?
 
-persist_4k => cache flushing only in userspace, but flushing is
-performed in 4K aligned units
+> So reads return -EIO - is what you wanted no?
 
-msync => same granularity flushing as the 'persist' case, but the
-kernel internally promotes this to a 4K sized / aligned flush
+That's well understood.  What we are debating is the method to clear
+errors / ask the storage device to remap bad blocks.
 
-msync_0 => synthetic case where msync() returns immediately and does
-no other work
+> writes get a memory error and retry with bdev_rw_page() to let the bdev
+> relocate / clear the error - is what you wanted no?
+>
+> In the partial page WRITE case on bad sectors. we can carefully read-modify-write
+> sector-by-sector and zero-out the bad-sectors that could not be read, what else?
+> (Or enhance the bdev_rw_page() API)
 
-The takeaway is that msync() is 9-10x slower than userspace cache management.
+See all the previous discussions on why the fallback path is
+problematic to implement.
 
-Let me know if there are any questions and I can add an NVML developer
-to this thread...
+>
+> [2]
+> Only switch to slow O_DIRECT, on presence of errors like you wanted. But I still
+> hate that you overload error semantics with O_DIRECT which does not exist today
+> see above
+
+I still think we're talking past each other on this point.  This patch
+set is not overloading error semantics, it's fixing the error handling
+problem that was introduced in this commit:
+
+   d475c6346a38 dax,ext2: replace XIP read and write with DAX I/O
+
+...where we started overloading O_DIRECT and dax_do_io() semantics.
 
 _______________________________________________
 xfs mailing list
