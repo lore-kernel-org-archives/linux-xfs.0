@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C5387CA6
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 15:44:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 629EE8F8033
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 13:44:09 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gCrUqChFwDttQ6kr (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 13:44:08 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 00/42] v7: separate operations from flags in the
-	bio/request structs
-References: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-Date: Tue, 03 May 2016 16:44:02 -0400
-In-Reply-To: <1460747777-8479-1-git-send-email-mchristi@redhat.com>
-	(mchristi@redhat.com's message of "Fri, 15 Apr 2016 14:15:35 -0500")
-Message-ID: <x49d1p2c1nx.fsf@segfault.boston.devel.redhat.com>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 50C407CF8
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 06EBA8F8035
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:47 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id aIHgJMbF0HZ8BBV3 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:44 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/14] xfs: split xfs_free_file_space in manageable pieces
+Date: Tue,  3 May 2016 23:29:06 +0200
+Message-Id: <1462310947-16132-14-git-send-email-hch@lst.de>
+In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
+References: <1462310947-16132-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +23,317 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: mchristi@redhat.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-mchristi@redhat.com writes:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_bmap_util.c | 252 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 137 insertions(+), 115 deletions(-)
 
-> The following patches begin to cleanup the request->cmd_flags and
-> bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-> attributes and state of the request. For bi_rw we use it for similar
-> info and also the priority but then also have another bi_flags field
-> for state. At some point, we abused them so much we just made cmd_flags
-> 64 bits, so we could add more.
->
-> The following patches seperate the operation (read, write discard,
-> flush, etc) from cmd_flags/bi_rw.
->
-> This patchset was made against linux-next from today April 15
-> (git tag next-20160415).
->
-> I put a git tree here:
-> https://github.com/mikechristie/linux-kernel.git
-> The patches are in the op branch.
-
-Hi, Mike,
-
-That git tree doesn't seem to exist.  I did manage to apply your patch
-set on top of next-20160415, though.
-
-So... what testing did you do? ;-) I ran into the following problems:
-- git clone fails
-- yum segfaults
-- many blktrace/blkparse issues, including incorrect cpu recorded in
-  traces, null task names, and blkparse outputting nothing for a trace
-  file several gigabytes in size.
-
-After that, I decided to back out your patches and test the base
-linux-next kernel.  That kernel has none of those issues.
-
-So, either I'm missing some dependencies, or I think we've got some
-issues to iron out before this thing goes in.  Before I dig any further,
-am I missing something?
-
-Cheers,
-Jeff
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 3246ebc..5d030b0 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1191,30 +1191,132 @@ xfs_zero_remaining_bytes(
+ 	return error;
+ }
+ 
++static int
++xfs_unmap_extent(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		startoffset_fsb,
++	xfs_filblks_t		len_fsb,
++	int			*done)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct xfs_bmap_free	free_list;
++	xfs_fsblock_t		firstfsb;
++	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++	int			error;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
++	if (error) {
++		ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot, ip->i_gdquot,
++			ip->i_pdquot, resblks, 0, XFS_QMOPT_RES_REGBLKS);
++	if (error)
++		goto out_trans_cancel;
++
++	xfs_trans_ijoin(tp, ip, 0);
++
++	xfs_bmap_init(&free_list, &firstfsb);
++	error = xfs_bunmapi(tp, ip, startoffset_fsb, len_fsb, 0, 2, &firstfsb,
++			&free_list, done);
++	if (error)
++		goto out_bmap_cancel;
++
++	error = xfs_bmap_finish(&tp, &free_list, NULL);
++	if (error)
++		goto out_bmap_cancel;
++
++	error = xfs_trans_commit(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++
++out_bmap_cancel:
++	xfs_bmap_cancel(&free_list);
++out_trans_cancel:
++	xfs_trans_cancel(tp);
++	goto out_unlock;
++}
++
++static int
++xfs_adjust_extent_unmap_boundaries(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		*startoffset_fsb,
++	xfs_fileoff_t		*endoffset_fsb)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_bmbt_irec	imap;
++	int			nimap, error;
++	xfs_extlen_t		mod = 0;
++
++	nimap = 1;
++	error = xfs_bmapi_read(ip, *startoffset_fsb, 1, &imap, &nimap, 0);
++	if (error)
++		return error;
++
++	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
++		xfs_daddr_t	block;
++
++		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++		block = imap.br_startblock;
++		mod = do_div(block, mp->m_sb.sb_rextsize);
++		if (mod)
++			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
++	}
++
++	nimap = 1;
++	error = xfs_bmapi_read(ip, *endoffset_fsb - 1, 1, &imap, &nimap, 0);
++	if (error)
++		return error;
++
++	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
++		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++		mod++;
++		if (mod && mod != mp->m_sb.sb_rextsize)
++			*endoffset_fsb -= mod;
++	}
++
++	return 0;
++}
++
++static int
++xfs_flush_unmap_range(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	xfs_off_t		rounding, start, end;
++	int			error;
++
++	/* wait for the completion of any pending DIOs */
++	inode_dio_wait(inode);
++
++	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_SIZE);
++	start = round_down(offset, rounding);
++	end = round_up(offset + len, rounding) - 1;
++
++	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
++	if (error)
++		return error;
++	truncate_pagecache_range(inode, start, end);
++	return 0;
++}
++
+ int
+ xfs_free_file_space(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+ 	xfs_off_t		len)
+ {
+-	int			done;
+-	xfs_fileoff_t		endoffset_fsb;
+-	int			error;
+-	xfs_fsblock_t		firstfsb;
+-	xfs_bmap_free_t		free_list;
+-	xfs_bmbt_irec_t		imap;
+-	xfs_off_t		ioffset;
+-	xfs_off_t		iendoffset;
+-	xfs_extlen_t		mod=0;
+-	xfs_mount_t		*mp;
+-	int			nimap;
+-	uint			resblks;
+-	xfs_off_t		rounding;
+-	int			rt;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		startoffset_fsb;
+-	xfs_trans_t		*tp;
+-
+-	mp = ip->i_mount;
++	xfs_fileoff_t		endoffset_fsb;
++	int			done, error;
+ 
+ 	trace_xfs_free_file_space(ip);
+ 
+@@ -1222,60 +1324,30 @@ xfs_free_file_space(
+ 	if (error)
+ 		return error;
+ 
+-	error = 0;
+ 	if (len <= 0)	/* if nothing being freed */
+-		return error;
+-	rt = XFS_IS_REALTIME_INODE(ip);
+-	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
+-	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+-
+-	/* wait for the completion of any pending DIOs */
+-	inode_dio_wait(VFS_I(ip));
++		return 0;
+ 
+-	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+-	ioffset = round_down(offset, rounding);
+-	iendoffset = round_up(offset + len, rounding) - 1;
+-	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping, ioffset,
+-					     iendoffset);
++	error = xfs_flush_unmap_range(ip, offset, len);
+ 	if (error)
+-		goto out;
+-	truncate_pagecache_range(VFS_I(ip), ioffset, iendoffset);
++		return error;
++
++	startoffset_fsb = XFS_B_TO_FSB(mp, offset);
++	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+ 
+ 	/*
+-	 * Need to zero the stuff we're not freeing, on disk.
+-	 * If it's a realtime file & can't use unwritten extents then we
+-	 * actually need to zero the extent edges.  Otherwise xfs_bunmapi
+-	 * will take care of it for us.
++	 * Need to zero the stuff we're not freeing, on disk.  If it's a RT file
++	 * and we can't use unwritten extents then we actually need to ensure
++	 * to zero the whole extent, otherwise we just need to take of block
++	 * boundaries, and xfs_bunmapi will handle the rest.
+ 	 */
+-	if (rt && !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+-		nimap = 1;
+-		error = xfs_bmapi_read(ip, startoffset_fsb, 1,
+-					&imap, &nimap, 0);
++	if (XFS_IS_REALTIME_INODE(ip) &&
++	    !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
++		error = xfs_adjust_extent_unmap_boundaries(ip, &startoffset_fsb,
++				&endoffset_fsb);
+ 		if (error)
+-			goto out;
+-		ASSERT(nimap == 0 || nimap == 1);
+-		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+-			xfs_daddr_t	block;
+-
+-			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-			block = imap.br_startblock;
+-			mod = do_div(block, mp->m_sb.sb_rextsize);
+-			if (mod)
+-				startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+-		}
+-		nimap = 1;
+-		error = xfs_bmapi_read(ip, endoffset_fsb - 1, 1,
+-					&imap, &nimap, 0);
+-		if (error)
+-			goto out;
+-		ASSERT(nimap == 0 || nimap == 1);
+-		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+-			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-			mod++;
+-			if (mod && (mod != mp->m_sb.sb_rextsize))
+-				endoffset_fsb -= mod;
+-		}
++			return error;
+ 	}
++
+ 	if ((done = (endoffset_fsb <= startoffset_fsb)))
+ 		/*
+ 		 * One contiguous piece to clear
+@@ -1295,62 +1367,12 @@ xfs_free_file_space(
+ 				offset + len - 1);
+ 	}
+ 
+-	/*
+-	 * free file space until done or until there is an error
+-	 */
+-	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+ 	while (!error && !done) {
+-
+-		/*
+-		 * allocate and setup the transaction. Allow this
+-		 * transaction to dip into the reserve blocks to ensure
+-		 * the freeing of the space succeeds at ENOSPC.
+-		 */
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+-				&tp);
+-		if (error) {
+-			ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+-			break;
+-		}
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		error = xfs_trans_reserve_quota(tp, mp,
+-				ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
+-				resblks, 0, XFS_QMOPT_RES_REGBLKS);
+-		if (error)
+-			goto error1;
+-
+-		xfs_trans_ijoin(tp, ip, 0);
+-
+-		/*
+-		 * issue the bunmapi() call to free the blocks
+-		 */
+-		xfs_bmap_init(&free_list, &firstfsb);
+-		error = xfs_bunmapi(tp, ip, startoffset_fsb,
+-				  endoffset_fsb - startoffset_fsb,
+-				  0, 2, &firstfsb, &free_list, &done);
+-		if (error)
+-			goto error0;
+-
+-		/*
+-		 * complete the transaction
+-		 */
+-		error = xfs_bmap_finish(&tp, &free_list, NULL);
+-		if (error)
+-			goto error0;
+-
+-		error = xfs_trans_commit(tp);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		error = xfs_unmap_extent(ip, startoffset_fsb,
++				endoffset_fsb - startoffset_fsb, &done);
+ 	}
+ 
+- out:
+ 	return error;
+-
+- error0:
+-	xfs_bmap_cancel(&free_list);
+- error1:
+-	xfs_trans_cancel(tp);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	goto out;
+ }
+ 
+ /*
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
