@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 80DA57D0B
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:17:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 552F98F8033
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 16:17:43 -0700 (PDT)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	tRKjivHJTxK6xenr for <xfs@oss.sgi.com>;
-	Mon, 02 May 2016 16:17:42 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v2 5/5] dax: handle media errors in dax_do_io
-Date: Mon, 2 May 2016 23:17:21 +0000
-Message-ID: <1462231029.1421.82.camel@intel.com>
-References: <1459303190-20072-6-git-send-email-vishal.l.verma@intel.com>
-	<x49twj26edj.fsf@segfault.boston.devel.redhat.com>
-	<20160420205923.GA24797@infradead.org>
-	<1461434916.3695.7.camel@intel.com>
-	<20160425083114.GA27556@infradead.org>
-	<1461604476.3106.12.camel@intel.com>
-	<20160425232552.GD18496@dastard> <1461628381.1421.24.camel@intel.com>
-	<20160426004155.GF18496@dastard>
-	<x49pot4ebeb.fsf@segfault.boston.devel.redhat.com>
-	<20160502230422.GQ26977@dastard>
-In-Reply-To: <20160502230422.GQ26977@dastard>
-Content-Language: en-US
-Content-ID: <DD7A3CDBB5E097499F162D3957B8E7B4@intel.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 759AF7CD3
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E32A6AC002
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:31 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id vuyJ3N4sCx5RJyMD (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:29 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/14] fs: iomap based fiemap implementation
+Date: Tue,  3 May 2016 23:29:00 +0200
+Message-Id: <1462310947-16132-8-git-send-email-hch@lst.de>
+In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
+References: <1462310947-16132-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +23,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "david@fromorbit.com" <david@fromorbit.com>, "jmoyer@redhat.com" <jmoyer@redhat.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "axboe@fb.com" <axboe@fb.com>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "Wilcox, Matthew
-	R" <matthew.r.wilcox@intel.com>
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-T24gVHVlLCAyMDE2LTA1LTAzIGF0IDA5OjA0ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-IE9uIE1vbiwgTWF5IDAyLCAyMDE2IGF0IDExOjE4OjM2QU0gLTA0MDAsIEplZmYgTW95ZXIgd3Jv
-dGU6DQo+ID4gDQo+ID4gRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cml0ZXM6
-DQo+ID4gDQo+ID4gPiANCj4gPiA+IE9uIE1vbiwgQXByIDI1LCAyMDE2IGF0IDExOjUzOjEzUE0g
-KzAwMDAsIFZlcm1hLCBWaXNoYWwgTCB3cm90ZToNCj4gPiA+ID4gDQo+ID4gPiA+IE9uIFR1ZSwg
-MjAxNi0wNC0yNiBhdCAwOToyNSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3RlOg0KPiA+ID4gWW91
-J3JlIGFzc3VtaW5nIHRoYXQgb25seSB0aGUgREFYIGF3YXJlIGFwcGxpY2F0aW9uIGFjY2Vzc2Vz
-IGl0J3MNCj4gPiA+IGZpbGVzLsKgwqB1c2VycywgYmFja3VwIHByb2dyYW1zLCBkYXRhIHJlcGxp
-Y2F0b3JzLCBmaWxleXN0ZW0NCj4gPiA+IHJlLW9yZ2FuaXNlcnMgKGUuZy7CoMKgZGVmcmFnbWVu
-dGVycykgZXRjIGFsbCBtYXkgYWNjZXNzIHRoZSBmaWxlcw0KPiA+ID4gYW5kDQo+ID4gPiB0aGV5
-IG1heSB0aHJvdyBlcnJvcnMuIFdoYXQgdGhlbj8NCj4gPiBJJ20gbm90IHN1cmUgaG93IHRoaXMg
-aXMgYW55IGRpZmZlcmVudCBmcm9tIHJlZ3VsYXIgc3RvcmFnZS7CoMKgSWYgYW4NCj4gPiBhcHBs
-aWNhdGlvbiBnZXRzIEVJTywgaXQncyB1cCB0byB0aGUgYXBwIHRvIGRlY2lkZSB3aGF0IHRvIGRv
-IHdpdGgNCj4gPiB0aGF0Lg0KPiBTdXJlIC0gdGhleSdsbCBmYWlsLiBCdXQgdGhlIHF1ZXN0aW9u
-IEknbSBhc2tpbmcgaXMgdGhhdCBpZiB0aGUNCj4gYXBwbGljYXRpb24gdGhhdCBvd25zIHRoZSBk
-YXRhIGlzIHN1cHBvc2VkIHRvIGRvIGVycm9yIHJlY292ZXJ5LA0KPiB3aGF0IGhhcHBlbnMgd2hl
-biBhIDNyZCBwYXJ0eSBhcHBsaWNhdGlvbiBoaXRzIGFuIGVycm9yPyBJZiB0aGF0DQo+IGNvbnN1
-bWVzIHRoZSBlcnJvciwgdGhlIHRoZSBhcHAgdGhhdCBvd25zIHRoZSBkYXRhIHdvbid0IGV2ZXIg
-Z2V0IGENCj4gY2hhbmNlIHRvIGNvcnJlY3QgdGhlIGVycm9yLg0KPiANCj4gVGhpcyBpcyBhIG1p
-bmVmaWVsZCAtIGEgM3JkIHBhcnR5IGFwcCB0aGF0IHN3YWxsb3dzIGFuZCBjbGVhcnMgREFYDQo+
-IGJhc2VkIElPIGVycm9ycyBpcyBhIGRhdGEgY29ycnVwdGlvbiB2ZWN0b3IuIGNhbiB5byBpbWFn
-aW5lIGlmDQo+ICpncmVwKiBkaWQgdGhpcz8gVGhlIG1vZGVsIHRoYXQgaXMgYmVpbmcgcHJvbW90
-ZWQgaGVyZSBlZmZlY3RpdmVseQ0KPiBhbGxvd3MgdGhpcyBzb3J0IG9mIGJlaGF2aW91ciAtIEkg
-ZG9uJ3QgcmVhbGx5IHRoaW5rIHdlDQo+IHNob3VsZCBiZSBhcmNoaXRlY3RpbmcgYW4gZXJyb3Ig
-cmVjb3Zlcnkgc3RyYXRlZ3kgdGhhdCBoYXMgdGhlDQo+IGNhcGFiaWxpdHkgdG8gZ28gdGhpcyB3
-cm9uZy4uLi4NCj4gDQoNCkp1c3QgdG8gYWRkcmVzcyB0aGlzIGJpdCAtIE5vLiBBbnkgbnVtYmVy
-IG9mIGJhY2t1cC8zcmQgcGFydHkNCmFwcGxpY2F0aW9uIGNhbiBoaXQgdGhlIGVycm9yIGFuZCBf
-ZmFpbF8gYnV0IHN1cmVseSB0aGV5IHdvbid0IHRyeSB0bw0KX3dyaXRlXyB0aGUgYmFkIGxvY2F0
-aW9uPyBPbmx5IGEgd3JpdGUgdG8gdGhlIGJhZCBzZWN0b3Igd2lsbCBjbGVhciBpdA0KaW4gdGhp
-cyBtb2RlbCAtIGFuZCB1bnRpbCBzdWNoIHRpbWUsIGFsbCByZWFkcyB3aWxsIGp1c3Qga2VlcCBl
-cnJvcmluZw0Kb3V0LiBUaGlzIHdvcmtzIGZvciBEQVgvbW1hcCBiYXNlZCByZWFkcy93cml0ZXMg
-dG9vIC0gbW1hcC1zdG9yZXMNCndvbid0L2Nhbid0IGNsZWFyIGVycm9ycyAtIHlvdSBoYXZlIHRv
-IGdvIHRocm91Z2ggdGhlIGJsb2NrIHBhdGgsIGFuZCBpbg0KdGhlIGFsdGVzdCB2ZXJzaW9uIG9m
-IG15IHBhdGNoIHNldCwgdGhhdCBoYXMgdG8gYmUgZXhwbGljaXRseSB0aHJvdWdoDQpPX0RJUkVD
-VC4KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+Add a simple fiemap implementation based on iomap_ops, partially based
+on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 ++
+ 2 files changed, 93 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 534cb37..28a8fcb 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -385,3 +385,93 @@ out_unlock:
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
++
++struct fiemap_ctx {
++	struct fiemap_extent_info *fi;
++	struct iomap prev;
++};
++
++static int iomap_to_fiemap(struct fiemap_extent_info *fi,
++		struct iomap *iomap, u32 flags)
++{
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/* skip holes */
++		return 0;
++	case IOMAP_DELALLOC:
++		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
++		break;
++	case IOMAP_UNWRITTEN:
++		flags |= FIEMAP_EXTENT_UNWRITTEN;
++		break;
++	case IOMAP_MAPPED:
++		break;
++	}
++
++	return fiemap_fill_next_extent(fi, iomap->offset,
++			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
++			iomap->length, flags | FIEMAP_EXTENT_MERGED);
++
++}
++
++static loff_t
++iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct fiemap_ctx *ctx = data;
++	loff_t ret = length;
++
++	if (iomap->type == IOMAP_HOLE)
++		return length;
++
++	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
++	ctx->prev = *iomap;
++	switch (ret) {
++	case 0:		/* success */
++		return length;
++	case 1:		/* extent array full */
++		return 0;
++	default:
++		return ret;
++	}
++}
++
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
++		loff_t start, loff_t len, struct iomap_ops *ops)
++{
++	struct fiemap_ctx ctx;
++	loff_t ret;
++
++	memset(&ctx, 0, sizeof(ctx));
++	ctx.fi = fi;
++	ctx.prev.type = IOMAP_HOLE;
++
++	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
++	if (ret)
++		return ret;
++
++	ret = filemap_write_and_wait(inode->i_mapping);
++	if (ret)
++		return ret;
++
++	while (len > 0) {
++		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
++				iomap_fiemap_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		start += ret;
++		len -= ret;
++	}
++
++	if (ctx.prev.type != IOMAP_HOLE) {
++		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_fiemap);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 854766f..b3deee1 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/types.h>
+ 
++struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+ struct kiocb;
+@@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ 		struct iomap_ops *ops);
+ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		struct iomap_ops *ops);
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
++		loff_t start, loff_t len, struct iomap_ops *ops);
+ 
+ #endif /* LINUX_IOMAP_H */
+-- 
+2.1.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
