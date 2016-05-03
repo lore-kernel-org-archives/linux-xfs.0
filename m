@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BD8517CB8
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 12:55:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 91048304043
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:55:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 087C17CBC
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 12:55:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CA79D30404E
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:55:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4TwUTXrwGwN8yQjR (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BJzSgtHvVr8jkZAg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 10:55:50 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 03 May 2016 10:55:51 -0700 (PDT)
 Received: from int-mx14.intmail.prod.int.phx2.redhat.com
 	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id A1308C0D222C
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 17:55:49 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 3252774B
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 17:55:51 +0000 (UTC)
 Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
 	[10.34.26.103])
 	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u43HtiDU016424
-	for <xfs@oss.sgi.com>; Tue, 3 May 2016 13:55:49 -0400
+	id u43HtiDW016424
+	for <xfs@oss.sgi.com>; Tue, 3 May 2016 13:55:50 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 5/7] xfs: add configuration of error failure speed
-Date: Tue,  3 May 2016 19:55:38 +0200
-Message-Id: <1462298140-12411-6-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 7/7] xfs: shutdown filesystem at unmount in case of errors
+Date: Tue,  3 May 2016 19:55:40 +0200
+Message-Id: <1462298140-12411-8-git-send-email-cmaiolino@redhat.com>
 In-Reply-To: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
 References: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,237 +43,83 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-On reception of an error, we can fail immediately, perform some
-bound amount of retries or retry indefinitely. The current behaviour
-we have is to retry forever.
+If we take "retry forever" literally on metadata IO errors, we can
+hang at unmount, once it retries those writes forever. This is the
+default behavior, unfortunately.
 
-However, we'd like the ability to choose what behaviour we have, and
-that requires the ability to configure the behaviour through the new
-sysfs interfaces.
+Currently, there is no way to move the unmount forward, once the mount point
+will be already detached, making a call to xfs_io shutdown impossible.
 
-max_retries is used to set the number of retries to do until permanently fail,
-the only special case is when it is set to -1, which, will cause the system to
-retry indefinitely.
+To fix this, we need to mark the filesystem as being in the process
+of unmounting, so that a shutdown can be triggered in case of errors. It will be
+noisy, though, as it will log the errors and the shutdown that occurs.
 
-Add both a maximum retry count and a retry timeout so that we can bound by
-time and/or physical IO attempts.
-
-Finally, plumb these into xfs_buf_iodone error processing so that
-the error behaviour follows the selected configuration.
+Do this with a mount flag that is added at the appropriate time (i.e. before
+the blocking AIL sync). We also need to add this flag if mount fails after
+the initial phase of log recovery has been run.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_buf.h      | 23 ++++++++++++++-
- fs/xfs/xfs_buf_item.c | 13 +++++++--
- fs/xfs/xfs_mount.h    |  3 +-
- fs/xfs/xfs_sysfs.c    | 81 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 112 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_buf_item.c | 4 ++++
+ fs/xfs/xfs_mount.c    | 9 +++++++++
+ fs/xfs/xfs_mount.h    | 1 +
+ 3 files changed, 14 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index adef116..bd978f0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -183,7 +183,28 @@ typedef struct xfs_buf {
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	int			b_error;	/* error code on I/O */
--	int			b_last_error;	/* previous async I/O error */
-+
-+	/*
-+	 * async write failure retry count. Initialised to zero on the first
-+	 * failure, then when it exceeds the maximum configured without a
-+	 * success the write is considered to be failed permanently and the
-+	 * iodone handler will take appropriate action.
-+	 *
-+	 * For retry timeouts, we record the jiffie of the first failure. This
-+	 * means that we can change the retry timeout and it on the next error
-+	 * it will be checked against the newly configured timeout. This
-+	 * prevents buffers getting stuck in retry loops with a really long
-+	 * timeout.
-+	 *
-+	 * last_error is used to ensure that we are getting repeated errors, not
-+	 * different errors. e.g. a block device might change ENOSPC to EIO when
-+	 * a failure timeout occurs, so we want to re-initialise the error
-+	 * retry behaviour appropriately when that happens.
-+	 */
-+	int			b_retries;
-+	unsigned long		b_first_retry_time; /* in jiffies */
-+	int			b_last_error;
-+
- 	const struct xfs_buf_ops	*b_ops;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
 diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 3a30a88..68ed2a0 100644
+index 68ed2a0..3fd3389 100644
 --- a/fs/xfs/xfs_buf_item.c
 +++ b/fs/xfs/xfs_buf_item.c
-@@ -1086,6 +1086,9 @@ xfs_buf_iodone_callback_error(
- 		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
- 			        XBF_DONE | XBF_WRITE_FAIL);
- 		bp->b_last_error = bp->b_error;
-+		bp->b_retries = 0;
-+		bp->b_first_retry_time = jiffies;
-+
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_submit(bp);
- 		return true;
-@@ -1095,8 +1098,13 @@ xfs_buf_iodone_callback_error(
- 	 * Repeated failure on an async write. Take action according to the
- 	 * error configuration we have been set up to use.
- 	 */
--	if (!cfg->max_retries)
--		goto permanent_error;
-+	if (cfg->max_retries >= 0)
-+		if (++bp->b_retries > cfg->max_retries)
-+			goto permanent_error;
-+	if (cfg->retry_timeout)
-+		if (time_after(jiffies,
-+			       cfg->retry_timeout + bp->b_first_retry_time))
-+			goto permanent_error;
+@@ -1106,6 +1106,10 @@ xfs_buf_iodone_callback_error(
+ 			       cfg->retry_timeout + bp->b_first_retry_time))
+ 			goto permanent_error;
  
++	/* At unmount we may treat errors differently */
++	if (mp->m_flags & XFS_MOUNT_UNMOUNTING)
++		goto permanent_error;
++
  	/* still a transient error, higher layers will retry */
  	xfs_buf_ioerror(bp, 0);
-@@ -1139,6 +1147,7 @@ xfs_buf_iodone_callbacks(
- 	 * retry state here in preparation for the next error that may occur.
- 	 */
- 	bp->b_last_error = 0;
-+	bp->b_retries = 0;
+ 	xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index eda3906..d89fba6 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -961,6 +961,7 @@ xfs_mountfs(
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
+  out_log_dealloc:
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+ 	xfs_log_mount_cancel(mp);
+  out_fail_wait:
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+@@ -1012,6 +1013,14 @@ xfs_unmountfs(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
  
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
+ 	/*
++	 * We now need to tell the world we are unmounting. This will allow
++	 * us to detect that the filesystem is going away and we should error
++	 * out anything that we have been retrying in the background. This will
++	 * prevent neverending retries iin AIL pushing from hanging the unmount.
++	 */
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
++
++	/*
+ 	 * Flush all pending changes from the AIL.
+ 	 */
+ 	xfs_ail_push_all_sync(mp->m_ail);
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 0c5a976..0382140 100644
+index e3b3267..54e26fc 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -54,7 +54,8 @@ enum {
- 
- struct xfs_error_cfg {
- 	struct xfs_kobj	kobj;
--	int		max_retries;
-+	int		max_retries;	/* -1 = retry forever */
-+	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
- };
- 
- typedef struct xfs_mount {
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index e49a6de..fa291c4 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -374,10 +374,6 @@ struct kobj_type xfs_log_ktype = {
-  * and any other future type of IO (e.g. special inode or directory error
-  * handling) we care to support.
-  */
--static struct attribute *xfs_error_attrs[] = {
--	NULL,
--};
--
- static inline struct xfs_error_cfg *
- to_error_cfg(struct kobject *kobject)
- {
-@@ -385,6 +381,79 @@ to_error_cfg(struct kobject *kobject)
- 	return container_of(kobj, struct xfs_error_cfg, kobj);
- }
- 
-+static ssize_t
-+max_retries_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", cfg->max_retries);
-+}
-+
-+static ssize_t
-+max_retries_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < -1 || val > INT_MAX)
-+		return -EINVAL;
-+
-+	cfg->max_retries = val;
-+	return count;
-+}
-+XFS_SYSFS_ATTR_RW(max_retries);
-+
-+static ssize_t
-+retry_timeout_seconds_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%ld\n",
-+			jiffies_to_msecs(cfg->retry_timeout) / MSEC_PER_SEC);
-+}
-+
-+static ssize_t
-+retry_timeout_seconds_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	/* 1 day timeout maximum */
-+	if (val < 0 || val > 86400)
-+		return -EINVAL;
-+
-+	cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
-+	return count;
-+}
-+XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
-+
-+static struct attribute *xfs_error_attrs[] = {
-+	ATTR_LIST(max_retries),
-+	ATTR_LIST(retry_timeout_seconds),
-+	NULL,
-+};
-+
-+
- struct kobj_type xfs_error_cfg_ktype = {
- 	.release = xfs_sysfs_release,
- 	.sysfs_ops = &xfs_sysfs_ops,
-@@ -404,11 +473,13 @@ struct kobj_type xfs_error_ktype = {
- struct xfs_error_init {
- 	char		*name;
- 	int		max_retries;
-+	int		retry_timeout;	/* in seconds */
- };
- 
- static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "Default",
- 	  .max_retries = -1,
-+	  .retry_timeout = 0,
- 	},
- };
- 
-@@ -439,6 +510,8 @@ xfs_error_sysfs_init_class(
- 			goto out_error;
- 
- 		cfg->max_retries = init[i].max_retries;
-+		cfg->retry_timeout = msecs_to_jiffies(
-+					init[i].retry_timeout * MSEC_PER_SEC);
- 	}
- 	return 0;
- 
+@@ -193,6 +193,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+ 						   must be synchronous except
+ 						   for space allocations */
++#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
+ #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+ #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+ 						   operations, typically for
 -- 
 2.4.11
 
