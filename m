@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 744427CB1
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 436A1304043
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:15 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Y8rUimwnMT9bxkCH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:14 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/14] fs: move struct iomap from exportfs.h to a separate
-	header
-Date: Tue,  3 May 2016 23:28:54 +0200
-Message-Id: <1462310947-16132-2-git-send-email-hch@lst.de>
-In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
-References: <1462310947-16132-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DF8857CA0
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:13:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6177EAC001
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 08:13:20 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id A7ej39lRs9O8XnZp
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 May 2016 08:13:15 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id r12so4370661wme.0
+	for <xfs@oss.sgi.com>; Tue, 03 May 2016 08:13:15 -0700 (PDT)
+Date: Tue, 3 May 2016 17:13:12 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 0/2] scop GFP_NOFS api
+Message-ID: <20160503151312.GA4470@dhcp22.suse.cz>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<8737q5ugcx.fsf@notabene.neil.brown.name>
+	<20160429120418.GK21977@dhcp22.suse.cz>
+	<87twiiu5gs.fsf@notabene.neil.brown.name>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <87twiiu5gs.fsf@notabene.neil.brown.name>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,123 +31,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
+To: NeilBrown <mr@neil.brown.name>
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, logfs@logfs.org, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, xfs@oss.sgi.com, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/nfsd/blocklayout.c    |  1 +
- fs/nfsd/blocklayoutxdr.c |  1 +
- fs/xfs/xfs_pnfs.c        |  1 +
- include/linux/exportfs.h | 16 +---------------
- include/linux/iomap.h    | 21 +++++++++++++++++++++
- 5 files changed, 25 insertions(+), 15 deletions(-)
- create mode 100644 include/linux/iomap.h
+Hi,
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index e55b524..4df16ae 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -2,6 +2,7 @@
-  * Copyright (c) 2014-2016 Christoph Hellwig.
-  */
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/genhd.h>
- #include <linux/slab.h>
- #include <linux/pr.h>
-diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-index 6c3b316..4ebaaf4 100644
---- a/fs/nfsd/blocklayoutxdr.c
-+++ b/fs/nfsd/blocklayoutxdr.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/sunrpc/svc.h>
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/nfs4.h>
- 
- #include "nfsd.h"
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 3332bae..0a56787 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2014 Christoph Hellwig.
-  */
-+#include <linux/iomap.h>
- #include "xfs.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index d841450..b03c062 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -6,6 +6,7 @@
- struct dentry;
- struct iattr;
- struct inode;
-+struct iomap;
- struct super_block;
- struct vfsmount;
- 
-@@ -187,21 +188,6 @@ struct fid {
-  *    get_name is not (which is possibly inconsistent)
-  */
- 
--/* types of block ranges for multipage write mappings. */
--#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
--#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
--
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
--
--struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
--};
--
- struct export_operations {
- 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
- 			struct inode *parent);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-new file mode 100644
-index 0000000..1b22197
---- /dev/null
-+++ b/include/linux/iomap.h
-@@ -0,0 +1,21 @@
-+#ifndef LINUX_IOMAP_H
-+#define LINUX_IOMAP_H 1
-+
-+#include <linux/types.h>
-+
-+/* types of block ranges for multipage write mappings. */
-+#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
-+#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+
-+#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+
-+struct iomap {
-+	sector_t	blkno;	/* first sector of mapping */
-+	loff_t		offset;	/* file offset of mapping, bytes */
-+	u64		length;	/* length of mapping, bytes */
-+	int		type;	/* type of mapping */
-+};
-+
-+#endif /* LINUX_IOMAP_H */
+On Sun 01-05-16 07:55:31, NeilBrown wrote:
+[...]
+> One particular problem with your process-context idea is that it isn't
+> inherited across threads.
+> Steve Whitehouse's example in gfs shows how allocation dependencies can
+> even cross into user space.
+
+Hmm, I am still not sure I understand that example completely but making
+a dependency between direct reclaim and userspace can hardly work.
+Especially when the direct reclaim might be sitting on top of hard to
+guess pile of locks. So unless I've missed anything what Steve has
+described is a clear NOFS context.
+
+> A more localized one that I have seen is that NFSv4 sometimes needs to
+> start up a state-management thread (particularly if the server
+> restarted).
+> It uses kthread_run(), which doesn't actually create the thread but asks
+> kthreadd to do it.  If NFS writeout is waiting for state management it
+> would need to make sure that kthreadd runs in allocation context to
+> avoid deadlock.
+> I feel that I've forgotten some important detail here and this might
+> have been fixed somehow, but the point still stands that the allocation
+> context can cross from thread to thread and can effectively become
+> anything and everything.
+
+Not sure I understand your point here but relying on kthread_run
+from GFP_NOFS context has always been deadlock prone with or without
+scope GFP_NOFS semantic so I am not really sure I see your point
+here. Similarly relying on a work item which doesn't have a dedicated
+WQ_MEM_RECLAIM WQ is deadlock prone.  You simply shouldn't do that.
+
+> It is OK to wait for memory to be freed.  It is not OK to wait for any
+> particular piece of memory to be freed because you don't always know who
+> is waiting for you, or who you really are waiting on to free that
+> memory.
+> 
+> Whenever trying to free memory I think you need to do best-effort
+> without blocking.
+
+I agree with that. Or at least you have to wait on something that is
+_guaranteed_ to make a forward progress. I am not really that sure this
+is easy to achieve with the current code base.
+
 -- 
-2.1.4
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
