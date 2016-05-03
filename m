@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E8AC77CA0
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:38:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A19B08F8035
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 08:38:28 -0700 (PDT)
-Received: from mail-wm0-f68.google.com (mail-wm0-f68.google.com
-	[74.125.82.68]) by cuda.sgi.com with ESMTP id faDGe2mN9hQzdI7O
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 May 2016 08:38:26 -0700 (PDT)
-Received: by mail-wm0-f68.google.com with SMTP id e201so4476137wme.2
-	for <xfs@oss.sgi.com>; Tue, 03 May 2016 08:38:26 -0700 (PDT)
-Date: Tue, 3 May 2016 17:38:23 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
-	explicitly from memalloc_no{fs,io}_{save,restore} context
-Message-ID: <20160503153823.GB4470@dhcp22.suse.cz>
-References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
-	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
-	<20160426225845.GF26977@dastard>
-	<20160428081759.GA31489@dhcp22.suse.cz>
-	<20160428215145.GM26977@dastard>
-	<20160429121219.GL21977@dhcp22.suse.cz>
-	<20160429234008.GN26977@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160429234008.GN26977@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F25AA7CB3
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 12:55:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7ED7FAC004
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:55:50 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id YUas9xaZXyX3rQWN (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 May 2016 10:55:49 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id F0A0D72D03
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 17:55:48 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u43HtiDT016424
+	for <xfs@oss.sgi.com>; Tue, 3 May 2016 13:55:48 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 4/7] xfs: introduce table-based init for error behaviours
+Date: Tue,  3 May 2016 19:55:37 +0200
+Message-Id: <1462298140-12411-5-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
+References: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,102 +34,128 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: xfs@oss.sgi.com
 
-On Sat 30-04-16 09:40:08, Dave Chinner wrote:
-> On Fri, Apr 29, 2016 at 02:12:20PM +0200, Michal Hocko wrote:
-[...]
-> > - was it 
-> > "inconsistent {RECLAIM_FS-ON-[RW]} -> {IN-RECLAIM_FS-[WR]} usage"
-> > or a different class reports?
-> 
-> Typically that was involved, but it quite often there'd be a number
-> of locks and sometimes even interrupt stacks in an interaction
-> between 5 or 6 different processes. Lockdep covers all sorts of
-> stuff now (like fs freeze annotations as well as locks and memory
-> reclaim) so sometimes the only thing we can do is remove the
-> reclaim context from the stack and see if that makes it go away...
+From: Dave Chinner <dchinner@redhat.com>
 
-That is what I was thinking of. lockdep_reclaim_{disable,enable} or
-something like that to tell __lockdep_trace_alloc to not skip
-mark_held_locks(). This would effectivelly help to get rid of reclaim
-specific reports. It is hard to tell whether there would be others,
-though.
+Before we start expanding the number of error classes and errors we
+can configure behaviour for, we need a simple and clear way to
+define the default behaviour that we initialized each mount with.
+Introduce a table based method for keeping the initial configuration
+in, and apply that to the existing initialization code.
 
-> > > They may have been fixed since, but I'm sceptical
-> > > of that because, generally speaking, developer testing only catches
-> > > the obvious lockdep issues. i.e. it's users that report all the
-> > > really twisty issues, and they are generally not reproducable except
-> > > under their production workloads...
-> > > 
-> > > IOWs, the absence of reports in your testing does not mean there
-> > > isn't a problem, and that is one of the biggest problems with
-> > > lockdep annotations - we have no way of ever knowing if they are
-> > > still necessary or not without exposing users to regressions and
-> > > potential deadlocks.....
-> > 
-> > I understand your points here but if we are sure that those lockdep
-> > reports are just false positives then we should rather provide an api to
-> > silence lockdep for those paths
-> 
-> I agree with this - please provide such infrastructure before we
-> need it...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 60 insertions(+), 12 deletions(-)
 
-Do you think a reclaim specific lockdep annotation would be sufficient?
-
-> > than abusing GFP_NOFS which a) hurts
-> > the overal reclaim healthiness
-> 
-> Which doesn't actually seem to be a problem for the vast majority of
-> users.
-
-Yes, most users are OK. Those allocations can be triggered by the
-userspace (read a malicious user) quite easily and be harmful without a
-good way to contain them.
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 0a9adcd..e49a6de 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -395,11 +395,67 @@ struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
+ };
  
-> > and b) works around a non-existing
-> > problem with lockdep disabled which is the vast majority of
-> > configurations.
-> 
-> But the moment we have a lockdep problem, we get bug reports from
-> all over the place and people complaining about it, so we are
-> *required* to silence them one way or another. And, like I said,
-> when the choice is simply adding GFP_NOFS or spending a week or two
-> completely reworking complex code that has functioned correctly for
-> 15 years, the risk/reward *always* falls on the side of "just add
-> GFP_NOFS".
-> 
-> Please keep in mind that there is as much code in fs/xfs as there is
-> in the mm/ subsystem, and XFS has twice that in userspace as well.
-> I say this, because we have only have 3-4 full time developers to do
-> all the work required on this code base, unlike the mm/ subsystem
-> which had 30-40 full time MM developers attending LSFMM. This is why
-> I push back on suggestions that require significant redesign of
-> subsystem code to handle memory allocation/reclaim quirks - most
-> subsystems simply don't have the resources available to do such
-> work, and so will always look for the quick 2 minute fix when it is
-> available....
-
-I do understand your concerns and I really do not ask you to redesign
-your code. I would like make the code more maintainable and reducing the
-number of (undocumented) GFP_NOFS usage to the minimum seems to be like
-a first step. Now the direct usage of GFP_NOFS (resp. KM_NOFS) in xfs is
-not that large. If we can reduce the few instances which are using the
-flag to silence the lockdep and replace them by a better annotation then
-I think this would be an improvement as well. If we can go one step
-further and can get rid of mapping_set_gfp_mask(inode->i_mapping,
-(gfp_mask & ~(__GFP_FS))) then I would be even happier.
-
-I think other fs and code which interacts with FS layer needs much more
-changes than xfs to be honest.
++/*
++ * Error initialization tables. These need to be ordered in the same
++ * order as the enums used to index the array. All class init tables need to
++ * define a "default" behaviour as the first entry, all other entries can be
++ * empty.
++ */
++struct xfs_error_init {
++	char		*name;
++	int		max_retries;
++};
++
++static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
++	{ .name = "Default",
++	  .max_retries = -1,
++	},
++};
++
++static int
++xfs_error_sysfs_init_class(
++	struct xfs_mount	*mp,
++	int			class,
++	const char		*parent_name,
++	struct xfs_kobj		*parent_kobj,
++	const struct xfs_error_init init[])
++{
++	struct xfs_error_cfg	*cfg;
++	int			error;
++	int			i;
++
++	ASSERT(class < XFS_ERR_CLASS_MAX);
++
++	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, parent_name);
++	if (error)
++		return error;
++
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		cfg = &mp->m_error_cfg[class][i];
++		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++					parent_kobj, init[i].name);
++		if (error)
++			goto out_error;
++
++		cfg->max_retries = init[i].max_retries;
++	}
++	return 0;
++
++out_error:
++	/* unwind the entries that succeeded */
++	for (i--; i >= 0; i--) {
++		cfg = &mp->m_error_cfg[class][i];
++		xfs_sysfs_del(&cfg->kobj);
++	}
++	xfs_sysfs_del(parent_kobj);
++	return error;
++}
++
+ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_error_cfg	*cfg;
+ 	int			error;
+ 
+ 	/* .../xfs/<dev>/error/ */
+@@ -409,22 +465,14 @@ xfs_error_sysfs_init(
+ 		return error;
+ 
+ 	/* .../xfs/<dev>/error/metadata/ */
+-	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
+-				&mp->m_error_kobj, "metadata");
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
++				"metadata", &mp->m_error_meta_kobj,
++				xfs_error_meta_init);
+ 	if (error)
+ 		goto out_error;
+ 
+-	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
+-	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+-				&mp->m_error_meta_kobj, "default");
+-	if (error)
+-		goto out_error_meta;
+-	cfg->max_retries = -1;
+-
+ 	return 0;
+ 
+-out_error_meta:
+-	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ out_error:
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
 -- 
-Michal Hocko
-SUSE Labs
+2.4.11
 
 _______________________________________________
 xfs mailing list
