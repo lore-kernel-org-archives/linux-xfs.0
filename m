@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 508397CA0
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:02:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D0E88F8039
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 08:02:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2xSINs6TQqDucO5k (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 08:02:21 -0700 (PDT)
-Date: Tue, 3 May 2016 11:02:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/8] xfs: implement iomap based buffered write path
-Message-ID: <20160503150217.GA8014@bfoster.bfoster>
-References: <1460494382-14547-1-git-send-email-hch@lst.de>
-	<1460494382-14547-6-git-send-email-hch@lst.de>
-	<20160414125814.GE20696@bfoster.bfoster>
-	<20160502182523.GB7077@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160502182523.GB7077@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 744427CB1
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 436A1304043
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:15 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Y8rUimwnMT9bxkCH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:14 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/14] fs: move struct iomap from exportfs.h to a separate
+	header
+Date: Tue,  3 May 2016 23:28:54 +0200
+Message-Id: <1462310947-16132-2-git-send-email-hch@lst.de>
+In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
+References: <1462310947-16132-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,53 +24,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Mon, May 02, 2016 at 08:25:23PM +0200, Christoph Hellwig wrote:
-> On Thu, Apr 14, 2016 at 08:58:14AM -0400, Brian Foster wrote:
-> > > +static int
-> > > +xfs_file_iomap_end_delalloc(
-> > > +	struct xfs_inode	*ip,
-> > > +	loff_t			offset,
-> > > +	loff_t			length,
-> > > +	ssize_t			written)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	xfs_fileoff_t		start_fsb;
-> > > +	xfs_fileoff_t		end_fsb;
-> > > +	int			error = 0;
-> > > +
-> > > +	start_fsb = XFS_B_TO_FSB(mp, offset + written);
-> > > +	end_fsb = XFS_B_TO_FSB(mp, offset + length - written);
-> > > +
-> > 
-> > Just skimming over this series... but shouldn't this be offset + length?
-> > Why walk back from the end of the allocated range?
-> 
-> Because the interface from the core iomap code need to pass the
-> length of the actually mapped range, and the amount of bytes successfully
-> written into it to the filesystem, as other filesystems will require
-> this for their locking.  We need to convert it back at some point,
-> and it seems more logical here than in the caller.
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/nfsd/blocklayout.c    |  1 +
+ fs/nfsd/blocklayoutxdr.c |  1 +
+ fs/xfs/xfs_pnfs.c        |  1 +
+ include/linux/exportfs.h | 16 +---------------
+ include/linux/iomap.h    | 21 +++++++++++++++++++++
+ 5 files changed, 25 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iomap.h
 
-I'm not asking about the interface... or at least I'm not following your
-point. I'm just suggesting that the calculation of end_fsb is wrong.
-E.g., if the intent is to punch out the range that was allocated but not
-written to, shouldn't the range to punch be [offset + written, offset +
-length]?
-
-Brian
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index e55b524..4df16ae 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -2,6 +2,7 @@
+  * Copyright (c) 2014-2016 Christoph Hellwig.
+  */
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/genhd.h>
+ #include <linux/slab.h>
+ #include <linux/pr.h>
+diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
+index 6c3b316..4ebaaf4 100644
+--- a/fs/nfsd/blocklayoutxdr.c
++++ b/fs/nfsd/blocklayoutxdr.c
+@@ -3,6 +3,7 @@
+  */
+ #include <linux/sunrpc/svc.h>
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/nfs4.h>
+ 
+ #include "nfsd.h"
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 3332bae..0a56787 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2014 Christoph Hellwig.
+  */
++#include <linux/iomap.h>
+ #include "xfs.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+index d841450..b03c062 100644
+--- a/include/linux/exportfs.h
++++ b/include/linux/exportfs.h
+@@ -6,6 +6,7 @@
+ struct dentry;
+ struct iattr;
+ struct inode;
++struct iomap;
+ struct super_block;
+ struct vfsmount;
+ 
+@@ -187,21 +188,6 @@ struct fid {
+  *    get_name is not (which is possibly inconsistent)
+  */
+ 
+-/* types of block ranges for multipage write mappings. */
+-#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+-#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+-#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+-#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+-
+-#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+-
+-struct iomap {
+-	sector_t	blkno;	/* first sector of mapping */
+-	loff_t		offset;	/* file offset of mapping, bytes */
+-	u64		length;	/* length of mapping, bytes */
+-	int		type;	/* type of mapping */
+-};
+-
+ struct export_operations {
+ 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
+ 			struct inode *parent);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+new file mode 100644
+index 0000000..1b22197
+--- /dev/null
++++ b/include/linux/iomap.h
+@@ -0,0 +1,21 @@
++#ifndef LINUX_IOMAP_H
++#define LINUX_IOMAP_H 1
++
++#include <linux/types.h>
++
++/* types of block ranges for multipage write mappings. */
++#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
++#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
++#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
++#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
++
++#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
++
++struct iomap {
++	sector_t	blkno;	/* first sector of mapping */
++	loff_t		offset;	/* file offset of mapping, bytes */
++	u64		length;	/* length of mapping, bytes */
++	int		type;	/* type of mapping */
++};
++
++#endif /* LINUX_IOMAP_H */
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
