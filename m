@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 16D1F7CA0
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DDF6030406A
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id eiFYatqRvfCMK8QR (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:28 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id DAF40C049E1A
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:27 +0000 (UTC)
-Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u44FhPoF012561
-	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:27 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/7] xfs: configurable error behavior via sysfs
-Date: Wed,  4 May 2016 17:43:14 +0200
-Message-Id: <1462376600-8617-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
-References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id BCE167CA3
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:48:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 86821304067
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:48:19 -0700 (PDT)
+Received: from mail-qg0-f46.google.com (mail-qg0-f46.google.com
+	[209.85.192.46]) by cuda.sgi.com with ESMTP id lP5TpuKHYHsbDDy4
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 04 May 2016 08:48:14 -0700 (PDT)
+Received: by mail-qg0-f46.google.com with SMTP id w36so25360852qge.3
+	for <xfs@oss.sgi.com>; Wed, 04 May 2016 08:48:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160418185429.GA6730@redhat.com>
+References: <CACo5E_6fz+BV7prpyo35jzH2_dwgswZ4ZkZ26XP9czbdT3g6vw@mail.gmail.com>
+	<20160418185429.GA6730@redhat.com>
+Date: Wed, 4 May 2016 10:48:13 -0500
+Message-ID: <CACo5E_7rcRdsQW00jO7FTfdHY7eyJDoFDTftA_YNh_nZ0rjsQg@mail.gmail.com>
+Subject: Re: "xfs_log_force: error 5 returned." for drive that was removed.
+From: Joe Wendt <joe@wendtwerks.com>
+Reply-To: joe@wendtwerks.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,206 +29,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6226364484403351819=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We need to be able to change the way XFS behaviours in error
-conditions depending on the type of underlying storage. This is
-necessary for handling non-traditional block devices with extended
-error cases, such as thin provisioned devices that can return ENOSPC
-as an IO error.
+--===============6226364484403351819==
+Content-Type: multipart/alternative; boundary=001a11c117704929bf0532062711
 
-Introduce the basic sysfs infrastructure needed to define and
-configure error behaviours. This is done to be generic enough to
-extend to configuring behaviour in other error conditions, such as
-ENOMEM, which also has different desired behaviours according to
-machine configuration.
+--001a11c117704929bf0532062711
+Content-Type: text/plain; charset=UTF-8
 
-Changelog:
+Thanks for the reply, and I'm sorry for the delay. Another admin rebooted
+the server before I had a chance to collect more info. I'll take a look at
+the other thread in case it comes up again. I think we'll avoid the
+lazy-unmount in the future though.
 
-V3:
-	- Rebase patch on top of linux-xfs tree
-	- Remove XFS_ERR_FAIL enums, once we are not using them
-	  to control the fail speed, but base it on max_retries value
-	- Get rid of xfs_error_cfg.fail_speed field. We will use only
-	  .max_retries to control the failure speed for each error
+Thanks again!
+-Joe
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_mount.c | 10 +++++++++-
- fs/xfs/xfs_mount.h | 20 ++++++++++++++++++++
- fs/xfs/xfs_sysfs.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.h |  3 +++
- 4 files changed, 84 insertions(+), 2 deletions(-)
+On Mon, Apr 18, 2016 at 1:54 PM, Carlos Maiolino <cmaiolino@redhat.com>
+wrote:
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 654799f..eda3906 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -689,10 +689,15 @@ xfs_mountfs(
- 	if (error)
- 		goto out_remove_sysfs;
- 
--	error = xfs_uuid_mount(mp);
-+	error = xfs_error_sysfs_init(mp);
- 	if (error)
- 		goto out_del_stats;
- 
-+
-+	error = xfs_uuid_mount(mp);
-+	if (error)
-+		goto out_remove_error_sysfs;
-+
- 	/*
- 	 * Set the minimum read and write sizes
- 	 */
-@@ -967,6 +972,8 @@ xfs_mountfs(
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
- 	xfs_uuid_unmount(mp);
-+ out_remove_error_sysfs:
-+	xfs_error_sysfs_del(mp);
-  out_del_stats:
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
-  out_remove_sysfs:
-@@ -1055,6 +1062,7 @@ xfs_unmountfs(
- #endif
- 	xfs_free_perag(mp);
- 
-+	xfs_error_sysfs_del(mp);
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
- 	xfs_sysfs_del(&mp->m_kobj);
- }
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index bac6b34..d639795 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -37,6 +37,24 @@ enum {
- 	XFS_LOWSP_MAX,
- };
- 
-+/*
-+ * Error Configuration
-+ *
-+ * Error classes define the subsystem the configuration belongs to.
-+ * Error numbers define the errors that are configurable.
-+ */
-+enum {
-+	XFS_ERR_CLASS_MAX,
-+};
-+enum {
-+	XFS_ERR_ERRNO_MAX,
-+};
-+
-+struct xfs_error_cfg {
-+	struct xfs_kobj	kobj;
-+	int		max_retries;
-+};
-+
- typedef struct xfs_mount {
- 	struct super_block	*m_super;
- 	xfs_tid_t		m_tid;		/* next unused tid for fs */
-@@ -127,6 +145,8 @@ typedef struct xfs_mount {
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 						/* low free space thresholds */
- 	struct xfs_kobj		m_kobj;
-+	struct xfs_kobj		m_error_kobj;
-+	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
- 	struct xstats		m_stats;	/* per-fs stats */
- 
- 	struct workqueue_struct *m_buf_workqueue;
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 6ced4f1..b971113 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -17,10 +17,11 @@
-  */
- 
- #include "xfs.h"
--#include "xfs_sysfs.h"
-+#include "xfs_shared.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
-+#include "xfs_sysfs.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
- #include "xfs_stats.h"
-@@ -362,3 +363,53 @@ struct kobj_type xfs_log_ktype = {
- 	.sysfs_ops = &xfs_sysfs_ops,
- 	.default_attrs = xfs_log_attrs,
- };
-+
-+/*
-+ * Metadata IO error configuration
-+ *
-+ * The sysfs structure here is:
-+ *	...xfs/<dev>/error/<class>/<errno>/<error_attrs>
-+ *
-+ * where <class> allows use to discriminate between data IO and metadata IO,
-+ * and any other future type of IO (e.g. special inode or directory error
-+ * handling) we care to support.
-+ */
-+static struct attribute *xfs_error_attrs[] = {
-+	NULL,
-+};
-+
-+static inline struct xfs_error_cfg *
-+to_error_cfg(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
-+	return container_of(kobj, struct xfs_error_cfg, kobj);
-+}
-+
-+struct kobj_type xfs_error_cfg_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_sysfs_ops,
-+	.default_attrs = xfs_error_attrs,
-+};
-+
-+struct kobj_type xfs_error_ktype = {
-+	.release = xfs_sysfs_release,
-+};
-+
-+int
-+xfs_error_sysfs_init(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
-+
-+	/* .../xfs/<dev>/error/ */
-+	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
-+				&mp->m_kobj, "error");
-+	return error;
-+}
-+
-+void
-+xfs_error_sysfs_del(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_sysfs_del(&mp->m_error_kobj);
-+}
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index be692e5..d046371 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -58,4 +58,7 @@ xfs_sysfs_del(
- 	wait_for_completion(&kobj->complete);
- }
- 
-+int	xfs_error_sysfs_init(struct xfs_mount *mp);
-+void	xfs_error_sysfs_del(struct xfs_mount *mp);
-+
- #endif	/* __XFS_SYSFS_H__ */
--- 
-2.4.11
+> On Sun, Apr 17, 2016 at 09:33:27AM -0500, Joe Wendt wrote:
+> >    Hello! This may be a silly question or an interesting one...
+> >    We had a drive fail in a production server, which spawned this error
+> in
+> >    the logs:
+> >    XFS (sde1): xfs_log_force: error 5 returned.
+> >    The dead array was lazy-unmounted, and the drive was hot-swapped, but
+> >    when the RAID array was rebuilt, it came online as /dev/sdk instead of
+> >    /dev/sde.
+> >    Now /dev/sde1 doesn't exist in the system, but we still see this
+> >    message every 30 seconds. I'm assuming a reboot will clear out
+> whatever
+> >    is still trying to access sde1, but I'm trying to avoid that if
+> >    possible. Could someone point me in the direction of what XFS might
+> >    still be trying to do with that device?
+> >    lsof hasn't given me any clues. I can't run xfs_repair on a volume
+> that
+> >    isn't there. I haven't been able to find anything similar yet online.
+> >    Any help would be greatly appreciated!
+> >    Thanks,
+> >    Joe
+>
+> I believe this is the same problem being discussed in this thread:
+>
+> XFS hung task in xfs_ail_push_all_sync() when unmounting FS after disk
+> failure/recovery.
+>
+> Can you get a stack dump of the system (sysrq-t) and post it in some
+> pastebin?
+>
+>
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+>
+>
+> --
+> Carlos
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
+
+--001a11c117704929bf0532062711
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>Thanks for the reply, and I&#39;m sorry for the =
+delay. Another admin rebooted the server before I had a chance to collect m=
+ore info. I&#39;ll take a look at the other thread in case it comes up agai=
+n. I think we&#39;ll avoid the lazy-unmount in the future though.<br><br></=
+div>Thanks again!<br></div>-Joe<br></div><div class=3D"gmail_extra"><br><di=
+v class=3D"gmail_quote">On Mon, Apr 18, 2016 at 1:54 PM, Carlos Maiolino <s=
+pan dir=3D"ltr">&lt;<a href=3D"mailto:cmaiolino@redhat.com" target=3D"_blan=
+k">cmaiolino@redhat.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail=
+_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:=
+1ex"><div class=3D"HOEnZb"><div class=3D"h5">On Sun, Apr 17, 2016 at 09:33:=
+27AM -0500, Joe Wendt wrote:<br>
+&gt;=C2=A0 =C2=A0 Hello! This may be a silly question or an interesting one=
+...<br>
+&gt;=C2=A0 =C2=A0 We had a drive fail in a production server, which spawned=
+ this error in<br>
+&gt;=C2=A0 =C2=A0 the logs:<br>
+&gt;=C2=A0 =C2=A0 XFS (sde1): xfs_log_force: error 5 returned.<br>
+&gt;=C2=A0 =C2=A0 The dead array was lazy-unmounted, and the drive was hot-=
+swapped, but<br>
+&gt;=C2=A0 =C2=A0 when the RAID array was rebuilt, it came online as /dev/s=
+dk instead of<br>
+&gt;=C2=A0 =C2=A0 /dev/sde.<br>
+&gt;=C2=A0 =C2=A0 Now /dev/sde1 doesn&#39;t exist in the system, but we sti=
+ll see this<br>
+&gt;=C2=A0 =C2=A0 message every 30 seconds. I&#39;m assuming a reboot will =
+clear out whatever<br>
+&gt;=C2=A0 =C2=A0 is still trying to access sde1, but I&#39;m trying to avo=
+id that if<br>
+&gt;=C2=A0 =C2=A0 possible. Could someone point me in the direction of what=
+ XFS might<br>
+&gt;=C2=A0 =C2=A0 still be trying to do with that device?<br>
+&gt;=C2=A0 =C2=A0 lsof hasn&#39;t given me any clues. I can&#39;t run xfs_r=
+epair on a volume that<br>
+&gt;=C2=A0 =C2=A0 isn&#39;t there. I haven&#39;t been able to find anything=
+ similar yet online.<br>
+&gt;=C2=A0 =C2=A0 Any help would be greatly appreciated!<br>
+&gt;=C2=A0 =C2=A0 Thanks,<br>
+&gt;=C2=A0 =C2=A0 Joe<br>
+<br>
+</div></div>I believe this is the same problem being discussed in this thre=
+ad:<br>
+<br>
+XFS hung task in xfs_ail_push_all_sync() when unmounting FS after disk<br>
+failure/recovery.<br>
+<br>
+Can you get a stack dump of the system (sysrq-t) and post it in some pasteb=
+in?<br>
+<br>
+<br>
+&gt; _______________________________________________<br>
+&gt; xfs mailing list<br>
+&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
+&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer"=
+ target=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
+<span class=3D"HOEnZb"><font color=3D"#888888"><br>
+<br>
+--<br>
+Carlos<br>
+<br>
+_______________________________________________<br>
+xfs mailing list<br>
+<a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
+<a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" rel=3D"noreferrer" targ=
+et=3D"_blank">http://oss.sgi.com/mailman/listinfo/xfs</a><br>
+</font></span></blockquote></div><br></div>
+
+--001a11c117704929bf0532062711--
+
+
+--===============6226364484403351819==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6226364484403351819==--
