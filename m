@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C509E7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:48:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 04E377CB8
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 793288F8033
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 12:48:52 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id bAgkLo7rv9PEJgrH (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 953078F8037
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uAVeDo9Mi9V7poZi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 12:48:50 -0700 (PDT)
-Date: Thu, 5 May 2016 12:47:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [RFC 0/3] getfsmapx ioctl
-Message-ID: <20160505194754.GA2785@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:34 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 227393B725
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:34 +0000 (UTC)
+Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u44FhPoL012561
+	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:33 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 7/7] xfs: add "fail at unmount" error handling configuration
+Date: Wed,  4 May 2016 17:43:20 +0200
+Message-Id: <1462376600-8617-8-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,54 +33,186 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Fasheh <mfasheh@suse.de>, Josef Bacik <jbacik@fb.com>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hi,
+If we take "retry forever" literally on metadata IO errors, we can
+hang at unmount, once it retries those writes forever. This is the
+default behavior, unfortunately.
 
-Building on the discussion "Exposing Extent Information to Userspace"
-at LSF, this patchset offers the userspace definition, implementation,
-and manpages for a new FS_IOC_GETFSMAPX ioctl that enables userspace
-to query the filesystem for a map of every extent in a given range of
-physical block keyspace.
+Add an error configuration option for this behavior and default it to "fail" so
+that an unmount will trigger actuall errors, a shutdown and allow the unmount to
+succeed. It will be noisy, though, as it will log the errors and shutdown that
+occurs.
 
-Note that prior to the existence of block sharing, I'd have said
-"given range of physical blocks", but now that we can return multiple
-owner:offset pairs for a given block, the block keyspace now has to
-include extra fields to uniquely identify a reverse mapping record.
+To fix this, we need to mark the filesystem as being in the process of
+unmounting. Do this with a mount flag that is added at the appropriate time
+(i.e. before the blocking AIL sync). We also need to add this flag if mount
+fails after the initial phase of log recovery has been run.
 
-This ioctl behaves in a similar manner to XFS_IOC_GETBMAPX -- pass in
-an array of struct getfsmapx with key and other control values in the
-first two array elements, and the kernel passes back extent
-information in the other array elements.  The particulars of how to do
-this are documented in the manpage that goes along with this set (it
-applies against man-pages.git) and example code in the other patches
-is against xfsprogs.git#for-next.
+Changelog:
 
-Basically, set the lowest key for which you want records in the first
-array element; the highest key in the second; and the kernel spits out
-records in the rest of the elements.  That's similar to how GETBMAPX
-does it, but different from FIEMAP.  I added a dummy 64-bit "device
-id" per Josef's request, though I'm thinking that could be cut down to
-a simple dev_t.  I also wonder if the kernel should rewrite the low
-key with the last element returned so as to seed the next call, but
-userspace can do that too.
+V3:
+	- No major changes have been done to this patch, only the ones needed to
+	  accomodate it on top of the remaining patches
 
-The kernel-space implementation (for XFS) is buried inside the xfs
-reverse mapping patchset which is treading water at github[1].  I
-prefer not to patchbomb the whole kernel series until I've put the
-mess through better testing, but this should be enough to get the
-mailing list discussion started.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c |  4 ++++
+ fs/xfs/xfs_mount.c    |  9 +++++++++
+ fs/xfs/xfs_mount.h    |  2 ++
+ fs/xfs/xfs_sysfs.c    | 38 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 53 insertions(+)
 
-Questions?  Comments?  Bike sheds?
-
---D
-
-[1] https://github.com/djwong/linux/tree/djwong-experimental
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 6fe6852..c37f118 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1105,6 +1105,10 @@ xfs_buf_iodone_callback_error(
+ 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+ 			goto permanent_error;
+ 
++	/* At unmount we may treat errors differently */
++	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && cfg->fail_at_unmount)
++		goto permanent_error;
++
+ 	/* still a transient error, higher layers will retry */
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index eda3906..d89fba6 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -961,6 +961,7 @@ xfs_mountfs(
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
+  out_log_dealloc:
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+ 	xfs_log_mount_cancel(mp);
+  out_fail_wait:
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+@@ -1012,6 +1013,14 @@ xfs_unmountfs(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+ 	/*
++	 * We now need to tell the world we are unmounting. This will allow
++	 * us to detect that the filesystem is going away and we should error
++	 * out anything that we have been retrying in the background. This will
++	 * prevent neverending retries iin AIL pushing from hanging the unmount.
++	 */
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
++
++	/*
+ 	 * Flush all pending changes from the AIL.
+ 	 */
+ 	xfs_ail_push_all_sync(mp->m_ail);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e3b3267..86f4344 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -59,6 +59,7 @@ struct xfs_error_cfg {
+ 	struct xfs_kobj	kobj;
+ 	int		max_retries;	/* -1 = retry forever */
+ 	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
++	bool		fail_at_unmount;
+ };
+ 
+ typedef struct xfs_mount {
+@@ -193,6 +194,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+ 						   must be synchronous except
+ 						   for space allocations */
++#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
+ #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+ #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+ 						   operations, typically for
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 1ed9033..ab27445 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -447,9 +447,42 @@ retry_timeout_seconds_store(
+ }
+ XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
+ 
++static ssize_t
++fail_at_unmount_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++		struct xfs_error_cfg *cfg = to_error_cfg(kobject);
++
++		return snprintf(buf, PAGE_SIZE, "%d\n", cfg->fail_at_unmount);
++}
++
++static ssize_t
++fail_at_unmount_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	if (val < 0 || val > 1)
++		return -EINVAL;
++
++	cfg->fail_at_unmount = val;
++	return count;
++}
++XFS_SYSFS_ATTR_RW(fail_at_unmount);
++
+ static struct attribute *xfs_error_attrs[] = {
+ 	ATTR_LIST(max_retries),
+ 	ATTR_LIST(retry_timeout_seconds),
++	ATTR_LIST(fail_at_unmount),
+ 	NULL,
+ };
+ 
+@@ -474,20 +507,24 @@ struct xfs_error_init {
+ 	char		*name;
+ 	int		max_retries;
+ 	int		retry_timeout;	/* in seconds */
++	bool		fail_at_unmount;
+ };
+ 
+ static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
+ 	{ .name = "default",
+ 	  .max_retries = -1,
+ 	  .retry_timeout = 0,
++	  .fail_at_unmount = true,
+ 	},
+ 	{ .name = "EIO",
+ 	  .max_retries = -1,
+ 	  .retry_timeout = 0,
++	  .fail_at_unmount = true,
+ 	},
+ 	{ .name = "ENOSPC",
+ 	  .max_retries = -1,
+ 	  .retry_timeout = 0,
++	  .fail_at_unmount = true,
+ 	},
+ 	{ .name = "ENODEV",
+ 	  .max_retries = -1,
+@@ -523,6 +560,7 @@ xfs_error_sysfs_init_class(
+ 		cfg->max_retries = init[i].max_retries;
+ 		cfg->retry_timeout = msecs_to_jiffies(
+ 					init[i].retry_timeout * MSEC_PER_SEC);
++		cfg->fail_at_unmount = init[i].fail_at_unmount;
+ 	}
+ 	return 0;
+ 
+-- 
+2.4.11
 
 _______________________________________________
 xfs mailing list
