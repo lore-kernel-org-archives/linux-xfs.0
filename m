@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 04E377CB8
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 92F5F7CA0
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 19:09:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 953078F8037
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uAVeDo9Mi9V7poZi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:34 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 227393B725
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:34 +0000 (UTC)
-Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u44FhPoL012561
-	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:33 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 7/7] xfs: add "fail at unmount" error handling configuration
-Date: Wed,  4 May 2016 17:43:20 +0200
-Message-Id: <1462376600-8617-8-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
-References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BAC1AC003
+	for <xfs@oss.sgi.com>; Tue,  3 May 2016 17:09:40 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	mWKR7UWlYQUOUHtx for <xfs@oss.sgi.com>;
+	Tue, 03 May 2016 17:09:35 -0700 (PDT)
+Date: Wed, 4 May 2016 10:07:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] mm, debug: report when GFP_NO{FS,IO} is used
+	explicitly from memalloc_no{fs,io}_{save,restore} context
+Message-ID: <20160504000703.GW26977@dastard>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<1461671772-1269-3-git-send-email-mhocko@kernel.org>
+	<20160426225845.GF26977@dastard>
+	<20160428081759.GA31489@dhcp22.suse.cz>
+	<20160428215145.GM26977@dastard>
+	<20160429121219.GL21977@dhcp22.suse.cz>
+	<20160429234008.GN26977@dastard>
+	<20160503153823.GB4470@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160503153823.GB4470@dhcp22.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,186 +33,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-If we take "retry forever" literally on metadata IO errors, we can
-hang at unmount, once it retries those writes forever. This is the
-default behavior, unfortunately.
+On Tue, May 03, 2016 at 05:38:23PM +0200, Michal Hocko wrote:
+> On Sat 30-04-16 09:40:08, Dave Chinner wrote:
+> > On Fri, Apr 29, 2016 at 02:12:20PM +0200, Michal Hocko wrote:
+> [...]
+> > > - was it 
+> > > "inconsistent {RECLAIM_FS-ON-[RW]} -> {IN-RECLAIM_FS-[WR]} usage"
+> > > or a different class reports?
+> > 
+> > Typically that was involved, but it quite often there'd be a number
+> > of locks and sometimes even interrupt stacks in an interaction
+> > between 5 or 6 different processes. Lockdep covers all sorts of
+> > stuff now (like fs freeze annotations as well as locks and memory
+> > reclaim) so sometimes the only thing we can do is remove the
+> > reclaim context from the stack and see if that makes it go away...
+> 
+> That is what I was thinking of. lockdep_reclaim_{disable,enable} or
+> something like that to tell __lockdep_trace_alloc to not skip
+> mark_held_locks(). This would effectivelly help to get rid of reclaim
+> specific reports. It is hard to tell whether there would be others,
+> though.
 
-Add an error configuration option for this behavior and default it to "fail" so
-that an unmount will trigger actuall errors, a shutdown and allow the unmount to
-succeed. It will be noisy, though, as it will log the errors and shutdown that
-occurs.
+Yeah, though I suspect this would get messy having to scatter it
+around the code. I can encapsulate it via internal XFS KM flags,
+though, so I do think that will be a real issue.
 
-To fix this, we need to mark the filesystem as being in the process of
-unmounting. Do this with a mount flag that is added at the appropriate time
-(i.e. before the blocking AIL sync). We also need to add this flag if mount
-fails after the initial phase of log recovery has been run.
+> > > > They may have been fixed since, but I'm sceptical
+> > > > of that because, generally speaking, developer testing only catches
+> > > > the obvious lockdep issues. i.e. it's users that report all the
+> > > > really twisty issues, and they are generally not reproducable except
+> > > > under their production workloads...
+> > > > 
+> > > > IOWs, the absence of reports in your testing does not mean there
+> > > > isn't a problem, and that is one of the biggest problems with
+> > > > lockdep annotations - we have no way of ever knowing if they are
+> > > > still necessary or not without exposing users to regressions and
+> > > > potential deadlocks.....
+> > > 
+> > > I understand your points here but if we are sure that those lockdep
+> > > reports are just false positives then we should rather provide an api to
+> > > silence lockdep for those paths
+> > 
+> > I agree with this - please provide such infrastructure before we
+> > need it...
+> 
+> Do you think a reclaim specific lockdep annotation would be sufficient?
 
-Changelog:
+It will help - it'll take some time to work through all the explicit
+KM_NOFS calls in XFS, though, to determine if they are just working
+around lockdep false positives or some other potential problem....
 
-V3:
-	- No major changes have been done to this patch, only the ones needed to
-	  accomodate it on top of the remaining patches
+> I do understand your concerns and I really do not ask you to redesign
+> your code. I would like make the code more maintainable and reducing the
+> number of (undocumented) GFP_NOFS usage to the minimum seems to be like
+> a first step. Now the direct usage of GFP_NOFS (resp. KM_NOFS) in xfs is
+> not that large.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_buf_item.c |  4 ++++
- fs/xfs/xfs_mount.c    |  9 +++++++++
- fs/xfs/xfs_mount.h    |  2 ++
- fs/xfs/xfs_sysfs.c    | 38 ++++++++++++++++++++++++++++++++++++++
- 4 files changed, 53 insertions(+)
+That's true, and if we can reduce them to real cases of GFP_NOFS
+being needed vs annotations to silence lockdep false positives we'll
+then know what problems we really need to fix...
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 6fe6852..c37f118 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1105,6 +1105,10 @@ xfs_buf_iodone_callback_error(
- 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
- 			goto permanent_error;
- 
-+	/* At unmount we may treat errors differently */
-+	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && cfg->fail_at_unmount)
-+		goto permanent_error;
-+
- 	/* still a transient error, higher layers will retry */
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index eda3906..d89fba6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -961,6 +961,7 @@ xfs_mountfs(
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
-  out_log_dealloc:
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-@@ -1012,6 +1013,14 @@ xfs_unmountfs(
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 
- 	/*
-+	 * We now need to tell the world we are unmounting. This will allow
-+	 * us to detect that the filesystem is going away and we should error
-+	 * out anything that we have been retrying in the background. This will
-+	 * prevent neverending retries iin AIL pushing from hanging the unmount.
-+	 */
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-+
-+	/*
- 	 * Flush all pending changes from the AIL.
- 	 */
- 	xfs_ail_push_all_sync(mp->m_ail);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e3b3267..86f4344 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -59,6 +59,7 @@ struct xfs_error_cfg {
- 	struct xfs_kobj	kobj;
- 	int		max_retries;	/* -1 = retry forever */
- 	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
-+	bool		fail_at_unmount;
- };
- 
- typedef struct xfs_mount {
-@@ -193,6 +194,7 @@ typedef struct xfs_mount {
- #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
- 						   must be synchronous except
- 						   for space allocations */
-+#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
- #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
- #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
- 						   operations, typically for
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 1ed9033..ab27445 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -447,9 +447,42 @@ retry_timeout_seconds_store(
- }
- XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
- 
-+static ssize_t
-+fail_at_unmount_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+		struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+
-+		return snprintf(buf, PAGE_SIZE, "%d\n", cfg->fail_at_unmount);
-+}
-+
-+static ssize_t
-+fail_at_unmount_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < 0 || val > 1)
-+		return -EINVAL;
-+
-+	cfg->fail_at_unmount = val;
-+	return count;
-+}
-+XFS_SYSFS_ATTR_RW(fail_at_unmount);
-+
- static struct attribute *xfs_error_attrs[] = {
- 	ATTR_LIST(max_retries),
- 	ATTR_LIST(retry_timeout_seconds),
-+	ATTR_LIST(fail_at_unmount),
- 	NULL,
- };
- 
-@@ -474,20 +507,24 @@ struct xfs_error_init {
- 	char		*name;
- 	int		max_retries;
- 	int		retry_timeout;	/* in seconds */
-+	bool		fail_at_unmount;
- };
- 
- static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "default",
- 	  .max_retries = -1,
- 	  .retry_timeout = 0,
-+	  .fail_at_unmount = true,
- 	},
- 	{ .name = "EIO",
- 	  .max_retries = -1,
- 	  .retry_timeout = 0,
-+	  .fail_at_unmount = true,
- 	},
- 	{ .name = "ENOSPC",
- 	  .max_retries = -1,
- 	  .retry_timeout = 0,
-+	  .fail_at_unmount = true,
- 	},
- 	{ .name = "ENODEV",
- 	  .max_retries = -1,
-@@ -523,6 +560,7 @@ xfs_error_sysfs_init_class(
- 		cfg->max_retries = init[i].max_retries;
- 		cfg->retry_timeout = msecs_to_jiffies(
- 					init[i].retry_timeout * MSEC_PER_SEC);
-+		cfg->fail_at_unmount = init[i].fail_at_unmount;
- 	}
- 	return 0;
- 
+Cheers,
+
+Dave.
 -- 
-2.4.11
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
