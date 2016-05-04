@@ -1,20 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D9A07CAE
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:54:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE29AAC005
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:54:01 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id HTw6KCLWVpU6dzKa for
-	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:54:00 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v5 5/5] dax: fix a comment in dax_zero_page_range and
-	dax_truncate_page
-Date: Fri,  6 May 2016 15:53:11 -0600
-Message-Id: <1462571591-3361-6-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
-References: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id CBF5A7CA0
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 04:53:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5EB80AC002
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 02:53:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HAkSpA45t0NdYSm3 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 04 May 2016 02:53:32 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id DC78D62678
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 09:53:31 +0000 (UTC)
+Received: from redhat.com (unused [10.10.50.11] (may be forged))
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u449rSpA005913
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Wed, 4 May 2016 05:53:31 -0400
+Date: Wed, 4 May 2016 11:53:28 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/7] Configurable error behavior [V2]
+Message-ID: <20160504095328.GA2855@redhat.com>
+References: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
+	<20160503225948.GU26977@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160503225948.GU26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +37,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: xfs@oss.sgi.com
 
-The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
+On Wed, May 04, 2016 at 08:59:48AM +1000, Dave Chinner wrote:
+> On Tue, May 03, 2016 at 07:55:33PM +0200, Carlos Maiolino wrote:
+> > Hi folks,
+> > 
+> > I spoke with Dave and to offload him a bit, I took over his patchset for enable
+> > configurable error handlers.
+> > 
+> > Since he did most of the design, I kept his signed-off to the patches.
+> > 
+> > Here are core the changes I did from his last patchset to this one:
+> > 
+> >  - Removed fail_speed configuration
+> > 	According with what has been discussed, there is no real need to have a
+> > fail_speed configuration, but instead, use the "max_retries" configuration to
+> > get for how long the filesystem should retrying, with the only special case for
+> > 	"-1", which will make the filesystem to retry forever.
+> > 
+> >  - Fail at unmount is no longer a config option
+> > 	Having a filesystem stuck forever during unmount due errors is not a
+> > 	good thing, so just enforce it if we are trying to unmount a failed
+> > 	filesystem.
+> 
+> I think this is wrong - the option should still remain to let the
+> filesystem retry for a long while if desired. We have lazy unmounts
+> to deal with this situation (i.e. it won't block an unmount command)
+> and there are cases where leaving the unmount retrying in the
+> background is useful.
+> 
+> If you are particularly worried about not being able to shut down a
+> filesystem that has been unmounted lazily and hence terminate the
+> retry forever loop, then we should be looking at ensuring the fs is
+> still visible in /sys/fs/xfs/<dev> when it is in this state and
+> providing a new shutdown hook through that interface....
+> 
 
-09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
-macros
+Right, I will keep this option, although, I don't think it's useful to have this
+option configurable with a per-error granularity, a single fail_at_unmount might
+suffice.
 
-The comments for the above functions described a distinction between
-those, that is now redundant, so remove those paragraphs
+> > I reduced by now, the amount of patches into this patchset, once, our priority
+> > here IMHO is to enable the possibility to shutdown the filesystem when we have
+> > metadata errors, and I can work on disabling specific error configs and add
+> > memory errors later, I hope that with a reduced amount of patches it can be
+> > easier for people to review the core of the error handlers configuration and
+> > speed up the inclusion of this patchset.
+> 
+> We'll see - the issue here is that once we settle on a sysfs
+> interface, we can't change it easily (it's part of the user facing
+> ABI). Hence if we don't consider all the different types of errors
+> we want to handle from the start, we may miss something that we
+> can't easily fix in future. Hence we at least have to consider the
+> different constraints for the different error types now to determine
+> if the abstractions and presentation will handle everything we think
+> we might need...
+> 
 
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/dax.c | 12 ------------
- 1 file changed, 12 deletions(-)
+Agreed, the interface for now looks good IMO, and adding the possibility to hide
+some specific error handlers from userspace can be done later without a real
+impact in the ABI, I just believe that implementing the interface for errors
+that will be visible is more important for now, specifically for EIO and ENOSPC
 
-diff --git a/fs/dax.c b/fs/dax.c
-index d8c974e..b8fa85a 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1221,12 +1221,6 @@ static bool dax_range_is_aligned(struct block_device *bdev,
-  * page in a DAX file.  This is intended for hole-punch operations.  If
-  * you are truncating a file, the helper function dax_truncate_page() may be
-  * more convenient.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 							get_block_t get_block)
-@@ -1279,12 +1273,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
-  *
-  * Similar to block_truncate_page(), this function can be called by a
-  * filesystem when it is truncating a DAX file to handle the partial page.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- {
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
 -- 
-2.5.5
+Carlos
 
 _______________________________________________
 xfs mailing list
