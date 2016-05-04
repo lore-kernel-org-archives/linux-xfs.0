@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7878F7CFD
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BB93D7CA4
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F01CAAC003
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:48 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id zJCy8uqKCW5PzJH7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:47 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/14] xfs: kill xfs_zero_remaining_bytes
-Date: Tue,  3 May 2016 23:29:07 +0200
-Message-Id: <1462310947-16132-15-git-send-email-hch@lst.de>
-In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
-References: <1462310947-16132-1-git-send-email-hch@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EA2D304067
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:32 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MFyXKbFUq6vfkobZ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:31 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id E9A7664D2D
+	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:30 +0000 (UTC)
+Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u44FhPoI012561
+	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:30 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 4/7] xfs: introduce table-based init for error behaviors
+Date: Wed,  4 May 2016 17:43:17 +0200
+Message-Id: <1462376600-8617-5-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,178 +39,128 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Instead punch the whole first, and the use the our zeroing helper
-to punch out the edge blocks.
+Before we start expanding the number of error classes and errors we
+can configure behaviour for, we need a simple and clear way to
+define the default behaviour that we initialized each mount with.
+Introduce a table based method for keeping the initial configuration
+in, and apply that to the existing initialization code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Changelog:
+
+V3:
+	- Replace all .fail_speed fields by .max_retries, once the code will no
+	  longer use .fail_speed to decide when it should fail
+	- The "Default" attribute is also in lower-case (default). I don't
+	  believe it's a good idea to have a mixed-case attribute names in sysfs.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 133 ++++++-------------------------------------------
- 1 file changed, 14 insertions(+), 119 deletions(-)
+ fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 60 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5d030b0..0efabc1 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1096,101 +1096,6 @@ error1:	/* Just cancel transaction */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 0a9adcd..2a5b1cf 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -395,11 +395,67 @@ struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
+ };
+ 
++/*
++ * Error initialization tables. These need to be ordered in the same
++ * order as the enums used to index the array. All class init tables need to
++ * define a "default" behaviour as the first entry, all other entries can be
++ * empty.
++ */
++struct xfs_error_init {
++	char		*name;
++	int		max_retries;
++};
++
++static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
++	{ .name = "default",
++	  .max_retries = -1,
++	},
++};
++
++static int
++xfs_error_sysfs_init_class(
++	struct xfs_mount	*mp,
++	int			class,
++	const char		*parent_name,
++	struct xfs_kobj		*parent_kobj,
++	const struct xfs_error_init init[])
++{
++	struct xfs_error_cfg	*cfg;
++	int			error;
++	int			i;
++
++	ASSERT(class < XFS_ERR_CLASS_MAX);
++
++	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, parent_name);
++	if (error)
++		return error;
++
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		cfg = &mp->m_error_cfg[class][i];
++		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++					parent_kobj, init[i].name);
++		if (error)
++			goto out_error;
++
++		cfg->max_retries = init[i].max_retries;
++	}
++	return 0;
++
++out_error:
++	/* unwind the entries that succeeded */
++	for (i--; i >= 0; i--) {
++		cfg = &mp->m_error_cfg[class][i];
++		xfs_sysfs_del(&cfg->kobj);
++	}
++	xfs_sysfs_del(parent_kobj);
++	return error;
++}
++
+ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_error_cfg	*cfg;
+ 	int			error;
+ 
+ 	/* .../xfs/<dev>/error/ */
+@@ -409,22 +465,14 @@ xfs_error_sysfs_init(
+ 		return error;
+ 
+ 	/* .../xfs/<dev>/error/metadata/ */
+-	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
+-				&mp->m_error_kobj, "metadata");
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
++				"metadata", &mp->m_error_meta_kobj,
++				xfs_error_meta_init);
+ 	if (error)
+ 		goto out_error;
+ 
+-	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
+-	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+-				&mp->m_error_meta_kobj, "default");
+-	if (error)
+-		goto out_error_meta;
+-	cfg->max_retries = -1;
+-
+ 	return 0;
+ 
+-out_error_meta:
+-	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ out_error:
+ 	xfs_sysfs_del(&mp->m_error_kobj);
  	return error;
- }
- 
--/*
-- * Zero file bytes between startoff and endoff inclusive.
-- * The iolock is held exclusive and no blocks are buffered.
-- *
-- * This function is used by xfs_free_file_space() to zero
-- * partial blocks when the range to free is not block aligned.
-- * When unreserving space with boundaries that are not block
-- * aligned we round up the start and round down the end
-- * boundaries and then use this function to zero the parts of
-- * the blocks that got dropped during the rounding.
-- */
--STATIC int
--xfs_zero_remaining_bytes(
--	xfs_inode_t		*ip,
--	xfs_off_t		startoff,
--	xfs_off_t		endoff)
--{
--	xfs_bmbt_irec_t		imap;
--	xfs_fileoff_t		offset_fsb;
--	xfs_off_t		lastoffset;
--	xfs_off_t		offset;
--	xfs_buf_t		*bp;
--	xfs_mount_t		*mp = ip->i_mount;
--	int			nimap;
--	int			error = 0;
--
--	/*
--	 * Avoid doing I/O beyond eof - it's not necessary
--	 * since nothing can read beyond eof.  The space will
--	 * be zeroed when the file is extended anyway.
--	 */
--	if (startoff >= XFS_ISIZE(ip))
--		return 0;
--
--	if (endoff > XFS_ISIZE(ip))
--		endoff = XFS_ISIZE(ip);
--
--	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
--		uint lock_mode;
--
--		offset_fsb = XFS_B_TO_FSBT(mp, offset);
--		nimap = 1;
--
--		lock_mode = xfs_ilock_data_map_shared(ip);
--		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
--		xfs_iunlock(ip, lock_mode);
--
--		if (error || nimap < 1)
--			break;
--		ASSERT(imap.br_blockcount >= 1);
--		ASSERT(imap.br_startoff == offset_fsb);
--		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
--
--		if (imap.br_startblock == HOLESTARTBLOCK ||
--		    imap.br_state == XFS_EXT_UNWRITTEN) {
--			/* skip the entire extent */
--			lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff +
--						      imap.br_blockcount) - 1;
--			continue;
--		}
--
--		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
--		if (lastoffset > endoff)
--			lastoffset = endoff;
--
--		/* DAX can just zero the backing device directly */
--		if (IS_DAX(VFS_I(ip))) {
--			error = dax_zero_page_range(VFS_I(ip), offset,
--						    lastoffset - offset + 1,
--						    xfs_get_blocks_direct);
--			if (error)
--				return error;
--			continue;
--		}
--
--		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
--				mp->m_rtdev_targp : mp->m_ddev_targp,
--				xfs_fsb_to_db(ip, imap.br_startblock),
--				BTOBB(mp->m_sb.sb_blocksize),
--				0, &bp, NULL);
--		if (error)
--			return error;
--
--		memset(bp->b_addr +
--				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
--		       0, lastoffset - offset + 1);
--
--		error = xfs_bwrite(bp);
--		xfs_buf_relse(bp);
--		if (error)
--			return error;
--	}
--	return error;
--}
--
- static int
- xfs_unmap_extent(
- 	struct xfs_inode	*ip,
-@@ -1316,7 +1221,7 @@ xfs_free_file_space(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_fileoff_t		endoffset_fsb;
--	int			done, error;
-+	int			done = 0, error;
- 
- 	trace_xfs_free_file_space(ip);
- 
-@@ -1348,31 +1253,21 @@ xfs_free_file_space(
- 			return error;
- 	}
- 
--	if ((done = (endoffset_fsb <= startoffset_fsb)))
--		/*
--		 * One contiguous piece to clear
--		 */
--		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
--	else {
--		/*
--		 * Some full blocks, possibly two pieces to clear
--		 */
--		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
--			error = xfs_zero_remaining_bytes(ip, offset,
--				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
--		if (!error &&
--		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
--			error = xfs_zero_remaining_bytes(ip,
--				XFS_FSB_TO_B(mp, endoffset_fsb),
--				offset + len - 1);
--	}
--
--	while (!error && !done) {
--		error = xfs_unmap_extent(ip, startoffset_fsb,
--				endoffset_fsb - startoffset_fsb, &done);
-+	if (endoffset_fsb > startoffset_fsb) {
-+		while (!done) {
-+			error = xfs_unmap_extent(ip, startoffset_fsb,
-+					endoffset_fsb - startoffset_fsb, &done);
-+			if (error)
-+				return error;
-+		}
- 	}
- 
--	return error;
-+	/*
-+	 * Now that we've unmap all full blocks we'll have to zero out any
-+	 * partial block at the beginning and/or end.  xfs_zero_range is
-+	 * smart enough to skip any holes, including those we just created.
-+	 */
-+	return xfs_zero_range(ip, offset, len, NULL);
- }
- 
- /*
 -- 
-2.1.4
+2.4.11
 
 _______________________________________________
 xfs mailing list
