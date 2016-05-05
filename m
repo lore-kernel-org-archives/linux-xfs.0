@@ -1,30 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BB93D7CA4
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:32 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 331137CA1
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 10:18:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EA2D304067
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:32 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D68858F8033
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 08:18:31 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MFyXKbFUq6vfkobZ (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mmYuhUapb8Rok0Jo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:31 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 08:18:30 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id E9A7664D2D
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:30 +0000 (UTC)
-Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u44FhPoI012561
-	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:30 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 4/7] xfs: introduce table-based init for error behaviors
-Date: Wed,  4 May 2016 17:43:17 +0200
-Message-Id: <1462376600-8617-5-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	by mx1.redhat.com (Postfix) with ESMTPS id B22F364D1D
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 15:18:29 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-205.bos.redhat.com [10.18.41.205])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u45FITtb007147
+	for <xfs@oss.sgi.com>; Thu, 5 May 2016 11:18:29 -0400
+Date: Thu, 5 May 2016 11:18:28 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/7] Configurable error behavior [V3]
+Message-ID: <20160505151827.GA1523@bfoster.bfoster>
 References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	<20160505141107.GG1231@bfoster.bfoster>
+	<20160505143718.GB9359@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160505143718.GB9359@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,134 +37,137 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Before we start expanding the number of error classes and errors we
-can configure behaviour for, we need a simple and clear way to
-define the default behaviour that we initialized each mount with.
-Introduce a table based method for keeping the initial configuration
-in, and apply that to the existing initialization code.
+On Thu, May 05, 2016 at 04:37:18PM +0200, Carlos Maiolino wrote:
+> On Thu, May 05, 2016 at 10:11:07AM -0400, Brian Foster wrote:
+> > On Wed, May 04, 2016 at 05:43:13PM +0200, Carlos Maiolino wrote:
+> > > This is the new revision of this patchset, according to last comments.
+> > > 
+> > > This patchset is aimed to implement a configurable error behavior in XFS, and
+> > > most of the design has been done by Dave, so, that's why I kept his signed-off
+> > > in the patches.
+> > > 
+> > > This new revision has the detailed changelog written on each patch, but the
+> > > major changes are:
+> > > 
+> > > 	- Detailed changelog by-patch and description fixed to become
+> > > 	  (hopefuly) more clear
+> > > 	- kept fail_at_unmount as a sysfs attribute
+> > > 
+> > > 
+> > > Regarding fail_at_unmount, I left it almost exactly as Dave's design, giving his
+> > > comments on the last revision, although, I still think there is no need to keep
+> > > it as a per-error granularity, so, I was wondering if a single, global option in
+> > > /sys/fs/xfs/<dev>/error/fail_at_unmount wouldn't suffice, but, this will require
+> > > a new place to store the value inside kernel, instead of keeping it inside
+> > > struct xfs_error_cfg, or maybe use the same structure but use it outside of the
+> > > m_error_cfg array?
+> > > 
+> > 
+> > I agree with regard to the granularity of fail_at_unmount. This was
+> > brought up previously:
+> > 
+> > http://oss.sgi.com/archives/xfs/2016-02/msg00558.html
+> > 
+> > ... and I haven't heard a use case for per-error granularity.
+> 
+> Hi, yes, my comment was based on our previous discussion, my apologies to not
+> have made it clear.
+> 
 
-Changelog:
+Ok..
 
-V3:
-	- Replace all .fail_speed fields by .max_retries, once the code will no
-	  longer use .fail_speed to decide when it should fail
-	- The "Default" attribute is also in lower-case (default). I don't
-	  believe it's a good idea to have a mixed-case attribute names in sysfs.
+> > 
+> > I suggest just to pull it out of the error classification stuff entirely
+> > and place it under xfs_mount. E.g., at the same level as "fail_writes"
+> > (but not a DEBUG mode only option).
+> > 
+> > I'm also wondering whether we need more mechanism for the
+> > fail_at_unmount behavior. For example, instead of defining
+> > XFS_MOUNT_UNMOUNTING, could we just call a function that resets
+> > max_retries (of each class) to 0 in the unmount path? Then maybe call
+> > the mount tunable retry_on_unmount or something like that. Thoughts?
+> > 
+> I don't oppose to that, although, having a flag like XFS_MOUNT_UNMOUNTING, might
+> be useful in the future, but still, wouldn't be better this single flag, instead
+> of walk through all classes/errors resetting the max_retries? It sounds as
+> granular as having fail_at_unmount inside each error, despite the fact it's not
+> exposed to user-space, we will need to interact over each max_retries to
+> actually shutdown the filesystem during unmount, which, is also error-prone
+> IMHO.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 60 insertions(+), 12 deletions(-)
+I view the granularity problem as a usability problem, not necessarily a
+code problem. E.g., why would somebody know or care to configure certain
+errors to fail on unmount but not others. If we have a knob, I think the
+knob is more clear as a general behavior knob rather than an error
+classification knob. Of course, that assumes there isn't some unknown
+good reason for per-error behavior (and/or a userspace mgmt tool that
+could provide a more usable interface on top of per-error knobs).
 
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 0a9adcd..2a5b1cf 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -395,11 +395,67 @@ struct kobj_type xfs_error_ktype = {
- 	.release = xfs_sysfs_release,
- };
- 
-+/*
-+ * Error initialization tables. These need to be ordered in the same
-+ * order as the enums used to index the array. All class init tables need to
-+ * define a "default" behaviour as the first entry, all other entries can be
-+ * empty.
-+ */
-+struct xfs_error_init {
-+	char		*name;
-+	int		max_retries;
-+};
-+
-+static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
-+	{ .name = "default",
-+	  .max_retries = -1,
-+	},
-+};
-+
-+static int
-+xfs_error_sysfs_init_class(
-+	struct xfs_mount	*mp,
-+	int			class,
-+	const char		*parent_name,
-+	struct xfs_kobj		*parent_kobj,
-+	const struct xfs_error_init init[])
-+{
-+	struct xfs_error_cfg	*cfg;
-+	int			error;
-+	int			i;
-+
-+	ASSERT(class < XFS_ERR_CLASS_MAX);
-+
-+	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
-+				&mp->m_error_kobj, parent_name);
-+	if (error)
-+		return error;
-+
-+	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
-+		cfg = &mp->m_error_cfg[class][i];
-+		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
-+					parent_kobj, init[i].name);
-+		if (error)
-+			goto out_error;
-+
-+		cfg->max_retries = init[i].max_retries;
-+	}
-+	return 0;
-+
-+out_error:
-+	/* unwind the entries that succeeded */
-+	for (i--; i >= 0; i--) {
-+		cfg = &mp->m_error_cfg[class][i];
-+		xfs_sysfs_del(&cfg->kobj);
-+	}
-+	xfs_sysfs_del(parent_kobj);
-+	return error;
-+}
-+
- int
- xfs_error_sysfs_init(
- 	struct xfs_mount	*mp)
- {
--	struct xfs_error_cfg	*cfg;
- 	int			error;
- 
- 	/* .../xfs/<dev>/error/ */
-@@ -409,22 +465,14 @@ xfs_error_sysfs_init(
- 		return error;
- 
- 	/* .../xfs/<dev>/error/metadata/ */
--	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
--				&mp->m_error_kobj, "metadata");
-+	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
-+				"metadata", &mp->m_error_meta_kobj,
-+				xfs_error_meta_init);
- 	if (error)
- 		goto out_error;
- 
--	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
--	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
--				&mp->m_error_meta_kobj, "default");
--	if (error)
--		goto out_error_meta;
--	cfg->max_retries = -1;
--
- 	return 0;
- 
--out_error_meta:
--	xfs_sysfs_del(&mp->m_error_meta_kobj);
- out_error:
- 	xfs_sysfs_del(&mp->m_error_kobj);
- 	return error;
--- 
-2.4.11
+> It also depends on how granular we will implement fail_at_unmount. If it's a
+> single global option, resetting all max_retries works, otherwise it might not
+> work, for example, if we decide to have fail_at_unmount for each class, we might
+> need to reset max_retries only in specific errors, which will increase the
+> complexity of the code.
+> 
+
+I'm assuming a per-mount option is sufficient. :) Otherwise, I'm just
+thinking out loud for ways to try and condense and/or reuse the code a
+bit here. I don't see a reason to add new mechanisms or config tunables
+in cases where we can accomplish the same thing by making existing
+knobs/mechanisms sufficiently generic.
+
+Sure, the code might be slightly more complex (or maybe some of the
+existing code can be refactored to support a reinit) and it might
+introduce the issue of unmount racing against sysfs knob updates. The
+tradeoff is that it reuses an existing mechanism, for what that's worth.
+Just an idea, though. ;)
+
+Brian
+
+> Well, hope my comments make sense, just giving my $0.02 :)
+> 
+> cheers
+> 
+> > Brian
+> > 
+> > > First 6 patches are ready, the fail_at_unmount one, need to be re-worked if we
+> > > want it in a less granular way, but until now I don't think we reached any
+> > > decision about how it should be implemented.
+> > > 
+> > >  fs/xfs/xfs_buf.h      |  22 ++++
+> > >  fs/xfs/xfs_buf_item.c | 126 ++++++++++++++--------
+> > >  fs/xfs/xfs_mount.c    |  19 +++-
+> > >  fs/xfs/xfs_mount.h    |  32 ++++++
+> > >  fs/xfs/xfs_sysfs.c    | 283 +++++++++++++++++++++++++++++++++++++++++++++++++-
+> > >  fs/xfs/xfs_sysfs.h    |   3 +
+> > >  6 files changed, 437 insertions(+), 48 deletions(-)
+> > > 
+> > > -- 
+> > > 2.4.11
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> -- 
+> Carlos
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
