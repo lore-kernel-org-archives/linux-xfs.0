@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B711A7CA1
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 10:22:34 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 092827CA7
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 16:45:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 548F5304051
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 08:22:34 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 8KlyXySbHUTjjaqd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 08:22:32 -0700 (PDT)
-Date: Thu, 5 May 2016 08:22:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E1F8AC006
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:45:09 -0700 (PDT)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id II5pQ9sNvZMXp5Jr for
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 14:45:08 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
 Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
-Message-ID: <20160505152230.GA3994@infradead.org>
+Date: Thu, 5 May 2016 21:45:07 +0000
+Message-ID: <1462484695.29294.7.camel@intel.com>
 References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
 	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
-	<5727753F.6090104@plexistor.com>
-	<20160505142433.GA4557@infradead.org>
+	<5727753F.6090104@plexistor.com> <20160505142433.GA4557@infradead.org>
 	<CAPcyv4gdmo5m=Arf5sp5izJfNaaAkaaMbOzud8KRcBEC8RRu1Q@mail.gmail.com>
+	<20160505152230.GA3994@infradead.org>
+In-Reply-To: <20160505152230.GA3994@infradead.org>
+Content-Language: en-US
+Content-ID: <70E6DC278A3EE74D9541D62DE6070F32@intel.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gdmo5m=Arf5sp5izJfNaaAkaaMbOzud8KRcBEC8RRu1Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +29,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Boaz Harrosh <boaz@plexistor.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <axboe@fb.com>, linux-nvdimm <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux MM <linux-mm@kvack.org>, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: "Williams, Dan J" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "matthew@wil.cx" <matthew@wil.cx>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-On Thu, May 05, 2016 at 08:15:32AM -0700, Dan Williams wrote:
-> > Agreed - makig O_DIRECT less direct than not having it is plain stupid,
-> > and I somehow missed this initially.
-> 
-> Of course I disagree because like Dave argues in the msync case we
-> should do the correct thing first and make it fast later, but also
-> like Dave this arguing in circles is getting tiresome.
-
-We should do the right thing first, and make it fast later.  But this
-proposal is not getting it right - it still does not handle errors
-for the fast path, but magically makes it work for direct I/O by
-in general using a less optional path for O_DIRECT.  It's getting the
-worst of all choices.
-
-As far as I can tell the only sensible option is to:
-
- - always try dax-like I/O first
- - have a custom get_user_pages + rw_bytes fallback handles bad blocks
-   when hitting EIO
-
-And then we need to sort out the concurrent write synchronization.
-Again there I think we absolutely have to obey Posix for the !O_DIRECT
-case and can avoid it for O_DIRECT, similar to the existing non-DAX
-semantics.  If we want any special additional semantics we _will_ need
-a special O_DAX flag.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA1LTA1IGF0IDA4OjIyIC0wNzAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gT24gVGh1LCBNYXkgMDUsIDIwMTYgYXQgMDg6MTU6MzJBTSAtMDcwMCwgRGFuIFdpbGxp
+YW1zIHdyb3RlOg0KPiA+IA0KPiA+ID4gDQo+ID4gPiBBZ3JlZWQgLSBtYWtpZyBPX0RJUkVDVCBs
+ZXNzIGRpcmVjdCB0aGFuIG5vdCBoYXZpbmcgaXQgaXMgcGxhaW4NCj4gPiA+IHN0dXBpZCwNCj4g
+PiA+IGFuZCBJIHNvbWVob3cgbWlzc2VkIHRoaXMgaW5pdGlhbGx5Lg0KPiA+IE9mIGNvdXJzZSBJ
+IGRpc2FncmVlIGJlY2F1c2UgbGlrZSBEYXZlIGFyZ3VlcyBpbiB0aGUgbXN5bmMgY2FzZSB3ZQ0K
+PiA+IHNob3VsZCBkbyB0aGUgY29ycmVjdCB0aGluZyBmaXJzdCBhbmQgbWFrZSBpdCBmYXN0IGxh
+dGVyLCBidXQgYWxzbw0KPiA+IGxpa2UgRGF2ZSB0aGlzIGFyZ3VpbmcgaW4gY2lyY2xlcyBpcyBn
+ZXR0aW5nIHRpcmVzb21lLg0KPiBXZSBzaG91bGQgZG8gdGhlIHJpZ2h0IHRoaW5nIGZpcnN0LCBh
+bmQgbWFrZSBpdCBmYXN0IGxhdGVyLsKgwqBCdXQgdGhpcw0KPiBwcm9wb3NhbCBpcyBub3QgZ2V0
+dGluZyBpdCByaWdodCAtIGl0IHN0aWxsIGRvZXMgbm90IGhhbmRsZSBlcnJvcnMNCj4gZm9yIHRo
+ZSBmYXN0IHBhdGgsIGJ1dCBtYWdpY2FsbHkgbWFrZXMgaXQgd29yayBmb3IgZGlyZWN0IEkvTyBi
+eQ0KPiBpbiBnZW5lcmFsIHVzaW5nIGEgbGVzcyBvcHRpb25hbCBwYXRoIGZvciBPX0RJUkVDVC7C
+oMKgSXQncyBnZXR0aW5nIHRoZQ0KPiB3b3JzdCBvZiBhbGwgY2hvaWNlcy4NCj4gDQo+IEFzIGZh
+ciBhcyBJIGNhbiB0ZWxsIHRoZSBvbmx5IHNlbnNpYmxlIG9wdGlvbiBpcyB0bzoNCj4gDQo+IMKg
+LSBhbHdheXMgdHJ5IGRheC1saWtlIEkvTyBmaXJzdA0KPiDCoC0gaGF2ZSBhIGN1c3RvbSBnZXRf
+dXNlcl9wYWdlcyArIHJ3X2J5dGVzIGZhbGxiYWNrIGhhbmRsZXMgYmFkIGJsb2Nrcw0KPiDCoMKg
+wqB3aGVuIGhpdHRpbmcgRUlPDQoNCkknbSBub3Qgc3VyZSBJIGNvbXBsZXRlbHkgdW5kZXJzdGFu
+ZCBob3cgdGhpcyB3aWxsIHdvcms/IENhbiB5b3UgZXhwbGFpbg0KYSBiaXQ/IFdvdWxkIHdlIGhh
+dmUgdG8gZXhwb3J0IHJ3X2J5dGVzIHVwIHRvIGxheWVycyBhYm92ZSB0aGUgcG1lbQ0KZHJpdmVy
+PyBXaGVyZSBkb2VzIGdldF91c2VyX3BhZ2VzIGNvbWUgaW4/DQoNCj4gDQo+IEFuZCB0aGVuIHdl
+IG5lZWQgdG8gc29ydCBvdXQgdGhlIGNvbmN1cnJlbnQgd3JpdGUgc3luY2hyb25pemF0aW9uLg0K
+PiBBZ2FpbiB0aGVyZSBJIHRoaW5rIHdlIGFic29sdXRlbHkgaGF2ZSB0byBvYmV5IFBvc2l4IGZv
+ciB0aGUgIU9fRElSRUNUDQo+IGNhc2UgYW5kIGNhbiBhdm9pZCBpdCBmb3IgT19ESVJFQ1QsIHNp
+bWlsYXIgdG8gdGhlIGV4aXN0aW5nIG5vbi1EQVgNCj4gc2VtYW50aWNzLsKgwqBJZiB3ZSB3YW50
+IGFueSBzcGVjaWFsIGFkZGl0aW9uYWwgc2VtYW50aWNzIHdlIF93aWxsXyBuZWVkDQo+IGEgc3Bl
+Y2lhbCBPX0RBWCBmbGFnLg0KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXw0KPiBMaW51eC1udmRpbW0gbWFpbGluZyBsaXN0DQo+IExpbnV4LW52ZGltbUBs
+aXN0cy4wMS5vcmcNCj4gaHR0cHM6Ly9saXN0cy4wMS5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
+eC1udmRpbW0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
