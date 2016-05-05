@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E133C7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:52:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 99C718F8037
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 12:52:08 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id EHUp6N4KdInBZ3OU (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 669727CA0
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 09:10:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CE604AC003
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 07:10:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kEwTd2IanwXhSx7B (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 12:52:06 -0700 (PDT)
-Date: Thu, 5 May 2016 12:51:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 2/3] xfs: introduce the XFS_IOC_GETFSMAPX ioctl
-Message-ID: <20160505195149.GB2905@birch.djwong.org>
-References: <20160505194754.GA2785@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 07:10:34 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id BE04783F45
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:10:33 +0000 (UTC)
+Date: Thu, 5 May 2016 10:10:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/7] xfs: introduce metadata IO error class
+Message-ID: <20160505141031.GB1231@bfoster.bfoster>
+References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	<1462376600-8617-3-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160505194754.GA2785@birch.djwong.org>
+In-Reply-To: <1462376600-8617-3-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,101 +36,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Fasheh <mfasheh@suse.de>, Josef Bacik <jbacik@fb.com>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-api@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs <xfs@oss.sgi.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.  This is
-the xfsprogs side of things for userspace support.
+On Wed, May 04, 2016 at 05:43:15PM +0200, Carlos Maiolino wrote:
+> Now we have the basic infrastructure, add the first error class so
+> we can build up the infrastructure in a meaningful way. Add the
+> metadata async write IO error class and sysfs entry, and introduce a
+> default configuration that matches the existing "retry forever" behavior
+> for async write metadata buffers.
+> 
+> Changelog:
+> 
+> V3:
+> 	- Use 'cfg->max_retries = -1' as the default configuration for the
+> 	  "retry forever" behavior, instead of
+> 	  cfg->fail_speed = XFS_ERR_FAIL_NEVER
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_fs.h       |   65 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 106 insertions(+), 14 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index d5ed090..6573fcc 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -117,6 +117,70 @@ struct getbmapx {
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
- 
- /*
-+ *	Structure for XFS_IOC_GETFSMAPX.
-+ *
-+ *	Similar to XFS_IOC_GETBMAPX, the first two elements in the array are
-+ *	used to constrain the output.  The first element in the array should
-+ *	represent the lowest disk address that the user wants to learn about.
-+ *	The second element in the array should represent the highest disk
-+ *	address to query.  Subsequent array elements will be filled out by the
-+ *	command.
-+ *
-+ *	The fmv_iflags field is only used in the first structure.  The
-+ *	fmv_oflags field is filled in for each returned structure after the
-+ *	second structure.  The fmv_unused1 fields in the first two array
-+ *	elements must be zero.
-+ *
-+ *	The fmv_count, fmv_entries, and fmv_iflags fields in the second array
-+ *	element must be zero.
-+ *
-+ *	fmv_block, fmv_offset, and fmv_length are expressed in units of 512
-+ *	byte sectors.
-+ */
-+#ifndef HAVE_GETFSMAPX
-+struct getfsmapx {
-+	__s64		fmv_device;	/* device id */
-+	__s64		fmv_block;	/* starting block */
-+	__s64		fmv_owner;	/* owner id */
-+	__s64		fmv_offset;	/* file offset of segment */
-+	__s64		fmv_length;	/* length of segment, blocks */
-+	__s32		fmv_oflags;	/* mapping flags */
-+	__s32		fmv_iflags;	/* control flags (1st structure) */
-+	__s32		fmv_count;	/* # of entries in array incl. input */
-+	__s32		fmv_entries;	/* # of entries filled in (output). */
-+	__s64		fmv_unused1;	/* future use, must be zero */
-+};
-+#endif
-+
-+/*	fmv_device values - set by XFS_IOC_GETFSMAPX caller.	*/
-+/* use this value if the filesystem doesn't support multiple devices. */
-+#define FMV_DEV_DEFAULT	0
-+
-+/*	fmv_flags values - set by XFS_IOC_GETFSMAPX caller.	*/
-+/* no flags defined yet */
-+#define FMV_IF_VALID	0
-+
-+/*	fmv_flags values - returned for each non-header segment */
-+#define FMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMV_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMV_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMV_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMV_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMV_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/*	fmv_owner special values */
-+#define	FMV_OWN_FREE		(-1ULL)	/* free space */
-+#define FMV_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
-+#define FMV_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define FMV_OWN_LOG		(-4ULL)	/* journalling log */
-+#define FMV_OWN_AG		(-5ULL)	/* per-AG metadata */
-+#define FMV_OWN_INOBT		(-6ULL)	/* inode btree blocks */
-+#define FMV_OWN_INODES		(-7ULL)	/* inodes */
-+#define FMV_OWN_REFC		(-8ULL) /* refcount tree */
-+#define FMV_OWN_COW		(-9ULL) /* cow allocations */
-+#define FMV_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
-+
-+/*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-@@ -523,6 +587,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+#define XFS_IOC_GETFSMAPX	_IOWR('X', 59, struct getfsmapx)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
+>  fs/xfs/xfs_mount.h |  3 +++
+>  fs/xfs/xfs_sysfs.c | 34 ++++++++++++++++++++++++++++++++++
+>  2 files changed, 37 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index d639795..352a5c8 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -44,9 +44,11 @@ enum {
+>   * Error numbers define the errors that are configurable.
+>   */
+>  enum {
+> +	XFS_ERR_METADATA,
+>  	XFS_ERR_CLASS_MAX,
+>  };
+>  enum {
+> +	XFS_ERR_DEFAULT,
+>  	XFS_ERR_ERRNO_MAX,
+>  };
+>  
+> @@ -146,6 +148,7 @@ typedef struct xfs_mount {
+>  						/* low free space thresholds */
+>  	struct xfs_kobj		m_kobj;
+>  	struct xfs_kobj		m_error_kobj;
+> +	struct xfs_kobj		m_error_meta_kobj;
+>  	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+>  	struct xstats		m_stats;	/* per-fs stats */
+>  
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index b971113..7180cff 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -399,11 +399,34 @@ int
+>  xfs_error_sysfs_init(
+>  	struct xfs_mount	*mp)
+>  {
+> +	struct xfs_error_cfg	*cfg;
+>  	int			error;
+>  
+>  	/* .../xfs/<dev>/error/ */
+>  	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
+>  				&mp->m_kobj, "error");
+> +	if (error)
+> +		return error;
+> +
+> +	/* .../xfs/<dev>/error/metadata/ */
+> +	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
+> +				&mp->m_error_kobj, "metadata");
+> +	if (error)
+> +		goto out_error;
+> +
+> +	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
+> +	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+> +				&mp->m_error_meta_kobj, "default");
+> +	if (error)
+> +		goto out_error_meta;
+> +	cfg->max_retries = -1;
+> +
+> +	return 0;
+> +
+> +out_error_meta:
+> +	xfs_sysfs_del(&mp->m_error_meta_kobj);
+> +out_error:
+> +	xfs_sysfs_del(&mp->m_error_kobj);
+>  	return error;
+>  }
+>  
+> @@ -411,5 +434,16 @@ void
+>  xfs_error_sysfs_del(
+>  	struct xfs_mount	*mp)
+>  {
+> +	struct xfs_error_cfg	*cfg;
+> +	int			i, j;
+> +
+> +	for (i = 0; i < XFS_ERR_CLASS_MAX; i++) {
+> +		for (j = 0; j < XFS_ERR_ERRNO_MAX; j++) {
+> +			cfg = &mp->m_error_cfg[i][j];
+> +
+> +			xfs_sysfs_del(&cfg->kobj);
+> +		}
+> +	}
+> +	xfs_sysfs_del(&mp->m_error_meta_kobj);
+>  	xfs_sysfs_del(&mp->m_error_kobj);
+>  }
+> -- 
+> 2.4.11
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
