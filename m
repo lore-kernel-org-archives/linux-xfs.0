@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 718667CA6
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 18:39:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 446598F8033
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:39:57 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id vBm1uq5ie79aZYL5 for <xfs@oss.sgi.com>;
-	Tue, 03 May 2016 16:39:54 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 1D0669E
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 18:39:54 -0500 (CDT)
-Subject: Re: [PATCH 13/19] mkfs: encode conflicts into parsing table
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-	<1461231593-31294-14-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a3f5f830-27e9-26b4-9ffd-1fbdf5ca7952@sandeen.net>
-Date: Tue, 3 May 2016 18:39:53 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C85D17CA0
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 12:28:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F501AC004
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 10:28:01 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id b0bRCTbMFiLMtjzA (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 10:27:59 -0700 (PDT)
+Date: Thu, 5 May 2016 13:27:55 -0400 (EDT)
+From: Bob Peterson <rpeterso@redhat.com>
+Message-ID: <367672176.1997654.1462469275533.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1462310947-16132-2-git-send-email-hch@lst.de>
+References: <1462310947-16132-1-git-send-email-hch@lst.de>
+	<1462310947-16132-2-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 01/14] fs: move struct iomap from exportfs.h to a
+	separate	header
 MIME-Version: 1.0
-In-Reply-To: <1461231593-31294-14-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,54 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Sorry, updated fixup patch; missed removal of "\" chars:
+----- Original Message -----
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/nfsd/blocklayout.c    |  1 +
+>  fs/nfsd/blocklayoutxdr.c |  1 +
+>  fs/xfs/xfs_pnfs.c        |  1 +
+>  include/linux/exportfs.h | 16 +---------------
+>  include/linux/iomap.h    | 21 +++++++++++++++++++++
+>  5 files changed, 25 insertions(+), 15 deletions(-)
+>  create mode 100644 include/linux/iomap.h
 
-
-
-Remove now-encoded conflict under case L_FILE
-
-The .conflicts handle this now, no need to keep it around.
-
-
-
-Remove unneccesary continuation chars "\"
-
-Eric Sandeen <sandeen@redhat.com>: remove explicit L_FILE conflict
----
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 963545b..e19181c 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -975,8 +975,7 @@ sb_set_features(
- 	 */
- 	if (fp->spinodes) {
- 		sbp->sb_spino_align = sbp->sb_inoalignmt;
--		sbp->sb_inoalignmt = \
--			XFS_INODES_PER_CHUNK * \
-+		sbp->sb_inoalignmt = XFS_INODES_PER_CHUNK *
- 			sbp->sb_inodesize >> sbp->sb_blocklog;
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
- 	}
-@@ -1090,7 +1089,7 @@ main(
- 		.lazy_sb_counters = true,
- 		.projid16bit = false,
- 		.crcs_enabled = true,
--		.dirftype = false,
-+		.dirftype = true,
- 		.parent_pointers = false,
- 	};
- 
-@@ -1109,7 +1108,6 @@ main(
- 	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
- 	loginternal = 1;
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
--	sb_feat.dirftype = 1;		/* inode type information in the dir */
- 	Nflag = nlflag = nsflag = nvflag = 0;
- 	nftype = 0;
- 	dirblocklog = dirblocksize = 0;
+Reviewed-off-by: Bob Peterson <rpeterso@redhat.com>
 
 _______________________________________________
 xfs mailing list
