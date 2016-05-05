@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1C79C7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 12:34:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B60BE7CA0
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 12:55:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8408BAC003
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 10:34:55 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C9F0AC003
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 10:55:20 -0700 (PDT)
 Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id vsVZzyDaLsl7mEzT (version=TLSv1
+	cuda.sgi.com with ESMTP id Uw6nW4Q1iGPB5jx3 (version=TLSv1
 	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 10:34:53 -0700 (PDT)
-Date: Thu, 5 May 2016 13:34:50 -0400 (EDT)
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 10:55:17 -0700 (PDT)
+Date: Thu, 5 May 2016 13:55:14 -0400 (EDT)
 From: Bob Peterson <rpeterso@redhat.com>
-Message-ID: <378179150.1999179.1462469690382.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1462310947-16132-5-git-send-email-hch@lst.de>
+Message-ID: <1826465730.2008964.1462470914901.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1462310947-16132-6-git-send-email-hch@lst.de>
 References: <1462310947-16132-1-git-send-email-hch@lst.de>
-	<1462310947-16132-5-git-send-email-hch@lst.de>
-Subject: Re: [PATCH 04/14] xfs: reorder zeroing and flushing sequence in
-	truncate
+	<1462310947-16132-6-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 05/14] xfs: implement iomap based buffered write path
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -34,25 +33,28 @@ To: Christoph Hellwig <hch@lst.de>
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
 ----- Original Message -----
-> Currently zeroing out blocks and waiting for writeout is a bit of a mess in
-> truncate.  This patch gives it a clear order in preparation for the iomap
-> path:
+> Convert XFS to use the new iomap based multipage write path. This involves
+> implementing the ->iomap_begin and ->iomap_end methods, and switching the
+> buffered file write, page_mkwrite and xfs_iozero paths to the new iomap
+> helpers.
 > 
->  (1) we first wait for any direct I/O to complete to prevent any races
->      for it
->  (2) we then perform the actual zeroing, and only use the truncate_page
->      helpers for truncating down.  The truncate up case already is
->      handled by the separate call to xfs_zero_eof.
->  (3) only then we write back dirty data, as zeroing block may cause
->      dirty pages when using either xfs_zero_eof or the new iomap
->      infrastructure.
+> With this change __xfs_get_blocks will never be used for buffered writes,
+> and the code handling them can be removed.
+> 
+> Based on earlier code from Dave Chinner.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> +	 * Start with zeroing any data beyond EOF that we may expose on file
-> +	 & extension, or zeroing out the rest of the block on a downward
-
-This "&" should be "*".
+>  fs/xfs/Kconfig     |   1 +
+>  fs/xfs/xfs_aops.c  | 212
+>  -----------------------------------------------------
+>  fs/xfs/xfs_file.c  |  71 ++++++++----------
+>  fs/xfs/xfs_iomap.c | 144 ++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_iomap.h |   5 +-
+>  fs/xfs/xfs_iops.c  |   9 ++-
+>  fs/xfs/xfs_trace.h |   3 +
+>  7 files changed, 187 insertions(+), 258 deletions(-)
+> 
 
 Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 
