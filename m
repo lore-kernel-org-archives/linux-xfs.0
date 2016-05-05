@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 087C17CBC
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 12:55:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1C9E87CA7
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 16:42:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA79D30404E
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 10:55:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BJzSgtHvVr8jkZAg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 10:55:51 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 3252774B
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 17:55:51 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u43HtiDW016424
-	for <xfs@oss.sgi.com>; Tue, 3 May 2016 13:55:50 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 7/7] xfs: shutdown filesystem at unmount in case of errors
-Date: Tue,  3 May 2016 19:55:40 +0200
-Message-Id: <1462298140-12411-8-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
-References: <1462298140-12411-1-git-send-email-cmaiolino@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D3445304043
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:42:15 -0700 (PDT)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id MqqS4vJPED21hXhG for
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 14:42:14 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
+Date: Thu, 5 May 2016 21:42:12 +0000
+Message-ID: <1462484521.29294.4.camel@intel.com>
+References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
+	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
+	<5727753F.6090104@plexistor.com> <20160505142433.GA4557@infradead.org>
+	<CAPcyv4gdmo5m=Arf5sp5izJfNaaAkaaMbOzud8KRcBEC8RRu1Q@mail.gmail.com>
+In-Reply-To: <CAPcyv4gdmo5m=Arf5sp5izJfNaaAkaaMbOzud8KRcBEC8RRu1Q@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <353BB2C55CB22643BBB65F3CF6BFC153@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,96 +28,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Williams, Dan J" <dan.j.williams@intel.com>, "hch@infradead.org" <hch@infradead.org>
+Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "matthew@wil.cx" <matthew@wil.cx>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-If we take "retry forever" literally on metadata IO errors, we can
-hang at unmount, once it retries those writes forever. This is the
-default behavior, unfortunately.
-
-Currently, there is no way to move the unmount forward, once the mount point
-will be already detached, making a call to xfs_io shutdown impossible.
-
-To fix this, we need to mark the filesystem as being in the process
-of unmounting, so that a shutdown can be triggered in case of errors. It will be
-noisy, though, as it will log the errors and the shutdown that occurs.
-
-Do this with a mount flag that is added at the appropriate time (i.e. before
-the blocking AIL sync). We also need to add this flag if mount fails after
-the initial phase of log recovery has been run.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_buf_item.c | 4 ++++
- fs/xfs/xfs_mount.c    | 9 +++++++++
- fs/xfs/xfs_mount.h    | 1 +
- 3 files changed, 14 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 68ed2a0..3fd3389 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1106,6 +1106,10 @@ xfs_buf_iodone_callback_error(
- 			       cfg->retry_timeout + bp->b_first_retry_time))
- 			goto permanent_error;
- 
-+	/* At unmount we may treat errors differently */
-+	if (mp->m_flags & XFS_MOUNT_UNMOUNTING)
-+		goto permanent_error;
-+
- 	/* still a transient error, higher layers will retry */
- 	xfs_buf_ioerror(bp, 0);
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index eda3906..d89fba6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -961,6 +961,7 @@ xfs_mountfs(
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
-  out_log_dealloc:
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
- 	xfs_log_mount_cancel(mp);
-  out_fail_wait:
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-@@ -1012,6 +1013,14 @@ xfs_unmountfs(
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 
- 	/*
-+	 * We now need to tell the world we are unmounting. This will allow
-+	 * us to detect that the filesystem is going away and we should error
-+	 * out anything that we have been retrying in the background. This will
-+	 * prevent neverending retries iin AIL pushing from hanging the unmount.
-+	 */
-+	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-+
-+	/*
- 	 * Flush all pending changes from the AIL.
- 	 */
- 	xfs_ail_push_all_sync(mp->m_ail);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e3b3267..54e26fc 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -193,6 +193,7 @@ typedef struct xfs_mount {
- #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
- 						   must be synchronous except
- 						   for space allocations */
-+#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
- #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
- #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
- 						   operations, typically for
--- 
-2.4.11
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA1LTA1IGF0IDA4OjE1IC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
+IE9uIFRodSwgTWF5IDUsIDIwMTYgYXQgNzoyNCBBTSwgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBp
+bmZyYWRlYWQub3JnPg0KPiB3cm90ZToNCj4gPiANCj4gPiBPbiBNb24sIE1heSAwMiwgMjAxNiBh
+dCAwNjo0MTo1MVBNICswMzAwLCBCb2F6IEhhcnJvc2ggd3JvdGU6DQo+ID4gPiANCj4gPiA+ID4g
+DQo+ID4gPiA+IEFsbCBJTyBpbiBhIGRheCBmaWxlc3lzdGVtIHVzZWQgdG8gZ28gdGhyb3VnaCBk
+YXhfZG9faW8sIHdoaWNoDQo+ID4gPiA+IGNhbm5vdA0KPiA+ID4gPiBoYW5kbGUgbWVkaWEgZXJy
+b3JzLCBhbmQgdGh1cyBjYW5ub3QgcHJvdmlkZSBhIHJlY292ZXJ5IHBhdGgNCj4gPiA+ID4gdGhh
+dCBjYW4NCj4gPiA+ID4gc2VuZCBhIHdyaXRlIHRocm91Z2ggdGhlIGRyaXZlciB0byBjbGVhciBl
+cnJvcnMuDQo+ID4gPiA+IA0KPiA+ID4gPiBBZGQgYSBuZXcgaW9jYiBmbGFnIGZvciBEQVgsIGFu
+ZCBzZXQgaXQgb25seSBmb3IgREFYIG1vdW50cy4gSW4NCj4gPiA+ID4gdGhlIElPDQo+ID4gPiA+
+IHBhdGggZm9yIERBWCBmaWxlc3lzdGVtcywgdXNlIHRoZSBzYW1lIGRpcmVjdF9JTyBwYXRoIGZv
+ciBib3RoDQo+ID4gPiA+IERBWCBhbmQNCj4gPiA+ID4gZGlyZWN0X2lvIGlvY2JzLCBidXQgdXNl
+IHRoZSBmbGFncyB0byBpZGVudGlmeSB3aGVuIHdlIGFyZSBpbg0KPiA+ID4gPiBPX0RJUkVDVA0K
+PiA+ID4gPiBtb2RlIHZzIG5vbiBPX0RJUkVDVCB3aXRoIERBWCwgYW5kIGZvciBPX0RJUkVDVCwg
+dXNlIHRoZQ0KPiA+ID4gPiBjb252ZW50aW9uYWwNCj4gPiA+ID4gZGlyZWN0X0lPIHBhdGggaW5z
+dGVhZCBvZiBEQVguDQo+ID4gPiA+IA0KPiA+ID4gUmVhbGx5PyBXaGF0IGFyZSB5b3VyIHRoaW5r
+aW5nIGhlcmU/DQo+ID4gPiANCj4gPiA+IFdoYXQgYWJvdXQgYWxsIHRoZSBjdXJyZW50IHVzZXJz
+IG9mIE9fRElSRUNULCB5b3UgaGF2ZSBqdXN0IG1hZGUNCj4gPiA+IHRoZW0NCj4gPiA+IDQgdGlt
+ZXMgc2xvd2VyIGFuZCAibGVzcyBjb25jdXJyZW50KiIgdGhlbiAiYnVmZnJlZCBpbyIgdXNlcnMu
+DQo+ID4gPiBTaW5jZQ0KPiA+ID4gZGlyZWN0X0lPIHBhdGggd2lsbCBxdWV1ZSBhbiBJTyByZXF1
+ZXN0IGFuZCBhbGwuDQo+ID4gPiAoQW5kIGlmIGl0IGlzIG5vdCBzbyBzbG93IHRoZW4gd2h5IGRv
+IHdlIG5lZWQgZGF4X2RvX2lvIGF0IGFsbD8NCj4gPiA+IFtSaGV0b3JpY2FsXSkNCj4gPiA+IA0K
+PiA+ID4gSSBoYXRlIGl0IHRoYXQgeW91IG92ZXJsb2FkIHRoZSBzZW1hbnRpY3Mgb2YgYSBrbm93
+biBhbmQgZXhwZWN0ZWQNCj4gPiA+IE9fRElSRUNUIGZsYWcsIGZvciBzcGVjaWFsIHBtZW0gcXVp
+cmtzLiBUaGlzIGlzIGFuIGluY29tcGF0aWJsZQ0KPiA+ID4gYW5kIHVucmVsYXRlZCBvdmVybG9h
+ZCBvZiB0aGUgc2VtYW50aWNzIG9mIE9fRElSRUNULg0KPiA+IEFncmVlZCAtIG1ha2lnIE9fRElS
+RUNUIGxlc3MgZGlyZWN0IHRoYW4gbm90IGhhdmluZyBpdCBpcyBwbGFpbg0KPiA+IHN0dXBpZCwN
+Cj4gPiBhbmQgSSBzb21laG93IG1pc3NlZCB0aGlzIGluaXRpYWxseS4NCj4gT2YgY291cnNlIEkg
+ZGlzYWdyZWUgYmVjYXVzZSBsaWtlIERhdmUgYXJndWVzIGluIHRoZSBtc3luYyBjYXNlIHdlDQo+
+IHNob3VsZCBkbyB0aGUgY29ycmVjdCB0aGluZyBmaXJzdCBhbmQgbWFrZSBpdCBmYXN0IGxhdGVy
+LCBidXQgYWxzbw0KPiBsaWtlIERhdmUgdGhpcyBhcmd1aW5nIGluIGNpcmNsZXMgaXMgZ2V0dGlu
+ZyB0aXJlc29tZS4NCj4gDQo+ID4gDQo+ID4gVGhpcyB3aG9sZSBEQVggc3RvcnkgdHVybnMgaW50
+byBhIG1ham9yIG5pZ2h0bWFyZSwgYW5kIEkgZmVhciBhbGwNCj4gPiBvdXINCj4gPiBob2RnZSBw
+b2RnZSB0d2Vha3MgdG8gdGhlIHNlbWFudGljcyBhcmVuJ3QgaGVscGluZyBpdC4NCj4gPiANCj4g
+PiBJdCBzZWVtcyBsaWtlIHdlIHNpbXBseSBuZWVkIGFuIGV4cGxpY2l0IE9fREFYIGZvciB0aGUg
+cmVhZC93cml0ZQ0KPiA+IGJ5cGFzcyBpZiBjYW4ndCBzb3J0IG91dCB0aGUgc2VtYW50aWNzIChl
+cnJvciwgd3JpdGVyDQo+ID4gc3luY2hyb25pemF0aW9uKQ0KPiA+IGp1c3QgYXMgd2UgbmVlZCBh
+IHNwZWNpYWwgZmxhZyBmb3IgTU1BUC4NCj4gSSBkb24ndCBzZWUgaG93IE9fREFYIG1ha2VzIHRo
+aXMgc2l0dWF0aW9uIGJldHRlciBpZiB0aGUgZ29hbCBpcyB0bw0KPiBhY2NlbGVyYXRlIHVubW9k
+aWZpZWQgYXBwbGljYXRpb25zLi4uDQo+IA0KPiBWaXNoYWwsIGF0IGxlYXN0IHRoZSAiZGVsZXRl
+IGEgZmlsZSB3aXRoIGEgYmFkYmxvY2siIG1vZGVsIHdpbGwgc3RpbGwNCj4gd29yayBmb3IgaW1w
+bGljaXRseSBjbGVhcmluZyBlcnJvcnMgd2l0aCB5b3VyIGNoYW5nZXMgdG8gc3RvcCBkb2luZw0K
+PiBibG9jayBjbGVhcmluZyBpbiBmcy9kYXguYy7CoMKgVGhpcyBjb21iaW5lZCB3aXRoIGEgbmV3
+IC1FQkFEQkxPQ0sgKGFzDQo+IERhdmUgc3VnZ2VzdHMpIGFuZCBleHBsaWNpdCBsb2dnaW5nIG9m
+IEkvT3MgdGhhdCBmYWlsIGZvciB0aGlzIHJlYXNvbg0KPiBhdCBsZWFzdCBnaXZlcyBhIGNoYW5j
+ZSB0byBjb21tdW5pY2F0ZSBlcnJvcnMgaW4gZmlsZXMgdG8gc3VpdGFibHkNCj4gYXdhcmUgYXBw
+bGljYXRpb25zIC8gZW52aXJvbm1lbnRzLg0KDQpBZ3JlZWQgLSBJJ2xsIHNlbmQgb3V0IGEgc2Vy
+aWVzIHRoYXQgaGFzIGp1c3QgdGhlIHplcm9pbmcgY2hhbmdlcywgYW5kDQpkcm9wIHRoZSBkYXhf
+aW8gZmFsbGJhY2svT19ESVJFQ1QgdHdlYWsgZm9yIG5vdyB3aGlsZSB3ZSBmaWd1cmUgb3V0IHRo
+ZQ0KcmlnaHQgdGhpbmcgdG8gZG8uIFRoYXQgc2hvdWxkIGdldCB1cyB0byBhIHBsYWNlIHdoZXJl
+IHdlIHN0aWxsIGhhdmUgZGF4DQppbiB0aGUgcHJlc2VuY2Ugb2YgZXJyb3JzLCBhbmQgaGF2ZSBf
+YV8gcGF0aCBmb3IgcmVjb3ZlcnkuDQoNCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18NCj4gTGludXgtbnZkaW1tIG1haWxpbmcgbGlzdA0KPiBMaW51eC1u
+dmRpbW1AbGlzdHMuMDEub3JnDQo+IGh0dHBzOi8vbGlzdHMuMDEub3JnL21haWxtYW4vbGlzdGlu
+Zm8vbGludXgtbnZkaW1tCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
