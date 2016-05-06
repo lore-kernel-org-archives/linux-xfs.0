@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A4CFC7CF4
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:08:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 45316304039
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 16:08:21 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Y0rgxtCN9e4qNAcq for <xfs@oss.sgi.com>;
-	Mon, 02 May 2016 16:08:19 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id F1259545
-	for <xfs@oss.sgi.com>; Mon,  2 May 2016 18:08:18 -0500 (CDT)
-Subject: Re: [PATCH 08/19] mkfs: getbool is redundant
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-	<1461231593-31294-9-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c2bb26bc-dbbb-4068-cdbf-4d7543d22408@sandeen.net>
-Date: Mon, 2 May 2016 18:08:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <1461231593-31294-9-git-send-email-jtulak@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id C41667CA4
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:53:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C1FF304048
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:53:59 -0700 (PDT)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id JW3xdmFACtcLdArI for
+	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:53:58 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v5 4/5] dax: for truncate/hole-punch,
+	do zeroing through the driver if possible
+Date: Fri,  6 May 2016 15:53:10 -0600
+Message-Id: <1462571591-3361-5-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +23,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-Remove manpage changes, tidy others
+In the truncate or hole-punch path in dax, we clear out sub-page ranges.
+If these sub-page ranges are sector aligned and sized, we can do the
+zeroing through the driver instead so that error-clearing is handled
+automatically.
 
-Tidy up the grammar a little in the boolean args description.
+For sub-sector ranges, we still have to rely on clear_pmem and have the
+possibility of tripping over errors.
 
-Remove extra text around the noalign option.
-
-It's fine that the noalign option now takes an optional
-boolean 0/1 argument, but I don't think we need to document
-it in the manpage.  If someone happens to add "=1" and it works,
-they'll just be pleasantly surprised.
-
-
-Eric Sandeen <sandeen@redhat.com>: manpage tidiness
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 ---
+ Documentation/filesystems/dax.txt | 32 ++++++++++++++++++++++++++++++++
+ fs/dax.c                          | 30 +++++++++++++++++++++++++-----
+ 2 files changed, 57 insertions(+), 5 deletions(-)
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index be3d1a0..980b0e1 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -119,7 +119,7 @@ option first needs to be added to the command line.
- Failure to specify the size of the units will result in illegal value errors
- when parameters are quantified in those units.
- .PP
--Many options allows for optional argument of value 0 or 1, to explicitly
-+Many feature options allow an optional argument of 0 or 1, to explicitly
- disable or enable the functionality.
- .SH OPTIONS
- .TP
-@@ -315,12 +315,10 @@ and
- .B swidth
- values.
- .TP
--.BI noalign[= value ]
--If the
--.I value
--is 1, this option disables automatic geometry detection and creates the filesystem
-+.BI noalign
-+This option disables automatic geometry detection and creates the filesystem
- without stripe geometry alignment even if the underlying storage device provides
--this information. 0 disables this option, that is, enables automatic detection.
-+this information.
- .RE
- .TP
- .B \-f
-@@ -810,11 +808,9 @@ This suboption is only needed if the real-time section of the
- filesystem should occupy less space than the size of the partition
- or logical volume containing the section.
- .TP
--.BI noalign[= value ]
--If the
--.I value
--is 1, then the option disables stripe size detection, enforcing a realtime
--device with no stripe geometry. 0 will enable stripe size detection.
-+.BI noalign
-+This option disables stripe size detection, enforcing a realtime device with no
-+stripe geometry.
- .RE
- .TP
- .BI \-s " sector_size"
-
+diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
+index 7bde640..ce4587d 100644
+--- a/Documentation/filesystems/dax.txt
++++ b/Documentation/filesystems/dax.txt
+@@ -79,6 +79,38 @@ These filesystems may be used for inspiration:
+ - ext4: the fourth extended filesystem, see Documentation/filesystems/ext4.txt
+ 
+ 
++Handling Media Errors
++---------------------
++
++The libnvdimm subsystem stores a record of known media error locations for
++each pmem block device (in gendisk->badblocks). If we fault at such location,
++or one with a latent error not yet discovered, the application can expect
++to receive a SIGBUS. Libnvdimm also allows clearing of these errors by simply
++writing the affected sectors (through the pmem driver, and if the underlying
++NVDIMM supports the clear_poison DSM defined by ACPI).
++
++Since DAX IO normally doesn't go through the driver/bio path, applications or
++sysadmins have an option to restore the lost data from a prior backup/inbuilt
++redundancy in the following ways:
++
++1. Delete the affected file, and restore from a backup (sysadmin route):
++   This will free the file system blocks that were being used by the file,
++   and the next time they're allocated, they will be zeroed first, which
++   happens through the driver, and will clear bad sectors.
++
++2. Truncate or hole-punch the part of the file that has a bad-block (at least
++   an entire aligned sector has to be hole-punched, but not necessarily an
++   entire filesystem block).
++
++These are the two basic paths that allow DAX filesystems to continue operating
++in the presence of media errors. More robust error recovery mechanisms can be
++built on top of this in the future, for example, involving redundancy/mirroring
++provided at the block layer through DM, or additionally, at the filesystem
++level. These would have to rely on the above two tenets, that error clearing
++can happen either by sending an IO through the driver, or zeroing (also through
++the driver).
++
++
+ Shortcomings
+ ------------
+ 
+diff --git a/fs/dax.c b/fs/dax.c
+index 5948d9b..d8c974e 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1196,6 +1196,20 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
+ 
++static bool dax_range_is_aligned(struct block_device *bdev,
++				 struct blk_dax_ctl *dax, unsigned int offset,
++				 unsigned int length)
++{
++	unsigned short sector_size = bdev_logical_block_size(bdev);
++
++	if (((u64)dax->addr + offset) % sector_size)
++		return false;
++	if (length % sector_size)
++		return false;
++
++	return true;
++}
++
+ /**
+  * dax_zero_page_range - zero a range within a page of a DAX file
+  * @inode: The file being truncated
+@@ -1240,11 +1254,17 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
+ 			.size = PAGE_SIZE,
+ 		};
+ 
+-		if (dax_map_atomic(bdev, &dax) < 0)
+-			return PTR_ERR(dax.addr);
+-		clear_pmem(dax.addr + offset, length);
+-		wmb_pmem();
+-		dax_unmap_atomic(bdev, &dax);
++		if (dax_range_is_aligned(bdev, &dax, offset, length))
++			return blkdev_issue_zeroout(bdev, dax.sector,
++					length / bdev_logical_block_size(bdev),
++					GFP_NOFS, true);
++		else {
++			if (dax_map_atomic(bdev, &dax) < 0)
++				return PTR_ERR(dax.addr);
++			clear_pmem(dax.addr + offset, length);
++			wmb_pmem();
++			dax_unmap_atomic(bdev, &dax);
++		}
+ 	}
+ 
+ 	return 0;
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
