@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1F3AD7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 09:11:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89F6EAC004
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 07:10:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1tuxlGCedO10ehx6 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 07:10:58 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id C2B093DD47
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:10:57 +0000 (UTC)
-Date: Thu, 5 May 2016 10:10:56 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 88B687CA0
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 19:12:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C48D7AC004
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 17:12:29 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	rndwwshNliZhlgPf for <xfs@oss.sgi.com>;
+	Thu, 05 May 2016 17:12:20 -0700 (PDT)
+Date: Fri, 6 May 2016 10:04:33 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 5/7] xfs: add configuration of error failure speed
-Message-ID: <20160505141055.GE1231@bfoster.bfoster>
+Message-ID: <20160506000433.GG26977@dastard>
 References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
 	<1462376600-8617-6-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
@@ -71,72 +65,9 @@ On Wed, May 04, 2016 at 05:43:18PM +0200, Carlos Maiolino wrote:
 > 	- retry_timeout_seconds_show() print fixed:
 > 		-- jiffies_to_msecs() should be divided by MSEC_PER_SEC
 > 		-- trailing whitespace removed
-> 
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_buf.h      | 23 ++++++++++++++-
->  fs/xfs/xfs_buf_item.c | 12 ++++++--
->  fs/xfs/xfs_mount.h    |  3 +-
->  fs/xfs/xfs_sysfs.c    | 81 ++++++++++++++++++++++++++++++++++++++++++++++++---
->  4 files changed, 111 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index adef116..bd978f0 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -183,7 +183,28 @@ typedef struct xfs_buf {
->  	unsigned int		b_page_count;	/* size of page array */
->  	unsigned int		b_offset;	/* page offset in first page */
->  	int			b_error;	/* error code on I/O */
-> -	int			b_last_error;	/* previous async I/O error */
-> +
-> +	/*
-> +	 * async write failure retry count. Initialised to zero on the first
-> +	 * failure, then when it exceeds the maximum configured without a
-> +	 * success the write is considered to be failed permanently and the
-> +	 * iodone handler will take appropriate action.
-> +	 *
-> +	 * For retry timeouts, we record the jiffie of the first failure. This
-> +	 * means that we can change the retry timeout and it on the next error
-> +	 * it will be checked against the newly configured timeout. This
-> +	 * prevents buffers getting stuck in retry loops with a really long
-> +	 * timeout.
 
-I'd reword the last bit to something like the following:
+Where's XFS_ERR_RETRY_FOREVER?
 
-"This means we can change the retry timeout for buffers already under
-I/O and thus avoid getting stuck in retry loops with a really long
-timeout."
-
-> +	 *
-> +	 * last_error is used to ensure that we are getting repeated errors, not
-> +	 * different errors. e.g. a block device might change ENOSPC to EIO when
-> +	 * a failure timeout occurs, so we want to re-initialise the error
-> +	 * retry behaviour appropriately when that happens.
-> +	 */
-> +	int			b_retries;
-> +	unsigned long		b_first_retry_time; /* in jiffies */
-> +	int			b_last_error;
-> +
->  	const struct xfs_buf_ops	*b_ops;
->  
->  #ifdef XFS_BUF_LOCK_TRACKING
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 3a30a88..6fe6852 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1086,6 +1086,9 @@ xfs_buf_iodone_callback_error(
->  		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
->  			        XBF_DONE | XBF_WRITE_FAIL);
->  		bp->b_last_error = bp->b_error;
-> +		bp->b_retries = 0;
-> +		bp->b_first_retry_time = jiffies;
-> +
->  		xfs_buf_ioerror(bp, 0);
->  		xfs_buf_submit(bp);
->  		return true;
 > @@ -1095,8 +1098,12 @@ xfs_buf_iodone_callback_error(
 >  	 * Repeated failure on an async write. Take action according to the
 >  	 * error configuration we have been set up to use.
@@ -146,6 +77,18 @@ timeout."
 > +	if ((cfg->max_retries >= 0) &&
 > +	    (++bp->b_retries > cfg->max_retries))
 > +			goto permanent_error;
+
+I suggested:
+
+        if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+            ++bp->b_retries > cfg->max_retries)
+                goto permanent_error;
+
+so that we document that there is a "retry forever" case being
+handled here. I really don't like magic "-1", ">= 0" or other
+implicit comparisions that don't document that it is valid to retry
+forever in these cases.
+
 > +	if (cfg->retry_timeout &&
 > +	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
 > +			goto permanent_error;
@@ -170,142 +113,18 @@ timeout."
 >  	struct xfs_kobj	kobj;
 > -	int		max_retries;
 > +	int		max_retries;	/* -1 = retry forever */
-> +	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
->  };
->  
->  typedef struct xfs_mount {
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 2a5b1cf..c881360 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -374,10 +374,6 @@ struct kobj_type xfs_log_ktype = {
->   * and any other future type of IO (e.g. special inode or directory error
->   * handling) we care to support.
->   */
-> -static struct attribute *xfs_error_attrs[] = {
-> -	NULL,
-> -};
-> -
->  static inline struct xfs_error_cfg *
->  to_error_cfg(struct kobject *kobject)
->  {
-> @@ -385,6 +381,79 @@ to_error_cfg(struct kobject *kobject)
->  	return container_of(kobj, struct xfs_error_cfg, kobj);
->  }
->  
-> +static ssize_t
-> +max_retries_show(
-> +	struct kobject	*kobject,
-> +	char		*buf)
-> +{
-> +	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", cfg->max_retries);
-> +}
-> +
-> +static ssize_t
-> +max_retries_store(
-> +	struct kobject	*kobject,
-> +	const char	*buf,
-> +	size_t		count)
-> +{
-> +	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-> +	int		ret;
-> +	int		val;
-> +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (val < -1 || val > INT_MAX)
-> +		return -EINVAL;
-> +
 
-Can an int be greater than INT_MAX? :)
+as per my last review, remove the comment, add XFS_ERR_RETRY_FOREVER
+to document that "-1 = retry forever" and use that in the code so
+it's explicit that the code is intended to handle this case.
 
-The rest looks fine so you can add:
+Cheers,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Dave.
 
-> +	cfg->max_retries = val;
-> +	return count;
-> +}
-> +XFS_SYSFS_ATTR_RW(max_retries);
-> +
-> +static ssize_t
-> +retry_timeout_seconds_show(
-> +	struct kobject	*kobject,
-> +	char		*buf)
-> +{
-> +	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%ld\n",
-> +			jiffies_to_msecs(cfg->retry_timeout) / MSEC_PER_SEC);
-> +}
-> +
-> +static ssize_t
-> +retry_timeout_seconds_store(
-> +	struct kobject	*kobject,
-> +	const char	*buf,
-> +	size_t		count)
-> +{
-> +	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-> +	int		ret;
-> +	int		val;
-> +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* 1 day timeout maximum */
-> +	if (val < 0 || val > 86400)
-> +		return -EINVAL;
-> +
-> +	cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
-> +	return count;
-> +}
-> +XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
-> +
-> +static struct attribute *xfs_error_attrs[] = {
-> +	ATTR_LIST(max_retries),
-> +	ATTR_LIST(retry_timeout_seconds),
-> +	NULL,
-> +};
-> +
-> +
->  struct kobj_type xfs_error_cfg_ktype = {
->  	.release = xfs_sysfs_release,
->  	.sysfs_ops = &xfs_sysfs_ops,
-> @@ -404,11 +473,13 @@ struct kobj_type xfs_error_ktype = {
->  struct xfs_error_init {
->  	char		*name;
->  	int		max_retries;
-> +	int		retry_timeout;	/* in seconds */
->  };
->  
->  static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
->  	{ .name = "default",
->  	  .max_retries = -1,
-> +	  .retry_timeout = 0,
->  	},
->  };
->  
-> @@ -439,6 +510,8 @@ xfs_error_sysfs_init_class(
->  			goto out_error;
->  
->  		cfg->max_retries = init[i].max_retries;
-> +		cfg->retry_timeout = msecs_to_jiffies(
-> +					init[i].retry_timeout * MSEC_PER_SEC);
->  	}
->  	return 0;
->  
-> -- 
-> 2.4.11
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
