@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED6087CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 18:49:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 53295AC005
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 16:49:55 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	XcUQjDIFJu6i5hdk for <xfs@oss.sgi.com>;
-	Thu, 05 May 2016 16:49:51 -0700 (PDT)
-Date: Fri, 6 May 2016 09:49:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/7] Configurable error behavior [V3]
-Message-ID: <20160505234948.GE26977@dastard>
-References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
-	<20160505141107.GG1231@bfoster.bfoster>
-	<20160505143718.GB9359@redhat.com>
-	<20160505151827.GA1523@bfoster.bfoster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BA7927CA0
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 22:21:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CB06304043
+	for <xfs@oss.sgi.com>; Thu,  5 May 2016 20:21:18 -0700 (PDT)
+Received: from neil.brown.name (neil.brown.name [103.29.64.221]) by
+	cuda.sgi.com with ESMTP id PLkjJrfylrXtYT23 (version=TLSv1.2
+	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 May 2016 20:21:09 -0700 (PDT)
+From: NeilBrown <mr@neil.brown.name>
+Date: Fri, 06 May 2016 13:20:38 +1000
+Subject: Re: [PATCH 0/2] scop GFP_NOFS api
+In-Reply-To: <20160504010004.GX26977@dastard>
+References: <1461671772-1269-1-git-send-email-mhocko@kernel.org>
+	<8737q5ugcx.fsf@notabene.neil.brown.name>
+	<20160430001138.GO26977@dastard>
+	<87r3dmu4cf.fsf@notabene.neil.brown.name>
+	<20160504010004.GX26977@dastard>
+Message-ID: <87poszvpmh.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160505151827.GA1523@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,94 +28,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0148398338308290894=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Michal Hocko <mhocko@kernel.org>, cluster-devel@redhat.com, linux-mm@kvack.org, linux-mtd@lists.infradead.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, logfs@logfs.org, ceph-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-afs@lists.infradead.org
 
-On Thu, May 05, 2016 at 11:18:28AM -0400, Brian Foster wrote:
-> On Thu, May 05, 2016 at 04:37:18PM +0200, Carlos Maiolino wrote:
-> > On Thu, May 05, 2016 at 10:11:07AM -0400, Brian Foster wrote:
-> > > I suggest just to pull it out of the error classification stuff entirely
-> > > and place it under xfs_mount. E.g., at the same level as "fail_writes"
-> > > (but not a DEBUG mode only option).
-> > > 
-> > > I'm also wondering whether we need more mechanism for the
-> > > fail_at_unmount behavior. For example, instead of defining
-> > > XFS_MOUNT_UNMOUNTING, could we just call a function that resets
-> > > max_retries (of each class) to 0 in the unmount path? Then maybe call
-> > > the mount tunable retry_on_unmount or something like that. Thoughts?
-> > > 
-> > I don't oppose to that, although, having a flag like XFS_MOUNT_UNMOUNTING, might
-> > be useful in the future, but still, wouldn't be better this single flag, instead
-> > of walk through all classes/errors resetting the max_retries? It sounds as
-> > granular as having fail_at_unmount inside each error, despite the fact it's not
-> > exposed to user-space, we will need to interact over each max_retries to
-> > actually shutdown the filesystem during unmount, which, is also error-prone
-> > IMHO.
-> 
-> I view the granularity problem as a usability problem, not necessarily a
-> code problem. E.g., why would somebody know or care to configure certain
-> errors to fail on unmount but not others. If we have a knob, I think the
-> knob is more clear as a general behavior knob rather than an error
-> classification knob. Of course, that assumes there isn't some unknown
-> good reason for per-error behavior (and/or a userspace mgmt tool that
-> could provide a more usable interface on top of per-error knobs).
+--===============0148398338308290894==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 
-FWIW, this is exactly what we need to work out with this patch -
-what makes sense in the UAPI ;)
+--=-=-=
+Content-Type: text/plain
 
-I have to agree with Brian here - it doesn't make a whole lot of
-sense to have per-error "fail-at-umount" configuration without an
-obvious use-case. Hence a single option at the top level of the
-error heirarchy makes sense i.e.
-/sys/fs/xfs/<dev>/error/fail_at_unmount.
+On Wed, May 04 2016, Dave Chinner wrote:
 
-If, in future, someone needs more fine-grained control we can always
-add it back in to the per-error config as an override to the global
-setting...
+> FWIW, I don't think making evict() non-blocking is going to be worth
+> the effort here. Making memory reclaim wait on a priority ordered
+> queue while asynchronous reclaim threads run reclaim as efficiently
+> as possible and wakes waiters as it frees the memory the waiters
+> require is a model that has been proven to work in the past, and
+> this appears to me to be the model you are advocating for. I agree
+> that direct reclaim needs to die and be replaced with something
+> entirely more predictable, controllable and less prone to deadlock
+> contexts - you just need to convince the mm developers that it will
+> perform and scale better than what we have now.
+>
+> In the mean time, having a slightly more fine grained GFP_NOFS
+> equivalent context will allow us to avoid the worst of the current
+> GFP_NOFS problems with very little extra code.
 
-> > It also depends on how granular we will implement fail_at_unmount. If it's a
-> > single global option, resetting all max_retries works, otherwise it might not
-> > work, for example, if we decide to have fail_at_unmount for each class, we might
-> > need to reset max_retries only in specific errors, which will increase the
-> > complexity of the code.
-> > 
-> 
-> I'm assuming a per-mount option is sufficient. :) Otherwise, I'm just
-> thinking out loud for ways to try and condense and/or reuse the code a
-> bit here. I don't see a reason to add new mechanisms or config tunables
-> in cases where we can accomplish the same thing by making existing
-> knobs/mechanisms sufficiently generic.
+You have painted two pictures here.  The first is an ideal which does
+look a lot like the sort of outcome I was aiming for, but is more than a
+small step away.
+The second is a band-aid which would take us in exactly the wrong
+direction.  It makes an interface which people apparently find hard to
+use (or easy to misused) - the setting of __GFP_FS - and makes it more
+complex.  Certainly it would be more powerful, but I think it would also
+be more misused.
 
-Code re-use is good, but I don't think it is good when it conflates
-or obfuscates specific behaviours we are checking for.  As such, I'd
-prefer that we have a generic flag we can check for an unmount in
-progress. There's likely to be code outside the IO error checking
-that we might need to check for unmount, so we really should have a
-separate flag for it and make all checks explicit.
+So I ask myself:  can we take some small steps towards 'A' and thereby
+enable at least the functionality enabled by 'B'?
 
-Think of it this way: we explicitly check for a shutdown situation
-to trigger imeediate failure processing in the IO path. Modifying
-max retries at unmount to trigger immediate failure is akin to doing
-the same thing when a shutdown is triggered rather than checking for
-the shutdown flag.
+A core design principle for me is to enable filesystems to take control
+of their own destiny.   They should have the information available to
+make the decisions they need to make, and the opportunity to carry them
+out.
 
-IOWs, the flag is as much documentation as it is implementation - it
-makes it explicit that this code path was intended to allow failure
-at unmount, just like it is explicit that we intend to fail if a
-shutdown is detected...
+All the places where direct reclaim currently calls into filesystems
+carry the 'gfp' flags so the file system can decide what to do, with one
+exception: evict_inode.  So my first proposal would be to rectify that.
 
-Cheers,
+ - redefine .nr_cached_objects and .free_cached_objects so that, if they
+   are defined, they are responsible for s_dentry_lru and s_inode_lru.
+   e.g. super_cache_count *either* calls ->nr_cached_objects *or* makes
+   two calls to list_lru_shrink_count.  This would require exporting
+   prune_dcache_sb and prune_icache_sb but otherwise should be a fairly
+   straight forward change.
+   If nr_cached_objects were defined, super_cache_scan would no longer
+   abort without __GFP_FS - that test would be left to the filesystem.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ - Now any filesystem that wants to can stash it's super_block pointer
+   in current->journal_info while doing memory allocations, and abort
+   any reclaim attempts (release_page, shrinker, nr_cached_objects) if
+   and only if current->journal_info == "my superblock".  This can be
+   done without the core mm code knowing any more than it already does.
+
+ - A more sophisticated filesystem might import much of the code for
+   prune_icache_sb() - either by copy/paste or by exporting some vfs
+   internals - and then store an inode pointer in current->journal_info
+   and only abort reclaim which touches that inode.
+
+ - if a filesystem happens to know that it will never block in any of
+   these reclaim calls, it can always allow prune_dcache_sb to run, and
+   never needs to use GFP_NOFS.  I think NFS might be close to being
+   able to do this as it flushes everything on last-close.  But that is
+   something that NFS developers can care about (or not) quite
+   independently from mm people.
+
+ - Maybe some fs developer will try to enable free_cached_objects to do
+   as much work as possible for every inode, but never deadlock.  It
+   could do its own fs-specfic deadlock detection, or could queue work
+   to a work queue and wait a limited time for it.  Or something.
+   If some filesystem developer comes up with something that works
+   really well, developers of other filesystems might copy it - or not
+   as they choose.
+
+Maybe ->journal_info isn't perfect for this.  It is currently only safe
+for reclaim code to compare it against a known value.  It is not safe to
+dereference it to see if it points to a known value.  That could possibly be
+cleaned up, or another task_struct field could be provided for
+filesystems to track their state.  Or do you find a task_struct field
+unacceptable and there is some reason and that an explicitly passed cookie
+is superior?
+
+My key point is that we shouldn't try to plumb some new abstraction
+through the MM code so there is a new pattern for all filesystems to
+follow.  Rather the mm/vfs should get out of the filesystems' way as much
+as possible and let them innovate independently.
+
+Thanks for your time,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXLA2GAAoJEDnsnt1WYoG5pUcQALDLvi2Udu2IeOr36ntBOmuZ
+zb6PG2vaTNZFvqSTkhQ8Jjh5UIxvgcSnJPSpOIO9jEK85fou60TABkbta9gs5BlU
+zY3rqkZFtu1wccuHIxzSIOJ5bGXcuUXlvemo7z6CBuROIin1Dja0V4adhBYF6PFy
+qBrGyEPU6QpIsqnx8ur9SBtljDjBiAhwo1rXlZhKlbGMxKiNXPxLTmrVGLLuT+xt
+XYlatMoQRbs2/hV4C7jvaKtHFToTsNLTcq1nun7WeQEkvI0ld2zi1TAJu1sLxQSv
+LbZEBp+uFPT3OeTLS3ed6WoXoNcjIs0R+yXvcFP2pYe7xu6c5ig0B6a2bM/+9/t4
+UmHHya9WMF+zL3H4Zd/F8AlTNGIPe2xNKe+2SCEAOvtfJjytdvCjQtUy8QoxIBEP
+MtvPU8JNxnhtnLPhPHD4LigTvF2uihqXS2PUc7eTrgoWjxFpUE3vb4zrQNA+C0D9
+12ItV4xhSOFmvIQJD3j27seYbz9q00Rnb/mXxG9hWhNybEXGkkLqiy4Eh0lLfvPG
+VhGLI/0YDU0dQESZrdVC9ECULcyiEY8G7sHFMhCMH9hCXLaf5ibomqLRTry1bLk9
+preYi0U2222hV/pZjSs0xA9BAeSyXQLeA0aN9u9A1SilfoMVq/id0ebbjqBCDjsP
+ilYbam7CA1GetVuDHi82
+=thI5
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+
+--===============0148398338308290894==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0148398338308290894==--
