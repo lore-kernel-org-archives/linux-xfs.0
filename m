@@ -1,20 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 296677CF4
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 16:29:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E766AC001
-	for <xfs@oss.sgi.com>; Tue,  3 May 2016 14:29:43 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Y5HZSRwG75jpJ8KB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 May 2016 14:29:42 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/14] xfs: use xfs_zero_range in xfs_zero_eof
-Date: Tue,  3 May 2016 23:29:05 +0200
-Message-Id: <1462310947-16132-13-git-send-email-hch@lst.de>
-In-Reply-To: <1462310947-16132-1-git-send-email-hch@lst.de>
-References: <1462310947-16132-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6C7257CA0
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 05:59:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 31109304043
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 03:59:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id nmSoZaBDgytXSE5c (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 06 May 2016 03:59:47 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 048D07F084
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 10:59:47 +0000 (UTC)
+Received: from redhat.com (dhcp-26-103.brq.redhat.com [10.34.26.103])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u46Axing003496
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Fri, 6 May 2016 06:59:46 -0400
+Date: Fri, 6 May 2016 12:59:44 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 5/7] xfs: add configuration of error failure speed
+Message-ID: <20160506105944.GA28694@redhat.com>
+References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+	<1462376600-8617-6-git-send-email-cmaiolino@redhat.com>
+	<20160506000433.GG26977@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160506000433.GG26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,173 +38,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-We now skip holes in it, so no need to have the caller do it as well.
+On Fri, May 06, 2016 at 10:04:33AM +1000, Dave Chinner wrote:
+> On Wed, May 04, 2016 at 05:43:18PM +0200, Carlos Maiolino wrote:
+> > On reception of an error, we can fail immediately, perform some
+> > bound amount of retries or retry indefinitely. The current behaviour
+> > we have is to retry forever.
+> > 
+> > However, we'd like the ability to choose how long the filesystem should try
+> > after an error, it can either fail immediately, retry a few times, or retry
+> > forever. This is implemented by using max_retries sysfs attribute, to hold the
+> > amount of times we allow the filesystem to retry after an error. Being -1 a
+> > special case where the filesystem will retry indefinitely.
+> > 
+> > Add both a maximum retry count and a retry timeout so that we can bound by
+> > time and/or physical IO attempts.
+> > 
+> > Finally, plumb these into xfs_buf_iodone error processing so that
+> > the error behaviour follows the selected configuration.
+> > 
+> > Changelog:
+> > 
+> > V3:
+> > 	- In xfs_buf_iodone_callback_error, use max_retries to decide how long
+> > 	  the filesystem should retry on errors instead of XFS_ERR_FAIL enums
+> > 	  and fail_speed
+> > 
+> > 	- Remove all code implementing fail_speed attribute from the original
+> > 	  patch
+> > 		-- failure_speed_show/store attributes function implementation
+> > 		-- max_retries_store() now accepts values from -1 up to INT_MAX
+> > 
+> > 	- retry_timeout_seconds_show() print fixed:
+> > 		-- jiffies_to_msecs() should be divided by MSEC_PER_SEC
+> > 		-- trailing whitespace removed
+> 
+> Where's XFS_ERR_RETRY_FOREVER?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 128 +-----------------------------------------------------
- 1 file changed, 1 insertion(+), 127 deletions(-)
+Hi, I didn't understand you literally meant to have XFS_ERR_RETRY_FOREVER macro
+implemented, sorry about that, I'll implement it, add fail_at_unmount to
+<dev>/error and re-send the patchset
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 85369a9..6ad30dd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -381,49 +381,6 @@ out:
- }
- 
- /*
-- * This routine is called to handle zeroing any space in the last block of the
-- * file that is beyond the EOF.  We do this since the size is being increased
-- * without writing anything to that block and we don't want to read the
-- * garbage on the disk.
-- */
--STATIC int				/* error (positive) */
--xfs_zero_last_block(
--	struct xfs_inode	*ip,
--	xfs_fsize_t		offset,
--	xfs_fsize_t		isize,
--	bool			*did_zeroing)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		last_fsb = XFS_B_TO_FSBT(mp, isize);
--	int			zero_offset = XFS_B_FSB_OFFSET(mp, isize);
--	int			zero_len;
--	int			nimaps = 1;
--	int			error = 0;
--	struct xfs_bmbt_irec	imap;
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	error = xfs_bmapi_read(ip, last_fsb, 1, &imap, &nimaps, 0);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	if (error)
--		return error;
--
--	ASSERT(nimaps > 0);
--
--	/*
--	 * If the block underlying isize is just a hole, then there
--	 * is nothing to zero.
--	 */
--	if (imap.br_startblock == HOLESTARTBLOCK)
--		return 0;
--
--	zero_len = mp->m_sb.sb_blocksize - zero_offset;
--	if (isize + zero_len > offset)
--		zero_len = offset - isize;
--	*did_zeroing = true;
--	return xfs_zero_range(ip, isize, zero_len, NULL);
--}
--
--/*
-  * Zero any on disk space between the current EOF and the new, larger EOF.
-  *
-  * This handles the normal case of zeroing the remainder of the last block in
-@@ -441,94 +398,11 @@ xfs_zero_eof(
- 	xfs_fsize_t		isize,		/* current inode size */
- 	bool			*did_zeroing)
- {
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		start_zero_fsb;
--	xfs_fileoff_t		end_zero_fsb;
--	xfs_fileoff_t		zero_count_fsb;
--	xfs_fileoff_t		last_fsb;
--	xfs_fileoff_t		zero_off;
--	xfs_fsize_t		zero_len;
--	int			nimaps;
--	int			error = 0;
--	struct xfs_bmbt_irec	imap;
--
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 	ASSERT(offset > isize);
- 
- 	trace_xfs_zero_eof(ip, isize, offset - isize);
--
--	/*
--	 * First handle zeroing the block on which isize resides.
--	 *
--	 * We only zero a part of that block so it is handled specially.
--	 */
--	if (XFS_B_FSB_OFFSET(mp, isize) != 0) {
--		error = xfs_zero_last_block(ip, offset, isize, did_zeroing);
--		if (error)
--			return error;
--	}
--
--	/*
--	 * Calculate the range between the new size and the old where blocks
--	 * needing to be zeroed may exist.
--	 *
--	 * To get the block where the last byte in the file currently resides,
--	 * we need to subtract one from the size and truncate back to a block
--	 * boundary.  We subtract 1 in case the size is exactly on a block
--	 * boundary.
--	 */
--	last_fsb = isize ? XFS_B_TO_FSBT(mp, isize - 1) : (xfs_fileoff_t)-1;
--	start_zero_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)isize);
--	end_zero_fsb = XFS_B_TO_FSBT(mp, offset - 1);
--	ASSERT((xfs_sfiloff_t)last_fsb < (xfs_sfiloff_t)start_zero_fsb);
--	if (last_fsb == end_zero_fsb) {
--		/*
--		 * The size was only incremented on its last block.
--		 * We took care of that above, so just return.
--		 */
--		return 0;
--	}
--
--	ASSERT(start_zero_fsb <= end_zero_fsb);
--	while (start_zero_fsb <= end_zero_fsb) {
--		nimaps = 1;
--		zero_count_fsb = end_zero_fsb - start_zero_fsb + 1;
--
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		error = xfs_bmapi_read(ip, start_zero_fsb, zero_count_fsb,
--					  &imap, &nimaps, 0);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		if (error)
--			return error;
--
--		ASSERT(nimaps > 0);
--
--		if (imap.br_state == XFS_EXT_UNWRITTEN ||
--		    imap.br_startblock == HOLESTARTBLOCK) {
--			start_zero_fsb = imap.br_startoff + imap.br_blockcount;
--			ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
--			continue;
--		}
--
--		/*
--		 * There are blocks we need to zero.
--		 */
--		zero_off = XFS_FSB_TO_B(mp, start_zero_fsb);
--		zero_len = XFS_FSB_TO_B(mp, imap.br_blockcount);
--
--		if ((zero_off + zero_len) > offset)
--			zero_len = offset - zero_off;
--
--		error = xfs_zero_range(ip, zero_off, zero_len, NULL);
--		if (error)
--			return error;
--
--		*did_zeroing = true;
--		start_zero_fsb = imap.br_startoff + imap.br_blockcount;
--		ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
--	}
--
--	return 0;
-+	return xfs_zero_range(ip, isize, offset - isize, did_zeroing);
- }
- 
- /*
+> 
+> > @@ -1095,8 +1098,12 @@ xfs_buf_iodone_callback_error(
+> >  	 * Repeated failure on an async write. Take action according to the
+> >  	 * error configuration we have been set up to use.
+> >  	 */
+> > -	if (!cfg->max_retries)
+> > -		goto permanent_error;
+> > +	if ((cfg->max_retries >= 0) &&
+> > +	    (++bp->b_retries > cfg->max_retries))
+> > +			goto permanent_error;
+> 
+> I suggested:
+> 
+>         if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+>             ++bp->b_retries > cfg->max_retries)
+>                 goto permanent_error;
+> 
+> so that we document that there is a "retry forever" case being
+> handled here. I really don't like magic "-1", ">= 0" or other
+> implicit comparisions that don't document that it is valid to retry
+> forever in these cases.
+> 
+> > +	if (cfg->retry_timeout &&
+> > +	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+> > +			goto permanent_error;
+> >  
+> >  	/* still a transient error, higher layers will retry */
+> >  	xfs_buf_ioerror(bp, 0);
+> > @@ -1139,6 +1146,7 @@ xfs_buf_iodone_callbacks(
+> >  	 * retry state here in preparation for the next error that may occur.
+> >  	 */
+> >  	bp->b_last_error = 0;
+> > +	bp->b_retries = 0;
+> >  
+> >  	xfs_buf_do_callbacks(bp);
+> >  	bp->b_fspriv = NULL;
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 0c5a976..0382140 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -54,7 +54,8 @@ enum {
+> >  
+> >  struct xfs_error_cfg {
+> >  	struct xfs_kobj	kobj;
+> > -	int		max_retries;
+> > +	int		max_retries;	/* -1 = retry forever */
+> 
+> as per my last review, remove the comment, add XFS_ERR_RETRY_FOREVER
+> to document that "-1 = retry forever" and use that in the code so
+> it's explicit that the code is intended to handle this case.
+> 
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
 -- 
-2.1.4
+Carlos
 
 _______________________________________________
 xfs mailing list
