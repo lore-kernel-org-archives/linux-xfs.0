@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2173C7CA4
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 10:43:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E84EF8F8039
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 08:43:33 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ttYzlwQQvEvz1Ezz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 04 May 2016 08:43:32 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 0204F7AE97
-	for <xfs@oss.sgi.com>; Wed,  4 May 2016 15:43:31 +0000 (UTC)
-Received: from zion.usersys.redhat.com (unused [10.10.50.11] (may be forged))
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u44FhPoJ012561
-	for <xfs@oss.sgi.com>; Wed, 4 May 2016 11:43:31 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 5/7] xfs: add configuration of error failure speed
-Date: Wed,  4 May 2016 17:43:18 +0200
-Message-Id: <1462376600-8617-6-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
-References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 345EF7CA0
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:53:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EAF7E304048
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:53:52 -0700 (PDT)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id CrXK84e48lieDtbJ for
+	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:53:51 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v5 2/5] dax: enable dax in the presence of known media errors
+	(badblocks)
+Date: Fri,  6 May 2016 15:53:08 -0600
+Message-Id: <1462571591-3361-3-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,255 +28,145 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On reception of an error, we can fail immediately, perform some
-bound amount of retries or retry indefinitely. The current behaviour
-we have is to retry forever.
+From: Dan Williams <dan.j.williams@intel.com>
 
-However, we'd like the ability to choose how long the filesystem should try
-after an error, it can either fail immediately, retry a few times, or retry
-forever. This is implemented by using max_retries sysfs attribute, to hold the
-amount of times we allow the filesystem to retry after an error. Being -1 a
-special case where the filesystem will retry indefinitely.
+1/ If a mapping overlaps a bad sector fail the request.
 
-Add both a maximum retry count and a retry timeout so that we can bound by
-time and/or physical IO attempts.
+2/ Do not opportunistically report more dax-capable capacity than is
+   requested when errors present.
 
-Finally, plumb these into xfs_buf_iodone error processing so that
-the error behaviour follows the selected configuration.
-
-Changelog:
-
-V3:
-	- In xfs_buf_iodone_callback_error, use max_retries to decide how long
-	  the filesystem should retry on errors instead of XFS_ERR_FAIL enums
-	  and fail_speed
-
-	- Remove all code implementing fail_speed attribute from the original
-	  patch
-		-- failure_speed_show/store attributes function implementation
-		-- max_retries_store() now accepts values from -1 up to INT_MAX
-
-	- retry_timeout_seconds_show() print fixed:
-		-- jiffies_to_msecs() should be divided by MSEC_PER_SEC
-		-- trailing whitespace removed
-
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+[vishal: fix a conflict with system RAM collision patches]
+[vishal: add a 'size' parameter to ->direct_access]
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 ---
- fs/xfs/xfs_buf.h      | 23 ++++++++++++++-
- fs/xfs/xfs_buf_item.c | 12 ++++++--
- fs/xfs/xfs_mount.h    |  3 +-
- fs/xfs/xfs_sysfs.c    | 81 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 111 insertions(+), 8 deletions(-)
+ arch/powerpc/sysdev/axonram.c |  2 +-
+ block/ioctl.c                 |  9 ---------
+ drivers/block/brd.c           |  2 +-
+ drivers/nvdimm/pmem.c         | 10 +++++++++-
+ drivers/s390/block/dcssblk.c  |  2 +-
+ fs/block_dev.c                |  2 +-
+ include/linux/blkdev.h        |  2 +-
+ 7 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index adef116..bd978f0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -183,7 +183,28 @@ typedef struct xfs_buf {
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	int			b_error;	/* error code on I/O */
--	int			b_last_error;	/* previous async I/O error */
-+
-+	/*
-+	 * async write failure retry count. Initialised to zero on the first
-+	 * failure, then when it exceeds the maximum configured without a
-+	 * success the write is considered to be failed permanently and the
-+	 * iodone handler will take appropriate action.
-+	 *
-+	 * For retry timeouts, we record the jiffie of the first failure. This
-+	 * means that we can change the retry timeout and it on the next error
-+	 * it will be checked against the newly configured timeout. This
-+	 * prevents buffers getting stuck in retry loops with a really long
-+	 * timeout.
-+	 *
-+	 * last_error is used to ensure that we are getting repeated errors, not
-+	 * different errors. e.g. a block device might change ENOSPC to EIO when
-+	 * a failure timeout occurs, so we want to re-initialise the error
-+	 * retry behaviour appropriately when that happens.
-+	 */
-+	int			b_retries;
-+	unsigned long		b_first_retry_time; /* in jiffies */
-+	int			b_last_error;
-+
- 	const struct xfs_buf_ops	*b_ops;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 3a30a88..6fe6852 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1086,6 +1086,9 @@ xfs_buf_iodone_callback_error(
- 		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
- 			        XBF_DONE | XBF_WRITE_FAIL);
- 		bp->b_last_error = bp->b_error;
-+		bp->b_retries = 0;
-+		bp->b_first_retry_time = jiffies;
-+
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_submit(bp);
- 		return true;
-@@ -1095,8 +1098,12 @@ xfs_buf_iodone_callback_error(
- 	 * Repeated failure on an async write. Take action according to the
- 	 * error configuration we have been set up to use.
- 	 */
--	if (!cfg->max_retries)
--		goto permanent_error;
-+	if ((cfg->max_retries >= 0) &&
-+	    (++bp->b_retries > cfg->max_retries))
-+			goto permanent_error;
-+	if (cfg->retry_timeout &&
-+	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
-+			goto permanent_error;
- 
- 	/* still a transient error, higher layers will retry */
- 	xfs_buf_ioerror(bp, 0);
-@@ -1139,6 +1146,7 @@ xfs_buf_iodone_callbacks(
- 	 * retry state here in preparation for the next error that may occur.
- 	 */
- 	bp->b_last_error = 0;
-+	bp->b_retries = 0;
- 
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 0c5a976..0382140 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -54,7 +54,8 @@ enum {
- 
- struct xfs_error_cfg {
- 	struct xfs_kobj	kobj;
--	int		max_retries;
-+	int		max_retries;	/* -1 = retry forever */
-+	unsigned long	retry_timeout;	/* in jiffies, 0 = no timeout */
- };
- 
- typedef struct xfs_mount {
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 2a5b1cf..c881360 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -374,10 +374,6 @@ struct kobj_type xfs_log_ktype = {
-  * and any other future type of IO (e.g. special inode or directory error
-  * handling) we care to support.
+diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
+index 0d112b9..ff75d70 100644
+--- a/arch/powerpc/sysdev/axonram.c
++++ b/arch/powerpc/sysdev/axonram.c
+@@ -143,7 +143,7 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
   */
--static struct attribute *xfs_error_attrs[] = {
--	NULL,
--};
--
- static inline struct xfs_error_cfg *
- to_error_cfg(struct kobject *kobject)
+ static long
+ axon_ram_direct_access(struct block_device *device, sector_t sector,
+-		       void __pmem **kaddr, pfn_t *pfn)
++		       void __pmem **kaddr, pfn_t *pfn, long size)
  {
-@@ -385,6 +381,79 @@ to_error_cfg(struct kobject *kobject)
- 	return container_of(kobj, struct xfs_error_cfg, kobj);
+ 	struct axon_ram_bank *bank = device->bd_disk->private_data;
+ 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 4ff1f92..bf80bfd 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
+ 			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
+ 		return false;
+ 
+-	/*
+-	 * If the device has known bad blocks, force all I/O through the
+-	 * driver / page cache.
+-	 *
+-	 * TODO: support finer grained dax error handling
+-	 */
+-	if (disk->bb && disk->bb->count)
+-		return false;
+-
+ 	return true;
+ }
+ #endif
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 51a071e..c04bd9b 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -381,7 +381,7 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
+ 
+ #ifdef CONFIG_BLK_DEV_RAM_DAX
+ static long brd_direct_access(struct block_device *bdev, sector_t sector,
+-			void __pmem **kaddr, pfn_t *pfn)
++			void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct brd_device *brd = bdev->bd_disk->private_data;
+ 	struct page *page;
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index f798899..c447579 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -182,14 +182,22 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
  }
  
-+static ssize_t
-+max_retries_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", cfg->max_retries);
-+}
-+
-+static ssize_t
-+max_retries_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < -1 || val > INT_MAX)
-+		return -EINVAL;
-+
-+	cfg->max_retries = val;
-+	return count;
-+}
-+XFS_SYSFS_ATTR_RW(max_retries);
-+
-+static ssize_t
-+retry_timeout_seconds_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+
-+	return snprintf(buf, PAGE_SIZE, "%ld\n",
-+			jiffies_to_msecs(cfg->retry_timeout) / MSEC_PER_SEC);
-+}
-+
-+static ssize_t
-+retry_timeout_seconds_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	/* 1 day timeout maximum */
-+	if (val < 0 || val > 86400)
-+		return -EINVAL;
-+
-+	cfg->retry_timeout = msecs_to_jiffies(val * MSEC_PER_SEC);
-+	return count;
-+}
-+XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
-+
-+static struct attribute *xfs_error_attrs[] = {
-+	ATTR_LIST(max_retries),
-+	ATTR_LIST(retry_timeout_seconds),
-+	NULL,
-+};
-+
-+
- struct kobj_type xfs_error_cfg_ktype = {
- 	.release = xfs_sysfs_release,
- 	.sysfs_ops = &xfs_sysfs_ops,
-@@ -404,11 +473,13 @@ struct kobj_type xfs_error_ktype = {
- struct xfs_error_init {
- 	char		*name;
- 	int		max_retries;
-+	int		retry_timeout;	/* in seconds */
- };
+ static long pmem_direct_access(struct block_device *bdev, sector_t sector,
+-		      void __pmem **kaddr, pfn_t *pfn)
++		      void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct pmem_device *pmem = bdev->bd_disk->private_data;
+ 	resource_size_t offset = sector * 512 + pmem->data_offset;
  
- static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "default",
- 	  .max_retries = -1,
-+	  .retry_timeout = 0,
- 	},
- };
++	if (unlikely(is_bad_pmem(&pmem->bb, sector, size)))
++		return -EIO;
+ 	*kaddr = pmem->virt_addr + offset;
+ 	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
  
-@@ -439,6 +510,8 @@ xfs_error_sysfs_init_class(
- 			goto out_error;
++	/*
++	 * If badblocks are present, limit known good range to the
++	 * requested range.
++	 */
++	if (unlikely(pmem->bb.count))
++		return size;
+ 	return pmem->size - pmem->pfn_pad - offset;
+ }
  
- 		cfg->max_retries = init[i].max_retries;
-+		cfg->retry_timeout = msecs_to_jiffies(
-+					init[i].retry_timeout * MSEC_PER_SEC);
- 	}
- 	return 0;
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index b839086..c45d538 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -884,7 +884,7 @@ fail:
  
+ static long
+ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
+-			void __pmem **kaddr, pfn_t *pfn)
++			void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct dcssblk_dev_info *dev_info;
+ 	unsigned long offset, dev_sz;
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index b25bb23..02c68c4 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
+ 	sector += get_start_sect(bdev);
+ 	if (sector % (PAGE_SIZE / 512))
+ 		return -EINVAL;
+-	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
++	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn, size);
+ 	if (!avail)
+ 		return -ERANGE;
+ 	if (avail > 0 && avail & ~PAGE_MASK)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 669e419..55ed530 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1657,7 +1657,7 @@ struct block_device_operations {
+ 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+-			pfn_t *);
++			pfn_t *, long);
+ 	unsigned int (*check_events) (struct gendisk *disk,
+ 				      unsigned int clearing);
+ 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
 -- 
-2.4.11
+2.5.5
 
 _______________________________________________
 xfs mailing list
