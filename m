@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BAA2A7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 15:25:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2CAE1AC003
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 13:25:38 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id UkCKEDrvRZGRUGrn (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 13:25:36 -0700 (PDT)
-Date: Thu, 5 May 2016 13:25:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: May 2016 XFS reverse-mapping, reflink, and online fs scrub
-Message-ID: <20160505202502.GA7297@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	by oss.sgi.com (Postfix) with ESMTP id 8D9A07CAE
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:54:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE29AAC005
+	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:54:01 -0700 (PDT)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id HTw6KCLWVpU6dzKa for
+	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:54:00 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v5 5/5] dax: fix a comment in dax_zero_page_range and
+	dax_truncate_page
+Date: Fri,  6 May 2016 15:53:11 -0600
+Message-Id: <1462571591-3361-6-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,36 +23,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-I've pushed the rmap+reflink patches to github.  The kernel patches are against
-4.6-rc6, the xfsprogs patches against for-next, and xfstests patches are
-against master, same as last time.
+The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
 
-I /think/ the overlapped interval btree is working correctly, and it's now
-in djwong-devel.  The xfstests should all pass except generic/924 (check that
-we can't swapon a reflink file) and xfs/128 (swapextents is broken with rmap).
+09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
+macros
 
-djwong-experimental now contains the start of adding log intent items for
-deferred operations.
+The comments for the above functions described a distinction between
+those, that is now redundant, so remove those paragraphs
 
---D
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+---
+ fs/dax.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-Semi-sane:
-https://github.com/djwong/linux/commits/djwong-devel
-https://github.com/djwong/xfsprogs/commits/djwong-devel
-https://github.com/djwong/xfstests/commits/djwong-devel
-https://github.com/djwong/xfs-documentation/commits/djwong-devel
-https://github.com/djwong/man-pages/commits/djwong-devel
-
-HBD:
-https://github.com/djwong/linux/commits/djwong-experimental
-https://github.com/djwong/xfsprogs/commits/djwong-experimental
+diff --git a/fs/dax.c b/fs/dax.c
+index d8c974e..b8fa85a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1221,12 +1221,6 @@ static bool dax_range_is_aligned(struct block_device *bdev,
+  * page in a DAX file.  This is intended for hole-punch operations.  If
+  * you are truncating a file, the helper function dax_truncate_page() may be
+  * more convenient.
+- *
+- * We work in terms of PAGE_SIZE here for commonality with
+- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
+- * took care of disposing of the unnecessary blocks.  Even if the filesystem
+- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
+- * since the file might be mmapped.
+  */
+ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
+ 							get_block_t get_block)
+@@ -1279,12 +1273,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
+  *
+  * Similar to block_truncate_page(), this function can be called by a
+  * filesystem when it is truncating a DAX file to handle the partial page.
+- *
+- * We work in terms of PAGE_SIZE here for commonality with
+- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
+- * took care of disposing of the unnecessary blocks.  Even if the filesystem
+- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
+- * since the file might be mmapped.
+  */
+ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
+ {
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
