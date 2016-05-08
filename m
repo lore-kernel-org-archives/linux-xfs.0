@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A4B257CBA
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 09:11:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2389DAC003
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 07:11:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vxrQC4KFLzgQlECs (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 07:11:04 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id DB080C04B300
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:11:03 +0000 (UTC)
-Date: Thu, 5 May 2016 10:11:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/7] xfs: add configuration handlers for specific errors
-Message-ID: <20160505141102.GF1231@bfoster.bfoster>
-References: <1462376600-8617-1-git-send-email-cmaiolino@redhat.com>
-	<1462376600-8617-7-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DFC517CA0
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 04:28:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A5343304032
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 02:28:11 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 7OAKLtAcs3HckwAB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 08 May 2016 02:28:08 -0700 (PDT)
+Date: Sun, 8 May 2016 02:27:58 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v5 0/8] block: prepare for multipage bvecs
+Message-ID: <20160508092758.GA29621@infradead.org>
+References: <1460928615-20894-1-git-send-email-ming.lei@canonical.com>
+	<CACVXFVOw2dnO0tw5n2dPXUQh_tkGLCo742AXpJ8mMQG6LQZVUA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1462376600-8617-7-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <CACVXFVOw2dnO0tw5n2dPXUQh_tkGLCo742AXpJ8mMQG6LQZVUA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,94 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Ming Lei <ming.lei@canonical.com>
+Cc: linux-block@vger.kernel.org, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Jens Axboe <axboe@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
 
-On Wed, May 04, 2016 at 05:43:19PM +0200, Carlos Maiolino wrote:
-> now most of the infrastructure is in place, we can start adding
-> support for configuring specific errors such as ENODEV, ENOSPC, EIO,
-> etc. Add these error configurations and configure them all to have
-> appropriate behaviours. That is, all will be configured to retry forever by
-> default, except for ENODEV, which is an unrecoverable error, so it will be
-> configured to not retry on error
+On Tue, May 03, 2016 at 09:03:58AM +0800, Ming Lei wrote:
+> Any possibility to make v5 into v4.7 so that we can move on about
+> multipage bvecs?
 > 
-> Changelog:
-> 
-> V3:
-> 	- Do not implement .fail_speed and .fail_at_unmount
-> 	- .fail_at_unmount will be implemented in a different patch
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_mount.h |  3 +++
->  fs/xfs/xfs_sysfs.c | 20 ++++++++++++++++++++
->  2 files changed, 23 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 0382140..e3b3267 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -49,6 +49,9 @@ enum {
->  };
->  enum {
->  	XFS_ERR_DEFAULT,
-> +	XFS_ERR_EIO,
-> +	XFS_ERR_ENOSPC,
-> +	XFS_ERR_ENODEV,
->  	XFS_ERR_ERRNO_MAX,
->  };
->  
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index c881360..1ed9033 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -481,6 +481,17 @@ static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
->  	  .max_retries = -1,
->  	  .retry_timeout = 0,
->  	},
-> +	{ .name = "EIO",
-> +	  .max_retries = -1,
-> +	  .retry_timeout = 0,
-> +	},
-> +	{ .name = "ENOSPC",
-> +	  .max_retries = -1,
-> +	  .retry_timeout = 0,
-> +	},
-> +	{ .name = "ENODEV",
-> +	  .max_retries = -1,
+> BTW, even though not considering mp bvecs, this patchset is still a
+> good cleanup.
 
-Shouldn't this be 0?
-
-Brian
-
-> +	},
->  };
->  
->  static int
-> @@ -578,6 +589,15 @@ xfs_error_get_cfg(
->  	struct xfs_error_cfg	*cfg;
->  
->  	switch (error) {
-> +	case EIO:
-> +		cfg = &mp->m_error_cfg[error_class][XFS_ERR_EIO];
-> +		break;
-> +	case ENOSPC:
-> +		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENOSPC];
-> +		break;
-> +	case ENODEV:
-> +		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENODEV];
-> +		break;
->  	default:
->  		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
->  		break;
-> -- 
-> 2.4.11
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Agreed.  I'm fine with the series and it looks harmless enough for
+4.7.
 
 _______________________________________________
 xfs mailing list
