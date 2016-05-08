@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 29DE77CBB
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:05:41 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E205B7CA4
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 14:18:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B1CB5AC007
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:05:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EvDG7drUFtv00FRo (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:05:39 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v21 22/22] ext4: Add richacl feature flag
-Date: Tue, 10 May 2016 00:02:55 +0200
-Message-Id: <1462831375-23017-23-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6797DAC002
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 12:18:25 -0700 (PDT)
+Received: from smtp.movistar.es (smtp08.acens.net [86.109.99.132]) by
+	cuda.sgi.com with ESMTP id EZEjeNf8O92rzfyG for
+	<xfs@oss.sgi.com>; Sun, 08 May 2016 12:18:22 -0700 (PDT)
+Received: from Telcontar.valinor (88.1.245.4) by smtp.movistar.es (8.6.122.03)
+	(authenticated as robin.listas2)
+	id 56BAF15505CB99D3 for xfs@oss.sgi.com; Sun, 8 May 2016 19:18:21 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 9D0A560D2A
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 21:18:20 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id XAJX-V8KZCSa for <xfs@oss.sgi.com>;
+	Sun,  8 May 2016 21:18:20 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 7D1CD604E0
+	for <xfs@oss.sgi.com>; Sun,  8 May 2016 21:18:20 +0200 (CEST)
+Subject: Re: Unable to mount a XFS filesystem
+References: <30479c32-e298-c64b-1964-f9c9824bfe7a@usa.net>
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Message-ID: <572F90FC.1020201@telefonica.net>
+Date: Sun, 8 May 2016 21:18:20 +0200
+MIME-Version: 1.0
+In-Reply-To: <30479c32-e298-c64b-1964-f9c9824bfe7a@usa.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,159 +36,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0371861051906250025=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: XFS mail list <xfs@oss.sgi.com>
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--===============0371861051906250025==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="jxAee070SrOC0hs81sGq7Uq4VQcWNBUeP"
 
-This feature flag selects richacl instead of POSIX ACL support on the
-filesystem.  When this feature is off, the "acl" and "noacl" mount options
-control whether POSIX ACLs are enabled.  When it is on, richacls are
-automatically enabled and using the "noacl" mount option leads to an error.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--jxAee070SrOC0hs81sGq7Uq4VQcWNBUeP
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
----
- fs/ext4/ext4.h  |  6 ++++--
- fs/ext4/super.c | 49 ++++++++++++++++++++++++++++++++++++++++---------
- 2 files changed, 44 insertions(+), 11 deletions(-)
+On 2016-05-08 16:12, Issa Gorissen wrote:
+> Hello,
+>=20
+> After I have upgraded my htpc from openSuse 12.3 running kernel 3.7.10
+> to openSuse Tumbleweed running kernel 4.5.2; I am unable to mount my XF=
+S
+> filesystem anymore.
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index c047435..f574e9e 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -1099,7 +1099,7 @@ struct ext4_inode_info {
- #define EXT4_MOUNT_UPDATE_JOURNAL	0x01000	/* Update the journal format */
- #define EXT4_MOUNT_NO_UID32		0x02000  /* Disable 32-bit UIDs */
- #define EXT4_MOUNT_XATTR_USER		0x04000	/* Extended user attributes */
--#define EXT4_MOUNT_POSIX_ACL		0x08000	/* POSIX Access Control Lists */
-+#define EXT4_MOUNT_ACL			0x08000	/* Access Control Lists */
- #define EXT4_MOUNT_NO_AUTO_DA_ALLOC	0x10000	/* No auto delalloc mapping */
- #define EXT4_MOUNT_BARRIER		0x20000 /* Use block barriers */
- #define EXT4_MOUNT_QUOTA		0x80000 /* Some quota option set */
-@@ -1678,6 +1678,7 @@ static inline int ext4_encrypted_inode(struct inode *inode)
- #define EXT4_FEATURE_INCOMPAT_LARGEDIR		0x4000 /* >2GB or 3-lvl htree */
- #define EXT4_FEATURE_INCOMPAT_INLINE_DATA	0x8000 /* data in inode */
- #define EXT4_FEATURE_INCOMPAT_ENCRYPT		0x10000
-+#define EXT4_FEATURE_INCOMPAT_RICHACL		0x20000
- 
- #define EXT4_FEATURE_COMPAT_FUNCS(name, flagname) \
- static inline bool ext4_has_feature_##name(struct super_block *sb) \
-@@ -1792,7 +1793,8 @@ EXT4_FEATURE_INCOMPAT_FUNCS(encrypt,		ENCRYPT)
- 					 EXT4_FEATURE_INCOMPAT_MMP | \
- 					 EXT4_FEATURE_INCOMPAT_INLINE_DATA | \
- 					 EXT4_FEATURE_INCOMPAT_ENCRYPT | \
--					 EXT4_FEATURE_INCOMPAT_CSUM_SEED)
-+					 EXT4_FEATURE_INCOMPAT_CSUM_SEED | \
-+					 EXT4_FEATURE_INCOMPAT_RICHACL)
- #define EXT4_FEATURE_RO_COMPAT_SUPP	(EXT4_FEATURE_RO_COMPAT_SPARSE_SUPER| \
- 					 EXT4_FEATURE_RO_COMPAT_LARGE_FILE| \
- 					 EXT4_FEATURE_RO_COMPAT_GDT_CSUM| \
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 5392975..de8510b 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1304,6 +1304,28 @@ static ext4_fsblk_t get_sb_block(void **data)
- 	return sb_block;
- }
- 
-+static int enable_acl(struct super_block *sb)
-+{
-+	sb->s_flags &= ~(MS_POSIXACL | MS_RICHACL);
-+	if (test_opt(sb, ACL)) {
-+		if (EXT4_HAS_INCOMPAT_FEATURE(sb,
-+					      EXT4_FEATURE_INCOMPAT_RICHACL)) {
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+			sb->s_flags |= MS_RICHACL;
-+#else
-+			return -EOPNOTSUPP;
-+#endif
-+		} else {
-+#ifdef CONFIG_EXT4_FS_POSIX_ACL
-+			sb->s_flags |= MS_POSIXACL;
-+#else
-+			return -EOPNOTSUPP;
-+#endif
-+		}
-+	}
-+	return 0;
-+}
-+
- #define DEFAULT_JOURNAL_IOPRIO (IOPRIO_PRIO_VALUE(IOPRIO_CLASS_BE, 3))
- static char deprecated_msg[] = "Mount option \"%s\" will be removed by %s\n"
- 	"Contact linux-ext4@vger.kernel.org if you think we should keep it.\n";
-@@ -1450,9 +1472,9 @@ static const struct mount_opts {
- 	 MOPT_NO_EXT2 | MOPT_DATAJ},
- 	{Opt_user_xattr, EXT4_MOUNT_XATTR_USER, MOPT_SET},
- 	{Opt_nouser_xattr, EXT4_MOUNT_XATTR_USER, MOPT_CLEAR},
--#ifdef CONFIG_EXT4_FS_POSIX_ACL
--	{Opt_acl, EXT4_MOUNT_POSIX_ACL, MOPT_SET},
--	{Opt_noacl, EXT4_MOUNT_POSIX_ACL, MOPT_CLEAR},
-+#if defined(CONFIG_EXT4_FS_POSIX_ACL) || defined(CONFIG_EXT4_FS_RICHACL)
-+	{Opt_acl, EXT4_MOUNT_ACL, MOPT_SET},
-+	{Opt_noacl, EXT4_MOUNT_ACL, MOPT_CLEAR},
- #else
- 	{Opt_acl, 0, MOPT_NOSUPPORT},
- 	{Opt_noacl, 0, MOPT_NOSUPPORT},
-@@ -1500,6 +1522,13 @@ static int handle_mount_opt(struct super_block *sb, char *opt, int token,
- #endif
- 	switch (token) {
- 	case Opt_noacl:
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+	if (EXT4_HAS_INCOMPAT_FEATURE(sb, EXT4_FEATURE_INCOMPAT_RICHACL)) {
-+		ext4_msg(sb, KERN_ERR, "Mount option \"%s\" incompatible "
-+			 "with richacl feature", opt);
-+		return -1;
-+	}
-+#endif
- 	case Opt_nouser_xattr:
- 		ext4_msg(sb, KERN_WARNING, deprecated_msg, opt, "3.5");
- 		break;
-@@ -3272,8 +3301,8 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		set_opt(sb, NO_UID32);
- 	/* xattr user namespace & acls are now defaulted on */
- 	set_opt(sb, XATTR_USER);
--#ifdef CONFIG_EXT4_FS_POSIX_ACL
--	set_opt(sb, POSIX_ACL);
-+#if defined(CONFIG_EXT4_FS_POSIX_ACL) || defined(CONFIG_EXT4_FS_RICHACL)
-+	set_opt(sb, ACL);
- #endif
- 	/* don't forget to enable journal_csum when metadata_csum is enabled. */
- 	if (ext4_has_metadata_csum(sb))
-@@ -3356,8 +3385,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		sb->s_iflags |= SB_I_CGROUPWB;
- 	}
- 
--	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
--		(test_opt(sb, POSIX_ACL) ? MS_POSIXACL : 0);
-+	err = enable_acl(sb);
-+	if (err)
-+		goto failed_mount;
- 
- 	if (le32_to_cpu(es->s_rev_level) == EXT4_GOOD_OLD_REV &&
- 	    (ext4_has_compat_features(sb) ||
-@@ -4675,8 +4705,9 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
- 	if (sbi->s_mount_flags & EXT4_MF_FS_ABORTED)
- 		ext4_abort(sb, "Abort forced by user");
- 
--	sb->s_flags = (sb->s_flags & ~MS_POSIXACL) |
--		(test_opt(sb, POSIX_ACL) ? MS_POSIXACL : 0);
-+	err = enable_acl(sb);
-+	if (err)
-+		goto restore_opts;
- 
- 	es = sbi->s_es;
- 
--- 
-2.5.5
+How did you do that upgrade? Zypper dup, or boot dvd, choose upgrade?
+
+
+
+> dmesg outputs
+>=20
+>=20
+> [ 5525.861750] SGI XFS with ACLs, security attributes, realtime, no
+> debug enabled
+> [ 5525.862231] attempt to access beyond end of device
+> [ 5525.862232] md0: rw=3D32, want=3D5860529904, limit=3D5860529792
+> [ 5525.862234] XFS (md0): last sector read failed
+
+Me, I would try to find out if the array is readable:
+
+dd if=3D/dev/md0 of=3D/dev/null
+
+and see where it stops.
+
+--=20
+Cheers / Saludos,
+
+		Carlos E. R.
+		(from 13.1 x86_64 "Bottle" at Telcontar)
+
+
+--jxAee070SrOC0hs81sGq7Uq4VQcWNBUeP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlcvkPwACgkQtTMYHG2NR9VTJgCeJxB5/JH7WUZRcCTqSVDP108C
+STUAnAm4qABmo7NQHDbvTgWhnxmImxbp
+=kjvE
+-----END PGP SIGNATURE-----
+
+--jxAee070SrOC0hs81sGq7Uq4VQcWNBUeP--
+
+
+--===============0371861051906250025==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0371861051906250025==--
