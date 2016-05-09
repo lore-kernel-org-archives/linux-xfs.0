@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 34D927CAF
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:47:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CD18AC004
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:35 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 61D947CCA
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:47:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0EFE0304043
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:48 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id hNAhXPrWNeKFtQ9N (version=TLSv1.2
+	ESMTP id 7pcrU6biYjBUVfkL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:33 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:46 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/15] fs: move struct iomap from exportfs.h to a separate
-	header
-Date: Mon,  9 May 2016 10:47:05 +0200
-Message-Id: <1462783638-4968-3-git-send-email-hch@lst.de>
+Subject: [PATCH 05/15] xfs: make xfs_bmbt_to_iomap available outside of
+	xfs_pnfs.c
+Date: Mon,  9 May 2016 10:47:08 +0200
+Message-Id: <1462783638-4968-6-git-send-email-hch@lst.de>
 In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
 References: <1462783638-4968-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,114 +32,117 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
 
+And ensure it works for RT subvolume files an set the block device,
+both of which will be needed to be able to use the function in the
+buffered write path.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 ---
- fs/nfsd/blocklayout.c    |  1 +
- fs/nfsd/blocklayoutxdr.c |  1 +
- fs/xfs/xfs_pnfs.c        |  1 +
- include/linux/exportfs.h | 16 +---------------
- include/linux/iomap.h    | 21 +++++++++++++++++++++
- 5 files changed, 25 insertions(+), 15 deletions(-)
- create mode 100644 include/linux/iomap.h
+ fs/xfs/xfs_iomap.c | 27 +++++++++++++++++++++++++++
+ fs/xfs/xfs_iomap.h |  4 ++++
+ fs/xfs/xfs_pnfs.c  | 26 --------------------------
+ 3 files changed, 31 insertions(+), 26 deletions(-)
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index e55b524..4df16ae 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -2,6 +2,7 @@
-  * Copyright (c) 2014-2016 Christoph Hellwig.
-  */
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/genhd.h>
- #include <linux/slab.h>
- #include <linux/pr.h>
-diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-index 6c3b316..4ebaaf4 100644
---- a/fs/nfsd/blocklayoutxdr.c
-+++ b/fs/nfsd/blocklayoutxdr.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/sunrpc/svc.h>
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/nfs4.h>
- 
- #include "nfsd.h"
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 3332bae..0a56787 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2014 Christoph Hellwig.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5839135..2f37194 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -15,6 +15,7 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   */
 +#include <linux/iomap.h>
  #include "xfs.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index d841450..b03c062 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -6,6 +6,7 @@
- struct dentry;
- struct iattr;
- struct inode;
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
+@@ -940,3 +941,29 @@ error_on_bmapi_transaction:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
++
++void
++xfs_bmbt_to_iomap(
++	struct xfs_inode	*ip,
++	struct iomap		*iomap,
++	struct xfs_bmbt_irec	*imap)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	if (imap->br_startblock == HOLESTARTBLOCK) {
++		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->type = IOMAP_HOLE;
++	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
++		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->type = IOMAP_DELALLOC;
++	} else {
++		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
++		if (imap->br_state == XFS_EXT_UNWRITTEN)
++			iomap->type = IOMAP_UNWRITTEN;
++		else
++			iomap->type = IOMAP_MAPPED;
++	}
++	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
++	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
++	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
++}
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 8688e66..718f07c 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -18,6 +18,7 @@
+ #ifndef __XFS_IOMAP_H__
+ #define __XFS_IOMAP_H__
+ 
 +struct iomap;
- struct super_block;
- struct vfsmount;
+ struct xfs_inode;
+ struct xfs_bmbt_irec;
  
-@@ -187,21 +188,6 @@ struct fid {
-  *    get_name is not (which is possibly inconsistent)
+@@ -29,4 +30,7 @@ int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+ 			struct xfs_bmbt_irec *);
+ int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
+ 
++void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
++		struct xfs_bmbt_irec *);
++
+ #endif /* __XFS_IOMAP_H__*/
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 0a56787..dc1a71f 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -80,32 +80,6 @@ xfs_fs_get_uuid(
+ 	return 0;
+ }
+ 
+-static void
+-xfs_bmbt_to_iomap(
+-	struct xfs_inode	*ip,
+-	struct iomap		*iomap,
+-	struct xfs_bmbt_irec	*imap)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-
+-	if (imap->br_startblock == HOLESTARTBLOCK) {
+-		iomap->blkno = IOMAP_NULL_BLOCK;
+-		iomap->type = IOMAP_HOLE;
+-	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
+-		iomap->blkno = IOMAP_NULL_BLOCK;
+-		iomap->type = IOMAP_DELALLOC;
+-	} else {
+-		iomap->blkno =
+-			XFS_FSB_TO_DADDR(ip->i_mount, imap->br_startblock);
+-		if (imap->br_state == XFS_EXT_UNWRITTEN)
+-			iomap->type = IOMAP_UNWRITTEN;
+-		else
+-			iomap->type = IOMAP_MAPPED;
+-	}
+-	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
+-	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
+-}
+-
+ /*
+  * Get a layout for the pNFS client.
   */
- 
--/* types of block ranges for multipage write mappings. */
--#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
--#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
--
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
--
--struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
--};
--
- struct export_operations {
- 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
- 			struct inode *parent);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-new file mode 100644
-index 0000000..1b22197
---- /dev/null
-+++ b/include/linux/iomap.h
-@@ -0,0 +1,21 @@
-+#ifndef LINUX_IOMAP_H
-+#define LINUX_IOMAP_H 1
-+
-+#include <linux/types.h>
-+
-+/* types of block ranges for multipage write mappings. */
-+#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
-+#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+
-+#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+
-+struct iomap {
-+	sector_t	blkno;	/* first sector of mapping */
-+	loff_t		offset;	/* file offset of mapping, bytes */
-+	u64		length;	/* length of mapping, bytes */
-+	int		type;	/* type of mapping */
-+};
-+
-+#endif /* LINUX_IOMAP_H */
 -- 
 2.1.4
 
