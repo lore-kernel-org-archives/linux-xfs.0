@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 07F587CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 08:34:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C72EA304066
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 06:34:21 -0700 (PDT)
-Date: Wed, 11 May 2016 09:34:17 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING
-	fs/xfs/xfs_aops.c:1232 xfs_vm_releasepage
-Message-ID: <20160511133417.GA42410@bfoster.bfoster>
-References: <20160304210341.GA8035@bfoster.bfoster>
-	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
-	<20160323140736.GD43073@bfoster.bfoster>
-	<56F3A101.1020300@profihost.ag> <56F3A213.2020908@profihost.ag>
-	<20160324111703.GA4068@bfoster.bfoster>
-	<56F3DACB.8040305@profihost.ag>
-	<20160324122417.GB4068@bfoster.bfoster> <57332508.307@profihost.ag>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <57332508.307@profihost.ag>
+	by oss.sgi.com (Postfix) with ESMTP id 4E8FA7CA4
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:03:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09E9D304062
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:03:32 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6EiAL03OfCHEovk0 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:03:32 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v21 04/22] vfs: Make the inode passed to inode_change_ok
+	non-const
+Date: Tue, 10 May 2016 00:02:37 +0200
+Message-Id: <1462831375-23017-5-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,137 +24,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Wed, May 11, 2016 at 02:26:48PM +0200, Stefan Priebe - Profihost AG wrote:
-> Hi Brian,
-> 
-> i'm still unable to grab anything to the trace file? Is there anything
-> to check if it's working at all?
-> 
+We will need to call iop->permission and iop->get_acl from
+inode_change_ok() for additional permission checks, and both take a
+non-const inode.
 
-See my previous mail:
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Andreas Dilger <adilger@dilger.ca>
+Reviewed-by: Steve French <steve.french@primarydata.com>
+---
+ fs/attr.c          | 2 +-
+ include/linux/fs.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-http://oss.sgi.com/pipermail/xfs/2016-March/047793.html
-
-E.g., something like this should work after writing to and removing a
-new file:
-
-# trace-cmd start -e "xfs:xfs_releasepage"
-# cat /sys/kernel/debug/tracing/trace_pipe
-...
-rm-8198  [000] ....  9445.774070: xfs_releasepage: dev 253:4 ino 0x69 pgoff 0x9ff000 size 0xa00000 offset 0 length 0 delalloc 0 unwritten 0
-
-Once that is working, add the grep command to filter out "delalloc 0"
-instances, etc. For example:
-
-	cat .../trace_pipe | grep -v "delalloc 0" > ~/trace.out
-
-Brian
-
-> This still happens in the first 48 hours after a fresh reboot.
-> 
-> Stefan
-> 
-> Am 24.03.2016 um 13:24 schrieb Brian Foster:
-> > On Thu, Mar 24, 2016 at 01:17:15PM +0100, Stefan Priebe - Profihost AG wrote:
-> >>
-> >> Am 24.03.2016 um 12:17 schrieb Brian Foster:
-> >>> On Thu, Mar 24, 2016 at 09:15:15AM +0100, Stefan Priebe - Profihost AG wrote:
-> >>>>
-> >>>> Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
-> >>>>>
-> >>>>> Am 23.03.2016 um 15:07 schrieb Brian Foster:
-> >>>>>> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
-> >>>>>>> sorry new one the last one got mangled. Comments inside.
-> >>>>>>>
-> >>>>>>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
-> >>>>>>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
-> >>>>>>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
-> >>>>>>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
-> >>>>>>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
-> >>>>>>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
-> >>>>>>>>>>>>>
-> >>>>>>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
-> >>>>>>>>>>>>>>
-> >>>>>>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
-> >>>>>> ...
-> >>>>>>>
-> >>>>>>> This has happened again on 8 different hosts in the last 24 hours
-> >>>>>>> running 4.4.6.
-> >>>>>>>
-> >>>>>>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
-> >>>>>>> OS stuff as the VMs have remote storage. So no database, no rsync on
-> >>>>>>> those hosts - just the OS doing nearly nothing.
-> >>>>>>>
-> >>>>>>> All those show:
-> >>>>>>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
-> >>>>>>> xfs_vm_releasepage+0xe2/0xf0()
-> >>>>>>>
-> >>>>>>
-> >>>>>> Ok, well at this point the warning isn't telling us anything beyond
-> >>>>>> you're reproducing the problem. We can't really make progress without
-> >>>>>> more information. We don't necessarily know what application or
-> >>>>>> operations caused this by the time it occurs, but perhaps knowing what
-> >>>>>> file is affected could give us a hint.
-> >>>>>>
-> >>>>>> We have the xfs_releasepage tracepoint, but that's unconditional and so
-> >>>>>> might generate a lot of noise by default. Could you enable the
-> >>>>>> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
-> >>>>>> E.g., we could leave a long running 'trace-cmd record -e
-> >>>>>> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
-> >>>>>> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
-> >>>>>> -e "xfs:xfs_releasepage"' and leave something like 'cat
-> >>>>>> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
-> >>>>>> ~/trace.out' running to capture instances.
-> >>>>
-> >>>> Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
-> >>>> it in the trace.out even the WARN_ONCE was already triggered?
-> >>>>
-> >>>
-> >>> The tracepoint is independent from the warning (see
-> >>> xfs_vm_releasepage()), so the tracepoint will fire every invocation of
-> >>> the function regardless of whether delalloc blocks still exist at that
-> >>> point. That creates the need to filter the entries.
-> >>>
-> >>> With regard to performance, I believe the tracepoints are intended to be
-> >>> pretty lightweight. I don't think it should hurt to try it on a box,
-> >>> observe for a bit and make sure there isn't a huge impact. Note that the
-> >>> 'trace-cmd record' approach will save everything to file, so that's
-> >>> something to consider I suppose.
-> >>
-> >> Tests / cat is running. Is there any way to test if it works? Or is it
-> >> enough that cat prints stuff from time to time but does not match -v
-> >> delalloc 0
-> >>
-> > 
-> > What is it printing where delalloc != 0? You could always just cat
-> > trace_pipe and make sure the event is firing, it's just that I suspect
-> > most entries will have delalloc == unwritten == 0.
-> > 
-> > Also, while the tracepoint fires independent of the warning, it might
-> > not be a bad idea to restart a system that has already seen the warning
-> > since boot, just to provide some correlation or additional notification
-> > when the problem occurs.
-> > 
-> > Brian
-> > 
-> >> Stefan
-> >>
-> >> _______________________________________________
-> >> xfs mailing list
-> >> xfs@oss.sgi.com
-> >> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/attr.c b/fs/attr.c
+index 25b24d0..7ca7fa0 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -28,7 +28,7 @@
+  * Should be called as the first thing in ->setattr implementations,
+  * possibly after taking additional locks.
+  */
+-int inode_change_ok(const struct inode *inode, struct iattr *attr)
++int inode_change_ok(struct inode *inode, struct iattr *attr)
+ {
+ 	unsigned int ia_valid = attr->ia_valid;
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0807a9c..ea40356 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2939,7 +2939,7 @@ extern int buffer_migrate_page(struct address_space *,
+ #define buffer_migrate_page NULL
+ #endif
+ 
+-extern int inode_change_ok(const struct inode *, struct iattr *);
++extern int inode_change_ok(struct inode *, struct iattr *);
+ extern int inode_newsize_ok(const struct inode *, loff_t offset);
+ extern void setattr_copy(struct inode *inode, const struct iattr *attr);
+ 
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
