@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A22C7CBE
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:48:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E6C40304043
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:59 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 294E67CA4
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:48:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F14F1304039
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:48:03 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id C533bAUGDqZav16U (version=TLSv1.2
+	ESMTP id 6pXSnOPaj5IevtnI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:58 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:48:02 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/15] xfs: remove buffered write support from __xfs_get_blocks
-Date: Mon,  9 May 2016 10:47:11 +0200
-Message-Id: <1462783638-4968-9-git-send-email-hch@lst.de>
+Subject: [PATCH 09/15] fs: iomap based fiemap implementation
+Date: Mon,  9 May 2016 10:47:12 +0200
+Message-Id: <1462783638-4968-10-git-send-email-hch@lst.de>
 In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
 References: <1462783638-4968-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,163 +31,133 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bob Peterson <rpeterso@redhat.com>
----
- fs/xfs/xfs_aops.c | 77 +++++++++++++++----------------------------------------
- 1 file changed, 21 insertions(+), 56 deletions(-)
+Add a simple fiemap implementation based on iomap_ops, partially based
+on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e481c80..cb4f75c 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1130,7 +1130,6 @@ __xfs_get_blocks(
- 	sector_t		iblock,
- 	struct buffer_head	*bh_result,
- 	int			create,
--	bool			direct,
- 	bool			dax_fault)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
-@@ -1151,22 +1150,14 @@ __xfs_get_blocks(
- 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
- 	size = bh_result->b_size;
- 
--	if (!create && direct && offset >= i_size_read(inode))
-+	if (!create && offset >= i_size_read(inode))
- 		return 0;
- 
- 	/*
- 	 * Direct I/O is usually done on preallocated files, so try getting
--	 * a block mapping without an exclusive lock first.  For buffered
--	 * writes we already have the exclusive iolock anyway, so avoiding
--	 * a lock roundtrip here by taking the ilock exclusive from the
--	 * beginning is a useful micro optimization.
-+	 * a block mapping without an exclusive lock first.
- 	 */
--	if (create && !direct) {
--		lockmode = XFS_ILOCK_EXCL;
--		xfs_ilock(ip, lockmode);
--	} else {
--		lockmode = xfs_ilock_data_map_shared(ip);
--	}
-+	lockmode = xfs_ilock_data_map_shared(ip);
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 	if (offset + size > mp->m_super->s_maxbytes)
-@@ -1185,37 +1176,19 @@ __xfs_get_blocks(
- 	     (imap.br_startblock == HOLESTARTBLOCK ||
- 	      imap.br_startblock == DELAYSTARTBLOCK) ||
- 	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
--		if (direct || xfs_get_extsz_hint(ip)) {
--			/*
--			 * xfs_iomap_write_direct() expects the shared lock. It
--			 * is unlocked on return.
--			 */
--			if (lockmode == XFS_ILOCK_EXCL)
--				xfs_ilock_demote(ip, lockmode);
--
--			error = xfs_iomap_write_direct(ip, offset, size,
--						       &imap, nimaps);
--			if (error)
--				return error;
--			new = 1;
-+		/*
-+		 * xfs_iomap_write_direct() expects the shared lock. It
-+		 * is unlocked on return.
-+		 */
-+		if (lockmode == XFS_ILOCK_EXCL)
-+			xfs_ilock_demote(ip, lockmode);
- 
--		} else {
--			/*
--			 * Delalloc reservations do not require a transaction,
--			 * we can go on without dropping the lock here. If we
--			 * are allocating a new delalloc block, make sure that
--			 * we set the new flag so that we mark the buffer new so
--			 * that we know that it is newly allocated if the write
--			 * fails.
--			 */
--			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
--				new = 1;
--			error = xfs_iomap_write_delay(ip, offset, size, &imap);
--			if (error)
--				goto out_unlock;
-+		error = xfs_iomap_write_direct(ip, offset, size,
-+					       &imap, nimaps);
-+		if (error)
-+			return error;
-+		new = 1;
- 
--			xfs_iunlock(ip, lockmode);
--		}
- 		trace_xfs_get_blocks_alloc(ip, offset, size,
- 				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
- 						   : XFS_IO_DELALLOC, &imap);
-@@ -1236,9 +1209,7 @@ __xfs_get_blocks(
- 	}
- 
- 	/* trim mapping down to size requested */
--	if (direct || size > (1 << inode->i_blkbits))
--		xfs_map_trim_size(inode, iblock, bh_result,
--				  &imap, offset, size);
-+	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
- 
- 	/*
- 	 * For unwritten extents do not report a disk address in the buffered
-@@ -1251,7 +1222,7 @@ __xfs_get_blocks(
- 		if (ISUNWRITTEN(&imap))
- 			set_buffer_unwritten(bh_result);
- 		/* direct IO needs special help */
--		if (create && direct) {
-+		if (create) {
- 			if (dax_fault)
- 				ASSERT(!ISUNWRITTEN(&imap));
- 			else
-@@ -1280,14 +1251,7 @@ __xfs_get_blocks(
- 	     (new || ISUNWRITTEN(&imap))))
- 		set_buffer_new(bh_result);
- 
--	if (imap.br_startblock == DELAYSTARTBLOCK) {
--		BUG_ON(direct);
--		if (create) {
--			set_buffer_uptodate(bh_result);
--			set_buffer_mapped(bh_result);
--			set_buffer_delay(bh_result);
--		}
--	}
-+	BUG_ON(imap.br_startblock == DELAYSTARTBLOCK);
- 
- 	return 0;
- 
-@@ -1303,7 +1267,8 @@ xfs_get_blocks(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
-+	BUG_ON(create);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 ++
+ 2 files changed, 93 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index f84c6eb..7e639bf 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -405,3 +405,93 @@ out_unlock:
+ 	return ret;
  }
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
++
++struct fiemap_ctx {
++	struct fiemap_extent_info *fi;
++	struct iomap prev;
++};
++
++static int iomap_to_fiemap(struct fiemap_extent_info *fi,
++		struct iomap *iomap, u32 flags)
++{
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/* skip holes */
++		return 0;
++	case IOMAP_DELALLOC:
++		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
++		break;
++	case IOMAP_UNWRITTEN:
++		flags |= FIEMAP_EXTENT_UNWRITTEN;
++		break;
++	case IOMAP_MAPPED:
++		break;
++	}
++
++	return fiemap_fill_next_extent(fi, iomap->offset,
++			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
++			iomap->length, flags | FIEMAP_EXTENT_MERGED);
++
++}
++
++static loff_t
++iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct fiemap_ctx *ctx = data;
++	loff_t ret = length;
++
++	if (iomap->type == IOMAP_HOLE)
++		return length;
++
++	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
++	ctx->prev = *iomap;
++	switch (ret) {
++	case 0:		/* success */
++		return length;
++	case 1:		/* extent array full */
++		return 0;
++	default:
++		return ret;
++	}
++}
++
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
++		loff_t start, loff_t len, struct iomap_ops *ops)
++{
++	struct fiemap_ctx ctx;
++	loff_t ret;
++
++	memset(&ctx, 0, sizeof(ctx));
++	ctx.fi = fi;
++	ctx.prev.type = IOMAP_HOLE;
++
++	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
++	if (ret)
++		return ret;
++
++	ret = filemap_write_and_wait(inode->i_mapping);
++	if (ret)
++		return ret;
++
++	while (len > 0) {
++		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
++				iomap_fiemap_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		start += ret;
++		len -= ret;
++	}
++
++	if (ctx.prev.type != IOMAP_HOLE) {
++		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_fiemap);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 854766f..b3deee1 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -3,6 +3,7 @@
  
- int
-@@ -1313,7 +1278,7 @@ xfs_get_blocks_direct(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
- }
+ #include <linux/types.h>
  
- int
-@@ -1323,7 +1288,7 @@ xfs_get_blocks_dax_fault(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
- }
++struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+ struct kiocb;
+@@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ 		struct iomap_ops *ops);
+ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		struct iomap_ops *ops);
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
++		loff_t start, loff_t len, struct iomap_ops *ops);
  
- /*
+ #endif /* LINUX_IOMAP_H */
 -- 
 2.1.4
 
