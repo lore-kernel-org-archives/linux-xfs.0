@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 47D297CA1
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 11:07:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B122B7CD3
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:04:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CA9E304048
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 09:07:03 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id sXyViL0yX5into3d for <xfs@oss.sgi.com>;
-	Wed, 11 May 2016 09:07:02 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 41E9D873
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 11:07:02 -0500 (CDT)
-Subject: Re: [PATCH] xfs/133 134: filter redundant projid 0 quota report
-References: <1462979156-7648-1-git-send-email-zlang@redhat.com>
-	<e0126658-70f7-f8f9-d3bd-a47df2c6ce96@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2114d344-c6bb-8580-81c4-cda68f7e2bc2@sandeen.net>
-Date: Wed, 11 May 2016 11:07:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <e0126658-70f7-f8f9-d3bd-a47df2c6ce96@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 85F79304062
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:04:29 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EzgEzvE7V2NyOFXt (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:04:28 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v21 12/22] vfs: Add get_richacl and set_richacl inode
+	operations
+Date: Tue, 10 May 2016 00:02:45 +0200
+Message-Id: <1462831375-23017-13-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
+These operations are similar to the get_acl and set_acl operations for
+POSIX ACLs.  The distinction between access and default ACLs doesn't exist
+for richacls.
 
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Steve French <steve.french@primarydata.com>
+---
+ include/linux/fs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-On 5/11/16 11:04 AM, Eric Sandeen wrote:
-> +_filter_project_quota()
-> +{
-> +	# Project ID 0 is always present on disk but was not reported
-> +	# until the GETNEXTQUOTA ioctl came into use.  Filter it out.
-> +	_filter_quota | grep -v "^\#0"
-> +}
-
-or perhaps that should be 
-
-	grep -v "^\#0\|^(null)"
-
-because at one point we reported "(null)" not "#0" right?
-
-Thanks,
--Eric
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index c569117..ec0bd11 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1698,6 +1698,7 @@ struct inode_operations {
+ 	const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
+ 	int (*permission) (struct inode *, int);
+ 	struct posix_acl * (*get_acl)(struct inode *, int);
++	struct richacl * (*get_richacl)(struct inode *);
+ 
+ 	int (*readlink) (struct dentry *, char __user *,int);
+ 
+@@ -1726,6 +1727,7 @@ struct inode_operations {
+ 			   umode_t create_mode, int *opened);
+ 	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
+ 	int (*set_acl)(struct inode *, struct posix_acl *, int);
++	int (*set_richacl)(struct inode *, struct richacl *);
+ } ____cacheline_aligned;
+ 
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
