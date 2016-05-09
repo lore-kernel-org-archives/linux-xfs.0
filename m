@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1217A7CAF
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:47:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BDCCC304032
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:43 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 34D927CAF
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:47:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CD18AC004
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:35 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id L5bcz6BCjGFQGjdi (version=TLSv1.2
+	ESMTP id hNAhXPrWNeKFtQ9N (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:42 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:33 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/15] fs: support DAX based iomap zeroing
-Date: Mon,  9 May 2016 10:47:07 +0200
-Message-Id: <1462783638-4968-5-git-send-email-hch@lst.de>
+Subject: [PATCH 02/15] fs: move struct iomap from exportfs.h to a separate
+	header
+Date: Mon,  9 May 2016 10:47:05 +0200
+Message-Id: <1462783638-4968-3-git-send-email-hch@lst.de>
 In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
 References: <1462783638-4968-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,54 +32,114 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
 
-This avoid needing a separate inefficient get_block based DAX zero_range
-implementation in file systems.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 ---
- fs/iomap.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ fs/nfsd/blocklayout.c    |  1 +
+ fs/nfsd/blocklayoutxdr.c |  1 +
+ fs/xfs/xfs_pnfs.c        |  1 +
+ include/linux/exportfs.h | 16 +---------------
+ include/linux/iomap.h    | 21 +++++++++++++++++++++
+ 5 files changed, 25 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iomap.h
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index fac9285..f84c6eb 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -24,6 +24,7 @@
- #include <linux/uio.h>
- #include <linux/backing-dev.h>
- #include <linux/buffer_head.h>
-+#include <linux/dax.h>
- #include "internal.h"
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index e55b524..4df16ae 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -2,6 +2,7 @@
+  * Copyright (c) 2014-2016 Christoph Hellwig.
+  */
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/genhd.h>
+ #include <linux/slab.h>
+ #include <linux/pr.h>
+diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
+index 6c3b316..4ebaaf4 100644
+--- a/fs/nfsd/blocklayoutxdr.c
++++ b/fs/nfsd/blocklayoutxdr.c
+@@ -3,6 +3,7 @@
+  */
+ #include <linux/sunrpc/svc.h>
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/nfs4.h>
  
- typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-@@ -268,6 +269,15 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	return iomap_write_end(inode, pos, bytes, bytes, page);
- }
+ #include "nfsd.h"
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 3332bae..0a56787 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright (c) 2014 Christoph Hellwig.
+  */
++#include <linux/iomap.h>
+ #include "xfs.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+index d841450..b03c062 100644
+--- a/include/linux/exportfs.h
++++ b/include/linux/exportfs.h
+@@ -6,6 +6,7 @@
+ struct dentry;
+ struct iattr;
+ struct inode;
++struct iomap;
+ struct super_block;
+ struct vfsmount;
  
-+static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-+		struct iomap *iomap)
-+{
-+	sector_t sector = iomap->blkno +
-+		(((pos & ~(PAGE_SIZE - 1)) - iomap->offset) >> 9);
+@@ -187,21 +188,6 @@ struct fid {
+  *    get_name is not (which is possibly inconsistent)
+  */
+ 
+-/* types of block ranges for multipage write mappings. */
+-#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+-#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+-#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+-#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+-
+-#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+-
+-struct iomap {
+-	sector_t	blkno;	/* first sector of mapping */
+-	loff_t		offset;	/* file offset of mapping, bytes */
+-	u64		length;	/* length of mapping, bytes */
+-	int		type;	/* type of mapping */
+-};
+-
+ struct export_operations {
+ 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
+ 			struct inode *parent);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+new file mode 100644
+index 0000000..1b22197
+--- /dev/null
++++ b/include/linux/iomap.h
+@@ -0,0 +1,21 @@
++#ifndef LINUX_IOMAP_H
++#define LINUX_IOMAP_H 1
 +
-+	return __dax_zero_page_range(iomap->bdev, sector, offset, bytes);
-+}
++#include <linux/types.h>
 +
- static loff_t
- iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		void *data, struct iomap *iomap)
-@@ -286,7 +296,10 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		offset = pos & (PAGE_SIZE - 1); /* Within page */
- 		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
- 
--		status = iomap_zero(inode, pos, offset, bytes, iomap);
-+		if (IS_DAX(inode))
-+			status = iomap_dax_zero(pos, offset, bytes, iomap);
-+		else
-+			status = iomap_zero(inode, pos, offset, bytes, iomap);
- 		if (status < 0)
- 			return status;
- 
++/* types of block ranges for multipage write mappings. */
++#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
++#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
++#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
++#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
++
++#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
++
++struct iomap {
++	sector_t	blkno;	/* first sector of mapping */
++	loff_t		offset;	/* file offset of mapping, bytes */
++	u64		length;	/* length of mapping, bytes */
++	int		type;	/* type of mapping */
++};
++
++#endif /* LINUX_IOMAP_H */
 -- 
 2.1.4
 
