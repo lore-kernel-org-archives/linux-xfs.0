@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2EC7C7CA7
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 16:39:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F36F28F8050
-	for <xfs@oss.sgi.com>; Thu,  5 May 2016 14:39:17 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id A5vWkqxReAoNFyR9 for
-	<xfs@oss.sgi.com>; Thu, 05 May 2016 14:39:17 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: [PATCH v4 5/7] fs: prioritize and separate direct_io from dax_io
-Date: Thu, 5 May 2016 21:39:14 +0000
-Message-ID: <1462484343.29294.1.camel@intel.com>
-References: <1461878218-3844-1-git-send-email-vishal.l.verma@intel.com>
-	<1461878218-3844-6-git-send-email-vishal.l.verma@intel.com>
-	<5727753F.6090104@plexistor.com> <20160505142433.GA4557@infradead.org>
-In-Reply-To: <20160505142433.GA4557@infradead.org>
-Content-Language: en-US
-Content-ID: <A85A0D742E7D4047B1D16786AE1B7AF0@intel.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A98EB7CA4
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:47:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7BB52304039
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:47:32 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3ql1OP4nTJlN8rLX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:47:29 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/15] dax: export a low-level __dax_zero_page_range helper
+Date: Mon,  9 May 2016 10:47:04 +0200
+Message-Id: <1462783638-4968-2-git-send-email-hch@lst.de>
+In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
+References: <1462783638-4968-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +23,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "hch@infradead.org" <hch@infradead.org>, "boaz@plexistor.com" <boaz@plexistor.com>
-Cc: "axboe@fb.com" <axboe@fb.com>, "jack@suse.cz" <jack@suse.cz>, "matthew@wil.cx" <matthew@wil.cx>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
 
-On Thu, 2016-05-05 at 07:24 -0700, Christoph Hellwig wrote:
-> On Mon, May 02, 2016 at 06:41:51PM +0300, Boaz Harrosh wrote:
-> > 
-> > > 
-> > > All IO in a dax filesystem used to go through dax_do_io, which
-> > > cannot
-> > > handle media errors, and thus cannot provide a recovery path that
-> > > can
-> > > send a write through the driver to clear errors.
-> > > 
-> > > Add a new iocb flag for DAX, and set it only for DAX mounts. In
-> > > the IO
-> > > path for DAX filesystems, use the same direct_IO path for both DAX
-> > > and
-> > > direct_io iocbs, but use the flags to identify when we are in
-> > > O_DIRECT
-> > > mode vs non O_DIRECT with DAX, and for O_DIRECT, use the
-> > > conventional
-> > > direct_IO path instead of DAX.
-> > > 
-> > Really? What are your thinking here?
-> > 
-> > What about all the current users of O_DIRECT, you have just made
-> > them
-> > 4 times slower and "less concurrent*" then "buffred io" users. Since
-> > direct_IO path will queue an IO request and all.
-> > (And if it is not so slow then why do we need dax_do_io at all?
-> > [Rhetorical])
-> > 
-> > I hate it that you overload the semantics of a known and expected
-> > O_DIRECT flag, for special pmem quirks. This is an incompatible
-> > and unrelated overload of the semantics of O_DIRECT.
-> Agreed - makig O_DIRECT less direct than not having it is plain
-> stupid,
-> and I somehow missed this initially.
+This allows XFS to perform zeroing using the iomap infrastructure and
+avoid buffer heads.
 
-How is it any 'less direct'? All it does now is follow the blockdev
-O_DIRECT path. There still isn't any page cache involved..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/dax.c            | 35 ++++++++++++++++++++---------------
+ include/linux/dax.h |  7 +++++++
+ 2 files changed, 27 insertions(+), 15 deletions(-)
 
-> 
-> This whole DAX story turns into a major nightmare, and I fear all our
-> hodge podge tweaks to the semantics aren't helping it.
-> 
-> It seems like we simply need an explicit O_DAX for the read/write
-> bypass if can't sort out the semantics (error, writer synchronization)
-> just as we need a special flag for MMAP..
+diff --git a/fs/dax.c b/fs/dax.c
+index 90322eb..6d5d744 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1082,6 +1082,23 @@ int dax_pfn_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ }
+ EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
+ 
++int __dax_zero_page_range(struct block_device *bdev, sector_t sector,
++		unsigned int offset, unsigned int length)
++{
++	struct blk_dax_ctl dax = {
++		.sector		= sector,
++		.size		= PAGE_CACHE_SIZE,
++	};
++
++	if (dax_map_atomic(bdev, &dax) < 0)
++		return PTR_ERR(dax.addr);
++	clear_pmem(dax.addr + offset, length);
++	wmb_pmem();
++	dax_unmap_atomic(bdev, &dax);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(__dax_zero_page_range);
++
+ /**
+  * dax_zero_page_range - zero a range within a page of a DAX file
+  * @inode: The file being truncated
+@@ -1117,23 +1134,11 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
+ 	bh.b_bdev = inode->i_sb->s_bdev;
+ 	bh.b_size = PAGE_CACHE_SIZE;
+ 	err = get_block(inode, index, &bh, 0);
+-	if (err < 0)
++	if (err < 0 || !buffer_written(&bh))
+ 		return err;
+-	if (buffer_written(&bh)) {
+-		struct block_device *bdev = bh.b_bdev;
+-		struct blk_dax_ctl dax = {
+-			.sector = to_sector(&bh, inode),
+-			.size = PAGE_CACHE_SIZE,
+-		};
+ 
+-		if (dax_map_atomic(bdev, &dax) < 0)
+-			return PTR_ERR(dax.addr);
+-		clear_pmem(dax.addr + offset, length);
+-		wmb_pmem();
+-		dax_unmap_atomic(bdev, &dax);
+-	}
+-
+-	return 0;
++	return __dax_zero_page_range(bh.b_bdev, to_sector(&bh, inode),
++			offset, length);
+ }
+ EXPORT_SYMBOL_GPL(dax_zero_page_range);
+ 
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 636dd59..8155b81 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -17,12 +17,19 @@ int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
+ 
+ #ifdef CONFIG_FS_DAX
+ struct page *read_dax_sector(struct block_device *bdev, sector_t n);
++int __dax_zero_page_range(struct block_device *bdev, sector_t sector,
++		unsigned int offset, unsigned int length);
+ #else
+ static inline struct page *read_dax_sector(struct block_device *bdev,
+ 		sector_t n)
+ {
+ 	return ERR_PTR(-ENXIO);
+ }
++static inline int __dax_zero_page_range(struct block_device *bdev,
++		sector_t sector, unsigned int offset, unsigned int length)
++{
++	return -ENXIO;
++}
+ #endif
+ 
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-- 
+2.1.4
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
