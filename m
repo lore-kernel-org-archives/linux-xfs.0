@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 294E67CA4
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:48:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F14F1304039
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:48:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7F57D7CD8
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:48:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5379030404E
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:48:07 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 6pXSnOPaj5IevtnI (version=TLSv1.2
+	ESMTP id iAcr6dRa7ueyNfvy (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:48:02 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:48:05 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/15] fs: iomap based fiemap implementation
-Date: Mon,  9 May 2016 10:47:12 +0200
-Message-Id: <1462783638-4968-10-git-send-email-hch@lst.de>
+Subject: [PATCH 10/15] xfs: use iomap fiemap implementation
+Date: Mon,  9 May 2016 10:47:13 +0200
+Message-Id: <1462783638-4968-11-git-send-email-hch@lst.de>
 In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
 References: <1462783638-4968-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,133 +31,123 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
 
-Add a simple fiemap implementation based on iomap_ops, partially based
-on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
+Note that this removes support for the untested FIEMAP_FLAG_XATTR.  It
+could be added relatively easily with iomap ops for the attr fork, but
+without test coverage I don't feel safe doing this.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 ++
- 2 files changed, 93 insertions(+)
+ fs/xfs/xfs_iops.c | 80 ++++---------------------------------------------------
+ 1 file changed, 5 insertions(+), 75 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index f84c6eb..7e639bf 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -405,3 +405,93 @@ out_unlock:
- 	return ret;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 5d1fdae..985a263 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -44,7 +44,7 @@
+ #include <linux/xattr.h>
+ #include <linux/posix_acl.h>
+ #include <linux/security.h>
+-#include <linux/fiemap.h>
++#include <linux/iomap.h>
+ #include <linux/slab.h>
+ 
+ /*
+@@ -1004,51 +1004,6 @@ xfs_vn_update_time(
+ 	return xfs_trans_commit(tp);
  }
- EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
-+
-+struct fiemap_ctx {
-+	struct fiemap_extent_info *fi;
-+	struct iomap prev;
-+};
-+
-+static int iomap_to_fiemap(struct fiemap_extent_info *fi,
-+		struct iomap *iomap, u32 flags)
-+{
-+	switch (iomap->type) {
-+	case IOMAP_HOLE:
-+		/* skip holes */
-+		return 0;
-+	case IOMAP_DELALLOC:
-+		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
-+		break;
-+	case IOMAP_UNWRITTEN:
-+		flags |= FIEMAP_EXTENT_UNWRITTEN;
-+		break;
-+	case IOMAP_MAPPED:
-+		break;
-+	}
-+
-+	return fiemap_fill_next_extent(fi, iomap->offset,
-+			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
-+			iomap->length, flags | FIEMAP_EXTENT_MERGED);
-+
-+}
-+
-+static loff_t
-+iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	struct fiemap_ctx *ctx = data;
-+	loff_t ret = length;
-+
-+	if (iomap->type == IOMAP_HOLE)
-+		return length;
-+
-+	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
-+	ctx->prev = *iomap;
-+	switch (ret) {
-+	case 0:		/* success */
-+		return length;
-+	case 1:		/* extent array full */
-+		return 0;
-+	default:
-+		return ret;
-+	}
-+}
-+
-+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-+		loff_t start, loff_t len, struct iomap_ops *ops)
-+{
-+	struct fiemap_ctx ctx;
-+	loff_t ret;
-+
-+	memset(&ctx, 0, sizeof(ctx));
-+	ctx.fi = fi;
-+	ctx.prev.type = IOMAP_HOLE;
-+
-+	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-+	if (ret)
-+		return ret;
-+
-+	ret = filemap_write_and_wait(inode->i_mapping);
-+	if (ret)
-+		return ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-+				iomap_fiemap_actor);
-+		if (ret < 0)
-+			return ret;
-+		if (ret == 0)
-+			break;
-+
-+		start += ret;
-+		len -= ret;
-+	}
-+
-+	if (ctx.prev.type != IOMAP_HOLE) {
-+		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iomap_fiemap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 854766f..b3deee1 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -3,6 +3,7 @@
  
- #include <linux/types.h>
+-#define XFS_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
+-
+-/*
+- * Call fiemap helper to fill in user data.
+- * Returns positive errors to xfs_getbmap.
+- */
+-STATIC int
+-xfs_fiemap_format(
+-	void			**arg,
+-	struct getbmapx		*bmv,
+-	int			*full)
+-{
+-	int			error;
+-	struct fiemap_extent_info *fieinfo = *arg;
+-	u32			fiemap_flags = 0;
+-	u64			logical, physical, length;
+-
+-	/* Do nothing for a hole */
+-	if (bmv->bmv_block == -1LL)
+-		return 0;
+-
+-	logical = BBTOB(bmv->bmv_offset);
+-	physical = BBTOB(bmv->bmv_block);
+-	length = BBTOB(bmv->bmv_length);
+-
+-	if (bmv->bmv_oflags & BMV_OF_PREALLOC)
+-		fiemap_flags |= FIEMAP_EXTENT_UNWRITTEN;
+-	else if (bmv->bmv_oflags & BMV_OF_DELALLOC) {
+-		fiemap_flags |= (FIEMAP_EXTENT_DELALLOC |
+-				 FIEMAP_EXTENT_UNKNOWN);
+-		physical = 0;   /* no block yet */
+-	}
+-	if (bmv->bmv_oflags & BMV_OF_LAST)
+-		fiemap_flags |= FIEMAP_EXTENT_LAST;
+-
+-	error = fiemap_fill_next_extent(fieinfo, logical, physical,
+-					length, fiemap_flags);
+-	if (error > 0) {
+-		error = 0;
+-		*full = 1;	/* user array now full */
+-	}
+-
+-	return error;
+-}
+-
+ STATIC int
+ xfs_vn_fiemap(
+ 	struct inode		*inode,
+@@ -1056,38 +1011,13 @@ xfs_vn_fiemap(
+ 	u64			start,
+ 	u64			length)
+ {
+-	xfs_inode_t		*ip = XFS_I(inode);
+-	struct getbmapx		bm;
+ 	int			error;
  
-+struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
- struct kiocb;
-@@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
- 		struct iomap_ops *ops);
- int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		struct iomap_ops *ops);
-+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-+		loff_t start, loff_t len, struct iomap_ops *ops);
+-	error = fiemap_check_flags(fieinfo, XFS_FIEMAP_FLAGS);
+-	if (error)
+-		return error;
+-
+-	/* Set up bmap header for xfs internal routine */
+-	bm.bmv_offset = BTOBBT(start);
+-	/* Special case for whole file */
+-	if (length == FIEMAP_MAX_OFFSET)
+-		bm.bmv_length = -1LL;
+-	else
+-		bm.bmv_length = BTOBB(start + length) - bm.bmv_offset;
+-
+-	/* We add one because in getbmap world count includes the header */
+-	bm.bmv_count = !fieinfo->fi_extents_max ? MAXEXTNUM :
+-					fieinfo->fi_extents_max + 1;
+-	bm.bmv_count = min_t(__s32, bm.bmv_count,
+-			     (PAGE_SIZE * 16 / sizeof(struct getbmapx)));
+-	bm.bmv_iflags = BMV_IF_PREALLOC | BMV_IF_NO_HOLES;
+-	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR)
+-		bm.bmv_iflags |= BMV_IF_ATTRFORK;
+-	if (!(fieinfo->fi_flags & FIEMAP_FLAG_SYNC))
+-		bm.bmv_iflags |= BMV_IF_DELALLOC;
+-
+-	error = xfs_getbmap(ip, &bm, xfs_fiemap_format, fieinfo);
+-	if (error)
+-		return error;
++	xfs_ilock(XFS_I(inode), XFS_IOLOCK_SHARED);
++	error = iomap_fiemap(inode, fieinfo, start, length, &xfs_iomap_ops);
++	xfs_iunlock(XFS_I(inode), XFS_IOLOCK_SHARED);
  
- #endif /* LINUX_IOMAP_H */
+-	return 0;
++	return error;
+ }
+ 
+ STATIC int
 -- 
 2.1.4
 
