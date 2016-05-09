@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 26D1C7CAF
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 09:15:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D2156304064
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 07:15:54 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 499A57CB5
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:03:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4729AC008
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:03:26 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VVR6ZnBHelRdq1WW (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mCwcbCyVbPWU87N9 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 May 2016 07:15:53 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 3F635C057EC6
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:15:53 +0000 (UTC)
-Date: Wed, 11 May 2016 10:15:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/7] xfs: add "fail at unmount" error handling
-	configuration
-Message-ID: <20160511141550.GD42410@bfoster.bfoster>
-References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
-	<1462882581-30859-8-git-send-email-cmaiolino@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1462882581-30859-8-git-send-email-cmaiolino@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:03:25 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v21 03/22] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
+	permission flags
+Date: Tue, 10 May 2016 00:02:36 +0200
+Message-Id: <1462831375-23017-4-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,183 +24,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Tue, May 10, 2016 at 02:16:21PM +0200, Carlos Maiolino wrote:
-> If we take "retry forever" literally on metadata IO errors, we can
-> hang at unmount, once it retries those writes forever. This is the
-> default behavior, unfortunately.
-> 
-> Add an error configuration option for this behavior and default it to "fail" so
-> that an unmount will trigger actuall errors, a shutdown and allow the unmount to
-> succeed. It will be noisy, though, as it will log the errors and shutdown that
-> occurs.
-> 
-> To fix this, we need to mark the filesystem as being in the process of
-> unmounting. Do this with a mount flag that is added at the appropriate time
-> (i.e. before the blocking AIL sync). We also need to add this flag if mount
-> fails after the initial phase of log recovery has been run.
-> 
-> Changelog:
-> 
-> V3:
-> 	- No major changes have been done to this patch, only the ones needed to
-> 	  accomodate it on top of the remaining patches
-> V4:
-> 	- Make fail_at_unmount a global configuration option into
-> 	  ../xfs/<dev>/error directory
-> 	- Add m_fail_unmount boolean to xfs_mount, to keep track of unmount
-> 	  error behavior
-> 	- Create err_to_mp() helper, to translate a kobject, from m_error_kobj
-> 	  into its xfs_mount
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c |  4 ++++
->  fs/xfs/xfs_mount.c    | 12 ++++++++++++
->  fs/xfs/xfs_mount.h    |  2 ++
->  fs/xfs/xfs_sysfs.c    | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 64 insertions(+)
-> 
-...
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index eda3906..1bcee7e 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-...
-> @@ -1012,6 +1016,14 @@ xfs_unmountfs(
->  	xfs_log_force(mp, XFS_LOG_SYNC);
->  
->  	/*
-> +	 * We now need to tell the world we are unmounting. This will allow
-> +	 * us to detect that the filesystem is going away and we should error
-> +	 * out anything that we have been retrying in the background. This will
-> +	 * prevent neverending retries iin AIL pushing from hanging the unmount.
+Normally, deleting a file requires MAY_WRITE access to the parent
+directory.  With richacls, a file may be deleted with MAY_DELETE_CHILD access
+to the parent directory or with MAY_DELETE_SELF access to the file.
 
-Spelling:			       in
+To support that, pass the MAY_DELETE_CHILD mask flag to inode_permission()
+when checking for delete access inside a directory, and MAY_DELETE_SELF
+when checking for delete access to a file itelf.
 
-Otherwise looks good:
+The MAY_DELETE_SELF permission overrides the sticky directory check.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Steve French <steve.french@primarydata.com>
+---
+ fs/namei.c         | 20 ++++++++++++--------
+ include/linux/fs.h |  2 ++
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-> +	 */
-> +	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-> +
-> +	/*
->  	 * Flush all pending changes from the AIL.
->  	 */
->  	xfs_ail_push_all_sync(mp->m_ail);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 72ec3e3..9063a9c 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -177,6 +177,7 @@ typedef struct xfs_mount {
->  	 */
->  	__uint32_t		m_generation;
->  
-> +	bool			m_fail_unmount;
->  #ifdef DEBUG
->  	/*
->  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
-> @@ -195,6 +196,7 @@ typedef struct xfs_mount {
->  #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
->  						   must be synchronous except
->  						   for space allocations */
-> +#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
->  #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
->  #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
->  						   operations, typically for
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 084a606..4c2c550 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -381,6 +381,13 @@ to_error_cfg(struct kobject *kobject)
->  	return container_of(kobj, struct xfs_error_cfg, kobj);
->  }
->  
-> +static inline struct xfs_mount *
-> +err_to_mp(struct kobject *kobject)
-> +{
-> +	struct xfs_kobj *kobj = to_kobj(kobject);
-> +	return container_of(kobj, struct xfs_mount, m_error_kobj);
-> +}
-> +
->  static ssize_t
->  max_retries_show(
->  	struct kobject	*kobject,
-> @@ -447,6 +454,38 @@ retry_timeout_seconds_store(
->  }
->  XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
->  
-> +static ssize_t
-> +fail_at_unmount_show(
-> +	struct kobject	*kobject,
-> +	char		*buf)
-> +{
-> +	struct xfs_mount	*mp = err_to_mp(kobject);
-> +
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_unmount);
-> +}
-> +
-> +static ssize_t
-> +fail_at_unmount_store(
-> +	struct kobject	*kobject,
-> +	const char	*buf,
-> +	size_t		count)
-> +{
-> +	struct xfs_mount	*mp = err_to_mp(kobject);
-> +	int		ret;
-> +	int		val;
-> +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (val < 0 || val > 1)
-> +		return -EINVAL;
-> +
-> +	mp->m_fail_unmount = val;
-> +	return count;
-> +}
-> +XFS_SYSFS_ATTR_RW(fail_at_unmount);
-> +
->  static struct attribute *xfs_error_attrs[] = {
->  	ATTR_LIST(max_retries),
->  	ATTR_LIST(retry_timeout_seconds),
-> @@ -462,6 +501,7 @@ struct kobj_type xfs_error_cfg_ktype = {
->  
->  struct kobj_type xfs_error_ktype = {
->  	.release = xfs_sysfs_release,
-> +	.sysfs_ops = &xfs_sysfs_ops,
->  };
->  
->  /*
-> @@ -548,6 +588,12 @@ xfs_error_sysfs_init(
->  	if (error)
->  		return error;
->  
-> +	error = sysfs_create_file(&mp->m_error_kobj.kobject,
-> +				  ATTR_LIST(fail_at_unmount));
-> +
-> +	if (error)
-> +		goto out_error;
-> +
->  	/* .../xfs/<dev>/error/metadata/ */
->  	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
->  				"metadata", &mp->m_error_meta_kobj,
-> -- 
-> 2.4.11
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/namei.c b/fs/namei.c
+index b013950..858ed96 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -453,9 +453,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
+  * this, letting us set arbitrary permissions for filesystem access without
+  * changing the "normal" UIDs which are used for other things.
+  *
+- * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE, or
+- * MAY_CREATE_DIR are set.  That way, file systems that don't support these
+- * permissions will check for MAY_WRITE instead.
++ * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE,
++ * MAY_CREATE_DIR, or MAY_DELETE_CHILD are set.  That way, file systems that
++ * don't support these permissions will check for MAY_WRITE instead.
+  */
+ int inode_permission(struct inode *inode, int mask)
+ {
+@@ -2603,14 +2603,18 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
+ 	BUG_ON(victim->d_parent->d_inode != dir);
+ 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
+ 
+-	error = inode_permission(dir, mask);
++	error = inode_permission(dir, mask | MAY_WRITE | MAY_DELETE_CHILD);
++	if (!error && check_sticky(dir, inode))
++		error = -EPERM;
++	if (error && IS_RICHACL(inode) &&
++	    inode_permission(inode, MAY_DELETE_SELF) == 0 &&
++	    inode_permission(dir, mask) == 0)
++		error = 0;
+ 	if (error)
+ 		return error;
+ 	if (IS_APPEND(dir))
+ 		return -EPERM;
+-
+-	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
+-	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
++	if (IS_APPEND(inode) || IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
+ 		return -EPERM;
+ 	if (isdir) {
+ 		if (!d_is_dir(victim))
+@@ -2628,7 +2632,7 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
+ 
+ static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
+ {
+-	return may_delete_or_replace(dir, victim, isdir, MAY_WRITE | MAY_EXEC);
++	return may_delete_or_replace(dir, victim, isdir, MAY_EXEC);
+ }
+ 
+ static int may_replace(struct inode *dir, struct dentry *victim, bool isdir)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0b6d5ff..0807a9c 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -87,6 +87,8 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+ #define MAY_NOT_BLOCK		0x00000080
+ #define MAY_CREATE_FILE		0x00000100
+ #define MAY_CREATE_DIR		0x00000200
++#define MAY_DELETE_CHILD	0x00000400
++#define MAY_DELETE_SELF		0x00000800
+ 
+ /*
+  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
