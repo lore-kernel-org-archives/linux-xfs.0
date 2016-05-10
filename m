@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 716317CA7
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 05:32:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DD2BBAC002
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:32:50 -0700 (PDT)
-Received: from co01.mbox.net (co01.mbox.net [165.212.64.31]) by cuda.sgi.com
-	with ESMTP id yk7AATGMmxwVDJQp (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 03:32:48 -0700 (PDT)
-Received: from co01.mbox.net (localhost [127.0.0.1])
-	by co01.mbox.net (Postfix) with ESMTP id 3r3JcK3NZ3zs4gb
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 10:32:49 +0000 (UTC)
-Date: Mon, 09 May 2016 12:32:42 +0200
-From: issa-gorissen@usa.net
-Subject: Re: Unable to mount a XFS filesystem
-Mime-Version: 1.0
-Message-ID: <690ueikfQ0112S06.1462789962@web06.cms.usa.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A2FF47CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68BA4304048
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:27 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 32Ehh5dUSVHyDf3L (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:26 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 9CDA383F47
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:25 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u4ACGOug016940
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:25 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/7] Configurable error behavior [V4]
+Date: Tue, 10 May 2016 14:16:14 +0200
+Message-Id: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +32,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mail list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Received: 09:18 PM CEST, 05/08/2016
-From: "Carlos E. R." <robin.listas@telefonica.net>
+New revision ot the patchset according with comments for V3.
 
-> 
-> How did you do that upgrade? Zypper dup, or boot dvd, choose upgrade?
-> 
-In fact it was not a "real" upgrade. I added a new boot disk on which I
-installed Tumbleweed as a new OS. The MD RAID disks were kept in the computer.
-It seems the install did something to it I don't know about.
+This patchset is aimed to implement a configurable error behavior in XFS, and,
+most of the design has been done by Dave, so, I kept his signed-off.
 
+Detailed changelog is written on each patch, but, major changes are:
 
-> Me, I would try to find out if the array is readable:
-> 
-> dd if=/dev/md0 of=/dev/null
-> 
+	- make fail_at_unmount a global configuration option inside
+	  ../xfs/<dev>/err/fail_at_unmount
 
-array is fine but somehow the md partitions have been shrunk with the
-superblock moved. Don't know know. Version of the superblock is 1.0; which is
-stored at the end of the partition. So XFS filesystem starts at the start of
-the partition. If after the new OS install I cannot mount XFS anymore, and as
-Dave said XFS mount will try to read end of filesystem; then the end of the
-partition have changed.
+Carlos Maiolino (7):
+  xfs: configurable error behavior via sysfs
+  xfs: introduce metadata IO error class
+  xfs: add configurable error support to metadata buffers
+  xfs: introduce table-based init for error behaviors
+  xfs: add configuration of error failure speed
+  xfs: add configuration handlers for specific errors
+  xfs: add "fail at unmount" error handling configuration
 
-Thx
+ fs/xfs/xfs_buf.h      |  20 ++++
+ fs/xfs/xfs_buf_item.c | 121 +++++++++++++--------
+ fs/xfs/xfs_mount.c    |  22 +++-
+ fs/xfs/xfs_mount.h    |  34 ++++++
+ fs/xfs/xfs_sysfs.c    | 291 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_sysfs.h    |   3 +
+ fs/xfs/xfs_trace.h    |   1 -
+ 7 files changed, 446 insertions(+), 46 deletions(-)
+
+-- 
+2.4.11
 
 _______________________________________________
 xfs mailing list
