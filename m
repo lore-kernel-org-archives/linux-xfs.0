@@ -1,21 +1,17 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CDF687CA4
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 06:23:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2120CAC008
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 04:23:47 -0700 (PDT)
-Received: from ofertata-bg.info (ofertata-bg.info [37.157.191.230]) by
-	cuda.sgi.com with ESMTP id DrTYrajuLJ2MyDuV for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 04:23:43 -0700 (PDT)
-Received: from trakmal.info by ofertata-bg.info (MDaemon PRO v9.6.1)
-	with ESMTP id md50011158891.msg
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 14:22:49 +0300
-Subject: =?UTF-8?B?0JfQsCDQvNC10L3QuNC00LbRitGA0LgsINC60L7QuNGC0L4g0YHQtSDQuNC90YLQtdGA0LXRgdGD0LLQsNGCINC+0YIgTUJB?=
-Message-ID: <8dd430a77e85c0351387f2918df6e38b@trakmal.info>
-Date: Tue, 10 May 2016 11:27:16 +0300
-From: "Access MBA" <accessmba-bg@ofertata-bg.info>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 345A97CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 06:07:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C50F88F8049
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 04:06:58 -0700 (PDT)
+Received: from out4447.biz.mail.alibaba.com (out4447.biz.mail.alibaba.com
+	[47.88.44.47]) by cuda.sgi.com with ESMTP id SgYFy1n8NUSfEN4a
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 04:06:54 -0700 (PDT)
+Date: Tue, 10 May 2016 19:06:51 +0800 (CST)
+From: Lucas <lucas@sz-luckyclover.com>
+Message-ID: <8654370699866701900.10649058.730963517.cnxm@sz-luckyclover.com>
+Subject: =?UTF-8?B?UmU6IFJF77yaIEJPQk8gIFo0LS1Tb21ldGhpbmcgWW91IGRvbid0IEtub3c=?=
 MIME-Version: 1.0
-Reply-To: accessmba-bg@mail.bg
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,209 +20,339 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0727649641940435015=="
+Content-Type: multipart/mixed; boundary="===============8751127603870967554=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0727649641940435015==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-X-MIME-Autoconverted: from 8bit to base64 by userv0022.oracle.com id u4ABZOfH000729
+--===============8751127603870967554==
+Content-Type: multipart/alternative;
+	boundary="----=_Part_92779_1878600791.1462878411181"
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9u
-YWwvL0VOIj4NCjxodG1sIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpv
-ZmZpY2U6b2ZmaWNlIj48aGVhZD4NCjxtZXRhIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNl
-dD11dGYtOCIgaHR0cC1lcXVpdj1Db250ZW50LVR5cGU+DQo8bWV0YSBuYW1lPUdFTkVSQVRP
-UiBjb250ZW50PSJNU0hUTUwgMTEuMDAuOTYwMC4xNzkyNCI+PC9oZWFkPg0KPGJvZHk+DQo8
-dGFibGUgY2VsbHNwYWNpbmc9IjIiIGNlbGxwYWRkaW5nPSIyIiBib3JkZXI9IjAiIHN0eWxl
-PSJ3aWR0aDogODAwcHg7Ij4NCjx0Ym9keT4NCjx0cj4NCjx0ZCB2YWxpZ249InRvcCI+DQo8
-cCBjbGFzcz0iTXNvTm9ybWFsIiBzdHlsZT0ibWFyZ2luOiAwY20gMGNtIDBwdDsiPjxzcGFu
-IGxhbmc9IkVOLVVTIg0Kc3R5bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWlseToN
-CidDYWxpYnJpJywnc2Fucy1zZXJpZic7Ij7Ql9C00YDQsNCy0LXQudGC0LUsPGJyIC8+PGJy
-DQovPtCf0YDQtdC00L/QvtC70LDQs9Cw0LwsINGH0LUg0YnQtSDRgdC1INGB0YrQs9C70LDR
-gdC40YLQtSwg0YfQtSDQsg0K0L/QvtGB0LvQtdC00L3QuNGC0LUg0L3Rj9C60L7Qu9C60L4g
-0LPQvtC00LjQvdC4INC60L7QvdC60YPRgNC10L3RhtC40Y/RgtCwDQrQsiDQv9GA0L7RhNC1
-0YHQuNC+0L3QsNC70L3QuNGPINGB0LLRj9GCINC1INGB0YLQsNC90LDQu9CwIDxzdHJvbmc+
-PHNwYW4NCnN0eWxlPSJmb250LWZhbWlseTogJ0NhbGlicmknLCdzYW5zLXNlcmlmJzsiPtC4
-0LfQutC70Y7Rh9C40YLQtdC70L3Qvg0K0L7QttC10YHRgtC+0YfQtdC90LA8L3NwYW4+PC9z
-dHJvbmc+LiA8YnIgLz48YnIgLz7QotC+0LLQsA0K0L3QsNC5LdCy0LXRgNC+0Y/RgtC90L4g
-0LUg0L3QtdGJ0L4sINC60L7QtdGC0L4g0LLQtdGH0LUg0JLQuCDQtQ0K0L3QsNC/0YDQsNCy
-0LjQu9C+INCy0L/QtdGH0LDRgtC70LXQvdC40LUgLSA8c3Ryb25nPjxzcGFuDQpzdHlsZT0i
-Zm9udC1mYW1pbHk6ICdDYWxpYnJpJywnc2Fucy1zZXJpZic7Ij7QstGB0Y/QutCwDQrQs9C+
-0LTQuNC90LA8L3NwYW4+PC9zdHJvbmc+LCDQsiDQv9C+0YfRgtC4INCy0YHRj9C60LAg0YHR
-hNC10YDQsA0K0L3QsNCy0LvQuNC30LDRgiDQstGB0LUg0L/QvtCy0LXRh9C1INC90L7QstC+
-0YHRgtC4INC4INC90LDRh9C40L3QuCDQt9CwDQrRgNCw0LHQvtGC0LAuINCYINCw0LrQviDQ
-vdC1INCz0Lgg0YHQu9C10LTQuNGC0LUgPHU+0L/QvtGB0YLQvtGP0L3QvdC+PC91PiwNCjxz
-dHJvbmc+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3NhbnMtc2VyaWYn
-OyI+0LLQtdC00L3QsNCz0LANCtC40LfQvtGB0YLQsNCy0LDRgtC1INC+0YIg0LrQvtC90LrR
-g9GA0LXQvdGG0LjRj9GC0LA8L3NwYW4+PC9zdHJvbmc+Lg0KPC9zcGFuPjxzcGFuIHN0eWxl
-PSJmb250LXNpemU6IDExLjVwdDsgZm9udC1mYW1pbHk6ICdDYWxpYnJpJywnc2Fucy1zZXJp
-Zic7DQptc28tYW5zaS1sYW5ndWFnZTogQkc7Ij48bzpwPjwvbzpwPjwvc3Bhbj48L3A+DQo8
-cCBjbGFzcz0iTXNvTm9ybWFsIiBzdHlsZT0ibWFyZ2luOiAwY20gMGNtIDBwdDsiPjxzcGFu
-IGxhbmc9IkVOLVVTIg0Kc3R5bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWlseTog
-J0NhbGlicmknLCdzYW5zLXNlcmlmJzsiPtCe0YINCtC00YDRg9Cz0LAg0YHRgtGA0LDQvdCw
-INC/0YrQuiwg0LDQutC+INC40LzQsNGC0LUg0L/QvtC00YXQvtC00Y/RidCw0YLQsA0K0L/Q
-vtC00LPQvtGC0L7QstC60LAg0Lgg0LfQvdCw0L3QuNGPPC9zcGFuPjxzcGFuIHN0eWxlPSJm
-b250LXNpemU6IDExLjVwdDsNCmZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3NhbnMtc2VyaWYn
-OyBtc28tYW5zaS1sYW5ndWFnZTogQkc7Ij4sPC9zcGFuPjxzcGFuDQpsYW5nPSJFTi1VUyIg
-c3R5bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWlseToNCidDYWxpYnJpJywnc2Fu
-cy1zZXJpZic7Ij4g0YDQsNCx0L7RgtCw0YLQsCDQktC4INGJ0LUg0LLRitGA0LLQuA0KPHN0
-cm9uZz48c3BhbiBzdHlsZT0iZm9udC1mYW1pbHk6DQonQ2FsaWJyaScsJ3NhbnMtc2VyaWYn
-OyI+0L/Qvi3Qu9C10LrQvjwvc3Bhbj48L3N0cm9uZz4sINGJ0LUg0LfQvdCw0LXRgtC1DQrQ
-utCw0LogPHN0cm9uZz48c3BhbiBzdHlsZT0iZm9udC1mYW1pbHk6DQonQ2FsaWJyaScsJ3Nh
-bnMtc2VyaWYnOyI+0L3QsNC5LdC00L7QsdGA0LUg0LTQsCDRgNCw0LfQv9C+0LvQsNCz0LDR
-gtC1INGBDQrRgNC10YHRg9GA0YHQuNGC0LUg0YHQuDwvc3Bhbj48L3N0cm9uZz4g0Lgg0LrQ
-sNC6INC00LAg0YHQuCDQstGK0YDRiNC40YLQtQ0K0YDQsNCx0L7RgtCw0YLQsCA8c3Ryb25n
-PjxzcGFuIHN0eWxlPSJmb250LWZhbWlseToNCidDYWxpYnJpJywnc2Fucy1zZXJpZic7Ij7Q
-stGK0LfQvNC+0LbQvdC+DQrQvdCw0Lkt0LXRhNC40LrQsNGB0L3Qvjwvc3Bhbj48L3N0cm9u
-Zz4uIDxiciAvPjxiciAvPtCT0L7Qu9GP0LzQsCDRh9Cw0YHRgg0K0L7RgiDRgtC10LfQuCDQ
-t9C90LDQvdC40Y8g0LfQsCDQv9GA0LDQstC40LvQvdC+INGD0L/RgNCw0LLQu9C10L3QuNC1
-DQrQvNC+0LPQsNGCINC00LAg0YHQtSDQv9GA0LjQtNC+0LHQuNGP0YIg0LIgPGIgc3R5bGU9
-Im1zby1iaWRpLWZvbnQtd2VpZ2h0Og0Kbm9ybWFsOyI+PHU+PHNwYW4gc3R5bGU9ImNvbG9y
-OiAjYzQ1OTExOyBtc28tdGhlbWVjb2xvcjogYWNjZW50MjsNCm1zby10aGVtZXNoYWRlOiAx
-OTE7Ij7QvNCw0LPQuNGB0YLRitGA0YHQutCwINC/0YDQvtCz0YDQsNC80LAg0L/Qvg0K0JHQ
-uNC30L3QtdGBINCw0LTQvNC40L3QuNGB0YLRgNCw0YbQuNGPPC9zcGFuPjwvdT48L2I+PC9z
-cGFuPjxiDQpzdHlsZT0ibXNvLWJpZGktZm9udC13ZWlnaHQ6IG5vcm1hbDsiPjx1PjxzcGFu
-IHN0eWxlPSJmb250LXNpemU6IDExLjVwdDsNCmZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3Nh
-bnMtc2VyaWYnOyBjb2xvcjogI2M0NTkxMTsgbXNvLWFuc2ktbGFuZ3VhZ2U6IEJHOw0KbXNv
-LXRoZW1lY29sb3I6IGFjY2VudDI7IG1zby10aGVtZXNoYWRlOiAxOTE7Ij4oIDwvc3Bhbj48
-L3U+PC9iPjxiDQpzdHlsZT0ibXNvLWJpZGktZm9udC13ZWlnaHQ6IG5vcm1hbDsiPjx1Pjxz
-cGFuIGxhbmc9IkVOLVVTIg0Kc3R5bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWls
-eTogJ0NhbGlicmknLCdzYW5zLXNlcmlmJzsgY29sb3I6DQojYzQ1OTExOyBtc28tdGhlbWVj
-b2xvcjogYWNjZW50MjsgbXNvLXRoZW1lc2hhZGU6IDE5MTsiPk1CQSk8YnINCi8+PC9zcGFu
-PjwvdT48L2I+PGIgc3R5bGU9Im1zby1iaWRpLWZvbnQtd2VpZ2h0OiBub3JtYWw7Ij48dT48
-c3Bhbg0KbGFuZz0iRU4tVVMiIHN0eWxlPSJmb250LXNpemU6IDExLjVwdDsgZm9udC1mYW1p
-bHk6DQonQ2FsaWJyaScsJ3NhbnMtc2VyaWYnOyI+PGJyIC8+PC9zcGFuPjwvdT48L2I+PHNw
-YW4gbGFuZz0iRU4tVVMiDQpzdHlsZT0iZm9udC1zaXplOiAxMS41cHQ7IGZvbnQtZmFtaWx5
-Og0KJ0NhbGlicmknLCdzYW5zLXNlcmlmJzsiPtCf0L4t0LTQvtCx0YDQvtGC0L4g0L/RgNC1
-0LTRgdGC0LDQstGP0L3QtSDQsg0K0YDQsNCx0L7RgtCw0YLQsCDQktC4INGJ0LUg0LTQvtCy
-0LXQtNC1INC00L4g0YHQv9C10YfQtdC70LLQsNC90LUg0L3QsA0KPHN0cm9uZz48c3BhbiBz
-dHlsZT0iZm9udC1mYW1pbHk6ICdDYWxpYnJpJywnc2Fucy1zZXJpZic7Ij7Qv9C+0LLQtdGH
-0LUNCtC60LvQuNC10L3RgtC4INC4INC/0L4t0LPQvtC70LXQvNC4INC/0YDQuNGF0L7QtNC4
-INC30LANCtCS0LDRgTwvc3Bhbj48L3N0cm9uZz4uIDxiciAvPjxiciAvPtCY0LzQtdC90L3Q
-viDRgtC+0LLQsCDQtQ0K0L/RgNC40YfQuNC90LDRgtCwINC00LAg0JLQuCDQv9C40YjQsCAt
-INGB0YrQstGB0LXQvCDRgdC60L7RgNC+LCDQsg0K0KHQvtGE0LjRjywg0YnQtSDQuNC80LDR
-gtC1INCy0YrQt9C80L7QttC90L7RgdGCINC00LANCtC/0YDQtdC00L/RgNC40LXQvNC10YLQ
-tSDQvdC10YnQviwg0LrQvtC10YLQviDQvNC+0LbQtSDQt9Cw0L3QsNC/0YDQtdC0DQrQtNCw
-INC/0L7QtNC+0LHRgNC4INGD0YHQu9C+0LLQuNGP0YLQsCDQktC4INC90LAg0YDQsNCx0L7R
-gtCwLg0K0J/Qvi3Qs9C+0LvRj9C80L4g0LfQsNC/0LvQsNGJ0LDQvdC1LCDQv9C+LdC10YTQ
-uNC60LDRgdC90LAg0YDQsNCx0L7RgtCwDQrQvdCwINGE0LjRgNC80LDRgtCwINCS0Lgg0Lgg
-0L/Qvi3QstC40YHQvtC60LAg0LvQuNGH0L3QsA0K0LrQstCw0LvQuNGE0LjQutCw0YbQuNGP
-INC30LAg0JLQsNGBLiA8YnIgLz48YnIgLz48Yg0Kc3R5bGU9Im1zby1iaWRpLWZvbnQtd2Vp
-Z2h0OiBub3JtYWw7Ij48c3BhbiBzdHlsZT0iY29sb3I6ICNjNDU5MTE7DQptc28tdGhlbWVj
-b2xvcjogYWNjZW50MjsgbXNvLXRoZW1lc2hhZGU6IDE5MTsiPtCd0LAgMTEg0LzQsNC5IDIw
-MTYg0LMuLCDQsg0K0KHQvtGE0LjRjzwvc3Bhbj48L2I+INGJ0LUg0LzQvtC20LXRgtC1INC0
-0LAg0YPRh9Cw0YHRgtCy0LDRgtC1DQrQkdCV0JfQn9Cb0JDQotCd0J4sINCyINGB0YrQsdC4
-0YLQuNC10YLQviA8YiBzdHlsZT0ibXNvLWJpZGktZm9udC13ZWlnaHQ6DQpub3JtYWw7Ij48
-c3BhbiBzdHlsZT0iY29sb3I6ICNjNDU5MTE7IG1zby10aGVtZWNvbG9yOiBhY2NlbnQyOw0K
-bXNvLXRoZW1lc2hhZGU6IDE5MTsiPkFjY2VzcyBNQkE8L3NwYW4+PC9iPjwvc3Bhbj48Yg0K
-c3R5bGU9Im1zby1iaWRpLWZvbnQtd2VpZ2h0OiBub3JtYWw7Ij48c3BhbiBzdHlsZT0iZm9u
-dC1zaXplOiAxMS41cHQ7DQpmb250LWZhbWlseTogJ0NhbGlicmknLCdzYW5zLXNlcmlmJzsg
-Y29sb3I6ICNjNDU5MTE7IG1zby1hbnNpLWxhbmd1YWdlOiBCRzsNCm1zby10aGVtZWNvbG9y
-OiBhY2NlbnQyOyBtc28tdGhlbWVzaGFkZTogMTkxOyI+Ljwvc3Bhbj48L2I+PHNwYW4NCmxh
-bmc9IkVOLVVTIiBzdHlsZT0iZm9udC1zaXplOiAxMS41cHQ7IGZvbnQtZmFtaWx5Og0KJ0Nh
-bGlicmknLCdzYW5zLXNlcmlmJzsiPiA8YnIgLz48YnIgLz7QndCwINC90LXQs9C+INGJ0LUg
-0LjQvNCw0YLQtQ0K0LLRitC30LzQvtC20L3QvtGB0YIg0LTQsCDQv9GA0L7QstC10LTQtdGC
-0LUgPHN0cm9uZz48c3Bhbg0Kc3R5bGU9ImZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3NhbnMt
-c2VyaWYnOyI+0LvQuNGH0L3QuCwgMjAt0LzQuNC90YPRgtC90LgNCtGB0YDQtdGJ0Lg8L3Nw
-YW4+PC9zdHJvbmc+INGBINC/0YDQtdC00YHRgtCw0LLQuNGC0LXQu9C4INC90LAg0LLQvtC0
-0LXRidC4DQrQtdCy0YDQvtC/0LXQudGB0LrQuCDQuCDQsdGK0LvQs9Cw0YDRgdC60Lgg0YPQ
-vdC40LLQtdGA0YHQuNGC0LXRgtC4INGBDQrQvNCw0LPQuNGB0YLRitGA0YHQutC4INC/0YDQ
-vtCz0YDQsNC80Lgg0L/QviDQkdC40LfQvdC10YENCtCw0LTQvNC40L3QuNGB0YLRgNCw0YbQ
-uNGPLCDQutCw0YLQviDQktC40LXQvdGB0LrQuNGPDQrQuNC60L7QvdC+0LzQuNGH0LXRgdC6
-0Lgg0YPQvdC40LLQtdGA0YHQuNGC0LXRgiwg0YjQstC10LnRhtCw0YDRgdC60LjRjw0K0YPQ
-vdC40LLQtdGA0YHQuNGC0LXRgiBTdC4gR2FsbGVuLElOU0VBRDwvc3Bhbj48c3BhbiBsYW5n
-PSJFTi1VUyINCnN0eWxlPSJmb250LXNpemU6IDExLjVwdDsgZm9udC1mYW1pbHk6ICdDYWxp
-YnJpJywnc2Fucy1zZXJpZic7DQptc28tYW5zaS1sYW5ndWFnZTogQkc7Ij4gPC9zcGFuPjxz
-cGFuIGxhbmc9IkVOLVVTIiBzdHlsZT0iZm9udC1zaXplOg0KMTEuNXB0OyBmb250LWZhbWls
-eTogJ0NhbGlicmknLCdzYW5zLXNlcmlmJzsiPtC4INC00YAuIDxiciAvPjxiciAvPtCp0LUN
-CtC/0L7Qu9GD0YfQuNGC0LUg0LrQvtC90LrRgNC10YLQvdCwINC40L3RhNC+0YDQvNCw0YbQ
-uNGPINC30LANCtC/0YDQvtCz0YDQsNC80LgsINC60L7QuNGC0L4g0YHQsCDQv9C+0LTRhdC+
-0LTRj9GJ0Lgg0LfQsCDQktCw0YEsINC30LANCtCy0YrQt9C80L7QttC90L7RgdGC0Lgg0LfQ
-sCDQt9Cw0LTQvtGH0L3QviDQvtCx0YPRh9C10L3QuNC1INC4INC30LANCtCy0LDRgNC40LDQ
-vdGC0Lgg0LfQsCDQv9C+0LvRg9GH0LDQstCw0L3QtSDQvdCwINGB0YLQuNC/0LXQvdC00LjR
-jy4gPGJyDQovPjxiciAvPtCn0LXRgdGC0L3QviDQutCw0LfQsNC90L4sINGC0YrQuSDQutCw
-0YLQvg0K0L/RgNC40YHRitGB0YLQstC40LXRgtC+PC9zcGFuPjxzcGFuIGxhbmc9IkVOLVVT
-IiBzdHlsZT0iZm9udC1zaXplOiAxMS41cHQ7DQpmb250LWZhbWlseTogJ0NhbGlicmknLCdz
-YW5zLXNlcmlmJzsgbXNvLWFuc2ktbGFuZ3VhZ2U6IEJHOyI+DQo8L3NwYW4+PHN0cm9uZz48
-c3BhbiBsYW5nPSJFTi1VUyIgc3R5bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWls
-eToNCidDYWxpYnJpJywnc2Fucy1zZXJpZic7Ij7QtSDQvdCw0L/RitC70L3Qvg0K0LHQtdC3
-0L/Qu9Cw0YLQvdC+PC9zcGFuPjwvc3Ryb25nPjxzcGFuIGxhbmc9IkVOLVVTIiBzdHlsZT0i
-Zm9udC1zaXplOg0KMTEuNXB0OyBmb250LWZhbWlseTogJ0NhbGlicmknLCdzYW5zLXNlcmlm
-JzsiPiwg0L3QtSDQs9GD0LHQuNGC0LUNCtC/0L7Rh9GC0Lgg0L3QuNGJ0L4g0L7RgdCy0LXQ
-vSDQvNCw0LvQutC+INC+0YLQtNC10LvQtdC90L4g0LLRgNC10LzQtS4g0JANCtC80L7QttC1
-0YLQtSDQtNCwINGB0L/QtdGH0LXQu9C40YLQtSDQvNC90L7Qs9C+LiA8YnINCnN0eWxlPSJt
-c28tc3BlY2lhbC1jaGFyYWN0ZXI6IGxpbmUtYnJlYWs7IiAvPjxicg0Kc3R5bGU9Im1zby1z
-cGVjaWFsLWNoYXJhY3RlcjogbGluZS1icmVhazsiIC8+PC9zcGFuPjxzcGFuIHN0eWxlPSJm
-b250LXNpemU6DQoxMS41cHQ7IGZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3NhbnMtc2VyaWYn
-OyBtc28tYW5zaS1sYW5ndWFnZToNCkJHOyI+PG86cD48L286cD48L3NwYW4+PC9wPg0KPHAg
-Y2xhc3M9Ik1zb05vcm1hbCIgc3R5bGU9InRleHQtYWxpZ246IGp1c3RpZnk7IG1hcmdpbjog
-MGNtIDBjbQ0KMHB0OyI+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJmb250LXNpemU6IDEx
-LjVwdDsgZm9udC1mYW1pbHk6DQonQ2FsaWJyaScsJ3NhbnMtc2VyaWYnOyI+0JXQutGB0LrQ
-u9GD0LfQuNCy0L3QviDQv9C+INCy0YDQtdC80LUg0L3QsA0K0YHRitCx0LjRgtC40LXRgtC+
-INGJ0LUg0LjQvNCw0YLQtSDQstGK0LfQvNC+0LbQvdC+0YHRgiDQuCDQtNCwDQrRg9GH0LDR
-gdGC0LLQsNGC0LUg0LIg0LrQsNGA0LjQtdGA0L3QsNGC0LAg0LTQuNGB0LrRg9GB0LjRjyzR
-gQ0K0YPRh9Cw0YHRgtC40LXRgtC+INC90LAg0YLQvtC/INC80LXQvdC40LTQttGK0YDQuCDQ
-vtGCINCy0L7QtNC10YnQuA0K0JHRitC70LPQsNGA0YHQutC4INC60L7QvNC/0LDQvdC40Lgs
-INC60L7QuNGC0L4g0YnQtSDRgdC/0L7QtNC10LvRj9GCDQrRhtC10L3QvdC4INGB0YrQstC1
-0YLQuCDQt9CwINGC0L7QstCwINC60LDQutCy0Lgg0YHQsA0K0L/QtdGA0YHQv9C10LrRgtC4
-0LLQuNGC0LUg0YHQu9C10LQg0LfQsNCy0YrRgNGI0LLQsNC90LUg0L3QsCDQnNCR0JAg0LgN
-CtC60LDQutCy0Lgg0YHQsCDRgtC10YXQvdC40YLQtSDRgtCw0LnQvdC4INC60YrQvCDRg9GB
-0L/QtdGF0LAuDQo8bzpwPjwvbzpwPjwvc3Bhbj48L3A+DQo8cCBzdHlsZT0idGV4dC1hbGln
-bjogY2VudGVyOyBtYXJnaW46IDE1cHQgMGNtOyIgYWxpZ249ImNlbnRlciI+PHNwYW4NCmxh
-bmc9IkVOLVVTIj48YQ0KaHJlZj0iaHR0cDovL3RyYWttYWwuaW5mby9pZW1zNTAzL2xpbmsu
-cGhwP009NDYxMDUyJk49MjQmTD0yJkY9SCI+PHNwYW4NCmxhbmc9IkJHIiBzdHlsZT0iZm9u
-dC1mYW1pbHk6ICdDYWxpYnJpJywnc2Fucy1zZXJpZic7IG1zby1hbnNpLWxhbmd1YWdlOg0K
-Qkc7IG1zby1iaWRpLWZvbnQtc2l6ZTogMTEuNXB0OyI+PGZvbnQNCmNvbG9yPSIjMDAwMGZm
-Ij7QoNC10LPQuNGB0YLRgNC40YDQsNC50YLQtSDRgdC1DQrRgdC10LPQsCE8L2ZvbnQ+PC9z
-cGFuPjwvYT48L3NwYW4+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5Og0KJ0NhbGlicmknLCdz
-YW5zLXNlcmlmJzsgbXNvLWFuc2ktbGFuZ3VhZ2U6IEJHOyBtc28tYmlkaS1mb250LXNpemU6
-DQoxMS41cHQ7Ij48bzpwPjwvbzpwPjwvc3Bhbj48L3A+DQo8cCBzdHlsZT0idGV4dC1hbGln
-bjoganVzdGlmeTsgbWFyZ2luOiAxNXB0IDBjbTsiPjxzcGFuIGxhbmc9IkVOLVVTIg0Kc3R5
-bGU9ImZvbnQtc2l6ZTogMTEuNXB0OyBmb250LWZhbWlseToNCidDYWxpYnJpJywnc2Fucy1z
-ZXJpZic7Ij7Qo9GB0L/QtdGFPC9zcGFuPjxzcGFuIHN0eWxlPSJmb250LXNpemU6IDExLjVw
-dDsNCmZvbnQtZmFtaWx5OiAnQ2FsaWJyaScsJ3NhbnMtc2VyaWYnOyBtc28tYW5zaS1sYW5n
-dWFnZToNCkJHOyI+ITxvOnA+PC9vOnA+PC9zcGFuPjwvcD4NCjwvdGQ+DQo8L3RyPg0KPC90
-Ym9keT4NCjwvdGFibGU+DQo8cHJlPtCh0YrQs9C70LDRgdC90L4g0JfQsNC60L7QvdCwINC3
-0LAg0JXQu9C10LrRgtGA0L7QvdC90LDRgtCwDQrQotGK0YDQs9C+0LLQuNGPINCS0Lgg0LjQ
-vdGE0L7RgNC80LjRgNCw0LzQtSwg0YfQtSDRgtC+0LLQsCDQvNC+0LbQtSDQtNCwDQrQtSDQ
-vdC10L/QvtC40YHQutCw0L3QviDRgtGK0YDQs9C+0LLRgdC60L4g0YHRitC+0LHRidC10L3Q
-uNC1LiA8YnIgLz7QktC40LUNCtC80L7QttC1INC00LAg0LPQviDQv9GA0LjQtdC80LXRgtC1
-INC40LvQuCDQvtGC0YXQstGK0YDQu9C40YLQtS4gPGJyDQovPtCd0LjQtSDQvNC+0LbQtSDQ
-tNCwINGB0LzQtSDQv9C+0LvRg9GH0LjQu9C4INCy0LDRiNC40Y8g0LjQvNC10LnQuyDQvtGC
-DQrQktCw0YEsINC+0YIg0JLQsNGIINC/0LDRgNGC0L3RjNC+0YAg0LjQu9C4INC+0YIg0L/R
-g9Cx0LvQuNGH0L3QvtGC0L4NCtC/0YDQvtGB0YLRgNCw0L3RgdGC0LLQvi4gIDxiciAvPtCQ
-0LrQviDQvdC1INC20LXQu9Cw0LXRgtC1INC00LANCtC/0L7Qu9GD0YfQsNCy0LDRgtC1INC/
-0L7QstC10YfQtSDQuNC90YTQvtGA0LzQsNGG0LjRjyDQvtGCDQoiPHN0cm9uZz5BY2Nlc3NN
-QkE8L3N0cm9uZz4iLCDQvNC+0LvRjyA8YQ0KaHJlZj0iaHR0cDovL3RyYWttYWwuaW5mby9p
-ZW1zNTAzL3Vuc3Vic2NyaWJlLnBocD9NPTQ2MTA1MiZDPTJmMWI4N2E4MzgwOTNjYjZiOWVj
-ZGNiOWU1MWNiZjk2Jkw9MyZOPTI0Ij48c3Ryb25nPtCe0KLQn9CY0KjQldCi0JUNCtCh0JUg
-0J7QoiDQotCj0Jo8L3N0cm9uZz48L2E+PGJyIC8+0Lgg0YnQtSDQv9GA0LXRg9GB0YLQsNC9
-0L7QstC40LwNCtC40LfQv9GA0LDRidCw0L3QtdGC0L4g0L3QsCDRgtGK0YDQs9C+0LLRgdC6
-0Lgg0YHRitC+0LHRidC10L3QuNGPINC60YrQvA0K0JLQsNGI0LjRj9GCINC40LzQtdC50Lsg
-0LDQtNGA0LXRgS48YnIgLz7QkNC60L4g0YHQvNC1INCS0LgNCtC+0LHQtdC30L/QvtC60L7Q
-uNC70LgsINC80L7Qu9GPINC00LAg0L3QuCDQuNC30LLQuNC90LjRgtC1ISA8L3ByZT4NCjxi
-ci8+DQoJPGJyPg0KDQoJPHRhYmxlIGJnY29sb3I9IiIgY2VsbHBhZGRpbmc9IjAiIHdpZHRo
-PSIxMDAlIiBib3JkZXI9IjAiPg0KCQk8dHIgYWxpZ249ImNlbnRlciI+DQoJCQk8dGQ+DQoJ
-CQkJPHRhYmxlIGJnY29sb3I9IndoaXRlIiB3aWR0aD0iNDUwIiBib3JkZXI9IjAiIGNlbGxw
-YWRkaW5nPSI1Ij4NCgkJCQkJPHRyPg0KCQkJCQkJPHRkPg0KCQkJCQkJCTxhDQpocmVmPSJo
-dHRwOi8vdHJha21hbC5pbmZvL2llbXM1MDMvbGluay5waHA/TT00NjEwNTImTj0yNCZMPTEm
-Rj1IIj4NCgkJCQkJCQkJPGltZyBib3JkZXI9IjAiIHNyYz0iL2FkbWluL2ltYWdlcy9wb3dl
-cmVkYnkuZ2lmIiBhbHQ9IlBvd2VyZWQgYnkNCkludGVyc3BpcmUiIC8+DQoJCQkJCQkJPC9h
-Pg0KCQkJCQkJPC90ZD4NCgkJCQkJPC90cj4NCgkJCQk8L3RhYmxlPg0KCQkJPC90ZD4NCgkJ
-PC90cj4NCgk8L3RhYmxlPg0KPGltZw0Kc3JjPSJodHRwOi8vdHJha21hbC5pbmZvL2llbXM1
-MDMvb3Blbi5waHA/TT00NjEwNTImTD0zJk49MjQmRj1IJmltYWdlPS5qcGciDQpoZWlnaHQ9
-IjEiIHdpZHRoPSIxMCI+PC9ib2R5PjwvaHRtbD4NCg0KDQo=
---===============0727649641940435015==
+------=_Part_92779_1878600791.1462878411181
+Content-Type: text/plain;charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Dear Bro and Sis,
+=C2=A0
+There is still Lucas, skype is: lucas-luckyclover
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0Whatsapp:+8615889459482
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0=C2=A0
+Below are some tracking numbers that clients buy =C2=A0VR BOX=C2=A0from me =
+recently,
+=C2=A0
+For your convenient reference:
+=C2=A0
+Europe:
+2890116062
+6170069253
+1515631585
+=C2=A0
+4902421510
+3736360110
+
+
+2901540633
+3736361926
+3736347801
+7600439254
+
+USA &Canada
+1515634805
+1515603040
+4902378003
+=C2=A0
+6764807162
+4546437571
+=C2=A0
+You can check here: www.dhl.com
+=C2=A0
+Could you let me know your comments please? Thanks
+=C2=A0
+BR
+Lucas
+Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0
+Website: <http://szluckyclover.en.alibaba.com/(http://szluckyclover.en.alib=
+aba.com/)>
+TradeManager:cn15157839744soil
+Skype:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lucas-luckyclover
+Whatsapp:=C2=A0+8615889459482
+=C2=A0
+ =C2=A0=20
+
+ =C2=A0=20
+ =C2=A0=20
+Best Regards=20
+Lucas=20
+...........................................................................=
+.......................................................=20
+Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0=20
+Website:=C2=A0<http://szluckyclover.en.alibaba.com/(http://szluckyclover.en=
+.alibaba.com/)>
+TradeManager:cn1517839744soil
+Skype: Lucas-luckyclover
+Whatsapp: 0086=C2=A015889459482=20
+
+ ------------------=C2=A0Original=C2=A0------------------=20
+From: =C2=A0Lucas<lucas@sz-luckyclover.com>=20
+Send time: =C2=A0Friday, May 6, 2016 04:43 PM=20
+To: =C2=A0pitches@citylab.com=20
+Subject: =C2=A0RE=EF=BC=9A BOBO Z4--Something You don't Know=20
+
+Dear Bro and Sis,=20
+This is Lucas, bringing VR PROMOTION news for you.=20
+Pls take a look at it.=20
+ =C2=A0=20
+
+ =C2=A0=20
+ =C2=A0=20
+ =C2=A0=20
+
+
+
+
+
+
+
+------=_Part_92779_1878600791.1462878411181
+Content-Type: text/html;charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div>=20
+ <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">=20
+  <div>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">Dear Bro and Sis,</span></p=
+>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">There is still Lucas, skype=
+ is: <strong><span style=3D"font-family: verdana, geneva; color: #ff00ff;">=
+lucas-luckyclover</span></strong></span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;"><strong><span style=3D"font=
+-family: verdana, geneva; color: #ff00ff;">&nbsp; &nbsp; &nbsp; &nbsp; &nbs=
+p; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Whatsapp:+8615889=
+459482</span></strong></span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span>=
+</p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">Below are some tracking num=
+bers that clients buy &nbsp;</span><strong><span style=3D"font-size: 12.0pt=
+; font-family: 'Verdana',sans-serif; color: #ff6600;">VR BOX</span></strong=
+><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; color=
+: #ff6600;">&nbsp;</span><span style=3D"font-size: 12.0pt; font-family: 'Ve=
+rdana',sans-serif; color: black;">from me recently,</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">For your convenient referen=
+ce:</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><strong><span style=3D"font-size: 12=
+.0pt; font-family: 'Verdana',sans-serif; color: #ff6600;">Europe:</span></s=
+trong></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">2890116062</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">6170069253</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">1515631585</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">4902421510</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">3736360110<br /><br /></spa=
+n></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">2901540633</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">3736361926</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">3736347801</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">7600439254<br /><br /></spa=
+n><strong><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-ser=
+if; color: #ff6600;">USA &amp;Canada</span></strong></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">1515634805</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">1515603040</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">4902378003</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">6764807162</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">4546437571</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">You can check here: www.dhl=
+.com</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">Could you let me know your =
+comments please? Thanks</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; fon=
+t-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">BR</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt; fo=
+nt-family: 'Verdana',sans-serif; color: black;">Lucas</span></p>=20
+   <p style=3D"margin: 0; padding: 0;"><strong><span style=3D"font-size: 12=
+.0pt; font-family: 'Verdana',sans-serif; color: black;">Top Quality,Best Pr=
+ice,Fastest Delivery,Best Service!&nbsp;</span></strong><span style=3D"font=
+-size: 9.0pt; font-family: 'Arial',sans-serif; color: black;"><br /></span>=
+<span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; color:=
+ black;">Website: &lt;</span><a href=3D"http://szluckyclover.en.alibaba.com=
+/" target=3D"_blank"><span style=3D"font-size: 12.0pt; font-family: 'Verdan=
+a',sans-serif; color: blue;">http://szluckyclover.en.alibaba.com/</span></a=
+><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; color=
+: black;">&gt;</span><span style=3D"font-size: 9.0pt; font-family: 'Arial',=
+sans-serif; color: black;"><br /></span><span style=3D"font-size: 12.0pt; f=
+ont-family: 'Verdana',sans-serif; color: black;">TradeManager:</span><span =
+style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; color: #ff66=
+00;">cn15157839744soil</span><span style=3D"font-size: 9.0pt; font-family: =
+'Arial',sans-serif; color: black;"><br /></span><span style=3D"font-size: 1=
+2.0pt; font-family: 'Verdana',sans-serif; color: black;">Skype:&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp; </span><span style=3D"font-size: 12.0pt; font-family: 'V=
+erdana',sans-serif; color: #ff6600;">lucas-luckyclover</span><span style=3D=
+"font-size: 9.0pt; font-family: 'Arial',sans-serif; color: black;"><br /></=
+span><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; c=
+olor: black;">Whatsapp:&nbsp;</span><span style=3D"font-size: 12.0pt; font-=
+family: 'Verdana',sans-serif; color: #ff6600;">+8615889459482</span></p>=20
+   <p style=3D"margin: 0; padding: 0;">&nbsp;</p> &nbsp;
+  </div>=20
+ </div>=20
+ <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
+  &nbsp;
+ </div>=20
+ <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
+  &nbsp;
+ </div>=20
+ <div>=20
+  <div>
+   <span style=3D"color: #006600; font-family: verdana, geneva; font-size: =
+16px;">Best Regards</span>
+  </div>=20
+  <div>
+   <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span sty=
+le=3D"color: #006600; font-family: 'Arial Unicode MS';">Lucas</span></span>
+  </div>=20
+  <div>
+   <span style=3D"color: #006600; font-family: 'Arial Unicode MS';">.......=
+...........................................................................=
+................................................</span>
+  </div>=20
+  <div>
+   <span style=3D"color: #006600; font-family: 'Arial Unicode MS'; font-siz=
+e: 14px;"><img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_20160=
+330165603_23ed025811d060d9e3dee62910865c37.png" alt=3D"image" width=3D"48" =
+height=3D"30" /><strong><span style=3D"font-family: verdana, geneva; font-s=
+ize: 16px;">Top Quality,Best Price,Fastest Delivery,Best Service!&nbsp;</sp=
+an></strong></span>
+  </div>=20
+  <div>
+   <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span sty=
+le=3D"color: #006600;">Website:&nbsp;&lt;<a title=3D"=E5=AE=89=E5=85=A8=E9=
+=93=BE=E6=8E=A5" href=3D"http://szluckyclover.en.alibaba.com/" target=3D"_b=
+lank">http://szluckyclover.en.alibaba.com/</a>&gt;</span><span style=3D"col=
+or: #006600;"><br />TradeManager:</span><span style=3D"color: #ed7d31;">cn1=
+517839744soil</span><span style=3D"color: #006600;"><br />Skype: <span styl=
+e=3D"color: #ff0000;">Lucas</span></span><span style=3D"color: #ed7d31;"><s=
+pan style=3D"color: #ff0000;">-</span>luckyclover</span><span style=3D"colo=
+r: #006600;"><br />Whatsapp: </span><span style=3D"color: #ed7d31;">0086&nb=
+sp;15889459482</span></span>
+  </div>=20
+ </div>=20
+ <div>=20
+  <div style=3D"font-size: 12px; font-family: Arial Narrow; padding: 2px 0 =
+2px 0;">
+   ------------------&nbsp;Original&nbsp;------------------
+  </div>=20
+  <div style=3D"font-size: 12px; background: #efefef; padding: 8px;">=20
+   <div>
+    <strong>From: </strong>&nbsp;Lucas&lt;lucas@sz-luckyclover.com&gt;
+   </div>=20
+   <div>
+    <strong>Send time: </strong>&nbsp;Friday, May 6, 2016 04:43 PM
+   </div>=20
+   <div>
+    <strong>To: </strong>&nbsp;pitches@citylab.com
+   </div>=20
+   <div>
+    <strong>Subject: </strong>&nbsp;RE=EF=BC=9A BOBO Z4--Something You don'=
+t Know
+   </div>=20
+  </div>=20
+  <div>=20
+   <div>=20
+    <div>=20
+     <div>=20
+      <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;"=
+>=20
+       <div>
+        <span style=3D"font-family: verdana, geneva;"><span style=3D"font-s=
+ize: 16px; line-height: 21.8182px;">Dear Bro and Sis,</span></span>
+       </div>=20
+       <div>
+        <span style=3D"font-family: verdana, geneva;"><span style=3D"font-s=
+ize: 16px; line-height: 21.8182px;">This is Lucas, bringing VR PROMOTION ne=
+ws for you.</span></span>
+       </div>=20
+       <div>
+        <span style=3D"font-family: verdana, geneva;"><span style=3D"font-s=
+ize: 16px; line-height: 21.8182px;">Pls take a look at it.</span></span>
+       </div>=20
+       <div>
+        &nbsp;
+        <img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_2016042=
+6105251_c3abfb2585a33c4c4da824b8ae665bf2.PNG" alt=3D"" />
+       </div>=20
+      </div>=20
+      <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;"=
+>
+       &nbsp;
+      </div>=20
+      <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;"=
+>
+       &nbsp;
+      </div>=20
+      <div>
+       &nbsp;
+      </div>=20
+     </div>=20
+    </div>=20
+   </div>=20
+  </div>=20
+ </div>=20
+</div><img id=3D"t_r_a_c_k_i_m_g_v_4" name=3D"t_r_a_c_k_i_m_g_v_4" width=3D=
+"1px" height=3D"1px"  style=3D"display:none;" src=3D"http://v5zhui.dachongm=
+ail.cc/track/mail?t=3D9WpFyubQe6H89zMs3KpSNcGbLU0ZTOia"/>
+------=_Part_92779_1878600791.1462878411181--
+
+
+--===============8751127603870967554==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0727649641940435015==--
+--===============8751127603870967554==--
