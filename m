@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 731467CA6
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 03:20:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E771AAC006
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 01:20:34 -0700 (PDT)
-Received: from mail.SerNet.de (mail1.SerNet.de [193.175.80.2]) by cuda.sgi.com
-	with ESMTP id kYeez8SOFfhM6upS (version=TLSv1.2
-	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 01:20:31 -0700 (PDT)
-Date: Tue, 10 May 2016 10:20:22 +0200
-From: Volker Lendecke <Volker.Lendecke@SerNet.DE>
-Subject: Re: [PATCH v21 00/22] Richacls
-Message-ID: <20160510082022.GC26892@sernet.de>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-	<20160510041809.GB1079@sernet.de>
-	<20160510081150.GA3411@jeremy-ThinkPad-T430s>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160510081150.GA3411@jeremy-ThinkPad-T430s>
-Reply-To: Volker.Lendecke@SerNet.DE
+	by oss.sgi.com (Postfix) with ESMTP id BE9997CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 13:49:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51E86AC005
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:40 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	He9FpU2CNoL2T59c for <xfs@oss.sgi.com>;
+	Tue, 10 May 2016 11:49:38 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v6 2/5] dax: enable dax in the presence of known media errors
+	(badblocks)
+Date: Tue, 10 May 2016 12:49:13 -0600
+Message-Id: <1462906156-22303-3-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +23,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeremy Allison <jra@samba.org>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Tue, May 10, 2016 at 10:11:50AM +0200, Jeremy Allison wrote:
-> +1 from me. This is something that many vendors need
-> and have needed for a very long time. Getting this
-> in will allow *large* amounts of existing storage to
-> be migrated to Linux.
+From: Dan Williams <dan.j.williams@intel.com>
 
-ZFS has NFSv4 richacls, and people seem to risk shitstorms
-for ZFS. Not only for this of course, but they do
-contribute.
+1/ If a mapping overlaps a bad sector fail the request.
 
-Volker
+2/ Do not opportunistically report more dax-capable capacity than is
+   requested when errors present.
 
--- =
+Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+[vishal: fix a conflict with system RAM collision patches]
+[vishal: add a 'size' parameter to ->direct_access]
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+---
+ arch/powerpc/sysdev/axonram.c |  2 +-
+ block/ioctl.c                 |  9 ---------
+ drivers/block/brd.c           |  2 +-
+ drivers/nvdimm/pmem.c         | 10 +++++++++-
+ drivers/s390/block/dcssblk.c  |  2 +-
+ fs/block_dev.c                |  2 +-
+ include/linux/blkdev.h        |  2 +-
+ 7 files changed, 14 insertions(+), 15 deletions(-)
 
-SerNet GmbH, Bahnhofsallee 1b, 37081 G=F6ttingen
-phone: +49-551-370000-0, fax: +49-551-370000-9
-AG G=F6ttingen, HRB 2816, GF: Dr. Johannes Loxen
-http://www.sernet.de, mailto:kontakt@sernet.de
+diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
+index 0d112b9..ff75d70 100644
+--- a/arch/powerpc/sysdev/axonram.c
++++ b/arch/powerpc/sysdev/axonram.c
+@@ -143,7 +143,7 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
+  */
+ static long
+ axon_ram_direct_access(struct block_device *device, sector_t sector,
+-		       void __pmem **kaddr, pfn_t *pfn)
++		       void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct axon_ram_bank *bank = device->bd_disk->private_data;
+ 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 4ff1f92..bf80bfd 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
+ 			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
+ 		return false;
+ 
+-	/*
+-	 * If the device has known bad blocks, force all I/O through the
+-	 * driver / page cache.
+-	 *
+-	 * TODO: support finer grained dax error handling
+-	 */
+-	if (disk->bb && disk->bb->count)
+-		return false;
+-
+ 	return true;
+ }
+ #endif
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 51a071e..c04bd9b 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -381,7 +381,7 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
+ 
+ #ifdef CONFIG_BLK_DEV_RAM_DAX
+ static long brd_direct_access(struct block_device *bdev, sector_t sector,
+-			void __pmem **kaddr, pfn_t *pfn)
++			void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct brd_device *brd = bdev->bd_disk->private_data;
+ 	struct page *page;
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index f798899..c447579 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -182,14 +182,22 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
+ }
+ 
+ static long pmem_direct_access(struct block_device *bdev, sector_t sector,
+-		      void __pmem **kaddr, pfn_t *pfn)
++		      void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct pmem_device *pmem = bdev->bd_disk->private_data;
+ 	resource_size_t offset = sector * 512 + pmem->data_offset;
+ 
++	if (unlikely(is_bad_pmem(&pmem->bb, sector, size)))
++		return -EIO;
+ 	*kaddr = pmem->virt_addr + offset;
+ 	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
+ 
++	/*
++	 * If badblocks are present, limit known good range to the
++	 * requested range.
++	 */
++	if (unlikely(pmem->bb.count))
++		return size;
+ 	return pmem->size - pmem->pfn_pad - offset;
+ }
+ 
+diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
+index b839086..c45d538 100644
+--- a/drivers/s390/block/dcssblk.c
++++ b/drivers/s390/block/dcssblk.c
+@@ -884,7 +884,7 @@ fail:
+ 
+ static long
+ dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
+-			void __pmem **kaddr, pfn_t *pfn)
++			void __pmem **kaddr, pfn_t *pfn, long size)
+ {
+ 	struct dcssblk_dev_info *dev_info;
+ 	unsigned long offset, dev_sz;
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index b25bb23..02c68c4 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
+ 	sector += get_start_sect(bdev);
+ 	if (sector % (PAGE_SIZE / 512))
+ 		return -EINVAL;
+-	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
++	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn, size);
+ 	if (!avail)
+ 		return -ERANGE;
+ 	if (avail > 0 && avail & ~PAGE_MASK)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 669e419..55ed530 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1657,7 +1657,7 @@ struct block_device_operations {
+ 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
+ 	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
+-			pfn_t *);
++			pfn_t *, long);
+ 	unsigned int (*check_events) (struct gendisk *disk,
+ 				      unsigned int clearing);
+ 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
