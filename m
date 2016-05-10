@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 509447CAF
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 14:25:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C68CCAC005
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:25:10 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id VC064YX49RhN02G3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 12:25:08 -0700 (PDT)
-Date: Tue, 10 May 2016 12:25:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v6 4/5] dax: for truncate/hole-punch, do zeroing through
-	the driver if possible
-Message-ID: <20160510192507.GA29312@infradead.org>
-References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
-	<1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1921B7CA4
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 23:18:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E1360304048
+	for <xfs@oss.sgi.com>; Mon,  9 May 2016 21:18:23 -0700 (PDT)
+Received: from mail.SerNet.de (mail1.SerNet.de [193.175.80.2]) by cuda.sgi.com
+	with ESMTP id cJAkd6ZfTzEJ0mhZ (version=TLSv1.2
+	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 09 May 2016 21:18:20 -0700 (PDT)
+Date: Tue, 10 May 2016 06:18:10 +0200
+From: Volker Lendecke <Volker.Lendecke@SerNet.DE>
+Subject: Re: [PATCH v21 00/22] Richacls
+Message-ID: <20160510041809.GB1079@sernet.de>
+References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+Reply-To: Volker.Lendecke@SerNet.DE
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Hi Vishal,
+On Tue, May 10, 2016 at 12:02:33AM +0200, Andreas Gruenbacher wrote:
+> What more can I do to finally get this merged?
 
-can you also pick up the my patch to add a low-level __dax_zero_range
-that I cced you on?  That way we can avoid a nasty merge conflict with
-my xfs/iomap changes.
+While I am not the one to comment on kernel specifics, from a pure Samba
+user space perspective let me say: We need this. NOW.
+
+Volker
 
 _______________________________________________
 xfs mailing list
