@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CF07C7CA4
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 01:11:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A4C518F8049
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 23:10:59 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	RZIevUKEGeMG4gn9 for <xfs@oss.sgi.com>;
-	Mon, 09 May 2016 23:10:56 -0700 (PDT)
-Date: Tue, 10 May 2016 16:10:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/19 v2] mkfs cleaning
-Message-ID: <20160510061054.GI26977@dastard>
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3A9587CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E56B930404E
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:29 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UQIh83jDdFuf7toY (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:28 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 8F26CC04B305
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:28 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u4ACGOuk016940
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:27 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 4/7] xfs: introduce table-based init for error behaviors
+Date: Tue, 10 May 2016 14:16:18 +0200
+Message-Id: <1462882581-30859-5-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +34,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Apr 21, 2016 at 11:39:34AM +0200, Jan Tulak wrote:
-> Updated version. Most notable changes are dropping of
-> "xfsprogs: disable truncating of files", reverting 
-> "don't treat files as though they are block devices"
-> back to Dave's version, and adding a new patch
-> "mkfs: conflicting values with disabled crc should fail."
+Before we start expanding the number of error classes and errors we
+can configure behaviour for, we need a simple and clear way to
+define the default behaviour that we initialized each mount with.
+Introduce a table based method for keeping the initial configuration
+in, and apply that to the existing initialization code.
 
-Looking at xfstests runs, new failures are:
+Changelog:
 
-generic/054 - 
-generic/055 - both fail with:
+V3:
+	- Replace all .fail_speed fields by .max_retries, once the code will no
+	  longer use .fail_speed to decide when it should fail
+	- The "Default" attribute is also in lower-case (default). I don't
+	  believe it's a good idea to have a mixed-case attribute names in sysfs.
 
-+*** mkfs failed: -l version=2,su=4096 ***
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 60 insertions(+), 12 deletions(-)
 
-and the .full file has this specific error:
-
-Illegal value 4096 for -l su option. value is too small
-
-indicating that we should be allowing (2^N * block size) log
-stripe units to be set. This will be a limit configuration issue,
-most likely needing fixing in mkfs.
-
-xfs/096 6s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/xfs/096.out.bad)
-    --- tests/xfs/096.out       2016-04-05 11:11:36.814382107 +1000
-    +++ /home/dave/src/xfstests-dev/results//xfs/xfs/096.out.bad        2016-05-10 12:54:25.956199714 +1000
-    @@ -2,18 +2,62 @@
-     
-     # su too big but must be a multiple of fs block size too
-     --- mkfs=-l version=2,su=262656 ---
-    -log stripe unit (262656) must be a multiple of the block size (4096)
-    +Illegal value 262656 for -l su option. value is too large
-    +Usage: mkfs.xfs
-    +/* blocksize */            [-b log=n|size=num]
-    ...
-    (Run 'diff -u tests/xfs/096.out /home/dave/src/xfstests-dev/results//xfs/xfs/096.out.bad'  to see the entire diff)
-
-This test is explicitly testing an invalid value, checking that it
-falls back to a sane default. This patchset has changed the
-behaviour, so the xfstest will need some rework to handle both old
-and new mkfs behaviour.
-
-Can you send patches to fix all these up?
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 1cb5a85..71046d9 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -395,11 +395,67 @@ struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
+ };
+ 
++/*
++ * Error initialization tables. These need to be ordered in the same
++ * order as the enums used to index the array. All class init tables need to
++ * define a "default" behaviour as the first entry, all other entries can be
++ * empty.
++ */
++struct xfs_error_init {
++	char		*name;
++	int		max_retries;
++};
++
++static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
++	{ .name = "default",
++	  .max_retries = -1,
++	},
++};
++
++static int
++xfs_error_sysfs_init_class(
++	struct xfs_mount	*mp,
++	int			class,
++	const char		*parent_name,
++	struct xfs_kobj		*parent_kobj,
++	const struct xfs_error_init init[])
++{
++	struct xfs_error_cfg	*cfg;
++	int			error;
++	int			i;
++
++	ASSERT(class < XFS_ERR_CLASS_MAX);
++
++	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, parent_name);
++	if (error)
++		return error;
++
++	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
++		cfg = &mp->m_error_cfg[class][i];
++		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++					parent_kobj, init[i].name);
++		if (error)
++			goto out_error;
++
++		cfg->max_retries = init[i].max_retries;
++	}
++	return 0;
++
++out_error:
++	/* unwind the entries that succeeded */
++	for (i--; i >= 0; i--) {
++		cfg = &mp->m_error_cfg[class][i];
++		xfs_sysfs_del(&cfg->kobj);
++	}
++	xfs_sysfs_del(parent_kobj);
++	return error;
++}
++
+ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_error_cfg	*cfg;
+ 	int			error;
+ 
+ 	/* .../xfs/<dev>/error/ */
+@@ -409,22 +465,14 @@ xfs_error_sysfs_init(
+ 		return error;
+ 
+ 	/* .../xfs/<dev>/error/metadata/ */
+-	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
+-				&mp->m_error_kobj, "metadata");
++	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
++				"metadata", &mp->m_error_meta_kobj,
++				xfs_error_meta_init);
+ 	if (error)
+ 		goto out_error;
+ 
+-	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
+-	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
+-				&mp->m_error_meta_kobj, "default");
+-	if (error)
+-		goto out_error_meta;
+-	cfg->max_retries = -1;
+-
+ 	return 0;
+ 
+-out_error_meta:
+-	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ out_error:
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.4.11
 
 _______________________________________________
 xfs mailing list
