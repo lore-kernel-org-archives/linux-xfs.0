@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A9587CA4
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E56B930404E
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UQIh83jDdFuf7toY (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:28 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 8F26CC04B305
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:28 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4ACGOuk016940
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:27 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 4/7] xfs: introduce table-based init for error behaviors
-Date: Tue, 10 May 2016 14:16:18 +0200
-Message-Id: <1462882581-30859-5-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
-References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B4DC17CB8
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 13:49:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 25CEDAC007
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:45 -0700 (PDT)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id YLJBu4FQtxhnm89b for
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:43 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v6 5/5] dax: fix a comment in dax_zero_page_range and
+	dax_truncate_page
+Date: Tue, 10 May 2016 12:49:16 -0600
+Message-Id: <1462906156-22303-6-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,129 +28,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-Before we start expanding the number of error classes and errors we
-can configure behaviour for, we need a simple and clear way to
-define the default behaviour that we initialized each mount with.
-Introduce a table based method for keeping the initial configuration
-in, and apply that to the existing initialization code.
+The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
 
-Changelog:
+09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
+macros
 
-V3:
-	- Replace all .fail_speed fields by .max_retries, once the code will no
-	  longer use .fail_speed to decide when it should fail
-	- The "Default" attribute is also in lower-case (default). I don't
-	  believe it's a good idea to have a mixed-case attribute names in sysfs.
+The comments for the above functions described a distinction between
+those, that is now redundant, so remove those paragraphs
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 ---
- fs/xfs/xfs_sysfs.c | 72 +++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 60 insertions(+), 12 deletions(-)
+ fs/dax.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 1cb5a85..71046d9 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -395,11 +395,67 @@ struct kobj_type xfs_error_ktype = {
- 	.release = xfs_sysfs_release,
- };
- 
-+/*
-+ * Error initialization tables. These need to be ordered in the same
-+ * order as the enums used to index the array. All class init tables need to
-+ * define a "default" behaviour as the first entry, all other entries can be
-+ * empty.
-+ */
-+struct xfs_error_init {
-+	char		*name;
-+	int		max_retries;
-+};
-+
-+static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
-+	{ .name = "default",
-+	  .max_retries = -1,
-+	},
-+};
-+
-+static int
-+xfs_error_sysfs_init_class(
-+	struct xfs_mount	*mp,
-+	int			class,
-+	const char		*parent_name,
-+	struct xfs_kobj		*parent_kobj,
-+	const struct xfs_error_init init[])
-+{
-+	struct xfs_error_cfg	*cfg;
-+	int			error;
-+	int			i;
-+
-+	ASSERT(class < XFS_ERR_CLASS_MAX);
-+
-+	error = xfs_sysfs_init(parent_kobj, &xfs_error_ktype,
-+				&mp->m_error_kobj, parent_name);
-+	if (error)
-+		return error;
-+
-+	for (i = 0; i < XFS_ERR_ERRNO_MAX; i++) {
-+		cfg = &mp->m_error_cfg[class][i];
-+		error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
-+					parent_kobj, init[i].name);
-+		if (error)
-+			goto out_error;
-+
-+		cfg->max_retries = init[i].max_retries;
-+	}
-+	return 0;
-+
-+out_error:
-+	/* unwind the entries that succeeded */
-+	for (i--; i >= 0; i--) {
-+		cfg = &mp->m_error_cfg[class][i];
-+		xfs_sysfs_del(&cfg->kobj);
-+	}
-+	xfs_sysfs_del(parent_kobj);
-+	return error;
-+}
-+
- int
- xfs_error_sysfs_init(
- 	struct xfs_mount	*mp)
+diff --git a/fs/dax.c b/fs/dax.c
+index 0167cde..afa289c 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1221,12 +1221,6 @@ static bool dax_range_is_aligned(struct block_device *bdev,
+  * page in a DAX file.  This is intended for hole-punch operations.  If
+  * you are truncating a file, the helper function dax_truncate_page() may be
+  * more convenient.
+- *
+- * We work in terms of PAGE_SIZE here for commonality with
+- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
+- * took care of disposing of the unnecessary blocks.  Even if the filesystem
+- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
+- * since the file might be mmapped.
+  */
+ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
+ 							get_block_t get_block)
+@@ -1278,12 +1272,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
+  *
+  * Similar to block_truncate_page(), this function can be called by a
+  * filesystem when it is truncating a DAX file to handle the partial page.
+- *
+- * We work in terms of PAGE_SIZE here for commonality with
+- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
+- * took care of disposing of the unnecessary blocks.  Even if the filesystem
+- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
+- * since the file might be mmapped.
+  */
+ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
  {
--	struct xfs_error_cfg	*cfg;
- 	int			error;
- 
- 	/* .../xfs/<dev>/error/ */
-@@ -409,22 +465,14 @@ xfs_error_sysfs_init(
- 		return error;
- 
- 	/* .../xfs/<dev>/error/metadata/ */
--	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
--				&mp->m_error_kobj, "metadata");
-+	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
-+				"metadata", &mp->m_error_meta_kobj,
-+				xfs_error_meta_init);
- 	if (error)
- 		goto out_error;
- 
--	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
--	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
--				&mp->m_error_meta_kobj, "default");
--	if (error)
--		goto out_error_meta;
--	cfg->max_retries = -1;
--
- 	return 0;
- 
--out_error_meta:
--	xfs_sysfs_del(&mp->m_error_meta_kobj);
- out_error:
- 	xfs_sysfs_del(&mp->m_error_kobj);
- 	return error;
 -- 
-2.4.11
+2.5.5
 
 _______________________________________________
 xfs mailing list
