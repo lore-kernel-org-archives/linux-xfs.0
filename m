@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2334B7CB3
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:32 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2F77B7CB3
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD040304066
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:31 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CC27E8F804B
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:32 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id h3do01tKYl8tZotf (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yk1kNq9IPRVT5emq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:30 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:31 -0700 (PDT)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 6F7F2627DA
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:30 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 4308462645
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:31 +0000 (UTC)
 Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
 	[10.34.26.103])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4ACGOum016940
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:29 -0400
+	id u4ACGOun016940
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:30 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 6/7] xfs: add configuration handlers for specific errors
-Date: Tue, 10 May 2016 14:16:20 +0200
-Message-Id: <1462882581-30859-7-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 7/7] xfs: add "fail at unmount" error handling configuration
+Date: Tue, 10 May 2016 14:16:21 +0200
+Message-Id: <1462882581-30859-8-git-send-email-cmaiolino@redhat.com>
 In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -41,86 +41,192 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-now most of the infrastructure is in place, we can start adding
-support for configuring specific errors such as ENODEV, ENOSPC, EIO,
-etc. Add these error configurations and configure them all to have
-appropriate behaviours. That is, all will be configured to retry forever by
-default, except for ENODEV, which is an unrecoverable error, so it will be
-configured to not retry on error
+If we take "retry forever" literally on metadata IO errors, we can
+hang at unmount, once it retries those writes forever. This is the
+default behavior, unfortunately.
+
+Add an error configuration option for this behavior and default it to "fail" so
+that an unmount will trigger actuall errors, a shutdown and allow the unmount to
+succeed. It will be noisy, though, as it will log the errors and shutdown that
+occurs.
+
+To fix this, we need to mark the filesystem as being in the process of
+unmounting. Do this with a mount flag that is added at the appropriate time
+(i.e. before the blocking AIL sync). We also need to add this flag if mount
+fails after the initial phase of log recovery has been run.
 
 Changelog:
 
 V3:
-	- Do not implement .fail_speed and .fail_at_unmount
-	- .fail_at_unmount will be implemented in a different patch
-
+	- No major changes have been done to this patch, only the ones needed to
+	  accomodate it on top of the remaining patches
 V4:
-	- ENODEV should fail immediately by default
-	- Use XFS_ERR_RETRY_FOREVER flag, instead of -1 directly
+	- Make fail_at_unmount a global configuration option into
+	  ../xfs/<dev>/error directory
+	- Add m_fail_unmount boolean to xfs_mount, to keep track of unmount
+	  error behavior
+	- Create err_to_mp() helper, to translate a kobject, from m_error_kobj
+	  into its xfs_mount
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_mount.h |  3 +++
- fs/xfs/xfs_sysfs.c | 22 +++++++++++++++++++++-
- 2 files changed, 24 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_buf_item.c |  4 ++++
+ fs/xfs/xfs_mount.c    | 12 ++++++++++++
+ fs/xfs/xfs_mount.h    |  2 ++
+ fs/xfs/xfs_sysfs.c    | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 64 insertions(+)
 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 0d95c59..3425799 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1106,6 +1106,10 @@ xfs_buf_iodone_callback_error(
+ 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+ 			goto permanent_error;
+ 
++	/* At unmount we may treat errors differently */
++	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
++		goto permanent_error;
++
+ 	/* still a transient error, higher layers will retry */
+ 	xfs_buf_ioerror(bp, 0);
+ 	xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index eda3906..1bcee7e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -680,6 +680,9 @@ xfs_mountfs(
+ 
+ 	xfs_set_maxicount(mp);
+ 
++	/* enable fail_at_unmount as default */
++	mp->m_fail_unmount = 1;
++
+ 	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype, NULL, mp->m_fsname);
+ 	if (error)
+ 		goto out;
+@@ -961,6 +964,7 @@ xfs_mountfs(
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
+  out_log_dealloc:
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+ 	xfs_log_mount_cancel(mp);
+  out_fail_wait:
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+@@ -1012,6 +1016,14 @@ xfs_unmountfs(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+ 	/*
++	 * We now need to tell the world we are unmounting. This will allow
++	 * us to detect that the filesystem is going away and we should error
++	 * out anything that we have been retrying in the background. This will
++	 * prevent neverending retries iin AIL pushing from hanging the unmount.
++	 */
++	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
++
++	/*
+ 	 * Flush all pending changes from the AIL.
+ 	 */
+ 	xfs_ail_push_all_sync(mp->m_ail);
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 2fafa94..72ec3e3 100644
+index 72ec3e3..9063a9c 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -49,6 +49,9 @@ enum {
- };
- enum {
- 	XFS_ERR_DEFAULT,
-+	XFS_ERR_EIO,
-+	XFS_ERR_ENOSPC,
-+	XFS_ERR_ENODEV,
- 	XFS_ERR_ERRNO_MAX,
- };
+@@ -177,6 +177,7 @@ typedef struct xfs_mount {
+ 	 */
+ 	__uint32_t		m_generation;
  
++	bool			m_fail_unmount;
+ #ifdef DEBUG
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+@@ -195,6 +196,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+ 						   must be synchronous except
+ 						   for space allocations */
++#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
+ #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+ #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+ 						   operations, typically for
 diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 918d144..084a606 100644
+index 084a606..4c2c550 100644
 --- a/fs/xfs/xfs_sysfs.c
 +++ b/fs/xfs/xfs_sysfs.c
-@@ -478,9 +478,20 @@ struct xfs_error_init {
+@@ -381,6 +381,13 @@ to_error_cfg(struct kobject *kobject)
+ 	return container_of(kobj, struct xfs_error_cfg, kobj);
+ }
  
- static const struct xfs_error_init xfs_error_meta_init[XFS_ERR_ERRNO_MAX] = {
- 	{ .name = "default",
--	  .max_retries = -1,
-+	  .max_retries = XFS_ERR_RETRY_FOREVER,
- 	  .retry_timeout = 0,
- 	},
-+	{ .name = "EIO",
-+	  .max_retries = XFS_ERR_RETRY_FOREVER,
-+	  .retry_timeout = 0,
-+	},
-+	{ .name = "ENOSPC",
-+	  .max_retries = XFS_ERR_RETRY_FOREVER,
-+	  .retry_timeout = 0,
-+	},
-+	{ .name = "ENODEV",
-+	  .max_retries = 0,
-+	},
++static inline struct xfs_mount *
++err_to_mp(struct kobject *kobject)
++{
++	struct xfs_kobj *kobj = to_kobj(kobject);
++	return container_of(kobj, struct xfs_mount, m_error_kobj);
++}
++
+ static ssize_t
+ max_retries_show(
+ 	struct kobject	*kobject,
+@@ -447,6 +454,38 @@ retry_timeout_seconds_store(
+ }
+ XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
+ 
++static ssize_t
++fail_at_unmount_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++	struct xfs_mount	*mp = err_to_mp(kobject);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_unmount);
++}
++
++static ssize_t
++fail_at_unmount_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	struct xfs_mount	*mp = err_to_mp(kobject);
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	if (val < 0 || val > 1)
++		return -EINVAL;
++
++	mp->m_fail_unmount = val;
++	return count;
++}
++XFS_SYSFS_ATTR_RW(fail_at_unmount);
++
+ static struct attribute *xfs_error_attrs[] = {
+ 	ATTR_LIST(max_retries),
+ 	ATTR_LIST(retry_timeout_seconds),
+@@ -462,6 +501,7 @@ struct kobj_type xfs_error_cfg_ktype = {
+ 
+ struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
++	.sysfs_ops = &xfs_sysfs_ops,
  };
  
- static int
-@@ -578,6 +589,15 @@ xfs_error_get_cfg(
- 	struct xfs_error_cfg	*cfg;
+ /*
+@@ -548,6 +588,12 @@ xfs_error_sysfs_init(
+ 	if (error)
+ 		return error;
  
- 	switch (error) {
-+	case EIO:
-+		cfg = &mp->m_error_cfg[error_class][XFS_ERR_EIO];
-+		break;
-+	case ENOSPC:
-+		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENOSPC];
-+		break;
-+	case ENODEV:
-+		cfg = &mp->m_error_cfg[error_class][XFS_ERR_ENODEV];
-+		break;
- 	default:
- 		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
- 		break;
++	error = sysfs_create_file(&mp->m_error_kobj.kobject,
++				  ATTR_LIST(fail_at_unmount));
++
++	if (error)
++		goto out_error;
++
+ 	/* .../xfs/<dev>/error/metadata/ */
+ 	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
+ 				"metadata", &mp->m_error_meta_kobj,
 -- 
 2.4.11
 
