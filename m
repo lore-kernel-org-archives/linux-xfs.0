@@ -1,29 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A2FF47CA4
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 68BA4304048
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 864D47CB8
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D7106AC012
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:28 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 32Ehh5dUSVHyDf3L (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Vd00t6orBTc80Awg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:26 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:27 -0700 (PDT)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 9CDA383F47
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:25 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 0A244627E0
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:27 +0000 (UTC)
 Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
 	[10.34.26.103])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4ACGOug016940
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:25 -0400
+	id u4ACGOui016940
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:26 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 0/7] Configurable error behavior [V4]
-Date: Tue, 10 May 2016 14:16:14 +0200
-Message-Id: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 2/7] xfs: introduce metadata IO error class
+Date: Tue, 10 May 2016 14:16:16 +0200
+Message-Id: <1462882581-30859-3-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,34 +41,106 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-New revision ot the patchset according with comments for V3.
+Now we have the basic infrastructure, add the first error class so
+we can build up the infrastructure in a meaningful way. Add the
+metadata async write IO error class and sysfs entry, and introduce a
+default configuration that matches the existing "retry forever" behavior
+for async write metadata buffers.
 
-This patchset is aimed to implement a configurable error behavior in XFS, and,
-most of the design has been done by Dave, so, I kept his signed-off.
+Changelog:
 
-Detailed changelog is written on each patch, but, major changes are:
+V3:
+	- Use 'cfg->max_retries = -1' as the default configuration for the
+	  "retry forever" behavior, instead of
+	  cfg->fail_speed = XFS_ERR_FAIL_NEVER
 
-	- make fail_at_unmount a global configuration option inside
-	  ../xfs/<dev>/err/fail_at_unmount
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_mount.h |  3 +++
+ fs/xfs/xfs_sysfs.c | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
-Carlos Maiolino (7):
-  xfs: configurable error behavior via sysfs
-  xfs: introduce metadata IO error class
-  xfs: add configurable error support to metadata buffers
-  xfs: introduce table-based init for error behaviors
-  xfs: add configuration of error failure speed
-  xfs: add configuration handlers for specific errors
-  xfs: add "fail at unmount" error handling configuration
-
- fs/xfs/xfs_buf.h      |  20 ++++
- fs/xfs/xfs_buf_item.c | 121 +++++++++++++--------
- fs/xfs/xfs_mount.c    |  22 +++-
- fs/xfs/xfs_mount.h    |  34 ++++++
- fs/xfs/xfs_sysfs.c    | 291 +++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_sysfs.h    |   3 +
- fs/xfs/xfs_trace.h    |   1 -
- 7 files changed, 446 insertions(+), 46 deletions(-)
-
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index d639795..352a5c8 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -44,9 +44,11 @@ enum {
+  * Error numbers define the errors that are configurable.
+  */
+ enum {
++	XFS_ERR_METADATA,
+ 	XFS_ERR_CLASS_MAX,
+ };
+ enum {
++	XFS_ERR_DEFAULT,
+ 	XFS_ERR_ERRNO_MAX,
+ };
+ 
+@@ -146,6 +148,7 @@ typedef struct xfs_mount {
+ 						/* low free space thresholds */
+ 	struct xfs_kobj		m_kobj;
+ 	struct xfs_kobj		m_error_kobj;
++	struct xfs_kobj		m_error_meta_kobj;
+ 	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+ 	struct xstats		m_stats;	/* per-fs stats */
+ 
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 74e3940..07c9599 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -399,11 +399,34 @@ int
+ xfs_error_sysfs_init(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_error_cfg	*cfg;
+ 	int			error;
+ 
+ 	/* .../xfs/<dev>/error/ */
+ 	error = xfs_sysfs_init(&mp->m_error_kobj, &xfs_error_ktype,
+ 				&mp->m_kobj, "error");
++	if (error)
++		return error;
++
++	/* .../xfs/<dev>/error/metadata/ */
++	error = xfs_sysfs_init(&mp->m_error_meta_kobj, &xfs_error_ktype,
++				&mp->m_error_kobj, "metadata");
++	if (error)
++		goto out_error;
++
++	cfg = &mp->m_error_cfg[XFS_ERR_METADATA][XFS_ERR_DEFAULT];
++	error = xfs_sysfs_init(&cfg->kobj, &xfs_error_cfg_ktype,
++				&mp->m_error_meta_kobj, "default");
++	if (error)
++		goto out_error_meta;
++	cfg->max_retries = -1;
++
++	return 0;
++
++out_error_meta:
++	xfs_sysfs_del(&mp->m_error_meta_kobj);
++out_error:
++	xfs_sysfs_del(&mp->m_error_kobj);
+ 	return error;
+ }
+ 
+@@ -411,5 +434,16 @@ void
+ xfs_error_sysfs_del(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_error_cfg	*cfg;
++	int			i, j;
++
++	for (i = 0; i < XFS_ERR_CLASS_MAX; i++) {
++		for (j = 0; j < XFS_ERR_ERRNO_MAX; j++) {
++			cfg = &mp->m_error_cfg[i][j];
++
++			xfs_sysfs_del(&cfg->kobj);
++		}
++	}
++	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ }
 -- 
 2.4.11
 
