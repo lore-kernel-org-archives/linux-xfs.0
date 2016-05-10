@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A4C77CDD
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 03:48:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59A93304032
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 01:48:28 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id RFLzD29ALwk5IsJt (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 01:48:26 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/15] xfs: kill xfs_zero_remaining_bytes
-Date: Mon,  9 May 2016 10:47:18 +0200
-Message-Id: <1462783638-4968-16-git-send-email-hch@lst.de>
-In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
-References: <1462783638-4968-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 731467CA6
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 03:20:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E771AAC006
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 01:20:34 -0700 (PDT)
+Received: from mail.SerNet.de (mail1.SerNet.de [193.175.80.2]) by cuda.sgi.com
+	with ESMTP id kYeez8SOFfhM6upS (version=TLSv1.2
+	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 01:20:31 -0700 (PDT)
+Date: Tue, 10 May 2016 10:20:22 +0200
+From: Volker Lendecke <Volker.Lendecke@SerNet.DE>
+Subject: Re: [PATCH v21 00/22] Richacls
+Message-ID: <20160510082022.GC26892@sernet.de>
+References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	<20160510041809.GB1079@sernet.de>
+	<20160510081150.GA3411@jeremy-ThinkPad-T430s>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160510081150.GA3411@jeremy-ThinkPad-T430s>
+Reply-To: Volker.Lendecke@SerNet.DE
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,184 +28,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, vishal.l.verma@intel.com, linux-fsdevel@vger.kernel.org
+To: Jeremy Allison <jra@samba.org>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Instead punch the whole first, and the use the our zeroing helper
-to punch out the edge blocks.
+On Tue, May 10, 2016 at 10:11:50AM +0200, Jeremy Allison wrote:
+> +1 from me. This is something that many vendors need
+> and have needed for a very long time. Getting this
+> in will allow *large* amounts of existing storage to
+> be migrated to Linux.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_bmap_util.c | 133 ++++++-------------------------------------------
- 1 file changed, 14 insertions(+), 119 deletions(-)
+ZFS has NFSv4 richacls, and people seem to risk shitstorms
+for ZFS. Not only for this of course, but they do
+contribute.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5d030b0..0efabc1 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1096,101 +1096,6 @@ error1:	/* Just cancel transaction */
- 	return error;
- }
- 
--/*
-- * Zero file bytes between startoff and endoff inclusive.
-- * The iolock is held exclusive and no blocks are buffered.
-- *
-- * This function is used by xfs_free_file_space() to zero
-- * partial blocks when the range to free is not block aligned.
-- * When unreserving space with boundaries that are not block
-- * aligned we round up the start and round down the end
-- * boundaries and then use this function to zero the parts of
-- * the blocks that got dropped during the rounding.
-- */
--STATIC int
--xfs_zero_remaining_bytes(
--	xfs_inode_t		*ip,
--	xfs_off_t		startoff,
--	xfs_off_t		endoff)
--{
--	xfs_bmbt_irec_t		imap;
--	xfs_fileoff_t		offset_fsb;
--	xfs_off_t		lastoffset;
--	xfs_off_t		offset;
--	xfs_buf_t		*bp;
--	xfs_mount_t		*mp = ip->i_mount;
--	int			nimap;
--	int			error = 0;
--
--	/*
--	 * Avoid doing I/O beyond eof - it's not necessary
--	 * since nothing can read beyond eof.  The space will
--	 * be zeroed when the file is extended anyway.
--	 */
--	if (startoff >= XFS_ISIZE(ip))
--		return 0;
--
--	if (endoff > XFS_ISIZE(ip))
--		endoff = XFS_ISIZE(ip);
--
--	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
--		uint lock_mode;
--
--		offset_fsb = XFS_B_TO_FSBT(mp, offset);
--		nimap = 1;
--
--		lock_mode = xfs_ilock_data_map_shared(ip);
--		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
--		xfs_iunlock(ip, lock_mode);
--
--		if (error || nimap < 1)
--			break;
--		ASSERT(imap.br_blockcount >= 1);
--		ASSERT(imap.br_startoff == offset_fsb);
--		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
--
--		if (imap.br_startblock == HOLESTARTBLOCK ||
--		    imap.br_state == XFS_EXT_UNWRITTEN) {
--			/* skip the entire extent */
--			lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff +
--						      imap.br_blockcount) - 1;
--			continue;
--		}
--
--		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
--		if (lastoffset > endoff)
--			lastoffset = endoff;
--
--		/* DAX can just zero the backing device directly */
--		if (IS_DAX(VFS_I(ip))) {
--			error = dax_zero_page_range(VFS_I(ip), offset,
--						    lastoffset - offset + 1,
--						    xfs_get_blocks_direct);
--			if (error)
--				return error;
--			continue;
--		}
--
--		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
--				mp->m_rtdev_targp : mp->m_ddev_targp,
--				xfs_fsb_to_db(ip, imap.br_startblock),
--				BTOBB(mp->m_sb.sb_blocksize),
--				0, &bp, NULL);
--		if (error)
--			return error;
--
--		memset(bp->b_addr +
--				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
--		       0, lastoffset - offset + 1);
--
--		error = xfs_bwrite(bp);
--		xfs_buf_relse(bp);
--		if (error)
--			return error;
--	}
--	return error;
--}
--
- static int
- xfs_unmap_extent(
- 	struct xfs_inode	*ip,
-@@ -1316,7 +1221,7 @@ xfs_free_file_space(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_fileoff_t		endoffset_fsb;
--	int			done, error;
-+	int			done = 0, error;
- 
- 	trace_xfs_free_file_space(ip);
- 
-@@ -1348,31 +1253,21 @@ xfs_free_file_space(
- 			return error;
- 	}
- 
--	if ((done = (endoffset_fsb <= startoffset_fsb)))
--		/*
--		 * One contiguous piece to clear
--		 */
--		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
--	else {
--		/*
--		 * Some full blocks, possibly two pieces to clear
--		 */
--		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
--			error = xfs_zero_remaining_bytes(ip, offset,
--				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
--		if (!error &&
--		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
--			error = xfs_zero_remaining_bytes(ip,
--				XFS_FSB_TO_B(mp, endoffset_fsb),
--				offset + len - 1);
--	}
--
--	while (!error && !done) {
--		error = xfs_unmap_extent(ip, startoffset_fsb,
--				endoffset_fsb - startoffset_fsb, &done);
-+	if (endoffset_fsb > startoffset_fsb) {
-+		while (!done) {
-+			error = xfs_unmap_extent(ip, startoffset_fsb,
-+					endoffset_fsb - startoffset_fsb, &done);
-+			if (error)
-+				return error;
-+		}
- 	}
- 
--	return error;
-+	/*
-+	 * Now that we've unmap all full blocks we'll have to zero out any
-+	 * partial block at the beginning and/or end.  xfs_zero_range is
-+	 * smart enough to skip any holes, including those we just created.
-+	 */
-+	return xfs_zero_range(ip, offset, len, NULL);
- }
- 
- /*
--- 
-2.1.4
+Volker
+
+-- =
+
+SerNet GmbH, Bahnhofsallee 1b, 37081 G=F6ttingen
+phone: +49-551-370000-0, fax: +49-551-370000-9
+AG G=F6ttingen, HRB 2816, GF: Dr. Johannes Loxen
+http://www.sernet.de, mailto:kontakt@sernet.de
 
 _______________________________________________
 xfs mailing list
