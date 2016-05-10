@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1921B7CA4
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 23:18:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1360304048
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 21:18:23 -0700 (PDT)
-Received: from mail.SerNet.de (mail1.SerNet.de [193.175.80.2]) by cuda.sgi.com
-	with ESMTP id cJAkd6ZfTzEJ0mhZ (version=TLSv1.2
-	cipher=DHE-RSA-AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 21:18:20 -0700 (PDT)
-Date: Tue, 10 May 2016 06:18:10 +0200
-From: Volker Lendecke <Volker.Lendecke@SerNet.DE>
-Subject: Re: [PATCH v21 00/22] Richacls
-Message-ID: <20160510041809.GB1079@sernet.de>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-Reply-To: Volker.Lendecke@SerNet.DE
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 56C857CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 13:49:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D8AF6AC007
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:37 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	fD5xmpbHEncquV3m for <xfs@oss.sgi.com>;
+	Tue, 10 May 2016 11:49:36 -0700 (PDT)
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: [PATCH v6 1/5] dax: fallback from pmd to pte on error
+Date: Tue, 10 May 2016 12:49:12 -0600
+Message-Id: <1462906156-22303-2-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,20 +22,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On Tue, May 10, 2016 at 12:02:33AM +0200, Andreas Gruenbacher wrote:
-> What more can I do to finally get this merged?
+From: Dan Williams <dan.j.williams@intel.com>
 
-While I am not the one to comment on kernel specifics, from a pure Samba
-user space perspective let me say: We need this. NOW.
+In preparation for consulting a badblocks list in pmem_direct_access(),
+teach dax_pmd_fault() to fallback rather than fail immediately upon
+encountering an error.  The thought being that reducing the span of the
+dax request may avoid the error region.
 
-Volker
+Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/dax.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 5a34f08..52f0044 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1111,8 +1111,8 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 		long length = dax_map_atomic(bdev, &dax);
+ 
+ 		if (length < 0) {
+-			result = VM_FAULT_SIGBUS;
+-			goto out;
++			dax_pmd_dbg(&bh, address, "dax-error fallback");
++			goto fallback;
+ 		}
+ 		if (length < PMD_SIZE) {
+ 			dax_pmd_dbg(&bh, address, "dax-length too small");
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
