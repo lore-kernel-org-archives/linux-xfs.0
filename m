@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7C71E7CA0
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 20:28:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 409DB304051
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 18:28:45 -0700 (PDT)
-Received: from mail-yw0-f196.google.com (mail-yw0-f196.google.com
-	[209.85.161.196]) by cuda.sgi.com with ESMTP id
-	kJxco5SJF2E9AkAp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 18:28:43 -0700 (PDT)
-Received: by mail-yw0-f196.google.com with SMTP id y6so2730241ywe.0
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 18:28:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160511000940.GJ26977@dastard>
-References: <1460040514-23834-1-git-send-email-zlang@redhat.com>
-	<20160511000940.GJ26977@dastard>
-Date: Wed, 11 May 2016 09:28:42 +0800
-Message-ID: <CADVQ27rUzsof0xT2=+cQ6R906tmWYC3EDS2BMf7DkqZuy5cv2Q@mail.gmail.com>
-Subject: Re: [PATCH v3] xfs_quota: print quota id number if the name can't be
-	found
-From: Zorro Lang <zorro.lang@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id B8DE27CA4
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6EABB30404E
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:29 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0phnKUFHGwfcUjDS (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:27 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id A73AF627F6
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:27 +0000 (UTC)
+Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
+	[10.34.26.103])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u4ACGOuj016940
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:27 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 3/7] xfs: add configurable error support to metadata buffers
+Date: Tue, 10 May 2016 14:16:17 +0200
+Message-Id: <1462882581-30859-4-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,198 +34,263 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7471150082980559583=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============7471150082980559583==
-Content-Type: multipart/alternative; boundary=001a114dfc4a4c17a3053286f618
+With the error configuration handle for async metadata write errors
+in place, we can now add initial support to the IO error processing
+in xfs_buf_iodone_error().
 
---001a114dfc4a4c17a3053286f618
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Add an infrastructure function to look up the configuration handle,
+and rearrange the error handling to prepare the way for different
+error handling conigurations to be used.
 
-2016=E5=B9=B45=E6=9C=8811=E6=97=A5 08:10=EF=BC=8C"Dave Chinner" <david@from=
-orbit.com>=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Thu, Apr 07, 2016 at 10:48:34PM +0800, Zorro Lang wrote:
-> > When use GETNEXTQUOTA ioctl to report project quota, it always
-> > report an unexpected quota:
-> >
-> >   (null) 0 0 0 00 [--------]
-> >
-> > The ID 0 store the default quota, even if no one set default quota,
-> > it still have quota accounting, but not enforced. So GETNEXTQUOTA
-> > can find and report this undefined quota.
-> >
-> > From this problem, I thought if others' quota name miss, (null) will
-> > be printed too. e.g.
-> >
-> >   # xfs_quota -xc "limit -u bsoft=3D300m bhard=3D400m test" $mnt
-> >   # xfs_quota -xc "report -u" $mnt
-> >   User ID          Used       Soft       Hard    Warn/Grace
-> >   ---------- --------------------------------------------------
-> >   root                0          0          0     00 [--------]
-> >   test                0     307200     409600     00 [--------]
-> >   # userdel -r test
-> >   # xfs_quota -xc "report -u" $mnt
-> >   User ID          Used       Soft       Hard    Warn/Grace
-> >   ---------- --------------------------------------------------
-> >   root                0          0          0     00 [--------]
-> >   (null)              0     307200     409600     00 [--------]
-> >
-> > So this problem same with above id 0's problem. For deal with this,
-> > this patch will print id number if the name can't be found.
-> >
-> > But if use old GETQUOTA ioctl, it won't print project id 0 quota
-> > information(if it's not defined). That's different with GETNEXTQUOTA.
-> > For keep consistent, this patch also print project id 0 when use old
-> > GETQUOTA.
-> >
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
->
-> OK, so with this applied xfs/133 and xfs/134 both now fail with
-> this extra output:
->
-> +#0 0 0 0 00 [--------]
->
-> Can you send patches for these tests to filter out these lines so
-> that the tests pass again for both old and new xfsprogs?
+Changelog:
 
-Hi Dave,
+V3:
+	- in xfs_buf_iodone_callbacks, use cfg->max_retries to
+	  determine if the filesystem should fail or not, a zero value
+	  means it should never retry.
 
-Sure, I'm doing on this. I remember that a patch from Eryu maybe suit for
-this xfsprogs change(maybe need some modify). I'll check it and send a
-suitable patch as soon as possible.
+V4:
+	- With the refactor of xfs_buf_iodone_callbacks, we don't need
+	  xfs_buf_item_iodone trace anymore, once it already contains
+	  item_iodone_async trace. Also, since it was the only caller from
+	  this tracepoint, just remove its definition
+	- Move xfs_error_get_cfg() call to just before the usage of cfg
 
-Thanks,
-Zorro
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_buf.h      |   1 +
+ fs/xfs/xfs_buf_item.c | 112 ++++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_mount.h    |   3 ++
+ fs/xfs/xfs_sysfs.c    |  17 ++++++++
+ fs/xfs/xfs_trace.h    |   1 -
+ 5 files changed, 88 insertions(+), 46 deletions(-)
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
---001a114dfc4a4c17a3053286f618
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<p dir=3D"ltr"><br>
-2016=E5=B9=B45=E6=9C=8811=E6=97=A5 08:10=EF=BC=8C&quot;Dave Chinner&quot; &=
-lt;<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a>&gt;=E5=86=
-=99=E9=81=93=EF=BC=9A<br>
-&gt;<br>
-&gt; On Thu, Apr 07, 2016 at 10:48:34PM +0800, Zorro Lang wrote:<br>
-&gt; &gt; When use GETNEXTQUOTA ioctl to report project quota, it always<br=
->
-&gt; &gt; report an unexpected quota:<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 =C2=A0(null) 0 0 0 00 [--------]<br>
-&gt; &gt;<br>
-&gt; &gt; The ID 0 store the default quota, even if no one set default quot=
-a,<br>
-&gt; &gt; it still have quota accounting, but not enforced. So GETNEXTQUOTA=
-<br>
-&gt; &gt; can find and report this undefined quota.<br>
-&gt; &gt;<br>
-&gt; &gt; From this problem, I thought if others&#39; quota name miss, (nul=
-l) will<br>
-&gt; &gt; be printed too. e.g.<br>
-&gt; &gt;<br>
-&gt; &gt;=C2=A0 =C2=A0# xfs_quota -xc &quot;limit -u bsoft=3D300m bhard=3D4=
-00m test&quot; $mnt<br>
-&gt; &gt;=C2=A0 =C2=A0# xfs_quota -xc &quot;report -u&quot; $mnt<br>
-&gt; &gt;=C2=A0 =C2=A0User ID=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Used=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0Soft=C2=A0 =C2=A0 =C2=A0 =C2=A0Hard=C2=A0 =C2=A0 Warn/G=
-race<br>
-&gt; &gt;=C2=A0 =C2=A0---------- ------------------------------------------=
---------<br>
-&gt; &gt;=C2=A0 =C2=A0root=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 0=C2=A0 =C2=A0 =C2=A000 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0test=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 0=C2=A0 =C2=A0 =C2=A0307200=C2=A0 =C2=A0 =C2=A0409600=C2=A0 =C2=A0 =
-=C2=A000 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0# userdel -r test<br>
-&gt; &gt;=C2=A0 =C2=A0# xfs_quota -xc &quot;report -u&quot; $mnt<br>
-&gt; &gt;=C2=A0 =C2=A0User ID=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Used=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0Soft=C2=A0 =C2=A0 =C2=A0 =C2=A0Hard=C2=A0 =C2=A0 Warn/G=
-race<br>
-&gt; &gt;=C2=A0 =C2=A0---------- ------------------------------------------=
---------<br>
-&gt; &gt;=C2=A0 =C2=A0root=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 0=C2=A0 =C2=A0 =C2=A000 [--------]<br>
-&gt; &gt;=C2=A0 =C2=A0(null)=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 0=C2=A0 =C2=A0 =C2=A0307200=C2=A0 =C2=A0 =C2=A0409600=C2=A0 =C2=A0 =C2=
-=A000 [--------]<br>
-&gt; &gt;<br>
-&gt; &gt; So this problem same with above id 0&#39;s problem. For deal with=
- this,<br>
-&gt; &gt; this patch will print id number if the name can&#39;t be found.<b=
-r>
-&gt; &gt;<br>
-&gt; &gt; But if use old GETQUOTA ioctl, it won&#39;t print project id 0 qu=
-ota<br>
-&gt; &gt; information(if it&#39;s not defined). That&#39;s different with G=
-ETNEXTQUOTA.<br>
-&gt; &gt; For keep consistent, this patch also print project id 0 when use =
-old<br>
-&gt; &gt; GETQUOTA.<br>
-&gt; &gt;<br>
-&gt; &gt; Signed-off-by: Zorro Lang &lt;<a href=3D"mailto:zlang@redhat.com"=
->zlang@redhat.com</a>&gt;<br>
-&gt;<br>
-&gt; OK, so with this applied xfs/133 and xfs/134 both now fail with<br>
-&gt; this extra output:<br>
-&gt;<br>
-&gt; +#0 0 0 0 00 [--------]<br>
-&gt;<br>
-&gt; Can you send patches for these tests to filter out these lines so<br>
-&gt; that the tests pass again for both old and new xfsprogs?</p>
-<p dir=3D"ltr">Hi Dave,</p>
-<p dir=3D"ltr">Sure, I&#39;m doing on this. I remember that a patch from Er=
-yu maybe suit for this xfsprogs change(maybe need some modify). I&#39;ll ch=
-eck it and send a suitable patch as soon as possible.</p>
-<p dir=3D"ltr">Thanks,<br>
-Zorro</p>
-<p dir=3D"ltr">&gt;<br>
-&gt; Cheers,<br>
-&gt;<br>
-&gt; Dave.<br>
-&gt; --<br>
-&gt; Dave Chinner<br>
-&gt; <a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-&gt;<br>
-&gt; _______________________________________________<br>
-&gt; xfs mailing list<br>
-&gt; <a href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>
-&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com=
-/mailman/listinfo/xfs</a><br>
-</p>
-
---001a114dfc4a4c17a3053286f618--
-
-
---===============7471150082980559583==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 4eb89bd..adef116 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -183,6 +183,7 @@ typedef struct xfs_buf {
+ 	unsigned int		b_page_count;	/* size of page array */
+ 	unsigned int		b_offset;	/* page offset in first page */
+ 	int			b_error;	/* error code on I/O */
++	int			b_last_error;	/* previous async I/O error */
+ 	const struct xfs_buf_ops	*b_ops;
+ 
+ #ifdef XFS_BUF_LOCK_TRACKING
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 99e91a0..b8d0cd4 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1042,35 +1042,22 @@ xfs_buf_do_callbacks(
+ 	}
+ }
+ 
+-/*
+- * This is the iodone() function for buffers which have had callbacks
+- * attached to them by xfs_buf_attach_iodone().  It should remove each
+- * log item from the buffer's list and call the callback of each in turn.
+- * When done, the buffer's fsprivate field is set to NULL and the buffer
+- * is unlocked with a call to iodone().
+- */
+-void
+-xfs_buf_iodone_callbacks(
++static bool
++xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_log_item	*lip = bp->b_fspriv;
+ 	struct xfs_mount	*mp = lip->li_mountp;
+ 	static ulong		lasttime;
+ 	static xfs_buftarg_t	*lasttarg;
+-
+-	if (likely(!bp->b_error))
+-		goto do_callbacks;
++	struct xfs_error_cfg	*cfg;
+ 
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+ 	 */
+-	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		xfs_buf_stale(bp);
+-		bp->b_flags |= XBF_DONE;
+-		trace_xfs_buf_item_iodone(bp, _RET_IP_);
+-		goto do_callbacks;
+-	}
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto out_stale;
+ 
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+@@ -1079,45 +1066,80 @@ xfs_buf_iodone_callbacks(
+ 	}
+ 	lasttarg = bp->b_target;
+ 
++	/* synchronous writes will have callers process the error */
++	if (!(bp->b_flags & XBF_ASYNC))
++		goto out_stale;
++
++	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++	ASSERT(bp->b_iodone != NULL);
++
+ 	/*
+ 	 * If the write was asynchronous then no one will be looking for the
+-	 * error.  Clear the error state and write the buffer out again.
+-	 *
+-	 * XXX: This helps against transient write errors, but we need to find
+-	 * a way to shut the filesystem down if the writes keep failing.
+-	 *
+-	 * In practice we'll shut the filesystem down soon as non-transient
+-	 * errors tend to affect the whole device and a failing log write
+-	 * will make us give up.  But we really ought to do better here.
++	 * error.  If this is the first failure of this type, clear the error
++	 * state and write the buffer out again. This means we always retry an
++	 * async write failure at least once, but we also need to set the buffer
++	 * up to behave correctly now for repeated failures.
+ 	 */
+-	if (bp->b_flags & XBF_ASYNC) {
+-		ASSERT(bp->b_iodone != NULL);
+-
+-		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL)) ||
++	     bp->b_last_error != bp->b_error) {
++		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
++			        XBF_DONE | XBF_WRITE_FAIL);
++		bp->b_last_error = bp->b_error;
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_submit(bp);
++		return true;
++	}
+ 
+-		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
++	/*
++	 * Repeated failure on an async write. Take action according to the
++	 * error configuration we have been set up to use.
++	 */
++	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++	if (!cfg->max_retries)
++		goto permanent_error;
+ 
+-		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+-			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+-				       XBF_DONE | XBF_WRITE_FAIL;
+-			xfs_buf_submit(bp);
+-		} else {
+-			xfs_buf_relse(bp);
+-		}
+-
+-		return;
+-	}
++	/* still a transient error, higher layers will retry */
++	xfs_buf_ioerror(bp, 0);
++	xfs_buf_relse(bp);
++	return true;
+ 
+ 	/*
+-	 * If the write of the buffer was synchronous, we want to make
+-	 * sure to return the error to the caller of xfs_bwrite().
++	 * Permanent error - we need to trigger a shutdown if we haven't already
++	 * to indicate that inconsistency will result from this action.
+ 	 */
++permanent_error:
++	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++out_stale:
+ 	xfs_buf_stale(bp);
+ 	bp->b_flags |= XBF_DONE;
+-
+ 	trace_xfs_buf_error_relse(bp, _RET_IP_);
++	return false;
++}
++
++/*
++ * This is the iodone() function for buffers which have had callbacks attached
++ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
++ * callback list, mark the buffer as having no more callbacks and then push the
++ * buffer through IO completion processing.
++ */
++void
++xfs_buf_iodone_callbacks(
++	struct xfs_buf		*bp)
++{
++	/*
++	 * If there is an error, process it. Some errors require us
++	 * to run callbacks after failure processing is done so we
++	 * detect that and take appropriate action.
++	 */
++	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
++		return;
++
++	/*
++	 * Successful IO or permanent error. Either way, we can clear the
++	 * retry state here in preparation for the next error that may occur.
++	 */
++	bp->b_last_error = 0;
+ 
+-do_callbacks:
+ 	xfs_buf_do_callbacks(bp);
+ 	bp->b_fspriv = NULL;
+ 	bp->b_iodone = NULL;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 352a5c8..0c5a976 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -387,4 +387,7 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+ int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+ 			xfs_off_t count_fsb);
+ 
++struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
++		int error_class, int error);
++
+ #endif	/* __XFS_MOUNT_H__ */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 07c9599..1cb5a85 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -447,3 +447,20 @@ xfs_error_sysfs_del(
+ 	xfs_sysfs_del(&mp->m_error_meta_kobj);
+ 	xfs_sysfs_del(&mp->m_error_kobj);
+ }
++
++struct xfs_error_cfg *
++xfs_error_get_cfg(
++	struct xfs_mount	*mp,
++	int			error_class,
++	int			error)
++{
++	struct xfs_error_cfg	*cfg;
++
++	switch (error) {
++	default:
++		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
++		break;
++	}
++
++	return cfg;
++}
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 840d52e..ea94ee0 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -364,7 +364,6 @@ DEFINE_BUF_EVENT(xfs_buf_delwri_split);
+ DEFINE_BUF_EVENT(xfs_buf_get_uncached);
+ DEFINE_BUF_EVENT(xfs_bdstrat_shut);
+ DEFINE_BUF_EVENT(xfs_buf_item_relse);
+-DEFINE_BUF_EVENT(xfs_buf_item_iodone);
+ DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
+ DEFINE_BUF_EVENT(xfs_buf_error_relse);
+ DEFINE_BUF_EVENT(xfs_buf_wait_buftarg);
+-- 
+2.4.11
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7471150082980559583==--
