@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BC6BE7CBA
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:05:06 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 26A507CA0
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 14:49:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3496DAC005
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:05:06 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hvaHbLLHmDjaY8AZ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:05:03 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v21 17/22] richacl: Automatic Inheritance
-Date: Tue, 10 May 2016 00:02:50 +0200
-Message-Id: <1462831375-23017-18-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DF49D304062
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:49:05 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	TbV6YMLVB8OE3LFo for <xfs@oss.sgi.com>;
+	Tue, 10 May 2016 12:49:05 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v6 4/5] dax: for truncate/hole-punch, do zeroing through
+	the driver if possible
+Date: Tue, 10 May 2016 19:49:01 +0000
+Message-ID: <1462909729.29294.21.camel@intel.com>
+References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+	<1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
+	<20160510192507.GA29312@infradead.org>
+In-Reply-To: <20160510192507.GA29312@infradead.org>
+Content-Language: en-US
+Content-ID: <21F7193DF9ABD64A97ED656576D4EB94@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,191 +28,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: "hch@infradead.org" <hch@infradead.org>, "axboe@fb.com" <axboe@fb.com>
+Cc: "boaz@plexistor.com" <boaz@plexistor.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-Automatic Inheritance (AI) allows changes to the acl of a directory to
-propagate down to children.
-
-This is mostly implemented in user space: when a process changes the
-permissions of a directory and Automatic Inheritance is enabled for that
-directory, the process must propagate those changes to all children,
-recursively.
-
-The kernel enables this by keeping track of which permissions have been
-inherited at create time.  In addition, it makes sure that permission
-propagation is turned off when the permissions are set explicitly (for
-example, upon create or chmod).
-
-Automatic Inheritance works as follows:
-
- - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
-   is not set, the file or directory is not affected by AI.
-
- - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
-   and a file or subdirectory is created in that directory, the
-   inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
-   inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
-   allows user space to distinguish between aces which have been
-   inherited and aces which have been explicitly added.
-
- - When the RICHACL_PROTECTED acl flag in the acl of a file or directory
-   is set, AI will not modify the acl.  This does not affect propagation
-   of permissions from the file to its children (if the file is a
-   directory).
-
-Linux does not have a way of creating files or directories without setting the
-file permission bits, so all files created inside a directory with
-RICHACL_AUTO_INHERIT set will have the RICHACL_PROTECTED flag set.  This
-effectively disables Automatic Inheritance.
-
-Protocols which support creating files without specifying permissions can
-explicitly clear the RICHACL_PROTECTED flag after creating a file and reset the
-file masks to "undo" applying the create mode; see richacl_compute_max_masks().
-They should set the RICHACL_DEFAULTED flag.  (A mechanism that would allow to
-indicate to the kernel to ignore the create mode in the first place when there
-are inherited permissions would be nice to have.)
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/richacl.c                 | 20 +++++++++++++++++++-
- include/linux/richacl.h      | 12 ++++++++++++
- include/uapi/linux/richacl.h | 11 ++++++++++-
- 3 files changed, 41 insertions(+), 2 deletions(-)
-
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 29eaf89..40e4af9 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -573,7 +573,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
- 	    acl->a_group_mask == group_mask &&
- 	    acl->a_other_mask == other_mask &&
- 	    (acl->a_flags & RICHACL_MASKED) &&
--	    (acl->a_flags & RICHACL_WRITE_THROUGH))
-+	    (acl->a_flags & RICHACL_WRITE_THROUGH) &&
-+	    (!richacl_is_auto_inherit(acl) || richacl_is_protected(acl)))
- 		return acl;
- 
- 	clone = richacl_clone(acl, GFP_KERNEL);
-@@ -585,6 +586,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
- 	clone->a_owner_mask = owner_mask;
- 	clone->a_group_mask = group_mask;
- 	clone->a_other_mask = other_mask;
-+	if (richacl_is_auto_inherit(clone))
-+		clone->a_flags |= RICHACL_PROTECTED;
- 
- 	return clone;
- }
-@@ -800,6 +803,14 @@ richacl_inherit(const struct richacl *dir_acl, int isdir)
- 			ace++;
- 		}
- 	}
-+	if (richacl_is_auto_inherit(dir_acl)) {
-+		acl->a_flags = RICHACL_AUTO_INHERIT;
-+		richacl_for_each_entry(ace, acl)
-+			ace->e_flags |= RICHACE_INHERITED_ACE;
-+	} else {
-+		richacl_for_each_entry(ace, acl)
-+			ace->e_flags &= ~RICHACE_INHERITED_ACE;
-+	}
- 
- 	return acl;
- }
-@@ -828,6 +839,13 @@ richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
- 			richacl_put(acl);
- 			acl = NULL;
- 		} else {
-+			/*
-+			 * We need to set RICHACL_PROTECTED because we are
-+			 * doing an implicit chmod
-+			 */
-+			if (richacl_is_auto_inherit(acl))
-+				acl->a_flags |= RICHACL_PROTECTED;
-+
- 			richacl_compute_max_masks(acl);
- 			/*
- 			 * Ensure that the acl will not grant any permissions
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 7aca1a3..a442372 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -81,6 +81,18 @@ extern void set_cached_richacl(struct inode *, struct richacl *);
- extern void forget_cached_richacl(struct inode *);
- extern struct richacl *get_richacl(struct inode *);
- 
-+static inline int
-+richacl_is_auto_inherit(const struct richacl *acl)
-+{
-+	return acl->a_flags & RICHACL_AUTO_INHERIT;
-+}
-+
-+static inline int
-+richacl_is_protected(const struct richacl *acl)
-+{
-+	return acl->a_flags & RICHACL_PROTECTED;
-+}
-+
- /**
-  * richace_is_owner  -  check if @ace is an OWNER@ entry
-  */
-diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
-index 1ed48ac..8849a53 100644
---- a/include/uapi/linux/richacl.h
-+++ b/include/uapi/linux/richacl.h
-@@ -18,6 +18,9 @@
- #define __UAPI_RICHACL_H
- 
- /* a_flags values */
-+#define RICHACL_AUTO_INHERIT			0x01
-+#define RICHACL_PROTECTED			0x02
-+#define RICHACL_DEFAULTED			0x04
- #define RICHACL_WRITE_THROUGH			0x40
- #define RICHACL_MASKED				0x80
- 
-@@ -31,6 +34,7 @@
- #define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
- #define RICHACE_INHERIT_ONLY_ACE		0x0008
- #define RICHACE_IDENTIFIER_GROUP		0x0040
-+#define RICHACE_INHERITED_ACE			0x0080
- #define RICHACE_SPECIAL_WHO			0x4000
- 
- /* e_mask bitflags */
-@@ -60,6 +64,9 @@
- #define RICHACE_EVERYONE_SPECIAL_ID		2
- 
- #define RICHACL_VALID_FLAGS (					\
-+	RICHACL_AUTO_INHERIT |					\
-+	RICHACL_PROTECTED |					\
-+	RICHACL_DEFAULTED |					\
- 	RICHACL_WRITE_THROUGH |					\
- 	RICHACL_MASKED )
- 
-@@ -69,13 +76,15 @@
- 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
- 	RICHACE_INHERIT_ONLY_ACE |				\
- 	RICHACE_IDENTIFIER_GROUP |				\
-+	RICHACE_INHERITED_ACE |					\
- 	RICHACE_SPECIAL_WHO )
- 
- #define RICHACE_INHERITANCE_FLAGS (				\
- 	RICHACE_FILE_INHERIT_ACE |				\
- 	RICHACE_DIRECTORY_INHERIT_ACE |				\
- 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
--	RICHACE_INHERIT_ONLY_ACE )
-+	RICHACE_INHERIT_ONLY_ACE |				\
-+	RICHACE_INHERITED_ACE )
- 
- /* Valid RICHACE_* flags for directories and non-directories */
- #define RICHACE_VALID_MASK (					\
--- 
-2.5.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCAyMDE2LTA1LTEwIGF0IDEyOjI1IC0wNzAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
+ZToNCj4gSGkgVmlzaGFsLA0KPiANCj4gY2FuIHlvdSBhbHNvIHBpY2sgdXAgdGhlIG15IHBhdGNo
+IHRvIGFkZCBhIGxvdy1sZXZlbCBfX2RheF96ZXJvX3JhbmdlDQo+IHRoYXQgSSBjY2VkIHlvdSBv
+bj/CoMKgVGhhdCB3YXkgd2UgY2FuIGF2b2lkIGEgbmFzdHkgbWVyZ2UgY29uZmxpY3Qgd2l0aA0K
+PiBteSB4ZnMvaW9tYXAgY2hhbmdlcy4NCg0KR29vZCBpZGVhIC0gSSdsbCBkbyB0aGF0IGZvciB0
+aGUgbmV4dCBwb3N0aW5nLiBJJ2xsIHdhaXQgYSBkYXkgb3IgdHdvDQpmb3IgYW55IGFkZGl0aW9u
+YWwgcmV2aWV3cy9hY2tzLg0KDQpJJ20gbG9va2luZyB0byBnZXQgYWxsIHRoaXMgaW50byBhIGJy
+YW5jaCBpbiB0aGUgbnZkaW1tIHRyZWUgb25jZSBKYW4NCnNwbGl0cyB1cCBoaXMgZGF4LWxvY2tp
+bmcgc2VyaWVzLi4NCg0KTW9zdGx5IEkgZ3Vlc3MgSSdtIGxvb2tpbmcgZm9yIGEgeWF5IG9yIG5h
+eSBmb3IgdGhlIGJsb2NrIGxheWVyIGNoYW5nZXMNCihwYXRjaCAyKS4gSmVucz8KX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
+ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
