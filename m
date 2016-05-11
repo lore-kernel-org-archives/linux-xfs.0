@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BD7477CA0
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 11:03:52 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 68F147CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:20:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D48A304067
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 09:03:49 -0700 (PDT)
-Received: from mail-wm0-f65.google.com (mail-wm0-f65.google.com
-	[74.125.82.65]) by cuda.sgi.com with ESMTP id WIkrimVOcbZojiTr
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 May 2016 09:03:44 -0700 (PDT)
-Received: by mail-wm0-f65.google.com with SMTP id e201so4581467wme.2
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 09:03:44 -0700 (PDT)
-Date: Fri, 13 May 2016 18:03:41 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160513160341.GW20141@dhcp22.suse.cz>
-References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
-	<20160512055756.GE6648@birch.djwong.org>
-	<20160512080321.GA18496@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E7C1304048
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 12:20:04 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id SWD6Se7J34vImdgy (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 12:19:59 -0700 (PDT)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <56F299E3.4020703@profihost.ag>
+	<20160323140736.GD43073@bfoster.bfoster>
+	<56F3A101.1020300@profihost.ag>
+	<56F3A213.2020908@profihost.ag> <20160324111703.GA4068@bfoster.bfoster>
+	<56F3DACB.8040305@profihost.ag> <20160324122417.GB4068@bfoster.bfoster>
+	<57332508.307@profihost.ag> <20160511133417.GA42410@bfoster.bfoster>
+	<57333BA4.4040402@profihost.ag>
+	<20160511155951.GF42410@bfoster.bfoster>
+From: Stefan Priebe <s.priebe@profihost.ag>
+Message-ID: <573385EA.6050603@profihost.ag>
+Date: Wed, 11 May 2016 21:20:10 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160512080321.GA18496@dastard>
+In-Reply-To: <20160511155951.GF42410@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,207 +32,213 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, Peter Zijlstra <peterz@infradead.org>, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu 12-05-16 18:03:21, Dave Chinner wrote:
-> [ cc Michal Hocko, just so he can see a lockdep reclaim state false
-> positive ]
 
-Thank you for CCing me!
+Am 11.05.2016 um 17:59 schrieb Brian Foster:
+> Dropped non-XFS cc's, probably no need to spam other lists at this
+> point...
+>
+> On Wed, May 11, 2016 at 04:03:16PM +0200, Stefan Priebe - Profihost AG wrote:
+>>
+>> Am 11.05.2016 um 15:34 schrieb Brian Foster:
+>>> On Wed, May 11, 2016 at 02:26:48PM +0200, Stefan Priebe - Profihost AG wrote:
+>>>> Hi Brian,
+>>>>
+>>>> i'm still unable to grab anything to the trace file? Is there anything
+>>>> to check if it's working at all?
+>>>>
+>>>
+>>> See my previous mail:
+>>>
+>>> http://oss.sgi.com/pipermail/xfs/2016-March/047793.html
+>>>
+>>> E.g., something like this should work after writing to and removing a
+>>> new file:
+>>>
+>>> # trace-cmd start -e "xfs:xfs_releasepage"
+>>> # cat /sys/kernel/debug/tracing/trace_pipe
+>>> ...
+>>> rm-8198  [000] ....  9445.774070: xfs_releasepage: dev 253:4 ino 0x69 pgoff 0x9ff000 size 0xa00000 offset 0 length 0 delalloc 0 unwritten 0
+>>
+>> arg sorry yes that's working but delalloc is always 0.
+>>
+>
+> Hrm, Ok. That is strange.
+>
+>> May be i have to hook that into my initramfs to be fast enough?
+>>
+>
+> Not sure that would matter.. you said it occurs within 48 hours? I take
+> that to mean it doesn't occur immediately on boot. You should be able to
+> tell from the logs or dmesg if it happens before you get a chance to
+> start the tracing.
+>
+> Well, the options I can think of are:
+>
+> - Perhaps I botched matching up the line number to the warning, in which
+>    case we might want to try 'grep -v "delalloc 0 unwritten 0"' to catch
+>    any delalloc or unwritten blocks at releasepage() time.
 
-I am sorry I didn't follow up on the previous discussion but I got side
-tracked by something else. I have tried to cook up something really
-simply. I didn't get to test it at all and it might be completely broken
-but I just wanted to throw an idea for the discussion. I am CCing Peter
-as well - he might have a better idea (the reference to the full email
-is in the changelog. Is something like the following correct/acceptable?
+OK i changed the grep command.
 
-This is on top of my scope gfp_nofs patch I have posted recently but I
-can reorder them if this looks ok.
----
->From 9e980c2342f355e2bf1e12839c51e8e304e8842e Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko@suse.com>
-Date: Fri, 13 May 2016 17:47:31 +0200
-Subject: [PATCH] lockdep: allow to disable reclaim lockup detection
+>
+> - Perhaps there's a race that the tracepoint doesn't catch. The warnings
+>    are based on local vars, so we could instrument the code to print a
+>    warning[1] to try and get the inode number.
 
-The current implementation of the reclaim lockup detection can lead to
-false positives and those even happen and usually lead to tweak the
-code to silence the lockdep by using GFP_NOFS even though the context
-can use __GFP_FS just fine. See
-http://lkml.kernel.org/r/20160512080321.GA18496@dastard as an example.
+Thx i also added your patch.
 
-=================================
-[ INFO: inconsistent lock state ]
-4.5.0-rc2+ #4 Tainted: G           O
----------------------------------
-inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
-kswapd0/543 [HC0[0]:SC0[0]:HE1:SE1] takes:
+So we need to wait another 48h.
 
-(&xfs_nondir_ilock_class){++++-+}, at: [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
+Greets,
+Stefan
 
-{RECLAIM_FS-ON-R} state was registered at:
-  [<ffffffff8110f369>] mark_held_locks+0x79/0xa0
-  [<ffffffff81113a43>] lockdep_trace_alloc+0xb3/0x100
-  [<ffffffff81224623>] kmem_cache_alloc+0x33/0x230
-  [<ffffffffa008acc1>] kmem_zone_alloc+0x81/0x120 [xfs]
-  [<ffffffffa005456e>] xfs_refcountbt_init_cursor+0x3e/0xa0 [xfs]
-  [<ffffffffa0053455>] __xfs_refcount_find_shared+0x75/0x580 [xfs]
-  [<ffffffffa00539e4>] xfs_refcount_find_shared+0x84/0xb0 [xfs]
-  [<ffffffffa005dcb8>] xfs_getbmap+0x608/0x8c0 [xfs]
-  [<ffffffffa007634b>] xfs_vn_fiemap+0xab/0xc0 [xfs]
-  [<ffffffff81244208>] do_vfs_ioctl+0x498/0x670
-  [<ffffffff81244459>] SyS_ioctl+0x79/0x90
-  [<ffffffff81847cd7>] entry_SYSCALL_64_fastpath+0x12/0x6f
-
-       CPU0
-       ----
-  lock(&xfs_nondir_ilock_class);
-  <Interrupt>
-    lock(&xfs_nondir_ilock_class);
-
- *** DEADLOCK ***
-
-3 locks held by kswapd0/543:
-
-stack backtrace:
-CPU: 0 PID: 543 Comm: kswapd0 Tainted: G           O    4.5.0-rc2+ #4
-
-Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006
-
- ffffffff82a34f10 ffff88003aa078d0 ffffffff813a14f9 ffff88003d8551c0
- ffff88003aa07920 ffffffff8110ec65 0000000000000000 0000000000000001
- ffff880000000001 000000000000000b 0000000000000008 ffff88003d855aa0
-Call Trace:
- [<ffffffff813a14f9>] dump_stack+0x4b/0x72
- [<ffffffff8110ec65>] print_usage_bug+0x215/0x240
- [<ffffffff8110ee85>] mark_lock+0x1f5/0x660
- [<ffffffff8110e100>] ? print_shortest_lock_dependencies+0x1a0/0x1a0
- [<ffffffff811102e0>] __lock_acquire+0xa80/0x1e50
- [<ffffffff8122474e>] ? kmem_cache_alloc+0x15e/0x230
- [<ffffffffa008acc1>] ? kmem_zone_alloc+0x81/0x120 [xfs]
- [<ffffffff811122e8>] lock_acquire+0xd8/0x1e0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] ? xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffff8110aace>] down_write_nested+0x5e/0xc0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffffa0085bdc>] xfs_fs_evict_inode+0xdc/0x1e0 [xfs]
- [<ffffffff8124d7d5>] evict+0xc5/0x190
- [<ffffffff8124d8d9>] dispose_list+0x39/0x60
- [<ffffffff8124eb2b>] prune_icache_sb+0x4b/0x60
- [<ffffffff8123317f>] super_cache_scan+0x14f/0x1a0
- [<ffffffff811e0d19>] shrink_slab.part.63.constprop.79+0x1e9/0x4e0
- [<ffffffff811e50ee>] shrink_zone+0x15e/0x170
- [<ffffffff811e5ef1>] kswapd+0x4f1/0xa80
- [<ffffffff811e5a00>] ? zone_reclaim+0x230/0x230
- [<ffffffff810e6882>] kthread+0xf2/0x110
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
- [<ffffffff8184803f>] ret_from_fork+0x3f/0x70
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
-
-To quote Dave:
-"
-Ignoring whether reflink should be doing anything or not, that's a
-"xfs_refcountbt_init_cursor() gets called both outside and inside
-transactions" lockdep false positive case. The problem here is
-lockdep has seen this allocation from within a transaction, hence a
-GFP_NOFS allocation, and now it's seeing it in a GFP_KERNEL context.
-Also note that we have an active reference to this inode.
-
-So, because the reclaim annotations overload the interrupt level
-detections and it's seen the inode ilock been taken in reclaim
-("interrupt") context, this triggers a reclaim context warning where
-it thinks it is unsafe to do this allocation in GFP_KERNEL context
-holding the inode ilock...
-"
-
-This sounds like a fundamental problem of the reclaim lock detection.
-It is really impossible to annotate such a special usecase IMHO unless
-the reclaim lockup detection is reworked completely. Until then it
-is much better to provide a way to add "I know what I am doing flag"
-and mark problematic places. This would prevent from abusing GFP_NOFS
-flag which has a runtime effect even on configurations which have
-lockdep disabled.
-
-Introduce lockdep_trace_alloc_{disable,enable} which would tell
-__lockdep_trace_alloc to skip an allocation request even when it has
-__GFP_FS enabled. This means that the false positive shouldn't be
-generated.
-
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- include/linux/lockdep.h  | 10 ++++++++++
- include/linux/sched.h    |  1 +
- kernel/locking/lockdep.c |  4 ++++
- 3 files changed, 15 insertions(+)
-
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index 4dca42fd32f5..4b04bf9ab560 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -354,6 +354,14 @@ static inline void lock_set_subclass(struct lockdep_map *lock,
- extern void lockdep_set_current_reclaim_state(gfp_t gfp_mask);
- extern void lockdep_clear_current_reclaim_state(void);
- extern void lockdep_trace_alloc(gfp_t mask);
-+static inline void lockdep_trace_alloc_disable(void)
-+{
-+	current->lockdep_reclaim_disabled = 1;
-+}
-+static inline void lockdep_trace_alloc_enable(void)
-+{
-+	current->lockdep_reclaim_disabled = 0;
-+}
- 
- extern void lock_pin_lock(struct lockdep_map *lock);
- extern void lock_unpin_lock(struct lockdep_map *lock);
-@@ -392,6 +400,8 @@ static inline void lockdep_on(void)
- # define lockdep_set_current_reclaim_state(g)	do { } while (0)
- # define lockdep_clear_current_reclaim_state()	do { } while (0)
- # define lockdep_trace_alloc(g)			do { } while (0)
-+# define lockdep_trace_alloc_disable()		do { } while (0)
-+# define lockdep_trace_alloc_enable()		do { } while (0)
- # define lockdep_init()				do { } while (0)
- # define lockdep_info()				do { } while (0)
- # define lockdep_init_map(lock, name, key, sub) \
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e9521dc0475f..ec643916bad3 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1644,6 +1644,7 @@ struct task_struct {
- 	unsigned int lockdep_recursion;
- 	struct held_lock held_locks[MAX_LOCK_DEPTH];
- 	gfp_t lockdep_reclaim_gfp;
-+	bool lockdep_reclaim_disabled;
- #endif
- #ifdef CONFIG_UBSAN
- 	unsigned int in_ubsan;
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index f60124d0871c..cf6ead3e7014 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -2753,6 +2753,10 @@ static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
- 	if (!(gfp_mask & __GFP_FS) || (curr->flags & PF_MEMALLOC_NOFS))
- 		return;
- 
-+	/* The caller explicitly asked to disable reclaim recursion tracking */
-+	if (curr->lockdep_reclaim_disabled)
-+		return;
-+
- 	/*
- 	 * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
- 	 */
--- 
-2.8.1
-
--- 
-Michal Hocko
-SUSE Labs
+> Brian
+>
+> [1] - compile tested diff:
+>
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 40645a4..94738ea 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1038,11 +1038,18 @@ xfs_vm_releasepage(
+>   	gfp_t			gfp_mask)
+>   {
+>   	int			delalloc, unwritten;
+> +	struct xfs_inode	*ip = XFS_I(page->mapping->host);
+>
+>   	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
+>
+>   	xfs_count_page_state(page, &delalloc, &unwritten);
+>
+> +	if (delalloc || unwritten)
+> +		xfs_warn(ip->i_mount,
+> +		"ino 0x%llx delalloc %d unwritten %d pgoff 0x%llx size 0x%llx",
+> +			 ip->i_ino, delalloc, unwritten, page_offset(page),
+> +			 i_size_read(page->mapping->host));
+> +
+>   	if (WARN_ON_ONCE(delalloc))
+>   		return 0;
+>   	if (WARN_ON_ONCE(unwritten))
+>
+>> Stefan
+>>
+>>> Once that is working, add the grep command to filter out "delalloc 0"
+>>> instances, etc. For example:
+>>>
+>>> 	cat .../trace_pipe | grep -v "delalloc 0" > ~/trace.out
+>>>
+>>> Brian
+>>>
+>>>> This still happens in the first 48 hours after a fresh reboot.
+>>>>
+>>>> Stefan
+>>>>
+>>>> Am 24.03.2016 um 13:24 schrieb Brian Foster:
+>>>>> On Thu, Mar 24, 2016 at 01:17:15PM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>
+>>>>>> Am 24.03.2016 um 12:17 schrieb Brian Foster:
+>>>>>>> On Thu, Mar 24, 2016 at 09:15:15AM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>>>
+>>>>>>>> Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>>>
+>>>>>>>>> Am 23.03.2016 um 15:07 schrieb Brian Foster:
+>>>>>>>>>> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>>>>>> sorry new one the last one got mangled. Comments inside.
+>>>>>>>>>>>
+>>>>>>>>>>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
+>>>>>>>>>>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
+>>>>>>>>>>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
+>>>>>>>>>>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
+>>>>>>>>>>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+>>>>>>>>>>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+>>>>>>>>>> ...
+>>>>>>>>>>>
+>>>>>>>>>>> This has happened again on 8 different hosts in the last 24 hours
+>>>>>>>>>>> running 4.4.6.
+>>>>>>>>>>>
+>>>>>>>>>>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
+>>>>>>>>>>> OS stuff as the VMs have remote storage. So no database, no rsync on
+>>>>>>>>>>> those hosts - just the OS doing nearly nothing.
+>>>>>>>>>>>
+>>>>>>>>>>> All those show:
+>>>>>>>>>>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
+>>>>>>>>>>> xfs_vm_releasepage+0xe2/0xf0()
+>>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> Ok, well at this point the warning isn't telling us anything beyond
+>>>>>>>>>> you're reproducing the problem. We can't really make progress without
+>>>>>>>>>> more information. We don't necessarily know what application or
+>>>>>>>>>> operations caused this by the time it occurs, but perhaps knowing what
+>>>>>>>>>> file is affected could give us a hint.
+>>>>>>>>>>
+>>>>>>>>>> We have the xfs_releasepage tracepoint, but that's unconditional and so
+>>>>>>>>>> might generate a lot of noise by default. Could you enable the
+>>>>>>>>>> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
+>>>>>>>>>> E.g., we could leave a long running 'trace-cmd record -e
+>>>>>>>>>> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
+>>>>>>>>>> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
+>>>>>>>>>> -e "xfs:xfs_releasepage"' and leave something like 'cat
+>>>>>>>>>> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
+>>>>>>>>>> ~/trace.out' running to capture instances.
+>>>>>>>>
+>>>>>>>> Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
+>>>>>>>> it in the trace.out even the WARN_ONCE was already triggered?
+>>>>>>>>
+>>>>>>>
+>>>>>>> The tracepoint is independent from the warning (see
+>>>>>>> xfs_vm_releasepage()), so the tracepoint will fire every invocation of
+>>>>>>> the function regardless of whether delalloc blocks still exist at that
+>>>>>>> point. That creates the need to filter the entries.
+>>>>>>>
+>>>>>>> With regard to performance, I believe the tracepoints are intended to be
+>>>>>>> pretty lightweight. I don't think it should hurt to try it on a box,
+>>>>>>> observe for a bit and make sure there isn't a huge impact. Note that the
+>>>>>>> 'trace-cmd record' approach will save everything to file, so that's
+>>>>>>> something to consider I suppose.
+>>>>>>
+>>>>>> Tests / cat is running. Is there any way to test if it works? Or is it
+>>>>>> enough that cat prints stuff from time to time but does not match -v
+>>>>>> delalloc 0
+>>>>>>
+>>>>>
+>>>>> What is it printing where delalloc != 0? You could always just cat
+>>>>> trace_pipe and make sure the event is firing, it's just that I suspect
+>>>>> most entries will have delalloc == unwritten == 0.
+>>>>>
+>>>>> Also, while the tracepoint fires independent of the warning, it might
+>>>>> not be a bad idea to restart a system that has already seen the warning
+>>>>> since boot, just to provide some correlation or additional notification
+>>>>> when the problem occurs.
+>>>>>
+>>>>> Brian
+>>>>>
+>>>>>> Stefan
+>>>>>>
+>>>>>> _______________________________________________
+>>>>>> xfs mailing list
+>>>>>> xfs@oss.sgi.com
+>>>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>>
+>>>> _______________________________________________
+>>>> xfs mailing list
+>>>> xfs@oss.sgi.com
+>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
