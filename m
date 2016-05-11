@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 08EBF7CA6
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:04:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C4E678F8049
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:04:43 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C87E17CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 10:06:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19B05AC002
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 08:06:05 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4TXxmQxhegUaojgb (version=TLSv1.2
+	cuda.sgi.com with ESMTP id DW1dLwun34zHjArl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:04:42 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v21 14/22] richacl: Update the file masks in chmod()
-Date: Tue, 10 May 2016 00:02:47 +0200
-Message-Id: <1462831375-23017-15-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 08:06:03 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id B1115154E3
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 15:06:02 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] xfs/133 134: filter redundant projid 0 quota report
+Date: Wed, 11 May 2016 23:05:56 +0800
+Message-Id: <1462979156-7648-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,121 +32,130 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
+Cc: Zorro Lang <zlang@redhat.com>, eguan@redhat.com
 
-Doing a chmod() sets the file mode, which includes the file permission
-bits.  When a file has a richacl, the permissions that the richacl
-grants need to be limited to what the new file permission bits allow.
+After GETNEXTQUOTA ioctl be supported, xfs_quota -c "report" always
+outputs one more quota info about default quota (as project ID 0).
+For fix this problem, xfsprogs has merged commit 3d607a1.
 
-This is done by setting the file masks in the richacl to what the file
-permission bits map to.  The richacl access check algorithm takes the
-file masks into account, which ensures that the richacl cannot grant too
-many permissions.
+Now xfstests face this same problem from this issue. xfs/133 and
+xfs/134 can't match their golden output, due to this one more line
+quota report output. So this patch filter this redundant quota info.
 
-It is possible to explicitly add permissions to the file masks which go
-beyond what the file permission bits can grant (like the
-RICHACE_WRITE_ACL permission).  The POSIX.1 standard calls this an
-alternate file access control mechanism.  A subsequent chmod() would
-ensure that those permissions are disabled again.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/richacl.c            | 71 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |  1 +
- 2 files changed, 72 insertions(+)
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index b2a03c1..ba110a6 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -547,3 +547,74 @@ out:
- 	return denied ? -EACCES : 0;
- }
- EXPORT_SYMBOL_GPL(richacl_permission);
-+
-+/**
-+ * __richacl_chmod  -  update the file masks to reflect the new mode
-+ * @acl:	access control list
-+ * @mode:	new file permission bits including the file type
-+ *
-+ * Return a copy of @acl where the file masks have been replaced by the file
-+ * masks corresponding to the file permission bits in @mode, or returns @acl
-+ * itself if the file masks are already up to date.  Takes over a reference
-+ * to @acl.
-+ */
-+static struct richacl *
-+__richacl_chmod(struct richacl *acl, umode_t mode)
-+{
-+	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
-+	unsigned int owner_mask, group_mask, other_mask;
-+	struct richacl *clone;
-+
-+	owner_mask = richacl_mode_to_mask(mode >> 6) & ~x;
-+	group_mask = richacl_mode_to_mask(mode >> 3) & ~x;
-+	other_mask = richacl_mode_to_mask(mode)      & ~x;
-+
-+	if (acl->a_owner_mask == owner_mask &&
-+	    acl->a_group_mask == group_mask &&
-+	    acl->a_other_mask == other_mask &&
-+	    (acl->a_flags & RICHACL_MASKED) &&
-+	    (acl->a_flags & RICHACL_WRITE_THROUGH))
-+		return acl;
-+
-+	clone = richacl_clone(acl, GFP_KERNEL);
-+	richacl_put(acl);
-+	if (!clone)
-+		return ERR_PTR(-ENOMEM);
-+
-+	clone->a_flags |= (RICHACL_WRITE_THROUGH | RICHACL_MASKED);
-+	clone->a_owner_mask = owner_mask;
-+	clone->a_group_mask = group_mask;
-+	clone->a_other_mask = other_mask;
-+
-+	return clone;
-+}
-+
-+/**
-+ * richacl_chmod  -  filesystem chmod helper
-+ * @inode:	inode whose file permission bits to change
-+ * @mode:	new file permission bits including the file type
-+ *
-+ * Helper for filesystems to use to perform a chmod on the richacl of an inode.
-+ */
-+int
-+richacl_chmod(struct inode *inode, umode_t mode)
-+{
-+	struct richacl *acl;
-+	int retval;
-+
-+	if (S_ISLNK(mode))
-+		return -EOPNOTSUPP;
-+	if (!inode->i_op->set_richacl)
-+		return -EOPNOTSUPP;
-+	acl = get_richacl(inode);
-+	if (IS_ERR_OR_NULL(acl))
-+		return PTR_ERR(acl);
-+	acl = __richacl_chmod(acl, mode);
-+	if (IS_ERR(acl))
-+		return PTR_ERR(acl);
-+	retval = inode->i_op->set_richacl(inode, acl);
-+	richacl_put(acl);
-+
-+	return retval;
-+}
-+EXPORT_SYMBOL(richacl_chmod);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 3e05c94..db82fab 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -190,5 +190,6 @@ extern unsigned int richacl_mode_to_mask(umode_t);
- extern unsigned int richacl_want_to_mask(unsigned int);
- extern void richacl_compute_max_masks(struct richacl *);
- extern int richacl_permission(struct inode *, const struct richacl *, int);
-+extern int richacl_chmod(struct inode *, umode_t);
+Hi,
+
+We found this problem when:
+http://thread.gmane.org/gmane.comp.file-systems.fstests/1852/focus=1968
+
+But we didn't make a suitable decision about how to deal with it. Then
+Eryu hit this problem again and wrote a patch for xfstests:
+http://oss.sgi.com/archives/xfs/2016-04/msg00002.html
+
+This pushed us decide to fix this problem. Now xfsprogs commit 3d607a1
+has been merged to resolve this problem. But after that xfstests still
+face one more line quota report problem, so I modify some code of Eryu's
+old patch, and send this new patch for fix that.
+
+Thanks,
+Zorro
+
+ tests/xfs/133 |  3 ++-
+ tests/xfs/134 | 27 +++++++++++++++++----------
+ 2 files changed, 19 insertions(+), 11 deletions(-)
+
+diff --git a/tests/xfs/133 b/tests/xfs/133
+index 82c38b1..ebf008b 100755
+--- a/tests/xfs/133
++++ b/tests/xfs/133
+@@ -67,6 +67,7 @@ EOF
  
- #endif /* __RICHACL_H */
+ 	cat >$tmp.projid <<EOF
+ $qa_project:10
++root:0
+ EOF
+ 
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+@@ -81,7 +82,7 @@ EOF
+ 
+ 	echo "=== report command output ==="
+ 	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+-		-c "report -p -N -b" $SCRATCH_MNT | _filter_quota
++		-c "report -p -N -b" $SCRATCH_MNT | _filter_quota | grep -v "^root "
+ }
+ 
+ # Test project
+diff --git a/tests/xfs/134 b/tests/xfs/134
+index be18ee8..a46a734 100755
+--- a/tests/xfs/134
++++ b/tests/xfs/134
+@@ -52,14 +52,15 @@ _require_test
+ _require_xfs_quota
+ 
+ dir=$SCRATCH_MNT/project
++proj_num=1
+ 
+ #project quota files
+ cat >$tmp.projects <<EOF
+-1:$dir
++${proj_num}:$dir
+ EOF
+ 
+ cat >$tmp.projid <<EOF
+-test:1
++test:${proj_num}
+ EOF
+ 
+ cp /dev/null $seqres.full
+@@ -87,17 +88,24 @@ fi
+ src/feature -p $SCRATCH_DEV
+ [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
+ 
++report_quota()
++{
++    $XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
++		    -c "repquota -inN -p -L $proj_num -U $proj_num" \
++		    $SCRATCH_DEV | tr -s '[:space:]'
++}
++
+ mkdir $dir
+ $XFS_IO_PROG -r -c "chproj -R 1" -c "chattr -R +P" $dir
+ 
+-xfs_quota -D $tmp.projects -P $tmp.projid -x \
+-    -c "limit -p bsoft=100m bhard=100m 1" $SCRATCH_DEV
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
++    -c "limit -p bsoft=100m bhard=100m $proj_num" $SCRATCH_DEV
++report_quota
++
+ touch $dir/1
+ touch $dir/2
+ cp $dir/2 $dir/3
+-
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ if [ "$HOSTOS" == "IRIX" ] ; then
+     mkfile 1M $TEST_DIR/6
+@@ -107,12 +115,11 @@ fi
+ 
+ #try cp to dir
+ cp $TEST_DIR/6 $dir/6
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ #try mv to dir
+ mv $TEST_DIR/6 $dir/7
+-
+-xfs_quota -D $tmp.projects -P $tmp.projid -x -c "repquota -inN -p" $SCRATCH_DEV | tr -s '[:space:]'
++report_quota
+ 
+ # success, all done
+ status=0
 -- 
 2.5.5
 
