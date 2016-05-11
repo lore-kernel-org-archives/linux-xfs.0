@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E8207CB3
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 13:49:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3CAD304051
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:44 -0700 (PDT)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	SvcX90WHHuIIT3Xw for <xfs@oss.sgi.com>;
-	Tue, 10 May 2016 11:49:43 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v6 4/5] dax: for truncate/hole-punch,
-	do zeroing through the driver if possible
-Date: Tue, 10 May 2016 12:49:15 -0600
-Message-Id: <1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
-References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1A0E17CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 09:03:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C53788F8035
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 07:03:25 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id tVWcaAhvyQWk0dhh (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 07:03:18 -0700 (PDT)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <20160304210341.GA8035@bfoster.bfoster>
+	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
+	<20160323140736.GD43073@bfoster.bfoster>
+	<56F3A101.1020300@profihost.ag>
+	<56F3A213.2020908@profihost.ag> <20160324111703.GA4068@bfoster.bfoster>
+	<56F3DACB.8040305@profihost.ag> <20160324122417.GB4068@bfoster.bfoster>
+	<57332508.307@profihost.ag> <20160511133417.GA42410@bfoster.bfoster>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <57333BA4.4040402@profihost.ag>
+Date: Wed, 11 May 2016 16:03:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160511133417.GA42410@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,127 +31,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-In the truncate or hole-punch path in dax, we clear out sub-page ranges.
-If these sub-page ranges are sector aligned and sized, we can do the
-zeroing through the driver instead so that error-clearing is handled
-automatically.
 
-For sub-sector ranges, we still have to rely on clear_pmem and have the
-possibility of tripping over errors.
+Am 11.05.2016 um 15:34 schrieb Brian Foster:
+> On Wed, May 11, 2016 at 02:26:48PM +0200, Stefan Priebe - Profihost AG wrote:
+>> Hi Brian,
+>>
+>> i'm still unable to grab anything to the trace file? Is there anything
+>> to check if it's working at all?
+>>
+> 
+> See my previous mail:
+> 
+> http://oss.sgi.com/pipermail/xfs/2016-March/047793.html
+> 
+> E.g., something like this should work after writing to and removing a
+> new file:
+> 
+> # trace-cmd start -e "xfs:xfs_releasepage"
+> # cat /sys/kernel/debug/tracing/trace_pipe
+> ...
+> rm-8198  [000] ....  9445.774070: xfs_releasepage: dev 253:4 ino 0x69 pgoff 0x9ff000 size 0xa00000 offset 0 length 0 delalloc 0 unwritten 0
 
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- Documentation/filesystems/dax.txt | 32 ++++++++++++++++++++++++++++++++
- fs/dax.c                          | 29 ++++++++++++++++++++++++-----
- 2 files changed, 56 insertions(+), 5 deletions(-)
+arg sorry yes that's working but delalloc is always 0.
 
-diff --git a/Documentation/filesystems/dax.txt b/Documentation/filesystems/dax.txt
-index 7bde640..ce4587d 100644
---- a/Documentation/filesystems/dax.txt
-+++ b/Documentation/filesystems/dax.txt
-@@ -79,6 +79,38 @@ These filesystems may be used for inspiration:
- - ext4: the fourth extended filesystem, see Documentation/filesystems/ext4.txt
- 
- 
-+Handling Media Errors
-+---------------------
-+
-+The libnvdimm subsystem stores a record of known media error locations for
-+each pmem block device (in gendisk->badblocks). If we fault at such location,
-+or one with a latent error not yet discovered, the application can expect
-+to receive a SIGBUS. Libnvdimm also allows clearing of these errors by simply
-+writing the affected sectors (through the pmem driver, and if the underlying
-+NVDIMM supports the clear_poison DSM defined by ACPI).
-+
-+Since DAX IO normally doesn't go through the driver/bio path, applications or
-+sysadmins have an option to restore the lost data from a prior backup/inbuilt
-+redundancy in the following ways:
-+
-+1. Delete the affected file, and restore from a backup (sysadmin route):
-+   This will free the file system blocks that were being used by the file,
-+   and the next time they're allocated, they will be zeroed first, which
-+   happens through the driver, and will clear bad sectors.
-+
-+2. Truncate or hole-punch the part of the file that has a bad-block (at least
-+   an entire aligned sector has to be hole-punched, but not necessarily an
-+   entire filesystem block).
-+
-+These are the two basic paths that allow DAX filesystems to continue operating
-+in the presence of media errors. More robust error recovery mechanisms can be
-+built on top of this in the future, for example, involving redundancy/mirroring
-+provided at the block layer through DM, or additionally, at the filesystem
-+level. These would have to rely on the above two tenets, that error clearing
-+can happen either by sending an IO through the driver, or zeroing (also through
-+the driver).
-+
-+
- Shortcomings
- ------------
- 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5948d9b..0167cde 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1196,6 +1196,20 @@ out:
- }
- EXPORT_SYMBOL_GPL(dax_pfn_mkwrite);
- 
-+static bool dax_range_is_aligned(struct block_device *bdev,
-+				 struct blk_dax_ctl *dax, unsigned int offset,
-+				 unsigned int length)
-+{
-+	unsigned short sector_size = bdev_logical_block_size(bdev);
-+
-+	if (!IS_ALIGNED(((u64)dax->addr + offset), sector_size))
-+		return false;
-+	if (!IS_ALIGNED(length, sector_size))
-+		return false;
-+
-+	return true;
-+}
-+
- /**
-  * dax_zero_page_range - zero a range within a page of a DAX file
-  * @inode: The file being truncated
-@@ -1240,11 +1254,16 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 			.size = PAGE_SIZE,
- 		};
- 
--		if (dax_map_atomic(bdev, &dax) < 0)
--			return PTR_ERR(dax.addr);
--		clear_pmem(dax.addr + offset, length);
--		wmb_pmem();
--		dax_unmap_atomic(bdev, &dax);
-+		if (dax_range_is_aligned(bdev, &dax, offset, length))
-+			return blkdev_issue_zeroout(bdev, dax.sector,
-+					length >> 9, GFP_NOFS, true);
-+		else {
-+			if (dax_map_atomic(bdev, &dax) < 0)
-+				return PTR_ERR(dax.addr);
-+			clear_pmem(dax.addr + offset, length);
-+			wmb_pmem();
-+			dax_unmap_atomic(bdev, &dax);
-+		}
- 	}
- 
- 	return 0;
--- 
-2.5.5
+May be i have to hook that into my initramfs to be fast enough?
+
+Stefan
+
+> Once that is working, add the grep command to filter out "delalloc 0"
+> instances, etc. For example:
+> 
+> 	cat .../trace_pipe | grep -v "delalloc 0" > ~/trace.out
+> 
+> Brian
+> 
+>> This still happens in the first 48 hours after a fresh reboot.
+>>
+>> Stefan
+>>
+>> Am 24.03.2016 um 13:24 schrieb Brian Foster:
+>>> On Thu, Mar 24, 2016 at 01:17:15PM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>
+>>>> Am 24.03.2016 um 12:17 schrieb Brian Foster:
+>>>>> On Thu, Mar 24, 2016 at 09:15:15AM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>
+>>>>>> Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>
+>>>>>>> Am 23.03.2016 um 15:07 schrieb Brian Foster:
+>>>>>>>> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>>>> sorry new one the last one got mangled. Comments inside.
+>>>>>>>>>
+>>>>>>>>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
+>>>>>>>>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
+>>>>>>>>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
+>>>>>>>>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
+>>>>>>>>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+>>>>>>>>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+>>>>>>>> ...
+>>>>>>>>>
+>>>>>>>>> This has happened again on 8 different hosts in the last 24 hours
+>>>>>>>>> running 4.4.6.
+>>>>>>>>>
+>>>>>>>>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
+>>>>>>>>> OS stuff as the VMs have remote storage. So no database, no rsync on
+>>>>>>>>> those hosts - just the OS doing nearly nothing.
+>>>>>>>>>
+>>>>>>>>> All those show:
+>>>>>>>>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
+>>>>>>>>> xfs_vm_releasepage+0xe2/0xf0()
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> Ok, well at this point the warning isn't telling us anything beyond
+>>>>>>>> you're reproducing the problem. We can't really make progress without
+>>>>>>>> more information. We don't necessarily know what application or
+>>>>>>>> operations caused this by the time it occurs, but perhaps knowing what
+>>>>>>>> file is affected could give us a hint.
+>>>>>>>>
+>>>>>>>> We have the xfs_releasepage tracepoint, but that's unconditional and so
+>>>>>>>> might generate a lot of noise by default. Could you enable the
+>>>>>>>> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
+>>>>>>>> E.g., we could leave a long running 'trace-cmd record -e
+>>>>>>>> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
+>>>>>>>> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
+>>>>>>>> -e "xfs:xfs_releasepage"' and leave something like 'cat
+>>>>>>>> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
+>>>>>>>> ~/trace.out' running to capture instances.
+>>>>>>
+>>>>>> Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
+>>>>>> it in the trace.out even the WARN_ONCE was already triggered?
+>>>>>>
+>>>>>
+>>>>> The tracepoint is independent from the warning (see
+>>>>> xfs_vm_releasepage()), so the tracepoint will fire every invocation of
+>>>>> the function regardless of whether delalloc blocks still exist at that
+>>>>> point. That creates the need to filter the entries.
+>>>>>
+>>>>> With regard to performance, I believe the tracepoints are intended to be
+>>>>> pretty lightweight. I don't think it should hurt to try it on a box,
+>>>>> observe for a bit and make sure there isn't a huge impact. Note that the
+>>>>> 'trace-cmd record' approach will save everything to file, so that's
+>>>>> something to consider I suppose.
+>>>>
+>>>> Tests / cat is running. Is there any way to test if it works? Or is it
+>>>> enough that cat prints stuff from time to time but does not match -v
+>>>> delalloc 0
+>>>>
+>>>
+>>> What is it printing where delalloc != 0? You could always just cat
+>>> trace_pipe and make sure the event is firing, it's just that I suspect
+>>> most entries will have delalloc == unwritten == 0.
+>>>
+>>> Also, while the tracepoint fires independent of the warning, it might
+>>> not be a bad idea to restart a system that has already seen the warning
+>>> since boot, just to provide some correlation or additional notification
+>>> when the problem occurs.
+>>>
+>>> Brian
+>>>
+>>>> Stefan
+>>>>
+>>>> _______________________________________________
+>>>> xfs mailing list
+>>>> xfs@oss.sgi.com
+>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
