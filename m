@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 379787CA4
-	for <xfs@oss.sgi.com>; Sun,  8 May 2016 09:13:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1E4B304032
-	for <xfs@oss.sgi.com>; Sun,  8 May 2016 07:13:13 -0700 (PDT)
-Received: from co02.mbox.net (co02.mbox.net [165.212.64.32]) by cuda.sgi.com
-	with ESMTP id x6f8xPnoVjIZgqb5 (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 08 May 2016 07:13:07 -0700 (PDT)
-Received: from co02.mbox.net (localhost [127.0.0.1])
-	by co02.mbox.net (Postfix) with ESMTP id 3r2nXy3bPxzKVGW
-	for <xfs@oss.sgi.com>; Sun,  8 May 2016 14:13:06 +0000 (UTC)
-From: Issa Gorissen <issa-gorissen@usa.net>
-Subject: Unable to mount a XFS filesystem
-Message-ID: <30479c32-e298-c64b-1964-f9c9824bfe7a@usa.net>
-Date: Sun, 8 May 2016 16:12:59 +0200
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E44167CA0
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 19:26:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E103AC005
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 17:26:25 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	mqpQnM1GsoUhouRF for <xfs@oss.sgi.com>;
+	Tue, 10 May 2016 17:26:20 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1b0HyZ-0000zt-6U
+	for xfs@oss.sgi.com; Wed, 11 May 2016 10:26:07 +1000
+Date: Wed, 11 May 2016 10:26:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: master branch updated to c5d584c
+Message-ID: <20160511002607.GK26977@dastard>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,191 +25,202 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============1391150662673769633=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
 
-After I have upgraded my htpc from openSuse 12.3 running kernel 3.7.10 
-to openSuse Tumbleweed running kernel 4.5.2; I am unable to mount my XFS 
-filesystem anymore.
-
-I probably made some mistakes as I tried some things but did not note 
-them because I thought the problem would not be hard to solve.
-
-As I still cannot mount it, I am asking for help.
-
-Here is the details.
-
-The XFS filesystem is on /dev/md0 device which is a RAID1 on top of two 
-partitions hosted on two hard disks.
-
-cat /proc/mdstat gives
-Personalities : [raid1]
-md0 : active raid1 sdc1[1] sdb1[0]
-       2930264896 blocks super 1.0 [2/2] [UU]
-       bitmap: 0/22 pages [0KB], 65536KB chunk
-
-unused devices: <none>
+--===============1391150662673769633==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+Content-Disposition: inline
 
 
-tv:/ # hdparm -N /dev/sdb
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-/dev/sdb:
-  max sectors   = 5860533168/5860533168, HPA is disabled
-tv:/ # hdparm -N /dev/sdc
+Hi Folks,
 
-/dev/sdc:
-  max sectors   = 5860533168/5860533168, HPA is disabled
+The xfsprogs repository at:
 
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-tv:/ # mdadm -Evvvvvvvvs /dev/sdb1 /dev/sdc1
-/dev/sdb1:
-           Magic : a92b4efc
-         Version : 1.0
-     Feature Map : 0x1
-      Array UUID : 227f22af:6aa194ed:254ca070:f896b2ce
-            Name : any:0
-   Creation Time : Sun May  1 23:07:01 2016
-      Raid Level : raid1
-    Raid Devices : 2
+has just been updated. Note that this includes the change of mkfs
+command line parsing, so you will see some additional xfstests
+failures resulting from that. Those should be fixed soon as filters
+and changes are made to xfstests to handle these differences.
 
-  Avail Dev Size : 5860529896 (2794.52 GiB 3000.59 GB)
-      Array Size : 2930264896 (2794.52 GiB 3000.59 GB)
-   Used Dev Size : 5860529792 (2794.52 GiB 3000.59 GB)
-    Super Offset : 5860530160 sectors
-    Unused Space : before=0 sectors, after=344 sectors
-           State : clean
-     Device UUID : 8f585fbd:6cf98a5b:60f7b824:a87e424f
+-Dave.
 
-Internal Bitmap : -24 sectors from superblock
-     Update Time : Sun May  8 15:28:25 2016
-   Bad Block Log : 512 entries available at offset -8 sectors
-        Checksum : 12a61779 - correct
-          Events : 6600
+The new head of the master branch is commit:
 
+c5d584c xfs_db: fix unaligned accesses
 
-    Device Role : Active device 0
-    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
-/dev/sdc1:
-           Magic : a92b4efc
-         Version : 1.0
-     Feature Map : 0x1
-      Array UUID : 227f22af:6aa194ed:254ca070:f896b2ce
-            Name : any:0
-   Creation Time : Sun May  1 23:07:01 2016
-      Raid Level : raid1
-    Raid Devices : 2
+New Commits:
 
-  Avail Dev Size : 5860529896 (2794.52 GiB 3000.59 GB)
-      Array Size : 2930264896 (2794.52 GiB 3000.59 GB)
-   Used Dev Size : 5860529792 (2794.52 GiB 3000.59 GB)
-    Super Offset : 5860530160 sectors
-    Unused Space : before=0 sectors, after=344 sectors
-           State : clean
-     Device UUID : da81fee9:5b4fd038:a1967771:b9a5c6b9
+Carlos Maiolino (1):
+      [ef25c9e] xfs_io: implement 'inode' command
 
-Internal Bitmap : -24 sectors from superblock
-     Update Time : Sun May  8 15:28:25 2016
-   Bad Block Log : 512 entries available at offset -8 sectors
-        Checksum : d3cd5d06 - correct
-          Events : 6600
+Christoph Hellwig (3):
+      [410c3de] xfs: handle errors from ->free_blocks in xfs_btree_kill_iro=
+ot
+      [c261f8c] xfs: factor btree block freeing into a helper
+      [08caf14] xfs: move buffer invalidation to xfs_btree_free_block
 
+Darrick J. Wong (1):
+      [71893d8] mkfs: fix crash when initializing rbmip
 
-    Device Role : Active device 1
-    Array State : AA ('A' == active, '.' == missing, 'R' == replacing)
+Dave Chinner (27):
+      [f36349d] xfs: RT bitmap and summary buffers are not typed
+      [a3d2294] xfs: RT bitmap and summary buffers need verifiers
+      [138659f] xfs: introduce inode log format object
+      [1bc6cbe] xfs: remove timestamps from incore inode
+      [db17aeb] xfs: cull unnecessary icdinode fields
+      [f089fc4] xfs: move v1 inode conversion to xfs_inode_from_disk
+      [bcbe04c] xfs: use vfs inode nlink field everywhere
+      [6652c25] xfs: move inode generation count to VFS inode
+      [9abcc5c] xfs: move di_changecount to VFS inode
+      [e37bf53] xfs: mode di_mode to vfs inode
+      [294e9dd] Merge branch 'libxfs-4.6-sync' into for-master
+      [09033e3] Merge branch 'progs-misc-fixes-for-4.6' into for-master
+      [4a32b9e] xfsprogs: use common code for multi-disk detection
+      [ff21c70] mkfs: sanitise ftype parameter values.
+      [5f1a210] mkfs: Sanitise the superblock feature macros
+      [a887c95] mkfs: validate all input values
+      [c81c846] mkfs: factor boolean option parsing
+      [147e0f3] mkfs: validate logarithmic parameters sanely
+      [a9dad67] mkfs: structify input parameter passing
+      [56e4d36] mkfs: getbool is redundant
+      [1974d3f] mkfs: use getnum_checked for all ranged parameters
+      [9090e18] mkfs: add respecification detection to generic parsing
+      [627e74f] mkfs: table based parsing for converted parameters
+      [6c85562] mkfs: merge getnum
+      [3ec1956] mkfs: encode conflicts into parsing table
+      [27ae3a5] mkfs: add string options to generic parsing
+      [06ac92f] mkfs: don't treat files as though they are block devices
 
+Eric Sandeen (6):
+      [43633a3] xfs: wire up Q_XGETNEXTQUOTA / get_nextdqblk
+      [499b47f] xfs: remove unused function definitions
+      [ff0f39e] libxfs: fix up mismerge in libxfs_iflush_int
+      [6aa32b4] xfs_repair: fix agf limit error messages
+      [d7006be] metadump: limit permissible sector sizes
+      [c5d584c] xfs_db: fix unaligned accesses
 
+Jan Tulak (5):
+      [1d43056] build: make librt optional for some platforms
+      [ddc3b2d] mkfs: move spinodes crc check
+      [6de2e6c] mkfs: unit conversions are case insensitive
+      [aa3034d] mkfs: add optional 'reason' for illegal_option
+      [2aca16d] mkfs: conflicting values with disabled crc should fail
 
-tv:/ # xfs_db /dev/md0
-xfs_db: error - read only 0 of 512 bytes
-xfs_db> sb 0
-xfs_db> p
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = 732566238
-rblocks = 0
-rextents = 0
-uuid = 2259f9c7-4f2a-4c02-a9f4-a12e91771126
-logstart = 536870916
-rootino = 128
-rbmino = 129
-rsumino = 130
-rextsize = 1
-agblocks = 22892695
-agcount = 32
-rbmblocks = 0
-logblocks = 357698
-versionnum = 0xb4a4
-sectsize = 512
-inodesize = 256
-inopblock = 16
-fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog = 12
-sectlog = 9
-inodelog = 8
-inopblog = 4
-agblklog = 25
-rextslog = 0
-inprogress = 0
-imax_pct = 5
-icount = 54720
-ifree = 1112
-fdblocks = 555446971
-frextents = 0
-uquotino = null
-gquotino = null
-qflags = 0
-flags = 0
-shared_vn = 0
-inoalignmt = 2
-unit = 0
-width = 0
-dirblklog = 0
-logsectlog = 0
-logsectsize = 0
-logsunit = 1
-features2 = 0xa
-bad_features2 = 0xa
-features_compat = 0
-features_ro_compat = 0
-features_incompat = 0
-features_log_incompat = 0
-crc = 0 (unchecked)
-spino_align = 0
-pquotino = 0
-lsn = 0
-meta_uuid = 00000000-0000-0000-0000-000000000000
-xfs_db>
+Mike Frysinger (2):
+      [3e50ece] po: respect LINGUAS build setting
+      [54e8f4a] configure: add mailing list contact
+
+Zorro Lang (5):
+      [6f224a2] xfs_io: modify argument errors of mremap command
+      [e0a8808] xfs_io: allow mmap command to reserve some free space
+      [2354bb6] xfs_quota: add missed options -D and -P into man page
+      [cef37d5] xfs_quota: fully support users and groups beginning with di=
+gits
+      [3d607a1] xfs_quota: print quota id number if the name can't be found
 
 
+Code Diffstat:
 
-tv:/ # mount -t xfs /dev/md0 /data
-mount: /dev/md0: can't read superblock
+ configure.ac                               |    9 +-
+ db/check.c                                 |  116 +-
+ db/frag.c                                  |    4 +-
+ db/metadump.c                              |   23 +-
+ doc/INSTALL                                |    6 +-
+ include/Makefile                           |    5 +-
+ include/xfs_inode.h                        |   45 +-
+ mkfs/xfs_mkfs.h =3D> include/xfs_multidisk.h |   50 +-
+ io/mmap.c                                  |   54 +-
+ io/open.c                                  |  150 +++
+ libxcmd/input.c                            |    4 +-
+ libxfs/init.c                              |   16 +-
+ libxfs/libxfs_api_defs.h                   |    4 +-
+ libxfs/linux.c                             |   11 +-
+ libxfs/rdwr.c                              |    4 +-
+ libxfs/util.c                              |   60 +-
+ libxfs/xfs_alloc_btree.c                   |    2 -
+ libxfs/xfs_bmap.c                          |    6 +-
+ libxfs/xfs_bmap_btree.c                    |    1 -
+ libxfs/xfs_btree.c                         |   32 +-
+ libxfs/xfs_dir2.c                          |   12 +-
+ libxfs/xfs_ialloc_btree.c                  |   12 +-
+ libxfs/xfs_inode_buf.c                     |  169 ++-
+ libxfs/xfs_inode_buf.h                     |   38 +-
+ libxfs/xfs_inode_fork.c                    |    2 +-
+ libxfs/xfs_log_format.h                    |   19 +-
+ libxfs/xfs_quota_defs.h                    |    3 +-
+ libxfs/xfs_rtbitmap.c                      |   32 +-
+ libxfs/xfs_sb.h                            |    1 -
+ libxfs/xfs_shared.h                        |    1 +
+ logprint/log_misc.c                        |    7 +-
+ logprint/log_print_all.c                   |   18 +-
+ m4/package_rt.m4                           |   12 +
+ man/man8/mkfs.xfs.8                        |   29 +-
+ man/man8/xfs_io.8                          |   22 +-
+ man/man8/xfs_quota.8                       |   22 +-
+ mdrestore/xfs_mdrestore.c                  |   22 +-
+ mkfs/Makefile                              |    2 +-
+ mkfs/maxtrres.c                            |    2 +-
+ mkfs/proto.c                               |   70 +-
+ mkfs/xfs_mkfs.c                            | 2011 +++++++++++++++++++-----=
+-------
+ po/Makefile                                |    5 +-
+ quota/report.c                             |   16 +-
+ repair/agheader.c                          |    4 +-
+ repair/phase6.c                            |   58 +-
+ repair/phase7.c                            |   43 +-
+ repair/xfs_repair.c                        |   44 +-
+ 47 files changed, 2087 insertions(+), 1191 deletions(-)
+ rename mkfs/xfs_mkfs.h =3D> include/xfs_multidisk.h (61%)
+ create mode 100644 m4/package_rt.m4
+--=20
+Dave Chinner
+david@fromorbit.com
 
-dmesg outputs
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJXMnweAAoJEK3oKUf0dfodRu0P/1KF7i05etM5DAKJ+idz+95i
+pKrld+S43uxo1Bu7tjEamQ7ei9Yhx0RFLCcH8BAVYd/GbrMhX3eDlZLnzr8dgIFy
+D9AZA/FX1UNHaA3+PfcbppQiNFkFmSW9fp+GUhBfIcuNra2ymg4fkEr8fiKZ36m5
+o3lzUkz62EWR6qnevckYyAzC8SxiQhnBfcN6NoR1ILlTZGItKjDBuBw1QxNPPhzz
+trdCoOKd/Ibe8ow51EidCtUcSgzsi270TItISm0gNCIHa/WyTJLHgaP0vEBegZzB
+TQMpj/hqsw23KhieoEQtcUI8rHxGXA9hZnwxJhqgv3u4xiHbqs97JhOK+8PQRrq8
+IPPeZrEKz9gUDE9fVbjcLAu7FDw9LijENJFbkVqw7Zmat49o7tu6ymCSte38coB2
+HgmhLb4/vta0GAFHsQGg4ECwfS6dIsE20GqX71CQw44rqcN8Fx/z3C7TifoSugks
+yPD1cgpxneiOPVm1KgmA/uBvE05j6erzsgRnnucPCeiSdp9IYpwXSs72VVMIwGmY
+j3YDLStySS4c09K7xGwPx3euH3iuGbQX//RdCOg1hsqkMB1zcPA1DJb0LQ656U1l
+gLz3H7+kgRoS7U8kxlQM/cUPawSdXO0IiJRxPnkszo9MzjhAqnvzggL8Q1uiPsys
+SySo9BQbKN1EpWk3BORE
+=PGv6
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
 
 
-[ 5525.861750] SGI XFS with ACLs, security attributes, realtime, no 
-debug enabled
-[ 5525.862231] attempt to access beyond end of device
-[ 5525.862232] md0: rw=32, want=5860529904, limit=5860529792
-[ 5525.862234] XFS (md0): last sector read failed
-
-
-
-
-Any pointers to fix this ? It seems the disks still contains a XFS 
-filesystem but for some reason, I cannot access it.
-
-Thanks
---
-Issa
+--===============1391150662673769633==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1391150662673769633==--
