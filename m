@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EF0DE7CA0
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:38:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C2832304039
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:38:25 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OqtkGeoAZwXZAiiq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:38:21 -0700 (PDT)
-Date: Fri, 6 May 2016 16:38:18 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_db: fix unaligned accesses
-Message-ID: <20160506213818.GA18803@redhat.com>
-References: <a8a63bc2-86ac-4f30-9b5d-79edf94cad57@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 919E17CA0
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 19:10:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 478158F8049
+	for <xfs@oss.sgi.com>; Tue, 10 May 2016 17:09:57 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	uecXqg0Yy1jb4UVL for <xfs@oss.sgi.com>;
+	Tue, 10 May 2016 17:09:54 -0700 (PDT)
+Date: Wed, 11 May 2016 10:09:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] xfs_quota: print quota id number if the name can't be
+	found
+Message-ID: <20160511000940.GJ26977@dastard>
+References: <1460040514-23834-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a8a63bc2-86ac-4f30-9b5d-79edf94cad57@redhat.com>
+In-Reply-To: <1460040514-23834-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +30,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Anatoly Pugachev <matorola@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: sandeen@redhat.com, xfs@oss.sgi.com
 
-On Fri, May 06, 2016 at 03:43:53PM -0500, Eric Sandeen wrote:
-> Fix 2 unaligned accesses in xfs_db which caused bus errors on
-> sparc64.  Similar treatment was already done in xfs_repair and
-> xfs_metadump but somehow xfs_db got missed.
+On Thu, Apr 07, 2016 at 10:48:34PM +0800, Zorro Lang wrote:
+> When use GETNEXTQUOTA ioctl to report project quota, it always
+> report an unexpected quota:
 > 
-> Thanks to Anatoly for reminding me that unaligned access is
-> a thing.  ;)
+>   (null) 0 0 0 00 [--------]
 > 
-> Resolves-oss-bugzilla: #1140
-> Reported-by: Anatoly Pugachev <matorola@gmail.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> The ID 0 store the default quota, even if no one set default quota,
+> it still have quota accounting, but not enforced. So GETNEXTQUOTA
+> can find and report this undefined quota.
+> 
+> From this problem, I thought if others' quota name miss, (null) will
+> be printed too. e.g.
+> 
+>   # xfs_quota -xc "limit -u bsoft=300m bhard=400m test" $mnt
+>   # xfs_quota -xc "report -u" $mnt
+>   User ID          Used       Soft       Hard    Warn/Grace
+>   ---------- --------------------------------------------------
+>   root                0          0          0     00 [--------]
+>   test                0     307200     409600     00 [--------]
+>   # userdel -r test
+>   # xfs_quota -xc "report -u" $mnt
+>   User ID          Used       Soft       Hard    Warn/Grace
+>   ---------- --------------------------------------------------
+>   root                0          0          0     00 [--------]
+>   (null)              0     307200     409600     00 [--------]
+> 
+> So this problem same with above id 0's problem. For deal with this,
+> this patch will print id number if the name can't be found.
+> 
+> But if use old GETQUOTA ioctl, it won't print project id 0 quota
+> information(if it's not defined). That's different with GETNEXTQUOTA.
+> For keep consistent, this patch also print project id 0 when use old
+> GETQUOTA.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-> 
-> diff --git a/db/check.c b/db/check.c
-> index c626a5c..0871ed7 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -2202,7 +2202,7 @@ process_btinode(
->  		pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(
->  				XFS_DFORK_SIZE(dip, mp, whichfork), 0));
->  		for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
-> -			scan_lbtree(be64_to_cpu(pp[i]),
-> +			scan_lbtree(get_unaligned_be64(&pp[i]),
->  					be16_to_cpu(dib->bb_level),
->  					scanfunc_bmap, type, id, totd, toti,
->  					nex, blkmapp, 1,
-> diff --git a/db/frag.c b/db/frag.c
-> index 3beb416..36bb689 100644
-> --- a/db/frag.c
-> +++ b/db/frag.c
-> @@ -258,8 +258,8 @@ process_btinode(
->  	pp = XFS_BMDR_PTR_ADDR(dib, 1,
->  		xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
->  	for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
-> -		scan_lbtree(be64_to_cpu(pp[i]), be16_to_cpu(dib->bb_level),
-> -			scanfunc_bmap, extmapp,
-> +		scan_lbtree(get_unaligned_be64(&pp[i]),
-> +			 be16_to_cpu(dib->bb_level), scanfunc_bmap, extmapp,
->  			whichfork == XFS_DATA_FORK ? TYP_BMAPBTD : TYP_BMAPBTA);
->  }
->  
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+OK, so with this applied xfs/133 and xfs/134 both now fail with
+this extra output:
+
++#0 0 0 0 00 [--------]
+
+Can you send patches for these tests to filter out these lines so
+that the tests pass again for both old and new xfsprogs?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
