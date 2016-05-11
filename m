@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B4DC17CB8
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 13:49:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 25CEDAC007
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:45 -0700 (PDT)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id YLJBu4FQtxhnm89b for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 11:49:43 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v6 5/5] dax: fix a comment in dax_zero_page_range and
-	dax_truncate_page
-Date: Tue, 10 May 2016 12:49:16 -0600
-Message-Id: <1462906156-22303-6-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
-References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C86807CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 09:15:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 70CB3304048
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 07:15:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Dss6IZsNPaZp4naf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 07:15:32 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 32268BF9EE
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:15:32 +0000 (UTC)
+Date: Wed, 11 May 2016 10:15:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/7] xfs: add configurable error support to metadata
+	buffers
+Message-ID: <20160511141529.GB42410@bfoster.bfoster>
+References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+	<1462882581-30859-4-git-send-email-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1462882581-30859-4-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,62 +33,270 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
+On Tue, May 10, 2016 at 02:16:17PM +0200, Carlos Maiolino wrote:
+> With the error configuration handle for async metadata write errors
+> in place, we can now add initial support to the IO error processing
+> in xfs_buf_iodone_error().
+> 
+> Add an infrastructure function to look up the configuration handle,
+> and rearrange the error handling to prepare the way for different
+> error handling conigurations to be used.
+> 
+> Changelog:
+> 
+> V3:
+> 	- in xfs_buf_iodone_callbacks, use cfg->max_retries to
+> 	  determine if the filesystem should fail or not, a zero value
+> 	  means it should never retry.
+> 
+> V4:
+> 	- With the refactor of xfs_buf_iodone_callbacks, we don't need
+> 	  xfs_buf_item_iodone trace anymore, once it already contains
+> 	  item_iodone_async trace. Also, since it was the only caller from
+> 	  this tracepoint, just remove its definition
+> 	- Move xfs_error_get_cfg() call to just before the usage of cfg
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
-macros
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-The comments for the above functions described a distinction between
-those, that is now redundant, so remove those paragraphs
-
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/dax.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 0167cde..afa289c 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1221,12 +1221,6 @@ static bool dax_range_is_aligned(struct block_device *bdev,
-  * page in a DAX file.  This is intended for hole-punch operations.  If
-  * you are truncating a file, the helper function dax_truncate_page() may be
-  * more convenient.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 							get_block_t get_block)
-@@ -1278,12 +1272,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
-  *
-  * Similar to block_truncate_page(), this function can be called by a
-  * filesystem when it is truncating a DAX file to handle the partial page.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- {
--- 
-2.5.5
+>  fs/xfs/xfs_buf.h      |   1 +
+>  fs/xfs/xfs_buf_item.c | 112 ++++++++++++++++++++++++++++++--------------------
+>  fs/xfs/xfs_mount.h    |   3 ++
+>  fs/xfs/xfs_sysfs.c    |  17 ++++++++
+>  fs/xfs/xfs_trace.h    |   1 -
+>  5 files changed, 88 insertions(+), 46 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 4eb89bd..adef116 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -183,6 +183,7 @@ typedef struct xfs_buf {
+>  	unsigned int		b_page_count;	/* size of page array */
+>  	unsigned int		b_offset;	/* page offset in first page */
+>  	int			b_error;	/* error code on I/O */
+> +	int			b_last_error;	/* previous async I/O error */
+>  	const struct xfs_buf_ops	*b_ops;
+>  
+>  #ifdef XFS_BUF_LOCK_TRACKING
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 99e91a0..b8d0cd4 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1042,35 +1042,22 @@ xfs_buf_do_callbacks(
+>  	}
+>  }
+>  
+> -/*
+> - * This is the iodone() function for buffers which have had callbacks
+> - * attached to them by xfs_buf_attach_iodone().  It should remove each
+> - * log item from the buffer's list and call the callback of each in turn.
+> - * When done, the buffer's fsprivate field is set to NULL and the buffer
+> - * is unlocked with a call to iodone().
+> - */
+> -void
+> -xfs_buf_iodone_callbacks(
+> +static bool
+> +xfs_buf_iodone_callback_error(
+>  	struct xfs_buf		*bp)
+>  {
+>  	struct xfs_log_item	*lip = bp->b_fspriv;
+>  	struct xfs_mount	*mp = lip->li_mountp;
+>  	static ulong		lasttime;
+>  	static xfs_buftarg_t	*lasttarg;
+> -
+> -	if (likely(!bp->b_error))
+> -		goto do_callbacks;
+> +	struct xfs_error_cfg	*cfg;
+>  
+>  	/*
+>  	 * If we've already decided to shutdown the filesystem because of
+>  	 * I/O errors, there's no point in giving this a retry.
+>  	 */
+> -	if (XFS_FORCED_SHUTDOWN(mp)) {
+> -		xfs_buf_stale(bp);
+> -		bp->b_flags |= XBF_DONE;
+> -		trace_xfs_buf_item_iodone(bp, _RET_IP_);
+> -		goto do_callbacks;
+> -	}
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		goto out_stale;
+>  
+>  	if (bp->b_target != lasttarg ||
+>  	    time_after(jiffies, (lasttime + 5*HZ))) {
+> @@ -1079,45 +1066,80 @@ xfs_buf_iodone_callbacks(
+>  	}
+>  	lasttarg = bp->b_target;
+>  
+> +	/* synchronous writes will have callers process the error */
+> +	if (!(bp->b_flags & XBF_ASYNC))
+> +		goto out_stale;
+> +
+> +	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> +	ASSERT(bp->b_iodone != NULL);
+> +
+>  	/*
+>  	 * If the write was asynchronous then no one will be looking for the
+> -	 * error.  Clear the error state and write the buffer out again.
+> -	 *
+> -	 * XXX: This helps against transient write errors, but we need to find
+> -	 * a way to shut the filesystem down if the writes keep failing.
+> -	 *
+> -	 * In practice we'll shut the filesystem down soon as non-transient
+> -	 * errors tend to affect the whole device and a failing log write
+> -	 * will make us give up.  But we really ought to do better here.
+> +	 * error.  If this is the first failure of this type, clear the error
+> +	 * state and write the buffer out again. This means we always retry an
+> +	 * async write failure at least once, but we also need to set the buffer
+> +	 * up to behave correctly now for repeated failures.
+>  	 */
+> -	if (bp->b_flags & XBF_ASYNC) {
+> -		ASSERT(bp->b_iodone != NULL);
+> -
+> -		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> +	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL)) ||
+> +	     bp->b_last_error != bp->b_error) {
+> +		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
+> +			        XBF_DONE | XBF_WRITE_FAIL);
+> +		bp->b_last_error = bp->b_error;
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_submit(bp);
+> +		return true;
+> +	}
+>  
+> -		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+> +	/*
+> +	 * Repeated failure on an async write. Take action according to the
+> +	 * error configuration we have been set up to use.
+> +	 */
+> +	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+> +	if (!cfg->max_retries)
+> +		goto permanent_error;
+>  
+> -		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+> -			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+> -				       XBF_DONE | XBF_WRITE_FAIL;
+> -			xfs_buf_submit(bp);
+> -		} else {
+> -			xfs_buf_relse(bp);
+> -		}
+> -
+> -		return;
+> -	}
+> +	/* still a transient error, higher layers will retry */
+> +	xfs_buf_ioerror(bp, 0);
+> +	xfs_buf_relse(bp);
+> +	return true;
+>  
+>  	/*
+> -	 * If the write of the buffer was synchronous, we want to make
+> -	 * sure to return the error to the caller of xfs_bwrite().
+> +	 * Permanent error - we need to trigger a shutdown if we haven't already
+> +	 * to indicate that inconsistency will result from this action.
+>  	 */
+> +permanent_error:
+> +	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> +out_stale:
+>  	xfs_buf_stale(bp);
+>  	bp->b_flags |= XBF_DONE;
+> -
+>  	trace_xfs_buf_error_relse(bp, _RET_IP_);
+> +	return false;
+> +}
+> +
+> +/*
+> + * This is the iodone() function for buffers which have had callbacks attached
+> + * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
+> + * callback list, mark the buffer as having no more callbacks and then push the
+> + * buffer through IO completion processing.
+> + */
+> +void
+> +xfs_buf_iodone_callbacks(
+> +	struct xfs_buf		*bp)
+> +{
+> +	/*
+> +	 * If there is an error, process it. Some errors require us
+> +	 * to run callbacks after failure processing is done so we
+> +	 * detect that and take appropriate action.
+> +	 */
+> +	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+> +		return;
+> +
+> +	/*
+> +	 * Successful IO or permanent error. Either way, we can clear the
+> +	 * retry state here in preparation for the next error that may occur.
+> +	 */
+> +	bp->b_last_error = 0;
+>  
+> -do_callbacks:
+>  	xfs_buf_do_callbacks(bp);
+>  	bp->b_fspriv = NULL;
+>  	bp->b_iodone = NULL;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 352a5c8..0c5a976 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -387,4 +387,7 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+>  int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
+>  			xfs_off_t count_fsb);
+>  
+> +struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
+> +		int error_class, int error);
+> +
+>  #endif	/* __XFS_MOUNT_H__ */
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index 07c9599..1cb5a85 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -447,3 +447,20 @@ xfs_error_sysfs_del(
+>  	xfs_sysfs_del(&mp->m_error_meta_kobj);
+>  	xfs_sysfs_del(&mp->m_error_kobj);
+>  }
+> +
+> +struct xfs_error_cfg *
+> +xfs_error_get_cfg(
+> +	struct xfs_mount	*mp,
+> +	int			error_class,
+> +	int			error)
+> +{
+> +	struct xfs_error_cfg	*cfg;
+> +
+> +	switch (error) {
+> +	default:
+> +		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
+> +		break;
+> +	}
+> +
+> +	return cfg;
+> +}
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 840d52e..ea94ee0 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -364,7 +364,6 @@ DEFINE_BUF_EVENT(xfs_buf_delwri_split);
+>  DEFINE_BUF_EVENT(xfs_buf_get_uncached);
+>  DEFINE_BUF_EVENT(xfs_bdstrat_shut);
+>  DEFINE_BUF_EVENT(xfs_buf_item_relse);
+> -DEFINE_BUF_EVENT(xfs_buf_item_iodone);
+>  DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
+>  DEFINE_BUF_EVENT(xfs_buf_error_relse);
+>  DEFINE_BUF_EVENT(xfs_buf_wait_buftarg);
+> -- 
+> 2.4.11
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
