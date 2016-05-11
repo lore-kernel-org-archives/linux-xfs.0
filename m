@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8C9857CA6
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:03:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5194430404E
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:03:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0v93xmAbMEUlfdto (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2ABCF7CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 07:26:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F0E6A8F804B
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 05:26:53 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id S1DDvkFbPbDCzAE0 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:03:12 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v21 01/22] vfs: Add IS_ACL() and IS_RICHACL() tests
-Date: Tue, 10 May 2016 00:02:34 +0200
-Message-Id: <1462831375-23017-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 05:26:50 -0700 (PDT)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <20160304191329.GC3758@bfoster.bfoster>
+	<56D9E9BE.40101@profihost.ag> <20160304210341.GA8035@bfoster.bfoster>
+	<20160305224845.GR30721@dastard> <56F299E3.4020703@profihost.ag>
+	<20160323140736.GD43073@bfoster.bfoster>
+	<56F3A101.1020300@profihost.ag>
+	<56F3A213.2020908@profihost.ag> <20160324111703.GA4068@bfoster.bfoster>
+	<56F3DACB.8040305@profihost.ag> <20160324122417.GB4068@bfoster.bfoster>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <57332508.307@profihost.ag>
+Date: Wed, 11 May 2016 14:26:48 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160324122417.GB4068@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,138 +31,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-The vfs does not apply the umask for file systems that support acls. The
-test used for this used to be called IS_POSIXACL(). Switch to a new
-IS_ACL() test to check for either posix acls or richacls instead. Add a new
-MS_RICHACL flag and IS_RICHACL() test for richacls alone. The IS_POSIXACL()
-test is still needed by nfsd.
+Hi Brian,
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
-Reviewed-by: Steve French <steve.french@primarydata.com>
----
- fs/Kconfig              |  3 +++
- fs/namei.c              |  8 ++++----
- include/linux/fs.h      | 12 ++++++++++++
- include/uapi/linux/fs.h |  3 ++-
- 4 files changed, 21 insertions(+), 5 deletions(-)
+i'm still unable to grab anything to the trace file? Is there anything
+to check if it's working at all?
 
-diff --git a/fs/Kconfig b/fs/Kconfig
-index 6725f59..8ad4e53 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -63,6 +63,9 @@ endif # BLOCK
- config FS_POSIX_ACL
- 	def_bool n
- 
-+config FS_RICHACL
-+	def_bool n
-+
- config EXPORTFS
- 	tristate
- 
-diff --git a/fs/namei.c b/fs/namei.c
-index 3498d53..a986e09 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2833,7 +2833,7 @@ static int atomic_open(struct nameidata *nd, struct dentry *dentry,
- 	}
- 
- 	mode = op->mode;
--	if ((open_flag & O_CREAT) && !IS_POSIXACL(dir))
-+	if ((open_flag & O_CREAT) && !IS_ACL(dir))
- 		mode &= ~current_umask();
- 
- 	excl = (open_flag & (O_EXCL | O_CREAT)) == (O_EXCL | O_CREAT);
-@@ -3023,7 +3023,7 @@ static int lookup_open(struct nameidata *nd, struct path *path,
- 	/* Negative dentry, just create the file */
- 	if (!dentry->d_inode && (op->open_flag & O_CREAT)) {
- 		umode_t mode = op->mode;
--		if (!IS_POSIXACL(dir->d_inode))
-+		if (!IS_ACL(dir->d_inode))
- 			mode &= ~current_umask();
- 		/*
- 		 * This write is needed to ensure that a
-@@ -3598,7 +3598,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mknod(&path, dentry, mode, dev);
- 	if (error)
-@@ -3667,7 +3667,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mkdir(&path, dentry, mode);
- 	if (!error)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 329ed37..c47de30 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1820,6 +1820,12 @@ struct super_operations {
- #define IS_IMMUTABLE(inode)	((inode)->i_flags & S_IMMUTABLE)
- #define IS_POSIXACL(inode)	__IS_FLG(inode, MS_POSIXACL)
- 
-+#ifdef CONFIG_FS_RICHACL
-+#define IS_RICHACL(inode)	__IS_FLG(inode, MS_RICHACL)
-+#else
-+#define IS_RICHACL(inode)	0
-+#endif
-+
- #define IS_DEADDIR(inode)	((inode)->i_flags & S_DEAD)
- #define IS_NOCMTIME(inode)	((inode)->i_flags & S_NOCMTIME)
- #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
-@@ -1833,6 +1839,12 @@ struct super_operations {
- 				 (inode)->i_rdev == WHITEOUT_DEV)
- 
- /*
-+ * IS_ACL() tells the VFS to not apply the umask
-+ * and use check_acl for acl permission checks when defined.
-+ */
-+#define IS_ACL(inode)		__IS_FLG(inode, MS_POSIXACL | MS_RICHACL)
-+
-+/*
-  * Inode state bits.  Protected by inode->i_lock
-  *
-  * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index a079d50..c454cf5 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -120,7 +120,7 @@ struct inodes_stat_t {
- #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
- 				   MS_VERBOSE is deprecated. */
- #define MS_SILENT	32768
--#define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
-+#define MS_POSIXACL	(1<<16)	/* Supports POSIX ACLs */
- #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
- #define MS_PRIVATE	(1<<18)	/* change to private */
- #define MS_SLAVE	(1<<19)	/* change to slave */
-@@ -130,6 +130,7 @@ struct inodes_stat_t {
- #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
- #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
- #define MS_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
-+#define MS_RICHACL	(1<<26) /* Supports richacls */
- 
- /* These sb flags are internal to the kernel */
- #define MS_NOSEC	(1<<28)
--- 
-2.5.5
+This still happens in the first 48 hours after a fresh reboot.
+
+Stefan
+
+Am 24.03.2016 um 13:24 schrieb Brian Foster:
+> On Thu, Mar 24, 2016 at 01:17:15PM +0100, Stefan Priebe - Profihost AG wrote:
+>>
+>> Am 24.03.2016 um 12:17 schrieb Brian Foster:
+>>> On Thu, Mar 24, 2016 at 09:15:15AM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>
+>>>> Am 24.03.2016 um 09:10 schrieb Stefan Priebe - Profihost AG:
+>>>>>
+>>>>> Am 23.03.2016 um 15:07 schrieb Brian Foster:
+>>>>>> On Wed, Mar 23, 2016 at 02:28:03PM +0100, Stefan Priebe - Profihost AG wrote:
+>>>>>>> sorry new one the last one got mangled. Comments inside.
+>>>>>>>
+>>>>>>> Am 05.03.2016 um 23:48 schrieb Dave Chinner:
+>>>>>>>> On Fri, Mar 04, 2016 at 04:03:42PM -0500, Brian Foster wrote:
+>>>>>>>>> On Fri, Mar 04, 2016 at 09:02:06PM +0100, Stefan Priebe wrote:
+>>>>>>>>>> Am 04.03.2016 um 20:13 schrieb Brian Foster:
+>>>>>>>>>>> On Fri, Mar 04, 2016 at 07:47:16PM +0100, Stefan Priebe wrote:
+>>>>>>>>>>>> Am 20.02.2016 um 19:02 schrieb Stefan Priebe - Profihost AG:
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>> Am 20.02.2016 um 15:45 schrieb Brian Foster <bfoster@redhat.com>:
+>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>> On Sat, Feb 20, 2016 at 09:02:28AM +0100, Stefan Priebe wrote:
+>>>>>> ...
+>>>>>>>
+>>>>>>> This has happened again on 8 different hosts in the last 24 hours
+>>>>>>> running 4.4.6.
+>>>>>>>
+>>>>>>> All of those are KVM / Qemu hosts and are doing NO I/O except the normal
+>>>>>>> OS stuff as the VMs have remote storage. So no database, no rsync on
+>>>>>>> those hosts - just the OS doing nearly nothing.
+>>>>>>>
+>>>>>>> All those show:
+>>>>>>> [153360.287040] WARNING: CPU: 0 PID: 109 at fs/xfs/xfs_aops.c:1234
+>>>>>>> xfs_vm_releasepage+0xe2/0xf0()
+>>>>>>>
+>>>>>>
+>>>>>> Ok, well at this point the warning isn't telling us anything beyond
+>>>>>> you're reproducing the problem. We can't really make progress without
+>>>>>> more information. We don't necessarily know what application or
+>>>>>> operations caused this by the time it occurs, but perhaps knowing what
+>>>>>> file is affected could give us a hint.
+>>>>>>
+>>>>>> We have the xfs_releasepage tracepoint, but that's unconditional and so
+>>>>>> might generate a lot of noise by default. Could you enable the
+>>>>>> xfs_releasepage tracepoint and hunt for instances where delalloc != 0?
+>>>>>> E.g., we could leave a long running 'trace-cmd record -e
+>>>>>> "xfs:xfs_releasepage" <cmd>' command on several boxes and wait for the
+>>>>>> problem to occur. Alternatively (and maybe easier), run 'trace-cmd start
+>>>>>> -e "xfs:xfs_releasepage"' and leave something like 'cat
+>>>>>> /sys/kernel/debug/tracing/trace_pipe | grep -v "delalloc 0" >
+>>>>>> ~/trace.out' running to capture instances.
+>>>>
+>>>> Isn't the trace a WARN_ONCE? So it does not reoccur or can i check the
+>>>> it in the trace.out even the WARN_ONCE was already triggered?
+>>>>
+>>>
+>>> The tracepoint is independent from the warning (see
+>>> xfs_vm_releasepage()), so the tracepoint will fire every invocation of
+>>> the function regardless of whether delalloc blocks still exist at that
+>>> point. That creates the need to filter the entries.
+>>>
+>>> With regard to performance, I believe the tracepoints are intended to be
+>>> pretty lightweight. I don't think it should hurt to try it on a box,
+>>> observe for a bit and make sure there isn't a huge impact. Note that the
+>>> 'trace-cmd record' approach will save everything to file, so that's
+>>> something to consider I suppose.
+>>
+>> Tests / cat is running. Is there any way to test if it works? Or is it
+>> enough that cat prints stuff from time to time but does not match -v
+>> delalloc 0
+>>
+> 
+> What is it printing where delalloc != 0? You could always just cat
+> trace_pipe and make sure the event is firing, it's just that I suspect
+> most entries will have delalloc == unwritten == 0.
+> 
+> Also, while the tracepoint fires independent of the warning, it might
+> not be a bad idea to restart a system that has already seen the warning
+> since boot, just to provide some correlation or additional notification
+> when the problem occurs.
+> 
+> Brian
+> 
+>> Stefan
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
