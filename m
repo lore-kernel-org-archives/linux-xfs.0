@@ -1,20 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 58FA87CBD
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 17:04:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F67A8F8035
-	for <xfs@oss.sgi.com>; Mon,  9 May 2016 15:04:01 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E75357CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 09:39:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A7AF28F8050
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 07:39:31 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yP47vjDBOyNYmeD4 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id oKWtBoOs5q9GSg8O (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 May 2016 15:03:59 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v21 08/22] richacl: Compute maximum file masks from an acl
-Date: Tue, 10 May 2016 00:02:41 +0200
-Message-Id: <1462831375-23017-9-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
-References: <1462831375-23017-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 11 May 2016 07:39:30 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id D60C510B84F
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:39:29 +0000 (UTC)
+Received: from redhat.com (unused [10.10.50.219] (may be forged))
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u4BEdP2e012451
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Wed, 11 May 2016 10:39:28 -0400
+Date: Wed, 11 May 2016 16:39:25 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 7/7] xfs: add "fail at unmount" error handling
+	configuration
+Message-ID: <20160511143925.GA7828@redhat.com>
+References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+	<1462882581-30859-8-git-send-email-cmaiolino@redhat.com>
+	<20160511141550.GD42410@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160511141550.GD42410@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,211 +39,189 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-Compute upper bound owner, group, and other file masks with as few
-permissions as possible without denying any permissions that the NFSv4
-acl in a richacl grants.
+On Wed, May 11, 2016 at 10:15:51AM -0400, Brian Foster wrote:
+> On Tue, May 10, 2016 at 02:16:21PM +0200, Carlos Maiolino wrote:
+> > If we take "retry forever" literally on metadata IO errors, we can
+> > hang at unmount, once it retries those writes forever. This is the
+> > default behavior, unfortunately.
+> > 
+> > Add an error configuration option for this behavior and default it to "fail" so
+> > that an unmount will trigger actuall errors, a shutdown and allow the unmount to
+> > succeed. It will be noisy, though, as it will log the errors and shutdown that
+> > occurs.
+> > 
+> > To fix this, we need to mark the filesystem as being in the process of
+> > unmounting. Do this with a mount flag that is added at the appropriate time
+> > (i.e. before the blocking AIL sync). We also need to add this flag if mount
+> > fails after the initial phase of log recovery has been run.
+> > 
+> > Changelog:
+> > 
+> > V3:
+> > 	- No major changes have been done to this patch, only the ones needed to
+> > 	  accomodate it on top of the remaining patches
+> > V4:
+> > 	- Make fail_at_unmount a global configuration option into
+> > 	  ../xfs/<dev>/error directory
+> > 	- Add m_fail_unmount boolean to xfs_mount, to keep track of unmount
+> > 	  error behavior
+> > 	- Create err_to_mp() helper, to translate a kobject, from m_error_kobj
+> > 	  into its xfs_mount
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  fs/xfs/xfs_buf_item.c |  4 ++++
+> >  fs/xfs/xfs_mount.c    | 12 ++++++++++++
+> >  fs/xfs/xfs_mount.h    |  2 ++
+> >  fs/xfs/xfs_sysfs.c    | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  4 files changed, 64 insertions(+)
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index eda3906..1bcee7e 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> ...
+> > @@ -1012,6 +1016,14 @@ xfs_unmountfs(
+> >  	xfs_log_force(mp, XFS_LOG_SYNC);
+> >  
+> >  	/*
+> > +	 * We now need to tell the world we are unmounting. This will allow
+> > +	 * us to detect that the filesystem is going away and we should error
+> > +	 * out anything that we have been retrying in the background. This will
+> > +	 * prevent neverending retries iin AIL pushing from hanging the unmount.
+> 
+> Spelling:			       in
+> 
 
-This algorithm is used when a file inherits an acl at create time and
-when an acl is set via a mechanism that does not provide file masks
-(such as setting an acl via nfsd).  When user-space sets an acl via
-setxattr, the extended attribute already includes the file masks.
+Dave, would you be able to fix it or do you want me to re-send this patch again?
 
-Setting an acl also sets the file mode permission bits: they are
-determined by the file masks; see richacl_masks_to_mode().
+> Otherwise looks good:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> > +	 */
+> > +	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+> > +
+> > +	/*
+> >  	 * Flush all pending changes from the AIL.
+> >  	 */
+> >  	xfs_ail_push_all_sync(mp->m_ail);
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 72ec3e3..9063a9c 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -177,6 +177,7 @@ typedef struct xfs_mount {
+> >  	 */
+> >  	__uint32_t		m_generation;
+> >  
+> > +	bool			m_fail_unmount;
+> >  #ifdef DEBUG
+> >  	/*
+> >  	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+> > @@ -195,6 +196,7 @@ typedef struct xfs_mount {
+> >  #define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+> >  						   must be synchronous except
+> >  						   for space allocations */
+> > +#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
+> >  #define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+> >  #define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+> >  						   operations, typically for
+> > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> > index 084a606..4c2c550 100644
+> > --- a/fs/xfs/xfs_sysfs.c
+> > +++ b/fs/xfs/xfs_sysfs.c
+> > @@ -381,6 +381,13 @@ to_error_cfg(struct kobject *kobject)
+> >  	return container_of(kobj, struct xfs_error_cfg, kobj);
+> >  }
+> >  
+> > +static inline struct xfs_mount *
+> > +err_to_mp(struct kobject *kobject)
+> > +{
+> > +	struct xfs_kobj *kobj = to_kobj(kobject);
+> > +	return container_of(kobj, struct xfs_mount, m_error_kobj);
+> > +}
+> > +
+> >  static ssize_t
+> >  max_retries_show(
+> >  	struct kobject	*kobject,
+> > @@ -447,6 +454,38 @@ retry_timeout_seconds_store(
+> >  }
+> >  XFS_SYSFS_ATTR_RW(retry_timeout_seconds);
+> >  
+> > +static ssize_t
+> > +fail_at_unmount_show(
+> > +	struct kobject	*kobject,
+> > +	char		*buf)
+> > +{
+> > +	struct xfs_mount	*mp = err_to_mp(kobject);
+> > +
+> > +	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_unmount);
+> > +}
+> > +
+> > +static ssize_t
+> > +fail_at_unmount_store(
+> > +	struct kobject	*kobject,
+> > +	const char	*buf,
+> > +	size_t		count)
+> > +{
+> > +	struct xfs_mount	*mp = err_to_mp(kobject);
+> > +	int		ret;
+> > +	int		val;
+> > +
+> > +	ret = kstrtoint(buf, 0, &val);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	if (val < 0 || val > 1)
+> > +		return -EINVAL;
+> > +
+> > +	mp->m_fail_unmount = val;
+> > +	return count;
+> > +}
+> > +XFS_SYSFS_ATTR_RW(fail_at_unmount);
+> > +
+> >  static struct attribute *xfs_error_attrs[] = {
+> >  	ATTR_LIST(max_retries),
+> >  	ATTR_LIST(retry_timeout_seconds),
+> > @@ -462,6 +501,7 @@ struct kobj_type xfs_error_cfg_ktype = {
+> >  
+> >  struct kobj_type xfs_error_ktype = {
+> >  	.release = xfs_sysfs_release,
+> > +	.sysfs_ops = &xfs_sysfs_ops,
+> >  };
+> >  
+> >  /*
+> > @@ -548,6 +588,12 @@ xfs_error_sysfs_init(
+> >  	if (error)
+> >  		return error;
+> >  
+> > +	error = sysfs_create_file(&mp->m_error_kobj.kobject,
+> > +				  ATTR_LIST(fail_at_unmount));
+> > +
+> > +	if (error)
+> > +		goto out_error;
+> > +
+> >  	/* .../xfs/<dev>/error/metadata/ */
+> >  	error = xfs_error_sysfs_init_class(mp, XFS_ERR_METADATA,
+> >  				"metadata", &mp->m_error_meta_kobj,
+> > -- 
+> > 2.4.11
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
----
- fs/richacl.c            | 157 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   1 +
- 2 files changed, 158 insertions(+)
-
-diff --git a/fs/richacl.c b/fs/richacl.c
-index d0a4135..056228f 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -181,3 +181,160 @@ richacl_want_to_mask(unsigned int want)
- 	return mask;
- }
- EXPORT_SYMBOL_GPL(richacl_want_to_mask);
-+
-+/*
-+ * Note: functions like richacl_allowed_to_who(), richacl_group_class_allowed(),
-+ * and richacl_compute_max_masks() iterate through the entire acl in reverse
-+ * order as an optimization.
-+ *
-+ * In the standard algorithm, aces are considered in forward order.  When a
-+ * process matches an ace, the permissions in the ace are either allowed or
-+ * denied depending on the ace type.  Once a permission has been allowed or
-+ * denied, it is no longer considered in further aces.
-+ *
-+ * By iterating through the acl in reverse order, we can compute the same
-+ * result without having to keep track of which permissions have been allowed
-+ * and denied already.
-+ */
-+
-+/**
-+ * richacl_allowed_to_who  -  permissions allowed to a specific who value
-+ *
-+ * Compute the maximum mask values allowed to a specific who value, taking
-+ * everyone@ aces into account.
-+ */
-+static unsigned int richacl_allowed_to_who(struct richacl *acl,
-+					   struct richace *who)
-+{
-+	struct richace *ace;
-+	unsigned int allowed = 0;
-+
-+	richacl_for_each_entry_reverse(ace, acl) {
-+		if (richace_is_inherit_only(ace))
-+			continue;
-+		if (richace_is_same_identifier(ace, who) ||
-+		    richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace))
-+				allowed |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				allowed &= ~ace->e_mask;
-+		}
-+	}
-+	return allowed;
-+}
-+
-+/**
-+ * richacl_group_class_allowed  -  maximum permissions of the group class
-+ *
-+ * Compute the maximum mask values allowed to a process in the group class
-+ * (i.e., a process which is not the owner but is in the owning group or
-+ * matches a user or group acl entry).  This includes permissions granted or
-+ * denied by everyone@ aces.
-+ *
-+ * See richacl_compute_max_masks().
-+ */
-+static unsigned int richacl_group_class_allowed(struct richacl *acl)
-+{
-+	struct richace *ace;
-+	unsigned int everyone_allowed = 0, group_class_allowed = 0;
-+	int had_group_ace = 0;
-+
-+	richacl_for_each_entry_reverse(ace, acl) {
-+		if (richace_is_inherit_only(ace) ||
-+		    richace_is_owner(ace))
-+			continue;
-+
-+		if (richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace))
-+				everyone_allowed |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				everyone_allowed &= ~ace->e_mask;
-+		} else {
-+			group_class_allowed |=
-+				richacl_allowed_to_who(acl, ace);
-+
-+			if (richace_is_group(ace))
-+				had_group_ace = 1;
-+		}
-+	}
-+	/*
-+	 * If the acl doesn't contain any group@ aces, richacl_allowed_to_who()
-+	 * wasn't called for the owning group.  We could make that call now, but
-+	 * we already know the result (everyone_allowed).
-+	 */
-+	if (!had_group_ace)
-+		group_class_allowed |= everyone_allowed;
-+	return group_class_allowed;
-+}
-+
-+/**
-+ * richacl_compute_max_masks  -  compute upper bound masks
-+ *
-+ * Computes upper bound owner, group, and other masks so that none of the
-+ * permissions allowed by the acl are disabled.
-+ *
-+ * We don't make assumptions about who the owner is so that the owner can
-+ * change with no effect on the file masks or file mode permission bits; this
-+ * means that we must assume that all entries can match the owner.
-+ */
-+void richacl_compute_max_masks(struct richacl *acl)
-+{
-+	unsigned int gmask = ~0;
-+	struct richace *ace;
-+
-+	/*
-+	 * @gmask contains all permissions which the group class is ever
-+	 * allowed.  We use it to avoid adding permissions to the group mask
-+	 * from everyone@ allow aces which the group class is always denied
-+	 * through other aces.  For example, the following acl would otherwise
-+	 * result in a group mask of rw:
-+	 *
-+	 *	group@:w::deny
-+	 *	everyone@:rw::allow
-+	 *
-+	 * Avoid computing @gmask for acls which do not include any group class
-+	 * deny aces: in such acls, the group class is never denied any
-+	 * permissions from everyone@ allow aces, and the group class cannot
-+	 * have fewer permissions than the other class.
-+	 */
-+
-+restart:
-+	acl->a_owner_mask = 0;
-+	acl->a_group_mask = 0;
-+	acl->a_other_mask = 0;
-+
-+	richacl_for_each_entry_reverse(ace, acl) {
-+		if (richace_is_inherit_only(ace))
-+			continue;
-+
-+		if (richace_is_owner(ace)) {
-+			if (richace_is_allow(ace))
-+				acl->a_owner_mask |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				acl->a_owner_mask &= ~ace->e_mask;
-+		} else if (richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace)) {
-+				acl->a_owner_mask |= ace->e_mask;
-+				acl->a_group_mask |= ace->e_mask & gmask;
-+				acl->a_other_mask |= ace->e_mask;
-+			} else if (richace_is_deny(ace)) {
-+				acl->a_owner_mask &= ~ace->e_mask;
-+				acl->a_group_mask &= ~ace->e_mask;
-+				acl->a_other_mask &= ~ace->e_mask;
-+			}
-+		} else {
-+			if (richace_is_allow(ace)) {
-+				acl->a_owner_mask |= ace->e_mask & gmask;
-+				acl->a_group_mask |= ace->e_mask & gmask;
-+			} else if (richace_is_deny(ace) && gmask == ~0) {
-+				gmask = richacl_group_class_allowed(acl);
-+				if (likely(gmask != ~0))
-+					/* should always be true */
-+					goto restart;
-+			}
-+		}
-+	}
-+
-+	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
-+}
-+EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 9102ef0..3559b2c 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -178,5 +178,6 @@ extern void richace_copy(struct richace *, const struct richace *);
- extern int richacl_masks_to_mode(const struct richacl *);
- extern unsigned int richacl_mode_to_mask(umode_t);
- extern unsigned int richacl_want_to_mask(unsigned int);
-+extern void richacl_compute_max_masks(struct richacl *);
- 
- #endif /* __RICHACL_H */
 -- 
-2.5.5
+Carlos
 
 _______________________________________________
 xfs mailing list
