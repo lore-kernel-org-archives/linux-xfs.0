@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD2727CAF
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 09:49:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 956FE8F804B
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 07:49:25 -0700 (PDT)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id Mx2axE6qZEP88PSp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 May 2016 07:49:22 -0700 (PDT)
-Date: Tue, 17 May 2016 16:49:12 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160517144912.GZ3193@twins.programming.kicks-ass.net>
-References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
-	<20160512055756.GE6648@birch.djwong.org>
-	<20160512080321.GA18496@dastard>
-	<20160513160341.GW20141@dhcp22.suse.cz>
-	<20160516104130.GK3193@twins.programming.kicks-ass.net>
-	<20160516130519.GJ23146@dhcp22.suse.cz>
-	<20160516132541.GP3193@twins.programming.kicks-ass.net>
-	<20160516231056.GE18496@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 226E37CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 18:07:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DA8758F8049
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 16:07:40 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Ci47wWi6caibUpVE for <xfs@oss.sgi.com>;
+	Wed, 11 May 2016 16:07:37 -0700 (PDT)
+Date: Thu, 12 May 2016 09:07:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 4.6-rc7 xfs circular locking dependency
+Message-ID: <20160511230734.GY18496@dastard>
+References: <57337140.3020905@sandisk.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160516231056.GE18496@dastard>
+In-Reply-To: <57337140.3020905@sandisk.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,225 +29,102 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: xfs@oss.sgi.com
 
-
-Thanks for writing all that down Dave!
-
-On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
-
-> The reason we don't have lock clases for the ilock is that we aren't
-> supposed to call memory reclaim with that lock held in exclusive
-> mode. This is because reclaim can run transactions, and that may
-> need to flush dirty inodes to make progress. Flushing dirty inode
-> requires taking the ilock in shared mode.
+On Wed, May 11, 2016 at 10:52:00AM -0700, Bart Van Assche wrote:
+> Hi Dave,
 > 
-> In the code path that was reported, we hold the ilock in /shared/
-> mode with no transaction context (we are doing a read-only
-> operation). This means we can run transactions in memory reclaim
-> because a) we can't deadlock on the inode we hold locks on, and b)
-> transaction reservations will be able to make progress as we don't
-> hold any locks it can block on.
+> While retesting the SRP initiator with xfstests on top of an XFS filesystem I
+> hit the below call trace once. I do not expect that this is related to the SRP
+> initiator changes I made. Please let me know if you need more information.
 
-Just to clarify; I read the above as that we cannot block on recursive
-shared locks, is this correct?
+YALFP.(*)
 
-Because we can in fact block on down_read()+down_read() just fine, so if
-you're assuming that, then something's busted.
+It's a "problem" with the filesystem freeze protection when
+interacting with emergency ENOSPC paths in the filesystem.
+sb_start_intwrite() can block when a freeze is being progressed, and
+hence on the surface this looks like a trivial ABBA deadlock
+condition.
 
-Otherwise, I'm not quite reading it right, which is, given the
-complexity of that stuff, entirely possible.
+However, this *cannot deadlock* because the trigger for
+sb_start_intwrite() to block is a change of state to
+SB_FREEZE_COMPLETE, and that happens under a
+down_write(sb->s_umount) context. i.e.:
 
-The other possible reading is that we cannot deadlock on the inode we
-hold locks on because we hold a reference on it; and the reference
-avoids the inode from being reclaimed. But then the whole
-shared/exclusive thing doesn't seem to make sense.
+int freeze_super(struct super_block *sb)
+{
+        int ret;
 
-> For the ilock, the number of places where the ilock is held over
-> GFP_KERNEL allocations is pretty small. Hence we've simply added
-> GFP_NOFS to those allocations to - effectively - annotate those
-> allocations as "lockdep causes problems here". There are probably
-> 30-35 allocations in XFS that explicitly use KM_NOFS - some of these
-> are masking lockdep false positive reports.
+        atomic_inc(&sb->s_active);
+        down_write(&sb->s_umount)
+	.....
 
+The XFS code that takes s_sync_lock here:
 
-> In the end, like pretty much all the complex lockdep false positives
-> we've had to deal in XFS, we've ended up changing the locking or
-> allocation contexts because that's been far easier than trying to
-> make annotations cover everything or convince other people that
-> lockdep annotations are insufficient.
+> nc_lock){+.+...}:
+>        [<ffffffff810a4e70>] lock_acquire+0x60/0x80
+>        [<ffffffff81582d2f>] mutex_lock_nested+0x5f/0x360
+>        [<ffffffff811bba2d>] sync_inodes_sb+0xbd/0x1d0
+>        [<ffffffffa0616963>] xfs_flush_inodes+0x23/0x30 [xfs]
 
-Well, I don't mind creating lockdep annotations; but explanations of the
-exact details always go a long way towards helping me come up with
-something.
+Does:
 
-While going over the code; I see there's complaining about
-MAX_SUBCLASSES being too small. Would it help if we doubled it? We
-cannot grow the thing without limits, but doubling it should be possible
-I think.
+        if (down_read_trylock(&sb->s_umount)) {
+                sync_inodes_sb(sb);
+                up_read(&sb->s_umount);
+        }
 
+So any attempt to freeze the filesystem is prevented /before/ XFS
+tries to flush data in this ENOSPC path. And if a freeze is
+alreadybeing processed, XFS will skip this path, thereby avoiding
+the possibility of a ABBA deadlock between freeze and s_sync_lock.
 
-In any case; would something like this work for you? Its entirely
-untested, but the idea is to mark an entire class to skip reclaim
-validation, instead of marking individual sites.
+>        [<ffffffffa060ea9f>] xfs_create+0x46f/0x5f0 [xfs]
+>        [<ffffffffa0609f39>] xfs_generic_create+0x1b9/0x290 [xfs]
+>        [<ffffffffa060a03f>] xfs_vn_mknod+0xf/0x20 [xfs]
+>        [<ffffffffa060a07e>] xfs_vn_create+0xe/0x10 [xfs]
+>        [<ffffffff8119af96>] vfs_create+0x76/0xd0
+>        [<ffffffff8119f13e>] path_openat+0xc1e/0x10d0
+>        [<ffffffff811a04d9>] do_filp_open+0x79/0xd0
+>        [<ffffffff8118f636>] do_sys_open+0x116/0x1f0
+>        [<ffffffff8118f769>] SyS_creat+0x19/0x20
+>        [<ffffffff81585fe5>] entry_SYSCALL_64_fastpath+0x18/0xa8
+> 
+> nal#2){++++.+}:
+>        [<ffffffff810a461f>] __lock_acquire+0x1b0f/0x1b20
+>        [<ffffffff810a4e70>] lock_acquire+0x60/0x80
+>        [<ffffffff8109edd5>] percpu_down_read+0x45/0x90
+>        [<ffffffff81193172>] __sb_start_write+0xb2/0xf0
+>        [<ffffffffa061838f>] xfs_trans_alloc+0x1f/0x40 [xfs]
+>        [<ffffffffa060f4d0>] xfs_inactive_truncate+0x20/0x130 [xfs]
+>        [<ffffffffa060fc9e>] xfs_inactive+0x1ae/0x1e0 [xfs]
+>        [<ffffffffa0614e88>] xfs_fs_evict_inode+0xb8/0xc0 [xfs]
+>        [<ffffffff811acc83>] evict+0xb3/0x180
+>        [<ffffffff811acefc>] iput+0x14c/0x1e0
+>        [<ffffffff811bbab5>] sync_inodes_sb+0x145/0x1d0
+>        [<ffffffff811c23e0>] sync_inodes_one_sb+0x10/0x20
+>        [<ffffffff81193bda>] iterate_supers+0xaa/0x100
 
-We have to do the subclass loop because; as per the comment with
-XFS_ILOCK_* we use all 8 subclasses.
+And iterate_supers() does the same thing:
 
----
- fs/xfs/xfs_super.c       | 13 +++++++++++++
- include/linux/lockdep.h  |  8 +++++++-
- kernel/locking/lockdep.c | 47 +++++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 63 insertions(+), 5 deletions(-)
+                down_read(&sb->s_umount);
+                if (sb->s_root && (sb->s_flags & MS_BORN))
+                        f(sb, arg);
+                up_read(&sb->s_umount);
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 187e14b696c2..ea55f87edad8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -985,6 +985,19 @@ xfs_fs_inode_init_once(
- 		     "xfsino", ip->i_ino);
- 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
- 		     "xfsino", ip->i_ino);
-+
-+#ifdef CONFIG_LOCKDEP
-+	/*
-+	 * Disable reclaim tests for the i_lock; reclaim is guarded
-+	 * by a reference count... XXX write coherent comment.
-+	 */
-+	do {
-+		int i;
-+
-+		for (i = 0; i < MAX_LOCKDEP_SUBCLASSES; i++)
-+			lockdep_skip_reclaim(&ip->i_lock.mr_lock, i);
-+	} while (0);
-+#endif
- }
- 
- STATIC void
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index eabe0138eb06..fbaa6c8bcff6 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -80,7 +80,8 @@ struct lock_class {
- 	/*
- 	 * IRQ/softirq usage tracking bits:
- 	 */
--	unsigned long			usage_mask;
-+	unsigned int			usage_mask;
-+	unsigned int			skip_mask;
- 	struct stack_trace		usage_traces[XXX_LOCK_USAGE_STATES];
- 
- 	/*
-@@ -281,6 +282,8 @@ extern void lockdep_on(void);
- extern void lockdep_init_map(struct lockdep_map *lock, const char *name,
- 			     struct lock_class_key *key, int subclass);
- 
-+extern void lock_skip_reclaim(struct lockdep_map *lock, int subclass);
-+
- /*
-  * To initialize a lockdep_map statically use this macro.
-  * Note that _name must not be NULL.
-@@ -304,6 +307,9 @@ extern void lockdep_init_map(struct lockdep_map *lock, const char *name,
- 		lockdep_init_map(&(lock)->dep_map, #lock, \
- 				 (lock)->dep_map.key, sub)
- 
-+#define lockdep_skip_reclaim(lock, sub) \
-+		lock_skip_reclaim(&(lock)->dep_map, sub)
-+
- #define lockdep_set_novalidate_class(lock) \
- 	lockdep_set_class_and_name(lock, &__lockdep_no_validate__, #lock)
- /*
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 81f1a7107c0e..f3b3b3e7938a 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -3022,13 +3022,17 @@ void lockdep_trace_alloc(gfp_t gfp_mask)
- static int mark_lock(struct task_struct *curr, struct held_lock *this,
- 			     enum lock_usage_bit new_bit)
- {
-+	struct lock_class *class = hlock_class(this);
- 	unsigned int new_mask = 1 << new_bit, ret = 1;
- 
- 	/*
- 	 * If already set then do not dirty the cacheline,
- 	 * nor do any checks:
- 	 */
--	if (likely(hlock_class(this)->usage_mask & new_mask))
-+	if (likely(class->usage_mask & new_mask))
-+		return 1;
-+
-+	if (class->skip_mask & (new_mask >> 2))
- 		return 1;
- 
- 	if (!graph_lock())
-@@ -3036,14 +3040,14 @@ static int mark_lock(struct task_struct *curr, struct held_lock *this,
- 	/*
- 	 * Make sure we didn't race:
- 	 */
--	if (unlikely(hlock_class(this)->usage_mask & new_mask)) {
-+	if (unlikely(class->usage_mask & new_mask)) {
- 		graph_unlock();
- 		return 1;
- 	}
- 
--	hlock_class(this)->usage_mask |= new_mask;
-+	class->usage_mask |= new_mask;
- 
--	if (!save_trace(hlock_class(this)->usage_traces + new_bit))
-+	if (!save_trace(class->usage_traces + new_bit))
- 		return 0;
- 
- 	switch (new_bit) {
-@@ -3586,6 +3590,24 @@ static int __lock_is_held(struct lockdep_map *lock)
- 	return 0;
- }
- 
-+static void __lock_skip_reclaim(struct lockdep_map *lock, int subclass)
-+{
-+	struct lock_class *class = register_lock_class(lock, subclass, 0);
-+
-+	if (!class)
-+		return;
-+
-+	if (class->skip_mask & (1 << RECLAIM_FS))
-+		return;
-+
-+	if (!graph_lock())
-+		return;
-+
-+	class->skip_mask |= 1 << RECLAIM_FS;
-+
-+	graph_unlock();
-+}
-+
- static struct pin_cookie __lock_pin_lock(struct lockdep_map *lock)
- {
- 	struct pin_cookie cookie = NIL_COOKIE;
-@@ -3784,6 +3806,23 @@ int lock_is_held(struct lockdep_map *lock)
- }
- EXPORT_SYMBOL_GPL(lock_is_held);
- 
-+void lock_skip_reclaim(struct lockdep_map *lock, int subclass)
-+{
-+	unsigned long flags;
-+
-+	if (unlikely(current->lockdep_recursion))
-+		return;
-+
-+	raw_local_irq_save(flags);
-+	check_flags(flags);
-+
-+	current->lockdep_recursion = 1;
-+	__lock_skip_reclaim(lock, subclass);
-+	current->lockdep_recursion = 0;
-+	raw_local_irq_restore(flags);
-+}
-+EXPORT_SYMBOL_GPL(lock_skip_reclaim);
-+
- struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
- {
- 	struct pin_cookie cookie = NIL_COOKIE;
+IOWs, freeze_super() cannot start/progress freeze state to the point
+that it would cause a deadlock in this code path because we hold the
+lock that freeze_super() requires to change the freeze state.
+
+Cheers,
+
+Dave.
+
+(*) YALFP: Yet Another Lockdep False Positive
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
