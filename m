@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 658D77CA6
-	for <xfs@oss.sgi.com>; Sun, 15 May 2016 17:23:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B57ACAC001
-	for <xfs@oss.sgi.com>; Sun, 15 May 2016 15:23:27 -0700 (PDT)
-Received: from shadbolt.e.decadent.org.uk (shadbolt.e.decadent.org.uk
-	[88.96.1.126]) by cuda.sgi.com with ESMTP id cBUhuPQHH785AnWx
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 15 May 2016 15:23:24 -0700 (PDT)
-Message-ID: <1463350996.2631.55.camel@decadent.org.uk>
-Subject: Re: XFS hole punch races
-From: Ben Hutchings <ben@decadent.org.uk>
-Date: Sun, 15 May 2016 23:23:16 +0100
-In-Reply-To: <20160322155740.GB28772@quack.suse.cz>
-References: <20160322155740.GB28772@quack.suse.cz>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64A337CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 13:40:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 370A0304048
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 11:40:02 -0700 (PDT)
+Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
+	sXLc3Ly6Teq4GiCW for <xfs@oss.sgi.com>;
+	Wed, 11 May 2016 11:40:01 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v6 4/5] dax: for truncate/hole-punch, do zeroing through
+	the driver if possible
+Date: Wed, 11 May 2016 18:39:59 +0000
+Message-ID: <1462991986.29294.29.camel@intel.com>
+References: <1462906156-22303-1-git-send-email-vishal.l.verma@intel.com>
+	<1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <1462906156-22303-5-git-send-email-vishal.l.verma@intel.com>
+Content-Language: en-US
+Content-ID: <5E1FB0B45FA4AB4A819E9443201F1C82@intel.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,91 +27,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9056883578406812250=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>, stable@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+Cc: "hch@infradead.org" <hch@infradead.org>, "jack@suse.cz" <jack@suse.cz>, "boaz@plexistor.com" <boaz@plexistor.com>, "axboe@fb.com" <axboe@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>
 
-
---===============9056883578406812250==
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-nWEbxTSjJh37pmBRtVXu"
-
-
---=-nWEbxTSjJh37pmBRtVXu
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2016-03-22 at 16:57 +0100, Jan Kara wrote:
-> Hi,
->=20
-> similarly to ext4 also XFS had races between hole punching and page fault=
-s
-> which could result in data corruption. The fixes were merged in 4.1-rc1 b=
-ut
-> it might make sense to backport them to older stable releases given the
-> nature of the issue.
->=20
-> Relevant fixes are:
->=20
-> de0e8c20ba3a65b0f15040aabbefdc1999876e6b
-> 075a924d45cc69c75a35f20b4912b85aa98b180a
-> e8e9ad42c1f1e1bfbe0e8c32c8cac02e9ebfb7ef
-> 0f9160b444e4de33b65dfcd3b901358a3129461a
-> 723cac48473358939759885a18e8df113ea96138
-> ec56b1f1fdc69599963574ce94cc5693d535dd64
-
-Thanks.  For 3.2 I needed to apply these first:
-
-f38996f57687 xfs: reduce ilock hold times in xfs_setattr_size
-bc4010ecb8f4 xfs: use iolock on XFS_IOC_ALLOCSP calls
-76ca4c238cf5 xfs: always take the iolock around xfs_setattr_size
-5f8aca8b43f4 xfs: always hold the iolock when calling xfs_change_file_space
-653c60b633a9 xfs: introduce mmap/truncate lock
-
-and I left out 723cac484733 "xfs: lock out page faults from extent swap
-operations" as it doesn't seem applicable.
-
-Ben.
-
---=20
-Ben Hutchings
-For every action, there is an equal and opposite criticism. - Harrison
---=-nWEbxTSjJh37pmBRtVXu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXOPbUAAoJEOe/yOyVhhEJ6fQP/ikdem6Rb6bywJopY5wYC5pc
-Zu6Vy/6N2/RqQDdL64IfT0FdsQD8N4kUPu1Fw/ojmGBHHNVQxlb6qElOgWSySci+
-NhXhQYHu6f9JI2Vr7gvYSbbDGhL0nSvGXt64PyVj/iAkydOGnHvAbdfCOLEKZMnz
-dJakjHBB65kSc9S0e2rGJiyGoMkqIRXw+SKKAcLMZy9eHcbSK0mC0MnCcyKm0xnK
-e0X2an452dDyNb5Favl9UoTxK09j0EU4qb0htRvl+W9IurnWrCSn0XsXmR2Pc6pH
-SUsvzF4lCHaubaIVg7XlMgdpkRySHhMat277oREArxHLy67uCZkTLnekH6aaBBb2
-GCrwtjDy0AXLMCnCZqpfJE45FWfh89TAdlA1PibwUEfqGP63+Fo3rr+W0YVE3BA1
-x8ttZp1ngn5cylg8QTdNSFFTTcernWqQdtv0z5EQkAQhw4IWbVy1740vVSj/okIC
-i/PWMPE0WnYAHXd9J606zYnOSKgZXBCyjpuUR1V1bnatA+AQvE/TeRrA2ebE82pa
-+6bco451fR4/+3hLVio3x6eMBtDmgXOjTty5BPewXoAd1/7rCQJkQpNhx2aaTlh+
-IvxE0BxEPfSZNDSIL10qisIk8GOLcEhp0UnyJuIE+Sx3p4UiI/JCj5wNRH3fduWP
-T/NtP/zV6z8Gf6QvF58g
-=CPig
------END PGP SIGNATURE-----
-
---=-nWEbxTSjJh37pmBRtVXu--
-
-
---===============9056883578406812250==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9056883578406812250==--
+T24gVHVlLCAyMDE2LTA1LTEwIGF0IDEyOjQ5IC0wNjAwLCBWaXNoYWwgVmVybWEgd3JvdGU6DQo+
+wqANCi4uLg0KDQo+IEBAIC0xMjQwLDExICsxMjU0LDE2IEBAIGludCBkYXhfemVyb19wYWdlX3Jh
+bmdlKHN0cnVjdCBpbm9kZSAqaW5vZGUsDQo+IGxvZmZfdCBmcm9tLCB1bnNpZ25lZCBsZW5ndGgs
+DQo+IMKgCQkJLnNpemUgPSBQQUdFX1NJWkUsDQo+IMKgCQl9Ow0KPiDCoA0KPiAtCQlpZiAoZGF4
+X21hcF9hdG9taWMoYmRldiwgJmRheCkgPCAwKQ0KPiAtCQkJcmV0dXJuIFBUUl9FUlIoZGF4LmFk
+ZHIpOw0KPiAtCQljbGVhcl9wbWVtKGRheC5hZGRyICsgb2Zmc2V0LCBsZW5ndGgpOw0KPiAtCQl3
+bWJfcG1lbSgpOw0KPiAtCQlkYXhfdW5tYXBfYXRvbWljKGJkZXYsICZkYXgpOw0KPiArCQlpZiAo
+ZGF4X3JhbmdlX2lzX2FsaWduZWQoYmRldiwgJmRheCwgb2Zmc2V0LCBsZW5ndGgpKQ0KPiArCQkJ
+cmV0dXJuIGJsa2Rldl9pc3N1ZV96ZXJvb3V0KGJkZXYsIGRheC5zZWN0b3IsDQo+ICsJCQkJCWxl
+bmd0aCA+PiA5LCBHRlBfTk9GUywgdHJ1ZSk7DQoNCkZvdW5kIGFub3RoZXIgYnVnIGhlcmUgd2hp
+bGUgdGVzdGluZy4gVGhlIHplcm9vdXQgbmVlZHMgdG8gYmUgZG9uZSBmb3INCnNlY3RvciArIChv
+ZmZzZXQgPj4gOSkuIFRoZSBhYm92ZSBqdXN0IHplcm9lZCBvdXQgdGhlIGZpcnN0IHNlY3RvciBv
+Zg0KdGhlIHBhZ2UgaXJyZXNwZWN0aXZlIG9mIG9mZnNldCwgd2hpY2ggaXMgd3JvbmcuCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
