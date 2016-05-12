@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 07D177CA1
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 04:50:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AE6BA304048
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 02:50:08 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id COQCUbBc5rYtSdo0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 18 May 2016 02:49:57 -0700 (PDT)
-Date: Wed, 18 May 2016 11:49:52 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160518094952.GB3193@twins.programming.kicks-ass.net>
-References: <20160512080321.GA18496@dastard>
-	<20160513160341.GW20141@dhcp22.suse.cz>
-	<20160516104130.GK3193@twins.programming.kicks-ass.net>
-	<20160516130519.GJ23146@dhcp22.suse.cz>
-	<20160516132541.GP3193@twins.programming.kicks-ass.net>
-	<20160516231056.GE18496@dastard>
-	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
-	<20160517223549.GV26977@dastard>
-	<20160518072005.GA3193@twins.programming.kicks-ass.net>
-	<20160518082538.GE21654@dhcp22.suse.cz>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 965B57CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 20:09:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04706AC003
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 18:09:17 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id BeS8KKaTqrvrRIWD for <xfs@oss.sgi.com>;
+	Wed, 11 May 2016 18:09:15 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 278852B2D
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 20:09:15 -0500 (CDT)
+Subject: Re: [PATCH v5 0/2] xfs_repair: improved secondary sb search
+References: <1463006717-6104-1-git-send-email-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a051d607-5b72-36b0-e501-590586bebeee@sandeen.net>
+Date: Wed, 11 May 2016 20:09:14 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160518082538.GE21654@dhcp22.suse.cz>
+In-Reply-To: <1463006717-6104-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,43 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, May 18, 2016 at 10:25:39AM +0200, Michal Hocko wrote:
-> On Wed 18-05-16 09:20:05, Peter Zijlstra wrote:
-> > On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
-> > > On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
-> [...]
-> > > > In any case; would something like this work for you? Its entirely
-> > > > untested, but the idea is to mark an entire class to skip reclaim
-> > > > validation, instead of marking individual sites.
-> > > 
-> > > Probably would, but it seems like swatting a fly with runaway
-> > > train. I'd much prefer a per-site annotation (e.g. as a GFP_ flag)
-> > > so that we don't turn off something that will tell us we've made a
-> > > mistake while developing new code...
-> > 
-> > Fair enough; if the mm folks don't object to 'wasting' a GFP flag on
-> > this the below ought to do I think.
+Ok, just a rebase, and all the code moves match current upstream,
+so for both patches:
+
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+
+On 5/11/16 5:45 PM, Bill O'Donnell wrote:
 > 
-> GFP flag space is quite scarse. 
-
-There's still 5 or so bits available, and you could always make gfp_t
-u64.
-
-> Especially when it would be used only
-> for lockdep configurations which are mostly disabled. Why cannot we go
-> with an explicit disable/enable API I have proposed? 
-
-It has unbounded scope. And in that respect the GFP flag thingy is wider
-than I'd like too, it avoids setting the state for all held locks, even
-though we'd only like to avoid setting it for one class.
-
-So ideally we'd combine the GFP flag with the previously proposed skip
-flag to only avoid marking the one class while keeping everything
-working for all other held locks.
-
+> Hello -
+> 
+> New iteration (v5) of this series...
+> 
+> Current xfs_repair uses a brute force approach to find a valid
+> secondary sb. This series optimizes the secondary sb search, using
+> similar method to determine geometry as that of xfs_mkfs. If the
+> faster method fails in its search, fall back to original brute force
+> slower search.
+> 
+> version history:
+> ----
+> v1: http://oss.sgi.com/archives/xfs/2016-02/msg00304.html
+> v2: patch 2 whitespace fixups
+> v3: patch 2 correct functionality; style fixups
+> v4: patch 1,2 properly see to style and whitespace fixups
+> v5: patch 1 rebase to latest
+> ----
+> 
+> patch 1 has some general infrastructure adjustments, moving general
+> topology functions from mkfs to libxcmd.
+> 
+> patch 2 adds the new secondary superblock search method.
+> 
+> Questions, comments are welcome.
+> 
+> Thanks-
+> Bill
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
