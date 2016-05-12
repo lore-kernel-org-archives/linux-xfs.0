@@ -1,17 +1,22 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 412E07CA0
-	for <xfs@oss.sgi.com>; Thu, 12 May 2016 23:18:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B70897CA0
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 03:05:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DCBB48F8035
-	for <xfs@oss.sgi.com>; Thu, 12 May 2016 21:18:54 -0700 (PDT)
-Received: from out4447.biz.mail.alibaba.com (out4447.biz.mail.alibaba.com
-	[47.88.44.47]) by cuda.sgi.com with ESMTP id DcZRfvMeNXcZDAuG
-	for <xfs@oss.sgi.com>; Thu, 12 May 2016 21:18:48 -0700 (PDT)
-Date: Fri, 13 May 2016 12:18:40 +0800 (CST)
-From: Lucas <lucas@sz-luckyclover.com>
-Message-ID: <8654370699866701900.10649058.775561291.cnxm@sz-luckyclover.com>
-Subject: =?UTF-8?B?UmU6IFJlOiBSRe+8mlZSIDNEIEdsYXNzZXMgZm9yIERhaWx5IExlYXJuaW5n?=
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DCC78F8059
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 01:05:52 -0700 (PDT)
+Received: from izgodnioffer.eu (izgodnioffer.eu [37.157.184.227]) by
+	cuda.sgi.com with ESMTP id g5o1mbAcaOGZWb5p for
+	<xfs@oss.sgi.com>; Thu, 12 May 2016 01:05:45 -0700 (PDT)
+Received: from mmarketing-bg.eu by izgodnioffer.eu (MDaemon PRO v9.6.1)
+	with ESMTP id md50009673338.msg
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 11:05:27 +0300
+Subject: =?UTF-8?B?0JDQvdGC0L7QvdC40Y8g0JzQsNGA0LrQvtCy0LAg0L/RgNC10LTRgdGC0LDQstGPINCw0LvQsdGD0LzQsCDRgdC4ICLQmtCw0Log0YnQtSDRgtC1INC+0LHQuNGH0LDQvCI=?=
+Message-ID: <9f619ef72e1e72a1b9d93b837ee53eff@mmarketing-bg.eu>
+Date: Thu, 12 May 2016 07:50:01 +0300
+From: "=?UTF-8?B?0JDQvdGC0L7QvdC40Y8g0JzQsNGA0LrQvtCy0LA=?="
+	<antoniamarkova@izgodnioffer.eu>
 MIME-Version: 1.0
+Reply-To: antoniamarkova@mail.bg
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,503 +25,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8028826015077883335=="
+Content-Type: multipart/mixed; boundary="===============4556392141186757494=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============8028826015077883335==
-Content-Type: multipart/alternative;
-	boundary="----=_Part_7063_184047421.1463113120157"
+--===============4556392141186757494==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+X-MIME-Autoconverted: from 8bit to base64 by aserv0021.oracle.com id u4C863QZ031296
 
-------=_Part_7063_184047421.1463113120157
-Content-Type: text/plain;charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Hello=C2=A0Bro or Sis,
-Have a nice day!
-This is still Lucas:-=EF=BC=89
-My skype is:=C2=A0lucas-luckyclover=C2=A0=C2=A0whatsapp:=C2=A00086 15889459=
-482
-Here are some of my Canada clients take order of=C2=A0=C2=A0VR box=C2=A0rec=
-ently,
-Pls take=C2=A02=C2=A0minutes to have a check:-)
-=C2=A0
-Could you pls give us a chance (give yourself a chance at the same time) to=
- be your long term business partner?
-Hope we can create maximum value for you!
-=C2=A0
-Best Regards
-Lucas
-...........................................................................=
-......
-Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0
- Website: <http://szluckyclover.en.alibaba.com/(http://szluckyclover.en.ali=
-baba.com/)>
- TradeManager:cn1517839744soil
- Skype:=C2=A0lucas-luckyclover
- Whatsapp:=C2=A00086=C2=A015889459482
-=C2=A0
-
- =C2=A0=20
- =C2=A0=20
-Best Regards=20
-Lucas=20
-...........................................................................=
-.......................................................=20
-Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0=20
-Website:=C2=A0<http://szluckyclover.en.alibaba.com/(http://szluckyclover.en=
-.alibaba.com/)>
-TradeManager:cn1517839744soil
-Skype: Lucas-luckyclover
-Whatsapp: 0086=C2=A015889459482=20
-
- ------------------=C2=A0Original=C2=A0------------------=20
-From: =C2=A0Lucas<lucas@sz-luckyclover.com>=20
-Send time: =C2=A0Wednesday, May 11, 2016 05:29 PM=20
-To: =C2=A0info@pishgaman-fe.com=20
-Subject: =C2=A0Re: RE=EF=BC=9AVR 3D Glasses for Daily Learning=20
-
-Dear Bro and Sis,
-=C2=A0
-There is still Lucas, skype is: lucas-luckyclover
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0Whatsapp:+8615889459482
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0=C2=A0
-Below are some tracking numbers that clients buy =C2=A0VR BOX=C2=A0from me =
-recently,
-=C2=A0
-For your convenient reference:
-=C2=A0
-Europe:
-2890116062
-6170069253
-1515631585
-=C2=A0
-4902421510
-3736360110
-
-
-2901540633
-3736361926
-3736347801
-7600439254
-
-USA &Canada
-1515634805
-1515603040
-4902378003
-=C2=A0
-6764807162
-4546437571
-=C2=A0
-You can check here: www.dhl.com
-=C2=A0
-Could you let me know your comments please? Thanks
-=C2=A0
-BR
-Lucas
-Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0
-Website: <http://szluckyclover.en.alibaba.com/(http://szluckyclover.en.alib=
-aba.com/)>
-TradeManager:cn15157839744soil
-Skype:=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lucas-luckyclover
-Whatsapp:=C2=A0+8615889459482
-=C2=A0
- =C2=A0=20
-
- =C2=A0=20
- =C2=A0=20
-Best Regards=20
-Lucas=20
-...........................................................................=
-.......................................................=20
-Top Quality,Best Price,Fastest Delivery,Best Service!=C2=A0=20
-Website:=C2=A0<http://szluckyclover.en.alibaba.com/(http://szluckyclover.en=
-.alibaba.com/)>
-TradeManager:cn1517839744soil
-Skype: Lucas-luckyclover
-Whatsapp: 0086=C2=A015889459482=20
-
- ------------------=C2=A0Original=C2=A0------------------=20
-From: =C2=A0Lucas<lucas@sz-luckyclover.com>=20
-Send time: =C2=A0Monday, May 9, 2016 07:47 PM=20
-To: =C2=A0optout@about.com=20
-Subject: =C2=A0RE=EF=BC=9AVR 3D Glasses for Daily Learning=20
-
-Dear Bro and Sis,=20
-This is Lucas, bringing VR PROMOTION news for you.=20
-Pls take a look at it.=20
- =C2=A0=20
-
- =C2=A0=20
- =C2=A0=20
- =C2=A0=20
-
-
-
-
-
-
-
-
-------=_Part_7063_184047421.1463113120157
-Content-Type: text/html;charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div>=20
- <div>=20
-  <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Hello&=
-nbsp;Bro or Sis,</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Have a=
- nice day!</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">This i=
-s still Lucas:-=EF=BC=89</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">My sky=
-pe is:&nbsp;<strong><span style=3D"color: #ff6600;">lucas-luckyclover</span=
->&nbsp;</strong>&nbsp;</span><span style=3D"font-family: verdana, geneva; f=
-ont-size: 16px;">whatsapp:&nbsp;<span style=3D"color: #ff6600;"><strong>008=
-6 15889459482</strong></span></span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Here a=
-re some of my Canada clients take order of&nbsp;<strong>&nbsp;VR box</stron=
-g>&nbsp;recently,</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Pls ta=
-ke&nbsp;<strong>2</strong>&nbsp;minutes to have a check:-)</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">&nbsp;=
-<img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_20160411184800_=
-e127441dd9e33a5fde565dfdf3645cb9.png" alt=3D"" /><img src=3D"https://v4clie=
-nt.oss-cn-hangzhou.aliyuncs.com/0_20160411184800_afdb5c3787336146347dd07e9a=
-30a920.png" alt=3D"" /><img src=3D"https://v4client.oss-cn-hangzhou.aliyunc=
-s.com/0_20160411184800_890c8188abe4e4f7803ebb113eb34b2a.png" alt=3D"" /><im=
-g src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_20160411184800_f62=
-c1021a4d39e5b17182d1b8038dbf6.png" alt=3D"" /></span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Could =
-you pls give us a chance (give yourself a chance at the same time) to be yo=
-ur long term business partner?</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Hope w=
-e can create maximum value for you!</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">&nbsp;=
-</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Best R=
-egards</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">Lucas<=
-/span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">......=
-...........................................................................=
-</span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px; color: =
-#008000;">Top Quality,Best Price,Fastest Delivery,Best Service!&nbsp;</span=
-><br /><span style=3D"font-family: verdana, geneva; font-size: 16px;"> Webs=
-ite: &lt;<a href=3D"http://szluckyclover.en.alibaba.com/" target=3D"_blank"=
->http://szluckyclover.en.alibaba.com/</a>&gt;</span><br /><span style=3D"fo=
-nt-family: verdana, geneva; font-size: 16px;"> TradeManager:<span style=3D"=
-color: #ff6600;">cn1517839744soil</span></span><br /><span style=3D"font-fa=
-mily: verdana, geneva; font-size: 16px;"> Skype:<span style=3D"color: #ff66=
-00;">&nbsp;lucas-luckyclover</span></span><br /><span style=3D"font-family:=
- verdana, geneva; font-size: 16px;"> Whatsapp:<span style=3D"color: #ff6600=
-;">&nbsp;0086&nbsp;15889459482</span></span></p>=20
-   <p><span style=3D"font-family: verdana, geneva; font-size: 16px;">&nbsp;=
-</span></p>=20
-  </div>=20
-  <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
-   &nbsp;
-  </div>=20
-  <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
-   &nbsp;
-  </div>=20
-  <div>=20
-   <div>
-    <span style=3D"color: #006600; font-family: verdana, geneva; font-size:=
- 16px;">Best Regards</span>
-   </div>=20
-   <div>
-    <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span st=
-yle=3D"color: #006600; font-family: 'Arial Unicode MS';">Lucas</span></span=
->
-   </div>=20
-   <div>
-    <span style=3D"color: #006600; font-family: 'Arial Unicode MS';">......=
-...........................................................................=
-.................................................</span>
-   </div>=20
-   <div>
-    <span style=3D"color: #006600; font-family: 'Arial Unicode MS'; font-si=
-ze: 14px;"><img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_2016=
-0330165603_23ed025811d060d9e3dee62910865c37.png" alt=3D"image" width=3D"48"=
- height=3D"30" /><strong><span style=3D"font-family: verdana, geneva; font-=
-size: 16px;">Top Quality,Best Price,Fastest Delivery,Best Service!&nbsp;</s=
-pan></strong></span>
-   </div>=20
-   <div>
-    <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span st=
-yle=3D"color: #006600;">Website:&nbsp;&lt;<a title=3D"=E5=AE=89=E5=85=A8=E9=
-=93=BE=E6=8E=A5" href=3D"http://szluckyclover.en.alibaba.com/" target=3D"_b=
-lank">http://szluckyclover.en.alibaba.com/</a>&gt;</span><span style=3D"col=
-or: #006600;"><br />TradeManager:</span><span style=3D"color: #ed7d31;">cn1=
-517839744soil</span><span style=3D"color: #006600;"><br />Skype: <span styl=
-e=3D"color: #ff0000;">Lucas</span></span><span style=3D"color: #ed7d31;"><s=
-pan style=3D"color: #ff0000;">-</span>luckyclover</span><span style=3D"colo=
-r: #006600;"><br />Whatsapp: </span><span style=3D"color: #ed7d31;">0086&nb=
-sp;15889459482</span></span>
-   </div>=20
-  </div>=20
-  <div>=20
-   <div style=3D"font-size: 12px; font-family: Arial Narrow; padding: 2px 0=
- 2px 0;">
-    ------------------&nbsp;Original&nbsp;------------------
-   </div>=20
-   <div style=3D"font-size: 12px; background: #efefef; padding: 8px;">=20
-    <div>
-     <strong>From: </strong>&nbsp;Lucas&lt;lucas@sz-luckyclover.com&gt;
-    </div>=20
-    <div>
-     <strong>Send time: </strong>&nbsp;Wednesday, May 11, 2016 05:29 PM
-    </div>=20
-    <div>
-     <strong>To: </strong>&nbsp;info@pishgaman-fe.com
-    </div>=20
-    <div>
-     <strong>Subject: </strong>&nbsp;Re: RE=EF=BC=9AVR 3D Glasses for Daily=
- Learning
-    </div>=20
-   </div>=20
-   <div>=20
-    <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">=
-=20
-     <div>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">Dear Bro and Sis,</span>=
-</p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">There is still Lucas, sk=
-ype is: <strong><span style=3D"font-family: verdana, geneva; color: #ff00ff=
-;">lucas-luckyclover</span></strong></span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;"><strong><span style=3D"f=
-ont-family: verdana, geneva; color: #ff00ff;">&nbsp; &nbsp; &nbsp; &nbsp; &=
-nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Whatsapp:+8615=
-889459482</span></strong></span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp; &nbsp; &nbsp; &nbsp;=
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbs=
-p; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</sp=
-an></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">Below are some tracking =
-numbers that clients buy &nbsp;</span><strong><span style=3D"font-size: 12.=
-0pt; font-family: 'Verdana',sans-serif; color: #ff6600;">VR BOX</span></str=
-ong><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; co=
-lor: #ff6600;">&nbsp;</span><span style=3D"font-size: 12.0pt; font-family: =
-'Verdana',sans-serif; color: black;">from me recently,</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">For your convenient refe=
-rence:</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><strong><span style=3D"font-size:=
- 12.0pt; font-family: 'Verdana',sans-serif; color: #ff6600;">Europe:</span>=
-</strong></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">2890116062</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">6170069253</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">1515631585</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">4902421510</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">3736360110<br /><br /></=
-span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">2901540633</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">3736361926</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">3736347801</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">7600439254<br /><br /></=
-span><strong><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-=
-serif; color: #ff6600;">USA &amp;Canada</span></strong></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">1515634805</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">1515603040</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">4902378003</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">6764807162</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">4546437571</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">You can check here: www.=
-dhl.com</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">Could you let me know yo=
-ur comments please? Thanks</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 9.0pt; =
-font-family: 'Arial',sans-serif; color: black;">&nbsp;</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">BR</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><span style=3D"font-size: 12.0pt;=
- font-family: 'Verdana',sans-serif; color: black;">Lucas</span></p>=20
-      <p style=3D"margin: 0; padding: 0;"><strong><span style=3D"font-size:=
- 12.0pt; font-family: 'Verdana',sans-serif; color: black;">Top Quality,Best=
- Price,Fastest Delivery,Best Service!&nbsp;</span></strong><span style=3D"f=
-ont-size: 9.0pt; font-family: 'Arial',sans-serif; color: black;"><br /></sp=
-an><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; col=
-or: black;">Website: &lt;</span><a href=3D"http://szluckyclover.en.alibaba.=
-com/" target=3D"_blank"><span style=3D"font-size: 12.0pt; font-family: 'Ver=
-dana',sans-serif; color: blue;">http://szluckyclover.en.alibaba.com/</span>=
-</a><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; co=
-lor: black;">&gt;</span><span style=3D"font-size: 9.0pt; font-family: 'Aria=
-l',sans-serif; color: black;"><br /></span><span style=3D"font-size: 12.0pt=
-; font-family: 'Verdana',sans-serif; color: black;">TradeManager:</span><sp=
-an style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif; color: #f=
-f6600;">cn15157839744soil</span><span style=3D"font-size: 9.0pt; font-famil=
-y: 'Arial',sans-serif; color: black;"><br /></span><span style=3D"font-size=
-: 12.0pt; font-family: 'Verdana',sans-serif; color: black;">Skype:&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp; </span><span style=3D"font-size: 12.0pt; font-family:=
- 'Verdana',sans-serif; color: #ff6600;">lucas-luckyclover</span><span style=
-=3D"font-size: 9.0pt; font-family: 'Arial',sans-serif; color: black;"><br /=
-></span><span style=3D"font-size: 12.0pt; font-family: 'Verdana',sans-serif=
-; color: black;">Whatsapp:&nbsp;</span><span style=3D"font-size: 12.0pt; fo=
-nt-family: 'Verdana',sans-serif; color: #ff6600;">+8615889459482</span></p>=
-=20
-      <p style=3D"margin: 0; padding: 0;">&nbsp;</p> &nbsp;
-     </div>=20
-    </div>=20
-    <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
-     &nbsp;
-    </div>=20
-    <div style=3D"font-family: Verdana; font-size: 16px; color: #000000;">
-     &nbsp;
-    </div>=20
-    <div>=20
-     <div>
-      <span style=3D"color: #006600; font-family: verdana, geneva; font-siz=
-e: 16px;">Best Regards</span>
-     </div>=20
-     <div>
-      <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span =
-style=3D"color: #006600; font-family: 'Arial Unicode MS';">Lucas</span></sp=
-an>
-     </div>=20
-     <div>
-      <span style=3D"color: #006600; font-family: 'Arial Unicode MS';">....=
-...........................................................................=
-...................................................</span>
-     </div>=20
-     <div>
-      <span style=3D"color: #006600; font-family: 'Arial Unicode MS'; font-=
-size: 14px;"><img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_20=
-160330165603_23ed025811d060d9e3dee62910865c37.png" alt=3D"image" width=3D"4=
-8" height=3D"30" /><strong><span style=3D"font-family: verdana, geneva; fon=
-t-size: 16px;">Top Quality,Best Price,Fastest Delivery,Best Service!&nbsp;<=
-/span></strong></span>
-     </div>=20
-     <div>
-      <span style=3D"font-size: 16px; font-family: verdana, geneva;"><span =
-style=3D"color: #006600;">Website:&nbsp;&lt;<a title=3D"=E5=AE=89=E5=85=A8=
-=E9=93=BE=E6=8E=A5" href=3D"http://szluckyclover.en.alibaba.com/" target=3D=
-"_blank">http://szluckyclover.en.alibaba.com/</a>&gt;</span><span style=3D"=
-color: #006600;"><br />TradeManager:</span><span style=3D"color: #ed7d31;">=
-cn1517839744soil</span><span style=3D"color: #006600;"><br />Skype: <span s=
-tyle=3D"color: #ff0000;">Lucas</span></span><span style=3D"color: #ed7d31;"=
-><span style=3D"color: #ff0000;">-</span>luckyclover</span><span style=3D"c=
-olor: #006600;"><br />Whatsapp: </span><span style=3D"color: #ed7d31;">0086=
-&nbsp;15889459482</span></span>
-     </div>=20
-    </div>=20
-    <div>=20
-     <div style=3D"font-size: 12px; font-family: Arial Narrow; padding: 2px=
- 0 2px 0;">
-      ------------------&nbsp;Original&nbsp;------------------
-     </div>=20
-     <div style=3D"font-size: 12px; background: #efefef; padding: 8px;">=20
-      <div>
-       <strong>From: </strong>&nbsp;Lucas&lt;lucas@sz-luckyclover.com&gt;
-      </div>=20
-      <div>
-       <strong>Send time: </strong>&nbsp;Monday, May 9, 2016 07:47 PM
-      </div>=20
-      <div>
-       <strong>To: </strong>&nbsp;optout@about.com
-      </div>=20
-      <div>
-       <strong>Subject: </strong>&nbsp;RE=EF=BC=9AVR 3D Glasses for Daily L=
-earning
-      </div>=20
-     </div>=20
-     <div>=20
-      <div>=20
-       <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;=
-">=20
-        <div>
-         <span style=3D"font-family: verdana, geneva;"><span style=3D"font-=
-size: 16px; line-height: 21.8182px;">Dear Bro and Sis,</span></span>
-        </div>=20
-        <div>
-         <span style=3D"font-family: verdana, geneva;"><span style=3D"font-=
-size: 16px; line-height: 21.8182px;">This is Lucas, bringing VR PROMOTION n=
-ews for you.</span></span>
-        </div>=20
-        <div>
-         <span style=3D"font-family: verdana, geneva;"><span style=3D"font-=
-size: 16px; line-height: 21.8182px;">Pls take a look at it.</span></span>
-        </div>=20
-        <div>
-         &nbsp;
-         <img src=3D"https://v4client.oss-cn-hangzhou.aliyuncs.com/0_201604=
-26105251_c3abfb2585a33c4c4da824b8ae665bf2.PNG" alt=3D"" />
-        </div>=20
-       </div>=20
-       <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;=
-">
-        &nbsp;
-       </div>=20
-       <div style=3D"font-family: Verdana; font-size: 14px; color: #000000;=
-">
-        &nbsp;
-       </div>=20
-       <div>
-        &nbsp;
-       </div>=20
-      </div>=20
-     </div>=20
-    </div>=20
-   </div>=20
-  </div>=20
- </div>=20
-</div><img id=3D"t_r_a_c_k_i_m_g_v_4" name=3D"t_r_a_c_k_i_m_g_v_4" width=3D=
-"1px" height=3D"1px"  style=3D"display:none;" src=3D"http://v5zhui.dachongm=
-ail.cc/track/mail?t=3D9WpFyubQe6FZ11EwOU8kPv6pQE7WW0L%2B"/>
-------=_Part_7063_184047421.1463113120157--
-
-
---===============8028826015077883335==
+PGh0bWw+DQo8aGVhZD4NCjwvaGVhZD4NCjxib2R5Pg0KPHRhYmxlIGNlbGxzcGFjaW5nPSIy
+IiBjZWxscGFkZGluZz0iMiIgYm9yZGVyPSIwIiBzdHlsZT0id2lkdGg6IDgwMHB4OyI+DQo8
+dGJvZHk+DQo8dHI+DQo8dGQgdmFsaWduPSJ0b3AiPg0KPGRpdj48c3BhbiBzdHlsZT0iZm9u
+dC1zaXplOiBtZWRpdW07Ij48YQ0KaHJlZj0iaHR0cDovL21tYXJrZXRpbmctYmcuZXUvaWVt
+czUwNC9saW5rLnBocD9NPTY1MjQwNCZOPTI1Jkw9NyZGPUgiDQpyZWw9Im5vcmVmZXJyZXIi
+IHRhcmdldD0iX2JsYW5rIj5NYXN0ZXJzJyBCdXNpbmVzcyBDbHViPC9hPiZuYnNwO9C40LzQ
+sA0K0YPQtNC+0LLQvtC70YHRgtCy0LjQtdGC0L4g0LTQsCDQktC4INC/0L7QutCw0L3QuCDQ
+vdCwDQrQv9GA0LXQtNGB0YLQsNCy0Y/QvdC10YLQviDQvdCwINC/0YDQtdC80LjQtdGA0L3Q
+uNGPINCw0LvQsdGD0Lwg0L3QsA0K0LzQu9Cw0LTQsNGC0LAg0Lgg0YLQsNC70LDQvdGC0LvQ
+uNCy0LAg0L/QtdCy0LjRhtCwINCQ0L3RgtC+0L3QuNGPDQrQnNCw0YDQutC+0LLQsC4mbmJz
+cDs8L3NwYW4+PC9kaXY+DQo8ZGl2PjxzcGFuIHN0eWxlPSJmb250LXNpemU6IG1lZGl1bTsi
+PjxiPjxiciAvPjwvYj48L3NwYW4+PC9kaXY+DQo8c3BhbiBzdHlsZT0iZm9udC1zaXplOiBt
+ZWRpdW07Ij48Yj4i0JrQkNCaINCp0JUg0KLQlSDQntCR0JjQp9CQ0JwuLi4iPGJyDQovPtCQ
+0L3RgtC+0L3QuNGPINCc0LDRgNC60L7QstCwPC9iPjxiciAvPjxiciAvPtCS0YHQuNGH0LrQ
+viDQtSDQvNGD0LfQuNC60LANCtC4INC70Y7QsdC+0LIuLi4g0JTQstC1INGD0LHQtdC00LjR
+gtC10LvQvdC4INC/0YDQuNGH0LjQvdC4INC00LAg0YHQtQ0K0LbQuNCy0LXQtSE8YnIgLz48
+YnIgLz7Ql9CwINC00LAg0LjQvNCw0YLQtSDQtdC00L3QsCDRgNCw0LfQu9C40YfQvdCwDQrQ
+v9C+0L3QtdC00LXQu9C90LjRh9C90LAg0LLQtdGH0LXRgCDQuCDQvtCx0LjRh9Cw0YLQtSDQ
+uNGB0YLQuNC90YHQutC4DQrRgdGC0L7QudC90L7RgdGC0L3QuNGC0LUg0L3QtdGJ0LAsINC6
+0LDQutGC0L4g0Lgg0LzRg9C30LjQutCwINC90LANCtC20LjQstC+LCDQt9Cw0L/QvtCy0Y/Q
+tNCw0LnRgtC1INC90LAg0L/RgNC10LTRgdGC0LDQstGP0L3QtdGC0L4g0L3QsA0K0L/RitGA
+0LLQuNGPINGB0LDQvNC+0YHRgtC+0Y/RgtC10LvQtdC9INCw0LvQsdGD0Lwg0L3QsCDQv9C1
+0LLQuNGG0LDRgtCwDQrQkNC90YLQvtC90LjRjyDQnNCw0YDQutC+0LLQsC4g0J3QsNGB0YLR
+gNC+0LXQvdC40LXRgtC+INC1DQrQs9Cw0YDQsNC90YLQuNGA0LDQvdC+ITxiciAvPjxiciAv
+PtCX0LDQtdC00L3QviDRgSDQkNC90YLQvtC90LjRjyDQvdCwDQrRgdGG0LXQvdCw0YLQsCDR
+idC1INGB0LLQuNGA0Y/RgiDQvdCwINC20LjQstC+INC80YPQt9C40LrQsNC90YLQuNGC0LU6
+PGJyDQovPuKZqiDQr9GB0LXQvSDQktC10LvRh9C10LIgKNC/0LjQsNC90L4pPGJyIC8+4pmq
+INCY0LLQsNC50LvQvg0K0JfQstC10LfQtNC+0LzQuNGA0L7QsiAo0LHQsNGBINC60LjRgtCw
+0YDQsCk8YnIgLz7imaog0JTQsNGA0LjQvQ0K0JLQsNGB0LjQu9C10LIgKNC60LjRgtCw0YDQ
+sCk8YnIgLz7imaog0KLQtdC+0LTQvtGAINCv0L3QutC+0LINCijQsdCw0YDQsNCx0LDQvdC4
+KSZuYnNwOzxiciAvPuKZqiDQodGC0LDQvdC40YHQu9Cw0LLQsCDQlNC40LzQuNGC0YDQvtCy
+0LAgLQ0K0KHRitC90LggKNCx0LXQutCy0L7QutCw0LspPGJyIC8+PGJyIC8+0KHQv9C10YbQ
+uNCw0LvQvdC4INCz0L7RgdGC0Lgg0L3QsA0K0YHRitCx0LjRgtC40LXRgtC+INGJ0LUg0LHR
+itC00LDRgjo8YnIgLz7imaog0J3QtdC70Lgg0KDQsNC90LPQtdC70L7QstCwPGJyDQovPuKZ
+qiDQlNC20LjQvdCwINCY0LLQsNC90L7QstCwPGJyIC8+4pmqINC4INC00YDRg9Cz0Lgg0LzR
+g9C30LjQutCw0LvQvdC4DQrQuNC30L3QtdC90LDQtNC4Li4uPGJyIC8+PGJyIC8+PHN0cm9u
+Zz7QktGF0L7QtDoNCtCh0JLQntCR0J7QlNCV0J08L3N0cm9uZz48YnIgLz48YnIgLz7QnNCv
+0KHQotCeOiBTb2ZpYSBMaXZlIENsdWIgKNCz0YAuDQrQodC+0YTQuNGPLCDQv9C7LtCR0YrQ
+u9Cz0LDRgNC40Y8gLSDQv9C+0LTQu9C10Lcg0L3QsCDQndCU0JogLSDRgdGA0LXRidGDDQrR
+hNC+0L3RgtCw0L3QsCk8YnIgLz7QlNCQ0KLQkDogMTYg0LzQsNC5IDIwMTYg0LMuPGJyIC8+
+0J3QkNCn0JDQm9CeOiAyMDowMA0K0YcuPGJyIC8+PGJyIC8+0JLQvtC00LXRiSDQvdCwINGB
+0YrQsdC40YLQuNC10YLQvjombmJzcDs8YQ0KaHJlZj0iaHR0cDovL21tYXJrZXRpbmctYmcu
+ZXUvaWVtczUwNC9saW5rLnBocD9NPTY1MjQwNCZOPTI1Jkw9NSZGPUgiDQpyZWw9Im5vcmVm
+ZXJyZXIiIHRhcmdldD0iX2JsYW5rIj5EaW1pdGVyIE1hbmRyYWRqaWV2PC9hPjxiciAvPjxi
+ciAvPjxicg0KLz7QkNC70LHRg9C80YrRgiDQtSDQvtGB0YrRidC10YHRgtCy0LXQvSDRgdGK
+0YEg0YHRitC00LXQudGB0YLQstC40LXRgtC+DQrQvdCwINCc0LXQsdC10LvQuCDQlNC40LfQ
+vNCwIC0mbmJzcDs8YQ0KaHJlZj0iaHR0cDovL21tYXJrZXRpbmctYmcuZXUvaWVtczUwNC9s
+aW5rLnBocD9NPTY1MjQwNCZOPTI1Jkw9OCZGPUgiDQpyZWw9Im5vcmVmZXJyZXIiIHRhcmdl
+dD0iX2JsYW5rIj53d3cuZGl6bWEuYmc8L2E+PC9zcGFuPg0KPGRpdj48c3BhbiBzdHlsZT0i
+Zm9udC1zaXplOiBtZWRpdW07Ij48YnIgLz48L3NwYW4+PC9kaXY+DQo8ZGl2PjxzcGFuIHN0
+eWxlPSJmb250LXNpemU6IG1lZGl1bTsiPtCf0LDRgNGC0L3RjNC+0YAg0L3QsA0K0YHRitCx
+0LjRgtC40LXRgtC+OiZuYnNwOzxhDQpocmVmPSJodHRwOi8vbW1hcmtldGluZy1iZy5ldS9p
+ZW1zNTA0L2xpbmsucGhwP009NjUyNDA0Jk49MjUmTD03JkY9SCINCnJlbD0ibm9yZWZlcnJl
+ciIgdGFyZ2V0PSJfYmxhbmsiPk1hc3RlcnMnIEJ1c2luZXNzIENsdWI8L2E+PGJyIC8+PGJy
+DQovPtCQ0L3RgtC+0L3QuNGPINCc0LDRgNC60L7QstCwINC1INCy0YHQtdC/0YDQuNC30L3Q
+sNGCINC80LvQsNC0DQrQsdGK0LvQs9Cw0YDRgdC60Lgg0YLQsNC70LDQvdGCINGBINC90LDQ
+tCAzMCDQvdCw0LPRgNCw0LTQuCDQvtGCINC90LDQtCA1MA0K0YPRh9Cw0YHRgtC40Y8g0LIg
+MjAg0LTRitGA0LbQsNCy0LguPGJyIC8+PGJyIC8+PGENCmhyZWY9Imh0dHA6Ly9tbWFya2V0
+aW5nLWJnLmV1L2llbXM1MDQvbGluay5waHA/TT02NTI0MDQmTj0yNSZMPTkmRj1IIg0KcmVs
+PSJub3JlZmVycmVyIiB0YXJnZXQ9Il9ibGFuayI+d3d3LmFudG9uaWFtYXJrb3ZhLmNvbTwv
+YT48YnIgLz48YnIgLz7Ql9CwDQrQstGK0L/RgNC+0YHQuDombmJzcDs8YQ0KaHJlZj0ibWFp
+bHRvOmFudG9uaWFtYXJrb3ZhQGFudG9uaWFtYXJrb3ZhLmNvbSI+YW50b25pYW1hcmtvdmFA
+YW50b25pYW1hcmtvdmEuY29tPGJyDQovPjwvYT48YQ0KaHJlZj0iaHR0cDovL21tYXJrZXRp
+bmctYmcuZXUvaWVtczUwNC9saW5rLnBocD9NPTY1MjQwNCZOPTI1Jkw9NiZGPUgiDQpyZWw9
+Im5vcmVmZXJyZXIiIHRhcmdldD0iX2JsYW5rIj53d3cuYW50b25pYW1hcmtvdmEuY29tPC9h
+PjxhDQpocmVmPSJtYWlsdG86YW50b25pYW1hcmtvdmFAYW50b25pYW1hcmtvdmEuY29tIj48
+YnIgLz48YnINCi8+PC9hPjwvc3Bhbj48L2Rpdj4NCjxkaXY+PHNwYW4gc3R5bGU9ImZvbnQt
+c2l6ZTogbWVkaXVtOyI+PGltZw0Kc3JjPSJodHRwOi8vbW1hcmtldGluZy1iZy5ldS9pZW1z
+NTA0L2FkbWluL3RlbXAvbmV3c2xldHRlcnMvMjAvMTMxNzg1MThfOTUxODk3OTE0OTIzNzk4
+XzIyMjM5MDk0NTMwMDE4MjQyNjVfbi5qcGciDQp3aWR0aD0iNzE0IiBoZWlnaHQ9IjI2NCIN
+CmFsdD0iMTMxNzg1MThfOTUxODk3OTE0OTIzNzk4XzIyMjM5MDk0NTMwMDE4MjQyNjVfbi5q
+cGciDQp0aXRsZT0iMTMxNzg1MThfOTUxODk3OTE0OTIzNzk4XzIyMjM5MDk0NTMwMDE4MjQy
+NjVfbi5qcGciIC8+PC9zcGFuPjwvZGl2Pg0KPGRpdj48c3BhbiBzdHlsZT0iZm9udC1zaXpl
+OiBtZWRpdW07Ij48aW1nIGJvcmRlcj0iMCIgaHNwYWNlPSIwIg0KYWx0PSJJbmxpbmUgaW1h
+Z2UgMiINCnNyYz0iRDpcTWFpbHNcTWFpbFNlbmRcRm9yU2VuZE5ld1wxMzE3ODUxOF85NTE4
+OTc5MTQ5MjM3OThfMjIyMzkwOTQ1MzAwMTgyNDI2NV9uLmpwZyINCi8+PC9zcGFuPjwvZGl2
+Pg0KPGRpdj48c3BhbiBzdHlsZT0iZm9udC1zaXplOiBtZWRpdW07Ij48YQ0KaHJlZj0iaHR0
+cDovL21tYXJrZXRpbmctYmcuZXUvaWVtczUwNC9saW5rLnBocD9NPTY1MjQwNCZOPTI1Jkw9
+NiZGPUgiDQpyZWw9Im5vcmVmZXJyZXIiIHRhcmdldD0iX2JsYW5rIj48YnIgLz48L2E+PC9z
+cGFuPjwvZGl2Pg0KPC90ZD4NCjwvdHI+DQo8L3Rib2R5Pg0KPC90YWJsZT4NCjxwPjxzcGFu
+PtCh0YrQs9C70LDRgdC90L4g0JfQldCiINCS0Lgg0YHRitC+0LHRidCw0LLQsNC80LUsINGH
+0LUg0YLQvtCy0LANCtGC0YrRgNCz0L7QstGB0LrQviDRgdGK0L7QsdGJ0LXQvdC40LUg0LzQ
+vtC20LUg0LTQsCDQvdC1INC1DQrQv9C+0LjRgdC60LDQvdC+INC/0YDQtdC00LLQsNGA0LjR
+gtC10LvQvdC+INC+0YIg0JLQsNGBLiA8YnIgLz7QkNC60L4NCtGB0LzQtSDQktC4INC/0YDQ
+uNGC0LXRgdC90LjQu9C4LCDQvNC+0LvRjyDQtNCwINC90Lgg0LjQt9Cy0LjQvdC40YLQtSwN
+CtCQ0LrQviDQvdC1INC40YHQutCw0YLQtSDQtNCwINC/0L7Qu9GD0YfQsNCy0LDRgtC1INC/
+0L7QstC10YfQtQ0K0YHRitC+0LHRidC10L3QuNGPINC+0YIg0L3QsNGBLCA8YnIgLz7QvNC+
+0LvRjw0K0L3QsNGC0LjRgdC90LXRgtC1Jm5ic3A7PC9zcGFuPjxzdHJvbmc+PGENCmhyZWY9
+Imh0dHA6Ly9tbWFya2V0aW5nLWJnLmV1L2llbXM1MDQvdW5zdWJzY3JpYmUucGhwP009NjUy
+NDA0JkM9NTI5MWJiYzY1NjVjZDEyZTVlNmIxYzUxNWM0MjdlNzImTD0xNiZOPTI1Ij7QntCi
+0J/QmNCh0JLQkNCd0JU8L2E+PC9zdHJvbmc+PHNwYW4+Jm5ic3A70LvQuNC90LrQsA0K0L3Q
+sCDQsdGA0L7RiNGD0YDQsNGC0LAg0Lgg0L3QuNC1INGJ0LUg0L/RgNC10YPRgdGC0LDQvdC+
+0LLQuNC8DQrQuNC30L/RgNCw0YnQsNC90LXRgtC+INC60YrQvCDQstCw0YjQsNGC0LAg0YTQ
+uNGA0LzQsC48L3NwYW4+PC9wPg0KPGltZw0Kc3JjPSJodHRwOi8vbW1hcmtldGluZy1iZy5l
+dS9pZW1zNTA0L29wZW4ucGhwP009NjUyNDA0Jkw9MTYmTj0yNSZGPUgmaW1hZ2U9LmpwZyIN
+CmhlaWdodD0iMSIgd2lkdGg9IjEwIj48L2JvZHk+DQo8L2h0bWw+DQoNCg0K
+--===============4556392141186757494==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8028826015077883335==--
+--===============4556392141186757494==--
