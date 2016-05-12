@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B18AE7CA0
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 18:35:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id F282A7CA0
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 21:41:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D583AC001
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 16:35:25 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BETrGuCKMMaDWstT for <xfs@oss.sgi.com>;
-	Wed, 18 May 2016 16:35:23 -0700 (PDT)
-Date: Thu, 19 May 2016 09:34:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: struct fsxattr redefinition
-Message-ID: <20160518233442.GE21200@dastard>
-References: <20160518163733.GB14165@tarantula.localdomain>
-	<237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8442FAC001
+	for <xfs@oss.sgi.com>; Wed, 11 May 2016 19:41:16 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id cWyjq45MsdTcYDn5 for <xfs@oss.sgi.com>;
+	Wed, 11 May 2016 19:41:13 -0700 (PDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfs_quota: check report_mount return value
+Message-ID: <1e8b9ace-2fa3-bc11-4487-19be60053ef9@sandeen.net>
+Date: Wed, 11 May 2016 21:41:12 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +25,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Zorro Lang <zlang@redhat.com>
 
-On Wed, May 18, 2016 at 03:44:46PM -0500, Eric Sandeen wrote:
-> On 5/18/16 11:37 AM, Jeffrey Bastian wrote:
-> > There was a discussion a few months ago about adding a guard for the
-> > fsxattr struct [0] because it's defined in two places, the Linux kernel
-> > header linux/fs.h [1] and xfsprogs header xfs/linux.h [2].
-> 
-> > xfs/linux.h has a FS_IOC_FSGETXATTR guard around the struct fsxattr
-> > definition, but this only works if linux/fs.h is included *before*
-> > xfs/linux.h (or xfs/xfs.h).  If you include linux/fs.h after, then you
-> > get a struct redefinition error.
-> > 
-> > Is it a requirement that linux/fs.h is included first?  If so, then
-> > there is a bug in xfstests because it includes them in the wrong order
-> > [3] and fails to build.  If there is not an order requirement, then both
-> > header files should probably have a HAVE_FSXATTR guard around the struct
-> > definition.
-> 
-> It seems best to me to include fs.h first.  That may not be written in
-> stone, but it's at least common practice.
-> 
-> Having the same definition in both places, and guards going both ways,
-> seems a little odd though.
-> 
-> Maybe xfsprogs' include/linux.h should just directly include
-> the kernel's linux/fs.h at the top - would that make sense?
+The new call to report_mount doesn't check the return value
+like every other caller does...
 
-That's the easiest solution - stops people wasting even more time on
-this.
+Returning 1 means it printed something; if the terse flag
+is used and there is no usage, nothing gets printed.
+If we set the NO_HEADER_FLAG anyway, then we won't see
+the header for subsequent entries as we expect.
 
-Cheers,
+For example, project ID 0 has no usage in this case:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+# xfs_quota -x -c "report -a" /mnt/test
+Project quota on /mnt/test (/dev/sdb1)
+                               Blocks                     
+Project ID       Used       Soft       Hard    Warn/Grace     
+---------- -------------------------------------------------- 
+#0                  0          0          0     00 [--------]
+project          2048          4          4     00 [--none--]
+
+So using the terse flag results in no header when it prints
+projects with usage:
+
+# xfs_quota -x -c "report -t -a" /mnt/test
+project          2048          4          4     00 [--none--]
+
+With this fix it prints the header as expected:
+
+# xfs_quota -x -c "report -t -a" /mnt/test
+Project quota on /mnt/test (/dev/sdb1)
+                               Blocks                     
+Project ID       Used       Soft       Hard    Warn/Grace     
+---------- -------------------------------------------------- 
+project          2048          4          4     00 [--none--]
+
+
+Addresses-Coverity-Id: 1361552
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/quota/report.c b/quota/report.c
+index cc422d1..59290e1 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -580,9 +580,9 @@ report_project_mount(
+ 			 * Print default project quota, even if projid 0
+ 			 * isn't defined
+ 			 */
+-			report_mount(fp, 0, NULL, NULL, form, XFS_PROJ_QUOTA,
+-			             mount, flags);
+-			flags |= NO_HEADER_FLAG;
++			if (report_mount(fp, 0, NULL, NULL,
++					form, XFS_PROJ_QUOTA, mount, flags))
++				flags |= NO_HEADER_FLAG;
+ 		}
+ 
+ 		setprent();
 
 _______________________________________________
 xfs mailing list
