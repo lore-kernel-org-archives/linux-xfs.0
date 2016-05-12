@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EAE547CA0
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 17:06:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 57EE5AC001
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 15:06:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id n2BzEUqG8J4B87N5 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 18 May 2016 15:06:43 -0700 (PDT)
-Date: Wed, 18 May 2016 17:06:39 -0500
-From: Jeffrey Bastian <jbastian@redhat.com>
-Subject: Re: struct fsxattr redefinition
-Message-ID: <20160518220639.GC23173@tarantula.localdomain>
-References: <20160518163733.GB14165@tarantula.localdomain>
-	<237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 917DA7CA0
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 12:06:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 13BF7AC001
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 10:06:42 -0700 (PDT)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id EMWqXZpzcUneVX3F for
+	<xfs@oss.sgi.com>; Thu, 12 May 2016 10:06:41 -0700 (PDT)
+From: "Verma, Vishal L" <vishal.l.verma@intel.com>
+Subject: Re: [PATCH v7 4/6] dax: export a low-level __dax_zero_page_range
+	helper
+Date: Thu, 12 May 2016 17:06:39 +0000
+Message-ID: <1463072787.29294.38.camel@intel.com>
+References: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
+	<1463000932-31680-5-git-send-email-vishal.l.verma@intel.com>
+	<20160512084138.GC10306@quack2.suse.cz>
+In-Reply-To: <20160512084138.GC10306@quack2.suse.cz>
+Content-Language: en-US
+Content-ID: <9CB344B4DD27584EAD3C45DE3E6E0947@intel.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,71 +28,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: "jack@suse.cz" <jack@suse.cz>
+Cc: "hch@infradead.org" <hch@infradead.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "axboe@fb.com" <axboe@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "boaz@plexistor.com" <boaz@plexistor.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "hch@lst.de" <hch@lst.de>
 
-T24gV2VkLCBNYXkgMTgsIDIwMTYgYXQgMDM6NDQ6NDZQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IE9uIDUvMTgvMTYgMTE6MzcgQU0sIEplZmZyZXkgQmFzdGlhbiB3cm90ZToKPiA+IFRo
-ZXJlIHdhcyBhIGRpc2N1c3Npb24gYSBmZXcgbW9udGhzIGFnbyBhYm91dCBhZGRpbmcgYSBndWFy
-ZCBmb3IgdGhlCj4gPiBmc3hhdHRyIHN0cnVjdCBbMF0gYmVjYXVzZSBpdCdzIGRlZmluZWQgaW4g
-dHdvIHBsYWNlcywgdGhlIExpbnV4IGtlcm5lbAo+ID4gaGVhZGVyIGxpbnV4L2ZzLmggWzFdIGFu
-ZCB4ZnNwcm9ncyBoZWFkZXIgeGZzL2xpbnV4LmggWzJdLgo+IAo+ID4geGZzL2xpbnV4LmggaGFz
-IGEgRlNfSU9DX0ZTR0VUWEFUVFIgZ3VhcmQgYXJvdW5kIHRoZSBzdHJ1Y3QgZnN4YXR0cgo+ID4g
-ZGVmaW5pdGlvbiwgYnV0IHRoaXMgb25seSB3b3JrcyBpZiBsaW51eC9mcy5oIGlzIGluY2x1ZGVk
-ICpiZWZvcmUqCj4gPiB4ZnMvbGludXguaCAob3IgeGZzL3hmcy5oKS4gIElmIHlvdSBpbmNsdWRl
-IGxpbnV4L2ZzLmggYWZ0ZXIsIHRoZW4geW91Cj4gPiBnZXQgYSBzdHJ1Y3QgcmVkZWZpbml0aW9u
-IGVycm9yLgo+ID4gCj4gPiBJcyBpdCBhIHJlcXVpcmVtZW50IHRoYXQgbGludXgvZnMuaCBpcyBp
-bmNsdWRlZCBmaXJzdD8gIElmIHNvLCB0aGVuCj4gPiB0aGVyZSBpcyBhIGJ1ZyBpbiB4ZnN0ZXN0
-cyBiZWNhdXNlIGl0IGluY2x1ZGVzIHRoZW0gaW4gdGhlIHdyb25nIG9yZGVyCj4gPiBbM10gYW5k
-IGZhaWxzIHRvIGJ1aWxkLiAgSWYgdGhlcmUgaXMgbm90IGFuIG9yZGVyIHJlcXVpcmVtZW50LCB0
-aGVuIGJvdGgKPiA+IGhlYWRlciBmaWxlcyBzaG91bGQgcHJvYmFibHkgaGF2ZSBhIEhBVkVfRlNY
-QVRUUiBndWFyZCBhcm91bmQgdGhlIHN0cnVjdAo+ID4gZGVmaW5pdGlvbi4KPiAKPiBJdCBzZWVt
-cyBiZXN0IHRvIG1lIHRvIGluY2x1ZGUgZnMuaCBmaXJzdC4gIFRoYXQgbWF5IG5vdCBiZSB3cml0
-dGVuIGluCj4gc3RvbmUsIGJ1dCBpdCdzIGF0IGxlYXN0IGNvbW1vbiBwcmFjdGljZS4KPiAKPiBI
-YXZpbmcgdGhlIHNhbWUgZGVmaW5pdGlvbiBpbiBib3RoIHBsYWNlcywgYW5kIGd1YXJkcyBnb2lu
-ZyBib3RoIHdheXMsCj4gc2VlbXMgYSBsaXR0bGUgb2RkIHRob3VnaC4KPiAKPiBNYXliZSB4ZnNw
-cm9ncycgaW5jbHVkZS9saW51eC5oIHNob3VsZCBqdXN0IGRpcmVjdGx5IGluY2x1ZGUKPiB0aGUg
-a2VybmVsJ3MgbGludXgvZnMuaCBhdCB0aGUgdG9wIC0gd291bGQgdGhhdCBtYWtlIHNlbnNlPwoK
-SSBzZW50IGEgcGF0Y2ggdG8gdGhlIGZzdGVzdHMgbGlzdCB0byBjaGFuZ2UgdGhlIG9yZGVyIG9m
-IHRoZSBoZWFkZXJzCih0d28gdGVzdHMgbmVlZGVkIHVwZGF0aW5nLCBzcmMvdF9pbW11dGFibGUu
-YyBhbmQgbHRwL2Zzc3RyZXNzLmMpLgoKSSdtIGFzc3VtaW5nIHRoZSBzdHJ1Y3QgZGVmaW5pdGlv
-biBpcyBpbiBib3RoIHNwb3RzIGJlY2F1c2UgeGZzcHJvZ3MgaXMKbWVhbnQgdG8gYmUgcG9ydGFi
-bGUgdG8gSXJpeCBhbmQgRnJlZUJTRCBhbmQgb3RoZXIgKm5peCBmbGF2b3JzPyAgSWYgc28sCnRo
-ZW4gdGhlIGRvdWJsZS1kZWZpbml0aW9uIGlzbid0IHNvIHdlaXJkLCBhbmQgd3JhcHBpbmcgYm90
-aCBkZWZpbml0aW9ucwp3aXRoIHRoZSBzYW1lIEhBVkVfRlNYQVRUUiBndWFyZCBpcyB0aGUgbG9n
-aWNhbCB0aGluZyB0byBkbyB0byBwcmV2ZW50CmRvdWJsZS1kZWZpbml0aW9ucyBmcm9tIGFjY2lk
-ZW50YWxseSBpbmNsdWRpbmcgdGhlIGZpbGVzIGluIHRoZSAid3JvbmciCm9yZGVyLgoKT24gdGhl
-IG90aGVyIGhhbmQsIHhmc3Byb2dzJyBpbmNsdWRlL2xpbnV4LmggaXMgb2J2aW91c2x5IG1lYW50
-IHRvIGJlCmZvciBMaW51eCBhbG9uZSwgc28gaW5jbHVkaW5nIGxpbnV4L2ZzLmggd291bGQgYWxz
-byBzb2x2ZSB0aGUgcHJvYmxlbQpzaW5jZSBpdCB3aWxsIGJyaW5nIGluIEZTX0lPQ19GU0dFVFhB
-VFRSIGFuZCB0aHVzIHNraXAgdGhlIHNlY29uZApkZWZpbml0aW9uIG9mIGZzeGF0dHIuICBJIGxp
-a2UgdGhpcyBpZGVhLgoKQSBxdWljayBhbmQgc2ltcGxlIHRlc3Qgc2hvd3MgdGhpcyB3b3Jrcy4g
-IEJlZm9yZToKfn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+CiQgZ3JlcCBsaW51eC5mcy5oIC91c3IvaW5jbHVkZS94
-ZnMvbGludXguaAoKJCBjYXQgdGVzdC1mc3hhdHRyLmMKI2RlZmluZSBfTEFSR0VGSUxFNjRfU09V
-UkNFCiNpbmNsdWRlIDxzeXMvdHlwZXMuaD4KI2lmZGVmIEJBRAojIGluY2x1ZGUgPHhmcy94ZnMu
-aD4KIyBpbmNsdWRlIDxsaW51eC9mcy5oPgojZWxzZQojIGluY2x1ZGUgPGxpbnV4L2ZzLmg+CiMg
-aW5jbHVkZSA8eGZzL3hmcy5oPgojZW5kaWYKaW50IG1haW4odm9pZCkKewogIHN0cnVjdCBmc3hh
-dHRyIGY7CiAgZi5mc3hfeGZsYWdzID0gMTsKICByZXR1cm4gMDsKfQoKJCBnY2MgdGVzdC1mc3hh
-dHRyLmMKCiQgZ2NjIC1EQkFEIHRlc3QtZnN4YXR0ci5jCkluIGZpbGUgaW5jbHVkZWQgZnJvbSB0
-ZXN0LWZzeGF0dHIuYzo1OjA6Ci91c3IvaW5jbHVkZS9saW51eC9mcy5oOjE1Nzo4OiBlcnJvcjog
-cmVkZWZpbml0aW9uIG9mIOKAmHN0cnVjdCBmc3hhdHRy4oCZCiBzdHJ1Y3QgZnN4YXR0ciB7CiAg
-ICAgICAgXgpJbiBmaWxlIGluY2x1ZGVkIGZyb20gL3Vzci9pbmNsdWRlL3hmcy94ZnMuaDozNzow
-LAogICAgICAgICAgICAgICAgIGZyb20gdGVzdC1mc3hhdHRyLmM6NDoKL3Vzci9pbmNsdWRlL3hm
-cy9saW51eC5oOjE4Mzo4OiBub3RlOiBvcmlnaW5hbGx5IGRlZmluZWQgaGVyZQogc3RydWN0IGZz
-eGF0dHIgewogICAgICAgIF4Kfn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+CgoKTm93IGluY2x1ZGUgbGludXgvZnMu
-aCBpbiB4ZnMvbGludXguaCBhbmQgdHJ5IGFnYWluOgp+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn4KJCBzdWRvIHZp
-IC91c3IvaW5jbHVkZS94ZnMvbGludXguaAoKJCBncmVwIGxpbnV4LmZzLmggL3Vzci9pbmNsdWRl
-L3hmcy9saW51eC5oCiNpbmNsdWRlIDxsaW51eC9mcy5oPgoKJCBnY2MgdGVzdC1mc3hhdHRyLmMK
-CiQgZ2NjIC1EQkFEIHRlc3QtZnN4YXR0ci5jCgokCn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgoKVGhlIG9yZGVy
-IG9mIGluY2x1c2lvbiBubyBsb25nZXIgbWF0dGVycyEKCi0tIApKZWZmIEJhc3RpYW4KCl9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
-c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
-cwo=
+On Thu, 2016-05-12 at 10:41 +0200, Jan Kara wrote:
+> On Wed 11-05-16 15:08:50, Vishal Verma wrote:
+> > 
+> > From: Christoph Hellwig <hch@lst.de>
+> > 
+> > This allows XFS to perform zeroing using the iomap infrastructure
+> > and
+> > avoid buffer heads.
+> > 
+> > [vishal: fix conflicts with dax-error-handling]
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Looks good. You can add:
+> 
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> 
+> BTW: You are supposed to add your Signed-off-by when forwarding
+> patches
+> like this...
+
+Ah I didn't know. I'll add it when making the stable topic branch for
+this. Thanks!
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
