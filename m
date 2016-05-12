@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0ACA87CB5
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 16:09:25 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 45DB87CA0
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 07:20:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A2D738F8065
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:24 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id CDuejvcnjAbrGrCA for
-	<xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:23 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v7 6/6] dax: fix a comment in dax_zero_page_range and
-	dax_truncate_page
-Date: Wed, 11 May 2016 15:08:52 -0600
-Message-Id: <1463000932-31680-7-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
-References: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4BACAC001
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 05:20:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id PZOgNQBUwzecR8TT (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 12 May 2016 05:20:41 -0700 (PDT)
+Date: Thu, 12 May 2016 07:20:39 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH v5 1/2] libxcmd: generalize topology functions
+Message-ID: <20160512122039.GA19699@redhat.com>
+References: <1463006717-6104-1-git-send-email-billodo@redhat.com>
+	<1463006717-6104-2-git-send-email-billodo@redhat.com>
+	<20160512115513.GD32528@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160512115513.GD32528@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,62 +27,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The distinction between PAGE_SIZE and PAGE_CACHE_SIZE was removed in
+On Thu, May 12, 2016 at 04:55:13AM -0700, Christoph Hellwig wrote:
+> I still think libxfs would be the better place, but otherwise this looks
+> fine in general.
+> 
+> > +#ifdef ENABLE_BLKID
+> > +#  include <blkid/blkid.h>
+> > +#endif /* ENABLE_BLKID */
+> > +#include "xfs_multidisk.h"
+> 
+> But what tree is this against?  I can't find a xfs_multidisk.h in
+> the master branch, nor in this patch?
 
-09cbfea mm, fs: get rid of PAGE_CACHE_* and page_cache_{get,release}
-macros
+xfs_multidisk.h came about a few days ago (4a32b9e928b80)
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-The comments for the above functions described a distinction between
-those, that is now redundant, so remove those paragraphs
 
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/dax.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 0b9a169..ea936b3 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -995,12 +995,6 @@ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
-  * page in a DAX file.  This is intended for hole-punch operations.  If
-  * you are truncating a file, the helper function dax_truncate_page() may be
-  * more convenient.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 							get_block_t get_block)
-@@ -1035,12 +1029,6 @@ EXPORT_SYMBOL_GPL(dax_zero_page_range);
-  *
-  * Similar to block_truncate_page(), this function can be called by a
-  * filesystem when it is truncating a DAX file to handle the partial page.
-- *
-- * We work in terms of PAGE_SIZE here for commonality with
-- * block_truncate_page(), but we could go down to PAGE_SIZE if the filesystem
-- * took care of disposing of the unnecessary blocks.  Even if the filesystem
-- * block size is smaller than PAGE_SIZE, we have to zero the rest of the page
-- * since the file might be mmapped.
-  */
- int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- {
--- 
-2.5.5
 
 _______________________________________________
 xfs mailing list
