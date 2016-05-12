@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5C6377CA2
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 05:43:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 692A77CA0
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 03:39:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D8B78F8054
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 03:42:58 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id oURSEfVTYMqIJoFA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 18 May 2016 03:42:56 -0700 (PDT)
-Date: Wed, 18 May 2016 13:42:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: xfs: fix efi/efd error handling to avoid fs shutdown hangs
-Message-ID: <20160518104239.GA11591@mwanda>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CB5A9AC002
+	for <xfs@oss.sgi.com>; Thu, 12 May 2016 01:38:59 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id GzppKMcK1b2FX5K9 (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 12 May 2016 01:38:56 -0700 (PDT)
+Date: Thu, 12 May 2016 10:38:52 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v7 5/6] dax: for truncate/hole-punch, do zeroing through
+	the driver if possible
+Message-ID: <20160512083852.GB10306@quack2.suse.cz>
+References: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
+	<1463000932-31680-6-git-send-email-vishal.l.verma@intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1463000932-31680-6-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,47 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bfoster@redhat.com
-Cc: xfs@oss.sgi.com
+To: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-Hello Brian Foster,
+On Wed 11-05-16 15:08:51, Vishal Verma wrote:
+> In the truncate or hole-punch path in dax, we clear out sub-page ranges.
+> If these sub-page ranges are sector aligned and sized, we can do the
+> zeroing through the driver instead so that error-clearing is handled
+> automatically.
+> 
+> For sub-sector ranges, we still have to rely on clear_pmem and have the
+> possibility of tripping over errors.
+> 
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Jan Kara <jack@suse.cz>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
 
-The patch 8d99fe92fed0: "xfs: fix efi/efd error handling to avoid fs
-shutdown hangs" from Aug 19, 2015, leads to the following static
-checker warning:
+The patch looks good to me now. Feel free to add:
 
-	fs/xfs/xfs_bmap_util.c:134 xfs_bmap_finish()
-	warn: error is never (-117)
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-fs/xfs/xfs_bmap_util.c
-   120          error = __xfs_trans_roll(tp, ip, &committed);
-
-It used to be that error was set by xfs_free_extent() which does return
--EFSCORRUPTED.  But I don't think __xfs_trans_roll() can.
-
-   121          if (error) {
-   122                  /*
-   123                   * If the transaction was committed, drop the EFD reference
-   124                   * since we're bailing out of here. The other reference is
-   125                   * dropped when the EFI hits the AIL.
-   126                   *
-   127                   * If the transaction was not committed, the EFI is freed by the
-   128                   * EFI item unlock handler on abort. Also, we have a new
-   129                   * transaction so we should return committed=1 even though we're
-   130                   * returning an error.
-   131                   */
-   132                  if (committed) {
-   133                          xfs_efi_release(efi);
-   134                          xfs_force_shutdown((*tp)->t_mountp,
-   135                                  (error == -EFSCORRUPTED) ?
-   136                                          SHUTDOWN_CORRUPT_INCORE :
-   137                                          SHUTDOWN_META_IO_ERROR);
-   138                  }
-   139                  return error;
-   140          }
-
-regards,
-dan carpenter
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
