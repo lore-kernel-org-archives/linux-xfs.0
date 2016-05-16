@@ -1,17 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0206F7CA1
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 16:09:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D87FE7CAE
+	for <xfs@oss.sgi.com>; Mon, 16 May 2016 18:11:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C5F7B304032
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:20 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id zkBT4n9dbo6A0EYF for
-	<xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:16 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v7 0/6] dax: handling media errors (clear-on-zero only)
-Date: Wed, 11 May 2016 15:08:46 -0600
-Message-Id: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B8A2AC004
+	for <xfs@oss.sgi.com>; Mon, 16 May 2016 16:11:03 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	6RyvT8SsEZodl8yB for <xfs@oss.sgi.com>;
+	Mon, 16 May 2016 16:10:59 -0700 (PDT)
+Date: Tue, 17 May 2016 09:10:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160516231056.GE18496@dastard>
+References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
+	<20160512055756.GE6648@birch.djwong.org>
+	<20160512080321.GA18496@dastard>
+	<20160513160341.GW20141@dhcp22.suse.cz>
+	<20160516104130.GK3193@twins.programming.kicks-ass.net>
+	<20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160516132541.GP3193@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,105 +31,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-mm@kvack.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Michal Hocko <mhocko@kernel.org>
 
-Until now, dax has been disabled if media errors were found on
-any device. This series attempts to address that.
+On Mon, May 16, 2016 at 03:25:41PM +0200, Peter Zijlstra wrote:
+> On Mon, May 16, 2016 at 03:05:19PM +0200, Michal Hocko wrote:
+> > On Mon 16-05-16 12:41:30, Peter Zijlstra wrote:
+> > > On Fri, May 13, 2016 at 06:03:41PM +0200, Michal Hocko wrote:
+> > IIRC Dave's emails they have tried that by using lockdep classes and
+> > that turned out to be an overly complex maze which still doesn't work
+> > 100% reliably.
+> 
+> So that would be the: 
+> 
+> > >  but we can't tell lockdep that easily in any way
+> > > without going back to the bad old ways of creating a new lockdep
+> > > class for inode ilocks the moment they enter ->evict. This then
+> > > disables "entire lifecycle" lockdep checking on the xfs inode ilock,
+> > > which is why we got rid of it in the first place."
+> > > 
+> > > But fails to explain the problems with the 'old' approach.
+> > > 
+> > > So clearly this is a 'problem' that has existed for quite a while, so I
+> > > don't see any need to rush half baked solutions either.
+> > 
+> > Well, at least my motivation for _some_ solution here is that xfs has
+> > worked around this deficiency by forcing GFP_NOFS also for contexts which
+> > are perfectly OK to do __GFP_FS allocation. And that in turn leads to
+> > other issues which I would really like to sort out. So the idea was to
+> > give xfs another way to express that workaround that would be a noop
+> > without lockdep configured.
+> 
+> Right, that's unfortunate. But I would really like to understand the
+> problem with the classes vs lifecycle thing.
+> 
+> Is there an email explaining that somewhere?
 
-The first two patches from Dan re-enable dax even when media
-errors are present.
+Years ago (i.e. last time I bothered mentioning that lockdep didn't
+cover these cases) but buggered if I can find a reference.
 
-The third patch from Matthew removes the zeroout path from dax
-entirely, making zeroout operations always go through the driver
-(The motivation is that if a backing device has media errors,
-and we create a sparse file on it, we don't want the initial
-zeroing to happen via dax, we want to give the block driver a
-chance to clear the errors).
+We used to have iolock classes. Added in commit 033da48 ("xfs: reset
+the i_iolock lock class in the reclaim path") in 2010, removed by
+commit 4f59af7 ("xfs: remove iolock lock classes") a couple of years
+later.
 
-Patch 4 from Christoph exports a low level dax helper for zeroing
-
-Patch 5 reduces our calls to clear_pmem from dax in the
-truncate/hole-punch cases. We check if the range being truncated
-is sector aligned/sized, and if so, send blkdev_issue_zeroout
-instead of clear_pmem so that errors can be handled better by
-the driver.
-
-Patch 6 fixes a redundant comment in DAX and is mostly unrelated
-to the rest of this series.
-
-This series also depends on/is based on Jan Kara's Ext4 and DAX
-fixups series:
-http://marc.info/?l=linux-ext4&m=146295959100848&w=2
-http://marc.info/?l=linux-ext4&m=146296078001307&w=2
-
-v7:
- - Fix the dax alignment check to only check 'offset' and 'length'
-   for alignment as that's all that is needed. (Jan)
- - Fix the blockdev_issue_zeroout call to zero the correct sector
- - Rebase to v4.6-rc7 + the two patch-series from Jan linked above
- - Add a patch from Christoph's iomap series:
-   http://www.spinics.net/lists/xfs/msg39656.html
-
-v6:
- - Use IS_ALIGNED in dax_range_is_aligned instead of open coding
-   an alignment check (Jan)
- - Collect all Reveiwed-by tags so far.
-
-v5:
- - Drop the patch that attempts to clear-errors-on-write till we
-   reach consensus on how to handle that.
- - Don't pass blk_dax_ctl to direct_access, instead pass in all the
-   required arguments individually (Christoph, Dan)
-
-v4:
- - Remove the dax->direct_IO fallbacks entirely. Instead, go through
-   the usual direct_IO path when we're in O_DIRECT, and use dax_IO
-   for other, non O_DIRECT IO. (Dan, Christoph)
-
-v3:
- - Wrapper-ize the direct_IO fallback again and make an exception
-   for -EIOCBQUEUED (Jeff, Dan)
- - Reduce clear_pmem usage in DAX to the minimum
+We needed distinct lock classes above and below reclaim because the
+same locks were taken above and below memory allocation, and the
+reclaimed inode recycling made lockdep think it had a loop in it's
+graph:
 
 
+inode lookup	memory reclaim		inode lookup
+------------	--------------		------------
+not found
+allocate inode
+init inode
+take active reference
+return to caller
+.....
+		  inode shrinker
+		  find inode with no active reference
+		   ->evict
+		     start transaction
+		       take inode locks
+		     .....
+		     commit transaction
+		     mark for reclaim
+		     .....
 
-Christoph Hellwig (1):
-  dax: export a low-level __dax_zero_page_range helper
+					find inactive inode in reclaimable state
+					remove from reclaim list
+					re-initialise inode state
+					take active reference
+					return to caller
 
-Dan Williams (2):
-  dax: fallback from pmd to pte on error
-  dax: enable dax in the presence of known media errors (badblocks)
+So you can see that an inode can go through the reclaim context
+without being freed but having taken locks, but then immediately
+reused in a non-reclaim context. Hence we had to split the two
+lockdep contexts and re-initialise the lock contexts in the
+different allocation paths.
 
-Matthew Wilcox (1):
-  dax: use sb_issue_zerout instead of calling dax_clear_sectors
+The reason we don't have lock clases for the ilock is that we aren't
+supposed to call memory reclaim with that lock held in exclusive
+mode. This is because reclaim can run transactions, and that may
+need to flush dirty inodes to make progress. Flushing dirty inode
+requires taking the ilock in shared mode.
 
-Vishal Verma (2):
-  dax: for truncate/hole-punch, do zeroing through the driver if
-    possible
-  dax: fix a comment in dax_zero_page_range and dax_truncate_page
+In the code path that was reported, we hold the ilock in /shared/
+mode with no transaction context (we are doing a read-only
+operation). This means we can run transactions in memory reclaim
+because a) we can't deadlock on the inode we hold locks on, and b)
+transaction reservations will be able to make progress as we don't
+hold any locks it can block on.
 
- Documentation/filesystems/dax.txt |  32 ++++++++++++
- arch/powerpc/sysdev/axonram.c     |   2 +-
- block/ioctl.c                     |   9 ----
- drivers/block/brd.c               |   2 +-
- drivers/nvdimm/pmem.c             |  10 +++-
- drivers/s390/block/dcssblk.c      |   2 +-
- fs/block_dev.c                    |   2 +-
- fs/dax.c                          | 104 ++++++++++++++++----------------------
- fs/ext2/inode.c                   |   7 ++-
- fs/xfs/xfs_bmap_util.c            |  15 ++----
- include/linux/blkdev.h            |   2 +-
- include/linux/dax.h               |   8 ++-
- 12 files changed, 103 insertions(+), 92 deletions(-)
+Sure, we can have multiple lock classes so that this can be done,
+but that then breaks lock order checking between the two contexts.
+Both contexts require locking order and transactional behaviour to
+be identical and, from this perspective, class separation is
+effectively no different from turning lockdep off.
 
+For the ilock, the number of places where the ilock is held over
+GFP_KERNEL allocations is pretty small. Hence we've simply added
+GFP_NOFS to those allocations to - effectively - annotate those
+allocations as "lockdep causes problems here". There are probably
+30-35 allocations in XFS that explicitly use KM_NOFS - some of these
+are masking lockdep false positive reports.
+
+The reason why we had lock classes for the *iolock* (not the ilock)
+was because ->evict processing used to require the iolock for
+attribute removal. This caused all sorts of problems with
+GFP_KERNEL allocations in the IO path (e.g. allocate a page cache
+page under the IO lock, direct reclaim would trigger lockdep
+warnings - there's another reason why XFS always used GFP_NOFS
+contexts for page cache allocations) which were all false positives
+because the inode holding the lock has active references and hence
+will never be accessed by the reclaim path. The only workable
+solution iwe could come up with at the time this was reported was
+to this was to split the lock classes.
+
+In the end, like pretty much all the complex lockdep false positives
+we've had to deal in XFS, we've ended up changing the locking or
+allocation contexts because that's been far easier than trying to
+make annotations cover everything or convince other people that
+lockdep annotations are insufficient.
+
+Cheers,
+
+Dave.
 -- 
-2.5.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
