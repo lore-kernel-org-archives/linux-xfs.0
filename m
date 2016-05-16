@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C21C97CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 16:09:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D19B97CA7
+	for <xfs@oss.sgi.com>; Mon, 16 May 2016 17:28:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F4EC8F8050
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:20 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id DxxRSE8BbYpA6RWs for
-	<xfs@oss.sgi.com>; Wed, 11 May 2016 14:09:18 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v7 2/6] dax: enable dax in the presence of known media errors
-	(badblocks)
-Date: Wed, 11 May 2016 15:08:48 -0600
-Message-Id: <1463000932-31680-3-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
-References: <1463000932-31680-1-git-send-email-vishal.l.verma@intel.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CFBE304039
+	for <xfs@oss.sgi.com>; Mon, 16 May 2016 15:28:09 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hK43iNkO3gtDSILj (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 16 May 2016 15:28:04 -0700 (PDT)
+Date: Mon, 16 May 2016 18:28:01 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS kernel bug 3.16.7 assertion failed xfs_log_cil.c
+Message-ID: <20160516222758.GA9435@bfoster.bfoster>
+References: <ABDC3A0B513405428FC59C79FA0404073636E868@PLNOMB1.netscout.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <ABDC3A0B513405428FC59C79FA0404073636E868@PLNOMB1.netscout.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,152 +25,312 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Vishal Verma <vishal.l.verma@intel.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: "Rich, Jason" <Jason.Rich@netscout.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Dan Williams <dan.j.williams@intel.com>
+On Mon, May 16, 2016 at 03:04:28PM +0000, Rich, Jason wrote:
+> Gents,
+> =
 
-1/ If a mapping overlaps a bad sector fail the request.
+> I've been seeing some very strange lockups on XFS recently in our deploym=
+ent and I'm looking for some help directing me to either a workaround or so=
+lution.  =
 
-2/ Do not opportunistically report more dax-capable capacity than is
-   requested when errors present.
+> When I say 'lockup':  the process that is trying to do I/O to the XFS vol=
+ume appears to be hung.  I have not had a chance to play with a system in t=
+his state yet, as the person who identified the issue just rebooted the mac=
+hine instead of attempting to diagnose further.  So I'm not sure of the act=
+ual process state when this occurs.
+> =
 
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-[vishal: fix a conflict with system RAM collision patches]
-[vishal: add a 'size' parameter to ->direct_access]
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- arch/powerpc/sysdev/axonram.c |  2 +-
- block/ioctl.c                 |  9 ---------
- drivers/block/brd.c           |  2 +-
- drivers/nvdimm/pmem.c         | 10 +++++++++-
- drivers/s390/block/dcssblk.c  |  2 +-
- fs/block_dev.c                |  2 +-
- include/linux/blkdev.h        |  2 +-
- 7 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-index 0d112b9..ff75d70 100644
---- a/arch/powerpc/sysdev/axonram.c
-+++ b/arch/powerpc/sysdev/axonram.c
-@@ -143,7 +143,7 @@ axon_ram_make_request(struct request_queue *queue, struct bio *bio)
-  */
- static long
- axon_ram_direct_access(struct block_device *device, sector_t sector,
--		       void __pmem **kaddr, pfn_t *pfn)
-+		       void __pmem **kaddr, pfn_t *pfn, long size)
- {
- 	struct axon_ram_bank *bank = device->bd_disk->private_data;
- 	loff_t offset = (loff_t)sector << AXON_RAM_SECTOR_SHIFT;
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 4ff1f92..bf80bfd 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -423,15 +423,6 @@ bool blkdev_dax_capable(struct block_device *bdev)
- 			|| (bdev->bd_part->nr_sects % (PAGE_SIZE / 512)))
- 		return false;
- 
--	/*
--	 * If the device has known bad blocks, force all I/O through the
--	 * driver / page cache.
--	 *
--	 * TODO: support finer grained dax error handling
--	 */
--	if (disk->bb && disk->bb->count)
--		return false;
--
- 	return true;
- }
- #endif
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 51a071e..c04bd9b 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -381,7 +381,7 @@ static int brd_rw_page(struct block_device *bdev, sector_t sector,
- 
- #ifdef CONFIG_BLK_DEV_RAM_DAX
- static long brd_direct_access(struct block_device *bdev, sector_t sector,
--			void __pmem **kaddr, pfn_t *pfn)
-+			void __pmem **kaddr, pfn_t *pfn, long size)
- {
- 	struct brd_device *brd = bdev->bd_disk->private_data;
- 	struct page *page;
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 5101f3a..b68f04d 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -182,14 +182,22 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
- }
- 
- static long pmem_direct_access(struct block_device *bdev, sector_t sector,
--		      void __pmem **kaddr, pfn_t *pfn)
-+		      void __pmem **kaddr, pfn_t *pfn, long size)
- {
- 	struct pmem_device *pmem = bdev->bd_disk->private_data;
- 	resource_size_t offset = sector * 512 + pmem->data_offset;
- 
-+	if (unlikely(is_bad_pmem(&pmem->bb, sector, size)))
-+		return -EIO;
- 	*kaddr = pmem->virt_addr + offset;
- 	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
- 
-+	/*
-+	 * If badblocks are present, limit known good range to the
-+	 * requested range.
-+	 */
-+	if (unlikely(pmem->bb.count))
-+		return size;
- 	return pmem->size - pmem->pfn_pad - offset;
- }
- 
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index b839086..c45d538 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -884,7 +884,7 @@ fail:
- 
- static long
- dcssblk_direct_access (struct block_device *bdev, sector_t secnum,
--			void __pmem **kaddr, pfn_t *pfn)
-+			void __pmem **kaddr, pfn_t *pfn, long size)
- {
- 	struct dcssblk_dev_info *dev_info;
- 	unsigned long offset, dev_sz;
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index b25bb23..02c68c4 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -488,7 +488,7 @@ long bdev_direct_access(struct block_device *bdev, struct blk_dax_ctl *dax)
- 	sector += get_start_sect(bdev);
- 	if (sector % (PAGE_SIZE / 512))
- 		return -EINVAL;
--	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn);
-+	avail = ops->direct_access(bdev, sector, &dax->addr, &dax->pfn, size);
- 	if (!avail)
- 		return -ERANGE;
- 	if (avail > 0 && avail & ~PAGE_MASK)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 669e419..55ed530 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1657,7 +1657,7 @@ struct block_device_operations {
- 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
- 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
- 	long (*direct_access)(struct block_device *, sector_t, void __pmem **,
--			pfn_t *);
-+			pfn_t *, long);
- 	unsigned int (*check_events) (struct gendisk *disk,
- 				      unsigned int clearing);
- 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
--- 
-2.5.5
+Are you running with XFS_DEBUG enabled in the kernel config? If so, this
+mode converts any assertion failure to an explicit BUG(), which is
+effectively a kernel crash. You probably don't want to run a production
+system with XFS_DEBUG enabled unless you're actually trying to debug
+something.
+
+> A little background on the environment first:
+> - We deploy a product running kernel 3.16.7 (debian 8's kernel), xfsprogs=
+ 4.3.0, and large storage arrays (40Tb x 14 raid volumes). =
+
+> - We have large data (PB) and high throughput (2+ GB/sec) using async IO =
+to several large volumes. =
+
+> - I think it is important to note that these servers (Dell R720s & R730s)=
+ are actually net-booting and tend to be ungracefully power cycled at any t=
+ime which we try to mitigate at all costs.  That said, the systems seem to =
+run fine for days before hitting this issue.
+> - The below error occurred on two different machines about 1 day apart.  =
+I only copy/pasted one of them here.  The system was recovered via reboot s=
+o I don't have all the debugging you might hope for.
+> - The volumes are configured in a raid 6 using NLSAS drives with 128k chu=
+nk size.
+> =
+
+> The error:
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.788188] XFS: Assertion fai=
+led: !list_empty(&cil->xc_cil), file: fs/xfs/xfs_log_cil.c, line: 666
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.799247] ------------[ cut =
+here ]------------
+
+You're on an older kernel and I don't recall how far back the original
+issue goes, but this looks familiar to 4703da7b7877 ("xfs: close xc_cil
+list_empty() races with cil commit sequence") from v4.3. Can you try
+with that patch applied (it's basically a one-liner)?
+
+Brian
+
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.804862] kernel BUG at fs/x=
+fs/xfs_message.c:107!
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.810773] invalid opcode: 00=
+00 [#1] PREEMPT SMP
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.816603] Modules linked in:=
+ mst_pciconf(O) mst_pci(O) tun ib_uverbs(O) fuse xfs libcrc32c mptctl mptba=
+se ipmi_poweroff mlx4_ib(O) mlx4_en(O) dm_round_robin ib_sa(O) ib_mad(O) ib=
+_core(O) ib_addr(O) mlx4_core(O) mlx_compat(O) mpt2sas(O) ahci megaraid_sas=
+ libahci scsi_transport_sas bridge stp llc bonding igb(O) ptp pps_core usb_=
+storage dm_multipath dm_mod edd ipmi_devintf ipmi_si ipmi_msghandler
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.858837] CPU: 6 PID: 59124 =
+Comm: pio_writer_12 Tainted: G           O  3.16.7.TEK.V7.16.1.0.1b11 #1
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.870142] Hardware name: NET=
+SCOUT SSU2000/04N3DF, BIOS 1.3.6 06/03/2015
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.878156] task: ffff882dd397=
+e000 ti: ffff882db3e50000 task.ti: ffff882db3e50000
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.887471] RIP: 0010:[<ffffff=
+ffa0497f56>]  [<ffffffffa0497f56>] assfail+0x22/0x28 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.897461] RSP: 0018:ffff882d=
+b3e53b38  EFLAGS: 00010292
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.903806] RAX: 0000000000000=
+057 RBX: ffff883e1c7c9e00 RCX: 0000000000000000
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.912227] RDX: ffff882db3e53=
+978 RSI: ffff88407eece1c8 RDI: 0000000000000246
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.920659] RBP: ffff882db3e53=
+b38 R08: 0000000000000000 R09: 0000000000000cc7
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.929032] R10: 0000000000000=
+000 R11: 0000000000000005 R12: ffff883ef69bd800
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.937439] R13: ffff883f768be=
+a40 R14: ffff883f768bea00 R15: ffff882db3e53ba0
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.945858] FS:  00007fffdec51=
+700(0000) GS:ffff88407eec0000(0000) knlGS:0000000000000000
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.955775] CS:  0010 DS: 0000=
+ ES: 0000 CR0: 0000000080050033
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.962609] CR2: 000000001d593=
+000 CR3: 0000003f7cac3000 CR4: 00000000001407e0
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.971003] Stack:
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.973679]  ffff882db3e53b88 =
+ffffffffa04ea310 00000000b3e53b88 ffff883f768bea00
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.982930]  ffff883d3556b920 =
+ffff883e1c7c9e00 0000000000000041 ffff8840608be000
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4123.992164]  0000000000000000 =
+0000000000000000 ffff882db3e53bd8 ffffffffa049ef7b
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.001348] Call Trace:
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.004576]  [<ffffffffa04ea31=
+0>] xfs_log_commit_cil+0xcd/0x145 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.012232]  [<ffffffffa049ef7=
+b>] xfs_trans_commit+0xc3/0x1fd [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.019669]  [<ffffffffa0496bb=
+a>] xfs_vn_update_time+0x16f/0x181 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.027427]  [<ffffffff8114711=
+c>] update_time+0x25/0xac
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.033763]  [<ffffffffa047e19=
+a>] ? ftrace_raw_event_xfs_lock_class+0x64/0x73 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.043270]  [<ffffffff8114723=
+0>] file_update_time+0x8d/0xb0
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.050011]  [<ffffffffa048c44=
+1>] ? xfs_rw_ilock+0x2c/0x33 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.057178]  [<ffffffffa048c94=
+0>] xfs_file_aio_write_checks+0xae/0xcf [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.065414]  [<ffffffffa048ca9=
+d>] xfs_file_dio_aio_write+0x116/0x270 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.073593]  [<ffffffffa048dae=
+7>] ? xfs_file_buffered_aio_write+0x176/0x176 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.082804]  [<ffffffffa048db6=
+1>] xfs_file_write_iter+0x7a/0x105 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.090579]  [<ffffffff8116ac4=
+0>] aio_run_iocb+0x1dc/0x2dd
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.097151]  [<ffffffff8116af0=
+2>] io_submit_one+0x1c1/0x201
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.103812]  [<ffffffff8116b02=
+c>] do_io_submit+0xea/0x13f
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.110326]  [<ffffffff8116b09=
+1>] SyS_io_submit+0x10/0x12
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.116775]  [<ffffffff815de6e=
+9>] system_call_fastpath+0x16/0x1b
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.123899] Code: 45 c8 e8 4a =
+fc ff ff c9 c3 55 48 89 e5 0f 1f 44 00 00 31 c0 48 89 f1 41 89 d0 48 c7 c6 =
+89 84 50 a0 48 89 fa 31 ff e8 89 ff ff ff <0f> 0b eb fe 90 90 55 48 89 e5 5=
+3 0f 1f 44 00 00 48 8b 8f c0 02
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.147242] RIP  [<ffffffffa04=
+97f56>] assfail+0x22/0x28 [xfs]
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.154142]  RSP <ffff882db3e5=
+3b38>
+> 2016 May 13 18:51:30 g512-ssu-1 kernel: [ 4124.161239] ---[ end trace dbd=
+3bab9608b5697 ]---
+> =
+
+> 2016 May 14 17:31:17 g512-ssu-2 kernel: [85687.891368] XFS: Assertion fai=
+led: !list_empty(&cil->xc_cil), file: fs/xfs/xfs_log_cil.c, line: 666   <--=
+- appropriate line number
+> 2016 May 14 17:31:17 g512-ssu-2 kernel: [85687.902402] ------------[ cut =
+here ]------------
+> =
+
+> HOST INFO:
+> Proc info:
+> processor	: 47
+> vendor_id	: GenuineIntel
+> cpu family	: 6
+> model		: 63
+> model name	: Intel(R) Xeon(R) CPU E5-2658 v3 @ 2.20GHz
+> =
+
+> Meminfo:
+> root@g512-ssu2000-2: ~ # cat /proc/meminfo
+> MemTotal:       264516692 kB
+> MemFree:        181040604 kB
+> MemAvailable:   200066392 kB
+> Buffers:              32 kB
+> Cached:          3722024 kB
+> SwapCached:            0 kB
+> Active:         31687480 kB
+> Inactive:        3307212 kB
+> Active(anon):   31300740 kB
+> Inactive(anon):  2534776 kB
+> Active(file):     386740 kB
+> Inactive(file):   772436 kB
+> Unevictable:        5188 kB
+> Mlocked:            5188 kB
+> SwapTotal:             0 kB
+> SwapFree:              0 kB
+> Dirty:                 0 kB
+> Writeback:             0 kB
+> AnonPages:      31303028 kB
+> Mapped:          2647080 kB
+> Shmem:           2535460 kB
+> Slab:           19452480 kB
+> SReclaimable:   18120028 kB
+> SUnreclaim:      1332452 kB
+> KernelStack:       20704 kB
+> PageTables:        83504 kB
+> NFS_Unstable:          0 kB
+> Bounce:                0 kB
+> WritebackTmp:          0 kB
+> CommitLimit:    125966888 kB
+> Committed_AS:   42757972 kB
+> VmallocTotal:   34359738367 kB
+> VmallocUsed:     1263588 kB
+> VmallocChunk:   34358261760 kB
+> AnonHugePages:  28125184 kB
+> HugePages_Total:    6144
+> HugePages_Free:        0
+> HugePages_Rsvd:        0
+> HugePages_Surp:        0
+> Hugepagesize:       2048 kB
+> DirectMap4k:       12080 kB
+> DirectMap2M:     1986560 kB
+> DirectMap1G:    268435456 kB
+> =
+
+> root@g512-ssu2000-2: ~ # cat /proc/mounts
+> rootfs / rootfs rw,size=3D132244472k,nr_inodes=3D33061118 0 0
+> mbc:/iris/opt/TEKplat/V7.16.1.0.1b11/x86_64_root / nfs ro,noatime,vers=3D=
+3,rsize=3D4096,wsize=3D4096,namlen=3D255,acregmin=3D300,acregmax=3D300,acdi=
+rmin=3D300,acdirmax=3D300,hard,nolock,proto=3Dudp,port=3D200
+> none /mnt tmpfs rw,relatime 0 0
+> dev /dev tmpfs rw,relatime,size=3D10240k 0 0
+> none /tmp tmpfs rw,relatime 0 0
+> proc /proc proc rw,relatime 0 0
+> sys /sys sysfs rw,relatime 0 0
+> none /local-blade tmpfs rw,relatime 0 0
+> mbc:/iris /iris nfs ro,noatime,vers=3D3,rsize=3D4096,wsize=3D4096,namlen=
+=3D255,acregmin=3D300,acregmax=3D300,acdirmin=3D300,acdirmax=3D300,hard,nol=
+ock,proto=3Dudp,port=3D2049,timeo=3D7,retrans=3D3,sec=3Dsys,local_0
+> none /mnt/initramfs tmpfs rw,relatime 0 0
+> tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=3D755 0 0
+> tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
+> debugfs /sys/kernel/debug debugfs rw,relatime 0 0
+> devpts /dev/pts devpts rw,relatime,gid=3D5,mode=3D620,ptmxmode=3D000 0 0
+> tek.iris.mbc:/iris/scratch /local-blade/scratch nfs rw,relatime,vers=3D3,=
+rsize=3D1048576,wsize=3D1048576,namlen=3D255,soft,nolock,proto=3Dtcp,timeo=
+=3D5,retrans=3D2,sec=3Dsys,mountaddr=3D192.168.0.1,mountve0
+> /dev/mapper/tek_ssu_sdb-SCRATCH /mnt/scratch xfs rw,relatime,attr2,inode6=
+4,noquota 0 0
+> none /proc/sys/fs/binfmt_misc binfmt_misc rw,relatime 0 0
+> nodev /local-blade/hugepages hugetlbfs rw,relatime,mode=3D1770,gid=3D1000=
+,size=3D12G 0 0
+> /dev/mapper/3600c0ff0001deaddd676a45501000000 /mnt/storage07 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deaddc378a45501000000 /mnt/storage11 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf727774a45501000000 /mnt/storage02 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deadde175a45501000000 /mnt/storage05 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf723b7aa45501000000 /mnt/storage14 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf724878a45501000000 /mnt/storage10 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deaddfe73a45501000000 /mnt/storage01 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf724279a45501000000 /mnt/storage12 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deaddbd79a45501000000 /mnt/storage13 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf726875a45501000000 /mnt/storage04 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deaddcb77a45501000000 /mnt/storage09 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deadd9a73a45501000000 /mnt/index01 xfs rw,noatime=
+,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D12=
+80,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf72cd73a45501000000 /mnt/index02 xfs rw,noatime=
+,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D12=
+80,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf725c76a45501000000 /mnt/storage06 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001dcf724f77a45501000000 /mnt/storage08 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> /dev/mapper/3600c0ff0001deaddee74a45501000000 /mnt/storage03 xfs rw,noati=
+me,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,swidth=3D=
+3072,noquota 0 0
+> =
+
+> =
+
+> I am not sure how to effectively reproduce the issue (and to be frank, am=
+ far from being knowledgable about the innerds of XFS) and would like to un=
+derstand the essence of the problem here.  While that rarely leads to root =
+cause, knowing what the failure is trying to tell me would be nice.
+> =
+
+> Jason Rich =A0|=A0 Senior Platform Engineer
+> NETSCOUT
+> O: 469.330.3678 =
+
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
