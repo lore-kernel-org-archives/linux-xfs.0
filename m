@@ -1,27 +1,19 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B74E37CA1
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 21:20:49 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 29F8F7CA1
+	for <xfs@oss.sgi.com>; Tue, 17 May 2016 15:35:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8AFAE8F8035
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 19:20:47 -0700 (PDT)
-Received: from mail-oi0-f43.google.com (mail-oi0-f43.google.com
-	[209.85.218.43]) by cuda.sgi.com with ESMTP id RU0JD6xujqlMkURx
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 May 2016 19:20:40 -0700 (PDT)
-Received: by mail-oi0-f43.google.com with SMTP id k142so55461584oib.1
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 19:20:40 -0700 (PDT)
-Received: from lenovo-PC (203185044176.res.dyn.ctinets.com. [203.185.44.176])
-	by smtp.gmail.com with ESMTPSA id
-	n9sm1663646obz.23.2016.05.17.19.20.33 for <xfs@oss.sgi.com>
-	(version=TLSv1/SSLv3 cipher=OTHER);
-	Tue, 17 May 2016 19:20:38 -0700 (PDT)
-Message-ID: <573bd176.4956b60a.81ed9.6911@mx.google.com>
-From: Feetek Ltd <feeteek@feeteek.com>
-Subject: Hot Sale USB Drive and Car Charger
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 84670AC001
+	for <xfs@oss.sgi.com>; Tue, 17 May 2016 13:34:56 -0700 (PDT)
+Received: from vm10274.vps.agava.net (vm10274.vps.agava.net [89.108.76.100])
+	by cuda.sgi.com with ESMTP id pR90RCjRVJwBMbHb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 17 May 2016 13:34:51 -0700 (PDT)
+Message-ID: <48B2FB417DA993904C49008C28FF8D55@ADKHADGFIUADHFIADFIOADHG>
+From: =?windows-1251?B?0eXw4+XpIMLr4OTo7Ojw7uLo9w==?= <223303@ukr.net>
+Subject: =?windows-1251?B?3evl6vLw7u3t++Ug8e/w4OLu9+3o6ugg6CDh?=
+	=?windows-1251?B?4Of7IOTg7e379S4=?=
+Date: Tue, 17 May 2016 23:38:12 +0300
 MIME-Version: 1.0
-Date: Wed, 18 May 2016 10:22:00 +0800
-Reply-To: sales@feetek.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,282 +22,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4451163494601690097=="
+Content-Type: multipart/mixed; boundary="===============1364260815746551602=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============4451163494601690097==
-Content-Type: text/html; charset="UTF-8"
-Content-Disposition: inline
+This is a multi-part message in MIME format.
+
+--===============1364260815746551602==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_16BD_01D1B095.2D0A9920"
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_16BD_01D1B095.2D0A9920
+Content-Type: text/plain;
+	charset="windows-1251"
 Content-Transfer-Encoding: quoted-printable
-X-MIME-Autoconverted: from 8bit to quoted-printable by aserv0021.oracle.com id u4I2KxnR027135
+
+=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5.
+
+=CF=F0=E5=E4=EB=E0=E3=E0=E5=EC =C2=E0=EC =F1=EF=F0=E0=E2=EE=F7=ED=FB=E5 =E4=
+=E0=ED=ED=FB=E5 =EF=EE =EF=F0=E5=E4=EF=F0=E8=FF=F2=E8=FF=EC =E8 =EE=F0=E3=
+=E0=ED=E8=E7=E0=F6=E8=FF=EC =F1=F2=F0=E0=ED =D1=CD=C3 =E8 =E7=E0=F0=F3=E1=
+=E5=E6=FC=FF.
+=C1=E0=E7=FB =E2 =F4=EE=F0=EC=E0=F2=E5 EXCEL, =F1=EE=E4=E5=F0=E6=E0=F2 =E2=
+=F1=E5 =ED=E5=EE=E1=F5=EE=E4=E8=EC=FB=E5 =EF=EE=EB=FF =E4=EB=FF =EE=EF=F0=
+=E5=E4=E5=EB=E5=ED=E8=FF =F0=EE=E4=E0 =E4=E5=FF=F2=E5=EB=FC=ED=EE=F1=F2=E8=
+,
+=E0=E4=F0=E5=F1=E0, =ED=E0=E7=E2=E0=ED=E8=FF, =F2=E5=EB=E5=F4=EE=ED=E0, =F1=
+=E0=E9=F2=E0 =E5=EC=E0=E8=EB =E0=E4=F0=E5=F1=E0 =E8 =EC=ED=EE=E3=EE=E5 =E4=
+=F0=F3=E3=EE=E5.
+
+=CF=EE =E7=E0=EF=F0=EE=F1=F3 =E2=FB=F1=FB=EB=E0=E5=EC =EF=F0=E0=E9=F1 =EB=
+=E8=F1=F2.
+
+=C4=EB=FF 100%-=ED=EE=E9 =F1=E2=FF=E7=E8 =F1 =ED=E0=EC=E8 =EF=E8=F8=E8=F2=
+=E5 =E7=E0=EF=F0=EE=F1 =E2 =F1=EA=E0=E9=EF=E5 =E8=EB=E8 =E7=E2=EE=ED=E8=F2=
+=E5.
+
+=3D=3D=3D
+=D1 =D3=E2=E0=E6=E5=ED=E8=E5=EC =D1=E5=F0=E3=E5=E9 =C2=EB=E0=E4=E8=EC=E8=F0=
+=EE=E2=E8=F7
+=F2=E5=EB: +38063-637-45-25
+mail: 223303@ukr.net=20
+skype: org-reestr
+
+------=_NextPart_000_16BD_01D1B095.2D0A9920
+Content-Type: text/html;
+	charset="windows-1251"
+Content-Transfer-Encoding: quoted-printable
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML xmlns:o =3D "urn:schemas-microsoft-com:office:office"><HEAD>
-<META content=3D"text/html; charset=3DUTF-8" http-equiv=3Dcontent-type>
-<META name=3DGENERATOR content=3D"MSHTML 11.00.9600.18315"></HEAD>
-<BODY><FONT size=3D2 face=3DArial>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#" xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-F=
-A4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-=
-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F=
--FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN style=3D"VISIBIL=
-ITY: hidden"></SPAN></A></DIV><P>Dear&nbsp;Product Manager, </P>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#"=20
-xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512D=
-E-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512=
-DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;09551=
-2DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN=20
-style=3D"VISIBILITY: hidden"></SPAN></A></DIV>
-<DIV><A href=3D"#" xfs&nbsp;2016-05-18 10:21:49;095512DE-0983-46C1-AA7F-F=
-A4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F-=
-FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1;095512DE-0983-46C1-AA7F=
--FA4F222AE9C1;095512DE-0983-46C1-AA7F-FA4F222AE9C1><SPAN style=3D"VISIBIL=
-ITY: hidden"></SPAN></A></DIV><P>Hope everything goes on well with you.&n=
-bsp;</P>
-<DIV>We&nbsp;are a professional and reliable electronics gift products fa=
-ctory=20
-in Shenzhen,China, </DIV>
-<DIV>mainly produce gift USB Flash Drives, Power Banks and Car Chargers e=
-tc.=20
-</DIV>
-<DIV>&nbsp;</DIV>
-<DIV>Here are our product&nbsp;list and&nbsp;photos for some of our hot s=
-ale=20
-products:</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</DIV>
-<DIV><STRONG><FONT color=3D#0000ff>=E2=98=85USB Flash Drives</FONT></STRO=
-NG></DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=E2=97=8F Comm=
-on USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Pen Shape=
- USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Key Shape=
- USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Leather U=
-SB Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Leather U=
-SB Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Recycled =
-USB Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Card USB =
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Silicone =
-USB Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F New Mold =
-Soft PVC USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Metal USB=
- Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Smart Pho=
-ne USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Wood/Bamb=
-oo USB=20
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Mini USB =
-Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Diamond U=
-SB Drive</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Crystal U=
-SB Drive</DIV>
-<DIV>&nbsp;</DIV>
-<DIV><FONT color=3D#0000ff><STRONG>=E2=98=85Power Banks</STRONG></FONT></=
-DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Small Cap=
-acity Gift=20
-Power Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Big Capac=
-ity Power=20
-Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=E2=97=8F PVC =
-Power=20
-Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Silicone =
-Power=20
-Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Wood/Bamb=
-oo Power=20
-Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Polymer T=
-hin Power=20
-Bank</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Solar Pow=
-er Bank</DIV>
-<DIV>&nbsp;</DIV>
-<DIV><STRONG><FONT color=3D#0000ff>=E2=98=85 Car Chargers:</FONT></STRONG=
-></DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F 1-Port Ca=
-r Charger</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F 2-Port Ca=
-r Charger=20
-</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F 3-Port Ca=
-r Charger</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F 4-Port Ca=
-r Charger</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=E2=97=8F Volt=
-age Display=20
-Car&nbsp;Charger</DIV>
-<DIV>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =E2=97=8F Bluetooth=
- Charger</DIV>
-<DIV>&nbsp;</DIV>
-<DIV>For more about us, you can feel free to visit our website. </DIV>
-<DIV>&nbsp;</DIV>
-<DIV>Please don&#39;t hesitate to let me know if you have interest in the=
-se.=20
-</DIV><FONT size=3D2 face=3DArial>
-<DIV>&nbsp;</DIV></FONT>
-<DIV><FONT size=3D2 face=3DArial>Best Regards, </FONT></DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT>&nbsp;</DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT></DIV>
-<DIV><FONT size=3D5 face=3D"Arial Black">Wendy Huang</FONT></DIV>
-<DIV><STRONG><FONT size=3D2 face=3DArial></FONT></STRONG>&nbsp;</DIV>
-<DIV><FONT size=3D4 face=3DArial>Feetek Electronics Co.,Ltd</FONT></DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT>&nbsp;</DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT></DIV>
-<DIV><FONT face=3DArial><FONT size=3D2>Email: wendy{at}feetek.com=20
+<HTML><HEAD>
+<META content=3D"text/html; charset=3Dwindows-1251" http-equiv=3DContent-=
+Type>
+<META name=3DGENERATOR content=3D"MSHTML 10.00.9200.16897">
+<STYLE></STYLE>
+</HEAD>
+<BODY bgColor=3D#ffffff>
+<DIV align=3Dleft><FONT face=3DArial>=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5=
+.</FONT></DIV>
+<DIV align=3Dleft><FONT face=3DArial></FONT>&nbsp;</DIV>
+<DIV align=3Dleft><FONT face=3DArial>=CF=F0=E5=E4=EB=E0=E3=E0=E5=EC =C2=E0=
+=EC =F1=EF=F0=E0=E2=EE=F7=ED=FB=E5 =E4=E0=ED=ED=FB=E5 =EF=EE=20
+=EF=F0=E5=E4=EF=F0=E8=FF=F2=E8=FF=EC =E8 =EE=F0=E3=E0=ED=E8=E7=E0=F6=E8=FF=
+=EC =F1=F2=F0=E0=ED =D1=CD=C3 =E8 =E7=E0=F0=F3=E1=E5=E6=FC=FF.</FONT></DI=
+V>
+<DIV align=3Dleft><FONT face=3DArial>=C1=E0=E7=FB =E2 =F4=EE=F0=EC=E0=F2=E5=
+ EXCEL, =F1=EE=E4=E5=F0=E6=E0=F2 =E2=F1=E5 =ED=E5=EE=E1=F5=EE=E4=E8=EC=FB=
+=E5=20
+=EF=EE=EB=FF =E4=EB=FF =EE=EF=F0=E5=E4=E5=EB=E5=ED=E8=FF =F0=EE=E4=E0 =E4=
+=E5=FF=F2=E5=EB=FC=ED=EE=F1=F2=E8,</FONT></DIV>
+<DIV align=3Dleft><FONT face=3DArial>=E0=E4=F0=E5=F1=E0, =ED=E0=E7=E2=E0=ED=
+=E8=FF, =F2=E5=EB=E5=F4=EE=ED=E0, =F1=E0=E9=F2=E0 =E5=EC=E0=E8=EB =E0=E4=F0=
+=E5=F1=E0=20
+=E8 =EC=ED=EE=E3=EE=E5 =E4=F0=F3=E3=EE=E5.</FONT></DIV>
+<DIV align=3Dleft><FONT face=3DArial></FONT>&nbsp;</DIV>
+<DIV align=3Dleft><FONT face=3DArial>=CF=EE =E7=E0=EF=F0=EE=F1=F3 =E2=FB=F1=
+=FB=EB=E0=E5=EC =EF=F0=E0=E9=F1 =EB=E8=F1=F2.</FONT></DIV>
+<DIV align=3Dleft><FONT face=3DArial></FONT>&nbsp;</DIV>
+<DIV align=3Dleft><FONT color=3D#ff0000 size=3D2 face=3DArial><STRONG>=C4=
+=EB=FF 100%-=ED=EE=E9 =F1=E2=FF=E7=E8=20
+=F1 =ED=E0=EC=E8 =EF=E8=F8=E8=F2=E5 =E7=E0=EF=F0=EE=F1 =E2 =F1=EA=E0=E9=EF=
+=E5 =E8=EB=E8 =E7=E2=EE=ED=E8=F2=E5.</STRONG></FONT></DIV>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial></FONT>&nbsp;</DIV>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial>=3D=3D=3D</FONT></DIV>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial>=D1 =D3=E2=E0=E6=E5=ED=E8=E5=
+=EC =D1=E5=F0=E3=E5=E9=20
+=C2=EB=E0=E4=E8=EC=E8=F0=EE=E2=E8=F7</FONT></DIV>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial>=F2=E5=EB: +38063-637-45-25=
+</FONT></DIV>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial>mail: <FONT size=3D3=20
+face=3D"Times New Roman"><A href=3D"mailto:223303@ukr.net">223303@ukr.net=
+</A>=20
 </FONT></FONT></DIV>
-<DIV><FONT face=3DArial><FONT size=3D2>Backup: </FONT><FONT size=3D2><A=20
-href=3D"mailto:feetek@vip.188.com">feetek@vip.188.com</A></FONT></FONT></=
-DIV>
-<DIV><FONT size=3D2 face=3DArial>Skype: wendyhuang2011</FONT></DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT>&nbsp;</DIV>
-<DIV><FONT size=3D2 face=3DArial></FONT></DIV>
-<DIV class=3DMsoNormal><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;">Tel:&nbsp;&nbsp;(+86)755=20
-83270640 </SPAN><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"></SPAN></DIV>
-<DIV>
-<DIV>
-<DIV class=3DMsoNormal><FONT color=3D#000000><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;">Fax: (+86)755=20
-83270635</SPAN></FONT></DIV>
-<DIV class=3DMsoNormal><FONT color=3D#000000><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;">Mobile:=20
-(+86)13725587763</SPAN></SPAN></FONT></DIV>
-<DIV class=3DMsoNormal><FONT color=3D#000000 size=3D2 face=3DArial><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"></SPAN></SPAN></FONT>&nbsp;</DIV>
-<DIV class=3DMsoNormal><FONT face=3DArial><FONT size=3D2><FONT color=3D#0=
-00000><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"></SPAN></FONT><FONT=20
-color=3D#000000><o:p></o:p></FONT></FONT></FONT><FONT color=3D#000000><SP=
-AN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"></DIV></DIV>
-<DIV>
-<DIV class=3DMsoNormal>
-<DIV class=3DMsoNormal><FONT color=3D#000000><SPAN=20
-style=3D"FONT-SIZE: 10pt; FONT-FAMILY: &#39;Arial&#39;,&#39;sans-serif&#3=
-9;"><STRONG>Address</STRONG>:5<EM>th&nbsp;Floor,=20
-Building C,ZhuangBian&nbsp;Industry Zone,Nanchang Road,Xixiang Town,Bao&#=
-39;an Dist,=20
-Shenzhen,China=20
-518126.</EM></SPAN></FONT></DIV></SPAN></FONT></DIV></DIV></DIV></FONT></=
-BODY></HTML>
+<DIV align=3Dleft><FONT size=3D2 face=3DArial>skype:=20
+org-reestr</FONT></DIV></BODY></HTML>
+
+------=_NextPart_000_16BD_01D1B095.2D0A9920--
 
 
-
---===============4451163494601690097==
+--===============1364260815746551602==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4451163494601690097==--
+--===============1364260815746551602==--
