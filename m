@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E02507CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 18:23:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D08A37CA1
+	for <xfs@oss.sgi.com>; Tue, 17 May 2016 17:35:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7911F8F8054
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 16:23:40 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RCCccECrJDr6a1v8 for <xfs@oss.sgi.com>;
-	Wed, 11 May 2016 16:23:37 -0700 (PDT)
-Date: Thu, 12 May 2016 09:23:36 +1000
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B817AC003
+	for <xfs@oss.sgi.com>; Tue, 17 May 2016 15:35:59 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	N7xCj1Erp8i0nLf4 for <xfs@oss.sgi.com>;
+	Tue, 17 May 2016 15:35:52 -0700 (PDT)
+Date: Wed, 18 May 2016 08:35:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/7] Configurable error behavior [V4]
-Message-ID: <20160511232336.GZ18496@dastard>
-References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
-	<20160511141558.GE42410@bfoster.bfoster>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160517223549.GV26977@dastard>
+References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
+	<20160512055756.GE6648@birch.djwong.org>
+	<20160512080321.GA18496@dastard>
+	<20160513160341.GW20141@dhcp22.suse.cz>
+	<20160516104130.GK3193@twins.programming.kicks-ass.net>
+	<20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+	<20160516231056.GE18496@dastard>
+	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160511141558.GE42410@bfoster.bfoster>
+In-Reply-To: <20160517144912.GZ3193@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +37,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
 
-On Wed, May 11, 2016 at 10:15:59AM -0400, Brian Foster wrote:
-> On Tue, May 10, 2016 at 02:16:14PM +0200, Carlos Maiolino wrote:
-> > New revision ot the patchset according with comments for V3.
-> > 
-> > This patchset is aimed to implement a configurable error behavior in XFS, and,
-> > most of the design has been done by Dave, so, I kept his signed-off.
-> > 
-> > Detailed changelog is written on each patch, but, major changes are:
-> > 
-> > 	- make fail_at_unmount a global configuration option inside
-> > 	  ../xfs/<dev>/err/fail_at_unmount
-> > 
+On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
 > 
-> Any reason you didn't carry the reviewed-by tags from v3?
+> Thanks for writing all that down Dave!
 > 
-> For Dave's convenience (and based on the reviews of v3 and v4), for the
-> series:
+> On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > The reason we don't have lock clases for the ilock is that we aren't
+> > supposed to call memory reclaim with that lock held in exclusive
+> > mode. This is because reclaim can run transactions, and that may
+> > need to flush dirty inodes to make progress. Flushing dirty inode
+> > requires taking the ilock in shared mode.
+> > 
+> > In the code path that was reported, we hold the ilock in /shared/
+> > mode with no transaction context (we are doing a read-only
+> > operation). This means we can run transactions in memory reclaim
+> > because a) we can't deadlock on the inode we hold locks on, and b)
+> > transaction reservations will be able to make progress as we don't
+> > hold any locks it can block on.
+> 
+> Just to clarify; I read the above as that we cannot block on recursive
+> shared locks, is this correct?
+> 
+> Because we can in fact block on down_read()+down_read() just fine, so if
+> you're assuming that, then something's busted.
 
-Thanks, Brian.
+The transaction reservation path will run down_read_trylock() on the
+inode, not down_read(). Hence if there are no pending writers, it
+will happily take the lock twice and make progress, otherwise it
+will skip the inode and there's no deadlock.  If there's a pending
+writer, then we have another context that is already in a
+transaction context and has already pushed the item, hence it is
+only in the scope of the current push because IO hasn't completed
+yet and removed it from the list.
 
-Carlos, no need to resend, I'll fix the typos up on merge.
+> Otherwise, I'm not quite reading it right, which is, given the
+> complexity of that stuff, entirely possible.
+
+There's a maze of dark, grue-filled twisty passages here...
+
+> The other possible reading is that we cannot deadlock on the inode we
+> hold locks on because we hold a reference on it; and the reference
+> avoids the inode from being reclaimed. But then the whole
+> shared/exclusive thing doesn't seem to make sense.
+
+Right, because that's not the problem. The issue has to do with
+transaction contexts and what locks are safe to hold when calling
+xfs_trans_reserve(). Direct reclaim is putting xfs_trans_reserve()
+behind memory allocation, which means it is unsafe for XFS to hold
+the ilock exclusive or be in an existing transaction context when
+doing GFP_KERNEL allocation.
+
+> > For the ilock, the number of places where the ilock is held over
+> > GFP_KERNEL allocations is pretty small. Hence we've simply added
+> > GFP_NOFS to those allocations to - effectively - annotate those
+> > allocations as "lockdep causes problems here". There are probably
+> > 30-35 allocations in XFS that explicitly use KM_NOFS - some of these
+> > are masking lockdep false positive reports.
+> 
+> 
+> > In the end, like pretty much all the complex lockdep false positives
+> > we've had to deal in XFS, we've ended up changing the locking or
+> > allocation contexts because that's been far easier than trying to
+> > make annotations cover everything or convince other people that
+> > lockdep annotations are insufficient.
+> 
+> Well, I don't mind creating lockdep annotations; but explanations of the
+> exact details always go a long way towards helping me come up with
+> something.
+> 
+> While going over the code; I see there's complaining about
+> MAX_SUBCLASSES being too small. Would it help if we doubled it? We
+> cannot grow the thing without limits, but doubling it should be possible
+> I think.
+
+Last time I asked cwif we could increase MAX_SUBCLASSES I was told
+no. So we've just had to try to fit about 30 different
+inode lock contexts into 8 subclasses split across multiple class
+types (i.e. xfs_[non]dir_ilock_class). I wasted an entire week on
+getting those annotations to fit the limitations of lockdep and
+still work.
+
+> In any case; would something like this work for you? Its entirely
+> untested, but the idea is to mark an entire class to skip reclaim
+> validation, instead of marking individual sites.
+
+Probably would, but it seems like swatting a fly with runaway
+train. I'd much prefer a per-site annotation (e.g. as a GFP_ flag)
+so that we don't turn off something that will tell us we've made a
+mistake while developing new code...
 
 Cheers,
 
