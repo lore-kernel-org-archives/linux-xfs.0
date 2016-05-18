@@ -1,30 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 427377CA0
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 11:37:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 05B79304048
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 09:37:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FAPKCc2zCEBbeUD8 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5C6377CA2
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 05:43:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D8B78F8054
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 03:42:58 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oURSEfVTYMqIJoFA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 18 May 2016 09:37:35 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 11B198AE73
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 16:37:35 +0000 (UTC)
-Received: from tarantula.localdomain (ovpn-116-102.phx2.redhat.com
-	[10.3.116.102])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4IGbX9I012942
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>; Wed, 18 May 2016 12:37:34 -0400
-Date: Wed, 18 May 2016 11:37:33 -0500
-From: Jeffrey Bastian <jbastian@redhat.com>
-Subject: struct fsxattr redefinition
-Message-ID: <20160518163733.GB14165@tarantula.localdomain>
+	<xfs@oss.sgi.com>; Wed, 18 May 2016 03:42:56 -0700 (PDT)
+Date: Wed, 18 May 2016 13:42:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: xfs: fix efi/efd error handling to avoid fs shutdown hangs
+Message-ID: <20160518104239.GA11591@mwanda>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,30 +27,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: bfoster@redhat.com
+Cc: xfs@oss.sgi.com
 
-There was a discussion a few months ago about adding a guard for the
-fsxattr struct [0] because it's defined in two places, the Linux kernel
-header linux/fs.h [1] and xfsprogs header xfs/linux.h [2].
+Hello Brian Foster,
 
-xfs/linux.h has a FS_IOC_FSGETXATTR guard around the struct fsxattr
-definition, but this only works if linux/fs.h is included *before*
-xfs/linux.h (or xfs/xfs.h).  If you include linux/fs.h after, then you
-get a struct redefinition error.
+The patch 8d99fe92fed0: "xfs: fix efi/efd error handling to avoid fs
+shutdown hangs" from Aug 19, 2015, leads to the following static
+checker warning:
 
-Is it a requirement that linux/fs.h is included first?  If so, then
-there is a bug in xfstests because it includes them in the wrong order
-[3] and fails to build.  If there is not an order requirement, then both
-header files should probably have a HAVE_FSXATTR guard around the struct
-definition.
+	fs/xfs/xfs_bmap_util.c:134 xfs_bmap_finish()
+	warn: error is never (-117)
 
-[0] http://oss.sgi.com/archives/xfs/2016-02/msg00306.html
-[1] https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fs.h?h=v4.6#n152
-[2] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=blob;f=include/linux.h;h=cc0f70ceed72406822885d878b939b3e66c03ffd;hb=53cefc406eb1047ce9dc85906a0117f8da9f44ca#l177
-[3] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=blob;f=src/t_immutable.c;h=87ffc75f2d0229941ad6c5235ce9deea272d66c9;hb=HEAD#l41
+fs/xfs/xfs_bmap_util.c
+   120          error = __xfs_trans_roll(tp, ip, &committed);
 
--- 
-Jeff Bastian
+It used to be that error was set by xfs_free_extent() which does return
+-EFSCORRUPTED.  But I don't think __xfs_trans_roll() can.
+
+   121          if (error) {
+   122                  /*
+   123                   * If the transaction was committed, drop the EFD reference
+   124                   * since we're bailing out of here. The other reference is
+   125                   * dropped when the EFI hits the AIL.
+   126                   *
+   127                   * If the transaction was not committed, the EFI is freed by the
+   128                   * EFI item unlock handler on abort. Also, we have a new
+   129                   * transaction so we should return committed=1 even though we're
+   130                   * returning an error.
+   131                   */
+   132                  if (committed) {
+   133                          xfs_efi_release(efi);
+   134                          xfs_force_shutdown((*tp)->t_mountp,
+   135                                  (error == -EFSCORRUPTED) ?
+   136                                          SHUTDOWN_CORRUPT_INCORE :
+   137                                          SHUTDOWN_META_IO_ERROR);
+   138                  }
+   139                  return error;
+   140          }
+
+regards,
+dan carpenter
 
 _______________________________________________
 xfs mailing list
