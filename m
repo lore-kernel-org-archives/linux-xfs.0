@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AF7737CA0
-	for <xfs@oss.sgi.com>; Thu, 12 May 2016 18:31:09 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B18AE7CA0
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 18:35:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 704B08F8037
-	for <xfs@oss.sgi.com>; Thu, 12 May 2016 16:31:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kJGWnQrAYOOsDMUa for <xfs@oss.sgi.com>;
-	Thu, 12 May 2016 16:31:04 -0700 (PDT)
-Subject: Re: [PATCH] xfs_db: allow recalculating CRCs on invalid metadata
-References: <1463092513-5462-1-git-send-email-david@fromorbit.com>
-	<ee586739-e804-8174-8497-cc8a992b9752@sandeen.net>
-	<20160512232804.GC18496@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <367454d8-56fe-6dda-7cc3-485b964fe8af@sandeen.net>
-Date: Thu, 12 May 2016 18:31:03 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D583AC001
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 16:35:25 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	BETrGuCKMMaDWstT for <xfs@oss.sgi.com>;
+	Wed, 18 May 2016 16:35:23 -0700 (PDT)
+Date: Thu, 19 May 2016 09:34:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: struct fsxattr redefinition
+Message-ID: <20160518233442.GE21200@dastard>
+References: <20160518163733.GB14165@tarantula.localdomain>
+	<237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20160512232804.GC18496@dastard>
+Content-Disposition: inline
+In-Reply-To: <237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
+On Wed, May 18, 2016 at 03:44:46PM -0500, Eric Sandeen wrote:
+> On 5/18/16 11:37 AM, Jeffrey Bastian wrote:
+> > There was a discussion a few months ago about adding a guard for the
+> > fsxattr struct [0] because it's defined in two places, the Linux kernel
+> > header linux/fs.h [1] and xfsprogs header xfs/linux.h [2].
+> 
+> > xfs/linux.h has a FS_IOC_FSGETXATTR guard around the struct fsxattr
+> > definition, but this only works if linux/fs.h is included *before*
+> > xfs/linux.h (or xfs/xfs.h).  If you include linux/fs.h after, then you
+> > get a struct redefinition error.
+> > 
+> > Is it a requirement that linux/fs.h is included first?  If so, then
+> > there is a bug in xfstests because it includes them in the wrong order
+> > [3] and fails to build.  If there is not an order requirement, then both
+> > header files should probably have a HAVE_FSXATTR guard around the struct
+> > definition.
+> 
+> It seems best to me to include fs.h first.  That may not be written in
+> stone, but it's at least common practice.
+> 
+> Having the same definition in both places, and guards going both ways,
+> seems a little odd though.
+> 
+> Maybe xfsprogs' include/linux.h should just directly include
+> the kernel's linux/fs.h at the top - would that make sense?
 
+That's the easiest solution - stops people wasting even more time on
+this.
 
-On 5/12/16 6:28 PM, Dave Chinner wrote:
->>> +
->>> > > +	if (corrupt) {
->>> > >  		nowrite_ops.verify_write = xfs_dummy_verify;
->>> > > -		iocur_top->bp->b_ops = &nowrite_ops;
->>> > > -		dbprintf(_("Allowing write of corrupted data\n"));
->>> > > +		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
->>> > > +	} else {
->> > 
->> > Maybe a helpful/redundant comment about /* invalid_data */ alongside } else { ?
-> I though the dbprintf() documented it well enough? maybe move that
-> to the top of each branch?
+Cheers,
 
-Oh, I suppose it does.  By the time we returned early on !corrupt & ! invalid_data,
-then tested explicitly for (corrupt), it requires a decent brain-stack to 
-remember what the } else { clause is for, IMHO.
-
-But like I said, just a thought.
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
