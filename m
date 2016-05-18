@@ -1,33 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AE7717CA0
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 05:14:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6EC488F8033
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 03:14:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GgLZqricO9tkEF9h (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 May 2016 03:14:01 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 8901E90E74
-	for <xfs@oss.sgi.com>; Fri, 13 May 2016 10:14:00 +0000 (UTC)
-Received: from redhat.com (vpn-55-193.rdu2.redhat.com [10.10.55.193])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4DADvsv025403
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>; Fri, 13 May 2016 06:13:59 -0400
-Date: Fri, 13 May 2016 12:13:56 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] db: limit AGFL bno array printing
-Message-ID: <20160513101356.GB4393@redhat.com>
-References: <1463103603-14610-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 07D177CA1
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 04:50:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AE6BA304048
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 02:50:08 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id COQCUbBc5rYtSdo0 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 18 May 2016 02:49:57 -0700 (PDT)
+Date: Wed, 18 May 2016 11:49:52 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160518094952.GB3193@twins.programming.kicks-ass.net>
+References: <20160512080321.GA18496@dastard>
+	<20160513160341.GW20141@dhcp22.suse.cz>
+	<20160516104130.GK3193@twins.programming.kicks-ass.net>
+	<20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+	<20160516231056.GE18496@dastard>
+	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
+	<20160517223549.GV26977@dastard>
+	<20160518072005.GA3193@twins.programming.kicks-ass.net>
+	<20160518082538.GE21654@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1463103603-14610-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20160518082538.GE21654@dhcp22.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,103 +38,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
 
-On Fri, May 13, 2016 at 11:40:03AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 18, 2016 at 10:25:39AM +0200, Michal Hocko wrote:
+> On Wed 18-05-16 09:20:05, Peter Zijlstra wrote:
+> > On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
+> > > On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
+> [...]
+> > > > In any case; would something like this work for you? Its entirely
+> > > > untested, but the idea is to mark an entire class to skip reclaim
+> > > > validation, instead of marking individual sites.
+> > > 
+> > > Probably would, but it seems like swatting a fly with runaway
+> > > train. I'd much prefer a per-site annotation (e.g. as a GFP_ flag)
+> > > so that we don't turn off something that will tell us we've made a
+> > > mistake while developing new code...
+> > 
+> > Fair enough; if the mm folks don't object to 'wasting' a GFP flag on
+> > this the below ought to do I think.
 > 
-> When asking for a single agfl entry such as:
+> GFP flag space is quite scarse. 
 
-Looks good to me, feel free to add
+There's still 5 or so bits available, and you could always make gfp_t
+u64.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Especially when it would be used only
+> for lockdep configurations which are mostly disabled. Why cannot we go
+> with an explicit disable/enable API I have proposed? 
 
-> 
-> # xfs_db -c "agfl 0" -c "p bno[1]" /dev/ram0
-> bno[1] = 1:6 2:7 3:8 4:null .....
-> 
-> The result should be just the single entry being asked for.
-> Currently this outputs the entire remainder of the array starting at
-> the given index. This makes it difficult to extract single entry
-> values.
-> 
-> This occurs because the printing of a flat array of number types
-> does not take into account the range that is specified on the
-> command line, which is held in fl->low and fl->high. To make this
-> work for flat arrays of number types (print function fp_num), change
-> print_flist() to limit the count of values to be emitted to the
-> range specified. This now gives:
-> 
-> # xfs_db -c "agfl 0" -c "p bno[1-2]" /dev/ram0
-> bno[1-2] = 1:6 2:7
-> 
-> To further simplify external parsing of single entry values, if only
-> a single value is requested from the array of fp_num type, don't
-> print the array index - it's already known. Hence:
-> 
-> # xfs_db -c "agfl 0" -c "p bno[1]" /dev/ram0
-> bno[1] = 6
-> 
-> This change will take effect on all types of flat number arrays that
-> are printed. e.g. the range limiting will work for things like the
-> AGI unlinked list arrays.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  db/fprint.c | 2 +-
->  db/print.c  | 7 +++++--
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/db/fprint.c b/db/fprint.c
-> index f2b3794..fd7e7f4 100644
-> --- a/db/fprint.c
-> +++ b/db/fprint.c
-> @@ -93,7 +93,7 @@ fp_num(
->  			val == -1LL : val == ((1LL << size) - 1LL);
->  		if ((arg & FTARG_SKIPNULL) && isnull)
->  			continue;
-> -		if (array)
-> +		if (array && count > 1)
->  			dbprintf("%d:", i + base);
->  		if ((arg & FTARG_DONULL) && isnull)
->  			dbprintf(_("null"));
-> diff --git a/db/print.c b/db/print.c
-> index 3ff2548..998daf4 100644
-> --- a/db/print.c
-> +++ b/db/print.c
-> @@ -107,6 +107,7 @@ print_flist_1(
->  	const ftattr_t	*fa;
->  	flist_t		*fl;
->  	int		low;
-> +	int		count;
->  	int		neednl;
->  	char		**pfx;
->  
-> @@ -139,10 +140,12 @@ print_flist_1(
->  				low = fl->low;
->  			else
->  				low = 0;
-> +			count = fcount(f, iocur_top->data, parentoff);
-> +			if (fl->flags & FL_OKHIGH)
-> +				count = min(count, fl->high - low + 1);
->  			if (fa->prfunc) {
->  				neednl = fa->prfunc(iocur_top->data, fl->offset,
-> -					fcount(f, iocur_top->data, parentoff),
-> -					fa->fmtstr,
-> +					count, fa->fmtstr,
->  					fsize(f, iocur_top->data, parentoff, 0),
->  					fa->arg, low,
->  					(f->flags & FLD_ARRAY) != 0);
-> -- 
-> 2.8.0.rc3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+It has unbounded scope. And in that respect the GFP flag thingy is wider
+than I'd like too, it avoids setting the state for all held locks, even
+though we'd only like to avoid setting it for one class.
 
--- 
-Carlos
+So ideally we'd combine the GFP flag with the previously proposed skip
+flag to only avoid marking the one class while keeping everything
+working for all other held locks.
+
 
 _______________________________________________
 xfs mailing list
