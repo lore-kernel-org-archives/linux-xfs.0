@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D08A37CA1
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 17:35:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B817AC003
-	for <xfs@oss.sgi.com>; Tue, 17 May 2016 15:35:59 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	N7xCj1Erp8i0nLf4 for <xfs@oss.sgi.com>;
-	Tue, 17 May 2016 15:35:52 -0700 (PDT)
-Date: Wed, 18 May 2016 08:35:49 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BE48E7CA1
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 03:25:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C4ED8F8065
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 01:25:43 -0700 (PDT)
+Received: from mail-wm0-f52.google.com (mail-wm0-f52.google.com
+	[74.125.82.52]) by cuda.sgi.com with ESMTP id zDGMxk1Z3glYl5kF
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 May 2016 01:25:41 -0700 (PDT)
+Received: by mail-wm0-f52.google.com with SMTP id r12so22682518wme.0
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 01:25:41 -0700 (PDT)
+Date: Wed, 18 May 2016 10:25:39 +0200
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160517223549.GV26977@dastard>
-References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
-	<20160512055756.GE6648@birch.djwong.org>
+Message-ID: <20160518082538.GE21654@dhcp22.suse.cz>
+References: <20160512055756.GE6648@birch.djwong.org>
 	<20160512080321.GA18496@dastard>
 	<20160513160341.GW20141@dhcp22.suse.cz>
 	<20160516104130.GK3193@twins.programming.kicks-ass.net>
@@ -22,9 +24,11 @@ References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
 	<20160516132541.GP3193@twins.programming.kicks-ass.net>
 	<20160516231056.GE18496@dastard>
 	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
+	<20160517223549.GV26977@dastard>
+	<20160518072005.GA3193@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160517144912.GZ3193@twins.programming.kicks-ass.net>
+In-Reply-To: <20160518072005.GA3193@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,104 +42,33 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Peter Zijlstra <peterz@infradead.org>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
 
-On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
-> 
-> Thanks for writing all that down Dave!
-> 
-> On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
-> 
-> > The reason we don't have lock clases for the ilock is that we aren't
-> > supposed to call memory reclaim with that lock held in exclusive
-> > mode. This is because reclaim can run transactions, and that may
-> > need to flush dirty inodes to make progress. Flushing dirty inode
-> > requires taking the ilock in shared mode.
+On Wed 18-05-16 09:20:05, Peter Zijlstra wrote:
+> On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
+> > On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
+[...]
+> > > In any case; would something like this work for you? Its entirely
+> > > untested, but the idea is to mark an entire class to skip reclaim
+> > > validation, instead of marking individual sites.
 > > 
-> > In the code path that was reported, we hold the ilock in /shared/
-> > mode with no transaction context (we are doing a read-only
-> > operation). This means we can run transactions in memory reclaim
-> > because a) we can't deadlock on the inode we hold locks on, and b)
-> > transaction reservations will be able to make progress as we don't
-> > hold any locks it can block on.
+> > Probably would, but it seems like swatting a fly with runaway
+> > train. I'd much prefer a per-site annotation (e.g. as a GFP_ flag)
+> > so that we don't turn off something that will tell us we've made a
+> > mistake while developing new code...
 > 
-> Just to clarify; I read the above as that we cannot block on recursive
-> shared locks, is this correct?
-> 
-> Because we can in fact block on down_read()+down_read() just fine, so if
-> you're assuming that, then something's busted.
+> Fair enough; if the mm folks don't object to 'wasting' a GFP flag on
+> this the below ought to do I think.
 
-The transaction reservation path will run down_read_trylock() on the
-inode, not down_read(). Hence if there are no pending writers, it
-will happily take the lock twice and make progress, otherwise it
-will skip the inode and there's no deadlock.  If there's a pending
-writer, then we have another context that is already in a
-transaction context and has already pushed the item, hence it is
-only in the scope of the current push because IO hasn't completed
-yet and removed it from the list.
-
-> Otherwise, I'm not quite reading it right, which is, given the
-> complexity of that stuff, entirely possible.
-
-There's a maze of dark, grue-filled twisty passages here...
-
-> The other possible reading is that we cannot deadlock on the inode we
-> hold locks on because we hold a reference on it; and the reference
-> avoids the inode from being reclaimed. But then the whole
-> shared/exclusive thing doesn't seem to make sense.
-
-Right, because that's not the problem. The issue has to do with
-transaction contexts and what locks are safe to hold when calling
-xfs_trans_reserve(). Direct reclaim is putting xfs_trans_reserve()
-behind memory allocation, which means it is unsafe for XFS to hold
-the ilock exclusive or be in an existing transaction context when
-doing GFP_KERNEL allocation.
-
-> > For the ilock, the number of places where the ilock is held over
-> > GFP_KERNEL allocations is pretty small. Hence we've simply added
-> > GFP_NOFS to those allocations to - effectively - annotate those
-> > allocations as "lockdep causes problems here". There are probably
-> > 30-35 allocations in XFS that explicitly use KM_NOFS - some of these
-> > are masking lockdep false positive reports.
-> 
-> 
-> > In the end, like pretty much all the complex lockdep false positives
-> > we've had to deal in XFS, we've ended up changing the locking or
-> > allocation contexts because that's been far easier than trying to
-> > make annotations cover everything or convince other people that
-> > lockdep annotations are insufficient.
-> 
-> Well, I don't mind creating lockdep annotations; but explanations of the
-> exact details always go a long way towards helping me come up with
-> something.
-> 
-> While going over the code; I see there's complaining about
-> MAX_SUBCLASSES being too small. Would it help if we doubled it? We
-> cannot grow the thing without limits, but doubling it should be possible
-> I think.
-
-Last time I asked cwif we could increase MAX_SUBCLASSES I was told
-no. So we've just had to try to fit about 30 different
-inode lock contexts into 8 subclasses split across multiple class
-types (i.e. xfs_[non]dir_ilock_class). I wasted an entire week on
-getting those annotations to fit the limitations of lockdep and
-still work.
-
-> In any case; would something like this work for you? Its entirely
-> untested, but the idea is to mark an entire class to skip reclaim
-> validation, instead of marking individual sites.
-
-Probably would, but it seems like swatting a fly with runaway
-train. I'd much prefer a per-site annotation (e.g. as a GFP_ flag)
-so that we don't turn off something that will tell us we've made a
-mistake while developing new code...
-
-Cheers,
-
-Dave.
+GFP flag space is quite scarse. Especially when it would be used only
+for lockdep configurations which are mostly disabled. Why cannot we go
+with an explicit disable/enable API I have proposed? It would be lockdep
+contained and quite easy to grep for and git blame would tell us
+(hopefuly) why the lockdep had to be put out of the way for the
+particular path.
 -- 
-Dave Chinner
-david@fromorbit.com
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
