@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E96607CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 22:15:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 427377CA0
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 11:37:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8598F30404E
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 20:15:04 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 05B79304048
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 09:37:38 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OKFAvNMLCI6QqMg0 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id FAPKCc2zCEBbeUD8 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 May 2016 20:15:03 -0700 (PDT)
-Date: Thu, 12 May 2016 11:15:00 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs_quota: check report_mount return value
-Message-ID: <20160512031500.GD17859@dhcp12-143.nay.redhat.com>
-References: <1e8b9ace-2fa3-bc11-4487-19be60053ef9@sandeen.net>
+	<xfs@oss.sgi.com>; Wed, 18 May 2016 09:37:35 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 11B198AE73
+	for <xfs@oss.sgi.com>; Wed, 18 May 2016 16:37:35 +0000 (UTC)
+Received: from tarantula.localdomain (ovpn-116-102.phx2.redhat.com
+	[10.3.116.102])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u4IGbX9I012942
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>; Wed, 18 May 2016 12:37:34 -0400
+Date: Wed, 18 May 2016 11:37:33 -0500
+From: Jeffrey Bastian <jbastian@redhat.com>
+Subject: struct fsxattr redefinition
+Message-ID: <20160518163733.GB14165@tarantula.localdomain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1e8b9ace-2fa3-bc11-4487-19be60053ef9@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,88 +39,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, May 11, 2016 at 09:41:12PM -0500, Eric Sandeen wrote:
-> The new call to report_mount doesn't check the return value
-> like every other caller does...
-> 
-> Returning 1 means it printed something; if the terse flag
-> is used and there is no usage, nothing gets printed.
-> If we set the NO_HEADER_FLAG anyway, then we won't see
-> the header for subsequent entries as we expect.
-> 
-> For example, project ID 0 has no usage in this case:
-> 
-> # xfs_quota -x -c "report -a" /mnt/test
-> Project quota on /mnt/test (/dev/sdb1)
->                                Blocks                     
-> Project ID       Used       Soft       Hard    Warn/Grace     
-> ---------- -------------------------------------------------- 
-> #0                  0          0          0     00 [--------]
-> project          2048          4          4     00 [--none--]
-> 
-> So using the terse flag results in no header when it prints
-> projects with usage:
-> 
-> # xfs_quota -x -c "report -t -a" /mnt/test
-> project          2048          4          4     00 [--none--]
-> 
-> With this fix it prints the header as expected:
-> 
-> # xfs_quota -x -c "report -t -a" /mnt/test
-> Project quota on /mnt/test (/dev/sdb1)
->                                Blocks                     
-> Project ID       Used       Soft       Hard    Warn/Grace     
-> ---------- -------------------------------------------------- 
-> project          2048          4          4     00 [--none--]
-> 
-> 
-> Addresses-Coverity-Id: 1361552
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/quota/report.c b/quota/report.c
-> index cc422d1..59290e1 100644
-> --- a/quota/report.c
-> +++ b/quota/report.c
-> @@ -580,9 +580,9 @@ report_project_mount(
->  			 * Print default project quota, even if projid 0
->  			 * isn't defined
->  			 */
-> -			report_mount(fp, 0, NULL, NULL, form, XFS_PROJ_QUOTA,
-> -			             mount, flags);
-> -			flags |= NO_HEADER_FLAG;
-> +			if (report_mount(fp, 0, NULL, NULL,
-> +					form, XFS_PROJ_QUOTA, mount, flags))
-> +				flags |= NO_HEADER_FLAG;
+There was a discussion a few months ago about adding a guard for the
+fsxattr struct [0] because it's defined in two places, the Linux kernel
+header linux/fs.h [1] and xfsprogs header xfs/linux.h [2].
 
-Wow, you're right! TERSE MODE will return 0 if no any quota
-limit:
-        if (flags & TERSE_FLAG) {
-                count = 0;
-                if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
-                        count++;
-                if ((form & XFS_INODE_QUOTA) && d.d_icount)
-                        count++;
-                if ((form & XFS_RTBLOCK_QUOTA) && d.d_rtbcount)
-                        count++;
-                if (!count)
-                        return 0;
-        }
+xfs/linux.h has a FS_IOC_FSGETXATTR guard around the struct fsxattr
+definition, but this only works if linux/fs.h is included *before*
+xfs/linux.h (or xfs/xfs.h).  If you include linux/fs.h after, then you
+get a struct redefinition error.
 
-Thanks for fix my mistake. I can add TERSE report functional
-test into my xfs/106 patch(which you're reviewing). Then it
-can find bugs likes this ASAP.
+Is it a requirement that linux/fs.h is included first?  If so, then
+there is a bug in xfstests because it includes them in the wrong order
+[3] and fails to build.  If there is not an order requirement, then both
+header files should probably have a HAVE_FSXATTR guard around the struct
+definition.
 
-Thanks,
-Zorro
+[0] http://oss.sgi.com/archives/xfs/2016-02/msg00306.html
+[1] https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fs.h?h=v4.6#n152
+[2] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=blob;f=include/linux.h;h=cc0f70ceed72406822885d878b939b3e66c03ffd;hb=53cefc406eb1047ce9dc85906a0117f8da9f44ca#l177
+[3] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=blob;f=src/t_immutable.c;h=87ffc75f2d0229941ad6c5235ce9deea272d66c9;hb=HEAD#l41
 
->  		}
->  
->  		setprent();
-> 
+-- 
+Jeff Bastian
 
 _______________________________________________
 xfs mailing list
