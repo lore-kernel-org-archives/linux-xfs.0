@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B8DE27CA4
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 07:16:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6EABB30404E
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0phnKUFHGwfcUjDS (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 10 May 2016 05:16:27 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	by oss.sgi.com (Postfix) with ESMTP id 7A7F77CA0
+	for <xfs@oss.sgi.com>; Thu, 19 May 2016 14:16:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E9C9304062
+	for <xfs@oss.sgi.com>; Thu, 19 May 2016 12:16:30 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Dn8rF6VVoaE5zD7f for <xfs@oss.sgi.com>;
+	Thu, 19 May 2016 12:16:25 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id A73AF627F6
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 12:16:27 +0000 (UTC)
-Received: from zion.usersys.redhat.com (dhcp-26-103.brq.redhat.com
-	[10.34.26.103])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4ACGOuj016940
-	for <xfs@oss.sgi.com>; Tue, 10 May 2016 08:16:27 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 3/7] xfs: add configurable error support to metadata buffers
-Date: Tue, 10 May 2016 14:16:17 +0200
-Message-Id: <1462882581-30859-4-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
-References: <1462882581-30859-1-git-send-email-cmaiolino@redhat.com>
+	by sandeen.net (Postfix) with ESMTPSA id C6AA72AC8
+	for <xfs@oss.sgi.com>; Thu, 19 May 2016 14:16:25 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfs: make several functions static
+Message-ID: <3ec4e394-1885-6f3e-f909-c9a77a72668b@sandeen.net>
+Date: Thu, 19 May 2016 14:16:25 -0500
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,261 +26,404 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-With the error configuration handle for async metadata write errors
-in place, we can now add initial support to the IO error processing
-in xfs_buf_iodone_error().
+Al Viro noticed that xfs_lock_inodes should be static, and
+that led to ... a few more.
 
-Add an infrastructure function to look up the configuration handle,
-and rearrange the error handling to prepare the way for different
-error handling conigurations to be used.
+These are just the easy ones, others require moving functions
+higher in source files, so that's not done here to keep
+this review simple.
 
-Changelog:
-
-V3:
-	- in xfs_buf_iodone_callbacks, use cfg->max_retries to
-	  determine if the filesystem should fail or not, a zero value
-	  means it should never retry.
-
-V4:
-	- With the refactor of xfs_buf_iodone_callbacks, we don't need
-	  xfs_buf_item_iodone trace anymore, once it already contains
-	  item_iodone_async trace. Also, since it was the only caller from
-	  this tracepoint, just remove its definition
-	- Move xfs_error_get_cfg() call to just before the usage of cfg
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- fs/xfs/xfs_buf.h      |   1 +
- fs/xfs/xfs_buf_item.c | 112 ++++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_mount.h    |   3 ++
- fs/xfs/xfs_sysfs.c    |  17 ++++++++
- fs/xfs/xfs_trace.h    |   1 -
- 5 files changed, 88 insertions(+), 46 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 4eb89bd..adef116 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -183,6 +183,7 @@ typedef struct xfs_buf {
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	int			b_error;	/* error code on I/O */
-+	int			b_last_error;	/* previous async I/O error */
- 	const struct xfs_buf_ops	*b_ops;
+We aren't using STATIC anymore ... right?
+
+FWIW cross-applying to xfsprogs picks up a handful of these
+as well, and it's still happy too.
+
+ libxfs/xfs_alloc.c     |    2 +-
+ libxfs/xfs_alloc.h     |    7 -------
+ libxfs/xfs_attr_leaf.h |    3 ---
+ libxfs/xfs_rtbitmap.c  |    2 +-
+ xfs_attr_inactive.c    |    2 +-
+ xfs_attr_list.c        |    2 +-
+ xfs_bmap_util.c        |    2 +-
+ xfs_bmap_util.h        |    2 --
+ xfs_file.c             |    2 +-
+ xfs_inode.c            |   16 ++++------------
+ xfs_inode.h            |    8 --------
+ xfs_iops.c             |    2 +-
+ xfs_iops.h             |    1 -
+ xfs_log.c              |    8 ++++----
+ xfs_log.h              |    5 -----
+ xfs_rtalloc.h          |    2 --
+ xfs_super.c            |    2 +-
+ xfs_super.h            |    2 --
+ 18 files changed, 16 insertions(+), 54 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index a708e38..99b077c 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -84,7 +84,7 @@ xfs_alloc_lookup_ge(
+  * Lookup the first record less than or equal to [bno, len]
+  * in the btree given by cur.
+  */
+-int					/* error */
++static int				/* error */
+ xfs_alloc_lookup_le(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	xfs_agblock_t		bno,	/* starting block of extent */
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 135eb3d..92a66ba 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -212,13 +212,6 @@ xfs_free_extent(
+ 	xfs_fsblock_t	bno,	/* starting block number of extent */
+ 	xfs_extlen_t	len);	/* length of extent */
  
- #ifdef XFS_BUF_LOCK_TRACKING
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 99e91a0..b8d0cd4 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1042,35 +1042,22 @@ xfs_buf_do_callbacks(
- 	}
- }
- 
--/*
-- * This is the iodone() function for buffers which have had callbacks
-- * attached to them by xfs_buf_attach_iodone().  It should remove each
-- * log item from the buffer's list and call the callback of each in turn.
-- * When done, the buffer's fsprivate field is set to NULL and the buffer
-- * is unlocked with a call to iodone().
-- */
--void
--xfs_buf_iodone_callbacks(
-+static bool
-+xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
+-int					/* error */
+-xfs_alloc_lookup_le(
+-	struct xfs_btree_cur	*cur,	/* btree cursor */
+-	xfs_agblock_t		bno,	/* starting block of extent */
+-	xfs_extlen_t		len,	/* length of extent */
+-	int			*stat);	/* success/failure */
+-
+ int				/* error */
+ xfs_alloc_lookup_ge(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 882c8d3..4f2aed0 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -50,7 +50,6 @@ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+-int	xfs_attr_shortform_list(struct xfs_attr_list_context *context);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+@@ -88,8 +87,6 @@ int	xfs_attr3_leaf_toosmall(struct xfs_da_state *state, int *retval);
+ void	xfs_attr3_leaf_unbalance(struct xfs_da_state *state,
+ 				       struct xfs_da_state_blk *drop_blk,
+ 				       struct xfs_da_state_blk *save_blk);
+-int	xfs_attr3_root_inactive(struct xfs_trans **trans, struct xfs_inode *dp);
+-
+ /*
+  * Utility routines.
+  */
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 951c044..e2e1106 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -70,7 +70,7 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
+  * Get a buffer for the bitmap or summary file block specified.
+  * The buffer is returned read and locked.
+  */
+-int
++static int
+ xfs_rtbuf_get(
+ 	xfs_mount_t	*mp,		/* file system mount structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 55d2149..be0b79d 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -322,7 +322,7 @@ xfs_attr3_node_inactive(
+  * Recurse (gasp!) through the attribute nodes until we find leaves.
+  * We're doing a depth-first traversal in order to invalidate everything.
+  */
+-int
++static int
+ xfs_attr3_root_inactive(
+ 	struct xfs_trans	**trans,
+ 	struct xfs_inode	*dp)
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index d25f26b..25e76cd 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -65,7 +65,7 @@ xfs_attr_shortform_compare(const void *a, const void *b)
+  * we have to calculate each entries' hashvalue and sort them before
+  * we can begin returning them to the user.
+  */
+-int
++static int
+ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
  {
- 	struct xfs_log_item	*lip = bp->b_fspriv;
- 	struct xfs_mount	*mp = lip->li_mountp;
- 	static ulong		lasttime;
- 	static xfs_buftarg_t	*lasttarg;
--
--	if (likely(!bp->b_error))
--		goto do_callbacks;
-+	struct xfs_error_cfg	*cfg;
+ 	attrlist_cursor_kern_t *cursor;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 3246ebc..62959a6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -416,7 +416,7 @@ xfs_bmap_count_tree(
+ /*
+  * Count fsblocks of the given fork.
+  */
+-int						/* error */
++static int					/* error */
+ xfs_bmap_count_blocks(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	xfs_inode_t		*ip,		/* incore inode */
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index af97d9a..1492348 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -31,8 +31,6 @@ struct xfs_bmalloca;
+ int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
+ int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+ 		     int whichfork, int *eof);
+-int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+-			      int whichfork, int *count);
+ int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+ 		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
  
- 	/*
- 	 * If we've already decided to shutdown the filesystem because of
- 	 * I/O errors, there's no point in giving this a retry.
- 	 */
--	if (XFS_FORCED_SHUTDOWN(mp)) {
--		xfs_buf_stale(bp);
--		bp->b_flags |= XBF_DONE;
--		trace_xfs_buf_item_iodone(bp, _RET_IP_);
--		goto do_callbacks;
--	}
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		goto out_stale;
- 
- 	if (bp->b_target != lasttarg ||
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
-@@ -1079,45 +1066,80 @@ xfs_buf_iodone_callbacks(
- 	}
- 	lasttarg = bp->b_target;
- 
-+	/* synchronous writes will have callers process the error */
-+	if (!(bp->b_flags & XBF_ASYNC))
-+		goto out_stale;
-+
-+	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
-+	ASSERT(bp->b_iodone != NULL);
-+
- 	/*
- 	 * If the write was asynchronous then no one will be looking for the
--	 * error.  Clear the error state and write the buffer out again.
--	 *
--	 * XXX: This helps against transient write errors, but we need to find
--	 * a way to shut the filesystem down if the writes keep failing.
--	 *
--	 * In practice we'll shut the filesystem down soon as non-transient
--	 * errors tend to affect the whole device and a failing log write
--	 * will make us give up.  But we really ought to do better here.
-+	 * error.  If this is the first failure of this type, clear the error
-+	 * state and write the buffer out again. This means we always retry an
-+	 * async write failure at least once, but we also need to set the buffer
-+	 * up to behave correctly now for repeated failures.
- 	 */
--	if (bp->b_flags & XBF_ASYNC) {
--		ASSERT(bp->b_iodone != NULL);
--
--		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
-+	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL)) ||
-+	     bp->b_last_error != bp->b_error) {
-+		bp->b_flags |= (XBF_WRITE | XBF_ASYNC |
-+			        XBF_DONE | XBF_WRITE_FAIL);
-+		bp->b_last_error = bp->b_error;
-+		xfs_buf_ioerror(bp, 0);
-+		xfs_buf_submit(bp);
-+		return true;
-+	}
- 
--		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
-+	/*
-+	 * Repeated failure on an async write. Take action according to the
-+	 * error configuration we have been set up to use.
-+	 */
-+	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
-+	if (!cfg->max_retries)
-+		goto permanent_error;
- 
--		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
--			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
--				       XBF_DONE | XBF_WRITE_FAIL;
--			xfs_buf_submit(bp);
--		} else {
--			xfs_buf_relse(bp);
--		}
--
--		return;
--	}
-+	/* still a transient error, higher layers will retry */
-+	xfs_buf_ioerror(bp, 0);
-+	xfs_buf_relse(bp);
-+	return true;
- 
- 	/*
--	 * If the write of the buffer was synchronous, we want to make
--	 * sure to return the error to the caller of xfs_bwrite().
-+	 * Permanent error - we need to trigger a shutdown if we haven't already
-+	 * to indicate that inconsistency will result from this action.
- 	 */
-+permanent_error:
-+	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+out_stale:
- 	xfs_buf_stale(bp);
- 	bp->b_flags |= XBF_DONE;
--
- 	trace_xfs_buf_error_relse(bp, _RET_IP_);
-+	return false;
-+}
-+
-+/*
-+ * This is the iodone() function for buffers which have had callbacks attached
-+ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
-+ * callback list, mark the buffer as having no more callbacks and then push the
-+ * buffer through IO completion processing.
-+ */
-+void
-+xfs_buf_iodone_callbacks(
-+	struct xfs_buf		*bp)
-+{
-+	/*
-+	 * If there is an error, process it. Some errors require us
-+	 * to run callbacks after failure processing is done so we
-+	 * detect that and take appropriate action.
-+	 */
-+	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
-+		return;
-+
-+	/*
-+	 * Successful IO or permanent error. Either way, we can clear the
-+	 * retry state here in preparation for the next error that may occur.
-+	 */
-+	bp->b_last_error = 0;
- 
--do_callbacks:
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
- 	bp->b_iodone = NULL;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 352a5c8..0c5a976 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -387,4 +387,7 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
- int	xfs_zero_extent(struct xfs_inode *ip, xfs_fsblock_t start_fsb,
- 			xfs_off_t count_fsb);
- 
-+struct xfs_error_cfg * xfs_error_get_cfg(struct xfs_mount *mp,
-+		int error_class, int error);
-+
- #endif	/* __XFS_MOUNT_H__ */
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 07c9599..1cb5a85 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -447,3 +447,20 @@ xfs_error_sysfs_del(
- 	xfs_sysfs_del(&mp->m_error_meta_kobj);
- 	xfs_sysfs_del(&mp->m_error_kobj);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 98bbd8f..fbeaaae 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -90,7 +90,7 @@ xfs_rw_ilock_demote(
+  * will not allocate blocks, but will avoid holes and unwritten extents and so
+  * not do unnecessary work.
+  */
+-int
++static int
+ xfs_iozero(
+ 	struct xfs_inode	*ip,	/* inode			*/
+ 	loff_t			pos,	/* offset in file		*/
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f79ea59..bc39033 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -431,7 +431,7 @@ xfs_lock_inumorder(int lock_mode, int subclass)
+  * lock more than one at a time, lockdep will report false positives saying we
+  * have violated locking orders.
+  */
+-void
++static void
+ xfs_lock_inodes(
+ 	xfs_inode_t	**ips,
+ 	int		inodes,
+@@ -667,14 +667,6 @@ xfs_ip2xflags(
+ 	return _xfs_dic2xflags(dic->di_flags, dic->di_flags2, XFS_IFORK_Q(ip));
  }
-+
-+struct xfs_error_cfg *
-+xfs_error_get_cfg(
-+	struct xfs_mount	*mp,
-+	int			error_class,
-+	int			error)
-+{
-+	struct xfs_error_cfg	*cfg;
-+
-+	switch (error) {
-+	default:
-+		cfg = &mp->m_error_cfg[error_class][XFS_ERR_DEFAULT];
-+		break;
-+	}
-+
-+	return cfg;
-+}
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 840d52e..ea94ee0 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -364,7 +364,6 @@ DEFINE_BUF_EVENT(xfs_buf_delwri_split);
- DEFINE_BUF_EVENT(xfs_buf_get_uncached);
- DEFINE_BUF_EVENT(xfs_bdstrat_shut);
- DEFINE_BUF_EVENT(xfs_buf_item_relse);
--DEFINE_BUF_EVENT(xfs_buf_item_iodone);
- DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
- DEFINE_BUF_EVENT(xfs_buf_error_relse);
- DEFINE_BUF_EVENT(xfs_buf_wait_buftarg);
--- 
-2.4.11
+ 
+-uint
+-xfs_dic2xflags(
+-	struct xfs_dinode	*dip)
+-{
+-	return _xfs_dic2xflags(be16_to_cpu(dip->di_flags),
+-				be64_to_cpu(dip->di_flags2), XFS_DFORK_Q(dip));
+-}
+-
+ /*
+  * Lookups up an inode from "name". If ci_name is not NULL, then a CI match
+  * is allowed, otherwise it has to be an exact match. If a CI match is found,
+@@ -748,7 +740,7 @@ out_unlock:
+  * are not linked into the directory structure - they are attached
+  * directly to the superblock - and so have no parent.
+  */
+-int
++static int
+ xfs_ialloc(
+ 	xfs_trans_t	*tp,
+ 	xfs_inode_t	*pip,
+@@ -1085,7 +1077,7 @@ xfs_dir_ialloc(
+  * link count to go to zero, move the inode to AGI unlinked list so that it can
+  * be freed when the last active reference goes away via xfs_inactive().
+  */
+-int				/* error */
++static int			/* error */
+ xfs_droplink(
+ 	xfs_trans_t *tp,
+ 	xfs_inode_t *ip)
+@@ -1104,7 +1096,7 @@ xfs_droplink(
+ /*
+  * Increment the link count on an inode & log the change.
+  */
+-int
++static int
+ xfs_bumplink(
+ 	xfs_trans_t *tp,
+ 	xfs_inode_t *ip)
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e52d7c7..a521bf7 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -395,12 +395,8 @@ void		xfs_ilock_demote(xfs_inode_t *, uint);
+ int		xfs_isilocked(xfs_inode_t *, uint);
+ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+-int		xfs_ialloc(struct xfs_trans *, xfs_inode_t *, umode_t,
+-			   xfs_nlink_t, xfs_dev_t, prid_t, int,
+-			   struct xfs_buf **, xfs_inode_t **);
+ 
+ uint		xfs_ip2xflags(struct xfs_inode *);
+-uint		xfs_dic2xflags(struct xfs_dinode *);
+ int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+ 			   struct xfs_bmap_free *);
+ int		xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
+@@ -411,7 +407,6 @@ void		xfs_iunpin_wait(xfs_inode_t *);
+ #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+ 
+ int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
+-void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+@@ -419,8 +414,6 @@ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+ 			       xfs_nlink_t, xfs_dev_t, prid_t, int,
+ 			       struct xfs_inode **, int *);
+-int		xfs_droplink(struct xfs_trans *, struct xfs_inode *);
+-int		xfs_bumplink(struct xfs_trans *, struct xfs_inode *);
+ 
+ /* from xfs_file.c */
+ enum xfs_prealloc_flags {
+@@ -434,7 +427,6 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+ 				  enum xfs_prealloc_flags flags);
+ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
+ 		     xfs_fsize_t isize, bool *did_zeroing);
+-int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+ loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
+ 			     loff_t eof, int whence);
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index c5d4eba..04afe38 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -524,7 +524,7 @@ xfs_setattr_mode(
+ 	inode->i_mode |= mode & ~S_IFMT;
+ }
+ 
+-void
++static void
+ xfs_setattr_time(
+ 	struct xfs_inode	*ip,
+ 	struct iattr		*iattr)
+diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+index a0f84ab..d4bcc29 100644
+--- a/fs/xfs/xfs_iops.h
++++ b/fs/xfs/xfs_iops.h
+@@ -30,7 +30,6 @@ extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+  */
+ #define XFS_ATTR_NOACL		0x01	/* Don't call posix_acl_chmod */
+ 
+-extern void xfs_setattr_time(struct xfs_inode *ip, struct iattr *iattr);
+ extern int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap,
+ 			       int flags);
+ extern int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index bde02f1..63dad9e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -788,7 +788,7 @@ xfs_log_mount_cancel(
+  * As far as I know, there weren't any dependencies on the old behaviour.
+  */
+ 
+-int
++static int
+ xfs_log_unmount_write(xfs_mount_t *mp)
+ {
+ 	struct xlog	 *log = mp->m_log;
+@@ -1036,7 +1036,7 @@ xfs_log_space_wake(
+  * there's no point in running a dummy transaction at this point because we
+  * can't start trying to idle the log until both the CIL and AIL are empty.
+  */
+-int
++static int
+ xfs_log_need_covered(xfs_mount_t *mp)
+ {
+ 	struct xlog	*log = mp->m_log;
+@@ -1177,7 +1177,7 @@ xlog_space_left(
+  * The log manager needs its own routine, in order to control what
+  * happens with the buffer after the write completes.
+  */
+-void
++static void
+ xlog_iodone(xfs_buf_t *bp)
+ {
+ 	struct xlog_in_core	*iclog = bp->b_fspriv;
+@@ -1302,7 +1302,7 @@ xfs_log_work_queue(
+  * disk. If there is nothing dirty, then we might need to cover the log to
+  * indicate that the filesystem is idle.
+  */
+-void
++static void
+ xfs_log_worker(
+ 	struct work_struct	*work)
+ {
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 80ba0c0..b5e7107 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -163,12 +163,8 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
+ 			  __uint8_t	   clientid,
+ 			  bool		   permanent);
+ int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+-int	  xfs_log_unmount_write(struct xfs_mount *mp);
+ void      xfs_log_unmount(struct xfs_mount *mp);
+ int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
+-int	  xfs_log_need_covered(struct xfs_mount *mp);
+-
+-void	  xlog_iodone(struct xfs_buf *);
+ 
+ struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
+ void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+@@ -178,7 +174,6 @@ void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
+ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+ 
+ void	xfs_log_work_queue(struct xfs_mount *mp);
+-void	xfs_log_worker(struct work_struct *work);
+ void	xfs_log_quiesce(struct xfs_mount *mp);
+ bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+ 
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index 76c0a4a..355dd9e 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -98,8 +98,6 @@ xfs_growfs_rt(
+ /*
+  * From xfs_rtbitmap.c
+  */
+-int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
+-		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
+ int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		      xfs_rtblock_t start, xfs_extlen_t len, int val,
+ 		      xfs_rtblock_t *new, int *stat);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b412bb1..d68b0db 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -546,7 +546,7 @@ xfs_showargs(
+ 
+ 	return 0;
+ }
+-__uint64_t
++static __uint64_t
+ xfs_max_file_offset(
+ 	unsigned int		blockshift)
+ {
+diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+index 2dfb1ce..529bce9 100644
+--- a/fs/xfs/xfs_super.h
++++ b/fs/xfs/xfs_super.h
+@@ -61,8 +61,6 @@ struct xfs_mount;
+ struct xfs_buftarg;
+ struct block_device;
+ 
+-extern __uint64_t xfs_max_file_offset(unsigned int);
+-
+ extern void xfs_flush_inodes(struct xfs_mount *mp);
+ extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
 
 _______________________________________________
 xfs mailing list
