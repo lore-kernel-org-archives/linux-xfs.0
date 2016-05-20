@@ -1,19 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1CE5C7CA0
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 08:36:36 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AE91C7CA0
+	for <xfs@oss.sgi.com>; Thu, 19 May 2016 19:25:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3D1F8F8040
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 06:36:32 -0700 (PDT)
-Received: from mail.somenet.org (mail.somenet.org [213.143.98.34]) by
-	cuda.sgi.com with ESMTP id TML5B9dvy4e1CnBv (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 May 2016 06:36:29 -0700 (PDT)
-From: Jan Vales <jan@jvales.net>
-Subject: remounting with "errors=remount-ro" in fstab fails.
-Message-ID: <5746FBD1.8010605@jvales.net>
-Date: Thu, 26 May 2016 15:36:17 +0200
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 734978F804B
+	for <xfs@oss.sgi.com>; Thu, 19 May 2016 17:25:15 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	zlRXltFePaPGM2Rw for <xfs@oss.sgi.com>;
+	Thu, 19 May 2016 17:25:12 -0700 (PDT)
+Date: Fri, 20 May 2016 10:17:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160520001714.GC26977@dastard>
+References: <20160512055756.GE6648@birch.djwong.org>
+	<20160512080321.GA18496@dastard>
+	<20160513160341.GW20141@dhcp22.suse.cz>
+	<20160516104130.GK3193@twins.programming.kicks-ass.net>
+	<20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+	<20160516231056.GE18496@dastard>
+	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
+	<20160517223549.GV26977@dastard>
+	<20160519081146.GS3193@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160519081146.GS3193@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,95 +34,138 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4997313189950135553=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---===============4997313189950135553==
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="S9j1RGFGSVNxIFkOF1okEiCxgBDxWOOnq"
+On Thu, May 19, 2016 at 10:11:46AM +0200, Peter Zijlstra wrote:
+> On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
+> > On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
+> > > On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
+> > > 
+> > > > The reason we don't have lock clases for the ilock is that we aren't
+> > > > supposed to call memory reclaim with that lock held in exclusive
+> > > > mode. This is because reclaim can run transactions, and that may
+> > > > need to flush dirty inodes to make progress. Flushing dirty inode
+> > > > requires taking the ilock in shared mode.
+> > > > 
+> > > > In the code path that was reported, we hold the ilock in /shared/
+> > > > mode with no transaction context (we are doing a read-only
+> > > > operation). This means we can run transactions in memory reclaim
+> > > > because a) we can't deadlock on the inode we hold locks on, and b)
+> > > > transaction reservations will be able to make progress as we don't
+> > > > hold any locks it can block on.
+> > > 
+> > > Just to clarify; I read the above as that we cannot block on recursive
+> > > shared locks, is this correct?
+> > > 
+> > > Because we can in fact block on down_read()+down_read() just fine, so if
+> > > you're assuming that, then something's busted.
+> > 
+> > The transaction reservation path will run down_read_trylock() on the
+> > inode, not down_read(). Hence if there are no pending writers, it
+> > will happily take the lock twice and make progress, otherwise it
+> > will skip the inode and there's no deadlock.  If there's a pending
+> > writer, then we have another context that is already in a
+> > transaction context and has already pushed the item, hence it is
+> > only in the scope of the current push because IO hasn't completed
+> > yet and removed it from the list.
+> > 
+> > > Otherwise, I'm not quite reading it right, which is, given the
+> > > complexity of that stuff, entirely possible.
+> > 
+> > There's a maze of dark, grue-filled twisty passages here...
+> 
+> OK; I might need a bit more again.
+> 
+> So now the code does something like:
+> 
+> 	down_read(&i_lock);		-- lockdep marks lock as held
+> 	kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+> 	  --> reclaim()
+> 	     down_read_trylock(&i_lock); -- lockdep does _NOT_ mark as USED_IN_RECLAIM_FS
+> 
+> Right?
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---S9j1RGFGSVNxIFkOF1okEiCxgBDxWOOnq
-Content-Type: multipart/mixed; boundary="t4LI3b4j0CJtqGlOt2GXxSf779nMQfovr"
-From: Jan Vales <jan@jvales.net>
-To: xfs@oss.sgi.com
-Message-ID: <5746FBD1.8010605@jvales.net>
-Subject: remounting with "errors=remount-ro" in fstab fails.
+In the path that can deadlock the log, yes. It's actually way more
+complex than the above, because the down_read_trylock(&i_lock) that
+matters is run in a completely separate, async kthread that
+xfs_trans_reserve() will block waiting for.
 
---t4LI3b4j0CJtqGlOt2GXxSf779nMQfovr
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+process context				xfsaild kthread(*)
+---------------				------------------
+down_read(&i_lock);		-- lockdep marks lock as held
+kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+  --> reclaim()
+     xfs_trans_reserve()
+     ....
+	  xfs_trans_push_ail()	---- called if no space in the log to kick the xfsaild into action
+	  ....
+       xlog_grant_head_wait()	---- blocks waiting for log space
+       .....
 
-Hi there,
+					xfsaild_push()   ----- iterates AIL
+					  grabs log item
+					    lock log item
+	>>>>>>>>>>>>>>>>>>>>>		      down_read_trylock(&i_lock);
+					      format item into buffer
+					      add to dirty buffer list
+					  ....
+					  submit dirty buffer list for IO
+					    buffer IO started
+					.....
+					<async IO completion context>
+					buffer callbacks
+					  mark inode clean
+					  remove inode from AIL
+					  move tail of log forwards
+					    wake grant head waiters
+	<woken by log tail moving>
+	<log space available>
+	transaction reservation granted
+     .....
+     down_write(some other inode ilock)
+     <modify some other inode>
+     xfs_trans_commit
+     .....
 
-I just updated to 4.6 kernel, and now i cannot remount / rw anymore.
+(*) xfsaild runs with PF_MEMALLOC context.
 
-root@... # mount / -o remount,rw
-mount: / not mounted or bad option
+The problem is that if the ilock is held exclusively at GFP_KERNEL
+time, the xfsaild cannot lock the inode to flush it, so if that
+inode pins the tail of the log then we can't make space available
+for xfs_trans_reserve and there is the deadlock.
 
-root@... # dmesg
-[...]
-XFS (md2): unknown mount option [errors=3Dremount-ro].
-[...]
+Once xfs_trans_reserve completes, however, we'll take the ilock on
+*some other inode*, and that's where the "it can't be the inode we
+currently hold locked because we have references to it" and
+henceit's safe to have a pattern like:
 
-root@... # cat /etc/fstab
-[...]
-/dev/sda / xfs ro,noatime,logbufs=3D8,errors=3Dremount-ro,inode64 0 1
-[...]
+down_read(&i_lock);		-- lockdep marks lock as held
+kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+  --> reclaim()
+    down_write(&ilock)
 
-Was that change intentional?
-As in: shall i remove errors=3D... from fstab or is it a mistake?
+because the lock within reclaim context is completely unrelated to
+the lock we already hold.
 
-cheers,
-Jan Vales
---
-I only read plaintext emails.
+Lockdep can't possibly know about this because the deadlock involves
+locking contexts that *aren't doing anything wrong within their own
+contexts*. It's only when you add the dependency of log space
+reservation requirements needed to make forwards progress that
+there's then an issue with locking and reclaim.
 
-Someone @ irc://irc.fsinf.at:6667/tuwien
-webIRC: https://frost.fsinf.at/iris/
+Cheers,
 
-
---t4LI3b4j0CJtqGlOt2GXxSf779nMQfovr--
-
---S9j1RGFGSVNxIFkOF1okEiCxgBDxWOOnq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXRvvXAAoJEERD22thjA7q0WIQAL07J2iITAuS4qB14JtWQoRI
-zDv4bZG7MJQxXwPdqUqPPxjpQTM9NZ0RwC51WpxHF27NMucPZ3vtx1BFsR93v0vx
-TlosC0EUSZsg+9IiuCtWDD8/CKLNNr8OXzgqlFr188Jiu7N1pTAaPzUC/s6/zeX7
-fVsyoK0E0ptuRWtQeLJQUZV37/GmeObsudgmHJXOOMfWtOLj2w/7B/TPM2+e+QPN
-irWbsyZDKvLBjq94cO+n7vWNXUs6swRMmdE4+JIrfGDwnZC6+sSv42m+6M4o5RLe
-I99Gxt1uUEia8NwpvW4t41wsSyOi05J0LVQDo17V20oF0HalxpM0iReMR/L3O4Ln
-ES7xwyHO6TLby/+8ZZwQdwCoF9WzUjjJS88A+PpjdIg+q0i0Dw0IKeAk/09AJyIw
-oXdv5vIEZWXoUcXf3PiR8Jizyese54dhghHGGciyB+mLIHYZfqHE+hQZnIITI5XG
-+ngspgF8bk1Dw9DWU7FuP/yzRDovX0UB8ygXVOMQcy79HVl/YcesXhjylAfpW5sS
-O6XZpJznFDKPG/UCGH5ipxUp0qfJX1TAWfKO5j6ayIauN+k9LLB4yTNu8WNJBCkA
-annTGrzkbsNHTv5U3EKF3nVd9YCJ5vLA9v+CMFfDk3VY0WqK1ozh+8G9bHRvKU35
-05GFumcnQxY4Bit1TOB6
-=9XlR
------END PGP SIGNATURE-----
-
---S9j1RGFGSVNxIFkOF1okEiCxgBDxWOOnq--
-
-
---===============4997313189950135553==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4997313189950135553==--
