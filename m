@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8155F7CA6
-	for <xfs@oss.sgi.com>; Sun, 22 May 2016 16:39:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DE39DAC002
-	for <xfs@oss.sgi.com>; Sun, 22 May 2016 14:38:57 -0700 (PDT)
-Date: Mon, 23 May 2016 07:38:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING
-	fs/xfs/xfs_aops.c:1232 xfs_vm_releasepage
-Message-ID: <20160522213850.GE26977@dastard>
-References: <20160324122417.GB4068@bfoster.bfoster> <57332508.307@profihost.ag>
-	<20160511133417.GA42410@bfoster.bfoster>
-	<57333BA4.4040402@profihost.ag>
-	<20160511155951.GF42410@bfoster.bfoster>
-	<5738576B.4010208@profihost.ag>
-	<20160515115017.GA6433@laptop.bfoster>
-	<57386E84.3090606@profihost.ag>
-	<20160516010602.GA24980@bfoster.bfoster>
-	<57420A47.2000700@profihost.ag>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BE7807CB4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 02:37:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 802F5304051
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 00:37:32 -0700 (PDT)
+Received: from mx404.newsletter.trustmta.com (mx404.newsletter.trustmta.com
+	[122.115.60.101]) by cuda.sgi.com with ESMTP id
+	r0sHO0RArHPyrPDa for <xfs@oss.sgi.com>;
+	Mon, 23 May 2016 00:37:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <57420A47.2000700@profihost.ag>
+From: =?utf-8?B?5aSW6LS45pCc?= <sale11@waimaosou.com>
+Date: 23 May 2016 15:37:19 +0800
+Subject: =?utf-8?B?6Ie0eGZzLOS4muWKoemDqOOAkOaQnOWuouaIt+OAkeWunueUqOaWueahiOS7i+e7jQ==?=
+Message-Id: <20160523073732.66DDAA420A0@cuda.sgi.com>
+Reply-To: sale11@waimaosou.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,83 +23,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Sun, May 22, 2016 at 09:36:39PM +0200, Stefan Priebe - Profihost AG wrote:
-> Am 16.05.2016 um 03:06 schrieb Brian Foster:
-> >> sd_mod ehci_pci ehci_hcd usbcore usb_common igb ahci i2c_algo_bit libahci
-> >> i2c_core ptp mpt3sas pps_core raid_class scsi_transport_sas
-> >> [Sun May 15 07:00:44 2016] CPU: 2 PID: 108 Comm: kswapd0 Tainted: G       O
-> >> 4.4.10+25-ph #1
-> > 
-> > How close is this to an upstream kernel? Upstream XFS? Have you tried to
-> > reproduce this on an upstream kernel?
-> 
-> It's a vanilla 4.4.10 + a new adaptec driver and some sched and wq
-> patches from 4.5 and 4.6 but i can try to replace the kernel on one
-> machine with a 100% vanilla one if this helps.
-
-Please do.
-
-> >> [295086.353473] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0x52000 size 0x13d1c8
-> >> [295086.353476] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0x53000 size 0x13d1c8
-> >> [295086.353478] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0x54000 size 0x13d1c8
-> > ...
-> >> [295086.567508] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0xab000 size 0x13d1c8
-> >> [295086.567510] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0xac000 size 0x13d1c8
-> >> [295086.567515] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
-> >> 0xad000 size 0x13d1c8
-> >>
-> >> The file to the inode number is:
-> >> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
-> >>
-> > 
-> > xfs_bmap -v might be interesting here as well.
-> 
-> # xfs_bmap -v
-> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
-> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en:
->  EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET        TOTAL
->    0: [0..2567]:       41268928..41271495  3 (374464..377031)  2568
-
-So the last file offset with a block is 0x140e00. This means the
-file is fully allocated. However, the pages inside the file range
-are still marked delayed allocation. That implies that we've failed
-to write the pages over a delayed allocation region after we've
-allocated the space.
-
-That, in turn, tends to indicate a problem in page writeback - the
-first page to be written has triggered delayed allocation of the
-entire range, but then the subsequent pages have not been written
-(for some as yet unknown reason). When a page is written, we map it
-to the current block via xfs_map_at_offset(), and that clears both
-the buffer delay and unwritten flags.
-
-This clearly isn't happening which means either the VFS doesn't
-think the inode is dirty anymore, writeback is never asking for
-these pages to be written, or XFs is screwing something up in
-->writepage. The XFS writepage code changed significantly in 4.6, so
-it might be worth seeing if a 4.6 kernel reproduces this same
-problem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+5bCK5pWs55qEeGZz77yM5oKo5aW977yBDQoNCuOAkOWklui0uOaQnOOAkeS4uuaCqOino+WGs+S4
+muWKoemDqOOAkOaQnOWuouaIt+OAkemBh+WIsOeahOWQhOenjemXrumimO+8jOaPkOS+m+WPr+aM
+gee7reW8gOWPkeino+WGs+aIt+aWueahiOOAgg0KDQrkuJrliqHpg6jlvZPliY3nmoTpl67popjv
+vJoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCjEu5Lia5Yqh5ZGY5p2C5Lmx5peg56ug572R5LiK5pCc57Si5a6i5oi3
+77yM5peg5rOV566h55CG77ybDQoyLuS6uuWRmOeahOa1geWkse+8jOmAoOaIkOWuouaIt+S/oeaB
+r+S4ouWkse+8mw0KMy7pmaTkuobkuJrnu6nvvIznu4/nkIblvojpmr7nm5HmjqfkuJrliqHlkZjl
+hajov4fnqIvvvJsgDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCjflubTov5DooYznu4/pqozop6PlhrPmlrnmoYjv
+vJoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0NCuKYheS7juOAkOS6kuiBlOe9keWFrOWFsei1hOa6kOOAkemrmOaViOey
+vuWHhuiOt+WPluWuouaIt++8jOWMheaLrO+8mg0KICAgIOKYhuaQnOe0ouW8leaTjg0KICAgIOKY
+hiDlm77niYcNCiAgICDimIbpu4TpobUNCiAgICDimIYgQ3VzdG9tIERhdGHmkJzntKINCiAgICDi
+mIbmkJzntKLlvJXmk47mm7TmlrDmkJzntKINCiAgICDimIboh6rlrprkuYnph4fpm4YNCiAgICDn
+rYnmlrnlvI/ojrflj5bnsr7noa7lrqLmiLcNCg0K4piF44CQ57K+6YCJ5a6i5oi344CR566h55CG
+77yM5LyB5Lia5Y+v5oyB57ut5byA5Y+R5a6i5oi35pa55byPDQotLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCuivpuaD
+heivt+WPguiAg++8mg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KaHR0cDovL3d3dy50cmFkZXNvdS5jb20vcHJvZHVj
+dHMvP3NuPTIwMTYNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCuW7uuiuruiuqei0teWFrOWPuOavj+S4quWRmOW3peWF
+jei0ueazqOWGjOS9k+mqjOWFiO+9ng0KDQoNCuWmguaenOS4i+asoeS4jeaDs+aOpeWPl+exu+S8
+vOmCruS7tu+8jOivt+WbnuWkjeWRiuefpeWFjeaJk+aJsO+9ng0KDQrlpJbotLjmkJzmlazkuIoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
+bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
+Zm8veGZzCg==
