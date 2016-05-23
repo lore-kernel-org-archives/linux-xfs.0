@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 611AE7CA1
-	for <xfs@oss.sgi.com>; Fri, 27 May 2016 11:35:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B0D81AC009
-	for <xfs@oss.sgi.com>; Fri, 27 May 2016 09:35:17 -0700 (PDT)
-Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
-	[74.125.82.53]) by cuda.sgi.com with ESMTP id jfuqRD3DAaCvbDcj
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 May 2016 09:35:11 -0700 (PDT)
-Received: by mail-wm0-f53.google.com with SMTP id a136so80786755wme.0
-	for <xfs@oss.sgi.com>; Fri, 27 May 2016 09:35:11 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C9C1C7CA4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 15:09:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BEC9304039
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 13:09:34 -0700 (PDT)
+Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
+	cuda.sgi.com with ESMTP id W6i3eXDXemPLPccU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 23 May 2016 13:09:31 -0700 (PDT)
+Date: Mon, 23 May 2016 16:09:26 -0400 (EDT)
+From: Bob Peterson <rpeterso@redhat.com>
+Message-ID: <1651455378.10041082.1464034166002.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1462783638-4968-10-git-send-email-hch@lst.de>
+References: <1462783638-4968-1-git-send-email-hch@lst.de>
+	<1462783638-4968-10-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 09/15] fs: iomap based fiemap implementation
 MIME-Version: 1.0
-In-Reply-To: <20160202180828.GA13880@infradead.org>
-References: <1437913255-7524-4-git-send-email-tytso@mit.edu>
-	<1454361909-36538-1-git-send-email-gwendal@chromium.org>
-	<20160202180828.GA13880@infradead.org>
-From: Gwendal Grignou <gwendal@chromium.org>
-Date: Fri, 27 May 2016 09:34:50 -0700
-Message-ID: <CAMHSBOUQ5eUL+Y+voDCwC9U7gmTsUZu2Oympn+c0=DxaU4egjA@mail.gmail.com>
-Subject: Re: xfsprogs: Add BUILD_CFLAGS for cross compilation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,78 +25,166 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0276501827349179257=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Gwendal Grignou <gwendal@chromium.org>, Theodore Ts'o <tytso@mit.edu>, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, vishal l verma <vishal.l.verma@intel.com>, xfs@oss.sgi.com
 
---===============0276501827349179257==
-Content-Type: multipart/alternative; boundary=047d7b5d5ffe85aa930533d57d46
+----- Original Message -----
+| Add a simple fiemap implementation based on iomap_ops, partially based
+| on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
+| 
+| Signed-off-by: Christoph Hellwig <hch@lst.de>
+| ---
+|  fs/iomap.c            | 90
+|  +++++++++++++++++++++++++++++++++++++++++++++++++++
+|  include/linux/iomap.h |  3 ++
+|  2 files changed, 93 insertions(+)
+| 
+| diff --git a/fs/iomap.c b/fs/iomap.c
+| index f84c6eb..7e639bf 100644
+| --- a/fs/iomap.c
+| +++ b/fs/iomap.c
+| @@ -405,3 +405,93 @@ out_unlock:
+|  	return ret;
+|  }
+|  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
+| +
+| +struct fiemap_ctx {
+| +	struct fiemap_extent_info *fi;
+| +	struct iomap prev;
+| +};
+| +
+| +static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+| +		struct iomap *iomap, u32 flags)
+| +{
+| +	switch (iomap->type) {
+| +	case IOMAP_HOLE:
+| +		/* skip holes */
+| +		return 0;
+| +	case IOMAP_DELALLOC:
+| +		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
+| +		break;
+| +	case IOMAP_UNWRITTEN:
+| +		flags |= FIEMAP_EXTENT_UNWRITTEN;
+| +		break;
+| +	case IOMAP_MAPPED:
+| +		break;
+| +	}
+| +
+| +	return fiemap_fill_next_extent(fi, iomap->offset,
+| +			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
+| +			iomap->length, flags | FIEMAP_EXTENT_MERGED);
+| +
+| +}
+| +
+| +static loff_t
+| +iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void
+| *data,
+| +		struct iomap *iomap)
+| +{
+| +	struct fiemap_ctx *ctx = data;
+| +	loff_t ret = length;
+| +
+| +	if (iomap->type == IOMAP_HOLE)
+| +		return length;
+| +
+| +	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
+| +	ctx->prev = *iomap;
+| +	switch (ret) {
+| +	case 0:		/* success */
+| +		return length;
+| +	case 1:		/* extent array full */
+| +		return 0;
+| +	default:
+| +		return ret;
+| +	}
+| +}
+| +
+| +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+| +		loff_t start, loff_t len, struct iomap_ops *ops)
+| +{
+| +	struct fiemap_ctx ctx;
+| +	loff_t ret;
+| +
+| +	memset(&ctx, 0, sizeof(ctx));
+| +	ctx.fi = fi;
+| +	ctx.prev.type = IOMAP_HOLE;
+| +
+| +	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
+| +	if (ret)
+| +		return ret;
+| +
+| +	ret = filemap_write_and_wait(inode->i_mapping);
+| +	if (ret)
+| +		return ret;
+| +
+| +	while (len > 0) {
+| +		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
+| +				iomap_fiemap_actor);
+| +		if (ret < 0)
+| +			return ret;
+| +		if (ret == 0)
+| +			break;
+| +
+| +		start += ret;
+| +		len -= ret;
+| +	}
+| +
+| +	if (ctx.prev.type != IOMAP_HOLE) {
+| +		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
+| +		if (ret < 0)
+| +			return ret;
+| +	}
+| +
+| +	return 0;
+| +}
+| +EXPORT_SYMBOL_GPL(iomap_fiemap);
+| diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+| index 854766f..b3deee1 100644
+| --- a/include/linux/iomap.h
+| +++ b/include/linux/iomap.h
+| @@ -3,6 +3,7 @@
+|  
+|  #include <linux/types.h>
+|  
+| +struct fiemap_extent_info;
+|  struct inode;
+|  struct iov_iter;
+|  struct kiocb;
+| @@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos,
+| bool *did_zero,
+|  		struct iomap_ops *ops);
+|  int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+|  		struct iomap_ops *ops);
+| +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+| +		loff_t start, loff_t len, struct iomap_ops *ops);
+|  
+|  #endif /* LINUX_IOMAP_H */
+| --
+| 2.1.4
+| 
+| 
 
---047d7b5d5ffe85aa930533d57d46
-Content-Type: text/plain; charset=UTF-8
+Hi Christoph,
 
-Looking at xfsprogs-4.5.0, that patch has not been applied. Did it not work?
-It still applies cleanly on 4.5.
+I've been looking at this again. Where are the calls to the fs-specific bits
+for fiemap? It looks like iomap_fiemap calls iomap_apply, which calls
+iomap_fiemap_actor, but that doesn't call any ops->iomap_get_iomap or similar.
+It calls the iomap_begin (which BTW has a comment that says "Execute a iomap
+write" which is probably wrong and should be more generic, as for cases like
+fiemap) and it calls iomap_end. But it never calls an fs-specific actor
+anywhere. Am I missing something? My earlier version passed in the actor
+function, as per Dave Chinner's request, but yours doesn't.
 
-Gwendal.
+Regards,
 
-On Tue, Feb 2, 2016 at 10:08 AM, Christoph Hellwig <hch@infradead.org>
-wrote:
-
-> On Mon, Feb 01, 2016 at 01:25:09PM -0800, Gwendal Grignou wrote:
-> > When cross compiling, CFLAGS may contains option for the cros-compiler
-> the
-> > host compiler can not handle.
-> > Add BUILD_CFLAGS variable that does not include $OPTIMIZER options.
->
-> I would have expected this to be HOST_CFLAGS, but it seems the
-> BUILD_ convention already exists in xfsprogs, so sticking to it
-> looks fine to me.
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-
---047d7b5d5ffe85aa930533d57d46
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Looking at xfsprogs-4.5.0, that patch has not been applied=
-. Did it not work?<div>It still applies cleanly on 4.5.<br><div><br></div><=
-div>Gwendal.</div></div></div><div class=3D"gmail_extra"><br><div class=3D"=
-gmail_quote">On Tue, Feb 2, 2016 at 10:08 AM, Christoph Hellwig <span dir=
-=3D"ltr">&lt;<a href=3D"mailto:hch@infradead.org" target=3D"_blank">hch@inf=
-radead.org</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
-=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span cl=
-ass=3D"">On Mon, Feb 01, 2016 at 01:25:09PM -0800, Gwendal Grignou wrote:<b=
-r>
-&gt; When cross compiling, CFLAGS may contains option for the cros-compiler=
- the<br>
-&gt; host compiler can not handle.<br>
-&gt; Add BUILD_CFLAGS variable that does not include $OPTIMIZER options.<br=
->
-<br>
-</span>I would have expected this to be HOST_CFLAGS, but it seems the<br>
-BUILD_ convention already exists in xfsprogs, so sticking to it<br>
-looks fine to me.<br>
-<br>
-Reviewed-by: Christoph Hellwig &lt;<a href=3D"mailto:hch@lst.de">hch@lst.de=
-</a>&gt;<br>
-</blockquote></div><br></div>
-
---047d7b5d5ffe85aa930533d57d46--
-
-
---===============0276501827349179257==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Bob Peterson
+Red Hat File Systems
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0276501827349179257==--
