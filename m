@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B485E7CB0
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 10:04:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2884BAC002
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 08:04:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 688907CA6
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 10:07:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C3515AC002
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 08:07:24 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 0hG5gjyOJf2oLqGS (version=TLSv1.2
+	ESMTP id wt9fzGqT3Fjpu99S (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 23 May 2016 08:04:03 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 23 May 2016 08:07:22 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
+	id 1b4rRx-0007ky-Mf
+	for xfs@oss.sgi.com; Mon, 23 May 2016 15:07:22 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] xfs.h: define XFS_IOC_FREEZE even if FIFREEZE is defined
-Date: Mon, 23 May 2016 17:03:55 +0200
-Message-Id: <1464015836-25127-2-git-send-email-hch@lst.de>
-In-Reply-To: <1464015836-25127-1-git-send-email-hch@lst.de>
-References: <1464015836-25127-1-git-send-email-hch@lst.de>
+Subject: [PATCH] xfs: define XFS_IOC_FREEZE even if FIFREEZE is defined
+Date: Mon, 23 May 2016 17:07:19 +0200
+Message-Id: <1464016039-26416-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,7 +31,6 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: jbastian@redhat.com
 
 And the same for XFS_IOC_THAW.  Just because we now have a common
 version of the ioctl we still need to provide the old name for it
@@ -37,14 +38,14 @@ for anyone using those.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_fs.h | 8 ++------
+ fs/xfs/libxfs/xfs_fs.h | 8 ++------
  1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index b9622ba..1f17e1c 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -542,12 +542,8 @@ typedef struct xfs_swapext
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 85727c4..3413699 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -591,12 +591,8 @@ typedef struct xfs_swapext
  #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
  /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
  
