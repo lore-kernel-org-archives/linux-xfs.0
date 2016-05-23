@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C9C1C7CA4
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 15:09:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BEC9304039
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 13:09:34 -0700 (PDT)
-Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
-	cuda.sgi.com with ESMTP id W6i3eXDXemPLPccU (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 86A0E7CA4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 10:27:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 56A41304032
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 08:27:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id VC0GHkde2Zvj9GB3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 23 May 2016 13:09:31 -0700 (PDT)
-Date: Mon, 23 May 2016 16:09:26 -0400 (EDT)
-From: Bob Peterson <rpeterso@redhat.com>
-Message-ID: <1651455378.10041082.1464034166002.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1462783638-4968-10-git-send-email-hch@lst.de>
-References: <1462783638-4968-1-git-send-email-hch@lst.de>
-	<1462783638-4968-10-git-send-email-hch@lst.de>
-Subject: Re: [PATCH 09/15] fs: iomap based fiemap implementation
+	<xfs@oss.sgi.com>; Mon, 23 May 2016 08:27:19 -0700 (PDT)
+Date: Mon, 23 May 2016 10:27:15 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfs_repair: further improvement on secondary superblock
+	search method
+Message-ID: <20160523152715.GA27527@redhat.com>
+References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
+	<20160523145116.GE9319@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160523145116.GE9319@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,160 +31,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, vishal l verma <vishal.l.verma@intel.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
------ Original Message -----
-| Add a simple fiemap implementation based on iomap_ops, partially based
-| on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
-| 
-| Signed-off-by: Christoph Hellwig <hch@lst.de>
-| ---
-|  fs/iomap.c            | 90
-|  +++++++++++++++++++++++++++++++++++++++++++++++++++
-|  include/linux/iomap.h |  3 ++
-|  2 files changed, 93 insertions(+)
-| 
-| diff --git a/fs/iomap.c b/fs/iomap.c
-| index f84c6eb..7e639bf 100644
-| --- a/fs/iomap.c
-| +++ b/fs/iomap.c
-| @@ -405,3 +405,93 @@ out_unlock:
-|  	return ret;
-|  }
-|  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
-| +
-| +struct fiemap_ctx {
-| +	struct fiemap_extent_info *fi;
-| +	struct iomap prev;
-| +};
-| +
-| +static int iomap_to_fiemap(struct fiemap_extent_info *fi,
-| +		struct iomap *iomap, u32 flags)
-| +{
-| +	switch (iomap->type) {
-| +	case IOMAP_HOLE:
-| +		/* skip holes */
-| +		return 0;
-| +	case IOMAP_DELALLOC:
-| +		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
-| +		break;
-| +	case IOMAP_UNWRITTEN:
-| +		flags |= FIEMAP_EXTENT_UNWRITTEN;
-| +		break;
-| +	case IOMAP_MAPPED:
-| +		break;
-| +	}
-| +
-| +	return fiemap_fill_next_extent(fi, iomap->offset,
-| +			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
-| +			iomap->length, flags | FIEMAP_EXTENT_MERGED);
-| +
-| +}
-| +
-| +static loff_t
-| +iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void
-| *data,
-| +		struct iomap *iomap)
-| +{
-| +	struct fiemap_ctx *ctx = data;
-| +	loff_t ret = length;
-| +
-| +	if (iomap->type == IOMAP_HOLE)
-| +		return length;
-| +
-| +	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
-| +	ctx->prev = *iomap;
-| +	switch (ret) {
-| +	case 0:		/* success */
-| +		return length;
-| +	case 1:		/* extent array full */
-| +		return 0;
-| +	default:
-| +		return ret;
-| +	}
-| +}
-| +
-| +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-| +		loff_t start, loff_t len, struct iomap_ops *ops)
-| +{
-| +	struct fiemap_ctx ctx;
-| +	loff_t ret;
-| +
-| +	memset(&ctx, 0, sizeof(ctx));
-| +	ctx.fi = fi;
-| +	ctx.prev.type = IOMAP_HOLE;
-| +
-| +	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-| +	if (ret)
-| +		return ret;
-| +
-| +	ret = filemap_write_and_wait(inode->i_mapping);
-| +	if (ret)
-| +		return ret;
-| +
-| +	while (len > 0) {
-| +		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-| +				iomap_fiemap_actor);
-| +		if (ret < 0)
-| +			return ret;
-| +		if (ret == 0)
-| +			break;
-| +
-| +		start += ret;
-| +		len -= ret;
-| +	}
-| +
-| +	if (ctx.prev.type != IOMAP_HOLE) {
-| +		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
-| +		if (ret < 0)
-| +			return ret;
-| +	}
-| +
-| +	return 0;
-| +}
-| +EXPORT_SYMBOL_GPL(iomap_fiemap);
-| diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-| index 854766f..b3deee1 100644
-| --- a/include/linux/iomap.h
-| +++ b/include/linux/iomap.h
-| @@ -3,6 +3,7 @@
-|  
-|  #include <linux/types.h>
-|  
-| +struct fiemap_extent_info;
-|  struct inode;
-|  struct iov_iter;
-|  struct kiocb;
-| @@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos,
-| bool *did_zero,
-|  		struct iomap_ops *ops);
-|  int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-|  		struct iomap_ops *ops);
-| +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-| +		loff_t start, loff_t len, struct iomap_ops *ops);
-|  
-|  #endif /* LINUX_IOMAP_H */
-| --
-| 2.1.4
-| 
-| 
+On Mon, May 23, 2016 at 07:51:16AM -0700, Christoph Hellwig wrote:
+> On Thu, May 12, 2016 at 03:38:16PM -0500, Bill O'Donnell wrote:
+> > +verify_sb_blocksize(xfs_sb_t *sb)
+> > +{
+> > +	__uint32_t	bsize;
+> > +	int		i;
+> > +
+> > +	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
+> > +	if (sb->sb_blocksize == 0)
+> > +		return(XR_BAD_BLOCKSIZE);
+> > +
+> > +	bsize = 1;
+> > +
+> > +	for (i = 0; bsize < sb->sb_blocksize &&
+> > +		i < sizeof(sb->sb_blocksize) * NBBY; i++)
+> > +		bsize <<= 1;
+> > +
+> > +	if (i < XFS_MIN_BLOCKSIZE_LOG || i > XFS_MAX_BLOCKSIZE_LOG)
+> > +		return(XR_BAD_BLOCKSIZE);
+> > +
+> > +	/* check sb blocksize field against sb blocklog field */
+> > +	if (i != sb->sb_blocklog)
+> > +		return(XR_BAD_BLOCKLOG);
+> 
+> Couldn't we do this much simpler?
+> 
+> 	if (sb->sb_blocksize == 0)
+> 		return XR_BAD_BLOCKSIZE;
+> 	if (sb->sb_blocksize != (1 << sb->sb_blocklog))
+> 		return XR_BAD_BLOCKLOG;
+> 	if (sb->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG ||
+> 	    sb->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG)
+> 		return XR_BAD_BLOCKLOG;
 
-Hi Christoph,
+Makes sense, yes.
 
-I've been looking at this again. Where are the calls to the fs-specific bits
-for fiemap? It looks like iomap_fiemap calls iomap_apply, which calls
-iomap_fiemap_actor, but that doesn't call any ops->iomap_get_iomap or similar.
-It calls the iomap_begin (which BTW has a comment that says "Execute a iomap
-write" which is probably wrong and should be more generic, as for cases like
-fiemap) and it calls iomap_end. But it never calls an fs-specific actor
-anywhere. Am I missing something? My earlier version passed in the actor
-function, as per Dave Chinner's request, but yours doesn't.
+> 
+> >  	/*
+> > +	 * Attempt to find secondary sb with a coarse approach,
+> > +	 * first trying agblocks and blocksize read from sb, providing
+> > +	 * they're sane.
+> >  	 */
+> > +	if (verify_sb_blocksize(rsb) == 0) {
+> > +		skip = rsb->sb_agblocks * rsb->sb_blocksize;
+> > +		if ((skip >= XFS_AG_MIN_BYTES) && (skip <= XFS_AG_MAX_BYTES))
+> 
+> no need for the inner braces here.
 
-Regards,
+Check.
 
-Bob Peterson
-Red Hat File Systems
+Thanks for the review!
+-Bill
 
 _______________________________________________
 xfs mailing list
