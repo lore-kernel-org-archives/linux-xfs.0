@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9D4E57CA0
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 11:07:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F4D28F804B
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 09:07:41 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id UfPxKBYSJzdhksPn (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 May 2016 09:07:39 -0700 (PDT)
-Date: Thu, 26 May 2016 09:07:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/7] tests: don't put loop control files on the scratch
-	mount
-Message-ID: <20160526160701.GA16512@birch.djwong.org>
-References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
-	<146424223512.6278.15231849939938178494.stgit@birch.djwong.org>
-	<20160526080948.GC20307@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1CA7F7CA4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 09:47:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E3D2B304032
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 07:47:01 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id uRkP8fjkoAJlXAOv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 23 May 2016 07:47:00 -0700 (PDT)
+Date: Mon, 23 May 2016 07:46:59 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] db: limit AGFL bno array printing
+Message-ID: <20160523144659.GD9319@infradead.org>
+References: <1463103603-14610-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160526080948.GC20307@infradead.org>
+In-Reply-To: <1463103603-14610-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,16 +29,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, May 26, 2016 at 01:09:48AM -0700, Christoph Hellwig wrote:
-> Shouldn't these tests also add a _require_test now?  But we probably
-> should just move them to /tmp instead?
+Looks fine,
 
-Yes.  I'll move 'em to /tmp.
-
---D
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
