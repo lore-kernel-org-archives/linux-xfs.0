@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7764D7CB2
-	for <xfs@oss.sgi.com>; Sat, 28 May 2016 04:25:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49BF0304053
-	for <xfs@oss.sgi.com>; Sat, 28 May 2016 02:25:40 -0700 (PDT)
-Received: from gourmet8.spamgourmet.com (gourmet.spamgourmet.com
-	[216.75.62.102]) by cuda.sgi.com with ESMTP id IJvTvrhyE0Qoh81D
-	(version=TLSv1.2 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 28 May 2016 02:25:35 -0700 (PDT)
-Received: from spamgourmet by gourmet7.spamgourmet.com with local (Exim 4.80)
-	(envelope-from <xfs.pkoch@dfgh.net>) id 1b6aUw-0006UY-EE
-	for xfs@oss.sgi.com; Sat, 28 May 2016 09:25:34 +0000
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 282857CA4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 17:36:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A63A7AC004
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 15:36:42 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id wE1zDdXh2MMEwIvu for <xfs@oss.sgi.com>;
+	Mon, 23 May 2016 15:36:39 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 59A4CB55
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 17:36:39 -0500 (CDT)
+Subject: Re: [PATCH 1/2] xfs.h: define XFS_IOC_FREEZE even if FIFREEZE is
+	defined
+References: <1464015836-25127-1-git-send-email-hch@lst.de>
+	<1464015836-25127-2-git-send-email-hch@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9b47e358-b106-1fe2-251a-c317a6a914dd@sandeen.net>
+Date: Mon, 23 May 2016 17:36:39 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
-References: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
-Date: Sat, 28 May 2016 11:25:32 +0200
-Message-ID: <CAPhCz3SPomfAn68TknFW-KyEB4WXvPzXU8UVhXWqyXztNbQG+Q@mail.gmail.com>
-Subject: Re: xfsrestore performance
-From: xfs.pkoch@dfgh.net
+In-Reply-To: <1464015836-25127-2-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,85 +30,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0753888840415442142=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0753888840415442142==
-Content-Type: multipart/alternative; boundary=001a114d3ceedef6ca0533e39a1f
-
---001a114d3ceedef6ca0533e39a1f
-Content-Type: text/plain; charset=UTF-8
-
-Dear XFS experts,
-
-I checked the situation this morning:
-
-....
-xfsdump: status at 10:25:53: 473543/7886560 files dumped, 1.3% data dumped,
-76211 seconds elapsed
-xfsdump: status at 10:35:46: 478508/7886560 files dumped, 1.3% data dumped,
-76804 seconds elapsed
-
-and decided to stop the process. With this kind of speed xfsdump |
-xfsrestore
-will need more than one month. Something must be seriously wrong here.
-
-I see two options: Use rsync again to copy the data from the 14TB xfs
-filesystem to the new 20TB xfs filesystem. This won't be finished
-this weekend.
-
-Or use dd to copy the 14TB XFS filesystem into the 20TB volume and
-then grow the filesystem.
-
-dd runs at 300MB/sec that's approx 1TB per hour, so I decided to go this
-way.
-
-So here's another question: The new filesystem will run on a 20 disk raid10
-volume and was copied from a 16 disk raid5 volume. So swidth will be wrong.
-Also all the data will be within the first 15TB.
-
-What should I do to fix this? Or will xfs_growfs fix it automatically?
-
-Regards
-
-Peter Koch
-
---001a114d3ceedef6ca0533e39a1f
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div><div><div><div>Dear XFS experts,<br><br></div>I check=
-ed the situation this morning:<br><br>....<br>xfsdump: status at 10:25:53: =
-473543/7886560 files dumped, 1.3% data dumped, 76211 seconds elapsed<br>xfs=
-dump: status at 10:35:46: 478508/7886560 files dumped, 1.3% data dumped, 76=
-804 seconds elapsed<br><br></div>and decided to stop the process. With this=
- kind of speed xfsdump | xfsrestore<br></div>will need more than one month.=
- Something must be seriously wrong here.<br><br></div><div>I see two option=
-s: Use rsync again to copy the data from the 14TB xfs<br>filesystem to the =
-new 20TB xfs filesystem. This won&#39;t be finished<br></div><div>this week=
-end.<br></div><div><br>Or use dd to copy the 14TB XFS filesystem into the 2=
-0TB volume and<br>then grow the filesystem.<br><br>dd runs at 300MB/sec tha=
-t&#39;s approx 1TB per hour, so I decided to go this<br>way.<br><br>So here=
-&#39;s another question: The new filesystem will run on a 20 disk raid10<br=
->volume and was copied from a 16 disk raid5 volume. So swidth will be wrong=
-.<br>Also all the data will be within the first 15TB.<br><br>What should I =
-do to fix this? Or will xfs_growfs fix it automatically?<br><br>Regards<br>=
-<br>Peter Koch</div></div>
-
---001a114d3ceedef6ca0533e39a1f--
 
 
---===============0753888840415442142==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On 5/23/16 10:03 AM, Christoph Hellwig wrote:
+> And the same for XFS_IOC_THAW.  Just because we now have a common
+> version of the ioctl we still need to provide the old name for it
+> for anyone using those.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Makes sense.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  libxfs/xfs_fs.h | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> index b9622ba..1f17e1c 100644
+> --- a/libxfs/xfs_fs.h
+> +++ b/libxfs/xfs_fs.h
+> @@ -542,12 +542,8 @@ typedef struct xfs_swapext
+>  #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
+>  /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
+>  
+> -/*	XFS_IOC_FREEZE		  -- FIFREEZE   119	 */
+> -/*	XFS_IOC_THAW		  -- FITHAW     120	 */
+> -#ifndef FIFREEZE
+> -#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
+> -#define XFS_IOC_THAW		     _IOWR('X', 120, int)
+> -#endif
+> +#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)	/* aka FIFREEZE */
+> +#define XFS_IOC_THAW		     _IOWR('X', 120, int)	/* aka FITHAW */
+>  
+>  #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+>  #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0753888840415442142==--
