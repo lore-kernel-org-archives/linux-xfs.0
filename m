@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 083FE7CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 11:42:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CC53E304048
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 09:42:43 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id LY3hF25GqPtxkVpH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 09:42:41 -0700 (PDT)
-Date: Tue, 31 May 2016 09:41:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/7] xfs/122: don't break on old xfsprogs
-Message-ID: <20160531164138.GB5053@birch.djwong.org>
-References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
-	<20160527180231.GB5050@birch.djwong.org>
-	<20160531125109.GA17018@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1A9A37CA4
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 09:44:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 78335AC003
+	for <xfs@oss.sgi.com>; Mon, 23 May 2016 07:44:28 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id W4SxBFG5XXyod8C8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 23 May 2016 07:44:26 -0700 (PDT)
+Date: Mon, 23 May 2016 07:44:25 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: make several functions static
+Message-ID: <20160523144425.GA9319@infradead.org>
+References: <3ec4e394-1885-6f3e-f909-c9a77a72668b@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160531125109.GA17018@infradead.org>
+In-Reply-To: <3ec4e394-1885-6f3e-f909-c9a77a72668b@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, May 31, 2016 at 05:51:09AM -0700, Christoph Hellwig wrote:
-> Looks fine, but can't we also remove the workaround at the end of the
-> the test as well?
-
-Oh, heh, yes, those can go.  The whitespace is wrong on them anyway.
-
---D
-
+On Thu, May 19, 2016 at 02:16:25PM -0500, Eric Sandeen wrote:
+> Al Viro noticed that xfs_lock_inodes should be static, and
+> that led to ... a few more.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> These are just the easy ones, others require moving functions
+> higher in source files, so that's not done here to keep
+> this review simple.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+> 
+> We aren't using STATIC anymore ... right?
+
+We're moving away from it at least, although not very stringently..
+
+> FWIW cross-applying to xfsprogs picks up a handful of these
+> as well, and it's still happy too.
+
+Yeah - seems like none of them is of the odd static in kernel but not in
+xfsprogs kind.
+
+Looks fine,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
