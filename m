@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 231387CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 13:54:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD9D7304032
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 11:54:34 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ZsAzjv3DjgEDyeUh for <xfs@oss.sgi.com>;
-	Wed, 11 May 2016 11:54:31 -0700 (PDT)
-Subject: Re: [PATCH] xfs/133 134: filter redundant projid 0 quota report
-References: <1462979156-7648-1-git-send-email-zlang@redhat.com>
-	<e0126658-70f7-f8f9-d3bd-a47df2c6ce96@sandeen.net>
-	<20160511173621.GC17859@dhcp12-143.nay.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <469fcded-5869-239c-8668-1b58a6b0eedd@sandeen.net>
-Date: Wed, 11 May 2016 13:54:29 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A2337CA0
+	for <xfs@oss.sgi.com>; Tue, 24 May 2016 17:12:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AAB6CAC003
+	for <xfs@oss.sgi.com>; Tue, 24 May 2016 15:12:11 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	PYEcxWGi7qxamjSj for <xfs@oss.sgi.com>;
+	Tue, 24 May 2016 15:12:07 -0700 (PDT)
+Date: Wed, 25 May 2016 08:12:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: LVM snapshot and log record CRC mismatch
+Message-ID: <20160524221205.GM21200@dastard>
+References: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
 MIME-Version: 1.0
-In-Reply-To: <20160511173621.GC17859@dhcp12-143.nay.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,83 +29,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, fstests <fstests@vger.kernel.org>
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: xfs@oss.sgi.com
 
-
-
-On 5/11/16 12:36 PM, Zorro Lang wrote:
-> On Wed, May 11, 2016 at 11:04:28AM -0500, Eric Sandeen wrote:
->> On 5/11/16 10:05 AM, Zorro Lang wrote:
->>> After GETNEXTQUOTA ioctl be supported, xfs_quota -c "report" always
->>> outputs one more quota info about default quota (as project ID 0).
->>> For fix this problem, xfsprogs has merged commit 3d607a1.
->>
->> This is only for project quota, right?  user & group quota always
->> reports id 0 / root, because it exists in the passwd and group files.
+On Tue, May 24, 2016 at 02:58:51PM +0200, Gionatan Danti wrote:
+> Hi list,
+> I have a question about LVM snapshot and XFS.
 > 
-> Yes, only for project quota. The truth is we decide to report project
-> quota #0 always, so we can just add one line "#0 0 0 0 00 ...." into
-> xfs/133 and xfs/134 golden output file simply.
+> Some preliminary information: CentOS Linux release 7.0.1406 (Core),
+> with kernel version 3.10.0-123.20.1.el7.x86_64
 > 
-> But for history reason, we can't do that. Mostly old xfsprogs still
-> report "(null) 0 0 0 00 ..."(if use GETNEXTQUOTA), or don't report
-> project id #0 (if use old GETQUOTA).
-
-Right, so filter that out? ;)
-
-...
-
->> Why not just do it as an actual filter, i.e.:
->>
->>
->>
->> diff --git a/common/filter b/common/filter
->> index 1be377c..2012729 100644
->> --- a/common/filter
->> +++ b/common/filter
->> @@ -302,6 +302,13 @@ _filter_quota()
->>  	sed -e 'N;s/TEST_DEV\n/TEST_DEV/g'
->>  }
->>  
->> +_filter_project_quota()
->> +{
->> +	# Project ID 0 is always present on disk but was not reported
->> +	# until the GETNEXTQUOTA ioctl came into use.  Filter it out.
->> +	_filter_quota | grep -v "^\#0"
->> +}
+> Basically, each time I mount a LVM snapshot (with the "nouuid"
+> option), I have the following dmesg entries:
 > 
-> I thought about this before I send this patch. But I don't know if it's
-> necessary to add a new common function. I thought the one who write
-> a case need to report project, who can decide how to deal with
-> its project id #0 output.
+> [824501.391058] XFS (dm-7): Mounting Filesystem
+> [824502.085459] XFS (dm-7): Starting recovery (logdev: internal)
+> [824502.120435] XFS (dm-7): log record CRC mismatch: found
+> 0x324293f8, expected 0x43a1b3b5.
+> [824502.121035] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00
+> 00 6d a0 9d a7  ........i...m...
+> [824502.121649] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52
+> 54 2a 00 00 00  ....i...NART*...
+> [824502.122403] XFS (dm-7): log record CRC mismatch: found
+> 0x873f6b2, expected 0x49045c16.
+....
 > 
-> Likes what I did in xfs/133. I named projid 0 to "root", then fileter
-> project name root directly. If we add a function named _filter_project_quota,
-> and we tell others it can filter project ID 0. But if someone named
-> projid #0, this function become hard to understand.
+> From my understanding, this should be more or less the expected
+> behavior: the snapshot is a "crash consistent" backup point, and
+> mounting the snapshotted filesystem can led to mismatched CRC.
 
-yes, but that's a lot of manual fiddling for every test that does a report
-of a project quota.  Most don't care at all about id 0.
+No, a snapshot should not have mismatched CRC errors in the log.
+However, log recovery should be seeing only an unmount record during
+recovery, so seeing multiple CRC errors indicates that the
+filesystem was not quiesced correctly when the snapshot was taken.
 
-If someone wants project ID 0 reported, just use _filter_quota instead
-of _filter_project_quota.
+How did you take the snapshot? (full command lines, please)
 
-If someone gives prjid 0 a name "foobarbaz" then it won't be filtered,
-and I think that's fine, they were doing something quite intentional.
-All the filter does is suppress the default output which is new to any
-test reporting project quota.
+> Anyway, I can read from the snapshot without problems.
 
-> Likes xfs/299, it named projid #0 to "root", and add "root" quota output
-> into golden image. That's another way to deal with this bug. Maybe better?
+Well, until you hit whatever was not replayed out of the log....
 
-I really think that a single, common filter function for a common form
-of output makes more sense than expecting each test to handle it on a
-case-by-case basis.
+> However, issuing a xfs_info on the original volume shows that crc
+> options is 0 (crc=0), so I am somewhat puzzled about the warning
+> above.
 
--Eric
+CRCs are now always enabled on the journal. The difference is that
+for crc=1 filesystems this is a fatal error and the fs won't mount,
+while for crc=0 it is simply a canary for developers when bugs are
+reported that something might have gone wrong in log recovery....
 
-> Thanks,
-> Zorro 
+> Moreover, on a more recent CentOS 7.2 server (kernel version
+> 3.10.0-327.13.1.el7.x86_64), I can not reproduce this warning.
+> 
+> So I ask:
+> 1) it really is the expected behavior, or should I be worried by the
+> dmesg entries?
+
+Not expected. indicates a problem with the snapshot image.
+
+> 2) this is kernel-related
+
+Maybe.
+
+> should I update the kernel to newer version?
+
+Depends if it is kernel related...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
