@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A99447CA0
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 17:42:47 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 93D207CA4
+	for <xfs@oss.sgi.com>; Tue, 24 May 2016 07:58:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CA4D304039
-	for <xfs@oss.sgi.com>; Wed, 11 May 2016 15:42:44 -0700 (PDT)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	KB0TyclWtN2YNDib for <xfs@oss.sgi.com>;
-	Wed, 11 May 2016 15:42:43 -0700 (PDT)
-From: "Verma, Vishal L" <vishal.l.verma@intel.com>
-Subject: Re: iomap infrastructure and multipage writes V4
-Date: Wed, 11 May 2016 22:42:37 +0000
-Message-ID: <1463006545.29294.32.camel@intel.com>
-References: <1462783638-4968-1-git-send-email-hch@lst.de>
-In-Reply-To: <1462783638-4968-1-git-send-email-hch@lst.de>
-Content-Language: en-US
-Content-ID: <AA02B8B69C3FC24A9F15891A73BBA518@intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 59DAA8F804B
+	for <xfs@oss.sgi.com>; Tue, 24 May 2016 05:58:56 -0700 (PDT)
+Received: from mr003msb.fastweb.it (mr003msb.fastweb.it [85.18.95.87]) by
+	cuda.sgi.com with ESMTP id qCFBUpkiR49VtEYq for
+	<xfs@oss.sgi.com>; Tue, 24 May 2016 05:58:53 -0700 (PDT)
+Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it
+	(8.5.140.04)
+	id 572A172301273F91 for xfs@oss.sgi.com; Tue, 24 May 2016 14:58:52 +0200
+Subject: LVM snapshot and log record CRC mismatch
 MIME-Version: 1.0
+Date: Tue, 24 May 2016 14:58:51 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,40 +24,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "hch@lst.de" <hch@lst.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-Cc: "rpeterso@redhat.com" <rpeterso@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: xfs@oss.sgi.com
+Cc: g.danti@assyoma.it
 
-T24gTW9uLCAyMDE2LTA1LTA5IGF0IDEwOjQ3ICswMjAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90
-ZToNCj4gVGhpcyBzZXJpZXMgYWRkIGEgbmV3IGZpbGUgc3lzdGVtIEkvTyBwYXRoIHRoYXQgdXNl
-cyB0aGUgaW9tYXANCj4gc3RydWN0dXJlDQo+IGludHJvZHVjZWQgZm9yIHRoZSBwTkZTIHN1cHBv
-cnQgYW5kIHN1cHBvcnQgbXVsdGktcGFnZSBidWZmZXJlZA0KPiB3cml0ZXMuDQo+IA0KPiBUaGlz
-IHdhcyBmaXJzdCBzdGFydGVkIGJ5IERhdmUgQ2hpbm5lciBhIGxvbmcgdGltZSBhZ28sIHRoZW4g
-SSBkaWQNCj4gYmVhdA0KPiBpdCBpbnRvIHNoYXBlIGZvciBwcm9kdWN0aW9uIHJ1bnMgaW4gYSB2
-ZXJ5IGNvbnN0cmFpbmVkIEFSTSBOQVMNCj4gZW52aXJvbWVudCBmb3IgVHV4ZXJhIGFsbW9zdCBh
-cyBsb25nIGFnbywgYW5kIG5vdyBoYWxmIGEgZG96ZW4NCj4gcmV3cml0ZXMNCj4gbGF0ZXIgaXQn
-cyBiYWNrLg0KPiANCj4gVGhlIGJhc2ljIGlkZWEgaXMgdG8gYXZvaWQgdGhlIHBlci1ibG9jayBn
-ZXRfYmxvY2tzIG92ZXJoZWFkDQo+IGFuZCBtYWtlIHVzZSBvZiBleHRlbnRzIGluIHRoZSBidWZm
-ZXJlZCB3cml0ZSBwYXRoIGJ5IGl0ZXJhdGluZyBvdmVyDQo+IHRoZW0gaW5zdGVhZC4NCj4gDQo+
-IE5vdGUgdGhhdCBwYXRjaCAxIGNvbmZsaWN0cyB3aXRoIFZpc2hhbHMgZGF4IGVycm9yIGhhbmRs
-aW5nIHNlcmllcy4NCj4gSXQgd291bGQgYmUgZ3JlYXQgdG8gaGF2ZSBhIHN0YWJsZSBicmFuY2gg
-d2l0aCBpdCBzbyB0aGF0IGJvdGggdGhlDQo+IFhGUyBhbmQgbnZkaW1tIHRyZWUgY291bGQgcHVs
-bCBpdCBpbiBiZWZvcmUgdGhlIG90aGVyIGNoYW5nZXMgaW4gdGhpcw0KPiBhcmVhLg0KDQpJJ20g
-bG9va2luZyB0byBwb3N0IGEgc3RhYmxlIGJyYW5jaCB3aXRoIG15IHBhdGNoZXMgc29vbi4gTXkg
-cGF0Y2hlcw0KZGVwZW5kIG9uIEphbidzIGZpeGVzIGZvciBleHQ0IGFuZCBEQVgsIGFuZCBhcyBz
-b29uIGFzIHRoZXkgbGFuZCBpbiBhDQpzdGFibGUgZXh0NCBicmFuY2gsIEknbGwgY3JlYXRlIG9u
-ZSBmb3IgZGF4IGVycm9yIGhhbmRsaW5nLiBJbiB0aGUNCm1lYW53aGlsZSwgdjcgb2YgbXkgcGF0
-Y2hlcyBpbmNsdWRlcyB5b3VyIHBhdGNoIDEgdXBkYXRlZCBmb3IgdGhlIGVycm9yDQpoYW5kbGlu
-ZyBzZXJpZXMuDQoNCj4gDQo+IENoYW5nZXMgc2luY2UgVjM6DQo+IMKgLSBmaXggREFYIGJhc2Vk
-IHplcm9pbmcNCj4gwqAtIFJldmlld3MgYW5kIHRyaXZpYWwgZml4ZXMgZnJvbSBCb2INCj4gDQo+
-IENoYW5nZXMgc2luY2UgVjI6DQo+IMKgLSBmaXggdGhlIHJhbmdlIGZvciBkZWxhbGxvYyBwdW5j
-aGVzIGFmdGVyIGZhaWxlZCB3cml0ZXMNCj4gwqAtIHVwZGF0ZWQgc29tZSBjaGFuZ2Vsb2dzDQo+
-IA0KPiBDaGFuY2VzIHNpbmNlIFYxOg0KPiDCoC0gYWRkIHN1cHBvcnQgZm9yIGZpZW1hcA0KPiDC
-oC0gZml4IGEgdGVzdCBmYWlsIG9uIDFrIGJsb2NrIHNpemVzDQo+IMKgLSBwcmVwYXJlIGZvciA2
-NC1iaXQgbGVuZ3RoLCB0aGlzIHdpbGwgYmUgdXNlZCBpbiBhIGZvbGxvdyBvbg0KPiBwYXRjaHNl
-dA0KPiAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+Hi list,
+I have a question about LVM snapshot and XFS.
+
+Some preliminary information: CentOS Linux release 7.0.1406 (Core), with 
+kernel version 3.10.0-123.20.1.el7.x86_64
+
+Basically, each time I mount a LVM snapshot (with the "nouuid" option), 
+I have the following dmesg entries:
+
+[824501.391058] XFS (dm-7): Mounting Filesystem
+[824502.085459] XFS (dm-7): Starting recovery (logdev: internal)
+[824502.120435] XFS (dm-7): log record CRC mismatch: found 0x324293f8, 
+expected 0x43a1b3b5.
+[824502.121035] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00 00 6d 
+a0 9d a7  ........i...m...
+[824502.121649] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.122403] XFS (dm-7): log record CRC mismatch: found 0x873f6b2, 
+expected 0x49045c16.
+[824502.122952] ffffc90018271000: 00 00 00 10 00 00 00 08 aa 20 00 00 6e 
+55 00 00  ......... ..nU..
+[824502.123508] ffffc90018271010: 00 00 00 00 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.124239] XFS (dm-7): log record CRC mismatch: found 0x2f6e47af, 
+expected 0x7efb222.
+[824502.124792] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00 00 a7 
+66 d7 2e  ........i....f..
+[824502.125359] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.126173] XFS (dm-7): log record CRC mismatch: found 0x324293f8, 
+expected 0x43a1b3b5.
+[824502.126751] ffffc900182b2000: 00 00 00 10 00 00 00 00 69 01 00 00 6d 
+a0 9d a7  ........i...m...
+[824502.127332] ffffc900182b2010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.153510] XFS (dm-7): log record CRC mismatch: found 0x873f6b2, 
+expected 0x49045c16.
+[824502.154158] ffffc900182b2000: 00 00 00 10 00 00 00 08 aa 20 00 00 6e 
+55 00 00  ......... ..nU..
+[824502.154818] ffffc900182b2010: 00 00 00 00 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.155654] XFS (dm-7): log record CRC mismatch: found 0x2f6e47af, 
+expected 0x7efb222.
+[824502.156258] ffffc900182b2000: 00 00 00 10 00 00 00 00 69 01 00 00 a7 
+66 d7 2e  ........i....f..
+[824502.156869] ffffc900182b2010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
+00 00 00  ....i...NART*...
+[824502.906702] XFS (dm-7): Ending recovery (logdev: internal)
+[824502.906714] SELinux: initialized (dev dm-7, type xfs), uses xattr
+
+ From my understanding, this should be more or less the expected 
+behavior: the snapshot is a "crash consistent" backup point, and 
+mounting the snapshotted filesystem can led to mismatched CRC. Anyway, I 
+can read from the snapshot without problems.
+
+However, issuing a xfs_info on the original volume shows that crc 
+options is 0 (crc=0), so I am somewhat puzzled about the warning above. 
+Moreover, on a more recent CentOS 7.2 server (kernel version 
+3.10.0-327.13.1.el7.x86_64), I can not reproduce this warning.
+
+So I ask:
+1) it really is the expected behavior, or should I be worried by the 
+dmesg entries?
+2) this is kernel-related, should I update the kernel to newer version?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
