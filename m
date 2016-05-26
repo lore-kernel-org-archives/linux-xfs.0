@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 93D207CA4
-	for <xfs@oss.sgi.com>; Tue, 24 May 2016 07:58:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 59DAA8F804B
-	for <xfs@oss.sgi.com>; Tue, 24 May 2016 05:58:56 -0700 (PDT)
-Received: from mr003msb.fastweb.it (mr003msb.fastweb.it [85.18.95.87]) by
-	cuda.sgi.com with ESMTP id qCFBUpkiR49VtEYq for
-	<xfs@oss.sgi.com>; Tue, 24 May 2016 05:58:53 -0700 (PDT)
-Received: from ceres.assyoma.it (93.63.55.57) by mr003msb.fastweb.it
-	(8.5.140.04)
-	id 572A172301273F91 for xfs@oss.sgi.com; Tue, 24 May 2016 14:58:52 +0200
-Subject: LVM snapshot and log record CRC mismatch
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9ABC57CA0
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 00:57:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DF17304039
+	for <xfs@oss.sgi.com>; Wed, 25 May 2016 22:57:47 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id EBtJzGoHdYMJb161 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 May 2016 22:57:45 -0700 (PDT)
+Subject: [PATCH 5/7] reflink: test interaction with swap files
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 25 May 2016 22:57:36 -0700
+Message-ID: <146424225618.6278.13884344251723851779.stgit@birch.djwong.org>
+In-Reply-To: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Date: Tue, 24 May 2016 14:58:51 +0200
-From: Gionatan Danti <g.danti@assyoma.it>
-Message-ID: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,86 +24,224 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: g.danti@assyoma.it
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi list,
-I have a question about LVM snapshot and XFS.
+Since none of the current filesystems support reflinked swap files,
+make sure that we prohibit reflinking of swapfiles and swapon of
+reflinked files.
 
-Some preliminary information: CentOS Linux release 7.0.1406 (Core), with 
-kernel version 3.10.0-123.20.1.el7.x86_64
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+---
+ tests/generic/923     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/923.out |    6 ++++
+ tests/generic/924     |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/924.out |    5 +++
+ tests/generic/group   |    2 +
+ 5 files changed, 160 insertions(+)
+ create mode 100755 tests/generic/923
+ create mode 100644 tests/generic/923.out
+ create mode 100755 tests/generic/924
+ create mode 100644 tests/generic/924.out
 
-Basically, each time I mount a LVM snapshot (with the "nouuid" option), 
-I have the following dmesg entries:
 
-[824501.391058] XFS (dm-7): Mounting Filesystem
-[824502.085459] XFS (dm-7): Starting recovery (logdev: internal)
-[824502.120435] XFS (dm-7): log record CRC mismatch: found 0x324293f8, 
-expected 0x43a1b3b5.
-[824502.121035] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00 00 6d 
-a0 9d a7  ........i...m...
-[824502.121649] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.122403] XFS (dm-7): log record CRC mismatch: found 0x873f6b2, 
-expected 0x49045c16.
-[824502.122952] ffffc90018271000: 00 00 00 10 00 00 00 08 aa 20 00 00 6e 
-55 00 00  ......... ..nU..
-[824502.123508] ffffc90018271010: 00 00 00 00 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.124239] XFS (dm-7): log record CRC mismatch: found 0x2f6e47af, 
-expected 0x7efb222.
-[824502.124792] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00 00 a7 
-66 d7 2e  ........i....f..
-[824502.125359] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.126173] XFS (dm-7): log record CRC mismatch: found 0x324293f8, 
-expected 0x43a1b3b5.
-[824502.126751] ffffc900182b2000: 00 00 00 10 00 00 00 00 69 01 00 00 6d 
-a0 9d a7  ........i...m...
-[824502.127332] ffffc900182b2010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.153510] XFS (dm-7): log record CRC mismatch: found 0x873f6b2, 
-expected 0x49045c16.
-[824502.154158] ffffc900182b2000: 00 00 00 10 00 00 00 08 aa 20 00 00 6e 
-55 00 00  ......... ..nU..
-[824502.154818] ffffc900182b2010: 00 00 00 00 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.155654] XFS (dm-7): log record CRC mismatch: found 0x2f6e47af, 
-expected 0x7efb222.
-[824502.156258] ffffc900182b2000: 00 00 00 10 00 00 00 00 69 01 00 00 a7 
-66 d7 2e  ........i....f..
-[824502.156869] ffffc900182b2010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 
-00 00 00  ....i...NART*...
-[824502.906702] XFS (dm-7): Ending recovery (logdev: internal)
-[824502.906714] SELinux: initialized (dev dm-7, type xfs), uses xattr
-
- From my understanding, this should be more or less the expected 
-behavior: the snapshot is a "crash consistent" backup point, and 
-mounting the snapshotted filesystem can led to mismatched CRC. Anyway, I 
-can read from the snapshot without problems.
-
-However, issuing a xfs_info on the original volume shows that crc 
-options is 0 (crc=0), so I am somewhat puzzled about the warning above. 
-Moreover, on a more recent CentOS 7.2 server (kernel version 
-3.10.0-327.13.1.el7.x86_64), I can not reproduce this warning.
-
-So I ask:
-1) it really is the expected behavior, or should I be worried by the 
-dmesg entries?
-2) this is kernel-related, should I update the kernel to newer version?
-
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+diff --git a/tests/generic/923 b/tests/generic/923
+new file mode 100755
+index 0000000..73c1621
+--- /dev/null
++++ b/tests/generic/923
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. 923
++#
++# Check that we can't reflink a swapfile.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++    wait
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++
++blocks=160
++blksz=65536
++
++echo "Initialize file"
++echo > $seqres.full
++_pwrite_byte 0x61 0 $((blocks * blksz)) $testdir/file1 >> $seqres.full
++mkswap -U 27376b42-ff65-42ca-919f-6c9b62292a5c $testdir/file1 >> $seqres.full
++swapon $testdir/file1
++
++echo "Try to reflink"
++_cp_reflink $testdir/file1 $testdir/file2 2>&1 | _filter_scratch
++
++echo "Tear it down"
++swapoff $testdir/file1
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/923.out b/tests/generic/923.out
+new file mode 100644
+index 0000000..97c18cf
+--- /dev/null
++++ b/tests/generic/923.out
+@@ -0,0 +1,6 @@
++QA output created by 923
++Format and mount
++Initialize file
++Try to reflink
++cp: failed to clone 'SCRATCH_MNT/test-923/file2' from 'SCRATCH_MNT/test-923/file1': Text file busy
++Tear it down
+diff --git a/tests/generic/924 b/tests/generic/924
+new file mode 100755
+index 0000000..86c2a39
+--- /dev/null
++++ b/tests/generic/924
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# FS QA Test No. 924
++#
++# Check that we can't swapon a reflinked file.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++    wait
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++
++blocks=160
++blksz=65536
++
++echo "Initialize file"
++echo > $seqres.full
++_pwrite_byte 0x61 0 $((blocks * blksz)) $testdir/file1 >> $seqres.full
++mkswap -U 27376b42-ff65-42ca-919f-6c9b62292a5c $testdir/file1 >> $seqres.full
++_cp_reflink $testdir/file1 $testdir/file2 2>&1 | _filter_scratch
++
++echo "Try to swapon"
++swapon $testdir/file1 2>&1 | _filter_scratch
++
++swapoff $testdir/file1 >> $seqres.full 2>&1
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/924.out b/tests/generic/924.out
+new file mode 100644
+index 0000000..b67e6fa
+--- /dev/null
++++ b/tests/generic/924.out
+@@ -0,0 +1,5 @@
++QA output created by 924
++Format and mount
++Initialize file
++Try to swapon
++swapon: SCRATCH_MNT/test-924/file1: swapon failed: Invalid argument
+diff --git a/tests/generic/group b/tests/generic/group
+index 36fb759..6fdf109 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -354,3 +354,5 @@
+ 349 blockdev quick rw
+ 350 blockdev quick rw
+ 351 blockdev quick rw
++923 auto quick clone
++924 auto quick clone
 
 _______________________________________________
 xfs mailing list
