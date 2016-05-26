@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 095987CA0
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 10:09:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B8F1030404E
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 08:09:08 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
-	cuda.sgi.com with ESMTP id xHmFxGjddaXhMROs (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 19 May 2016 08:09:06 -0700 (PDT)
-Subject: Bug#822369: fixed in qemu 1:2.6+dfsg-1
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.822369.B822369.146367044910738@bugs.debian.org>
-References: <573DCFAA.8000500@physik.fu-berlin.de>
-	<573DD225.5040502@msgid.tls.msk.ru>
-	<573DD3CC.6040608@physik.fu-berlin.de>
-From: Michael Tokarev <mjt@tls.msk.ru>
-Message-ID: <573DD6AF.5020608@msgid.tls.msk.ru>
-Date: Thu, 19 May 2016 18:07:27 +0300
+	by oss.sgi.com (Postfix) with ESMTP id E08EE7CA0
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 11:13:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AFBEE304048
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 09:13:27 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id txNXmlbyxT0sWqUC (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 26 May 2016 09:13:26 -0700 (PDT)
+Date: Thu, 26 May 2016 09:12:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/7] xfs: test rmap behavior when multiple bmbt records
+	map to a single rmapbt record
+Message-ID: <20160526161257.GB16512@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+	<146424226290.6278.15051221437554845000.stgit@birch.djwong.org>
+	<20160526080424.GA8469@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <573DD3CC.6040608@physik.fu-berlin.de>
-Reply-To: Michael Tokarev <mjt@tls.msk.ru>, 822369@bugs.debian.org
+Content-Disposition: inline
+In-Reply-To: <20160526080424.GA8469@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,48 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Cc: 822369@bugs.debian.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Control: affects -1 - qemu
-Control:
-
-19.05.2016 17:55, John Paul Adrian Glaubitz wrote:
-> On 05/19/2016 04:48 PM, Michael Tokarev wrote:
->> Actually it is more interesting.  This bug is listed in qemu bug list,
->> see https://bugs.debian.org/cgi-bin/pkgreport.cgi?src=qemu , AND in
->> xfsprogs bug list, see
->> https://bugs.debian.org/cgi-bin/pkgreport.cgi?src=xfsprogs
+On Thu, May 26, 2016 at 01:04:24AM -0700, Christoph Hellwig wrote:
+> > --- a/src/t_immutable.c
+> > +++ b/src/t_immutable.c
+> > @@ -38,10 +38,10 @@
+> >  #include <libgen.h>
+> >  #include <sys/acl.h>
+> >  #include <attr/xattr.h>
+> > +#include <linux/fs.h>
+> >  #include <xfs/xfs.h>
+> >  #include <xfs/handle.h>
+> >  #include <xfs/jdm.h>
+> > -#include <linux/fs.h>
+> >  #include <linux/magic.h>
+> >  
+> >  #ifndef XFS_SUPER_MAGIC
 > 
-> If you look closer that the package is actually "xfsprogs" in both
-> cases. The bug just shows up in the bug tracker of the qemu package
-> because it is affected by the bug.
+> How does this belong into the patch?
 
-Ok, that makes sense.  Indeed, while it is listed for qemu, it
-is marked belonging to xfsprogs.  I've never saw this before,
-and thought it is qemu bug not xfsprogs bug.
+It doesn't, this somehow jumped patches when I rebased. :/
 
-> If that is no longer the case, we should remove the association
-> here, i.e. removing "affects src:qemu", but not close the actual
-> bug because the package which is the actual origin of the bug has
-> not been fixed yet.
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index f0ca410..0e34f9a 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -288,3 +288,4 @@
+> >  853 auto quick clone
+> >  854 auto quick clone
+> >  855 auto clone
+> > +856 auto clone rmap reflink
 > 
->> I closed it thinking it is in qemu.  But I closed it wrongly anyway,
->> and that's where I should've been more careful.  In qemu there was
->> a workaround proposed for this issue, but it hasn't been applied,
->> and I thought it has been.  So it has already been reopened meanwhile.
-> 
-> Apparently the workaround has been applied in qemu, otherwise qemu
-> wouldn't build. I will verify that. I have to build a patched version
-> of qemu for sparc64 manually anyway.
+> This is the only test in the reflink group, how is this group different
+> from the clone one?
 
-And now this is lack of closer look on my side again.  Yes, the
-workaround has actually been applied, and I hasn't reopened this
-bug yesterday.. Oh well :))  I was thinking about different bug.
+I'm just gonna say 'thinko' and respin. :)
 
-Thank you for your patience and explanations!
+/me pours a larger cup of coffee...
 
-/mjt
+(Thx for the review!)
+
+--D
 
 _______________________________________________
 xfs mailing list
