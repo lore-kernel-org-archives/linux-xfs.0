@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ADE437CA0
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 15:44:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 23D5DAC001
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 13:44:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 2SjvdXfqFnyMtDEu for <xfs@oss.sgi.com>;
-	Wed, 18 May 2016 13:44:47 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 5E8439E
-	for <xfs@oss.sgi.com>; Wed, 18 May 2016 15:44:47 -0500 (CDT)
-Subject: Re: struct fsxattr redefinition
-References: <20160518163733.GB14165@tarantula.localdomain>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <237c0dad-b27a-7fa0-6283-2832ca00ac43@sandeen.net>
-Date: Wed, 18 May 2016 15:44:46 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 919BD7CA0
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 06:34:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B9CB304053
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 04:34:25 -0700 (PDT)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id n2QRXdges8P98K5z (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 26 May 2016 04:34:22 -0700 (PDT)
+Date: Thu, 26 May 2016 13:34:22 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: LVM snapshot and log record CRC mismatch
+Message-ID: <20160526133422.32f65920@harpe.intellique.com>
+In-Reply-To: <5746DB30.5040006@assyoma.it>
+References: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
+	<20160524221205.GM21200@dastard> <57455645.5040608@assyoma.it>
+	<20160526122315.4112f713@harpe.intellique.com>
+	<5746DB30.5040006@assyoma.it>
 MIME-Version: 1.0
-In-Reply-To: <20160518163733.GB14165@tarantula.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +27,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: xfs@oss.sgi.com
 
-On 5/18/16 11:37 AM, Jeffrey Bastian wrote:
-> There was a discussion a few months ago about adding a guard for the
-> fsxattr struct [0] because it's defined in two places, the Linux kernel
-> header linux/fs.h [1] and xfsprogs header xfs/linux.h [2].
-
-> xfs/linux.h has a FS_IOC_FSGETXATTR guard around the struct fsxattr
-> definition, but this only works if linux/fs.h is included *before*
-> xfs/linux.h (or xfs/xfs.h).  If you include linux/fs.h after, then you
-> get a struct redefinition error.
-> 
-> Is it a requirement that linux/fs.h is included first?  If so, then
-> there is a bug in xfstests because it includes them in the wrong order
-> [3] and fails to build.  If there is not an order requirement, then both
-> header files should probably have a HAVE_FSXATTR guard around the struct
-> definition.
-
-It seems best to me to include fs.h first.  That may not be written in
-stone, but it's at least common practice.
-
-Having the same definition in both places, and guards going both ways,
-seems a little odd though.
-
-Maybe xfsprogs' include/linux.h should just directly include
-the kernel's linux/fs.h at the top - would that make sense?
-
--Eric
-
-> [0] http://oss.sgi.com/archives/xfs/2016-02/msg00306.html
-> [1] https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/include/uapi/linux/fs.h?h=v4.6#n152
-> [2] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=blob;f=include/linux.h;h=cc0f70ceed72406822885d878b939b3e66c03ffd;hb=53cefc406eb1047ce9dc85906a0117f8da9f44ca#l177
-> [3] http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=blob;f=src/t_immutable.c;h=87ffc75f2d0229941ad6c5235ce9deea272d66c9;hb=HEAD#l41
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCAyNiBNYXkgMjAxNiAxMzoxNzowNCArMDIwMApHaW9uYXRhbiBEYW50aSA8Zy5kYW50
+aUBhc3N5b21hLml0PiDDqWNyaXZhaXQ6Cgo+ID4KPiA+IFlvdSBuZWVkIHRvIHVzZSB4ZnNfZnJl
+ZXplIHRvIG1ha2UgdGhlIGZpbGVzeXN0ZW0gY29oZXJlbnQgYmVmb3JlCj4gPiBzbmFwc2hvdDoK
+PiA+Cj4gPiB4ZnNfZnJlZXplIC9kZXYvaHlwZXJ2aXNvci9LVk1fU3RvcmFnZQo+ID4gbHZjcmVh
+dGUgLXMgaHlwZXJ2aXNvci9LVk1fU3RvcmFnZSAtLW5hbWUgQmFja3VwX1NOQVAKPiA+IHhmc19m
+cmVlemUgLXUgL2Rldi9oeXBlcnZpc29yL0tWTV9TdG9yYWdlCj4gPiBsdmNoYW5nZSAtYXkgLUsg
+aHlwZXJ2aXNvci9CYWNrdXBfU05BUAo+ID4gIAo+IAo+IEl0IHdhcyBteSB1bmRlcnN0YW5kaW5n
+IHRoYXQgZmlsZXN5c3RlbSBmcmVlemluZyB3YXMgYXV0b21hdGljYWxseSAKPiBtYW5hZ2VkIGJ5
+IExWTSwgYW5kIGludGVncmF0ZWQgaW50byBWRlMgbG9uZyBhZ28uCj4gCj4gSSBhbSBtaXNzaW5n
+IHNvbWV0aGluZz8KClllcywgSSB0aG91Z2h0IHRoYXQgdG9vLCBob3dldmVyIGl0IGRvZXNuJ3Qg
+c2VlbSB0byBiZSB3b3JraW5nIGluIHlvdXIKY2FzZSwgYW5kIGZyZWV6aW5nIHR3aWNlIGNhbid0
+IGRvIGFueSBoYXJtIGFueXdheSA6KQoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9y
+YWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIElu
+dGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgog
+ICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
