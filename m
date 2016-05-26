@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AE91C7CA0
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 19:25:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 734978F804B
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 17:25:15 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	zlRXltFePaPGM2Rw for <xfs@oss.sgi.com>;
-	Thu, 19 May 2016 17:25:12 -0700 (PDT)
-Date: Fri, 20 May 2016 10:17:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160520001714.GC26977@dastard>
-References: <20160512055756.GE6648@birch.djwong.org>
-	<20160512080321.GA18496@dastard>
-	<20160513160341.GW20141@dhcp22.suse.cz>
-	<20160516104130.GK3193@twins.programming.kicks-ass.net>
-	<20160516130519.GJ23146@dhcp22.suse.cz>
-	<20160516132541.GP3193@twins.programming.kicks-ass.net>
-	<20160516231056.GE18496@dastard>
-	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
-	<20160517223549.GV26977@dastard>
-	<20160519081146.GS3193@twins.programming.kicks-ass.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160519081146.GS3193@twins.programming.kicks-ass.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 613D97CA2
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 11:20:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 25E3E304039
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 09:20:12 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id vdzdVPtrC1nXPGpx (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 26 May 2016 09:20:09 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 2/5] ceph: Propagate dentry down to inode_change_ok()
+Date: Thu, 26 May 2016 18:19:57 +0200
+Message-Id: <1464279600-13009-3-git-send-email-jack@suse.cz>
+In-Reply-To: <1464279600-13009-1-git-send-email-jack@suse.cz>
+References: <1464279600-13009-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,136 +23,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Thu, May 19, 2016 at 10:11:46AM +0200, Peter Zijlstra wrote:
-> On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
-> > On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
-> > > On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
-> > > 
-> > > > The reason we don't have lock clases for the ilock is that we aren't
-> > > > supposed to call memory reclaim with that lock held in exclusive
-> > > > mode. This is because reclaim can run transactions, and that may
-> > > > need to flush dirty inodes to make progress. Flushing dirty inode
-> > > > requires taking the ilock in shared mode.
-> > > > 
-> > > > In the code path that was reported, we hold the ilock in /shared/
-> > > > mode with no transaction context (we are doing a read-only
-> > > > operation). This means we can run transactions in memory reclaim
-> > > > because a) we can't deadlock on the inode we hold locks on, and b)
-> > > > transaction reservations will be able to make progress as we don't
-> > > > hold any locks it can block on.
-> > > 
-> > > Just to clarify; I read the above as that we cannot block on recursive
-> > > shared locks, is this correct?
-> > > 
-> > > Because we can in fact block on down_read()+down_read() just fine, so if
-> > > you're assuming that, then something's busted.
-> > 
-> > The transaction reservation path will run down_read_trylock() on the
-> > inode, not down_read(). Hence if there are no pending writers, it
-> > will happily take the lock twice and make progress, otherwise it
-> > will skip the inode and there's no deadlock.  If there's a pending
-> > writer, then we have another context that is already in a
-> > transaction context and has already pushed the item, hence it is
-> > only in the scope of the current push because IO hasn't completed
-> > yet and removed it from the list.
-> > 
-> > > Otherwise, I'm not quite reading it right, which is, given the
-> > > complexity of that stuff, entirely possible.
-> > 
-> > There's a maze of dark, grue-filled twisty passages here...
-> 
-> OK; I might need a bit more again.
-> 
-> So now the code does something like:
-> 
-> 	down_read(&i_lock);		-- lockdep marks lock as held
-> 	kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
-> 	  --> reclaim()
-> 	     down_read_trylock(&i_lock); -- lockdep does _NOT_ mark as USED_IN_RECLAIM_FS
-> 
-> Right?
+To avoid clearing of capabilities or security related extended
+attributes too early, inode_change_ok() will need to take dentry instead
+of inode. ceph_setattr() has the dentry easily available but
+__ceph_setattr() is also called from ceph_set_acl() where dentry is not
+easily available. Luckily that call path does not need inode_change_ok()
+to be called anyway. So reorganize functions a bit so that
+inode_change_ok() is called only from paths where dentry is available.
 
-In the path that can deadlock the log, yes. It's actually way more
-complex than the above, because the down_read_trylock(&i_lock) that
-matters is run in a completely separate, async kthread that
-xfs_trans_reserve() will block waiting for.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/ceph/acl.c   |  5 +++++
+ fs/ceph/inode.c | 19 +++++++++++--------
+ 2 files changed, 16 insertions(+), 8 deletions(-)
 
-process context				xfsaild kthread(*)
----------------				------------------
-down_read(&i_lock);		-- lockdep marks lock as held
-kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
-  --> reclaim()
-     xfs_trans_reserve()
-     ....
-	  xfs_trans_push_ail()	---- called if no space in the log to kick the xfsaild into action
-	  ....
-       xlog_grant_head_wait()	---- blocks waiting for log space
-       .....
-
-					xfsaild_push()   ----- iterates AIL
-					  grabs log item
-					    lock log item
-	>>>>>>>>>>>>>>>>>>>>>		      down_read_trylock(&i_lock);
-					      format item into buffer
-					      add to dirty buffer list
-					  ....
-					  submit dirty buffer list for IO
-					    buffer IO started
-					.....
-					<async IO completion context>
-					buffer callbacks
-					  mark inode clean
-					  remove inode from AIL
-					  move tail of log forwards
-					    wake grant head waiters
-	<woken by log tail moving>
-	<log space available>
-	transaction reservation granted
-     .....
-     down_write(some other inode ilock)
-     <modify some other inode>
-     xfs_trans_commit
-     .....
-
-(*) xfsaild runs with PF_MEMALLOC context.
-
-The problem is that if the ilock is held exclusively at GFP_KERNEL
-time, the xfsaild cannot lock the inode to flush it, so if that
-inode pins the tail of the log then we can't make space available
-for xfs_trans_reserve and there is the deadlock.
-
-Once xfs_trans_reserve completes, however, we'll take the ilock on
-*some other inode*, and that's where the "it can't be the inode we
-currently hold locked because we have references to it" and
-henceit's safe to have a pattern like:
-
-down_read(&i_lock);		-- lockdep marks lock as held
-kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
-  --> reclaim()
-    down_write(&ilock)
-
-because the lock within reclaim context is completely unrelated to
-the lock we already hold.
-
-Lockdep can't possibly know about this because the deadlock involves
-locking contexts that *aren't doing anything wrong within their own
-contexts*. It's only when you add the dependency of log space
-reservation requirements needed to make forwards progress that
-there's then an issue with locking and reclaim.
-
-Cheers,
-
-Dave.
+diff --git a/fs/ceph/acl.c b/fs/ceph/acl.c
+index 013151d50069..a2cedfde75eb 100644
+--- a/fs/ceph/acl.c
++++ b/fs/ceph/acl.c
+@@ -127,6 +127,11 @@ int ceph_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 			goto out_free;
+ 	}
+ 
++	if (ceph_snap(inode) != CEPH_NOSNAP) {
++		ret = -EROFS;
++		goto out_free;
++	}
++
+ 	if (new_mode != old_mode) {
+ 		newattrs.ia_mode = new_mode;
+ 		newattrs.ia_valid = ATTR_MODE;
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index e669cfa9d793..29873cbd6b2b 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -1791,13 +1791,6 @@ int __ceph_setattr(struct inode *inode, struct iattr *attr)
+ 	int inode_dirty_flags = 0;
+ 	bool lock_snap_rwsem = false;
+ 
+-	if (ceph_snap(inode) != CEPH_NOSNAP)
+-		return -EROFS;
+-
+-	err = inode_change_ok(inode, attr);
+-	if (err != 0)
+-		return err;
+-
+ 	prealloc_cf = ceph_alloc_cap_flush();
+ 	if (!prealloc_cf)
+ 		return -ENOMEM;
+@@ -2011,7 +2004,17 @@ out_put:
+  */
+ int ceph_setattr(struct dentry *dentry, struct iattr *attr)
+ {
+-	return __ceph_setattr(d_inode(dentry), attr);
++	struct inode *inode = d_inode(dentry);
++	int err;
++
++	if (ceph_snap(inode) != CEPH_NOSNAP)
++		return -EROFS;
++
++	err = inode_change_ok(inode, attr);
++	if (err != 0)
++		return err;
++
++	return __ceph_setattr(inode, attr);
+ }
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.6.6
 
 _______________________________________________
 xfs mailing list
