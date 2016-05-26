@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D94207CA0
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 03:11:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FC86AC003
-	for <xfs@oss.sgi.com>; Thu, 19 May 2016 01:11:56 -0700 (PDT)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id ykb8uWf2LgA5DYjd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 19 May 2016 01:11:54 -0700 (PDT)
-Date: Thu, 19 May 2016 10:11:46 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160519081146.GS3193@twins.programming.kicks-ass.net>
-References: <94cea603-2782-1c5a-e2df-42db4459a8ce@cn.fujitsu.com>
-	<20160512055756.GE6648@birch.djwong.org>
-	<20160512080321.GA18496@dastard>
-	<20160513160341.GW20141@dhcp22.suse.cz>
-	<20160516104130.GK3193@twins.programming.kicks-ass.net>
-	<20160516130519.GJ23146@dhcp22.suse.cz>
-	<20160516132541.GP3193@twins.programming.kicks-ass.net>
-	<20160516231056.GE18496@dastard>
-	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
-	<20160517223549.GV26977@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 595F67CA0
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 00:57:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A6C78F8050
+	for <xfs@oss.sgi.com>; Wed, 25 May 2016 22:57:36 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id MPS3mzH17JyeG8Pk (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 May 2016 22:57:27 -0700 (PDT)
+Subject: [PATCH 3/7] xfs: test copy-on-write leftover recovery
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 25 May 2016 22:57:23 -0700
+Message-ID: <146424224300.6278.15812903283890243005.stgit@birch.djwong.org>
+In-Reply-To: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160517223549.GV26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,63 +28,444 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Ingo Molnar <mingo@kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
-> On Tue, May 17, 2016 at 04:49:12PM +0200, Peter Zijlstra wrote:
-> > On Tue, May 17, 2016 at 09:10:56AM +1000, Dave Chinner wrote:
-> > 
-> > > The reason we don't have lock clases for the ilock is that we aren't
-> > > supposed to call memory reclaim with that lock held in exclusive
-> > > mode. This is because reclaim can run transactions, and that may
-> > > need to flush dirty inodes to make progress. Flushing dirty inode
-> > > requires taking the ilock in shared mode.
-> > > 
-> > > In the code path that was reported, we hold the ilock in /shared/
-> > > mode with no transaction context (we are doing a read-only
-> > > operation). This means we can run transactions in memory reclaim
-> > > because a) we can't deadlock on the inode we hold locks on, and b)
-> > > transaction reservations will be able to make progress as we don't
-> > > hold any locks it can block on.
-> > 
-> > Just to clarify; I read the above as that we cannot block on recursive
-> > shared locks, is this correct?
-> > 
-> > Because we can in fact block on down_read()+down_read() just fine, so if
-> > you're assuming that, then something's busted.
-> 
-> The transaction reservation path will run down_read_trylock() on the
-> inode, not down_read(). Hence if there are no pending writers, it
-> will happily take the lock twice and make progress, otherwise it
-> will skip the inode and there's no deadlock.  If there's a pending
-> writer, then we have another context that is already in a
-> transaction context and has already pushed the item, hence it is
-> only in the scope of the current push because IO hasn't completed
-> yet and removed it from the list.
-> 
-> > Otherwise, I'm not quite reading it right, which is, given the
-> > complexity of that stuff, entirely possible.
-> 
-> There's a maze of dark, grue-filled twisty passages here...
+Test recovery of CoW leftovers in xfs_repair.
 
-OK; I might need a bit more again.
-
-So now the code does something like:
-
-	down_read(&i_lock);		-- lockdep marks lock as held
-	kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
-	  --> reclaim()
-	     down_read_trylock(&i_lock); -- lockdep does _NOT_ mark as USED_IN_RECLAIM_FS
-
-Right?
-
-My 'problem' is that lockdep doesn't consider a trylock for the USED_IN
-annotation, so the i_lock class will only get the ENABLED tag but not
-get the USED_IN tag, and therefore _should_ not trigger the inversion.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/853     |  179 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/853.out |   13 ++++
+ tests/xfs/854     |  180 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/854.out |   13 ++++
+ tests/xfs/group   |    2 +
+ 5 files changed, 387 insertions(+)
+ create mode 100755 tests/xfs/853
+ create mode 100644 tests/xfs/853.out
+ create mode 100755 tests/xfs/854
+ create mode 100644 tests/xfs/854.out
 
 
-So what exactly is triggering the inversion?
+diff --git a/tests/xfs/853 b/tests/xfs/853
+new file mode 100755
+index 0000000..14a6940
+--- /dev/null
++++ b/tests/xfs/853
+@@ -0,0 +1,179 @@
++#! /bin/bash
++# FS QA Test No. 853
++#
++# Test recovery of "lost" CoW blocks:
++# - Use the debugger to fake a leftover CoW extent
++# - See if xfs_repair fixes it
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_reflink
++
++rm -f $seqres.full
++
++echo "Format"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full
++is_rmap=$(xfs_info $SCRATCH_MNT | grep -c "rmapbt=1")
++umount $SCRATCH_MNT
++
++_get_agf_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'agf 1' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_agf_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'agf 1' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_get_sb_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'sb 0' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_sb_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_filter_leftover() {
++	grep "^leftover" | sed -e "s/[0-9]\+/NR/g"
++}
++
++_dump_status() {
++	echo "** " "$@"
++	xfs_db -c 'sb 0' -c p $SCRATCH_DEV
++	echo "** agf header"
++	xfs_db -c 'agf 1' -c p $SCRATCH_DEV
++	echo "** refcntbt"
++	xfs_db -c 'agf 1' -c 'addr refcntroot' -c p $SCRATCH_DEV
++	echo "** rmapbt"
++	test $is_rmap -gt 0 && xfs_db -c 'agf 1' -c 'addr rmaproot' -c p $SCRATCH_DEV
++	echo "** bnobt"
++	xfs_db -c 'agf 1' -c 'addr bnoroot' -c p $SCRATCH_DEV
++	echo "** cntbt"
++	xfs_db -c 'agf 1' -c 'addr cntroot' -c p $SCRATCH_DEV
++}
++
++echo "We need AG1 to have a single free extent"
++bno_lvl=$(_get_agf_data level -c 'addr bnoroot')
++bno_nr=$(_get_agf_data numrecs -c 'addr bnoroot')
++refc_lvl=$(_get_agf_data level -c 'addr refcntroot')
++refc_nr=$(_get_agf_data numrecs -c 'addr refcntroot')
++
++test $bno_lvl -eq 0 || echo "  AG 1 bnobt must only have one level"
++test $bno_nr -eq 1 || echo "  AG 1 bnobt must only have one record"
++test $refc_lvl -eq 0 || echo "  AG 1 refcountbt must only have one level"
++test $refc_nr -eq 0 || echo "  AG 1 refcountbt must only have one record"
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_lvl=$(_get_agf_data level -c 'addr rmaproot')
++	rmap_nr=$(_get_agf_data numrecs -c 'addr rmaproot')
++	test $rmap_lvl -eq 0 || echo "  AG 1 rmapbt must only have one level"
++fi
++
++echo "Find our extent and old counter values"
++bno=$(_get_agf_data "recs[1].startblock" -c 'addr bnoroot')
++len=$(_get_agf_data "recs[1].blockcount" -c 'addr bnoroot')
++agf_freeblks=$(_get_agf_data freeblks)
++sb_fdblocks=$(_get_sb_data fdblocks)
++
++test $len -ge 200 || echo "  AG 1 doesn't have enough free blocks"
++
++# Take the last 100 blocks of the free extent
++debris_len=100
++debris_bno=$((bno + len - debris_len))
++
++echo "Remove the extent from the freesp btrees"
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr bnoroot'
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr cntroot'
++_set_agf_data freeblks $((agf_freeblks - debris_len))
++_set_agf_data longest $((len - debris_len))
++_set_sb_data fdblocks $((sb_fdblocks - debris_len))
++
++echo "Add the extent to the refcount btree"
++_set_agf_data numrecs 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
++_set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
++_set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_nr=$((rmap_nr + 1))
++	_set_agf_data numrecs $rmap_nr -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].startblock" $debris_bno -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].blockcount" $debris_len -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].owner" -9 -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].offset" 0 -c 'addr rmaproot'
++fi
++
++_dump_status "broken fs config" >> $seqres.full
++
++echo "Look for leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++echo "Fix filesystem"
++_scratch_xfs_repair >> $seqres.full 2>&1 || echo "xfs_repair failed?"
++
++_dump_status "supposedly fixed fs config" >> $seqres.full
++
++echo "Look for no more leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for no more leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/853.out b/tests/xfs/853.out
+new file mode 100644
+index 0000000..3224e8d
+--- /dev/null
++++ b/tests/xfs/853.out
+@@ -0,0 +1,13 @@
++QA output created by 853
++Format
++We need AG1 to have a single free extent
++Find our extent and old counter values
++Remove the extent from the freesp btrees
++Add the extent to the refcount btree
++Look for leftover warning in xfs_check
++leftover CoW extent (NR/NR) len NR
++Look for leftover warning in xfs_repair
++leftover CoW extent (NR/NR) len NR
++Fix filesystem
++Look for no more leftover warning in xfs_check
++Look for no more leftover warning in xfs_repair
+diff --git a/tests/xfs/854 b/tests/xfs/854
+new file mode 100755
+index 0000000..5c6bec9
+--- /dev/null
++++ b/tests/xfs/854
+@@ -0,0 +1,180 @@
++#! /bin/bash
++# FS QA Test No. 854
++#
++# Test recovery of "lost" CoW blocks:
++# - Use the debugger to fake a leftover CoW extent
++# - See if mount/umount fixes it
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_reflink
++
++rm -f $seqres.full
++
++echo "Format"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full
++is_rmap=$(xfs_info $SCRATCH_MNT | grep -c "rmapbt=1")
++umount $SCRATCH_MNT
++
++_get_agf_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'agf 1' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_agf_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'agf 1' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_get_sb_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'sb 0' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_sb_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_filter_leftover() {
++	grep "^leftover" | sed -e "s/[0-9]\+/NR/g"
++}
++
++_dump_status() {
++	echo "** " "$@"
++	xfs_db -c 'sb 0' -c p $SCRATCH_DEV
++	echo "** agf header"
++	xfs_db -c 'agf 1' -c p $SCRATCH_DEV
++	echo "** refcntbt"
++	xfs_db -c 'agf 1' -c 'addr refcntroot' -c p $SCRATCH_DEV
++	echo "** rmapbt"
++	test $is_rmap -gt 0 && xfs_db -c 'agf 1' -c 'addr rmaproot' -c p $SCRATCH_DEV
++	echo "** bnobt"
++	xfs_db -c 'agf 1' -c 'addr bnoroot' -c p $SCRATCH_DEV
++	echo "** cntbt"
++	xfs_db -c 'agf 1' -c 'addr cntroot' -c p $SCRATCH_DEV
++}
++
++echo "We need AG1 to have a single free extent"
++bno_lvl=$(_get_agf_data level -c 'addr bnoroot')
++bno_nr=$(_get_agf_data numrecs -c 'addr bnoroot')
++refc_lvl=$(_get_agf_data level -c 'addr refcntroot')
++refc_nr=$(_get_agf_data numrecs -c 'addr refcntroot')
++
++test $bno_lvl -eq 0 || echo "  AG 1 bnobt must only have one level"
++test $bno_nr -eq 1 || echo "  AG 1 bnobt must only have one record"
++test $refc_lvl -eq 0 || echo "  AG 1 refcountbt must only have one level"
++test $refc_nr -eq 0 || echo "  AG 1 refcountbt must only have one record"
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_lvl=$(_get_agf_data level -c 'addr rmaproot')
++	rmap_nr=$(_get_agf_data numrecs -c 'addr rmaproot')
++	test $rmap_lvl -eq 0 || echo "  AG 1 rmapbt must only have one level"
++fi
++
++echo "Find our extent and old counter values"
++bno=$(_get_agf_data "recs[1].startblock" -c 'addr bnoroot')
++len=$(_get_agf_data "recs[1].blockcount" -c 'addr bnoroot')
++agf_freeblks=$(_get_agf_data freeblks)
++sb_fdblocks=$(_get_sb_data fdblocks)
++
++test $len -ge 200 || echo "  AG 1 doesn't have enough free blocks"
++
++# Take the last 100 blocks of the free extent
++debris_len=100
++debris_bno=$((bno + len - debris_len))
++
++echo "Remove the extent from the freesp btrees"
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr bnoroot'
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr cntroot'
++_set_agf_data freeblks $((agf_freeblks - debris_len))
++_set_agf_data longest $((len - debris_len))
++_set_sb_data fdblocks $((sb_fdblocks - debris_len))
++
++echo "Add the extent to the refcount btree"
++_set_agf_data numrecs 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
++_set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
++_set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_nr=$((rmap_nr + 1))
++	_set_agf_data numrecs $rmap_nr -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].startblock" $debris_bno -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].blockcount" $debris_len -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].owner" -9 -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].offset" 0 -c 'addr rmaproot'
++fi
++
++_dump_status "broken fs config" >> $seqres.full
++
++echo "Look for leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++echo "Mount filesystem"
++_scratch_mount
++umount $SCRATCH_MNT
++
++_dump_status "supposedly fixed fs config" >> $seqres.full
++
++echo "Look for no more leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for no more leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/854.out b/tests/xfs/854.out
+new file mode 100644
+index 0000000..aae2fd7
+--- /dev/null
++++ b/tests/xfs/854.out
+@@ -0,0 +1,13 @@
++QA output created by 854
++Format
++We need AG1 to have a single free extent
++Find our extent and old counter values
++Remove the extent from the freesp btrees
++Add the extent to the refcount btree
++Look for leftover warning in xfs_check
++leftover CoW extent (NR/NR) len NR
++Look for leftover warning in xfs_repair
++leftover CoW extent (NR/NR) len NR
++Mount filesystem
++Look for no more leftover warning in xfs_check
++Look for no more leftover warning in xfs_repair
+diff --git a/tests/xfs/group b/tests/xfs/group
+index f4c6816..4ac62c1 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -285,3 +285,5 @@
+ 303 auto quick quota
+ 304 auto quick quota
+ 305 auto quota
++853 auto quick clone
++854 auto quick clone
 
 _______________________________________________
 xfs mailing list
