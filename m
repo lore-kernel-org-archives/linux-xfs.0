@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6D97E7CA6
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 17:36:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3F86D304051
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 15:36:47 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ND4twxAst9seArPG for <xfs@oss.sgi.com>;
-	Sun, 29 May 2016 15:36:44 -0700 (PDT)
-Date: Mon, 30 May 2016 08:36:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: Propagate dentry down to inode_change_ok()
-Message-ID: <20160529223641.GJ26977@dastard>
-References: <1464279600-13009-1-git-send-email-jack@suse.cz>
-	<1464279600-13009-2-git-send-email-jack@suse.cz>
-	<20160526215304.GO21200@dastard>
-	<20160527161233.GE21780@quack2.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EBEA17CAE
+	for <xfs@oss.sgi.com>; Fri, 27 May 2016 13:02:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F038A8F8033
+	for <xfs@oss.sgi.com>; Fri, 27 May 2016 11:02:54 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oSAioCicKUConUvA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 27 May 2016 11:02:52 -0700 (PDT)
+Date: Fri, 27 May 2016 11:02:31 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 8/7] xfs/122: don't break on old xfsprogs
+Message-ID: <20160527180231.GB5050@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160527161233.GE21780@quack2.suse.cz>
+In-Reply-To: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,91 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org, xfs@oss.sgi.com, Al Viro <viro@ZenIV.linux.org.uk>, Miklos Szeredi <miklos@szeredi.hu>
+To: david@fromorbit.com
+Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 27, 2016 at 06:12:33PM +0200, Jan Kara wrote:
-> On Fri 27-05-16 07:53:04, Dave Chinner wrote:
-> > On Thu, May 26, 2016 at 06:19:56PM +0200, Jan Kara wrote:
-> > > To avoid clearing of capabilities or security related extended
-> > > attributes too early, inode_change_ok() will need to take dentry instead
-> > > of inode. Propagate dentry down to functions calling inode_change_ok().
-> > > This is rather straightforward except for xfs_set_mode() function which
-> > > does not have dentry easily available. Luckily that function does not
-> > > call inode_change_ok() anyway so we just have to do a little dance with
-> > > function prototypes.
-> > 
-> > The idea behind the change is good, but I think the little dance
-> > could be improved as it makes the layering of the code seem weirdly
-> > unbalanced to me. e.g.
-> > 
-> > xfs_vn_setattr()
-> >   xfs_vn_setattr_size()		<<<< inode_change_ok() here
-> > 
-> > xfs_vn_setattr()
-> >   xfs_vn_setattr_nonsize()	<<<< inode_change_ok() here
-> >     xfs_setattr_nonsize()
-> > 
-> > xfs_vn_setattr()
-> >   xfs_vn_setattr_size()
-> >     xfs_vn_setattr_nonsize()	<<<< inode_change_ok() here
-> >       xfs_setattr_nonsize()
-> > 
-> > And to be more confusing, the externally callable functions for the
-> > rest of the XFS code are now xfs_vn_setattr_size() and
-> > xfs_setattr_nonsize() which now have different calling context
-> > limitations.
-> > 
-> > I think adding a little symmetric make sense. i.e:
-> > 
-> > xfs_vn_change_ok(dentry, iattr)
-> > {
-> > +	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > +		return -EROFS;
-> > +
-> > +	if (XFS_FORCED_SHUTDOWN(mp))
-> > +		return -EIO;
-> > +
-> > +	error = inode_change_ok(inode, iattr);
-> > +	if (error)
-> > +		return error;
-> > +
-> > }
-> > 
-> > xfs_vn_setattr_size(d, i)
-> > {
-> > 	xfs_vn_change_ok(d, i)
-> > 	xfs_setattr_size(ip, i)
-> > }
-> > 
-> > xfs_vn_setattr_nonsize(d, i)
-> > {
-> > 	xfs_vn_change_ok(d, i)
-> > 	xfs_setattr_nonsize(ip, i)
-> > }
-> > 
-> > xfs_vn_setattr(d, i)
-> > {
-> > 	xfs_vn_change_ok(d, i)
-> > 	<rest of xfs_vn_setattr unchanged>
-> > }
-> > 
-> > And remove the inode_change_ok() code from xfs_setattr_size and
-> > xfs_setattr_nonsize() completely.  You've already done this with
-> > xfs_vn_setattr_nonsize() - it just needs to be made symmetric to
-> > keep a clean layering between VFS interfaces and internal XFS
-> > interfaces...
-> 
-> Ok, something like attached patch?
+If we're running against a old version of xfsprogs that lacks some of
+the structures that the golden output knows about, copy the structure
+size definition from the golden output to the program output.  This
+way we can check for structure size mutations on old xfsprogs without
+generating false error reports for structs that don't exist in the
+old release.
 
-Yup, looks much better to me!
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/122     |    8 ++++++++
+ tests/xfs/122.out |    1 +
+ 2 files changed, 9 insertions(+)
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index 845cdd2..c944942 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -73,6 +73,7 @@ _attribute_filter()
+ cprog=$tmp.get_structs.c
+ oprog=$tmp.get_structs
+ progout=$tmp.output
++keyfile=$tmp.keys
+ 
+ cat >$cprog <<EOF
+ #define _GNU_SOURCE
+@@ -239,6 +240,13 @@ if [ $XFSPROGS_VERSION -lt 30000 ]; then
+ 	echo 'sizeof( xfs_dsb_t ) = 208' >>$progout;
+ fi
+ 
++# Find all the items that only exist in the golden output
++comm -23 <(grep '=' $0.out | sed -e 's/ =.*$//g' | LC_COLLATE=POSIX sort) \
++	 <(sed -e 's/ =.*$//g' < $progout | LC_COLLATE=POSIX sort) > $keyfile
++
++# Copy those items to the program output
++grep -F -f $keyfile $0.out >> $progout
++
+ LC_COLLATE=POSIX sort $progout
+ 
+ status=0
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index 451871e..46d1dd4 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -147,3 +147,4 @@ sizeof(xfs_lookup_t) = 4
+ sizeof(xfs_qoff_logformat_t) = 20
+ sizeof(xfs_timestamp_t) = 8
+ sizeof(xfs_trans_header_t) = 16
++sizeof(xfs_zzzz_test_the_test_program) = -47
 
 _______________________________________________
 xfs mailing list
