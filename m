@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 939DA7CA0
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 06:17:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A4B017CA0
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 22:28:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64E888F8035
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 04:17:18 -0700 (PDT)
-Received: from mr002msb.fastweb.it (mr002msb.fastweb.it [85.18.95.86]) by
-	cuda.sgi.com with ESMTP id 5ucqAuQkc9S9RCvq for
-	<xfs@oss.sgi.com>; Thu, 26 May 2016 04:17:15 -0700 (PDT)
-Subject: Re: LVM snapshot and log record CRC mismatch
-References: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
-	<20160524221205.GM21200@dastard> <57455645.5040608@assyoma.it>
-	<20160526122315.4112f713@harpe.intellique.com>
-From: Gionatan Danti <g.danti@assyoma.it>
-Message-ID: <5746DB30.5040006@assyoma.it>
-Date: Thu, 26 May 2016 13:17:04 +0200
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D502AC007
+	for <xfs@oss.sgi.com>; Thu, 26 May 2016 20:28:39 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id JhujnyEhDo0fgWN8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 26 May 2016 20:28:35 -0700 (PDT)
+Date: Thu, 26 May 2016 20:28:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/7] tests: don't put loop control files on the scratch
+	mount
+Message-ID: <20160527032804.GA9418@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+	<146424223512.6278.15231849939938178494.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20160526122315.4112f713@harpe.intellique.com>
+Content-Disposition: inline
+In-Reply-To: <146424223512.6278.15231849939938178494.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +27,478 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Gionatan Danti <g.danti@assyoma.it>, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: hch@infradead.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-T24gMjYvMDUvMjAxNiAxMjoyMywgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFdlZCwgMjUg
-TWF5IDIwMTYgMDk6Mzc6NDEgKzAyMDAKPiBHaW9uYXRhbiBEYW50aSA8Zy5kYW50aUBhc3N5b21h
-Lml0PiDDqWNyaXZhaXQ6Cj4KPj4gVGhlIHNuYXBzaG90IGlzIGFjY29tcGxpc2hlZCB1c2luZyB0
-aGUgZm9sbG93aW5nIGNvbW1hbmRzOgo+Pgo+PiBsdmNyZWF0ZSAtcyBoeXBlcnZpc29yL0tWTV9T
-dG9yYWdlIC0tbmFtZSBCYWNrdXBfU05BUAo+PiBsdmNoYW5nZSAtYXkgLUsgaHlwZXJ2aXNvci9C
-YWNrdXBfU05BUAo+PiBtb3VudCAtbyBub3V1aWQgL2Rldi9oeXBlcnZpc29yL0JhY2t1cF9TTkFQ
-IC9tbnQvbHZtLwo+Pgo+Cj4gWW91IG5lZWQgdG8gdXNlIHhmc19mcmVlemUgdG8gbWFrZSB0aGUg
-ZmlsZXN5c3RlbSBjb2hlcmVudCBiZWZvcmUKPiBzbmFwc2hvdDoKPgo+IHhmc19mcmVlemUgL2Rl
-di9oeXBlcnZpc29yL0tWTV9TdG9yYWdlCj4gbHZjcmVhdGUgLXMgaHlwZXJ2aXNvci9LVk1fU3Rv
-cmFnZSAtLW5hbWUgQmFja3VwX1NOQVAKPiB4ZnNfZnJlZXplIC11IC9kZXYvaHlwZXJ2aXNvci9L
-Vk1fU3RvcmFnZQo+IGx2Y2hhbmdlIC1heSAtSyBoeXBlcnZpc29yL0JhY2t1cF9TTkFQCj4KCkl0
-IHdhcyBteSB1bmRlcnN0YW5kaW5nIHRoYXQgZmlsZXN5c3RlbSBmcmVlemluZyB3YXMgYXV0b21h
-dGljYWxseSAKbWFuYWdlZCBieSBMVk0sIGFuZCBpbnRlZ3JhdGVkIGludG8gVkZTIGxvbmcgYWdv
-LgoKSSBhbSBtaXNzaW5nIHNvbWV0aGluZz8KCi0tIApEYW50aSBHaW9uYXRhbgpTdXBwb3J0byBU
-ZWNuaWNvCkFzc3lvbWEgUy5yLmwuIC0gd3d3LmFzc3lvbWEuaXQKZW1haWw6IGcuZGFudGlAYXNz
-eW9tYS5pdCAtIGluZm9AYXNzeW9tYS5pdApHUEcgcHVibGljIGtleSBJRDogRkY1RjMyQTgKCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
-IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
-L3hmcwo=
+If we're doing write/overwrite/snapshot/resource exhaustion tests on
+the scratch device, use the test directory to hold the loop
+termination signal files.  This way we don't run infinitely because we
+can't create the flag due to ENOSPC.
+
+v2: put the control files in /tmp, not $TEST_DIR
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/162 |    8 +++++---
+ tests/generic/163 |    8 +++++---
+ tests/generic/164 |    8 +++++---
+ tests/generic/165 |    8 +++++---
+ tests/generic/166 |    8 +++++---
+ tests/generic/167 |    8 +++++---
+ tests/generic/168 |    8 +++++---
+ tests/generic/170 |    8 +++++---
+ tests/generic/333 |   20 ++++++++++++--------
+ tests/generic/334 |   20 ++++++++++++--------
+ 10 files changed, 64 insertions(+), 40 deletions(-)
+
+diff --git a/tests/generic/162 b/tests/generic/162
+index 5ff2ee2..61cf463 100755
+--- a/tests/generic/162
++++ b/tests/generic/162
+@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -51,6 +51,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=512
+@@ -64,7 +66,7 @@ _pwrite_byte 0x61 0 $((loops * blksz)) $testdir/file2 >> $seqres.full
+ _scratch_cycle_mount
+ 
+ overwrite() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		seq $nr_loops -1 0 | while read i; do
+ 			_pwrite_byte 0x61 $((i * blksz)) $blksz $testdir/file2 >> $seqres.full
+ 		done
+@@ -81,7 +83,7 @@ for i in `seq 1 2`; do
+ 	done
+ done
+ echo "Finished dedupeing"
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/163 b/tests/generic/163
+index fcba677..e2c6042 100755
+--- a/tests/generic/163
++++ b/tests/generic/163
+@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -51,6 +51,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=512
+@@ -64,7 +66,7 @@ _pwrite_byte 0x61 0 $((loops * blksz)) $testdir/file2 >> $seqres.full
+ _scratch_cycle_mount
+ 
+ overwrite() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		seq $nr_loops -1 0 | while read i; do
+ 			_pwrite_byte 0x61 $((i * blksz)) $blksz $testdir/file1 >> $seqres.full
+ 		done
+@@ -81,7 +83,7 @@ for i in `seq 1 2`; do
+ 	done
+ done
+ echo "Finished dedupeing"
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/164 b/tests/generic/164
+index acacb7f..78ea787 100755
+--- a/tests/generic/164
++++ b/tests/generic/164
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=512
+@@ -71,7 +73,7 @@ fbytes() {
+ }
+ 
+ reader() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		_read_range $testdir/file3 0 $((loops * blksz)) | fbytes
+ 	done
+ }
+@@ -91,7 +93,7 @@ for i in `seq 1 2`; do
+ 	done
+ done
+ echo "Finished reflinking"
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/165 b/tests/generic/165
+index b742d19..ca11e1e 100755
+--- a/tests/generic/165
++++ b/tests/generic/165
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -54,6 +54,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=512
+@@ -72,7 +74,7 @@ fbytes() {
+ }
+ 
+ reader() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		_read_range $testdir/file3 0 $((loops * blksz)) -d | fbytes
+ 	done
+ }
+@@ -92,7 +94,7 @@ for i in `seq 1 2`; do
+ 	done
+ done
+ echo "Finished reflinking"
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/166 b/tests/generic/166
+index 0e31f2e..8600a13 100755
+--- a/tests/generic/166
++++ b/tests/generic/166
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -54,6 +54,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -68,7 +70,7 @@ _scratch_cycle_mount
+ # Snapshot creator...
+ snappy() {
+ 	n=0
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo "$out" | grep -q "No space left" && break
+@@ -83,7 +85,7 @@ snappy &
+ seq $nr_loops -1 0 | while read i; do
+ 	_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file1 >> $seqres.full
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/167 b/tests/generic/167
+index b2d6c87..261506b 100755
+--- a/tests/generic/167
++++ b/tests/generic/167
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -67,7 +69,7 @@ _scratch_cycle_mount
+ # Snapshot creator...
+ snappy() {
+ 	n=0
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo "$out" | grep -q "No space left" && break
+@@ -82,7 +84,7 @@ snappy &
+ seq $nr_loops -1 0 | while read i; do
+ 	_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file1 >> $seqres.full
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/168 b/tests/generic/168
+index 7047d10..ceee264 100755
+--- a/tests/generic/168
++++ b/tests/generic/168
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -52,6 +52,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -66,7 +68,7 @@ _scratch_cycle_mount
+ 
+ # Direct I/O overwriter...
+ overwrite() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		seq $nr_loops -1 0 | while read i; do
+ 			_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file2 >> $seqres.full
+ 		done
+@@ -82,7 +84,7 @@ seq 1 10 | while read j; do
+ 		[ $? -ne 0 ] && exit
+ 	done
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/170 b/tests/generic/170
+index 4861052..6559243 100755
+--- a/tests/generic/170
++++ b/tests/generic/170
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file
+     wait
+ }
+ 
+@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -67,7 +69,7 @@ _scratch_cycle_mount
+ 
+ # Direct I/O overwriter...
+ overwrite() {
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		seq $nr_loops -1 0 | while read i; do
+ 			_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file2 >> $seqres.full
+ 		done
+@@ -83,7 +85,7 @@ seq 1 10 | while read j; do
+ 		[ $? -ne 0 ] && exit
+ 	done
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/333 b/tests/generic/333
+index 8db86e3..3d874d7 100755
+--- a/tests/generic/333
++++ b/tests/generic/333
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file $abort_file
+     wait
+ }
+ 
+@@ -54,6 +54,10 @@ _scratch_mkfs_sized $((400 * 1048576)) > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
++abort_file=/tmp/abort
++rm -rf $abort_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -68,7 +72,7 @@ _scratch_cycle_mount
+ # Snapshot creator...
+ snappy() {
+ 	n=0
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo $out | grep -q "No space left" && break
+@@ -76,7 +80,7 @@ snappy() {
+ 		test $res -ne 0 && break
+ 		n=$((n + 1))
+ 	done
+-	touch $testdir/abort
++	touch $abort_file
+ }
+ 
+ echo "Snapshot a file undergoing directio rewrite"
+@@ -85,13 +89,13 @@ seq 1 1000 | while read j; do
+ 	seq $nr_loops -1 0 | while read i; do
+ 		out="$(_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file1 2>&1)"
+ 		echo $out >> $seqres.full
+-		echo $out | grep -q "No space left" && touch $testdir/abort
+-		echo $out | grep -qi "error" && touch $testdir/abort
+-		test -e $testdir/abort && break
++		echo $out | grep -q "No space left" && touch $abort_file
++		echo $out | grep -qi "error" && touch $abort_file
++		test -e $abort_file && break
+ 	done
+-	test -e $testdir/abort && break
++	test -e $abort_file && break
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+diff --git a/tests/generic/334 b/tests/generic/334
+index 5714125..fb21d4f 100755
+--- a/tests/generic/334
++++ b/tests/generic/334
+@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
+ _cleanup()
+ {
+     cd /
+-    rm -rf $tmp.*
++    rm -rf $tmp.* $finished_file $abort_file
+     wait
+ }
+ 
+@@ -53,6 +53,10 @@ _scratch_mkfs_sized $((400 * 1048576)) > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
++finished_file=/tmp/finished
++rm -rf $finished_file
++abort_file=/tmp/abort
++rm -rf $abort_file
+ mkdir $testdir
+ 
+ loops=1024
+@@ -67,7 +71,7 @@ _scratch_cycle_mount
+ # Snapshot creator...
+ snappy() {
+ 	n=0
+-	while [ ! -e $testdir/finished ]; do
++	while [ ! -e $finished_file ]; do
+ 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
+ 		res=$?
+ 		echo $out | grep -q "No space left" && break
+@@ -75,7 +79,7 @@ snappy() {
+ 		test $res -ne 0 && break
+ 		n=$((n + 1))
+ 	done
+-	touch $testdir/abort
++	touch $abort_file
+ }
+ 
+ echo "Snapshot a file undergoing buffered rewrite"
+@@ -84,13 +88,13 @@ seq 1 1000 | while read j; do
+ 	seq $nr_loops -1 0 | while read i; do
+ 		out="$(_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file1 2>&1)"
+ 		echo $out >> $seqres.full
+-		echo $out | grep -q "No space left" && touch $testdir/abort
+-		echo $out | grep -qi "error" && touch $testdir/abort
+-		test -e $testdir/abort && break
++		echo $out | grep -q "No space left" && touch $abort_file
++		echo $out | grep -qi "error" && touch $abort_file
++		test -e $abort_file && break
+ 	done
+-	test -e $testdir/abort && break
++	test -e $abort_file && break
+ done
+-touch $testdir/finished
++touch $finished_file
+ wait
+ 
+ # success, all done
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
