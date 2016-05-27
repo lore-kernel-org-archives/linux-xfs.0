@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 86A0E7CA4
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 10:27:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 56A41304032
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 08:27:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VC0GHkde2Zvj9GB3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 23 May 2016 08:27:19 -0700 (PDT)
-Date: Mon, 23 May 2016 10:27:15 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_repair: further improvement on secondary superblock
-	search method
-Message-ID: <20160523152715.GA27527@redhat.com>
-References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
-	<20160523145116.GE9319@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BC6FC7CA3
+	for <xfs@oss.sgi.com>; Fri, 27 May 2016 12:32:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 80AB08F804C
+	for <xfs@oss.sgi.com>; Fri, 27 May 2016 10:32:26 -0700 (PDT)
+Received: from mail-wm0-f41.google.com (mail-wm0-f41.google.com
+	[74.125.82.41]) by cuda.sgi.com with ESMTP id 1w1Qi3pZppZBV98v
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 27 May 2016 10:32:22 -0700 (PDT)
+Received: by mail-wm0-f41.google.com with SMTP id z87so1299698wmh.0
+	for <xfs@oss.sgi.com>; Fri, 27 May 2016 10:32:22 -0700 (PDT)
+Subject: Re: [PATCH] xfs: fail ->bmap for reflink inodes
+References: <1464267724-31423-1-git-send-email-hch@lst.de>
+	<1464267724-31423-2-git-send-email-hch@lst.de>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <71afd256-5dfe-2ff9-ac25-b7519dadd5f9@scylladb.com>
+Date: Fri, 27 May 2016 20:32:18 +0300
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160523145116.GE9319@infradead.org>
+In-Reply-To: <1464267724-31423-2-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +28,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, darrick.wong@oracle.com
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Mon, May 23, 2016 at 07:51:16AM -0700, Christoph Hellwig wrote:
-> On Thu, May 12, 2016 at 03:38:16PM -0500, Bill O'Donnell wrote:
-> > +verify_sb_blocksize(xfs_sb_t *sb)
-> > +{
-> > +	__uint32_t	bsize;
-> > +	int		i;
-> > +
-> > +	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
-> > +	if (sb->sb_blocksize == 0)
-> > +		return(XR_BAD_BLOCKSIZE);
-> > +
-> > +	bsize = 1;
-> > +
-> > +	for (i = 0; bsize < sb->sb_blocksize &&
-> > +		i < sizeof(sb->sb_blocksize) * NBBY; i++)
-> > +		bsize <<= 1;
-> > +
-> > +	if (i < XFS_MIN_BLOCKSIZE_LOG || i > XFS_MAX_BLOCKSIZE_LOG)
-> > +		return(XR_BAD_BLOCKSIZE);
-> > +
-> > +	/* check sb blocksize field against sb blocklog field */
-> > +	if (i != sb->sb_blocklog)
-> > +		return(XR_BAD_BLOCKLOG);
-> 
-> Couldn't we do this much simpler?
-> 
-> 	if (sb->sb_blocksize == 0)
-> 		return XR_BAD_BLOCKSIZE;
-> 	if (sb->sb_blocksize != (1 << sb->sb_blocklog))
-> 		return XR_BAD_BLOCKLOG;
-> 	if (sb->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-> 	    sb->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG)
-> 		return XR_BAD_BLOCKLOG;
-
-Makes sense, yes.
-
-> 
-> >  	/*
-> > +	 * Attempt to find secondary sb with a coarse approach,
-> > +	 * first trying agblocks and blocksize read from sb, providing
-> > +	 * they're sane.
-> >  	 */
-> > +	if (verify_sb_blocksize(rsb) == 0) {
-> > +		skip = rsb->sb_agblocks * rsb->sb_blocksize;
-> > +		if ((skip >= XFS_AG_MIN_BYTES) && (skip <= XFS_AG_MAX_BYTES))
-> 
-> no need for the inner braces here.
-
-Check.
-
-Thanks for the review!
--Bill
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDUvMjYvMjAxNiAwNDowMiBQTSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gU2lnbmVk
+LW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4gLS0tCj4gICBmcy94ZnMv
+eGZzX2FvcHMuYyB8IDExICsrKysrKysrKysrCj4gICAxIGZpbGUgY2hhbmdlZCwgMTEgaW5zZXJ0
+aW9ucygrKQo+Cj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYW9wcy5jIGIvZnMveGZzL3hmc19h
+b3BzLmMKPiBpbmRleCBhOTU1NTUyLi5kMDUzYTllIDEwMDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNf
+YW9wcy5jCj4gKysrIGIvZnMveGZzL3hmc19hb3BzLmMKPiBAQCAtMTgyOSw2ICsxODI5LDE3IEBA
+IHhmc192bV9ibWFwKAo+ICAgCj4gICAJdHJhY2VfeGZzX3ZtX2JtYXAoWEZTX0koaW5vZGUpKTsK
+PiAgIAl4ZnNfaWxvY2soaXAsIFhGU19JT0xPQ0tfU0hBUkVEKTsKPiArCj4gKwkvKgo+ICsJICog
+VGhlIHN3YXAgY29kZSAoYWItKXVzZXMgLT5ibWFwIHRvIGdldCBhIGJsb2NrIG1hcHBpbmcgYW5k
+IHRoZW4KPiArCSAqIGJ5cGFzc2XRlSB0aGUgZmlsZSBzeXN0ZW0gZm9yIGFjdHVhbCBJL08uICBX
+ZSByZWFsbHkgY2FuJ3QgYWxsb3cKPiArCSAqIHRoYXQgb24gcmVmbGlua3MgaW5vZGVzLCBzbyB3
+ZSBoYXZlIHRvIHNraXAgb3V0IGhlcmUuICBBbmQgeWVzLAo+ICsJICogMCBpcyB0aGUgbWFnaWMg
+Y29kZSBmb3IgYSBibWFwIGVycm9yLi4KPiArCSAqLwo+ICsJaWYgKHhmc19pc19yZWZsaW5rX2lu
+b2RlKGlwKSkgewo+ICsJCXhmc19pdW5sb2NrKGlwLCBYRlNfSU9MT0NLX1NIQVJFRCk7Cj4gKwkJ
+cmV0dXJuIDA7Cj4gKwl9Cj4gICAJZmlsZW1hcF93cml0ZV9hbmRfd2FpdChtYXBwaW5nKTsKPiAg
+IAl4ZnNfaXVubG9jayhpcCwgWEZTX0lPTE9DS19TSEFSRUQpOwo+ICAgCXJldHVybiBnZW5lcmlj
+X2Jsb2NrX2JtYXAobWFwcGluZywgYmxvY2ssIHhmc19nZXRfYmxvY2tzKTsKCkRvbid0IHlvdSBh
+bHNvIGhhdmUgdG8gcHJldmVudCBhIHN3YXBmaWxlIGZyb20gYmVpbmcgcmVmbGlua2VkIGFmdGVy
+IAppdCdzIGJtYXBwZWQ/ICBPciBpcyB0aGF0IGFscmVhZHkgdGFrZW4gY2FyZSBvZj8KCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
