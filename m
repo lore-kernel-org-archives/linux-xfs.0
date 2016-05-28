@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B96B47CA0
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 23:11:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7AF01304039
-	for <xfs@oss.sgi.com>; Thu, 26 May 2016 21:11:48 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id PRDamVzG3GvD5s1v (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 May 2016 21:11:41 -0700 (PDT)
-Date: Thu, 26 May 2016 21:11:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fail ->bmap for reflink inodes
-Message-ID: <20160527041127.GA5053@birch.djwong.org>
-References: <1464267724-31423-1-git-send-email-hch@lst.de>
-	<1464267724-31423-2-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 7764D7CB2
+	for <xfs@oss.sgi.com>; Sat, 28 May 2016 04:25:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 49BF0304053
+	for <xfs@oss.sgi.com>; Sat, 28 May 2016 02:25:40 -0700 (PDT)
+Received: from gourmet8.spamgourmet.com (gourmet.spamgourmet.com
+	[216.75.62.102]) by cuda.sgi.com with ESMTP id IJvTvrhyE0Qoh81D
+	(version=TLSv1.2 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Sat, 28 May 2016 02:25:35 -0700 (PDT)
+Received: from spamgourmet by gourmet7.spamgourmet.com with local (Exim 4.80)
+	(envelope-from <xfs.pkoch@dfgh.net>) id 1b6aUw-0006UY-EE
+	for xfs@oss.sgi.com; Sat, 28 May 2016 09:25:34 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1464267724-31423-2-git-send-email-hch@lst.de>
+In-Reply-To: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
+References: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
+Date: Sat, 28 May 2016 11:25:32 +0200
+Message-ID: <CAPhCz3SPomfAn68TknFW-KyEB4WXvPzXU8UVhXWqyXztNbQG+Q@mail.gmail.com>
+Subject: Re: xfsrestore performance
+From: xfs.pkoch@dfgh.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,36 +27,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============0753888840415442142=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBNYXkgMjYsIDIwMTYgYXQgMDM6MDI6MDRQTSArMDIwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+
-Cj4gLS0tCj4gIGZzL3hmcy94ZnNfYW9wcy5jIHwgMTEgKysrKysrKysrKysKPiAgMSBmaWxlIGNo
-YW5nZWQsIDExIGluc2VydGlvbnMoKykKPiAKPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19hb3Bz
-LmMgYi9mcy94ZnMveGZzX2FvcHMuYwo+IGluZGV4IGE5NTU1NTIuLmQwNTNhOWUgMTAwNjQ0Cj4g
-LS0tIGEvZnMveGZzL3hmc19hb3BzLmMKPiArKysgYi9mcy94ZnMveGZzX2FvcHMuYwo+IEBAIC0x
-ODI5LDYgKzE4MjksMTcgQEAgeGZzX3ZtX2JtYXAoCj4gIAo+ICAJdHJhY2VfeGZzX3ZtX2JtYXAo
-WEZTX0koaW5vZGUpKTsKPiAgCXhmc19pbG9jayhpcCwgWEZTX0lPTE9DS19TSEFSRUQpOwo+ICsK
-PiArCS8qCj4gKwkgKiBUaGUgc3dhcCBjb2RlIChhYi0pdXNlcyAtPmJtYXAgdG8gZ2V0IGEgYmxv
-Y2sgbWFwcGluZyBhbmQgdGhlbgo+ICsJICogYnlwYXNzZdGVIHRoZSBmaWxlIHN5c3RlbSBmb3Ig
-YWN0dWFsIEkvTy4gIFdlIHJlYWxseSBjYW4ndCBhbGxvdwo+ICsJICogdGhhdCBvbiByZWZsaW5r
-cyBpbm9kZXMsIHNvIHdlIGhhdmUgdG8gc2tpcCBvdXQgaGVyZS4gIEFuZCB5ZXMsCj4gKwkgKiAw
-IGlzIHRoZSBtYWdpYyBjb2RlIGZvciBhIGJtYXAgZXJyb3IuLgo+ICsJICovCj4gKwlpZiAoeGZz
-X2lzX3JlZmxpbmtfaW5vZGUoaXApKSB7Cj4gKwkJeGZzX2l1bmxvY2soaXAsIFhGU19JT0xPQ0tf
-U0hBUkVEKTsKPiArCQlyZXR1cm4gMDsKPiArCX0KCi9tZSBhZGRzIHRvIHRoZSByZWZsaW5rIHBh
-dGNocGlsZSwgdGhhbmtzLgoKSnVzdCBwb2tpbmcgYXQgbW0vc3dhcGZpbGUuYyBpdCBsb29rcyBs
-aWtlIGlvbWFwIG1pZ2h0IHdvcmsgd2VsbAphcyBhIHJlcGxhY2VtZW50IGZvciByZXBlYXRlZCBi
-bWFwKCkgY2FsbHMsIG9uY2UgdGhlIGlvbWFwIHZmcwpiaXRzIGdldCBpbi4KCi0tRAoKPiAgCWZp
-bGVtYXBfd3JpdGVfYW5kX3dhaXQobWFwcGluZyk7Cj4gIAl4ZnNfaXVubG9jayhpcCwgWEZTX0lP
-TE9DS19TSEFSRUQpOwo+ICAJcmV0dXJuIGdlbmVyaWNfYmxvY2tfYm1hcChtYXBwaW5nLCBibG9j
-aywgeGZzX2dldF9ibG9ja3MpOwo+IC0tIAo+IDIuMS40Cj4gCgo+IF9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bv
-c3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+--===============0753888840415442142==
+Content-Type: multipart/alternative; boundary=001a114d3ceedef6ca0533e39a1f
+
+--001a114d3ceedef6ca0533e39a1f
+Content-Type: text/plain; charset=UTF-8
+
+Dear XFS experts,
+
+I checked the situation this morning:
+
+....
+xfsdump: status at 10:25:53: 473543/7886560 files dumped, 1.3% data dumped,
+76211 seconds elapsed
+xfsdump: status at 10:35:46: 478508/7886560 files dumped, 1.3% data dumped,
+76804 seconds elapsed
+
+and decided to stop the process. With this kind of speed xfsdump |
+xfsrestore
+will need more than one month. Something must be seriously wrong here.
+
+I see two options: Use rsync again to copy the data from the 14TB xfs
+filesystem to the new 20TB xfs filesystem. This won't be finished
+this weekend.
+
+Or use dd to copy the 14TB XFS filesystem into the 20TB volume and
+then grow the filesystem.
+
+dd runs at 300MB/sec that's approx 1TB per hour, so I decided to go this
+way.
+
+So here's another question: The new filesystem will run on a 20 disk raid10
+volume and was copied from a 16 disk raid5 volume. So swidth will be wrong.
+Also all the data will be within the first 15TB.
+
+What should I do to fix this? Or will xfs_growfs fix it automatically?
+
+Regards
+
+Peter Koch
+
+--001a114d3ceedef6ca0533e39a1f
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div><div><div>Dear XFS experts,<br><br></div>I check=
+ed the situation this morning:<br><br>....<br>xfsdump: status at 10:25:53: =
+473543/7886560 files dumped, 1.3% data dumped, 76211 seconds elapsed<br>xfs=
+dump: status at 10:35:46: 478508/7886560 files dumped, 1.3% data dumped, 76=
+804 seconds elapsed<br><br></div>and decided to stop the process. With this=
+ kind of speed xfsdump | xfsrestore<br></div>will need more than one month.=
+ Something must be seriously wrong here.<br><br></div><div>I see two option=
+s: Use rsync again to copy the data from the 14TB xfs<br>filesystem to the =
+new 20TB xfs filesystem. This won&#39;t be finished<br></div><div>this week=
+end.<br></div><div><br>Or use dd to copy the 14TB XFS filesystem into the 2=
+0TB volume and<br>then grow the filesystem.<br><br>dd runs at 300MB/sec tha=
+t&#39;s approx 1TB per hour, so I decided to go this<br>way.<br><br>So here=
+&#39;s another question: The new filesystem will run on a 20 disk raid10<br=
+>volume and was copied from a 16 disk raid5 volume. So swidth will be wrong=
+.<br>Also all the data will be within the first 15TB.<br><br>What should I =
+do to fix this? Or will xfs_growfs fix it automatically?<br><br>Regards<br>=
+<br>Peter Koch</div></div>
+
+--001a114d3ceedef6ca0533e39a1f--
+
+
+--===============0753888840415442142==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0753888840415442142==--
