@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 37A6C7CB4
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 00:37:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B57F304039
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 22:37:14 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	APBcmUhNifAq4OIC for <xfs@oss.sgi.com>;
-	Sun, 29 May 2016 22:37:12 -0700 (PDT)
-Date: Mon, 30 May 2016 15:37:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: further improvement on secondary superblock
-	search method
-Message-ID: <20160530053710.GO26977@dastard>
-References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7474B7CB8
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 01:33:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 33CD0304039
+	for <xfs@oss.sgi.com>; Sun, 29 May 2016 23:33:27 -0700 (PDT)
+Received: from mr002msb.fastweb.it (mr002msb.fastweb.it [85.18.95.86]) by
+	cuda.sgi.com with ESMTP id WGUmDFpVfGIrrIo9 for
+	<xfs@oss.sgi.com>; Sun, 29 May 2016 23:33:25 -0700 (PDT)
+Subject: Re: LVM snapshot and log record CRC mismatch
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1463085496-17919-1-git-send-email-billodo@redhat.com>
+Date: Mon, 30 May 2016 08:33:22 +0200
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20160526133422.32f65920@harpe.intellique.com>
+References: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
+	<20160524221205.GM21200@dastard> <57455645.5040608@assyoma.it>
+	<20160526122315.4112f713@harpe.intellique.com>
+	<5746DB30.5040006@assyoma.it>
+	<20160526133422.32f65920@harpe.intellique.com>
+Message-ID: <f5396f64997a30689dc4214dea6a4d8b@assyoma.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +27,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: g.danti@assyoma.it, xfs@oss.sgi.com
 
-On Thu, May 12, 2016 at 03:38:16PM -0500, Bill O'Donnell wrote:
-> This patch is a further optimization of secondary sb search, in order to
-> handle non-default geometries. Once again, use a similar method to find
-> fs geometry as that of xfs_mkfs. Refactor verify_sb(), creating new
-> sub-function that checks sanity of agblocks and agcount: verify_sb_blocksize().
+Il 26-05-2016 13:34 Emmanuel Florac ha scritto:
 > 
-> If verify_sb_blocksize verifies sane paramters, use found values for the sb
-> search. Otherwise, try search with default values. If these faster methods
-> both fail, fall back to original brute force slower search.
-> 
-> NOTE: patch series "xfs_repair: improved secondary sb search" must be
-> applied before applying this patch.
-> (http://oss.sgi.com/archives/xfs/2016-05/msg00269.html)
+> Yes, I thought that too, however it doesn't seem to be working in your
+> case, and freezing twice can't do any harm anyway :)
 
-Either this or one of the above patches is causing xfs/030 on
-my xfstests runs to fail with extra output:
+Hi all,
+after upgrading to CentOS 7.2, kernel version 
+3.10.0-327.18.2.el7.x86_64, the problem was solved: mounting a snapshot 
+shows no more CRC error (ie: the filesystem is quiesced before taking 
+the snapshot).
 
-xfs/030 4s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad)
-    --- tests/xfs/030.out       2016-04-06 11:30:45.348477421 +1000
-    +++ /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad        2016-05-30 13:06:29.955682633 +1000
-    @@ -11,6 +11,8 @@
-     bad primary superblock - bad magic number !!!
-     
-     attempting to find secondary superblock...
-    +....
-    +attempting to find secondary superblock...
-     found candidate secondary superblock...
-     verified secondary superblock...
-    ...
-    (Run 'diff -u tests/xfs/030.out /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad'  to see the entire diff)
+I am not sure of what component upgrade solved the problem, if kernel or 
+lvm tools. I are more inclined to the latter, anyway.
 
-Bill, can you please work up a filter or equivalent for xfstests
-so that this extra output doesn't cause unnecessary failures?
-Something like simply filtering all the "attempting to find
-secondary superblock..." and "...." lines from the output would work
-just fine - all we really care about is that a secondary sb is found
-and verified, not how many steps it takes to find it...
+Thanks.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
 
 _______________________________________________
 xfs mailing list
