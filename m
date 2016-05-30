@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D1FA7CB5
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 08:03:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EDCBBAC002
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 06:03:15 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E0D187CA1
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 07:12:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 93678304032
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 05:12:28 -0700 (PDT)
 Received: from 103104.com ([199.188.103.189]) by cuda.sgi.com with ESMTP id
-	FPHwHB2eHTxThIg6 for <xfs@oss.sgi.com>;
-	Mon, 30 May 2016 06:03:11 -0700 (PDT)
-Subject: Business Opportunity Available
-Message-ID: <b6e3ba7edbbfb441d23a02623646c424@traxsource.com>
-Date: Mon, 30 May 2016 15:02:52 +0200
+	zh0fAEafKrAW3p25 for <xfs@oss.sgi.com>;
+	Mon, 30 May 2016 05:12:25 -0700 (PDT)
+Subject: Distribute to McDonalds, Pfizer, Toyota, etc.
+Message-ID: <77936d3ca364725a44eabd0f850e80eb@grizzly.com>
+Date: Mon, 30 May 2016 14:05:15 +0200
 From: "Jason Ryan" <ninslokik@yandex.com>
 MIME-Version: 1.0
 Reply-To: piderram@aliyun.com
