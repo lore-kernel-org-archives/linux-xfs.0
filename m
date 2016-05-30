@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3DF3A7CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 12:37:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ADF90AC007
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 10:37:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BQnqbzNA4ztePJjP (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 10:37:27 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 2FC0C7F6A2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 17:37:26 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-61-108.rdu2.redhat.com
-	[10.10.61.108])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4VHbPDg025164
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 13:37:25 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH V2] xfs_repair: further improvement on secondary superblock
-	search method
-Date: Tue, 31 May 2016 12:37:24 -0500
-Message-Id: <1464716244-2401-1-git-send-email-billodo@redhat.com>
-In-Reply-To: <1463085496-17919-1-git-send-email-billodo@redhat.com>
-References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7AB607CA7
+	for <xfs@oss.sgi.com>; Sun, 29 May 2016 21:16:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C4A58F8033
+	for <xfs@oss.sgi.com>; Sun, 29 May 2016 19:16:15 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	zGEgmEl7HyEbtYRK for <xfs@oss.sgi.com>;
+	Sun, 29 May 2016 19:16:12 -0700 (PDT)
+Date: Mon, 30 May 2016 12:13:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v5 1/2] libxcmd: generalize topology functions
+Message-ID: <20160530021330.GL26977@dastard>
+References: <1463006717-6104-1-git-send-email-billodo@redhat.com>
+	<1463006717-6104-2-git-send-email-billodo@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1463006717-6104-2-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,173 +26,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-This patch is a further optimization of secondary sb search, in order to
-handle non-default geometries. Once again, use a similar method to find
-fs geometry as that of xfs_mkfs. Refactor verify_sb(), creating new
-sub-function that checks sanity of agblocks and agcount: verify_sb_blocksize().
+On Wed, May 11, 2016 at 05:45:16PM -0500, Bill O'Donnell wrote:
+> Move general topology functions from xfs_mkfs to new topology
+> collection in libxcmd.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-If verify_sb_blocksize verifies sane paramters, use found values for the sb
-search. Otherwise, try search with default values. If these faster methods
-both fail, fall back to original brute force slower search.
+FYI, this patch breaks 'make deb'.
 
-NOTE: patch series "xfs_repair: improved secondary sb search" must be
-applied before applying this patch.
-(http://oss.sgi.com/archives/xfs/2016-05/msg00269.html)
+I don't expect anyone to know this - the debian/rules build script
+has a special hand-rolled mkfs build for the debian installer. This
+new libxcmd dependency also needs to be described in that script.
+I've fixed that up, but it's also pointed out a couple of other
+things to do with dependencies:
 
-v2: simplify verify_sb_blocksize function.
-    remove unneeded parentheses.
-    remove redundant warns about attempt to find secondary sb.
+> diff --git a/mkfs/Makefile b/mkfs/Makefile
+> index 63ba4ec..f0e4ce1 100644
+> --- a/mkfs/Makefile
+> +++ b/mkfs/Makefile
+> @@ -10,7 +10,7 @@ LTCOMMAND = mkfs.xfs
+>  HFILES =
+>  CFILES = maxtrres.c proto.c xfs_mkfs.c
+>  
+> -LLDLIBS += $(LIBBLKID) $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+> +LLDLIBS += $(LIBBLKID) $(LIBXFS) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBXCMD)
+>  LTDEPENDENCIES += $(LIBXFS)
+>  LLDFLAGS = -static-libtool-libs
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- repair/sb.c | 78 +++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 42 insertions(+), 36 deletions(-)
+mkfs.xfs also needs the build dependency on libxcmd to be expressed
+in LTDEPENDENCIES. It's just lucky that other targets have already
+expressed such "libxfs + libxcmd" dependencies as that ensured
+libxcmd was already built before mkfs tries to link against it.
+Blind luck strikes again!
 
-diff --git a/repair/sb.c b/repair/sb.c
-index 7e4708c..3965953 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -23,12 +23,10 @@
- #include "globals.h"
- #include "protos.h"
- #include "err_protos.h"
-+#include "xfs_multidisk.h"
+Those top level build dependencies are expressed in the top level
+Makefile like so:
+
+--- a/Makefile
++++ b/Makefile
+@@ -82,6 +82,7 @@ io: libxcmd libhandle
+ quota: libxcmd
+ repair: libxlog
+ copy: libxlog
++mkfs: libxcmd
  
- #define BSIZE	(1024 * 1024)
- 
--#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
--#define	XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
--
- /*
-  * copy the fields of a superblock that are present in primary and
-  * secondaries -- preserve fields that are different in the primary.
-@@ -85,6 +83,21 @@ copy_sb(xfs_sb_t *source, xfs_sb_t *dest)
- 	memset(source->sb_fname, 0, 12);
- }
- 
-+int
-+verify_sb_blocksize(xfs_sb_t *sb)
-+{
-+	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
-+	if (sb->sb_blocksize == 0)
-+		return XR_BAD_BLOCKSIZE;
-+	if (sb->sb_blocksize != (1 << sb->sb_blocklog))
-+		return XR_BAD_BLOCKLOG;
-+	if (sb->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-+	    sb->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG)
-+		return XR_BAD_BLOCKLOG;
-+
-+	return 0;
-+}
-+
- /*
-  * find a secondary superblock, copy it into the sb buffer.
-  * start is the point to begin reading BSIZE bytes.
-@@ -106,8 +119,6 @@ __find_secondary_sb(
- 	int		retval;
- 	int		bsize;
- 
--	do_warn(_("\nattempting to find secondary superblock...\n"));
--
- 	sb = (xfs_sb_t *)memalign(libxfs_device_alignment(), BSIZE);
- 	if (!sb) {
- 		do_error(
-@@ -205,29 +216,36 @@ guess_default_geometry(
- int
- find_secondary_sb(xfs_sb_t *rsb)
- {
--	int		retval;
-+	int		retval = 0;
- 	__uint64_t	agcount;
- 	__uint64_t	agsize;
- 	__uint64_t	skip;
- 	int		blocklog;
- 
- 	/*
--	 * Attempt to find secondary sb with a coarse approach.
--	 * Failing that, fallback to a fine-grained approach.
-+	 * Attempt to find secondary sb with a coarse approach,
-+	 * first trying agblocks and blocksize read from sb, providing
-+	 * they're sane.
- 	 */
--	blocklog = guess_default_geometry(&agsize, &agcount, &x);
-+	do_warn(_("\nattempting to find secondary superblock...\n"));
- 
--	/*
--	 * use found ag geometry to quickly find secondary sb
--	 */
--	skip = agsize << blocklog;
--	retval = __find_secondary_sb(rsb, skip, skip);
--	if (!retval)  {
--		/*
--		 * fallback: Start at min agsize and scan all blocks
--		 */
--		retval = __find_secondary_sb(rsb, XFS_AG_MIN_BYTES, BSIZE);
-+	if (verify_sb_blocksize(rsb) == 0) {
-+		skip = rsb->sb_agblocks * rsb->sb_blocksize;
-+		if (skip >= XFS_AG_MIN_BYTES && skip <= XFS_AG_MAX_BYTES)
-+			retval = __find_secondary_sb(rsb, skip, skip);
- 	}
-+
-+        /* If that failed, retry coarse approach, using default geometry */
-+        if (!retval) {
-+                blocklog = guess_default_geometry(&agsize, &agcount, &x);
-+                skip = agsize << blocklog;
-+                retval = __find_secondary_sb(rsb, skip, skip);
-+        }
-+
-+        /* If that failed, fall back to the brute force method */
-+        if (!retval)
-+                retval = __find_secondary_sb(rsb, XFS_AG_MIN_BYTES, BSIZE);
-+
- 	return retval;
- }
- 
-@@ -328,6 +346,7 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- {
- 	__uint32_t	bsize;
- 	int		i;
-+	int		ret;
- 
- 	/* check magic number and version number */
- 
-@@ -369,23 +388,10 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 	    !xfs_verify_cksum(sb_buf, sb->sb_sectsize, XFS_SB_CRC_OFF))
- 		return XR_BAD_CRC;
- 
--	/* check to make sure blocksize is legal 2^N, 9 <= N <= 16 */
--	if (sb->sb_blocksize == 0)
--		return(XR_BAD_BLOCKSIZE);
--
--	bsize = 1;
--
--	for (i = 0; bsize < sb->sb_blocksize &&
--		i < sizeof(sb->sb_blocksize) * NBBY; i++)
--		bsize <<= 1;
--
--	if (i < XFS_MIN_BLOCKSIZE_LOG || i > XFS_MAX_BLOCKSIZE_LOG)
--		return(XR_BAD_BLOCKSIZE);
--
--	/* check sb blocksize field against sb blocklog field */
--
--	if (i != sb->sb_blocklog)
--		return(XR_BAD_BLOCKLOG);
-+	/* check to ensure blocksize and blocklog are legal */
-+	ret = verify_sb_blocksize(sb);
-+	if (ret != 0)
-+		return ret;
- 
- 	/* sanity check ag count, size fields against data size field */
- 
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+
+I've fixed these problems because I need to build .deb packages to
+deploy changes for testing.
+
+Cheers,
+
+Dave.
 -- 
-2.5.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
