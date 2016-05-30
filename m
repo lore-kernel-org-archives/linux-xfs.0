@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6665E7CA7
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 18:21:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B701E7CBC
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 02:23:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3974330404E
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 16:20:59 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Q1KhHouaSTyne9oJ for <xfs@oss.sgi.com>;
-	Sun, 29 May 2016 16:20:55 -0700 (PDT)
-Date: Mon, 30 May 2016 09:20:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsrestore performance
-Message-ID: <20160529232053.GK26977@dastard>
-References: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 87E618F8035
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 00:23:54 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id 5dBj8gTSxWwxwMhi (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 30 May 2016 00:23:51 -0700 (PDT)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <20160324122417.GB4068@bfoster.bfoster>
+	<57332508.307@profihost.ag> <20160511133417.GA42410@bfoster.bfoster>
+	<57333BA4.4040402@profihost.ag>
+	<20160511155951.GF42410@bfoster.bfoster>
+	<5738576B.4010208@profihost.ag> <20160515115017.GA6433@laptop.bfoster>
+	<57386E84.3090606@profihost.ag>
+	<20160516010602.GA24980@bfoster.bfoster>
+	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <574BEA84.3010206@profihost.ag>
+Date: Mon, 30 May 2016 09:23:48 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPhCz3S7dvrOCqEJFvYvTQ89nUJwFxieQ5A1rShaxUb71rrNew@mail.gmail.com>
+In-Reply-To: <20160522213850.GE26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,102 +36,145 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs.pkoch@dfgh.net
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, May 28, 2016 at 12:39:45AM +0200, xfs.pkoch@dfgh.net wrote:
-> Dear XFS experts,
+Hi Dave,
+  Hi Brian,
+
+below are the results with a vanilla 4.4.11 kernel.
+
+Am 22.05.2016 um 23:38 schrieb Dave Chinner:
+> On Sun, May 22, 2016 at 09:36:39PM +0200, Stefan Priebe - Profihost AG wrote:
+>> Am 16.05.2016 um 03:06 schrieb Brian Foster:
+>>>> sd_mod ehci_pci ehci_hcd usbcore usb_common igb ahci i2c_algo_bit libahci
+>>>> i2c_core ptp mpt3sas pps_core raid_class scsi_transport_sas
+>>>> [Sun May 15 07:00:44 2016] CPU: 2 PID: 108 Comm: kswapd0 Tainted: G       O
+>>>> 4.4.10+25-ph #1
+>>>
+>>> How close is this to an upstream kernel? Upstream XFS? Have you tried to
+>>> reproduce this on an upstream kernel?
+>>
+>> It's a vanilla 4.4.10 + a new adaptec driver and some sched and wq
+>> patches from 4.5 and 4.6 but i can try to replace the kernel on one
+>> machine with a 100% vanilla one if this helps.
 > 
-> I was using a 16TB linux mdraid raid10 volume built from 16 seagate
-> 2TB disks, which was formatted with an ext3 filesystem. It contained
-> a couple of hundred very large files (ZFS full and incremental dumps
-> with sizes between 10GB and 400GB). It also contained 7 million
-> files from our users home directories, which where backuped with
-> rsync --link-dest=<last backup dir>, so most of these files are
-> just hard links to previous versions.
-
-Oh, dear. There's a massive red flag. I'll come back to it...
-
-> 1: create a 14TB XFS-filesystem on the temporary RAID5-volume
-> 2: first rsync run to copy the ext3 fs to the temporary XFS-fs,
-> this took 6 days
-
-Rsync took 6 days to copy the filesystem - I doubt dump/restore is
-going to be 3x faster than that - xfsdump is much faster than rsync
-on the read side, but xfsdump runs at about the same speed as rsync 
-on the write side. As such, 2x faster is about as much as you can
-expect for a "data-mostly" dump/restore. I'll come back to this....
-
-> 3: another rsync run to copy what changed during the first run,
-> this took another 2 days
-> 4: another rsync run to copy what changed during the second run,
-> this took another day
-> 5: xfsdump the temporary xfs fs to /dev/null. took 20 hours
-
-Nothing to slow down xfsdump reading from disk. Benchmarks lie.
-
-> 5: remounting the ext3 fs readonly and do a final rsync run to
-> copy what changed during the third run. This took 10 hours.
-> 6: delete the ext3 fs and create a 20TB xfs fs
-> 7: copy back the temporary xfs fs to the new xfs fs using
-> xfsdump | xfsrestore
+> Please do.
 > 
-> Here's my problem Since dumping the temporary xfs fs to /dev/null
-> needed less than a day I expected the xfsdump | xfsrestore
-> combination to be finished in less than 2 day. xfsdump | xfsrestore
-> should be a lot fasten than rsync since it justs pumps blocks from
-> one xfs fs into another one.
+>>>> [295086.353473] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0x52000 size 0x13d1c8
+>>>> [295086.353476] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0x53000 size 0x13d1c8
+>>>> [295086.353478] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0x54000 size 0x13d1c8
+>>> ...
+>>>> [295086.567508] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0xab000 size 0x13d1c8
+>>>> [295086.567510] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0xac000 size 0x13d1c8
+>>>> [295086.567515] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
+>>>> 0xad000 size 0x13d1c8
+>>>>
+>>>> The file to the inode number is:
+>>>> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
+>>>>
+>>>
+>>> xfs_bmap -v might be interesting here as well.
+>>
+>> # xfs_bmap -v
+>> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
+>> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en:
+>>  EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET        TOTAL
+>>    0: [0..2567]:       41268928..41271495  3 (374464..377031)  2568
+> 
+> So the last file offset with a block is 0x140e00. This means the
+> file is fully allocated. However, the pages inside the file range
+> are still marked delayed allocation. That implies that we've failed
+> to write the pages over a delayed allocation region after we've
+> allocated the space.
+> 
+> That, in turn, tends to indicate a problem in page writeback - the
+> first page to be written has triggered delayed allocation of the
+> entire range, but then the subsequent pages have not been written
+> (for some as yet unknown reason). When a page is written, we map it
+> to the current block via xfs_map_at_offset(), and that clears both
+> the buffer delay and unwritten flags.
+> 
+> This clearly isn't happening which means either the VFS doesn't
+> think the inode is dirty anymore, writeback is never asking for
+> these pages to be written, or XFs is screwing something up in
+> ->writepage. The XFS writepage code changed significantly in 4.6, so
+> it might be worth seeing if a 4.6 kernel reproduces this same
+> problem....
 
-dump is fast - restore is the slow point because it has to recreate
-everything. That's what limits the speed of dump - the pipe has a
-bound limit on data in flight, so dump is throttled to restore
-speed when you run this.
+i've now used a vanilla 4.4.11 Kernel and the issue remains. After a
+fresh reboot it has happened again on the root FS for a debian apt file:
 
-And, as I said I'll come back to, restore is slow because:
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x0 size 0x12b990
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 111 at fs/xfs/xfs_aops.c:1239
+xfs_vm_releasepage+0x10f/0x140()
+Modules linked in: netconsole ipt_REJECT nf_reject_ipv4 xt_multiport
+iptable_filter ip_tables x_tables bonding coretemp 8021q garp fuse
+sb_edac edac_core i2c_i801 i40e(O) xhci_pci xhci_hcd shpchp vxlan
+ip6_udp_tunnel udp_tunnel ipmi_si ipmi_msghandler button btrfs xor
+raid6_pq dm_mod raid1 md_mod usbhid usb_storage ohci_hcd sg sd_mod
+ehci_pci ehci_hcd usbcore usb_common igb ahci i2c_algo_bit libahci
+i2c_core mpt3sas ptp pps_core raid_class scsi_transport_sas
+CPU: 1 PID: 111 Comm: kswapd0 Tainted: G           O    4.4.11 #1
+Hardware name: Supermicro Super Server/X10SRH-CF, BIOS 1.0b 05/18/2015
+ 0000000000000000 ffff880c4dacfa88 ffffffffa23c5b8f 0000000000000000
+ ffffffffa2a51ab4 ffff880c4dacfac8 ffffffffa20837a7 ffff880c4dacfae8
+ 0000000000000001 ffffea00010c3640 ffff8802176b49d0 ffffea00010c3660
+Call Trace:
+ [<ffffffffa23c5b8f>] dump_stack+0x63/0x84
+ [<ffffffffa20837a7>] warn_slowpath_common+0x97/0xe0
+ [<ffffffffa208380a>] warn_slowpath_null+0x1a/0x20
+ [<ffffffffa2326caf>] xfs_vm_releasepage+0x10f/0x140
+ [<ffffffffa218c680>] ? page_mkclean_one+0xd0/0xd0
+ [<ffffffffa218d3a0>] ? anon_vma_prepare+0x150/0x150
+ [<ffffffffa21521c2>] try_to_release_page+0x32/0x50
+ [<ffffffffa2166b2e>] shrink_active_list+0x3ce/0x3e0
+ [<ffffffffa21671c7>] shrink_lruvec+0x687/0x7d0
+ [<ffffffffa21673ec>] shrink_zone+0xdc/0x2c0
+ [<ffffffffa2168539>] kswapd+0x4f9/0x970
+ [<ffffffffa2168040>] ? mem_cgroup_shrink_node_zone+0x1a0/0x1a0
+ [<ffffffffa20a0d99>] kthread+0xc9/0xe0
+ [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+ [<ffffffffa26b404f>] ret_from_fork+0x3f/0x70
+ [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+---[ end trace c9d679f8ed4d7610 ]---
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x1000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x2000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x3000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x4000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x5000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x6000 size
+0x12b990
+XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x7000 size
+0x12b990
+XFS (md127p3): ino 0x400de4c delalloc 1 unwritten 0 pgoff 0x12000 size
+0x2cc69
 
-[....]
-> xfsrestore: reading directories
-> xfsdump: dumping directories
-> xfsdump: dumping non-directory files
-> xfsdump: status at 20:04:52: 1/7886560 files dumped, 0.0% data dumped,
-> 24550 seconds elapsed
-> xfsrestore: 20756853 directories and 274128228 entries processed
-> xfsrestore: directory post-processing
-> xfsrestore: restoring non-directory files
+# find / -inum $(printf "%d" 0x41221d1) -print
+/var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_source_Sources
 
-The filesystem is not exactly as you described.  Did you notice that
-xfs_restore realises that it has to restore 20 million directories
-and *274 million* directory entries? i.e. for those 7 million inodes
-containing data, there is roughly 40 hard links pointing to each
-inode. There are also 3 directory inodes for every regular file.
-This is not a "data mostly" filesystem - it has vastly more metadata
-than it has data, even though the data takes up more space.
+# xfs_bmap -v
+/var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_source_Sources
+/var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_source_Sources:
+ EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET        TOTAL
+   0: [0..2399]:       27851552..27853951  2 (588576..590975)  2400
 
-Keep in mind that it took dump the best part of 7 hours just to read
-all the inodes and the directory structure to build the dump
-inventory. This matches with the final ext3 rsync pass of 10 hours
-which should have copied very little data.  Creating 270 million
-hard links in 20 million directories from scratch takes a long time,
-and xfs_restore will be no faster at that than rsync....
+So you mean the next step would be to test 4.6? I hope this is stable
+enough for production usage.
 
-> Seems like 2 days was a little optimistic
-
-Just a little. :/
-
-Personally, I would have copied the data using rsync to the
-temporary XFS filesystem of the same size and shape of the final
-destination (via mkfs parameters to ensure stripe unit/width match
-final destination) and then used xfs_copy to do a block level copy
-of the temporary filesystem back to the final destination. xfs_copy
-will run *much* faster than xfsdump/restore....
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Greets,
+Stefan
 
 _______________________________________________
 xfs mailing list
