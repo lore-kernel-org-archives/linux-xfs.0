@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EBEA17CAE
-	for <xfs@oss.sgi.com>; Fri, 27 May 2016 13:02:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 20C647CA0
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 17:06:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F038A8F8033
-	for <xfs@oss.sgi.com>; Fri, 27 May 2016 11:02:54 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id oSAioCicKUConUvA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 27 May 2016 11:02:52 -0700 (PDT)
-Date: Fri, 27 May 2016 11:02:31 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 8/7] xfs/122: don't break on old xfsprogs
-Message-ID: <20160527180231.GB5050@birch.djwong.org>
-References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D78F68F804B
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 15:06:40 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 4ZZ8fVHD72G4xXfD for <xfs@oss.sgi.com>;
+	Mon, 30 May 2016 15:06:37 -0700 (PDT)
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH] xfs_repair: further improvement on secondary superblock
+	search method
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20160530053710.GO26977@dastard>
+Date: Mon, 30 May 2016 17:06:25 -0500
+Message-Id: <EBA7AF88-BE25-450A-AB43-D6B8F0C5FF41@sandeen.net>
+References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
+	<20160530053710.GO26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +29,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Bill O'Donnell <billodo@redhat.com>, xfs@oss.sgi.com
 
-If we're running against a old version of xfsprogs that lacks some of
-the structures that the golden output knows about, copy the structure
-size definition from the golden output to the program output.  This
-way we can check for structure size mutations on old xfsprogs without
-generating false error reports for structs that don't exist in the
-old release.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/122     |    8 ++++++++
- tests/xfs/122.out |    1 +
- 2 files changed, 9 insertions(+)
 
-diff --git a/tests/xfs/122 b/tests/xfs/122
-index 845cdd2..c944942 100755
---- a/tests/xfs/122
-+++ b/tests/xfs/122
-@@ -73,6 +73,7 @@ _attribute_filter()
- cprog=$tmp.get_structs.c
- oprog=$tmp.get_structs
- progout=$tmp.output
-+keyfile=$tmp.keys
- 
- cat >$cprog <<EOF
- #define _GNU_SOURCE
-@@ -239,6 +240,13 @@ if [ $XFSPROGS_VERSION -lt 30000 ]; then
- 	echo 'sizeof( xfs_dsb_t ) = 208' >>$progout;
- fi
- 
-+# Find all the items that only exist in the golden output
-+comm -23 <(grep '=' $0.out | sed -e 's/ =.*$//g' | LC_COLLATE=POSIX sort) \
-+	 <(sed -e 's/ =.*$//g' < $progout | LC_COLLATE=POSIX sort) > $keyfile
-+
-+# Copy those items to the program output
-+grep -F -f $keyfile $0.out >> $progout
-+
- LC_COLLATE=POSIX sort $progout
- 
- status=0
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index 451871e..46d1dd4 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -147,3 +147,4 @@ sizeof(xfs_lookup_t) = 4
- sizeof(xfs_qoff_logformat_t) = 20
- sizeof(xfs_timestamp_t) = 8
- sizeof(xfs_trans_header_t) = 16
-+sizeof(xfs_zzzz_test_the_test_program) = -47
+> On May 30, 2016, at 12:37 AM, Dave Chinner <david@fromorbit.com> wrote:
+> 
+>> On Thu, May 12, 2016 at 03:38:16PM -0500, Bill O'Donnell wrote:
+>> This patch is a further optimization of secondary sb search, in order to
+>> handle non-default geometries. Once again, use a similar method to find
+>> fs geometry as that of xfs_mkfs. Refactor verify_sb(), creating new
+>> sub-function that checks sanity of agblocks and agcount: verify_sb_blocksize().
+>> 
+>> If verify_sb_blocksize verifies sane paramters, use found values for the sb
+>> search. Otherwise, try search with default values. If these faster methods
+>> both fail, fall back to original brute force slower search.
+>> 
+>> NOTE: patch series "xfs_repair: improved secondary sb search" must be
+>> applied before applying this patch.
+>> (http://oss.sgi.com/archives/xfs/2016-05/msg00269.html)
+> 
+> Either this or one of the above patches is causing xfs/030 on
+> my xfstests runs to fail with extra output:
+> 
+> xfs/030 4s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad)
+>    --- tests/xfs/030.out       2016-04-06 11:30:45.348477421 +1000
+>    +++ /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad        2016-05-30 13:06:29.955682633 +1000
+>    @@ -11,6 +11,8 @@
+>     bad primary superblock - bad magic number !!!
+> 
+>     attempting to find secondary superblock...
+>    +....
+>    +attempting to find secondary superblock...
+
+Seems like the best fix is to not print that twice in the first place?
+
+-Eric
+
+>     found candidate secondary superblock...
+>     verified secondary superblock...
+>    ...
+>    (Run 'diff -u tests/xfs/030.out /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad'  to see the entire diff)
+> 
+> Bill, can you please work up a filter or equivalent for xfstests
+> so that this extra output doesn't cause unnecessary failures?
+> Something like simply filtering all the "attempting to find
+> secondary superblock..." and "...." lines from the output would work
+> just fine - all we really care about is that a secondary sb is found
+> and verified, not how many steps it takes to find it...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
