@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5862B7CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 07:52:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 37A6C7CB4
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 00:37:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B3BB8F8033
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 05:52:15 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id v58DdCTgN1OQ4Ov1 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 05:52:13 -0700 (PDT)
-Date: Tue, 31 May 2016 05:52:10 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 6/7] xfs: test rmap behavior when multiple bmbt
-	records map to a single rmapbt record
-Message-ID: <20160531125210.GC17018@infradead.org>
-References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
-	<146424226290.6278.15051221437554845000.stgit@birch.djwong.org>
-	<20160527032851.GB9418@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B57F304039
+	for <xfs@oss.sgi.com>; Sun, 29 May 2016 22:37:14 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	APBcmUhNifAq4OIC for <xfs@oss.sgi.com>;
+	Sun, 29 May 2016 22:37:12 -0700 (PDT)
+Date: Mon, 30 May 2016 15:37:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_repair: further improvement on secondary superblock
+	search method
+Message-ID: <20160530053710.GO26977@dastard>
+References: <1463085496-17919-1-git-send-email-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160527032851.GB9418@birch.djwong.org>
+In-Reply-To: <1463085496-17919-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,12 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Looks fine,
+On Thu, May 12, 2016 at 03:38:16PM -0500, Bill O'Donnell wrote:
+> This patch is a further optimization of secondary sb search, in order to
+> handle non-default geometries. Once again, use a similar method to find
+> fs geometry as that of xfs_mkfs. Refactor verify_sb(), creating new
+> sub-function that checks sanity of agblocks and agcount: verify_sb_blocksize().
+> 
+> If verify_sb_blocksize verifies sane paramters, use found values for the sb
+> search. Otherwise, try search with default values. If these faster methods
+> both fail, fall back to original brute force slower search.
+> 
+> NOTE: patch series "xfs_repair: improved secondary sb search" must be
+> applied before applying this patch.
+> (http://oss.sgi.com/archives/xfs/2016-05/msg00269.html)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Either this or one of the above patches is causing xfs/030 on
+my xfstests runs to fail with extra output:
+
+xfs/030 4s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad)
+    --- tests/xfs/030.out       2016-04-06 11:30:45.348477421 +1000
+    +++ /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad        2016-05-30 13:06:29.955682633 +1000
+    @@ -11,6 +11,8 @@
+     bad primary superblock - bad magic number !!!
+     
+     attempting to find secondary superblock...
+    +....
+    +attempting to find secondary superblock...
+     found candidate secondary superblock...
+     verified secondary superblock...
+    ...
+    (Run 'diff -u tests/xfs/030.out /home/dave/src/xfstests-dev/results//xfs/xfs/030.out.bad'  to see the entire diff)
+
+Bill, can you please work up a filter or equivalent for xfstests
+so that this extra output doesn't cause unnecessary failures?
+Something like simply filtering all the "attempting to find
+secondary superblock..." and "...." lines from the output would work
+just fine - all we really care about is that a secondary sb is found
+and verified, not how many steps it takes to find it...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
