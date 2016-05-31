@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BEC637CB6
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 06:51:47 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5923B7CCA
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 06:51:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 47EDCAC003
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 04:51:47 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B2B430404E
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 04:51:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QPnsS11n45YS6cmY (version=TLSv1.2
+	cuda.sgi.com with ESMTP id zKdud3IPTYtJybIV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 04:51:45 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 04:51:51 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v22 06/22] richacl: In-memory representation and helper
-	functions
-Date: Tue, 31 May 2016 13:50:38 +0200
-Message-Id: <1464695454-18557-7-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v22 07/22] richacl: Permission mapping functions
+Date: Tue, 31 May 2016 13:50:39 +0200
+Message-Id: <1464695454-18557-8-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1464695454-18557-1-git-send-email-agruenba@redhat.com>
 References: <1464695454-18557-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,419 +31,212 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-A richacl consists of an NFSv4 acl and an owner, group, and other mask.
-These three masks correspond to the owner, group, and other file
-permission bits, but they contain NFSv4 permissions instead of POSIX
-permissions.
-
-Each entry in the NFSv4 acl applies to the file owner (OWNER@), the
-owning group (GROUP@), everyone (EVERYONE@), or to a specific uid or
-gid.
-
-As in the standard POSIX file permission model, each process is the
-owner, group, or other file class.  A richacl grants a requested access
-only if the NFSv4 acl in the richacl grants the access (according to the
-NFSv4 permission check algorithm), and the file mask that applies to the
-process includes the requested permissions.
+We need to map from POSIX permissions to NFSv4 permissions when a
+chmod() is done, from NFSv4 permissions to POSIX permissions when an acl
+is set (which implicitly sets the file permission bits), and from the
+MAY_READ/MAY_WRITE/MAY_EXEC/MAY_APPEND flags to NFSv4 permissions when
+doing an access check in a richacl.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Reviewed-by: J. Bruce Fields <bfields@redhat.com>
 ---
- fs/Makefile                  |   1 +
- fs/richacl.c                 |  65 ++++++++++++++++
- include/linux/richacl.h      | 179 +++++++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/Kbuild    |   1 +
- include/uapi/linux/richacl.h |  99 ++++++++++++++++++++++++
- 5 files changed, 345 insertions(+)
- create mode 100644 fs/richacl.c
- create mode 100644 include/linux/richacl.h
- create mode 100644 include/uapi/linux/richacl.h
+ fs/richacl.c                 | 118 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h      |   3 ++
+ include/uapi/linux/richacl.h |  44 ++++++++++++++++
+ 3 files changed, 165 insertions(+)
 
-diff --git a/fs/Makefile b/fs/Makefile
-index 85b6e13..2b3e6f1 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -49,6 +49,7 @@ obj-$(CONFIG_COREDUMP)		+= coredump.o
- obj-$(CONFIG_SYSCTL)		+= drop_caches.o
- 
- obj-$(CONFIG_FHANDLE)		+= fhandle.o
-+obj-$(CONFIG_FS_RICHACL)	+= richacl.o
- 
- obj-y				+= quota/
- 
 diff --git a/fs/richacl.c b/fs/richacl.c
-new file mode 100644
-index 0000000..bcc6591
---- /dev/null
+index bcc6591..d0a4135 100644
+--- a/fs/richacl.c
 +++ b/fs/richacl.c
-@@ -0,0 +1,65 @@
+@@ -63,3 +63,121 @@ richace_copy(struct richace *to, const struct richace *from)
+ {
+ 	memcpy(to, from, sizeof(struct richace));
+ }
++
 +/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ * richacl_mask_to_mode  -  compute the file permission bits from mask
++ * @mask:	%RICHACE_* permission mask
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2, or (at your option) any
-+ * later version.
++ * Compute the file permission bits corresponding to a particular set of
++ * richacl permissions.
 + *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
++ * See richacl_masks_to_mode().
 + */
-+
-+#include <linux/sched.h>
-+#include <linux/module.h>
-+#include <linux/fs.h>
-+#include <linux/slab.h>
-+#include <linux/richacl.h>
-+
-+/**
-+ * richacl_alloc  -  allocate a richacl
-+ * @count:	number of entries
-+ */
-+struct richacl *
-+richacl_alloc(int count, gfp_t gfp)
++static int
++richacl_mask_to_mode(unsigned int mask)
 +{
-+	size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
-+	struct richacl *acl = kzalloc(size, gfp);
++	int mode = 0;
 +
-+	if (acl) {
-+		atomic_set(&acl->a_refcount, 1);
-+		acl->a_count = count;
-+	}
-+	return acl;
-+}
-+EXPORT_SYMBOL_GPL(richacl_alloc);
++	if (mask & RICHACE_POSIX_MODE_READ)
++		mode |= S_IROTH;
++	if (mask & RICHACE_POSIX_MODE_WRITE)
++		mode |= S_IWOTH;
++	if (mask & RICHACE_POSIX_MODE_EXEC)
++		mode |= S_IXOTH;
 +
-+/**
-+ * richacl_clone  -  create a copy of a richacl
-+ */
-+struct richacl *
-+richacl_clone(const struct richacl *acl, gfp_t gfp)
-+{
-+	int count = acl->a_count;
-+	size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
-+	struct richacl *dup = kmalloc(size, gfp);
-+
-+	if (dup) {
-+		memcpy(dup, acl, size);
-+		atomic_set(&dup->a_refcount, 1);
-+	}
-+	return dup;
++	return mode;
 +}
 +
 +/**
-+ * richace_copy  -  copy an acl entry
++ * richacl_masks_to_mode  -  compute file permission bits from file masks
++ *
++ * When setting a richacl, we set the file permission bits to indicate maximum
++ * permissions: for example, we set the Write permission when a mask contains
++ * RICHACE_APPEND_DATA even if it does not also contain RICHACE_WRITE_DATA.
++ *
++ * Permissions which are not in RICHACE_POSIX_MODE_READ,
++ * RICHACE_POSIX_MODE_WRITE, or RICHACE_POSIX_MODE_EXEC cannot be represented
++ * in the file permission bits.  Such permissions can still be effective, but
++ * not for new files or after a chmod(); they must be explicitly enabled in the
++ * richacl.
 + */
-+void
-+richace_copy(struct richace *to, const struct richace *from)
++int
++richacl_masks_to_mode(const struct richacl *acl)
 +{
-+	memcpy(to, from, sizeof(struct richace));
++	return richacl_mask_to_mode(acl->a_owner_mask) << 6 |
++	       richacl_mask_to_mode(acl->a_group_mask) << 3 |
++	       richacl_mask_to_mode(acl->a_other_mask);
 +}
++EXPORT_SYMBOL_GPL(richacl_masks_to_mode);
++
++/**
++ * richacl_mode_to_mask  - compute a file mask from the lowest three mode bits
++ * @mode:	mode to convert to richacl permissions
++ *
++ * When the file permission bits of a file are set with chmod(), this specifies
++ * the maximum permissions that processes will get.  All permissions beyond
++ * that will be removed from the file masks, and become ineffective.
++ */
++unsigned int
++richacl_mode_to_mask(umode_t mode)
++{
++	unsigned int mask = 0;
++
++	if (mode & S_IROTH)
++		mask |= RICHACE_POSIX_MODE_READ;
++	if (mode & S_IWOTH)
++		mask |= RICHACE_POSIX_MODE_WRITE;
++	if (mode & S_IXOTH)
++		mask |= RICHACE_POSIX_MODE_EXEC;
++
++	return mask;
++}
++
++/**
++ * richacl_want_to_mask  - convert the iop->permission want argument to a mask
++ * @want:	@want argument of the permission inode operation
++ *
++ * When checking for append, @want is (MAY_WRITE | MAY_APPEND).
++ *
++ * Richacls use the iop->may_create and iop->may_delete hooks which are used
++ * for checking if creating and deleting files is allowed.  These hooks do not
++ * use richacl_want_to_mask(), so we do not have to deal with mapping MAY_WRITE
++ * to RICHACE_ADD_FILE, RICHACE_ADD_SUBDIRECTORY, and RICHACE_DELETE_CHILD
++ * here.
++ */
++unsigned int
++richacl_want_to_mask(unsigned int want)
++{
++	unsigned int mask = 0;
++
++	if (want & MAY_READ)
++		mask |= RICHACE_READ_DATA;
++	if (want & MAY_DELETE_SELF)
++		mask |= RICHACE_DELETE;
++	if (want & MAY_TAKE_OWNERSHIP)
++		mask |= RICHACE_WRITE_OWNER;
++	if (want & MAY_CHMOD)
++		mask |= RICHACE_WRITE_ACL;
++	if (want & MAY_SET_TIMES)
++		mask |= RICHACE_WRITE_ATTRIBUTES;
++	if (want & MAY_EXEC)
++		mask |= RICHACE_EXECUTE;
++	/*
++	 * differentiate MAY_WRITE from these request
++	 */
++	if (want & (MAY_APPEND |
++		    MAY_CREATE_FILE | MAY_CREATE_DIR |
++		    MAY_DELETE_CHILD)) {
++		if (want & MAY_APPEND)
++			mask |= RICHACE_APPEND_DATA;
++		if (want & MAY_CREATE_FILE)
++			mask |= RICHACE_ADD_FILE;
++		if (want & MAY_CREATE_DIR)
++			mask |= RICHACE_ADD_SUBDIRECTORY;
++		if (want & MAY_DELETE_CHILD)
++			mask |= RICHACE_DELETE_CHILD;
++	} else if (want & MAY_WRITE)
++		mask |= RICHACE_WRITE_DATA;
++	return mask;
++}
++EXPORT_SYMBOL_GPL(richacl_want_to_mask);
 diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-new file mode 100644
-index 0000000..edb8480
---- /dev/null
+index edb8480..9102ef0 100644
+--- a/include/linux/richacl.h
 +++ b/include/linux/richacl.h
-@@ -0,0 +1,179 @@
-+/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2, or (at your option) any
-+ * later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __RICHACL_H
-+#define __RICHACL_H
-+
-+#include <uapi/linux/richacl.h>
-+
-+struct richace {
-+	unsigned short	e_type;
-+	unsigned short	e_flags;
-+	unsigned int	e_mask;
-+	union {
-+		kuid_t		uid;
-+		kgid_t		gid;
-+		unsigned int	special;
-+	} e_id;
-+};
-+
-+struct richacl {
-+	atomic_t	a_refcount;
-+	unsigned int	a_owner_mask;
-+	unsigned int	a_group_mask;
-+	unsigned int	a_other_mask;
-+	unsigned short	a_count;
-+	unsigned short	a_flags;
-+	struct richace	a_entries[0];
-+};
-+
-+#define richacl_for_each_entry(_ace, _acl)			\
-+	for (_ace = (_acl)->a_entries;				\
-+	     _ace != (_acl)->a_entries + (_acl)->a_count;	\
-+	     _ace++)
-+
-+#define richacl_for_each_entry_reverse(_ace, _acl)		\
-+	for (_ace = (_acl)->a_entries + (_acl)->a_count - 1;	\
-+	     _ace != (_acl)->a_entries - 1;			\
-+	     _ace--)
-+
-+/**
-+ * richacl_get  -  grab another reference to a richacl handle
-+ */
-+static inline struct richacl *
-+richacl_get(struct richacl *acl)
-+{
-+	if (acl)
-+		atomic_inc(&acl->a_refcount);
-+	return acl;
-+}
-+
-+/**
-+ * richacl_put  -  free a richacl handle
-+ */
-+static inline void
-+richacl_put(struct richacl *acl)
-+{
-+	if (acl && atomic_dec_and_test(&acl->a_refcount))
-+		kfree(acl);
-+}
-+
-+/**
-+ * richace_is_owner  -  check if @ace is an OWNER@ entry
-+ */
-+static inline bool
-+richace_is_owner(const struct richace *ace)
-+{
-+	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
-+	       ace->e_id.special == RICHACE_OWNER_SPECIAL_ID;
-+}
-+
-+/**
-+ * richace_is_group  -  check if @ace is a GROUP@ entry
-+ */
-+static inline bool
-+richace_is_group(const struct richace *ace)
-+{
-+	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
-+	       ace->e_id.special == RICHACE_GROUP_SPECIAL_ID;
-+}
-+
-+/**
-+ * richace_is_everyone  -  check if @ace is an EVERYONE@ entry
-+ */
-+static inline bool
-+richace_is_everyone(const struct richace *ace)
-+{
-+	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
-+	       ace->e_id.special == RICHACE_EVERYONE_SPECIAL_ID;
-+}
-+
-+/**
-+ * richace_is_unix_user  -  check if @ace applies to a specific user
-+ */
-+static inline bool
-+richace_is_unix_user(const struct richace *ace)
-+{
-+	return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
-+	       !(ace->e_flags & RICHACE_IDENTIFIER_GROUP);
-+}
-+
-+/**
-+ * richace_is_unix_group  -  check if @ace applies to a specific group
-+ */
-+static inline bool
-+richace_is_unix_group(const struct richace *ace)
-+{
-+	return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
-+	       (ace->e_flags & RICHACE_IDENTIFIER_GROUP);
-+}
-+
-+/**
-+ * richace_is_inherit_only  -  check if @ace is for inheritance only
-+ *
-+ * ACEs with the %RICHACE_INHERIT_ONLY_ACE flag set have no effect during
-+ * permission checking.
-+ */
-+static inline bool
-+richace_is_inherit_only(const struct richace *ace)
-+{
-+	return ace->e_flags & RICHACE_INHERIT_ONLY_ACE;
-+}
-+
-+/**
-+ * richace_is_inheritable  -  check if @ace is inheritable
-+ */
-+static inline bool
-+richace_is_inheritable(const struct richace *ace)
-+{
-+	return ace->e_flags & (RICHACE_FILE_INHERIT_ACE |
-+			       RICHACE_DIRECTORY_INHERIT_ACE);
-+}
-+
-+/**
-+ * richace_is_allow  -  check if @ace is an %ALLOW type entry
-+ */
-+static inline bool
-+richace_is_allow(const struct richace *ace)
-+{
-+	return ace->e_type == RICHACE_ACCESS_ALLOWED_ACE_TYPE;
-+}
-+
-+/**
-+ * richace_is_deny  -  check if @ace is a %DENY type entry
-+ */
-+static inline bool
-+richace_is_deny(const struct richace *ace)
-+{
-+	return ace->e_type == RICHACE_ACCESS_DENIED_ACE_TYPE;
-+}
-+
-+/**
-+ * richace_is_same_identifier  -  are both identifiers the same?
-+ */
-+static inline bool
-+richace_is_same_identifier(const struct richace *a, const struct richace *b)
-+{
-+	return !((a->e_flags ^ b->e_flags) &
-+		 (RICHACE_SPECIAL_WHO | RICHACE_IDENTIFIER_GROUP)) &&
-+	       !memcmp(&a->e_id, &b->e_id, sizeof(a->e_id));
-+}
-+
-+extern struct richacl *richacl_alloc(int, gfp_t);
-+extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
-+extern void richace_copy(struct richace *, const struct richace *);
-+
-+#endif /* __RICHACL_H */
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index 8bdae34..abeaa98 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -355,6 +355,7 @@ header-y += reboot.h
- header-y += reiserfs_fs.h
- header-y += reiserfs_xattr.h
- header-y += resource.h
-+header-y += richacl.h
- header-y += rfkill.h
- header-y += rio_mport_cdev.h
- header-y += romfs_fs.h
+@@ -175,5 +175,8 @@ richace_is_same_identifier(const struct richace *a, const struct richace *b)
+ extern struct richacl *richacl_alloc(int, gfp_t);
+ extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+ extern void richace_copy(struct richace *, const struct richace *);
++extern int richacl_masks_to_mode(const struct richacl *);
++extern unsigned int richacl_mode_to_mask(umode_t);
++extern unsigned int richacl_want_to_mask(unsigned int);
+ 
+ #endif /* __RICHACL_H */
 diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
-new file mode 100644
-index 0000000..08856f8
---- /dev/null
+index 08856f8..1ed48ac 100644
+--- a/include/uapi/linux/richacl.h
 +++ b/include/uapi/linux/richacl.h
-@@ -0,0 +1,99 @@
+@@ -96,4 +96,48 @@
+ 	RICHACE_WRITE_OWNER |					\
+ 	RICHACE_SYNCHRONIZE )
+ 
 +/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ * The POSIX permissions are supersets of the following richacl permissions:
 + *
-+ * This file is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Lesser General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2.1 of the License, or (at your option) any later version.
++ *  - MAY_READ maps to READ_DATA or LIST_DIRECTORY, depending on the type
++ *    of the file system object.
 + *
-+ * This file is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Lesser General Public License for more details.
++ *  - MAY_WRITE maps to WRITE_DATA or RICHACE_APPEND_DATA for files, and to
++ *    ADD_FILE, RICHACE_ADD_SUBDIRECTORY, or RICHACE_DELETE_CHILD for directories.
++ *
++ *  - MAY_EXECUTE maps to RICHACE_EXECUTE.
++ *
++ *  (Some of these richacl permissions have the same bit values.)
 + */
++#define RICHACE_POSIX_MODE_READ (			\
++		RICHACE_READ_DATA |			\
++		RICHACE_LIST_DIRECTORY)
++#define RICHACE_POSIX_MODE_WRITE (			\
++		RICHACE_WRITE_DATA |			\
++		RICHACE_ADD_FILE |			\
++		RICHACE_APPEND_DATA |			\
++		RICHACE_ADD_SUBDIRECTORY |		\
++		RICHACE_DELETE_CHILD)
++#define RICHACE_POSIX_MODE_EXEC RICHACE_EXECUTE
++#define RICHACE_POSIX_MODE_ALL (			\
++		RICHACE_POSIX_MODE_READ |		\
++		RICHACE_POSIX_MODE_WRITE |		\
++		RICHACE_POSIX_MODE_EXEC)
 +
-+#ifndef __UAPI_RICHACL_H
-+#define __UAPI_RICHACL_H
++/*
++ * These permissions are always allowed no matter what the acl says.
++ */
++#define RICHACE_POSIX_ALWAYS_ALLOWED (			\
++		RICHACE_SYNCHRONIZE |			\
++		RICHACE_READ_ATTRIBUTES |		\
++		RICHACE_READ_ACL)
 +
-+/* a_flags values */
-+#define RICHACL_WRITE_THROUGH			0x40
-+#define RICHACL_MASKED				0x80
++/*
++ * The owner is implicitly granted these permissions under POSIX.
++ */
++#define RICHACE_POSIX_OWNER_ALLOWED (			\
++		RICHACE_WRITE_ATTRIBUTES |		\
++		RICHACE_WRITE_OWNER |			\
++		RICHACE_WRITE_ACL)
 +
-+/* e_type values */
-+#define RICHACE_ACCESS_ALLOWED_ACE_TYPE		0x0000
-+#define RICHACE_ACCESS_DENIED_ACE_TYPE		0x0001
-+
-+/* e_flags bitflags */
-+#define RICHACE_FILE_INHERIT_ACE		0x0001
-+#define RICHACE_DIRECTORY_INHERIT_ACE		0x0002
-+#define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
-+#define RICHACE_INHERIT_ONLY_ACE		0x0008
-+#define RICHACE_IDENTIFIER_GROUP		0x0040
-+#define RICHACE_SPECIAL_WHO			0x4000
-+
-+/* e_mask bitflags */
-+#define RICHACE_READ_DATA			0x00000001
-+#define RICHACE_LIST_DIRECTORY			0x00000001
-+#define RICHACE_WRITE_DATA			0x00000002
-+#define RICHACE_ADD_FILE			0x00000002
-+#define RICHACE_APPEND_DATA			0x00000004
-+#define RICHACE_ADD_SUBDIRECTORY		0x00000004
-+#define RICHACE_READ_NAMED_ATTRS		0x00000008
-+#define RICHACE_WRITE_NAMED_ATTRS		0x00000010
-+#define RICHACE_EXECUTE				0x00000020
-+#define RICHACE_DELETE_CHILD			0x00000040
-+#define RICHACE_READ_ATTRIBUTES			0x00000080
-+#define RICHACE_WRITE_ATTRIBUTES		0x00000100
-+#define RICHACE_WRITE_RETENTION			0x00000200
-+#define RICHACE_WRITE_RETENTION_HOLD		0x00000400
-+#define RICHACE_DELETE				0x00010000
-+#define RICHACE_READ_ACL			0x00020000
-+#define RICHACE_WRITE_ACL			0x00040000
-+#define RICHACE_WRITE_OWNER			0x00080000
-+#define RICHACE_SYNCHRONIZE			0x00100000
-+
-+/* e_id values */
-+#define RICHACE_OWNER_SPECIAL_ID		0
-+#define RICHACE_GROUP_SPECIAL_ID		1
-+#define RICHACE_EVERYONE_SPECIAL_ID		2
-+
-+#define RICHACL_VALID_FLAGS (					\
-+	RICHACL_WRITE_THROUGH |					\
-+	RICHACL_MASKED )
-+
-+#define RICHACE_VALID_FLAGS (					\
-+	RICHACE_FILE_INHERIT_ACE |				\
-+	RICHACE_DIRECTORY_INHERIT_ACE |				\
-+	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
-+	RICHACE_INHERIT_ONLY_ACE |				\
-+	RICHACE_IDENTIFIER_GROUP |				\
-+	RICHACE_SPECIAL_WHO )
-+
-+#define RICHACE_INHERITANCE_FLAGS (				\
-+	RICHACE_FILE_INHERIT_ACE |				\
-+	RICHACE_DIRECTORY_INHERIT_ACE |				\
-+	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
-+	RICHACE_INHERIT_ONLY_ACE )
-+
-+/* Valid RICHACE_* flags for directories and non-directories */
-+#define RICHACE_VALID_MASK (					\
-+	RICHACE_READ_DATA | RICHACE_LIST_DIRECTORY |		\
-+	RICHACE_WRITE_DATA | RICHACE_ADD_FILE |			\
-+	RICHACE_APPEND_DATA | RICHACE_ADD_SUBDIRECTORY |	\
-+	RICHACE_READ_NAMED_ATTRS |				\
-+	RICHACE_WRITE_NAMED_ATTRS |				\
-+	RICHACE_EXECUTE |					\
-+	RICHACE_DELETE_CHILD |					\
-+	RICHACE_READ_ATTRIBUTES |				\
-+	RICHACE_WRITE_ATTRIBUTES |				\
-+	RICHACE_WRITE_RETENTION |				\
-+	RICHACE_WRITE_RETENTION_HOLD |				\
-+	RICHACE_DELETE |					\
-+	RICHACE_READ_ACL |					\
-+	RICHACE_WRITE_ACL |					\
-+	RICHACE_WRITE_OWNER |					\
-+	RICHACE_SYNCHRONIZE )
-+
-+#endif /* __UAPI_RICHACL_H */
+ #endif /* __UAPI_RICHACL_H */
 -- 
 2.5.5
 
