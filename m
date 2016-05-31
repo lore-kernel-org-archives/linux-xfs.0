@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DDCDE7CBD
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 16:54:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 643EEAC005
-	for <xfs@oss.sgi.com>; Fri,  6 May 2016 14:54:06 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id vyPSdSZGluoKqyEP for
-	<xfs@oss.sgi.com>; Fri, 06 May 2016 14:54:05 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [PATCH v5 1/5] dax: fallback from pmd to pte on error
-Date: Fri,  6 May 2016 15:53:07 -0600
-Message-Id: <1462571591-3361-2-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
-References: <1462571591-3361-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 9277B7CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 11:44:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3FB3AC002
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 09:44:39 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ojYO5NHF11pk0uLr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 09:44:37 -0700 (PDT)
+Date: Tue, 31 May 2016 09:43:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 8/7] xfs/122: don't break on old xfsprogs
+Message-ID: <20160531164352.GC5053@birch.djwong.org>
+References: <146424222237.6278.4174636124436241002.stgit@birch.djwong.org>
+	<20160527180231.GB5050@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160527180231.GB5050@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,43 +26,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org
-Cc: Jens Axboe <axboe@fb.com>, Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-block@vger.kernel.org, linux-mm@kvack.org, Jeff Moyer <jmoyer@redhat.com>, Boaz Harrosh <boaz@plexistor.com>, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: david@fromorbit.com
+Cc: hch@infradead.org, linux-btrfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dan Williams <dan.j.williams@intel.com>
+If we're running against a old version of xfsprogs that lacks some of
+the structures that the golden output knows about, copy the structure
+size definition from the golden output to the program output.  This
+way we can check for structure size mutations on old xfsprogs without
+generating false error reports for structs that don't exist in the
+old release.
 
-In preparation for consulting a badblocks list in pmem_direct_access(),
-teach dax_pmd_fault() to fallback rather than fail immediately upon
-encountering an error.  The thought being that reducing the span of the
-dax request may avoid the error region.
+v2: Remove the xfsprogs 2.9.8 compatibility cruft.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/dax.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ tests/xfs/122     |   17 ++++++-----------
+ tests/xfs/122.out |    1 +
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5a34f08..52f0044 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1111,8 +1111,8 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		long length = dax_map_atomic(bdev, &dax);
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index 845cdd2..330d3ac 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -73,6 +73,7 @@ _attribute_filter()
+ cprog=$tmp.get_structs.c
+ oprog=$tmp.get_structs
+ progout=$tmp.output
++keyfile=$tmp.keys
  
- 		if (length < 0) {
--			result = VM_FAULT_SIGBUS;
--			goto out;
-+			dax_pmd_dbg(&bh, address, "dax-error fallback");
-+			goto fallback;
- 		}
- 		if (length < PMD_SIZE) {
- 			dax_pmd_dbg(&bh, address, "dax-length too small");
--- 
-2.5.5
+ cat >$cprog <<EOF
+ #define _GNU_SOURCE
+@@ -226,18 +227,12 @@ cc -o $oprog $cprog >> $seqres.full 2>&1 || \
+   _notrun "Could not compile test program (see end of $seqres.full)"
+ $oprog | _type_size_filter | _type_name_filter > $progout
+ 
+-#
+-# add addition sizes and xfs_sb_t fields that don't exist in the version
+-# being tested.
+-#
++# Find all the items that only exist in the golden output
++comm -23 <(grep '=' $0.out | sed -e 's/ =.*$//g' | LC_COLLATE=POSIX sort) \
++	 <(sed -e 's/ =.*$//g' < $progout | LC_COLLATE=POSIX sort) > $keyfile
+ 
+-# xfsprogs 2.9.8: sb_bad_features2 in pv 978822
+-if [ $XFSPROGS_VERSION -lt 20908 ]; then
+-	echo 'offsetof(xfs_sb_t, sb_bad_features2 ) = 204' >>$progout
+-fi
+-if [ $XFSPROGS_VERSION -lt 30000 ]; then
+-	echo 'sizeof( xfs_dsb_t ) = 208' >>$progout;
+-fi
++# Copy those items to the program output
++grep -F -f $keyfile $0.out >> $progout
+ 
+ LC_COLLATE=POSIX sort $progout
+ 
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index 451871e..46d1dd4 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -147,3 +147,4 @@ sizeof(xfs_lookup_t) = 4
+ sizeof(xfs_qoff_logformat_t) = 20
+ sizeof(xfs_timestamp_t) = 8
+ sizeof(xfs_trans_header_t) = 16
++sizeof(xfs_zzzz_test_the_test_program) = -47
 
 _______________________________________________
 xfs mailing list
