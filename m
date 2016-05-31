@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A2337CA0
-	for <xfs@oss.sgi.com>; Tue, 24 May 2016 17:12:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AAB6CAC003
-	for <xfs@oss.sgi.com>; Tue, 24 May 2016 15:12:11 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	PYEcxWGi7qxamjSj for <xfs@oss.sgi.com>;
-	Tue, 24 May 2016 15:12:07 -0700 (PDT)
-Date: Wed, 25 May 2016 08:12:05 +1000
+	by oss.sgi.com (Postfix) with ESMTP id CF6AF7CA0
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 03:33:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 67ACFAC003
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 01:32:57 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	UWiWFOHuBMQWkhv3 for <xfs@oss.sgi.com>;
+	Tue, 31 May 2016 01:32:54 -0700 (PDT)
+Date: Tue, 31 May 2016 18:32:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: LVM snapshot and log record CRC mismatch
-Message-ID: <20160524221205.GM21200@dastard>
-References: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
+Subject: Re: [PATCH] xfs: fix broken multi-fsb buffer logging
+Message-ID: <20160531083252.GR26977@dastard>
+References: <1464204667-10199-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <ab81e19cd6fce41f9d63cdd3695c80f7@assyoma.it>
+In-Reply-To: <1464204667-10199-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +29,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gionatan Danti <g.danti@assyoma.it>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 24, 2016 at 02:58:51PM +0200, Gionatan Danti wrote:
-> Hi list,
-> I have a question about LVM snapshot and XFS.
-> 
-> Some preliminary information: CentOS Linux release 7.0.1406 (Core),
-> with kernel version 3.10.0-123.20.1.el7.x86_64
-> 
-> Basically, each time I mount a LVM snapshot (with the "nouuid"
-> option), I have the following dmesg entries:
-> 
-> [824501.391058] XFS (dm-7): Mounting Filesystem
-> [824502.085459] XFS (dm-7): Starting recovery (logdev: internal)
-> [824502.120435] XFS (dm-7): log record CRC mismatch: found
-> 0x324293f8, expected 0x43a1b3b5.
-> [824502.121035] ffffc90018271000: 00 00 00 10 00 00 00 00 69 01 00
-> 00 6d a0 9d a7  ........i...m...
-> [824502.121649] ffffc90018271010: 00 00 00 10 69 00 00 00 4e 41 52
-> 54 2a 00 00 00  ....i...NART*...
-> [824502.122403] XFS (dm-7): log record CRC mismatch: found
-> 0x873f6b2, expected 0x49045c16.
-....
-> 
-> From my understanding, this should be more or less the expected
-> behavior: the snapshot is a "crash consistent" backup point, and
-> mounting the snapshotted filesystem can led to mismatched CRC.
+On Wed, May 25, 2016 at 03:31:07PM -0400, Brian Foster wrote:
+> Multi-block buffers are logged based on buffer offset in
+> xfs_trans_log_buf(). xfs_buf_item_log() ultimately walks each mapping in
+> the buffer and marks the associated range to be logged in the
+> xfs_buf_log_format bitmap for that mapping. This code is broken,
+> however, [....]
 
-No, a snapshot should not have mismatched CRC errors in the log.
-However, log recovery should be seeing only an unmount record during
-recovery, so seeing multiple CRC errors indicates that the
-filesystem was not quiesced correctly when the snapshot was taken.
+[snip description I've not read, and go look at the code changes]
 
-How did you take the snapshot? (full command lines, please)
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 3425799..2e95ad0 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -359,7 +359,7 @@ xfs_buf_item_format(
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+>  					    &bip->bli_formats[i]);
+> -		offset += bp->b_maps[i].bm_len;
+> +		offset += BBTOB(bp->b_maps[i].bm_len);
+>  	}
 
-> Anyway, I can read from the snapshot without problems.
+Ok, that means the offset into the multi-fsb buffer is wrong for the
+second and subsequent chunks, resulting in copying the wrong range
+into the log vector. Offset should be in bytes, so this is a valid
+fix all by itself.
 
-Well, until you hit whatever was not replayed out of the log....
 
-> However, issuing a xfs_info on the original volume shows that crc
-> options is 0 (crc=0), so I am somewhat puzzled about the warning
-> above.
+>  
+>  	/*
+> @@ -915,20 +915,28 @@ xfs_buf_item_log(
+>  	for (i = 0; i < bip->bli_format_count; i++) {
+>  		if (start > last)
+>  			break;
+> -		end = start + BBTOB(bp->b_maps[i].bm_len);
+> +		end = start + BBTOB(bp->b_maps[i].bm_len) - 1;
 
-CRCs are now always enabled on the journal. The difference is that
-for crc=1 filesystems this is a fatal error and the fs won't mount,
-while for crc=0 it is simply a canary for developers when bugs are
-reported that something might have gone wrong in log recovery....
+Ok, buffer starts at offset 0, last byte in buffer is length - 1.
+Yup, there's an off-by-one there - end points to the offset of the
+first byte of the next buffer. This will screw up the range trimming
+done below. I think this is probably harmless as it doesn't impact
+the next iteration of the loop, but still good to get it right.
 
-> Moreover, on a more recent CentOS 7.2 server (kernel version
-> 3.10.0-327.13.1.el7.x86_64), I can not reproduce this warning.
-> 
-> So I ask:
-> 1) it really is the expected behavior, or should I be worried by the
-> dmesg entries?
+> +
+> +		/* skip to the map that includes the first byte to log */
+>  		if (first > end) {
+>  			start += BBTOB(bp->b_maps[i].bm_len);
+>  			continue;
+>  		}
+> +
+> +		/*
+> +		 * Trim the range to this segment and mark it in the bitmap.
+> +		 * Note that we must convert buffer offsets to segment relative
+> +		 * offsets (e.g., the first byte of each segment is byte 0 of
+> +		 * that segment).
+> +		 */
+>  		if (first < start)
+>  			first = start;
+>  		if (end > last)
+>  			end = last;
+> -
+> -		xfs_buf_item_log_segment(first, end,
+> +		xfs_buf_item_log_segment(first - start, end - start,
+>  					 &bip->bli_formats[i].blf_data_map[0]);
 
-Not expected. indicates a problem with the snapshot image.
+Ok so we pass offsets first and end as the range that needs to be
+logged in the segment, and start is the byte offset of the first
+byte of data in the current buffer segment.
 
-> 2) this is kernel-related
+/me looks at xfs_buf_item_log_segment()
 
-Maybe.
+It sets bits in the format item based on offsets passed in.
+That means if the start is non-zero (i.e. we're in the second
+buffer range) we'll set bits in the dirty mask that map to first/end
+rather than 0/buffer len.
 
-> should I update the kernel to newer version?
+/me looks at xfs_buf_item_size, follows blf_map_size to it's
+initialisation, sees that first/end bits will be beyond blf_map_size
+for second+ buffer range and so never seen by xfs_buf_item_size().
 
-Depends if it is kernel related...
+Hence subtracting start normalises the range being logged to 
+offsets within the buffer range, and so now xfs_buf_item_size (and
+hence xfs_buf_item_format) will see them correctly as dirty.
+
+Yes, that change looks correct.
+
+>  
+> -		start += bp->b_maps[i].bm_len;
+> +		start += BBTOB(bp->b_maps[i].bm_len);
+
+Yup, same as the first hunk in the patch.
+
+So from the code perspective the change looks correct. I've looked
+over all the other users of bp->b_maps[i].bm_len and loops over
+bli_format_count and I can't see any other obvious problems. I'm
+going to leave this under test overnight and see if anything pops
+up...
 
 Cheers,
 
