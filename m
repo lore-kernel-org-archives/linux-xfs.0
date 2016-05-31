@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E9AD17CC5
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 09:08:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B973F304032
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 07:08:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aPZOCZVC13rlgSrW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 30 May 2016 07:08:38 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id B5B63C049D5C
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 14:08:37 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-63.bos.redhat.com [10.18.41.63])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u4UE8bFC020049
-	for <xfs@oss.sgi.com>; Mon, 30 May 2016 10:08:37 -0400
-Date: Mon, 30 May 2016 10:08:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix broken multi-fsb buffer logging
-Message-ID: <20160530140836.GA18031@bfoster.bfoster>
-References: <1464204667-10199-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BCE837CA0
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 21:55:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51609AC001
+	for <xfs@oss.sgi.com>; Mon, 30 May 2016 19:55:16 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	VTii7sbBl8v2TIv8 for <xfs@oss.sgi.com>;
+	Mon, 30 May 2016 19:55:12 -0700 (PDT)
+Date: Tue, 31 May 2016 12:55:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: shrink_active_list/try_to_release_page bug? (was Re: xfs trace
+	in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage)
+Message-ID: <20160531025509.GA12670@dastard>
+References: <20160511155951.GF42410@bfoster.bfoster>
+	<5738576B.4010208@profihost.ag>
+	<20160515115017.GA6433@laptop.bfoster>
+	<57386E84.3090606@profihost.ag>
+	<20160516010602.GA24980@bfoster.bfoster>
+	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
+	<574BEA84.3010206@profihost.ag> <20160530223657.GP26977@dastard>
+	<20160531010724.GA9616@bbox>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1464204667-10199-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20160531010724.GA9616@bbox>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,123 +38,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Minchan Kim <minchan@kernel.org>
+Cc: linux-mm@kvack.org, Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, linux-kernel@vger.kernel.org, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-On Wed, May 25, 2016 at 03:31:07PM -0400, Brian Foster wrote:
-> Multi-block buffers are logged based on buffer offset in
-> xfs_trans_log_buf(). xfs_buf_item_log() ultimately walks each mapping in
-> the buffer and marks the associated range to be logged in the
-> xfs_buf_log_format bitmap for that mapping. This code is broken,
-> however, in that it marks the actual buffer offsets of the associated
-> range in each bitmap rather than shifting to the byte range for that
-> particular mapping.
+On Tue, May 31, 2016 at 10:07:24AM +0900, Minchan Kim wrote:
+> On Tue, May 31, 2016 at 08:36:57AM +1000, Dave Chinner wrote:
+> > [adding lkml and linux-mm to the cc list]
+> > 
+> > On Mon, May 30, 2016 at 09:23:48AM +0200, Stefan Priebe - Profihost AG wrote:
+> > > Hi Dave,
+> > >   Hi Brian,
+> > > 
+> > > below are the results with a vanilla 4.4.11 kernel.
+> > 
+> > Thanks for persisting with the testing, Stefan.
+> > 
+> > ....
+> > 
+> > > i've now used a vanilla 4.4.11 Kernel and the issue remains. After a
+> > > fresh reboot it has happened again on the root FS for a debian apt file:
+> > > 
+> > > XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x0 size 0x12b990
+> > > ------------[ cut here ]------------
+> > > WARNING: CPU: 1 PID: 111 at fs/xfs/xfs_aops.c:1239
+> > > xfs_vm_releasepage+0x10f/0x140()
+> > > Modules linked in: netconsole ipt_REJECT nf_reject_ipv4 xt_multiport
+> > > iptable_filter ip_tables x_tables bonding coretemp 8021q garp fuse
+> > > sb_edac edac_core i2c_i801 i40e(O) xhci_pci xhci_hcd shpchp vxlan
+> > > ip6_udp_tunnel udp_tunnel ipmi_si ipmi_msghandler button btrfs xor
+> > > raid6_pq dm_mod raid1 md_mod usbhid usb_storage ohci_hcd sg sd_mod
+> > > ehci_pci ehci_hcd usbcore usb_common igb ahci i2c_algo_bit libahci
+> > > i2c_core mpt3sas ptp pps_core raid_class scsi_transport_sas
+> > > CPU: 1 PID: 111 Comm: kswapd0 Tainted: G           O    4.4.11 #1
+> > > Hardware name: Supermicro Super Server/X10SRH-CF, BIOS 1.0b 05/18/2015
+> > >  0000000000000000 ffff880c4dacfa88 ffffffffa23c5b8f 0000000000000000
+> > >  ffffffffa2a51ab4 ffff880c4dacfac8 ffffffffa20837a7 ffff880c4dacfae8
+> > >  0000000000000001 ffffea00010c3640 ffff8802176b49d0 ffffea00010c3660
+> > > Call Trace:
+> > >  [<ffffffffa23c5b8f>] dump_stack+0x63/0x84
+> > >  [<ffffffffa20837a7>] warn_slowpath_common+0x97/0xe0
+> > >  [<ffffffffa208380a>] warn_slowpath_null+0x1a/0x20
+> > >  [<ffffffffa2326caf>] xfs_vm_releasepage+0x10f/0x140
+> > >  [<ffffffffa218c680>] ? page_mkclean_one+0xd0/0xd0
+> > >  [<ffffffffa218d3a0>] ? anon_vma_prepare+0x150/0x150
+> > >  [<ffffffffa21521c2>] try_to_release_page+0x32/0x50
+> > >  [<ffffffffa2166b2e>] shrink_active_list+0x3ce/0x3e0
+> > >  [<ffffffffa21671c7>] shrink_lruvec+0x687/0x7d0
+> > >  [<ffffffffa21673ec>] shrink_zone+0xdc/0x2c0
+> > >  [<ffffffffa2168539>] kswapd+0x4f9/0x970
+> > >  [<ffffffffa2168040>] ? mem_cgroup_shrink_node_zone+0x1a0/0x1a0
+> > >  [<ffffffffa20a0d99>] kthread+0xc9/0xe0
+> > >  [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+> > >  [<ffffffffa26b404f>] ret_from_fork+0x3f/0x70
+> > >  [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+> > > ---[ end trace c9d679f8ed4d7610 ]---
+> > > XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x1000 size
+> > > 0x12b990
+> > > XFS (md127p3): ino 0x41221d1 delalloc 1 unwritten 0 pgoff 0x2000 size
+> > .....
+> > 
+> > Ok, I suspect this may be a VM bug. I've been looking at the 4.6
+> > code (so please try to reproduce on that kernel!) but it looks to me
+> > like the only way we can get from shrink_active_list() direct to
+> > try_to_release_page() is if we are over the maximum bufferhead
+> > threshold (i.e buffer_heads_over_limit = true) and we are trying to
+> > reclaim pages direct from the active list.
+> > 
+> > Because we are called from kswapd()->balance_pgdat(), we have:
+> > 
+> >         struct scan_control sc = {
+> >                 .gfp_mask = GFP_KERNEL,
+> >                 .order = order,
+> >                 .priority = DEF_PRIORITY,
+> >                 .may_writepage = !laptop_mode,
+> >                 .may_unmap = 1,
+> >                 .may_swap = 1,
+> >         };
+> > 
+> > The key point here is reclaim is being run with .may_writepage =
+> > true for default configuration kernels. when we get to
+> > shrink_active_list():
+> > 
+> > 	if (!sc->may_writepage)
+> > 		isolate_mode |= ISOLATE_CLEAN;
+> > 
+> > But sc->may_writepage = true and this allows isolate_lru_pages() to
+> > isolate dirty pages from the active list. Normally this isn't a
+> > problem, because the isolated active list pages are rotated to the
+> > inactive list, and nothing else happens to them. *Except when
+> > buffer_heads_over_limit = true*. This special condition would
+> > explain why I have never seen apt/dpkg cause this problem on any of
+> > my (many) Debian systems that all use XFS....
+> > 
+> > In that case, shrink_active_list() runs:
+> > 
+> > 	if (unlikely(buffer_heads_over_limit)) {
+> > 		if (page_has_private(page) && trylock_page(page)) {
+> > 			if (page_has_private(page))
+> > 				try_to_release_page(page, 0);
+> > 			unlock_page(page);
+> > 		}
+> > 	}
+> > 
+> > i.e. it locks the page, and if it has buffer heads it trys to get
+> > the bufferheads freed from the page.
+> > 
+> > But this is a dirty page, which means it may have delalloc or
+> > unwritten state on it's buffers, both of which indicate that there
+> > is dirty data in teh page that hasn't been written. XFS issues a
+> > warning on this because neither shrink_active_list nor
+> > try_to_release_page() check for whether the page is dirty or not.
+> > 
+> > Hence it seems to me that shrink_active_list() is calling
+> > try_to_release_page() inappropriately, and XFS is just the
+> > messenger. If you turn laptop mode on, it is likely the problem will
+> > go away as kswapd will run with .may_writepage = false, but that
+> > will also cause other behavioural changes relating to writeback and
+> > memory reclaim. It might be worth trying as a workaround for now.
+> > 
+> > MM-folk - is this analysis correct? If so, why is
+> > shrink_active_list() calling try_to_release_page() on dirty pages?
+> > Is this just an oversight or is there some problem that this is
+> > trying to work around? It seems trivial to fix to me (add a
+> > !PageDirty check), but I don't know why the check is there in the
+> > first place...
 > 
-> For example, on a 4k fsb fs, buffer offset 4096 refers to the first byte
-> of the second mapping in the buffer. This means byte 0 of the second log
-> format bitmap should be tagged as dirty. Instead, the current code marks
-> byte offset 4096 of the second log format bitmap, which is invalid and
-> potentially out of range of the mapping.
-> 
-> As a result of this, the log item format code invoked at transaction
-> commit time is not be able to correctly identify what parts of the
-> buffer to copy into log vectors. This can lead to NULL log vector
-> pointer dereferences in CIL push context if the item format code was not
-> able to locate any dirty ranges at all. This crash has been reproduced
-> on a 4k FSB filesystem using 16k directory blocks where an unlink
-> operation happened not to log anything in the first block of the
-> mapping. The logged offsets were all over 4k, marked as such in the
-> subsequent log format mappings, and thus left the transaction with an
-> xfs_log_item that is marked DIRTY but without any logged regions.
-> 
-> Further, even when the logged regions are marked correctly in the buffer
-> log format bitmaps, the format code doesn't copy the correct ranges of
-> the buffer into the log. This means that any logged region beyond the
-> first block of a multi-block buffer is subject to corruption after a
-> crash and log recovery sequence. This is due to a failure to convert the
-> mapping bm_len field from basic blocks to bytes in the buffer offset
-> tracking code in xfs_buf_item_format().
-> 
-> Update xfs_buf_item_log() to convert buffer offsets to segment relative
-> offsets when logging multi-block buffers. This ensures that the modified
-> regions of a buffer are logged correctly and avoids the aforementioned
-> crash. Also update xfs_buf_item_format() to correctly track the source
-> offset into the buffer for the log vector formatting code. This ensures
-> that the correct data is copied into the log.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Note that this has only been tested so far in a particular filesystem
-> environment that reproduces the crash/corruption discussed in the commit
-> log description. Generic testing still required, posting just to get a
-> jump on review...
-> 
+> It seems to be latter.
+> Below commit seems to be related.
+> [ecdfc9787fe527, Resurrect 'try_to_free_buffers()' VM hackery.]
 
-This has passed my tests without any obvious problems or regressions.
-Any other thoughts/comments or reviews? I'd like to get a backport going
-for this, but can't do so until there is at least some kind of
-acknowledgement this is acceptable.
+Okay, that's been there a long, long time (2007), and it covers a
+case where the filesystem cleans pages without the VM knowing about
+it (i.e. it marks bufferheads clean without clearing the PageDirty
+state).
 
-Brian
+That does not explain the code in shrink_active_list().
 
-> Brian
-> 
->  fs/xfs/xfs_buf_item.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 3425799..2e95ad0 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -359,7 +359,7 @@ xfs_buf_item_format(
->  	for (i = 0; i < bip->bli_format_count; i++) {
->  		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
->  					    &bip->bli_formats[i]);
-> -		offset += bp->b_maps[i].bm_len;
-> +		offset += BBTOB(bp->b_maps[i].bm_len);
->  	}
->  
->  	/*
-> @@ -915,20 +915,28 @@ xfs_buf_item_log(
->  	for (i = 0; i < bip->bli_format_count; i++) {
->  		if (start > last)
->  			break;
-> -		end = start + BBTOB(bp->b_maps[i].bm_len);
-> +		end = start + BBTOB(bp->b_maps[i].bm_len) - 1;
-> +
-> +		/* skip to the map that includes the first byte to log */
->  		if (first > end) {
->  			start += BBTOB(bp->b_maps[i].bm_len);
->  			continue;
->  		}
-> +
-> +		/*
-> +		 * Trim the range to this segment and mark it in the bitmap.
-> +		 * Note that we must convert buffer offsets to segment relative
-> +		 * offsets (e.g., the first byte of each segment is byte 0 of
-> +		 * that segment).
-> +		 */
->  		if (first < start)
->  			first = start;
->  		if (end > last)
->  			end = last;
-> -
-> -		xfs_buf_item_log_segment(first, end,
-> +		xfs_buf_item_log_segment(first - start, end - start,
->  					 &bip->bli_formats[i].blf_data_map[0]);
->  
-> -		start += bp->b_maps[i].bm_len;
-> +		start += BBTOB(bp->b_maps[i].bm_len);
->  	}
->  }
->  
-> -- 
-> 2.4.11
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> At that time, even shrink_page_list works like this.
+
+The current code in shrink_page_list still works this way - the
+PageDirty code will *jump over the PagePrivate case* if the page is
+to remain dirty or pageout() fails to make it clean.  Hence it never
+gets to try_to_release_page() on a dirty page.
+
+Seems like this really needs a dirty check in shrink_active_list()
+and to leave the stripping of bufferheads from dirty pages in the
+ext3 corner case to shrink_inactive_list() once the dirty pages have
+been rotated off the active list...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
