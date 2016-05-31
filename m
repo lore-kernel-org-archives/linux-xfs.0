@@ -1,30 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C4EF17CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 12:35:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F302AC003
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 10:35:38 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id s5BBkedCpcElajcB for <xfs@oss.sgi.com>;
-	Tue, 31 May 2016 10:35:36 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id B202C2B18
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 12:35:35 -0500 (CDT)
-Subject: Re: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback
-	path
-References: <1458128681-10869-1-git-send-email-hch@lst.de>
-	<1458128681-10869-4-git-send-email-hch@lst.de>
-	<b8d49db2-131d-0735-c803-adec326f43bb@sandeen.net>
-	<20160531163118.GA7016@infradead.org>
-	<066e4a87-42f9-2c3c-3ab2-f9be58af8b97@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fe4d6255-69e1-5ed4-3fb5-67c549154d65@sandeen.net>
-Date: Tue, 31 May 2016 12:35:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <066e4a87-42f9-2c3c-3ab2-f9be58af8b97@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id D7CE47CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 14:33:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5317BAC001
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 12:33:02 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id K8q22CVStMBy4viz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 12:32:59 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH, reflink] xfs: fix logging of AGF refcount btree fields
+Date: Tue, 31 May 2016 21:32:55 +0200
+Message-Id: <1464723175-2164-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,21 +21,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: darrick.wong@oracle.com
+Cc: xfs@oss.sgi.com
 
-On 5/31/16 11:44 AM, Eric Sandeen wrote:
+These fields are separate from the existing roots and levels array
+and thus need a separate logging flag.
 
-> Hrmph, I guess I have misunderstood what's going on.  :/  Sorry.
+That being said the API to logs the AGI/AGF is a bit of a nightmare,
+and I have an idea how to improve it.  Stay tuned..
 
-I wasn't aware of the whole bioset front_pad stuff.  Tricky and
-clever and horrible all at the same time IMHO.  ;)  Makes sense
-now.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_alloc.c          | 4 ++++
+ fs/xfs/libxfs/xfs_format.h         | 5 ++++-
+ fs/xfs/libxfs/xfs_refcount_btree.c | 3 ++-
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
--Eric
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 6cbca1b..e6e32c2 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2327,6 +2327,10 @@ xfs_alloc_log_agf(
+ 		offsetof(xfs_agf_t, agf_longest),
+ 		offsetof(xfs_agf_t, agf_btreeblks),
+ 		offsetof(xfs_agf_t, agf_uuid),
++		offsetof(xfs_agf_t, agf_refcount_root),
++		offsetof(xfs_agf_t, agf_refcount_level),
++		/* needed so that we don't log the whole rest of the structure: */
++		offsetof(xfs_agf_t, agf_spare64),
+ 		sizeof(xfs_agf_t)
+ 	};
+ 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index e00037c..5cc0b8c 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -681,7 +681,10 @@ typedef struct xfs_agf {
+ #define	XFS_AGF_LONGEST		0x00000400
+ #define	XFS_AGF_BTREEBLKS	0x00000800
+ #define	XFS_AGF_UUID		0x00001000
+-#define	XFS_AGF_NUM_BITS	13
++#define	XFS_AGF_REFCOUNT_ROOT	0x00002000
++#define	XFS_AGF_REFCOUNT_LEVEL	0x00004000
++#define	XFS_AGF_SPARE64		0x00008000
++#define	XFS_AGF_NUM_BITS	16
+ #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
+ 
+ #define XFS_AGF_FLAGS \
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 3391cbd..303f959 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -61,7 +61,8 @@ xfs_refcountbt_set_root(
+ 	pag->pagf_refcount_level += inc;
+ 	xfs_perag_put(pag);
+ 
+-	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
++	xfs_alloc_log_agf(cur->bc_tp, agbp,
++			XFS_AGF_REFCOUNT_ROOT | XFS_AGF_REFCOUNT_LEVEL);
+ }
+ 
+ STATIC int
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
