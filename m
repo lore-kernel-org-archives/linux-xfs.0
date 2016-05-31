@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5B2D7CB8
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 05:51:13 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 063867CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 15:15:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 659828F8037
-	for <xfs@oss.sgi.com>; Sun, 29 May 2016 03:51:13 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
-	cuda.sgi.com with ESMTP id hfojyt79l5amujJ8 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 29 May 2016 03:51:08 -0700 (PDT)
-Subject: Bug#822369: fixed in qemu 1:2.6+dfsg-1
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.822369.B822369.146451895122270@bugs.debian.org>
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-From: James Clarke <jrtc27@jrtc27.com>
-Date: Sun, 29 May 2016 11:48:57 +0100
-Message-Id: <EF224558-AF7E-4737-8B5B-E535D63DE335@jrtc27.com>
-References: <573DCFAA.8000500@physik.fu-berlin.de>
-	<573DD225.5040502@msgid.tls.msk.ru>
-	<573DD3CC.6040608@physik.fu-berlin.de>
-	<573DD6AF.5020608@msgid.tls.msk.ru>
-Reply-To: James Clarke <jrtc27@jrtc27.com>, 822369@bugs.debian.org
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BB154304059
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 13:15:08 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id B3vqWxGdJ0kJ5LMd (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 13:15:06 -0700 (PDT)
+Date: Tue, 31 May 2016 13:14:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH, reflink] xfs: fix logging of AGF refcount btree fields
+Message-ID: <20160531201459.GD5053@birch.djwong.org>
+References: <1464723175-2164-1-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1464723175-2164-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +25,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0677890552914828060=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: 822369@bugs.debian.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
+On Tue, May 31, 2016 at 09:32:55PM +0200, Christoph Hellwig wrote:
+> These fields are separate from the existing roots and levels array
+> and thus need a separate logging flag.
+> 
+> That being said the API to logs the AGI/AGF is a bit of a nightmare,
+> and I have an idea how to improve it.  Stay tuned..
 
---===============0677890552914828060==
-Content-Type: multipart/signed; boundary="Apple-Mail=_A79FCB1A-BC31-4534-96B5-E0403D0211F4"; protocol="application/pgp-signature"; micalg=pgp-sha512
+Looks good, tests great!,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+(Will keep ears open.)
 
---Apple-Mail=_A79FCB1A-BC31-4534-96B5-E0403D0211F4
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
+--D
 
-Control: affects -1 - src:qemu
-
-On Thu, 19 May 2016 18:07:27 +0300 Michael Tokarev <mjt@tls.msk.ru> wrote:
-> Control: affects -1 - qemu
-> Control:
-
-That should have been src:qemu; fixed above :)
-
-Regards,
-James
-
-
---Apple-Mail=_A79FCB1A-BC31-4534-96B5-E0403D0211F4
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCgAGBQJXSskdAAoJELGTdwwYahx9uzoP/ArmUpIEvGKbgp/oJjRCXipv
-7/A3KADkzt8BsAXpziDuyLl8H7Lfq1kykR6JuRBEZzWyzFXbVw5EFl9tb60lmoH5
-CidR4bBuTdoI/fntY8NeCSocYIXosTWcuipS67G6vkqyWuxWckufjEbeJP1DWOpH
-UurKT+2MpC8iueGKj5w0q9S9PMtfsujLjOIGk5EBMwgY9lUImswAj9OqIjKiEXZd
-aqA7BDuILrCp08uYD9ALygu/iYWbbw4scTpq0DP/UZqS30Gdm/8DqsjFUZEkA4WB
-9k9XCHu5flDjUn58QTCxQuBrU54jG/l9GbtcP9UPP2mqvO96SzkImKvKhyeVOe7/
-IH7xcAqWpSU1mp2163XcptrOUfJIcQxfHerJfV8BN8gYy7hvardNSfMN0xD1mkud
-hqyVHRQG4eqaU21Q1Z02lPJRaWosMK7XLaL5VNsrbOZ/rwR3lgFjwAbRWvb+wIoP
-fxIzss5ITUiU2Mc46fuTlahpukqK141gCyMvziEADHDU/3Kz7rahBzcVenIoIXEd
-JZgd+naBbS21JIIhKQIYDwteeyKaPwayxgLgXo8000/bhGGppiR6AXmEz8XFCSZT
-Qr2KT71viETvWlMVXUfnxWAD+KqXZrM1hoZaTz9iIHaEu9XY9mVgAFQ8HxEdj0GC
-8SGLOswXM3HkhH1sKVJO
-=M2tZ
------END PGP SIGNATURE-----
-
---Apple-Mail=_A79FCB1A-BC31-4534-96B5-E0403D0211F4--
-
-
---===============0677890552914828060==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c          | 4 ++++
+>  fs/xfs/libxfs/xfs_format.h         | 5 ++++-
+>  fs/xfs/libxfs/xfs_refcount_btree.c | 3 ++-
+>  3 files changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 6cbca1b..e6e32c2 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2327,6 +2327,10 @@ xfs_alloc_log_agf(
+>  		offsetof(xfs_agf_t, agf_longest),
+>  		offsetof(xfs_agf_t, agf_btreeblks),
+>  		offsetof(xfs_agf_t, agf_uuid),
+> +		offsetof(xfs_agf_t, agf_refcount_root),
+> +		offsetof(xfs_agf_t, agf_refcount_level),
+> +		/* needed so that we don't log the whole rest of the structure: */
+> +		offsetof(xfs_agf_t, agf_spare64),
+>  		sizeof(xfs_agf_t)
+>  	};
+>  
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index e00037c..5cc0b8c 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -681,7 +681,10 @@ typedef struct xfs_agf {
+>  #define	XFS_AGF_LONGEST		0x00000400
+>  #define	XFS_AGF_BTREEBLKS	0x00000800
+>  #define	XFS_AGF_UUID		0x00001000
+> -#define	XFS_AGF_NUM_BITS	13
+> +#define	XFS_AGF_REFCOUNT_ROOT	0x00002000
+> +#define	XFS_AGF_REFCOUNT_LEVEL	0x00004000
+> +#define	XFS_AGF_SPARE64		0x00008000
+> +#define	XFS_AGF_NUM_BITS	16
+>  #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
+>  
+>  #define XFS_AGF_FLAGS \
+> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> index 3391cbd..303f959 100644
+> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> @@ -61,7 +61,8 @@ xfs_refcountbt_set_root(
+>  	pag->pagf_refcount_level += inc;
+>  	xfs_perag_put(pag);
+>  
+> -	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
+> +	xfs_alloc_log_agf(cur->bc_tp, agbp,
+> +			XFS_AGF_REFCOUNT_ROOT | XFS_AGF_REFCOUNT_LEVEL);
+>  }
+>  
+>  STATIC int
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0677890552914828060==--
