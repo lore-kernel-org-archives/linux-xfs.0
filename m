@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 063867CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 15:15:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BB154304059
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 13:15:08 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id B3vqWxGdJ0kJ5LMd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 13:15:06 -0700 (PDT)
-Date: Tue, 31 May 2016 13:14:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH, reflink] xfs: fix logging of AGF refcount btree fields
-Message-ID: <20160531201459.GD5053@birch.djwong.org>
-References: <1464723175-2164-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 083537CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 08:57:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CD5A7304048
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 06:57:52 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id BWBT1AqGfLRott20 for <xfs@oss.sgi.com>;
+	Tue, 31 May 2016 06:57:46 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 8E4942B18
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 08:57:45 -0500 (CDT)
+Subject: Re: Cumulative xfsrestore shows many warnings and files/directories
+	are missing after restoration
+References: <8323ac3a-f9d2-ad31-69e3-1eea5a44dcde@recia.fr>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <87a11f69-1a10-89e2-598f-015f0205a55a@sandeen.net>
+Date: Tue, 31 May 2016 08:57:45 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1464723175-2164-1-git-send-email-hch@lst.de>
+In-Reply-To: <8323ac3a-f9d2-ad31-69e3-1eea5a44dcde@recia.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,87 +29,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, May 31, 2016 at 09:32:55PM +0200, Christoph Hellwig wrote:
-> These fields are separate from the existing roots and levels array
-> and thus need a separate logging flag.
-> 
-> That being said the API to logs the AGI/AGF is a bit of a nightmare,
-> and I have an idea how to improve it.  Stay tuned..
+On 5/31/16 5:55 AM, Damien Gombault wrote:
+> Hi.
+> =
 
-Looks good, tests great!,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> I use xfsdump to backup my systems.
+> Recently I had to use xfsrestore to restore a cumulative level 0 + level =
+1 dumps.
+> =
 
-(Will keep ears open.)
 
---D
+...
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c          | 4 ++++
->  fs/xfs/libxfs/xfs_format.h         | 5 ++++-
->  fs/xfs/libxfs/xfs_refcount_btree.c | 3 ++-
->  3 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 6cbca1b..e6e32c2 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2327,6 +2327,10 @@ xfs_alloc_log_agf(
->  		offsetof(xfs_agf_t, agf_longest),
->  		offsetof(xfs_agf_t, agf_btreeblks),
->  		offsetof(xfs_agf_t, agf_uuid),
-> +		offsetof(xfs_agf_t, agf_refcount_root),
-> +		offsetof(xfs_agf_t, agf_refcount_level),
-> +		/* needed so that we don't log the whole rest of the structure: */
-> +		offsetof(xfs_agf_t, agf_spare64),
->  		sizeof(xfs_agf_t)
->  	};
->  
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index e00037c..5cc0b8c 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -681,7 +681,10 @@ typedef struct xfs_agf {
->  #define	XFS_AGF_LONGEST		0x00000400
->  #define	XFS_AGF_BTREEBLKS	0x00000800
->  #define	XFS_AGF_UUID		0x00001000
-> -#define	XFS_AGF_NUM_BITS	13
-> +#define	XFS_AGF_REFCOUNT_ROOT	0x00002000
-> +#define	XFS_AGF_REFCOUNT_LEVEL	0x00004000
-> +#define	XFS_AGF_SPARE64		0x00008000
-> +#define	XFS_AGF_NUM_BITS	16
->  #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
->  
->  #define XFS_AGF_FLAGS \
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-> index 3391cbd..303f959 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-> @@ -61,7 +61,8 @@ xfs_refcountbt_set_root(
->  	pag->pagf_refcount_level += inc;
->  	xfs_perag_put(pag);
->  
-> -	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_ROOTS | XFS_AGF_LEVELS);
-> +	xfs_alloc_log_agf(cur->bc_tp, agbp,
-> +			XFS_AGF_REFCOUNT_ROOT | XFS_AGF_REFCOUNT_LEVEL);
->  }
->  
->  STATIC int
-> -- 
-> 2.1.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> The level 1 restore shows many warnings :
+> xfsrestore: drive 0: examining media file 0
+> xfsrestore: drive 1: searching media for directory dump
+> xfsrestore: drive 1: reading directories
+> xfsrestore: drive 1: 11013 directories and 96122 entries processed
+> xfsrestore: drive 1: directory post-processing
+> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1677721775.4=
+173752252 to dir var/www/html/owncloud/data/F1000buv/files/Dossier personne=
+l et source de partage/E-Administration/08 S=E9curit=E9/08c Gestion des mot=
+s de passe - Keepass: Aucun fichier ou dossier de ce type
+> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1711276202.4=
+274102453 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier=
+ personnel et source de partage/E-Administration/02 Mise en oeuvre sOl=E6re=
+: Aucun fichier ou dossier de ce type
+> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1694499004.2=
+655526171 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier=
+ personnel et source de partage/E-Administration/07 Communication: Aucun fi=
+chier ou dossier de ce type
+> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/2365644069.2=
+895542759 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier=
+ personnel et source de partage/E-Administration/08 S=E9curit=E9/08c Gestio=
+n des mots de passe - Keepass: Aucun fichier ou dossier de ce type
+> xfsrestore: drive 1: WARNING: unable to rename nondir orphanage/290247433=
+8.2817943331 to var/www/html/owncloud/data/F1000buv/files/Dossier personnel=
+ et source de partage/E-Administration/09 Questionnaires communes sol=E6re/=
+Dossiers des collectivit=E9s/37003 - Amboise/02-Compte rendu de r=E9unions/=
+Compte rendu r=E9union 3 mai 2016.odt: Aucun fichier ou dossier de ce type
+
+Restating what I said in the bug you also filed:
+
+In general, it would helpful to provide the error messages after setting LA=
+NG=3Den_US - because your English is far better than my French.  :)
+
+A couple questions:
+
+> Some folders are not restored at the right place.
+
+What does that mean?  Were they restored to the wrong place, or were they n=
+ot restored at all?
+
+Also, the "Aucun fichier ou dossier de ce type" errors indicate that files =
+could not be moved into a directory hierarchy, presumably because some path=
+ component did not exist.
+
+The common portions of those paths which failed are:
+
+> var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de =
+partage/E-Administration/
+
+and
+
+> var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et s=
+ource de partage/E-Administration
+
+Do those paths still exist on the original filesystem?  Is it possible that=
+ they were removed while the dump was occurring?
+
+It seems most likely that the filesystem changed significantly during the d=
+ump processes, and this is what led to the errors.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
