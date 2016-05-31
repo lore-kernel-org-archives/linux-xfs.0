@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ACAB57CA2
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 11:31:22 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 195CF7CCD
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 07:14:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38E79AC003
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 09:31:22 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id rzYoL7dqysFkISMm (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 09:31:19 -0700 (PDT)
-Date: Tue, 31 May 2016 09:31:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfs: optimize bio handling in the buffer writeback
-	path
-Message-ID: <20160531163118.GA7016@infradead.org>
-References: <1458128681-10869-1-git-send-email-hch@lst.de>
-	<1458128681-10869-4-git-send-email-hch@lst.de>
-	<b8d49db2-131d-0735-c803-adec326f43bb@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E00A0304048
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 05:14:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UH5RGwGY8NOcFMPI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 05:14:07 -0700 (PDT)
+Date: Tue, 31 May 2016 14:14:02 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+Message-ID: <20160531121402.GA15274@redhat.com>
+References: <AD1240BA-DB24-44F2-893D-28A824063F99@gmail.com>
+	<20160530050452.GM26977@dastard>
+	<9BD371B3-8A44-481C-B9E4-381BAE0B6B79@gmail.com>
+	<CAGbZs7i66XWt3PF1_-L-WeBtdH80nfAOv+-Ary+ORKHxFGOLFg@mail.gmail.com>
+	<20160531031010.GB12670@dastard>
+	<CAGbZs7g9nfDFXKkhW-pgiVu1quRQDwMYxeAtLoky+xFcfx7WmQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <b8d49db2-131d-0735-c803-adec326f43bb@sandeen.net>
+In-Reply-To: <CAGbZs7g9nfDFXKkhW-pgiVu1quRQDwMYxeAtLoky+xFcfx7WmQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +30,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: baotiao@gmail.com
 
-On Tue, May 31, 2016 at 10:35:01AM -0500, Eric Sandeen wrote:
-> Coverity thinks this is problematic, calling it a
-> "Free of address-of expression (BAD_FREE)"
-> 
-> CID 1362192
-> 
-> The issue is that if bio still == io_inline_bio, we are freeing
-> memory which was not allocated.
-
-No, we free the ioend into which the bio is embedded.  Take a look
-at the allocation side in xfs_alloc_ioend:
-
-	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, xfs_ioend_bioset);
-
-	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
-
-
-> Maybe this needs a:
-> 
-> if (bio != &ioend->io_inline_bio)
-> 	bio_put(bio);
-
-That would leak every ioend used.
-
-> or is there a better way?
-
-We just need to shut up the checker..
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBNYXkgMzEsIDIwMTYgYXQgMDc6MDA6MjJQTSArMDgwMCwg6ZmI5a6X5b+XIHdyb3Rl
+Ogo+ICAgIGNhbiB3ZSBjaGFuZ2UgdGhlIGV4aXN0aW5nIGZpbGUncyBleHRlbnQgc2l6ZT8KPiAK
+Tm8sIHlvdSBjYW4gb25seSBzZXQgZXh0ZW50IGhpbnQgc2l6ZSBmb3IgZW1wdHkgZmlsZXMsIG9y
+LCBtb3JlIHByZWNpc2VseSBmb3IKZmlsZXMgd2hvc2UgZG9lcyBub3QgaGF2ZSBhbGxvY2F0ZWQg
+ZXh0ZW50cwoKPiAgICBPbiBUdWUsIE1heSAzMSwgMjAxNiBhdCAxMToxMCBBTSwgRGF2ZSBDaGlu
+bmVyIDxbMV1kYXZpZEBmcm9tb3JiaXQuY29tPgo+ICAgIHdyb3RlOgo+IAo+ICAgICAgT24gVHVl
+LCBNYXkgMzEsIDIwMTYgYXQgMTA6NDM6MzZBTSArMDgwMCwg6ZmI5a6X5b+XIHdyb3RlOgo+ICAg
+ICAgPiBJIGhhdmUgZmludCB0aGUgd2F5IHRvIGNoYW5nZSB0aGUgZXh0ZW50IHNpemUgaGludAo+
+ICAgICAgPiBta2ZzLnhmcyAtciBleHRzaXplPTQwOTYwIC9kZXYvc2RhMQo+ICAgICAgQWgsIG5v
+LCB0aGF0IGlzbid0IHRoZSBleHRzaXplIEknbSByZWZlcmluZyB0by4gVGhhdCdzIGZvciByZWFs
+dGltZQo+ICAgICAgZGV2aWNlIGNvbmZpZ3VyYXRpb24gYXQgbWtmcywgbm90IGEgcGVyLWlub2Rl
+IGV4dGVudCBzaXplIGhpbnQuCj4gICAgICBXaGVuIHlvdSBjcmVhdGUgdGhlIGltYWdlIGZpbGUg
+ZG8gdGhpczoKPiAgICAgICQgeGZzX2lvIC1mIC1jICJleHRzaXplIDFtIiAvcGF0aC90by9uZXcv
+dm1faW1hZ2UKPiAgICAgICQgcWVtdS1pbWFnZSBjcmVhdGUgLWYgcWNvdzIgL3BhdGgvdG8vbmV3
+L3ZtX2ltYWdlIDEwZwo+ICAgICAgJCB4ZnNfaW8gLWMgZXh0c2l6ZSAvcGF0aC90by9uZXcvdm1f
+aW1hZ2UKPiAgICAgIFsxMDQ4NTc2XSAvcGF0aC90by9uZXcvdm1faW1hZ2UKPiAgICAgICQKPiAg
+ICAgIEFuZCBub3cgdGhlIHFjb3cyIGltYWdlIGZpbGUgd2lsbCBoYXZlIGV4dGVudHMgYWxsb2Nh
+dGVkIGluCj4gICAgICBtdWx0aXBsZXMgb2YgMU1CLgo+IAo+ICAgIENoZWVycywKPiAgICBEYXZl
+Lgo+ICAgIC0tCj4gICAgRGF2ZSBDaGlubmVyCj4gICAgWzJdZGF2aWRAZnJvbW9yYml0LmNvbQo+
+IAo+ICAgIC0tCj4gICAgLS0tCj4gICAgQmxvZzogWzNdaHR0cDovL3d3dy5jaGVuem9uZ3poaS5p
+bmZvCj4gICAgVHdpdHRlcjogWzRdaHR0cHM6Ly90d2l0dGVyLmNvbS9iYW90aWFvCj4gICAgR2l0
+OiBbNV1odHRwczovL2dpdGh1Yi5jb20vYmFvdGlhbwo+IAo+IFJlZmVyZW5jZXMKPiAKPiAgICAx
+LiBtYWlsdG86ZGF2aWRAZnJvbW9yYml0LmNvbQo+ICAgIDIuIG1haWx0bzpkYXZpZEBmcm9tb3Ji
+aXQuY29tCj4gICAgMy4gaHR0cDovL3d3dy5jaGVuem9uZ3poaS5pbmZvLwo+ICAgIDQuIGh0dHBz
+Oi8vdHdpdHRlci5jb20vIyEvYmFvdGlhbwo+ICAgIDUuIGh0dHBzOi8vZ2l0aHViLmNvbS9iYW90
+aWFvCgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4g
+eGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwoKCi0tIApDYXJsb3MKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
