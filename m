@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0D0977CA4
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 783BBAC006
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 965C77CA4
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 57828304071
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:24 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id mqEzU4VaPH6DCvEo (version=TLSv1.2
+	ESMTP id S0GbjwtCs7pLq1F3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:04 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:22 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/14] fs: move struct iomap from exportfs.h to a separate
-	header
-Date: Wed,  1 Jun 2016 16:44:44 +0200
-Message-Id: <1464792297-13185-2-git-send-email-hch@lst.de>
+Subject: [PATCH 08/14] fs: iomap based fiemap implementation
+Date: Wed,  1 Jun 2016 16:44:51 +0200
+Message-Id: <1464792297-13185-9-git-send-email-hch@lst.de>
 In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
 References: <1464792297-13185-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,114 +31,133 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bob Peterson <rpeterso@redhat.com>
----
- fs/nfsd/blocklayout.c    |  1 +
- fs/nfsd/blocklayoutxdr.c |  1 +
- fs/xfs/xfs_pnfs.c        |  1 +
- include/linux/exportfs.h | 16 +---------------
- include/linux/iomap.h    | 21 +++++++++++++++++++++
- 5 files changed, 25 insertions(+), 15 deletions(-)
- create mode 100644 include/linux/iomap.h
+Add a simple fiemap implementation based on iomap_ops, partially based
+on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
 
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index e55b524..4df16ae 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -2,6 +2,7 @@
-  * Copyright (c) 2014-2016 Christoph Hellwig.
-  */
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/genhd.h>
- #include <linux/slab.h>
- #include <linux/pr.h>
-diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-index 6c3b316..4ebaaf4 100644
---- a/fs/nfsd/blocklayoutxdr.c
-+++ b/fs/nfsd/blocklayoutxdr.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/sunrpc/svc.h>
- #include <linux/exportfs.h>
-+#include <linux/iomap.h>
- #include <linux/nfs4.h>
- 
- #include "nfsd.h"
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index d5b7566..db3c7df 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -1,6 +1,7 @@
- /*
-  * Copyright (c) 2014 Christoph Hellwig.
-  */
-+#include <linux/iomap.h>
- #include "xfs.h"
- #include "xfs_format.h"
- #include "xfs_log_format.h"
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index d841450..b03c062 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -6,6 +6,7 @@
- struct dentry;
- struct iattr;
- struct inode;
-+struct iomap;
- struct super_block;
- struct vfsmount;
- 
-@@ -187,21 +188,6 @@ struct fid {
-  *    get_name is not (which is possibly inconsistent)
-  */
- 
--/* types of block ranges for multipage write mappings. */
--#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
--#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
--#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
--#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
--
--#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
--
--struct iomap {
--	sector_t	blkno;	/* first sector of mapping */
--	loff_t		offset;	/* file offset of mapping, bytes */
--	u64		length;	/* length of mapping, bytes */
--	int		type;	/* type of mapping */
--};
--
- struct export_operations {
- 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
- 			struct inode *parent);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-new file mode 100644
-index 0000000..1b22197
---- /dev/null
-+++ b/include/linux/iomap.h
-@@ -0,0 +1,21 @@
-+#ifndef LINUX_IOMAP_H
-+#define LINUX_IOMAP_H 1
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 ++
+ 2 files changed, 93 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index e51adb6..e874c78 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -405,3 +405,93 @@ out_unlock:
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
 +
-+#include <linux/types.h>
-+
-+/* types of block ranges for multipage write mappings. */
-+#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
-+#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
-+#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
-+#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
-+
-+#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-+
-+struct iomap {
-+	sector_t	blkno;	/* first sector of mapping */
-+	loff_t		offset;	/* file offset of mapping, bytes */
-+	u64		length;	/* length of mapping, bytes */
-+	int		type;	/* type of mapping */
++struct fiemap_ctx {
++	struct fiemap_extent_info *fi;
++	struct iomap prev;
 +};
 +
-+#endif /* LINUX_IOMAP_H */
++static int iomap_to_fiemap(struct fiemap_extent_info *fi,
++		struct iomap *iomap, u32 flags)
++{
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/* skip holes */
++		return 0;
++	case IOMAP_DELALLOC:
++		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
++		break;
++	case IOMAP_UNWRITTEN:
++		flags |= FIEMAP_EXTENT_UNWRITTEN;
++		break;
++	case IOMAP_MAPPED:
++		break;
++	}
++
++	return fiemap_fill_next_extent(fi, iomap->offset,
++			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
++			iomap->length, flags | FIEMAP_EXTENT_MERGED);
++
++}
++
++static loff_t
++iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct fiemap_ctx *ctx = data;
++	loff_t ret = length;
++
++	if (iomap->type == IOMAP_HOLE)
++		return length;
++
++	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
++	ctx->prev = *iomap;
++	switch (ret) {
++	case 0:		/* success */
++		return length;
++	case 1:		/* extent array full */
++		return 0;
++	default:
++		return ret;
++	}
++}
++
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
++		loff_t start, loff_t len, struct iomap_ops *ops)
++{
++	struct fiemap_ctx ctx;
++	loff_t ret;
++
++	memset(&ctx, 0, sizeof(ctx));
++	ctx.fi = fi;
++	ctx.prev.type = IOMAP_HOLE;
++
++	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
++	if (ret)
++		return ret;
++
++	ret = filemap_write_and_wait(inode->i_mapping);
++	if (ret)
++		return ret;
++
++	while (len > 0) {
++		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
++				iomap_fiemap_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		start += ret;
++		len -= ret;
++	}
++
++	if (ctx.prev.type != IOMAP_HOLE) {
++		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_fiemap);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 854766f..b3deee1 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/types.h>
+ 
++struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+ struct kiocb;
+@@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ 		struct iomap_ops *ops);
+ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		struct iomap_ops *ops);
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
++		loff_t start, loff_t len, struct iomap_ops *ops);
+ 
+ #endif /* LINUX_IOMAP_H */
 -- 
 2.1.4
 
