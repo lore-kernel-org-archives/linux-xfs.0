@@ -1,25 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 476277CA0
-	for <xfs@oss.sgi.com>; Sat,  4 Jun 2016 21:17:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 01D25304048
-	for <xfs@oss.sgi.com>; Sat,  4 Jun 2016 19:17:15 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZgBEcOKdJttX0cqB for <xfs@oss.sgi.com>;
-	Sat, 04 Jun 2016 19:17:13 -0700 (PDT)
-Date: Sun, 5 Jun 2016 12:16:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS hole punch races
-Message-ID: <20160605021654.GX26977@dastard>
-References: <20160322155740.GB28772@quack.suse.cz>
-	<1465060270.2847.149.camel@decadent.org.uk>
-	<20160604232800.GW26977@dastard>
-	<1465089572.2847.180.camel@decadent.org.uk>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A465B7CA6
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:57:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6947E8F8035
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 05:57:16 -0700 (PDT)
+Received: from mx.recia.fr (mx.recia.fr [95.128.41.47]) by cuda.sgi.com with
+	ESMTP id Gy3NPQj5zZ9hsjdH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:57:11 -0700 (PDT)
+Received: from e6530-damien.recia.fr (unknown [37.58.188.254])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested) (Authenticated sender: F12A086p)
+	by mx.recia.fr (Postfix) with ESMTPSA id B5AE122602E
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 14:57:09 +0200 (CEST)
+Subject: Re: Re: Cumulative xfsrestore shows many warnings and
+	files/directories are missing after restoration
+References: <8323ac3a-f9d2-ad31-69e3-1eea5a44dcde@recia.fr>
+	<87a11f69-1a10-89e2-598f-015f0205a55a@sandeen.net>
+From: Damien Gombault <damien.gombault@recia.fr>
+Message-ID: <f3fb0f44-f7af-ce62-2037-2edb024426db@recia.fr>
+Date: Wed, 1 Jun 2016 14:57:09 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1465089572.2847.180.camel@decadent.org.uk>
+In-Reply-To: <87a11f69-1a10-89e2-598f-015f0205a55a@sandeen.net>
+Content-Type: multipart/mixed; boundary="------------8EA2A3A708D8CFD2D40D45BC"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,117 +32,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Jun 05, 2016 at 02:19:32AM +0100, Ben Hutchings wrote:
-> On Sun, 2016-06-05 at 09:28 +1000, Dave Chinner wrote:
-> > On Sat, Jun 04, 2016 at 06:11:10PM +0100, Ben Hutchings wrote:
-> > > On Tue, 2016-03-22 at 16:57 +0100, Jan Kara wrote:
-> > > =
+This is a multi-part message in MIME format.
+--------------8EA2A3A708D8CFD2D40D45BC
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-> > > Hi,
-> > > =
+Hi.
 
-> > > similarly to ext4 also XFS had races between hole punching and page f=
-aults
-> > > which could result in data corruption. The fixes were merged in 4.1-r=
-c1 but
-> > > it might make sense to backport them to older stable releases given t=
-he
-> > > nature of the issue.
-> > > =
+Thank you for your answer.
+I also open a report on Red Hat Bugzilla : 
+https://bugzilla.redhat.com/show_bug.cgi?id=1341126
+Eric answered me also on Bugzilla, I will continue on it.
 
-> > > Relevant fixes are:
-> > > =
+Le 31/05/2016 à 15:57, Eric Sandeen a écrit :
+> On 5/31/16 5:55 AM, Damien Gombault wrote:
+>> Hi.
+>>
+>> I use xfsdump to backup my systems.
+>> Recently I had to use xfsrestore to restore a cumulative level 0 + level 1 dumps.
+>>
+> ...
+>
+>> The level 1 restore shows many warnings :
+>> xfsrestore: drive 0: examining media file 0
+>> xfsrestore: drive 1: searching media for directory dump
+>> xfsrestore: drive 1: reading directories
+>> xfsrestore: drive 1: 11013 directories and 96122 entries processed
+>> xfsrestore: drive 1: directory post-processing
+>> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1677721775.4173752252 to dir var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/08 Sécurité/08c Gestion des mots de passe - Keepass: Aucun fichier ou dossier de ce type
+>> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1711276202.4274102453 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/02 Mise en oeuvre sOlære: Aucun fichier ou dossier de ce type
+>> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1694499004.2655526171 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/07 Communication: Aucun fichier ou dossier de ce type
+>> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/2365644069.2895542759 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/08 Sécurité/08c Gestion des mots de passe - Keepass: Aucun fichier ou dossier de ce type
+>> xfsrestore: drive 1: WARNING: unable to rename nondir orphanage/2902474338.2817943331 to var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/09 Questionnaires communes solære/Dossiers des collectivités/37003 - Amboise/02-Compte rendu de réunions/Compte rendu réunion 3 mai 2016.odt: Aucun fichier ou dossier de ce type
+> Restating what I said in the bug you also filed:
+>
+> In general, it would helpful to provide the error messages after setting LANG=en_US - because your English is far better than my French.  :)
+>
+> A couple questions:
+>
+>> Some folders are not restored at the right place.
+> What does that mean?  Were they restored to the wrong place, or were they not restored at all?
+>
+> Also, the "Aucun fichier ou dossier de ce type" errors indicate that files could not be moved into a directory hierarchy, presumably because some path component did not exist.
+>
+> The common portions of those paths which failed are:
+>
+>> var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/
+> and
+>
+>> var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration
+> Do those paths still exist on the original filesystem?  Is it possible that they were removed while the dump was occurring?
+>
+> It seems most likely that the filesystem changed significantly during the dump processes, and this is what led to the errors.
+>
+> -Eric
+>
 
-> > > de0e8c20ba3a65b0f15040aabbefdc1999876e6b
-> > > 075a924d45cc69c75a35f20b4912b85aa98b180a
-> > > e8e9ad42c1f1e1bfbe0e8c32c8cac02e9ebfb7ef
-> > > 0f9160b444e4de33b65dfcd3b901358a3129461a
-> > > 723cac48473358939759885a18e8df113ea96138
-> > > ec56b1f1fdc69599963574ce94cc5693d535dd64
-> > > =
 
-> > > =
+--------------8EA2A3A708D8CFD2D40D45BC
+Content-Type: text/x-vcard; charset=utf-8;
+ name="damien_gombault.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="damien_gombault.vcf"
 
-> > > You missed the first in that sequence:
-> > > =
+begin:vcard
+fn:Damien Gombault
+n:Gombault;Damien
+org;quoted-printable:GIP Recia =E2=88=92 Centre de ressources r=C3=A9gional du num=C3=A9rique
+adr;quoted-printable;dom:Parc d'Activit=C3=A9s les Aulnaies;;151, Rue de la Juine;Olivet;;45160
+email;internet:damien.gombault@recia.fr
+title;quoted-printable:Responsable des syst=C3=A8mes informatiques
+tel;work:02 38 42 14 71
+tel;cell:06 42 62 78 19
+url:http://recia.fr
+version:2.1
+end:vcard
 
-> > > 653c60b633a9 xfs: introduce mmap/truncate lock
-> > > =
 
-> > > For 3.16, I've queued up all=A0those fixes with one further=A0prerequ=
-isite:
-> > > =
-
-> > > 812176832169 xfs: fix swapext ilock deadlock
-> > > =
-
-> > > For 3.2, I've queued up all but 723cac484733, with these additional
-> > > prerequisites:
-> > > =
-
-> > > f38996f57687 xfs: reduce ilock hold times in xfs_setattr_size
-> > > bc4010ecb8f4 xfs: use iolock on XFS_IOC_ALLOCSP calls
-> > > 76ca4c238cf5 xfs: always take the iolock around xfs_setattr_size
-> > > 5f8aca8b43f4 xfs: always hold the iolock when calling xfs_change_file=
-_space
-> > > I realise I'll need to check for regressions with xfstests.
-> > =
-
-> > Hi Ben,
-> > =
-
-> > You do realise that this sort of backport effectively makes the
-> > stable kernels unsupportable by the upstream XFS developers? You're
-> > taking random changes from the upstream kernel until the kernel
-> > compiles, and then mostly hoping that it works.
-> =
-
-> I'm applying slightly more intelligence than that, but of course I'm
-> not an XFS developer.
-
-Sorry, Ben, I didn't mean to imply you hadn't done your due diligence
-properly. It's more a case of lots of things around these patches
-also changed, and from that perspective the changes are effective a
-random selection of changes spread across several years of
-development.
-
-It's subtle things, like changes to how IO completion is processed
-(especially for AIO), etc that the backported code might depend on
-for correct behaviour but aren't in the older kernels. These sorts
-of subtle problems are typically only discovered by users with
-uncommon applications and/or load....
-
-> > Stable kernels are supposed to be stable, and backports like this
-> > are riskier than the original changes in the upstream kernels. if a
-> > user is hitting a mmap/hole-punch race on an XFS filesytem (I can't
-> > remember any reports to the upstream list for any kernel) on a 3.2
-> > kernel, then correct answer is "upgrade to a newer upstream kernel",
-> > not "do a risky backport that exposes the entire user base to the
-> > potential of new data corruption bugs"....
-> =
-
-> OK, then I'll drop them for 3.2.
-
-Probably for the best - these mmap/holepunch races had been in the
-code since XFS was first ported, so it's not like it's a new
-problem. :/
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+--------------8EA2A3A708D8CFD2D40D45BC
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------8EA2A3A708D8CFD2D40D45BC--
