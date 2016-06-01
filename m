@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EA36C7CA0
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 03:03:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 58F097CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 19:04:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AF901304048
-	for <xfs@oss.sgi.com>; Tue, 31 May 2016 01:03:49 -0700 (PDT)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id IkyzFFumIsy3woNO (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 May 2016 01:03:43 -0700 (PDT)
-Subject: Re: shrink_active_list/try_to_release_page bug? (was Re: xfs trace in
-	4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
-	xfs_vm_releasepage)
-References: <20160516010602.GA24980@bfoster.bfoster>
-	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
-	<574BEA84.3010206@profihost.ag> <20160530223657.GP26977@dastard>
-	<20160531010724.GA9616@bbox> <20160531025509.GA12670@dastard>
-	<20160531035904.GA17371@bbox> <20160531060712.GC12670@dastard>
-	<574D2B1E.2040002@profihost.ag> <20160531073119.GD12670@dastard>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <574D455D.8050101@profihost.ag>
-Date: Tue, 31 May 2016 10:03:41 +0200
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D311EAC001
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 17:04:09 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	0zLYGjU7rQnIimz1 for <xfs@oss.sgi.com>;
+	Tue, 31 May 2016 17:04:07 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1b7tcr-00061S-I2
+	for xfs@oss.sgi.com; Wed, 01 Jun 2016 10:03:09 +1000
+Date: Wed, 1 Jun 2016 10:03:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: master, for-next branches update to v4.7-rc1
+Message-ID: <20160601000309.GG12670@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160531073119.GD12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,41 +25,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7116182969865434931=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, Minchan Kim <minchan@kernel.org>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Am 31.05.2016 um 09:31 schrieb Dave Chinner:
-> On Tue, May 31, 2016 at 08:11:42AM +0200, Stefan Priebe - Profihost AG wrote:
->>> I'm half tempted at this point to mostly ignore this mm/ behavour
->>> because we are moving down the path of removing buffer heads from
->>> XFS. That will require us to do different things in ->releasepage
->>> and so just skipping dirty pages in the XFS code is the best thing
->>> to do....
->>
->> does this change anything i should test? Or is 4.6 still the way to go?
-> 
-> Doesn't matter now - the warning will still be there on 4.6. I think
-> you can simply ignore it as the XFS code appears to be handling the
-> dirty page that is being passed to it correctly. We'll work out what
-> needs to be done to get rid of the warning for this case, wether it
-> be a mm/ change or an XFS change.
 
-So is it OK to remove the WARN_ONCE in kernel code? So i don't get
-alarms from our monitoring systems for the trace.
+--===============7116182969865434931==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
+Content-Disposition: inline
 
-Stefan
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
+--qDbXVdCdHGoSgWSk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The cycle begins again - I just updated the XFS master and for-next
+branches to v4.7-rc1. Please update your trees and send new patches
+against these updated branches. Thanks!
+
+-Dave.
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--qDbXVdCdHGoSgWSk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJXTiY9AAoJEK3oKUf0dfodW3YP/2eyWo4Me+fJcy2GYGrAsx1g
+DC5LqrCYNnm9PWsDETRQOOEjFRNgVhPCAmh93P7Q4DTTHizDZkp8yHp7YN+I7ovn
+snahPky3OmWh89I0m5XzORY8XC1kqG1LceGj6dEwZGY5I+AhbhD0roYMXFkjLM0w
+Zttn+dPdL4NEhWUL4DRPKpjIpHPs2DJ6WtITf2eQcGjJp/RjPlGMTgpkkkTEs9Xm
+wrySQGdk89e+6nO6i/DtEDAc6H5pTCjF8FvOiqLIvlsOeKdLQgRPcr2+mDFKoj3m
+LRXg0UORG08wPMuYeoWXiVk8ql180dcHBeE7ZJw53mpxZQYJw1caTqDUfr/HMPX9
+sSCDTCMeYr/mOwszyX55p2C2KQnF+yT9mw8H6foaXhPUPig2t8JGrFcgMNkQF9V2
+A8MfDcyxGRvSL/Qc7fdIZKstYvQgof7Kn0tZxuzVlaywcStGwjnea993Ny1/DWLM
+OmT7qiHC6lzQquEY5k55oHGKB/v8Ml7huS1zBt8KWbIJfd875Rr0o5TISA5/OxfT
+5UWm0nyO+sCk0kfpAViTQMG0Fn/u7IkEAAdETh68/fMk3KdMt9JNXQGA/Z67RhoC
+qiPmkpsL1dHOvsYihJOEag2O13usI5823sMZ7QG19DUVo3VLK5p1bZir3cICUACi
+smGKIrsvzhvOMfqatql4
+=RCdU
+-----END PGP SIGNATURE-----
+
+--qDbXVdCdHGoSgWSk--
+
+
+--===============7116182969865434931==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7116182969865434931==--
