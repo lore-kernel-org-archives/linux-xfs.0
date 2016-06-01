@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 857F97CA0
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 21:28:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 44FB73040A4
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 19:28:52 -0700 (PDT)
-Received: from smtp-out-so.shaw.ca (smtp-out-so.shaw.ca [64.59.136.139]) by
-	cuda.sgi.com with ESMTP id m3eeovh3GD2tGqjI (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F0C947CA2
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 00:52:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C6CDAC001
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 22:52:43 -0700 (PDT)
+Received: from hotel311.server4you.de (hotel311.server4you.de [85.25.146.15])
+	by cuda.sgi.com with ESMTP id frcIhCz0Wp9y8MDZ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 19:28:50 -0700 (PDT)
-From: Andrew Ryder <tireman@shaw.ca>
-Subject: Re: xfs_repair fails after trying to format log cycle?
-References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
-	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
-	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
-	<20160413045129.GO567@dastard>
-Message-ID: <57523CE6.7020906@shaw.ca>
-Date: Fri, 3 Jun 2016 22:28:54 -0400
+	<xfs@oss.sgi.com>; Tue, 31 May 2016 22:52:38 -0700 (PDT)
+From: Daniel Wagner <wagi@monom.org>
+Subject: Internal error xfs_trans_cancel
+Message-ID: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
+Date: Wed, 1 Jun 2016 07:52:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160413045129.GO567@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,83 +22,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Sorry to dig up old stuff here but after replacing hardware and pulling 
-my hair out to no end, I traced the source of the problem out.
+Hi,
 
-On every drive in the array, the points on the PCB which the contacts 
-for the drives motors and head/actuators make contact with were oxidized 
-enough to cause the issue. I ended up pulling the PCB off each drive and 
-cleaning them as well as cleaning out all other cable and drive 
-connectors from the HBA outward and everything is happy again.
-
-http://s33.postimg.org/uhjmvw4dr/Not_Cleaned.jpg
-http://s33.postimg.org/xo94ieii7/Partial_Cleaned_1.jpg
-http://s33.postimg.org/hoqgyumgf/Partial_Cleaned_2.jpg
-http://s33.postimg.org/68k20t8a7/Partial_Cleaned_3.jpg
+I got the error message below while compiling a kernel 
+on that system. I can't really say if I did something
+which made the file system unhappy before the crash.
 
 
-On 04/13/2016 12:51 AM, Dave Chinner wrote:
-> On Tue, Apr 12, 2016 at 11:02:37PM -0400, Andrew Ryder wrote:
->> Is it possible the location its searching for at block
->>
->> 02:34:43.887528 pread64(4, 0x7fb8f53e0200, 2097152, 3001552175104) =
->> -1 EIO (Input/output error)
->
-> so offset is 3001552175104, or roughly around the 3TB mark. Given
-> the log i always placed int eh middle of the filesystem and you have
-> a 6TB device, then the above definitely looks like a valid place to
-> be reading from the log.
->
->> xfs_logprint:
->>      data device: 0x902
->>      log device: 0x902 daddr: 5860130880 length: 4173824
->
-> daddr converted to offset is 5860130880 * 512 = 3001552175104, which
-> tells us that the above pread64 failure was definitely coming from
-> an attempt to read the log.
->
-> That this is coming from the block device from userspace indicates a
-> problem below XFS. There is something going wrong with your
-> underlying block device and/or hardware here; AFAICT it's not
-> related to XFS at all.
->
->>> GNU Parted 3.2
->>> Using /dev/sdk
->>> Welcome to GNU Parted! Type 'help' to view a list of commands.
->>> (parted) p
->>> Model: ATA ST2000DL001-9VT1 (scsi)
->>> Disk /dev/sdk: 2000GB
->>> Sector size (logical/physical): 512B/512B
->>> Partition Table: msdos
->>> Disk Flags:
->>>
->>> Number  Start  End     Size    Type     File system  Flags
->>>   1      512B   2000GB  2000GB  primary               raid
->>> Number  Start  End          Size         Type     File system  Flags
->>>   1      1s     3907029167s  3907029167s  primary               raid
->
-> Compared to the other devices, it has a different start sector, a
-> different size, and an msdos partition table rather than gpt.
-> Definitely a red flag...
->
->>>>> This all began when the RR2722 driver running under 3.18.15
->>>>> complained and
->
-> Reported physical IO errors to a write command. Really, this looks
-> like a hardware issue, not something that can be fixed by running
-> xfs_repair...
->
-> Cheers,
->
-> Dave.
->
+[Jun 1 07:41] XFS (sde1): Internal error xfs_trans_cancel at line 984 of file fs/xfs/xfs_trans.c.  Caller xfs_rename+0x453/0x960 [xfs]
+[  +0.000095] CPU: 22 PID: 8640 Comm: gcc Not tainted 4.7.0-rc1 #16
+[  +0.000035] Hardware name: Dell Inc. PowerEdge R820/066N7P, BIOS 2.0.20 01/16/2014
+[  +0.000048]  0000000000000286 00000000c8be6bc3 ffff885fa9473cb0 ffffffff813d146e
+[  +0.000056]  ffff885fa9ac5ed0 0000000000000001 ffff885fa9473cc8 ffffffffa0213cdc
+[  +0.000053]  ffffffffa02257b3 ffff885fa9473cf0 ffffffffa022eb36 ffff883faa502d00
+[  +0.000053] Call Trace:
+[  +0.000028]  [<ffffffff813d146e>] dump_stack+0x63/0x85
+[  +0.000069]  [<ffffffffa0213cdc>] xfs_error_report+0x3c/0x40 [xfs]
+[  +0.000065]  [<ffffffffa02257b3>] ? xfs_rename+0x453/0x960 [xfs]
+[  +0.000064]  [<ffffffffa022eb36>] xfs_trans_cancel+0xb6/0xe0 [xfs]
+[  +0.000065]  [<ffffffffa02257b3>] xfs_rename+0x453/0x960 [xfs]
+[  +0.000062]  [<ffffffffa021fa63>] xfs_vn_rename+0xb3/0xf0 [xfs]
+[  +0.000040]  [<ffffffff8124f92c>] vfs_rename+0x58c/0x8d0
+[  +0.000032]  [<ffffffff81253fb1>] SyS_rename+0x371/0x390
+[  +0.000036]  [<ffffffff817d2032>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+[  +0.000040] XFS (sde1): xfs_do_force_shutdown(0x8) called from line 985 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffffa022eb4f
+[  +0.027680] XFS (sde1): Corruption of in-memory data detected.  Shutting down filesystem
+[  +0.000057] XFS (sde1): Please umount the filesystem and rectify the problem(s)
+[Jun 1 07:42] XFS (sde1): xfs_log_force: error -5 returned.
+[ +30.081016] XFS (sde1): xfs_log_force: error -5 returned.
+
+
+cheers,
+daniel
 
 _______________________________________________
 xfs mailing list
