@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F2247CDA
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:29 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E0BB7CBB
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 13885AC002
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:28 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62398304066
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:31 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 08GoCCUj0MXOHPAb (version=TLSv1.2
+	ESMTP id UvzZWNHhICrPzRaM (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:27 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:29 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/14] xfs: use iomap infrastructure for DAX zeroing
-Date: Wed,  1 Jun 2016 16:44:53 +0200
-Message-Id: <1464792297-13185-11-git-send-email-hch@lst.de>
+Subject: [PATCH 11/14] xfs: handle 64-bit length in xfs_iozero
+Date: Wed,  1 Jun 2016 16:44:54 +0200
+Message-Id: <1464792297-13185-12-git-send-email-hch@lst.de>
 In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
 References: <1464792297-13185-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,85 +31,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
+We'll want to use this code for large offsets now that we're skipping holes
+and unwritten extents efficiently.  Also rename it to xfs_zero_range to be
+a bit more descriptive, and tell the caller if we actually did any zeroing.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c | 35 +----------------------------------
- fs/xfs/xfs_iops.c |  9 ++-------
- 2 files changed, 3 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_file.c  | 11 ++++++-----
+ fs/xfs/xfs_inode.h |  3 ++-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7316d38..090a90f 100644
+index 090a90f..294e5f4 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -80,34 +80,6 @@ xfs_rw_ilock_demote(
- 		inode_unlock(VFS_I(ip));
- }
- 
--static int
--xfs_dax_zero_range(
--	struct inode		*inode,
+@@ -85,10 +85,11 @@ xfs_rw_ilock_demote(
+  * Holes and unwritten extents will be left as-is as they already are zeroed.
+  */
+ int
+-xfs_iozero(
++xfs_zero_range(
+ 	struct xfs_inode	*ip,
 -	loff_t			pos,
 -	size_t			count)
--{
--	int			status = 0;
--
--	do {
--		unsigned offset, bytes;
--
--		offset = (pos & (PAGE_SIZE -1)); /* Within page */
--		bytes = PAGE_SIZE - offset;
--		if (bytes > count)
--			bytes = count;
--
--		status = dax_zero_page_range(inode, pos, bytes,
--					     xfs_get_blocks_direct);
--		if (status)
--			break;
--
--		pos += bytes;
--		count -= bytes;
--	} while (count);
--
--	return status;
--}
--
- /*
-  * Clear the specified ranges to zero through either the pagecache or DAX.
-  * Holes and unwritten extents will be left as-is as they already are zeroed.
-@@ -118,12 +90,7 @@ xfs_iozero(
- 	loff_t			pos,
- 	size_t			count)
++	xfs_off_t		pos,
++	xfs_off_t		count,
++	bool			*did_zero)
  {
--	struct inode		*inode = VFS_I(ip);
--
--	if (IS_DAX(VFS_I(ip)))
--		return xfs_dax_zero_range(inode, pos, count);
--	else
--		return iomap_zero_range(inode, pos, count, NULL, &xfs_iomap_ops);
-+	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
+ 	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
+ }
+@@ -419,7 +420,7 @@ xfs_zero_last_block(
+ 	if (isize + zero_len > offset)
+ 		zero_len = offset - isize;
+ 	*did_zeroing = true;
+-	return xfs_iozero(ip, isize, zero_len);
++	return xfs_zero_range(ip, isize, zero_len, NULL);
  }
  
- int
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 985a263..ab820f8 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -819,13 +819,8 @@ xfs_setattr_size(
- 	if (newsize > oldsize) {
- 		error = xfs_zero_eof(ip, newsize, oldsize, &did_zeroing);
- 	} else {
--		if (IS_DAX(inode)) {
--			error = dax_truncate_page(inode, newsize,
--					xfs_get_blocks_direct);
--		} else {
--			error = iomap_truncate_page(inode, newsize,
--					&did_zeroing, &xfs_iomap_ops);
--		}
-+		error = iomap_truncate_page(inode, newsize, &did_zeroing,
-+				&xfs_iomap_ops);
- 	}
+ /*
+@@ -518,7 +519,7 @@ xfs_zero_eof(
+ 		if ((zero_off + zero_len) > offset)
+ 			zero_len = offset - zero_off;
  
- 	if (error)
+-		error = xfs_iozero(ip, zero_off, zero_len);
++		error = xfs_zero_range(ip, zero_off, zero_len, NULL);
+ 		if (error)
+ 			return error;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e52d7c7..dbb0bcf 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -434,7 +434,8 @@ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+ 				  enum xfs_prealloc_flags flags);
+ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
+ 		     xfs_fsize_t isize, bool *did_zeroing);
+-int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
++int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
++		bool *did_zero);
+ loff_t	__xfs_seek_hole_data(struct inode *inode, loff_t start,
+ 			     loff_t eof, int whence);
+ 
 -- 
 2.1.4
 
