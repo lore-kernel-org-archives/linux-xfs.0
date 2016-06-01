@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0245D7CA3
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:44:02 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C4317CA6
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:38:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8A528F8066
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 15:44:01 -0700 (PDT)
-Received: from mail02.iobjects.de (mail02.iobjects.de [188.40.134.68]) by
-	cuda.sgi.com with ESMTP id Ns3zqlB0BmNWMFGC (version=TLSv1.2
-	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2016 15:43:58 -0700 (PDT)
-Received: from tux.wizards.de (p4FF5801B.dip0.t-ipconnect.de [79.245.128.27])
-	by mail02.iobjects.de (Postfix) with ESMTPSA id 97D55416014D
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 00:43:57 +0200 (CEST)
-Received: from [192.168.100.223] (ragnarok [192.168.100.223])
-	by tux.wizards.de (Postfix) with ESMTP id 2715211C01CF
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 00:43:57 +0200 (CEST)
-Subject: Re: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
-References: <57503353.2050402@profihost.ag>
-	<57503D33.6010000@applied-asynchrony.com>
-	<575040D8.8070903@applied-asynchrony.com>
-	<20160602222545.GO12670@dastard>
-From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Message-ID: <5750B6AD.2050308@applied-asynchrony.com>
-Date: Fri, 3 Jun 2016 00:43:57 +0200
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EB23BAC004
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 05:38:46 -0700 (PDT)
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id wL6rmvARqbuY8eYZ
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:38:44 -0700 (PDT)
+Received: from mail-yw0-f180.google.com ([209.85.161.180])
+	by youngberry.canonical.com with esmtpsa
+	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
+	(envelope-from <ming.lei@canonical.com>) id 1b85Q2-0003hH-KG
+	for xfs@oss.sgi.com; Wed, 01 Jun 2016 12:38:42 +0000
+Received: by mail-yw0-f180.google.com with SMTP id h19so16728260ywc.0
+	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:38:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160602222545.GO12670@dastard>
+In-Reply-To: <20160531155348.GA24840@redhat.com>
+References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
+	<20160531155348.GA24840@redhat.com>
+Date: Wed, 1 Jun 2016 20:38:41 +0800
+Message-ID: <CACVXFVM9FqZFkMat_4ysJ8_vFd1FFnf6Bd9sHDDoCK=v93wViQ@mail.gmail.com>
+Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
+From: Ming Lei <ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,33 +32,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: linux-block@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Steven Whitehouse <swhiteho@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@fb.com>, Joe Thornber <ejt@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
 
-T24gMDYvMDMvMTYgMDA6MjUsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBUaHUsIEp1biAwMiwg
-MjAxNiBhdCAwNDoyMToxMlBNICswMjAwLCBIb2xnZXIgSG9mZnN0w6R0dGUgd3JvdGU6Cj4+IE9u
-IDA2LzAyLzE2IDE2OjA1LCBIb2xnZXIgSG9mZnN0w6R0dGUgd3JvdGU6Cj4+PiBPbiAwNi8wMi8x
-NiAxNToyMywgU3RlZmFuIFByaWViZSAtIFByb2ZpaG9zdCBBRyB3cm90ZToKPj4+PiBJIGZvdW5k
-IGEgYnVnIHJlcG9ydCBmcm9tIHJlZGhhdCBoZXJlCj4+Pj4gaHR0cHM6Ly9idWd6aWxsYS5yZWRo
-YXQuY29tL3Nob3dfYnVnLmNnaT9pZD0xMjM0NTg2IHBvaW50aW5nIHRvIHRoaXMgY29tbWl0Ogo+
-Pj4+IHhmczogaGFuZGxlIGRxdW90IGJ1ZmZlciByZWFkYWhlYWQgaW4gbG9nIHJlY292ZXJ5IGNv
-cnJlY3RseQo+Pj4+Cj4+Pj4gd2hpY2ggaXNuJ3QgcGFydCBvZiA0LjQuIElzIGl0IG1pc3Npbmcg
-ZnJvbSBsaW51eC1zdGFibGU/Cj4+Pgo+Pj4gWWVzLCBtYWlubGluZSA3ZDZhMTNmMDIzNTYgaXMg
-bWlzc2luZyBmcm9tIDQuNC1zdGFibGUgYmVjYXVzZSBpdCBhcHBsaWVzLAo+Pj4gYnV0IGRvZXNu
-J3QgY29tcGlsZS4gOikKPj4+Cj4+PiBJJ2xsIGxvb2sgaW50byBhIGZpeC4KPj4KPj4gV2VsbCwg
-dGhhdCB3YXMgZWFzeS4gSXQgYWxzbyBuZWVkcyAyMzMxMzViNzYzICgieGZzOiBwcmludCBuYW1l
-IG9mIHZlcmlmaWVyCj4+IGlmIGl0IGZhaWxzIikgd2hpY2ggYWRkZWQgYSAubmFtZSB0byB0aGUg
-dmFyaW91cyB4ZnNfYnVmX29wcyB0eXBlcy4KPj4gQ2FuIHNvbWVvbmUgY29uZmlybSB0aGF0IHRo
-ZXNlIGNhbiBib3RoIGdvIGludG8gNC40LXN0YWJsZT8KPiAKPiBZb3UgY291bGQganVzdCByZW1v
-dmUgdGhlIGxpbmU6Cj4gCj4gKyAgICAgICAubmFtZSA9ICJ4ZnNfZHF1b3RfcmEiLAo+IAo+IGZy
-b20gN2Q2YTEzZjAyMzU2IGFuZCB0aGF0IHdpbGwgZml4IHRoZSBiYWNrcG9ydCBwcm9ibGVtIGFu
-ZCBub3QKPiByZXF1aXJlIGFueSBvdGhlciBjb21taXRzIHRvIGJlIGJhY2twb3J0ZWQuIEknbSBm
-aW5lIHdpdGggZWl0aGVyCj4gc29sdXRpb24uCgpIYS4udGhhdCB0b3RhbGx5IGRpZG4ndCBvY2N1
-ciB0byBtZS4udG9vIHNpbXBsZS4gOn0KVGhlIC5uYW1lIHBhdGNoIGFwcGxpZXMgY2xlYW5seSBh
-bmQgY2FuJ3QgaHVydCBlaXRoZXIsIHNvIEkgdGhpbmsKc2VuZGluZyBib3RoIGNvbW1pdHMgdG8g
-R3JlZyBpcyBlYXNpZXN0IGZvciBldmVyeW9uZS4KCnRoYW5rcyEKSG9sZ2VyCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, May 31, 2016 at 11:53 PM, Mike Snitzer <snitzer@redhat.com> wrote:
+> On Mon, May 30 2016 at  9:34am -0400,
+> Ming Lei <ming.lei@canonical.com> wrote:
+>
+>>
+>> Hi,
+>>
+>> Interests[1] have been shown in multipage bvecs, so this patchset
+>> try to prepare for the support and do two things:
+>>
+>> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
+>> then we can drop the non-standard way for iterating bvec, which
+>> can be thought as a good cleanup for lib/iov_iter.c
+>>
+>> 2) remove BIO_MAX_SECTORS and makre BIO_MAX_SIZE as obsolete, and
+>> now there is only one user for each. Once multipage bvecs is introduced,
+>> one bio may hold lots of sectors, and we should always use sort of
+>> BIO_MAX_VECS which should be introduced in future and is similiar
+>> with current BIO_MAX_PAGES.
+>>
+>> The only functional change is iterate_bvec():lib/iov_iter.c
+>>
+>> xfstests(-a auto) over loop aio is run for ext4/xfs to verify
+>> the change and no regression found with this patchset.
+>>
+>> V6:
+>>       - rebased on v4.7-rc1
+>>       - add reviewed-by tag
+>>       - mark BIO_MAX_SIZE as obsolete instead of removing because
+>>       dm-tree adds one usage now
+>
+> Not sure what you're referring to here with "dm-tree" (since "dm-tree"
+> doesn't exist).  But only direct user of "BIO_MAX_SIZE" in DM appears to
+
+Looks it is from crypto tree:
+
+   git://git.kernel.org/pub/scm/linux/kernel/git/herbert/crypto-2.6
+
+> be dm-crypt.c.  Maybe you've identified some indirect use of
+> BIO_MAX_SIZE?
+
+I mean the recently introduced BIO_MAX_SIZE in -next tree:
+
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/md/dm-crypt.c?id=4ed89c97b0706477b822ea2182827640c0cec486
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-block" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
