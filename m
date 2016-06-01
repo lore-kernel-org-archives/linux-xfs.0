@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2EE6F8078
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E2C0E8F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:04 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 94ck3CRAGOnIeqTC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:02 -0700 (PDT)
-Subject: [PATCH 011/145] man: document the DAX fsxattr inode flag
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:31:54 -0700
-Message-ID: <146612711418.16048.15527594819477737762.stgit@birch.djwong.org>
-In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
-References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 557ED7CD0
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D35E1AC006
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:21 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 4c7OHGFeZjAaHOnq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:19 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/14] xfs: remove buffered write support from __xfs_get_blocks
+Date: Wed,  1 Jun 2016 16:44:50 +0200
+Message-Id: <1464792297-13185-8-git-send-email-hch@lst.de>
+In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
+References: <1464792297-13185-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +23,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Document the new inode flag in struct fsxattr for DAX.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 ---
- man/man3/xfsctl.3 |    5 +++++
- 1 file changed, 5 insertions(+)
+ fs/xfs/xfs_aops.c | 71 +++++++++++++++----------------------------------------
+ 1 file changed, 19 insertions(+), 52 deletions(-)
 
-
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index e84b829..9e7f138 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -225,6 +225,11 @@ group and so files within different directories will not interleave
- extents on disk. The reservation is only active while files are being
- created and written into the directory.
- .TP
-+.SM "Bit 15 (0x8000) \- XFS_XFLAG_DAX"
-+If the filesystem lives on directly accessible persistent memory, reads and
-+writes to this file will go straight to the persistent memory, bypassing the
-+page cache.
-+.TP
- .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
- The file has extended attributes associated with it.
- .RE
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2ac9f7e..80714eb 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1143,6 +1143,8 @@ __xfs_get_blocks(
+ 	ssize_t			size;
+ 	int			new = 0;
+ 
++	BUG_ON(create && !direct);
++
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+@@ -1150,22 +1152,14 @@ __xfs_get_blocks(
+ 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
+ 	size = bh_result->b_size;
+ 
+-	if (!create && direct && offset >= i_size_read(inode))
++	if (!create && offset >= i_size_read(inode))
+ 		return 0;
+ 
+ 	/*
+ 	 * Direct I/O is usually done on preallocated files, so try getting
+-	 * a block mapping without an exclusive lock first.  For buffered
+-	 * writes we already have the exclusive iolock anyway, so avoiding
+-	 * a lock roundtrip here by taking the ilock exclusive from the
+-	 * beginning is a useful micro optimization.
++	 * a block mapping without an exclusive lock first.
+ 	 */
+-	if (create && !direct) {
+-		lockmode = XFS_ILOCK_EXCL;
+-		xfs_ilock(ip, lockmode);
+-	} else {
+-		lockmode = xfs_ilock_data_map_shared(ip);
+-	}
++	lockmode = xfs_ilock_data_map_shared(ip);
+ 
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 	if (offset + size > mp->m_super->s_maxbytes)
+@@ -1184,37 +1178,19 @@ __xfs_get_blocks(
+ 	     (imap.br_startblock == HOLESTARTBLOCK ||
+ 	      imap.br_startblock == DELAYSTARTBLOCK) ||
+ 	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
+-		if (direct || xfs_get_extsz_hint(ip)) {
+-			/*
+-			 * xfs_iomap_write_direct() expects the shared lock. It
+-			 * is unlocked on return.
+-			 */
+-			if (lockmode == XFS_ILOCK_EXCL)
+-				xfs_ilock_demote(ip, lockmode);
+-
+-			error = xfs_iomap_write_direct(ip, offset, size,
+-						       &imap, nimaps);
+-			if (error)
+-				return error;
+-			new = 1;
++		/*
++		 * xfs_iomap_write_direct() expects the shared lock. It
++		 * is unlocked on return.
++		 */
++		if (lockmode == XFS_ILOCK_EXCL)
++			xfs_ilock_demote(ip, lockmode);
+ 
+-		} else {
+-			/*
+-			 * Delalloc reservations do not require a transaction,
+-			 * we can go on without dropping the lock here. If we
+-			 * are allocating a new delalloc block, make sure that
+-			 * we set the new flag so that we mark the buffer new so
+-			 * that we know that it is newly allocated if the write
+-			 * fails.
+-			 */
+-			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
+-				new = 1;
+-			error = xfs_iomap_write_delay(ip, offset, size, &imap);
+-			if (error)
+-				goto out_unlock;
++		error = xfs_iomap_write_direct(ip, offset, size,
++					       &imap, nimaps);
++		if (error)
++			return error;
++		new = 1;
+ 
+-			xfs_iunlock(ip, lockmode);
+-		}
+ 		trace_xfs_get_blocks_alloc(ip, offset, size,
+ 				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
+ 						   : XFS_IO_DELALLOC, &imap);
+@@ -1235,9 +1211,7 @@ __xfs_get_blocks(
+ 	}
+ 
+ 	/* trim mapping down to size requested */
+-	if (direct || size > (1 << inode->i_blkbits))
+-		xfs_map_trim_size(inode, iblock, bh_result,
+-				  &imap, offset, size);
++	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
+ 
+ 	/*
+ 	 * For unwritten extents do not report a disk address in the buffered
+@@ -1250,7 +1224,7 @@ __xfs_get_blocks(
+ 		if (ISUNWRITTEN(&imap))
+ 			set_buffer_unwritten(bh_result);
+ 		/* direct IO needs special help */
+-		if (create && direct) {
++		if (create) {
+ 			if (dax_fault)
+ 				ASSERT(!ISUNWRITTEN(&imap));
+ 			else
+@@ -1279,14 +1253,7 @@ __xfs_get_blocks(
+ 	     (new || ISUNWRITTEN(&imap))))
+ 		set_buffer_new(bh_result);
+ 
+-	if (imap.br_startblock == DELAYSTARTBLOCK) {
+-		BUG_ON(direct);
+-		if (create) {
+-			set_buffer_uptodate(bh_result);
+-			set_buffer_mapped(bh_result);
+-			set_buffer_delay(bh_result);
+-		}
+-	}
++	BUG_ON(direct && imap.br_startblock == DELAYSTARTBLOCK);
+ 
+ 	return 0;
+ 
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
