@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 761B57CA4
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49E53304067
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:40 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D0977CA4
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 783BBAC006
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:06 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id t7B8la3VCzoWOHl8 (version=TLSv1.2
+	ESMTP id mqEzU4VaPH6DCvEo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:38 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:04 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/14] xfs: kill xfs_zero_remaining_bytes
-Date: Wed,  1 Jun 2016 16:44:57 +0200
-Message-Id: <1464792297-13185-15-git-send-email-hch@lst.de>
+Subject: [PATCH 01/14] fs: move struct iomap from exportfs.h to a separate
+	header
+Date: Wed,  1 Jun 2016 16:44:44 +0200
+Message-Id: <1464792297-13185-2-git-send-email-hch@lst.de>
 In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
 References: <1464792297-13185-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,174 +32,114 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Instead punch the whole first, and the use the our zeroing helper
-to punch out the edge blocks.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 133 ++++++-------------------------------------------
- 1 file changed, 14 insertions(+), 119 deletions(-)
+ fs/nfsd/blocklayout.c    |  1 +
+ fs/nfsd/blocklayoutxdr.c |  1 +
+ fs/xfs/xfs_pnfs.c        |  1 +
+ include/linux/exportfs.h | 16 +---------------
+ include/linux/iomap.h    | 21 +++++++++++++++++++++
+ 5 files changed, 25 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iomap.h
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index e36664f..569f03d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1089,101 +1089,6 @@ error1:	/* Just cancel transaction */
- 	return error;
- }
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index e55b524..4df16ae 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -2,6 +2,7 @@
+  * Copyright (c) 2014-2016 Christoph Hellwig.
+  */
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/genhd.h>
+ #include <linux/slab.h>
+ #include <linux/pr.h>
+diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
+index 6c3b316..4ebaaf4 100644
+--- a/fs/nfsd/blocklayoutxdr.c
++++ b/fs/nfsd/blocklayoutxdr.c
+@@ -3,6 +3,7 @@
+  */
+ #include <linux/sunrpc/svc.h>
+ #include <linux/exportfs.h>
++#include <linux/iomap.h>
+ #include <linux/nfs4.h>
  
--/*
-- * Zero file bytes between startoff and endoff inclusive.
-- * The iolock is held exclusive and no blocks are buffered.
-- *
-- * This function is used by xfs_free_file_space() to zero
-- * partial blocks when the range to free is not block aligned.
-- * When unreserving space with boundaries that are not block
-- * aligned we round up the start and round down the end
-- * boundaries and then use this function to zero the parts of
-- * the blocks that got dropped during the rounding.
-- */
--STATIC int
--xfs_zero_remaining_bytes(
--	xfs_inode_t		*ip,
--	xfs_off_t		startoff,
--	xfs_off_t		endoff)
--{
--	xfs_bmbt_irec_t		imap;
--	xfs_fileoff_t		offset_fsb;
--	xfs_off_t		lastoffset;
--	xfs_off_t		offset;
--	xfs_buf_t		*bp;
--	xfs_mount_t		*mp = ip->i_mount;
--	int			nimap;
--	int			error = 0;
--
--	/*
--	 * Avoid doing I/O beyond eof - it's not necessary
--	 * since nothing can read beyond eof.  The space will
--	 * be zeroed when the file is extended anyway.
--	 */
--	if (startoff >= XFS_ISIZE(ip))
--		return 0;
--
--	if (endoff > XFS_ISIZE(ip))
--		endoff = XFS_ISIZE(ip);
--
--	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
--		uint lock_mode;
--
--		offset_fsb = XFS_B_TO_FSBT(mp, offset);
--		nimap = 1;
--
--		lock_mode = xfs_ilock_data_map_shared(ip);
--		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
--		xfs_iunlock(ip, lock_mode);
--
--		if (error || nimap < 1)
--			break;
--		ASSERT(imap.br_blockcount >= 1);
--		ASSERT(imap.br_startoff == offset_fsb);
--		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
--
--		if (imap.br_startblock == HOLESTARTBLOCK ||
--		    imap.br_state == XFS_EXT_UNWRITTEN) {
--			/* skip the entire extent */
--			lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff +
--						      imap.br_blockcount) - 1;
--			continue;
--		}
--
--		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
--		if (lastoffset > endoff)
--			lastoffset = endoff;
--
--		/* DAX can just zero the backing device directly */
--		if (IS_DAX(VFS_I(ip))) {
--			error = dax_zero_page_range(VFS_I(ip), offset,
--						    lastoffset - offset + 1,
--						    xfs_get_blocks_direct);
--			if (error)
--				return error;
--			continue;
--		}
--
--		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
--				mp->m_rtdev_targp : mp->m_ddev_targp,
--				xfs_fsb_to_db(ip, imap.br_startblock),
--				BTOBB(mp->m_sb.sb_blocksize),
--				0, &bp, NULL);
--		if (error)
--			return error;
--
--		memset(bp->b_addr +
--				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
--		       0, lastoffset - offset + 1);
--
--		error = xfs_bwrite(bp);
--		xfs_buf_relse(bp);
--		if (error)
--			return error;
--	}
--	return error;
--}
--
- static int
- xfs_unmap_extent(
- 	struct xfs_inode	*ip,
-@@ -1309,7 +1214,7 @@ xfs_free_file_space(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_fileoff_t		endoffset_fsb;
--	int			done, error;
-+	int			done = 0, error;
- 
- 	trace_xfs_free_file_space(ip);
- 
-@@ -1341,31 +1246,21 @@ xfs_free_file_space(
- 			return error;
- 	}
- 
--	if ((done = (endoffset_fsb <= startoffset_fsb)))
--		/*
--		 * One contiguous piece to clear
--		 */
--		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
--	else {
--		/*
--		 * Some full blocks, possibly two pieces to clear
--		 */
--		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
--			error = xfs_zero_remaining_bytes(ip, offset,
--				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
--		if (!error &&
--		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
--			error = xfs_zero_remaining_bytes(ip,
--				XFS_FSB_TO_B(mp, endoffset_fsb),
--				offset + len - 1);
--	}
--
--	while (!error && !done) {
--		error = xfs_unmap_extent(ip, startoffset_fsb,
--				endoffset_fsb - startoffset_fsb, &done);
-+	if (endoffset_fsb > startoffset_fsb) {
-+		while (!done) {
-+			error = xfs_unmap_extent(ip, startoffset_fsb,
-+					endoffset_fsb - startoffset_fsb, &done);
-+			if (error)
-+				return error;
-+		}
- 	}
- 
--	return error;
-+	/*
-+	 * Now that we've unmap all full blocks we'll have to zero out any
-+	 * partial block at the beginning and/or end.  xfs_zero_range is
-+	 * smart enough to skip any holes, including those we just created.
-+	 */
-+	return xfs_zero_range(ip, offset, len, NULL);
- }
- 
+ #include "nfsd.h"
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index d5b7566..db3c7df 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -1,6 +1,7 @@
  /*
+  * Copyright (c) 2014 Christoph Hellwig.
+  */
++#include <linux/iomap.h>
+ #include "xfs.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
+diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+index d841450..b03c062 100644
+--- a/include/linux/exportfs.h
++++ b/include/linux/exportfs.h
+@@ -6,6 +6,7 @@
+ struct dentry;
+ struct iattr;
+ struct inode;
++struct iomap;
+ struct super_block;
+ struct vfsmount;
+ 
+@@ -187,21 +188,6 @@ struct fid {
+  *    get_name is not (which is possibly inconsistent)
+  */
+ 
+-/* types of block ranges for multipage write mappings. */
+-#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
+-#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
+-#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
+-#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+-
+-#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+-
+-struct iomap {
+-	sector_t	blkno;	/* first sector of mapping */
+-	loff_t		offset;	/* file offset of mapping, bytes */
+-	u64		length;	/* length of mapping, bytes */
+-	int		type;	/* type of mapping */
+-};
+-
+ struct export_operations {
+ 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
+ 			struct inode *parent);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+new file mode 100644
+index 0000000..1b22197
+--- /dev/null
++++ b/include/linux/iomap.h
+@@ -0,0 +1,21 @@
++#ifndef LINUX_IOMAP_H
++#define LINUX_IOMAP_H 1
++
++#include <linux/types.h>
++
++/* types of block ranges for multipage write mappings. */
++#define IOMAP_HOLE	0x01	/* no blocks allocated, need allocation */
++#define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
++#define IOMAP_MAPPED	0x03	/* blocks allocated @blkno */
++#define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
++
++#define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
++
++struct iomap {
++	sector_t	blkno;	/* first sector of mapping */
++	loff_t		offset;	/* file offset of mapping, bytes */
++	u64		length;	/* length of mapping, bytes */
++	int		type;	/* type of mapping */
++};
++
++#endif /* LINUX_IOMAP_H */
 -- 
 2.1.4
 
