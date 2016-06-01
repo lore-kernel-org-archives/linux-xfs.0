@@ -1,29 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7C4317CA6
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:38:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EB23BAC004
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 05:38:46 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id wL6rmvARqbuY8eYZ
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:38:44 -0700 (PDT)
-Received: from mail-yw0-f180.google.com ([209.85.161.180])
-	by youngberry.canonical.com with esmtpsa
-	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
-	(envelope-from <ming.lei@canonical.com>) id 1b85Q2-0003hH-KG
-	for xfs@oss.sgi.com; Wed, 01 Jun 2016 12:38:42 +0000
-Received: by mail-yw0-f180.google.com with SMTP id h19so16728260ywc.0
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:38:42 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E423F7CA6
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 08:18:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B7AC78F8049
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 06:18:06 -0700 (PDT)
+Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
+	[74.125.82.67]) by cuda.sgi.com with ESMTP id LrEcJqhzN08rb2gW
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2016 06:18:01 -0700 (PDT)
+Received: by mail-wm0-f67.google.com with SMTP id q62so6718438wmg.3
+	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 06:18:01 -0700 (PDT)
+Date: Wed, 1 Jun 2016 15:17:58 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160601131758.GO26601@dhcp22.suse.cz>
+References: <20160512080321.GA18496@dastard>
+	<20160513160341.GW20141@dhcp22.suse.cz>
+	<20160516104130.GK3193@twins.programming.kicks-ass.net>
+	<20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+	<20160516231056.GE18496@dastard>
+	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
+	<20160517223549.GV26977@dastard>
+	<20160519081146.GS3193@twins.programming.kicks-ass.net>
+	<20160520001714.GC26977@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160531155348.GA24840@redhat.com>
-References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
-	<20160531155348.GA24840@redhat.com>
-Date: Wed, 1 Jun 2016 20:38:41 +0800
-Message-ID: <CACVXFVM9FqZFkMat_4ysJ8_vFd1FFnf6Bd9sHDDoCK=v93wViQ@mail.gmail.com>
-Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
-From: Ming Lei <ming.lei@canonical.com>
+Content-Disposition: inline
+In-Reply-To: <20160520001714.GC26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,58 +41,119 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-block@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Steven Whitehouse <swhiteho@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, NeilBrown <neilb@suse.com>, Jens Axboe <axboe@fb.com>, Joe Thornber <ejt@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
+To: Peter Zijlstra <peterz@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, xfs@oss.sgi.com, Ingo Molnar <mingo@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, May 31, 2016 at 11:53 PM, Mike Snitzer <snitzer@redhat.com> wrote:
-> On Mon, May 30 2016 at  9:34am -0400,
-> Ming Lei <ming.lei@canonical.com> wrote:
->
->>
->> Hi,
->>
->> Interests[1] have been shown in multipage bvecs, so this patchset
->> try to prepare for the support and do two things:
->>
->> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
->> then we can drop the non-standard way for iterating bvec, which
->> can be thought as a good cleanup for lib/iov_iter.c
->>
->> 2) remove BIO_MAX_SECTORS and makre BIO_MAX_SIZE as obsolete, and
->> now there is only one user for each. Once multipage bvecs is introduced,
->> one bio may hold lots of sectors, and we should always use sort of
->> BIO_MAX_VECS which should be introduced in future and is similiar
->> with current BIO_MAX_PAGES.
->>
->> The only functional change is iterate_bvec():lib/iov_iter.c
->>
->> xfstests(-a auto) over loop aio is run for ext4/xfs to verify
->> the change and no regression found with this patchset.
->>
->> V6:
->>       - rebased on v4.7-rc1
->>       - add reviewed-by tag
->>       - mark BIO_MAX_SIZE as obsolete instead of removing because
->>       dm-tree adds one usage now
->
-> Not sure what you're referring to here with "dm-tree" (since "dm-tree"
-> doesn't exist).  But only direct user of "BIO_MAX_SIZE" in DM appears to
+Thanks Dave for your detailed explanation again! Peter do you have any
+other idea how to deal with these situations other than opt out from
+lockdep reclaim machinery?
 
-Looks it is from crypto tree:
+If not I would rather go with an annotation than a gfp flag to be honest
+but if you absolutely hate that approach then I will try to check wheter
+a CONFIG_LOCKDEP GFP_FOO doesn't break something else. Otherwise I would
+steal the description from Dave's email and repost my patch.
 
-   git://git.kernel.org/pub/scm/linux/kernel/git/herbert/crypto-2.6
+I plan to repost my scope gfp patches in few days and it would be good
+to have some mechanism to drop those GFP_NOFS to paper over lockdep
+false positives for that.
 
-> be dm-crypt.c.  Maybe you've identified some indirect use of
-> BIO_MAX_SIZE?
+[keeping Dave's explanation for reference]
 
-I mean the recently introduced BIO_MAX_SIZE in -next tree:
+On Fri 20-05-16 10:17:14, Dave Chinner wrote:
+> On Thu, May 19, 2016 at 10:11:46AM +0200, Peter Zijlstra wrote:
+> > On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
+[...]
+> > > There's a maze of dark, grue-filled twisty passages here...
+> > 
+> > OK; I might need a bit more again.
+> > 
+> > So now the code does something like:
+> > 
+> > 	down_read(&i_lock);		-- lockdep marks lock as held
+> > 	kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+> > 	  --> reclaim()
+> > 	     down_read_trylock(&i_lock); -- lockdep does _NOT_ mark as USED_IN_RECLAIM_FS
+> > 
+> > Right?
+> 
+> In the path that can deadlock the log, yes. It's actually way more
+> complex than the above, because the down_read_trylock(&i_lock) that
+> matters is run in a completely separate, async kthread that
+> xfs_trans_reserve() will block waiting for.
+> 
+> process context				xfsaild kthread(*)
+> ---------------				------------------
+> down_read(&i_lock);		-- lockdep marks lock as held
+> kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+>   --> reclaim()
+>      xfs_trans_reserve()
+>      ....
+> 	  xfs_trans_push_ail()	---- called if no space in the log to kick the xfsaild into action
+> 	  ....
+>        xlog_grant_head_wait()	---- blocks waiting for log space
+>        .....
+> 
+> 					xfsaild_push()   ----- iterates AIL
+> 					  grabs log item
+> 					    lock log item
+> 	>>>>>>>>>>>>>>>>>>>>>		      down_read_trylock(&i_lock);
+> 					      format item into buffer
+> 					      add to dirty buffer list
+> 					  ....
+> 					  submit dirty buffer list for IO
+> 					    buffer IO started
+> 					.....
+> 					<async IO completion context>
+> 					buffer callbacks
+> 					  mark inode clean
+> 					  remove inode from AIL
+> 					  move tail of log forwards
+> 					    wake grant head waiters
+> 	<woken by log tail moving>
+> 	<log space available>
+> 	transaction reservation granted
+>      .....
+>      down_write(some other inode ilock)
+>      <modify some other inode>
+>      xfs_trans_commit
+>      .....
+> 
+> (*) xfsaild runs with PF_MEMALLOC context.
+> 
+> The problem is that if the ilock is held exclusively at GFP_KERNEL
+> time, the xfsaild cannot lock the inode to flush it, so if that
+> inode pins the tail of the log then we can't make space available
+> for xfs_trans_reserve and there is the deadlock.
+> 
+> Once xfs_trans_reserve completes, however, we'll take the ilock on
+> *some other inode*, and that's where the "it can't be the inode we
+> currently hold locked because we have references to it" and
+> henceit's safe to have a pattern like:
+> 
+> down_read(&i_lock);		-- lockdep marks lock as held
+> kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
+>   --> reclaim()
+>     down_write(&ilock)
+> 
+> because the lock within reclaim context is completely unrelated to
+> the lock we already hold.
+> 
+> Lockdep can't possibly know about this because the deadlock involves
+> locking contexts that *aren't doing anything wrong within their own
+> contexts*. It's only when you add the dependency of log space
+> reservation requirements needed to make forwards progress that
+> there's then an issue with locking and reclaim.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/md/dm-crypt.c?id=4ed89c97b0706477b822ea2182827640c0cec486
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
