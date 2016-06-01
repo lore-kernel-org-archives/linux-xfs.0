@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE7807CB4
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 02:37:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 802F5304051
-	for <xfs@oss.sgi.com>; Mon, 23 May 2016 00:37:32 -0700 (PDT)
-Received: from mx404.newsletter.trustmta.com (mx404.newsletter.trustmta.com
-	[122.115.60.101]) by cuda.sgi.com with ESMTP id
-	r0sHO0RArHPyrPDa for <xfs@oss.sgi.com>;
-	Mon, 23 May 2016 00:37:21 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 25F957CA2
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 20:42:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DF1A68F8035
+	for <xfs@oss.sgi.com>; Tue, 31 May 2016 18:42:35 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	yldK4Qiral7FBD81 for <xfs@oss.sgi.com>;
+	Tue, 31 May 2016 18:42:33 -0700 (PDT)
+Date: Wed, 1 Jun 2016 11:42:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: make several functions static
+Message-ID: <20160601014214.GH12670@dastard>
+References: <3ec4e394-1885-6f3e-f909-c9a77a72668b@sandeen.net>
 MIME-Version: 1.0
-From: =?utf-8?B?5aSW6LS45pCc?= <sale11@waimaosou.com>
-Date: 23 May 2016 15:37:19 +0800
-Subject: =?utf-8?B?6Ie0eGZzLOS4muWKoemDqOOAkOaQnOWuouaIt+OAkeWunueUqOaWueahiOS7i+e7jQ==?=
-Message-Id: <20160523073732.66DDAA420A0@cuda.sgi.com>
-Reply-To: sale11@waimaosou.com
+Content-Disposition: inline
+In-Reply-To: <3ec4e394-1885-6f3e-f909-c9a77a72668b@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +25,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-5bCK5pWs55qEeGZz77yM5oKo5aW977yBDQoNCuOAkOWklui0uOaQnOOAkeS4uuaCqOino+WGs+S4
-muWKoemDqOOAkOaQnOWuouaIt+OAkemBh+WIsOeahOWQhOenjemXrumimO+8jOaPkOS+m+WPr+aM
-gee7reW8gOWPkeino+WGs+aIt+aWueahiOOAgg0KDQrkuJrliqHpg6jlvZPliY3nmoTpl67popjv
-vJoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCjEu5Lia5Yqh5ZGY5p2C5Lmx5peg56ug572R5LiK5pCc57Si5a6i5oi3
-77yM5peg5rOV566h55CG77ybDQoyLuS6uuWRmOeahOa1geWkse+8jOmAoOaIkOWuouaIt+S/oeaB
-r+S4ouWkse+8mw0KMy7pmaTkuobkuJrnu6nvvIznu4/nkIblvojpmr7nm5HmjqfkuJrliqHlkZjl
-hajov4fnqIvvvJsgDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCjflubTov5DooYznu4/pqozop6PlhrPmlrnmoYjv
-vJoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCuKYheS7juOAkOS6kuiBlOe9keWFrOWFsei1hOa6kOOAkemrmOaViOey
-vuWHhuiOt+WPluWuouaIt++8jOWMheaLrO+8mg0KICAgIOKYhuaQnOe0ouW8leaTjg0KICAgIOKY
-hiDlm77niYcNCiAgICDimIbpu4TpobUNCiAgICDimIYgQ3VzdG9tIERhdGHmkJzntKINCiAgICDi
-mIbmkJzntKLlvJXmk47mm7TmlrDmkJzntKINCiAgICDimIboh6rlrprkuYnph4fpm4YNCiAgICDn
-rYnmlrnlvI/ojrflj5bnsr7noa7lrqLmiLcNCg0K4piF44CQ57K+6YCJ5a6i5oi344CR566h55CG
-77yM5LyB5Lia5Y+v5oyB57ut5byA5Y+R5a6i5oi35pa55byPDQotLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCuivpuaD
-heivt+WPguiAg++8mg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KaHR0cDovL3d3dy50cmFkZXNvdS5jb20vcHJvZHVj
-dHMvP3NuPTIwMTYNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCuW7uuiuruiuqei0teWFrOWPuOavj+S4quWRmOW3peWF
-jei0ueazqOWGjOS9k+mqjOWFiO+9ng0KDQoNCuWmguaenOS4i+asoeS4jeaDs+aOpeWPl+exu+S8
-vOmCruS7tu+8jOivt+WbnuWkjeWRiuefpeWFjeaJk+aJsO+9ng0KDQrlpJbotLjmkJzmlazkuIoK
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
-bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
-Zm8veGZzCg==
+On Thu, May 19, 2016 at 02:16:25PM -0500, Eric Sandeen wrote:
+> Al Viro noticed that xfs_lock_inodes should be static, and
+> that led to ... a few more.
+> 
+> These are just the easy ones, others require moving functions
+> higher in source files, so that's not done here to keep
+> this review simple.
+....
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index c5d4eba..04afe38 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -524,7 +524,7 @@ xfs_setattr_mode(
+>  	inode->i_mode |= mode & ~S_IFMT;
+>  }
+>  
+> -void
+> +static void
+>  xfs_setattr_time(
+>  	struct xfs_inode	*ip,
+>  	struct iattr		*iattr)
+> diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+> index a0f84ab..d4bcc29 100644
+> --- a/fs/xfs/xfs_iops.h
+> +++ b/fs/xfs/xfs_iops.h
+> @@ -30,7 +30,6 @@ extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+>   */
+>  #define XFS_ATTR_NOACL		0x01	/* Don't call posix_acl_chmod */
+>  
+> -extern void xfs_setattr_time(struct xfs_inode *ip, struct iattr *iattr);
+>  extern int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap,
+>  			       int flags);
+>  extern int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap);
+
+Just a note: xfs_pnfs.c uses this function, so it can't be made
+static. I've dropped this hunk. Maybe add CONFIG_NFSD_PNFS=y to you
+kernel config?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
