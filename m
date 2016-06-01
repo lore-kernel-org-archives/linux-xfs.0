@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 368487CA6
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:36:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DE411304059
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 05:36:55 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Qke0lanyciLDnkGk (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:36:54 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 721C23B71B
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 12:36:54 +0000 (UTC)
-Received: from redhat.com (vpn-61-114.rdu2.redhat.com [10.10.61.114])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u51CaoQK011039
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>; Wed, 1 Jun 2016 08:36:53 -0400
-Date: Wed, 1 Jun 2016 14:36:50 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: XFS_IOC_FSEMAP (old XFS_IOC_FIEMAPFS)
-Message-ID: <20160601123650.GC7967@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D1C47CA2
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 02:10:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0402DAC001
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 00:10:53 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	WFrR1wCa0ggWlDUw for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2016 00:10:50 -0700 (PDT)
+Date: Wed, 1 Jun 2016 17:10:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Internal error xfs_trans_cancel
+Message-ID: <20160601071047.GJ12670@dastard>
+References: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,28 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Daniel Wagner <wagi@monom.org>
+Cc: linux-fsdevel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-Howdy folks,
+On Wed, Jun 01, 2016 at 07:52:31AM +0200, Daniel Wagner wrote:
+> Hi,
+> 
+> I got the error message below while compiling a kernel 
+> on that system. I can't really say if I did something
+> which made the file system unhappy before the crash.
+> 
+> 
+> [Jun 1 07:41] XFS (sde1): Internal error xfs_trans_cancel at line 984 of file fs/xfs/xfs_trans.c.  Caller xfs_rename+0x453/0x960 [xfs]
 
-I've talked to Dave about moving forward XFS_IOC_FIEMAPFS ioctl, and
-consequently their users, such as xfs_spaceman tool.
+Anything in the log before this?
 
-For now, I'm porting the old stuff to the current code, doing code cleanups,
-etc.
+> [  +0.000095] CPU: 22 PID: 8640 Comm: gcc Not tainted 4.7.0-rc1 #16
+> [  +0.000035] Hardware name: Dell Inc. PowerEdge R820/066N7P, BIOS 2.0.20 01/16/2014
+> [  +0.000048]  0000000000000286 00000000c8be6bc3 ffff885fa9473cb0 ffffffff813d146e
+> [  +0.000056]  ffff885fa9ac5ed0 0000000000000001 ffff885fa9473cc8 ffffffffa0213cdc
+> [  +0.000053]  ffffffffa02257b3 ffff885fa9473cf0 ffffffffa022eb36 ffff883faa502d00
+> [  +0.000053] Call Trace:
+> [  +0.000028]  [<ffffffff813d146e>] dump_stack+0x63/0x85
+> [  +0.000069]  [<ffffffffa0213cdc>] xfs_error_report+0x3c/0x40 [xfs]
+> [  +0.000065]  [<ffffffffa02257b3>] ? xfs_rename+0x453/0x960 [xfs]
+> [  +0.000064]  [<ffffffffa022eb36>] xfs_trans_cancel+0xb6/0xe0 [xfs]
+> [  +0.000065]  [<ffffffffa02257b3>] xfs_rename+0x453/0x960 [xfs]
+> [  +0.000062]  [<ffffffffa021fa63>] xfs_vn_rename+0xb3/0xf0 [xfs]
+> [  +0.000040]  [<ffffffff8124f92c>] vfs_rename+0x58c/0x8d0
+> [  +0.000032]  [<ffffffff81253fb1>] SyS_rename+0x371/0x390
+> [  +0.000036]  [<ffffffff817d2032>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+> [  +0.000040] XFS (sde1): xfs_do_force_shutdown(0x8) called from line 985 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffffa022eb4f
+> [  +0.027680] XFS (sde1): Corruption of in-memory data detected.  Shutting down filesystem
+> [  +0.000057] XFS (sde1): Please umount the filesystem and rectify the problem(s)
+> [Jun 1 07:42] XFS (sde1): xfs_log_force: error -5 returned.
+> [ +30.081016] XFS (sde1): xfs_log_force: error -5 returned.
 
-If someone wants to take a look, I've made the patches available here:
+Doesn't normally happen, and there's not a lot to go on here. Can
+you provide the info listed in the link below so we have some idea
+of what configuration the error occurred on?
 
-https://github.com/cmaiolino/linux/tree/fsemap
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-For now, I just did the port forward of the patches, but still need to clean up
-a few stuff, and also port forward xfs_spaceman.
+You didn't run out of space or something unusual like that?  Does
+'xfs_repair -n <dev>' report any errors?
 
-As per Dave suggestion (as you can see in $SUBJ), the ioctl has been renamed to
-XFS_IOC_FSEMAP.
+Cheers,
 
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
