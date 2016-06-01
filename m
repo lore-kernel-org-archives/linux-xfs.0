@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A05197CC7
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BBF9AC003
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:14 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 457C47CB7
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B2948F804B
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:10 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id gd3JmFcKZXJKD09D (version=TLSv1.2
+	ESMTP id ldrd8vfaVVB9gXL3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:12 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:09 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/14] xfs: make xfs_bmbt_to_iomap available outside of
-	xfs_pnfs.c
-Date: Wed,  1 Jun 2016 16:44:47 +0200
-Message-Id: <1464792297-13185-5-git-send-email-hch@lst.de>
+Subject: [PATCH 03/14] fs: support DAX based iomap zeroing
+Date: Wed,  1 Jun 2016 16:44:46 +0200
+Message-Id: <1464792297-13185-4-git-send-email-hch@lst.de>
 In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
 References: <1464792297-13185-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,117 +31,54 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-And ensure it works for RT subvolume files an set the block device,
-both of which will be needed to be able to use the function in the
-buffered write path.
+This avoid needing a separate inefficient get_block based DAX zero_range
+implementation in file systems.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bob Peterson <rpeterso@redhat.com>
 ---
- fs/xfs/xfs_iomap.c | 27 +++++++++++++++++++++++++++
- fs/xfs/xfs_iomap.h |  4 ++++
- fs/xfs/xfs_pnfs.c  | 26 --------------------------
- 3 files changed, 31 insertions(+), 26 deletions(-)
+ fs/iomap.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 5839135..2f37194 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -15,6 +15,7 @@
-  * along with this program; if not, write the Free Software Foundation,
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
-+#include <linux/iomap.h>
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_shared.h"
-@@ -940,3 +941,29 @@ error_on_bmapi_transaction:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 5cc6d48..e51adb6 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -24,6 +24,7 @@
+ #include <linux/uio.h>
+ #include <linux/backing-dev.h>
+ #include <linux/buffer_head.h>
++#include <linux/dax.h>
+ #include "internal.h"
+ 
+ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+@@ -268,6 +269,15 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	return iomap_write_end(inode, pos, bytes, bytes, page);
  }
-+
-+void
-+xfs_bmbt_to_iomap(
-+	struct xfs_inode	*ip,
-+	struct iomap		*iomap,
-+	struct xfs_bmbt_irec	*imap)
+ 
++static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
++		struct iomap *iomap)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
++	sector_t sector = iomap->blkno +
++		(((pos & ~(PAGE_SIZE - 1)) - iomap->offset) >> 9);
 +
-+	if (imap->br_startblock == HOLESTARTBLOCK) {
-+		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->type = IOMAP_HOLE;
-+	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
-+		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->type = IOMAP_DELALLOC;
-+	} else {
-+		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
-+		if (imap->br_state == XFS_EXT_UNWRITTEN)
-+			iomap->type = IOMAP_UNWRITTEN;
-+		else
-+			iomap->type = IOMAP_MAPPED;
-+	}
-+	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-+	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
-+	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
++	return __dax_zero_page_range(iomap->bdev, sector, offset, bytes);
 +}
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 8688e66..718f07c 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -18,6 +18,7 @@
- #ifndef __XFS_IOMAP_H__
- #define __XFS_IOMAP_H__
- 
-+struct iomap;
- struct xfs_inode;
- struct xfs_bmbt_irec;
- 
-@@ -29,4 +30,7 @@ int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
- 			struct xfs_bmbt_irec *);
- int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
- 
-+void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
-+		struct xfs_bmbt_irec *);
 +
- #endif /* __XFS_IOMAP_H__*/
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index db3c7df..0f14b2e 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -80,32 +80,6 @@ xfs_fs_get_uuid(
- 	return 0;
- }
+ static loff_t
+ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 		void *data, struct iomap *iomap)
+@@ -286,7 +296,10 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 		offset = pos & (PAGE_SIZE - 1); /* Within page */
+ 		bytes = min_t(unsigned, PAGE_SIZE - offset, count);
  
--static void
--xfs_bmbt_to_iomap(
--	struct xfs_inode	*ip,
--	struct iomap		*iomap,
--	struct xfs_bmbt_irec	*imap)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--
--	if (imap->br_startblock == HOLESTARTBLOCK) {
--		iomap->blkno = IOMAP_NULL_BLOCK;
--		iomap->type = IOMAP_HOLE;
--	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
--		iomap->blkno = IOMAP_NULL_BLOCK;
--		iomap->type = IOMAP_DELALLOC;
--	} else {
--		iomap->blkno =
--			XFS_FSB_TO_DADDR(ip->i_mount, imap->br_startblock);
--		if (imap->br_state == XFS_EXT_UNWRITTEN)
--			iomap->type = IOMAP_UNWRITTEN;
--		else
--			iomap->type = IOMAP_MAPPED;
--	}
--	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
--	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
--}
--
- /*
-  * Get a layout for the pNFS client.
-  */
+-		status = iomap_zero(inode, pos, offset, bytes, iomap);
++		if (IS_DAX(inode))
++			status = iomap_dax_zero(pos, offset, bytes, iomap);
++		else
++			status = iomap_zero(inode, pos, offset, bytes, iomap);
+ 		if (status < 0)
+ 			return status;
+ 
 -- 
 2.1.4
 
