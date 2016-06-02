@@ -1,19 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6ADF17CA0
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:40 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D7527CAE
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 21:13:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A6EE9AC007
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bwPNfDpVbQ2OSPYq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:34 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 00/45] v8: separate operations from flags in the bio/request
-	structs
-Date: Sun,  5 Jun 2016 14:31:40 -0500
-Message-Id: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E2E318F8049
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 19:13:23 -0700 (PDT)
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id wiOfBPfb8mr5uVeK
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 19:13:20 -0700 (PDT)
+Received: from mail-yw0-f181.google.com ([209.85.161.181])
+	by youngberry.canonical.com with esmtpsa
+	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
+	(envelope-from <ming.lei@canonical.com>) id 1b8I8N-0005BV-8D
+	for xfs@oss.sgi.com; Thu, 02 Jun 2016 02:13:19 +0000
+Received: by mail-yw0-f181.google.com with SMTP id x189so36793542ywe.3
+	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 19:13:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160601135150.GA30759@redhat.com>
+References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
+	<20160531155348.GA24840@redhat.com>
+	<CACVXFVM9FqZFkMat_4ysJ8_vFd1FFnf6Bd9sHDDoCK=v93wViQ@mail.gmail.com>
+	<20160601134427.GA15888@infradead.org>
+	<20160601135150.GA30759@redhat.com>
+Date: Thu, 2 Jun 2016 10:13:18 +0800
+Message-ID: <CACVXFVNFH7zYOG+RsCNEXuxLE+ybq1qbLk6h=keN19LWsKT2mw@mail.gmail.com>
+Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
+From: Ming Lei <ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,270 +35,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jens Axboe <axboe@fb.com>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, NeilBrown <neilb@suse.com>, Christoph Hellwig <hch@infradead.org>, Joe Thornber <ejt@redhat.com>, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
 
-The following patches begin to cleanup the request->cmd_flags and
-bio->bi_rw mess. We currently use cmd_flags to specify the operation,
-attributes and state of the request. For bi_rw we use it for similar
-info and also the priority but then also have another bi_flags field
-for state. At some point, we abused them so much we just made cmd_flags
-64 bits, so we could add more.
+On Wed, Jun 1, 2016 at 9:51 PM, Mike Snitzer <snitzer@redhat.com> wrote:
+> On Wed, Jun 01 2016 at  9:44am -0400,
+> Christoph Hellwig <hch@infradead.org> wrote:
+>
+>> On Wed, Jun 01, 2016 at 08:38:41PM +0800, Ming Lei wrote:
+>> > > be dm-crypt.c.  Maybe you've identified some indirect use of
+>> > > BIO_MAX_SIZE?
+>> >
+>> > I mean the recently introduced BIO_MAX_SIZE in -next tree:
+>> >
+>> > https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/md/dm-crypt.c?id=4ed89c97b0706477b822ea2182827640c0cec486
+>>
+>> The crazy bcache bios striking back once again.  I really think it's
+>> harmful having a _MAX value and then having a minor driver
+>> reinterpreting it and sending larger ones.  Until we can lift the
+>> maximum limit in general nad have common code exercise it we really need
+>> to stop bcache from sending these instead of littering the tree with
+>> workarounds.
+>
+> So should I not push this type of fix to Linus now?  I was going to send
+> the above commit and this one to him this week:
+> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.7&id=57b3001b240629ecc5266d28c845e23ca5f11719
 
-The following patches seperate the operation (read, write discard,
-flush, etc) from cmd_flags/bi_rw. They were made against Linus's
-tree.
+I don't suggest this kind of fix.
 
-I put a git tree here:
+That fix should be in bcache or blk-core instead of other places.
+Last time, I sent out the following fix([PATCH v1] block: make sure big bio is
+splitted into at most 256 bvecs):
 
-https://github.com/mikechristie/linux-kernel/tree/op
+     https://lkml.org/lkml/2016/4/5/1046
 
-The patches are in the op branch.
+But forget to clear the flag of REQ_NOMERGE for this case.
 
-Note that I made it against linus's tree, but right now the only
-major conflicts with -next are in the dm tree from the dm-rq related
-changes. I have patches for that and can submit them. I was just not
-sure how to coordinate everything.
+If Jens doesn't mind doing such thing in block-core, I can post v2
+for this issue.
 
-v8:
-1. Handle Jens's review comments from LSF.  Instead of adding a op
-field, store the value in bi_rw/cmd_flags and access via accessors.
+>
+> Instead, should bcache be made to not do what it is doing?
 
-v7:
-1. Fix broken feature_flush/fua use.
+It depends on if bcache is the only user of this kind of usage.
+In theory, any driver can use external bvec table.
 
-v6 and maybe hopfully the last version:
-1. Adapt patch 41 to Jens's QUEUE_FLAG_WC/FUA patchset.
-
-v5:
-1. Missed crypto fs submit_bio_wait call.
-2. Change nfs bi_rw check to bi_op.
-3. btrfs. Convert finish_parity_scrub.
-4. Reworked against Jens's QUEUE_FLAG patches so I could drop my similar
-code.
-5. Separated the core block layer change into multiple patches for
-merging, elevator, stats, mq and non mq request allocation to try
-and make it easier to read.
-
-v4:
-1. Rebased to current linux-next tree.
-
-v3:
-
-1. Used "=" instead of "|="  to setup bio bi_rw.
-2. Removed __get_request cmd_flags compat code.
-3. Merged initial dm related changes requested by Mike Snitzer.
-4. Fixed ubd kbuild errors in flush related patches.
-5. Fix 80 char col issues in several patches.
-6. Fix issue with one of the btrfs patches where it looks like I reverted
-a patch when trying to fix a merge error.
-
-v2
-
-1. Dropped arguments from submit_bio, and had callers setup
-bio.
-2. Add REQ_OP_FLUSH for request_fn users and renamed REQ_FLUSH
-to REQ_PREFLUSH for make_request_fn users.
-3. Dropped bio/rq_data_dir functions, and added a op_is_write
-function instead.
-
-
-
-Diffstat for the set:
-
-Documentation/block/writeback_cache_control.txt |   28 +++---
- Documentation/device-mapper/log-writes.txt      |   10 +-
- arch/um/drivers/ubd_kern.c                      |    2
- block/bio.c                                     |   20 ++--
- block/blk-core.c                                |  105 +++++++++++------------
- block/blk-flush.c                               |   25 ++---
- block/blk-lib.c                                 |   37 ++++----
- block/blk-map.c                                 |    2
- block/blk-merge.c                               |   24 ++---
- block/blk-mq.c                                  |   42 ++++-----
- block/cfq-iosched.c                             |   55 +++++++-----
- block/elevator.c                                |    7 -
- drivers/ata/libata-scsi.c                       |    2
- drivers/block/brd.c                             |    2
- drivers/block/drbd/drbd_actlog.c                |   34 ++++---
- drivers/block/drbd/drbd_bitmap.c                |   10 +-
- drivers/block/drbd/drbd_int.h                   |    4
- drivers/block/drbd/drbd_main.c                  |   22 ++--
- drivers/block/drbd/drbd_protocol.h              |    2
- drivers/block/drbd/drbd_receiver.c              |   38 +++++---
- drivers/block/drbd/drbd_req.c                   |    2
- drivers/block/drbd/drbd_worker.c                |    7 -
- drivers/block/floppy.c                          |    5 -
- drivers/block/loop.c                            |   16 +--
- drivers/block/mtip32xx/mtip32xx.c               |    2
- drivers/block/nbd.c                             |    4
- drivers/block/osdblk.c                          |    2
- drivers/block/pktcdvd.c                         |    4
- drivers/block/ps3disk.c                         |    4
- drivers/block/rbd.c                             |    4
- drivers/block/rsxx/dma.c                        |    2
- drivers/block/skd_main.c                        |    2
- drivers/block/umem.c                            |    2
- drivers/block/virtio_blk.c                      |    2
- drivers/block/xen-blkback/blkback.c             |   31 ++++--
- drivers/block/xen-blkfront.c                    |   67 +++++++--------
- drivers/block/zram/zram_drv.c                   |    2
- drivers/ide/ide-cd_ioctl.c                      |    3
- drivers/ide/ide-disk.c                          |    2
- drivers/ide/ide-floppy.c                        |    2
- drivers/lightnvm/rrpc.c                         |    6 -
- drivers/md/bcache/btree.c                       |    4
- drivers/md/bcache/debug.c                       |   10 +-
- drivers/md/bcache/io.c                          |    2
- drivers/md/bcache/journal.c                     |   11 +-
- drivers/md/bcache/movinggc.c                    |    2
- drivers/md/bcache/request.c                     |   28 +++---
- drivers/md/bcache/super.c                       |   28 +++---
- drivers/md/bcache/writeback.c                   |    4
- drivers/md/bitmap.c                             |    6 -
- drivers/md/dm-bufio.c                           |   11 +-
- drivers/md/dm-cache-target.c                    |   22 ++--
- drivers/md/dm-crypt.c                           |   15 +--
- drivers/md/dm-era-target.c                      |    4
- drivers/md/dm-flakey.c                          |    2
- drivers/md/dm-io.c                              |   65 +++++++-------
- drivers/md/dm-kcopyd.c                          |   11 +-
- drivers/md/dm-log-writes.c                      |   19 ++--
- drivers/md/dm-log.c                             |    5 -
- drivers/md/dm-raid.c                            |    5 -
- drivers/md/dm-raid1.c                           |   24 +++--
- drivers/md/dm-region-hash.c                     |    8 -
- drivers/md/dm-snap-persistent.c                 |   24 ++---
- drivers/md/dm-snap.c                            |    6 -
- drivers/md/dm-stats.c                           |    9 --
- drivers/md/dm-stripe.c                          |    6 -
- drivers/md/dm-thin.c                            |   30 +++---
- drivers/md/dm.c                                 |   45 +++++-----
- drivers/md/linear.c                             |    4
- drivers/md/md.c                                 |   24 +++--
- drivers/md/md.h                                 |    5 -
- drivers/md/multipath.c                          |    2
- drivers/md/raid0.c                              |    4
- drivers/md/raid1.c                              |   38 ++++----
- drivers/md/raid10.c                             |   54 ++++++------
- drivers/md/raid5-cache.c                        |   35 ++++---
- drivers/md/raid5.c                              |   48 +++++-----
- drivers/mmc/card/block.c                        |   13 +-
- drivers/mmc/card/queue.c                        |    6 -
- drivers/mmc/card/queue.h                        |    8 +
- drivers/mtd/mtd_blkdevs.c                       |    4
- drivers/nvme/host/core.c                        |    4
- drivers/nvme/host/nvme.h                        |    4
- drivers/scsi/osd/osd_initiator.c                |   12 +-
- drivers/scsi/sd.c                               |   34 ++++---
- drivers/staging/lustre/lustre/llite/lloop.c     |    6 -
- drivers/target/target_core_iblock.c             |   53 ++++++-----
- drivers/target/target_core_pscsi.c              |    2
- fs/btrfs/check-integrity.c                      |   73 ++++++++--------
- fs/btrfs/check-integrity.h                      |    6 -
- fs/btrfs/compression.c                          |   17 ++-
- fs/btrfs/ctree.h                                |    2
- fs/btrfs/disk-io.c                              |   45 ++++------
- fs/btrfs/disk-io.h                              |    2
- fs/btrfs/extent-tree.c                          |    2
- fs/btrfs/extent_io.c                            |  107 +++++++++++-------------
- fs/btrfs/extent_io.h                            |    8 -
- fs/btrfs/inode.c                                |   74 ++++++++--------
- fs/btrfs/raid56.c                               |   27 +++---
- fs/btrfs/scrub.c                                |   25 +++--
- fs/btrfs/volumes.c                              |   95 +++++++++++----------
- fs/btrfs/volumes.h                              |    6 -
- fs/buffer.c                                     |   75 ++++++++--------
- fs/crypto/crypto.c                              |    5 -
- fs/direct-io.c                                  |   37 ++++----
- fs/exofs/ore.c                                  |    2
- fs/ext4/balloc.c                                |    2
- fs/ext4/ialloc.c                                |    2
- fs/ext4/inode.c                                 |    8 -
- fs/ext4/mmp.c                                   |    4
- fs/ext4/namei.c                                 |    3
- fs/ext4/page-io.c                               |    9 +-
- fs/ext4/readpage.c                              |   11 +-
- fs/ext4/super.c                                 |    2
- fs/f2fs/checkpoint.c                            |   10 +-
- fs/f2fs/data.c                                  |   51 ++++++-----
- fs/f2fs/f2fs.h                                  |    5 -
- fs/f2fs/gc.c                                    |    9 +-
- fs/f2fs/inline.c                                |    3
- fs/f2fs/node.c                                  |    8 +
- fs/f2fs/segment.c                               |   18 ++--
- fs/f2fs/trace.c                                 |    7 -
- fs/fat/misc.c                                   |    2
- fs/gfs2/bmap.c                                  |    4
- fs/gfs2/dir.c                                   |    2
- fs/gfs2/log.c                                   |    8 -
- fs/gfs2/lops.c                                  |   14 +--
- fs/gfs2/lops.h                                  |    2
- fs/gfs2/meta_io.c                               |   20 ++--
- fs/gfs2/ops_fstype.c                            |    5 -
- fs/gfs2/quota.c                                 |    2
- fs/hfsplus/hfsplus_fs.h                         |    2
- fs/hfsplus/part_tbl.c                           |    5 -
- fs/hfsplus/super.c                              |    6 -
- fs/hfsplus/wrapper.c                            |   17 ++-
- fs/isofs/compress.c                             |    2
- fs/jbd2/commit.c                                |    6 -
- fs/jbd2/journal.c                               |   12 +-
- fs/jbd2/recovery.c                              |    4
- fs/jfs/jfs_logmgr.c                             |   10 +-
- fs/jfs/jfs_metapage.c                           |   14 +--
- fs/logfs/dev_bdev.c                             |   27 +++---
- fs/mpage.c                                      |   43 ++++-----
- fs/nfs/blocklayout/blocklayout.c                |   26 +++--
- fs/nilfs2/btnode.c                              |    6 -
- fs/nilfs2/btnode.h                              |    2
- fs/nilfs2/btree.c                               |    6 -
- fs/nilfs2/gcinode.c                             |    5 -
- fs/nilfs2/mdt.c                                 |   11 +-
- fs/nilfs2/segbuf.c                              |   20 ++--
- fs/ntfs/aops.c                                  |    6 -
- fs/ntfs/compress.c                              |    2
- fs/ntfs/file.c                                  |    2
- fs/ntfs/logfile.c                               |    2
- fs/ntfs/mft.c                                   |    4
- fs/ocfs2/aops.c                                 |    2
- fs/ocfs2/buffer_head_io.c                       |    8 -
- fs/ocfs2/cluster/heartbeat.c                    |   22 ++--
- fs/ocfs2/super.c                                |    2
- fs/reiserfs/inode.c                             |    4
- fs/reiserfs/journal.c                           |   14 +--
- fs/reiserfs/stree.c                             |    4
- fs/reiserfs/super.c                             |    2
- fs/squashfs/block.c                             |    4
- fs/udf/dir.c                                    |    2
- fs/udf/directory.c                              |    2
- fs/udf/inode.c                                  |    2
- fs/ufs/balloc.c                                 |    2
- fs/ufs/util.c                                   |    2
- fs/xfs/xfs_aops.c                               |   27 +++---
- fs/xfs/xfs_buf.c                                |   32 +++----
- include/linux/bio.h                             |   37 +++-----
- include/linux/blk-cgroup.h                      |   15 +--
- include/linux/blk_types.h                       |   94 +++++++++++----------
- include/linux/blkdev.h                          |   56 ++++++++----
- include/linux/blktrace_api.h                    |    2
- include/linux/buffer_head.h                     |   11 +-
- include/linux/dm-io.h                           |    3
- include/linux/elevator.h                        |    4
- include/linux/fs.h                              |   71 +++++++++------
- include/trace/events/bcache.h                   |   12 +-
- include/trace/events/block.h                    |   31 ++++--
- include/trace/events/f2fs.h                     |   37 ++++----
- kernel/power/swap.c                             |   35 ++++---
- kernel/trace/blktrace.c                         |   72 +++++++++-------
- mm/page_io.c                                    |   14 +--
- 186 files changed, 1679 insertions(+), 1413 deletions(-)
-
-
+Thanks,
+Ming
 
 _______________________________________________
 xfs mailing list
