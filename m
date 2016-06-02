@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 80A1D7CA0
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 12:43:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 52F8E3040D4
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 10:43:27 -0700 (PDT)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id WSmg7yU0gJ5Eu30O (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 10:43:24 -0700 (PDT)
-Subject: Re: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
-References: <57503353.2050402@profihost.ag>
-	<57503D33.6010000@applied-asynchrony.com>
-	<575040D8.8070903@applied-asynchrony.com>
-	<20160602222545.GO12670@dastard>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <5751C1B9.90709@profihost.ag>
-Date: Fri, 3 Jun 2016 19:43:21 +0200
+	by oss.sgi.com (Postfix) with ESMTP id 92CB57CA3
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 10:11:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 53844304062
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 08:11:26 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3aEehPxLDhXVC6pc (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 02 Jun 2016 08:11:20 -0700 (PDT)
+Date: Thu, 2 Jun 2016 17:11:16 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160602151116.GD3190@twins.programming.kicks-ass.net>
+References: <20160516130519.GJ23146@dhcp22.suse.cz>
+	<20160516132541.GP3193@twins.programming.kicks-ass.net>
+	<20160516231056.GE18496@dastard>
+	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
+	<20160517223549.GV26977@dastard>
+	<20160519081146.GS3193@twins.programming.kicks-ass.net>
+	<20160520001714.GC26977@dastard>
+	<20160601131758.GO26601@dhcp22.suse.cz>
+	<20160601181617.GV3190@twins.programming.kicks-ass.net>
+	<20160602145048.GS1995@dhcp22.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20160602222545.GO12670@dastard>
+Content-Disposition: inline
+In-Reply-To: <20160602145048.GS1995@dhcp22.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +34,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
 
-Am 03.06.2016 um 00:25 schrieb Dave Chinner:
-> On Thu, Jun 02, 2016 at 04:21:12PM +0200, Holger Hoffst=E4tte wrote:
->> On 06/02/16 16:05, Holger Hoffst=E4tte wrote:
->>> On 06/02/16 15:23, Stefan Priebe - Profihost AG wrote:
->>>> I found a bug report from redhat here
->>>> https://bugzilla.redhat.com/show_bug.cgi?id=3D1234586 pointing to this=
- commit:
->>>> xfs: handle dquot buffer readahead in log recovery correctly
->>>>
->>>> which isn't part of 4.4. Is it missing from linux-stable?
->>>
->>> Yes, mainline 7d6a13f02356 is missing from 4.4-stable because it applie=
-s,
->>> but doesn't compile. :)
->>>
->>> I'll look into a fix.
->>
->> Well, that was easy. It also needs 233135b763 ("xfs: print name of verif=
-ier
->> if it fails") which added a .name to the various xfs_buf_ops types.
->> Can someone confirm that these can both go into 4.4-stable?
-> =
+On Thu, Jun 02, 2016 at 04:50:49PM +0200, Michal Hocko wrote:
+> On Wed 01-06-16 20:16:17, Peter Zijlstra wrote:
 
-> You could just remove the line:
-> =
+> > So my favourite is the dedicated GFP flag, but if that's unpalatable for
+> > the mm folks then something like the below might work. It should be
+> > similar in effect to your proposal, except its more limited in scope.
+> [...]
+> > @@ -2876,11 +2883,36 @@ static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
+> >  	if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
+> >  		return;
+> >  
+> > +	/*
+> > +	 * Skip _one_ allocation as per the lockdep_skip_alloc() request.
+> > +	 * Must be done last so that we don't loose the annotation for
+> > +	 * GFP_ATOMIC like things from IRQ or other nesting contexts.
+> > +	 */
+> > +	if (current->lockdep_reclaim_gfp & __GFP_SKIP_ALLOC) {
+> > +		current->lockdep_reclaim_gfp &= ~__GFP_SKIP_ALLOC;
+> > +		return;
+> > +	}
+> > +
+> >  	mark_held_locks(curr, RECLAIM_FS);
+> >  }
+> 
+> I might be missing something but does this work actually? Say you would
+> want a kmalloc(size), it would call
+> slab_alloc_node
+>   slab_pre_alloc_hook
+>     lockdep_trace_alloc
+> [...]
+>   ____cache_alloc_node
+>     cache_grow_begin
+>       kmem_getpages
+>         __alloc_pages_node
+> 	  __alloc_pages_nodemask
+> 	    lockdep_trace_alloc
 
-> +       .name =3D "xfs_dquot_ra",
-> =
+Bugger :/ You're right, that would fail.
 
-> from 7d6a13f02356 and that will fix the backport problem and not
-> require any other commits to be backported. I'm fine with either
-> solution.
-> =
+So how about doing:
 
+#define __GFP_NOLOCKDEP	(1u << __GFP_BITS_SHIFT)
 
-Great. Should be push that one to greg?
+this means it cannot be part of address_space::flags or
+radix_tree_root::gfp_mask, but that might not be a bad thing.
 
-Greets,
-Stefan
+And this solves the scarcity thing, because per pagemap we need to have
+5 'spare' bits anyway.
+
+> I understand your concerns about the scope but usually all allocations
+> have to be __GFP_NOFS or none in the same scope so I would see it as a
+> huge deal.
+
+With scope I mostly meant the fact that you have two calls that you need
+to pair up. That's not really nice as you can 'annotate' a _lot_ of code
+in between. I prefer the narrower annotations where you annotate a
+single specific site.
 
 _______________________________________________
 xfs mailing list
