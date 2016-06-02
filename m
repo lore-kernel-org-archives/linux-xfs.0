@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7FE097CA0
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 02:03:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 51C9A8F804C
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 00:03:45 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id pL8q814AKTByEv1J (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 00:03:43 -0700 (PDT)
-Date: Wed, 8 Jun 2016 00:03:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Allow compiling xfsprogs in a cross compile environment.
-Message-ID: <20160608070339.GB18458@infradead.org>
-References: <AMHSBOU5+XsM503_3khtVBWa+Ymz9BrezGzpxpJEr3axCMuR1Q@mail.gmail.com>
-	<1465000276-16554-1-git-send-email-gwendal@chromium.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 291DD7CA3
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:54:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9C4CAC003
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 15:54:20 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Nm4Cg8XCqBCJ9lhi for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2016 15:54:17 -0700 (PDT)
+Date: Fri, 3 Jun 2016 08:54:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] allow enabling reflinks at runtime
+Message-ID: <20160602225415.GP12670@dastard>
+References: <1464877150-20457-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1465000276-16554-1-git-send-email-gwendal@chromium.org>
+In-Reply-To: <1464877150-20457-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gwendal Grignou <gwendal@chromium.org>
-Cc: hch@infradead.org, tytso@mit.edu, vapier@gentoo.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com, darrick.wong@oracle.com
 
-Looks fine,
+On Thu, Jun 02, 2016 at 04:19:07PM +0200, Christoph Hellwig wrote:
+> I've had some vocal user requests to allow enabling reflinks at run time,
+> which happens to be a mostly trivial feature.  The only caveat is that we
+> need a large enough log size to support the reflink requirements, but for
+> typical large file systems that's not an issue.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Hmmm - how does this interact with all the rmap code? I was not
+planning on enabling reflink without rmap and vice versa simply
+because it makes the validation and testing matrix vastly more
+complex. Indeed, having reflink turned on after a filesystem has
+aged for some time (i.e. from unknown initial conditions) makes
+validation especially tricky....
+
+Darrick?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
