@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D1257CA3
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:25:54 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BEEE07CAE
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 19:27:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 072A0AC001
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 15:25:50 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	D1TiPpQhxz1sC5Z8 for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2016 15:25:48 -0700 (PDT)
-Date: Fri, 3 Jun 2016 08:25:45 +1000
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 83C038F8039
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 17:27:14 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ZTo72DUYMpcdgzzm for <xfs@oss.sgi.com>;
+	Wed, 01 Jun 2016 17:27:10 -0700 (PDT)
+Date: Thu, 2 Jun 2016 10:26:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
-Message-ID: <20160602222545.GO12670@dastard>
-References: <57503353.2050402@profihost.ag>
-	<57503D33.6010000@applied-asynchrony.com>
-	<575040D8.8070903@applied-asynchrony.com>
+Subject: Re: Internal error xfs_trans_cancel
+Message-ID: <20160602002653.GL12670@dastard>
+References: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
+	<20160601071047.GJ12670@dastard>
+	<e80cee4f-1789-5418-ffa8-7551138bda0a@monom.org>
+	<0644b434-6cea-4188-9702-469c26d191b8@monom.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <575040D8.8070903@applied-asynchrony.com>
+In-Reply-To: <0644b434-6cea-4188-9702-469c26d191b8@monom.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +28,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Daniel Wagner <wagi@monom.org>
+Cc: linux-fsdevel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, Jun 02, 2016 at 04:21:12PM +0200, Holger Hoffst=E4tte wrote:
-> On 06/02/16 16:05, Holger Hoffst=E4tte wrote:
-> > On 06/02/16 15:23, Stefan Priebe - Profihost AG wrote:
-> >> I found a bug report from redhat here
-> >> https://bugzilla.redhat.com/show_bug.cgi?id=3D1234586 pointing to this=
- commit:
-> >> xfs: handle dquot buffer readahead in log recovery correctly
-> >>
-> >> which isn't part of 4.4. Is it missing from linux-stable?
-> > =
+On Wed, Jun 01, 2016 at 04:13:10PM +0200, Daniel Wagner wrote:
+> >> Anything in the log before this?
+> > 
+> > Just the usual stuff, as I remember. Sorry, I haven't copied the whole log.
+> 
+> Just triggered it again. My steps for it are:
+> 
+> - run all lockperf test
+> 
+>   git://git.samba.org/jlayton/lockperf.git
+> 
+>   via my test script:
+>  
+> #!/bin/sh
+>
+> run_tests () {
+.....
+> for c in `seq 8 32 128`; do
+>     for l in `seq 100 100 500`; do
+>         time run_tests "posix01 -n $c -l $l "     $DIR/posix01-$c-$l.data
+>         time run_tests "posix02 -n $c -l $l "     $DIR/posix02-$c-$l.data
+>         time run_tests "posix03 -n $c -l $l "     $DIR/posix03-$c-$l.data
+>         time run_tests "posix04 -n $c -l $l "     $DIR/posix04-$c-$l.data
 
-> > Yes, mainline 7d6a13f02356 is missing from 4.4-stable because it applie=
-s,
-> > but doesn't compile. :)
-> > =
+posix03 and posix04 just emit error messages:
 
-> > I'll look into a fix.
-> =
+posix04 -n 40 -l 100
+posix04: invalid option -- 'l'
+posix04: Usage: posix04 [-i iterations] [-n nr_children] [-s] <filename>
+.....
 
-> Well, that was easy. It also needs 233135b763 ("xfs: print name of verifi=
-er
-> if it fails") which added a .name to the various xfs_buf_ops types.
-> Can someone confirm that these can both go into 4.4-stable?
 
-You could just remove the line:
+So I changed them to run "-i $l" instead, and that has a somewhat
+undesired effect:
 
-+       .name =3D "xfs_dquot_ra",
+static void
+kill_children()
+{
+        siginfo_t       infop;
 
-from 7d6a13f02356 and that will fix the backport problem and not
-require any other commits to be backported. I'm fine with either
-solution.
+        signal(SIGINT, SIG_IGN);
+>>>>>   kill(0, SIGINT);
+        while (waitid(P_ALL, 0, &infop, WEXITED) != -1);
+}
+
+Yeah, it sends a SIGINT to everything with a process group id. It
+kills the parent shell:
+
+$ ./run-lockperf-tests.sh /mnt/scratch/
+pid 9597's current affinity list: 0-15
+pid 9597's new affinity list: 0,4,8,12
+sh: 1: cannot create /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor: Directory nonexistent
+posix01 -n 8 -l 100
+posix02 -n 8 -l 100
+posix03 -n 8 -i 100
+
+$
+
+So, I've just removed those tests from your script. I'll see if I
+have any luck with reproducing the problem now.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
