@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D9E67CA7
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 01:35:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FF948F8049
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 23:35:45 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	p8G17fzPcg8Zw681 for <xfs@oss.sgi.com>;
-	Wed, 01 Jun 2016 23:35:42 -0700 (PDT)
-Date: Thu, 2 Jun 2016 16:35:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Internal error xfs_trans_cancel
-Message-ID: <20160602063539.GM12670@dastard>
-References: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
-	<20160601071047.GJ12670@dastard>
-	<e80cee4f-1789-5418-ffa8-7551138bda0a@monom.org>
-	<0644b434-6cea-4188-9702-469c26d191b8@monom.org>
-	<20160602002653.GL12670@dastard>
-	<af997005-e144-5509-885c-a688562ea3ec@monom.org>
+	by oss.sgi.com (Postfix) with ESMTP id 26DB77CAE
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 00:42:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ED5B58F8039
+	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 22:42:03 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 6t64fbettUzq4cmr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 22:42:01 -0700 (PDT)
+Date: Wed, 1 Jun 2016 22:41:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: XFS_IOC_FSEMAP (old XFS_IOC_FIEMAPFS)
+Message-ID: <20160602054151.GE5053@birch.djwong.org>
+References: <20160601123650.GC7967@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <af997005-e144-5509-885c-a688562ea3ec@monom.org>
+In-Reply-To: <20160601123650.GC7967@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +29,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Daniel Wagner <wagi@monom.org>
-Cc: linux-fsdevel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, cmaiolino@redhat.com, Dave Chinner <david@fromorbit.com>
 
-On Thu, Jun 02, 2016 at 07:23:24AM +0200, Daniel Wagner wrote:
-> > posix03 and posix04 just emit error messages:
-> > 
-> > posix04 -n 40 -l 100
-> > posix04: invalid option -- 'l'
-> > posix04: Usage: posix04 [-i iterations] [-n nr_children] [-s] <filename>
-> > .....
+On Wed, Jun 01, 2016 at 02:36:50PM +0200, Carlos Maiolino wrote:
+> Howdy folks,
 > 
-> I screwed that this up. I have patched my version of lockperf to make
-> all test using the same options names. Though forgot to send those
-> patches. Will do now.
+> I've talked to Dave about moving forward XFS_IOC_FIEMAPFS ioctl, and
+> consequently their users, such as xfs_spaceman tool.
 > 
-> In this case you can use use '-i' instead of '-l'.
+> For now, I'm porting the old stuff to the current code, doing code cleanups,
+> etc.
 > 
-> > So I changed them to run "-i $l" instead, and that has a somewhat
-> > undesired effect:
-> > 
-> > static void
-> > kill_children()
-> > {
-> >         siginfo_t       infop;
-> > 
-> >         signal(SIGINT, SIG_IGN);
-> >>>>>>   kill(0, SIGINT);
-> >         while (waitid(P_ALL, 0, &infop, WEXITED) != -1);
-> > }
-> > 
-> > Yeah, it sends a SIGINT to everything with a process group id. It
-> > kills the parent shell:
+> If someone wants to take a look, I've made the patches available here:
 > 
-> Ah that rings a bell. I tuned the parameters so that I did not run into
-> this problem. I'll do patch for this one. It's pretty annoying.
+> https://github.com/cmaiolino/linux/tree/fsemap
 > 
-> > $ ./run-lockperf-tests.sh /mnt/scratch/
-> > pid 9597's current affinity list: 0-15
-> > pid 9597's new affinity list: 0,4,8,12
-> > sh: 1: cannot create /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor: Directory nonexistent
-> > posix01 -n 8 -l 100
-> > posix02 -n 8 -l 100
-> > posix03 -n 8 -i 100
-> > 
-> > $
-> > 
-> > So, I've just removed those tests from your script. I'll see if I
-> > have any luck with reproducing the problem now.
+> For now, I just did the port forward of the patches, but still need to clean up
+> a few stuff, and also port forward xfs_spaceman.
 > 
-> I was able to reproduce it again with the same steps.
+> As per Dave suggestion (as you can see in $SUBJ), the ioctl has been renamed to
+> XFS_IOC_FSEMAP.
 
-Hmmm, Ok. I've been running the lockperf test and kernel builds all
-day on a filesystem that is identical in shape and size to yours
-(i.e. xfs_info output is the same) but I haven't reproduced it yet.
-Is it possible to get a metadump image of your filesystem to see if
-I can reproduce it on that?
+I was planning to push the GETFSMAPX ioctl that we talked about at LSF
+as part of the reverse mapping patchset:
 
-Cheers,
+https://lwn.net/Articles/685978/
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Patches here:
+
+https://github.com/djwong/linux/commit/fa063533cffa4627f423ba952422796da9364cfc
+https://github.com/djwong/xfsprogs/commit/21502ebb972f03319940fe8bb1a1e6fcb181ed3f
+https://github.com/djwong/xfsprogs/commit/8347e762e3b94dc14f40754a4db952acdadfb080
+https://github.com/djwong/man-pages/commit/822729ce87cb389f5d980d88187d86745e41ecd5
+
+GETFSMAPX reports device id and owner id, which (AFAICT) FSEMAP
+doesn't.  I think the btrfs folks are interested in using the
+(possibly obsolete) mappings for duperemove enhancements, and from the
+brief look I took at spaceman, it could use this interface for its
+reporting.  xfs_scrub could (possibly) use it to figure out which
+parts of the disk to scrub.
+
+I think it'd be pretty simple to bring spaceman up to date with
+current xfsprogs and teach it to use GETFSMAPX.  I also think there
+could be a (stupider) GETFSMAPX implementation for non-rmapbt
+filesystems that only reports free space extents that are in the
+bnobt.
+
+--D
+
+> 
+> -- 
+> Carlos
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
