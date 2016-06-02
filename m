@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 53BD77CA3
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 19:53:49 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 123557CAE
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 02:04:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25387304089
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:53:46 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	uutb37VeykgeBLbH for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2016 17:53:40 -0700 (PDT)
-Date: Fri, 3 Jun 2016 10:53:24 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C9FA430404E
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 00:04:49 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1G1v9oVPERuMHKPe for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2016 00:04:43 -0700 (PDT)
+Date: Thu, 2 Jun 2016 17:04:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/19 v2] mkfs cleaning
-Message-ID: <20160603005324.GS12670@dastard>
-References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
-	<20160510061054.GI26977@dastard>
-	<CACj3i715X7X65=BjSW8GZLhUF-YjQVShC-_Udmxe24XB1ACb1w@mail.gmail.com>
+Subject: Re: XFS_IOC_FSEMAP (old XFS_IOC_FIEMAPFS)
+Message-ID: <20160602070423.GN12670@dastard>
+References: <20160601123650.GC7967@redhat.com>
+	<20160602054151.GE5053@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CACj3i715X7X65=BjSW8GZLhUF-YjQVShC-_Udmxe24XB1ACb1w@mail.gmail.com>
+In-Reply-To: <20160602054151.GE5053@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +26,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: cmaiolino@redhat.com, xfs@oss.sgi.com
 
-T24gV2VkLCBKdW4gMDEsIDIwMTYgYXQgMDM6MTk6MzRQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
-Ogo+IE9uIFR1ZSwgTWF5IDEwLCAyMDE2IGF0IDg6MTAgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
-ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4gPgo+ID4gTG9va2luZyBhdCB4ZnN0ZXN0cyBydW5z
-LCBuZXcgZmFpbHVyZXMgYXJlOgo+ID4KPiA+IGdlbmVyaWMvMDU0IC0KPiA+IGdlbmVyaWMvMDU1
-IC0gYm90aCBmYWlsIHdpdGg6Cj4gPgo+ID4gKyoqKiBta2ZzIGZhaWxlZDogLWwgdmVyc2lvbj0y
-LHN1PTQwOTYgKioqCj4gPgo+ID4gYW5kIHRoZSAuZnVsbCBmaWxlIGhhcyB0aGlzIHNwZWNpZmlj
-IGVycm9yOgo+ID4KPiA+IElsbGVnYWwgdmFsdWUgNDA5NiBmb3IgLWwgc3Ugb3B0aW9uLiB2YWx1
-ZSBpcyB0b28gc21hbGwKPiA+Cj4gPiBpbmRpY2F0aW5nIHRoYXQgd2Ugc2hvdWxkIGJlIGFsbG93
-aW5nICgyXk4gKiBibG9jayBzaXplKSBsb2cKPiA+IHN0cmlwZSB1bml0cyB0byBiZSBzZXQuIFRo
-aXMgd2lsbCBiZSBhIGxpbWl0IGNvbmZpZ3VyYXRpb24gaXNzdWUsCj4gPiBtb3N0IGxpa2VseSBu
-ZWVkaW5nIGZpeGluZyBpbiBta2ZzLgo+ID4KPiAKPiDigItJJ20gbG9va2luZyBvbiBpdCwgYnV0
-IHRoaXMgaXNzdWUgd2FzIGludHJvZHVjZWQgYnkgRXJpYydzIGZpeCBmb3IKPiBwYXRjaCAibWtm
-czoKPiB0YWJsZSBiYXNlZCBwYXJzaW5nIGZvciBjb252ZXJ0ZWQgcGFyYW1ldGVycyI6Cj4gCj4g
-4oCLPiDigIsKPiBUaGUga2VybmVsIGVuZm9yY2VzIGEgbWF4IG9mIFhMT0dfTUFYX1JFQ09SRF9C
-U0laRSwKPiDigIs+IOKAiwo+IGFuZCBpdCBzaG91bGQgbWF0Y2ggdGhlIGxpbWl0cyBpbiBMX1NV
-TklUIGFmdGVyIGFsbCAuLi4KClNvIG5vYm9keSBnb3QgaXQgcmlnaHQsIHRoZW4uICBpLmUuIEVy
-aWMncyBjaGFuZ2VzIG1hZGUgaXQgdGhlIHNhbWUKYXMgd2hhdCB3YXMgaW4gbXkgb3JpZ2luYWwg
-cGF0Y2hzZXQsIHdoaWNoIG1lYW5zICpJIGdvdCBpdCB3cm9uZyosCnRvby4KClJlYWxseSwgaXQn
-cyBub3QgYXQgYWxsIGltcG9ydGFudCB3aG8gbWFkZSB0aGUgaW5jb3JyZWN0IGNoYW5nZSBvcgp3
-aHkgaXQgd2FzIHdyb25nIC0gaXQncyBlYXN5IHZlcnkgbWFrZSBtaXN0YWtlcyBvciBnZXQgY29t
-cGxleAp0aGluZ3Mgd3JvbmcuIFdoYXQgbWF0dGVycyBpcyB0aGF0IHdlIGlkZW50aWZ5IHRoZSBw
-cm9ibGVtIGNvZGUsIHdlCmZpeCB0aGUgcHJvYmxlbSwgYW5kIHdlIHRyeSBub3QgdG8gbWFrZSB0
-aGUgc2FtZSBlcnJvciBhZ2Fpbi4KTWlzdGFrZXMgYXJlIGEgbGVhcm5pbmcgb3Bwb3J0dW5pdHkg
-Zm9yIGV2ZXJ5b25lLCBub3QganVzdCB0aGUKcGVyc29uIHdobyB3cm90ZSBvciByZXZpZXdlZCB0
-aGUgY29kZS4KCj4gQW5kIGxvb2tpbmcgb24gZnMveGZzL3hmc19zdXBlci5jLCB0aGUgTUlOIHZh
-bHVlIGlzIGVuZm9yY2VkIHRvby4gU28gbWF5YmUKPiBpdCBpcyB0aGUgdGVzdCB3aGF0IG5lZWRz
-IGZpeGluZz8gT3RoZXJ3aXNlLCBJIHdvdWxkIHB1dCBzb21ldGhpbmcKPiBsaWtlIFhGU19NSU5f
-U0VDVE9SU0laRSB0aGVyZS4KPiAKPiBTZWUgaHR0cDovL2x4ci5mcmVlLWVsZWN0cm9ucy5jb20v
-c291cmNlL2ZzL3hmcy94ZnNfc3VwZXIuYyNMNDM1CgptcC0+bV9sb2dic2l6ZSBpcyB0aGUgaW5j
-b3JlIGxvZyBidWZmZXIgc2l6ZSBhbmQgdGhpcyBpcyBjaGVja2luZwp0aGF0IHRoZSBpY2xvZ3Np
-emUgcGFzc2VkIGluIGFzIGEgbW91bnQgb3B0aW9uIGlzIHdpdGhpbiB0aGUgdmFsaWQKcmFuZ2Ug
-KDE2ay0+MjU2aykuIEl0IGlzIG5vdCBjaGVja2luZyBzdHJpcGUgdW5pdCBhbGlnbm1lbnQgbGlt
-aXRzLgpXZSBjYW4gd3JpdGUgYW4gaWNsb2didWYgYXQgYW55IHNlY3RvciBvZmZzZXQgaW4gdGhl
-IGxvZzsgdGhlIGxvZwpzdHJpcGUgdW5pdCBpcyBzaW1wbHkgYW4gYWxpZ25tZW50IGd1aWRlLiBp
-LmUuIGEgbHN1bml0ID0gNDA5NiBpcyA4CnNlY3RvciBhbGlnbm1lbnQsIHNvIHRoZSBpY2xvZ2J1
-ZiB3aGVuIHdyaXR0ZW4gaXMgcGFkZGVkIG91dCB0byA4CnNlY3RvciBib3VuZGFyaWVzIHNvIHRo
-YXQgbG9nIHdyaXRlcyBhcmUgYWx3YXlzIGFsaWduZWQgYW5kIHNpemVkIHRvCnRoZSBsb2cgc3Ry
-aXBlIHVuaXQuCgpUaGUgb25seSBhY3R1YWwgbGltaXQgb24gaWNsb2didWYgc2l6ZSB2cyBsc3Vu
-aXQgaXMgdGhhdCB0aGUKaWNsb2didWYgc2l6ZSBtdXN0IGJlID49IHRoYW4gdGhlIGxzdW5pdCwg
-d2hpY2ggbGltaXRzIHRoZSBsc3VuaXQKdG8gWExPR19NQVhfUkVDT1JEX0JTSVpFLiBpLmUgdmFs
-aWQgcmFuZ2UgZm9yIHNwZWNpZnlpbmcgbHN1bml0IG9uCnRoZSBjb21tYW5kIGxpbmUgaXMgMSA8
-PSBsc3VuaXQgPD0gWExPR19NQVhfUkVDT1JEX0JTSVpFLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRh
-dmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Jun 01, 2016 at 10:41:51PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 01, 2016 at 02:36:50PM +0200, Carlos Maiolino wrote:
+> > Howdy folks,
+> > 
+> > I've talked to Dave about moving forward XFS_IOC_FIEMAPFS ioctl, and
+> > consequently their users, such as xfs_spaceman tool.
+> > 
+> > For now, I'm porting the old stuff to the current code, doing code cleanups,
+> > etc.
+> > 
+> > If someone wants to take a look, I've made the patches available here:
+> > 
+> > https://github.com/cmaiolino/linux/tree/fsemap
+> > 
+> > For now, I just did the port forward of the patches, but still need to clean up
+> > a few stuff, and also port forward xfs_spaceman.
+> > 
+> > As per Dave suggestion (as you can see in $SUBJ), the ioctl has been renamed to
+> > XFS_IOC_FSEMAP.
+> 
+> I was planning to push the GETFSMAPX ioctl that we talked about at LSF
+> as part of the reverse mapping patchset:
+> 
+> https://lwn.net/Articles/685978/
+> 
+> Patches here:
+> 
+> https://github.com/djwong/linux/commit/fa063533cffa4627f423ba952422796da9364cfc
+> https://github.com/djwong/xfsprogs/commit/21502ebb972f03319940fe8bb1a1e6fcb181ed3f
+> https://github.com/djwong/xfsprogs/commit/8347e762e3b94dc14f40754a4db952acdadfb080
+> https://github.com/djwong/man-pages/commit/822729ce87cb389f5d980d88187d86745e41ecd5
+> 
+> GETFSMAPX reports device id and owner id, which (AFAICT) FSEMAP
+> doesn't.  I think the btrfs folks are interested in using the
+> (possibly obsolete) mappings for duperemove enhancements, and from the
+> brief look I took at spaceman, it could use this interface for its
+> reporting.  xfs_scrub could (possibly) use it to figure out which
+> parts of the disk to scrub.
+
+GETFSMAP is a bit different to FSEMAP. fsemap is for iterating
+things like free space extents for generating histograms or
+determining if free space is fragmented in a quick, concise manner.
+I can see how you could do this with GETFSMAP, but it seems a lot
+less efficient to get this infomration from the rmap tree rather
+than directly from the free space trees.
+
+Indeed, I see that FSEMAP is similar to XFS_IOC_FSINUMBERS in that
+it returns a specific set of information that could then be used to
+quickly target ranges of the filesystem with GETFSMAP. e.g.
+freespace defragmentation requires us to first identify an area of
+fragmented space to address, GETFSMAP() on the used space in that
+range then tells us the owners of the objects we need to move to
+defragment that free space...
+
+Hence I see them as complementary rather than competing interfaces,
+and it not being a problem to introduce two separate interfaces to
+extract all this info...
+
+> I think it'd be pretty simple to bring spaceman up to date with
+> current xfsprogs and teach it to use GETFSMAPX. 
+
+Should be no harder than adding ti to xfs_io - spaceman is
+structured almost identically to xfs_io.
+
+> I also think there
+> could be a (stupider) GETFSMAPX implementation for non-rmapbt
+> filesystems that only reports free space extents that are in the
+> bnobt.
+
+Which is what FSEMAP already does. No need to implement GETFSMAPX
+twice for different filesystem formats... :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
