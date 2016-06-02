@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7843A7CA0
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 12:56:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2DE7E3040D6
-	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 10:56:14 -0700 (PDT)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id 51SA7LEFYbHhfrBd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 10:56:11 -0700 (PDT)
-Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
-	xfs_vm_releasepage
-References: <20160324122417.GB4068@bfoster.bfoster>
-	<57332508.307@profihost.ag> <20160511133417.GA42410@bfoster.bfoster>
-	<57333BA4.4040402@profihost.ag>
-	<20160511155951.GF42410@bfoster.bfoster>
-	<5738576B.4010208@profihost.ag> <20160515115017.GA6433@laptop.bfoster>
-	<57386E84.3090606@profihost.ag>
-	<20160516010602.GA24980@bfoster.bfoster>
-	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <5751C4B8.2080301@profihost.ag>
-Date: Fri, 3 Jun 2016 19:56:08 +0200
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D1257CA3
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:25:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 072A0AC001
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 15:25:50 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	D1TiPpQhxz1sC5Z8 for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2016 15:25:48 -0700 (PDT)
+Date: Fri, 3 Jun 2016 08:25:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
+Message-ID: <20160602222545.GO12670@dastard>
+References: <57503353.2050402@profihost.ag>
+	<57503D33.6010000@applied-asynchrony.com>
+	<575040D8.8070903@applied-asynchrony.com>
 MIME-Version: 1.0
-In-Reply-To: <20160522213850.GE26977@dastard>
+Content-Disposition: inline
+In-Reply-To: <575040D8.8070903@applied-asynchrony.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,99 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-Hi,
+On Thu, Jun 02, 2016 at 04:21:12PM +0200, Holger Hoffst=E4tte wrote:
+> On 06/02/16 16:05, Holger Hoffst=E4tte wrote:
+> > On 06/02/16 15:23, Stefan Priebe - Profihost AG wrote:
+> >> I found a bug report from redhat here
+> >> https://bugzilla.redhat.com/show_bug.cgi?id=3D1234586 pointing to this=
+ commit:
+> >> xfs: handle dquot buffer readahead in log recovery correctly
+> >>
+> >> which isn't part of 4.4. Is it missing from linux-stable?
+> > =
 
-should i remove the complete if conditions incl. the return 0 or should
-id convert it to if without WARN_ONCE? like below?
+> > Yes, mainline 7d6a13f02356 is missing from 4.4-stable because it applie=
+s,
+> > but doesn't compile. :)
+> > =
 
-        if (WARN_ON_ONCE(delalloc))
-                return 0;
-        if (WARN_ON_ONCE(unwritten))
-                return 0;
+> > I'll look into a fix.
+> =
 
-=>
+> Well, that was easy. It also needs 233135b763 ("xfs: print name of verifi=
+er
+> if it fails") which added a .name to the various xfs_buf_ops types.
+> Can someone confirm that these can both go into 4.4-stable?
 
-  if (delalloc)
-    return 0;
-  if (unwritten)
-    return 0;
+You could just remove the line:
 
++       .name =3D "xfs_dquot_ra",
 
+from 7d6a13f02356 and that will fix the backport problem and not
+require any other commits to be backported. I'm fine with either
+solution.
 
-Am 22.05.2016 um 23:38 schrieb Dave Chinner:
-> On Sun, May 22, 2016 at 09:36:39PM +0200, Stefan Priebe - Profihost AG wrote:
->> Am 16.05.2016 um 03:06 schrieb Brian Foster:
->>>> sd_mod ehci_pci ehci_hcd usbcore usb_common igb ahci i2c_algo_bit libahci
->>>> i2c_core ptp mpt3sas pps_core raid_class scsi_transport_sas
->>>> [Sun May 15 07:00:44 2016] CPU: 2 PID: 108 Comm: kswapd0 Tainted: G       O
->>>> 4.4.10+25-ph #1
->>>
->>> How close is this to an upstream kernel? Upstream XFS? Have you tried to
->>> reproduce this on an upstream kernel?
->>
->> It's a vanilla 4.4.10 + a new adaptec driver and some sched and wq
->> patches from 4.5 and 4.6 but i can try to replace the kernel on one
->> machine with a 100% vanilla one if this helps.
-> 
-> Please do.
-> 
->>>> [295086.353473] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0x52000 size 0x13d1c8
->>>> [295086.353476] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0x53000 size 0x13d1c8
->>>> [295086.353478] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0x54000 size 0x13d1c8
->>> ...
->>>> [295086.567508] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0xab000 size 0x13d1c8
->>>> [295086.567510] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0xac000 size 0x13d1c8
->>>> [295086.567515] XFS (md127p3): ino 0x600204f delalloc 1 unwritten 0 pgoff
->>>> 0xad000 size 0x13d1c8
->>>>
->>>> The file to the inode number is:
->>>> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
->>>>
->>>
->>> xfs_bmap -v might be interesting here as well.
->>
->> # xfs_bmap -v
->> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en
->> /var/lib/apt/lists/security.debian.org_dists_wheezy_updates_main_i18n_Translation-en:
->>  EXT: FILE-OFFSET      BLOCK-RANGE        AG AG-OFFSET        TOTAL
->>    0: [0..2567]:       41268928..41271495  3 (374464..377031)  2568
-> 
-> So the last file offset with a block is 0x140e00. This means the
-> file is fully allocated. However, the pages inside the file range
-> are still marked delayed allocation. That implies that we've failed
-> to write the pages over a delayed allocation region after we've
-> allocated the space.
-> 
-> That, in turn, tends to indicate a problem in page writeback - the
-> first page to be written has triggered delayed allocation of the
-> entire range, but then the subsequent pages have not been written
-> (for some as yet unknown reason). When a page is written, we map it
-> to the current block via xfs_map_at_offset(), and that clears both
-> the buffer delay and unwritten flags.
-> 
-> This clearly isn't happening which means either the VFS doesn't
-> think the inode is dirty anymore, writeback is never asking for
-> these pages to be written, or XFs is screwing something up in
-> ->writepage. The XFS writepage code changed significantly in 4.6, so
-> it might be worth seeing if a 4.6 kernel reproduces this same
-> problem....
-> 
-> Cheers,
-> 
-> Dave.
-> 
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
