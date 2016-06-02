@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 896887CA7
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 00:23:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E2EEAC001
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 22:23:29 -0700 (PDT)
-Received: from hotel311.server4you.de (hotel311.server4you.de [85.25.146.15])
-	by cuda.sgi.com with ESMTP id opuXSBUBPokupGw6 (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id EB3F97CA1
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 07:13:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8004DAC003
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 05:13:11 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id 7Ee5BKXtZeQkFZHu (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 22:23:26 -0700 (PDT)
-Subject: Re: Internal error xfs_trans_cancel
-References: <ab487269-a423-e3dc-6f59-3dda004960c3@monom.org>
-	<20160601071047.GJ12670@dastard>
-	<e80cee4f-1789-5418-ffa8-7551138bda0a@monom.org>
-	<0644b434-6cea-4188-9702-469c26d191b8@monom.org>
-	<20160602002653.GL12670@dastard>
-From: Daniel Wagner <wagi@monom.org>
-Message-ID: <af997005-e144-5509-885c-a688562ea3ec@monom.org>
-Date: Thu, 2 Jun 2016 07:23:24 +0200
+	<xfs@oss.sgi.com>; Thu, 02 Jun 2016 05:13:08 -0700 (PDT)
+Subject: Re: shrink_active_list/try_to_release_page bug? (was Re: xfs trace in
+	4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage)
+References: <20160516010602.GA24980@bfoster.bfoster>
+	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
+	<574BEA84.3010206@profihost.ag> <20160530223657.GP26977@dastard>
+	<20160531010724.GA9616@bbox> <20160531025509.GA12670@dastard>
+	<20160531035904.GA17371@bbox> <20160531060712.GC12670@dastard>
+	<574D2B1E.2040002@profihost.ag> <20160531073119.GD12670@dastard>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Message-ID: <575022D2.7030502@profihost.ag>
+Date: Thu, 2 Jun 2016 14:13:06 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160602002653.GL12670@dastard>
+In-Reply-To: <20160531073119.GD12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,54 +36,29 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: linux-mm@kvack.org, Minchan Kim <minchan@kernel.org>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-> posix03 and posix04 just emit error messages:
+
+Am 31.05.2016 um 09:31 schrieb Dave Chinner:
+> On Tue, May 31, 2016 at 08:11:42AM +0200, Stefan Priebe - Profihost AG wrote:
+>>> I'm half tempted at this point to mostly ignore this mm/ behavour
+>>> because we are moving down the path of removing buffer heads from
+>>> XFS. That will require us to do different things in ->releasepage
+>>> and so just skipping dirty pages in the XFS code is the best thing
+>>> to do....
+>>
+>> does this change anything i should test? Or is 4.6 still the way to go?
 > 
-> posix04 -n 40 -l 100
-> posix04: invalid option -- 'l'
-> posix04: Usage: posix04 [-i iterations] [-n nr_children] [-s] <filename>
-> .....
+> Doesn't matter now - the warning will still be there on 4.6. I think
+> you can simply ignore it as the XFS code appears to be handling the
+> dirty page that is being passed to it correctly. We'll work out what
+> needs to be done to get rid of the warning for this case, wether it
+> be a mm/ change or an XFS change.
 
-I screwed that this up. I have patched my version of lockperf to make
-all test using the same options names. Though forgot to send those
-patches. Will do now.
+Any idea what i could do with 4.4.X? Can i safely remove the WARN_ONCE
+statement?
 
-In this case you can use use '-i' instead of '-l'.
-
-> So I changed them to run "-i $l" instead, and that has a somewhat
-> undesired effect:
-> 
-> static void
-> kill_children()
-> {
->         siginfo_t       infop;
-> 
->         signal(SIGINT, SIG_IGN);
->>>>>>   kill(0, SIGINT);
->         while (waitid(P_ALL, 0, &infop, WEXITED) != -1);
-> }
-> 
-> Yeah, it sends a SIGINT to everything with a process group id. It
-> kills the parent shell:
-
-Ah that rings a bell. I tuned the parameters so that I did not run into
-this problem. I'll do patch for this one. It's pretty annoying.
-
-> $ ./run-lockperf-tests.sh /mnt/scratch/
-> pid 9597's current affinity list: 0-15
-> pid 9597's new affinity list: 0,4,8,12
-> sh: 1: cannot create /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor: Directory nonexistent
-> posix01 -n 8 -l 100
-> posix02 -n 8 -l 100
-> posix03 -n 8 -i 100
-> 
-> $
-> 
-> So, I've just removed those tests from your script. I'll see if I
-> have any luck with reproducing the problem now.
-
-I was able to reproduce it again with the same steps.
+Stefan
 
 _______________________________________________
 xfs mailing list
