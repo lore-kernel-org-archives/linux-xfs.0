@@ -1,31 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 47E767CA3
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 18:23:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 190D330404E
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 16:23:42 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	CE17isx9eKHRKX6P for <xfs@oss.sgi.com>;
-	Thu, 02 Jun 2016 16:23:37 -0700 (PDT)
-Date: Fri, 3 Jun 2016 09:22:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160602232254.GR12670@dastard>
-References: <20160516231056.GE18496@dastard>
-	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
-	<20160517223549.GV26977@dastard>
-	<20160519081146.GS3193@twins.programming.kicks-ass.net>
-	<20160520001714.GC26977@dastard>
-	<20160601131758.GO26601@dhcp22.suse.cz>
-	<20160601181617.GV3190@twins.programming.kicks-ass.net>
-	<20160602145048.GS1995@dhcp22.suse.cz>
-	<20160602151116.GD3190@twins.programming.kicks-ass.net>
-	<20160602154619.GU1995@dhcp22.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id 565077CA0
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 14:36:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1717A304090
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 12:36:01 -0700 (PDT)
+Received: from mail02.iobjects.de (mail02.iobjects.de [188.40.134.68]) by
+	cuda.sgi.com with ESMTP id FACOcj0yvCPKOnLB (version=TLSv1.2
+	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 12:35:59 -0700 (PDT)
+Received: from tux.wizards.de (p4FF5801B.dip0.t-ipconnect.de [79.245.128.27])
+	by mail02.iobjects.de (Postfix) with ESMTPSA id 469E6416014D
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 21:35:57 +0200 (CEST)
+Received: from [192.168.100.223] (ragnarok [192.168.100.223])
+	by tux.wizards.de (Postfix) with ESMTP id D188211C01CF
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 21:35:56 +0200 (CEST)
+Subject: Re: xfs trace in 4.4.2 / also in 4.3.3 WARNING fs/xfs/xfs_aops.c:1232
+	xfs_vm_releasepage
+References: <20160324122417.GB4068@bfoster.bfoster>
+	<57332508.307@profihost.ag> <20160511133417.GA42410@bfoster.bfoster>
+	<57333BA4.4040402@profihost.ag>
+	<20160511155951.GF42410@bfoster.bfoster>
+	<5738576B.4010208@profihost.ag> <20160515115017.GA6433@laptop.bfoster>
+	<57386E84.3090606@profihost.ag>
+	<20160516010602.GA24980@bfoster.bfoster>
+	<57420A47.2000700@profihost.ag> <20160522213850.GE26977@dastard>
+	<5751C4B8.2080301@profihost.ag>
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Message-ID: <5751DC1C.5010909@applied-asynchrony.com>
+Date: Fri, 3 Jun 2016 21:35:56 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160602154619.GU1995@dhcp22.suse.cz>
+In-Reply-To: <5751C4B8.2080301@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,50 +43,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Peter Zijlstra <peterz@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, Qu Wenruo <quwenruo@cn.fujitsu.com>, Ingo Molnar <mingo@kernel.org>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Jun 02, 2016 at 05:46:19PM +0200, Michal Hocko wrote:
-> On Thu 02-06-16 17:11:16, Peter Zijlstra wrote:
-> > With scope I mostly meant the fact that you have two calls that you need
-> > to pair up. That's not really nice as you can 'annotate' a _lot_ of code
-> > in between. I prefer the narrower annotations where you annotate a
-> > single specific site.
+On 06/03/16 19:56, Stefan Priebe - Profihost AG wrote:
+> Hi,
 > 
-> Yes, I can see you point. What I meant to say is that we would most
-> probably end up with the following pattern
-> 	lockdep_trace_alloc_enable()
-> 	some_foo_with_alloc(gfp_mask);
-> 	lockdep_trace_alloc_disable()
->
-> and some_foo_with_alloc might be a lot of code.
+> should i remove the complete if conditions incl. the return 0 or should
+> id convert it to if without WARN_ONCE? like below?
+> 
+>         if (WARN_ON_ONCE(delalloc))
+>                 return 0;
+>         if (WARN_ON_ONCE(unwritten))
+>                 return 0;
+> 
+> =>
+> 
+>   if (delalloc)
+>     return 0;
+>   if (unwritten)
+>     return 0;
 
-That's the problem I see with this - the only way to make it
-maintainable is to precede each enable/disable() pair with a comment
-explaining *exactly* what those calls are protecting.  And that, in
-itself, becomes a maintenance problem, because then code several
-layers deep has no idea what context it is being called from and we
-are likely to disable warnings in contexts where we probably
-shouldn't be.
+Good thing you ask, I forgot about the returns..
 
-I think such an annotation approach really requires per-alloc site
-annotation, the reason for it should be more obvious from the
-context. e.g. any function that does memory alloc and takes an
-optional transaction context needs annotation. Hence, from an XFS
-perspective, I think it makes more sense to add a new KM_ flag to
-indicate this call site requirement, then jump through whatever
-lockdep hoop is required within the kmem_* allocation wrappers.
-e.g, we can ignore the new KM_* flag if we are in a transaction
-context and so the flag is only activated in the situations were
-we currently enforce an external GFP_NOFS context from the call
-site.....
+Until the bigger picture has been figured out with -mm I'd probably
+keep the returns.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-h
 
 _______________________________________________
 xfs mailing list
