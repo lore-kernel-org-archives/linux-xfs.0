@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A465B7CA6
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:57:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6947E8F8035
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 05:57:16 -0700 (PDT)
-Received: from mx.recia.fr (mx.recia.fr [95.128.41.47]) by cuda.sgi.com with
-	ESMTP id Gy3NPQj5zZ9hsjdH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 05:57:11 -0700 (PDT)
-Received: from e6530-damien.recia.fr (unknown [37.58.188.254])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested) (Authenticated sender: F12A086p)
-	by mx.recia.fr (Postfix) with ESMTPSA id B5AE122602E
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 14:57:09 +0200 (CEST)
-Subject: Re: Re: Cumulative xfsrestore shows many warnings and
-	files/directories are missing after restoration
-References: <8323ac3a-f9d2-ad31-69e3-1eea5a44dcde@recia.fr>
-	<87a11f69-1a10-89e2-598f-015f0205a55a@sandeen.net>
-From: Damien Gombault <damien.gombault@recia.fr>
-Message-ID: <f3fb0f44-f7af-ce62-2037-2edb024426db@recia.fr>
-Date: Wed, 1 Jun 2016 14:57:09 +0200
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 53BD77CA3
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 19:53:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 25387304089
+	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 17:53:46 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	uutb37VeykgeBLbH for <xfs@oss.sgi.com>;
+	Thu, 02 Jun 2016 17:53:40 -0700 (PDT)
+Date: Fri, 3 Jun 2016 10:53:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/19 v2] mkfs cleaning
+Message-ID: <20160603005324.GS12670@dastard>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+	<20160510061054.GI26977@dastard>
+	<CACj3i715X7X65=BjSW8GZLhUF-YjQVShC-_Udmxe24XB1ACb1w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <87a11f69-1a10-89e2-598f-015f0205a55a@sandeen.net>
-Content-Type: multipart/mixed; boundary="------------8EA2A3A708D8CFD2D40D45BC"
+Content-Disposition: inline
+In-Reply-To: <CACj3i715X7X65=BjSW8GZLhUF-YjQVShC-_Udmxe24XB1ACb1w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,97 +27,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
---------------8EA2A3A708D8CFD2D40D45BC
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-
-Hi.
-
-Thank you for your answer.
-I also open a report on Red Hat Bugzilla : 
-https://bugzilla.redhat.com/show_bug.cgi?id=1341126
-Eric answered me also on Bugzilla, I will continue on it.
-
-Le 31/05/2016 à 15:57, Eric Sandeen a écrit :
-> On 5/31/16 5:55 AM, Damien Gombault wrote:
->> Hi.
->>
->> I use xfsdump to backup my systems.
->> Recently I had to use xfsrestore to restore a cumulative level 0 + level 1 dumps.
->>
-> ...
->
->> The level 1 restore shows many warnings :
->> xfsrestore: drive 0: examining media file 0
->> xfsrestore: drive 1: searching media for directory dump
->> xfsrestore: drive 1: reading directories
->> xfsrestore: drive 1: 11013 directories and 96122 entries processed
->> xfsrestore: drive 1: directory post-processing
->> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1677721775.4173752252 to dir var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/08 Sécurité/08c Gestion des mots de passe - Keepass: Aucun fichier ou dossier de ce type
->> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1711276202.4274102453 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/02 Mise en oeuvre sOlære: Aucun fichier ou dossier de ce type
->> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/1694499004.2655526171 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/07 Communication: Aucun fichier ou dossier de ce type
->> xfsrestore: drive 1: WARNING: unable to rename dir orphanage/2365644069.2895542759 to dir var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration/08 Sécurité/08c Gestion des mots de passe - Keepass: Aucun fichier ou dossier de ce type
->> xfsrestore: drive 1: WARNING: unable to rename nondir orphanage/2902474338.2817943331 to var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/09 Questionnaires communes solære/Dossiers des collectivités/37003 - Amboise/02-Compte rendu de réunions/Compte rendu réunion 3 mai 2016.odt: Aucun fichier ou dossier de ce type
-> Restating what I said in the bug you also filed:
->
-> In general, it would helpful to provide the error messages after setting LANG=en_US - because your English is far better than my French.  :)
->
-> A couple questions:
->
->> Some folders are not restored at the right place.
-> What does that mean?  Were they restored to the wrong place, or were they not restored at all?
->
-> Also, the "Aucun fichier ou dossier de ce type" errors indicate that files could not be moved into a directory hierarchy, presumably because some path component did not exist.
->
-> The common portions of those paths which failed are:
->
->> var/www/html/owncloud/data/F1000buv/files/Dossier personnel et source de partage/E-Administration/
-> and
->
->> var/www/html/owncloud/data/F1000buv/files_versions/Dossier personnel et source de partage/E-Administration
-> Do those paths still exist on the original filesystem?  Is it possible that they were removed while the dump was occurring?
->
-> It seems most likely that the filesystem changed significantly during the dump processes, and this is what led to the errors.
->
-> -Eric
->
-
-
---------------8EA2A3A708D8CFD2D40D45BC
-Content-Type: text/x-vcard; charset=utf-8;
- name="damien_gombault.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="damien_gombault.vcf"
-
-begin:vcard
-fn:Damien Gombault
-n:Gombault;Damien
-org;quoted-printable:GIP Recia =E2=88=92 Centre de ressources r=C3=A9gional du num=C3=A9rique
-adr;quoted-printable;dom:Parc d'Activit=C3=A9s les Aulnaies;;151, Rue de la Juine;Olivet;;45160
-email;internet:damien.gombault@recia.fr
-title;quoted-printable:Responsable des syst=C3=A8mes informatiques
-tel;work:02 38 42 14 71
-tel;cell:06 42 62 78 19
-url:http://recia.fr
-version:2.1
-end:vcard
-
-
---------------8EA2A3A708D8CFD2D40D45BC
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---------------8EA2A3A708D8CFD2D40D45BC--
+T24gV2VkLCBKdW4gMDEsIDIwMTYgYXQgMDM6MTk6MzRQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IE9uIFR1ZSwgTWF5IDEwLCAyMDE2IGF0IDg6MTAgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gCj4gPgo+ID4gTG9va2luZyBhdCB4ZnN0ZXN0cyBydW5z
+LCBuZXcgZmFpbHVyZXMgYXJlOgo+ID4KPiA+IGdlbmVyaWMvMDU0IC0KPiA+IGdlbmVyaWMvMDU1
+IC0gYm90aCBmYWlsIHdpdGg6Cj4gPgo+ID4gKyoqKiBta2ZzIGZhaWxlZDogLWwgdmVyc2lvbj0y
+LHN1PTQwOTYgKioqCj4gPgo+ID4gYW5kIHRoZSAuZnVsbCBmaWxlIGhhcyB0aGlzIHNwZWNpZmlj
+IGVycm9yOgo+ID4KPiA+IElsbGVnYWwgdmFsdWUgNDA5NiBmb3IgLWwgc3Ugb3B0aW9uLiB2YWx1
+ZSBpcyB0b28gc21hbGwKPiA+Cj4gPiBpbmRpY2F0aW5nIHRoYXQgd2Ugc2hvdWxkIGJlIGFsbG93
+aW5nICgyXk4gKiBibG9jayBzaXplKSBsb2cKPiA+IHN0cmlwZSB1bml0cyB0byBiZSBzZXQuIFRo
+aXMgd2lsbCBiZSBhIGxpbWl0IGNvbmZpZ3VyYXRpb24gaXNzdWUsCj4gPiBtb3N0IGxpa2VseSBu
+ZWVkaW5nIGZpeGluZyBpbiBta2ZzLgo+ID4KPiAKPiDigItJJ20gbG9va2luZyBvbiBpdCwgYnV0
+IHRoaXMgaXNzdWUgd2FzIGludHJvZHVjZWQgYnkgRXJpYydzIGZpeCBmb3IKPiBwYXRjaCAibWtm
+czoKPiB0YWJsZSBiYXNlZCBwYXJzaW5nIGZvciBjb252ZXJ0ZWQgcGFyYW1ldGVycyI6Cj4gCj4g
+4oCLPiDigIsKPiBUaGUga2VybmVsIGVuZm9yY2VzIGEgbWF4IG9mIFhMT0dfTUFYX1JFQ09SRF9C
+U0laRSwKPiDigIs+IOKAiwo+IGFuZCBpdCBzaG91bGQgbWF0Y2ggdGhlIGxpbWl0cyBpbiBMX1NV
+TklUIGFmdGVyIGFsbCAuLi4KClNvIG5vYm9keSBnb3QgaXQgcmlnaHQsIHRoZW4uICBpLmUuIEVy
+aWMncyBjaGFuZ2VzIG1hZGUgaXQgdGhlIHNhbWUKYXMgd2hhdCB3YXMgaW4gbXkgb3JpZ2luYWwg
+cGF0Y2hzZXQsIHdoaWNoIG1lYW5zICpJIGdvdCBpdCB3cm9uZyosCnRvby4KClJlYWxseSwgaXQn
+cyBub3QgYXQgYWxsIGltcG9ydGFudCB3aG8gbWFkZSB0aGUgaW5jb3JyZWN0IGNoYW5nZSBvcgp3
+aHkgaXQgd2FzIHdyb25nIC0gaXQncyBlYXN5IHZlcnkgbWFrZSBtaXN0YWtlcyBvciBnZXQgY29t
+cGxleAp0aGluZ3Mgd3JvbmcuIFdoYXQgbWF0dGVycyBpcyB0aGF0IHdlIGlkZW50aWZ5IHRoZSBw
+cm9ibGVtIGNvZGUsIHdlCmZpeCB0aGUgcHJvYmxlbSwgYW5kIHdlIHRyeSBub3QgdG8gbWFrZSB0
+aGUgc2FtZSBlcnJvciBhZ2Fpbi4KTWlzdGFrZXMgYXJlIGEgbGVhcm5pbmcgb3Bwb3J0dW5pdHkg
+Zm9yIGV2ZXJ5b25lLCBub3QganVzdCB0aGUKcGVyc29uIHdobyB3cm90ZSBvciByZXZpZXdlZCB0
+aGUgY29kZS4KCj4gQW5kIGxvb2tpbmcgb24gZnMveGZzL3hmc19zdXBlci5jLCB0aGUgTUlOIHZh
+bHVlIGlzIGVuZm9yY2VkIHRvby4gU28gbWF5YmUKPiBpdCBpcyB0aGUgdGVzdCB3aGF0IG5lZWRz
+IGZpeGluZz8gT3RoZXJ3aXNlLCBJIHdvdWxkIHB1dCBzb21ldGhpbmcKPiBsaWtlIFhGU19NSU5f
+U0VDVE9SU0laRSB0aGVyZS4KPiAKPiBTZWUgaHR0cDovL2x4ci5mcmVlLWVsZWN0cm9ucy5jb20v
+c291cmNlL2ZzL3hmcy94ZnNfc3VwZXIuYyNMNDM1CgptcC0+bV9sb2dic2l6ZSBpcyB0aGUgaW5j
+b3JlIGxvZyBidWZmZXIgc2l6ZSBhbmQgdGhpcyBpcyBjaGVja2luZwp0aGF0IHRoZSBpY2xvZ3Np
+emUgcGFzc2VkIGluIGFzIGEgbW91bnQgb3B0aW9uIGlzIHdpdGhpbiB0aGUgdmFsaWQKcmFuZ2Ug
+KDE2ay0+MjU2aykuIEl0IGlzIG5vdCBjaGVja2luZyBzdHJpcGUgdW5pdCBhbGlnbm1lbnQgbGlt
+aXRzLgpXZSBjYW4gd3JpdGUgYW4gaWNsb2didWYgYXQgYW55IHNlY3RvciBvZmZzZXQgaW4gdGhl
+IGxvZzsgdGhlIGxvZwpzdHJpcGUgdW5pdCBpcyBzaW1wbHkgYW4gYWxpZ25tZW50IGd1aWRlLiBp
+LmUuIGEgbHN1bml0ID0gNDA5NiBpcyA4CnNlY3RvciBhbGlnbm1lbnQsIHNvIHRoZSBpY2xvZ2J1
+ZiB3aGVuIHdyaXR0ZW4gaXMgcGFkZGVkIG91dCB0byA4CnNlY3RvciBib3VuZGFyaWVzIHNvIHRo
+YXQgbG9nIHdyaXRlcyBhcmUgYWx3YXlzIGFsaWduZWQgYW5kIHNpemVkIHRvCnRoZSBsb2cgc3Ry
+aXBlIHVuaXQuCgpUaGUgb25seSBhY3R1YWwgbGltaXQgb24gaWNsb2didWYgc2l6ZSB2cyBsc3Vu
+aXQgaXMgdGhhdCB0aGUKaWNsb2didWYgc2l6ZSBtdXN0IGJlID49IHRoYW4gdGhlIGxzdW5pdCwg
+d2hpY2ggbGltaXRzIHRoZSBsc3VuaXQKdG8gWExPR19NQVhfUkVDT1JEX0JTSVpFLiBpLmUgdmFs
+aWQgcmFuZ2UgZm9yIHNwZWNpZnlpbmcgbHN1bml0IG9uCnRoZSBjb21tYW5kIGxpbmUgaXMgMSA8
+PSBsc3VuaXQgPD0gWExPR19NQVhfUkVDT1JEX0JTSVpFLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRh
+dmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
