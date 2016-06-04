@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F25CF7CA1
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 18:30:05 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CE6567CA0
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 19:33:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C952AC003
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 16:30:05 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	iKLowmN0Y1VJ4Jja for <xfs@oss.sgi.com>;
-	Tue, 21 Jun 2016 16:29:59 -0700 (PDT)
-Date: Wed, 22 Jun 2016 09:29:40 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 902FE3040CB
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 17:33:19 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	EAObp43X319BIR8j for <xfs@oss.sgi.com>;
+	Fri, 03 Jun 2016 17:33:16 -0700 (PDT)
+Date: Sat, 4 Jun 2016 10:32:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs_check: process sparse inode chunks correctly
-Message-ID: <20160621232940.GQ12670@dastard>
-References: <1466441562-12317-1-git-send-email-bfoster@redhat.com>
-	<1466441562-12317-3-git-send-email-bfoster@redhat.com>
-	<20160621090153.GB28212@redhat.com>
-	<de32a39e-864d-bd4d-8d5d-7a019b8e445f@sandeen.net>
+Subject: Re: [PATCH 00/19 v2] mkfs cleaning
+Message-ID: <20160604003259.GV26977@dastard>
+References: <1461231593-31294-1-git-send-email-jtulak@redhat.com>
+	<20160510061054.GI26977@dastard>
+	<CACj3i715X7X65=BjSW8GZLhUF-YjQVShC-_Udmxe24XB1ACb1w@mail.gmail.com>
+	<20160603005324.GS12670@dastard>
+	<CACj3i70LGZ7TKWRdKVTi4MyyL5DhnH5Fr-3Q6O5qhKbYfvWJbA@mail.gmail.com>
+	<CACj3i734=8ZJcdJztA76ru93SpdNNUgVtF_tUv2Jy_8U0V9HzQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <de32a39e-864d-bd4d-8d5d-7a019b8e445f@sandeen.net>
+In-Reply-To: <CACj3i734=8ZJcdJztA76ru93SpdNNUgVtF_tUv2Jy_8U0V9HzQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,73 +30,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jun 21, 2016 at 08:54:04AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 6/21/16 4:01 AM, Carlos Maiolino wrote:
-> > On Mon, Jun 20, 2016 at 12:52:42PM -0400, Brian Foster wrote:
-> >> Update the inode btree scanning functions to process sparse inode chunks
-> >> correctly. For filesystems with sparse inode support enabled, process
-> >> each chunk a cluster at a time. Each cluster is checked against the
-> >> inobt record to determine if it is a hole and skipped if so.
-> >>
-> >> Note that since xfs_check is deprecated in favor of xfs_repair,  this
-> >> adds the minimum support necessary to process sparse inode enabled
-> >> filesystems. In other words, this adds no sparse inode specific checks
-> >> or verifications. We only update the inobt scanning functions to extend
-> >> the existing level of verification to sparse inode enabled filesystems
-> >> (e.g., avoid incorrectly tracking sparse regions as inodes). Problems
-> >> or corruptions associated with sparse inode records must be detected and
-> >> recovered via xfs_repair.
-> >>
-> > 
-> > Hi,
-> > 
-> > I'm not quite sure, but a while ago, I thought I've heard some rumors about
-> > deprecating xfs_check, is this true or something that my mind made up for some
-> > weird reason?
-> 
-> Yes, like Brian said above.  ;)
-> 
-> bfc541e xfsprogs: remove xfs_check
-> 12a48f5 xfsprogs: remove xfs_check references from fsck.xfs script & manpage
-> 
-> However, we still run check inside xfs_db in xfstests as an independent
-> verification step:
-> 
-> 187bccd xfstests: Remove dependence of xfs_check script
-> 
-> +# xfs_check script is planned to be deprecated. But, we want to
-> +# be able to invoke "xfs_check" behavior in xfstests in order to
-> +# maintain the current verification levels.
-> +_xfs_check()
-
-Right - it's a secondary set of code that effectively tells us
-whether repair is detecting all the problems it should. i.e. if
-check fails and repair doesn't, then we've got a bug in repair that
-needs fixing.
-
-Also, the check code is really just an "addon" to other
-functionality in xfs_db (e.g. blockget) that we have to keep, so
-removing check doesn't really gain us all that much in terms of
-reduced maintenance overhead. So long as we can easily keep check up
-to date with new features I think we shoul dbe keeping it...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKdW4gMDMsIDIwMTYgYXQgMDI6MDk6MTlQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IFsKPiDigItzbmlwIGFsbCwgYW5vdGhlciBpc3N1ZSwgdW5yZWxhdGVkIHRvIHRoZSBsc3Vu
+aXQgb25lXeKAiwo+IAo+ID4KPiDigItJIHJlYWxpc2VkIG9uZSBzbWFsbCBnbGl0Y2ggd2l0aCBj
+b25mbGljdHMgd2F0Y2hpbmcgaW4gdGhlIGNvZGUgaW4KPiBjb21iaW5hdGlvbiB3aXRoIGZsYWdz
+LiBJdCBpcyBub3QgcmVncmVzc2lvbiwgSSB0aGluaywgYmVjYXVzZSBi4oCLZWZvcmUgbm93LAo+
+IGl0IHdhcyBub3QgcG9zc2libGUgdG8gZG8gc29tZXRoaW5nIGxpa2UgLWwgaW50ZXJuYWw9MCxs
+b2dkZXY9c29tZXRoaW5nLAo+IGJ1dCBub3cgaXQgc2hvdWxkIGJlIHBvc3NpYmxlLgoKSSB0aGlu
+ayB0aGF0IG92ZXJseSBjb21wbGljYXRlcyB0aGluZ3MuIE15IG9yaWdpbmFsIGludGVudCBmb3Ig
+dGhpcwp3b3JrIHdhcyB0byBzaW1wbGlmeSB0aGUgaW50ZXJmYWNlIGFuZCBjb2RlLCBub3QgbWFr
+ZSBpdCBtb3JlCmVsYWJvcmF0ZSB0byBzdXBwb3J0IGNvbmZpZ3VyYXRpb25zIHRoYXQgYXJlIHRo
+ZW9yZXRpY2FsbHkgcG9zc2libGUKYnV0IGNvbXBsZXRlbHkgcmVkdW5kYW50LgoKaS5lLiAnLWwg
+aW50ZXJuYWw9MCxsb2dkZXY9c29tZXRoaW5nJyBpcyBpZGVudGljYWwgaW4gZnVuY3Rpb24gdG8K
+Jy1sIGxvZ2Rldj1zb21ldGhpbmcnLCBzbyB0aGVyZSBpcyBubyBuZWVkIHRvIHNwZWNpZnkgaW50
+ZXJuYWw9MC4KQUZBSUNULCB0aGVyeHAgZWlzIG5ldmVyIGEgbmVlZCB0byBzcGVjaWZ5ICctbCBp
+bnRlcm5hbD1bMHwxXScKYmVjYXVzZSBpZiAnLWwgbG9nZGV2PTxmb28+JyBpcyBzcGVjaWZpZWQs
+IGl0IGltcGxpZXMgYW4gZXh0ZXJuYWwKbG9nIGlzIGJlaW5nIGNvbmZpZ3VyZWQsIGFuZCBpbiBl
+dmVyeSBvdGhlciBjYXNlIHRoZSBsb2cgaXMKaW50ZXJuYWwuCgo+IFRoZSBjb2RlIGNoZWNrcyBv
+bmx5IHdoZXRoZXIgYW4gb3B0aW9uIHdhcyBzZWVuLCBub3QgaXRzIHZhbHVlLCBzbyBpdAo+IGRv
+ZXMndCBrbm93IHRoYXQgd2UgYXJlIGluIGZhY3QgZGlzYWJsaW5nIHNvbWV0aGluZy4gSSBzZWUg
+dHdvIHdheXMgaG93IHRvCj4gZG8gc29sdmUgaXQuIE9uZSBpcyBhIGN1c3RvbSBjb25mbGljdCBz
+b2x2aW5nIGZvciB0aGVzZSBjYXNlcywgcHV0dGluZyBzb21lCj4gaWYgKGZsYWcxICYmIG9wdGlv
+bjIpIHNvbWV3aGVyZSBvbmNlIGV2ZXJ5IGFyZ3VtZW50IGFuZCBvcHRpb24gaXMgcGFyc2VkLgo+
+IEJ1dCB0aGlzIGdvZXMgYWdhaW5zdCB3aGF0IHRoZSBwYXRjaHNldCBkaWQgYW5kIG1vdmVzIGl0
+IGFnYWluIG91dCBvZiB0aGUKPiBvcHRpb24gdGFibGUuLi4KPiAKPiBUaGUgb3RoZXIgd2F5IGlz
+IHRvIG1ha2UgYSBzcGVjaWFsIGNhc2UgZm9yIGZsYWdzIGluIHRoZSBjb25mbGljdHMtaGFuZGxp
+bmcKPiBjb2RlLiBCYXNpY2FsbHksIEkgd291bGQgZXh0ZW5kIHRoZSBzdHJ1Y3R1cmUgd2l0aCBz
+b21ldGhpbmcgbGlrZToKPiAKPiB7IC5pbmRleCA9IExfSU5URVJOQUwsCj4gICAuY29uZmxpY3Rz
+ID0geyBMX0ZJTEUsCj4gICAgICAgICBMX0RFViwKPiAgICAgICAgIExBU1RfQ09ORkxJQ1QgfSwK
+PiAgIC5jb25mbGljdHNfaWdub3JlX29uX2ZhbHNlPXRydWUsIC8vIG5ldyBpdGVtLCBzaG9ydGVy
+IG5hbWUgdG8gYmUgZm91bmQKCldoYXQgaGFwcGVucyB3aGVuIHlvdSBoYXZlIHR3byBjb25mbGlj
+dHMsIG9uIHdoaWNoIHlvdSB3YW50IHRvCmlnbm9yZSBvbiBmYWxzZSwgdGhlIG90aGVyIHlvdSB3
+YW50IHRvIGlnbm9yZSBvbiB0cnVlPyAgQW5kIHdoZXJlIGRvCnlvdSBkcmF3IHRoZSBsaW5lPyBM
+X1NVIHZzIExfU1VOSVQgY29uZmxpY3QgYW5kIHRocm93IGFuIGVycm9yIG9ubHkKd2hlbiB0aGUg
+dmFsdWVzIGRpZmZlcj8KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJv
+bW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
