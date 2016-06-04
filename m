@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A32B37CA2
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 09:05:47 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 857F97CA0
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 21:28:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 583B7304059
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 07:05:44 -0700 (PDT)
-Received: from mail02.iobjects.de (mail02.iobjects.de [188.40.134.68]) by
-	cuda.sgi.com with ESMTP id l4p5oSzfMiZN8sqO (version=TLSv1.2
-	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2016 07:05:41 -0700 (PDT)
-Subject: Re: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
-References: <57503353.2050402@profihost.ag>
-From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Message-ID: <57503D33.6010000@applied-asynchrony.com>
-Date: Thu, 2 Jun 2016 16:05:39 +0200
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 44FB73040A4
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 19:28:52 -0700 (PDT)
+Received: from smtp-out-so.shaw.ca (smtp-out-so.shaw.ca [64.59.136.139]) by
+	cuda.sgi.com with ESMTP id m3eeovh3GD2tGqjI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 19:28:50 -0700 (PDT)
+From: Andrew Ryder <tireman@shaw.ca>
+Subject: Re: xfs_repair fails after trying to format log cycle?
+References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
+	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
+	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
+	<20160413045129.GO567@dastard>
+Message-ID: <57523CE6.7020906@shaw.ca>
+Date: Fri, 3 Jun 2016 22:28:54 -0400
 MIME-Version: 1.0
-In-Reply-To: <57503353.2050402@profihost.ag>
+In-Reply-To: <20160413045129.GO567@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,65 +27,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On 06/02/16 15:23, Stefan Priebe - Profihost AG wrote:
-> Hi,
-> 
-> another issue i'm having with 4.4.11 is the following trace after a reboot:
-> [  541.661121] XFS (dm-0): _xfs_buf_ioapply: no ops on block 0x188e78/0x8
-> [  541.662423] ffff88013a3b3000: 44 51 01 01 00 00 00 00 00 00 00 00 00
-> 00 00 00  DQ..............
-> [  541.663258] ffff88013a3b3010: 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 00 00 00  ................
-> [  541.664156] ffff88013a3b3020: 00 00 00 00 00 00 00 00 00 00 00 00 00
-> 0b db fd  ................
-> [  541.664930] ffff88013a3b3030: 00 00 00 00 00 01 9e 82 00 00 00 00 00
-> 00 00 00  ................
-> [  541.665704] CPU: 0 PID: 489 Comm: xfsaild/dm-0 Not tainted 4.4.11 #1
-> [  541.666486] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
-> BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
-> [  541.667276]  0000000000000000 ffff880037a57c70 ffffffffbe3b3c33
-> 0000000000000001
-> [  541.668094]  ffff880139d16900 ffff880037a57d18 ffffffffbe31c681
-> 0000000000000000
-> [  541.668896]  ffff880139d16980 0000000000000000 0000000000000000
-> 0000000000000000
-> [  541.669705] Call Trace:
-> [  541.670491]  [<ffffffffbe3b3c33>] dump_stack+0x63/0x90
-> [  541.671286]  [<ffffffffbe31c681>] _xfs_buf_ioapply+0x3e1/0x440
-> [  541.672113]  [<ffffffffbe0aaba0>] ? wake_up_q+0x70/0x70
-> [  541.672901]  [<ffffffffbe31df99>] ? __xfs_buf_delwri_submit+0x179/0x270
-> [  541.673704]  [<ffffffffbe31dcc4>] xfs_buf_submit+0x64/0x1c0
-> [  541.674506]  [<ffffffffbe31df99>] __xfs_buf_delwri_submit+0x179/0x270
-> [  541.675321]  [<ffffffffbe31eea0>] ?
-> xfs_buf_delwri_submit_nowait+0x20/0x30
-> [  541.676129]  [<ffffffffbe31eea0>] xfs_buf_delwri_submit_nowait+0x20/0x30
-> [  541.676930]  [<ffffffffbe3495f6>] xfsaild+0x2a6/0x710
-> [  541.677738]  [<ffffffffbe349350>] ? xfs_trans_ail_cursor_first+0x90/0x90
-> [  541.678557]  [<ffffffffbe349350>] ? xfs_trans_ail_cursor_first+0x90/0x90
-> [  541.679357]  [<ffffffffbe09f36b>] kthread+0xdb/0x100
-> [  541.680136]  [<ffffffffbe09f290>] ? kthread_park+0x60/0x60
-> [  541.680912]  [<ffffffffbe6972cf>] ret_from_fork+0x3f/0x70
-> [  541.681708]  [<ffffffffbe09f290>] ? kthread_park+0x60/0x60
-> 
-> I found a bug report from redhat here
-> https://bugzilla.redhat.com/show_bug.cgi?id=1234586 pointing to this commit:
-> xfs: handle dquot buffer readahead in log recovery correctly
-> 
-> which isn't part of 4.4. Is it missing from linux-stable?
+Sorry to dig up old stuff here but after replacing hardware and pulling 
+my hair out to no end, I traced the source of the problem out.
 
-Yes, mainline 7d6a13f02356 is missing from 4.4-stable because it applies,
-but doesn't compile. :)
+On every drive in the array, the points on the PCB which the contacts 
+for the drives motors and head/actuators make contact with were oxidized 
+enough to cause the issue. I ended up pulling the PCB off each drive and 
+cleaning them as well as cleaning out all other cable and drive 
+connectors from the HBA outward and everything is happy again.
 
-I'll look into a fix.
+http://s33.postimg.org/uhjmvw4dr/Not_Cleaned.jpg
+http://s33.postimg.org/xo94ieii7/Partial_Cleaned_1.jpg
+http://s33.postimg.org/hoqgyumgf/Partial_Cleaned_2.jpg
+http://s33.postimg.org/68k20t8a7/Partial_Cleaned_3.jpg
 
--h
+
+On 04/13/2016 12:51 AM, Dave Chinner wrote:
+> On Tue, Apr 12, 2016 at 11:02:37PM -0400, Andrew Ryder wrote:
+>> Is it possible the location its searching for at block
+>>
+>> 02:34:43.887528 pread64(4, 0x7fb8f53e0200, 2097152, 3001552175104) =
+>> -1 EIO (Input/output error)
+>
+> so offset is 3001552175104, or roughly around the 3TB mark. Given
+> the log i always placed int eh middle of the filesystem and you have
+> a 6TB device, then the above definitely looks like a valid place to
+> be reading from the log.
+>
+>> xfs_logprint:
+>>      data device: 0x902
+>>      log device: 0x902 daddr: 5860130880 length: 4173824
+>
+> daddr converted to offset is 5860130880 * 512 = 3001552175104, which
+> tells us that the above pread64 failure was definitely coming from
+> an attempt to read the log.
+>
+> That this is coming from the block device from userspace indicates a
+> problem below XFS. There is something going wrong with your
+> underlying block device and/or hardware here; AFAICT it's not
+> related to XFS at all.
+>
+>>> GNU Parted 3.2
+>>> Using /dev/sdk
+>>> Welcome to GNU Parted! Type 'help' to view a list of commands.
+>>> (parted) p
+>>> Model: ATA ST2000DL001-9VT1 (scsi)
+>>> Disk /dev/sdk: 2000GB
+>>> Sector size (logical/physical): 512B/512B
+>>> Partition Table: msdos
+>>> Disk Flags:
+>>>
+>>> Number  Start  End     Size    Type     File system  Flags
+>>>   1      512B   2000GB  2000GB  primary               raid
+>>> Number  Start  End          Size         Type     File system  Flags
+>>>   1      1s     3907029167s  3907029167s  primary               raid
+>
+> Compared to the other devices, it has a different start sector, a
+> different size, and an msdos partition table rather than gpt.
+> Definitely a red flag...
+>
+>>>>> This all began when the RR2722 driver running under 3.18.15
+>>>>> complained and
+>
+> Reported physical IO errors to a write command. Really, this looks
+> like a hardware issue, not something that can be fixed by running
+> xfs_repair...
+>
+> Cheers,
+>
+> Dave.
+>
 
 _______________________________________________
 xfs mailing list
