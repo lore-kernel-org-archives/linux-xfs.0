@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A58B57CA1
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 14:37:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 79C708F8035
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 12:37:45 -0700 (PDT)
-Received: from smtp-out-no.shaw.ca (smtp-out-no.shaw.ca [64.59.134.13]) by
-	cuda.sgi.com with ESMTP id f2n6wgczkh9eJBad (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D18957CA0
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 19:43:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D124AC01F
+	for <xfs@oss.sgi.com>; Fri,  3 Jun 2016 17:43:28 -0700 (PDT)
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id kz7TwkVy5J4qRb42 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 06 Jun 2016 12:37:40 -0700 (PDT)
-Subject: Re: xfs_repair fails after trying to format log cycle?
-References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
-	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
-	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
-	<20160413045129.GO567@dastard> <57523CE6.7020906@shaw.ca>
-	<20160606173336.027917f5@harpe.intellique.com>
-	<5755CCD7.1000104@shaw.ca>
-From: Andrew Ryder <tireman@shaw.ca>
-Message-ID: <5755D107.5060001@shaw.ca>
-Date: Mon, 6 Jun 2016 15:37:43 -0400
+	<xfs@oss.sgi.com>; Fri, 03 Jun 2016 17:43:26 -0700 (PDT)
+Date: Fri, 3 Jun 2016 20:43:25 -0400
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: Re: [PATCH] Allow compiling xfsprogs in a cross compile environment.
+Message-ID: <20160604004325.GZ7717@vapier.lan>
+References: <AMHSBOU5+XsM503_3khtVBWa+Ymz9BrezGzpxpJEr3axCMuR1Q@mail.gmail.com>
+	<1465000276-16554-1-git-send-email-gwendal@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <5755CCD7.1000104@shaw.ca>
+In-Reply-To: <1465000276-16554-1-git-send-email-gwendal@chromium.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +25,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============7495614736890081138=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: linux-raid@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Gwendal Grignou <gwendal@chromium.org>
+Cc: hch@infradead.org, tytso@mit.edu, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-CgpPbiAwNi8wNi8yMDE2IDAzOjE5IFBNLCBBbmRyZXcgUnlkZXIgd3JvdGU6Cj4KPgo+IE9uIDA2
-LzA2LzIwMTYgMTE6MzMgQU0sIEVtbWFudWVsIEZsb3JhYyB3cm90ZToKPj4gTGUgRnJpLCAzIEp1
-biAyMDE2IDIyOjI4OjU0IC0wNDAwCj4+IEFuZHJldyBSeWRlciA8dGlyZW1hbkBzaGF3LmNhPiDD
-qWNyaXZhaXQ6Cj4+Cj4+PiBTb3JyeSB0byBkaWcgdXAgb2xkIHN0dWZmIGhlcmUgYnV0IGFmdGVy
-IHJlcGxhY2luZyBoYXJkd2FyZSBhbmQKPj4+IHB1bGxpbmcgbXkgaGFpciBvdXQgdG8gbm8gZW5k
-LCBJIHRyYWNlZCB0aGUgc291cmNlIG9mIHRoZSBwcm9ibGVtIG91dC4KPj4+Cj4+PiBPbiBldmVy
-eSBkcml2ZSBpbiB0aGUgYXJyYXksIHRoZSBwb2ludHMgb24gdGhlIFBDQiB3aGljaCB0aGUgY29u
-dGFjdHMKPj4+IGZvciB0aGUgZHJpdmVzIG1vdG9ycyBhbmQgaGVhZC9hY3R1YXRvcnMgbWFrZSBj
-b250YWN0IHdpdGggd2VyZQo+Pj4gb3hpZGl6ZWQgZW5vdWdoIHRvIGNhdXNlIHRoZSBpc3N1ZS4g
-SSBlbmRlZCB1cCBwdWxsaW5nIHRoZSBQQ0Igb2ZmCj4+PiBlYWNoIGRyaXZlIGFuZCBjbGVhbmlu
-ZyB0aGVtIGFzIHdlbGwgYXMgY2xlYW5pbmcgb3V0IGFsbCBvdGhlciBjYWJsZQo+Pj4gYW5kIGRy
-aXZlIGNvbm5lY3RvcnMgZnJvbSB0aGUgSEJBIG91dHdhcmQgYW5kIGV2ZXJ5dGhpbmcgaXMgaGFw
-cHkKPj4+IGFnYWluLgo+Pj4KPj4+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvdWhqbXZ3NGRyL05v
-dF9DbGVhbmVkLmpwZwo+Pj4gaHR0cDovL3MzMy5wb3N0aW1nLm9yZy94bzk0aWVpaTcvUGFydGlh
-bF9DbGVhbmVkXzEuanBnCj4+PiBodHRwOi8vczMzLnBvc3RpbWcub3JnL2hvcWd5dW1nZi9QYXJ0
-aWFsX0NsZWFuZWRfMi5qcGcKPj4+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvNjhrMjB0OGE3L1Bh
-cnRpYWxfQ2xlYW5lZF8zLmpwZwo+Pj4KPj4KPj4gR29vZCBqb2IsIHRoYXQgd2FzIHF1aXRlIHVu
-ZXhwZWN0ZWQgOikgQXJlIHlvdSBuZXh0IHRvIHRoZQo+PiBzZWFzaG9yZT8KPj4KPgo+Cj4gTm8u
-IEknbSB1cCBpbiBOVyBPbnRhcmlvIGluIENhbmFkYSBhY3R1YWxseSwgZmFyIGF3YXkgZnJvbSBh
-bnkgc2FsdAo+IHdhdGVyLiBJJ20gZ3Vlc3NpbmcgaXQgd2FzIGZyb20gdGhlIGNvbWJpbmF0aW9u
-IG9mIGFpcgo+IHBvbGx1dGFudHMvaHVtaWRpdHkgYW5kIGhlYXQgZ2l2ZW4gdGhlIGRyaXZlcyBh
-cmUgbm90IGluIHRoZSBtb3N0Cj4gaG9zcGl0YWJsZSBlbnZpcm9ubWVudCBlc3AgZHVyaW5nIHRo
-ZSBzdW1tZXIgLi4uIGJ1dCBhZnRlciBjbGVhbmluZyB0aGUKPiBib2FyZCBjb250YWN0cyB1cCBh
-cyB3ZWxsIGFzIHRoZSBlc2F0YSBjYWJsZSBlbmRzL3BvcnRzLCBpdHMgd29ya2luZwo+IGdyZWF0
-IGFnYWluLgo+Cj4gSSdtIGJlZ2lubmluZyB0byB0aGluayB3aGVuIEkgZG8gcmVwbGFjZSBhbnkg
-ZHJpdmVzLCBhZnRlciB3YXJyYW50eSBpcwo+IHVwIG9uIHRoZW0sIHB1bGwgb2ZmIHRoZSBQQ0Is
-IGNsZWFuIGl0IHVwIGFuZCBjb2F0IHRoZSBjb250YWN0cyB3aXRoIGEKPiBnb29kIHNtZWFyaW5n
-IG9mIGRpZWxlY3RyaWMgZ3JlYXNlIHRvIGtlZXAgdGhlIGlzc3VlIGZyb20gaGFwcGVuaW5nLgo+
-Cj4gTWFrZXMgbWUgd29uZGVyIGhvdyBtYW55IG90aGVyIHBlb3BsZSBvdXQgdGhlcmUgc3VmZmVy
-IGZyb20gdGhlIHNhbWUKPiBpc3N1ZSBnaXZlbiB0aGUgYW1vdW50IG9mIHVucmVzb2x2ZWQgc2lt
-aWxhciBodyBlcnJvcnMgSSd2ZSBmb3VuZCB3aGlsZQo+IGdvb2dsaW5nIHRoZSBlcnJvcnMuLgo+
-Cj4gVGhhbmtzIGFnYWluLAo+IEFuZHJldwo+CgpPbmUgb3RoZXIgdGhpbmcgbWlnaHQgYmUgd29y
-dGggbm90aW5nLCBiZWZvcmUgSSBjbGVhbmVkIHVwIHRoZSBveGlkYXRpb24gCm9uIHRoZSBkcml2
-ZXMgYm9hcmRzLCB0aGV5IHdvdWxkIHdvcmsgZmluZSBpZiBvbiBkZWRpY2F0ZWQgU0FUQSBjaGFu
-bmVscyAKb2ZmIHRoZSBtYWluYm9hcmQsIGJ1dCB3aGVuIHB1dCBvbiBhbnkgc2F0YSBwb3J0IG11
-bHRpcGxpZXIsIGl0IHdvdWxkIGRvIApub3RoaW5nIGJ1dCBhY3QgdXAuIFdoaWNoIHdhcyByZWFs
-bHkgd2VpcmQuCgpJJ20gYXNzdW1pbmcgdGhlcmUgbXVzdCBiZSBzb21lIGluaGVyZW50IHNlbnNp
-dGl2aXR5IHdpdGggc2F0YSBQTVAgCmNoaXBzL2h3IHRoYXQgbWFrZSB0aGlzIG1vcmUgcHJldmFs
-ZW50Li4gYW5kIEkndmUgdHJpZWQgYm90aCB0aGUgb2xkIGFuZCAKbmV3IHZlcnNpb24gb2YgU2Fu
-c0RpZ2l0YWwncyBUUjhNJ3MgYmFja3BsYW5lcywgMiBkaWZmZXJlbnQgc2F0YSBQTVAgCkhCQXMg
-KHJvY2tldHJhaWQgMjcyMiBhbmQgYWRkb25pY3Mgb2xkZXIgUENJIDQgcG9ydCBzYXRhIHBtcCBo
-YmEpIGFzIAp3ZWxsIGFzIGFuIG9sZGVyIGFkZG9uaWNzIDNnYml0IHNhdGEgcG9ydCBtdWx0aXBs
-aWVyIGZhbiBvdXQgYm9hcmQgLi4KCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+
+--===============7495614736890081138==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="9+ohdFDUqiMJzwPo"
+Content-Disposition: inline
+
+
+--9+ohdFDUqiMJzwPo
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+
+Reviewed-by: Mike Frysinger <vapier@gentoo.org>
+-mike
+
+--9+ohdFDUqiMJzwPo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXUiQsAAoJEEFjO5/oN/WBv2IP/Az8W7bMSzhiVcH/yT6UC98J
+dGZrsP7meey44BCojV1TVfgaKEF2nzYAv9396wchEkKqOD4hb93dd4IZ2Ir75kX/
+2ob4DQoBv/PmVRhvHvLfUVhTWUm7ax4L8dwmqQ5XEhHc0GApnSlZjFpVFuvUied/
+GyorBn3CvQ9v7NhIoF0esDc+4k2YeflHhyVNZ8YSMbTqW7Sj70Dk5qXEx/IKn2fU
+gHys/cdQKq15vD9v5JNXwalap+UAtwJAEAmj3K1OnJVL9/nAUxtOUQkwe7+JEj8C
+/Kd4TwXZC6Kj7YXqqBWkfW9DTTOUY1ovkeYx6B+xw6Tcfnu+HsBCNrDc8enFweeN
++bwYQFnNGumtojGRSwckiqPZvHR4zaFSH2v8Xx7K4GWEWNQqbFD4y5pL8DSQHd6r
+6mGomYv6yPxoJRI8LqF+eBGQTfduno0ZV5tgneCOpeoET1uSJZdpzMA8gy/0731X
+mr2tmZgdjX1ri11Et+eopv6RdhoWB6jADDjbYUbQ9aS+F7AC1klZ0OuexbO4zxUI
+b/AYkRu396a+wtMlXbM+/sd6LV7NR9/4HgtkeZ1dwJ/1TwDOrJekuAaRTOjidih5
+OW1ONx+DojASxKizPZGNj9DrvS+p21+hcnGMDiGuI9vYddS2cnzswxF0PO/NGGXW
+GF5mrtgCjhqi+hGa3p+M
+=bRrJ
+-----END PGP SIGNATURE-----
+
+--9+ohdFDUqiMJzwPo--
+
+
+--===============7495614736890081138==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7495614736890081138==--
