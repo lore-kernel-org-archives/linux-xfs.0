@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1FDC47D4E
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D653A8F8037
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:51 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A252E7D2C
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 66776304043
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:54 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1YXFrxi2GoaD5ZPS (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 9RACriPhsxU0uK26 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:50 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:53 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 34/45] blkg_rwstat: separate op from flags
-Date: Sun,  5 Jun 2016 14:32:14 -0500
-Message-Id: <1465155145-10812-35-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 35/45] block: convert merge/insert code to check for REQ_OPs.
+Date: Sun,  5 Jun 2016 14:32:15 -0500
+Message-Id: <1465155145-10812-36-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,201 +33,129 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-The bio and request operation and flags are going to be separate
-definitions, so we cannot pass them in as a bitmap. This patch
-converts the blkg_rwstat code and its caller, cfq, to pass in the
-values separately.
+This patch converts the block layer merging code to use separate variables
+for the operation and flags, and to check req_op for the REQ_OP.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/cfq-iosched.c        | 49 +++++++++++++++++++++++++++-------------------
- include/linux/blk-cgroup.h | 13 ++++++------
- 2 files changed, 36 insertions(+), 26 deletions(-)
+ block/blk-core.c       |  2 +-
+ block/blk-merge.c      | 10 ++++++----
+ include/linux/blkdev.h | 20 ++++++++++----------
+ 3 files changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
-index 3fcc598..3dafdba 100644
---- a/block/cfq-iosched.c
-+++ b/block/cfq-iosched.c
-@@ -667,9 +667,10 @@ static inline void cfqg_put(struct cfq_group *cfqg)
- } while (0)
- 
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--					    struct cfq_group *curr_cfqg, int rw)
-+					    struct cfq_group *curr_cfqg, int op,
-+					    int op_flags)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 090e55d..1333bb7 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2161,7 +2161,7 @@ EXPORT_SYMBOL(submit_bio);
+ static int blk_cloned_rq_check_limits(struct request_queue *q,
+ 				      struct request *rq)
  {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, 1);
- 	cfqg_stats_end_empty_time(&cfqg->stats);
- 	cfqg_stats_set_start_group_wait_time(cfqg, curr_cfqg);
- }
-@@ -683,26 +684,30 @@ static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- #endif
- }
- 
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.queued, rw, -1);
-+	blkg_rwstat_add(&cfqg->stats.queued, op, op_flags, -1);
- }
- 
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw)
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+					       int op_flags)
- {
--	blkg_rwstat_add(&cfqg->stats.merged, rw, 1);
-+	blkg_rwstat_add(&cfqg->stats.merged, op, op_flags, 1);
- }
- 
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw)
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags)
- {
- 	struct cfqg_stats *stats = &cfqg->stats;
- 	unsigned long long now = sched_clock();
- 
- 	if (time_after64(now, io_start_time))
--		blkg_rwstat_add(&stats->service_time, rw, now - io_start_time);
-+		blkg_rwstat_add(&stats->service_time, op, op_flags,
-+				now - io_start_time);
- 	if (time_after64(io_start_time, start_time))
--		blkg_rwstat_add(&stats->wait_time, rw,
-+		blkg_rwstat_add(&stats->wait_time, op, op_flags,
- 				io_start_time - start_time);
- }
- 
-@@ -781,13 +786,16 @@ static inline void cfqg_put(struct cfq_group *cfqg) { }
- #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
- 
- static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
--			struct cfq_group *curr_cfqg, int rw) { }
-+			struct cfq_group *curr_cfqg, int op, int op_flags) { }
- static inline void cfqg_stats_update_timeslice_used(struct cfq_group *cfqg,
- 			unsigned long time, unsigned long unaccounted_time) { }
--static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int rw) { }
--static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int rw) { }
-+static inline void cfqg_stats_update_io_remove(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
-+static inline void cfqg_stats_update_io_merged(struct cfq_group *cfqg, int op,
-+			int op_flags) { }
- static inline void cfqg_stats_update_completion(struct cfq_group *cfqg,
--			uint64_t start_time, uint64_t io_start_time, int rw) { }
-+			uint64_t start_time, uint64_t io_start_time, int op,
-+			int op_flags) { }
- 
- #endif	/* CONFIG_CFQ_GROUP_IOSCHED */
- 
-@@ -2461,10 +2469,10 @@ static void cfq_reposition_rq_rb(struct cfq_queue *cfqq, struct request *rq)
- {
- 	elv_rb_del(&cfqq->sort_list, rq);
- 	cfqq->queued[rq_is_sync(rq)]--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
- 	cfq_add_rq_rb(rq);
- 	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqq->cfqd->serving_group,
--				 rq->cmd_flags);
-+				 req_op(rq), rq->cmd_flags);
- }
- 
- static struct request *
-@@ -2517,7 +2525,7 @@ static void cfq_remove_request(struct request *rq)
- 	cfq_del_rq_rb(rq);
- 
- 	cfqq->cfqd->rq_queued--;
--	cfqg_stats_update_io_remove(RQ_CFQG(rq), rq->cmd_flags);
-+	cfqg_stats_update_io_remove(RQ_CFQG(rq), req_op(rq), rq->cmd_flags);
- 	if (rq->cmd_flags & REQ_PRIO) {
- 		WARN_ON(!cfqq->prio_pending);
- 		cfqq->prio_pending--;
-@@ -2552,7 +2560,7 @@ static void cfq_merged_request(struct request_queue *q, struct request *req,
- static void cfq_bio_merged(struct request_queue *q, struct request *req,
- 				struct bio *bio)
- {
--	cfqg_stats_update_io_merged(RQ_CFQG(req), bio->bi_rw);
-+	cfqg_stats_update_io_merged(RQ_CFQG(req), bio_op(bio), bio->bi_rw);
- }
- 
- static void
-@@ -2575,7 +2583,7 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
- 	if (cfqq->next_rq == next)
- 		cfqq->next_rq = rq;
- 	cfq_remove_request(next);
--	cfqg_stats_update_io_merged(RQ_CFQG(rq), next->cmd_flags);
-+	cfqg_stats_update_io_merged(RQ_CFQG(rq), req_op(next), next->cmd_flags);
- 
- 	cfqq = RQ_CFQQ(next);
- 	/*
-@@ -4108,7 +4116,7 @@ static void cfq_insert_request(struct request_queue *q, struct request *rq)
- 	rq->fifo_time = jiffies + cfqd->cfq_fifo_expire[rq_is_sync(rq)];
- 	list_add_tail(&rq->queuelist, &cfqq->fifo);
- 	cfq_add_rq_rb(rq);
--	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group,
-+	cfqg_stats_update_io_add(RQ_CFQG(rq), cfqd->serving_group, req_op(rq),
- 				 rq->cmd_flags);
- 	cfq_rq_enqueued(cfqd, cfqq, rq);
- }
-@@ -4206,7 +4214,8 @@ static void cfq_completed_request(struct request_queue *q, struct request *rq)
- 	cfqq->dispatched--;
- 	(RQ_CFQG(rq))->dispatched--;
- 	cfqg_stats_update_completion(cfqq->cfqg, rq_start_time_ns(rq),
--				     rq_io_start_time_ns(rq), rq->cmd_flags);
-+				     rq_io_start_time_ns(rq), req_op(rq),
-+				     rq->cmd_flags);
- 
- 	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]--;
- 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 04f9c8d..f77150a 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -590,25 +590,26 @@ static inline void blkg_rwstat_exit(struct blkg_rwstat *rwstat)
- /**
-  * blkg_rwstat_add - add a value to a blkg_rwstat
-  * @rwstat: target blkg_rwstat
-- * @rw: mask of REQ_{WRITE|SYNC}
-+ * @op: REQ_OP
-+ * @op_flags: rq_flag_bits
-  * @val: value to add
-  *
-  * Add @val to @rwstat.  The counters are chosen according to @rw.  The
-  * caller is responsible for synchronizing calls to this function.
-  */
- static inline void blkg_rwstat_add(struct blkg_rwstat *rwstat,
--				   int rw, uint64_t val)
-+				   int op, int op_flags, uint64_t val)
- {
- 	struct percpu_counter *cnt;
- 
--	if (op_is_write(rw))
-+	if (op_is_write(op))
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_WRITE];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_READ];
- 
- 	__percpu_counter_add(cnt, val, BLKG_STAT_CPU_BATCH);
- 
--	if (rw & REQ_SYNC)
-+	if (op_flags & REQ_SYNC)
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_SYNC];
- 	else
- 		cnt = &rwstat->cpu_cnt[BLKG_RWSTAT_ASYNC];
-@@ -713,9 +714,9 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 
- 	if (!throtl) {
- 		blkg = blkg ?: q->root_blkg;
--		blkg_rwstat_add(&blkg->stat_bytes, bio->bi_rw,
-+		blkg_rwstat_add(&blkg->stat_bytes, bio_op(bio), bio->bi_rw,
- 				bio->bi_iter.bi_size);
--		blkg_rwstat_add(&blkg->stat_ios, bio->bi_rw, 1);
-+		blkg_rwstat_add(&blkg->stat_ios, bio_op(bio), bio->bi_rw, 1);
+-	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
++	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, req_op(rq))) {
+ 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
+ 		return -EIO;
  	}
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 5a03f96..c265348 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -649,7 +649,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	if (!rq_mergeable(req) || !rq_mergeable(next))
+ 		return 0;
  
- 	rcu_read_unlock();
+-	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
++	if (!blk_check_merge_flags(req->cmd_flags, req_op(req), next->cmd_flags,
++				   req_op(next)))
+ 		return 0;
+ 
+ 	/*
+@@ -663,7 +664,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
+ 	    || req_no_special_merge(next))
+ 		return 0;
+ 
+-	if (req->cmd_flags & REQ_WRITE_SAME &&
++	if (req_op(req) == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(req->bio, next->bio))
+ 		return 0;
+ 
+@@ -751,7 +752,8 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
+ 		return false;
+ 
+-	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
++	if (!blk_check_merge_flags(rq->cmd_flags, req_op(rq), bio->bi_rw,
++				   bio_op(bio)))
+ 		return false;
+ 
+ 	/* different data direction or already started, don't merge */
+@@ -767,7 +769,7 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
+ 		return false;
+ 
+ 	/* must be using the same buffer */
+-	if (rq->cmd_flags & REQ_WRITE_SAME &&
++	if (req_op(rq) == REQ_OP_WRITE_SAME &&
+ 	    !blk_write_same_mergeable(rq->bio, bio))
+ 		return false;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8c78aca..25f01ff 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -666,16 +666,16 @@ static inline bool rq_mergeable(struct request *rq)
+ 	return true;
+ }
+ 
+-static inline bool blk_check_merge_flags(unsigned int flags1,
+-					 unsigned int flags2)
++static inline bool blk_check_merge_flags(unsigned int flags1, unsigned int op1,
++					 unsigned int flags2, unsigned int op2)
+ {
+-	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
++	if ((op1 == REQ_OP_DISCARD) != (op2 == REQ_OP_DISCARD))
+ 		return false;
+ 
+ 	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
+ 		return false;
+ 
+-	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
++	if ((op1 == REQ_OP_WRITE_SAME) != (op2 == REQ_OP_WRITE_SAME))
+ 		return false;
+ 
+ 	return true;
+@@ -887,12 +887,12 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+ }
+ 
+ static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
+-						     unsigned int cmd_flags)
++						     int op)
+ {
+-	if (unlikely(cmd_flags & REQ_DISCARD))
++	if (unlikely(op == REQ_OP_DISCARD))
+ 		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+ 
+-	if (unlikely(cmd_flags & REQ_WRITE_SAME))
++	if (unlikely(op == REQ_OP_WRITE_SAME))
+ 		return q->limits.max_write_same_sectors;
+ 
+ 	return q->limits.max_sectors;
+@@ -919,11 +919,11 @@ static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
+ 	if (unlikely(rq->cmd_type != REQ_TYPE_FS))
+ 		return q->limits.max_hw_sectors;
+ 
+-	if (!q->limits.chunk_sectors || (rq->cmd_flags & REQ_DISCARD))
+-		return blk_queue_get_max_sectors(q, rq->cmd_flags);
++	if (!q->limits.chunk_sectors || (req_op(rq) == REQ_OP_DISCARD))
++		return blk_queue_get_max_sectors(q, req_op(rq));
+ 
+ 	return min(blk_max_size_offset(q, blk_rq_pos(rq)),
+-			blk_queue_get_max_sectors(q, rq->cmd_flags));
++			blk_queue_get_max_sectors(q, req_op(rq)));
+ }
+ 
+ static inline unsigned int blk_rq_count_bios(struct request *rq)
 -- 
 2.7.2
 
