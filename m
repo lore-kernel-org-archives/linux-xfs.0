@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 115347D05
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:34:20 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 431257CD3
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 15:44:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B56D78F8037
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:34:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jnjI3kpQ5xEZADld (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:34:16 -0700 (PDT)
-From: mchristi@redhat.com
-Subject: [PATCH 45/45] block, drivers, fs: rename REQ_FLUSH to REQ_PREFLUSH
-Date: Sun,  5 Jun 2016 14:32:25 -0500
-Message-Id: <1465155145-10812-46-git-send-email-mchristi@redhat.com>
-In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C2F0DAC002
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 13:44:24 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	6N0pODKCnKDkvBhR for <xfs@oss.sgi.com>;
+	Sun, 05 Jun 2016 13:44:20 -0700 (PDT)
+Date: Mon, 6 Jun 2016 04:30:07 +0800
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 01/45] block/fs/drivers: remove rw argument from submit_bio
+Message-ID: <201606060411.oSFVvcx1%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="J/dobhs11T7y2rNN"
+Content-Disposition: inline
+In-Reply-To: <1465155145-10812-2-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,976 +24,538 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
-Cc: Mike Christie <mchristi@redhat.com>
+To: mchristi@redhat.com
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, kbuild-all@01.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
-From: Mike Christie <mchristi@redhat.com>
 
-To avoid confusion between REQ_OP_FLUSH, which is handled by
-request_fn drivers, and upper layers requesting the block layer
-perform a flush sequence along with possibly a WRITE, this patch
-renames REQ_FLUSH to REQ_PREFLUSH.
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hi,
+
+[auto build test ERROR on v4.7-rc1]
+[cannot apply to dm/for-next md/for-next next-20160603]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/mchristi-redhat-com/v8-separate-operations-from-flags-in-the-bio-request-structs/20160606-040240
+config: x86_64-randconfig-i0-201623 (attached as .config)
+compiler: gcc-6 (Debian 6.1.1-1) 6.1.1 20160430
+reproduce:
+        # save the attached .config to linux build tree
+        make ARCH=x86_64 
+
+All error/warnings (new ones prefixed by >>):
+
+   In file included from include/linux/fs.h:31:0,
+                    from include/linux/genhd.h:67,
+                    from include/linux/blkdev.h:9,
+                    from fs/ext4/ext4.h:20,
+                    from fs/ext4/ext4_extents.h:22,
+                    from fs/ext4/crypto.c:37:
+   fs/ext4/crypto.c: In function 'ext4_encrypted_zeroout':
+   include/linux/blk_types.h:194:20: warning: passing argument 1 of 'submit_bio_wait' makes pointer from integer without a cast [-Wint-conversion]
+    #define REQ_WRITE  (1ULL << __REQ_WRITE)
+                       ^
+   include/linux/fs.h:196:19: note: in expansion of macro 'REQ_WRITE'
+    #define RW_MASK   REQ_WRITE
+                      ^~~~~~~~~
+>> include/linux/fs.h:200:17: note: in expansion of macro 'RW_MASK'
+    #define WRITE   RW_MASK
+                    ^~~~~~~
+>> fs/ext4/crypto.c:442:25: note: in expansion of macro 'WRITE'
+      err = submit_bio_wait(WRITE, bio);
+                            ^~~~~
+   In file included from include/linux/blkdev.h:19:0,
+                    from fs/ext4/ext4.h:20,
+                    from fs/ext4/ext4_extents.h:22,
+                    from fs/ext4/crypto.c:37:
+   include/linux/bio.h:476:12: note: expected 'struct bio *' but argument is of type 'long long unsigned int'
+    extern int submit_bio_wait(struct bio *bio);
+               ^~~~~~~~~~~~~~~
+>> fs/ext4/crypto.c:442:9: error: too many arguments to function 'submit_bio_wait'
+      err = submit_bio_wait(WRITE, bio);
+            ^~~~~~~~~~~~~~~
+   In file included from include/linux/blkdev.h:19:0,
+                    from fs/ext4/ext4.h:20,
+                    from fs/ext4/ext4_extents.h:22,
+                    from fs/ext4/crypto.c:37:
+   include/linux/bio.h:476:12: note: declared here
+    extern int submit_bio_wait(struct bio *bio);
+               ^~~~~~~~~~~~~~~
+
+vim +/submit_bio_wait +442 fs/ext4/crypto.c
+
+36086d43 Theodore Ts'o   2015-10-03  436  				 "bio_add_page failed: %d", ret);
+36086d43 Theodore Ts'o   2015-10-03  437  			WARN_ON(1);
+b30ab0e0 Michael Halcrow 2015-04-12  438  			bio_put(bio);
+36086d43 Theodore Ts'o   2015-10-03  439  			err = -EIO;
+b30ab0e0 Michael Halcrow 2015-04-12  440  			goto errout;
+b30ab0e0 Michael Halcrow 2015-04-12  441  		}
+b30ab0e0 Michael Halcrow 2015-04-12 @442  		err = submit_bio_wait(WRITE, bio);
+36086d43 Theodore Ts'o   2015-10-03  443  		if ((err == 0) && bio->bi_error)
+36086d43 Theodore Ts'o   2015-10-03  444  			err = -EIO;
+95ea68b4 Theodore Ts'o   2015-05-31  445  		bio_put(bio);
+
+:::::: The code at line 442 was first introduced by commit
+:::::: b30ab0e03407d2aa2d9316cba199c757e4bfc8ad ext4 crypto: add ext4 encryption facilities
+
+:::::: TO: Michael Halcrow <mhalcrow@google.com>
+:::::: CC: Theodore Ts'o <tytso@mit.edu>
+
 ---
- Documentation/block/writeback_cache_control.txt | 22 +++++++++++-----------
- Documentation/device-mapper/log-writes.txt      | 10 +++++-----
- block/blk-core.c                                | 12 ++++++------
- block/blk-flush.c                               | 16 ++++++++--------
- block/blk-mq.c                                  |  4 ++--
- drivers/block/drbd/drbd_actlog.c                |  4 ++--
- drivers/block/drbd/drbd_main.c                  |  2 +-
- drivers/block/drbd/drbd_protocol.h              |  2 +-
- drivers/block/drbd/drbd_receiver.c              |  2 +-
- drivers/block/drbd/drbd_req.c                   |  2 +-
- drivers/md/bcache/journal.c                     |  2 +-
- drivers/md/bcache/request.c                     |  8 ++++----
- drivers/md/dm-cache-target.c                    | 12 ++++++------
- drivers/md/dm-crypt.c                           |  7 ++++---
- drivers/md/dm-era-target.c                      |  4 ++--
- drivers/md/dm-io.c                              |  2 +-
- drivers/md/dm-log-writes.c                      |  2 +-
- drivers/md/dm-raid1.c                           |  5 +++--
- drivers/md/dm-region-hash.c                     |  4 ++--
- drivers/md/dm-snap.c                            |  6 +++---
- drivers/md/dm-stripe.c                          |  2 +-
- drivers/md/dm-thin.c                            |  8 ++++----
- drivers/md/dm.c                                 | 12 ++++++------
- drivers/md/linear.c                             |  2 +-
- drivers/md/md.c                                 |  2 +-
- drivers/md/md.h                                 |  2 +-
- drivers/md/multipath.c                          |  2 +-
- drivers/md/raid0.c                              |  2 +-
- drivers/md/raid1.c                              |  3 ++-
- drivers/md/raid10.c                             |  2 +-
- drivers/md/raid5-cache.c                        |  2 +-
- drivers/md/raid5.c                              |  2 +-
- fs/btrfs/check-integrity.c                      |  8 ++++----
- fs/jbd2/journal.c                               |  2 +-
- fs/xfs/xfs_buf.c                                |  2 +-
- include/linux/blk_types.h                       |  8 ++++----
- include/linux/fs.h                              |  4 ++--
- include/trace/events/f2fs.h                     |  2 +-
- kernel/trace/blktrace.c                         |  5 +++--
- 39 files changed, 102 insertions(+), 98 deletions(-)
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/Documentation/block/writeback_cache_control.txt b/Documentation/block/writeback_cache_control.txt
-index da70bda..8a6bdad 100644
---- a/Documentation/block/writeback_cache_control.txt
-+++ b/Documentation/block/writeback_cache_control.txt
-@@ -20,11 +20,11 @@ a forced cache flush, and the Force Unit Access (FUA) flag for requests.
- Explicit cache flushes
- ----------------------
- 
--The REQ_FLUSH flag can be OR ed into the r/w flags of a bio submitted from
-+The REQ_PREFLUSH flag can be OR ed into the r/w flags of a bio submitted from
- the filesystem and will make sure the volatile cache of the storage device
- has been flushed before the actual I/O operation is started.  This explicitly
- guarantees that previously completed write requests are on non-volatile
--storage before the flagged bio starts. In addition the REQ_FLUSH flag can be
-+storage before the flagged bio starts. In addition the REQ_PREFLUSH flag can be
- set on an otherwise empty bio structure, which causes only an explicit cache
- flush without any dependent I/O.  It is recommend to use
- the blkdev_issue_flush() helper for a pure cache flush.
-@@ -41,21 +41,21 @@ signaled after the data has been committed to non-volatile storage.
- Implementation details for filesystems
- --------------------------------------
- 
--Filesystems can simply set the REQ_FLUSH and REQ_FUA bits and do not have to
-+Filesystems can simply set the REQ_PREFLUSH and REQ_FUA bits and do not have to
- worry if the underlying devices need any explicit cache flushing and how
--the Forced Unit Access is implemented.  The REQ_FLUSH and REQ_FUA flags
-+the Forced Unit Access is implemented.  The REQ_PREFLUSH and REQ_FUA flags
- may both be set on a single bio.
- 
- 
- Implementation details for make_request_fn based block drivers
- --------------------------------------------------------------
- 
--These drivers will always see the REQ_FLUSH and REQ_FUA bits as they sit
-+These drivers will always see the REQ_PREFLUSH and REQ_FUA bits as they sit
- directly below the submit_bio interface.  For remapping drivers the REQ_FUA
- bits need to be propagated to underlying devices, and a global flush needs
--to be implemented for bios with the REQ_FLUSH bit set.  For real device
--drivers that do not have a volatile cache the REQ_FLUSH and REQ_FUA bits
--on non-empty bios can simply be ignored, and REQ_FLUSH requests without
-+to be implemented for bios with the REQ_PREFLUSH bit set.  For real device
-+drivers that do not have a volatile cache the REQ_PREFLUSH and REQ_FUA bits
-+on non-empty bios can simply be ignored, and REQ_PREFLUSH requests without
- data can be completed successfully without doing any work.  Drivers for
- devices with volatile caches need to implement the support for these
- flags themselves without any help from the block layer.
-@@ -65,8 +65,8 @@ Implementation details for request_fn based block drivers
- --------------------------------------------------------------
- 
- For devices that do not support volatile write caches there is no driver
--support required, the block layer completes empty REQ_FLUSH requests before
--entering the driver and strips off the REQ_FLUSH and REQ_FUA bits from
-+support required, the block layer completes empty REQ_PREFLUSH requests before
-+entering the driver and strips off the REQ_PREFLUSH and REQ_FUA bits from
- requests that have a payload.  For devices with volatile write caches the
- driver needs to tell the block layer that it supports flushing caches by
- doing:
-@@ -74,7 +74,7 @@ doing:
- 	blk_queue_write_cache(sdkp->disk->queue, true, false);
- 
- and handle empty REQ_OP_FLUSH requests in its prep_fn/request_fn.  Note that
--REQ_FLUSH requests with a payload are automatically turned into a sequence
-+REQ_PREFLUSH requests with a payload are automatically turned into a sequence
- of an empty REQ_OP_FLUSH request followed by the actual write by the block
- layer.  For devices that also support the FUA bit the block layer needs
- to be told to pass through the REQ_FUA bit using:
-diff --git a/Documentation/device-mapper/log-writes.txt b/Documentation/device-mapper/log-writes.txt
-index c10f30c..f4ebcba 100644
---- a/Documentation/device-mapper/log-writes.txt
-+++ b/Documentation/device-mapper/log-writes.txt
-@@ -14,14 +14,14 @@ Log Ordering
- 
- We log things in order of completion once we are sure the write is no longer in
- cache.  This means that normal WRITE requests are not actually logged until the
--next REQ_FLUSH request.  This is to make it easier for userspace to replay the
--log in a way that correlates to what is on disk and not what is in cache, to
--make it easier to detect improper waiting/flushing.
-+next REQ_PREFLUSH request.  This is to make it easier for userspace to replay
-+the log in a way that correlates to what is on disk and not what is in cache,
-+to make it easier to detect improper waiting/flushing.
- 
- This works by attaching all WRITE requests to a list once the write completes.
--Once we see a REQ_FLUSH request we splice this list onto the request and once
-+Once we see a REQ_PREFLUSH request we splice this list onto the request and once
- the FLUSH request completes we log all of the WRITEs and then the FLUSH.  Only
--completed WRITEs, at the time the REQ_FLUSH is issued, are added in order to
-+completed WRITEs, at the time the REQ_PREFLUSH is issued, are added in order to
- simulate the worst case scenario with regard to power failures.  Consider the
- following example (W means write, C means complete):
- 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index c7d66c2..32a283e 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1029,7 +1029,7 @@ static bool blk_rq_should_init_elevator(struct bio *bio)
- 	 * Flush requests do not use the elevator so skip initialization.
- 	 * This allows a request to share the flush and elevator data.
- 	 */
--	if (bio->bi_rw & (REQ_FLUSH | REQ_FUA))
-+	if (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA))
- 		return false;
- 
- 	return true;
-@@ -1736,7 +1736,7 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
- 		return BLK_QC_T_NONE;
- 	}
- 
--	if (bio->bi_rw & (REQ_FLUSH | REQ_FUA)) {
-+	if (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA)) {
- 		spin_lock_irq(q->queue_lock);
- 		where = ELEVATOR_INSERT_FLUSH;
- 		goto get_rq;
-@@ -1968,9 +1968,9 @@ generic_make_request_checks(struct bio *bio)
- 	 * drivers without flush support don't have to worry
- 	 * about them.
- 	 */
--	if ((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) &&
-+	if ((bio->bi_rw & (REQ_PREFLUSH | REQ_FUA)) &&
- 	    !test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
--		bio->bi_rw &= ~(REQ_FLUSH | REQ_FUA);
-+		bio->bi_rw &= ~(REQ_PREFLUSH | REQ_FUA);
- 		if (!nr_sectors) {
- 			err = 0;
- 			goto end_io;
-@@ -2217,7 +2217,7 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
- 	 */
- 	BUG_ON(blk_queued_rq(rq));
- 
--	if (rq->cmd_flags & (REQ_FLUSH|REQ_FUA))
-+	if (rq->cmd_flags & (REQ_PREFLUSH | REQ_FUA))
- 		where = ELEVATOR_INSERT_FLUSH;
- 
- 	add_acct_request(q, rq, where);
-@@ -3311,7 +3311,7 @@ void blk_flush_plug_list(struct blk_plug *plug, bool from_schedule)
- 		/*
- 		 * rq is already accounted, so use raw insert
- 		 */
--		if (rq->cmd_flags & (REQ_FLUSH | REQ_FUA))
-+		if (rq->cmd_flags & (REQ_PREFLUSH | REQ_FUA))
- 			__elv_add_request(q, rq, ELEVATOR_INSERT_FLUSH);
- 		else
- 			__elv_add_request(q, rq, ELEVATOR_INSERT_SORT_MERGE);
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 21f0d5b..d308def 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -10,8 +10,8 @@
-  * optional steps - PREFLUSH, DATA and POSTFLUSH - according to the request
-  * properties and hardware capability.
-  *
-- * If a request doesn't have data, only REQ_FLUSH makes sense, which
-- * indicates a simple flush request.  If there is data, REQ_FLUSH indicates
-+ * If a request doesn't have data, only REQ_PREFLUSH makes sense, which
-+ * indicates a simple flush request.  If there is data, REQ_PREFLUSH indicates
-  * that the device cache should be flushed before the data is executed, and
-  * REQ_FUA means that the data must be on non-volatile media on request
-  * completion.
-@@ -20,11 +20,11 @@
-  * difference.  The requests are either completed immediately if there's no
-  * data or executed as normal requests otherwise.
-  *
-- * If the device has writeback cache and supports FUA, REQ_FLUSH is
-+ * If the device has writeback cache and supports FUA, REQ_PREFLUSH is
-  * translated to PREFLUSH but REQ_FUA is passed down directly with DATA.
-  *
-- * If the device has writeback cache and doesn't support FUA, REQ_FLUSH is
-- * translated to PREFLUSH and REQ_FUA to POSTFLUSH.
-+ * If the device has writeback cache and doesn't support FUA, REQ_PREFLUSH
-+ * is translated to PREFLUSH and REQ_FUA to POSTFLUSH.
-  *
-  * The actual execution of flush is double buffered.  Whenever a request
-  * needs to execute PRE or POSTFLUSH, it queues at
-@@ -103,7 +103,7 @@ static unsigned int blk_flush_policy(unsigned long fflags, struct request *rq)
- 		policy |= REQ_FSEQ_DATA;
- 
- 	if (fflags & (1UL << QUEUE_FLAG_WC)) {
--		if (rq->cmd_flags & REQ_FLUSH)
-+		if (rq->cmd_flags & REQ_PREFLUSH)
- 			policy |= REQ_FSEQ_PREFLUSH;
- 		if (!(fflags & (1UL << QUEUE_FLAG_FUA)) &&
- 		    (rq->cmd_flags & REQ_FUA))
-@@ -391,9 +391,9 @@ void blk_insert_flush(struct request *rq)
- 
- 	/*
- 	 * @policy now records what operations need to be done.  Adjust
--	 * REQ_FLUSH and FUA for the driver.
-+	 * REQ_PREFLUSH and FUA for the driver.
- 	 */
--	rq->cmd_flags &= ~REQ_FLUSH;
-+	rq->cmd_flags &= ~REQ_PREFLUSH;
- 	if (!(fflags & (1UL << QUEUE_FLAG_FUA)))
- 		rq->cmd_flags &= ~REQ_FUA;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 29bcd9c..13f4603 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1247,7 +1247,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
- static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- {
- 	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
--	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
-+	const int is_flush_fua = bio->bi_rw & (REQ_PREFLUSH | REQ_FUA);
- 	struct blk_map_ctx data;
- 	struct request *rq;
- 	unsigned int request_count = 0;
-@@ -1344,7 +1344,7 @@ done:
- static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- {
- 	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
--	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
-+	const int is_flush_fua = bio->bi_rw & (REQ_PREFLUSH | REQ_FUA);
- 	struct blk_plug *plug;
- 	unsigned int request_count = 0;
- 	struct blk_map_ctx data;
-diff --git a/drivers/block/drbd/drbd_actlog.c b/drivers/block/drbd/drbd_actlog.c
-index f236a31..d524973 100644
---- a/drivers/block/drbd/drbd_actlog.c
-+++ b/drivers/block/drbd/drbd_actlog.c
-@@ -148,7 +148,7 @@ static int _drbd_md_sync_page_io(struct drbd_device *device,
- 	device->md_io.error = -ENODEV;
- 
- 	if ((op == REQ_OP_WRITE) && !test_bit(MD_NO_FUA, &device->flags))
--		op_flags |= REQ_FUA | REQ_FLUSH;
-+		op_flags |= REQ_FUA | REQ_PREFLUSH;
- 	op_flags |= REQ_SYNC | REQ_NOIDLE;
- 
- 	bio = bio_alloc_drbd(GFP_NOIO);
-@@ -847,7 +847,7 @@ int __drbd_change_sync(struct drbd_device *device, sector_t sector, int size,
- 	unsigned long count = 0;
- 	sector_t esector, nr_sectors;
- 
--	/* This would be an empty REQ_FLUSH, be silent. */
-+	/* This would be an empty REQ_PREFLUSH, be silent. */
- 	if ((mode == SET_OUT_OF_SYNC) && size == 0)
- 		return 0;
- 
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index d55febc..2b37744 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -1609,7 +1609,7 @@ static u32 bio_flags_to_wire(struct drbd_connection *connection,
- 	if (connection->agreed_pro_version >= 95)
- 		return  (bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0) |
- 			(bio->bi_rw & REQ_FUA ? DP_FUA : 0) |
--			(bio->bi_rw & REQ_FLUSH ? DP_FLUSH : 0) |
-+			(bio->bi_rw & REQ_PREFLUSH ? DP_FLUSH : 0) |
- 			(bio_op(bio) == REQ_OP_DISCARD ? DP_DISCARD : 0);
- 	else
- 		return bio->bi_rw & REQ_SYNC ? DP_RW_SYNC : 0;
-diff --git a/drivers/block/drbd/drbd_protocol.h b/drivers/block/drbd/drbd_protocol.h
-index ef92453..129f8c7 100644
---- a/drivers/block/drbd/drbd_protocol.h
-+++ b/drivers/block/drbd/drbd_protocol.h
-@@ -112,7 +112,7 @@ struct p_header100 {
- #define DP_MAY_SET_IN_SYNC    4
- #define DP_UNPLUG             8 /* not used anymore   */
- #define DP_FUA               16 /* equals REQ_FUA     */
--#define DP_FLUSH             32 /* equals REQ_FLUSH   */
-+#define DP_FLUSH             32 /* equals REQ_PREFLUSH   */
- #define DP_DISCARD           64 /* equals REQ_DISCARD */
- #define DP_SEND_RECEIVE_ACK 128 /* This is a proto B write request */
- #define DP_SEND_WRITE_ACK   256 /* This is a proto C write request */
-diff --git a/drivers/block/drbd/drbd_receiver.c b/drivers/block/drbd/drbd_receiver.c
-index 6c59978..1ee0023 100644
---- a/drivers/block/drbd/drbd_receiver.c
-+++ b/drivers/block/drbd/drbd_receiver.c
-@@ -2158,7 +2158,7 @@ static unsigned long wire_flags_to_bio_flags(u32 dpf)
- {
- 	return  (dpf & DP_RW_SYNC ? REQ_SYNC : 0) |
- 		(dpf & DP_FUA ? REQ_FUA : 0) |
--		(dpf & DP_FLUSH ? REQ_FLUSH : 0);
-+		(dpf & DP_FLUSH ? REQ_PREFLUSH : 0);
- }
- 
- static unsigned long wire_flags_to_bio_op(u32 dpf)
-diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-index 2255dcf..eef6e95 100644
---- a/drivers/block/drbd/drbd_req.c
-+++ b/drivers/block/drbd/drbd_req.c
-@@ -1132,7 +1132,7 @@ static int drbd_process_write_request(struct drbd_request *req)
- 	 * replicating, in which case there is no point. */
- 	if (unlikely(req->i.size == 0)) {
- 		/* The only size==0 bios we expect are empty flushes. */
--		D_ASSERT(device, req->master_bio->bi_rw & REQ_FLUSH);
-+		D_ASSERT(device, req->master_bio->bi_rw & REQ_PREFLUSH);
- 		if (remote)
- 			_req_mod(req, QUEUE_AS_DRBD_BARRIER);
- 		return remote;
-diff --git a/drivers/md/bcache/journal.c b/drivers/md/bcache/journal.c
-index a3c3b30..6925023 100644
---- a/drivers/md/bcache/journal.c
-+++ b/drivers/md/bcache/journal.c
-@@ -631,7 +631,7 @@ static void journal_write_unlocked(struct closure *cl)
- 		bio->bi_end_io	= journal_write_endio;
- 		bio->bi_private = w;
- 		bio_set_op_attrs(bio, REQ_OP_WRITE,
--				 REQ_SYNC|REQ_META|REQ_FLUSH|REQ_FUA);
-+				 REQ_SYNC|REQ_META|REQ_PREFLUSH|REQ_FUA);
- 		bch_bio_map(bio, w->data);
- 
- 		trace_bcache_journal_write(bio);
-diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
-index 016b0aa..69f16f4 100644
---- a/drivers/md/bcache/request.c
-+++ b/drivers/md/bcache/request.c
-@@ -205,10 +205,10 @@ static void bch_data_insert_start(struct closure *cl)
- 		return bch_data_invalidate(cl);
- 
- 	/*
--	 * Journal writes are marked REQ_FLUSH; if the original write was a
-+	 * Journal writes are marked REQ_PREFLUSH; if the original write was a
- 	 * flush, it'll wait on the journal write.
- 	 */
--	bio->bi_rw &= ~(REQ_FLUSH|REQ_FUA);
-+	bio->bi_rw &= ~(REQ_PREFLUSH|REQ_FUA);
- 
- 	do {
- 		unsigned i;
-@@ -668,7 +668,7 @@ static inline struct search *search_alloc(struct bio *bio,
- 	s->iop.write_prio	= 0;
- 	s->iop.error		= 0;
- 	s->iop.flags		= 0;
--	s->iop.flush_journal	= (bio->bi_rw & (REQ_FLUSH|REQ_FUA)) != 0;
-+	s->iop.flush_journal	= (bio->bi_rw & (REQ_PREFLUSH|REQ_FUA)) != 0;
- 	s->iop.wq		= bcache_wq;
- 
- 	return s;
-@@ -920,7 +920,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
- 		bch_writeback_add(dc);
- 		s->iop.bio = bio;
- 
--		if (bio->bi_rw & REQ_FLUSH) {
-+		if (bio->bi_rw & REQ_PREFLUSH) {
- 			/* Also need to send a flush to the backing device */
- 			struct bio *flush = bio_alloc_bioset(GFP_NOIO, 0,
- 							     dc->disk.bio_split);
-diff --git a/drivers/md/dm-cache-target.c b/drivers/md/dm-cache-target.c
-index 540e80e..718744d 100644
---- a/drivers/md/dm-cache-target.c
-+++ b/drivers/md/dm-cache-target.c
-@@ -788,7 +788,7 @@ static void check_if_tick_bio_needed(struct cache *cache, struct bio *bio)
- 
- 	spin_lock_irqsave(&cache->lock, flags);
- 	if (cache->need_tick_bio &&
--	    !(bio->bi_rw & (REQ_FUA | REQ_FLUSH)) &&
-+	    !(bio->bi_rw & (REQ_FUA | REQ_PREFLUSH)) &&
- 	    bio_op(bio) != REQ_OP_DISCARD) {
- 		pb->tick = true;
- 		cache->need_tick_bio = false;
-@@ -830,7 +830,7 @@ static dm_oblock_t get_bio_block(struct cache *cache, struct bio *bio)
- 
- static int bio_triggers_commit(struct cache *cache, struct bio *bio)
- {
--	return bio->bi_rw & (REQ_FLUSH | REQ_FUA);
-+	return bio->bi_rw & (REQ_PREFLUSH | REQ_FUA);
- }
- 
- /*
-@@ -1069,7 +1069,7 @@ static void dec_io_migrations(struct cache *cache)
- static bool discard_or_flush(struct bio *bio)
- {
- 	return bio_op(bio) == REQ_OP_DISCARD ||
--	       bio->bi_rw & (REQ_FLUSH | REQ_FUA);
-+	       bio->bi_rw & (REQ_PREFLUSH | REQ_FUA);
- }
- 
- static void __cell_defer(struct cache *cache, struct dm_bio_prison_cell *cell)
-@@ -1614,8 +1614,8 @@ static void process_flush_bio(struct cache *cache, struct bio *bio)
- 		remap_to_cache(cache, bio, 0);
- 
- 	/*
--	 * REQ_FLUSH is not directed at any particular block so we don't
--	 * need to inc_ds().  REQ_FUA's are split into a write + REQ_FLUSH
-+	 * REQ_PREFLUSH is not directed at any particular block so we don't
-+	 * need to inc_ds().  REQ_FUA's are split into a write + REQ_PREFLUSH
- 	 * by dm-core.
- 	 */
- 	issue(cache, bio);
-@@ -1980,7 +1980,7 @@ static void process_deferred_bios(struct cache *cache)
- 
- 		bio = bio_list_pop(&bios);
- 
--		if (bio->bi_rw & REQ_FLUSH)
-+		if (bio->bi_rw & REQ_PREFLUSH)
- 			process_flush_bio(cache, bio);
- 		else if (bio_op(bio) == REQ_OP_DISCARD)
- 			process_discard_bio(cache, &structs, bio);
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 057d19b..96dd5d7 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1911,11 +1911,12 @@ static int crypt_map(struct dm_target *ti, struct bio *bio)
- 	struct crypt_config *cc = ti->private;
- 
- 	/*
--	 * If bio is REQ_FLUSH or REQ_OP_DISCARD, just bypass crypt queues.
--	 * - for REQ_FLUSH device-mapper core ensures that no IO is in-flight
-+	 * If bio is REQ_PREFLUSH or REQ_OP_DISCARD, just bypass crypt queues.
-+	 * - for REQ_PREFLUSH device-mapper core ensures that no IO is in-flight
- 	 * - for REQ_OP_DISCARD caller must use flush if IO ordering matters
- 	 */
--	if (unlikely(bio->bi_rw & REQ_FLUSH || bio_op(bio) == REQ_OP_DISCARD)) {
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH ||
-+	    bio_op(bio) == REQ_OP_DISCARD)) {
- 		bio->bi_bdev = cc->dev->bdev;
- 		if (bio_sectors(bio))
- 			bio->bi_iter.bi_sector = cc->start +
-diff --git a/drivers/md/dm-era-target.c b/drivers/md/dm-era-target.c
-index 665bf32..2faf49d8 100644
---- a/drivers/md/dm-era-target.c
-+++ b/drivers/md/dm-era-target.c
-@@ -1540,9 +1540,9 @@ static int era_map(struct dm_target *ti, struct bio *bio)
- 	remap_to_origin(era, bio);
- 
- 	/*
--	 * REQ_FLUSH bios carry no data, so we're not interested in them.
-+	 * REQ_PREFLUSH bios carry no data, so we're not interested in them.
- 	 */
--	if (!(bio->bi_rw & REQ_FLUSH) &&
-+	if (!(bio->bi_rw & REQ_PREFLUSH) &&
- 	    (bio_data_dir(bio) == WRITE) &&
- 	    !metadata_current_marked(era->md, block)) {
- 		defer_bio(era, bio);
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index 22e0597..0e225fd 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -380,7 +380,7 @@ static void dispatch_io(int op, int op_flags, unsigned int num_regions,
- 	 */
- 	for (i = 0; i < num_regions; i++) {
- 		*dp = old_pages;
--		if (where[i].count || (op_flags & REQ_FLUSH))
-+		if (where[i].count || (op_flags & REQ_PREFLUSH))
- 			do_region(op, op_flags, i, where + i, dp, io);
- 	}
- 
-diff --git a/drivers/md/dm-log-writes.c b/drivers/md/dm-log-writes.c
-index 0edb8ea..b5dbf7a 100644
---- a/drivers/md/dm-log-writes.c
-+++ b/drivers/md/dm-log-writes.c
-@@ -555,7 +555,7 @@ static int log_writes_map(struct dm_target *ti, struct bio *bio)
- 	struct bio_vec bv;
- 	size_t alloc_size;
- 	int i = 0;
--	bool flush_bio = (bio->bi_rw & REQ_FLUSH);
-+	bool flush_bio = (bio->bi_rw & REQ_PREFLUSH);
- 	bool fua_bio = (bio->bi_rw & REQ_FUA);
- 	bool discard_bio = (bio_op(bio) == REQ_OP_DISCARD);
- 
-diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
-index 907df2b..9f5f460 100644
---- a/drivers/md/dm-raid1.c
-+++ b/drivers/md/dm-raid1.c
-@@ -704,7 +704,7 @@ static void do_writes(struct mirror_set *ms, struct bio_list *writes)
- 	bio_list_init(&requeue);
- 
- 	while ((bio = bio_list_pop(writes))) {
--		if ((bio->bi_rw & REQ_FLUSH) ||
-+		if ((bio->bi_rw & REQ_PREFLUSH) ||
- 		    (bio_op(bio) == REQ_OP_DISCARD)) {
- 			bio_list_add(&sync, bio);
- 			continue;
-@@ -1253,7 +1253,8 @@ static int mirror_end_io(struct dm_target *ti, struct bio *bio, int error)
- 	 * We need to dec pending if this was a write.
- 	 */
- 	if (rw == WRITE) {
--		if (!(bio->bi_rw & REQ_FLUSH) && bio_op(bio) != REQ_OP_DISCARD)
-+		if (!(bio->bi_rw & REQ_PREFLUSH) &&
-+		    bio_op(bio) != REQ_OP_DISCARD)
- 			dm_rh_dec(ms->rh, bio_record->write_region);
- 		return error;
- 	}
-diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
-index 3550ca7..b118134 100644
---- a/drivers/md/dm-region-hash.c
-+++ b/drivers/md/dm-region-hash.c
-@@ -398,7 +398,7 @@ void dm_rh_mark_nosync(struct dm_region_hash *rh, struct bio *bio)
- 	region_t region = dm_rh_bio_to_region(rh, bio);
- 	int recovering = 0;
- 
--	if (bio->bi_rw & REQ_FLUSH) {
-+	if (bio->bi_rw & REQ_PREFLUSH) {
- 		rh->flush_failure = 1;
- 		return;
- 	}
-@@ -526,7 +526,7 @@ void dm_rh_inc_pending(struct dm_region_hash *rh, struct bio_list *bios)
- 	struct bio *bio;
- 
- 	for (bio = bios->head; bio; bio = bio->bi_next) {
--		if (bio->bi_rw & REQ_FLUSH || bio_op(bio) == REQ_OP_DISCARD)
-+		if (bio->bi_rw & REQ_PREFLUSH || bio_op(bio) == REQ_OP_DISCARD)
- 			continue;
- 		rh_inc(rh, dm_rh_bio_to_region(rh, bio));
- 	}
-diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
-index 70bb0e8..69ab1ff 100644
---- a/drivers/md/dm-snap.c
-+++ b/drivers/md/dm-snap.c
-@@ -1680,7 +1680,7 @@ static int snapshot_map(struct dm_target *ti, struct bio *bio)
- 
- 	init_tracked_chunk(bio);
- 
--	if (bio->bi_rw & REQ_FLUSH) {
-+	if (bio->bi_rw & REQ_PREFLUSH) {
- 		bio->bi_bdev = s->cow->bdev;
- 		return DM_MAPIO_REMAPPED;
- 	}
-@@ -1799,7 +1799,7 @@ static int snapshot_merge_map(struct dm_target *ti, struct bio *bio)
- 
- 	init_tracked_chunk(bio);
- 
--	if (bio->bi_rw & REQ_FLUSH) {
-+	if (bio->bi_rw & REQ_PREFLUSH) {
- 		if (!dm_bio_get_target_bio_nr(bio))
- 			bio->bi_bdev = s->origin->bdev;
- 		else
-@@ -2285,7 +2285,7 @@ static int origin_map(struct dm_target *ti, struct bio *bio)
- 
- 	bio->bi_bdev = o->dev->bdev;
- 
--	if (unlikely(bio->bi_rw & REQ_FLUSH))
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH))
- 		return DM_MAPIO_REMAPPED;
- 
- 	if (bio_rw(bio) != WRITE)
-diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
-index b738178..48f1c01 100644
---- a/drivers/md/dm-stripe.c
-+++ b/drivers/md/dm-stripe.c
-@@ -286,7 +286,7 @@ static int stripe_map(struct dm_target *ti, struct bio *bio)
- 	uint32_t stripe;
- 	unsigned target_bio_nr;
- 
--	if (bio->bi_rw & REQ_FLUSH) {
-+	if (bio->bi_rw & REQ_PREFLUSH) {
- 		target_bio_nr = dm_bio_get_target_bio_nr(bio);
- 		BUG_ON(target_bio_nr >= sc->stripes);
- 		bio->bi_bdev = sc->stripe[target_bio_nr].dev->bdev;
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index 1b684cb..5f9e3d7 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -697,7 +697,7 @@ static void remap_to_origin(struct thin_c *tc, struct bio *bio)
- 
- static int bio_triggers_commit(struct thin_c *tc, struct bio *bio)
- {
--	return (bio->bi_rw & (REQ_FLUSH | REQ_FUA)) &&
-+	return (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA)) &&
- 		dm_thin_changed_this_transaction(tc->td);
- }
- 
-@@ -868,7 +868,7 @@ static void __inc_remap_and_issue_cell(void *context,
- 	struct bio *bio;
- 
- 	while ((bio = bio_list_pop(&cell->bios))) {
--		if (bio->bi_rw & (REQ_FLUSH | REQ_FUA) ||
-+		if (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA) ||
- 		    bio_op(bio) == REQ_OP_DISCARD)
- 			bio_list_add(&info->defer_bios, bio);
- 		else {
-@@ -1641,7 +1641,7 @@ static void __remap_and_issue_shared_cell(void *context,
- 
- 	while ((bio = bio_list_pop(&cell->bios))) {
- 		if ((bio_data_dir(bio) == WRITE) ||
--		    (bio->bi_rw & (REQ_FLUSH | REQ_FUA) ||
-+		    (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA) ||
- 		     bio_op(bio) == REQ_OP_DISCARD))
- 			bio_list_add(&info->defer_bios, bio);
- 		else {
-@@ -2556,7 +2556,7 @@ static int thin_bio_map(struct dm_target *ti, struct bio *bio)
- 		return DM_MAPIO_SUBMITTED;
- 	}
- 
--	if (bio->bi_rw & (REQ_FLUSH | REQ_FUA) ||
-+	if (bio->bi_rw & (REQ_PREFLUSH | REQ_FUA) ||
- 	    bio_op(bio) == REQ_OP_DISCARD) {
- 		thin_defer_bio_with_throttle(tc, bio);
- 		return DM_MAPIO_SUBMITTED;
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index fcc68c8..aba7ed9 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1003,12 +1003,12 @@ static void dec_pending(struct dm_io *io, int error)
- 		if (io_error == DM_ENDIO_REQUEUE)
- 			return;
- 
--		if ((bio->bi_rw & REQ_FLUSH) && bio->bi_iter.bi_size) {
-+		if ((bio->bi_rw & REQ_PREFLUSH) && bio->bi_iter.bi_size) {
- 			/*
- 			 * Preflush done for flush with data, reissue
--			 * without REQ_FLUSH.
-+			 * without REQ_PREFLUSH.
- 			 */
--			bio->bi_rw &= ~REQ_FLUSH;
-+			bio->bi_rw &= ~REQ_PREFLUSH;
- 			queue_io(md, bio);
- 		} else {
- 			/* done with normal IO or empty flush */
-@@ -1477,7 +1477,7 @@ EXPORT_SYMBOL_GPL(dm_set_target_max_io_len);
- 
- /*
-  * A target may call dm_accept_partial_bio only from the map routine.  It is
-- * allowed for all bio types except REQ_FLUSH.
-+ * allowed for all bio types except REQ_PREFLUSH.
-  *
-  * dm_accept_partial_bio informs the dm that the target only wants to process
-  * additional n_sectors sectors of the bio and the rest of the data should be
-@@ -1507,7 +1507,7 @@ void dm_accept_partial_bio(struct bio *bio, unsigned n_sectors)
- {
- 	struct dm_target_io *tio = container_of(bio, struct dm_target_io, clone);
- 	unsigned bi_size = bio->bi_iter.bi_size >> SECTOR_SHIFT;
--	BUG_ON(bio->bi_rw & REQ_FLUSH);
-+	BUG_ON(bio->bi_rw & REQ_PREFLUSH);
- 	BUG_ON(bi_size > *tio->len_ptr);
- 	BUG_ON(n_sectors > bi_size);
- 	*tio->len_ptr -= bi_size - n_sectors;
-@@ -1795,7 +1795,7 @@ static void __split_and_process_bio(struct mapped_device *md,
- 
- 	start_io_acct(ci.io);
- 
--	if (bio->bi_rw & REQ_FLUSH) {
-+	if (bio->bi_rw & REQ_PREFLUSH) {
- 		ci.bio = &ci.md->flush_bio;
- 		ci.sector_count = 0;
- 		error = __send_empty_flush(&ci);
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 1ad3f48..70ff888 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -221,7 +221,7 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
- 	struct bio *split;
- 	sector_t start_sector, end_sector, data_offset;
- 
--	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH)) {
- 		md_flush_request(mddev, bio);
- 		return;
- 	}
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index bd4844f..1f123f5 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -414,7 +414,7 @@ static void md_submit_flush_data(struct work_struct *ws)
- 		/* an empty barrier - all done */
- 		bio_endio(bio);
- 	else {
--		bio->bi_rw &= ~REQ_FLUSH;
-+		bio->bi_rw &= ~REQ_PREFLUSH;
- 		mddev->pers->make_request(mddev, bio);
- 	}
- 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 2e0918f..b4f3352 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -424,7 +424,7 @@ struct mddev {
- 
- 	/* Generic flush handling.
- 	 * The last to finish preflush schedules a worker to submit
--	 * the rest of the request (without the REQ_FLUSH flag).
-+	 * the rest of the request (without the REQ_PREFLUSH flag).
- 	 */
- 	struct bio *flush_bio;
- 	atomic_t flush_pending;
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index dd483bb..72ea98e 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -111,7 +111,7 @@ static void multipath_make_request(struct mddev *mddev, struct bio * bio)
- 	struct multipath_bh * mp_bh;
- 	struct multipath_info *multipath;
- 
--	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH)) {
- 		md_flush_request(mddev, bio);
- 		return;
- 	}
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 051a10c..c3d4390 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -458,7 +458,7 @@ static void raid0_make_request(struct mddev *mddev, struct bio *bio)
- 	struct md_rdev *tmp_dev;
- 	struct bio *split;
- 
--	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH)) {
- 		md_flush_request(mddev, bio);
- 		return;
- 	}
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a342723..10e53cd 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1056,7 +1056,8 @@ static void raid1_make_request(struct mddev *mddev, struct bio * bio)
- 	const int op = bio_op(bio);
- 	const int rw = bio_data_dir(bio);
- 	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
--	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
-+	const unsigned long do_flush_fua = (bio->bi_rw &
-+						(REQ_PREFLUSH | REQ_FUA));
- 	const unsigned long do_sec = (bio->bi_rw & REQ_SECURE);
- 	struct md_rdev *blocked_rdev;
- 	struct blk_plug_cb *cb;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 615045a..245640b 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1447,7 +1447,7 @@ static void raid10_make_request(struct mddev *mddev, struct bio *bio)
- 
- 	struct bio *split;
- 
--	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
-+	if (unlikely(bio->bi_rw & REQ_PREFLUSH)) {
- 		md_flush_request(mddev, bio);
- 		return;
- 	}
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 9265138..5504ce2 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -536,7 +536,7 @@ int r5l_handle_flush_request(struct r5l_log *log, struct bio *bio)
- 		bio_endio(bio);
- 		return 0;
- 	}
--	bio->bi_rw &= ~REQ_FLUSH;
-+	bio->bi_rw &= ~REQ_PREFLUSH;
- 	return -EAGAIN;
- }
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b9122e2..7aacf5b 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5150,7 +5150,7 @@ static void raid5_make_request(struct mddev *mddev, struct bio * bi)
- 	DEFINE_WAIT(w);
- 	bool do_prepare;
- 
--	if (unlikely(bi->bi_rw & REQ_FLUSH)) {
-+	if (unlikely(bi->bi_rw & REQ_PREFLUSH)) {
- 		int ret = r5l_handle_flush_request(conf->log, bi);
- 
- 		if (ret == 0)
-diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
-index da944ff..ca70bc7 100644
---- a/fs/btrfs/check-integrity.c
-+++ b/fs/btrfs/check-integrity.c
-@@ -2207,7 +2207,7 @@ static void btrfsic_bio_end_io(struct bio *bp)
- 			       block->dev_bytenr, block->mirror_num);
- 		next_block = block->next_in_same_bio;
- 		block->iodone_w_error = iodone_w_error;
--		if (block->submit_bio_bh_rw & REQ_FLUSH) {
-+		if (block->submit_bio_bh_rw & REQ_PREFLUSH) {
- 			dev_state->last_flush_gen++;
- 			if ((dev_state->state->print_mask &
- 			     BTRFSIC_PRINT_MASK_END_IO_BIO_BH))
-@@ -2243,7 +2243,7 @@ static void btrfsic_bh_end_io(struct buffer_head *bh, int uptodate)
- 		       block->dev_bytenr, block->mirror_num);
- 
- 	block->iodone_w_error = iodone_w_error;
--	if (block->submit_bio_bh_rw & REQ_FLUSH) {
-+	if (block->submit_bio_bh_rw & REQ_PREFLUSH) {
- 		dev_state->last_flush_gen++;
- 		if ((dev_state->state->print_mask &
- 		     BTRFSIC_PRINT_MASK_END_IO_BIO_BH))
-@@ -2884,7 +2884,7 @@ int btrfsic_submit_bh(int op, int op_flags, struct buffer_head *bh)
- 		btrfsic_process_written_block(dev_state, dev_bytenr,
- 					      &bh->b_data, 1, NULL,
- 					      NULL, bh, op_flags);
--	} else if (NULL != dev_state && (op_flags & REQ_FLUSH)) {
-+	} else if (NULL != dev_state && (op_flags & REQ_PREFLUSH)) {
- 		if (dev_state->state->print_mask &
- 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
- 			printk(KERN_INFO
-@@ -2982,7 +2982,7 @@ static void __btrfsic_submit_bio(struct bio *bio)
- 			kunmap(bio->bi_io_vec[i].bv_page);
- 		}
- 		kfree(mapped_datav);
--	} else if (NULL != dev_state && (bio->bi_rw & REQ_FLUSH)) {
-+	} else if (NULL != dev_state && (bio->bi_rw & REQ_PREFLUSH)) {
- 		if (dev_state->state->print_mask &
- 		    BTRFSIC_PRINT_MASK_SUBMIT_BIO_BH)
- 			printk(KERN_INFO
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 34bc996..dc68f56 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -1354,7 +1354,7 @@ static int jbd2_write_superblock(journal_t *journal, int write_flags)
- 
- 	trace_jbd2_write_superblock(journal, write_flags);
- 	if (!(journal->j_flags & JBD2_BARRIER))
--		write_flags &= ~(REQ_FUA | REQ_FLUSH);
-+		write_flags &= ~(REQ_FUA | REQ_PREFLUSH);
- 	lock_buffer(bh);
- 	if (buffer_write_io_error(bh)) {
- 		/*
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d8acd37..686d8f1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1237,7 +1237,7 @@ _xfs_buf_ioapply(
- 		if (bp->b_flags & XBF_FUA)
- 			op_flags |= REQ_FUA;
- 		if (bp->b_flags & XBF_FLUSH)
--			op_flags |= REQ_FLUSH;
-+			op_flags |= REQ_PREFLUSH;
- 
- 		/*
- 		 * Run the write verifier callback function if it exists. If
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 32d8752..562ab83 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -168,7 +168,7 @@ enum rq_flag_bits {
- 	__REQ_NOIDLE,		/* don't anticipate more IO after this one */
- 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
- 	__REQ_FUA,		/* forced unit access */
--	__REQ_FLUSH,		/* request for cache flush */
-+	__REQ_PREFLUSH,		/* request for cache flush */
- 
- 	/* bio only flags */
- 	__REQ_RAHEAD,		/* read ahead, can fail anytime */
-@@ -212,12 +212,12 @@ enum rq_flag_bits {
- 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
- #define REQ_COMMON_MASK \
- 	(REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | REQ_NOIDLE | \
--	 REQ_FLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY | REQ_NOMERGE)
-+	 REQ_PREFLUSH | REQ_FUA | REQ_SECURE | REQ_INTEGRITY | REQ_NOMERGE)
- #define REQ_CLONE_MASK		REQ_COMMON_MASK
- 
- /* This mask is used for both bio and request merge checking */
- #define REQ_NOMERGE_FLAGS \
--	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_FLUSH | REQ_FUA | REQ_FLUSH_SEQ)
-+	(REQ_NOMERGE | REQ_STARTED | REQ_SOFTBARRIER | REQ_PREFLUSH | REQ_FUA | REQ_FLUSH_SEQ)
- 
- #define REQ_RAHEAD		(1ULL << __REQ_RAHEAD)
- #define REQ_THROTTLED		(1ULL << __REQ_THROTTLED)
-@@ -235,7 +235,7 @@ enum rq_flag_bits {
- #define REQ_PREEMPT		(1ULL << __REQ_PREEMPT)
- #define REQ_ALLOCED		(1ULL << __REQ_ALLOCED)
- #define REQ_COPY_USER		(1ULL << __REQ_COPY_USER)
--#define REQ_FLUSH		(1ULL << __REQ_FLUSH)
-+#define REQ_PREFLUSH		(1ULL << __REQ_PREFLUSH)
- #define REQ_FLUSH_SEQ		(1ULL << __REQ_FLUSH_SEQ)
- #define REQ_IO_STAT		(1ULL << __REQ_IO_STAT)
- #define REQ_MIXED_MERGE		(1ULL << __REQ_MIXED_MERGE)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ccd1664..1830245 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -204,9 +204,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- #define READ_SYNC		REQ_SYNC
- #define WRITE_SYNC		(REQ_SYNC | REQ_NOIDLE)
- #define WRITE_ODIRECT		REQ_SYNC
--#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH)
-+#define WRITE_FLUSH		(REQ_SYNC | REQ_NOIDLE | REQ_PREFLUSH)
- #define WRITE_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FUA)
--#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define WRITE_FLUSH_FUA		(REQ_SYNC | REQ_NOIDLE | REQ_PREFLUSH | REQ_FUA)
- 
- /*
-  * Attribute flags.  These should be or-ed together to figure out what
-diff --git a/include/trace/events/f2fs.h b/include/trace/events/f2fs.h
-index 30efa44..878963a 100644
---- a/include/trace/events/f2fs.h
-+++ b/include/trace/events/f2fs.h
-@@ -33,7 +33,7 @@ TRACE_DEFINE_ENUM(SSR);
- TRACE_DEFINE_ENUM(__REQ_RAHEAD);
- TRACE_DEFINE_ENUM(__REQ_SYNC);
- TRACE_DEFINE_ENUM(__REQ_NOIDLE);
--TRACE_DEFINE_ENUM(__REQ_FLUSH);
-+TRACE_DEFINE_ENUM(__REQ_PREFLUSH);
- TRACE_DEFINE_ENUM(__REQ_FUA);
- TRACE_DEFINE_ENUM(__REQ_PRIO);
- TRACE_DEFINE_ENUM(__REQ_META);
-diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 0c70fbb..03b0dd9 100644
---- a/kernel/trace/blktrace.c
-+++ b/kernel/trace/blktrace.c
-@@ -189,6 +189,7 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
- 				 BLK_TC_ACT(BLK_TC_WRITE) };
- 
- #define BLK_TC_RAHEAD		BLK_TC_AHEAD
-+#define BLK_TC_PREFLUSH		BLK_TC_FLUSH
- 
- /* The ilog2() calls fall out because they're constant */
- #define MASK_TC_BIT(rw, __name) ((rw & REQ_ ## __name) << \
-@@ -219,7 +220,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
- 	what |= MASK_TC_BIT(op_flags, SYNC);
- 	what |= MASK_TC_BIT(op_flags, RAHEAD);
- 	what |= MASK_TC_BIT(op_flags, META);
--	what |= MASK_TC_BIT(op_flags, FLUSH);
-+	what |= MASK_TC_BIT(op_flags, PREFLUSH);
- 	what |= MASK_TC_BIT(op_flags, FUA);
- 	if (op == REQ_OP_DISCARD)
- 		what |= BLK_TC_ACT(BLK_TC_DISCARD);
-@@ -1779,7 +1780,7 @@ void blk_fill_rwbs(char *rwbs, int op, u32 rw, int bytes)
- {
- 	int i = 0;
- 
--	if (rw & REQ_FLUSH)
-+	if (rw & REQ_PREFLUSH)
- 		rwbs[i++] = 'F';
- 
- 	switch (op) {
--- 
-2.7.2
+--J/dobhs11T7y2rNN
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+8yRQNV7WWvcII0om4ZU3i4D8H6gwKNOoagEA
+
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--J/dobhs11T7y2rNN--
