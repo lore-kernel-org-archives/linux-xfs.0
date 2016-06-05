@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2FCCF7CA0
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:18 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 57C657CA0
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E7128304043
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:17 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0DDC4304043
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:20 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nXh0x9NZMgV0kDCI (version=TLSv1.2
+	cuda.sgi.com with ESMTP id afOHA0wUjKhHHiZ3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:16 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:18 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 19/45] mpage: use bio op accessors
-Date: Sun,  5 Jun 2016 14:31:59 -0500
-Message-Id: <1465155145-10812-20-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 20/45] nilfs: use bio op accessors
+Date: Sun,  5 Jun 2016 14:32:00 -0500
+Message-Id: <1465155145-10812-21-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,160 +33,83 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have the mpage code
+Separate the op from the rq_flag_bits and have nilfs
 set/get the bio using bio_set_op_attrs/bio_op.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
 ---
- fs/mpage.c | 40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ fs/nilfs2/segbuf.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/fs/mpage.c b/fs/mpage.c
-index 2c251ec..37b2828 100644
---- a/fs/mpage.c
-+++ b/fs/mpage.c
-@@ -56,11 +56,11 @@ static void mpage_end_io(struct bio *bio)
- 	bio_put(bio);
+diff --git a/fs/nilfs2/segbuf.c b/fs/nilfs2/segbuf.c
+index 0f62909..a962d7d 100644
+--- a/fs/nilfs2/segbuf.c
++++ b/fs/nilfs2/segbuf.c
+@@ -346,7 +346,8 @@ static void nilfs_end_bio_write(struct bio *bio)
  }
  
--static struct bio *mpage_bio_submit(int rw, struct bio *bio)
-+static struct bio *mpage_bio_submit(int op, int op_flags, struct bio *bio)
+ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+-				   struct nilfs_write_info *wi, int mode)
++				   struct nilfs_write_info *wi, int mode,
++				   int mode_flags)
  {
- 	bio->bi_end_io = mpage_end_io;
--	bio->bi_rw = rw;
--	guard_bio_eod(rw, bio);
-+	bio_set_op_attrs(bio, op, op_flags);
-+	guard_bio_eod(op, bio);
+ 	struct bio *bio = wi->bio;
+ 	int err;
+@@ -364,7 +365,7 @@ static int nilfs_segbuf_submit_bio(struct nilfs_segment_buffer *segbuf,
+ 
+ 	bio->bi_end_io = nilfs_end_bio_write;
+ 	bio->bi_private = segbuf;
+-	bio->bi_rw = mode;
++	bio_set_op_attrs(bio, mode, mode_flags);
  	submit_bio(bio);
- 	return NULL;
- }
-@@ -270,7 +270,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && (*last_block_in_bio != blocks[0] - 1))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
+ 	segbuf->sb_nbio++;
  
- alloc_new:
- 	if (bio == NULL) {
-@@ -287,7 +287,7 @@ alloc_new:
+@@ -438,7 +439,7 @@ static int nilfs_segbuf_submit_bh(struct nilfs_segment_buffer *segbuf,
+ 		return 0;
+ 	}
+ 	/* bio is FULL */
+-	err = nilfs_segbuf_submit_bio(segbuf, wi, mode);
++	err = nilfs_segbuf_submit_bio(segbuf, wi, mode, 0);
+ 	/* never submit current bh */
+ 	if (likely(!err))
+ 		goto repeat;
+@@ -462,19 +463,19 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+ {
+ 	struct nilfs_write_info wi;
+ 	struct buffer_head *bh;
+-	int res = 0, rw = WRITE;
++	int res = 0;
  
- 	length = first_hole << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 		goto alloc_new;
+ 	wi.nilfs = nilfs;
+ 	nilfs_segbuf_prepare_write(segbuf, &wi);
+ 
+ 	list_for_each_entry(bh, &segbuf->sb_segsum_buffers, b_assoc_buffers) {
+-		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
++		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+ 		if (unlikely(res))
+ 			goto failed_bio;
  	}
  
-@@ -295,7 +295,7 @@ alloc_new:
- 	nblocks = map_bh->b_size >> blkbits;
- 	if ((buffer_boundary(map_bh) && relative_block == nblocks) ||
- 	    (first_hole != blocks_per_page))
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	else
- 		*last_block_in_bio = blocks[blocks_per_page - 1];
- out:
-@@ -303,7 +303,7 @@ out:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(READ, bio);
-+		bio = mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	if (!PageUptodate(page))
- 	        block_read_full_page(page, get_block);
- 	else
-@@ -385,7 +385,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
+ 	list_for_each_entry(bh, &segbuf->sb_payload_buffers, b_assoc_buffers) {
+-		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, rw);
++		res = nilfs_segbuf_submit_bh(segbuf, &wi, bh, REQ_OP_WRITE);
+ 		if (unlikely(res))
+ 			goto failed_bio;
  	}
- 	BUG_ON(!list_empty(pages));
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpages);
-@@ -406,7 +406,7 @@ int mpage_readpage(struct page *page, get_block_t get_block)
- 	bio = do_mpage_readpage(bio, page, 1, &last_block_in_bio,
- 			&map_bh, &first_logical_block, get_block, gfp);
- 	if (bio)
--		mpage_bio_submit(READ, bio);
-+		mpage_bio_submit(REQ_OP_READ, 0, bio);
- 	return 0;
- }
- EXPORT_SYMBOL(mpage_readpage);
-@@ -487,7 +487,7 @@ static int __mpage_writepage(struct page *page, struct writeback_control *wbc,
- 	struct buffer_head map_bh;
- 	loff_t i_size = i_size_read(inode);
- 	int ret = 0;
--	int wr = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
-+	int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : 0);
- 
- 	if (page_has_buffers(page)) {
- 		struct buffer_head *head = page_buffers(page);
-@@ -596,7 +596,7 @@ page_is_mapped:
- 	 * This page will go to BIO.  Do we need to send this BIO off first?
- 	 */
- 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- alloc_new:
- 	if (bio == NULL) {
-@@ -623,7 +623,7 @@ alloc_new:
- 	wbc_account_io(wbc, page, PAGE_SIZE);
- 	length = first_unmapped << blkbits;
- 	if (bio_add_page(bio, page, length, 0) < length) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		goto alloc_new;
+@@ -484,8 +485,8 @@ static int nilfs_segbuf_write(struct nilfs_segment_buffer *segbuf,
+ 		 * Last BIO is always sent through the following
+ 		 * submission.
+ 		 */
+-		rw |= REQ_SYNC;
+-		res = nilfs_segbuf_submit_bio(segbuf, &wi, rw);
++		res = nilfs_segbuf_submit_bio(segbuf, &wi, REQ_OP_WRITE,
++					      REQ_SYNC);
  	}
  
-@@ -633,7 +633,7 @@ alloc_new:
- 	set_page_writeback(page);
- 	unlock_page(page);
- 	if (boundary || (first_unmapped != blocks_per_page)) {
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 		if (boundary_block) {
- 			write_boundary_block(boundary_bdev,
- 					boundary_block, 1 << blkbits);
-@@ -645,7 +645,7 @@ alloc_new:
- 
- confused:
- 	if (bio)
--		bio = mpage_bio_submit(wr, bio);
-+		bio = mpage_bio_submit(REQ_OP_WRITE, op_flags, bio);
- 
- 	if (mpd->use_writepage) {
- 		ret = mapping->a_ops->writepage(page, wbc);
-@@ -702,9 +702,9 @@ mpage_writepages(struct address_space *mapping,
- 
- 		ret = write_cache_pages(mapping, wbc, __mpage_writepage, &mpd);
- 		if (mpd.bio) {
--			int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--				  WRITE_SYNC : WRITE);
--			mpage_bio_submit(wr, mpd.bio);
-+			int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+				  WRITE_SYNC : 0);
-+			mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
- 		}
- 	}
- 	blk_finish_plug(&plug);
-@@ -723,9 +723,9 @@ int mpage_writepage(struct page *page, get_block_t get_block,
- 	};
- 	int ret = __mpage_writepage(page, wbc, &mpd);
- 	if (mpd.bio) {
--		int wr = (wbc->sync_mode == WB_SYNC_ALL ?
--			  WRITE_SYNC : WRITE);
--		mpage_bio_submit(wr, mpd.bio);
-+		int op_flags = (wbc->sync_mode == WB_SYNC_ALL ?
-+			  WRITE_SYNC : 0);
-+		mpage_bio_submit(REQ_OP_WRITE, op_flags, mpd.bio);
- 	}
- 	return ret;
- }
+  failed_bio:
 -- 
 2.7.2
 
