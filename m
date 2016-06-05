@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9D4F77D62
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:34:03 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 838E87D66
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:34:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6278F8F8037
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:34:03 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0077AAC003
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:34:05 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JGhQUFnL2dfEgsIo (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 4MAjkNKY3qtoCluX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:34:02 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:34:05 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 39/45] ide cd: do not set REQ_WRITE on requests.
-Date: Sun,  5 Jun 2016 14:32:19 -0500
-Message-Id: <1465155145-10812-40-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 40/45] block: move bio io prio to a new field
+Date: Sun,  5 Jun 2016 14:32:20 -0500
+Message-Id: <1465155145-10812-41-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,30 +33,57 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-The block layer will set the correct READ/WRITE operation flags/fields
-when creating a request, so there is not need for drivers to set the
-REQ_WRITE flag.
+In the next patch, we move drop the compat code and make
+the op a separate value that is hidden in bi_rw. To give
+the op and rq bits flags room to grow this moves prio to
+its own field.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/ide/ide-cd_ioctl.c | 3 ---
- 1 file changed, 3 deletions(-)
+ include/linux/bio.h       | 14 ++------------
+ include/linux/blk_types.h |  5 ++---
+ 2 files changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 474173e..5887a7a 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -459,9 +459,6 @@ int ide_cdrom_packet(struct cdrom_device_info *cdi,
- 	   layer. the packet must be complete, as we do not
- 	   touch it at all. */
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 4568647..35108c2 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -47,18 +47,8 @@
+ #define bio_op(bio)				(op_from_rq_bits((bio)->bi_rw))
+ #define bio_set_op_attrs(bio, op, flags)	((bio)->bi_rw |= (op | flags))
  
--	if (cgc->data_direction == CGC_DATA_WRITE)
--		flags |= REQ_WRITE;
+-/*
+- * upper 16 bits of bi_rw define the io priority of this bio
+- */
+-#define BIO_PRIO_SHIFT	(8 * sizeof(unsigned long) - IOPRIO_BITS)
+-#define bio_prio(bio)	((bio)->bi_rw >> BIO_PRIO_SHIFT)
+-#define bio_prio_valid(bio)	ioprio_valid(bio_prio(bio))
 -
- 	if (cgc->sense)
- 		memset(cgc->sense, 0, sizeof(struct request_sense));
+-#define bio_set_prio(bio, prio)		do {			\
+-	WARN_ON(prio >= (1 << IOPRIO_BITS));			\
+-	(bio)->bi_rw &= ((1UL << BIO_PRIO_SHIFT) - 1);		\
+-	(bio)->bi_rw |= ((unsigned long) (prio) << BIO_PRIO_SHIFT);	\
+-} while (0)
++#define bio_prio(bio)			(bio)->bi_ioprio
++#define bio_set_prio(bio, prio)		((bio)->bi_ioprio = prio)
+ 
+ /*
+  * various member access, note that bio_data should of course not be used
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 6e60baa..2738413 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -48,9 +48,8 @@ struct bio {
+ 	struct block_device	*bi_bdev;
+ 	unsigned int		bi_flags;	/* status, command, etc */
+ 	int			bi_error;
+-	unsigned long		bi_rw;		/* bottom bits READ/WRITE,
+-						 * top bits priority
+-						 */
++	unsigned long		bi_rw;		/* READ/WRITE */
++	unsigned short		bi_ioprio;
+ 
+ 	struct bvec_iter	bi_iter;
  
 -- 
 2.7.2
