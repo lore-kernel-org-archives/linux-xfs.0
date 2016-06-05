@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EF8DD7CA4
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 16:23:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C138B8F8037
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:23:03 -0700 (PDT)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id XGSmY7XcGD8bP8Sd for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 14:23:02 -0700 (PDT)
-Date: Mon, 6 Jun 2016 05:22:09 +0800
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 60B617CA1
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 16:36:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FA9C304039
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:36:34 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	27uAwOZwAwKQ5cAW for <xfs@oss.sgi.com>;
+	Sun, 05 Jun 2016 14:36:33 -0700 (PDT)
+Date: Mon, 6 Jun 2016 05:43:50 +0800
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 01/45] block/fs/drivers: remove rw argument from submit_bio
-Message-ID: <201606060538.MXS5FrrY%fengguang.wu@intel.com>
+Subject: Re: [PATCH 42/45] block, fs, drivers: remove REQ_OP compat defs and
+	related code
+Message-ID: <201606060540.nWhFU0Cr%fengguang.wu@intel.com>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="dDRMvlgZJXvWKvBx"
 Content-Disposition: inline
-In-Reply-To: <1465155145-10812-2-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-43-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,110 +25,218 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: mchristi@redhat.com
 Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, kbuild-all@01.org, linux-fsdevel@vger.kernel.org, lars.ellenberg@linbit.com, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
+
+--dDRMvlgZJXvWKvBx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
 Hi,
 
-[auto build test WARNING on v4.7-rc1]
+[auto build test ERROR on v4.7-rc1]
 [cannot apply to dm/for-next md/for-next next-20160603]
 [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
 url:    https://github.com/0day-ci/linux/commits/mchristi-redhat-com/v8-separate-operations-from-flags-in-the-bio-request-structs/20160606-040240
+config: m32r-opsput_defconfig (attached as .config)
+compiler: m32r-linux-gcc (GCC) 4.9.0
 reproduce:
-        # apt-get install sparse
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=m32r 
 
+All errors (new ones prefixed by >>):
 
-sparse warnings: (new ones prefixed by >>)
-
-   include/linux/compiler.h:232:8: sparse: attribute 'no_sanitize_address': unknown attribute
->> fs/ext4/crypto.c:442:38: sparse: too many arguments for function submit_bio_wait
-   In file included from include/linux/fs.h:31:0,
-                    from include/linux/seq_file.h:10,
-                    from include/linux/pinctrl/consumer.h:17,
-                    from include/linux/pinctrl/devinfo.h:21,
-                    from include/linux/device.h:24,
-                    from include/linux/genhd.h:64,
-                    from include/linux/blkdev.h:9,
-                    from fs/ext4/ext4.h:20,
-                    from fs/ext4/ext4_extents.h:22,
-                    from fs/ext4/crypto.c:37:
-   fs/ext4/crypto.c: In function 'ext4_encrypted_zeroout':
-   include/linux/blk_types.h:194:20: warning: passing argument 1 of 'submit_bio_wait' makes pointer from integer without a cast [-Wint-conversion]
-    #define REQ_WRITE  (1ULL << __REQ_WRITE)
-                       ^
-   include/linux/fs.h:196:19: note: in expansion of macro 'REQ_WRITE'
-    #define RW_MASK   REQ_WRITE
-                      ^~~~~~~~~
-   include/linux/fs.h:200:17: note: in expansion of macro 'RW_MASK'
-    #define WRITE   RW_MASK
-                    ^~~~~~~
-   fs/ext4/crypto.c:442:25: note: in expansion of macro 'WRITE'
-      err = submit_bio_wait(WRITE, bio);
-                            ^~~~~
-   In file included from include/linux/blkdev.h:19:0,
-                    from fs/ext4/ext4.h:20,
-                    from fs/ext4/ext4_extents.h:22,
-                    from fs/ext4/crypto.c:37:
-   include/linux/bio.h:476:12: note: expected 'struct bio *' but argument is of type 'long long unsigned int'
-    extern int submit_bio_wait(struct bio *bio);
-               ^~~~~~~~~~~~~~~
-   fs/ext4/crypto.c:442:9: error: too many arguments to function 'submit_bio_wait'
-      err = submit_bio_wait(WRITE, bio);
-            ^~~~~~~~~~~~~~~
-   In file included from include/linux/blkdev.h:19:0,
-                    from fs/ext4/ext4.h:20,
-                    from fs/ext4/ext4_extents.h:22,
-                    from fs/ext4/crypto.c:37:
-   include/linux/bio.h:476:12: note: declared here
-    extern int submit_bio_wait(struct bio *bio);
-               ^~~~~~~~~~~~~~~
-
-vim +442 fs/ext4/crypto.c
-
-b30ab0e0 Michael Halcrow 2015-04-12  426  			goto errout;
-b30ab0e0 Michael Halcrow 2015-04-12  427  		}
-b30ab0e0 Michael Halcrow 2015-04-12  428  		bio->bi_bdev = inode->i_sb->s_bdev;
-36086d43 Theodore Ts'o   2015-10-03  429  		bio->bi_iter.bi_sector =
-36086d43 Theodore Ts'o   2015-10-03  430  			pblk << (inode->i_sb->s_blocksize_bits - 9);
-36086d43 Theodore Ts'o   2015-10-03  431  		ret = bio_add_page(bio, ciphertext_page,
-b30ab0e0 Michael Halcrow 2015-04-12  432  				   inode->i_sb->s_blocksize, 0);
-36086d43 Theodore Ts'o   2015-10-03  433  		if (ret != inode->i_sb->s_blocksize) {
-36086d43 Theodore Ts'o   2015-10-03  434  			/* should never happen! */
-36086d43 Theodore Ts'o   2015-10-03  435  			ext4_msg(inode->i_sb, KERN_ERR,
-36086d43 Theodore Ts'o   2015-10-03  436  				 "bio_add_page failed: %d", ret);
-36086d43 Theodore Ts'o   2015-10-03  437  			WARN_ON(1);
-b30ab0e0 Michael Halcrow 2015-04-12  438  			bio_put(bio);
-36086d43 Theodore Ts'o   2015-10-03  439  			err = -EIO;
-b30ab0e0 Michael Halcrow 2015-04-12  440  			goto errout;
-b30ab0e0 Michael Halcrow 2015-04-12  441  		}
-b30ab0e0 Michael Halcrow 2015-04-12 @442  		err = submit_bio_wait(WRITE, bio);
-36086d43 Theodore Ts'o   2015-10-03  443  		if ((err == 0) && bio->bi_error)
-36086d43 Theodore Ts'o   2015-10-03  444  			err = -EIO;
-95ea68b4 Theodore Ts'o   2015-05-31  445  		bio_put(bio);
-b30ab0e0 Michael Halcrow 2015-04-12  446  		if (err)
-b30ab0e0 Michael Halcrow 2015-04-12  447  			goto errout;
-36086d43 Theodore Ts'o   2015-10-03  448  		lblk++; pblk++;
-b30ab0e0 Michael Halcrow 2015-04-12  449  	}
-b30ab0e0 Michael Halcrow 2015-04-12  450  	err = 0;
-
-:::::: The code at line 442 was first introduced by commit
-:::::: b30ab0e03407d2aa2d9316cba199c757e4bfc8ad ext4 crypto: add ext4 encryption facilities
-
-:::::: TO: Michael Halcrow <mhalcrow@google.com>
-:::::: CC: Theodore Ts'o <tytso@mit.edu>
+>> ERROR: "__ucmpdi2" [drivers/scsi/sd_mod.ko] undefined!
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
+--dDRMvlgZJXvWKvBx
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+
+--dDRMvlgZJXvWKvBx
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--dDRMvlgZJXvWKvBx--
