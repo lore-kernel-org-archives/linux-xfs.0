@@ -1,34 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E423F7CA6
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 08:18:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7AC78F8049
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 06:18:06 -0700 (PDT)
-Received: from mail-wm0-f67.google.com (mail-wm0-f67.google.com
-	[74.125.82.67]) by cuda.sgi.com with ESMTP id LrEcJqhzN08rb2gW
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D45647CA0
+	for <xfs@oss.sgi.com>; Sat,  4 Jun 2016 20:19:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C621AC005
+	for <xfs@oss.sgi.com>; Sat,  4 Jun 2016 18:19:45 -0700 (PDT)
+Received: from shadbolt.e.decadent.org.uk (shadbolt.e.decadent.org.uk
+	[88.96.1.126]) by cuda.sgi.com with ESMTP id k3by0pdl7VhyqhV3
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Jun 2016 06:18:01 -0700 (PDT)
-Received: by mail-wm0-f67.google.com with SMTP id q62so6718438wmg.3
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 06:18:01 -0700 (PDT)
-Date: Wed, 1 Jun 2016 15:17:58 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160601131758.GO26601@dhcp22.suse.cz>
-References: <20160512080321.GA18496@dastard>
-	<20160513160341.GW20141@dhcp22.suse.cz>
-	<20160516104130.GK3193@twins.programming.kicks-ass.net>
-	<20160516130519.GJ23146@dhcp22.suse.cz>
-	<20160516132541.GP3193@twins.programming.kicks-ass.net>
-	<20160516231056.GE18496@dastard>
-	<20160517144912.GZ3193@twins.programming.kicks-ass.net>
-	<20160517223549.GV26977@dastard>
-	<20160519081146.GS3193@twins.programming.kicks-ass.net>
-	<20160520001714.GC26977@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160520001714.GC26977@dastard>
+	Sat, 04 Jun 2016 18:19:40 -0700 (PDT)
+Message-ID: <1465089572.2847.180.camel@decadent.org.uk>
+Subject: Re: XFS hole punch races
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Sun, 05 Jun 2016 02:19:32 +0100
+In-Reply-To: <20160604232800.GW26977@dastard>
+References: <20160322155740.GB28772@quack.suse.cz>
+	<1465060270.2847.149.camel@decadent.org.uk>
+	<20160604232800.GW26977@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,125 +27,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7366282649965941311=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, xfs@oss.sgi.com, Ingo Molnar <mingo@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-Thanks Dave for your detailed explanation again! Peter do you have any
-other idea how to deal with these situations other than opt out from
-lockdep reclaim machinery?
 
-If not I would rather go with an annotation than a gfp flag to be honest
-but if you absolutely hate that approach then I will try to check wheter
-a CONFIG_LOCKDEP GFP_FOO doesn't break something else. Otherwise I would
-steal the description from Dave's email and repost my patch.
+--===============7366282649965941311==
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-GGgF4nOcNdE0iJ56Ay5F"
 
-I plan to repost my scope gfp patches in few days and it would be good
-to have some mechanism to drop those GFP_NOFS to paper over lockdep
-false positives for that.
 
-[keeping Dave's explanation for reference]
+--=-GGgF4nOcNdE0iJ56Ay5F
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri 20-05-16 10:17:14, Dave Chinner wrote:
-> On Thu, May 19, 2016 at 10:11:46AM +0200, Peter Zijlstra wrote:
-> > On Wed, May 18, 2016 at 08:35:49AM +1000, Dave Chinner wrote:
-[...]
-> > > There's a maze of dark, grue-filled twisty passages here...
-> > 
-> > OK; I might need a bit more again.
-> > 
-> > So now the code does something like:
-> > 
-> > 	down_read(&i_lock);		-- lockdep marks lock as held
-> > 	kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
-> > 	  --> reclaim()
-> > 	     down_read_trylock(&i_lock); -- lockdep does _NOT_ mark as USED_IN_RECLAIM_FS
-> > 
-> > Right?
-> 
-> In the path that can deadlock the log, yes. It's actually way more
-> complex than the above, because the down_read_trylock(&i_lock) that
-> matters is run in a completely separate, async kthread that
-> xfs_trans_reserve() will block waiting for.
-> 
-> process context				xfsaild kthread(*)
-> ---------------				------------------
-> down_read(&i_lock);		-- lockdep marks lock as held
-> kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
->   --> reclaim()
->      xfs_trans_reserve()
->      ....
-> 	  xfs_trans_push_ail()	---- called if no space in the log to kick the xfsaild into action
-> 	  ....
->        xlog_grant_head_wait()	---- blocks waiting for log space
->        .....
-> 
-> 					xfsaild_push()   ----- iterates AIL
-> 					  grabs log item
-> 					    lock log item
-> 	>>>>>>>>>>>>>>>>>>>>>		      down_read_trylock(&i_lock);
-> 					      format item into buffer
-> 					      add to dirty buffer list
-> 					  ....
-> 					  submit dirty buffer list for IO
-> 					    buffer IO started
-> 					.....
-> 					<async IO completion context>
-> 					buffer callbacks
-> 					  mark inode clean
-> 					  remove inode from AIL
-> 					  move tail of log forwards
-> 					    wake grant head waiters
-> 	<woken by log tail moving>
-> 	<log space available>
-> 	transaction reservation granted
->      .....
->      down_write(some other inode ilock)
->      <modify some other inode>
->      xfs_trans_commit
->      .....
-> 
-> (*) xfsaild runs with PF_MEMALLOC context.
-> 
-> The problem is that if the ilock is held exclusively at GFP_KERNEL
-> time, the xfsaild cannot lock the inode to flush it, so if that
-> inode pins the tail of the log then we can't make space available
-> for xfs_trans_reserve and there is the deadlock.
-> 
-> Once xfs_trans_reserve completes, however, we'll take the ilock on
-> *some other inode*, and that's where the "it can't be the inode we
-> currently hold locked because we have references to it" and
-> henceit's safe to have a pattern like:
-> 
-> down_read(&i_lock);		-- lockdep marks lock as held
-> kmalloc(GFP_KERNEL);		-- lockdep marks held locks as ENABLED_RECLAIM_FS
->   --> reclaim()
->     down_write(&ilock)
-> 
-> because the lock within reclaim context is completely unrelated to
-> the lock we already hold.
-> 
-> Lockdep can't possibly know about this because the deadlock involves
-> locking contexts that *aren't doing anything wrong within their own
-> contexts*. It's only when you add the dependency of log space
-> reservation requirements needed to make forwards progress that
-> there's then an issue with locking and reclaim.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+On Sun, 2016-06-05 at 09:28 +1000, Dave Chinner wrote:
+> On Sat, Jun 04, 2016 at 06:11:10PM +0100, Ben Hutchings wrote:
+> > On Tue, 2016-03-22 at 16:57 +0100, Jan Kara wrote:
+> >=20
+> > Hi,
+> >=20
+> > similarly to ext4 also XFS had races between hole punching and page fau=
+lts
+> > which could result in data corruption. The fixes were merged in 4.1-rc1=
+ but
+> > it might make sense to backport them to older stable releases given the
+> > nature of the issue.
+> >=20
+> > Relevant fixes are:
+> >=20
+> > de0e8c20ba3a65b0f15040aabbefdc1999876e6b
+> > 075a924d45cc69c75a35f20b4912b85aa98b180a
+> > e8e9ad42c1f1e1bfbe0e8c32c8cac02e9ebfb7ef
+> > 0f9160b444e4de33b65dfcd3b901358a3129461a
+> > 723cac48473358939759885a18e8df113ea96138
+> > ec56b1f1fdc69599963574ce94cc5693d535dd64
+> >=20
+> >=20
+> > You missed the first in that sequence:
+> >=20
+> > 653c60b633a9 xfs: introduce mmap/truncate lock
+> >=20
+> > For 3.16, I've queued up all=C2=A0those fixes with one further=C2=A0pre=
+requisite:
+> >=20
+> > 812176832169 xfs: fix swapext ilock deadlock
+> >=20
+> > For 3.2, I've queued up all but 723cac484733, with these additional
+> > prerequisites:
+> >=20
+> > f38996f57687 xfs: reduce ilock hold times in xfs_setattr_size
+> > bc4010ecb8f4 xfs: use iolock on XFS_IOC_ALLOCSP calls
+> > 76ca4c238cf5 xfs: always take the iolock around xfs_setattr_size
+> > 5f8aca8b43f4 xfs: always hold the iolock when calling xfs_change_file_s=
+pace
+> > I realise I'll need to check for regressions with xfstests.
+>=20
+> Hi Ben,
+>=20
+> You do realise that this sort of backport effectively makes the
+> stable kernels unsupportable by the upstream XFS developers? You're
+> taking random changes from the upstream kernel until the kernel
+> compiles, and then mostly hoping that it works.
 
--- 
-Michal Hocko
-SUSE Labs
+I'm applying slightly more intelligence than that, but of course I'm
+not an XFS developer.
+
+> It's trivially easy to break truncate by screwing up the locking and
+> IO barriers that it depends on, and this set of patches make quite a
+> lot of different changes that have an unknown set of dependencies
+> for correct behaviour. xfstests won't find all those problems; at
+> best it will tell us that there won't be obvious problems.
+>=20
+> Stable kernels are supposed to be stable, and backports like this
+> are riskier than the original changes in the upstream kernels. if a
+> user is hitting a mmap/hole-punch race on an XFS filesytem (I can't
+> remember any reports to the upstream list for any kernel) on a 3.2
+> kernel, then correct answer is "upgrade to a newer upstream kernel",
+> not "do a risky backport that exposes the entire user base to the
+> potential of new data corruption bugs"....
+
+OK, then I'll drop them for 3.2.
+
+Ben.
+
+--=20
+Ben Hutchings
+Everything should be made as simple as possible, but not simpler.
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0- Albert
+Einstein
+
+--=-GGgF4nOcNdE0iJ56Ay5F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXU34kAAoJEOe/yOyVhhEJ9IYP/iaZuRDEahJ6CCIBHzbOwiYw
+xb23RFpa0bk0uXLgIZaiRkMQ+LAAf/n8mLFcqGkZP6DhaaSh5qdzi8yguz5izd+F
+gK/qmugvOUANA5gQ8IQaW0t4GfvkgdSBE/I7uXBbKB1Q9VHqaClm6xdzbCWN6RbE
+QAOXWhl1Uf8M4hVWV57BxJTllycRX8buvm+cgJLPN1TzL5r6kHMIo6qs7PJVlKGH
+lAHQ6mvgz9sTtF3c7z8wpF+jr74xNYSaU7XrPq5jGXm2HGLQboQkHnzYGzIMkxKY
+GEbZ+VkDHhg4vaN9wYOyIGMz7F3MHhOuc7Ev+Ctni1Aa7HJxE5w5pZwNQ5mS/o3p
+zacjRB7AsAqsLHlUJat1+ZmxCJywdsyNGD5zU7yLLvUl09yxrY49JyeoCNgzf1Hu
+TRvadINWcmgNdFSSRvfECGqqLtcQW0e890sLC3/6D8rrU50uDBxyrHwoXpRkVsrQ
+M0oDpwu5uq8NV7pxGY9LcJsXPRKZC41ePvEozO0/+0DiALLUvPFArt3nHlOD9U81
+MMpNNN7NPDjeFUaBSG2vxhqjfBCcPj3UXq+oKNoVXgdjaWOr5meTqu84FDvyKvie
+yCmBMk/xQd6hhfnDonVNroXMe2+iecwfeECS379OLpQi/hEZpq31WEcUjyhR60BO
+qRCTxL5RJCYUaUw0o/NR
+=yS2t
+-----END PGP SIGNATURE-----
+
+--=-GGgF4nOcNdE0iJ56Ay5F--
+
+
+--===============7366282649965941311==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7366282649965941311==--
