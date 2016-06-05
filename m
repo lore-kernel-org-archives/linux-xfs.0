@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5207A7CA0
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C9202AC003
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:48 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 45C6A7CA0
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F5B08F8040
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 67A5tv3z6fw8qbog (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 8DSFEFkjzV0N4Quu (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:47 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:49 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 06/45] dm: use op_is_write instead of checking for REQ_WRITE
-Date: Sun,  5 Jun 2016 14:31:46 -0500
-Message-Id: <1465155145-10812-7-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 07/45] bcache: use op_is_write instead of checking for
+	REQ_WRITE
+Date: Sun,  5 Jun 2016 14:31:47 -0500
+Message-Id: <1465155145-10812-8-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,68 +40,59 @@ no longer set up the op as a bitmap, we will not be able to
 detect a operation direction like writesame by testing if REQ_WRITE is
 set.
 
-This has dm use the op_is_write helper which will do the right
+This has bcache use the op_is_write helper which will do the right
 thing.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 ---
- drivers/md/dm-io.c     | 4 ++--
- drivers/md/dm-kcopyd.c | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/md/bcache/io.c      | 2 +-
+ drivers/md/bcache/request.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index 50f17e3..26e9a85 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -409,7 +409,7 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
- 	struct io *io;
- 	struct sync_io sio;
+diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
+index 86a0bb8..fd885cc 100644
+--- a/drivers/md/bcache/io.c
++++ b/drivers/md/bcache/io.c
+@@ -111,7 +111,7 @@ void bch_bbio_count_io_errors(struct cache_set *c, struct bio *bio,
+ 	struct bbio *b = container_of(bio, struct bbio, bio);
+ 	struct cache *ca = PTR_CACHE(c, &b->key, 0);
  
--	if (num_regions > 1 && (rw & RW_MASK) != WRITE) {
-+	if (num_regions > 1 && !op_is_write(rw)) {
- 		WARN_ON(1);
- 		return -EIO;
- 	}
-@@ -442,7 +442,7 @@ static int async_io(struct dm_io_client *client, unsigned int num_regions,
- {
- 	struct io *io;
+-	unsigned threshold = bio->bi_rw & REQ_WRITE
++	unsigned threshold = op_is_write(bio_op(bio))
+ 		? c->congested_write_threshold_us
+ 		: c->congested_read_threshold_us;
  
--	if (num_regions > 1 && (rw & RW_MASK) != WRITE) {
-+	if (num_regions > 1 && !op_is_write(rw)) {
- 		WARN_ON(1);
- 		fn(1, context);
- 		return -EIO;
-diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
-index 1452ed9..9f390e4 100644
---- a/drivers/md/dm-kcopyd.c
-+++ b/drivers/md/dm-kcopyd.c
-@@ -465,7 +465,7 @@ static void complete_io(unsigned long error, void *context)
- 	io_job_finish(kc->throttle);
+diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
+index 25fa844..6b85a23 100644
+--- a/drivers/md/bcache/request.c
++++ b/drivers/md/bcache/request.c
+@@ -383,7 +383,7 @@ static bool check_should_bypass(struct cached_dev *dc, struct bio *bio)
  
- 	if (error) {
--		if (job->rw & WRITE)
-+		if (op_is_write(job->rw))
- 			job->write_err |= error;
- 		else
- 			job->read_err = 1;
-@@ -477,7 +477,7 @@ static void complete_io(unsigned long error, void *context)
- 		}
- 	}
+ 	if (mode == CACHE_MODE_NONE ||
+ 	    (mode == CACHE_MODE_WRITEAROUND &&
+-	     (bio->bi_rw & REQ_WRITE)))
++	     op_is_write(bio_op(bio))))
+ 		goto skip;
  
--	if (job->rw & WRITE)
-+	if (op_is_write(job->rw))
- 		push(&kc->complete_jobs, job);
+ 	if (bio->bi_iter.bi_sector & (c->sb.block_size - 1) ||
+@@ -404,7 +404,7 @@ static bool check_should_bypass(struct cached_dev *dc, struct bio *bio)
  
- 	else {
-@@ -550,7 +550,7 @@ static int process_jobs(struct list_head *jobs, struct dm_kcopyd_client *kc,
+ 	if (!congested &&
+ 	    mode == CACHE_MODE_WRITEBACK &&
+-	    (bio->bi_rw & REQ_WRITE) &&
++	    op_is_write(bio_op(bio)) &&
+ 	    (bio->bi_rw & REQ_SYNC))
+ 		goto rescale;
  
- 		if (r < 0) {
- 			/* error this rogue job */
--			if (job->rw & WRITE)
-+			if (op_is_write(job->rw))
- 				job->write_err = (unsigned long) -1L;
- 			else
- 				job->read_err = 1;
+@@ -657,7 +657,7 @@ static inline struct search *search_alloc(struct bio *bio,
+ 	s->cache_miss		= NULL;
+ 	s->d			= d;
+ 	s->recoverable		= 1;
+-	s->write		= (bio->bi_rw & REQ_WRITE) != 0;
++	s->write		= op_is_write(bio_op(bio));
+ 	s->read_dirty_data	= 0;
+ 	s->start_time		= jiffies;
+ 
 -- 
 2.7.2
 
