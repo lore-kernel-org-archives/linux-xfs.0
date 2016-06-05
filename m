@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E68ED7D09
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7ED38F8049
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:24 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4009D7D0B
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F3BA58F8037
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:26 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iAJMzuBjv35tTBz9 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id TVBDWDWNME93349Z (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:23 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:26 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 22/45] pm: use bio op accessors
-Date: Sun,  5 Jun 2016 14:32:02 -0500
-Message-Id: <1465155145-10812-23-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 23/45] dm: pass dm stats data dir instead of bi_rw
+Date: Sun,  5 Jun 2016 14:32:03 -0500
+Message-Id: <1465155145-10812-24-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,122 +33,123 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-Separate the op from the rq_flag_bits and have the pm code
-set/get the bio using bio_set_op_attrs/bio_op.
+It looks like dm stats cares about the data direction
+(READ vs WRITE) and does not need the bio/request flags.
+Commands like REQ_FLUSH, REQ_DISCARD and REQ_WRITE_SAME
+are currently always set with REQ_WRITE, so the extra check for
+REQ_DISCARD in dm_stats_account_io is not needed.
+
+This patch has it use the bio and request data_dir helpers
+instead of accessing the bi_rw/cmd_flags directly. This makes
+the next patches that remove the operation from the cmd_flags
+and bi_rw easier, because we will no longer have the REQ_WRITE
+bit set for operations like discards.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- kernel/power/swap.c | 30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+v2:
 
-diff --git a/kernel/power/swap.c b/kernel/power/swap.c
-index be227f5..c1aaac4 100644
---- a/kernel/power/swap.c
-+++ b/kernel/power/swap.c
-@@ -261,7 +261,7 @@ static void hib_end_io(struct bio *bio)
- 	bio_put(bio);
+1. Merged Mike Snitzer's fixes to pass in int instead of
+unsigned long.
+
+2. Fix 80 char col issues.
+
+ drivers/md/dm-stats.c |  9 ++++-----
+ drivers/md/dm.c       | 21 ++++++++++++---------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/md/dm-stats.c b/drivers/md/dm-stats.c
+index 8289804..4fba26c 100644
+--- a/drivers/md/dm-stats.c
++++ b/drivers/md/dm-stats.c
+@@ -514,11 +514,10 @@ static void dm_stat_round(struct dm_stat *s, struct dm_stat_shared *shared,
  }
  
--static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
-+static int hib_submit_io(int op, int op_flags, pgoff_t page_off, void *addr,
- 		struct hib_bio_batch *hb)
+ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+-			      unsigned long bi_rw, sector_t len,
++			      int idx, sector_t len,
+ 			      struct dm_stats_aux *stats_aux, bool end,
+ 			      unsigned long duration_jiffies)
  {
- 	struct page *page = virt_to_page(addr);
-@@ -271,7 +271,7 @@ static int hib_submit_io(int rw, pgoff_t page_off, void *addr,
- 	bio = bio_alloc(__GFP_RECLAIM | __GFP_HIGH, 1);
- 	bio->bi_iter.bi_sector = page_off * (PAGE_SIZE >> 9);
- 	bio->bi_bdev = hib_resume_bdev;
--	bio->bi_rw = rw;
-+	bio_set_op_attrs(bio, op, op_flags);
+-	unsigned long idx = bi_rw & REQ_WRITE;
+ 	struct dm_stat_shared *shared = &s->stat_shared[entry];
+ 	struct dm_stat_percpu *p;
  
- 	if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
- 		printk(KERN_ERR "PM: Adding page to bio failed at %llu\n",
-@@ -307,7 +307,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
- {
- 	int error;
+@@ -584,7 +583,7 @@ static void dm_stat_for_entry(struct dm_stat *s, size_t entry,
+ #endif
+ }
  
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp("SWAP-SPACE",swsusp_header->sig, 10) ||
- 	    !memcmp("SWAPSPACE2",swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->orig_sig,swsusp_header->sig, 10);
-@@ -316,8 +317,8 @@ static int mark_swapfiles(struct swap_map_handle *handle, unsigned int flags)
- 		swsusp_header->flags = flags;
- 		if (flags & SF_CRC32_MODE)
- 			swsusp_header->crc32 = handle->crc32;
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
--					swsusp_header, NULL);
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+				      swsusp_resume_block, swsusp_header, NULL);
- 	} else {
- 		printk(KERN_ERR "PM: Swap header not found!\n");
- 		error = -ENODEV;
-@@ -390,7 +391,7 @@ static int write_page(void *buf, sector_t offset, struct hib_bio_batch *hb)
- 	} else {
- 		src = buf;
+-static void __dm_stat_bio(struct dm_stat *s, unsigned long bi_rw,
++static void __dm_stat_bio(struct dm_stat *s, int bi_rw,
+ 			  sector_t bi_sector, sector_t end_sector,
+ 			  bool end, unsigned long duration_jiffies,
+ 			  struct dm_stats_aux *stats_aux)
+@@ -645,8 +644,8 @@ void dm_stats_account_io(struct dm_stats *stats, unsigned long bi_rw,
+ 		last = raw_cpu_ptr(stats->last);
+ 		stats_aux->merged =
+ 			(bi_sector == (ACCESS_ONCE(last->last_sector) &&
+-				       ((bi_rw & (REQ_WRITE | REQ_DISCARD)) ==
+-					(ACCESS_ONCE(last->last_rw) & (REQ_WRITE | REQ_DISCARD)))
++				       ((bi_rw == WRITE) ==
++					(ACCESS_ONCE(last->last_rw) == WRITE))
+ 				       ));
+ 		ACCESS_ONCE(last->last_sector) = end_sector;
+ 		ACCESS_ONCE(last->last_rw) = bi_rw;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 1b2f962..f5ac0a3 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -723,8 +723,9 @@ static void start_io_acct(struct dm_io *io)
+ 		atomic_inc_return(&md->pending[rw]));
+ 
+ 	if (unlikely(dm_stats_used(&md->stats)))
+-		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
+-				    bio_sectors(bio), false, 0, &io->stats_aux);
++		dm_stats_account_io(&md->stats, bio_data_dir(bio),
++				    bio->bi_iter.bi_sector, bio_sectors(bio),
++				    false, 0, &io->stats_aux);
+ }
+ 
+ static void end_io_acct(struct dm_io *io)
+@@ -738,8 +739,9 @@ static void end_io_acct(struct dm_io *io)
+ 	generic_end_io_acct(rw, &dm_disk(md)->part0, io->start_time);
+ 
+ 	if (unlikely(dm_stats_used(&md->stats)))
+-		dm_stats_account_io(&md->stats, bio->bi_rw, bio->bi_iter.bi_sector,
+-				    bio_sectors(bio), true, duration, &io->stats_aux);
++		dm_stats_account_io(&md->stats, bio_data_dir(bio),
++				    bio->bi_iter.bi_sector, bio_sectors(bio),
++				    true, duration, &io->stats_aux);
+ 
+ 	/*
+ 	 * After this is decremented the bio must not be touched if it is
+@@ -1121,9 +1123,9 @@ static void rq_end_stats(struct mapped_device *md, struct request *orig)
+ 	if (unlikely(dm_stats_used(&md->stats))) {
+ 		struct dm_rq_target_io *tio = tio_from_request(orig);
+ 		tio->duration_jiffies = jiffies - tio->duration_jiffies;
+-		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
+-				    tio->n_sectors, true, tio->duration_jiffies,
+-				    &tio->stats_aux);
++		dm_stats_account_io(&md->stats, rq_data_dir(orig),
++				    blk_rq_pos(orig), tio->n_sectors, true,
++				    tio->duration_jiffies, &tio->stats_aux);
  	}
--	return hib_submit_io(WRITE_SYNC, offset, src, hb);
-+	return hib_submit_io(REQ_OP_WRITE, WRITE_SYNC, offset, src, hb);
  }
  
- static void release_swap_writer(struct swap_map_handle *handle)
-@@ -993,7 +994,8 @@ static int get_swap_reader(struct swap_map_handle *handle,
- 			return -ENOMEM;
- 		}
+@@ -2082,8 +2084,9 @@ static void dm_start_request(struct mapped_device *md, struct request *orig)
+ 		struct dm_rq_target_io *tio = tio_from_request(orig);
+ 		tio->duration_jiffies = jiffies;
+ 		tio->n_sectors = blk_rq_sectors(orig);
+-		dm_stats_account_io(&md->stats, orig->cmd_flags, blk_rq_pos(orig),
+-				    tio->n_sectors, false, 0, &tio->stats_aux);
++		dm_stats_account_io(&md->stats, rq_data_dir(orig),
++				    blk_rq_pos(orig), tio->n_sectors, false, 0,
++				    &tio->stats_aux);
+ 	}
  
--		error = hib_submit_io(READ_SYNC, offset, tmp->map, NULL);
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset,
-+				      tmp->map, NULL);
- 		if (error) {
- 			release_swap_reader(handle);
- 			return error;
-@@ -1017,7 +1019,7 @@ static int swap_read_page(struct swap_map_handle *handle, void *buf,
- 	offset = handle->cur->entries[handle->k];
- 	if (!offset)
- 		return -EFAULT;
--	error = hib_submit_io(READ_SYNC, offset, buf, hb);
-+	error = hib_submit_io(REQ_OP_READ, READ_SYNC, offset, buf, hb);
- 	if (error)
- 		return error;
- 	if (++handle->k >= MAP_PAGE_ENTRIES) {
-@@ -1526,7 +1528,8 @@ int swsusp_check(void)
- 	if (!IS_ERR(hib_resume_bdev)) {
- 		set_blocksize(hib_resume_bdev, PAGE_SIZE);
- 		clear_page(swsusp_header);
--		error = hib_submit_io(READ_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_READ, READ_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
- 		if (error)
- 			goto put;
-@@ -1534,7 +1537,8 @@ int swsusp_check(void)
- 		if (!memcmp(HIBERNATE_SIG, swsusp_header->sig, 10)) {
- 			memcpy(swsusp_header->sig, swsusp_header->orig_sig, 10);
- 			/* Reset swap signature now */
--			error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+			error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+						swsusp_resume_block,
- 						swsusp_header, NULL);
- 		} else {
- 			error = -EINVAL;
-@@ -1578,10 +1582,12 @@ int swsusp_unmark(void)
- {
- 	int error;
- 
--	hib_submit_io(READ_SYNC, swsusp_resume_block, swsusp_header, NULL);
-+	hib_submit_io(REQ_OP_READ, READ_SYNC, swsusp_resume_block,
-+		      swsusp_header, NULL);
- 	if (!memcmp(HIBERNATE_SIG,swsusp_header->sig, 10)) {
- 		memcpy(swsusp_header->sig,swsusp_header->orig_sig, 10);
--		error = hib_submit_io(WRITE_SYNC, swsusp_resume_block,
-+		error = hib_submit_io(REQ_OP_WRITE, WRITE_SYNC,
-+					swsusp_resume_block,
- 					swsusp_header, NULL);
- 	} else {
- 		printk(KERN_ERR "PM: Cannot find swsusp signature!\n");
+ 	/*
 -- 
 2.7.2
 
