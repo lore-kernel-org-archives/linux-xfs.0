@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A252E7D2C
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:54 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1C2B77CEE
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:33:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 66776304043
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:54 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87740AC003
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:33:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9RACriPhsxU0uK26 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Dfmp2iG72a3YSflN (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:53 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:33:56 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 35/45] block: convert merge/insert code to check for REQ_OPs.
-Date: Sun,  5 Jun 2016 14:32:15 -0500
-Message-Id: <1465155145-10812-36-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 36/45] block: convert is_sync helpers to use REQ_OPs.
+Date: Sun,  5 Jun 2016 14:32:16 -0500
+Message-Id: <1465155145-10812-37-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,129 +33,125 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This patch converts the block layer merging code to use separate variables
-for the operation and flags, and to check req_op for the REQ_OP.
+This patch converts the is_sync helpers to use separate variables
+for the operation and flags.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-core.c       |  2 +-
- block/blk-merge.c      | 10 ++++++----
- include/linux/blkdev.h | 20 ++++++++++----------
- 3 files changed, 17 insertions(+), 15 deletions(-)
+ block/blk-core.c       | 6 +++---
+ block/blk-mq.c         | 8 ++++----
+ block/cfq-iosched.c    | 2 +-
+ include/linux/blkdev.h | 6 +++---
+ 4 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 090e55d..1333bb7 100644
+index 1333bb7..f9f4228 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -2161,7 +2161,7 @@ EXPORT_SYMBOL(submit_bio);
- static int blk_cloned_rq_check_limits(struct request_queue *q,
- 				      struct request *rq)
+@@ -962,7 +962,7 @@ static void __freed_request(struct request_list *rl, int sync)
+ static void freed_request(struct request_list *rl, int op, unsigned int flags)
  {
--	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, rq->cmd_flags)) {
-+	if (blk_rq_sectors(rq) > blk_queue_get_max_sectors(q, req_op(rq))) {
- 		printk(KERN_ERR "%s: over max size limit.\n", __func__);
- 		return -EIO;
- 	}
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 5a03f96..c265348 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -649,7 +649,8 @@ static int attempt_merge(struct request_queue *q, struct request *req,
- 	if (!rq_mergeable(req) || !rq_mergeable(next))
- 		return 0;
+ 	struct request_queue *q = rl->q;
+-	int sync = rw_is_sync(op | flags);
++	int sync = rw_is_sync(op, flags);
  
--	if (!blk_check_merge_flags(req->cmd_flags, next->cmd_flags))
-+	if (!blk_check_merge_flags(req->cmd_flags, req_op(req), next->cmd_flags,
-+				   req_op(next)))
- 		return 0;
+ 	q->nr_rqs[sync]--;
+ 	rl->count[sync]--;
+@@ -1075,7 +1075,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+ 	struct elevator_type *et = q->elevator->type;
+ 	struct io_context *ioc = rq_ioc(bio);
+ 	struct io_cq *icq = NULL;
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	int may_queue;
  
- 	/*
-@@ -663,7 +664,7 @@ static int attempt_merge(struct request_queue *q, struct request *req,
- 	    || req_no_special_merge(next))
- 		return 0;
+ 	if (unlikely(blk_queue_dying(q)))
+@@ -1244,7 +1244,7 @@ static struct request *get_request(struct request_queue *q, int op,
+ 				   int op_flags, struct bio *bio,
+ 				   gfp_t gfp_mask)
+ {
+-	const bool is_sync = rw_is_sync(op | op_flags) != 0;
++	const bool is_sync = rw_is_sync(op, op_flags) != 0;
+ 	DEFINE_WAIT(wait);
+ 	struct request_list *rl;
+ 	struct request *rq;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 3393f29..29bcd9c 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -204,7 +204,7 @@ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
+ 	rq->end_io_data = NULL;
+ 	rq->next_rq = NULL;
  
--	if (req->cmd_flags & REQ_WRITE_SAME &&
-+	if (req_op(req) == REQ_OP_WRITE_SAME &&
- 	    !blk_write_same_mergeable(req->bio, next->bio))
- 		return 0;
+-	ctx->rq_dispatched[rw_is_sync(op | op_flags)]++;
++	ctx->rq_dispatched[rw_is_sync(op, op_flags)]++;
+ }
  
-@@ -751,7 +752,8 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 	if (!rq_mergeable(rq) || !bio_mergeable(bio))
- 		return false;
+ static struct request *
+@@ -1178,7 +1178,7 @@ static struct request *blk_mq_map_request(struct request_queue *q,
+ 	ctx = blk_mq_get_ctx(q);
+ 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
  
--	if (!blk_check_merge_flags(rq->cmd_flags, bio->bi_rw))
-+	if (!blk_check_merge_flags(rq->cmd_flags, req_op(rq), bio->bi_rw,
-+				   bio_op(bio)))
- 		return false;
+-	if (rw_is_sync(bio->bi_rw))
++	if (rw_is_sync(bio_op(bio), bio->bi_rw))
+ 		op_flags |= REQ_SYNC;
  
- 	/* different data direction or already started, don't merge */
-@@ -767,7 +769,7 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio)
- 		return false;
+ 	trace_block_getrq(q, bio, op);
+@@ -1246,7 +1246,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+  */
+ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_rw);
++	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_map_ctx data;
+ 	struct request *rq;
+@@ -1343,7 +1343,7 @@ done:
+  */
+ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
+ {
+-	const int is_sync = rw_is_sync(bio->bi_rw);
++	const int is_sync = rw_is_sync(bio_op(bio), bio->bi_rw);
+ 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
+ 	struct blk_plug *plug;
+ 	unsigned int request_count = 0;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 3dafdba..b115486 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4311,7 +4311,7 @@ static int cfq_may_queue(struct request_queue *q, int op, int op_flags)
+ 	if (!cic)
+ 		return ELV_MQUEUE_MAY;
  
- 	/* must be using the same buffer */
--	if (rq->cmd_flags & REQ_WRITE_SAME &&
-+	if (req_op(rq) == REQ_OP_WRITE_SAME &&
- 	    !blk_write_same_mergeable(rq->bio, bio))
- 		return false;
+-	cfqq = cic_to_cfqq(cic, rw_is_sync(op | op_flags));
++	cfqq = cic_to_cfqq(cic, rw_is_sync(op, op_flags));
+ 	if (cfqq) {
+ 		cfq_init_prio_data(cfqq, cic);
  
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 8c78aca..25f01ff 100644
+index 25f01ff..4937c05 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -666,16 +666,16 @@ static inline bool rq_mergeable(struct request *rq)
- 	return true;
- }
- 
--static inline bool blk_check_merge_flags(unsigned int flags1,
--					 unsigned int flags2)
-+static inline bool blk_check_merge_flags(unsigned int flags1, unsigned int op1,
-+					 unsigned int flags2, unsigned int op2)
+@@ -624,14 +624,14 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
+ /*
+  * We regard a request as sync, if either a read or a sync write
+  */
+-static inline bool rw_is_sync(unsigned int rw_flags)
++static inline bool rw_is_sync(int op, unsigned int rw_flags)
  {
--	if ((flags1 & REQ_DISCARD) != (flags2 & REQ_DISCARD))
-+	if ((op1 == REQ_OP_DISCARD) != (op2 == REQ_OP_DISCARD))
- 		return false;
- 
- 	if ((flags1 & REQ_SECURE) != (flags2 & REQ_SECURE))
- 		return false;
- 
--	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
-+	if ((op1 == REQ_OP_WRITE_SAME) != (op2 == REQ_OP_WRITE_SAME))
- 		return false;
- 
- 	return true;
-@@ -887,12 +887,12 @@ static inline unsigned int blk_rq_cur_sectors(const struct request *rq)
+-	return !(rw_flags & REQ_WRITE) || (rw_flags & REQ_SYNC);
++	return op == REQ_OP_READ || (rw_flags & REQ_SYNC);
  }
  
- static inline unsigned int blk_queue_get_max_sectors(struct request_queue *q,
--						     unsigned int cmd_flags)
-+						     int op)
+ static inline bool rq_is_sync(struct request *rq)
  {
--	if (unlikely(cmd_flags & REQ_DISCARD))
-+	if (unlikely(op == REQ_OP_DISCARD))
- 		return min(q->limits.max_discard_sectors, UINT_MAX >> 9);
- 
--	if (unlikely(cmd_flags & REQ_WRITE_SAME))
-+	if (unlikely(op == REQ_OP_WRITE_SAME))
- 		return q->limits.max_write_same_sectors;
- 
- 	return q->limits.max_sectors;
-@@ -919,11 +919,11 @@ static inline unsigned int blk_rq_get_max_sectors(struct request *rq)
- 	if (unlikely(rq->cmd_type != REQ_TYPE_FS))
- 		return q->limits.max_hw_sectors;
- 
--	if (!q->limits.chunk_sectors || (rq->cmd_flags & REQ_DISCARD))
--		return blk_queue_get_max_sectors(q, rq->cmd_flags);
-+	if (!q->limits.chunk_sectors || (req_op(rq) == REQ_OP_DISCARD))
-+		return blk_queue_get_max_sectors(q, req_op(rq));
- 
- 	return min(blk_max_size_offset(q, blk_rq_pos(rq)),
--			blk_queue_get_max_sectors(q, rq->cmd_flags));
-+			blk_queue_get_max_sectors(q, req_op(rq)));
+-	return rw_is_sync(rq->cmd_flags);
++	return rw_is_sync(req_op(rq), rq->cmd_flags);
  }
  
- static inline unsigned int blk_rq_count_bios(struct request *rq)
+ static inline bool blk_rl_full(struct request_list *rl, bool sync)
 -- 
 2.7.2
 
