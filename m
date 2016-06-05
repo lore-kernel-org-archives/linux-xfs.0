@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7EDD17CD2
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 445468F8040
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:55 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id ED01C7CCD
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD9F68F8039
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id l4bWHubsPAB5ZsEz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id sGaMV1KhvVUNBUKD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:54 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:56 -0700 (PDT)
 From: mchristi@redhat.com
-Subject: [PATCH 09/45] block discard: use bio set op accessor
-Date: Sun,  5 Jun 2016 14:31:49 -0500
-Message-Id: <1465155145-10812-10-git-send-email-mchristi@redhat.com>
+Subject: [PATCH 10/45] direct-io: use bio set/get op accessors
+Date: Sun,  5 Jun 2016 14:31:50 -0500
+Message-Id: <1465155145-10812-11-git-send-email-mchristi@redhat.com>
 In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,96 +33,193 @@ Cc: Mike Christie <mchristi@redhat.com>
 
 From: Mike Christie <mchristi@redhat.com>
 
-This converts the block issue discard helper and users to use
-the bio_set_op_attrs accessor and only pass in the operation flags
-like REQ_SEQURE.
+This patch has the dio code use a REQ_OP for the op and rq_flag_bits
+for bi_rw flags. To set/get the op it uses the bio_set_op_attrs/bio_op
+accssors.
+
+It also begins to convert btrfs's dio_submit_t because of the dio
+submit_io callout use. The next patches will completely convert
+this code and the reset of the btrfs code paths.
 
 Signed-off-by: Mike Christie <mchristi@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/blk-lib.c        | 13 +++++++------
- drivers/md/dm-thin.c   |  2 +-
- include/linux/blkdev.h |  3 ++-
- 3 files changed, 10 insertions(+), 8 deletions(-)
+ fs/btrfs/inode.c   |  8 ++++----
+ fs/direct-io.c     | 34 ++++++++++++++++++++--------------
+ include/linux/fs.h |  2 +-
+ 3 files changed, 25 insertions(+), 19 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index c614eaa..ff2a7f0 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -23,7 +23,8 @@ static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 2704995..96f9192 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -8422,14 +8422,14 @@ out_err:
+ 	return 0;
  }
  
- int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
--		sector_t nr_sects, gfp_t gfp_mask, int type, struct bio **biop)
-+		sector_t nr_sects, gfp_t gfp_mask, int op_flags,
-+		struct bio **biop)
+-static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+-				struct inode *inode, loff_t file_offset)
++static void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
++				loff_t file_offset)
  {
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	struct bio *bio = *biop;
-@@ -34,7 +35,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		return -ENXIO;
- 	if (!blk_queue_discard(q))
- 		return -EOPNOTSUPP;
--	if ((type & REQ_SECURE) && !blk_queue_secdiscard(q))
-+	if ((op_flags & REQ_SECURE) && !blk_queue_secdiscard(q))
- 		return -EOPNOTSUPP;
+ 	struct btrfs_dio_private *dip = NULL;
+ 	struct bio *io_bio = NULL;
+ 	struct btrfs_io_bio *btrfs_bio;
+ 	int skip_sum;
+-	int write = rw & REQ_WRITE;
++	bool write = (bio_op(dio_bio) == REQ_OP_WRITE);
+ 	int ret = 0;
  
- 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
-@@ -65,7 +66,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		bio = next_bio(bio, 1, gfp_mask);
- 		bio->bi_iter.bi_sector = sector;
- 		bio->bi_bdev = bdev;
--		bio->bi_rw = type;
-+		bio_set_op_attrs(bio, REQ_OP_DISCARD, op_flags);
+ 	skip_sum = BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM;
+@@ -8480,7 +8480,7 @@ static void btrfs_submit_direct(int rw, struct bio *dio_bio,
+ 			dio_data->unsubmitted_oe_range_end;
+ 	}
  
- 		bio->bi_iter.bi_size = req_sects << 9;
- 		nr_sects -= req_sects;
-@@ -99,16 +100,16 @@ EXPORT_SYMBOL(__blkdev_issue_discard);
- int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, unsigned long flags)
+-	ret = btrfs_submit_direct_hook(rw, dip, skip_sum);
++	ret = btrfs_submit_direct_hook(dio_bio->bi_rw, dip, skip_sum);
+ 	if (!ret)
+ 		return;
+ 
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 1bcdd5d..7c3ce73 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -108,7 +108,8 @@ struct dio_submit {
+ /* dio_state communicated between submission path and end_io */
+ struct dio {
+ 	int flags;			/* doesn't change */
+-	int rw;
++	int op;
++	int op_flags;
+ 	blk_qc_t bio_cookie;
+ 	struct block_device *bio_bdev;
+ 	struct inode *inode;
+@@ -163,7 +164,7 @@ static inline int dio_refill_pages(struct dio *dio, struct dio_submit *sdio)
+ 	ret = iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
+ 				&sdio->from);
+ 
+-	if (ret < 0 && sdio->blocks_available && (dio->rw & WRITE)) {
++	if (ret < 0 && sdio->blocks_available && (dio->op == REQ_OP_WRITE)) {
+ 		struct page *page = ZERO_PAGE(0);
+ 		/*
+ 		 * A memory fault, but the filesystem has some outstanding
+@@ -242,7 +243,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
+ 		transferred = dio->result;
+ 
+ 		/* Check for short read case */
+-		if ((dio->rw == READ) && ((offset + transferred) > dio->i_size))
++		if ((dio->op == REQ_OP_READ) &&
++		    ((offset + transferred) > dio->i_size))
+ 			transferred = dio->i_size - offset;
+ 	}
+ 
+@@ -273,7 +275,7 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
+ 		 */
+ 		dio->iocb->ki_pos += transferred;
+ 
+-		if (dio->rw & WRITE)
++		if (dio->op == REQ_OP_WRITE)
+ 			ret = generic_write_sync(dio->iocb,  transferred);
+ 		dio->iocb->ki_complete(dio->iocb, ret, 0);
+ 	}
+@@ -375,7 +377,7 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
+ 
+ 	bio->bi_bdev = bdev;
+ 	bio->bi_iter.bi_sector = first_sector;
+-	bio->bi_rw = dio->rw;
++	bio_set_op_attrs(bio, dio->op, dio->op_flags);
+ 	if (dio->is_async)
+ 		bio->bi_end_io = dio_bio_end_aio;
+ 	else
+@@ -403,14 +405,13 @@ static inline void dio_bio_submit(struct dio *dio, struct dio_submit *sdio)
+ 	dio->refcount++;
+ 	spin_unlock_irqrestore(&dio->bio_lock, flags);
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty)
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty)
+ 		bio_set_pages_dirty(bio);
+ 
+ 	dio->bio_bdev = bio->bi_bdev;
+ 
+ 	if (sdio->submit_io) {
+-		sdio->submit_io(dio->rw, bio, dio->inode,
+-			       sdio->logical_offset_in_bio);
++		sdio->submit_io(bio, dio->inode, sdio->logical_offset_in_bio);
+ 		dio->bio_cookie = BLK_QC_T_NONE;
+ 	} else
+ 		dio->bio_cookie = submit_bio(bio);
+@@ -479,14 +480,14 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	if (bio->bi_error)
+ 		dio->io_error = -EIO;
+ 
+-	if (dio->is_async && dio->rw == READ && dio->should_dirty) {
++	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+ 		bio_check_pages_dirty(bio);	/* transfers ownership */
+ 	} else {
+ 		bio_for_each_segment_all(bvec, bio, i) {
+ 			struct page *page = bvec->bv_page;
+ 
+-			if (dio->rw == READ && !PageCompound(page) &&
++			if (dio->op == REQ_OP_READ && !PageCompound(page) &&
+ 					dio->should_dirty)
+ 				set_page_dirty_lock(page);
+ 			put_page(page);
+@@ -639,7 +640,7 @@ static int get_more_blocks(struct dio *dio, struct dio_submit *sdio,
+ 		 * which may decide to handle it or also return an unmapped
+ 		 * buffer head.
+ 		 */
+-		create = dio->rw & WRITE;
++		create = dio->op == REQ_OP_WRITE;
+ 		if (dio->flags & DIO_SKIP_HOLES) {
+ 			if (fs_startblk <= ((i_size_read(dio->inode) - 1) >>
+ 							i_blkbits))
+@@ -789,7 +790,7 @@ submit_page_section(struct dio *dio, struct dio_submit *sdio, struct page *page,
  {
--	int type = REQ_WRITE | REQ_DISCARD;
-+	int op_flags = 0;
- 	struct bio *bio = NULL;
- 	struct blk_plug plug;
- 	int ret;
+ 	int ret = 0;
  
- 	if (flags & BLKDEV_DISCARD_SECURE)
--		type |= REQ_SECURE;
-+		op_flags |= REQ_SECURE;
+-	if (dio->rw & WRITE) {
++	if (dio->op == REQ_OP_WRITE) {
+ 		/*
+ 		 * Read accounting is performed in submit_bio()
+ 		 */
+@@ -989,7 +990,7 @@ do_holes:
+ 				loff_t i_size_aligned;
  
- 	blk_start_plug(&plug);
--	ret = __blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, type,
-+	ret = __blkdev_issue_discard(bdev, sector, nr_sects, gfp_mask, op_flags,
- 			&bio);
- 	if (!ret && bio) {
- 		ret = submit_bio_wait(bio);
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index 8c070ee..e8661c2 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -360,7 +360,7 @@ static int issue_discard(struct discard_op *op, dm_block_t data_b, dm_block_t da
- 	sector_t len = block_to_sectors(tc->pool, data_e - data_b);
+ 				/* AKPM: eargh, -ENOTBLK is a hack */
+-				if (dio->rw & WRITE) {
++				if (dio->op == REQ_OP_WRITE) {
+ 					put_page(page);
+ 					return -ENOTBLK;
+ 				}
+@@ -1203,7 +1204,12 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 		dio->is_async = true;
  
- 	return __blkdev_issue_discard(tc->pool_dev->bdev, s, len,
--				      GFP_NOWAIT, REQ_WRITE | REQ_DISCARD, &op->bio);
-+				      GFP_NOWAIT, 0, &op->bio);
- }
+ 	dio->inode = inode;
+-	dio->rw = iov_iter_rw(iter) == WRITE ? WRITE_ODIRECT : READ;
++	if (iov_iter_rw(iter) == WRITE) {
++		dio->op = REQ_OP_WRITE;
++		dio->op_flags = WRITE_ODIRECT;
++	} else {
++		dio->op = REQ_OP_READ;
++	}
  
- static void end_discard(struct discard_op *op, int r)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 49c2dbc..8c78aca 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1149,7 +1149,8 @@ extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *);
- extern int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, unsigned long flags);
- extern int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
--		sector_t nr_sects, gfp_t gfp_mask, int type, struct bio **biop);
-+		sector_t nr_sects, gfp_t gfp_mask, int op_flags,
-+		struct bio **biop);
- extern int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 		sector_t nr_sects, gfp_t gfp_mask, struct page *page);
- extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	/*
+ 	 * For AIO O_(D)SYNC writes we need to defer completions to a workqueue
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 62ca2f9..af6f3c7 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2824,7 +2824,7 @@ extern int generic_file_open(struct inode * inode, struct file * filp);
+ extern int nonseekable_open(struct inode * inode, struct file * filp);
+ 
+ #ifdef CONFIG_BLOCK
+-typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
++typedef void (dio_submit_t)(struct bio *bio, struct inode *inode,
+ 			    loff_t file_offset);
+ 
+ enum {
 -- 
 2.7.2
 
