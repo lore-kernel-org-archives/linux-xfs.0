@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1FBD97CA6
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 08:23:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E6BB8304066
-	for <xfs@oss.sgi.com>; Thu,  2 Jun 2016 06:23:38 -0700 (PDT)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id yugvCOP0DGLA1JGp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 02 Jun 2016 06:23:33 -0700 (PDT)
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Subject: _xfs_buf_ioapply: no ops on block 0x188e78/0x8 on vanilla 4.4.11
-Message-ID: <57503353.2050402@profihost.ag>
-Date: Thu, 2 Jun 2016 15:23:31 +0200
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E6027CA0
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 00:17:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C72E7AC004
+	for <xfs@oss.sgi.com>; Sat,  4 Jun 2016 22:17:04 -0700 (PDT)
+Received: from 1wt.eu (wtarreau.pck.nerim.net [62.212.114.60]) by cuda.sgi.com
+	with ESMTP id wlPbwhlMC4POCPfm for <xfs@oss.sgi.com>;
+	Sat, 04 Jun 2016 22:17:01 -0700 (PDT)
+Date: Sun, 5 Jun 2016 07:16:54 +0200
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: XFS hole punch races
+Message-ID: <20160605051654.GA20713@1wt.eu>
+References: <20160322155740.GB28772@quack.suse.cz>
+	<1465060270.2847.149.camel@decadent.org.uk>
+	<20160604232800.GW26977@dastard>
+	<1465089572.2847.180.camel@decadent.org.uk>
+	<20160605021654.GX26977@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160605021654.GX26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +32,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>
-Cc: holger@applied-asynchrony.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Ben Hutchings <ben@decadent.org.uk>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-Hi,
+Dave,
 
-another issue i'm having with 4.4.11 is the following trace after a reboot:
-[  541.661121] XFS (dm-0): _xfs_buf_ioapply: no ops on block 0x188e78/0x8
-[  541.662423] ffff88013a3b3000: 44 51 01 01 00 00 00 00 00 00 00 00 00
-00 00 00  DQ..............
-[  541.663258] ffff88013a3b3010: 00 00 00 00 00 00 00 00 00 00 00 00 00
-00 00 00  ................
-[  541.664156] ffff88013a3b3020: 00 00 00 00 00 00 00 00 00 00 00 00 00
-0b db fd  ................
-[  541.664930] ffff88013a3b3030: 00 00 00 00 00 01 9e 82 00 00 00 00 00
-00 00 00  ................
-[  541.665704] CPU: 0 PID: 489 Comm: xfsaild/dm-0 Not tainted 4.4.11 #1
-[  541.666486] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
-BIOS rel-1.8.2-0-g33fbe13 by qemu-project.org 04/01/2014
-[  541.667276]  0000000000000000 ffff880037a57c70 ffffffffbe3b3c33
-0000000000000001
-[  541.668094]  ffff880139d16900 ffff880037a57d18 ffffffffbe31c681
-0000000000000000
-[  541.668896]  ffff880139d16980 0000000000000000 0000000000000000
-0000000000000000
-[  541.669705] Call Trace:
-[  541.670491]  [<ffffffffbe3b3c33>] dump_stack+0x63/0x90
-[  541.671286]  [<ffffffffbe31c681>] _xfs_buf_ioapply+0x3e1/0x440
-[  541.672113]  [<ffffffffbe0aaba0>] ? wake_up_q+0x70/0x70
-[  541.672901]  [<ffffffffbe31df99>] ? __xfs_buf_delwri_submit+0x179/0x270
-[  541.673704]  [<ffffffffbe31dcc4>] xfs_buf_submit+0x64/0x1c0
-[  541.674506]  [<ffffffffbe31df99>] __xfs_buf_delwri_submit+0x179/0x270
-[  541.675321]  [<ffffffffbe31eea0>] ?
-xfs_buf_delwri_submit_nowait+0x20/0x30
-[  541.676129]  [<ffffffffbe31eea0>] xfs_buf_delwri_submit_nowait+0x20/0x30
-[  541.676930]  [<ffffffffbe3495f6>] xfsaild+0x2a6/0x710
-[  541.677738]  [<ffffffffbe349350>] ? xfs_trans_ail_cursor_first+0x90/0x90
-[  541.678557]  [<ffffffffbe349350>] ? xfs_trans_ail_cursor_first+0x90/0x90
-[  541.679357]  [<ffffffffbe09f36b>] kthread+0xdb/0x100
-[  541.680136]  [<ffffffffbe09f290>] ? kthread_park+0x60/0x60
-[  541.680912]  [<ffffffffbe6972cf>] ret_from_fork+0x3f/0x70
-[  541.681708]  [<ffffffffbe09f290>] ? kthread_park+0x60/0x60
+On Sun, Jun 05, 2016 at 12:16:54PM +1000, Dave Chinner wrote:
+> On Sun, Jun 05, 2016 at 02:19:32AM +0100, Ben Hutchings wrote:
+> > On Sun, 2016-06-05 at 09:28 +1000, Dave Chinner wrote:
+> > > You do realise that this sort of backport effectively makes the
+> > > stable kernels unsupportable by the upstream XFS developers? You're
+> > > taking random changes from the upstream kernel until the kernel
+> > > compiles, and then mostly hoping that it works.
+> > 
+> > I'm applying slightly more intelligence than that, but of course I'm
+> > not an XFS developer.
+> 
+> Sorry, Ben, I didn't mean to imply you hadn't done your due diligence
+> properly. It's more a case of lots of things around these patches
+> also changed, and from that perspective the changes are effective a
+> random selection of changes spread across several years of
+> development.
+> 
+> It's subtle things, like changes to how IO completion is processed
+> (especially for AIO), etc that the backported code might depend on
+> for correct behaviour but aren't in the older kernels. These sorts
+> of subtle problems are typically only discovered by users with
+> uncommon applications and/or load....
 
-I found a bug report from redhat here
-https://bugzilla.redhat.com/show_bug.cgi?id=1234586 pointing to this commit:
-xfs: handle dquot buffer readahead in log recovery correctly
+Does this mean that as a rule of thumb we'd rather avoid backporting
+XFS fixes unless they seem really obvious (or at all) ?
 
-which isn't part of 4.4. Is it missing from linux-stable?
-
-i'm using XFS V5 with root quotas on in this case.
-
-Greets,
-Stefan
+Thanks,
+Willy
 
 _______________________________________________
 xfs mailing list
