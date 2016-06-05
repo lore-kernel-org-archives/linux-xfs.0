@@ -1,32 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D7527CAE
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 21:13:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AC6D77CA2
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 14:32:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E2E318F8049
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 19:13:23 -0700 (PDT)
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id wiOfBPfb8mr5uVeK
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 19:13:20 -0700 (PDT)
-Received: from mail-yw0-f181.google.com ([209.85.161.181])
-	by youngberry.canonical.com with esmtpsa
-	(TLS1.0:RSA_AES_128_CBC_SHA1:16) (Exim 4.76)
-	(envelope-from <ming.lei@canonical.com>) id 1b8I8N-0005BV-8D
-	for xfs@oss.sgi.com; Thu, 02 Jun 2016 02:13:19 +0000
-Received: by mail-yw0-f181.google.com with SMTP id x189so36793542ywe.3
-	for <xfs@oss.sgi.com>; Wed, 01 Jun 2016 19:13:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160601135150.GA30759@redhat.com>
-References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
-	<20160531155348.GA24840@redhat.com>
-	<CACVXFVM9FqZFkMat_4ysJ8_vFd1FFnf6Bd9sHDDoCK=v93wViQ@mail.gmail.com>
-	<20160601134427.GA15888@infradead.org>
-	<20160601135150.GA30759@redhat.com>
-Date: Thu, 2 Jun 2016 10:13:18 +0800
-Message-ID: <CACVXFVNFH7zYOG+RsCNEXuxLE+ybq1qbLk6h=keN19LWsKT2mw@mail.gmail.com>
-Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
-From: Ming Lei <ming.lei@canonical.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71E808F8039
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 12:32:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id l596yVqit5FiSdXz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 12:32:38 -0700 (PDT)
+From: mchristi@redhat.com
+Subject: [PATCH 02/45] block: add REQ_OP definitions and helpers
+Date: Sun,  5 Jun 2016 14:31:42 -0500
+Message-Id: <1465155145-10812-3-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,57 +23,157 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Sagi Grimberg <sagig@mellanox.com>, NeilBrown <neilb@suse.com>, Christoph Hellwig <hch@infradead.org>, Joe Thornber <ejt@redhat.com>, linux-block@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
+To: linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
+Cc: Mike Christie <mchristi@redhat.com>
 
-On Wed, Jun 1, 2016 at 9:51 PM, Mike Snitzer <snitzer@redhat.com> wrote:
-> On Wed, Jun 01 2016 at  9:44am -0400,
-> Christoph Hellwig <hch@infradead.org> wrote:
->
->> On Wed, Jun 01, 2016 at 08:38:41PM +0800, Ming Lei wrote:
->> > > be dm-crypt.c.  Maybe you've identified some indirect use of
->> > > BIO_MAX_SIZE?
->> >
->> > I mean the recently introduced BIO_MAX_SIZE in -next tree:
->> >
->> > https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/drivers/md/dm-crypt.c?id=4ed89c97b0706477b822ea2182827640c0cec486
->>
->> The crazy bcache bios striking back once again.  I really think it's
->> harmful having a _MAX value and then having a minor driver
->> reinterpreting it and sending larger ones.  Until we can lift the
->> maximum limit in general nad have common code exercise it we really need
->> to stop bcache from sending these instead of littering the tree with
->> workarounds.
->
-> So should I not push this type of fix to Linus now?  I was going to send
-> the above commit and this one to him this week:
-> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.7&id=57b3001b240629ecc5266d28c845e23ca5f11719
+From: Mike Christie <mchristi@redhat.com>
 
-I don't suggest this kind of fix.
+The following patches separate the operation (WRITE, READ, DISCARD,
+etc) from the rq_flag_bits flags. This patch adds definitions for
+request/bio operations (REQ_OPs) and adds request/bio accessors to
+get/set the op.
 
-That fix should be in bcache or blk-core instead of other places.
-Last time, I sent out the following fix([PATCH v1] block: make sure big bio is
-splitted into at most 256 bvecs):
+In this patch the REQ_OPs match the REQ rq_flag_bits ones
+for compat reasons while all the code is converted to use the
+op accessors in the set. In the last patches the op will become a
+number and the accessors and helpers in this patch will be dropped
+or updated.
 
-     https://lkml.org/lkml/2016/4/5/1046
+Signed-off-by: Mike Christie <mchristi@redhat.com>
+---
+ include/linux/bio.h       |  3 +++
+ include/linux/blk_types.h | 24 ++++++++++++++++++++++++
+ include/linux/blkdev.h    | 10 +++++++++-
+ include/linux/fs.h        | 26 ++++++++++++++++++++++++--
+ 4 files changed, 60 insertions(+), 3 deletions(-)
 
-But forget to clear the flag of REQ_NOMERGE for this case.
-
-If Jens doesn't mind doing such thing in block-core, I can post v2
-for this issue.
-
->
-> Instead, should bcache be made to not do what it is doing?
-
-It depends on if bcache is the only user of this kind of usage.
-In theory, any driver can use external bvec table.
-
-Thanks,
-Ming
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 3bde942..09c5308 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -44,6 +44,9 @@
+ #define BIO_MAX_SIZE		(BIO_MAX_PAGES << PAGE_SHIFT)
+ #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
+ 
++#define bio_op(bio)				(op_from_rq_bits((bio)->bi_rw))
++#define bio_set_op_attrs(bio, op, flags)	((bio)->bi_rw |= (op | flags))
++
+ /*
+  * upper 16 bits of bi_rw define the io priority of this bio
+  */
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 77e5d81..6e60baa 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -242,6 +242,30 @@ enum rq_flag_bits {
+ #define REQ_HASHED		(1ULL << __REQ_HASHED)
+ #define REQ_MQ_INFLIGHT		(1ULL << __REQ_MQ_INFLIGHT)
+ 
++enum req_op {
++	REQ_OP_READ,
++	REQ_OP_WRITE		= REQ_WRITE,
++	REQ_OP_DISCARD		= REQ_DISCARD,
++	REQ_OP_WRITE_SAME	= REQ_WRITE_SAME,
++};
++
++/*
++ * tmp cpmpat. Users used to set the write bit for all non reads, but
++ * we will be dropping the bitmap use for ops. Support both until
++ * the end of the patchset.
++ */
++static inline int op_from_rq_bits(u64 flags)
++{
++	if (flags & REQ_OP_DISCARD)
++		return REQ_OP_DISCARD;
++	else if (flags & REQ_OP_WRITE_SAME)
++		return REQ_OP_WRITE_SAME;
++	else if (flags & REQ_OP_WRITE)
++		return REQ_OP_WRITE;
++	else
++		return REQ_OP_READ;
++}
++
+ typedef unsigned int blk_qc_t;
+ #define BLK_QC_T_NONE	-1U
+ #define BLK_QC_T_SHIFT	16
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 3d9cf32..49c2dbc 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -200,6 +200,13 @@ struct request {
+ 	struct request *next_rq;
+ };
+ 
++#define req_op(req)		(op_from_rq_bits((req)->cmd_flags))
++#define req_set_op(req, op)	((req)->cmd_flags |= op)
++#define req_set_op_attrs(req, op, flags) do {	\
++	req_set_op(req, op);			\
++	(req)->cmd_flags |= flags;		\
++} while (0)
++
+ static inline unsigned short req_get_ioprio(struct request *req)
+ {
+ 	return req->ioprio;
+@@ -597,7 +604,8 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ 
+ #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ 
+-#define rq_data_dir(rq)		((int)((rq)->cmd_flags & 1))
++#define rq_data_dir(rq) \
++	(op_is_write(op_from_rq_bits(rq->cmd_flags)) ? WRITE : READ)
+ 
+ /*
+  * Driver can handle struct request, if it either has an old style
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 65e4c51..62ca2f9 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2465,14 +2465,36 @@ extern bool is_bad_inode(struct inode *);
+ 
+ #ifdef CONFIG_BLOCK
+ /*
++ * tmp cpmpat. Users used to set the write bit for all non reads, but
++ * we will be dropping the bitmap use for ops. Support both until
++ * the end of the patchset.
++ */
++static inline bool op_is_write(unsigned long flags)
++{
++	if (flags & (REQ_OP_WRITE | REQ_OP_WRITE_SAME | REQ_OP_DISCARD))
++		return true;
++	else
++		return false;
++}
++
++/*
+  * return READ, READA, or WRITE
+  */
+-#define bio_rw(bio)		((bio)->bi_rw & (RW_MASK | RWA_MASK))
++static inline int bio_rw(struct bio *bio)
++{
++	if (op_is_write(op_from_rq_bits(bio->bi_rw)))
++		return WRITE;
++
++	return bio->bi_rw & RWA_MASK;
++}
+ 
+ /*
+  * return data direction, READ or WRITE
+  */
+-#define bio_data_dir(bio)	((bio)->bi_rw & 1)
++static inline int bio_data_dir(struct bio *bio)
++{
++	return op_is_write(op_from_rq_bits(bio->bi_rw)) ? WRITE : READ;
++}
+ 
+ extern void check_disk_size_change(struct gendisk *disk,
+ 				   struct block_device *bdev);
+-- 
+2.7.2
 
 _______________________________________________
 xfs mailing list
