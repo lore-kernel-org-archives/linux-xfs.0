@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 069A27CBE
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 13:13:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BE46830405F
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 11:13:32 -0700 (PDT)
-Received: from g4t3425.houston.hpe.com (g4t3425.houston.hpe.com
-	[15.241.140.78]) by cuda.sgi.com with ESMTP id Jc9VWdbRTBl7iAQr
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Jun 2016 11:13:30 -0700 (PDT)
-From: Waiman Long <Waiman.Long@hpe.com>
-Subject: [RFC PATCH-tip 6/6] xfs: Enable reader optimistic spinning for DAX
-	inodes
-Date: Tue, 14 Jun 2016 14:12:39 -0400
-Message-Id: <1465927959-39719-7-git-send-email-Waiman.Long@hpe.com>
-In-Reply-To: <1465927959-39719-1-git-send-email-Waiman.Long@hpe.com>
-References: <1465927959-39719-1-git-send-email-Waiman.Long@hpe.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0CC317CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 12:13:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 862B4AC002
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 10:12:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id shhsEuxD7Fh2CE4K (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 06 Jun 2016 10:12:57 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id C9F6C8E67B
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 17:12:56 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-195.bos.redhat.com [10.18.41.195])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u56HCuAO008108
+	for <xfs@oss.sgi.com>; Mon, 6 Jun 2016 13:12:56 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: cancel eofblocks background trimming on remount read-only
+Date: Mon,  6 Jun 2016 13:12:55 -0400
+Message-Id: <1465233175-6701-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,49 +36,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
-Cc: linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, Davidlohr Bueso <dave@stgolabs.net>, linux-ia64@vger.kernel.org, Scott J Norton <scott.norton@hpe.com>, x86@kernel.org, linux-kernel@vger.kernel.org, Waiman Long <Waiman.Long@hpe.com>, xfs@oss.sgi.com, linux-alpha@vger.kernel.org, Douglas Hatch <doug.hatch@hpe.com>, Jason Low <jason.low2@hp.com>
+To: xfs@oss.sgi.com
 
-This patch enables reader optimistic spinning for inodes that are
-under a DAX-based mount point.
+The filesystem quiesce sequence performs the operations necessary to
+drain all background work, push pending transactions through the log
+infrastructure and wait on I/O resulting from the final AIL push. We
+have had reports of remount,ro hangs in xfs_log_quiesce() ->
+xfs_wait_buftarg(), however, and some instrumentation code to detect
+transaction commits at this point in the quiesce sequence has inculpated
+the eofblocks background scanner as a cause.
 
-On a 4-socket Haswell machine running on a 4.7-rc1 tip-based kernel,
-the fio test with multithreaded randrw and randwrite tests on the
-same file on a XFS partition on top of a NVDIMM with DAX were run,
-the aggregated bandwidths before and after the patch were as follows:
+While higher level remount code generally prevents user modifications by
+the time the filesystem has made it to xfs_log_quiesce(), the background
+scanner may still be alive and can perform pending work at any time. If
+this occurs between the xfs_log_force() and xfs_wait_buftarg() calls
+within xfs_log_quiesce(), this can lead to an indefinite lockup in
+xfs_wait_buftarg().
 
-  Test      BW before patch     BW after patch  % change
-  ----      ---------------     --------------  --------
-  randrw        1352 MB/s          2164 MB/s      +60%
-  randwrite     1710 MB/s          2550 MB/s      +49%
+To prevent this problem, cancel the background eofblocks scan worker
+during the remount read-only quiesce sequence. This suspends background
+trimming when a filesystem is remounted read-only. This is only done in
+the remount path because the freeze codepath has already locked out new
+transactions by the time the filesystem attempts to quiesce (and thus
+waiting on an active work item could deadlock). Kick the eofblocks
+worker to pick up where it left off once an fs is remounted back to
+read-write.
 
-Signed-off-by: Waiman Long <Waiman.Long@hpe.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_icache.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+
+To confirm the problem, I have managed to manufacture the remount,ro
+hang issue described above by hacking in some delays/coordination
+between the quiesce and eofblocks background worker.
+
+Also, an alternative approach that I was considering is to run a
+synchronous scan around the same place this patch cancels the background
+scan. The idea is that the background scan would then have no work to do
+on the subsequent iteration and then die off naturally (until
+preallocation occurs once again). I suppose the downside is that a
+remount might not necessarily be expected to muck with preallocation
+state of affected files. This patch seemed more simple, but I'm open to
+either. Thoughts?
+
+Brian
+
+ fs/xfs/xfs_icache.c | 2 +-
+ fs/xfs/xfs_icache.h | 1 +
+ fs/xfs/xfs_super.c  | 8 ++++++++
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 99ee6ee..09f284f 100644
+index 99ee6eee..fb39a66 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -71,6 +71,15 @@ xfs_inode_alloc(
+@@ -765,7 +765,7 @@ restart:
+  * Background scanning to trim post-EOF preallocated space. This is queued
+  * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
+  */
+-STATIC void
++void
+ xfs_queue_eofblocks(
+ 	struct xfs_mount *mp)
+ {
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 62f1f91..05bac99 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -68,6 +68,7 @@ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+ int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
+ int xfs_inode_free_quota_eofblocks(struct xfs_inode *ip);
+ void xfs_eofblocks_worker(struct work_struct *);
++void xfs_queue_eofblocks(struct xfs_mount *);
  
- 	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 4700f09..7965371 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1294,6 +1294,7 @@ xfs_fs_remount(
+ 		 */
+ 		xfs_restore_resvblks(mp);
+ 		xfs_log_work_queue(mp);
++		xfs_queue_eofblocks(mp);
+ 	}
  
-+	/*
-+	 * Enable reader spinning for DAX nount point
-+	 */
-+	if (mp->m_flags & XFS_MOUNT_DAX) {
-+		rwsem_set_rspin_threshold(&ip->i_iolock.mr_lock);
-+		rwsem_set_rspin_threshold(&ip->i_mmaplock.mr_lock);
-+		rwsem_set_rspin_threshold(&ip->i_lock.mr_lock);
-+	}
+ 	/* rw -> ro */
+@@ -1306,6 +1307,13 @@ xfs_fs_remount(
+ 		 * return it to the same size.
+ 		 */
+ 		xfs_save_resvblks(mp);
 +
- 	/* initialise the xfs inode */
- 	ip->i_ino = ino;
- 	ip->i_mount = mp;
++		/*
++		 * Cancel background eofb scanning so it cannot race with the
++		 * final log force+buftarg wait and deadlock the remount.
++		 */
++		cancel_delayed_work_sync(&mp->m_eofblocks_work);
++
+ 		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+ 	}
 -- 
-1.7.1
+2.5.5
 
 _______________________________________________
 xfs mailing list
