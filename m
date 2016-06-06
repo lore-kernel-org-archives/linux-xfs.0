@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 526D67CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:15:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 24EFA304051
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:15:52 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3FB527CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:16:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BCEE9AC003
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:16:47 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 1Nzqt31Cgp4YaIbL (version=TLSv1
+	ESMTP id BmHnG5K1UaPzAI7Q (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:15:51 -0700 (PDT)
-Subject: Re: [PATCH 06/45] dm: use op_is_write instead of checking for
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:16:45 -0700 (PDT)
+Subject: Re: [PATCH 07/45] bcache: use op_is_write instead of checking for
 	REQ_WRITE
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-7-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-8-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57551515.8060205@suse.de>
-Date: Mon, 6 Jun 2016 08:15:49 +0200
+Message-ID: <5755154C.7030007@suse.de>
+Date: Mon, 6 Jun 2016 08:16:44 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-7-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-8-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,14 +43,18 @@ On 06/05/2016 09:31 PM, mchristi@redhat.com wrote:
 > set.
 > =
 
-> This has dm use the op_is_write helper which will do the right
+> This has bcache use the op_is_write helper which will do the right
 > thing.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
 > ---
+>  drivers/md/bcache/io.c      | 2 +-
+>  drivers/md/bcache/request.c | 6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> =
 
-(Could probably be folded into the previous patch)
+(Could probably folded together with the two previous patches)
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
