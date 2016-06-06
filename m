@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 24C177CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 10:33:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EB7E57CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 10:40:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 896A4AC003
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 08:33:30 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id A5eeLKTXPGJnId2g (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5925EAC005
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 08:40:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XfvNe3FCIJhCCwFX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 06 Jun 2016 08:33:26 -0700 (PDT)
-Date: Mon, 6 Jun 2016 17:33:36 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_repair fails after trying to format log cycle?
-Message-ID: <20160606173336.027917f5@harpe.intellique.com>
-In-Reply-To: <57523CE6.7020906@shaw.ca>
-References: <56F6DE67.60403@shaw.ca> <20160328085541.GA27040@bfoster.bfoster>
-	<570C8D4D.3060304@shaw.ca> <20160412140512.GA59690@bfoster.bfoster>
-	<570D578D.5010706@shaw.ca> <570DB6CD.1000007@shaw.ca>
-	<20160413045129.GO567@dastard> <57523CE6.7020906@shaw.ca>
+	<xfs@oss.sgi.com>; Mon, 06 Jun 2016 08:40:41 -0700 (PDT)
+Subject: Re: [PATCH 28/45] target: use bio op accessors
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-29-git-send-email-mchristi@redhat.com>
+	<57551C57.5090507@suse.de>
+From: Mike Christie <mchristi@redhat.com>
+Message-ID: <57559973.1020105@redhat.com>
+Date: Mon, 6 Jun 2016 10:40:35 -0500
 MIME-Version: 1.0
+In-Reply-To: <57551C57.5090507@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,34 +26,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Ryder <tireman@shaw.ca>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Hannes Reinecke <hare@suse.de>, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-TGUgRnJpLCAzIEp1biAyMDE2IDIyOjI4OjU0IC0wNDAwCkFuZHJldyBSeWRlciA8dGlyZW1hbkBz
-aGF3LmNhPiDDqWNyaXZhaXQ6Cgo+IFNvcnJ5IHRvIGRpZyB1cCBvbGQgc3R1ZmYgaGVyZSBidXQg
-YWZ0ZXIgcmVwbGFjaW5nIGhhcmR3YXJlIGFuZAo+IHB1bGxpbmcgbXkgaGFpciBvdXQgdG8gbm8g
-ZW5kLCBJIHRyYWNlZCB0aGUgc291cmNlIG9mIHRoZSBwcm9ibGVtIG91dC4KPiAKPiBPbiBldmVy
-eSBkcml2ZSBpbiB0aGUgYXJyYXksIHRoZSBwb2ludHMgb24gdGhlIFBDQiB3aGljaCB0aGUgY29u
-dGFjdHMgCj4gZm9yIHRoZSBkcml2ZXMgbW90b3JzIGFuZCBoZWFkL2FjdHVhdG9ycyBtYWtlIGNv
-bnRhY3Qgd2l0aCB3ZXJlCj4gb3hpZGl6ZWQgZW5vdWdoIHRvIGNhdXNlIHRoZSBpc3N1ZS4gSSBl
-bmRlZCB1cCBwdWxsaW5nIHRoZSBQQ0Igb2ZmCj4gZWFjaCBkcml2ZSBhbmQgY2xlYW5pbmcgdGhl
-bSBhcyB3ZWxsIGFzIGNsZWFuaW5nIG91dCBhbGwgb3RoZXIgY2FibGUKPiBhbmQgZHJpdmUgY29u
-bmVjdG9ycyBmcm9tIHRoZSBIQkEgb3V0d2FyZCBhbmQgZXZlcnl0aGluZyBpcyBoYXBweQo+IGFn
-YWluLgo+IAo+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvdWhqbXZ3NGRyL05vdF9DbGVhbmVkLmpw
-Zwo+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcveG85NGllaWk3L1BhcnRpYWxfQ2xlYW5lZF8xLmpw
-Zwo+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvaG9xZ3l1bWdmL1BhcnRpYWxfQ2xlYW5lZF8yLmpw
-Zwo+IGh0dHA6Ly9zMzMucG9zdGltZy5vcmcvNjhrMjB0OGE3L1BhcnRpYWxfQ2xlYW5lZF8zLmpw
-Zwo+IAoKR29vZCBqb2IsIHRoYXQgd2FzIHF1aXRlIHVuZXhwZWN0ZWQgOikgQXJlIHlvdSBuZXh0
-IHRvIHRoZQpzZWFzaG9yZT8KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAg
-ICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxp
-cXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAg
-ICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+On 06/06/2016 01:46 AM, Hannes Reinecke wrote:
+> On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
+>> From: Mike Christie <mchristi@redhat.com>
+>>
+>> Separate the op from the rq_flag_bits and have the target layer
+>> set/get the bio using bio_set_op_attrs/bio_op.
+>>
+>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>> ---
+>>  drivers/target/target_core_iblock.c | 29 ++++++++++++++---------------
+>>  drivers/target/target_core_pscsi.c  |  2 +-
+>>  2 files changed, 15 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+>> index c25109c..22af12f 100644
+>> --- a/drivers/target/target_core_iblock.c
+>> +++ b/drivers/target/target_core_iblock.c
+> [ .. ]
+>> @@ -689,18 +690,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+>>  		 * Force writethrough using WRITE_FUA if a volatile write cache
+>>  		 * is not enabled, or if initiator set the Force Unit Access bit.
+>>  		 */
+>> +		op = REQ_OP_WRITE;
+>>  		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+>>  			if (cmd->se_cmd_flags & SCF_FUA)
+>> -				rw = WRITE_FUA;
+>> +				op_flags = WRITE_FUA;
+>>  			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+>> -				rw = WRITE_FUA;
+>> -			else
+>> -				rw = WRITE;
+>> -		} else {
+>> -			rw = WRITE;
+>> +				op_flags = WRITE_FUA;
+>>  		}
+> Wrong intendation.
+
+It should be ok. That line is for the QUEUE_FLAG_WC test. We end up with:
+
+op = REQ_OP_WRITE;
+if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
+	if (cmd->se_cmd_flags & SCF_FUA)
+		op_flags = WRITE_FUA;
+	else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+		op_flags = WRITE_FUA;
+}
+
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
