@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6776B7CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:44:07 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B0C6D7CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:45:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 388CB8F8035
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:44:04 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3AC24AC004
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:45:42 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id x00fySgq6TsV48sQ (version=TLSv1
+	ESMTP id KAA5aBtYm42FoVBe (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:44:02 -0700 (PDT)
-Subject: Re: [PATCH 24/45] dm: use bio op accessors
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:45:40 -0700 (PDT)
+Subject: Re: [PATCH 25/45] bcache: use bio op accessors
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-25-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-26-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57551BA7.8080102@suse.de>
-Date: Mon, 6 Jun 2016 08:43:51 +0200
+Message-ID: <57551BF2.6060000@suse.de>
+Date: Mon, 6 Jun 2016 08:45:06 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-25-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-26-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,11 +35,20 @@ On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > =
 
-> Separate the op from the rq_flag_bits and have dm
+> Separate the op from the rq_flag_bits and have bcache
 > set/get the bio using bio_set_op_attrs/bio_op.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
+> ---
+>  drivers/md/bcache/btree.c     |  4 ++--
+>  drivers/md/bcache/debug.c     |  4 ++--
+>  drivers/md/bcache/journal.c   |  7 ++++---
+>  drivers/md/bcache/movinggc.c  |  2 +-
+>  drivers/md/bcache/request.c   | 14 +++++++-------
+>  drivers/md/bcache/super.c     | 24 +++++++++++++-----------
+>  drivers/md/bcache/writeback.c |  4 ++--
+>  7 files changed, 31 insertions(+), 28 deletions(-)
 > =
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
