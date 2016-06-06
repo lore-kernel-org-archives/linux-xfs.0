@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 084C87CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:46:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 722C7AC007
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:46:51 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 91FCE7CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:50:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6036E8F8037
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:50:23 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id z1GosjrLuX2wEAh1 (version=TLSv1
+	ESMTP id IAE3R4DQ9q0IIb4u (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:46:49 -0700 (PDT)
-Subject: Re: [PATCH 28/45] target: use bio op accessors
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:50:20 -0700 (PDT)
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-29-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57551C57.5090507@suse.de>
-Date: Mon, 6 Jun 2016 08:46:47 +0200
+Message-ID: <57551D2B.1090707@suse.de>
+Date: Mon, 6 Jun 2016 08:50:19 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-29-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-38-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,93 +35,31 @@ On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > =
 
-> Separate the op from the rq_flag_bits and have the target layer
-> set/get the bio using bio_set_op_attrs/bio_op.
+> The req operation REQ_OP is separated from the rq_flag_bits
+> definition. This converts the block layer drivers to
+> use req_op to get the op from the request struct.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
 > ---
->  drivers/target/target_core_iblock.c | 29 ++++++++++++++---------------
->  drivers/target/target_core_pscsi.c  |  2 +-
->  2 files changed, 15 insertions(+), 16 deletions(-)
+>  drivers/block/loop.c              |  6 +++---
+>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
+>  drivers/block/nbd.c               |  2 +-
+>  drivers/block/rbd.c               |  4 ++--
+>  drivers/block/xen-blkfront.c      |  8 +++++---
+>  drivers/ide/ide-floppy.c          |  2 +-
+>  drivers/md/dm.c                   |  2 +-
+>  drivers/mmc/card/block.c          |  7 +++----
+>  drivers/mmc/card/queue.c          |  6 ++----
+>  drivers/mmc/card/queue.h          |  5 ++++-
+>  drivers/mtd/mtd_blkdevs.c         |  2 +-
+>  drivers/nvme/host/core.c          |  2 +-
+>  drivers/nvme/host/nvme.h          |  4 ++--
+>  drivers/scsi/sd.c                 | 25 ++++++++++++++++---------
+>  14 files changed, 43 insertions(+), 34 deletions(-)
 > =
 
-> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_=
-core_iblock.c
-> index c25109c..22af12f 100644
-> --- a/drivers/target/target_core_iblock.c
-> +++ b/drivers/target/target_core_iblock.c
-[ .. ]
-> @@ -689,18 +690,15 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatte=
-rlist *sgl, u32 sgl_nents,
->  		 * Force writethrough using WRITE_FUA if a volatile write cache
->  		 * is not enabled, or if initiator set the Force Unit Access bit.
->  		 */
-> +		op =3D REQ_OP_WRITE;
->  		if (test_bit(QUEUE_FLAG_FUA, &q->queue_flags)) {
->  			if (cmd->se_cmd_flags & SCF_FUA)
-> -				rw =3D WRITE_FUA;
-> +				op_flags =3D WRITE_FUA;
->  			else if (!test_bit(QUEUE_FLAG_WC, &q->queue_flags))
-> -				rw =3D WRITE_FUA;
-> -			else
-> -				rw =3D WRITE;
-> -		} else {
-> -			rw =3D WRITE;
-> +				op_flags =3D WRITE_FUA;
->  		}
-Wrong intendation.
-
->  	} else {
-> -		rw =3D READ;
-> +		op =3D REQ_OP_READ;
->  	}
->  =
-
->  	ibr =3D kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
-> @@ -714,7 +712,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterl=
-ist *sgl, u32 sgl_nents,
->  		return 0;
->  	}
->  =
-
-> -	bio =3D iblock_get_bio(cmd, block_lba, sgl_nents, rw);
-> +	bio =3D iblock_get_bio(cmd, block_lba, sgl_nents, op, op_flags);
->  	if (!bio)
->  		goto fail_free_ibr;
->  =
-
-> @@ -738,7 +736,8 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterl=
-ist *sgl, u32 sgl_nents,
->  				bio_cnt =3D 0;
->  			}
->  =
-
-> -			bio =3D iblock_get_bio(cmd, block_lba, sg_num, rw);
-> +			bio =3D iblock_get_bio(cmd, block_lba, sg_num, op,
-> +					     op_flags);
->  			if (!bio)
->  				goto fail_put_bios;
->  =
-
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_c=
-ore_pscsi.c
-> index de18790..81564c8 100644
-> --- a/drivers/target/target_core_pscsi.c
-> +++ b/drivers/target/target_core_pscsi.c
-> @@ -922,7 +922,7 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *=
-sgl, u32 sgl_nents,
->  					goto fail;
->  =
-
->  				if (rw)
-> -					bio->bi_rw |=3D REQ_WRITE;
-> +					bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
->  =
-
->  				pr_debug("PSCSI: Allocated bio: %p,"
->  					" dir: %s nr_vecs: %d\n", bio,
-> =
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
