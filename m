@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BE1057CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:21:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3410CAC002
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:21:12 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6776B7CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:44:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 388CB8F8035
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:44:04 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id awJy0c69BXxbQtxb (version=TLSv1
+	ESMTP id x00fySgq6TsV48sQ (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:21:10 -0700 (PDT)
-Subject: Re: [PATCH 09/45] block discard: use bio set op accessor
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:44:02 -0700 (PDT)
+Subject: Re: [PATCH 24/45] dm: use bio op accessors
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-10-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-25-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57551655.3020306@suse.de>
-Date: Mon, 6 Jun 2016 08:21:09 +0200
+Message-ID: <57551BA7.8080102@suse.de>
+Date: Mon, 6 Jun 2016 08:43:51 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-10-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-25-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,21 +31,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: mchristi@redhat.com, linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, xfs@oss.sgi.com, ocfs2-devel@oss.oracle.com
 
-On 06/05/2016 09:31 PM, mchristi@redhat.com wrote:
+On 06/05/2016 09:32 PM, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > =
 
-> This converts the block issue discard helper and users to use
-> the bio_set_op_attrs accessor and only pass in the operation flags
-> like REQ_SEQURE.
+> Separate the op from the rq_flag_bits and have dm
+> set/get the bio using bio_set_op_attrs/bio_op.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  block/blk-lib.c        | 13 +++++++------
->  drivers/md/dm-thin.c   |  2 +-
->  include/linux/blkdev.h |  3 ++-
->  3 files changed, 10 insertions(+), 8 deletions(-)
 > =
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
