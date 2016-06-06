@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 240507CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:13:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 91047AC002
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:13:43 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B893C7CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:14:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 32238AC003
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:14:44 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 8mawPwM6Uiu3VCR8 (version=TLSv1
+	ESMTP id LSv57zsAkXTQ2nYo (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:13:41 -0700 (PDT)
-Subject: Re: [PATCH 02/45] block: add REQ_OP definitions and helpers
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:14:42 -0700 (PDT)
+Subject: Re: [PATCH 05/45] block, drivers, cgroup: use op_is_write helper
+	instead of checking for REQ_WRITE
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-3-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-6-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57551493.5050300@suse.de>
-Date: Mon, 6 Jun 2016 08:13:39 +0200
+Message-ID: <575514D0.3000609@suse.de>
+Date: Mon, 6 Jun 2016 08:14:40 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-3-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-6-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,17 +36,17 @@ On 06/05/2016 09:31 PM, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > =
 
-> The following patches separate the operation (WRITE, READ, DISCARD,
-> etc) from the rq_flag_bits flags. This patch adds definitions for
-> request/bio operations (REQ_OPs) and adds request/bio accessors to
-> get/set the op.
+> We currently set REQ_WRITE/WRITE for all non READ IOs
+> like discard, flush, writesame, etc. In the next patches where we
+> no longer set up the op as a bitmap, we will not be able to
+> detect a operation direction like writesame by testing if REQ_WRITE is
+> set.
 > =
 
-> In this patch the REQ_OPs match the REQ rq_flag_bits ones
-> for compat reasons while all the code is converted to use the
-> op accessors in the set. In the last patches the op will become a
-> number and the accessors and helpers in this patch will be dropped
-> or updated.
+> This patch converts the drivers and cgroup to use the
+> op_is_write helper. This should just cover the simple
+> cases. I did dm, md and bcache in their own patches
+> because they were more involved.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
