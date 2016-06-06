@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B08127CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:12:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F7F3304032
-	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:12:50 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 240507CA0
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 01:13:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91047AC002
+	for <xfs@oss.sgi.com>; Sun,  5 Jun 2016 23:13:43 -0700 (PDT)
 Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id IJfbYEEeVLg6YAbn (version=TLSv1
+	ESMTP id 8mawPwM6Uiu3VCR8 (version=TLSv1
 	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:12:47 -0700 (PDT)
-Subject: Re: [PATCH 01/45] block/fs/drivers: remove rw argument from submit_bio
+	<xfs@oss.sgi.com>; Sun, 05 Jun 2016 23:13:41 -0700 (PDT)
+Subject: Re: [PATCH 02/45] block: add REQ_OP definitions and helpers
 References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-2-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-3-git-send-email-mchristi@redhat.com>
 From: Hannes Reinecke <hare@suse.de>
-Message-ID: <5755145A.3070500@suse.de>
-Date: Mon, 6 Jun 2016 08:12:42 +0200
+Message-ID: <57551493.5050300@suse.de>
+Date: Mon, 6 Jun 2016 08:13:39 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-2-git-send-email-mchristi@redhat.com>
+In-Reply-To: <1465155145-10812-3-git-send-email-mchristi@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,9 +35,17 @@ On 06/05/2016 09:31 PM, mchristi@redhat.com wrote:
 > From: Mike Christie <mchristi@redhat.com>
 > =
 
-> This has callers of submit_bio/submit_bio_wait set the bio->bi_rw
-> instead of passing it in. This makes that use the same as
-> generic_make_request and how we set the other bio fields.
+> The following patches separate the operation (WRITE, READ, DISCARD,
+> etc) from the rq_flag_bits flags. This patch adds definitions for
+> request/bio operations (REQ_OPs) and adds request/bio accessors to
+> get/set the op.
+> =
+
+> In this patch the REQ_OPs match the REQ rq_flag_bits ones
+> for compat reasons while all the code is converted to use the
+> op accessors in the set. In the last patches the op will become a
+> number and the accessors and helpers in this patch will be dropped
+> or updated.
 > =
 
 > Signed-off-by: Mike Christie <mchristi@redhat.com>
