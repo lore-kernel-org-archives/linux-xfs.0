@@ -1,34 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C77957CA4
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 10:09:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5BE14AC005
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 08:09:35 -0700 (PDT)
-Received: from us-smtp-delivery-194.mimecast.com
-	(us-smtp-delivery-194.mimecast.com [216.205.24.194]) by
-	cuda.sgi.com with ESMTP id Ky4aWV5f6Cov9fKw (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 15 Jun 2016 08:09:30 -0700 (PDT)
-From: Trond Myklebust <trondmy@primarydata.com>
-Subject: Re: [PATCH 10/12] NFS: Do not serialise O_DIRECT reads and writes
-Date: Wed, 15 Jun 2016 15:09:23 +0000
-Message-ID: <02DCF6B5-AFDF-4E33-A8F2-DBFE67A87E91@primarydata.com>
-References: <1465931115-30784-5-git-send-email-trond.myklebust@primarydata.com>
-	<1465931115-30784-6-git-send-email-trond.myklebust@primarydata.com>
-	<1465931115-30784-7-git-send-email-trond.myklebust@primarydata.com>
-	<1465931115-30784-8-git-send-email-trond.myklebust@primarydata.com>
-	<1465931115-30784-9-git-send-email-trond.myklebust@primarydata.com>
-	<1465931115-30784-10-git-send-email-trond.myklebust@primarydata.com>
-	<20160615071343.GC4318@infradead.org>
-	<755A2A14-C6A9-4737-8335-0A6785490F6D@primarydata.com>
-	<20160615144801.GB18524@infradead.org>
-	<C13D01C1-4B83-442A-A0EA-D7624BE8A782@primarydata.com>
-	<20160615145638.GC5297@infradead.org>
-In-Reply-To: <20160615145638.GC5297@infradead.org>
-Content-Language: en-US
-Content-ID: <5594A498DF247448A4B9742EF574217F@namprd11.prod.outlook.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A8B77CA0
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 18:40:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50C65304032
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 16:40:06 -0700 (PDT)
+Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
+	[209.85.192.53]) by cuda.sgi.com with ESMTP id TE4VXLngSNcnAArs
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 07 Jun 2016 16:40:04 -0700 (PDT)
+Received: by mail-qg0-f53.google.com with SMTP id p34so66726421qgp.1
+	for <xfs@oss.sgi.com>; Tue, 07 Jun 2016 16:40:04 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20160607134442.GA1803@infradead.org>
+References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
+	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
+	<20160607062717.GA30022@infradead.org>
+	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
+	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
+	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+	<20160607134442.GA1803@infradead.org>
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Date: Tue, 7 Jun 2016 17:40:03 -0600
+Message-ID: <CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+Subject: Re: crash in xfs in current
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,101 +33,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4680638439736777196=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Daniel Wagner <wagi@monom.org>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
---===============4680638439736777196==
-Content-Language: en-US
-Content-ID: <5594A498DF247448A4B9742EF574217F@namprd11.prod.outlook.com>
-Content-Type: multipart/alternative;
-	boundary="MCBoundary=_11606151109270731"
+Hi Christoph,
 
---MCBoundary=_11606151109270731
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Now my git log show this:
 
-DQoNCk9uIDYvMTUvMTYsIDEwOjU2LCAiQ2hyaXN0b3BoIEhlbGx3aWciIDxoY2hAaW5mcmFkZWFk
-Lm9yZz4gd3JvdGU6DQoNCj5PbiBXZWQsIEp1biAxNSwgMjAxNiBhdCAwMjo1MjoyNFBNICswMDAw
-LCBUcm9uZCBNeWtsZWJ1c3Qgd3JvdGU6DQo+PiA+QnV0IFhGUyBhbGxvd3MgZnVsbCBwYXJhbGxl
-bGlzbSBmb3IgZGlyZWN0IHJlYWRzIGFuZCB3cml0ZXMgYXMgbG9uZw0KPj4gPmFzIHRoZXJlIGlz
-IG5vIG1vcmUgcGFnZWNhY2hlIHRvIGZsdXNoLiAgQnV0IGlmIHlvdSBoYXZlIHBhZ2VzIGluDQo+
-PiA+dGhlIHBhZ2VjYWNoZSB5b3UgbmVlZCB0aGUgZXhjbHVzaXZlIGxvY2sgdG8gcHJldmVudCBh
-Z2FpbnN0IG5ldw0KPj4gPnBhZ2VjYWNoZSBwYWdlcyBiZWluZyBhZGRlZC4NCj4+IA0KPj4gRXhh
-Y3RseS4gU28gZG9lcyB0aGlzLg0KPg0KPlNvIGxldCdzIGF2b2lkIGJsb2F0aW5nIHRoZSBpbm9k
-ZSB3aXRoIGFub3RoZXIgcndfc2VtYXBob3JlLCBhbmQgbWFrZQ0KPmV2ZXJ5b25lcyBsaWZlIGVh
-c2llciBieSB1c2luZyB0aGUgZXhpc3RpbmcgbG9jay4NCg0KQXMgSSBzYWlkIGVhcmxpZXIsIHRo
-ZSBwcm9ibGVtIHdpdGggdGhhdCBpcyB5b3UgZW5kIHVwIGFydGlmaWNpYWxseSBzZXJpYWxpc2lu
-ZyBidWZmZXJlZCByZWFkcyBhbmQgYnVmZmVyZWQgd3JpdGVzLg0KDQrigKIgVGhlIHJlYWRzIG9u
-bHkgbmVlZCBhIHNoYXJlZCBsb2NrIGluIG9yZGVyIHRvIHByb3RlY3QgdGhlIEkvTyBtb2RlIGZy
-b20gZmxpcHBpbmcgdG8gT19ESVJFQ1QgKGFuZCByZWx5aW5nIG9uIHBhZ2UgbG9ja3MgdG8gcHJv
-dGVjdCBhZ2FpbnN0IGJ1ZmZlcmVkIHdyaXRlcykuDQrigKIgVGhlIHdyaXRlcyBuZWVkIHByb3Rl
-Y3Rpb24gYWdhaW5zdCBPX0RJUkVDVCwgdGhleSBkb27igJl0IG5lZWQgc2VyaWFsaXNhdGlvbiB3
-aXRoIG90aGVyIHJlYWRzLCBidXQgdGhleSBkbyBuZWVkIHRvIGJlIHNlcmlhbGlzZWQgYWdhaW5z
-dCBvdGhlciBidWZmZXJlZCB3cml0ZXMuDQoNCkRpc2NsYWltZXINCg0KVGhlIGluZm9ybWF0aW9u
-IGNvbnRhaW5lZCBpbiB0aGlzIGNvbW11bmljYXRpb24gZnJvbSB0aGUgc2VuZGVyIGlzIGNvbmZp
-ZGVudGlhbC4gSXQgaXMgaW50ZW5kZWQgc29sZWx5IGZvciB1c2UgYnkgdGhlIHJlY2lwaWVudCBh
-bmQgb3RoZXJzIGF1dGhvcml6ZWQgdG8gcmVjZWl2ZSBpdC4gSWYgeW91IGFyZSBub3QgdGhlIHJl
-Y2lwaWVudCwgeW91IGFyZSBoZXJlYnkgbm90aWZpZWQgdGhhdCBhbnkgZGlzY2xvc3VyZSwgY29w
-eWluZywgZGlzdHJpYnV0aW9uIG9yIHRha2luZyBhY3Rpb24gaW4gcmVsYXRpb24gb2YgdGhlIGNv
-bnRlbnRzIG9mIHRoaXMgaW5mb3JtYXRpb24gaXMgc3RyaWN0bHkgcHJvaGliaXRlZCBhbmQgbWF5
-IGJlIHVubGF3ZnVsLg0K
---MCBoundary=_11606151109270731
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+commit 555b67e4e729ca544bb4028ab12e532c68b70ddb
+Merge: 544ad71 ad438c4
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri May 20 10:34:00 2016 +1000
 
-<HTML><body><BR>
-<BR>
-On 6/15/16, 10:56, &quot;Christoph Hellwig&quot; &lt;hch@infradead.org&gt; =
-wrote:<BR>
-<BR>
-&gt;On Wed, Jun 15, 2016 at 02:52:24PM +0000, Trond Myklebust wrote:<BR>
-&gt;&gt; &gt;But XFS allows full parallelism for direct reads and writes as=
- long<BR>
-&gt;&gt; &gt;as there is no more pagecache to flush.  But if you have pages=
- in<BR>
-&gt;&gt; &gt;the pagecache you need the exclusive lock to prevent against n=
-ew<BR>
-&gt;&gt; &gt;pagecache pages being added.<BR>
-&gt;&gt; <BR>
-&gt;&gt; Exactly. So does this.<BR>
-&gt;<BR>
-&gt;So let's avoid bloating the inode with another rw_semaphore, and make<B=
-R>
-&gt;everyones life easier by using the existing lock.<BR>
-<BR>
-As I said earlier, the problem with that is you end up artificially seriali=
-sing buffered reads and buffered writes.<BR>
-<BR>
-=E2=80=A2 The reads only need a shared lock in order to protect the I/O mod=
-e from flipping to O_DIRECT (and relying on page locks to protect against b=
-uffered writes).<BR>
-=E2=80=A2 The writes need protection against O_DIRECT, they don=E2=80=99t n=
-eed serialisation with other reads, but they do need to be serialised again=
-st other buffered writes.<BR>
-<br /><br /><p style=3D"font-family: Verdana; font-size:10pt; color:#666666=
-;"><b>Disclaimer</b></p><p style=3D"font-family: Verdana; font-size:8pt; co=
-lor:#666666;">The information contained in this communication from the send=
-er is confidential. It is intended solely for use by the recipient and othe=
-rs authorized to receive it. If you are not the recipient, you are hereby n=
-otified that any disclosure, copying, distribution or taking action in rela=
-tion of the contents of this information is strictly prohibited and may be =
-unlawful.<br /></p></body></HTML>
+   Merge branch 'xfs-4.7-inode-reclaim' into for-next
 
---MCBoundary=_11606151109270731--
+commit 544ad71fc8e20fb3a6f50f00d487751492cd8409
+Merge: 2a4ad58 e6b3bb7
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri May 20 10:33:38 2016 +1000
 
+   Merge branch 'xfs-4.7-error-cfg' into for-next
 
---===============4680638439736777196==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+commit 2a4ad5894c819978dca5595396d54d51c3aca694
+Merge: a7792aa 6e3e6d5
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri May 20 10:33:17 2016 +1000
+
+   Merge branch 'xfs-4.7-misc-fixes' into for-next
+
+commit a7792aad644a259375002db8c9d9e03fd50bf509
+Merge: 5b911354 3ab3ffc
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri May 20 10:32:35 2016 +1000
+
+Is this correct?
+If so, let me build and test.
+Building it already as we speak, but it would be nice if you could
+confirm I'm actually testing the right thing.
+Though, wouldn't it be good to repro and get a core file as well?
+Or would the test of this commit narrow down the possibilities as well?
+Thanks,
+
+Reinoud.
+
+On Tue, Jun 7, 2016 at 7:44 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Jun 07, 2016 at 12:52:39PM +0200, Daniel Wagner wrote:
+>> >> I try to reproduce it on 4.6. My steps do not always trigger the crash.
+>> >> So I can't be really sure if 4.6 doesn't show it, it does not happen.
+>> >
+>> > I have never been able to trigger this in 4.6 and it's my failsafe
+>> > reboot (4.6.0).
+>> > In 4.7-rc1 it's just a matter of time before I hit it.
+>> > I do a lot of transactions, using git, extraction of tar.xz etc normally.
+>>
+>> This rings a bell. I though the lockperf tests triggered it. Before I
+>> compiled a new kernel I did a 'git checkout' step.
+>
+> Thanks for testing this to both of you.  Can you try to build a kernel
+> from git commit 555b67e4e729ca544bb4028ab12e532c68b70ddb - this is the
+> XFS pull request that Dave sent to Linux for Linux 4.7-rc, so it has
+> all the XFS changes relative to 4.6, but none of the others like the VFS
+> changes.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4680638439736777196==--
