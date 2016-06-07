@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E5687CA0
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 13:24:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0E06C8F8035
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 11:24:30 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AB70E7CA0
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 01:27:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 432F2AC005
+	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 23:27:21 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id YtFxgUms7mKweRDp (version=TLSv1.2
+	ESMTP id t7nSX7ppsuETHQFI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 14 Jun 2016 11:24:29 -0700 (PDT)
-Date: Tue, 14 Jun 2016 11:24:23 -0700
+	<xfs@oss.sgi.com>; Mon, 06 Jun 2016 23:27:19 -0700 (PDT)
+Date: Mon, 6 Jun 2016 23:27:17 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH-tip 6/6] xfs: Enable reader optimistic spinning for
-	DAX inodes
-Message-ID: <20160614182423.GA6330@infradead.org>
-References: <1465927959-39719-1-git-send-email-Waiman.Long@hpe.com>
-	<1465927959-39719-7-git-send-email-Waiman.Long@hpe.com>
+Subject: Re: crash in xfs in current
+Message-ID: <20160607062717.GA30022@infradead.org>
+References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
+	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1465927959-39719-7-git-send-email-Waiman.Long@hpe.com>
+In-Reply-To: <79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,21 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Waiman Long <Waiman.Long@hpe.com>
-Cc: linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, Davidlohr Bueso <dave@stgolabs.net>, linux-ia64@vger.kernel.org, Scott J Norton <scott.norton@hpe.com>, Peter Zijlstra <peterz@infradead.org>, x86@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ingo Molnar <mingo@redhat.com>, linux-alpha@vger.kernel.org, Douglas Hatch <doug.hatch@hpe.com>, Jason Low <jason.low2@hp.com>
+To: Eric Sandeen <sandeen@sandeen.net>, reinoudkoornstra@gmail.com
+Cc: wagi@monom.org, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-On Tue, Jun 14, 2016 at 02:12:39PM -0400, Waiman Long wrote:
-> This patch enables reader optimistic spinning for inodes that are
-> under a DAX-based mount point.
+On Mon, Jun 06, 2016 at 11:39:59PM -0500, Eric Sandeen wrote:
+> xfs_dir2_leaf_lookup_int() only hits that ASSERT if it was given
+> a name to rename, and failed to find the original.  i.e. that should
+> not happen.
 > 
-> On a 4-socket Haswell machine running on a 4.7-rc1 tip-based kernel,
-> the fio test with multithreaded randrw and randwrite tests on the
-> same file on a XFS partition on top of a NVDIMM with DAX were run,
-> the aggregated bandwidths before and after the patch were as follows:
+>         /*
+>          * Loop over all the entries with the right hash value
+>          * looking to match the name.
+>          */
+> 
+> <do that loop>
+> <fail to find the hash value for the name>
+> <then:>
+> 
+>         ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+>         /*
+>          * Here, we can only be doing a lookup (not a rename or remove).
+>          * If a case-insensitive match was found earlier, re-read the
+>          * appropriate data block if required and return it.
+>          */
+> 
+> A rename should never fail to find the original name.
 
-And why is this specific to DAX?  Many I/O operations already never
-got out to disk, and ilock is mostly held for operations that have
-nothing to do with disk I/O.
+FYI, this looks very much the same like the Bug Daniel reported, which
+I tried to help debugging in person over the weekend.  His backtrace
+points to cancelling a dirty transaction after xfs_dir_replace failed,
+which most likely comes from the failing lookup, except that he probably
+doen't have XFS_DEBUG enabled.
+
+Given that 4.7-rc1 comes with the new shared locks for lookups, and
+there are very little other changes I wonder if there is any relation
+It would be good if Reinoud and/or Daniel can confirm that Linux 4.6
+is ok.
 
 _______________________________________________
 xfs mailing list
