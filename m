@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D5EA87CA0
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 02:14:50 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 785D57CA0
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 23:40:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A6DD5304032
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:14:47 -0700 (PDT)
-Received: from 1wt.eu (wtarreau.pck.nerim.net [62.212.114.60]) by cuda.sgi.com
-	with ESMTP id aes6DpLmkVTSlz4k for <xfs@oss.sgi.com>;
-	Wed, 15 Jun 2016 00:14:44 -0700 (PDT)
-Date: Wed, 15 Jun 2016 09:14:38 +0200
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: Something badly broken with the latest XFS changeset in all
-	stable kernels?
-Message-ID: <20160615071438.GA5294@1wt.eu>
-References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
-	<20160615052831.GA3452@1wt.eu> <20160615065121.GE26977@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D033FAC001
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 21:40:14 -0700 (PDT)
+Received: from mail-qk0-f175.google.com (mail-qk0-f175.google.com
+	[209.85.220.175]) by cuda.sgi.com with ESMTP id
+	HpjNssv9T4qbIFlg (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 07 Jun 2016 21:40:12 -0700 (PDT)
+Received: by mail-qk0-f175.google.com with SMTP id p22so52221163qka.2
+	for <xfs@oss.sgi.com>; Tue, 07 Jun 2016 21:40:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160615065121.GE26977@dastard>
+In-Reply-To: <CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
+References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
+	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
+	<20160607062717.GA30022@infradead.org>
+	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
+	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
+	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+	<20160607134442.GA1803@infradead.org>
+	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+	<CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Date: Tue, 7 Jun 2016 22:40:11 -0600
+Message-ID: <CAAA5faEDdR_L6y9ShhUcermgvjtmzNCzwoYeENjx+8RUEMdwaA@mail.gmail.com>
+Subject: Re: crash in xfs in current
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +39,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Greg KH <greg@kroah.com>, xfs@oss.sgi.com, spender@grsecurity.net, stable@vger.kernel.org, "Thomas D." <whissi@whissi.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Daniel Wagner <wagi@monom.org>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-On Wed, Jun 15, 2016 at 04:51:21PM +1000, Dave Chinner wrote:
-> > Overall the regression lived only 8 days in a single branch, I
-> > guess it shows that our process works rather well and limits the exposure
-> > to regressions.
-> 
-> That it got as far as release and it took so long to get to the
-> upstream maintainers shows the process could do with being improved.
+On Tue, Jun 7, 2016 at 10:16 PM, Reinoud Koornstra
+<reinoudkoornstra@gmail.com> wrote:
+> On Tue, Jun 7, 2016 at 5:40 PM, Reinoud Koornstra
+> <reinoudkoornstra@gmail.com> wrote:
+>> Hi Christoph,
+>>
+>> Now my git log show this:
+>>
+>> commit 555b67e4e729ca544bb4028ab12e532c68b70ddb
+>> Merge: 544ad71 ad438c4
+>> Author: Dave Chinner <david@fromorbit.com>
+>> Date:   Fri May 20 10:34:00 2016 +1000
+>>
+>>    Merge branch 'xfs-4.7-inode-reclaim' into for-next
+>>
+>> commit 544ad71fc8e20fb3a6f50f00d487751492cd8409
+>> Merge: 2a4ad58 e6b3bb7
+>> Author: Dave Chinner <david@fromorbit.com>
+>> Date:   Fri May 20 10:33:38 2016 +1000
+>>
+>>    Merge branch 'xfs-4.7-error-cfg' into for-next
+>>
+>> commit 2a4ad5894c819978dca5595396d54d51c3aca694
+>> Merge: a7792aa 6e3e6d5
+>> Author: Dave Chinner <david@fromorbit.com>
+>> Date:   Fri May 20 10:33:17 2016 +1000
+>>
+>>    Merge branch 'xfs-4.7-misc-fixes' into for-next
+>>
+>> commit a7792aad644a259375002db8c9d9e03fd50bf509
+>> Merge: 5b911354 3ab3ffc
+>> Author: Dave Chinner <david@fromorbit.com>
+>> Date:   Fri May 20 10:32:35 2016 +1000
+>>
+>> Is this correct?
+>> If so, let me build and test.
+>> Building it already as we speak, but it would be nice if you could
+>> confirm I'm actually testing the right thing.
+>> Though, wouldn't it be good to repro and get a core file as well?
+>> Or would the test of this commit narrow down the possibilities as well?
+>> Thanks,
+>>
+>> Reinoud.
+>>
+>
+> Ouch, forgive me for not responding inline previously.
+> For what it's worth, i've compiled the kernel and are running it as we speak.
+> Will do testing and let you know.
 
-Yep but users relying on oldest LTS usually run on servers that cannot
-reboot without prior planning, so in practice we know that users tend
-to be late by 1 week or more and often one or two versions. I'm pretty
-sure this is the reason why a single user reported the issue. I'm not
-saying this to dismiss the importance of a regression, just the fact
-that the zero-risk never exists and that if an issue can only be
-discovered in field (since the commit was backported according to the
-tags and that the need to adapt it was not detected during the review
-process), it will need one first victim to save all other users. In the
-end the quick enough report ensured that most 3.14 users will not have
-the time to upgrade to the broken version and 3.10/3.12 users will not
-even have the opportunity to see the issue at all. That's what I'm
-saying is not that bad.
+Ok, going back to commit 555b67e4e729ca544bb4028ab12e532c68b70ddb
+brings the kernel back to 4.6-rc1.
+With that kernel I crash all over the place, so that's something I cannot run.
+Is there a way to get the 4.7-rc1 or rc2 without the commits for XFS?
 
-We could imagine some automated tests depending on the affected files
-and/or subsystems but it's not even certain that an automated test
-would have detected this one :-/  We need to thank the initial reporter
-here, and to encourage Brad to pass the information back ASAP next time
-this happens via his channel.
+Reinoud.
 
-Willy
+
+> Thanks,
+>
+> Reinoud.
+>
+>> On Tue, Jun 7, 2016 at 7:44 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>>> On Tue, Jun 07, 2016 at 12:52:39PM +0200, Daniel Wagner wrote:
+>>>> >> I try to reproduce it on 4.6. My steps do not always trigger the crash.
+>>>> >> So I can't be really sure if 4.6 doesn't show it, it does not happen.
+>>>> >
+>>>> > I have never been able to trigger this in 4.6 and it's my failsafe
+>>>> > reboot (4.6.0).
+>>>> > In 4.7-rc1 it's just a matter of time before I hit it.
+>>>> > I do a lot of transactions, using git, extraction of tar.xz etc normally.
+>>>>
+>>>> This rings a bell. I though the lockperf tests triggered it. Before I
+>>>> compiled a new kernel I did a 'git checkout' step.
+>>>
+>>> Thanks for testing this to both of you.  Can you try to build a kernel
+>>> from git commit 555b67e4e729ca544bb4028ab12e532c68b70ddb - this is the
+>>> XFS pull request that Dave sent to Linux for Linux 4.7-rc, so it has
+>>> all the XFS changes relative to 4.6, but none of the others like the VFS
+>>> changes.
 
 _______________________________________________
 xfs mailing list
