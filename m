@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E9227CA0
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 01:51:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D746E8F8040
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 23:51:58 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	OlFkaDRLvdAVzJkv for <xfs@oss.sgi.com>;
-	Tue, 14 Jun 2016 23:51:55 -0700 (PDT)
-Date: Wed, 15 Jun 2016 16:51:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Something badly broken with the latest XFS changeset in all
-	stable kernels?
-Message-ID: <20160615065121.GE26977@dastard>
-References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
-	<20160615052831.GA3452@1wt.eu>
+	by oss.sgi.com (Postfix) with ESMTP id EEBA07CA0
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 06:16:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BC9058F8033
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 04:16:41 -0700 (PDT)
+Received: from mk-outboundfilter-4.mail.uk.tiscali.com
+	(mk-outboundfilter-4.mail.uk.tiscali.com [212.74.114.32]) by
+	cuda.sgi.com with ESMTP id JBi0ae3FmQNipATi for
+	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 04:16:39 -0700 (PDT)
+Received: from [192.168.10.10]
+	by host-92-27-244-57.static.as13285.net with esmtpsa
+	(TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128) (Exim 4.80)
+	(envelope-from <ntamplin@codefaber.co.uk>) id 1bAbT5-000813-SN
+	for xfs@oss.sgi.com; Wed, 08 Jun 2016 12:16:16 +0100
+From: Nigel Tamplin <ntamplin@codefaber.co.uk>
+Subject: invalid inode numbers ? after drive moved from Linux 2.6.32 to Linux
+	3.16.0 then back again
+Message-ID: <5757FE7A.8020504@codefaber.co.uk>
+Date: Wed, 8 Jun 2016 12:16:10 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160615052831.GA3452@1wt.eu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,53 +28,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Willy Tarreau <w@1wt.eu>
-Cc: Greg KH <greg@kroah.com>, xfs@oss.sgi.com, spender@grsecurity.net, stable@vger.kernel.org, "Thomas D." <whissi@whissi.de>
+To: xfs@oss.sgi.com
 
-On Wed, Jun 15, 2016 at 07:28:31AM +0200, Willy Tarreau wrote:
-> On Tue, Jun 14, 2016 at 06:30:56PM -0700, Greg KH wrote:
-> > As the patch was tagged with 3.10+, I assumed that it was safe to be
-> > merged to those older kernels, otherwise I would never have done so.  We
-> > do have ways to mark external things like this for stable patches, it's
-> > a great help when doing backports.
-> 
-> I guess only 3.14.72 was affected in the end. 3.18.35 has the fix but my
-> understanding is that after 3.17 it's OK.
+Hello,
 
-Correct.
+I have a drive with a partition containing an XFS file system.
+This drive normally resides in a Linux 2.6.32 (Debian 6) server, which 
+is also where the file system was created many months ago.
+Last week I removed this drive from it's usual 2.6.32 server and for a 
+few hours it was attached to an alternative Linux 3.16.0 (Debian 8) 
+server, where the XFS file system was mounted and during this time I 
+created /modified / deleted some files.
+Later the drive was moved back to the normal Linux 2.6.32.
 
-> Apparently it's not yet queued
-> for 3.16.
+I've noticed something strange has happened.
+Some (maybe all) of the files worked on whilst the drive was in the 
+Linux 3.16.0 are not accessible when the file system is mounted on the 
+Linux 2.6.32.
 
-The queue for 3.16 has a different bunch of XFS stuff that I've
-previous said is pretty risky and not advisable to back port (the
-mmaplock stuff). I'm waiting for that to get to users and a new
-bunch of whacky problems to be reported...
+If I put the drive back in the 3.16.0 server, all files are again 
+accessible.
 
-> Jiri has queued it for 3.12 but not yet released it. For 3.10
-> I only pick patches that are already in a 3.14 release so I didn't have
-> the time to backport it to 3.10 yet as the preview started before the
-> release.
+The few files which are inaccessible on 2.6.32 seem to have no inodes 
+when viewed under 2.6.32 but look ok when the drive is in 3.16.0
 
-Just lucky, eh?
 
-> Overall the regression lived only 8 days in a single branch, I
-> guess it shows that our process works rather well and limits the exposure
-> to regressions.
+"ls -li" on 3.16.0
 
-That it got as far as release and it took so long to get to the
-upstream maintainers shows the process could do with being improved.
+7249604387 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 01
+     104207 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 02
+     101524 drwxrwxr-x 2 nigel users       62 Jun  2 16:39 03
+2220005080 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 06
+5637828101 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 07
+1344499710 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 09
+2958135019 drwxrwxr-x 2 nigel users       62 Jun  2 16:39 0b
+7516254020 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 0c
+5905580833 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 0f
+3494120096 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 10
+1988369908 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 12
+2446706848 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 13
+2446706832 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 14
+5905580836 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 16
+  807056393 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 17
+2688006922 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 18
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+"ls -li" on 2.6.32
+
+          ? ?????????? ? ?     ?            ?            ? 01
+     104207 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 02
+     101524 drwxrwxr-x 2 nigel users       62 Jun  2 16:39 03
+2220005080 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 06
+          ? ?????????? ? ?     ?            ?            ? 07
+1344499710 drwxrwxr-x 2 nigel users      118 Jun  2 16:40 09
+2958135019 drwxrwxr-x 2 nigel users       62 Jun  2 16:39 0b
+          ? ?????????? ? ?     ?            ?            ? 0c
+          ? ?????????? ? ?     ?            ?            ? 0f
+3494120096 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 10
+1988369908 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 12
+2446706848 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 13
+2446706832 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 14
+          ? ?????????? ? ?     ?            ?            ? 16
+  807056393 drwxrwxr-x 2 nigel users     4096 Jun  2 16:40 17
+2688006922 drwxrwxr-x 2 nigel users       62 Jun  2 16:40 18
+
+
+I notice that the files created on 3.16.0 which cannot be accessed on 
+2.6.32, seem to have much higher inode numbers than those which can be 
+accessed on both systems.  Could the numbers chosen by 3.16.0 be 
+overflowing on 2.6.32 ?  I experimented on another almost empty file 
+system, and this seems fine in both systems, but this has very low inode 
+numbers, hence my inode number idea.
+
+I can attach the drive to either system and run diagnostic commands if 
+more information is required.
+
+Regards,
+Nigel
 
 _______________________________________________
 xfs mailing list
