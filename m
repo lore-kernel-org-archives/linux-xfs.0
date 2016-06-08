@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C198D7CA0
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 07:08:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2AA477CA1
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 07:37:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9474F304039
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 05:08:10 -0700 (PDT)
-Received: from hotel311.server4you.de (hotel311.server4you.de [85.25.146.15])
-	by cuda.sgi.com with ESMTP id j17aLgZxpjARa1dS (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E37698F8037
+	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 05:37:04 -0700 (PDT)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id u99Ne8XiuAkWBDkc (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 05:08:07 -0700 (PDT)
-Subject: Re: crash in xfs in current
-References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
-	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
-	<20160607062717.GA30022@infradead.org>
-	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
-	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
-	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
-	<20160607134442.GA1803@infradead.org>
-From: Daniel Wagner <wagi@monom.org>
-Message-ID: <75539b07-d05c-1516-26c1-2c4e2d42de1f@monom.org>
-Date: Wed, 8 Jun 2016 14:08:02 +0200
+	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 05:37:03 -0700 (PDT)
+Date: Wed, 8 Jun 2016 14:37:05 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: determining superblock version?
+Message-ID: <20160608143705.2345d2dc@harpe.intellique.com>
+In-Reply-To: <ded753a1-8bf2-2071-da8a-ec6939846ab0@sandeen.net>
+References: <20160607125127.6dd23aef@harpe.intellique.com>
+	<ded753a1-8bf2-2071-da8a-ec6939846ab0@sandeen.net>
+	<ded753a1-8bf2-2071-da8a-ec6939846ab0@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20160607134442.GA1803@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,23 +26,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Reinoud Koornstra <reinoudkoornstra@gmail.com>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-> Thanks for testing this to both of you.  Can you try to build a kernel
-> from git commit 555b67e4e729ca544bb4028ab12e532c68b70ddb - this is the
-> XFS pull request that Dave sent to Linux for Linux 4.7-rc, so it has
-> all the XFS changes relative to 4.6, but none of the others like the VFS
-> changes.
-
-For some reason, I can't reproduce it with 4.7-rc1 right now. still
-trying...
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVHVlLCA3IEp1biAyMDE2IDEyOjEyOjIxIC0wNTAwCkVyaWMgU2FuZGVlbiA8c2FuZGVlbkBz
+YW5kZWVuLm5ldD4gw6ljcml2YWl0OgoKPiBIb3dldmVyLCAtbiBmdHlwZT0xIG1heSBzdGlsbCBi
+ZSBlbmFibGVkLCBhbmQgb2xkZXIga2VybmVscyBtYXkgaGF2ZQo+IGFuIGlzc3VlIHdpdGggdGhh
+dCBhcyB3ZWxsLgo+IAoKSW5kZWVkLCBJJ3ZlIG1hZGUgc29tZSB0ZXN0czoKCgpta2ZzLnhmcyAt
+ZiAtbSBjcmM9MCwgLW4gZnR5cGU9MSB0ZXN0eGZzIAoKMy4xNCBrZXJuZWw6IHN1Y2Nlc3MKCjMu
+MTMgKHVidW50dSAxNC4wNCk6IHN1Y2Nlc3MKCjMuMTIgOiBzdWNjZXNzCgozLjEwIGFuZCBsb3dl
+cjogZmFpbHVyZQoKCm1rZnMueGZzIC1mIC1tIGNyYz0wIC1uIGZ0eXBlPTAgdGVzdHhmcwoKMy4y
+ICh1YnVudHUgMTIuMDQsIERlYmlhbiBvbGRzdGFibGUpOiBzdWNjZXNzCgoyLjYuMzIgOiBmYWls
+dXJlCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlv
+biB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAg
+ICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAg
+fCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
