@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 335317CA0
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 20:31:04 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A0307CA0
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 23:16:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B0F63AC001
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 18:31:00 -0700 (PDT)
-Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com
-	[66.111.4.27]) by cuda.sgi.com with ESMTP id Ibv2bddN0Cdc58RD
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Jun 2016 18:30:57 -0700 (PDT)
-Date: Tue, 14 Jun 2016 18:30:56 -0700
-From: Greg KH <greg@kroah.com>
-Subject: Re: Something badly broken with the latest XFS changeset in all
-	stable kernels?
-Message-ID: <20160615013056.GA23074@kroah.com>
-References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-	<20160615000241.GC26977@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3DC8E304051
+	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 21:16:05 -0700 (PDT)
+Received: from mail-qt0-f179.google.com (mail-qt0-f179.google.com
+	[209.85.216.179]) by cuda.sgi.com with ESMTP id
+	tXD2WSjCDFU39FQY (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 07 Jun 2016 21:16:03 -0700 (PDT)
+Received: by mail-qt0-f179.google.com with SMTP id q45so27164054qtq.1
+	for <xfs@oss.sgi.com>; Tue, 07 Jun 2016 21:16:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160615000241.GC26977@dastard>
+In-Reply-To: <CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
+	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
+	<20160607062717.GA30022@infradead.org>
+	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
+	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
+	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+	<20160607134442.GA1803@infradead.org>
+	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Date: Tue, 7 Jun 2016 22:16:01 -0600
+Message-ID: <CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
+Subject: Re: crash in xfs in current
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,91 +38,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Thomas D." <whissi@whissi.de>, spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Daniel Wagner <wagi@monom.org>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-On Wed, Jun 15, 2016 at 10:02:41AM +1000, Dave Chinner wrote:
-> On Mon, Jun 13, 2016 at 11:57:53PM +0200, Thomas D. wrote:
-> > Hi,
-> > 
-> > can anybody confirm if there's something broken with the latest XFS
-> > change set which is now applied on all stable kernels?
-> > 
-> > I found https://forums.grsecurity.net/viewtopic.php?t=4489&p=16355 and
-> > grsec changelog says
-> > 
-> > > commit 1f621dc42acbabb71bd69f6ba606cee56e7ad3bc
-> > > Author: Brad Spengler <spender@grsecurity.net>
-> > > Date:   Sat Jun 11 08:14:32 2016 -0400
-> > > 
-> > >     Fix Greg KH's broken XFS backport, caused a benign case to be detected
-> > >     as disk corruption
-> > >     Problem was due to a tree-wide conversion of error codes to their negative
-> > >     counterparts, which would likely never be backported to older kernels, but
-> > >     the backports didn't account for the change
-> > > 
-> > >  fs/xfs/xfs_inode.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Yes, the backport is busted, and needs this fix. The error sign
-> change occurred in 3.17. xfstests would have picked up this
-> regression in a couple of minutes, so I'm guessing that none of
-> these stable releases have had any significant regression testing
-> done....
-> 
-> > This is the change grsec applied:
-> > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index fb8579d..af807d8 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -3098,7 +3111,7 @@ xfs_iflush(
-> > >  	 */
-> > >  	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
-> > >  			       0);
-> > > -	if (error == -EAGAIN) {
-> > > +	if (error == EAGAIN) {
-> > >  		xfs_ifunlock(ip);
-> > >  		return error;
-> > >  	}
-> 
-> Yes, that is the fix that is needed. Thank you for reporting it to
-> us.
-> 
-> Mr Spender: it would be appreciated if you reported stable kernel
-> regressions to the relevant upstream maintainers so they can be
-> fixed quickly for everyone, rather than having one of your users
-> decide it needs to be reported.
-> 
-> Stable kernel maintainers: the above error sign change is needed for
-> stable kernels 3.16 and earlier, as a matter of critical importance.
-> And as a further matter of critical importance: in future, please
-> take the time to regression test the changes you backport.
-> 
-> > The bad commit according to grsec's statement is
-> > 
-> > > From b1438f477934f5a4d5a44df26f3079a7575d5946 Mon Sep 17 00:00:00 2001
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > Date: Wed, 18 May 2016 13:53:42 +1000
-> > > Subject: [PATCH] xfs: xfs_iflush_cluster fails to abort on error
-> > 
-> > Would be nice to get some clarification.
-> 
-> There's nothing wrong with that commit in the upstream kernel,
-> it's the backport that has a bug in it because it failed to take
-> into account changes outside the context of the upstream commit that
-> the older kernels don't have.
+On Tue, Jun 7, 2016 at 5:40 PM, Reinoud Koornstra
+<reinoudkoornstra@gmail.com> wrote:
+> Hi Christoph,
+>
+> Now my git log show this:
+>
+> commit 555b67e4e729ca544bb4028ab12e532c68b70ddb
+> Merge: 544ad71 ad438c4
+> Author: Dave Chinner <david@fromorbit.com>
+> Date:   Fri May 20 10:34:00 2016 +1000
+>
+>    Merge branch 'xfs-4.7-inode-reclaim' into for-next
+>
+> commit 544ad71fc8e20fb3a6f50f00d487751492cd8409
+> Merge: 2a4ad58 e6b3bb7
+> Author: Dave Chinner <david@fromorbit.com>
+> Date:   Fri May 20 10:33:38 2016 +1000
+>
+>    Merge branch 'xfs-4.7-error-cfg' into for-next
+>
+> commit 2a4ad5894c819978dca5595396d54d51c3aca694
+> Merge: a7792aa 6e3e6d5
+> Author: Dave Chinner <david@fromorbit.com>
+> Date:   Fri May 20 10:33:17 2016 +1000
+>
+>    Merge branch 'xfs-4.7-misc-fixes' into for-next
+>
+> commit a7792aad644a259375002db8c9d9e03fd50bf509
+> Merge: 5b911354 3ab3ffc
+> Author: Dave Chinner <david@fromorbit.com>
+> Date:   Fri May 20 10:32:35 2016 +1000
+>
+> Is this correct?
+> If so, let me build and test.
+> Building it already as we speak, but it would be nice if you could
+> confirm I'm actually testing the right thing.
+> Though, wouldn't it be good to repro and get a core file as well?
+> Or would the test of this commit narrow down the possibilities as well?
+> Thanks,
+>
+> Reinoud.
+>
 
-Thanks for letting me know about this.
+Ouch, forgive me for not responding inline previously.
+For what it's worth, i've compiled the kernel and are running it as we speak.
+Will do testing and let you know.
+Thanks,
 
-As the patch was tagged with 3.10+, I assumed that it was safe to be
-merged to those older kernels, otherwise I would never have done so.  We
-do have ways to mark external things like this for stable patches, it's
-a great help when doing backports.
+Reinoud.
 
-thanks,
-
-greg k-h
+> On Tue, Jun 7, 2016 at 7:44 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>> On Tue, Jun 07, 2016 at 12:52:39PM +0200, Daniel Wagner wrote:
+>>> >> I try to reproduce it on 4.6. My steps do not always trigger the crash.
+>>> >> So I can't be really sure if 4.6 doesn't show it, it does not happen.
+>>> >
+>>> > I have never been able to trigger this in 4.6 and it's my failsafe
+>>> > reboot (4.6.0).
+>>> > In 4.7-rc1 it's just a matter of time before I hit it.
+>>> > I do a lot of transactions, using git, extraction of tar.xz etc normally.
+>>>
+>>> This rings a bell. I though the lockperf tests triggered it. Before I
+>>> compiled a new kernel I did a 'git checkout' step.
+>>
+>> Thanks for testing this to both of you.  Can you try to build a kernel
+>> from git commit 555b67e4e729ca544bb4028ab12e532c68b70ddb - this is the
+>> XFS pull request that Dave sent to Linux for Linux 4.7-rc, so it has
+>> all the XFS changes relative to 4.6, but none of the others like the VFS
+>> changes.
 
 _______________________________________________
 xfs mailing list
