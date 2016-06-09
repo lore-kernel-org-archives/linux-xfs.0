@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 557ED7CD0
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 09:45:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D35E1AC006
-	for <xfs@oss.sgi.com>; Wed,  1 Jun 2016 07:45:21 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 4c7OHGFeZjAaHOnq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Jun 2016 07:45:19 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/14] xfs: remove buffered write support from __xfs_get_blocks
-Date: Wed,  1 Jun 2016 16:44:50 +0200
-Message-Id: <1464792297-13185-8-git-send-email-hch@lst.de>
-In-Reply-To: <1464792297-13185-1-git-send-email-hch@lst.de>
-References: <1464792297-13185-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 03BC17CA0
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:38:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 72631AC004
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 09:38:43 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id qkSOkpu3grjoJPed for <xfs@oss.sgi.com>;
+	Thu, 09 Jun 2016 09:38:41 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5F0504A6
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:38:41 -0500 (CDT)
+Subject: [PATCH 1/4] fs: hoist [GS]ET_FSLABEL to vfs
+References: <c1922d3d-208c-3699-0a36-26108a4f44de@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d5394e49-dd3c-6725-2f93-a6b1acd7c36f@sandeen.net>
+Date: Thu, 9 Jun 2016 11:38:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <c1922d3d-208c-3699-0a36-26108a4f44de@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,146 +28,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bob Peterson <rpeterso@redhat.com>
+Move the btrfs label ioctls up to the vfs for general use.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 71 +++++++++++++++----------------------------------------
- 1 file changed, 19 insertions(+), 52 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2ac9f7e..80714eb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1143,6 +1143,8 @@ __xfs_get_blocks(
- 	ssize_t			size;
- 	int			new = 0;
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index 053e677..b23be4e 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -5431,6 +5431,10 @@ long btrfs_ioctl(struct file *file, unsigned int
+ 		return btrfs_ioctl_setflags(file, argp);
+ 	case FS_IOC_GETVERSION:
+ 		return btrfs_ioctl_getversion(file, argp);
++	case FS_IOC_GET_FSLABEL:
++		return btrfs_ioctl_get_fslabel(file, argp);
++	case FS_IOC_SET_FSLABEL:
++		return btrfs_ioctl_set_fslabel(file, argp);
+ 	case FITRIM:
+ 		return btrfs_ioctl_fitrim(file, argp);
+ 	case BTRFS_IOC_SNAP_CREATE:
+@@ -5538,10 +5542,6 @@ long btrfs_ioctl(struct file *file, unsigned int
+ 		return btrfs_ioctl_quota_rescan_wait(file, argp);
+ 	case BTRFS_IOC_DEV_REPLACE:
+ 		return btrfs_ioctl_dev_replace(root, argp);
+-	case BTRFS_IOC_GET_FSLABEL:
+-		return btrfs_ioctl_get_fslabel(file, argp);
+-	case BTRFS_IOC_SET_FSLABEL:
+-		return btrfs_ioctl_set_fslabel(file, argp);
+ 	case BTRFS_IOC_GET_SUPPORTED_FEATURES:
+ 		return btrfs_ioctl_get_supported_features(argp);
+ 	case BTRFS_IOC_GET_FEATURES:
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index a079d50..fca64f2 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -234,6 +234,8 @@ struct fsxattr {
+ #define FICLONERANGE	_IOW(0x94, 13, struct file_clone_range)
+ #define FIDEDUPERANGE	_IOWR(0x94, 54, struct file_dedupe_range)
  
-+	BUG_ON(create && !direct);
++#define FSLABEL_MAX 256	/* Max chars for the interface; each fs may differ */
 +
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+ #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
+ #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
+ #define	FS_IOC_GETVERSION		_IOR('v', 1, long)
+@@ -243,8 +245,10 @@ struct fsxattr {
+ #define FS_IOC32_SETFLAGS		_IOW('f', 2, int)
+ #define FS_IOC32_GETVERSION		_IOR('v', 1, int)
+ #define FS_IOC32_SETVERSION		_IOW('v', 2, int)
+-#define FS_IOC_FSGETXATTR		_IOR ('X', 31, struct fsxattr)
+-#define FS_IOC_FSSETXATTR		_IOW ('X', 32, struct fsxattr)
++#define FS_IOC_FSGETXATTR		_IOR('X', 31, struct fsxattr)
++#define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
++#define FS_IOC_GET_FSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
++#define FS_IOC_SET_FSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
  
-@@ -1150,22 +1152,14 @@ __xfs_get_blocks(
- 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
- 	size = bh_result->b_size;
- 
--	if (!create && direct && offset >= i_size_read(inode))
-+	if (!create && offset >= i_size_read(inode))
- 		return 0;
- 
- 	/*
- 	 * Direct I/O is usually done on preallocated files, so try getting
--	 * a block mapping without an exclusive lock first.  For buffered
--	 * writes we already have the exclusive iolock anyway, so avoiding
--	 * a lock roundtrip here by taking the ilock exclusive from the
--	 * beginning is a useful micro optimization.
-+	 * a block mapping without an exclusive lock first.
- 	 */
--	if (create && !direct) {
--		lockmode = XFS_ILOCK_EXCL;
--		xfs_ilock(ip, lockmode);
--	} else {
--		lockmode = xfs_ilock_data_map_shared(ip);
--	}
-+	lockmode = xfs_ilock_data_map_shared(ip);
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 	if (offset + size > mp->m_super->s_maxbytes)
-@@ -1184,37 +1178,19 @@ __xfs_get_blocks(
- 	     (imap.br_startblock == HOLESTARTBLOCK ||
- 	      imap.br_startblock == DELAYSTARTBLOCK) ||
- 	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
--		if (direct || xfs_get_extsz_hint(ip)) {
--			/*
--			 * xfs_iomap_write_direct() expects the shared lock. It
--			 * is unlocked on return.
--			 */
--			if (lockmode == XFS_ILOCK_EXCL)
--				xfs_ilock_demote(ip, lockmode);
--
--			error = xfs_iomap_write_direct(ip, offset, size,
--						       &imap, nimaps);
--			if (error)
--				return error;
--			new = 1;
-+		/*
-+		 * xfs_iomap_write_direct() expects the shared lock. It
-+		 * is unlocked on return.
-+		 */
-+		if (lockmode == XFS_ILOCK_EXCL)
-+			xfs_ilock_demote(ip, lockmode);
- 
--		} else {
--			/*
--			 * Delalloc reservations do not require a transaction,
--			 * we can go on without dropping the lock here. If we
--			 * are allocating a new delalloc block, make sure that
--			 * we set the new flag so that we mark the buffer new so
--			 * that we know that it is newly allocated if the write
--			 * fails.
--			 */
--			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
--				new = 1;
--			error = xfs_iomap_write_delay(ip, offset, size, &imap);
--			if (error)
--				goto out_unlock;
-+		error = xfs_iomap_write_direct(ip, offset, size,
-+					       &imap, nimaps);
-+		if (error)
-+			return error;
-+		new = 1;
- 
--			xfs_iunlock(ip, lockmode);
--		}
- 		trace_xfs_get_blocks_alloc(ip, offset, size,
- 				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
- 						   : XFS_IO_DELALLOC, &imap);
-@@ -1235,9 +1211,7 @@ __xfs_get_blocks(
- 	}
- 
- 	/* trim mapping down to size requested */
--	if (direct || size > (1 << inode->i_blkbits))
--		xfs_map_trim_size(inode, iblock, bh_result,
--				  &imap, offset, size);
-+	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
- 
- 	/*
- 	 * For unwritten extents do not report a disk address in the buffered
-@@ -1250,7 +1224,7 @@ __xfs_get_blocks(
- 		if (ISUNWRITTEN(&imap))
- 			set_buffer_unwritten(bh_result);
- 		/* direct IO needs special help */
--		if (create && direct) {
-+		if (create) {
- 			if (dax_fault)
- 				ASSERT(!ISUNWRITTEN(&imap));
- 			else
-@@ -1279,14 +1253,7 @@ __xfs_get_blocks(
- 	     (new || ISUNWRITTEN(&imap))))
- 		set_buffer_new(bh_result);
- 
--	if (imap.br_startblock == DELAYSTARTBLOCK) {
--		BUG_ON(direct);
--		if (create) {
--			set_buffer_uptodate(bh_result);
--			set_buffer_mapped(bh_result);
--			set_buffer_delay(bh_result);
--		}
--	}
-+	BUG_ON(direct && imap.br_startblock == DELAYSTARTBLOCK);
- 
- 	return 0;
- 
--- 
-2.1.4
+ /*
+  * File system encryption support
 
 _______________________________________________
 xfs mailing list
