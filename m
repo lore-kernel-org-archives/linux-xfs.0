@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 08C617CA0
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 07:19:39 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BD80F7CA0
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 12:46:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A084A304048
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 05:19:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nvRHTXCwGouYsD0k (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47D16AC002
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 10:46:02 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id J4D8igDfQvuT0CWG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 10 Jun 2016 05:19:37 -0700 (PDT)
-Date: Fri, 10 Jun 2016 08:19:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/4] xfs: online relabeling [RFC]
-Message-ID: <20160610121936.GC21568@bfoster.bfoster>
-References: <c1922d3d-208c-3699-0a36-26108a4f44de@sandeen.net>
-	<2305b486-f336-6d1e-9420-b69dc5bdc572@sandeen.net>
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 10:46:00 -0700 (PDT)
+Date: Thu, 9 Jun 2016 10:45:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC] allow enabling reflinks at runtime
+Message-ID: <20160609174551.GD10371@birch.djwong.org>
+References: <1464877150-20457-1-git-send-email-hch@lst.de>
+	<20160602225415.GP12670@dastard> <20160608071130.GB24663@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <2305b486-f336-6d1e-9420-b69dc5bdc572@sandeen.net>
+In-Reply-To: <20160608071130.GB24663@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@lst.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 09, 2016 at 11:51:12AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 6/9/16 11:36 AM, Eric Sandeen wrote:
-> > Ok, this more or less works; not really up to snuff
-> > for submission or merging, just sketching it out, but some
-> > questions first:
+On Wed, Jun 08, 2016 at 09:11:30AM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 03, 2016 at 08:54:15AM +1000, Dave Chinner wrote:
+> > On Thu, Jun 02, 2016 at 04:19:07PM +0200, Christoph Hellwig wrote:
+> > > I've had some vocal user requests to allow enabling reflinks at run time,
+> > > which happens to be a mostly trivial feature.  The only caveat is that we
+> > > need a large enough log size to support the reflink requirements, but for
+> > > typical large file systems that's not an issue.
 > > 
-> > 1) Is there really any point to this? :) We did have one
-> >    request, and btrfs can do it ...
-> > 
+> > Hmmm - how does this interact with all the rmap code? I was not
+> > planning on enabling reflink without rmap and vice versa simply
+> > because it makes the validation and testing matrix vastly more
+> > complex.
+> 
+> Uh.  So far I've only been testing pure reflink code, mostly because
+> rmap really doesn't buy much for the use case I'm working on.
 
-Seems reasonable to me. Any details on the use case for the request?
+So far I've mostly been testing with mkfs.xfs -i sparse=1 -m rmapbt=1,reflink=1
+on the assumption that sparse will get turned on soon and that it
+might help a lot in the post-COW fragmentation world.
 
-> > 2) Is using m_growlock horrible?  growfs is the only other
-> >    thing that writes all supers, so I grabbed it.  We don't
-> >    want multiple relabels stepping on each other.
-> > 
-> > 3) Is there some way to actually force the primary to disk?
-> >    Right now the label change isn't actually visible on the
-> >    primary until unmount, which defeats the purpose.  I'm not
-> >    sure if there's a straightforward/safe way to make it
-> >    visible...
-> 
+(Hoping that the cowextsize defaults avoid most of the horrifying
+fragmentation that we see on the second- and last-letter filesystems.)
 
-> Oh, sorry - I guess it is getting written out, but it's only
-> available via an O_DIRECT read from userspace; it's not
-> invalidating the cache.
-> 
-> # io/xfs_io -c "label derp" /mnt/test
-> label = "derp"
-> 
-> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
-> ...
-> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
-> ...
-> 
-> # dd if=/dev/sdb2 iflag=direct bs=512 count=1 | hexdump -C
-> ...
-> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 64 65 72 70  |............derp|
-> ...
-> 
-> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
-> ...
-> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
-> ...
-> 
-> Guess I need to think about this some more.
-> 
+> Enabling rmap post-mkfs is defintively a different ballpark, and probably
+> not worth it even if it would be doable.
 
-Isn't this to be expected? You're directly accessing the block device of
-a mounted filesystem. I would think this is expected behavior, so long
-as the set/get interfaces through the fs are consistent.
+Hughflgrgh.  I wasn't even going to consider /that/ possibility. :)
 
-Brian
+(I guess you could flip on the feature bit and run xfs_repair...)
 
-> -Eric
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+--D
 
 _______________________________________________
 xfs mailing list
