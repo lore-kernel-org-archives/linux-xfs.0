@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6DDF67CA0
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 08:44:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D42D8F8040
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 06:44:48 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id QPuedyCuUWIUfPum (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 07 Jun 2016 06:44:45 -0700 (PDT)
-Date: Tue, 7 Jun 2016 06:44:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: crash in xfs in current
-Message-ID: <20160607134442.GA1803@infradead.org>
-References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
-	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
-	<20160607062717.GA30022@infradead.org>
-	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
-	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
-	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8A1877CAF
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 13:08:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04522AC002
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:08:26 -0700 (PDT)
+Received: from mx1.math.uh.edu (mx1.math.uh.edu [129.7.128.32]) by
+	cuda.sgi.com with ESMTP id G4xM51c4NzvDe2kU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 11:08:24 -0700 (PDT)
+From: Jason L Tibbitts III <tibbs@math.uh.edu>
+Subject: Re: xfsaild 20 wakeups per second
+References: <ufaeg86e2jk.fsf@epithumia.math.uh.edu>
+	<20160609171857.GA9052@laptop.bfoster>
+Date: Thu, 09 Jun 2016 13:08:23 -0500
+In-Reply-To: <20160609171857.GA9052@laptop.bfoster> (Brian Foster's message of
+	"Thu, 9 Jun 2016 13:18:57 -0400")
+Message-ID: <ufa7fdydylk.fsf@epithumia.math.uh.edu>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,26 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Daniel Wagner <wagi@monom.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Reinoud Koornstra <reinoudkoornstra@gmail.com>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 07, 2016 at 12:52:39PM +0200, Daniel Wagner wrote:
-> >> I try to reproduce it on 4.6. My steps do not always trigger the crash.
-> >> So I can't be really sure if 4.6 doesn't show it, it does not happen.
-> > 
-> > I have never been able to trigger this in 4.6 and it's my failsafe
-> > reboot (4.6.0).
-> > In 4.7-rc1 it's just a matter of time before I hit it.
-> > I do a lot of transactions, using git, extraction of tar.xz etc normally.
-> 
-> This rings a bell. I though the lockperf tests triggered it. Before I
-> compiled a new kernel I did a 'git checkout' step.
+>>>>> "BF" == Brian Foster <bfoster@redhat.com> writes:
 
-Thanks for testing this to both of you.  Can you try to build a kernel
-from git commit 555b67e4e729ca544bb4028ab12e532c68b70ddb - this is the
-XFS pull request that Dave sent to Linux for Linux 4.7-rc, so it has
-all the XFS changes relative to 4.6, but none of the others like the VFS
-changes.
+BF> There was some recent discussion on this here (see the follow up
+BF> thread to the patch):
+
+Ah.  Sorry about bringing that back up; I just joined and I wasn't using
+the right search terms to find the previous thread in the archives.
+
+At least I now know what's happening.
+
+ - J<
 
 _______________________________________________
 xfs mailing list
