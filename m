@@ -1,36 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B48237CB1
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 22:42:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 87B7F304043
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 20:42:29 -0700 (PDT)
-Received: from mail-qg0-f41.google.com (mail-qg0-f41.google.com
-	[209.85.192.41]) by cuda.sgi.com with ESMTP id whwFUYxqpRQt8AzZ
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 08 Jun 2016 20:42:27 -0700 (PDT)
-Received: by mail-qg0-f41.google.com with SMTP id q32so14445703qgq.3
-	for <xfs@oss.sgi.com>; Wed, 08 Jun 2016 20:42:27 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 241447CA4
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:23:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E8BDA8F8033
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 09:23:15 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id pvkRiqyOLKk6NBTa for <xfs@oss.sgi.com>;
+	Thu, 09 Jun 2016 09:23:12 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id DEE934A6
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:23:11 -0500 (CDT)
+Subject: Re: [PATCH] mkfs: test that -l su is a multiple of block size
+References: <1465479700-14111-1-git-send-email-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5f6ee8a0-b704-5aa6-ff67-f7a5f6761732@sandeen.net>
+Date: Thu, 9 Jun 2016 11:23:11 -0500
 MIME-Version: 1.0
-In-Reply-To: <00bbe658-a891-3771-ca1d-5661a8b6ab61@sandeen.net>
-References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
-	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
-	<20160607062717.GA30022@infradead.org>
-	<c0b9776e-6917-13f2-1948-e7d51f72a909@monom.org>
-	<CAAA5faEvt-vrvrkWC8-9Fys0WHN2TBQz7-Y-mtU8FaRHxUM6rw@mail.gmail.com>
-	<48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
-	<20160607134442.GA1803@infradead.org>
-	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
-	<CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
-	<CAAA5faEDdR_L6y9ShhUcermgvjtmzNCzwoYeENjx+8RUEMdwaA@mail.gmail.com>
-	<20160609022238.GY26977@dastard>
-	<CAAA5faGL_Nyu=jW2Vrgr_m7crhnB9BriWWzMAPODbiQATFhS=Q@mail.gmail.com>
-	<00bbe658-a891-3771-ca1d-5661a8b6ab61@sandeen.net>
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Date: Wed, 8 Jun 2016 21:42:26 -0600
-Message-ID: <CAAA5faH7RA=_WByj6uh4yVCLgwxkLh88CkrtTOa-qJqdyEDT-A@mail.gmail.com>
-Subject: Re: crash in xfs in current
+In-Reply-To: <1465479700-14111-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,100 +32,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Daniel Wagner <wagi@monom.org>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jun 8, 2016 at 8:56 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 6/8/16 9:53 PM, Reinoud Koornstra wrote:
->
->>> In your Linus git tree:
->>>
->>> $ git remote add xfsdev git://git.kernel.org/git/dgc/linux-xfs.git
->>> $ git remote update
->>> $ git checkout -b xfsdev-merge v4.6
->>> $ git merge xfsdev/xfs-for-linus-4.7-rc1
->>
->> Tried to do this:
->>
->> reinoud@router-dev:~/Downloads/kernel_current$  git remote add xfsdev
->> git://git.kernel.org/git/dgc/linux-xfs.git
->
-> I think that should be:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-Ok That worked better indeed. :)
 
-reinoud@router-dev:~/Downloads/kernel_current$ git remote add xfsdev
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-reinoud@router-dev:~/Downloads/kernel_current$ git remote update
-Fetching origin
-Fetching xfsdev
-remote: Counting objects: 139, done.
-[SNIP]
-reinoud@router-dev:~/Downloads/kernel_current$ git checkout -b xfsdev-merge v4.6
-Checking out files: 100% (9437/9437), done.
-Switched to a new branch 'xfsdev-merge'
-reinoud@router-dev:~/Downloads/kernel_current$ git merge
-xfsdev/xfs-for-linus-4.7-rc1
-merge: xfsdev/xfs-for-linus-4.7-rc1 - not something we can merge
-So i tried this:
+On 6/9/16 8:41 AM, Jan Tulak wrote:
+> lsunit was already tested, but lsu was not. So a thing like -l su=4097 was
+> possible. This commit adds a check to fix it.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 455bf11..b9b50fe 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2875,6 +2875,15 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  		lsunit = dsunit;
+>  	}
+>  
+> +	if (lsu) {
+> +		if (lsu % blocksize != 0) {
+> +			fprintf(stderr,
+> +	_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+> +			lsu, blocksize);
+> +			exit(1);
+> +		}
+> +	}
+> +
 
-reinoud@router-dev:~/Downloads/kernel_current$ git merge xfs-for-linus-4.7-rc1
-Auto-merging fs/xfs/xfs_super.c
-Auto-merging fs/xfs/xfs_pnfs.c
-Auto-merging fs/xfs/xfs_mount.h
-Auto-merging fs/xfs/xfs_mount.c
-Auto-merging fs/xfs/xfs_file.c
-Auto-merging fs/xfs/xfs_bmap_util.c
-Auto-merging fs/xfs/xfs_aops.c
-Auto-merging fs/xfs/libxfs/xfs_bmap.c
-Auto-merging fs/namei.c
-Merge made by the 'recursive' strategy.
-The terminal did hang .... in 4.6
-I killed the git operation and did it again and now it says it's up to date.
 
-reinoud@router-dev:~/Downloads/kernel_current$ git merge xfs-for-linus-4.7-rc1
-Already up-to-date.
-reinoud@router-dev:~/Downloads/kernel_current$ git status
-On branch xfsdev-merge
+Hm, I'm not quite seeing the behavior you say you're fixing;
+you give the example of -l su=4097, but:
 
-Is this correct, can I now build and test?
+# mkfs/mkfs.xfs -f -dfile,name=fsfile,size=128m -l su=4097
+Illegal value 4097 for -l su option. value is too small
 
->
-> -Eric
->
->> reinoud@router-dev:~/Downloads/kernel_current$  git remote update
->> Fetching origin
->> Fetching xfsdev
->> fatal: remote error: access denied or repository not exported:
->> /git/dgc/linux-xfs.git
->> error: Could not fetch xfsdev
->>
->> I don't think I have access to git.kernel.org in terms of pushing. :)
->> Or am I doing something else wrong.
->> Forgive the trivial question.
->>
->> Btw, I started in the most current linus git tree.... or should I git
->> 4.6.y and then do your suggestions?
->>
->> Thanks,
->>
->> Reinoud.
->>
->>>
->>> And that should give you the XFS changes for 4.7-rc1 in a vanilla 4.6
->>> tree. This merge is one of the things I test (i.e. send to my test
->>> machiens for a round of xfstests and other stress) before sending a
->>> pull request to Linus, so it should work just fine.
->>>
->>> Cheers,
->>>
->>> Dave.
->>> --
->>> Dave Chinner
->>> david@fromorbit.com
->>
+So that's really not the relevant test case.
+
+
+And in these cases it is caught and does fail:
+
+# mkfs/mkfs.xfs -f -dfile,name=fsfile,size=128m -l su=63k
+log stripe unit (64512) must be a multiple of the block size (4096)
+
+# mkfs/mkfs.xfs -f -dfile,name=fsfile,size=128m -l su=64512
+log stripe unit (64512) must be a multiple of the block size (4096)
+
+But in this case it does not:
+
+# mkfs/mkfs.xfs -f -dfile,name=fsfile,size=128m -l su=16385
+meta-data=fsfile                 isize=512    agcount=4, agsize=8192 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=32768, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=552, version=2
+         =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+So what's going on here...?  It has something to do with how
+calc_stripe_factors() operates, and when that happens vs. the checks.
+
+lsu and lsunit are really specifying the same thing, just in different
+units.
+
+Your patch does fix it up, but I wonder if these tests are in the
+wrong place; with your patch we essentially do this:
+
+1) Parse lsu value
+2) Convert lsu to lsunit
+3) Check lsunit (it's ok)
+4) Go back and check lsu (it's not ok)
+
+It seems to me that we should recognize either lsu or lsunit
+as the "one true value" and convert the other to it as soon as possible,
+rather than carrying around both, and checking both at various times.
+
+calc_stripe_factors() does do some validity checks; perhaps it should
+check against blocksize multiples as well, so it's all in one place?
+And a comment about what that function is doing (converting su's to
+sunit's, really) would be helpful.
+
+What do you think?
+
+Your patch does resolve the problem but I think it adds a little more
+confusion to already confusing code.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
