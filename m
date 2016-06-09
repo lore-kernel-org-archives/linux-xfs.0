@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 30D8C7CA1
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 15:41:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 191517CA0
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:06:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B112CAC003
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 13:41:25 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id pDrSCD4Jdt8iRTSL for <xfs@oss.sgi.com>;
-	Mon, 06 Jun 2016 13:41:23 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id A2C4322C5
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 15:41:23 -0500 (CDT)
-Subject: Re: [PATCH] mkfs: fix -l su minval
-References: <1465199729-8622-1-git-send-email-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b324a647-efc0-da18-02be-447c46abdb93@sandeen.net>
-Date: Mon, 6 Jun 2016 15:41:23 -0500
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CEF348F8033
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 09:06:08 -0700 (PDT)
+Received: from mail-io0-f182.google.com (mail-io0-f182.google.com
+	[209.85.223.182]) by cuda.sgi.com with ESMTP id
+	cZYuGEftKC0TCyWc (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 09:06:06 -0700 (PDT)
+Received: by mail-io0-f182.google.com with SMTP id 5so42025415ioy.1
+	for <xfs@oss.sgi.com>; Thu, 09 Jun 2016 09:06:06 -0700 (PDT)
+Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
+References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <575993EA.3010005@kernel.dk>
+Date: Thu, 9 Jun 2016 10:06:02 -0600
 MIME-Version: 1.0
-In-Reply-To: <1465199729-8622-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,55 +27,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ming Lei <ming.lei@canonical.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.com>, Sagi Grimberg <sagig@mellanox.com>, Steven Whitehouse <swhiteho@redhat.com>, linux-block@vger.kernel.org, Joe Thornber <ejt@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
 
-On 6/6/16 2:55 AM, Jan Tulak wrote:
-> -l su should be in range BBTOB(1) <= L_SU <= XLOG_MAX_RECORD_BSIZE, because the
-> upper limit is imposed by kernel on iclogbuf: stripe unit can't be bigger than
-> the log buffer, but the log buffer can span multiple stripe units. L_SUNIT is
-> changed in the same way.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On 05/30/2016 07:34 AM, Ming Lei wrote:
+> Hi,
+>
+> Interests[1] have been shown in multipage bvecs, so this patchset
+> try to prepare for the support and do two things:
+>
+> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
+> then we can drop the non-standard way for iterating bvec, which
+> can be thought as a good cleanup for lib/iov_iter.c
+>
+> 2) remove BIO_MAX_SECTORS and makre BIO_MAX_SIZE as obsolete, and
+> now there is only one user for each. Once multipage bvecs is introduced,
+> one bio may hold lots of sectors, and we should always use sort of
+> BIO_MAX_VECS which should be introduced in future and is similiar
+> with current BIO_MAX_PAGES.
+>
+> The only functional change is iterate_bvec():lib/iov_iter.c
+>
+> xfstests(-a auto) over loop aio is run for ext4/xfs to verify
+> the change and no regression found with this patchset.
 
-Manpage could use documentation on defaults, min, and max I suppose.
+Added patches 1-7, still waiting for an answer on my reply to #8.
 
-But for this code change:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Thanks for digging into it :)
-
-> ---
->  mkfs/xfs_mkfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 955dcfd..ed7800f 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -462,7 +462,7 @@ struct opt_params lopts = {
->  		{ .index = L_SUNIT,
->  		  .conflicts = { L_SU,
->  				 LAST_CONFLICT },
-> -		  .minval = BTOBB(XLOG_MIN_RECORD_BSIZE),
-> +		  .minval = 1,
->  		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
-> @@ -470,7 +470,7 @@ struct opt_params lopts = {
->  		  .conflicts = { L_SUNIT,
->  				 LAST_CONFLICT },
->  		  .convert = true,
-> -		  .minval = XLOG_MIN_RECORD_BSIZE,
-> +		  .minval = BBTOB(1),
->  		  .maxval = XLOG_MAX_RECORD_BSIZE,
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
-> 
+-- 
+Jens Axboe
 
 _______________________________________________
 xfs mailing list
