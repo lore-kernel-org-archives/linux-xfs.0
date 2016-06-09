@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 754E47CA0
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 23:40:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4725F8F8037
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 21:40:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4rjiPBtDTMYfjLT3 for <xfs@oss.sgi.com>;
-	Mon, 06 Jun 2016 21:39:59 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EA7B97CA0
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 08:27:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 62A18AC002
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 06:27:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MyXXDvoVKc4jKK3P (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 06:27:46 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id AA9E0B55
-	for <xfs@oss.sgi.com>; Mon,  6 Jun 2016 23:39:59 -0500 (CDT)
-Subject: Re: crash in xfs in current
-References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
-Date: Mon, 6 Jun 2016 23:39:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
+	by mx1.redhat.com (Postfix) with ESMTPS id 454E88F4F7
+	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 13:27:46 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH v2] mkfs: better error with incorrect b/s value suffix usage
+Date: Thu,  9 Jun 2016 15:27:41 +0200
+Message-Id: <1465478861-8714-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1465475195-19149-1-git-send-email-jtulak@redhat.com>
+References: <1465475195-19149-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,83 +29,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On 6/6/16 8:43 PM, Reinoud Koornstra wrote:
-> Dear Dave and Everyone,
-> 
-> Today I crashed twice in a row in 4.7-rc1.
-> This was the message and trace:
-> 
-> Jun  6 18:07:34 router-dev kernel: [  134.297442] XFS: Assertion failed: args->op_flags & XFS_DA_OP_OKNOENT, file: fs/xfs/libxfs/xfs_dir2_leaf.c, line: 1307
+If user writes a value using b or s suffix without explicitly stating the size
+of blocks or sectors, mkfs ends with a not helpful error about the value being
+too small. It happens because we read the physical geometry after all options
+are parsed.
 
-Ok, that ASSERT has been there since 2005 ...
+So, tell the user exactly what is wrong with the input.
 
-> Jun  6 18:07:34 router-dev kernel: [  134.297459] ------------[ cut here ]------------
-> Jun  6 18:07:34 router-dev kernel: [  134.297474] kernel BUG at fs/xfs/xfs_message.c:113!
-> Jun  6 18:07:34 router-dev kernel: [  134.297485] invalid opcode: 0000 [#1] SMP
-> Jun  6 18:07:34 router-dev kernel: [  134.297494] Modules linked in:
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
 
-... unlinewrapping...
+While adding entries into the mkfs input test, I found this issue, though it
+may be only a documentation thing. When I give some option block/sector suffix
+without specifying explicitly its size (for example, -l su=10b without -b
+size=4096), I get an error that value 10b is too small.  Of course it is,
+because, at the time, mkfs did not read physical geometry yet, so blocksize is
+0. And 10*0 = 0.
 
-> Jun  6 18:07:34 router-dev kernel: [  134.297962] Stack:
-> Jun  6 18:07:34 router-dev kernel: [  134.297967]  ffff8803f7ebbc40 ffffffffc0322277 ffff8803f7ebbc58 00000000ffffffff
-> Jun  6 18:07:34 router-dev kernel: [  134.297986]  ffff8803ffffffff ffff880414673840 ffff8803f610b000 0000000000000000
-> Jun  6 18:07:34 router-dev kernel: [  134.298004]  ffff880452bed380 0000000000000000 ffff003c00a7d2f1 00000000b56d2e47
-> Jun  6 18:07:34 router-dev kernel: [  134.298022] Call Trace:
-> Jun  6 18:07:34 router-dev kernel: [  134.298039] [<ffffffffc0322277>] xfs_dir2_leaf_lookup_int+0x237/0x350 [xfs]
-> Jun  6 18:07:34 router-dev kernel: [  134.298064] [<ffffffffc03229e1>] xfs_dir2_leaf_replace+0x41/0x190 [xfs]
-> Jun  6 18:07:34 router-dev kernel: [  134.298088] [<ffffffffc031c06c>] xfs_dir_replace+0x18c/0x1b0 [xfs]
-> Jun  6 18:07:34 router-dev kernel: [  134.298114] [<ffffffffc035653f>] xfs_rename+0x45f/0x9d0 [xfs]
-> Jun  6 18:07:34 router-dev kernel: [  134.298155] [<ffffffffc034f892>] xfs_vn_rename+0xb2/0xe0 [xfs]
-> Jun  6 18:07:34 router-dev kernel: [  134.298169] [<ffffffff8122e824>] vfs_rename+0x5a4/0x940
-> Jun  6 18:07:34 router-dev kernel: [  134.298195] [<ffffffff81233475>] SyS_rename+0x3d5/0x3f0
-> Jun  6 18:07:34 router-dev kernel: [  134.298207] [<ffffffff819cd236>] entry_SYSCALL_64_fastpath+0x1e/0xa8
-> Jun  6 18:07:34 router-dev kernel: [  134.298221] Code: 00 66 2e 0f 1f
+I think that this is not something we need to change, but it should be better
+documented. Maybe not manpage (where it can be overlooked if not written to
+every option using the size and it might be that it already is somewhere down
+there), but an error message should warn the user in case of using b or s
+suffix incorrectly.
 
+I'm open to suggestions for a better solution, though.
 
-> I seem to be able to hit this bug rather frequently.
-> So I put in some instrumentation to print out the flags next time I
-> hit it and save a core file to another fs.
-> Is this is known bug to you or?
+UPDATE:
+Add { and } to fix a gcc warning about ambigious else branch.
 
-xfs_dir2_leaf_lookup_int() only hits that ASSERT if it was given
-a name to rename, and failed to find the original.  i.e. that should
-not happen.
+Cheers,
+Jan
+---
+ mkfs/xfs_mkfs.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-        /*
-         * Loop over all the entries with the right hash value
-         * looking to match the name.
-         */
-
-<do that loop>
-<fail to find the hash value for the name>
-<then:>
-
-        ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
-        /*
-         * Here, we can only be doing a lookup (not a rename or remove).
-         * If a case-insensitive match was found earlier, re-read the
-         * appropriate data block if required and return it.
-         */
-
-A rename should never fail to find the original name.
-
-Did this problem only show up after an update?
-
-Do you have a reproducer?
-
-Have you unmounted and run an "xfs_repair -n" and captured the output
-to see if there is any on-disk corruption?
-
-You might gather an xfs_metadump as well, before you do any live
-repair that might change the filesystem.
-
--Eric
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index ed7800f..455bf11 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3614,10 +3614,24 @@ cvtnum(
+ 	if (sp[1] != '\0')
+ 		return -1LL;
+ 
+-	if (*sp == 'b')
+-		return i * blksize;
+-	if (*sp == 's')
+-		return i * sectsize;
++	if (*sp == 'b') {
++		if (!blksize) {
++			fprintf(stderr,
++_("Blocksize must be explicitly provided when using 'b' suffix.\n"));
++			usage();
++		} else {
++			return i * blksize;
++		}
++	}
++	if (*sp == 's') {
++		if (!sectsize) {
++			fprintf(stderr,
++_("Sectorsize must be explicitly provided when using 's' suffix.\n"));
++			usage();
++		} else {
++			return i * sectsize;
++		}
++	}
+ 
+ 	c = tolower(*sp);
+ 	switch (c) {
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
