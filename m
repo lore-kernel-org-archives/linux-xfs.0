@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 624757CA0
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 17:58:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5F6F97CA0
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 04:27:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27FFC304051
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 15:58:05 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	VCqdc3pojoWjmSH0 for <xfs@oss.sgi.com>;
-	Thu, 09 Jun 2016 15:58:02 -0700 (PDT)
-Date: Fri, 10 Jun 2016 08:57:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: add an option to enable reflinks at mount time
-Message-ID: <20160609225742.GZ26977@dastard>
-References: <1464877150-20457-1-git-send-email-hch@lst.de>
-	<1464877150-20457-4-git-send-email-hch@lst.de>
-	<20160606112342.GB23695@redhat.com>
-	<20160608070459.GC18458@infradead.org>
-	<20160608080703.GA8987@redhat.com>
-	<20160608081007.GB8987@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160608081007.GB8987@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31B268F8033
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 02:27:16 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hs71pt1pyxn0hUJy (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 10 Jun 2016 02:27:14 -0700 (PDT)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH v2] mkfs: test that -l su is a multiple of block size
+Date: Fri, 10 Jun 2016 11:27:09 +0200
+Message-Id: <1465550829-8066-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1465479700-14111-1-git-send-email-jtulak@redhat.com>
+References: <1465479700-14111-1-git-send-email-jtulak@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +23,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, hch@infradead.org
+To: xfs@oss.sgi.com
+Cc: sandeen@sandeen.net, Jan Tulak <jtulak@redhat.com>
 
-On Wed, Jun 08, 2016 at 10:10:07AM +0200, Carlos Maiolino wrote:
-> On Wed, Jun 08, 2016 at 10:07:03AM +0200, Carlos Maiolino wrote:
-> > On Wed, Jun 08, 2016 at 12:04:59AM -0700, Christoph Hellwig wrote:
-> > > Yes, the comment is wrong.  Any reason you didn't include me in the
-> > > reply?  Also it seems your reply-to also magically drops you
-> > > from the reply.  Are you using a new mailer? :)
-> > 
-> > No, no reason, I missed to CC you. Maybe my CTRL-L list-reply in mutt screwed up
-> > with the destination fields, I should come back to group replies, thanks for the
-> > heads up :)
-> 
-> Oh crap, I did it again, ok, no more list-reply for me
+lsunit was already tested, but lsu was not. So a thing like -l su=4097 was
+possible. This commit adds a check to catch this, and moves the entire
+lsu/lsunit block size testing to calc_stripe_factors(), where already is some
+logic w.r.t. lsu/lsunit.
 
-If you are using mutt, then just use "g" for group reply. I've never
-used anything else - it just does the right thing. I didn't even
-know that "list-reply" was something that people used....
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+UPDATE:
+Moving the checks to calc_stripe_factors().
 
-Cheers,
+An example of previously failing options:
+ mkfs.xfs -f -dfile,name=fsfile,size=128m -l su=16385
+---
+ mkfs/xfs_mkfs.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-Dave.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 6059d91..b8f6b89 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -726,6 +726,9 @@ struct opt_params mopts = {
+  */
+ #define WHACK_SIZE (128 * 1024)
+ 
++/*
++ * Convert lsu to lsunit for 512 bytes blocks and check validity of the values.
++ */
+ static void
+ calc_stripe_factors(
+ 	int		dsu,
+@@ -775,6 +778,20 @@ calc_stripe_factors(
+ 
+ 	if (lsu)
+ 		*lsunit = (int)BTOBBT(lsu);
++
++	/* verify if lsu/lsunit is a multiple block size */
++	if (lsu % blocksize != 0) {
++		fprintf(stderr,
++_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
++		lsu, blocksize);
++		exit(1);
++	}
++	if ((BBTOB(*lsunit) % blocksize != 0)) {
++		fprintf(stderr,
++_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
++		BBTOB(*lsunit), blocksize);
++		exit(1);
++	}
+ }
+ 
+ /*
+@@ -2862,12 +2879,6 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 	 */
+ 
+ 	if (lsunit) {
+-		if ((BBTOB(lsunit) % blocksize != 0)) {
+-			fprintf(stderr,
+-	_("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
+-			BBTOB(lsunit), blocksize);
+-			exit(1);
+-		}
+ 		/* convert from 512 byte blocks to fs blocks */
+ 		lsunit = DTOBT(lsunit);
+ 	} else if (sb_feat.log_version == 2 && loginternal && dsunit) {
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.5
 
 _______________________________________________
 xfs mailing list
