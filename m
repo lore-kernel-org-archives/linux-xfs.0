@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EA7B97CA0
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 08:27:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 62A18AC002
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 06:27:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MyXXDvoVKc4jKK3P (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 06:27:46 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 454E88F4F7
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 13:27:46 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH v2] mkfs: better error with incorrect b/s value suffix usage
-Date: Thu,  9 Jun 2016 15:27:41 +0200
-Message-Id: <1465478861-8714-1-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1465475195-19149-1-git-send-email-jtulak@redhat.com>
-References: <1465475195-19149-1-git-send-email-jtulak@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C1AF27CA0
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 13:12:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 962C0304051
+	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 11:12:43 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ahrjQLOJhmLAr74N for <xfs@oss.sgi.com>;
+	Fri, 10 Jun 2016 11:12:39 -0700 (PDT)
+Subject: Re: [PATCH 0/4] xfs: online relabeling [RFC]
+References: <c1922d3d-208c-3699-0a36-26108a4f44de@sandeen.net>
+	<2305b486-f336-6d1e-9420-b69dc5bdc572@sandeen.net>
+	<20160610121936.GC21568@bfoster.bfoster>
+	<20160610164157.GA11810@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7bb93415-d08c-29e8-df68-1665d7f39581@sandeen.net>
+Date: Fri, 10 Jun 2016 13:12:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160610164157.GA11810@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,83 +26,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-If user writes a value using b or s suffix without explicitly stating the size
-of blocks or sectors, mkfs ends with a not helpful error about the value being
-too small. It happens because we read the physical geometry after all options
-are parsed.
 
-So, tell the user exactly what is wrong with the input.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
+On 6/10/16 11:41 AM, Darrick J. Wong wrote:
+> On Fri, Jun 10, 2016 at 08:19:36AM -0400, Brian Foster wrote:
+>> On Thu, Jun 09, 2016 at 11:51:12AM -0500, Eric Sandeen wrote:
+>>>
+>>>
+>>> On 6/9/16 11:36 AM, Eric Sandeen wrote:
+>>>> Ok, this more or less works; not really up to snuff
+>>>> for submission or merging, just sketching it out, but some
+>>>> questions first:
+>>>>
+>>>> 1) Is there really any point to this? :) We did have one
+>>>>    request, and btrfs can do it ...
+>>>>
+>>
+>> Seems reasonable to me. Any details on the use case for the request?
+>>
+>>>> 2) Is using m_growlock horrible?  growfs is the only other
+>>>>    thing that writes all supers, so I grabbed it.  We don't
+>>>>    want multiple relabels stepping on each other.
+>>>>
+>>>> 3) Is there some way to actually force the primary to disk?
+>>>>    Right now the label change isn't actually visible on the
+>>>>    primary until unmount, which defeats the purpose.  I'm not
+>>>>    sure if there's a straightforward/safe way to make it
+>>>>    visible...
+>>>
+>>
+>>> Oh, sorry - I guess it is getting written out, but it's only
+>>> available via an O_DIRECT read from userspace; it's not
+>>> invalidating the cache.
+>>>
+>>> # io/xfs_io -c "label derp" /mnt/test
+>>> label = "derp"
+>>>
+>>> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
+>>> ...
+>>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
+>>> ...
+>>>
+>>> # dd if=/dev/sdb2 iflag=direct bs=512 count=1 | hexdump -C
+>>> ...
+>>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 64 65 72 70  |............derp|
+>>> ...
+>>>
+>>> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
+>>> ...
+>>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
+>>> ...
+>>>
+>>> Guess I need to think about this some more.
+>>>
+>>
+>> Isn't this to be expected? You're directly accessing the block device of
+>> a mounted filesystem. I would think this is expected behavior, so long
+>> as the set/get interfaces through the fs are consistent.
+> 
+> Trouble is, I bet blkid prints LABEL=foo here and not LABEL=derp as
+> the admin is probably expecting.
 
-While adding entries into the mkfs input test, I found this issue, though it
-may be only a documentation thing. When I give some option block/sector suffix
-without specifying explicitly its size (for example, -l su=10b without -b
-size=4096), I get an error that value 10b is too small.  Of course it is,
-because, at the time, mkfs did not read physical geometry yet, so blocksize is
-0. And 10*0 = 0.
+exactly.
 
-I think that this is not something we need to change, but it should be better
-documented. Maybe not manpage (where it can be overlooked if not written to
-every option using the size and it might be that it already is somewhere down
-there), but an error message should warn the user in case of using b or s
-suffix incorrectly.
+And FWIW, when btrfs does it, it *is* visible.
 
-I'm open to suggestions for a better solution, though.
+> /me wonders if invalidate_inode_pages2_range here would help?
 
-UPDATE:
-Add { and } to fix a gcc warning about ambigious else branch.
+Um, not sure.  Calling that against metadata from xfs feels a bit
+bizarre...
 
-Cheers,
-Jan
----
- mkfs/xfs_mkfs.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index ed7800f..455bf11 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3614,10 +3614,24 @@ cvtnum(
- 	if (sp[1] != '\0')
- 		return -1LL;
- 
--	if (*sp == 'b')
--		return i * blksize;
--	if (*sp == 's')
--		return i * sectsize;
-+	if (*sp == 'b') {
-+		if (!blksize) {
-+			fprintf(stderr,
-+_("Blocksize must be explicitly provided when using 'b' suffix.\n"));
-+			usage();
-+		} else {
-+			return i * blksize;
-+		}
-+	}
-+	if (*sp == 's') {
-+		if (!sectsize) {
-+			fprintf(stderr,
-+_("Sectorsize must be explicitly provided when using 's' suffix.\n"));
-+			usage();
-+		} else {
-+			return i * sectsize;
-+		}
-+	}
- 
- 	c = tolower(*sp);
- 	switch (c) {
--- 
-2.5.5
+-Eric
 
 _______________________________________________
 xfs mailing list
