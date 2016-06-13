@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8BD547CA0
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 06:53:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FA7D304053
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 04:53:37 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id nJJfHQoyOdRUj47F (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 04:53:34 -0700 (PDT)
-Date: Wed, 8 Jun 2016 13:53:35 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: determining superblock version?
-Message-ID: <20160608135335.24cde291@harpe.intellique.com>
-In-Reply-To: <ded753a1-8bf2-2071-da8a-ec6939846ab0@sandeen.net>
-References: <20160607125127.6dd23aef@harpe.intellique.com>
-	<ded753a1-8bf2-2071-da8a-ec6939846ab0@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 0FAEC7CA2
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 13:37:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C94BA304048
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 11:37:34 -0700 (PDT)
+Received: from shadbolt.e.decadent.org.uk (shadbolt.e.decadent.org.uk
+	[88.96.1.126]) by cuda.sgi.com with ESMTP id Zx1FQ4vcNpm6RR51
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Jun 2016 11:37:32 -0700 (PDT)
+Content-Disposition: inline
 MIME-Version: 1.0
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 13 Jun 2016 19:36:37 +0100
+Message-ID: <lsq.1465842997.496189698@decadent.org.uk>
+Subject: [PATCH 3.16 092/114] xfs: use i_mmaplock on read faults
+In-Reply-To: <lsq.1465842997.838358341@decadent.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,27 +25,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org
 
-TGUgVHVlLCA3IEp1biAyMDE2IDEyOjEyOjIxIC0wNTAwCkVyaWMgU2FuZGVlbiA8c2FuZGVlbkBz
-YW5kZWVuLm5ldD4gw6ljcml2YWl0OgoKPiA+IG1rZnMueGZzIC1tIGNyYz0wLGZpbm9idD0wIC9k
-ZXYvdGhpcyAgCj4gCj4gZmlub2J0PTAgc2hvdWxkIG5vdCBiZSBuZWVkZWQsIGl0IHNob3VsZCBi
-ZSBvZmYgaWYgY3JjPTAgQUZBSUsuCgpZZXMsIHRoYXQgaXMgaW4gdGhlIG1hbnBhZ2UgOikKIAo+
-IEhvd2V2ZXIsIC1uIGZ0eXBlPTEgbWF5IHN0aWxsIGJlIGVuYWJsZWQsIGFuZCBvbGRlciBrZXJu
-ZWxzIG1heSBoYXZlCj4gYW4gaXNzdWUgd2l0aCB0aGF0IGFzIHdlbGwuCj4gCgpJJ2xsIGdpdmUg
-aXQgYSB0cnkuCgo+IEZlZWwgZnJlZSB0byBhZGQgdGhpcyB0byB0aGUgd2lraSAoY2FuIG5ldyBh
-Y2NvdW50cyBzdGlsbCBiZSBjcmVhdGVkPykKCkkgZG9uJ3Qga25vdywgd2hvJ3MgaW4gY2hhcmdl
-PyBJJ20gcHJldHR5IHN1cmUgSSBoYXZlbid0IGdvdCBvbmUuCgotLSAKLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-CkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAg
-ICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50
-ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+3.16.36-rc1 review patch.  If anyone has any objections, please let me know.
+
+------------------
+
+From: Dave Chinner <dchinner@redhat.com>
+
+commit de0e8c20ba3a65b0f15040aabbefdc1999876e6b upstream.
+
+Take the i_mmaplock over read page faults. These come through the
+->fault callout, so we need to wrap the generic implementation
+with the i_mmaplock. While there, add tracepoints for the read
+fault as it passes through XFS.
+
+This gives us a lock order of mmap_sem -> i_mmaplock -> page_lock
+-> i_lock.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: Jan Kara <jack@suse.cz>
+Cc: xfs@oss.sgi.com
+---
+ fs/xfs/xfs_file.c  | 28 +++++++++++++++++++++++++++-
+ fs/xfs/xfs_trace.h |  2 ++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1417,6 +1417,32 @@ xfs_file_llseek(
+ 	}
+ }
+ 
++/*
++ * Locking for serialisation of IO during page faults. This results in a lock
++ * ordering of:
++ *
++ * mmap_sem (MM)
++ *   i_mmap_lock (XFS - truncate serialisation)
++ *     page_lock (MM)
++ *       i_lock (XFS - extent map serialisation)
++ */
++STATIC int
++xfs_filemap_fault(
++	struct vm_area_struct	*vma,
++	struct vm_fault		*vmf)
++{
++	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
++	int			error;
++
++	trace_xfs_filemap_fault(ip);
++
++	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
++	error = filemap_fault(vma, vmf);
++	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
++
++	return error;
++}
++
+ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read		= new_sync_read,
+@@ -1449,7 +1475,7 @@ const struct file_operations xfs_dir_fil
+ };
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops = {
+-	.fault		= filemap_fault,
++	.fault		= xfs_filemap_fault,
+ 	.map_pages	= filemap_map_pages,
+ 	.page_mkwrite	= xfs_vm_page_mkwrite,
+ 	.remap_pages	= generic_file_remap_pages,
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -684,6 +684,8 @@ DEFINE_INODE_EVENT(xfs_inode_set_eofbloc
+ DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ 
++DEFINE_INODE_EVENT(xfs_filemap_fault);
++
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+ 	TP_ARGS(ip, caller_ip),
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
