@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C8067CA0
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:28:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE8EEAC002
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 22:28:41 -0700 (PDT)
-Received: from 1wt.eu (wtarreau.pck.nerim.net [62.212.114.60]) by cuda.sgi.com
-	with ESMTP id qAs5nM5C3E32IDNi for <xfs@oss.sgi.com>;
-	Tue, 14 Jun 2016 22:28:38 -0700 (PDT)
-Date: Wed, 15 Jun 2016 07:28:31 +0200
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: Something badly broken with the latest XFS changeset in all
-	stable kernels?
-Message-ID: <20160615052831.GA3452@1wt.eu>
-References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C849E7CA0
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 10:49:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B817304032
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 08:49:10 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id kMKF5L7FgnVW1XNp for <xfs@oss.sgi.com>;
+	Mon, 13 Jun 2016 08:49:03 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 74890B55
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 10:49:03 -0500 (CDT)
+Subject: Re: Metadata corruption
+References: <7494383b-a153-7a79-b872-42ac6506ac9e@gmail.com>
+	<20160613112738.GA4730@bfoster.bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <eac741bb-72d4-8f73-1d7d-2db456768fe9@sandeen.net>
+Date: Mon, 13 Jun 2016 10:49:02 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160615013056.GA23074@kroah.com>
+In-Reply-To: <20160613112738.GA4730@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg KH <greg@kroah.com>
-Cc: "Thomas D." <whissi@whissi.de>, spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jun 14, 2016 at 06:30:56PM -0700, Greg KH wrote:
-> As the patch was tagged with 3.10+, I assumed that it was safe to be
-> merged to those older kernels, otherwise I would never have done so.  We
-> do have ways to mark external things like this for stable patches, it's
-> a great help when doing backports.
 
-I guess only 3.14.72 was affected in the end. 3.18.35 has the fix but my
-understanding is that after 3.17 it's OK. Apparently it's not yet queued
-for 3.16. Jiri has queued it for 3.12 but not yet released it. For 3.10
-I only pick patches that are already in a 3.14 release so I didn't have
-the time to backport it to 3.10 yet as the preview started before the
-release. Overall the regression lived only 8 days in a single branch, I
-guess it shows that our process works rather well and limits the exposure
-to regressions.
 
-Brad, it would have been nice to report it to the stable team especially
-since you rely on these kernels for yours as well.
+On 6/13/16 6:27 AM, Brian Foster wrote:
+> On Mon, Jun 13, 2016 at 09:27:57AM +0300, Martin Aleksov wrote:
+>> HiThere,
+>>
+>> I'm using XFS on Arch linux.Each 2 days I'm receiving this error:
+>>
+>>
+>> Metadata corruption detected at xfs_inode block 0x5bd20/0x8000
+>>
+>> while doing this:
+>>
+>>
+>> [martin@marto ~]$ sudo xfs_db -c frag -r /dev/sda2
+> 
+> sda2 is your root filesystem.. so I assume the filesystem is mounted
+> when you run this? If so, this type of thing could be expected. Do you
+> see errors in the logs otherwise? If not, I'd suggest to repeat this
+> from a ramdisk or boot/recovery disk where the filesystem isn't mounted
+> to confirm.
 
-Regards,
-Willy
+That's probably it.  In addition, I would suggest not
+running the frag command, as it is largely useless:
+
+http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.27m_over_50.25._Is_that_bad.3F
+
+-Eric
 
 _______________________________________________
 xfs mailing list
