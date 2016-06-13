@@ -1,26 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E72E7CA2
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 17:37:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 605A97CA0
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 16:58:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 31C388F8037
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 15:37:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qDxmj5BBsyEFQngQ for <xfs@oss.sgi.com>;
-	Fri, 24 Jun 2016 15:37:12 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 8D439541
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 17:37:11 -0500 (CDT)
-Subject: Re: Some xfstests failures on non-crc xfs with latest xfsprogs
-	(v4.5.0-rc1)
-References: <20160304112354.GX11419@eguan.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <727b405b-7df2-641a-d4d0-24333e003374@sandeen.net>
-Date: Fri, 24 Jun 2016 17:37:10 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DEE12AC004
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 14:58:03 -0700 (PDT)
+Received: from yamato.tf-network.de (yamato.tf-network.de [93.186.202.221]) by
+	cuda.sgi.com with ESMTP id AQ6GjxI9rUSpWHMB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 13 Jun 2016 14:57:56 -0700 (PDT)
+Received: from amavis3.tf-network.de ([IPv6:2001:4ba0:ffa0:1b::d1:221])
+	by yamato.tf-network.de (Postfix) with ESMTP id 3rT68f6m53z45m1
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
+Received: from smtp.tf-network.de ([93.186.202.221])
+	by amavis3.tf-network.de ([IPv6:2001:4ba0:ffa0:1b::d1:221])
+	(amavisd-new, port 10024)
+	with LMTP id JeBIUkEnd1eZ for <xfs@oss.sgi.com>;
+	Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
+Received: from [192.168.2.10] (pD9F15652.dip0.t-ipconnect.de [217.241.86.82])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
+	bits)) (No client certificate requested)
+	by smtp.tf-network.de (Postfix) with ESMTPSA id 3rT68f18LTz45ls
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
+From: "Thomas D." <whissi@whissi.de>
+Subject: Something badly broken with the latest XFS changeset in all stable
+	kernels?
+Message-ID: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
+Date: Mon, 13 Jun 2016 23:57:53 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160304112354.GX11419@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,56 +42,58 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 3/4/16 5:23 AM, Eryu Guan wrote:
-> Hi,
+Hi,
+
+can anybody confirm if there's something broken with the latest XFS
+change set which is now applied on all stable kernels?
+
+I found https://forums.grsecurity.net/viewtopic.php?t=4489&p=16355 and
+grsec changelog says
+
+> commit 1f621dc42acbabb71bd69f6ba606cee56e7ad3bc
+> Author: Brad Spengler <spender@grsecurity.net>
+> Date:   Sat Jun 11 08:14:32 2016 -0400
 > 
-> I noticed some xfstests failures while testing v4 XFS with latest
-> v4.5.0-rc1 xfsprogs on v4.5-rc6 kernel, and all these failures are gone
-> if I use v3.2.4 xfsprogs, or if test on v5 XFS.
+>     Fix Greg KH's broken XFS backport, caused a benign case to be detected
+>     as disk corruption
+>     Problem was due to a tree-wide conversion of error codes to their negative
+>     counterparts, which would likely never be backported to older kernels, but
+>     the backports didn't account for the change
 > 
-> So either xfstests needs update or xfsprogs breaks something for non-crc
-> XFS. But I'm not sure which is which, so I post them out for broader
-> review.
-> 
-> (All tests are checked with 'MKFS_OPTIONS="-m crc=0" ./check <sometest>')
+>  fs/xfs/xfs_inode.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Eryu, sorry you didn't get a reply on this in March.  We should have
-listened!  ;)  The patches I sent in the pat day or two should
-fix some of these ...
+This is the change grsec applied:
 
-> == 1. xfs/032 fsck failure (xfs_db check) on ppc64 host ==
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index fb8579d..af807d8 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3098,7 +3111,7 @@ xfs_iflush(
+>  	 */
+>  	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
+>  			       0);
+> -	if (error == -EAGAIN) {
+> +	if (error == EAGAIN) {
+>  		xfs_ifunlock(ip);
+>  		return error;
+>  	}
 
-but not this one.  Do you still see this?
+The bad commit according to grsec's statement is
 
-> == 2. xfs/033 fsck failure ==
-> 
-> xfs_repair detects more nlinks error. And this happens after commit
-> "c2c5096 libxfs: update to 3.16 kernel code"
+> From b1438f477934f5a4d5a44df26f3079a7575d5946 Mon Sep 17 00:00:00 2001
+> From: Dave Chinner <dchinner@redhat.com>
+> Date: Wed, 18 May 2016 13:53:42 +1000
+> Subject: [PATCH] xfs: xfs_iflush_cluster fails to abort on error
 
-this should be fixed by
-[PATCH] xfs_repair: set rsumino version to 2
- 
-> == 3. xfs/108 xfs/196 xfs/261 xfs/244 fsck failure. ==
+Would be nice to get some clarification.
 
-this should be fixed by
-[PATCH] xfs_repair: don't call xfs_sb_quota_from_disk twice
+Thanks.
 
-although I'm not sure about the ppc-specific failure.
- 
-> These tests fail in a similiar way, and they are all quota related.
-> Note that xfs/244 only fails on ppc64, others fail on all arches.
 
-> == 4. xfs/186 xfs/187 attr test failure ==
-> 
-> xfs/186 is missing almost all the attr values.
-
-[PATCH] xfs/186: fix test for crc=0, ftype=1
-
-> xfs/187 reports test needs update.
-
-Not sure on this one yet.
-
--Eric
+-- 
+Regards,
+Thomas
 
 _______________________________________________
 xfs mailing list
