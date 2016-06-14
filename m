@@ -1,21 +1,20 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3EA727CA2
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 05:14:01 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4D0247CA0
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 15:51:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 106F9304032
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 03:13:58 -0700 (PDT)
-Received: from mail-vk0-f67.google.com (mail-vk0-f67.google.com
-	[209.85.213.67]) by cuda.sgi.com with ESMTP id kfjZc4TRBWAickTd
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Jun 2016 03:13:56 -0700 (PDT)
-Received: by mail-vk0-f67.google.com with SMTP id k2so7437313vkb.0
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 03:13:56 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E7FC30405F
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 13:51:33 -0700 (PDT)
+Received: from s18564588.onlinehome-server.info
+	(s18564588.onlinehome-server.info [212.227.86.227]) by
+	cuda.sgi.com with ESMTP id YTm6Blmk9lsSY1hS (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 14 Jun 2016 13:51:30 -0700 (PDT)
+From: <thomas@fjellstrom.ca>
+Subject: recent photos
+Date: Tue, 14 Jun 2016 23:09:42 +0300
+Message-ID: <00006044b145$8783a721$bdcb090a$@fjellstrom.ca>
 MIME-Version: 1.0
-From: Shi Summer <zbvesa@gmail.com>
-Date: Thu, 16 Jun 2016 18:13:55 +0800
-Message-ID: <CAEAEqMot6rqv6ZkiZVBYP9XykDV7WycYXtnDGHOBnrpe48qxnA@mail.gmail.com>
-Subject: Premium Grade A 11 Oz. White Sublimation Mugs
+Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,41 +23,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7698013898142283998=="
+Content-Type: multipart/mixed; boundary="===============2108042800863809524=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: zubaidahsabran@gmail.com, zonerouge@montrealalouettes.com, zapatayavonne@gmail.com, zamzamimpex@hotmail.com, zakup@poltronic.eu, zahran2371@yahoo.com.tq, zafikeloanfirm88@gmail.com, yolandaanimo225@hotmail.com, Yolanda926@outlook.com, Yolanda@hai-di.com, yevmar@gmail.com, yanielncc@gmail.com, yanie_lncc88@gmail.com, yahyayavas@hotmail.com, xytota14@yahoo.com, xytota@yahoo.com, xytota@gmail.com, xuan@ipcgifts.com, xtarantulz@mail.ru, xfs@oss.sgi.com, xcopyfullerton@gmail.com, wzincker@hotmail.com, wwisewin@gmail.com, wuc4371@gmail.com
+To: xemul <xemul@parallels.com>, xen-devel <xen-devel@lists.xenproject.org>, xfs <xfs@oss.sgi.com>, xiakaixu <xiakaixu@huawei.com>, "xiaofeng.yan" <xiaofeng.yan@huawei.com>
 
---===============7698013898142283998==
-Content-Type: multipart/alternative; boundary=001a11353092e7f6200535627ebe
+This is a multipart message in MIME format.
 
---001a11353092e7f6200535627ebe
-Content-Type: text/plain; charset=UTF-8
+--===============2108042800863809524==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_0001_1DBC46AE.52935B68"
+Content-Language: en-us
 
-Dear friends,
-Glad to hear that you are on the market for sublimation mugs and
-sublimation printing.
-We are the manufacturer of the items, we can supply high quality and
-competitive price.
-kindly contact me if any questions.
+This is a multipart message in MIME format.
 
-Best regards,
+------=_NextPart_000_0001_1DBC46AE.52935B68
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-Summer
+Hi,
 
---001a11353092e7f6200535627ebe
-Content-Type: text/html; charset=UTF-8
+I've got those photos from our last meeting, just take a look <http://hislechypo.cincoranchhomevalue.com/aevzzepz>
 
-<div dir="ltr"><p>Dear friends,<br>Glad to hear that you are on the market for sublimation mugs 
-and sublimation printing.<br>We are the manufacturer of the items, we can supply 
-high quality and competitive price. <br>kindly contact me if any questions. </p>
-<p>Best regards,</p>
-<p>Summer</p></div>
-
---001a11353092e7f6200535627ebe--
+Kind regards, thomas@fjellstrom.ca
 
 
---===============7698013898142283998==
+------=_NextPart_000_0001_1DBC46AE.52935B68
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas=
+-microsoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:off=
+ice:word" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"=
+ xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META HTTP-EQUIV=3D"C=
+ontent-Type" CONTENT=3D"text/html; charset=3Dus-ascii"><meta name=3DGe=
+nerator content=3D"Microsoft Word 15 (filtered medium)"><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-fareast-language:EN-US;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri",sans-serif;
+	color:windowtext;}
+=2EMsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri",sans-serif;
+	mso-fareast-language:EN-US;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:2.0cm 42.5pt 2.0cm 3.0cm;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DEN link=3D"#0563=
+C1" vlink=3D"#954F72"><div class=3DWordSection1><p class=3DMsoNormal><=
+span lang=3DEN-US>Hi,<o:p></o:p></span></p><p class=3DMsoNormal><span =
+lang=3DEN-US><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><span la=
+ng=3DEN-US>I've got those photos from our last meeting, just take a lo=
+ok <a href=3D"http://hislechypo.cincoranchhomevalue.com/aevzzepz">http=
+://hislechypo.cincoranchhomevalue.com/aevzzepz</a><o:p></o:p></span></=
+p><p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>=
+<p class=3DMsoNormal><span lang=3DEN-US>Kind regards, thomas@fjellstro=
+m.ca<o:p></o:p></span></p></div></body></html>
+
+------=_NextPart_000_0001_1DBC46AE.52935B68--
+
+
+--===============2108042800863809524==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -69,4 +123,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7698013898142283998==--
+--===============2108042800863809524==--
