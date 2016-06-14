@@ -1,33 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 605A97CA0
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 16:58:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DEE12AC004
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 14:58:03 -0700 (PDT)
-Received: from yamato.tf-network.de (yamato.tf-network.de [93.186.202.221]) by
-	cuda.sgi.com with ESMTP id AQ6GjxI9rUSpWHMB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 13 Jun 2016 14:57:56 -0700 (PDT)
-Received: from amavis3.tf-network.de ([IPv6:2001:4ba0:ffa0:1b::d1:221])
-	by yamato.tf-network.de (Postfix) with ESMTP id 3rT68f6m53z45m1
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
-Received: from smtp.tf-network.de ([93.186.202.221])
-	by amavis3.tf-network.de ([IPv6:2001:4ba0:ffa0:1b::d1:221])
-	(amavisd-new, port 10024)
-	with LMTP id JeBIUkEnd1eZ for <xfs@oss.sgi.com>;
-	Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
-Received: from [192.168.2.10] (pD9F15652.dip0.t-ipconnect.de [217.241.86.82])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
-	bits)) (No client certificate requested)
-	by smtp.tf-network.de (Postfix) with ESMTPSA id 3rT68f18LTz45ls
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 23:57:54 +0200 (CEST)
-From: "Thomas D." <whissi@whissi.de>
-Subject: Something badly broken with the latest XFS changeset in all stable
-	kernels?
-Message-ID: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-Date: Mon, 13 Jun 2016 23:57:53 +0200
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F29437CA4
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 13:13:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C45C98F8052
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 11:13:22 -0700 (PDT)
+Received: from g9t5009.houston.hpe.com (g9t5009.houston.hpe.com
+	[15.241.48.73]) by cuda.sgi.com with ESMTP id RZzunPrPUdV1sb64
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 14 Jun 2016 11:13:19 -0700 (PDT)
+From: Waiman Long <Waiman.Long@hpe.com>
+Subject: [RFC PATCH-tip 0/6] locking/rwsem: Enable reader optimistic spinning
+Date: Tue, 14 Jun 2016 14:12:33 -0400
+Message-Id: <1465927959-39719-1-git-send-email-Waiman.Long@hpe.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,64 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>
+Cc: linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, Davidlohr Bueso <dave@stgolabs.net>, linux-ia64@vger.kernel.org, Scott J Norton <scott.norton@hpe.com>, x86@kernel.org, linux-kernel@vger.kernel.org, Waiman Long <Waiman.Long@hpe.com>, xfs@oss.sgi.com, linux-alpha@vger.kernel.org, Douglas Hatch <doug.hatch@hpe.com>, Jason Low <jason.low2@hp.com>
 
-Hi,
+This patchset adds an option to enable more aggressive optimistic
+spinning on both readers and writers waiting on a writer or reader
+owned lock. Spinning on writer is done by looking at the on_cpu
+flag of the lock owner. Spinning on readers, on the other hand, is
+count-based as there is no easy way to figure out if all the readers
+are running. The spinner will stop spinning once the count goes to
+0. Because of that, spinning on readers may hurt performance in some
+cases. So this feature is optional and has to explicitly enabled for
+those rwsems where the readers are unlikely to go to sleep.
 
-can anybody confirm if there's something broken with the latest XFS
-change set which is now applied on all stable kernels?
+Patch 1 reduces the length of the blocking window after a read locking
+attempt where writer lock stealing is disabled because of the active
+read lock. It can improve rwsem performance for contended lock. It is
+independent of the rest of the patchset.
 
-I found https://forums.grsecurity.net/viewtopic.php?t=4489&p=16355 and
-grsec changelog says
+Patches 2-5 lays the groundwork for enabling reader optimistic spinning.
 
-> commit 1f621dc42acbabb71bd69f6ba606cee56e7ad3bc
-> Author: Brad Spengler <spender@grsecurity.net>
-> Date:   Sat Jun 11 08:14:32 2016 -0400
-> 
->     Fix Greg KH's broken XFS backport, caused a benign case to be detected
->     as disk corruption
->     Problem was due to a tree-wide conversion of error codes to their negative
->     counterparts, which would likely never be backported to older kernels, but
->     the backports didn't account for the change
-> 
->  fs/xfs/xfs_inode.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Patch 6 enables reader optimistic spinning in XFS for inodes that
+comes from a DAX-enabled mount point on top of persistent memory as
+the CPUs can do I/O directly without waiting or sleeping.
 
-This is the change grsec applied:
+Waiman Long (6):
+  locking/rwsem: Stop active read lock ASAP
+  locking/rwsem: Enable optional count-based spinning on reader
+  locking/rwsem: move down rwsem_down_read_failed function
+  locking/rwsem: Change RWSEM_WAITING_BIAS for better disambiguation
+  locking/rwsem: Enable spinning readers
+  xfs: Enable reader optimistic spinning for DAX inodes
 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index fb8579d..af807d8 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3098,7 +3111,7 @@ xfs_iflush(
->  	 */
->  	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
->  			       0);
-> -	if (error == -EAGAIN) {
-> +	if (error == EAGAIN) {
->  		xfs_ifunlock(ip);
->  		return error;
->  	}
-
-The bad commit according to grsec's statement is
-
-> From b1438f477934f5a4d5a44df26f3079a7575d5946 Mon Sep 17 00:00:00 2001
-> From: Dave Chinner <dchinner@redhat.com>
-> Date: Wed, 18 May 2016 13:53:42 +1000
-> Subject: [PATCH] xfs: xfs_iflush_cluster fails to abort on error
-
-Would be nice to get some clarification.
-
-Thanks.
-
-
--- 
-Regards,
-Thomas
+ arch/alpha/include/asm/rwsem.h |    7 +-
+ arch/ia64/include/asm/rwsem.h  |    6 +-
+ arch/s390/include/asm/rwsem.h  |    6 +-
+ arch/x86/include/asm/rwsem.h   |   13 ++-
+ fs/xfs/xfs_icache.c            |    9 ++
+ include/asm-generic/rwsem.h    |    9 +-
+ include/linux/rwsem.h          |   21 ++++-
+ kernel/locking/rwsem-xadd.c    |  212 ++++++++++++++++++++++++++--------------
+ 8 files changed, 192 insertions(+), 91 deletions(-)
 
 _______________________________________________
 xfs mailing list
