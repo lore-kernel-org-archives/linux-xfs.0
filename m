@@ -1,32 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1ABD07CA2
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 20:51:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63B66AC003
-	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 18:51:20 -0700 (PDT)
-Received: from regular2.263xmail.com (regular2.263xmail.com [211.157.152.3])
-	by cuda.sgi.com with ESMTP id K1efuh4bINl5QFoG (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 13 Jun 2016 18:51:15 -0700 (PDT)
-Received: from regular1.263xmail.com (unknown [192.168.165.185])
-	by regular2.263xmail.com (Postfix) with ESMTP id 13F6B1EA47
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 09:51:06 +0800 (CST)
-Received: from ning_wang?asdc.com.cn (unknown [192.168.167.87])
-	by regular1.263xmail.com (Postfix) with SMTP id 2DDB04CA7
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 09:50:57 +0800 (CST)
-Received: from smtp.263.net (va-smtp01.263.net [54.88.144.211])
-	by smtp.263.net (Postfix) with ESMTP id 2ADC6735B
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 09:50:57 +0800 (CST)
-Received: from MchiaelPC (localhost.localdomain [127.0.0.1])
-	by smtp.263.net (Postfix) with ESMTP id E33CA9F615
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 09:50:49 +0800 (CST)
-From: "Michael" <ning_wang@asdc.com.cn>
-Subject: questions about flush data to disk.
-Date: Tue, 14 Jun 2016 09:50:45 +0800
-Message-ID: <00ba01d1c5df$2d254090$876fc1b0$@asdc.com.cn>
+	by oss.sgi.com (Postfix) with ESMTP id D0B0C7CA2
+	for <xfs@oss.sgi.com>; Mon, 13 Jun 2016 21:26:48 -0500 (CDT)
+From: Troy McCorkell <tdm@sgi.com>
+Subject: RE: questions about flush data to disk.
+Date: Tue, 14 Jun 2016 02:26:42 +0000
+Message-ID: <DF733A1EC32F124D86BC1188068FECB101A72C20A9@P-EXMB4-DC21.corp.sgi.com>
+References: <00ba01d1c5df$2d254090$876fc1b0$@asdc.com.cn>
+In-Reply-To: <00ba01d1c5df$2d254090$876fc1b0$@asdc.com.cn>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Language: zh-cn
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,252 +18,229 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3842760168469513344=="
+Content-Type: multipart/mixed; boundary="===============2491968828648932015=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Michael <ning_wang@asdc.com.cn>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is a multipart message in MIME format.
-
---===============3842760168469513344==
+--===============2491968828648932015==
+Content-Language: en-US
 Content-Type: multipart/related;
-	boundary="----=_NextPart_000_00BB_01D1C622.3B4BDBF0"
-Content-Language: zh-cn
+	boundary="_005_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_";
+	type="multipart/alternative"
 
-This is a multipart message in MIME format.
-
-------=_NextPart_000_00BB_01D1C622.3B4BDBF0
+--_005_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_
 Content-Type: multipart/alternative;
-	boundary="----=_NextPart_001_00BC_01D1C622.3B4BDBF0"
+	boundary="_000_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_"
 
-
-------=_NextPart_001_00BC_01D1C622.3B4BDBF0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: quoted-printable
-
-Dear SGI,
-
-=20
-
-I=A1=AFm trying to backup XFS partition SUSE 12 with XFS_PROGS 3.2.1, =
-when we do
-snapshot of the partition. The created snapshot always have problem by =
-run
-=A1=B0xfs_repair =A8Cn /dev/VG/snapshot=A1=B1. I have tried =
-=A1=B0sync=A1=B1 didn=A1=AFt flush
-cache to disk. Then tried to umount and mount the XFS partition the =
-snapshot
-looks fine. Can you tell me another way to force XFS flush cached data =
-to
-disk?=20
-
-=20
-
-Best Regards
-
-Michael(Ning)Wang
-
--------------------------------------------------------------------------=
----
--------------------------------------------
-
-=CB=B5=C3=F7: cid:_Foxmail.1@95d58f00-9e62-93f7-6199-b1696cc80320
-
-ADVANCED SYSTEMS DEVELOPMENT CO.,LTD.
-
-3/F DASCOM Mansion, 9# East Road Shangdi, Haidian, Beijing, 100085
-
-Tel=A3=BA010-62981691-1234, 010-62980000, 010-82780000
-
-Fax=A3=BA010-62981258
-
-E-mail=A3=BA <mailto:ning_wang@asdc.com.cn> ning_wang@asdc.com.cn
-
-Http=A3=BA <http://www.asdc.com.cn/> www.asdc.com.cn
-
-=CB=B5=C3=F7: cid:_Foxmail.1@e1a38f84-0fa5-04a6-9e7c-c5842b6ca2fa
-
-=20
-
-
-------=_NextPart_001_00BC_01D1C622.3B4BDBF0
-Content-Type: text/html;
-	charset="gb2312"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
-xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
-xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
-xmlns=3D"http://www.w3.org/TR/REC-html40"><head><meta =
-http-equiv=3DContent-Type content=3D"text/html; charset=3Dgb2312"><meta =
-name=3DGenerator content=3D"Microsoft Word 14 (filtered medium)"><!--[if =
-!mso]><style>v\:* {behavior:url(#default#VML);}
-o\:* {behavior:url(#default#VML);}
-w\:* {behavior:url(#default#VML);}
-.shape {behavior:url(#default#VML);}
-</style><![endif]--><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:=CB=CE=CC=E5;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:=CB=CE=CC=E5;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:Tahoma;
-	panose-1:2 11 6 4 3 5 4 4 2 4;}
-@font-face
-	{font-family:=CE=A2=C8=ED=D1=C5=BA=DA;
-	panose-1:2 11 5 3 2 2 4 2 2 4;}
-@font-face
-	{font-family:"\@=CB=CE=CC=E5";
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:"\@=CE=A2=C8=ED=D1=C5=BA=DA";
-	panose-1:2 11 5 3 2 2 4 2 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-justify:inter-ideograph;
-	font-size:10.5pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
-	{mso-style-priority:99;
-	mso-style-link:"=C5=FA=D7=A2=BF=F2=CE=C4=B1=BE Char";
-	margin:0cm;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-justify:inter-ideograph;
-	font-size:9.0pt;
-	font-family:"Calibri","sans-serif";}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri","sans-serif";
-	color:black;}
-span.Char
-	{mso-style-name:"=C5=FA=D7=A2=BF=F2=CE=C4=B1=BE Char";
-	mso-style-priority:99;
-	mso-style-link:=C5=FA=D7=A2=BF=F2=CE=C4=B1=BE;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri","sans-serif";}
-/* Page Definitions */
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:72.0pt 90.0pt 72.0pt 90.0pt;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]--></head><body lang=3DZH-CN link=3Dblue =
-vlink=3Dpurple style=3D'text-justify-trim:punctuation'><div =
-class=3DWordSection1><p class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:14.0pt;color:black'>Dear SGI,<o:p></o:p></span></p><p =
-class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:14.0pt;color:black'><o:p>&nbsp;</o:p></span></p><p =
-class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:14.0pt;color:black'>I=A1=AFm trying to backup XFS =
-partition SUSE 12 with XFS_PROGS 3.2.1, when we do snapshot of the =
-partition. The created snapshot always have problem by run =
-=A1=B0xfs_repair =A8Cn /dev/VG/snapshot=A1=B1. I have tried =
-=A1=B0sync=A1=B1 didn=A1=AFt flush cache to disk. Then tried to umount =
-and mount the XFS partition the snapshot looks fine. Can you tell me =
-another way to force XFS flush cached data to disk? =
-<o:p></o:p></span></p><p class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:14.0pt;color:black'><o:p>&nbsp;</o:p></span></p><p =
-class=3DMsoNormal align=3Dleft =
-style=3D'text-align:left;line-height:18.0pt;background:#F2F2F2'><b><span =
-lang=3DEN-US =
-style=3D'font-size:11.0pt;font-family:"Tahoma","sans-serif";color:#434343=
-;border:none windowtext 1.0pt;padding:0cm'>Best =
-Regards</span></b><b><span lang=3DEN-US =
-style=3D'font-size:11.0pt;font-family:"Tahoma","sans-serif";color:#434343=
-'><o:p></o:p></span></b></p><p class=3DMsoNormal =
-style=3D'line-height:12.0pt'><span lang=3DEN-US =
-style=3D'font-size:11.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-se=
-rif";color:#333333'>Michael(Ning)Wang<o:p></o:p></span></p><p =
-class=3DMsoNormal style=3D'line-height:12.0pt'><span lang=3DEN-US =
-style=3D'font-size:9.0pt;color:#333333'>---------------------------------=
--------------------------------------------------------------------------=
--------------</span><span lang=3DEN-US =
-style=3D'color:black'><o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'line-height:12.0pt'><span lang=3DEN-US =
-style=3D'color:black'><img width=3D222 height=3D25 =
-id=3D"=CD=BC=C6=AC_x0020_1" src=3D"cid:image001.png@01D1C622.38742AE0" =
-alt=3D"=CB=B5=C3=F7: =
-cid:_Foxmail.1@95d58f00-9e62-93f7-6199-b1696cc80320"><o:p></o:p></span></=
-p><p class=3DMsoNormal style=3D'line-height:20.0pt'><b><span =
-lang=3DEN-US =
-style=3D'font-size:10.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-se=
-rif";color:#333333'>ADVANCED SYSTEMS DEVELOPMENT =
-CO.,LTD.</span></b><span lang=3DEN-US =
-style=3D'color:black'><o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'line-height:20.0pt'><span lang=3DEN-US =
-style=3D'font-size:11.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-se=
-rif";color:black'>3/F DASCOM Mansion, 9# East Road Shangdi, Haidian, =
-Beijing, 100085</span><span lang=3DEN-US =
-style=3D'font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-serif";color:black'=
-><o:p></o:p></span></p><p class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>Tel</span><span =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>=A3=BA<span lang=3DEN-US>010-62981691-1234, =
-010-62980000, 010-82780000</span></span><span lang=3DEN-US =
-style=3D'color:black'><o:p></o:p></span></p><p class=3DMsoNormal><span =
-lang=3DEN-US =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>Fax</span><span =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>=A3=BA<span =
-lang=3DEN-US>010-62981258</span></span><span lang=3DEN-US =
-style=3D'color:black'><o:p></o:p></span></p><p class=3DMsoNormal><span =
-lang=3DEN-US =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>E-mail</span><span =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>=A3=BA<span lang=3DEN-US><a =
-href=3D"mailto:ning_wang@asdc.com.cn"><span =
-style=3D'color:blue'>ning_wang@asdc.com.cn</span></a></span></span><span =
-lang=3DEN-US style=3D'color:black'><o:p></o:p></span></p><p =
-class=3DMsoNormal><span lang=3DEN-US =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>Http</span><span =
-style=3D'font-size:9.0pt;font-family:"=CE=A2=C8=ED=D1=C5=BA=DA","sans-ser=
-if";color:#333333'>=A3=BA<span lang=3DEN-US><a =
-href=3D"http://www.asdc.com.cn/"><span =
-style=3D'color:blue'>www.asdc.com.cn</span></a></span></span><span =
-lang=3DEN-US style=3D'color:black'><o:p></o:p></span></p><p =
-class=3DMsoNormal><span lang=3DEN-US style=3D'color:black'><img =
-border=3D0 width=3D400 height=3D90 id=3D"=CD=BC=C6=AC_x0020_2" =
-src=3D"cid:image002.gif@01D1C622.38742AE0" alt=3D"=CB=B5=C3=F7: =
-cid:_Foxmail.1@e1a38f84-0fa5-04a6-9e7c-c5842b6ca2fa"><o:p></o:p></span></=
-p><p class=3DMsoNormal><span =
-lang=3DEN-US><o:p>&nbsp;</o:p></span></p></div></body></html>
-------=_NextPart_001_00BC_01D1C622.3B4BDBF0--
-
-------=_NextPart_000_00BB_01D1C622.3B4BDBF0
-Content-Type: image/png;
-	name="image001.png"
+--_000_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_
+Content-Type: text/plain; charset="big5"
 Content-Transfer-Encoding: base64
+
+TWljaGFlbCwNCg0KU0dJIGlzIG5vIGxvbmdlciB0aGUgbWFpbnRhaW5lciBmb3IgWEZTIGluIHRo
+ZSBvcGVuIHNvdXJjZSBjb21tdW5pdHkuICBYRlMgaXMgbWFpbnRhaW5lZCBieSBEYXZlIENoaW5u
+ZXINCmFuZCBkZXZlbG9wZWQgYW5kIGVuaGFuY2VkIGJ5IGEgbGFyZ2UgY29tbXVuaXR5IG9mIGNv
+bnRyaWJ1dG9ycy4NCg0KUmVmZXJlbmNlIHRoZSBtYW5wYWdlIGZvciB0aGUgeGZzX2ZyZWV6ZSBj
+b21tYW5kIHRvIGhlbHAgc3RhYmlsaXppbmcgeW91ciBmaWxlc3lzdGVtIGJlZm9yZQ0KZ2VuZXJh
+dGluZyBhIHNuYXBzaG90LiAgIFF1b3RpbmcgdGhlIG1hbnBhZ2UsICJ4ZnNfZnJlZXplIGlzIGlu
+dGVuZGVkIHRvIGJlDQp1c2VkIHdpdGggdm9sdW1lIG1hbmFnZXJzIGFuZCBoYXJkd2FyZSBSQUlE
+IGRldmljZXMgdGhhdCBzdXBwb3J0IHRoZSBjcmVhdGlvbiBvZiBzbmFwc2hvdHMuIg0KDQpUaGFu
+a3MsDQpUcm95IE1jQ29ya2VsbA0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXw0K
+RnJvbTogeGZzLWJvdW5jZXNAb3NzLnNnaS5jb20gW3hmcy1ib3VuY2VzQG9zcy5zZ2kuY29tXSBv
+biBiZWhhbGYgb2YgTWljaGFlbCBbbmluZ193YW5nQGFzZGMuY29tLmNuXQ0KU2VudDogTW9uZGF5
+LCBKdW5lIDEzLCAyMDE2IDg6NTAgUE0NClRvOiB4ZnNAb3NzLnNnaS5jb20NClN1YmplY3Q6IHF1
+ZXN0aW9ucyBhYm91dCBmbHVzaCBkYXRhIHRvIGRpc2suDQoNCkRlYXIgU0dJLA0KDQpJoaZtIHRy
+eWluZyB0byBiYWNrdXAgWEZTIHBhcnRpdGlvbiBTVVNFIDEyIHdpdGggWEZTX1BST0dTIDMuMi4x
+LCB3aGVuIHdlIGRvIHNuYXBzaG90IG9mIHRoZSBwYXJ0aXRpb24uIFRoZSBjcmVhdGVkIHNuYXBz
+aG90IGFsd2F5cyBoYXZlIHByb2JsZW0gYnkgcnVuIKGneGZzX3JlcGFpciChVm4gL2Rldi9WRy9z
+bmFwc2hvdKGoLiBJIGhhdmUgdHJpZWQgoadzeW5joaggZGlkbqGmdCBmbHVzaCBjYWNoZSB0byBk
+aXNrLiBUaGVuIHRyaWVkIHRvIHVtb3VudCBhbmQgbW91bnQgdGhlIFhGUyBwYXJ0aXRpb24gdGhl
+IHNuYXBzaG90IGxvb2tzIGZpbmUuIENhbiB5b3UgdGVsbCBtZSBhbm90aGVyIHdheSB0byBmb3Jj
+ZSBYRlMgZmx1c2ggY2FjaGVkIGRhdGEgdG8gZGlzaz8NCg0KQmVzdCBSZWdhcmRzDQpNaWNoYWVs
+KE5pbmcpV2FuZw0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0NCls/qfo6IGNpZDpfRm94bWFpbC4xQDk1ZDU4ZjAwLTllNjItOTNm
+Ny02MTk5LWIxNjk2Y2M4MDMyMF0NCkFEVkFOQ0VEIFNZU1RFTVMgREVWRUxPUE1FTlQgQ08uLExU
+RC4NCjMvRiBEQVNDT00gTWFuc2lvbiwgOSMgRWFzdCBSb2FkIFNoYW5nZGksIEhhaWRpYW4sIEJl
+aWppbmcsIDEwMDA4NQ0KVGVsoUcwMTAtNjI5ODE2OTEtMTIzNCwgMDEwLTYyOTgwMDAwLCAwMTAt
+ODI3ODAwMDANCkZheKFHMDEwLTYyOTgxMjU4DQpFLW1haWyhR25pbmdfd2FuZ0Bhc2RjLmNvbS5j
+bjxtYWlsdG86bmluZ193YW5nQGFzZGMuY29tLmNuPg0KSHR0cKFHd3d3LmFzZGMuY29tLmNuPGh0
+dHA6Ly93d3cuYXNkYy5jb20uY24vPg0KWz+p+jogY2lkOl9Gb3htYWlsLjFAZTFhMzhmODQtMGZh
+NS0wNGE2LTllN2MtYzU4NDJiNmNhMmZhXQ0KDQo=
+
+--_000_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_
+Content-Type: text/html; charset="big5"
+Content-Transfer-Encoding: quoted-printable
+
+<html dir=3D"ltr">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dbig5">
+<style>=0A=
+<!--=0A=
+@font-face=0A=
+	{font-family:=A7=BA=CA^}=0A=
+@font-face=0A=
+	{font-family:=A7=BA=CA^}=0A=
+@font-face=0A=
+	{font-family:Calibri}=0A=
+@font-face=0A=
+	{font-family:Tahoma}=0A=
+@font-face=0A=
+	{font-family:=B7L?=B6=AE=B6=C2}=0A=
+p.MsoNormal, li.MsoNormal, div.MsoNormal=0A=
+	{margin:0cm;=0A=
+	margin-bottom:.0001pt;=0A=
+	text-align:justify;=0A=
+	text-justify:inter-ideograph;=0A=
+	font-size:10.5pt;=0A=
+	font-family:"Calibri","sans-serif"}=0A=
+a:link, span.MsoHyperlink=0A=
+	{color:blue;=0A=
+	text-decoration:underline}=0A=
+a:visited, span.MsoHyperlinkFollowed=0A=
+	{color:purple;=0A=
+	text-decoration:underline}=0A=
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate=0A=
+	{margin:0cm;=0A=
+	margin-bottom:.0001pt;=0A=
+	text-align:justify;=0A=
+	text-justify:inter-ideograph;=0A=
+	font-size:9.0pt;=0A=
+	font-family:"Calibri","sans-serif"}=0A=
+span.EmailStyle17=0A=
+	{font-family:"Calibri","sans-serif";=0A=
+	color:black}=0A=
+.MsoChpDefault=0A=
+	{font-family:"Calibri","sans-serif"}=0A=
+@page WordSection1=0A=
+	{margin:72.0pt 90.0pt 72.0pt 90.0pt}=0A=
+-->=0A=
+</style><style id=3D"owaParaStyle" type=3D"text/css">P {margin-top:0;margin=
+-bottom:0;}</style>
+</head>
+<body ocsi=3D"0" fpstyle=3D"1" style=3D"" lang=3D"ZH-CN" link=3D"blue" vlin=
+k=3D"purple">
+<div style=3D"direction: ltr;font-family: Tahoma;color: #000000;font-size: =
+10pt;">Michael,<br>
+<br>
+SGI is no longer the maintainer for XFS in the open source community.&nbsp;=
+ XFS is maintained by Dave Chinner<br>
+and developed and enhanced by a large community of contributors.<br>
+<br>
+Reference the manpage for the xfs_freeze command to help stabilizing your f=
+ilesystem before<br>
+generating a snapshot.&nbsp;&nbsp; Quoting the manpage, &quot;xfs_freeze is=
+ intended to be<br>
+used with volume managers and hardware RAID devices that support the creati=
+on of snapshots.&quot;<br>
+<br>
+Thanks,<br>
+Troy McCorkell<br>
+<br>
+<div style=3D"font-family: Times New Roman; color: #000000; font-size: 16px=
+">
+<hr tabindex=3D"-1">
+<div style=3D"direction: ltr;" id=3D"divRpF478494"><font face=3D"Tahoma" co=
+lor=3D"#000000" size=3D"2"><b>From:</b> xfs-bounces@oss.sgi.com [xfs-bounce=
+s@oss.sgi.com] on behalf of Michael [ning_wang@asdc.com.cn]<br>
+<b>Sent:</b> Monday, June 13, 2016 8:50 PM<br>
+<b>To:</b> xfs@oss.sgi.com<br>
+<b>Subject:</b> questions about flush data to disk.<br>
+</font><br>
+</div>
+<div></div>
+<div>
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal"><span style=3D"font-size:14.0pt; color:black" lang=
+=3D"EN-US">Dear SGI,</span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:14.0pt; color:black" lang=
+=3D"EN-US">&nbsp;</span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:14.0pt; color:black" lang=
+=3D"EN-US">I=A1=A6m trying to backup XFS partition SUSE 12 with XFS_PROGS 3=
+.2.1, when we do snapshot of the partition. The created snapshot always hav=
+e problem by run =A1=A7xfs_repair =A1Vn /dev/VG/snapshot=A1=A8.
+ I have tried =A1=A7sync=A1=A8 didn=A1=A6t flush cache to disk. Then tried =
+to umount and mount the XFS partition the snapshot looks fine. Can you tell=
+ me another way to force XFS flush cached data to disk?
+</span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:14.0pt; color:black" lang=
+=3D"EN-US">&nbsp;</span></p>
+<p class=3D"MsoNormal" style=3D"text-align:left; line-height:18.0pt; backgr=
+ound:#F2F2F2" align=3D"left">
+<b><span style=3D"font-size:11.0pt; font-family:&quot;Tahoma&quot;,&quot;sa=
+ns-serif&quot;; color:#434343; border:none windowtext 1.0pt; padding:0cm" l=
+ang=3D"EN-US">Best Regards</span></b><b><span style=3D"font-size:11.0pt; fo=
+nt-family:&quot;Tahoma&quot;,&quot;sans-serif&quot;; color:#434343" lang=3D=
+"EN-US"></span></b></p>
+<p class=3D"MsoNormal" style=3D"line-height:12.0pt"><span style=3D"font-siz=
+e:11.0pt; font-family:&quot;=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif=
+&quot;; color:#333333" lang=3D"EN-US">Michael(Ning)Wang</span></p>
+<p class=3D"MsoNormal" style=3D"line-height:12.0pt"><span style=3D"font-siz=
+e:9.0pt; color:#333333" lang=3D"EN-US">------------------------------------=
+---------------------------------------------------------------------------=
+--------</span><span style=3D"color:black" lang=3D"EN-US"></span></p>
+<p class=3D"MsoNormal" style=3D"line-height:12.0pt"><span style=3D"color:bl=
+ack" lang=3D"EN-US"><img id=3D"&#22270;=A4=F9_x0020_1" src=3D"cid:image001.=
+png@01D1C622.38742AE0" alt=3D"&#35828;=A9=FA: cid:_Foxmail.1@95d58f00-9e62-=
+93f7-6199-b1696cc80320" height=3D"25" width=3D"222"></span></p>
+<p class=3D"MsoNormal" style=3D"line-height:20.0pt"><b><span style=3D"font-=
+size:10.0pt; font-family:&quot;=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-se=
+rif&quot;; color:#333333" lang=3D"EN-US">ADVANCED SYSTEMS DEVELOPMENT CO.,L=
+TD.</span></b><span style=3D"color:black" lang=3D"EN-US"></span></p>
+<p class=3D"MsoNormal" style=3D"line-height:20.0pt"><span style=3D"font-siz=
+e:11.0pt; font-family:&quot;=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif=
+&quot;; color:black" lang=3D"EN-US">3/F DASCOM Mansion, 9# East Road Shangd=
+i, Haidian, Beijing, 100085</span><span style=3D"font-family:&quot;=B7L&#36=
+719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:black" lang=3D"EN-US">=
+</span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt; font-family:&quot;=
+=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333" lang=
+=3D"EN-US">Tel</span><span style=3D"font-size:9.0pt; font-family:&quot;=B7L=
+&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333">=A1G<span=
+ lang=3D"EN-US">010-62981691-1234, 010-62980000, 010-82780000</span></span>=
+<span style=3D"color:black" lang=3D"EN-US"></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt; font-family:&quot;=
+=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333" lang=
+=3D"EN-US">Fax</span><span style=3D"font-size:9.0pt; font-family:&quot;=B7L=
+&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333">=A1G<span=
+ lang=3D"EN-US">010-62981258</span></span><span style=3D"color:black" lang=
+=3D"EN-US"></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt; font-family:&quot;=
+=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333" lang=
+=3D"EN-US">E-mail</span><span style=3D"font-size:9.0pt; font-family:&quot;=
+=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333">=A1G<=
+span lang=3D"EN-US"><a href=3D"mailto:ning_wang@asdc.com.cn" target=3D"_bla=
+nk"><span style=3D"color:blue">ning_wang@asdc.com.cn</span></a></span></spa=
+n><span style=3D"color:black" lang=3D"EN-US"></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:9.0pt; font-family:&quot;=
+=B7L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333" lang=
+=3D"EN-US">Http</span><span style=3D"font-size:9.0pt; font-family:&quot;=B7=
+L&#36719;=B6=AE=B6=C2&quot;,&quot;sans-serif&quot;; color:#333333">=A1G<spa=
+n lang=3D"EN-US"><a href=3D"http://www.asdc.com.cn/" target=3D"_blank"><spa=
+n style=3D"color:blue">www.asdc.com.cn</span></a></span></span><span style=
+=3D"color:black" lang=3D"EN-US"></span></p>
+<p class=3D"MsoNormal"><span style=3D"color:black" lang=3D"EN-US"><img id=
+=3D"&#22270;=A4=F9_x0020_2" src=3D"cid:image002.gif@01D1C622.38742AE0" alt=
+=3D"&#35828;=A9=FA: cid:_Foxmail.1@e1a38f84-0fa5-04a6-9e7c-c5842b6ca2fa" he=
+ight=3D"90" width=3D"400" border=3D"0"></span></p>
+<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp;</span></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
+
+--_000_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_--
+
+--_005_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_
+Content-Type: image/png; name="image001.png"
+Content-Description: image001.png
+Content-Disposition: inline; filename="image001.png"; size=3330;
+	creation-date="Tue, 14 Jun 2016 01:51:29 GMT";
+	modification-date="Tue, 14 Jun 2016 01:51:29 GMT"
 Content-ID: <image001.png@01D1C622.38742AE0>
+Content-Transfer-Encoding: base64
 
 iVBORw0KGgoAAAANSUhEUgAAAN4AAAAZCAYAAABeipC7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJ
 bWFnZVJlYWR5ccllPAAAAyBpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdp
@@ -342,11 +302,14 @@ jVfjol5++vbHl7+++u7D5sUP9KccKHWPeCqCwvLv7uRPemKhBLHwsj3U7YksXFPUX6K9AXtXUZZB
 Di/fi1F1bEjzZKPe4gBAhv6yorZ9xqL7EPMlqSe9/0yDGd6Qfpic3PubK7XUUsvzSf3n/Wqp5SPI
 fwIMAE8YLTUlD+5LAAAAAElFTkSuQmCC
 
-------=_NextPart_000_00BB_01D1C622.3B4BDBF0
-Content-Type: image/gif;
-	name="image002.gif"
-Content-Transfer-Encoding: base64
+--_005_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_
+Content-Type: image/gif; name="image002.gif"
+Content-Description: image002.gif
+Content-Disposition: inline; filename="image002.gif"; size=9216;
+	creation-date="Tue, 14 Jun 2016 01:51:29 GMT";
+	modification-date="Tue, 14 Jun 2016 01:51:29 GMT"
 Content-ID: <image002.gif@01D1C622.38742AE0>
+Content-Transfer-Encoding: base64
 
 R0lGODlhkAFaAPcAAAAAAP////Ly8pK92iAfIGRjZOvr7Ofn6OXl5gA8hUZHSABXqQBIjAFVoQFN
 kgVTmBBPjBpbliZjmgBcrAJgsQJgrwRcpgVhrglfqApgqA1krBRqsRhmqR5injR3rzFrnUyEskh6
@@ -511,11 +474,10 @@ bEgj2BEe4MmWdElpFEqojEq8EYpHOMmjREaniIoc2EmmlCentEipDEuxxJWFvMpkZALAiYoZ+IGu
 9MlIHEu4jMsYIY9jNEtkvAF6UY0cYEq3NEC5/EvA7I6ytMv/24G0XI0Z4Epn7MvNC0zHfEzLaBer
 JMyLM4K85JGlXMyvLBbI7EzPDIpGqErK/D9hIZbEdETGBLmAAAA7
 
-------=_NextPart_000_00BB_01D1C622.3B4BDBF0--
+--_005_DF733A1EC32F124D86BC1188068FECB101A72C20A9PEXMB4DC21cor_--
 
 
-
---===============3842760168469513344==
+--===============2491968828648932015==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -526,4 +488,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3842760168469513344==--
+--===============2491968828648932015==--
