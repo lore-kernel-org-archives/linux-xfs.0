@@ -1,27 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E6BC57CA0
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 02:00:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6E14AAC003
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:00:12 -0700 (PDT)
-Received: from mail-wm0-f45.google.com (mail-wm0-f45.google.com
-	[74.125.82.45]) by cuda.sgi.com with ESMTP id 0GPClhMDIkEb8hMa
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Jun 2016 00:00:09 -0700 (PDT)
-Received: by mail-wm0-f45.google.com with SMTP id v199so149439857wmv.0
-	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:00:09 -0700 (PDT)
-Subject: Re: Something badly broken with the latest XFS changeset in all
-	stable kernels?
-References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
-	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
-	<20160615052831.GA3452@1wt.eu>
-From: Jiri Slaby <jslaby@suse.cz>
-Message-ID: <ab3877db-6c0c-545f-766c-5ba5d00b5ab9@suse.cz>
-Date: Wed, 15 Jun 2016 09:00:06 +0200
+	by oss.sgi.com (Postfix) with ESMTP id 07BE47CA2
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 09:56:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 75101AC002
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 07:56:42 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id pkhbDMQGGqJ5mIeI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 15 Jun 2016 07:56:40 -0700 (PDT)
+Date: Wed, 15 Jun 2016 07:56:38 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/12] NFS: Do not serialise O_DIRECT reads and writes
+Message-ID: <20160615145638.GC5297@infradead.org>
+References: <1465931115-30784-5-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-6-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-7-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-8-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-9-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-10-git-send-email-trond.myklebust@primarydata.com>
+	<20160615071343.GC4318@infradead.org>
+	<755A2A14-C6A9-4737-8335-0A6785490F6D@primarydata.com>
+	<20160615144801.GB18524@infradead.org>
+	<C13D01C1-4B83-442A-A0EA-D7624BE8A782@primarydata.com>
 MIME-Version: 1.0
-In-Reply-To: <20160615052831.GA3452@1wt.eu>
+Content-Disposition: inline
+In-Reply-To: <C13D01C1-4B83-442A-A0EA-D7624BE8A782@primarydata.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +38,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Willy Tarreau <w@1wt.eu>, Greg KH <greg@kroah.com>
-Cc: "Thomas D." <whissi@whissi.de>, spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Trond Myklebust <trondmy@primarydata.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 06/15/2016, 07:28 AM, Willy Tarreau wrote:
-> Jiri has queued it for 3.12 but not yet released it.
+On Wed, Jun 15, 2016 at 02:52:24PM +0000, Trond Myklebust wrote:
+> >But XFS allows full parallelism for direct reads and writes as long
+> >as there is no more pagecache to flush.  But if you have pages in
+> >the pagecache you need the exclusive lock to prevent against new
+> >pagecache pages being added.
+> 
+> Exactly. So does this.
 
-Fixed now, thanks!
+So let's avoid bloating the inode with another rw_semaphore, and make
+everyones life easier by using the existing lock.
 
--- 
-js
-suse labs
+> We don???t use generic_file_* for O_DIRECT; we only use it for buffered I/O.
+
+I know - this was just an answer to your reference to the generic_file_*
+code.
 
 _______________________________________________
 xfs mailing list
