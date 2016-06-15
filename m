@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C1AF27CA0
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 13:12:46 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 40EFC7CA0
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 01:40:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 962C0304051
-	for <xfs@oss.sgi.com>; Fri, 10 Jun 2016 11:12:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ahrjQLOJhmLAr74N for <xfs@oss.sgi.com>;
-	Fri, 10 Jun 2016 11:12:39 -0700 (PDT)
-Subject: Re: [PATCH 0/4] xfs: online relabeling [RFC]
-References: <c1922d3d-208c-3699-0a36-26108a4f44de@sandeen.net>
-	<2305b486-f336-6d1e-9420-b69dc5bdc572@sandeen.net>
-	<20160610121936.GC21568@bfoster.bfoster>
-	<20160610164157.GA11810@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7bb93415-d08c-29e8-df68-1665d7f39581@sandeen.net>
-Date: Fri, 10 Jun 2016 13:12:39 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AF2A0AC002
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 23:40:27 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	DrgHLIm54Dz3XHWG for <xfs@oss.sgi.com>;
+	Tue, 14 Jun 2016 23:40:24 -0700 (PDT)
+Date: Wed, 15 Jun 2016 16:40:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Something badly broken with the latest XFS changeset in all
+	stable kernels?
+Message-ID: <20160615064022.GD26977@dastard>
+References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
+	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <20160610164157.GA11810@birch.djwong.org>
+Content-Disposition: inline
+In-Reply-To: <20160615013056.GA23074@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,80 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Greg KH <greg@kroah.com>
+Cc: "Thomas D." <whissi@whissi.de>, spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
 
-
-
-On 6/10/16 11:41 AM, Darrick J. Wong wrote:
-> On Fri, Jun 10, 2016 at 08:19:36AM -0400, Brian Foster wrote:
->> On Thu, Jun 09, 2016 at 11:51:12AM -0500, Eric Sandeen wrote:
->>>
->>>
->>> On 6/9/16 11:36 AM, Eric Sandeen wrote:
->>>> Ok, this more or less works; not really up to snuff
->>>> for submission or merging, just sketching it out, but some
->>>> questions first:
->>>>
->>>> 1) Is there really any point to this? :) We did have one
->>>>    request, and btrfs can do it ...
->>>>
->>
->> Seems reasonable to me. Any details on the use case for the request?
->>
->>>> 2) Is using m_growlock horrible?  growfs is the only other
->>>>    thing that writes all supers, so I grabbed it.  We don't
->>>>    want multiple relabels stepping on each other.
->>>>
->>>> 3) Is there some way to actually force the primary to disk?
->>>>    Right now the label change isn't actually visible on the
->>>>    primary until unmount, which defeats the purpose.  I'm not
->>>>    sure if there's a straightforward/safe way to make it
->>>>    visible...
->>>
->>
->>> Oh, sorry - I guess it is getting written out, but it's only
->>> available via an O_DIRECT read from userspace; it's not
->>> invalidating the cache.
->>>
->>> # io/xfs_io -c "label derp" /mnt/test
->>> label = "derp"
->>>
->>> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
->>> ...
->>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
->>> ...
->>>
->>> # dd if=/dev/sdb2 iflag=direct bs=512 count=1 | hexdump -C
->>> ...
->>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 64 65 72 70  |............derp|
->>> ...
->>>
->>> # dd if=/dev/sdb2 bs=512 count=1 | hexdump -C
->>> ...
->>> 00000060  00 00 0a 00 b4 e5 02 00  02 00 00 08 66 6f 6f 00  |............foo.|
->>> ...
->>>
->>> Guess I need to think about this some more.
->>>
->>
->> Isn't this to be expected? You're directly accessing the block device of
->> a mounted filesystem. I would think this is expected behavior, so long
->> as the set/get interfaces through the fs are consistent.
+On Tue, Jun 14, 2016 at 06:30:56PM -0700, Greg KH wrote:
+> On Wed, Jun 15, 2016 at 10:02:41AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 13, 2016 at 11:57:53PM +0200, Thomas D. wrote:
+> > > The bad commit according to grsec's statement is
+> > > 
+> > > > From b1438f477934f5a4d5a44df26f3079a7575d5946 Mon Sep 17 00:00:00 2001
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > Date: Wed, 18 May 2016 13:53:42 +1000
+> > > > Subject: [PATCH] xfs: xfs_iflush_cluster fails to abort on error
+> > > 
+> > > Would be nice to get some clarification.
+> > 
+> > There's nothing wrong with that commit in the upstream kernel,
+> > it's the backport that has a bug in it because it failed to take
+> > into account changes outside the context of the upstream commit that
+> > the older kernels don't have.
 > 
-> Trouble is, I bet blkid prints LABEL=foo here and not LABEL=derp as
-> the admin is probably expecting.
+> Thanks for letting me know about this.
+> 
+> As the patch was tagged with 3.10+, I assumed that it was safe to be
+> merged to those older kernels, otherwise I would never have done so.  We
+> do have ways to mark external things like this for stable patches, it's
+> a great help when doing backports.
 
-exactly.
+Little things like this are very easy to forget about - those error
+sign changes are ancient history as far as upstream development is
+concerned. This is why we have regression tests - the zero-day
+kernel robot can run xfstests - perhaps stable kernels should be
+submitted to a full round of testing before release to catch
+subtle "patch applies but ends up wrong" issues like this...
 
-And FWIW, when btrfs does it, it *is* visible.
+Cheers,
 
-> /me wonders if invalidate_inode_pages2_range here would help?
-
-Um, not sure.  Calling that against metadata from xfs feels a bit
-bizarre...
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
