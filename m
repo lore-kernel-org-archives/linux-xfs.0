@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2CA237CA0
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 18:33:53 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8C8067CA0
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:28:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01F6D8F8033
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 16:33:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	wdExOUKWcL6TeqB6 for <xfs@oss.sgi.com>;
-	Thu, 09 Jun 2016 16:33:47 -0700 (PDT)
-Date: Fri, 10 Jun 2016 09:33:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] allow enabling reflinks at runtime
-Message-ID: <20160609233344.GA26977@dastard>
-References: <1464877150-20457-1-git-send-email-hch@lst.de>
-	<20160602225415.GP12670@dastard> <20160608071130.GB24663@lst.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE8EEAC002
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 22:28:41 -0700 (PDT)
+Received: from 1wt.eu (wtarreau.pck.nerim.net [62.212.114.60]) by cuda.sgi.com
+	with ESMTP id qAs5nM5C3E32IDNi for <xfs@oss.sgi.com>;
+	Tue, 14 Jun 2016 22:28:38 -0700 (PDT)
+Date: Wed, 15 Jun 2016 07:28:31 +0200
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: Something badly broken with the latest XFS changeset in all
+	stable kernels?
+Message-ID: <20160615052831.GA3452@1wt.eu>
+References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
+	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160608071130.GB24663@lst.de>
+In-Reply-To: <20160615013056.GA23074@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +30,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com, darrick.wong@oracle.com
+To: Greg KH <greg@kroah.com>
+Cc: "Thomas D." <whissi@whissi.de>, spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jun 08, 2016 at 09:11:30AM +0200, Christoph Hellwig wrote:
-> On Fri, Jun 03, 2016 at 08:54:15AM +1000, Dave Chinner wrote:
-> > On Thu, Jun 02, 2016 at 04:19:07PM +0200, Christoph Hellwig wrote:
-> > > I've had some vocal user requests to allow enabling reflinks at run time,
-> > > which happens to be a mostly trivial feature.  The only caveat is that we
-> > > need a large enough log size to support the reflink requirements, but for
-> > > typical large file systems that's not an issue.
-> > 
-> > Hmmm - how does this interact with all the rmap code? I was not
-> > planning on enabling reflink without rmap and vice versa simply
-> > because it makes the validation and testing matrix vastly more
-> > complex.
-> 
-> Uh.  So far I've only been testing pure reflink code, mostly because
-> rmap really doesn't buy much for the use case I'm working on.
-> Enabling rmap post-mkfs is defintively a different ballpark, and probably
-> not worth it even if it would be doable.
+On Tue, Jun 14, 2016 at 06:30:56PM -0700, Greg KH wrote:
+> As the patch was tagged with 3.10+, I assumed that it was safe to be
+> merged to those older kernels, otherwise I would never have done so.  We
+> do have ways to mark external things like this for stable patches, it's
+> a great help when doing backports.
 
-Wasn't expecting rmap to ever be dynamically enabled ;)
+I guess only 3.14.72 was affected in the end. 3.18.35 has the fix but my
+understanding is that after 3.17 it's OK. Apparently it's not yet queued
+for 3.16. Jiri has queued it for 3.12 but not yet released it. For 3.10
+I only pick patches that are already in a 3.14 release so I didn't have
+the time to backport it to 3.10 yet as the preview started before the
+release. Overall the regression lived only 8 days in a single branch, I
+guess it shows that our process works rather well and limits the exposure
+to regressions.
 
-So ignoring the testing side of things, and looking more at the
-implementation of the enabling, I'm not sure I really like the idea
-of doing this via a mount option. Because we've got to make
-significant additions to the on disk format in each AG, this seems
-more like a "growfs style" operation than anything. i.e. lock out
-allocation, add all the structures to the AG headers and allocate
-all the blocks needed, re-initialise the per-ag structures with all
-the necessary info, then switch on the feature bit and commit the
-change.
+Brad, it would have been nice to report it to the stable team especially
+since you rely on these kernels for yours as well.
 
-It's probably a little more intricate than doing it at mount time,
-but it gets around the fact that users have to add a mount option
-and bounce the filesystem to turn on reflinks.
-I can see this being much easier than a mount option in some
-situations, (e.g. for the root filesystem), and I don't think it's
-much harder to test than the mount option (e.g. the way growfs is
-tested under stress by xfs/104)...
-
-Your thoughts, Christoph?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+Willy
 
 _______________________________________________
 xfs mailing list
