@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7964D7CA0
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 18:06:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B8A7304039
-	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 16:06:35 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7B6047CA0
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 19:07:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E6768F8037
+	for <xfs@oss.sgi.com>; Tue, 14 Jun 2016 17:07:42 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	y1ktwrMwP6v0vY57 for <xfs@oss.sgi.com>;
-	Tue, 14 Jun 2016 16:06:29 -0700 (PDT)
-Date: Wed, 15 Jun 2016 09:06:13 +1000
+	1WwDMyjkDIk6NlDZ for <xfs@oss.sgi.com>;
+	Tue, 14 Jun 2016 17:07:34 -0700 (PDT)
+Date: Wed, 15 Jun 2016 10:02:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH-tip 6/6] xfs: Enable reader optimistic spinning for
-	DAX inodes
-Message-ID: <20160614230613.GB26977@dastard>
-References: <1465927959-39719-1-git-send-email-Waiman.Long@hpe.com>
-	<1465927959-39719-7-git-send-email-Waiman.Long@hpe.com>
+Subject: Re: Something badly broken with the latest XFS changeset in all
+	stable kernels?
+Message-ID: <20160615000241.GC26977@dastard>
+References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1465927959-39719-7-git-send-email-Waiman.Long@hpe.com>
+In-Reply-To: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +30,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Waiman Long <Waiman.Long@hpe.com>
-Cc: linux-arch@vger.kernel.org, linux-s390@vger.kernel.org, Davidlohr Bueso <dave@stgolabs.net>, linux-ia64@vger.kernel.org, Scott J Norton <scott.norton@hpe.com>, Peter Zijlstra <peterz@infradead.org>, x86@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ingo Molnar <mingo@redhat.com>, linux-alpha@vger.kernel.org, Douglas Hatch <doug.hatch@hpe.com>, Jason Low <jason.low2@hp.com>
+To: "Thomas D." <whissi@whissi.de>
+Cc: spender@grsecurity.net, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Jun 14, 2016 at 02:12:39PM -0400, Waiman Long wrote:
-> This patch enables reader optimistic spinning for inodes that are
-> under a DAX-based mount point.
+On Mon, Jun 13, 2016 at 11:57:53PM +0200, Thomas D. wrote:
+> Hi,
 > 
-> On a 4-socket Haswell machine running on a 4.7-rc1 tip-based kernel,
-> the fio test with multithreaded randrw and randwrite tests on the
-> same file on a XFS partition on top of a NVDIMM with DAX were run,
-> the aggregated bandwidths before and after the patch were as follows:
+> can anybody confirm if there's something broken with the latest XFS
+> change set which is now applied on all stable kernels?
 > 
->   Test      BW before patch     BW after patch  % change
->   ----      ---------------     --------------  --------
->   randrw        1352 MB/s          2164 MB/s      +60%
->   randwrite     1710 MB/s          2550 MB/s      +49%
+> I found https://forums.grsecurity.net/viewtopic.php?t=4489&p=16355 and
+> grsec changelog says
 > 
-> Signed-off-by: Waiman Long <Waiman.Long@hpe.com>
-> ---
->  fs/xfs/xfs_icache.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
+> > commit 1f621dc42acbabb71bd69f6ba606cee56e7ad3bc
+> > Author: Brad Spengler <spender@grsecurity.net>
+> > Date:   Sat Jun 11 08:14:32 2016 -0400
+> > 
+> >     Fix Greg KH's broken XFS backport, caused a benign case to be detected
+> >     as disk corruption
+> >     Problem was due to a tree-wide conversion of error codes to their negative
+> >     counterparts, which would likely never be backported to older kernels, but
+> >     the backports didn't account for the change
+> > 
+> >  fs/xfs/xfs_inode.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+
+Yes, the backport is busted, and needs this fix. The error sign
+change occurred in 3.17. xfstests would have picked up this
+regression in a couple of minutes, so I'm guessing that none of
+these stable releases have had any significant regression testing
+done....
+
+> This is the change grsec applied:
 > 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 99ee6ee..09f284f 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -71,6 +71,15 @@ xfs_inode_alloc(
->  
->  	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
->  
-> +	/*
-> +	 * Enable reader spinning for DAX nount point
-> +	 */
-> +	if (mp->m_flags & XFS_MOUNT_DAX) {
-> +		rwsem_set_rspin_threshold(&ip->i_iolock.mr_lock);
-> +		rwsem_set_rspin_threshold(&ip->i_mmaplock.mr_lock);
-> +		rwsem_set_rspin_threshold(&ip->i_lock.mr_lock);
-> +	}
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index fb8579d..af807d8 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -3098,7 +3111,7 @@ xfs_iflush(
+> >  	 */
+> >  	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
+> >  			       0);
+> > -	if (error == -EAGAIN) {
+> > +	if (error == EAGAIN) {
+> >  		xfs_ifunlock(ip);
+> >  		return error;
+> >  	}
 
-That's wrong. DAX is a per-inode flag, not a mount wide flag. This
-needs to be done once the inode has been fully initialised and
-IS_DAX(inode) can be run.
+Yes, that is the fix that is needed. Thank you for reporting it to
+us.
 
-Also, the benchmark doesn't show that all these locks are being
-tested by this benchmark. e.g. the i_mmaplock isn't involved in
-the benchmark's IO paths at all. It's only taken in page faults and
-truncate paths....
+Mr Spender: it would be appreciated if you reported stable kernel
+regressions to the relevant upstream maintainers so they can be
+fixed quickly for everyone, rather than having one of your users
+decide it needs to be reported.
 
-I'd also like to see how much of the gain comes from the iolock vs
-the ilock, as the ilock is nested inside the iolock and so
-contention is much rarer....
+Stable kernel maintainers: the above error sign change is needed for
+stable kernels 3.16 and earlier, as a matter of critical importance.
+And as a further matter of critical importance: in future, please
+take the time to regression test the changes you backport.
 
-As it is, I'm *extremely* paranoid when it comes to changes to core
-locking like this. Performance is secondary to correctness, and we
-need much more than just a few benchmarks to verify there aren't
-locking bugs being introduced....
+> The bad commit according to grsec's statement is
+> 
+> > From b1438f477934f5a4d5a44df26f3079a7575d5946 Mon Sep 17 00:00:00 2001
+> > From: Dave Chinner <dchinner@redhat.com>
+> > Date: Wed, 18 May 2016 13:53:42 +1000
+> > Subject: [PATCH] xfs: xfs_iflush_cluster fails to abort on error
+> 
+> Would be nice to get some clarification.
+
+There's nothing wrong with that commit in the upstream kernel,
+it's the backport that has a bug in it because it failed to take
+into account changes outside the context of the upstream commit that
+the older kernels don't have.
 
 Cheers,
 
