@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 191517CA0
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 11:06:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CEF348F8033
-	for <xfs@oss.sgi.com>; Thu,  9 Jun 2016 09:06:08 -0700 (PDT)
-Received: from mail-io0-f182.google.com (mail-io0-f182.google.com
-	[209.85.223.182]) by cuda.sgi.com with ESMTP id
-	cZYuGEftKC0TCyWc (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 09 Jun 2016 09:06:06 -0700 (PDT)
-Received: by mail-io0-f182.google.com with SMTP id 5so42025415ioy.1
-	for <xfs@oss.sgi.com>; Thu, 09 Jun 2016 09:06:06 -0700 (PDT)
-Subject: Re: [PATCH v6 0/8] block: prepare for multipage bvecs
-References: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <575993EA.3010005@kernel.dk>
-Date: Thu, 9 Jun 2016 10:06:02 -0600
-MIME-Version: 1.0
-In-Reply-To: <1464615294-9946-1-git-send-email-ming.lei@canonical.com>
+	by oss.sgi.com (Postfix) with ESMTP id A42E67CA3
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 08:26:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 772618F8040
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 06:26:47 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MIsAHLRAddTm2VXO (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 15 Jun 2016 06:26:46 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 4AFD4B5396
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 13:26:45 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-81.bos.redhat.com [10.18.41.81])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u5FDQiOB009553
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 09:26:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2] xfs: refactor xfs_reserve_blocks() to handle ENOSPC
+	correctly
+Date: Wed, 15 Jun 2016 09:26:43 -0400
+Message-Id: <1465997203-55379-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +32,207 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ming Lei <ming.lei@canonical.com>, Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, NeilBrown <neilb@suse.com>, Sagi Grimberg <sagig@mellanox.com>, Steven Whitehouse <swhiteho@redhat.com>, linux-block@vger.kernel.org, Joe Thornber <ejt@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, "open list:XFS FILESYSTEM" <xfs@oss.sgi.com>, Kent Overstreet <kent.overstreet@gmail.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>
+To: xfs@oss.sgi.com
 
-On 05/30/2016 07:34 AM, Ming Lei wrote:
-> Hi,
->
-> Interests[1] have been shown in multipage bvecs, so this patchset
-> try to prepare for the support and do two things:
->
-> 1) the 1st 4 patches use bvec iterator to implement iterate_bvec(),
-> then we can drop the non-standard way for iterating bvec, which
-> can be thought as a good cleanup for lib/iov_iter.c
->
-> 2) remove BIO_MAX_SECTORS and makre BIO_MAX_SIZE as obsolete, and
-> now there is only one user for each. Once multipage bvecs is introduced,
-> one bio may hold lots of sectors, and we should always use sort of
-> BIO_MAX_VECS which should be introduced in future and is similiar
-> with current BIO_MAX_PAGES.
->
-> The only functional change is iterate_bvec():lib/iov_iter.c
->
-> xfstests(-a auto) over loop aio is run for ext4/xfs to verify
-> the change and no regression found with this patchset.
+xfs_reserve_blocks() is responsible to update the XFS reserved block
+pool count at mount time or based on user request. When the caller
+requests to increase the reserve pool, blocks must be allocated from the
+global counters such that they are no longer available for general
+purpose use. If the requested reserve pool size is too large, XFS
+reserves what blocks are available. The implementation requires looking
+at the percpu counters and making an educated guess as to how many
+blocks to try and allocate from xfs_mod_fdblocks(), which can return
+-ENOSPC if the guess was not accurate due to counters being modified in
+parallel.
 
-Added patches 1-7, still waiting for an answer on my reply to #8.
+xfs_reserve_blocks() retries the guess in this scenario until the
+allocation succeeds or it is determined that there is no space available
+in the fs. While not easily reproducible in the current form, the retry
+code doesn't actually work correctly if xfs_mod_fdblocks() actually
+fails. The problem is that the percpu calculations use the m_resblks
+counter to determine how many blocks to allocate, but unconditionally
+update m_resblks before the block allocation has actually succeeded.
+Therefore, if xfs_mod_fdblocks() fails, the code jumps to the retry
+label and uses the already updated m_resblks value to determine how many
+blocks to try and allocate. If the percpu counters previously suggested
+that the entire request was available, fdblocks_delta could end up set
+to 0. In that case, m_resblks is updated to the requested value, yet no
+blocks have been reserved at all.
 
+Refactor xfs_reserve_blocks() to use an explicit loop and make the code
+easier to follow. Since we have to drop the spinlock across the
+xfs_mod_fdblocks() call, use a delta value for m_resblks as well and
+only apply the delta once allocation succeeds.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+v2:
+- Convert while() loop to do {} while().
+v1: http://oss.sgi.com/pipermail/xfs/2016-June/049391.html
+
+ fs/xfs/xfs_fsops.c | 104 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 59 insertions(+), 45 deletions(-)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index b4d7582..d5c1044 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -667,8 +667,11 @@ xfs_reserve_blocks(
+ 	__uint64_t              *inval,
+ 	xfs_fsop_resblks_t      *outval)
+ {
+-	__int64_t		lcounter, delta, fdblks_delta;
++	__int64_t		lcounter, delta;
++	__int64_t		fdblks_delta = 0;
+ 	__uint64_t		request;
++	__int64_t		free;
++	int			error = 0;
+ 
+ 	/* If inval is null, report current values and return */
+ 	if (inval == (__uint64_t *)NULL) {
+@@ -682,24 +685,23 @@ xfs_reserve_blocks(
+ 	request = *inval;
+ 
+ 	/*
+-	 * With per-cpu counters, this becomes an interesting
+-	 * problem. we needto work out if we are freeing or allocation
+-	 * blocks first, then we can do the modification as necessary.
++	 * With per-cpu counters, this becomes an interesting problem. we need
++	 * to work out if we are freeing or allocation blocks first, then we can
++	 * do the modification as necessary.
+ 	 *
+-	 * We do this under the m_sb_lock so that if we are near
+-	 * ENOSPC, we will hold out any changes while we work out
+-	 * what to do. This means that the amount of free space can
+-	 * change while we do this, so we need to retry if we end up
+-	 * trying to reserve more space than is available.
++	 * We do this under the m_sb_lock so that if we are near ENOSPC, we will
++	 * hold out any changes while we work out what to do. This means that
++	 * the amount of free space can change while we do this, so we need to
++	 * retry if we end up trying to reserve more space than is available.
+ 	 */
+-retry:
+ 	spin_lock(&mp->m_sb_lock);
+ 
+ 	/*
+ 	 * If our previous reservation was larger than the current value,
+-	 * then move any unused blocks back to the free pool.
++	 * then move any unused blocks back to the free pool. Modify the resblks
++	 * counters directly since we shouldn't have any problems unreserving
++	 * space.
+ 	 */
+-	fdblks_delta = 0;
+ 	if (mp->m_resblks > request) {
+ 		lcounter = mp->m_resblks_avail - request;
+ 		if (lcounter  > 0) {		/* release unused blocks */
+@@ -707,54 +709,66 @@ retry:
+ 			mp->m_resblks_avail -= lcounter;
+ 		}
+ 		mp->m_resblks = request;
+-	} else {
+-		__int64_t	free;
++		if (fdblks_delta) {
++			spin_unlock(&mp->m_sb_lock);
++			error = xfs_mod_fdblocks(mp, fdblks_delta, 0);
++			spin_lock(&mp->m_sb_lock);
++		}
++
++		goto out;
++	}
+ 
++	/*
++	 * If the request is larger than the current reservation, reserve the
++	 * blocks before we update the reserve counters. Sample m_fdblocks and
++	 * perform a partial reservation if the request exceeds free space.
++	 */
++	do {
+ 		free = percpu_counter_sum(&mp->m_fdblocks) -
+ 							XFS_ALLOC_SET_ASIDE(mp);
+ 		if (!free)
+-			goto out; /* ENOSPC and fdblks_delta = 0 */
++			break;
+ 
+ 		delta = request - mp->m_resblks;
+ 		lcounter = free - delta;
+-		if (lcounter < 0) {
++		if (lcounter < 0)
+ 			/* We can't satisfy the request, just get what we can */
+-			mp->m_resblks += free;
+-			mp->m_resblks_avail += free;
+-			fdblks_delta = -free;
+-		} else {
+-			fdblks_delta = -delta;
+-			mp->m_resblks = request;
+-			mp->m_resblks_avail += delta;
+-		}
+-	}
+-out:
+-	if (outval) {
+-		outval->resblks = mp->m_resblks;
+-		outval->resblks_avail = mp->m_resblks_avail;
+-	}
+-	spin_unlock(&mp->m_sb_lock);
++			fdblks_delta = free;
++		else
++			fdblks_delta = delta;
+ 
+-	if (fdblks_delta) {
+ 		/*
+-		 * If we are putting blocks back here, m_resblks_avail is
+-		 * already at its max so this will put it in the free pool.
+-		 *
+-		 * If we need space, we'll either succeed in getting it
+-		 * from the free block count or we'll get an enospc. If
+-		 * we get a ENOSPC, it means things changed while we were
+-		 * calculating fdblks_delta and so we should try again to
+-		 * see if there is anything left to reserve.
++		 * We'll either succeed in getting space from the free block
++		 * count or we'll get an ENOSPC. If we get a ENOSPC, it means
++		 * things changed while we were calculating fdblks_delta and so
++		 * we should try again to see if there is anything left to
++		 * reserve.
+ 		 *
+ 		 * Don't set the reserved flag here - we don't want to reserve
+ 		 * the extra reserve blocks from the reserve.....
+ 		 */
+-		int error;
+-		error = xfs_mod_fdblocks(mp, fdblks_delta, 0);
+-		if (error == -ENOSPC)
+-			goto retry;
++		spin_unlock(&mp->m_sb_lock);
++		error = xfs_mod_fdblocks(mp, -fdblks_delta, 0);
++		spin_lock(&mp->m_sb_lock);
++	} while (error == -ENOSPC);
++
++	/*
++	 * Update the reserve counters if blocks have been successfully
++	 * allocated.
++	 */
++	if (!error && fdblks_delta) {
++		mp->m_resblks += fdblks_delta;
++		mp->m_resblks_avail += fdblks_delta;
+ 	}
+-	return 0;
++
++out:
++	if (outval) {
++		outval->resblks = mp->m_resblks;
++		outval->resblks_avail = mp->m_resblks_avail;
++	}
++
++	spin_unlock(&mp->m_sb_lock);
++	return error;
+ }
+ 
+ int
 -- 
-Jens Axboe
+2.5.5
 
 _______________________________________________
 xfs mailing list
