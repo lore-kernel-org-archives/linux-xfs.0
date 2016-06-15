@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 468917CA0
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 07:32:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C7963AC004
-	for <xfs@oss.sgi.com>; Wed,  8 Jun 2016 05:32:06 -0700 (PDT)
-Received: from mk-outboundfilter-5-a-2.mail.uk.tiscali.com
-	(mk-outboundfilter-5-a-2.mail.uk.tiscali.com [212.74.114.4]) by
-	cuda.sgi.com with ESMTP id 4SR4JMt0QzGzOtGe for
-	<xfs@oss.sgi.com>; Wed, 08 Jun 2016 05:32:03 -0700 (PDT)
-Subject: Re: invalid inode numbers ? after drive moved from Linux 2.6.32 to
-	Linux 3.16.0 then back again
-References: <5757FE7A.8020504@codefaber.co.uk>
-	<20160608114907.GC8987@redhat.com>
-From: Nigel Tamplin <ntamplin@codefaber.co.uk>
-Message-ID: <5758103A.9090103@codefaber.co.uk>
-Date: Wed, 8 Jun 2016 13:31:54 +0100
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D5EA87CA0
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 02:14:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6DD5304032
+	for <xfs@oss.sgi.com>; Wed, 15 Jun 2016 00:14:47 -0700 (PDT)
+Received: from 1wt.eu (wtarreau.pck.nerim.net [62.212.114.60]) by cuda.sgi.com
+	with ESMTP id aes6DpLmkVTSlz4k for <xfs@oss.sgi.com>;
+	Wed, 15 Jun 2016 00:14:44 -0700 (PDT)
+Date: Wed, 15 Jun 2016 09:14:38 +0200
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: Something badly broken with the latest XFS changeset in all
+	stable kernels?
+Message-ID: <20160615071438.GA5294@1wt.eu>
+References: <75808782-835f-4bc9-5243-b25cab00d6f3@whissi.de>
+	<20160615000241.GC26977@dastard> <20160615013056.GA23074@kroah.com>
+	<20160615052831.GA3452@1wt.eu> <20160615065121.GE26977@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160608114907.GC8987@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20160615065121.GE26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +27,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Greg KH <greg@kroah.com>, xfs@oss.sgi.com, spender@grsecurity.net, stable@vger.kernel.org, "Thomas D." <whissi@whissi.de>
 
-On 08/06/16 12:49, Carlos Maiolino wrote:
-> On Wed, Jun 08, 2016 at 12:16:10PM +0100, Nigel Tamplin wrote:
->> Hello,
->>
->> I have a drive with a partition containing an XFS file system.
->> This drive normally resides in a Linux 2.6.32 (Debian 6) server, which is
->> also where the file system was created many months ago.
->> Last week I removed this drive from it's usual 2.6.32 server and for a few
->> hours it was attached to an alternative Linux 3.16.0 (Debian 8) server,
->> where the XFS file system was mounted and during this time I created
->> /modified / deleted some files.
->> Later the drive was moved back to the normal Linux 2.6.32.
->>
->
-> Linux 3.16 has inode64 mount option enabled by default, which will cause inodes
-> to be spread along the whole disk, causing some inodes (those allocated on disk
-> blocks beyond 1TB offset) to have 64bit numbers.
->
-> 2.6.32 doesn't use inode64 option by default, and so, files with inodes > 2^32
-> will not be accessible by the kernel 2.6.32, but, you can use `mount -o inode64`
-> mount option in the old system and then be able to access these inodes again.
->
+On Wed, Jun 15, 2016 at 04:51:21PM +1000, Dave Chinner wrote:
+> > Overall the regression lived only 8 days in a single branch, I
+> > guess it shows that our process works rather well and limits the exposure
+> > to regressions.
+> 
+> That it got as far as release and it took so long to get to the
+> upstream maintainers shows the process could do with being improved.
 
-Excellent explanation Carlos.
-This exactly explains what had happened, the partition being moved 
-between systems is 2TB in size.
-As you suggested, remounting on the older systems with option inode64 
-resolved it.
+Yep but users relying on oldest LTS usually run on servers that cannot
+reboot without prior planning, so in practice we know that users tend
+to be late by 1 week or more and often one or two versions. I'm pretty
+sure this is the reason why a single user reported the issue. I'm not
+saying this to dismiss the importance of a regression, just the fact
+that the zero-risk never exists and that if an issue can only be
+discovered in field (since the commit was backported according to the
+tags and that the need to adapt it was not detected during the review
+process), it will need one first victim to save all other users. In the
+end the quick enough report ensured that most 3.14 users will not have
+the time to upgrade to the broken version and 3.10/3.12 users will not
+even have the opportunity to see the issue at all. That's what I'm
+saying is not that bad.
 
-Thank you.
+We could imagine some automated tests depending on the affected files
+and/or subsystems but it's not even certain that an automated test
+would have detected this one :-/  We need to thank the initial reporter
+here, and to encourage Brad to pass the information back ASAP next time
+this happens via his channel.
+
+Willy
 
 _______________________________________________
 xfs mailing list
