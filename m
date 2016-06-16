@@ -1,18 +1,21 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 745557CCA
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 10:52:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BA6AAC002
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 08:52:27 -0700 (PDT)
-Received: from offer.com ([61.144.196.136]) by cuda.sgi.com with SMTP id
-	OwnWgsQVYczDty2N for <xfs@oss.sgi.com>;
-	Fri, 17 Jun 2016 08:52:21 -0700 (PDT)
-From: "liguoyan2@163.com" <liguoyan2@163.com>
-Subject: re:pigeon ring,bird ring manufactory directly from china
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3EA727CA2
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 05:14:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 106F9304032
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 03:13:58 -0700 (PDT)
+Received: from mail-vk0-f67.google.com (mail-vk0-f67.google.com
+	[209.85.213.67]) by cuda.sgi.com with ESMTP id kfjZc4TRBWAickTd
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 16 Jun 2016 03:13:56 -0700 (PDT)
+Received: by mail-vk0-f67.google.com with SMTP id k2so7437313vkb.0
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 03:13:56 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 17 Jun 2016 23:48:12 +0800
-Message-Id: <20160617155227.CFFA9A420A0@cuda.sgi.com>
-Reply-To: liguoyan2@163.com
+From: Shi Summer <zbvesa@gmail.com>
+Date: Thu, 16 Jun 2016 18:13:55 +0800
+Message-ID: <CAEAEqMot6rqv6ZkiZVBYP9XykDV7WycYXtnDGHOBnrpe48qxnA@mail.gmail.com>
+Subject: Premium Grade A 11 Oz. White Sublimation Mugs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,32 +24,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1800346456131367019=="
+Content-Type: multipart/mixed; boundary="===============7698013898142283998=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: zubaidahsabran@gmail.com, zonerouge@montrealalouettes.com, zapatayavonne@gmail.com, zamzamimpex@hotmail.com, zakup@poltronic.eu, zahran2371@yahoo.com.tq, zafikeloanfirm88@gmail.com, yolandaanimo225@hotmail.com, Yolanda926@outlook.com, Yolanda@hai-di.com, yevmar@gmail.com, yanielncc@gmail.com, yanie_lncc88@gmail.com, yahyayavas@hotmail.com, xytota14@yahoo.com, xytota@yahoo.com, xytota@gmail.com, xuan@ipcgifts.com, xtarantulz@mail.ru, xfs@oss.sgi.com, xcopyfullerton@gmail.com, wzincker@hotmail.com, wwisewin@gmail.com, wuc4371@gmail.com
 
---===============1800346456131367019==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+--===============7698013898142283998==
+Content-Type: multipart/alternative; boundary=001a11353092e7f6200535627ebe
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
-Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCAxMS4wMC4xMDU4Ni4wIj48L0hFQUQ+DQo8Qk9EWT4NCjxQPmhpIGRlYXI8L1A+
-DQo8UD50aGlzIGlzIGdyYWNlIGxpIGZyb20gR2VzaGlmZW5nIGZhY3RvcnkgaW4gY2hpbmEsIG91
-ciBmYWN0b3J5IG1haW5seSBwcm9kdWNlIA0KPC9QPg0KPFA+PFNUUk9ORz5waWdlb24gcmluZyxi
-aXJkIHJpbmcsIHBpZ2VvbiBjYWdlcywgZHJpbmtlciBhbmQgZmVlZGVyLCB0aGUgcXVhbGl0eSAN
-CmlzIHRoZSBiZXN0IGFuZCBwcmljZSB2ZXJ5IGNoZWFwZXI8L1NUUk9ORz48L1A+DQo8UD48U1RS
-T05HPjwvU1RST05HPiZuYnNwOzwvUD4NCjxQPndlY2xvbWUgdG8gcGxhY2UmbmJzcDsgb3JkZXJz
-PC9QPg0KPFA+VGhhbmtzIGFuZCBiZXN0IHJlZ2FyZHM8L1A+DQo8UD5ncmFjZSBsaSA8L1A+DQo8
-UD53ZWNoYXQvbW9iaWxlL3doYXRzYXBwOiAwMDg2LTEzNTEwNzI2NzE2PC9QPg0KPFA+c2t5cGU6
-Z3JhY2VfYmVzdG9uZXI8L1A+DQo8UD48U1RST05HPjwvU1RST05HPiZuYnNwOzwvUD4NCjxQPjxT
-VFJPTkc+PC9TVFJPTkc+Jm5ic3A7PC9QPjwvQk9EWT48L0hUTUw+DQoNCg==
+--001a11353092e7f6200535627ebe
+Content-Type: text/plain; charset=UTF-8
+
+Dear friends,
+Glad to hear that you are on the market for sublimation mugs and
+sublimation printing.
+We are the manufacturer of the items, we can supply high quality and
+competitive price.
+kindly contact me if any questions.
+
+Best regards,
+
+Summer
+
+--001a11353092e7f6200535627ebe
+Content-Type: text/html; charset=UTF-8
+
+<div dir="ltr"><p>Dear friends,<br>Glad to hear that you are on the market for sublimation mugs 
+and sublimation printing.<br>We are the manufacturer of the items, we can supply 
+high quality and competitive price. <br>kindly contact me if any questions. </p>
+<p>Best regards,</p>
+<p>Summer</p></div>
+
+--001a11353092e7f6200535627ebe--
 
 
---===============1800346456131367019==
+--===============7698013898142283998==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -57,4 +69,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1800346456131367019==--
+--===============7698013898142283998==--
