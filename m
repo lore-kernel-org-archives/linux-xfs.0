@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9DA77CA2
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 04:33:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 99DB38F8037
-	for <xfs@oss.sgi.com>; Tue,  7 Jun 2016 02:33:35 -0700 (PDT)
-Received: from mail-qg0-f49.google.com (mail-qg0-f49.google.com
-	[209.85.192.49]) by cuda.sgi.com with ESMTP id 8FCHhBaXm0lLGMSw
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 07 Jun 2016 02:33:33 -0700 (PDT)
-Received: by mail-qg0-f49.google.com with SMTP id q32so55236149qgq.3
-	for <xfs@oss.sgi.com>; Tue, 07 Jun 2016 02:33:33 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F32C87CA2
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 04:12:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C65BD8F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 02:12:47 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Tg1wNV6NITmBzMue (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 02:12:44 -0700 (PDT)
+Date: Thu, 16 Jun 2016 02:12:41 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/12] NFS: Do not serialise O_DIRECT reads and writes
+Message-ID: <20160616091241.GA15953@infradead.org>
+References: <1465931115-30784-9-git-send-email-trond.myklebust@primarydata.com>
+	<1465931115-30784-10-git-send-email-trond.myklebust@primarydata.com>
+	<20160615071343.GC4318@infradead.org>
+	<755A2A14-C6A9-4737-8335-0A6785490F6D@primarydata.com>
+	<20160615144801.GB18524@infradead.org>
+	<C13D01C1-4B83-442A-A0EA-D7624BE8A782@primarydata.com>
+	<20160615145638.GC5297@infradead.org>
+	<02DCF6B5-AFDF-4E33-A8F2-DBFE67A87E91@primarydata.com>
+	<20160615151422.GA28557@infradead.org>
+	<E6003989-FB5F-4FE8-A161-C6E52E031091@primarydata.com>
 MIME-Version: 1.0
-In-Reply-To: <20160607062717.GA30022@infradead.org>
-References: <CAAA5faG3Ls0Dh_bx=950db9BV01zoLfmubKbM0UYkWpS0y60BA@mail.gmail.com>
-	<79c8e051-24a9-2e2b-553a-bcab17d03e83@sandeen.net>
-	<20160607062717.GA30022@infradead.org>
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Date: Tue, 7 Jun 2016 03:33:32 -0600
-Message-ID: <CAAA5faELfZidgODiVfAVDr7AOrGpgfap9rm_UCfLmWh136mb2Q@mail.gmail.com>
-Subject: Re: crash in xfs in current
+Content-Disposition: inline
+In-Reply-To: <E6003989-FB5F-4FE8-A161-C6E52E031091@primarydata.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,56 +38,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Daniel Wagner <wagi@monom.org>, Eric Sandeen <sandeen@sandeen.net>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: Trond Myklebust <trondmy@primarydata.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jun 7, 2016 at 12:27 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Jun 06, 2016 at 11:39:59PM -0500, Eric Sandeen wrote:
->> xfs_dir2_leaf_lookup_int() only hits that ASSERT if it was given
->> a name to rename, and failed to find the original.  i.e. that should
->> not happen.
->>
->>         /*
->>          * Loop over all the entries with the right hash value
->>          * looking to match the name.
->>          */
->>
->> <do that loop>
->> <fail to find the hash value for the name>
->> <then:>
->>
->>         ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
->>         /*
->>          * Here, we can only be doing a lookup (not a rename or remove).
->>          * If a case-insensitive match was found earlier, re-read the
->>          * appropriate data block if required and return it.
->>          */
->>
->> A rename should never fail to find the original name.
->
-> FYI, this looks very much the same like the Bug Daniel reported, which
-> I tried to help debugging in person over the weekend.  His backtrace
-> points to cancelling a dirty transaction after xfs_dir_replace failed,
-> which most likely comes from the failing lookup, except that he probably
-> doen't have XFS_DEBUG enabled.
+On Wed, Jun 15, 2016 at 03:45:37PM +0000, Trond Myklebust wrote:
+> Serialisation is not mandatory in POSIX:
+> 
+> http://pubs.opengroup.org/onlinepubs/9699919799/functions/write.html
+> 
+> ???Writes can be serialized with respect to other reads and writes. If a read() of file data can be proven (by any means) to occur after a write() of the data, it must reflect that write(), even if the calls are made by different processes. A similar requirement applies to multiple write operations to the same file position. This is needed to guarantee the propagation of data from write() calls to subsequent read() calls. This requirement is particularly significant for networked file systems, where some caching schemes violate these semantics.???
 
-In my case, it looks like that the lookup failed.
-First you try to find the xfs_buf, lbp if the pointer to that buffer.
-Then you try to find the leaf entry with the same hash value.
-Then you look over the entries with the hash value and look if the names match.
-Hopefully XFS_CMP_EXACT is returned.
-What I do NOT get is why this flag needs to be set: XFS_DA_OP_OKNOENT
-I see it being set in xfs_attr_{get, set, remove}, but I am not able
-to see that anywhere in the path of this function.
-In each of these xfs_attrs I see locks acquired and locked released,
-no problem, other than that it's assumed the you obtain the lock.
-If the beginning checks during the lock process don't work out you ASSERT.
+That is the basic defintion, but once O_DSYNC and friends come into
+play it gets more complicated:
 
->
-> Given that 4.7-rc1 comes with the new shared locks for lookups, and
-> there are very little other changes I wonder if there is any relation
-> It would be good if Reinoud and/or Daniel can confirm that Linux 4.6
-> is ok.
+>From http://pubs.opengroup.org/onlinepubs/9699919799/functions/read.html:
+
+    [SIO] [Option Start] If the O_DSYNC and O_RSYNC bits have been set,
+    read I/O operations on the file descriptor shall complete as defined
+    by synchronized I/O data integrity completion. If the O_SYNC and
+    O_RSYNC bits have been set, read I/O operations on the file descriptor
+    shall complete as defined by synchronized I/O file integrity completion.
+    [Option End]
+
+Which directs to:
+http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html:
+
+     3.378 Synchronized I/O Data Integrity Completion
+
+     For read, when the operation has been completed or diagnosed if
+     unsuccessful. The read is complete only when an image of the data
+     has been successfully transferred to the requesting process. If
+     there were any pending write requests affecting the data to be read
+     at the time that the synchronized read operation was requested,
+     these write requests are successfully transferred prior to reading
+     the data.
+
+     For write, when the operation has been completed or diagnosed if
+     unsuccessful. The write is complete only when the data specified in
+     the write request is successfully transferred and all file system
+     information required to retrieve the data is successfully
+     transferred.
+
+     File attributes that are not necessary for data retrieval (access
+     time, modification time, status change time) need not be
+     successfully transferred prior to returning to the calling process.
+
+While we'll never see O_RSYNC in the kernel glibc treats it as just
+O_SYNC.  Either way - I'd be much happier if we could come up with
+less different ways to do read/write exclusion rather than more..
 
 _______________________________________________
 xfs mailing list
