@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A2D4980E9
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 728AC8F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:48 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id s9nv6xBxyZBxUTzN (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 87F24842D
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A5B0304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:55 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 2KFmejkd2Yojqt4z (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:45 -0700 (PDT)
-Subject: [PATCH 123/145] xfs_repair: fix get_agino_buf to avoid corrupting
-	inodes
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:52 -0700 (PDT)
+Subject: [PATCH 124/145] xfs_repair: check the existing refcount btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:43:39 -0700
-Message-ID: <146612781992.16048.3010681907202444358.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:43:46 -0700
+Message-ID: <146612782607.16048.11743925855006104394.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,166 +31,261 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-The inode buffering code tries to read inodes in units of chunks,
-which are the larger of 8K or 1 FSB.  Each chunk gets its own xfs_buf,
-which means that get_agino_buf must calculate the disk address of the
-chunk and feed that to libxfs_readbuf in order to find the inode data
-correctly.  The current code simply grabs the chunk for the start
-inode and indexes from that, which corrupts memory because the start
-inode and the target inode could be in different inode chunks.  That
-causes the assert in rmap.c to blow when we clear the reflink flag.
-
-(Also fix some minor errors in the debugging printfs.)
+Spot-check the refcount btree for obvious errors, and mark the
+refcount btree blocks as such.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/rdwr.c   |    8 +++---
- repair/dinode.c |   73 +++++++++++++++++++++++++++++++++----------------------
- repair/dinode.h |   12 +++++----
- 3 files changed, 54 insertions(+), 39 deletions(-)
+ repair/incore.h     |    3 +
+ repair/scan.c       |  185 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/xfs_repair.c |    2 +
+ 3 files changed, 189 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 533a064..9fcc319 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1038,9 +1038,9 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
- 	if (!error)
- 		bp->b_flags |= LIBXFS_B_UPTODATE;
- #ifdef IO_DEBUG
--	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
--		pthread_self(), __FUNCTION__, , error,
--		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
-+	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
-+		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
-+		(long long)LIBXFS_BBTOOFF64(bp->b_bn), (long long)bp->b_bn, bp);
- #endif
- 	return error;
- }
-@@ -1070,7 +1070,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
- 	if (!error)
- 		libxfs_readbuf_verify(bp, ops);
+diff --git a/repair/incore.h b/repair/incore.h
+index bc0810b..b6c4b4f 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -106,7 +106,8 @@ typedef struct rt_extent_tree_node  {
+ #define XR_E_INUSE_FS1	9	/* used by fs ag header or log (rmap btree) */
+ #define XR_E_INO1	10	/* used by inodes (marked by rmap btree) */
+ #define XR_E_FS_MAP1	11	/* used by fs space/inode maps (rmap btree) */
+-#define XR_E_BAD_STATE	12
++#define XR_E_REFC	12	/* used by fs ag reference count btree */
++#define XR_E_BAD_STATE	13
  
--#ifdef IO_DEBUG
-+#ifdef IO_DEBUGX
- 	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
- 		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
- 		(long long)LIBXFS_BBTOOFF64(bp->b_bn), (long long)bp->b_bn, bp);
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 89163b1..e9b4f8f 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -847,43 +847,58 @@ scan_bmbt_reclist(
+ /* separate state bit, OR'ed into high (4th) bit of ex_state field */
+ 
+diff --git a/repair/scan.c b/repair/scan.c
+index ec41ba6..6300204 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -995,6 +995,9 @@ advance:
+ 					case XFS_RMAP_OWN_INODES:
+ 						set_bmap(agno, b, XR_E_INO1);
+ 						break;
++					case XFS_RMAP_OWN_REFC:
++						set_bmap(agno, b, XR_E_REFC);
++						break;
+ 					case XFS_RMAP_OWN_NULL:
+ 						/* still unknown */
+ 						break;
+@@ -1030,6 +1033,14 @@ _("inode block (%d,%d-%d) mismatch in %s tree, state - %d,%" PRIx64 "\n"),
+ 						agno, b, b + blen - 1,
+ 						name, state, owner);
+ 					break;
++				case XR_E_REFC:
++					if (owner == XFS_RMAP_OWN_REFC)
++						break;
++					do_warn(
++_("AG refcount block (%d,%d-%d) mismatch in %s tree, state - %d,%" PRIx64 "\n"),
++						agno, b, b + blen - 1,
++						name, state, owner);
++					break;
+ 				case XR_E_INUSE:
+ 					if (owner >= 0 &&
+ 					    owner < mp->m_sb.sb_dblocks)
+@@ -1148,6 +1159,167 @@ out:
+ 		rmap_avoid_check();
  }
  
- /*
-- * these two are meant for routines that read and work with inodes
-- * one at a time where the inodes may be in any order (like walking
-- * the unlinked lists to look for inodes).  the caller is responsible
-- * for writing/releasing the buffer.
-+ * Grab the buffer backing an inode.  This is meant for routines that
-+ * work with inodes one at a time in any order (like walking the
-+ * unlinked lists to look for inodes).  The caller is responsible for
-+ * writing/releasing the buffer.
-  */
--xfs_buf_t *
--get_agino_buf(xfs_mount_t	 *mp,
--		xfs_agnumber_t	agno,
--		xfs_agino_t	agino,
--		xfs_dinode_t	**dipp)
-+struct xfs_buf *
-+get_agino_buf(
-+	struct xfs_mount	*mp,
++static void
++scan_refcbt(
++	struct xfs_btree_block	*block,
++	int			level,
++	xfs_agblock_t		bno,
 +	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino,
-+	struct xfs_dinode	**dipp)
- {
--	ino_tree_node_t *irec;
--	xfs_buf_t *bp;
--	int size;
--
--	if ((irec = find_inode_rec(mp, agno, agino)) == NULL)
--		return(NULL);
-+	struct xfs_buf		*bp;
-+	int			cluster_size;
-+	int			ino_per_cluster;
-+	xfs_agino_t		cluster_agino;
-+	xfs_daddr_t		cluster_daddr;
-+	xfs_daddr_t		cluster_blks;
- 
--	size = MAX(1, XFS_FSB_TO_BB(mp,
++	int			suspect,
++	int			isroot,
++	__uint32_t		magic,
++	void			*priv)
++{
++	const char		*name = "refcount";
++	int			i;
++	xfs_refcount_ptr_t	*pp;
++	struct xfs_refcount_rec	*rp;
++	int			hdr_errors = 0;
++	int			numrecs;
++	int			state;
++	xfs_agblock_t		lastblock = 0;
++
++	if (magic != XFS_REFC_CRC_MAGIC) {
++		name = "(unknown)";
++		hdr_errors++;
++		suspect++;
++		goto out;
++	}
++
++	if (be32_to_cpu(block->bb_magic) != magic) {
++		do_warn(_("bad magic # %#x in %s btree block %d/%d\n"),
++			be32_to_cpu(block->bb_magic), name, agno, bno);
++		hdr_errors++;
++		if (suspect)
++			goto out;
++	}
++
++	if (be16_to_cpu(block->bb_level) != level) {
++		do_warn(_("expected level %d got %d in %s btree block %d/%d\n"),
++			level, be16_to_cpu(block->bb_level), name, agno, bno);
++		hdr_errors++;
++		if (suspect)
++			goto out;
++	}
++
++	/* check for btree blocks multiply claimed */
++	state = get_bmap(agno, bno);
++	if (!(state == XR_E_UNKNOWN || state == XR_E_REFC))  {
++		set_bmap(agno, bno, XR_E_MULT);
++		do_warn(
++_("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
++				name, state, agno, bno, suspect);
++		goto out;
++	}
++	set_bmap(agno, bno, XR_E_FS_MAP);
++
++	numrecs = be16_to_cpu(block->bb_numrecs);
++	if (level == 0) {
++		if (numrecs > mp->m_refc_mxr[0])  {
++			numrecs = mp->m_refc_mxr[0];
++			hdr_errors++;
++		}
++		if (isroot == 0 && numrecs < mp->m_refc_mnr[0])  {
++			numrecs = mp->m_refc_mnr[0];
++			hdr_errors++;
++		}
++
++		if (hdr_errors) {
++			do_warn(
++	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
++				be16_to_cpu(block->bb_numrecs),
++				mp->m_refc_mnr[0], mp->m_refc_mxr[0],
++				name, agno, bno);
++			suspect++;
++		}
++
++		rp = XFS_REFCOUNT_REC_ADDR(block, 1);
++		for (i = 0; i < numrecs; i++) {
++			xfs_agblock_t		b, end;
++			xfs_extlen_t		len;
++			xfs_nlink_t		nr;
++
++			b = be32_to_cpu(rp[i].rc_startblock);
++			len = be32_to_cpu(rp[i].rc_blockcount);
++			nr = be32_to_cpu(rp[i].rc_refcount);
++			end = b + len;
++
++			if (!verify_agbno(mp, agno, b)) {
++				do_warn(
++	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
++					b, i, name, agno, bno);
++				continue;
++			}
++			if (len == 0 || !verify_agbno(mp, agno, end - 1)) {
++				do_warn(
++	_("invalid length %u in record %u of %s btree block %u/%u\n"),
++					len, i, name, agno, bno);
++				continue;
++			}
++
++			if (nr < 2 || nr > MAXREFCOUNT) {
++				do_warn(
++	_("invalid reference count %u in record %u of %s btree block %u/%u\n"),
++					nr, i, name, agno, bno);
++				continue;
++			}
++
++			if (b && b <= lastblock) {
++				do_warn(_(
++	"out-of-order %s btree record %d (%u %u) block %u/%u\n"),
++					name, i, b, len, agno, bno);
++			} else {
++				lastblock = b;
++			}
++
++			/* XXX: probably want to mark the reflinked areas? */
++		}
++		goto out;
++	}
++
 +	/*
-+	 * Inode buffers have been read into memory in inode_cluster_size
-+	 * chunks (or one FSB).  To find the correct buffer for an inode,
-+	 * we must find the buffer for its cluster, add the appropriate
-+	 * offset, and return that.
++	 * interior record
 +	 */
-+	cluster_size = MAX(mp->m_inode_cluster_size, mp->m_sb.sb_blocksize);
-+	ino_per_cluster = cluster_size / mp->m_sb.sb_inodesize;
-+	cluster_agino = agino & ~(ino_per_cluster - 1);
-+	cluster_blks = XFS_FSB_TO_DADDR(mp, MAX(1,
- 			mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog));
--	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno,
--		XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)), size, 0,
--		&xfs_inode_buf_ops);
-+	cluster_daddr = XFS_AGB_TO_DADDR(mp, agno,
-+			XFS_AGINO_TO_AGBNO(mp, cluster_agino));
++	pp = XFS_REFCOUNT_PTR_ADDR(block, 1, mp->m_refc_mxr[1]);
 +
-+#ifdef XR_INODE_TRACE
-+	printf("cluster_size %d ipc %d clusagino %d daddr %lld sectors %lld\n",
-+		cluster_size, ino_per_cluster, cluster_agino, cluster_daddr,
-+		cluster_blks);
-+#endif
++	if (numrecs > mp->m_refc_mxr[1])  {
++		numrecs = mp->m_refc_mxr[1];
++		hdr_errors++;
++	}
++	if (isroot == 0 && numrecs < mp->m_refc_mnr[1])  {
++		numrecs = mp->m_refc_mnr[1];
++		hdr_errors++;
++	}
 +
-+	bp = libxfs_readbuf(mp->m_dev, cluster_daddr, cluster_blks,
-+			0, &xfs_inode_buf_ops);
- 	if (!bp) {
- 		do_warn(_("cannot read inode (%u/%u), disk block %" PRIu64 "\n"),
--			agno, irec->ino_startnum,
--			XFS_AGB_TO_DADDR(mp, agno,
--				XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)));
--		return(NULL);
-+			agno, cluster_agino, cluster_daddr);
-+		return NULL;
++	/*
++	 * don't pass bogus tree flag down further if this block
++	 * looked ok.  bail out if two levels in a row look bad.
++	 */
++	if (hdr_errors)  {
++		do_warn(
++	_("bad btree nrecs (%u, min=%u, max=%u) in %s btree block %u/%u\n"),
++			be16_to_cpu(block->bb_numrecs),
++			mp->m_refc_mnr[1], mp->m_refc_mxr[1],
++			name, agno, bno);
++		if (suspect)
++			goto out;
++		suspect++;
++	} else if (suspect) {
++		suspect = 0;
++	}
++
++	for (i = 0; i < numrecs; i++)  {
++		xfs_agblock_t		bno = be32_to_cpu(pp[i]);
++
++		if (bno != 0 && verify_agbno(mp, agno, bno)) {
++			scan_sbtree(bno, level, agno, suspect, scan_refcbt, 0,
++				    magic, priv, &xfs_refcountbt_buf_ops);
++		}
++	}
++out:
++	return;
++}
++
+ /*
+  * The following helpers are to help process and validate individual on-disk
+  * inode btree records. We have two possible inode btrees with slightly
+@@ -1933,6 +2105,19 @@ validate_agf(
+ 		}
  	}
  
--	*dipp = xfs_make_iptr(mp, bp, agino -
--		XFS_OFFBNO_TO_AGINO(mp, XFS_AGINO_TO_AGBNO(mp,
--						irec->ino_startnum),
--		0));
--
--	return(bp);
-+	*dipp = xfs_make_iptr(mp, bp, agino - cluster_agino);
-+	ASSERT(!xfs_sb_version_hascrc(&mp->m_sb) ||
-+			XFS_AGINO_TO_INO(mp, agno, agino) ==
-+			be64_to_cpu((*dipp)->di_ino));
-+	return bp;
- }
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		bno = be32_to_cpu(agf->agf_refcount_root);
++		if (bno != 0 && verify_agbno(mp, agno, bno)) {
++			scan_sbtree(bno,
++				    be32_to_cpu(agf->agf_refcount_level),
++				    agno, 0, scan_refcbt, 1, XFS_REFC_CRC_MAGIC,
++				    agcnts, &xfs_refcountbt_buf_ops);
++		} else  {
++			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
++				bno, agno);
++		}
++	}
++
+ 	if (be32_to_cpu(agf->agf_freeblks) != agcnts->agffreeblks) {
+ 		do_warn(_("agf_freeblks %u, counted %u in ag %u\n"),
+ 			be32_to_cpu(agf->agf_freeblks), agcnts->agffreeblks, agno);
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 2ecd81d..cc557f7 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -423,6 +423,8 @@ calc_mkfs(xfs_mount_t *mp)
+ 		fino_bno += min(2, mp->m_rmap_maxlevels);
+ 		fino_bno++;
+ 	}
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		fino_bno++;
  
- /*
-diff --git a/repair/dinode.h b/repair/dinode.h
-index 5aebf5b..61d0736 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -113,12 +113,12 @@ void
- check_uncertain_aginodes(xfs_mount_t	*mp,
- 			xfs_agnumber_t	agno);
- 
--xfs_buf_t *
--get_agino_buf(xfs_mount_t	*mp,
--		xfs_agnumber_t	agno,
--		xfs_agino_t	agino,
--		xfs_dinode_t	**dipp);
--
-+struct xfs_buf *
-+get_agino_buf(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino,
-+	struct xfs_dinode	**dipp);
- 
- void dinode_bmbt_translation_init(void);
- char * get_forkname(int whichfork);
+ 	/*
+ 	 * If the log is allocated in the first allocation group we need to
 
 _______________________________________________
 xfs mailing list
