@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5A2D28384
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:42:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A4468F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:42 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 3jQRGFg7X0Ys8qUi (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 0DE268354
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:42:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D1F8E8F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:43 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 0EZvhIrb2GLZEABL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:40 -0700 (PDT)
-Subject: [PATCH 112/145] xfs_db: metadump should copy the refcount btree too
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:42 -0700 (PDT)
+Subject: [PATCH 113/145] xfs_db: deal with the CoW extent size hint
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:42:32 -0700
-Message-ID: <146612775267.16048.14038936933078418653.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:42:38 -0700
+Message-ID: <146612775876.16048.7337361121630211530.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,106 +31,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Teach metadump to copy the refcount btree.
+Display the CoW extent hint size when dumping inodes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/metadump.c |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+ db/inode.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 609a5d7..a98e951 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -615,6 +615,78 @@ copy_rmap_btree(
- 	return scan_btree(agno, root, levels, TYP_RMAPBT, agf, scanfunc_rmapbt);
- }
+diff --git a/db/inode.c b/db/inode.c
+index 702cdf8..cac19fc 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -172,12 +172,16 @@ const field_t	inode_v3_flds[] = {
+ 	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
+ 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
+ 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
++	{ "cowextsize", FLDT_EXTLEN, OI(COFF(cowextsize)), C1, 0, TYP_NONE },
+ 	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
+ 	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
+ 	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
+ 	{ "reflink", FLDT_UINT1,
+ 	  OI(COFF(flags2) + bitsz(__uint64_t) - XFS_DIFLAG2_REFLINK_BIT-1), C1,
+ 	  0, TYP_NONE },
++	{ "cowextsz", FLDT_UINT1,
++	  OI(COFF(flags2) + bitsz(__uint64_t) - XFS_DIFLAG2_COWEXTSIZE_BIT-1), C1,
++	  0, TYP_NONE },
+ 	{ NULL }
+ };
  
-+static int
-+scanfunc_refcntbt(
-+	struct xfs_btree_block	*block,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	int			level,
-+	typnm_t			btype,
-+	void			*arg)
-+{
-+	xfs_refcount_ptr_t	*pp;
-+	int			i;
-+	int			numrecs;
-+
-+	if (level == 0)
-+		return 1;
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+	if (numrecs > mp->m_refc_mxr[1]) {
-+		if (show_warnings)
-+			print_warning("invalid numrecs (%u) in %s block %u/%u",
-+				numrecs, typtab[btype].name, agno, agbno);
-+		return 1;
-+	}
-+
-+	pp = XFS_REFCOUNT_PTR_ADDR(block, 1, mp->m_refc_mxr[1]);
-+	for (i = 0; i < numrecs; i++) {
-+		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
-+			if (show_warnings)
-+				print_warning("invalid block number (%u/%u) "
-+					"in %s block %u/%u",
-+					agno, be32_to_cpu(pp[i]),
-+					typtab[btype].name, agno, agbno);
-+			continue;
-+		}
-+		if (!scan_btree(agno, be32_to_cpu(pp[i]), level, btype, arg,
-+				scanfunc_refcntbt))
-+			return 0;
-+	}
-+	return 1;
-+}
-+
-+static int
-+copy_refcount_btree(
-+	xfs_agnumber_t	agno,
-+	struct xfs_agf	*agf)
-+{
-+	xfs_agblock_t	root;
-+	int		levels;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 1;
-+
-+	root = be32_to_cpu(agf->agf_refcount_root);
-+	levels = be32_to_cpu(agf->agf_refcount_level);
-+
-+	/* validate root and levels before processing the tree */
-+	if (root == 0 || root > mp->m_sb.sb_agblocks) {
-+		if (show_warnings)
-+			print_warning("invalid block number (%u) in refcntbt "
-+					"root in agf %u", root, agno);
-+		return 1;
-+	}
-+	if (levels >= XFS_BTREE_MAXLEVELS) {
-+		if (show_warnings)
-+			print_warning("invalid level (%u) in refcntbt root "
-+					"in agf %u", levels, agno);
-+		return 1;
-+	}
-+
-+	return scan_btree(agno, root, levels, TYP_REFCBT, agf, scanfunc_refcntbt);
-+}
-+
- /* filename and extended attribute obfuscation routines */
- 
- struct name_ent {
-@@ -2525,6 +2597,8 @@ scan_ag(
- 			goto pop_out;
- 		if (!copy_rmap_btree(agno, agf))
- 			goto pop_out;
-+		if (!copy_refcount_btree(agno, agf))
-+			goto pop_out;
- 	}
- 
- 	/* copy inode btrees and the inodes and their associated metadata */
 
 _______________________________________________
 xfs mailing list
