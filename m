@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 811F581C7
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:36:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41F4F304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:25 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 382CC819B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:36:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 07EA78F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:30 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id vV2Jgmbp6FKYmFb9 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id in5rmwg6WP8jFqUr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:15 -0700 (PDT)
-Subject: [PATCH 051/145] xfs_db: spot check rmapbt
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:29 -0700 (PDT)
+Subject: [PATCH 053/145] xfs_growfs: report rmapbt presence
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:36:07 -0700
-Message-ID: <146612736753.16048.10847740420522557364.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:36:19 -0700
+Message-ID: <146612737977.16048.15630789762971566149.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,147 +31,73 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Check the rmapbt for obvious errors.  We're leaving thorough checks
-such as comparing the primary metadata against the rmapbt contents
-for newer things like xfs_repair.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c |   85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 84 insertions(+), 1 deletion(-)
+ growfs/xfs_growfs.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 
-diff --git a/db/check.c b/db/check.c
-index 0871ed7..2964b5f 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -44,7 +44,7 @@ typedef enum {
- 	DBM_FREE1,	DBM_FREE2,	DBM_FREELIST,	DBM_INODE,
- 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
- 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
--	DBM_SYMLINK,	DBM_BTFINO,
-+	DBM_SYMLINK,	DBM_BTFINO,	DBM_BTRMAP,
- 	DBM_NDBM
- } dbm_t;
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 56315f9..2b46480 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -58,12 +58,13 @@ report_info(
+ 	int		cimode,
+ 	int		ftype_enabled,
+ 	int		finobt_enabled,
+-	int		spinodes)
++	int		spinodes,
++	int		rmapbt_enabled)
+ {
+ 	printf(_(
+ 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
+ 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-	    "         =%-22s crc=%-8u finobt=%u spinodes=%u\n"
++	    "         =%-22s crc=%-8u finobt=%u spinodes=%u rmapbt=%u\n"
+ 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+@@ -73,7 +74,7 @@ report_info(
  
-@@ -171,6 +171,7 @@ static const char	*typename[] = {
- 	"sb",
- 	"symlink",
- 	"btfino",
-+	"btrmap",
- 	NULL
- };
- static int		verbose;
-@@ -349,6 +350,9 @@ static void		scanfunc_ino(struct xfs_btree_block *block, int level,
- static void		scanfunc_fino(struct xfs_btree_block *block, int level,
- 				     struct xfs_agf *agf, xfs_agblock_t bno,
- 				     int isroot);
-+static void		scanfunc_rmap(struct xfs_btree_block *block, int level,
-+				     struct xfs_agf *agf, xfs_agblock_t bno,
-+				     int isroot);
- static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
- 				  xfs_extlen_t len, dbm_t type,
- 				  xfs_agnumber_t c_agno, xfs_agblock_t c_agbno);
-@@ -1050,6 +1054,7 @@ blocktrash_f(
- 		   (1 << DBM_RTSUM) |
- 		   (1 << DBM_SYMLINK) |
- 		   (1 << DBM_BTFINO) |
-+		   (1 << DBM_BTRMAP) |
- 		   (1 << DBM_SB);
- 	while ((c = getopt(argc, argv, "0123n:o:s:t:x:y:z")) != EOF) {
- 		switch (c) {
-@@ -3899,6 +3904,12 @@ scan_ag(
- 		be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]),
- 		be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
- 		1, scanfunc_cnt, TYP_CNTBT);
-+	if (agf->agf_roots[XFS_BTNUM_RMAP]) {
-+		scan_sbtree(agf,
-+			be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]),
-+			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]),
-+			1, scanfunc_rmap, TYP_RMAPBT);
-+	}
- 	scan_sbtree(agf,
- 		be32_to_cpu(agi->agi_root),
- 		be32_to_cpu(agi->agi_level),
-@@ -4650,6 +4661,78 @@ scanfunc_fino(
- }
+ 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
+ 		"", geo.sectsize, attrversion, projid32bit,
+-		"", crcs_enabled, finobt_enabled, spinodes,
++		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
+ 		"", geo.blocksize, (unsigned long long)geo.datablocks,
+ 			geo.imaxpct,
+ 		"", geo.sunit, geo.swidth,
+@@ -127,6 +128,7 @@ main(int argc, char **argv)
+ 	int			ftype_enabled = 0;
+ 	int			finobt_enabled;	/* free inode btree */
+ 	int			spinodes;
++	int			rmapbt_enabled;
  
- static void
-+scanfunc_rmap(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	struct xfs_agf		*agf,
-+	xfs_agblock_t		bno,
-+	int			isroot)
-+{
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	int			i;
-+	xfs_rmap_ptr_t		*pp;
-+	struct xfs_rmap_rec	*rp;
-+	xfs_agblock_t		lastblock;
-+
-+	if (be32_to_cpu(block->bb_magic) != XFS_RMAP_CRC_MAGIC) {
-+		dbprintf(_("bad magic # %#x in rmapbt block %u/%u\n"),
-+			be32_to_cpu(block->bb_magic), seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		if (!sflag)
-+			dbprintf(_("expected level %d got %d in rmapbt block "
-+				 "%u/%u\n"),
-+				level, be16_to_cpu(block->bb_level), seqno, bno);
-+		error++;
-+	}
-+	if (!isroot) {
-+		fdblocks++;
-+		agfbtreeblks++;
-+	}
-+	set_dbmap(seqno, bno, 1, DBM_BTRMAP, seqno, bno);
-+	if (level == 0) {
-+		if (be16_to_cpu(block->bb_numrecs) > mp->m_rmap_mxr[0] ||
-+		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_rmap_mnr[0])) {
-+			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
-+				 "rmapbt block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs), mp->m_rmap_mnr[0],
-+				mp->m_rmap_mxr[0], seqno, bno);
-+			serious_error++;
-+			return;
-+		}
-+		rp = XFS_RMAP_REC_ADDR(block, 1);
-+		lastblock = 0;
-+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
-+			if (be32_to_cpu(rp[i].rm_startblock) < lastblock) {
-+				dbprintf(_(
-+		"out-of-order rmap btree record %d (%u %u) block %u/%u\n"),
-+					 i, be32_to_cpu(rp[i].rm_startblock),
-+					 be32_to_cpu(rp[i].rm_startblock),
-+					 be32_to_cpu(agf->agf_seqno), bno);
-+			} else {
-+				lastblock = be32_to_cpu(rp[i].rm_startblock);
-+			}
-+		}
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_numrecs) > mp->m_rmap_mxr[1] ||
-+	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_rmap_mnr[1])) {
-+		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in rmapbt "
-+			 "block %u/%u\n"),
-+			be16_to_cpu(block->bb_numrecs), mp->m_rmap_mnr[1],
-+			mp->m_rmap_mxr[1], seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	pp = XFS_RMAP_PTR_ADDR(block, 1, mp->m_rmap_mxr[1]);
-+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
-+		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_rmap,
-+				TYP_RMAPBT);
-+}
-+
-+static void
- set_dbmap(
- 	xfs_agnumber_t	agno,
- 	xfs_agblock_t	agbno,
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -250,11 +252,13 @@ main(int argc, char **argv)
+ 	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
+ 	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
+ 	spinodes = geo.flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
++	rmapbt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
+ 	if (nflag) {
+ 		report_info(geo, datadev, isint, logdev, rtdev,
+ 				lazycount, dirversion, logversion,
+ 				attrversion, projid32bit, crcs_enabled, ci,
+-				ftype_enabled, finobt_enabled, spinodes);
++				ftype_enabled, finobt_enabled, spinodes,
++				rmapbt_enabled);
+ 		exit(0);
+ 	}
+ 
+@@ -292,7 +296,7 @@ main(int argc, char **argv)
+ 	report_info(geo, datadev, isint, logdev, rtdev,
+ 			lazycount, dirversion, logversion,
+ 			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
+-			finobt_enabled, spinodes);
++			finobt_enabled, spinodes, rmapbt_enabled);
+ 
+ 	ddsize = xi.dsize;
+ 	dlsize = ( xi.logBBsize? xi.logBBsize :
 
 _______________________________________________
 xfs mailing list
