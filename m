@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5E5E58080
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F0278F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:10 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id OrXQr9DxezIaQxTw (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4109E8089
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C007BAC002
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:12 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id mcD9kusdpnRCXfbE (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:08 -0700 (PDT)
-Subject: [PATCH 012/145] xfs: separate freelist fixing into a separate helper
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:10 -0700 (PDT)
+Subject: [PATCH 013/145] xfs: convert list of extents to free into a regular
+	list
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:32:00 -0700
-Message-ID: <146612712023.16048.11958690424572913723.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:32:06 -0700
+Message-ID: <146612712636.16048.4965436384661239506.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,146 +32,195 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <david@fromorbit.com>
+In struct xfs_bmap_free, convert the open-coded free extent list to
+a regular list, then use list_sort to sort it prior to processing.
 
-Break up xfs_free_extent() into a helper that fixes the freelist.
-This helper will be used subsequently to ensure the freelist during
-deferred rmap processing.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-[darrick: refactor to put this at the head of the patchset]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_alloc.c |   82 ++++++++++++++++++++++++++++++++++------------------
- libxfs/xfs_alloc.h |    2 +
- 2 files changed, 55 insertions(+), 29 deletions(-)
+ libxfs/init.c        |    3 ++-
+ libxfs/libxfs_priv.h |    3 +--
+ libxfs/util.c        |   10 +++++-----
+ libxfs/xfs_bmap.c    |   39 +++++++++++----------------------------
+ libxfs/xfs_bmap.h    |   14 ++++++++------
+ 5 files changed, 27 insertions(+), 42 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 8520f31..2998af8 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2656,55 +2656,79 @@ error0:
- 	return error;
- }
+diff --git a/libxfs/init.c b/libxfs/init.c
+index e04b6e0..67c3b30 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -417,7 +417,8 @@ manage_zones(int release)
+ 	xfs_btree_cur_zone = kmem_zone_init(
+ 			sizeof(xfs_btree_cur_t), "xfs_btree_cur");
+ 	xfs_bmap_free_item_zone = kmem_zone_init(
+-			sizeof(xfs_bmap_free_item_t), "xfs_bmap_free_item");
++			sizeof(struct xfs_bmap_free_item),
++			"xfs_bmap_free_item");
+ 	xfs_log_item_desc_zone = kmem_zone_init(
+ 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
+ 	xfs_dir_startup();
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index ecd75e7..ba16544 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -466,8 +466,7 @@ struct xfs_buftarg;
+ int xfs_attr_rmtval_get(struct xfs_da_args *);
  
--/*
-- * Free an extent.
-- * Just break up the extent address and hand off to xfs_free_ag_extent
-- * after fixing up the freelist.
-- */
--int				/* error */
--xfs_free_extent(
--	xfs_trans_t	*tp,	/* transaction pointer */
--	xfs_fsblock_t	bno,	/* starting block number of extent */
--	xfs_extlen_t	len)	/* length of extent */
-+/* Ensure that the freelist is at full capacity. */
-+int
-+xfs_free_extent_fix_freelist(
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	struct xfs_buf		**agbp)
+ /* xfs_bmap.c */
+-void xfs_bmap_del_free(struct xfs_bmap_free *, struct xfs_bmap_free_item *,
+-			struct xfs_bmap_free_item *);
++void xfs_bmap_del_free(struct xfs_bmap_free *, struct xfs_bmap_free_item *);
+ 
+ /* xfs_mount.c */
+ int xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 2e826c9..f37b396 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -480,20 +480,20 @@ libxfs_bmap_finish(
+ 	struct xfs_bmap_free	*flist,
+ 	struct xfs_inode	*ip)
  {
--	xfs_alloc_arg_t	args;
--	int		error;
-+	xfs_alloc_arg_t		args;
-+	int			error;
+-	xfs_bmap_free_item_t	*free;	/* free extent list item */
+-	xfs_bmap_free_item_t	*next;	/* next item on free list */
++	struct xfs_bmap_free_item	*free;	/* free extent list item */
+ 	int			error;
  
--	ASSERT(len != 0);
- 	memset(&args, 0, sizeof(xfs_alloc_arg_t));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
-+	args.agno = agno;
+ 	if (flist->xbf_count == 0)
+ 		return 0;
  
- 	/*
- 	 * validate that the block number is legal - the enables us to detect
- 	 * and handle a silent filesystem corruption rather than crashing.
- 	 */
--	args.agno = XFS_FSB_TO_AGNO(args.mp, bno);
- 	if (args.agno >= args.mp->m_sb.sb_agcount)
- 		return -EFSCORRUPTED;
- 
--	args.agbno = XFS_FSB_TO_AGBNO(args.mp, bno);
--	if (args.agbno >= args.mp->m_sb.sb_agblocks)
--		return -EFSCORRUPTED;
--
- 	args.pag = xfs_perag_get(args.mp, args.agno);
- 	ASSERT(args.pag);
- 
- 	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
- 	if (error)
--		goto error0;
-+		goto out;
-+
-+	*agbp = args.agbp;
-+out:
-+	xfs_perag_put(args.pag);
-+	return error;
-+}
-+
-+/*
-+ * Free an extent.
-+ * Just break up the extent address and hand off to xfs_free_ag_extent
-+ * after fixing up the freelist.
-+ */
-+int				/* error */
-+xfs_free_extent(
-+	struct xfs_trans	*tp,	/* transaction pointer */
-+	xfs_fsblock_t		bno,	/* starting block number of extent */
-+	xfs_extlen_t		len)	/* length of extent */
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_buf		*agbp;
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, bno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, bno);
-+	int			error;
-+
-+	ASSERT(len != 0);
-+
-+	error = xfs_free_extent_fix_freelist(tp, agno, &agbp);
-+	if (error)
-+		return error;
-+
-+	XFS_WANT_CORRUPTED_GOTO(mp, agbno < mp->m_sb.sb_agblocks, err);
- 
- 	/* validate the extent size is legal now we have the agf locked */
--	if (args.agbno + len >
--			be32_to_cpu(XFS_BUF_TO_AGF(args.agbp)->agf_length)) {
--		error = -EFSCORRUPTED;
--		goto error0;
--	}
-+	XFS_WANT_CORRUPTED_GOTO(mp,
-+			agbno + len <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_length),
-+			err);
- 
--	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
--	if (!error)
--		xfs_extent_busy_insert(tp, args.agno, args.agbno, len, 0);
--error0:
--	xfs_perag_put(args.pag);
-+	error = xfs_free_ag_extent(tp, agbp, agno, agbno, len, 0);
-+	if (error)
-+		goto err;
-+
-+	xfs_extent_busy_insert(tp, agno, agbno, len, 0);
-+	return 0;
-+
-+err:
-+	xfs_trans_brelse(tp, agbp);
- 	return error;
+-	for (free = flist->xbf_first; free != NULL; free = next) {
+-		next = free->xbfi_next;
++	while (!list_empty(&flist->xbf_flist)) {
++		free = list_first_entry(&flist->xbf_flist,
++				struct xfs_bmap_free_item, xbfi_list);
+ 		error = xfs_free_extent(*tp, free->xbfi_startblock,
+ 					free->xbfi_blockcount);
+ 		if (error)
+ 			return error;
+-		xfs_bmap_del_free(flist, NULL, free);
++		xfs_bmap_del_free(flist, free);
+ 	}
+ 	return 0;
  }
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 92a66ba..cf268b2 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -229,5 +229,7 @@ xfs_alloc_get_rec(
- int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
- int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
-+int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
-+		struct xfs_buf **agbp);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index c2a2c53..65de5ad 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -567,9 +567,7 @@ xfs_bmap_add_free(
+ 	xfs_fsblock_t		bno,		/* fs block number of extent */
+ 	xfs_filblks_t		len)		/* length of extent */
+ {
+-	xfs_bmap_free_item_t	*cur;		/* current (next) element */
+-	xfs_bmap_free_item_t	*new;		/* new element */
+-	xfs_bmap_free_item_t	*prev;		/* previous element */
++	struct xfs_bmap_free_item	*new;		/* new element */
+ #ifdef DEBUG
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
+@@ -589,17 +587,7 @@ xfs_bmap_add_free(
+ 	new = kmem_zone_alloc(xfs_bmap_free_item_zone, KM_SLEEP);
+ 	new->xbfi_startblock = bno;
+ 	new->xbfi_blockcount = (xfs_extlen_t)len;
+-	for (prev = NULL, cur = flist->xbf_first;
+-	     cur != NULL;
+-	     prev = cur, cur = cur->xbfi_next) {
+-		if (cur->xbfi_startblock >= bno)
+-			break;
+-	}
+-	if (prev)
+-		prev->xbfi_next = new;
+-	else
+-		flist->xbf_first = new;
+-	new->xbfi_next = cur;
++	list_add(&new->xbfi_list, &flist->xbf_flist);
+ 	flist->xbf_count++;
+ }
  
- #endif	/* __XFS_ALLOC_H__ */
+@@ -609,14 +597,10 @@ xfs_bmap_add_free(
+  */
+ void
+ xfs_bmap_del_free(
+-	xfs_bmap_free_t		*flist,	/* free item list header */
+-	xfs_bmap_free_item_t	*prev,	/* previous item on list, if any */
+-	xfs_bmap_free_item_t	*free)	/* list item to be freed */
++	struct xfs_bmap_free		*flist,	/* free item list header */
++	struct xfs_bmap_free_item	*free)	/* list item to be freed */
+ {
+-	if (prev)
+-		prev->xbfi_next = free->xbfi_next;
+-	else
+-		flist->xbf_first = free->xbfi_next;
++	list_del(&free->xbfi_list);
+ 	flist->xbf_count--;
+ 	kmem_zone_free(xfs_bmap_free_item_zone, free);
+ }
+@@ -626,17 +610,16 @@ xfs_bmap_del_free(
+  */
+ void
+ xfs_bmap_cancel(
+-	xfs_bmap_free_t		*flist)	/* list of bmap_free_items */
++	struct xfs_bmap_free		*flist)	/* list of bmap_free_items */
+ {
+-	xfs_bmap_free_item_t	*free;	/* free list item */
+-	xfs_bmap_free_item_t	*next;
++	struct xfs_bmap_free_item	*free;	/* free list item */
+ 
+ 	if (flist->xbf_count == 0)
+ 		return;
+-	ASSERT(flist->xbf_first != NULL);
+-	for (free = flist->xbf_first; free; free = next) {
+-		next = free->xbfi_next;
+-		xfs_bmap_del_free(flist, NULL, free);
++	while (!list_empty(&flist->xbf_flist)) {
++		free = list_first_entry(&flist->xbf_flist,
++				struct xfs_bmap_free_item, xbfi_list);
++		xfs_bmap_del_free(flist, free);
+ 	}
+ 	ASSERT(flist->xbf_count == 0);
+ }
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index 6485403..c165b2d 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -62,12 +62,12 @@ struct xfs_bmalloca {
+  * List of extents to be free "later".
+  * The list is kept sorted on xbf_startblock.
+  */
+-typedef struct xfs_bmap_free_item
++struct xfs_bmap_free_item
+ {
+ 	xfs_fsblock_t		xbfi_startblock;/* starting fs block number */
+ 	xfs_extlen_t		xbfi_blockcount;/* number of blocks in extent */
+-	struct xfs_bmap_free_item *xbfi_next;	/* link to next entry */
+-} xfs_bmap_free_item_t;
++	struct list_head	xbfi_list;
++};
+ 
+ /*
+  * Header for free extent list.
+@@ -85,7 +85,7 @@ typedef struct xfs_bmap_free_item
+  */
+ typedef	struct xfs_bmap_free
+ {
+-	xfs_bmap_free_item_t	*xbf_first;	/* list of to-be-free extents */
++	struct list_head	xbf_flist;	/* list of to-be-free extents */
+ 	int			xbf_count;	/* count of items on list */
+ 	int			xbf_low;	/* alloc in low mode */
+ } xfs_bmap_free_t;
+@@ -141,8 +141,10 @@ static inline int xfs_bmapi_aflag(int w)
+ 
+ static inline void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp)
+ {
+-	((flp)->xbf_first = NULL, (flp)->xbf_count = 0, \
+-		(flp)->xbf_low = 0, *(fbp) = NULLFSBLOCK);
++	INIT_LIST_HEAD(&flp->xbf_flist);
++	flp->xbf_count = 0;
++	flp->xbf_low = 0;
++	*fbp = NULLFSBLOCK;
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
