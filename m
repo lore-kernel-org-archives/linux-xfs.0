@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A585E7CB1
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:04:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5426C8F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:04:25 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id ogLt1EmUKLWOnKuf for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:04:23 -0700 (PDT)
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: [RFC PATCH 2/2] xfs: initial/partial support for badblocks
-Date: Thu, 16 Jun 2016 19:03:39 -0600
-Message-Id: <1466125419-17736-3-git-send-email-vishal.l.verma@intel.com>
-In-Reply-To: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
-References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 78CDD7CA2
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3799AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:01 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id PASvl6hOWnsGZJh1 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:00 -0700 (PDT)
+Subject: [PATCH v9 0/3] fallocate for block devices
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:17:27 -0700
+Message-ID: <146612624734.12764.4316680863289411106.stgit@birch.djwong.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,193 +22,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org, xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>, Vishal Verma <vishal.l.verma@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: axboe@kernel.dk, darrick.wong@oracle.com
+Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
-RFC/WIP commit.
+Hi,
 
-This adds the foollowing:
-1. In xfs_mountfs(), get an initial badblocks list from gendisk's
-badblocks infrastructure.
-2. Register with the badblocks notifier to get updates for this disk's
-badblocks
+This is a redesign of the patch series that fixes various interface
+problems with the existing "zero out this part of a block device"
+code.  BLKZEROOUT2 is gone.
 
-TODO:
-1. Add badblocks info to the reverse mapping tree (and remove if a
-badblock was cleared).
-2. Before doing file IO, refer the rmap/badblocks to error out early if
-the IO will attempt wo read a bad sector
-3. Figure out interactions with mmap/DAX.
+The first patch is still a fix to the existing BLKZEROOUT ioctl to
+invalidate the page cache if the zeroing command to the underlying
+device succeeds.  Without this patch we still have the pagecache
+coherence bug that's been in the kernel forever.
 
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
----
- fs/xfs/xfs_linux.h |   1 +
- fs/xfs/xfs_mount.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_mount.h |   1 +
- 3 files changed, 106 insertions(+)
+The second patch changes the internal block device functions to reject
+attempts to discard or zeroout that are not aligned to the logical
+block size.  Previously, we only checked that the start/len parameters
+were 512-byte aligned, which caused kernel BUG_ONs for unaligned IOs
+to 4k-LBA devices.
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 7e749be..f66d181 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -78,6 +78,7 @@ typedef __u32			xfs_nlink_t;
- #include <linux/freezer.h>
- #include <linux/list_sort.h>
- #include <linux/ratelimit.h>
-+#include <linux/badblocks.h>
- 
- #include <asm/page.h>
- #include <asm/div64.h>
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 5e68b2c..1a47737 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -618,6 +618,96 @@ xfs_default_resblks(xfs_mount_t *mp)
- 	return resblks;
- }
- 
-+STATIC int
-+xfs_notifier_call(
-+	struct notifier_block	*nb,
-+	unsigned long		action,
-+	void			*data)
-+{
-+	struct bb_notifier_data *bb_data = data;
-+	struct xfs_mount *mp;
-+
-+	mp = container_of(nb, struct xfs_mount, m_badblocks_nb);
-+	/* TODO xfs_add_bb_to_rmap(mp, bb_data->sector, bb_data->count); */
-+	xfs_warn(mp, "xfs badblock %s sector %lu (count %d)\n",
-+		(action == BB_ADD)?"added":"cleared",
-+		bb_data->sector, bb_data->count);
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_init_badblocks(struct xfs_mount *mp)
-+{
-+	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-+	int done = 0, error = 0;
-+	ssize_t len, off = 0;
-+	char *p;
-+
-+	/*
-+	 * TODO: get a list of known badblocks so far and process it.
-+	 * Can we just parse the sysfs format that badblocks_show()
-+	 * returns? That should be the fastest way to get this.
-+	 * Something like: (Is this too hacky? Should we just do
-+	 * badblocks_check() in a (rather large) loop?)
-+	 */
-+	p = kzalloc(PAGE_SIZE, GFP_KERNEL);
-+	len = badblocks_show(bb, p, 0);
-+	while (len) {
-+		int count, n;
-+		sector_t s;
-+
-+		/*
-+		 * The sysfs badblocks format is multiple lines of:
-+		 * "<sector> <count>"
-+		 */
-+		n = sscanf(p + off, "%lu %d\n%n", &s, &count, &done);
-+		if (n < 2 || done < 3) {
-+			error = -1;
-+			break;
-+		}
-+		off += done;
-+		len -= done;
-+		xfs_warn(mp, "got badblocks: sector %ld, count %d", s, count);
-+		/* TODO xfs_add_bb_to_rmap(mp, s, count); */
-+	}
-+	kfree(p);
-+	if (error)
-+		return error;
-+
-+	mp->m_badblocks_nb.notifier_call = xfs_notifier_call;
-+	error = bb_notifier_register(bb, &mp->m_badblocks_nb);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * TODO: There is probably a TOCTOU race hiding here - what if the
-+	 * badblocks list gets updated before we register for notifications..
-+	 * Can likely be solved by registering for notifications _first_ (the
-+	 * above xfs_add_bb_to_rmap function has to be ready to accept new
-+	 * blocks), then querying for the initial list (there could be overlap
-+	 * here, shich the above function could handle), and then setting the
-+	 * mount flag below.
-+	 */
-+
-+	/*
-+	 * TODO: set some flag (mount flag?) in xfs so that xfs knows
-+	 * it will be doing error checking, and can possibly, later,
-+	 * tell the block layer (possibly using a REQ_ flag in its IO
-+	 * requests) not to do further badblock checking for those IOs.
-+	 */
-+
-+	/* mp->m_flags |= XFS_MOUNT_FS_BADBLOCKS; */
-+	return 0;
-+}
-+
-+STATIC void
-+xfs_badblocks_unmount(struct xfs_mount *mp)
-+{
-+	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-+
-+	bb_notifier_unregister(bb, &mp->m_badblocks_nb);
-+}
-+
- /*
-  * This function does the following on an initial mount of a file system:
-  *	- reads the superblock from disk and init the mount struct
-@@ -955,6 +1045,19 @@ xfs_mountfs(
- 	}
- 
- 	/*
-+	 * Register with the badblocks notifier chain
-+	 */
-+	error = xfs_init_badblocks(mp);
-+	if (error) {
-+		xfs_warn(mp, "Unable to register to badblocks notifications\n");
-+		/*
-+		 * TODO is this a hard error or can we simply
-+		 * warn and continue?
-+		 */
-+		goto out_rtunmount;
-+	}
-+
-+	/*
- 	 * Now we are mounted, reserve a small amount of unused space for
- 	 * privileged transactions. This is needed so that transaction
- 	 * space required for critical operations can dip into this pool
-@@ -1085,6 +1188,7 @@ xfs_unmountfs(
- 	xfs_log_unmount(mp);
- 	xfs_da_unmount(mp);
- 	xfs_uuid_unmount(mp);
-+	xfs_badblocks_unmount(mp);
- 
- #if defined(DEBUG)
- 	xfs_errortag_clearall(mp, 0);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 0ca9244..f0d1111 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -139,6 +139,7 @@ typedef struct xfs_mount {
- 						/* low free space thresholds */
- 	struct xfs_kobj		m_kobj;
- 	struct xstats		m_stats;	/* per-fs stats */
-+	struct notifier_block	m_badblocks_nb;	/* disk badblocks notifier */
- 
- 	struct workqueue_struct *m_buf_workqueue;
- 	struct workqueue_struct	*m_data_workqueue;
--- 
-2.5.5
+The third patch creates an fallocate handler for block devices, wires
+up the FALLOC_FL_PUNCH_HOLE flag to zeroing-discard, and connects
+FALLOC_FL_ZERO_RANGE to write-same so that we can have a consistent
+fallocate interface between files and block devices.  It also allows
+the combination of PUNCH_HOLE and NO_HIDE_STALE to invoke non-zeroing
+discard.
+
+Test cases for the new block device fallocate are now in xfstests as
+generic/349-351.
+
+Comments and questions are, as always, welcome.  Patches are against
+4.7-rc3.
+
+v7: Strengthen parameter checking and fix various code issues pointed
+out by Linus and Christoph.
+v8: More code rearranging, rebase to 4.6-rc3, and dig into alignment
+issues.
+v9: Forward port to 4.7.
+
+--D
 
 _______________________________________________
 xfs mailing list
