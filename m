@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 483FA7CB3
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 07:37:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1BB3F8F8049
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:37:16 -0700 (PDT)
-Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
-	[74.125.82.47]) by cuda.sgi.com with ESMTP id OjAwSwF3ADyGVdzn
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Jun 2016 05:37:14 -0700 (PDT)
-Received: by mail-wm0-f47.google.com with SMTP id r201so59819488wme.1
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:37:14 -0700 (PDT)
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [PATCH 2/3] block: require write_same and discard requests align
-	to logical block size
-References: <146612624734.12764.4316680863289411106.stgit@birch.djwong.org>
-	<146612626092.12764.773833541076937471.stgit@birch.djwong.org>
-Message-ID: <3470c511-59f5-ff7d-b4b0-22d7d8a2a6e7@acm.org>
-Date: Mon, 20 Jun 2016 14:37:06 +0200
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 583487CC5
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5A34AC002
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:26 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id CQjdRXkVHizAMKIN (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:25 -0700 (PDT)
+Subject: [PATCH 004/119] xfs: enable buffer deadlock postmortem diagnosis
+	via ftrace
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:18:18 -0700
+Message-ID: <146612629822.12839.7938642541078923297.stgit@birch.djwong.org>
+In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <146612626092.12764.773833541076937471.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +25,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "hch@infradead.org" <hch@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, "bfoster@redhat.com" <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@lst.de>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On 06/17/2016 03:19 AM, Darrick J. Wong wrote:
-> Make sure that the offset and length arguments that we're using to
-> construct WRITE SAME and DISCARD requests are actually aligned to the
-> logical block size.  Failure to do this causes other errors in other
-> parts of the block layer or the SCSI layer because disks don't support
-> partial logical block writes.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Create a second buf_trylock tracepoint so that we can distinguish
+between a successful and a failed trylock.  With this piece, we can
+use a script to look at the ftrace output to detect buffer deadlocks.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_buf.c   |    3 ++-
+ fs/xfs/xfs_trace.h |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index efa2a73..2333db7 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -947,7 +947,8 @@ xfs_buf_trylock(
+ 	if (locked)
+ 		XB_SET_OWNER(bp);
+ 
+-	trace_xfs_buf_trylock(bp, _RET_IP_);
++	locked ? trace_xfs_buf_trylock(bp, _RET_IP_) :
++		 trace_xfs_buf_trylock_fail(bp, _RET_IP_);
+ 	return locked;
+ }
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index ea94ee0..68f27f7 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -354,6 +354,7 @@ DEFINE_BUF_EVENT(xfs_buf_submit_wait);
+ DEFINE_BUF_EVENT(xfs_buf_bawrite);
+ DEFINE_BUF_EVENT(xfs_buf_lock);
+ DEFINE_BUF_EVENT(xfs_buf_lock_done);
++DEFINE_BUF_EVENT(xfs_buf_trylock_fail);
+ DEFINE_BUF_EVENT(xfs_buf_trylock);
+ DEFINE_BUF_EVENT(xfs_buf_unlock);
+ DEFINE_BUF_EVENT(xfs_buf_iowait);
 
 _______________________________________________
 xfs mailing list
