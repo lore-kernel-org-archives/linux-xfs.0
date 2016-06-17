@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B439F81A5
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:35:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 81A61304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:56 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id F556fwLhUp16NOI3 (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0FEC881B5
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:36:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B69AAC002
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:05 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id o3LU0dHbCHa9PFLo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:55 -0700 (PDT)
-Subject: [PATCH 048/145] xfs: don't update rmapbt when fixing agfl
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:04 -0700 (PDT)
+Subject: [PATCH 049/145] xfs: enable the rmap btree functionality
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:35:47 -0700
-Message-ID: <146612734754.16048.4355394142113008748.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:35:53 -0700
+Message-ID: <146612735364.16048.10084233974535786999.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,92 +29,37 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-Allow a caller of xfs_alloc_fix_freelist to disable rmapbt updates
-when fixing the AG freelist.  xfs_repair needs this during phase 5
-to be able to adjust the freelist while it's reconstructing the rmap
-btree; the missing entries will be added back at the very end of
-phase 5 once the AGFL contents settle down.
+From: Dave Chinner <dchinner@redhat.com>
 
+Add the feature flag to the supported matrix so that the kernel can
+mount and use rmap btree enabled filesystems
+
+v2: Move the EXPERIMENTAL message to fill_super so it only prints once.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick.wong@oracle.com: move the experimental tag]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_alloc.c |   40 ++++++++++++++++++++++++++--------------
- libxfs/xfs_alloc.h |    3 +++
- 2 files changed, 29 insertions(+), 14 deletions(-)
+ libxfs/xfs_format.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 7d680da..2f943db 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2088,26 +2088,38 @@ xfs_alloc_fix_freelist(
- 	 * anything other than extra overhead when we need to put more blocks
- 	 * back on the free list? Maybe we should only do this when space is
- 	 * getting low or the AGFL is more than half full?
-+	 *
-+	 * The NOSHRINK flag prevents the AGFL from being shrunk if it's too
-+	 * big; the NORMAP flag prevents AGFL expand/shrink operations from
-+	 * updating the rmapbt.  Both flags are used in xfs_repair while we're
-+	 * rebuilding the rmapbt, and neither are used by the kernel.  They're
-+	 * both required to ensure that rmaps are correctly recorded for the
-+	 * regenerated AGFL, bnobt, and cntbt.  See repair/phase5.c and
-+	 * repair/rmap.c in xfsprogs for details.
- 	 */
--	xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
--	while (pag->pagf_flcount > need) {
--		struct xfs_buf	*bp;
-+	memset(&targs, 0, sizeof(targs));
-+	if (!(flags & XFS_ALLOC_FLAG_NOSHRINK)) {
-+		if (!(flags & XFS_ALLOC_FLAG_NORMAP))
-+			xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
-+		while (pag->pagf_flcount > need) {
-+			struct xfs_buf	*bp;
- 
--		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
--		if (error)
--			goto out_agbp_relse;
--		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
--					   &targs.oinfo, 1);
--		if (error)
--			goto out_agbp_relse;
--		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
--		xfs_trans_binval(tp, bp);
-+			error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
-+			if (error)
-+				goto out_agbp_relse;
-+			error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
-+						   &targs.oinfo, 1);
-+			if (error)
-+				goto out_agbp_relse;
-+			bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-+			xfs_trans_binval(tp, bp);
-+		}
- 	}
- 
--	memset(&targs, 0, sizeof(targs));
- 	targs.tp = tp;
- 	targs.mp = mp;
--	xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
-+	if (!(flags & XFS_ALLOC_FLAG_NORMAP))
-+		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
- 	targs.agbp = agbp;
- 	targs.agno = args->agno;
- 	targs.alignment = targs.minlen = targs.prod = targs.isfl = 1;
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 7b6c66b..7b9e67e 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -54,6 +54,9 @@ typedef unsigned int xfs_alloctype_t;
-  */
- #define	XFS_ALLOC_FLAG_TRYLOCK	0x00000001  /* use trylock for buffer locking */
- #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
-+#define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
-+#define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
-+
- 
- /*
-  * Argument structure for xfs_alloc routines.
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 2525004..7205806 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -457,7 +457,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+-		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
 
 _______________________________________________
 xfs mailing list
