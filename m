@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE9E582AF
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E92D304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:14 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id dZpdM5NDGRLeT3iz (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id D185382EC
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 91080304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:17 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id TLLwJUmDnk9l35Mh (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:12 -0700 (PDT)
-Subject: [PATCH 088/145] xfs: map an inode's offset to an exact physical block
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:15 -0700 (PDT)
+Subject: [PATCH 089/145] xfs: implement deferred bmbt map/unmap operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:40:05 -0700
-Message-ID: <146612760515.16048.9407022403121181267.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:40:11 -0700
+Message-ID: <146612761130.16048.14802509002983794111.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,156 +31,322 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Teach the bmap routine to know how to map a range of file blocks to a
-specific range of physical blocks, instead of simply allocating fresh
-blocks.  This enables reflink to map a file to blocks that are already
-in use.
+Implement deferred versions of the inode block map/unmap functions.
+These will be used in subsequent patches to make reflink operations
+atomic.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfs_trace.h |    3 ++
- libxfs/xfs_bmap.c   |   63 +++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_bmap.h   |   10 +++++++-
- 3 files changed, 75 insertions(+), 1 deletion(-)
+ include/xfs_trace.h |    2 +
+ libxfs/defer_item.c |  101 ++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_bmap.c   |  124 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_bmap.h   |   11 +++++
+ libxfs/xfs_defer.h  |    1 
+ 5 files changed, 239 insertions(+)
 
 
 diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-index d3b2486..6277b53 100644
+index 6277b53..dfc92a6 100644
 --- a/include/xfs_trace.h
 +++ b/include/xfs_trace.h
-@@ -256,6 +256,9 @@
- #define trace_xfs_refcount_find_shared_result(...)	((void) 0)
- #define trace_xfs_refcount_find_shared_error(...)	((void) 0)
+@@ -258,6 +258,8 @@
  
-+#define trace_xfs_bmap_remap_alloc(...)		((void) 0)
-+#define trace_xfs_bmap_remap_alloc_error(...)	((void) 0)
-+
+ #define trace_xfs_bmap_remap_alloc(...)		((void) 0)
+ #define trace_xfs_bmap_remap_alloc_error(...)	((void) 0)
++#define trace_xfs_bmap_deferred(...)		((void) 0)
++#define trace_xfs_bmap_defer(...)		((void) 0)
+ 
  /* set c = c to avoid unused var warnings */
  #define trace_xfs_perag_get(a,b,c,d)	((c) = (c))
- #define trace_xfs_perag_get_tag(a,b,c,d) ((c) = (c))
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 7ef1d18..58f730e 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -3864,6 +3864,55 @@ xfs_bmap_btalloc(
- }
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index a383813..bd41808 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -32,6 +32,8 @@
+ #include "xfs_alloc.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount.h"
++#include "xfs_bmap.h"
++#include "xfs_inode.h"
  
- /*
-+ * For a remap operation, just "allocate" an extent at the address that the
-+ * caller passed in, and ensure that the AGFL is the right size.  The caller
-+ * will then map the "allocated" extent into the file somewhere.
-+ */
-+STATIC int
-+xfs_bmap_remap_alloc(
-+	struct xfs_bmalloca	*ap)
+ /* Extent Freeing */
+ 
+@@ -364,12 +366,111 @@ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+ 	.cancel_item	= xfs_refcount_update_cancel_item,
+ };
+ 
++/* Inode Block Mapping */
++
++/* Sort bmap intents by inode. */
++static int
++xfs_bmap_update_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
 +{
-+	struct xfs_trans	*tp = ap->tp;
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	xfs_agblock_t		bno;
-+	struct xfs_alloc_arg	args;
-+	int			error;
++	struct xfs_bmap_intent		*ba;
++	struct xfs_bmap_intent		*bb;
 +
-+	/*
-+	 * validate that the block number is legal - the enables us to detect
-+	 * and handle a silent filesystem corruption rather than crashing.
-+	 */
-+	memset(&args, 0, sizeof(struct xfs_alloc_arg));
-+	args.tp = ap->tp;
-+	args.mp = ap->tp->t_mountp;
-+	bno = *ap->firstblock;
-+	args.agno = XFS_FSB_TO_AGNO(mp, bno);
-+	ASSERT(args.agno < mp->m_sb.sb_agcount);
-+	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
-+	ASSERT(args.agbno < mp->m_sb.sb_agblocks);
++	ba = container_of(a, struct xfs_bmap_intent, bi_list);
++	bb = container_of(b, struct xfs_bmap_intent, bi_list);
++	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
++}
 +
-+	/* "Allocate" the extent from the range we passed in. */
-+	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
-+	ap->blkno = bno;
-+	ap->ip->i_d.di_nblocks += ap->length;
-+	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
++/* Get an BUI. */
++STATIC void *
++xfs_bmap_update_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	return NULL;
++}
 +
-+	/* Fix the freelist, like a real allocator does. */
-+	args.userdata = 1;
-+	args.pag = xfs_perag_get(args.mp, args.agno);
-+	ASSERT(args.pag);
++/* Log bmap updates in the intent item. */
++STATIC void
++xfs_bmap_update_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++}
 +
-+	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
-+	if (error)
-+		goto error0;
-+error0:
-+	xfs_perag_put(args.pag);
-+	if (error)
-+		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
++/* Get an BUD so we can process all the deferred rmap updates. */
++STATIC void *
++xfs_bmap_update_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return NULL;
++}
++
++/* Process a deferred rmap update. */
++STATIC int
++xfs_bmap_update_finish_item(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dop,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_bmap_intent		*bmap;
++	int				error;
++
++	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
++	error = xfs_bmap_finish_one(tp, dop,
++			bmap->bi_owner,
++			bmap->bi_type, bmap->bi_whichfork,
++			bmap->bi_bmap.br_startoff,
++			bmap->bi_bmap.br_startblock,
++			bmap->bi_bmap.br_blockcount,
++			bmap->bi_bmap.br_state);
++	kmem_free(bmap);
 +	return error;
 +}
 +
-+/*
-  * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
-  * It figures out where to ask the underlying allocator to put the new extent.
-  */
-@@ -3871,6 +3920,8 @@ STATIC int
- xfs_bmap_alloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
-+	if (ap->flags & XFS_BMAPI_REMAP)
-+		return xfs_bmap_remap_alloc(ap);
- 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
- 		return xfs_bmap_rtalloc(ap);
- 	return xfs_bmap_btalloc(ap);
-@@ -4507,6 +4558,12 @@ xfs_bmapi_write(
- 	ASSERT(len > 0);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	if (whichfork == XFS_ATTR_FORK)
-+		ASSERT(!(flags & XFS_BMAPI_REMAP));
-+	if (flags & XFS_BMAPI_REMAP) {
-+		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
-+		ASSERT(!(flags & XFS_BMAPI_CONVERT));
-+	}
- 
- 	/* zeroing is for currently only for data extents, not metadata */
- 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-@@ -4568,6 +4625,12 @@ xfs_bmapi_write(
- 		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
- 
- 		/*
-+		 * Make sure we only reflink into a hole.
-+		 */
-+		if (flags & XFS_BMAPI_REMAP)
-+			ASSERT(inhole);
++/* Abort all pending BUIs. */
++STATIC void
++xfs_bmap_update_abort_intent(
++	void				*intent)
++{
++}
 +
-+		/*
- 		 * First, deal with the hole before the allocated space
- 		 * that we found, if any.
- 		 */
++/* Cancel a deferred rmap update. */
++STATIC void
++xfs_bmap_update_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_bmap_intent		*bmap;
++
++	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
++	kmem_free(bmap);
++}
++
++const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
++	.type		= XFS_DEFER_OPS_TYPE_BMAP,
++	.diff_items	= xfs_bmap_update_diff_items,
++	.create_intent	= xfs_bmap_update_create_intent,
++	.abort_intent	= xfs_bmap_update_abort_intent,
++	.log_item	= xfs_bmap_update_log_item,
++	.create_done	= xfs_bmap_update_create_done,
++	.finish_item	= xfs_bmap_update_finish_item,
++	.cancel_item	= xfs_bmap_update_cancel_item,
++};
++
+ /* Deferred Item Initialization */
+ 
+ /* Initialize the deferred operation types. */
+ void
+ xfs_defer_init_types(void)
+ {
++	xfs_defer_init_op_type(&xfs_bmap_update_defer_type);
+ 	xfs_defer_init_op_type(&xfs_refcount_update_defer_type);
+ 	xfs_defer_init_op_type(&xfs_rmap_update_defer_type);
+ 	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 58f730e..dff4b7b 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -6119,3 +6119,127 @@ out:
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++/* Record a bmap intent. */
++static int
++__xfs_bmap_add(
++	struct xfs_mount	*mp,
++	struct xfs_defer_ops	*dfops,
++	struct xfs_bmap_intent	*bi)
++{
++	int			error;
++	struct xfs_bmap_intent	*new;
++
++	ASSERT(bi->bi_whichfork == XFS_DATA_FORK);
++
++	trace_xfs_bmap_defer(mp, XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock),
++			bi->bi_type,
++			XFS_FSB_TO_AGBNO(mp, bi->bi_bmap.br_startblock),
++			bi->bi_owner->i_ino, bi->bi_whichfork,
++			bi->bi_bmap.br_startoff,
++			bi->bi_bmap.br_blockcount,
++			bi->bi_bmap.br_state);
++
++	new = kmem_zalloc(sizeof(struct xfs_bmap_intent), KM_SLEEP | KM_NOFS);
++	*new = *bi;
++
++	error = xfs_defer_join(dfops, bi->bi_owner);
++	if (error)
++		return error;
++
++	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_BMAP, &new->bi_list);
++	return 0;
++}
++
++/* Map an extent into a file. */
++int
++xfs_bmap_map_extent(
++	struct xfs_mount	*mp,
++	struct xfs_defer_ops	*dfops,
++	struct xfs_inode	*ip,
++	int			whichfork,
++	struct xfs_bmbt_irec	*PREV)
++{
++	struct xfs_bmap_intent	bi;
++
++	bi.bi_type = XFS_BMAP_MAP;
++	bi.bi_owner = ip;
++	bi.bi_whichfork = whichfork;
++	bi.bi_bmap = *PREV;
++
++	return __xfs_bmap_add(mp, dfops, &bi);
++}
++
++/* Unmap an extent out of a file. */
++int
++xfs_bmap_unmap_extent(
++	struct xfs_mount	*mp,
++	struct xfs_defer_ops	*dfops,
++	struct xfs_inode	*ip,
++	int			whichfork,
++	struct xfs_bmbt_irec	*PREV)
++{
++	struct xfs_bmap_intent	bi;
++
++	bi.bi_type = XFS_BMAP_UNMAP;
++	bi.bi_owner = ip;
++	bi.bi_whichfork = whichfork;
++	bi.bi_bmap = *PREV;
++
++	return __xfs_bmap_add(mp, dfops, &bi);
++}
++
++/*
++ * Process one of the deferred bmap operations.  We pass back the
++ * btree cursor to maintain our lock on the bmapbt between calls.
++ */
++int
++xfs_bmap_finish_one(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dfops,
++	struct xfs_inode		*ip,
++	enum xfs_bmap_intent_type	type,
++	int				whichfork,
++	xfs_fileoff_t			startoff,
++	xfs_fsblock_t			startblock,
++	xfs_filblks_t			blockcount,
++	xfs_exntst_t			state)
++{
++	struct xfs_bmbt_irec		bmap;
++	int				nimaps = 1;
++	xfs_fsblock_t			firstfsb;
++	int				error = 0;
++
++	bmap.br_startblock = startblock;
++	bmap.br_startoff = startoff;
++	bmap.br_blockcount = blockcount;
++	bmap.br_state = state;
++
++	trace_xfs_bmap_deferred(tp->t_mountp,
++			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
++			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
++			ip->i_ino, whichfork, startoff, blockcount, state);
++
++	if (XFS_TEST_ERROR(false, tp->t_mountp,
++			XFS_ERRTAG_BMAP_FINISH_ONE,
++			XFS_RANDOM_BMAP_FINISH_ONE))
++		return -EIO;
++
++	switch (type) {
++	case XFS_BMAP_MAP:
++		firstfsb = bmap.br_startblock;
++		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
++					bmap.br_blockcount,
++					XFS_BMAPI_REMAP, &firstfsb,
++					bmap.br_blockcount, &bmap, &nimaps,
++					dfops);
++		break;
++	case XFS_BMAP_UNMAP:
++		/* not implemented for now */
++	default:
++		ASSERT(0);
++		error = -EFSCORRUPTED;
++	}
++
++	return error;
++}
 diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 62a66d0..fb2fd4c 100644
+index fb2fd4c..394a22c 100644
 --- a/libxfs/xfs_bmap.h
 +++ b/libxfs/xfs_bmap.h
-@@ -97,6 +97,13 @@ struct xfs_bmap_free_item
-  */
- #define XFS_BMAPI_ZERO		0x080
+@@ -230,4 +230,15 @@ struct xfs_bmap_intent {
+ 	struct xfs_bmbt_irec			bi_bmap;
+ };
  
-+/*
-+ * Map the inode offset to the block given in ap->firstblock.  Primarily
-+ * used for reflink.  The range must be in a hole, and this flag cannot be
-+ * turned on with PREALLOC or CONVERT, and cannot be used on the attr fork.
-+ */
-+#define XFS_BMAPI_REMAP		0x100
++int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_defer_ops *dfops,
++		struct xfs_inode *ip, enum xfs_bmap_intent_type type,
++		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
++		xfs_filblks_t blockcount, xfs_exntst_t state);
++int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
++		struct xfs_inode *ip, int whichfork,
++		struct xfs_bmbt_irec *imap);
++int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
++		struct xfs_inode *ip, int whichfork,
++		struct xfs_bmbt_irec *imap);
 +
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -105,7 +112,8 @@ struct xfs_bmap_free_item
- 	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
- 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
- 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
--	{ XFS_BMAPI_ZERO,	"ZERO" }
-+	{ XFS_BMAPI_ZERO,	"ZERO" }, \
-+	{ XFS_BMAPI_REMAP,	"REMAP" }
- 
- 
- static inline int xfs_bmapi_aflag(int w)
+ #endif	/* __XFS_BMAP_H__ */
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 4081b00..47aa048 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -51,6 +51,7 @@ struct xfs_defer_pending {
+  * find all the space it needs.
+  */
+ enum xfs_defer_ops_type {
++	XFS_DEFER_OPS_TYPE_BMAP,
+ 	XFS_DEFER_OPS_TYPE_REFCOUNT,
+ 	XFS_DEFER_OPS_TYPE_RMAP,
+ 	XFS_DEFER_OPS_TYPE_FREE,
 
 _______________________________________________
 xfs mailing list
