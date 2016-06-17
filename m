@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6BDC28397
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:42:57 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2FFF2836F
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B939304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:57 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id trq7ruS5xDWqU5t8 (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E3F24304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:04 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id UaD3IAjnC4HBR9vA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:42:54 -0700 (PDT)
-Subject: [PATCH 115/145] xfs_io: bmap should support querying CoW fork,
-	shared blocks
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:01 -0700 (PDT)
+Subject: [PATCH 116/145] xfs_io: get and set the CoW extent size hint
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:42:50 -0700
-Message-ID: <146612777093.16048.15058864646971176390.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:42:57 -0700
+Message-ID: <146612777707.16048.16381607370131674150.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,171 +31,283 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Teach the bmap command to report shared and delayed allocation
-extents, and to be able to query the CoW fork.
+Enable administrators to get or set the CoW extent size hint.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/bmap.c           |   43 ++++++++++++++++++++++++++++++++++---------
- man/man8/xfs_bmap.8 |   14 ++++++++++++++
- man/man8/xfs_io.8   |    2 +-
- 3 files changed, 49 insertions(+), 10 deletions(-)
+ io/attr.c         |    8 ++-
+ io/open.c         |  166 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |   16 +++++
+ 3 files changed, 189 insertions(+), 1 deletion(-)
 
 
-diff --git a/io/bmap.c b/io/bmap.c
-index 04d04c7..0834cdd 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -41,7 +41,9 @@ bmap_help(void)
- " Holes are marked by replacing the startblock..endblock with 'hole'.\n"
- " All the file offsets and disk blocks are in units of 512-byte blocks.\n"
- " -a -- prints the attribute fork map instead of the data fork.\n"
-+" -c -- prints the copy-on-write fork map instead of the data fork.\n"
- " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
-+" -e -- print delayed allocation extents.\n"
- " -l -- also displays the length of each extent in 512-byte blocks.\n"
- " -n -- query n extents.\n"
- " -p -- obtain all unwritten extents as well (w/ -v show which are unwritten.)\n"
-@@ -75,6 +77,7 @@ bmap_f(
- 	int			loop = 0;
- 	int			flg = 0;
- 	int			aflag = 0;
-+	int			cflag = 0;
- 	int			lflag = 0;
- 	int			nflag = 0;
- 	int			pflag = 0;
-@@ -85,12 +88,19 @@ bmap_f(
- 	int			c;
- 	int			egcnt;
+diff --git a/io/attr.c b/io/attr.c
+index 0186b1d..13bec73 100644
+--- a/io/attr.c
++++ b/io/attr.c
+@@ -48,9 +48,11 @@ static struct xflags {
+ 	{ FS_XFLAG_NODEFRAG,		"f", "no-defrag"	},
+ 	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
+ 	{ FS_XFLAG_DAX,			"x", "dax"		},
++	{ FS_XFLAG_REFLINK,		"R", "reflink"		},
++	{ FS_XFLAG_COWEXTSIZE,		"C", "cowextsize"	},
+ 	{ 0, NULL, NULL }
+ };
+-#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSx"
++#define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSxRC"
  
--	while ((c = getopt(argc, argv, "adln:pv")) != EOF) {
-+	while ((c = getopt(argc, argv, "acdeln:pv")) != EOF) {
- 		switch (c) {
- 		case 'a':	/* Attribute fork. */
- 			bmv_iflags |= BMV_IF_ATTRFORK;
- 			aflag = 1;
- 			break;
-+		case 'c':	/* CoW fork. */
-+			bmv_iflags |= BMV_IF_COWFORK | BMV_IF_DELALLOC;
-+			cflag = 1;
-+			break;
-+		case 'e':
-+			bmv_iflags |= BMV_IF_DELALLOC;
-+			break;
- 		case 'l':	/* list number of blocks with each extent */
- 			lflag = 1;
- 			break;
-@@ -113,7 +123,7 @@ bmap_f(
- 			return command_usage(&bmap_cmd);
- 		}
+ static void
+ lsattr_help(void)
+@@ -75,6 +77,8 @@ lsattr_help(void)
+ " f -- do not include this file when defragmenting the filesystem\n"
+ " S -- enable filestreams allocator for this directory\n"
+ " x -- Use direct access (DAX) for data in this file\n"
++" R -- file data blocks may be shared with another file\n"
++" C -- for files with shared blocks, observe the inode CoW extent size value\n"
+ "\n"
+ " Options:\n"
+ " -R -- recursively descend (useful when current file is a directory)\n"
+@@ -111,6 +115,8 @@ chattr_help(void)
+ " +/-f -- set/clear the no-defrag flag\n"
+ " +/-S -- set/clear the filestreams allocator flag\n"
+ " +/-x -- set/clear the direct access (DAX) flag\n"
++" +/-R -- set/clear the reflink flag\n"
++" +/-C -- set/clear the CoW extent-size flag\n"
+ " Note1: user must have certain capabilities to modify immutable/append-only.\n"
+ " Note2: immutable/append-only files cannot be deleted; removing these files\n"
+ "        requires the immutable/append-only flag to be cleared first.\n"
+diff --git a/io/open.c b/io/open.c
+index 2303527..1e682a4 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -46,8 +46,10 @@ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+ static cmdinfo_t extsize_cmd;
+ static cmdinfo_t inode_cmd;
++static cmdinfo_t cowextsize_cmd;
+ static prid_t prid;
+ static long extsize;
++static long cowextsize;
+ 
+ off64_t
+ filesize(void)
+@@ -125,6 +127,7 @@ stat_f(
+ 		printxattr(fsx.fsx_xflags, verbose, 0, file->name, 1, 1);
+ 		printf(_("fsxattr.projid = %u\n"), fsx.fsx_projid);
+ 		printf(_("fsxattr.extsize = %u\n"), fsx.fsx_extsize);
++		printf(_("fsxattr.cowextsize = %u\n"), fsx.fsx_cowextsize);
+ 		printf(_("fsxattr.nextents = %u\n"), fsx.fsx_nextents);
+ 		printf(_("fsxattr.naextents = %u\n"), fsxa.fsx_nextents);
  	}
--	if (aflag)
-+	if (aflag || cflag)
- 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
+@@ -696,6 +699,158 @@ extsize_f(
+ 	return 0;
+ }
  
- 	if (vflag) {
-@@ -271,13 +281,14 @@ bmap_f(
- #define MINRANGE_WIDTH	16
- #define MINAG_WIDTH	2
- #define MINTOT_WIDTH	5
--#define NFLG		5	/* count of flags */
--#define	FLG_NULL	000000	/* Null flag */
--#define	FLG_PRE		010000	/* Unwritten extent */
--#define	FLG_BSU		001000	/* Not on begin of stripe unit  */
--#define	FLG_ESU		000100	/* Not on end   of stripe unit  */
--#define	FLG_BSW		000010	/* Not on begin of stripe width */
--#define	FLG_ESW		000001	/* Not on end   of stripe width */
-+#define NFLG		6	/* count of flags */
-+#define	FLG_NULL	0000000	/* Null flag */
-+#define	FLG_SHARED	0100000	/* shared extent */
-+#define	FLG_PRE		0010000	/* Unwritten extent */
-+#define	FLG_BSU		0001000	/* Not on begin of stripe unit  */
-+#define	FLG_ESU		0000100	/* Not on end   of stripe unit  */
-+#define	FLG_BSW		0000010	/* Not on begin of stripe width */
-+#define	FLG_ESW		0000001	/* Not on end   of stripe width */
- 		int	agno;
- 		off64_t agoff, bbperag;
- 		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
-@@ -348,6 +359,10 @@ bmap_f(
- 			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC) {
- 				flg |= FLG_PRE;
- 			}
-+			if (map[i + 1].bmv_oflags & BMV_OF_SHARED)
-+				flg |= FLG_SHARED;
-+			if (map[i + 1].bmv_oflags & BMV_OF_DELALLOC)
-+				map[i + 1].bmv_block = -2;
- 			/*
- 			 * If striping enabled, determine if extent starts/ends
- 			 * on a stripe unit boundary.
-@@ -380,6 +395,14 @@ bmap_f(
- 					agno_w, "",
- 					aoff_w, "",
- 					tot_w, (long long)map[i+1].bmv_length);
-+			} else if (map[i + 1].bmv_block == -2) {
-+				printf("%4d: %-*s %-*s %*s %-*s %*lld\n",
-+					i,
-+					foff_w, rbuf,
-+					boff_w, _("delalloc"),
-+					agno_w, "",
-+					aoff_w, "",
-+					tot_w, (long long)map[i+1].bmv_length);
- 			} else {
- 				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
- 					(long long) map[i + 1].bmv_block,
-@@ -411,6 +434,8 @@ bmap_f(
- 		}
- 		if ((flg || pflag) && vflag > 1) {
- 			printf(_(" FLAG Values:\n"));
-+			printf(_("    %*.*o Shared extent\n"),
-+				NFLG+1, NFLG+1, FLG_SHARED);
- 			printf(_("    %*.*o Unwritten preallocated extent\n"),
- 				NFLG+1, NFLG+1, FLG_PRE);
- 			printf(_("    %*.*o Doesn't begin on stripe unit\n"),
-diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-index e196559..098cfae 100644
---- a/man/man8/xfs_bmap.8
-+++ b/man/man8/xfs_bmap.8
-@@ -36,6 +36,10 @@ no matter what the filesystem's block size is.
- If this option is specified, information about the file's
- attribute fork is printed instead of the default data fork.
- .TP
-+.B \-c
-+If this option is specified, information about the file's
-+copy on write fork is printed instead of the default data fork.
-+.TP
- .B \-d
- If portions of the file have been migrated offline by
- a DMAPI application, a DMAPI read event will be generated to
-@@ -45,6 +49,16 @@ printed.  However if the
- option is used, no DMAPI read event will be generated for a
- DMAPI file and offline portions will be reported as holes.
- .TP
-+.B \-e
-+If this option is used,
-+.B xfs_bmap
-+obtains all delayed allocation extents, and does not flush dirty pages
-+to disk before querying extent data. With the
-+.B \-v
-+option, the
-+.I flags
-+column will show which extents have not yet been allocated.
-+.TP
- .B \-l
- If this option is used, then
- .IP
++static void
++cowextsize_help(void)
++{
++	printf(_(
++"\n"
++" report or modify preferred CoW extent size (in bytes) for the current path\n"
++"\n"
++" -R -- recursively descend (useful when current path is a directory)\n"
++" -D -- recursively descend, only modifying cowextsize on directories\n"
++"\n"));
++}
++
++static int
++get_cowextsize(const char *path, int fd)
++{
++	struct fsxattr	fsx;
++
++	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
++		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
++			progname, path, strerror(errno));
++		return 0;
++	}
++	printf("[%u] %s\n", fsx.fsx_cowextsize, path);
++	return 0;
++}
++
++static int
++set_cowextsize(const char *path, int fd, long extsz)
++{
++	struct fsxattr	fsx;
++	struct stat64	stat;
++
++	if (fstat64(fd, &stat) < 0) {
++		perror("fstat64");
++		return 0;
++	}
++	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
++		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
++			progname, path, strerror(errno));
++		return 0;
++	}
++
++	if (S_ISREG(stat.st_mode) || S_ISDIR(stat.st_mode)) {
++		fsx.fsx_xflags |= FS_XFLAG_COWEXTSIZE;
++	} else {
++		printf(_("invalid target file type - file %s\n"), path);
++		return 0;
++	}
++	fsx.fsx_cowextsize = extsz;
++
++	if ((xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
++		printf("%s: XFS_IOC_FSSETXATTR %s: %s\n",
++			progname, path, strerror(errno));
++		return 0;
++	}
++
++	return 0;
++}
++
++static int
++get_cowextsize_callback(
++	const char		*path,
++	const struct stat	*stat,
++	int			status,
++	struct FTW		*data)
++{
++	int			fd;
++
++	if (recurse_dir && !S_ISDIR(stat->st_mode))
++		return 0;
++
++	fd = open(path, O_RDONLY);
++	if (fd < 0) {
++		fprintf(stderr, _("%s: cannot open %s: %s\n"),
++			progname, path, strerror(errno));
++	} else {
++		get_cowextsize(path, fd);
++		close(fd);
++	}
++	return 0;
++}
++
++static int
++set_cowextsize_callback(
++	const char		*path,
++	const struct stat	*stat,
++	int			status,
++	struct FTW		*data)
++{
++	int			fd;
++
++	if (recurse_dir && !S_ISDIR(stat->st_mode))
++		return 0;
++
++	fd = open(path, O_RDONLY);
++	if (fd < 0) {
++		fprintf(stderr, _("%s: cannot open %s: %s\n"),
++			progname, path, strerror(errno));
++	} else {
++		set_cowextsize(path, fd, cowextsize);
++		close(fd);
++	}
++	return 0;
++}
++
++static int
++cowextsize_f(
++	int		argc,
++	char		**argv)
++{
++	size_t			blocksize, sectsize;
++	int			c;
++
++	recurse_all = recurse_dir = 0;
++	init_cvtnum(&blocksize, &sectsize);
++	while ((c = getopt(argc, argv, "DR")) != EOF) {
++		switch (c) {
++		case 'D':
++			recurse_all = 0;
++			recurse_dir = 1;
++			break;
++		case 'R':
++			recurse_all = 1;
++			recurse_dir = 0;
++			break;
++		default:
++			return command_usage(&cowextsize_cmd);
++		}
++	}
++
++	if (optind < argc) {
++		cowextsize = (long)cvtnum(blocksize, sectsize, argv[optind]);
++		if (cowextsize < 0) {
++			printf(_("non-numeric cowextsize argument -- %s\n"),
++				argv[optind]);
++			return 0;
++		}
++	} else {
++		cowextsize = -1;
++	}
++
++	if (recurse_all || recurse_dir)
++		nftw(file->name, (extsize >= 0) ?
++			set_cowextsize_callback : get_cowextsize_callback,
++			100, FTW_PHYS | FTW_MOUNT | FTW_DEPTH);
++	else if (cowextsize >= 0)
++		set_cowextsize(file->name, file->fd, cowextsize);
++	else
++		get_cowextsize(file->name, file->fd);
++	return 0;
++}
++
+ static int
+ statfs_f(
+ 	int			argc,
+@@ -964,6 +1119,16 @@ open_init(void)
+ 		_("Query inode number usage in the filesystem");
+ 	inode_cmd.help = inode_help;
+ 
++	cowextsize_cmd.name = "cowextsize";
++	cowextsize_cmd.cfunc = cowextsize_f;
++	cowextsize_cmd.args = _("[-D | -R] [cowextsize]");
++	cowextsize_cmd.argmin = 0;
++	cowextsize_cmd.argmax = -1;
++	cowextsize_cmd.flags = CMD_NOMAP_OK;
++	cowextsize_cmd.oneline =
++		_("get/set preferred CoW extent size (in bytes) for the open file");
++	cowextsize_cmd.help = cowextsize_help;
++
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+@@ -972,4 +1137,5 @@ open_init(void)
+ 	add_command(&lsproj_cmd);
+ 	add_command(&extsize_cmd);
+ 	add_command(&inode_cmd);
++	add_command(&cowextsize_cmd);
+ }
 diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index b0300bb..6c45c37 100644
+index 6c45c37..cc70b7c 100644
 --- a/man/man8/xfs_io.8
 +++ b/man/man8/xfs_io.8
-@@ -256,7 +256,7 @@ See the
- .B pwrite
- command.
+@@ -283,6 +283,22 @@ The
+ should be specified in bytes, or using one of the usual units suffixes
+ (k, m, g, b, etc). The extent size is always reported in units of bytes.
  .TP
--.BI "bmap [ \-adlpv ] [ \-n " nx " ]"
-+.BI "bmap [ \-acdelpv ] [ \-n " nx " ]"
- Prints the block mapping for the current open file. Refer to the
- .BR xfs_bmap (8)
- manual page for complete documentation.
++.BI "cowextsize [ \-R | \-D ] [ " value " ]"
++Display and/or modify the preferred copy-on-write extent size used
++when allocating space for the currently open file. If the
++.B \-R
++option is specified, a recursive descent is performed
++for all directory entries below the currently open file
++.RB ( \-D
++can be used to restrict the output to directories only).
++If the target file is a directory, then the inherited CoW extent size
++is set for that directory (new files created in that directory
++inherit that CoW extent size).
++The
++.I value
++should be specified in bytes, or using one of the usual units suffixes
++(k, m, g, b, etc). The extent size is always reported in units of bytes.
++.TP
+ .BI "allocsp " size " 0"
+ Sets the size of the file to
+ .I size
 
 _______________________________________________
 xfs mailing list
