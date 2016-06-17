@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 89A88857B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:48:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A60E48552
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:48:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A2DC8F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:19 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id aRQdEU3uAD5JSzgW (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3DB67AC004
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:27 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id dz2i5jigBwbuyk84 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:12 -0700 (PDT)
-Subject: [PATCH 20/20] xfs: scrub fs (if still mounted) at the end of the test
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:22 -0700 (PDT)
+Subject: [PATCH 1/6] journaling_log: fix some typos in the section about EFDs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:48:07 -0700
-Message-ID: <146612808781.25024.9354886387434772563.stgit@birch.djwong.org>
-In-Reply-To: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:48:15 -0700
+Message-ID: <146612809529.25586.12927884450458378559.stgit@birch.djwong.org>
+In-Reply-To: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
+References: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,49 +29,39 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
-
-Teach _check_xfs_filesystem to scrub mounted filesystems before
-unmounting and fscking them.  This is mostly to test the online
-scrub tool...
+Cc: xfs@oss.sgi.com
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config |    1 +
- common/rc     |    7 +++++++
- 2 files changed, 8 insertions(+)
+ .../journaling_log.asciidoc                        |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/common/config b/common/config
-index cacd815..41edb0c 100644
---- a/common/config
-+++ b/common/config
-@@ -163,6 +163,7 @@ export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
- export XFS_DB_PROG="`set_prog_path xfs_db`"
- export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
- export XFS_IO_PROG="`set_prog_path xfs_io`"
-+export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
- export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
- export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
- export __XFSDUMP_PROG="`set_prog_path xfsdump`"
-diff --git a/common/rc b/common/rc
-index 847191e..ea5baea 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2188,6 +2188,13 @@ _check_xfs_filesystem()
+diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
+index a67fcc2..67d209f 100644
+--- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
++++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
+@@ -368,7 +368,7 @@ typedef struct xfs_efd_log_format {
+ ----
  
-     if [ "$type" = "xfs" ]
-     then
-+	if [ -x "$XFS_SCRUB_PROG" ]; then
-+		"$XFS_SCRUB_PROG" $scrubflag -vd $device >>$seqres.full
-+		if [ $? -ne 0 ]; then
-+			echo "filesystem on $device failed scrub (see $seqres.full)"
-+			ok=0
-+		fi
-+	fi
-         # mounted ...
-         mountpoint=`_umount_or_remount_ro $device`
-     fi
+ *efd_type*::
+-The signature of an EFI operation, 0x1236.  This value is in host-endian order,
++The signature of an EFD operation, 0x1237.  This value is in host-endian order,
+ not big-endian like the rest of XFS.
+ 
+ *efd_size*::
+@@ -382,9 +382,9 @@ A 64-bit number that binds the corresponding EFI log item to this EFD log item.
+ 
+ *efd_extents*::
+ Variable-length array of extents to be freed.  The array length is given by
+-+efi_nextents+.  The record type will be either +xfs_extent_64_t+ or
+++efd_nextents+.  The record type will be either +xfs_extent_64_t+ or
+ +xfs_extent_32_t+; this can be determined from the log item size (+oh_len+) and
+-the number of extents (+efi_nextents+).
++the number of extents (+efd_nextents+).
+ 
+ [[Inode_Log_Item]]
+ === Inode Updates
 
 _______________________________________________
 xfs mailing list
