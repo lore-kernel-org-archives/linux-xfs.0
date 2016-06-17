@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5F73F7F28
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:30:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 17CB7304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:21 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 21AFF7FE5
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:30:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D43378F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:25 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ANE8nEA52Fn2Pk4f (version=TLSv1.2
+	cuda.sgi.com with ESMTP id nzHaEmJE5MdrsGl1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:19 -0700 (PDT)
-Subject: [PATCH 114/119] xfs: create sysfs hooks to scrub various files
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:23 -0700 (PDT)
+Subject: [PATCH 115/119] xfs: support scrubbing free space btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:30:10 -0700
-Message-ID: <146612700997.12839.14645543192839503554.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:30:16 -0700
+Message-ID: <146612701627.12839.18375212914216273798.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,348 +31,257 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Create some sysfs files so that we can scrub various AG metadata
-structures.  The interface will be as follows:
-
-# cat /sys/fs/xfs/$dev/check/rmapbt
-0:3
-# echo 3 > /sys/fs/xfs/$dev/check/rmapbt
--bash: echo: write error: <some error code>
-
-(or it'll just return 0 if the metadata is fine)
+Plumb in the pieces necessary to check the free space btrees.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile          |    1 
- fs/xfs/xfs_mount.c       |    9 ++
- fs/xfs/xfs_mount.h       |    1 
- fs/xfs/xfs_scrub_sysfs.c |  214 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_scrub_sysfs.h |   26 ++++++
- 5 files changed, 250 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/xfs_scrub_sysfs.c
- create mode 100644 fs/xfs/xfs_scrub_sysfs.h
+ fs/xfs/libxfs/xfs_alloc.c       |   98 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h       |    3 +
+ fs/xfs/libxfs/xfs_alloc_btree.c |   51 ++++++++++++++++++--
+ fs/xfs/xfs_scrub_sysfs.c        |    5 ++
+ 4 files changed, 151 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 8942390..7d93af2 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -93,6 +93,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_mount.o \
- 				   xfs_mru_cache.o \
- 				   xfs_reflink.o \
-+				   xfs_scrub_sysfs.o \
- 				   xfs_stats.o \
- 				   xfs_super.o \
- 				   xfs_symlink.o \
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index e53853d..1f74f72 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -46,6 +46,7 @@
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 6fc1981..bc2a1b1 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -39,6 +39,7 @@
+ #include "xfs_log.h"
+ #include "xfs_ag_resv.h"
  #include "xfs_refcount_btree.h"
- #include "xfs_reflink.h"
- #include "xfs_refcount_btree.h"
-+#include "xfs_scrub_sysfs.h"
++#include "xfs_scrub.h"
  
+ struct workqueue_struct *xfs_alloc_wq;
  
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
-@@ -705,10 +706,13 @@ xfs_mountfs(
- 	if (error)
- 		goto out_del_stats;
- 
-+	error = xfs_scrub_init(mp);
-+	if (error)
-+		goto out_remove_error_sysfs;
- 
- 	error = xfs_uuid_mount(mp);
- 	if (error)
--		goto out_remove_error_sysfs;
-+		goto out_remove_scrub;
- 
- 	/*
- 	 * Set the minimum read and write sizes
-@@ -993,6 +997,8 @@ xfs_mountfs(
- 	xfs_da_unmount(mp);
-  out_remove_uuid:
- 	xfs_uuid_unmount(mp);
-+ out_remove_scrub:
-+	xfs_scrub_free(mp);
-  out_remove_error_sysfs:
- 	xfs_error_sysfs_del(mp);
-  out_del_stats:
-@@ -1093,6 +1099,7 @@ xfs_unmountfs(
- #endif
- 	xfs_free_perag(mp);
- 
-+	xfs_scrub_free(mp);
- 	xfs_error_sysfs_del(mp);
- 	xfs_sysfs_del(&mp->m_stats.xs_kobj);
- 	xfs_sysfs_del(&mp->m_kobj);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 6b06d24..0e222d2 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -167,6 +167,7 @@ typedef struct xfs_mount {
- 	struct xfs_kobj		m_error_kobj;
- 	struct xfs_kobj		m_error_meta_kobj;
- 	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
-+	struct xfs_kobj		m_scrub_kobj;
- 	struct xstats		m_stats;	/* per-fs stats */
- 
- 	struct workqueue_struct *m_buf_workqueue;
-diff --git a/fs/xfs/xfs_scrub_sysfs.c b/fs/xfs/xfs_scrub_sysfs.c
-new file mode 100644
-index 0000000..9942d55
---- /dev/null
-+++ b/fs/xfs/xfs_scrub_sysfs.c
-@@ -0,0 +1,214 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bmap.h"
-+#include "xfs_refcount.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_alloc.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_sysfs.h"
-+#include <linux/kernel.h>
+@@ -2957,3 +2958,100 @@ xfs_alloc_record_exists(
+ 	*is_freesp = (fbno <= bno && fbno + flen >= bno + len);
+ 	return 0;
+ }
 +
-+/* general scrub attributes */
-+struct xfs_scrub_attr {
-+	struct attribute attr;
-+	bool (*is_visible)(struct xfs_mount *mp, struct xfs_scrub_attr *attr);
-+	ssize_t (*show)(struct xfs_mount *mp, struct xfs_scrub_attr *attr,
-+			char *buf);
-+	ssize_t (*store)(struct xfs_mount *mp, struct xfs_scrub_attr *attr,
-+			const char *buf, size_t count);
-+};
-+
-+static inline struct xfs_scrub_attr *
-+to_scrub_attr(struct attribute *attr)
++STATIC int
++xfs_allocbt_scrub_rmap_check(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
 +{
-+	return container_of(attr, struct xfs_scrub_attr, attr);
++	xfs_err(cur->bc_mp, "%s: freespace in rmapbt! %u/%u %u %lld %lld %x",
++			__func__, cur->bc_private.a.agno, rec->rm_startblock,
++			rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
++			rec->rm_flags);
++	return XFS_BTREE_QUERY_RANGE_ABORT;
 +}
 +
-+static inline struct xfs_mount *to_mount(struct kobject	*kobj)
++STATIC int
++xfs_allocbt_scrub_helper(
++	struct xfs_btree_scrub		*bs,
++	union xfs_btree_rec		*rec)
 +{
-+	struct xfs_kobj *k = container_of(kobj, struct xfs_kobj, kobject);
-+
-+	return container_of(k, struct xfs_mount, m_scrub_kobj);
-+}
-+
-+STATIC ssize_t
-+xfs_scrub_attr_show(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	char			*buf)
-+{
-+	struct xfs_scrub_attr	*sa = to_scrub_attr(attr);
-+	struct xfs_mount	*mp = to_mount(kobject);
-+
-+	return sa->show ? sa->show(mp, sa, buf) : 0;
-+}
-+
-+STATIC ssize_t
-+xfs_scrub_attr_store(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xfs_scrub_attr	*sa = to_scrub_attr(attr);
-+	struct xfs_mount	*mp = to_mount(kobject);
-+
-+	return sa->store ? sa->store(mp, sa, buf, count) : 0;
-+}
-+
-+STATIC umode_t
-+xfs_scrub_attr_visible(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	int unused)
-+{
-+	struct xfs_scrub_attr	*sa = to_scrub_attr(attr);
-+	struct xfs_mount	*mp = to_mount(kobject);
-+
-+	if (!sa->is_visible || sa->is_visible(mp, sa))
-+		return attr->mode;
-+	return 0;
-+}
-+
-+static const struct sysfs_ops xfs_scrub_ops = {
-+	.show = xfs_scrub_attr_show,
-+	.store = xfs_scrub_attr_store,
-+};
-+
-+static struct kobj_type xfs_scrub_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_scrub_ops,
-+};
-+
-+/* per-AG scrub attributes */
-+struct xfs_agdata_scrub_attr {
-+	struct xfs_scrub_attr sa;
-+	bool (*has_feature)(struct xfs_sb *);
-+	int (*scrub)(struct xfs_mount *mp, xfs_agnumber_t agno);
-+};
-+
-+static inline struct xfs_agdata_scrub_attr *
-+to_agdata_scrub_attr(struct xfs_scrub_attr *sa)
-+{
-+	return container_of(sa, struct xfs_agdata_scrub_attr, sa);
-+}
-+
-+STATIC bool
-+xfs_agdata_scrub_visible(
-+	struct xfs_mount		*mp,
-+	struct xfs_scrub_attr		*sa)
-+{
-+	struct xfs_agdata_scrub_attr	*asa = to_agdata_scrub_attr(sa);
-+
-+	return (!asa->has_feature || asa->has_feature(&mp->m_sb));
-+}
-+
-+STATIC ssize_t
-+xfs_agdata_scrub_show(
-+	struct xfs_mount		*mp,
-+	struct xfs_scrub_attr		*sa,
-+	char				*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0:%u\n", mp->m_sb.sb_agcount - 1);
-+}
-+
-+STATIC ssize_t
-+xfs_agdata_scrub_store(
-+	struct xfs_mount		*mp,
-+	struct xfs_scrub_attr		*sa,
-+	const char			*buf,
-+	size_t				count)
-+{
-+	unsigned long			val;
-+	xfs_agnumber_t			agno;
-+	struct xfs_agdata_scrub_attr	*asa = to_agdata_scrub_attr(sa);
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	xfs_agblock_t			bno;
++	xfs_extlen_t			len;
++	struct xfs_rmap_irec		low;
++	struct xfs_rmap_irec		high;
++	bool				no_rmap;
 +	int				error;
 +
-+	error = kstrtoul(buf, 0, &val);
-+	if (error)
-+		return error;
-+	agno = val;
-+	if (agno >= mp->m_sb.sb_agcount)
-+		return -EINVAL;
-+	error = asa->scrub(mp, agno);
-+	if (error)
-+		return error;
-+	return count;
++	bno = be32_to_cpu(rec->alloc.ar_startblock);
++	len = be32_to_cpu(rec->alloc.ar_blockcount);
++
++	XFS_BTREC_SCRUB_CHECK(bs, bno <= mp->m_sb.sb_agblocks);
++	XFS_BTREC_SCRUB_CHECK(bs, bno < bno + len);
++	XFS_BTREC_SCRUB_CHECK(bs, (unsigned long long)bno + len <=
++			mp->m_sb.sb_agblocks);
++
++	/* if rmapbt, make sure there's no record */
++	if (!bs->rmap_cur)
++		return 0;
++
++	memset(&low, 0, sizeof(low));
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	error = xfs_rmapbt_query_range(bs->rmap_cur, &low, &high,
++			&xfs_allocbt_scrub_rmap_check, NULL);
++	if (error && error != XFS_BTREE_QUERY_RANGE_ABORT)
++		goto err;
++	no_rmap = error == 0;
++	XFS_BTREC_SCRUB_CHECK(bs, no_rmap);
++err:
++	return error;
 +}
 +
-+#define XFS_AGDATA_SCRUB_ATTR(_name, _fn)	     \
-+static struct xfs_agdata_scrub_attr xfs_agdata_scrub_attr_##_name = {	     \
-+	.sa = {								     \
-+		.attr = {.name = __stringify(_name), .mode = 0600 },	     \
-+		.is_visible = xfs_agdata_scrub_visible,			     \
-+		.show = xfs_agdata_scrub_show,				     \
-+		.store = xfs_agdata_scrub_store,			     \
-+	},								     \
-+	.has_feature = _fn,						     \
-+	.scrub = xfs_##_name##_scrub,				     \
-+}
-+#define XFS_AGDATA_SCRUB_LIST(name)	&xfs_agdata_scrub_attr_##name.sa.attr
-+
-+static struct attribute *xfs_agdata_scrub_attrs[] = {
-+	NULL,
-+};
-+
-+static const struct attribute_group xfs_agdata_scrub_attr_group = {
-+	.is_visible = xfs_scrub_attr_visible,
-+	.attrs = xfs_agdata_scrub_attrs,
-+};
-+
-+int
-+xfs_scrub_init(
-+	struct xfs_mount	*mp)
++/* Scrub the freespace btrees for some AG. */
++STATIC int
++xfs_allocbt_scrub(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	int			which)
 +{
++	struct xfs_btree_scrub	bs;
 +	int			error;
 +
-+	error = xfs_sysfs_init(&mp->m_scrub_kobj, &xfs_scrub_ktype,
-+			&mp->m_kobj, "check");
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &bs.agf_bp);
 +	if (error)
 +		return error;
 +
-+	error = sysfs_create_group(&mp->m_scrub_kobj.kobject,
-+			&xfs_agdata_scrub_attr_group);
-+	if (error)
-+		goto err;
-+	return error;
-+err:
-+	xfs_sysfs_del(&mp->m_scrub_kobj);
++	bs.cur = xfs_allocbt_init_cursor(mp, NULL, bs.agf_bp, agno, which);
++	bs.scrub_rec = xfs_allocbt_scrub_helper;
++	xfs_rmap_ag_owner(&bs.oinfo, XFS_RMAP_OWN_AG);
++	error = xfs_btree_scrub(&bs);
++	xfs_btree_del_cursor(bs.cur,
++			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_trans_brelse(NULL, bs.agf_bp);
++
++	if (!error && bs.error)
++		error = bs.error;
++
 +	return error;
 +}
 +
-+void
-+xfs_scrub_free(
-+	struct xfs_mount	*mp)
++int
++xfs_bnobt_scrub(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
 +{
-+	sysfs_remove_group(&mp->m_scrub_kobj.kobject,
-+			&xfs_agdata_scrub_attr_group);
-+	xfs_sysfs_del(&mp->m_scrub_kobj);
++	return xfs_allocbt_scrub(mp, agno, XFS_BTNUM_BNO);
 +}
-diff --git a/fs/xfs/xfs_scrub_sysfs.h b/fs/xfs/xfs_scrub_sysfs.h
-new file mode 100644
-index 0000000..d9a58f5
---- /dev/null
-+++ b/fs/xfs/xfs_scrub_sysfs.h
-@@ -0,0 +1,26 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef __XFS_SCRUB_H
-+#define __XFS_SCRUB_H
 +
-+int xfs_scrub_init(struct xfs_mount *mp);
-+void xfs_scrub_free(struct xfs_mount *mp);
++int
++xfs_cntbt_scrub(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	return xfs_allocbt_scrub(mp, agno, XFS_BTNUM_CNT);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 4f2ce38..f1fcc7e 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -213,4 +213,7 @@ xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+ int xfs_alloc_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, bool *is_freesp);
+ 
++int xfs_bnobt_scrub(struct xfs_mount *mp, xfs_agnumber_t agno);
++int xfs_cntbt_scrub(struct xfs_mount *mp, xfs_agnumber_t agno);
 +
-+#endif /* __XFS_SCRUB_H */
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 5ba2dac..f9859e8 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -256,6 +256,26 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
++STATIC __int64_t
++xfs_bnobt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k2->alloc.ar_startblock) -
++			  be32_to_cpu(k1->alloc.ar_startblock);
++}
++
++STATIC __int64_t
++xfs_cntbt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k2->alloc.ar_blockcount) -
++			  be32_to_cpu(k1->alloc.ar_blockcount);
++}
++
+ static bool
+ xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -344,7 +364,6 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ };
+ 
+ 
+-#if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+ xfs_allocbt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+@@ -381,9 +400,29 @@ xfs_allocbt_recs_inorder(
+ 			 be32_to_cpu(r2->alloc.ar_startblock));
+ 	}
+ }
+-#endif	/* DEBUG */
+ 
+-static const struct xfs_btree_ops xfs_allocbt_ops = {
++static const struct xfs_btree_ops xfs_bnobt_ops = {
++	.rec_len		= sizeof(xfs_alloc_rec_t),
++	.key_len		= sizeof(xfs_alloc_key_t),
++
++	.dup_cursor		= xfs_allocbt_dup_cursor,
++	.set_root		= xfs_allocbt_set_root,
++	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
++	.update_lastrec		= xfs_allocbt_update_lastrec,
++	.get_minrecs		= xfs_allocbt_get_minrecs,
++	.get_maxrecs		= xfs_allocbt_get_maxrecs,
++	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
++	.key_diff		= xfs_allocbt_key_diff,
++	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_bnobt_diff_two_keys,
++	.keys_inorder		= xfs_allocbt_keys_inorder,
++	.recs_inorder		= xfs_allocbt_recs_inorder,
++};
++
++static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
+@@ -399,10 +438,9 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_allocbt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
+-#if defined(DEBUG) || defined(XFS_WARN)
++	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+ 	.keys_inorder		= xfs_allocbt_keys_inorder,
+ 	.recs_inorder		= xfs_allocbt_recs_inorder,
+-#endif
+ };
+ 
+ /*
+@@ -427,12 +465,13 @@ xfs_allocbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-	cur->bc_ops = &xfs_allocbt_ops;
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_ops = &xfs_cntbt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
++		cur->bc_ops = &xfs_bnobt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_scrub_sysfs.c b/fs/xfs/xfs_scrub_sysfs.c
+index 9942d55..efaa635 100644
+--- a/fs/xfs/xfs_scrub_sysfs.c
++++ b/fs/xfs/xfs_scrub_sysfs.c
+@@ -174,7 +174,12 @@ static struct xfs_agdata_scrub_attr xfs_agdata_scrub_attr_##_name = {	     \
+ }
+ #define XFS_AGDATA_SCRUB_LIST(name)	&xfs_agdata_scrub_attr_##name.sa.attr
+ 
++XFS_AGDATA_SCRUB_ATTR(bnobt, NULL);
++XFS_AGDATA_SCRUB_ATTR(cntbt, NULL);
++
+ static struct attribute *xfs_agdata_scrub_attrs[] = {
++	XFS_AGDATA_SCRUB_LIST(bnobt),
++	XFS_AGDATA_SCRUB_LIST(cntbt),
+ 	NULL,
+ };
+ 
 
 _______________________________________________
 xfs mailing list
