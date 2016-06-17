@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 906A37EFA
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:28:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 075117D69
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:28:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 61F6C8F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:27 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id HVXCauA4kCamrHJB (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C05C78F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:40 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id mMZGt6P5LsIbgEYp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:24 -0700 (PDT)
-Subject: [PATCH 097/119] xfs: create a separate cow extent size hint for the
-	allocator
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:38 -0700 (PDT)
+Subject: [PATCH 098/119] xfs: preallocate blocks for worst-case btree expansion
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:28:18 -0700
-Message-ID: <146612689831.12839.939478487228706208.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:28:24 -0700
+Message-ID: <146612690470.12839.4608031019884955143.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -30,484 +29,485 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Create a per-inode extent size allocator hint for copy-on-write.  This
-hint is separate from the existing extent size hint so that CoW can
-take advantage of the fragmentation-reducing properties of extent size
-hints without disabling delalloc for regular writes.
+To gracefully handle the situation where a CoW operation turns a
+single refcount extent into a lot of tiny ones and then run out of
+space when a tree split has to happen, use the per-AG reserved block
+pool to pre-allocate all the space we'll ever need for a maximal
+btree.  For a 4K block size, this only costs an overhead of 0.3% of
+available disk space.
 
-The extent size hint that's fed to the allocator during a copy on
-write operation is the greater of the cowextsize and regular extsize
-hint.
+When reflink is enabled, we have an unfortunate problem with rmap --
+since we can share a block billions of times, this means that the
+reverse mapping btree can expand basically infinitely.  When an AG is
+so full that there are no free blocks with which to expand the rmapbt,
+the filesystem will shut down hard.
 
-During reflink, if we're sharing the entire source file to the entire
-destination file and the destination file doesn't already have a
-cowextsize hint, propagate the source file's cowextsize hint to the
-destination file.
+This is rather annoying to the user, so use the AG reservation code to
+reserve a "reasonable" amount of space for rmap.  We'll prevent
+reflinks and CoW operations if we think we're getting close to
+exhausting an AG's free space rather than shutting down, but this
+permanent reservation should be enough for "most" users.  Hopefully.
+
+v2: Simplify the return value from xfs_perag_pool_free_block to a bool
+so that we can easily call xfs_trans_binval for both the per-AG pool
+and the real freeing case.  Without this we fail to invalidate the
+btree buffer and will trip over the write verifier on a shrinking
+refcount btree.
+
+v3: Convert to the new per-AG reservation code.
+
+v4: Combine this patch with the one that adds the rmapbt reservation,
+since the rmapbt reservation is only needed for reflink filesystems.
+
+v5: If we detect errors while counting the refcount or rmap btrees,
+shut down the filesystem to avoid the scenario where the fs shuts down
+mid-transaction due to btree corruption, repair refuses to run until
+the log is clean, and the log cannot be cleaned because replay hits
+btree corruption and shuts down.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch@lst.de: ensure that we invalidate the freed btree buffer]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |   13 +++++++-
- fs/xfs/libxfs/xfs_format.h     |    3 +-
- fs/xfs/libxfs/xfs_fs.h         |    3 +-
- fs/xfs/libxfs/xfs_inode_buf.c  |    4 ++
- fs/xfs/libxfs/xfs_inode_buf.h  |    1 +
- fs/xfs/libxfs/xfs_log_format.h |    3 +-
- fs/xfs/xfs_bmap_util.c         |    9 ++++-
- fs/xfs/xfs_inode.c             |   33 ++++++++++++++++++++
- fs/xfs/xfs_inode.h             |    1 +
- fs/xfs/xfs_inode_item.c        |    2 +
- fs/xfs/xfs_ioctl.c             |   67 +++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_iomap.c             |    5 ++-
- fs/xfs/xfs_itable.c            |    5 +++
- fs/xfs/xfs_reflink.c           |   36 +++++++++++++++++----
- 14 files changed, 166 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c        |   11 +++++
+ fs/xfs/libxfs/xfs_alloc.c          |    2 -
+ fs/xfs/libxfs/xfs_refcount_btree.c |   61 +++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_refcount_btree.h |    3 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   80 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    7 +++
+ fs/xfs/xfs_fsops.c                 |   56 +++++++++++++++++++++++++
+ fs/xfs/xfs_fsops.h                 |    3 +
+ fs/xfs/xfs_mount.c                 |    4 ++
+ fs/xfs/xfs_super.c                 |    5 ++
+ 10 files changed, 225 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 0909532..a6c08bf 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3665,7 +3665,13 @@ xfs_bmap_btalloc(
- 	else if (mp->m_dalign)
- 		stripe_align = mp->m_dalign;
- 
--	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
-+	if (ap->userdata) {
-+		if (ap->flags & XFS_BMAPI_COWFORK)
-+			align = xfs_get_cowextsz_hint(ap->ip);
-+		else
-+			align = xfs_get_extsz_hint(ap->ip);
-+	} else
-+		align = 0;
- 	if (unlikely(align)) {
- 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 						align, 0, ap->eof, 0, ap->conv,
-@@ -4178,7 +4184,10 @@ xfs_bmapi_reserve_delalloc(
- 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
- 
- 	/* Figure out the extent size, adjust alen */
--	extsz = xfs_get_extsz_hint(ip);
-+	if (whichfork == XFS_COW_FORK)
-+		extsz = xfs_get_cowextsz_hint(ip);
-+	else
-+		extsz = xfs_get_extsz_hint(ip);
- 	if (extsz) {
- 		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
- 					       1, 0, &aoff, &alen);
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 3d336e9..a35f4e5 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -890,7 +890,8 @@ typedef struct xfs_dinode {
- 	__be64		di_changecount;	/* number of attribute changes */
- 	__be64		di_lsn;		/* flush sequence */
- 	__be64		di_flags2;	/* more random flags */
--	__u8		di_pad2[16];	/* more padding for future expansion */
-+	__be32		di_cowextsize;	/* basic cow extent size for file */
-+	__u8		di_pad2[12];	/* more padding for future expansion */
- 
- 	/* fields only written to during inode creation */
- 	xfs_timestamp_t	di_crtime;	/* time created */
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b1af423..10ebf99 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -278,7 +278,8 @@ typedef struct xfs_bstat {
- #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
- 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
- 	__u16		bs_projid_hi;	/* higher part of project id	*/
--	unsigned char	bs_pad[10];	/* pad space, unused		*/
-+	unsigned char	bs_pad[6];	/* pad space, unused		*/
-+	__u32		bs_cowextsize;	/* cow extent size		*/
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 44f325c..2efa42c 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -267,6 +267,7 @@ xfs_inode_from_disk(
- 		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
- 		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
- 		to->di_flags2 = be64_to_cpu(from->di_flags2);
-+		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
- 	}
- }
- 
-@@ -316,7 +317,7 @@ xfs_inode_to_disk(
- 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
- 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
--
-+		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(ip->i_ino);
- 		to->di_lsn = cpu_to_be64(lsn);
- 		memset(to->di_pad2, 0, sizeof(to->di_pad2));
-@@ -368,6 +369,7 @@ xfs_log_dinode_to_disk(
- 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
- 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
-+		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(from->di_ino);
- 		to->di_lsn = cpu_to_be64(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 958c543..6848a0a 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -47,6 +47,7 @@ struct xfs_icdinode {
- 	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
- 
- 	__uint64_t	di_flags2;	/* more random flags */
-+	__uint32_t	di_cowextsize;	/* basic cow extent size for file */
- 
- 	xfs_ictimestamp_t di_crtime;	/* time created */
- };
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 320a305..9cab67f 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -423,7 +423,8 @@ struct xfs_log_dinode {
- 	__uint64_t	di_changecount;	/* number of attribute changes */
- 	xfs_lsn_t	di_lsn;		/* flush sequence */
- 	__uint64_t	di_flags2;	/* more random flags */
--	__uint8_t	di_pad2[16];	/* more padding for future expansion */
-+	__uint32_t	di_cowextsize;	/* basic cow extent size for file */
-+	__uint8_t	di_pad2[12];	/* more padding for future expansion */
- 
- 	/* fields only written to during inode creation */
- 	xfs_ictimestamp_t di_crtime;	/* time created */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index a5f5515..b0c2c6d5 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -499,8 +499,13 @@ xfs_getbmap(
- 		if (ip->i_cformat != XFS_DINODE_FMT_EXTENTS)
- 			return -EINVAL;
- 
--		prealloced = 0;
--		fixlen = XFS_ISIZE(ip);
-+		if (xfs_get_cowextsz_hint(ip)) {
-+			prealloced = 1;
-+			fixlen = mp->m_super->s_maxbytes;
-+		} else {
-+			prealloced = 0;
-+			fixlen = XFS_ISIZE(ip);
-+		}
- 		break;
- 	default:
- 		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 127bf54..480e48a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -78,6 +78,27 @@ xfs_get_extsz_hint(
- }
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 4d390b7..9cfe132 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -38,6 +38,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_btree.h"
++#include "xfs_refcount_btree.h"
  
  /*
-+ * Helper function to extract CoW extent size hint from inode.
-+ * Between the extent size hint and the CoW extent size hint, we
-+ * return the greater of the two.
-+ */
-+xfs_extlen_t
-+xfs_get_cowextsz_hint(
-+	struct xfs_inode	*ip)
+  * Per-AG Block Reservations
+@@ -225,6 +226,11 @@ xfs_ag_resv_init(
+ 	/* Create the metadata reservation. */
+ 	ask = used = 0;
+ 
++	err2 = xfs_refcountbt_calc_reserves(pag->pag_mount, pag->pag_agno,
++			&ask, &used);
++	if (err2 && !error)
++		error = err2;
++
+ 	err2 = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA, ask, used);
+ 	if (err2 && !error)
+ 		error = err2;
+@@ -236,6 +242,11 @@ init_agfl:
+ 	/* Create the AGFL metadata reservation */
+ 	ask = used = 0;
+ 
++	err2 = xfs_rmapbt_calc_reserves(pag->pag_mount, pag->pag_agno,
++			&ask, &used);
++	if (err2 && !error)
++		error = err2;
++
+ 	err2 = __xfs_ag_resv_init(pag, XFS_AG_RESV_AGFL, ask, used);
+ 	if (err2 && !error)
+ 		error = err2;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index c46db76..188c359a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -139,8 +139,6 @@ xfs_alloc_ag_max_usable(struct xfs_mount *mp)
+ 		/* rmap root block + full tree split on full AG */
+ 		blocks += 1 + (2 * mp->m_ag_maxlevels) - 1;
+ 	}
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		blocks += xfs_refcountbt_max_size(mp);
+ 
+ 	return mp->m_sb.sb_agblocks - blocks;
+ }
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index a944fca..abf1ebf 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -76,6 +76,8 @@ xfs_refcountbt_alloc_block(
+ 	struct xfs_alloc_arg	args;		/* block allocation args */
+ 	int			error;		/* error return value */
+ 
++	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
++
+ 	memset(&args, 0, sizeof(args));
+ 	args.tp = cur->bc_tp;
+ 	args.mp = cur->bc_mp;
+@@ -85,6 +87,7 @@ xfs_refcountbt_alloc_block(
+ 	args.firstblock = args.fsbno;
+ 	xfs_rmap_ag_owner(&args.oinfo, XFS_RMAP_OWN_REFC);
+ 	args.minlen = args.maxlen = args.prod = 1;
++	args.resv = XFS_AG_RESV_METADATA;
+ 
+ 	error = xfs_alloc_vextent(&args);
+ 	if (error)
+@@ -116,17 +119,20 @@ xfs_refcountbt_free_block(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = cur->bc_mp;
+-	struct xfs_trans	*tp = cur->bc_tp;
+ 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+ 	struct xfs_owner_info	oinfo;
++	int			error;
+ 
+ 	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_private.a.agno,
+ 			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);
+ 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
+-	xfs_bmap_add_free(mp, cur->bc_private.a.dfops, fsbno, 1,
+-			&oinfo);
+-	xfs_trans_binval(tp, bp);
+-	return 0;
++	error = xfs_free_extent(cur->bc_tp, fsbno, 1, &oinfo,
++			XFS_AG_RESV_METADATA);
++	if (error)
++		return error;
++
++	xfs_trans_binval(cur->bc_tp, bp);
++	return error;
+ }
+ 
+ STATIC int
+@@ -396,3 +402,48 @@ xfs_refcountbt_max_size(
+ 
+ 	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
+ }
++
++/* Count the blocks in the reference count tree. */
++static int
++xfs_refcountbt_count_blocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*tree_blocks)
 +{
-+	xfs_extlen_t		a, b;
++	struct xfs_buf		*agbp;
++	struct xfs_btree_cur	*cur;
++	int			error;
 +
-+	a = 0;
-+	if (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
-+		a = ip->i_d.di_cowextsize;
-+	b = xfs_get_extsz_hint(ip);
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		return error;
++	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++	error = xfs_btree_count_blocks(cur, tree_blocks);
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_trans_brelse(NULL, agbp);
 +
-+	if (a > b)
-+		return a;
-+	return b;
++	return error;
 +}
 +
 +/*
-  * These two are wrapper routines around the xfs_ilock() routine used to
-  * centralize some grungy code.  They are used in places that wish to lock the
-  * inode solely for reading the extents.  The reason these places can't just
-@@ -654,6 +675,8 @@ _xfs_dic2xflags(
- 			flags |= FS_XFLAG_DAX;
- 		if (di_flags2 & XFS_DIFLAG2_REFLINK)
- 			flags |= FS_XFLAG_REFLINK;
-+		if (di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
-+			flags |= FS_XFLAG_COWEXTSIZE;
- 	}
- 
- 	if (has_attr)
-@@ -837,6 +860,7 @@ xfs_ialloc(
- 	if (ip->i_d.di_version == 3) {
- 		inode->i_version = 1;
- 		ip->i_d.di_flags2 = 0;
-+		ip->i_d.di_cowextsize = 0;
- 		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
- 		ip->i_d.di_crtime.t_nsec = (__int32_t)tv.tv_nsec;
- 	}
-@@ -899,6 +923,15 @@ xfs_ialloc(
- 			ip->i_d.di_flags |= di_flags;
- 			ip->i_d.di_flags2 |= di_flags2;
- 		}
-+		if (pip &&
-+		    (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY) &&
-+		    pip->i_d.di_version == 3 &&
-+		    ip->i_d.di_version == 3) {
-+			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-+				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-+				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
-+			}
-+		}
- 		/* FALLTHROUGH */
- 	case S_IFLNK:
- 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 797fcc7..2c1fb3f 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -419,6 +419,7 @@ int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
- void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
- 
- xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
-+xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
- 
- int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
- 			       xfs_nlink_t, xfs_dev_t, prid_t, int,
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index a1b0761..9a1d62b 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -368,7 +368,7 @@ xfs_inode_to_log_dinode(
- 		to->di_crtime.t_sec = from->di_crtime.t_sec;
- 		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
- 		to->di_flags2 = from->di_flags2;
--
-+		to->di_cowextsize = from->di_cowextsize;
- 		to->di_ino = ip->i_ino;
- 		to->di_lsn = lsn;
- 		memset(to->di_pad2, 0, sizeof(to->di_pad2));
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index b8eceee..d2b4e81 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -900,6 +900,8 @@ xfs_ioc_fsgetxattr(
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	fa.fsx_xflags = xfs_ip2xflags(ip);
- 	fa.fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
-+	fa.fsx_cowextsize = ip->i_d.di_cowextsize <<
-+			ip->i_mount->m_sb.sb_blocklog;
- 	fa.fsx_projid = xfs_get_projid(ip);
- 
- 	if (attr) {
-@@ -970,12 +972,13 @@ xfs_set_diflags(
- 	if (ip->i_d.di_version < 3)
- 		return;
- 
--	di_flags2 = 0;
-+	di_flags2 = (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
-+	if (xflags & FS_XFLAG_COWEXTSIZE)
-+		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 
- 	ip->i_d.di_flags2 = di_flags2;
--
- }
- 
- STATIC void
-@@ -1216,6 +1219,56 @@ xfs_ioctl_setattr_check_extsize(
- 	return 0;
- }
- 
-+/*
-+ * CoW extent size hint validation rules are:
-+ *
-+ * 1. CoW extent size hint can only be set if reflink is enabled on the fs.
-+ *    The inode does not have to have any shared blocks, but it must be a v3.
-+ * 2. FS_XFLAG_COWEXTSIZE is only valid for directories and regular files;
-+ *    for a directory, the hint is propagated to new files.
-+ * 3. Can be changed on files & directories at any time.
-+ * 4. CoW extsize hint of 0 turns off hints, clears inode flags.
-+ * 5. Extent size must be a multiple of the appropriate block size.
-+ * 6. The extent size hint must be limited to half the AG size to avoid
-+ *    alignment extending the extent beyond the limits of the AG.
++ * Figure out how many blocks to reserve and how many are used by this btree.
 + */
-+static int
-+xfs_ioctl_setattr_check_cowextsize(
-+	struct xfs_inode	*ip,
-+	struct fsxattr		*fa)
++int
++xfs_refcountbt_calc_reserves(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*ask,
++	xfs_extlen_t		*used)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
++	xfs_extlen_t		tree_len = 0;
++	int			error;
 +
-+	if (!(fa->fsx_xflags & FS_XFLAG_COWEXTSIZE))
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
 +		return 0;
 +
-+	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb) ||
-+	    ip->i_d.di_version != 3)
-+		return -EINVAL;
++	*ask += xfs_refcountbt_max_size(mp);
++	error = xfs_refcountbt_count_blocks(mp, agno, &tree_len);
++	*used += tree_len;
 +
-+	if (!S_ISREG(VFS_I(ip)->i_mode) && !S_ISDIR(VFS_I(ip)->i_mode))
-+		return -EINVAL;
-+
-+	if (fa->fsx_cowextsize != 0) {
-+		xfs_extlen_t    size;
-+		xfs_fsblock_t   cowextsize_fsb;
-+
-+		cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
-+		if (cowextsize_fsb > MAXEXTLEN)
-+			return -EINVAL;
-+
-+		size = mp->m_sb.sb_blocksize;
-+		if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
-+			return -EINVAL;
-+
-+		if (fa->fsx_cowextsize % size)
-+			return -EINVAL;
-+	} else
-+		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
-+
-+	return 0;
++	return error;
 +}
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index 780b02f..3be7768 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -68,4 +68,7 @@ extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+ extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
+ 
++extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
++		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
 +
- static int
- xfs_ioctl_setattr_check_projid(
- 	struct xfs_inode	*ip,
-@@ -1312,6 +1365,10 @@ xfs_ioctl_setattr(
- 	if (code)
- 		goto error_trans_cancel;
- 
-+	code = xfs_ioctl_setattr_check_cowextsize(ip, fa);
-+	if (code)
-+		goto error_trans_cancel;
-+
- 	code = xfs_ioctl_setattr_xflags(tp, ip, fa);
- 	if (code)
- 		goto error_trans_cancel;
-@@ -1347,6 +1404,12 @@ xfs_ioctl_setattr(
- 		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
- 	else
- 		ip->i_d.di_extsize = 0;
-+	if (ip->i_d.di_version == 3 &&
-+	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
-+		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
-+				mp->m_sb.sb_blocklog;
-+	else
-+		ip->i_d.di_cowextsize = 0;
- 
- 	code = xfs_trans_commit(tp);
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e7e1346..3914f0f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -589,7 +589,10 @@ __xfs_iomap_write_delay(
- 	if (error)
- 		return error;
- 
--	extsz = xfs_get_extsz_hint(ip);
-+	if (whichfork == XFS_COW_FORK)
-+		extsz = xfs_get_cowextsz_hint(ip);
-+	else
-+		extsz = xfs_get_extsz_hint(ip);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
- 	if (whichfork == XFS_DATA_FORK) {
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index ce73eb3..6da964a 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -111,6 +111,11 @@ xfs_bulkstat_one_int(
- 	buf->bs_aextents = dic->di_anextents;
- 	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
- 
-+	if (dic->di_version == 3) {
-+		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
-+			buf->bs_cowextsize = dic->di_cowextsize;
-+	}
-+
- 	switch (dic->di_format) {
- 	case XFS_DINODE_FMT_DEV:
- 		buf->bs_rdev = ip->i_df.if_u2.if_rdev;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7c64104..d2c1547 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1010,18 +1010,19 @@ out_error:
- }
+ #endif	/* __XFS_REFCOUNT_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 090dbbe..0b045a6 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -34,6 +34,7 @@
+ #include "xfs_cksum.h"
+ #include "xfs_error.h"
+ #include "xfs_extent_busy.h"
++#include "xfs_ag_resv.h"
  
  /*
-- * Update destination inode size, if necessary.
-+ * Update destination inode size & cowextsize hint, if necessary.
+  * Reverse map btree.
+@@ -60,6 +61,14 @@
+  * try to recover tree and file data from corrupt primary metadata.
   */
- STATIC int
- xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
--	xfs_off_t		newlen)
-+	xfs_off_t		newlen,
-+	xfs_extlen_t		cowextsize)
- {
- 	struct xfs_mount	*mp = dest->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
  
--	if (newlen <= i_size_read(VFS_I(dest)))
-+	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
++static bool
++xfs_rmapbt_need_reserve(
++	struct xfs_mount	*mp)
++{
++	return  xfs_sb_version_hasrmapbt(&mp->m_sb) &&
++		xfs_sb_version_hasreflink(&mp->m_sb);
++}
++
+ static struct xfs_btree_cur *
+ xfs_rmapbt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+@@ -481,3 +490,74 @@ xfs_rmapbt_compute_maxlevels(
+ 		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
+ 				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
+ }
++
++/* Calculate the refcount btree size for some records. */
++xfs_extlen_t
++xfs_rmapbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_rmap_mnr, len);
++}
++
++/*
++ * Calculate the maximum refcount btree size.
++ */
++xfs_extlen_t
++xfs_rmapbt_max_size(
++	struct xfs_mount	*mp)
++{
++	/* Bail out if we're uninitialized, which can happen in mkfs. */
++	if (mp->m_rmap_mxr[0] == 0)
++		return 0;
++
++	return xfs_rmapbt_calc_size(mp, mp->m_sb.sb_agblocks);
++}
++
++/* Count the blocks in the reference count tree. */
++static int
++xfs_rmapbt_count_blocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*tree_blocks)
++{
++	struct xfs_buf		*agbp;
++	struct xfs_btree_cur	*cur;
++	int			error;
++
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		return error;
++	cur = xfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
++	error = xfs_btree_count_blocks(cur, tree_blocks);
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_trans_brelse(NULL, agbp);
++
++	return error;
++}
++
++/*
++ * Figure out how many blocks to reserve and how many are used by this btree.
++ */
++int
++xfs_rmapbt_calc_reserves(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*ask,
++	xfs_extlen_t		*used)
++{
++	xfs_extlen_t		pool_len;
++	xfs_extlen_t		tree_len = 0;
++	int			error;
++
++	if (!xfs_rmapbt_need_reserve(mp))
++		return 0;
++
++	/* Reserve 1% of the AG or enough for 1 block per record. */
++	pool_len = max(mp->m_sb.sb_agblocks / 100, xfs_rmapbt_max_size(mp));
++	*ask += pool_len;
++	error = xfs_rmapbt_count_blocks(mp, agno, &tree_len);
++	*used += tree_len;
++
++	return error;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 5df406e..f398e8b 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -130,4 +130,11 @@ int xfs_rmap_finish_one(struct xfs_trans *tp, enum xfs_rmap_intent_type type,
+ 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+ 		xfs_exntst_t state, struct xfs_btree_cur **pcur);
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -1031,9 +1032,17 @@ xfs_reflink_update_dest(
- 	xfs_ilock(dest, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, dest, XFS_ILOCK_EXCL);
++extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
++extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
++
++extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
++		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
++
+ #endif	/* __XFS_RMAP_BTREE_H__ */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 84e7ba3..e76aefc 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -42,6 +42,8 @@
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+ #include "xfs_filestream.h"
++#include "xfs_refcount_btree.h"
++#include "xfs_ag_resv.h"
  
--	trace_xfs_reflink_update_inode_size(dest, newlen);
--	i_size_write(VFS_I(dest), newlen);
--	dest->i_d.di_size = newlen;
-+	if (newlen > i_size_read(VFS_I(dest))) {
-+		trace_xfs_reflink_update_inode_size(dest, newlen);
-+		i_size_write(VFS_I(dest), newlen);
-+		dest->i_d.di_size = newlen;
+ /*
+  * File system operations
+@@ -677,6 +679,9 @@ xfs_growfs_data_private(
+ 			continue;
+ 		}
+ 	}
++
++	xfs_fs_reserve_ag_blocks(mp);
++
+ 	return saved_error ? saved_error : error;
+ 
+  error0:
+@@ -971,3 +976,54 @@ xfs_do_force_shutdown(
+ 	"Please umount the filesystem and rectify the problem(s)");
+ 	}
+ }
++
++/*
++ * Reserve free space for per-AG metadata.
++ */
++void
++xfs_fs_reserve_ag_blocks(
++	struct xfs_mount	*mp)
++{
++	xfs_agnumber_t		agno;
++	struct xfs_perag	*pag;
++	int			error = 0;
++	int			err2;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		err2 = xfs_ag_resv_init(pag);
++		xfs_perag_put(pag);
++		if (err2 && !error)
++			error = err2;
 +	}
 +
-+	if (cowextsize) {
-+		dest->i_d.di_cowextsize = cowextsize;
-+		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++	if (error) {
++		xfs_warn(mp, "Error %d reserving metadata blocks.", error);
++		xfs_force_shutdown(mp, (error == -EFSCORRUPTED) ?
++			SHUTDOWN_CORRUPT_INCORE : SHUTDOWN_META_IO_ERROR);
++	}
++}
++
++/*
++ * Free space reserved for per-AG metadata.
++ */
++void
++xfs_fs_unreserve_ag_blocks(
++	struct xfs_mount	*mp)
++{
++	xfs_agnumber_t		agno;
++	struct xfs_perag	*pag;
++	int			error = 0;
++	int			err2;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		err2 = xfs_ag_resv_free(pag);
++		xfs_perag_put(pag);
++		if (err2 && !error)
++			error = err2;
 +	}
 +
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
++	if (error)
++		xfs_warn(mp, "Error %d unreserving metadata blocks.", error);
++}
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index f32713f..71e3248 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -26,4 +26,7 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
  
- 	error = xfs_trans_commit(tp);
-@@ -1351,6 +1360,7 @@ xfs_reflink_remap_range(
- 	xfs_fileoff_t		sfsbno, dfsbno;
- 	xfs_filblks_t		fsblen;
- 	int			error;
-+	xfs_extlen_t		cowextsize;
- 	bool			is_same;
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-@@ -1411,7 +1421,19 @@ xfs_reflink_remap_range(
- 	if (error)
- 		goto out_error;
- 
--	error = xfs_reflink_update_dest(dest, destoff + len);
-+	/*
-+	 * Carry the cowextsize hint from src to dest if we're sharing the
-+	 * entire source file to the entire destination file, the source file
-+	 * has a cowextsize hint, and the destination file does not.
-+	 */
-+	cowextsize = 0;
-+	if (srcoff == 0 && len == i_size_read(VFS_I(src)) &&
-+	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
-+	    destoff == 0 && len >= i_size_read(VFS_I(dest)) &&
-+	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
-+		cowextsize = src->i_d.di_cowextsize;
++extern void xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
++extern void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
 +
-+	error = xfs_reflink_update_dest(dest, destoff + len, cowextsize);
- 	if (error)
- 		goto out_error;
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 6351dce..db80832 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -45,6 +45,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_reflink.h"
++#include "xfs_refcount_btree.h"
  
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+@@ -962,6 +963,8 @@ xfs_mountfs(
+ 			xfs_warn(mp,
+ 	"Unable to allocate reserve blocks. Continuing without reserve pool.");
+ 
++		xfs_fs_reserve_ag_blocks(mp);
++
+ 		/* Recover any CoW blocks that never got remapped. */
+ 		error = xfs_reflink_recover_cow(mp);
+ 		if (error && !XFS_FORCED_SHUTDOWN(mp))
+@@ -1013,6 +1016,7 @@ xfs_unmountfs(
+ 
+ 	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+ 
++	xfs_fs_unreserve_ag_blocks(mp);
+ 	xfs_qm_unmount_quotas(mp);
+ 	xfs_rtunmount_inodes(mp);
+ 	IRELE(mp->m_rootip);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 87e997a..10a0f721 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -51,6 +51,7 @@
+ #include "xfs_refcount_item.h"
+ #include "xfs_bmap_item.h"
+ #include "xfs_reflink.h"
++#include "xfs_refcount_btree.h"
+ 
+ #include <linux/namei.h>
+ #include <linux/init.h>
+@@ -1306,6 +1307,7 @@ xfs_fs_remount(
+ 		 */
+ 		xfs_restore_resvblks(mp);
+ 		xfs_log_work_queue(mp);
++		xfs_fs_reserve_ag_blocks(mp);
+ 
+ 		/* Recover any CoW blocks that never got remapped. */
+ 		error = xfs_reflink_recover_cow(mp);
+@@ -1323,6 +1325,9 @@ xfs_fs_remount(
+ 		 * reserve pool size so that if we get remounted rw, we can
+ 		 * return it to the same size.
+ 		 */
++
++		xfs_fs_unreserve_ag_blocks(mp);
++
+ 		xfs_save_resvblks(mp);
+ 		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
 
 _______________________________________________
 xfs mailing list
