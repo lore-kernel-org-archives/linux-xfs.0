@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 734E27CD1
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:22:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 69BFF7DB3
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:22:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D92F2AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:22:24 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 6VKMymQijmMqtc6i (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AA918F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:22:32 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id VzYRQG76az85qaZR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:22:20 -0700 (PDT)
-Subject: [PATCH 041/119] xfs: create rmap update intent log items
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:22:28 -0700 (PDT)
+Subject: [PATCH 042/119] xfs: log rmap intent items
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:22:14 -0700
-Message-ID: <146612653482.12839.13343504748508270421.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:22:21 -0700
+Message-ID: <146612654128.12839.11872963796909332527.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,172 +31,515 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Create rmap update intent/done log items to record redo information in
-the log.  Because we need to roll transactions between updating the
-bmbt mapping and updating the reverse mapping, we also have to track
-the status of the metadata updates that will be recorded in the
-post-roll transactions, just in case we crash before committing the
-final transaction.  This mechanism enables log recovery to finish what
-was already started.
+Provide a mechanism for higher levels to create RUI/RUD items, submit
+them to the log, and a stub function to deal with recovered RUI items.
+These parts will be connected to the rmapbt in a later patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile                |    1 
- fs/xfs/libxfs/xfs_log_format.h |   67 ++++++
- fs/xfs/libxfs/xfs_rmap_btree.h |   19 ++
- fs/xfs/xfs_rmap_item.c         |  459 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_rmap_item.h         |  100 +++++++++
- fs/xfs/xfs_super.c             |   21 ++
- 6 files changed, 665 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/xfs_rmap_item.c
- create mode 100644 fs/xfs/xfs_rmap_item.h
+ fs/xfs/Makefile          |    1 
+ fs/xfs/xfs_log_recover.c |  344 +++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h       |   17 ++
+ fs/xfs/xfs_trans_rmap.c  |  235 +++++++++++++++++++++++++++++++
+ 4 files changed, 589 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/xfs_trans_rmap.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 2de8c20..8ae0a10 100644
+index 8ae0a10..1980110 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -104,6 +104,7 @@ xfs-y				+= xfs_log.o \
- 				   xfs_extfree_item.o \
- 				   xfs_icreate_item.o \
- 				   xfs_inode_item.o \
-+				   xfs_rmap_item.o \
- 				   xfs_log_recover.o \
- 				   xfs_trans_ail.o \
+@@ -110,6 +110,7 @@ xfs-y				+= xfs_log.o \
  				   xfs_trans_buf.o \
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index e5baba3..b9627b7 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -110,7 +110,9 @@ static inline uint xlog_get_cycle(char *ptr)
- #define XLOG_REG_TYPE_COMMIT		18
- #define XLOG_REG_TYPE_TRANSHDR		19
- #define XLOG_REG_TYPE_ICREATE		20
--#define XLOG_REG_TYPE_MAX		20
-+#define XLOG_REG_TYPE_RUI_FORMAT	21
-+#define XLOG_REG_TYPE_RUD_FORMAT	22
-+#define XLOG_REG_TYPE_MAX		22
+ 				   xfs_trans_extfree.o \
+ 				   xfs_trans_inode.o \
++				   xfs_trans_rmap.o \
+ 
+ # optional features
+ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index b33187b..c9fe0c4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -44,6 +44,7 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_error.h"
+ #include "xfs_dir2.h"
++#include "xfs_rmap_item.h"
+ 
+ #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+ 
+@@ -1912,6 +1913,8 @@ xlog_recover_reorder_trans(
+ 		case XFS_LI_QUOTAOFF:
+ 		case XFS_LI_EFD:
+ 		case XFS_LI_EFI:
++		case XFS_LI_RUI:
++		case XFS_LI_RUD:
+ 			trace_xfs_log_recover_item_reorder_tail(log,
+ 							trans, item, pass);
+ 			list_move_tail(&item->ri_list, &inode_list);
+@@ -3416,6 +3419,101 @@ xlog_recover_efd_pass2(
+ }
  
  /*
-  * Flags to log operation header
-@@ -227,6 +229,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_DQUOT		0x123d
- #define	XFS_LI_QUOTAOFF		0x123e
- #define	XFS_LI_ICREATE		0x123f
-+#define	XFS_LI_RUI		0x1240	/* rmap update intent */
-+#define	XFS_LI_RUD		0x1241
++ * This routine is called to create an in-core extent rmap update
++ * item from the rui format structure which was logged on disk.
++ * It allocates an in-core rui, copies the extents from the format
++ * structure into it, and adds the rui to the AIL with the given
++ * LSN.
++ */
++STATIC int
++xlog_recover_rui_pass2(
++	struct xlog			*log,
++	struct xlog_recover_item	*item,
++	xfs_lsn_t			lsn)
++{
++	int				error;
++	struct xfs_mount		*mp = log->l_mp;
++	struct xfs_rui_log_item		*ruip;
++	struct xfs_rui_log_format	*rui_formatp;
++
++	rui_formatp = item->ri_buf[0].i_addr;
++
++	ruip = xfs_rui_init(mp, rui_formatp->rui_nextents);
++	error = xfs_rui_copy_format(&item->ri_buf[0], &ruip->rui_format);
++	if (error) {
++		xfs_rui_item_free(ruip);
++		return error;
++	}
++	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
++
++	spin_lock(&log->l_ailp->xa_lock);
++	/*
++	 * The RUI has two references. One for the RUD and one for RUI to ensure
++	 * it makes it into the AIL. Insert the RUI into the AIL directly and
++	 * drop the RUI reference. Note that xfs_trans_ail_update() drops the
++	 * AIL lock.
++	 */
++	xfs_trans_ail_update(log->l_ailp, &ruip->rui_item, lsn);
++	xfs_rui_release(ruip);
++	return 0;
++}
++
++
++/*
++ * This routine is called when an RUD format structure is found in a committed
++ * transaction in the log. Its purpose is to cancel the corresponding RUI if it
++ * was still in the log. To do this it searches the AIL for the RUI with an id
++ * equal to that in the RUD format structure. If we find it we drop the RUD
++ * reference, which removes the RUI from the AIL and frees it.
++ */
++STATIC int
++xlog_recover_rud_pass2(
++	struct xlog			*log,
++	struct xlog_recover_item	*item)
++{
++	struct xfs_rud_log_format	*rud_formatp;
++	struct xfs_rui_log_item		*ruip = NULL;
++	struct xfs_log_item		*lip;
++	__uint64_t			rui_id;
++	struct xfs_ail_cursor		cur;
++	struct xfs_ail			*ailp = log->l_ailp;
++
++	rud_formatp = item->ri_buf[0].i_addr;
++	ASSERT(item->ri_buf[0].i_len == (sizeof(struct xfs_rud_log_format) +
++			((rud_formatp->rud_nextents - 1) *
++			sizeof(struct xfs_map_extent))));
++	rui_id = rud_formatp->rud_rui_id;
++
++	/*
++	 * Search for the RUI with the id in the RUD format structure in the
++	 * AIL.
++	 */
++	spin_lock(&ailp->xa_lock);
++	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
++	while (lip != NULL) {
++		if (lip->li_type == XFS_LI_RUI) {
++			ruip = (struct xfs_rui_log_item *)lip;
++			if (ruip->rui_format.rui_id == rui_id) {
++				/*
++				 * Drop the RUD reference to the RUI. This
++				 * removes the RUI from the AIL and frees it.
++				 */
++				spin_unlock(&ailp->xa_lock);
++				xfs_rui_release(ruip);
++				spin_lock(&ailp->xa_lock);
++				break;
++			}
++		}
++		lip = xfs_trans_ail_cursor_next(ailp, &cur);
++	}
++
++	xfs_trans_ail_cursor_done(&cur);
++	spin_unlock(&ailp->xa_lock);
++
++	return 0;
++}
++
++/*
+  * This routine is called when an inode create format structure is found in a
+  * committed transaction in the log.  It's purpose is to initialise the inodes
+  * being allocated on disk. This requires us to get inode cluster buffers that
+@@ -3640,6 +3738,8 @@ xlog_recover_ra_pass2(
+ 	case XFS_LI_EFI:
+ 	case XFS_LI_EFD:
+ 	case XFS_LI_QUOTAOFF:
++	case XFS_LI_RUI:
++	case XFS_LI_RUD:
+ 	default:
+ 		break;
+ 	}
+@@ -3663,6 +3763,8 @@ xlog_recover_commit_pass1(
+ 	case XFS_LI_EFD:
+ 	case XFS_LI_DQUOT:
+ 	case XFS_LI_ICREATE:
++	case XFS_LI_RUI:
++	case XFS_LI_RUD:
+ 		/* nothing to do in pass 1 */
+ 		return 0;
+ 	default:
+@@ -3693,6 +3795,10 @@ xlog_recover_commit_pass2(
+ 		return xlog_recover_efi_pass2(log, item, trans->r_lsn);
+ 	case XFS_LI_EFD:
+ 		return xlog_recover_efd_pass2(log, item);
++	case XFS_LI_RUI:
++		return xlog_recover_rui_pass2(log, item, trans->r_lsn);
++	case XFS_LI_RUD:
++		return xlog_recover_rud_pass2(log, item);
+ 	case XFS_LI_DQUOT:
+ 		return xlog_recover_dquot_pass2(log, buffer_list, item,
+ 						trans->r_lsn);
+@@ -4165,6 +4271,18 @@ xlog_recover_process_data(
+ 	return 0;
+ }
  
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -236,7 +240,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
- 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
- 	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
--	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }, \
-+	{ XFS_LI_RUI,		"XFS_LI_RUI" }, \
-+	{ XFS_LI_RUD,		"XFS_LI_RUD" }
++/* Is this log item a deferred action intent? */
++static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
++{
++	switch (lip->li_type) {
++	case XFS_LI_EFI:
++	case XFS_LI_RUI:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ /*
+  * Process an extent free intent item that was recovered from
+  * the log.  We need to free the extents that it describes.
+@@ -4265,17 +4383,23 @@ xlog_recover_process_efis(
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	while (lip != NULL) {
+ 		/*
+-		 * We're done when we see something other than an EFI.
+-		 * There should be no EFIs left in the AIL now.
++		 * We're done when we see something other than an intent.
++		 * There should be no intents left in the AIL now.
+ 		 */
+-		if (lip->li_type != XFS_LI_EFI) {
++		if (!xlog_item_is_intent(lip)) {
+ #ifdef DEBUG
+ 			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
+-				ASSERT(lip->li_type != XFS_LI_EFI);
++				ASSERT(!xlog_item_is_intent(lip));
+ #endif
+ 			break;
+ 		}
+ 
++		/* Skip anything that isn't an EFI */
++		if (lip->li_type != XFS_LI_EFI) {
++			lip = xfs_trans_ail_cursor_next(ailp, &cur);
++			continue;
++		}
++
+ 		/*
+ 		 * Skip EFIs that we've already processed.
+ 		 */
+@@ -4320,14 +4444,20 @@ xlog_recover_cancel_efis(
+ 		 * We're done when we see something other than an EFI.
+ 		 * There should be no EFIs left in the AIL now.
+ 		 */
+-		if (lip->li_type != XFS_LI_EFI) {
++		if (!xlog_item_is_intent(lip)) {
+ #ifdef DEBUG
+ 			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
+-				ASSERT(lip->li_type != XFS_LI_EFI);
++				ASSERT(!xlog_item_is_intent(lip));
+ #endif
+ 			break;
+ 		}
+ 
++		/* Skip anything that isn't an EFI */
++		if (lip->li_type != XFS_LI_EFI) {
++			lip = xfs_trans_ail_cursor_next(ailp, &cur);
++			continue;
++		}
++
+ 		efip = container_of(lip, struct xfs_efi_log_item, efi_item);
+ 
+ 		spin_unlock(&ailp->xa_lock);
+@@ -4343,6 +4473,190 @@ xlog_recover_cancel_efis(
+ }
  
  /*
-  * Inode Log Item Format definitions.
-@@ -604,6 +610,63 @@ typedef struct xfs_efd_log_format_64 {
- } xfs_efd_log_format_64_t;
++ * Process an rmap update intent item that was recovered from the log.
++ * We need to update the rmapbt.
++ */
++STATIC int
++xlog_recover_process_rui(
++	struct xfs_mount		*mp,
++	struct xfs_rui_log_item		*ruip)
++{
++	int				i;
++	int				error = 0;
++	struct xfs_map_extent		*rmap;
++	xfs_fsblock_t			startblock_fsb;
++	bool				op_ok;
++
++	ASSERT(!test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags));
++
++	/*
++	 * First check the validity of the extents described by the
++	 * RUI.  If any are bad, then assume that all are bad and
++	 * just toss the RUI.
++	 */
++	for (i = 0; i < ruip->rui_format.rui_nextents; i++) {
++		rmap = &(ruip->rui_format.rui_extents[i]);
++		startblock_fsb = XFS_BB_TO_FSB(mp,
++				   XFS_FSB_TO_DADDR(mp, rmap->me_startblock));
++		switch (rmap->me_flags & XFS_RMAP_EXTENT_TYPE_MASK) {
++		case XFS_RMAP_EXTENT_MAP:
++		case XFS_RMAP_EXTENT_MAP_SHARED:
++		case XFS_RMAP_EXTENT_UNMAP:
++		case XFS_RMAP_EXTENT_UNMAP_SHARED:
++		case XFS_RMAP_EXTENT_CONVERT:
++		case XFS_RMAP_EXTENT_CONVERT_SHARED:
++		case XFS_RMAP_EXTENT_ALLOC:
++		case XFS_RMAP_EXTENT_FREE:
++			op_ok = true;
++			break;
++		default:
++			op_ok = false;
++			break;
++		}
++		if (!op_ok || (startblock_fsb == 0) ||
++		    (rmap->me_len == 0) ||
++		    (startblock_fsb >= mp->m_sb.sb_dblocks) ||
++		    (rmap->me_len >= mp->m_sb.sb_agblocks) ||
++		    (rmap->me_flags & ~XFS_RMAP_EXTENT_FLAGS)) {
++			/*
++			 * This will pull the RUI from the AIL and
++			 * free the memory associated with it.
++			 */
++			set_bit(XFS_RUI_RECOVERED, &ruip->rui_flags);
++			xfs_rui_release(ruip);
++			return -EIO;
++		}
++	}
++
++	/* XXX: do nothing for now */
++	set_bit(XFS_RUI_RECOVERED, &ruip->rui_flags);
++	xfs_rui_release(ruip);
++	return error;
++}
++
++/*
++ * When this is called, all of the RUIs which did not have
++ * corresponding RUDs should be in the AIL.  What we do now
++ * is update the rmaps associated with each one.
++ *
++ * Since we process the RUIs in normal transactions, they
++ * will be removed at some point after the commit.  This prevents
++ * us from just walking down the list processing each one.
++ * We'll use a flag in the RUI to skip those that we've already
++ * processed and use the AIL iteration mechanism's generation
++ * count to try to speed this up at least a bit.
++ *
++ * When we start, we know that the RUIs are the only things in
++ * the AIL.  As we process them, however, other items are added
++ * to the AIL.  Since everything added to the AIL must come after
++ * everything already in the AIL, we stop processing as soon as
++ * we see something other than an RUI in the AIL.
++ */
++STATIC int
++xlog_recover_process_ruis(
++	struct xlog		*log)
++{
++	struct xfs_log_item	*lip;
++	struct xfs_rui_log_item	*ruip;
++	int			error = 0;
++	struct xfs_ail_cursor	cur;
++	struct xfs_ail		*ailp;
++
++	ailp = log->l_ailp;
++	spin_lock(&ailp->xa_lock);
++	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
++	while (lip != NULL) {
++		/*
++		 * We're done when we see something other than an intent.
++		 * There should be no intents left in the AIL now.
++		 */
++		if (!xlog_item_is_intent(lip)) {
++#ifdef DEBUG
++			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
++				ASSERT(!xlog_item_is_intent(lip));
++#endif
++			break;
++		}
++
++		/* Skip anything that isn't an RUI */
++		if (lip->li_type != XFS_LI_RUI) {
++			lip = xfs_trans_ail_cursor_next(ailp, &cur);
++			continue;
++		}
++
++		/*
++		 * Skip RUIs that we've already processed.
++		 */
++		ruip = container_of(lip, struct xfs_rui_log_item, rui_item);
++		if (test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags)) {
++			lip = xfs_trans_ail_cursor_next(ailp, &cur);
++			continue;
++		}
++
++		spin_unlock(&ailp->xa_lock);
++		error = xlog_recover_process_rui(log->l_mp, ruip);
++		spin_lock(&ailp->xa_lock);
++		if (error)
++			goto out;
++		lip = xfs_trans_ail_cursor_next(ailp, &cur);
++	}
++out:
++	xfs_trans_ail_cursor_done(&cur);
++	spin_unlock(&ailp->xa_lock);
++	return error;
++}
++
++/*
++ * A cancel occurs when the mount has failed and we're bailing out. Release all
++ * pending RUIs so they don't pin the AIL.
++ */
++STATIC int
++xlog_recover_cancel_ruis(
++	struct xlog		*log)
++{
++	struct xfs_log_item	*lip;
++	struct xfs_rui_log_item	*ruip;
++	int			error = 0;
++	struct xfs_ail_cursor	cur;
++	struct xfs_ail		*ailp;
++
++	ailp = log->l_ailp;
++	spin_lock(&ailp->xa_lock);
++	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
++	while (lip != NULL) {
++		/*
++		 * We're done when we see something other than an RUI.
++		 * There should be no RUIs left in the AIL now.
++		 */
++		if (!xlog_item_is_intent(lip)) {
++#ifdef DEBUG
++			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
++				ASSERT(!xlog_item_is_intent(lip));
++#endif
++			break;
++		}
++
++		/* Skip anything that isn't an RUI */
++		if (lip->li_type != XFS_LI_RUI) {
++			lip = xfs_trans_ail_cursor_next(ailp, &cur);
++			continue;
++		}
++
++		ruip = container_of(lip, struct xfs_rui_log_item, rui_item);
++
++		spin_unlock(&ailp->xa_lock);
++		xfs_rui_release(ruip);
++		spin_lock(&ailp->xa_lock);
++
++		lip = xfs_trans_ail_cursor_next(ailp, &cur);
++	}
++
++	xfs_trans_ail_cursor_done(&cur);
++	spin_unlock(&ailp->xa_lock);
++	return error;
++}
++
++/*
+  * This routine performs a transaction to null out a bad inode pointer
+  * in an agi unlinked inode hash bucket.
+  */
+@@ -5144,11 +5458,19 @@ xlog_recover_finish(
+ 	 */
+ 	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
+ 		int	error;
++
++		error = xlog_recover_process_ruis(log);
++		if (error) {
++			xfs_alert(log->l_mp, "Failed to recover RUIs");
++			return error;
++		}
++
+ 		error = xlog_recover_process_efis(log);
+ 		if (error) {
+ 			xfs_alert(log->l_mp, "Failed to recover EFIs");
+ 			return error;
+ 		}
++
+ 		/*
+ 		 * Sync the log to get all the EFIs out of the AIL.
+ 		 * This isn't absolutely necessary, but it helps in
+@@ -5176,9 +5498,15 @@ xlog_recover_cancel(
+ 	struct xlog	*log)
+ {
+ 	int		error = 0;
++	int		err2;
  
- /*
-+ * RUI/RUD (reverse mapping) log format definitions
-+ */
-+struct xfs_map_extent {
-+	__uint64_t		me_owner;
-+	__uint64_t		me_startblock;
-+	__uint64_t		me_startoff;
-+	__uint32_t		me_len;
-+	__uint32_t		me_flags;
-+};
+-	if (log->l_flags & XLOG_RECOVERY_NEEDED)
+-		error = xlog_recover_cancel_efis(log);
++	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
++		error = xlog_recover_cancel_ruis(log);
 +
-+/* rmap me_flags: upper bits are flags, lower byte is type code */
-+#define XFS_RMAP_EXTENT_MAP		1
-+#define XFS_RMAP_EXTENT_MAP_SHARED	2
-+#define XFS_RMAP_EXTENT_UNMAP		3
-+#define XFS_RMAP_EXTENT_UNMAP_SHARED	4
-+#define XFS_RMAP_EXTENT_CONVERT		5
-+#define XFS_RMAP_EXTENT_CONVERT_SHARED	6
-+#define XFS_RMAP_EXTENT_ALLOC		7
-+#define XFS_RMAP_EXTENT_FREE		8
-+#define XFS_RMAP_EXTENT_TYPE_MASK	0xFF
-+
-+#define XFS_RMAP_EXTENT_ATTR_FORK	(1U << 31)
-+#define XFS_RMAP_EXTENT_BMBT_BLOCK	(1U << 30)
-+#define XFS_RMAP_EXTENT_UNWRITTEN	(1U << 29)
-+
-+#define XFS_RMAP_EXTENT_FLAGS		(XFS_RMAP_EXTENT_TYPE_MASK | \
-+					 XFS_RMAP_EXTENT_ATTR_FORK | \
-+					 XFS_RMAP_EXTENT_BMBT_BLOCK | \
-+					 XFS_RMAP_EXTENT_UNWRITTEN)
-+
-+/*
-+ * This is the structure used to lay out an rui log item in the
-+ * log.  The rui_extents field is a variable size array whose
-+ * size is given by rui_nextents.
-+ */
-+struct xfs_rui_log_format {
-+	__uint16_t		rui_type;	/* rui log item type */
-+	__uint16_t		rui_size;	/* size of this item */
-+	__uint32_t		rui_nextents;	/* # extents to free */
-+	__uint64_t		rui_id;		/* rui identifier */
-+	struct xfs_map_extent	rui_extents[1];	/* array of extents to rmap */
-+};
-+
-+/*
-+ * This is the structure used to lay out an rud log item in the
-+ * log.  The rud_extents array is a variable size array whose
-+ * size is given by rud_nextents;
-+ */
-+struct xfs_rud_log_format {
-+	__uint16_t		rud_type;	/* rud log item type */
-+	__uint16_t		rud_size;	/* size of this item */
-+	__uint32_t		rud_nextents;	/* # of extents freed */
-+	__uint64_t		rud_rui_id;	/* id of corresponding rui */
-+	struct xfs_map_extent	rud_extents[1];	/* array of extents rmapped */
-+};
-+
-+/*
-  * Dquot Log format definitions.
-  *
-  * The first two fields must be the type and size fitting into
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 6674340..aff60dc 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -87,4 +87,23 @@ int xfs_rmapbt_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmapbt_query_range_fn fn, void *priv);
++		err2 = xlog_recover_cancel_efis(log);
++		if (err2 && !error)
++			error = err2;
++	}
  
-+enum xfs_rmap_intent_type {
-+	XFS_RMAP_MAP,
-+	XFS_RMAP_MAP_SHARED,
-+	XFS_RMAP_UNMAP,
-+	XFS_RMAP_UNMAP_SHARED,
-+	XFS_RMAP_CONVERT,
-+	XFS_RMAP_CONVERT_SHARED,
-+	XFS_RMAP_ALLOC,
-+	XFS_RMAP_FREE,
-+};
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index f8d363f..c48be63 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -235,4 +235,21 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
+ extern kmem_zone_t	*xfs_trans_zone;
+ extern kmem_zone_t	*xfs_log_item_desc_zone;
+ 
++enum xfs_rmap_intent_type;
 +
-+struct xfs_rmap_intent {
-+	struct list_head			ri_list;
-+	enum xfs_rmap_intent_type		ri_type;
-+	__uint64_t				ri_owner;
-+	int					ri_whichfork;
-+	struct xfs_bmbt_irec			ri_bmap;
-+};
++struct xfs_rui_log_item *xfs_trans_get_rui(struct xfs_trans *tp, uint nextents);
++void xfs_trans_log_start_rmap_update(struct xfs_trans *tp,
++		struct xfs_rui_log_item *ruip, enum xfs_rmap_intent_type type,
++		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
++		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
++		xfs_exntst_t state);
 +
- #endif	/* __XFS_RMAP_BTREE_H__ */
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
++struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
++		struct xfs_rui_log_item *ruip, uint nextents);
++int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
++		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
++		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
++		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
++		xfs_exntst_t state);
++
+ #endif	/* __XFS_TRANS_H__ */
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
 new file mode 100644
-index 0000000..91a3b2c
+index 0000000..b55a725
 --- /dev/null
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -0,0 +1,459 @@
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -0,0 +1,235 @@
 +/*
 + * Copyright (C) 2016 Oracle.  All Rights Reserved.
 + *
@@ -218,598 +561,220 @@ index 0000000..91a3b2c
 + */
 +#include "xfs.h"
 +#include "xfs_fs.h"
++#include "xfs_shared.h"
 +#include "xfs_format.h"
 +#include "xfs_log_format.h"
 +#include "xfs_trans_resv.h"
 +#include "xfs_mount.h"
++#include "xfs_defer.h"
 +#include "xfs_trans.h"
 +#include "xfs_trans_priv.h"
-+#include "xfs_buf_item.h"
 +#include "xfs_rmap_item.h"
-+#include "xfs_log.h"
-+
-+
-+kmem_zone_t	*xfs_rui_zone;
-+kmem_zone_t	*xfs_rud_zone;
-+
-+static inline struct xfs_rui_log_item *RUI_ITEM(struct xfs_log_item *lip)
-+{
-+	return container_of(lip, struct xfs_rui_log_item, rui_item);
-+}
-+
-+void
-+xfs_rui_item_free(
-+	struct xfs_rui_log_item	*ruip)
-+{
-+	if (ruip->rui_format.rui_nextents > XFS_RUI_MAX_FAST_EXTENTS)
-+		kmem_free(ruip);
-+	else
-+		kmem_zone_free(xfs_rui_zone, ruip);
-+}
++#include "xfs_alloc.h"
++#include "xfs_rmap_btree.h"
 +
 +/*
-+ * This returns the number of iovecs needed to log the given rui item.
-+ * We only need 1 iovec for an rui item.  It just logs the rui_log_format
-+ * structure.
-+ */
-+static inline int
-+xfs_rui_item_sizeof(
-+	struct xfs_rui_log_item *ruip)
-+{
-+	return sizeof(struct xfs_rui_log_format) +
-+			(ruip->rui_format.rui_nextents - 1) *
-+			sizeof(struct xfs_map_extent);
-+}
-+
-+STATIC void
-+xfs_rui_item_size(
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
-+{
-+	*nvecs += 1;
-+	*nbytes += xfs_rui_item_sizeof(RUI_ITEM(lip));
-+}
-+
-+/*
-+ * This is called to fill in the vector of log iovecs for the
-+ * given rui log item. We use only 1 iovec, and we point that
-+ * at the rui_log_format structure embedded in the rui item.
-+ * It is at this point that we assert that all of the extent
-+ * slots in the rui item have been filled.
-+ */
-+STATIC void
-+xfs_rui_item_format(
-+	struct xfs_log_item	*lip,
-+	struct xfs_log_vec	*lv)
-+{
-+	struct xfs_rui_log_item	*ruip = RUI_ITEM(lip);
-+	struct xfs_log_iovec	*vecp = NULL;
-+
-+	ASSERT(atomic_read(&ruip->rui_next_extent) ==
-+			ruip->rui_format.rui_nextents);
-+
-+	ruip->rui_format.rui_type = XFS_LI_RUI;
-+	ruip->rui_format.rui_size = 1;
-+
-+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_RUI_FORMAT, &ruip->rui_format,
-+			xfs_rui_item_sizeof(ruip));
-+}
-+
-+/*
-+ * Pinning has no meaning for an rui item, so just return.
-+ */
-+STATIC void
-+xfs_rui_item_pin(
-+	struct xfs_log_item	*lip)
-+{
-+}
-+
-+/*
-+ * The unpin operation is the last place an RUI is manipulated in the log. It is
-+ * either inserted in the AIL or aborted in the event of a log I/O error. In
-+ * either case, the RUI transaction has been successfully committed to make it
-+ * this far. Therefore, we expect whoever committed the RUI to either construct
-+ * and commit the RUD or drop the RUD's reference in the event of error. Simply
-+ * drop the log's RUI reference now that the log is done with it.
-+ */
-+STATIC void
-+xfs_rui_item_unpin(
-+	struct xfs_log_item	*lip,
-+	int			remove)
-+{
-+	struct xfs_rui_log_item	*ruip = RUI_ITEM(lip);
-+
-+	xfs_rui_release(ruip);
-+}
-+
-+/*
-+ * RUI items have no locking or pushing.  However, since RUIs are pulled from
-+ * the AIL when their corresponding RUDs are committed to disk, their situation
-+ * is very similar to being pinned.  Return XFS_ITEM_PINNED so that the caller
-+ * will eventually flush the log.  This should help in getting the RUI out of
-+ * the AIL.
-+ */
-+STATIC uint
-+xfs_rui_item_push(
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	return XFS_ITEM_PINNED;
-+}
-+
-+/*
-+ * The RUI has been either committed or aborted if the transaction has been
-+ * cancelled. If the transaction was cancelled, an RUD isn't going to be
-+ * constructed and thus we free the RUI here directly.
-+ */
-+STATIC void
-+xfs_rui_item_unlock(
-+	struct xfs_log_item	*lip)
-+{
-+	if (lip->li_flags & XFS_LI_ABORTED)
-+		xfs_rui_item_free(RUI_ITEM(lip));
-+}
-+
-+/*
-+ * The RUI is logged only once and cannot be moved in the log, so simply return
-+ * the lsn at which it's been logged.
-+ */
-+STATIC xfs_lsn_t
-+xfs_rui_item_committed(
-+	struct xfs_log_item	*lip,
-+	xfs_lsn_t		lsn)
-+{
-+	return lsn;
-+}
-+
-+/*
-+ * The RUI dependency tracking op doesn't do squat.  It can't because
-+ * it doesn't know where the free extent is coming from.  The dependency
-+ * tracking has to be handled by the "enclosing" metadata object.  For
-+ * example, for inodes, the inode is locked throughout the extent freeing
-+ * so the dependency should be recorded there.
-+ */
-+STATIC void
-+xfs_rui_item_committing(
-+	struct xfs_log_item	*lip,
-+	xfs_lsn_t		lsn)
-+{
-+}
-+
-+/*
-+ * This is the ops vector shared by all rui log items.
-+ */
-+static const struct xfs_item_ops xfs_rui_item_ops = {
-+	.iop_size	= xfs_rui_item_size,
-+	.iop_format	= xfs_rui_item_format,
-+	.iop_pin	= xfs_rui_item_pin,
-+	.iop_unpin	= xfs_rui_item_unpin,
-+	.iop_unlock	= xfs_rui_item_unlock,
-+	.iop_committed	= xfs_rui_item_committed,
-+	.iop_push	= xfs_rui_item_push,
-+	.iop_committing = xfs_rui_item_committing,
-+};
-+
-+/*
-+ * Allocate and initialize an rui item with the given number of extents.
++ * This routine is called to allocate an "rmap update intent"
++ * log item that will hold nextents worth of extents.  The
++ * caller must use all nextents extents, because we are not
++ * flexible about this at all.
 + */
 +struct xfs_rui_log_item *
-+xfs_rui_init(
-+	struct xfs_mount		*mp,
++xfs_trans_get_rui(
++	struct xfs_trans		*tp,
 +	uint				nextents)
-+
 +{
 +	struct xfs_rui_log_item		*ruip;
-+	uint				size;
 +
++	ASSERT(tp != NULL);
 +	ASSERT(nextents > 0);
-+	if (nextents > XFS_RUI_MAX_FAST_EXTENTS) {
-+		size = (uint)(sizeof(struct xfs_rui_log_item) +
-+			((nextents - 1) * sizeof(struct xfs_map_extent)));
-+		ruip = kmem_zalloc(size, KM_SLEEP);
-+	} else {
-+		ruip = kmem_zone_zalloc(xfs_rui_zone, KM_SLEEP);
-+	}
 +
-+	xfs_log_item_init(mp, &ruip->rui_item, XFS_LI_RUI, &xfs_rui_item_ops);
-+	ruip->rui_format.rui_nextents = nextents;
-+	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
-+	atomic_set(&ruip->rui_next_extent, 0);
-+	atomic_set(&ruip->rui_refcount, 2);
++	ruip = xfs_rui_init(tp->t_mountp, nextents);
++	ASSERT(ruip != NULL);
 +
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &ruip->rui_item);
 +	return ruip;
 +}
 +
 +/*
-+ * Copy an RUI format buffer from the given buf, and into the destination
-+ * RUI format structure.  The RUI/RUD items were designed not to need any
-+ * special alignment handling.
-+ */
-+int
-+xfs_rui_copy_format(
-+	struct xfs_log_iovec		*buf,
-+	struct xfs_rui_log_format	*dst_rui_fmt)
-+{
-+	struct xfs_rui_log_format	*src_rui_fmt;
-+	uint				len;
-+
-+	src_rui_fmt = buf->i_addr;
-+	len = sizeof(struct xfs_rui_log_format) +
-+			(src_rui_fmt->rui_nextents - 1) *
-+			sizeof(struct xfs_map_extent);
-+
-+	if (buf->i_len == len) {
-+		memcpy((char *)dst_rui_fmt, (char *)src_rui_fmt, len);
-+		return 0;
-+	}
-+	return -EFSCORRUPTED;
-+}
-+
-+/*
-+ * Freeing the RUI requires that we remove it from the AIL if it has already
-+ * been placed there. However, the RUI may not yet have been placed in the AIL
-+ * when called by xfs_rui_release() from RUD processing due to the ordering of
-+ * committed vs unpin operations in bulk insert operations. Hence the reference
-+ * count to ensure only the last caller frees the RUI.
++ * This routine is called to indicate that the described
++ * extent is to be logged as needing to be freed.  It should
++ * be called once for each extent to be freed.
 + */
 +void
-+xfs_rui_release(
-+	struct xfs_rui_log_item	*ruip)
++xfs_trans_log_start_rmap_update(
++	struct xfs_trans		*tp,
++	struct xfs_rui_log_item		*ruip,
++	enum xfs_rmap_intent_type	type,
++	__uint64_t			owner,
++	int				whichfork,
++	xfs_fileoff_t			startoff,
++	xfs_fsblock_t			startblock,
++	xfs_filblks_t			blockcount,
++	xfs_exntst_t			state)
 +{
-+	if (atomic_dec_and_test(&ruip->rui_refcount)) {
-+		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_rui_item_free(ruip);
-+	}
-+}
++	uint				next_extent;
++	struct xfs_map_extent		*rmap;
 +
-+static inline struct xfs_rud_log_item *RUD_ITEM(struct xfs_log_item *lip)
-+{
-+	return container_of(lip, struct xfs_rud_log_item, rud_item);
-+}
-+
-+STATIC void
-+xfs_rud_item_free(struct xfs_rud_log_item *rudp)
-+{
-+	if (rudp->rud_format.rud_nextents > XFS_RUD_MAX_FAST_EXTENTS)
-+		kmem_free(rudp);
-+	else
-+		kmem_zone_free(xfs_rud_zone, rudp);
-+}
-+
-+/*
-+ * This returns the number of iovecs needed to log the given rud item.
-+ * We only need 1 iovec for an rud item.  It just logs the rud_log_format
-+ * structure.
-+ */
-+static inline int
-+xfs_rud_item_sizeof(
-+	struct xfs_rud_log_item	*rudp)
-+{
-+	return sizeof(struct xfs_rud_log_format) +
-+			(rudp->rud_format.rud_nextents - 1) *
-+			sizeof(struct xfs_map_extent);
-+}
-+
-+STATIC void
-+xfs_rud_item_size(
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
-+{
-+	*nvecs += 1;
-+	*nbytes += xfs_rud_item_sizeof(RUD_ITEM(lip));
-+}
-+
-+/*
-+ * This is called to fill in the vector of log iovecs for the
-+ * given rud log item. We use only 1 iovec, and we point that
-+ * at the rud_log_format structure embedded in the rud item.
-+ * It is at this point that we assert that all of the extent
-+ * slots in the rud item have been filled.
-+ */
-+STATIC void
-+xfs_rud_item_format(
-+	struct xfs_log_item	*lip,
-+	struct xfs_log_vec	*lv)
-+{
-+	struct xfs_rud_log_item	*rudp = RUD_ITEM(lip);
-+	struct xfs_log_iovec	*vecp = NULL;
-+
-+	ASSERT(rudp->rud_next_extent == rudp->rud_format.rud_nextents);
-+
-+	rudp->rud_format.rud_type = XFS_LI_RUD;
-+	rudp->rud_format.rud_size = 1;
-+
-+	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_RUD_FORMAT, &rudp->rud_format,
-+			xfs_rud_item_sizeof(rudp));
-+}
-+
-+/*
-+ * Pinning has no meaning for an rud item, so just return.
-+ */
-+STATIC void
-+xfs_rud_item_pin(
-+	struct xfs_log_item	*lip)
-+{
-+}
-+
-+/*
-+ * Since pinning has no meaning for an rud item, unpinning does
-+ * not either.
-+ */
-+STATIC void
-+xfs_rud_item_unpin(
-+	struct xfs_log_item	*lip,
-+	int			remove)
-+{
-+}
-+
-+/*
-+ * There isn't much you can do to push on an rud item.  It is simply stuck
-+ * waiting for the log to be flushed to disk.
-+ */
-+STATIC uint
-+xfs_rud_item_push(
-+	struct xfs_log_item	*lip,
-+	struct list_head	*buffer_list)
-+{
-+	return XFS_ITEM_PINNED;
-+}
-+
-+/*
-+ * The RUD is either committed or aborted if the transaction is cancelled. If
-+ * the transaction is cancelled, drop our reference to the RUI and free the
-+ * RUD.
-+ */
-+STATIC void
-+xfs_rud_item_unlock(
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_rud_log_item	*rudp = RUD_ITEM(lip);
-+
-+	if (lip->li_flags & XFS_LI_ABORTED) {
-+		xfs_rui_release(rudp->rud_ruip);
-+		xfs_rud_item_free(rudp);
-+	}
-+}
-+
-+/*
-+ * When the rud item is committed to disk, all we need to do is delete our
-+ * reference to our partner rui item and then free ourselves. Since we're
-+ * freeing ourselves we must return -1 to keep the transaction code from
-+ * further referencing this item.
-+ */
-+STATIC xfs_lsn_t
-+xfs_rud_item_committed(
-+	struct xfs_log_item	*lip,
-+	xfs_lsn_t		lsn)
-+{
-+	struct xfs_rud_log_item	*rudp = RUD_ITEM(lip);
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	ruip->rui_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 +
 +	/*
-+	 * Drop the RUI reference regardless of whether the RUD has been
-+	 * aborted. Once the RUD transaction is constructed, it is the sole
-+	 * responsibility of the RUD to release the RUI (even if the RUI is
-+	 * aborted due to log I/O error).
++	 * atomic_inc_return gives us the value after the increment;
++	 * we want to use it as an array index so we need to subtract 1 from
++	 * it.
 +	 */
-+	xfs_rui_release(rudp->rud_ruip);
-+	xfs_rud_item_free(rudp);
-+
-+	return (xfs_lsn_t)-1;
++	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
++	ASSERT(next_extent < ruip->rui_format.rui_nextents);
++	rmap = &(ruip->rui_format.rui_extents[next_extent]);
++	rmap->me_owner = owner;
++	rmap->me_startblock = startblock;
++	rmap->me_startoff = startoff;
++	rmap->me_len = blockcount;
++	rmap->me_flags = 0;
++	if (state == XFS_EXT_UNWRITTEN)
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
++	if (whichfork == XFS_ATTR_FORK)
++		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
++	switch (type) {
++	case XFS_RMAP_MAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
++		break;
++	case XFS_RMAP_MAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
++		break;
++	case XFS_RMAP_UNMAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
++		break;
++	case XFS_RMAP_UNMAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
++		break;
++	case XFS_RMAP_CONVERT:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
++		break;
++	case XFS_RMAP_CONVERT_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
++		break;
++	case XFS_RMAP_ALLOC:
++		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
++		break;
++	case XFS_RMAP_FREE:
++		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
++		break;
++	default:
++		ASSERT(0);
++	}
 +}
 +
-+/*
-+ * The RUD dependency tracking op doesn't do squat.  It can't because
-+ * it doesn't know where the free extent is coming from.  The dependency
-+ * tracking has to be handled by the "enclosing" metadata object.  For
-+ * example, for inodes, the inode is locked throughout the extent freeing
-+ * so the dependency should be recorded there.
-+ */
-+STATIC void
-+xfs_rud_item_committing(
-+	struct xfs_log_item	*lip,
-+	xfs_lsn_t		lsn)
-+{
-+}
 +
 +/*
-+ * This is the ops vector shared by all rud log items.
-+ */
-+static const struct xfs_item_ops xfs_rud_item_ops = {
-+	.iop_size	= xfs_rud_item_size,
-+	.iop_format	= xfs_rud_item_format,
-+	.iop_pin	= xfs_rud_item_pin,
-+	.iop_unpin	= xfs_rud_item_unpin,
-+	.iop_unlock	= xfs_rud_item_unlock,
-+	.iop_committed	= xfs_rud_item_committed,
-+	.iop_push	= xfs_rud_item_push,
-+	.iop_committing = xfs_rud_item_committing,
-+};
-+
-+/*
-+ * Allocate and initialize an rud item with the given number of extents.
++ * This routine is called to allocate an "extent free done"
++ * log item that will hold nextents worth of extents.  The
++ * caller must use all nextents extents, because we are not
++ * flexible about this at all.
 + */
 +struct xfs_rud_log_item *
-+xfs_rud_init(
-+	struct xfs_mount		*mp,
++xfs_trans_get_rud(
++	struct xfs_trans		*tp,
 +	struct xfs_rui_log_item		*ruip,
 +	uint				nextents)
-+
 +{
-+	struct xfs_rud_log_item	*rudp;
-+	uint			size;
++	struct xfs_rud_log_item		*rudp;
 +
++	ASSERT(tp != NULL);
 +	ASSERT(nextents > 0);
-+	if (nextents > XFS_RUD_MAX_FAST_EXTENTS) {
-+		size = (uint)(sizeof(struct xfs_rud_log_item) +
-+			((nextents - 1) * sizeof(struct xfs_map_extent)));
-+		rudp = kmem_zalloc(size, KM_SLEEP);
-+	} else {
-+		rudp = kmem_zone_zalloc(xfs_rud_zone, KM_SLEEP);
-+	}
 +
-+	xfs_log_item_init(mp, &rudp->rud_item, XFS_LI_RUD, &xfs_rud_item_ops);
-+	rudp->rud_ruip = ruip;
-+	rudp->rud_format.rud_nextents = nextents;
-+	rudp->rud_format.rud_rui_id = ruip->rui_format.rui_id;
++	rudp = xfs_rud_init(tp->t_mountp, ruip, nextents);
++	ASSERT(rudp != NULL);
 +
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &rudp->rud_item);
 +	return rudp;
 +}
-diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
-new file mode 100644
-index 0000000..bd36ab5
---- /dev/null
-+++ b/fs/xfs/xfs_rmap_item.h
-@@ -0,0 +1,100 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef	__XFS_RMAP_ITEM_H__
-+#define	__XFS_RMAP_ITEM_H__
 +
 +/*
-+ * There are (currently) three pairs of rmap btree redo item types: map, unmap,
-+ * and convert.  The common abbreviations for these are RUI (rmap update
-+ * intent) and RUD (rmap update done).  The redo item type is encoded in the
-+ * flags field of each xfs_map_extent.
-+ *
-+ * *I items should be recorded in the *first* of a series of rolled
-+ * transactions, and the *D items should be recorded in the same transaction
-+ * that records the associated rmapbt updates.  Typically, the first
-+ * transaction will record a bmbt update, followed by some number of
-+ * transactions containing rmapbt updates, and finally transactions with any
-+ * bnobt/cntbt updates.
-+ *
-+ * Should the system crash after the commit of the first transaction but
-+ * before the commit of the final transaction in a series, log recovery will
-+ * use the redo information recorded by the intent items to replay the
-+ * (rmapbt/bnobt/cntbt) metadata updates in the non-first transaction.
++ * Finish an rmap update and log it to the RUD. Note that the transaction is
++ * marked dirty regardless of whether the rmap update succeeds or fails to
++ * support the RUI/RUD lifecycle rules.
 + */
++int
++xfs_trans_log_finish_rmap_update(
++	struct xfs_trans		*tp,
++	struct xfs_rud_log_item		*rudp,
++	enum xfs_rmap_intent_type	type,
++	__uint64_t			owner,
++	int				whichfork,
++	xfs_fileoff_t			startoff,
++	xfs_fsblock_t			startblock,
++	xfs_filblks_t			blockcount,
++	xfs_exntst_t			state)
++{
++	uint				next_extent;
++	struct xfs_map_extent		*rmap;
++	int				error;
 +
-+/* kernel only RUI/RUD definitions */
++	/* XXX: actually finish the rmap update here */
++	error = -EFSCORRUPTED;
 +
-+struct xfs_mount;
-+struct kmem_zone;
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the RUI and frees the RUD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	rudp->rud_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 +
-+/*
-+ * Max number of extents in fast allocation path.
-+ */
-+#define	XFS_RUI_MAX_FAST_EXTENTS	16
++	next_extent = rudp->rud_next_extent;
++	ASSERT(next_extent < rudp->rud_format.rud_nextents);
++	rmap = &(rudp->rud_format.rud_extents[next_extent]);
++	rmap->me_owner = owner;
++	rmap->me_startblock = startblock;
++	rmap->me_startoff = startoff;
++	rmap->me_len = blockcount;
++	rmap->me_flags = 0;
++	if (state == XFS_EXT_UNWRITTEN)
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
++	if (whichfork == XFS_ATTR_FORK)
++		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
++	switch (type) {
++	case XFS_RMAP_MAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
++		break;
++	case XFS_RMAP_MAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
++		break;
++	case XFS_RMAP_UNMAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
++		break;
++	case XFS_RMAP_UNMAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
++		break;
++	case XFS_RMAP_CONVERT:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
++		break;
++	case XFS_RMAP_CONVERT_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
++		break;
++	case XFS_RMAP_ALLOC:
++		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
++		break;
++	case XFS_RMAP_FREE:
++		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
++		break;
++	default:
++		ASSERT(0);
++	}
++	rudp->rud_next_extent++;
 +
-+/*
-+ * Define RUI flag bits. Manipulated by set/clear/test_bit operators.
-+ */
-+#define	XFS_RUI_RECOVERED		1
-+
-+/*
-+ * This is the "rmap update intent" log item.  It is used to log the fact that
-+ * some reverse mappings need to change.  It is used in conjunction with the
-+ * "rmap update done" log item described below.
-+ *
-+ * These log items follow the same rules as struct xfs_efi_log_item; see the
-+ * comments about that structure (in xfs_extfree_item.h) for more details.
-+ */
-+struct xfs_rui_log_item {
-+	struct xfs_log_item		rui_item;
-+	atomic_t			rui_refcount;
-+	atomic_t			rui_next_extent;
-+	unsigned long			rui_flags;	/* misc flags */
-+	struct xfs_rui_log_format	rui_format;
-+};
-+
-+/*
-+ * This is the "rmap update done" log item.  It is used to log the fact that
-+ * some rmapbt updates mentioned in an earlier rui item have been performed.
-+ */
-+struct xfs_rud_log_item {
-+	struct xfs_log_item		rud_item;
-+	struct xfs_rui_log_item		*rud_ruip;
-+	uint				rud_next_extent;
-+	struct xfs_rud_log_format	rud_format;
-+};
-+
-+/*
-+ * Max number of extents in fast allocation path.
-+ */
-+#define	XFS_RUD_MAX_FAST_EXTENTS	16
-+
-+extern struct kmem_zone	*xfs_rui_zone;
-+extern struct kmem_zone	*xfs_rud_zone;
-+
-+struct xfs_rui_log_item *xfs_rui_init(struct xfs_mount *, uint);
-+struct xfs_rud_log_item *xfs_rud_init(struct xfs_mount *,
-+		struct xfs_rui_log_item *, uint);
-+int xfs_rui_copy_format(struct xfs_log_iovec *buf,
-+		struct xfs_rui_log_format *dst_rui_fmt);
-+void xfs_rui_item_free(struct xfs_rui_log_item *);
-+void xfs_rui_release(struct xfs_rui_log_item *);
-+
-+#endif	/* __XFS_RMAP_ITEM_H__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1575849..a8300e4 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -47,6 +47,7 @@
- #include "xfs_sysfs.h"
- #include "xfs_ondisk.h"
- #include "xfs_defer.h"
-+#include "xfs_rmap_item.h"
- 
- #include <linux/namei.h>
- #include <linux/init.h>
-@@ -1762,8 +1763,26 @@ xfs_init_zones(void)
- 	if (!xfs_icreate_zone)
- 		goto out_destroy_ili_zone;
- 
-+	xfs_rud_zone = kmem_zone_init((sizeof(struct xfs_rud_log_item) +
-+			((XFS_RUD_MAX_FAST_EXTENTS - 1) *
-+				 sizeof(struct xfs_map_extent))),
-+			"xfs_rud_item");
-+	if (!xfs_rud_zone)
-+		goto out_destroy_icreate_zone;
-+
-+	xfs_rui_zone = kmem_zone_init((sizeof(struct xfs_rui_log_item) +
-+			((XFS_RUI_MAX_FAST_EXTENTS - 1) *
-+				sizeof(struct xfs_map_extent))),
-+			"xfs_rui_item");
-+	if (!xfs_rui_zone)
-+		goto out_destroy_rud_zone;
-+
- 	return 0;
- 
-+ out_destroy_rud_zone:
-+	kmem_zone_destroy(xfs_rud_zone);
-+ out_destroy_icreate_zone:
-+	kmem_zone_destroy(xfs_icreate_zone);
-  out_destroy_ili_zone:
- 	kmem_zone_destroy(xfs_ili_zone);
-  out_destroy_inode_zone:
-@@ -1802,6 +1821,8 @@ xfs_destroy_zones(void)
- 	 * destroy caches.
- 	 */
- 	rcu_barrier();
-+	kmem_zone_destroy(xfs_rui_zone);
-+	kmem_zone_destroy(xfs_rud_zone);
- 	kmem_zone_destroy(xfs_icreate_zone);
- 	kmem_zone_destroy(xfs_ili_zone);
- 	kmem_zone_destroy(xfs_inode_zone);
++	return error;
++}
 
 _______________________________________________
 xfs mailing list
