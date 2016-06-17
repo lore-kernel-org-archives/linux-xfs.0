@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A62A4820A
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:37:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 670BD8F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:07 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id mI65Ot2MiscU8qxL (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6DA2281C7
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:37:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D55C304048
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:13 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5egZY8jLDAwZBB5D (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:04 -0700 (PDT)
-Subject: [PATCH 059/145] xfs_repair: collect reverse-mapping data for
-	refcount/rmap tree rebuilding
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:10 -0700 (PDT)
+Subject: [PATCH 060/145] xfs_repair: record and merge raw rmap data
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:36:57 -0700
-Message-ID: <146612741720.16048.10495862880874161170.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:37:03 -0700
+Message-ID: <146612742343.16048.8981147515226574112.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,358 +31,206 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Collect reverse-mapping data for the entire filesystem so that we can
-later check and rebuild the reference count tree and the reverse mapping
-tree.
+Since we still allow merging of BMBT block, AG metadata, and AG btree
+block rmaps, provide a facility to collect these raw observations and
+merge them (with maximal length) into the main rmap list.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/Makefile     |    4 +
- repair/dinode.c     |    9 ++
- repair/phase4.c     |    5 +
- repair/rmap.c       |  191 +++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/rmap.h       |   32 +++++++++
- repair/xfs_repair.c |    4 +
- 6 files changed, 243 insertions(+), 2 deletions(-)
- create mode 100644 repair/rmap.c
- create mode 100644 repair/rmap.h
+ repair/rmap.c |  137 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h |    4 ++
+ 2 files changed, 140 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/Makefile b/repair/Makefile
-index 756ba95..81c2b9f 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -11,13 +11,13 @@ LTCOMMAND = xfs_repair
- 
- HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h btree.h \
- 	da_util.h dinode.h dir2.h err_protos.h globals.h incore.h protos.h \
--	rt.h progress.h scan.h versions.h prefetch.h slab.h threads.h
-+	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h
- 
- CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
- 	da_util.c dino_chunks.c dinode.c dir2.c globals.c incore.c \
- 	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
- 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
--	progress.c prefetch.c rt.c sb.c scan.c slab.c threads.c \
-+	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
- 	versions.c xfs_repair.c
- 
- LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-diff --git a/repair/dinode.c b/repair/dinode.c
-index c1e60ff..89163b1 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -30,6 +30,8 @@
- #include "attr_repair.h"
- #include "bmap.h"
- #include "threads.h"
-+#include "slab.h"
-+#include "rmap.h"
- 
- /*
-  * gettext lookups for translations of strings use mutexes internally to
-@@ -779,6 +781,13 @@ _("illegal state %d in block map %" PRIu64 "\n"),
- 					state, b);
- 			}
- 		}
-+		if (collect_rmaps) { /* && !check_dups */
-+			error = add_rmap(mp, ino, whichfork, &irec);
-+			if (error)
-+				do_error(
-+_("couldn't add reverse mapping\n")
-+					);
-+		}
- 		*tot += irec.br_blockcount;
- 	}
- 	error = 0;
-diff --git a/repair/phase4.c b/repair/phase4.c
-index 1a7d7b5..b4264df 100644
---- a/repair/phase4.c
-+++ b/repair/phase4.c
-@@ -30,7 +30,10 @@
- #include "versions.h"
- #include "dir2.h"
- #include "progress.h"
-+#include "slab.h"
-+#include "rmap.h"
- 
-+bool collect_rmaps;
- 
- /*
-  * null out quota inode fields in sb if they point to non-existent inodes.
-@@ -170,6 +173,8 @@ phase4(xfs_mount_t *mp)
- 	int			ag_hdr_block;
- 	int			bstate;
- 
-+	if (needs_rmap_work(mp))
-+		collect_rmaps = true;
- 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
- 
- 	do_log(_("Phase 4 - check for duplicate blocks...\n"));
 diff --git a/repair/rmap.c b/repair/rmap.c
-new file mode 100644
-index 0000000..e78115e
---- /dev/null
+index e78115e..1851742 100644
+--- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -0,0 +1,191 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <libxfs.h>
-+#include "btree.h"
-+#include "err_protos.h"
-+#include "libxlog.h"
-+#include "incore.h"
-+#include "globals.h"
-+#include "dinode.h"
-+#include "slab.h"
-+#include "rmap.h"
-+
-+#undef RMAP_DEBUG
-+
-+#ifdef RMAP_DEBUG
-+# define dbg_printf(f, a...)  do {printf(f, ## a); fflush(stdout); } while (0)
-+#else
-+# define dbg_printf(f, a...)
-+#endif
-+
-+/* per-AG rmap object anchor */
-+struct xfs_ag_rmap {
-+	struct xfs_slab	*ar_rmaps;		/* rmap observations, p4 */
-+};
-+
-+static struct xfs_ag_rmap *ag_rmaps;
-+
-+/*
-+ * Compare rmap observations for array sorting.
-+ */
-+static int
-+rmap_compare(
-+	const void		*a,
-+	const void		*b)
-+{
-+	const struct xfs_rmap_irec	*pa;
-+	const struct xfs_rmap_irec	*pb;
-+	__u64			oa;
-+	__u64			ob;
-+
-+	pa = a; pb = b;
-+	oa = xfs_rmap_irec_offset_pack(pa);
-+	ob = xfs_rmap_irec_offset_pack(pb);
-+
-+	if (pa->rm_startblock < pb->rm_startblock)
-+		return -1;
-+	else if (pa->rm_startblock > pb->rm_startblock)
-+		return 1;
-+	else if (pa->rm_owner < pb->rm_owner)
-+		return -1;
-+	else if (pa->rm_owner > pb->rm_owner)
-+		return 1;
-+	else if (oa < ob)
-+		return -1;
-+	else if (oa > ob)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
-+/*
-+ * Returns true if we must reconstruct either the reference count or reverse
-+ * mapping trees.
-+ */
-+bool
-+needs_rmap_work(
-+	struct xfs_mount	*mp)
-+{
-+	return xfs_sb_version_hasrmapbt(&mp->m_sb);
-+}
-+
-+/*
-+ * Initialize per-AG reverse map data.
-+ */
-+void
-+init_rmaps(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_agnumber_t		i;
-+	int			error;
-+
-+	if (!needs_rmap_work(mp))
-+		return;
-+
-+	ag_rmaps = calloc(mp->m_sb.sb_agcount, sizeof(struct xfs_ag_rmap));
-+	if (!ag_rmaps)
-+		do_error(_("couldn't allocate per-AG reverse map roots\n"));
-+
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
-+		error = init_slab(&ag_rmaps[i].ar_rmaps,
-+				sizeof(struct xfs_rmap_irec));
+@@ -38,6 +38,7 @@
+ /* per-AG rmap object anchor */
+ struct xfs_ag_rmap {
+ 	struct xfs_slab	*ar_rmaps;		/* rmap observations, p4 */
++	struct xfs_slab	*ar_raw_rmaps;		/* unmerged rmaps */
+ };
+ 
+ static struct xfs_ag_rmap *ag_rmaps;
+@@ -109,6 +110,11 @@ init_rmaps(
+ 		if (error)
+ 			do_error(
+ _("Insufficient memory while allocating reverse mapping slabs."));
++		error = init_slab(&ag_rmaps[i].ar_raw_rmaps,
++				  sizeof(struct xfs_rmap_irec));
 +		if (error)
 +			do_error(
-+_("Insufficient memory while allocating reverse mapping slabs."));
++_("Insufficient memory while allocating raw metadata reverse mapping slabs."));
+ 	}
+ }
+ 
+@@ -124,13 +130,40 @@ free_rmaps(
+ 	if (!needs_rmap_work(mp))
+ 		return;
+ 
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+ 		free_slab(&ag_rmaps[i].ar_rmaps);
++		free_slab(&ag_rmaps[i].ar_raw_rmaps);
 +	}
-+}
-+
-+/*
-+ * Free the per-AG reverse-mapping data.
+ 	free(ag_rmaps);
+ 	ag_rmaps = NULL;
+ }
+ 
+ /*
++ * Decide if two reverse-mapping records can be merged.
 + */
-+void
-+free_rmaps(
-+	struct xfs_mount	*mp)
++bool
++mergeable_rmaps(
++	struct xfs_rmap_irec	*r1,
++	struct xfs_rmap_irec	*r2)
 +{
-+	xfs_agnumber_t		i;
-+
-+	if (!needs_rmap_work(mp))
-+		return;
-+
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+		free_slab(&ag_rmaps[i].ar_rmaps);
-+	free(ag_rmaps);
-+	ag_rmaps = NULL;
++	if (r1->rm_owner != r2->rm_owner)
++		return false;
++	if (r1->rm_startblock + r1->rm_blockcount != r2->rm_startblock)
++		return false;
++	if ((unsigned long long)r1->rm_blockcount + r2->rm_blockcount >
++	    XFS_RMAP_LEN_MAX)
++		return false;
++	if (XFS_RMAP_NON_INODE_OWNER(r2->rm_owner))
++		return true;
++	/* must be an inode owner below here */
++	if (r1->rm_flags != r2->rm_flags)
++		return false;
++	if (r1->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		return true;
++	return r1->rm_offset + r1->rm_blockcount == r2->rm_offset;
 +}
 +
 +/*
-+ * Add an observation about a block mapping in an inode's data or attribute
-+ * fork for later btree reconstruction.
+  * Add an observation about a block mapping in an inode's data or attribute
+  * fork for later btree reconstruction.
+  */
+@@ -170,6 +203,108 @@ add_rmap(
+ 	return slab_add(rmaps, &rmap);
+ }
+ 
++/* add a raw rmap; these will be merged later */
++static int
++__add_raw_rmap(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len,
++	uint64_t		owner,
++	bool			is_attr,
++	bool			is_bmbt)
++{
++	struct xfs_rmap_irec	rmap;
++
++	ASSERT(len != 0);
++	rmap.rm_owner = owner;
++	rmap.rm_offset = 0;
++	rmap.rm_flags = 0;
++	if (is_attr)
++		rmap.rm_flags |= XFS_RMAP_ATTR_FORK;
++	if (is_bmbt)
++		rmap.rm_flags |= XFS_RMAP_BMBT_BLOCK;
++	rmap.rm_startblock = agbno;
++	rmap.rm_blockcount = len;
++	return slab_add(ag_rmaps[agno].ar_raw_rmaps, &rmap);
++}
++
++/*
++ * Add a reverse mapping for a per-AG fixed metadata extent.
 + */
 +int
-+add_rmap(
++add_ag_rmap(
 +	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*irec)
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len,
++	uint64_t		owner)
 +{
-+	struct xfs_slab		*rmaps;
-+	struct xfs_rmap_irec	rmap;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+
 +	if (!needs_rmap_work(mp))
 +		return 0;
 +
-+	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
-+	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
 +	ASSERT(agno != NULLAGNUMBER);
 +	ASSERT(agno < mp->m_sb.sb_agcount);
-+	ASSERT(agbno + irec->br_blockcount <= mp->m_sb.sb_agblocks);
-+	ASSERT(ino != NULLFSINO);
-+	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
++	ASSERT(agbno + len <= mp->m_sb.sb_agblocks);
 +
-+	rmaps = ag_rmaps[agno].ar_rmaps;
-+	rmap.rm_owner = ino;
-+	rmap.rm_offset = irec->br_startoff;
-+	rmap.rm_flags = 0;
-+	if (whichfork == XFS_ATTR_FORK)
-+		rmap.rm_flags |= XFS_RMAP_ATTR_FORK;
-+	rmap.rm_startblock = agbno;
-+	rmap.rm_blockcount = irec->br_blockcount;
-+	if (irec->br_state == XFS_EXT_UNWRITTEN)
-+		rmap.rm_flags |= XFS_RMAP_UNWRITTEN;
-+	return slab_add(rmaps, &rmap);
++	return __add_raw_rmap(mp, agno, agbno, len, owner, false, false);
 +}
 +
-+#ifdef RMAP_DEBUG
-+static void
-+dump_rmap(
-+	const char		*msg,
-+	xfs_agnumber_t		agno,
-+	struct xfs_rmap_irec	*rmap)
-+{
-+	printf("%s: %p agno=%u pblk=%llu own=%lld lblk=%llu len=%u flags=0x%x\n",
-+		msg, rmap,
-+		(unsigned int)agno,
-+		(unsigned long long)rmap->rm_startblock,
-+		(unsigned long long)rmap->rm_owner,
-+		(unsigned long long)rmap->rm_offset,
-+		(unsigned int)rmap->rm_blockcount,
-+		(unsigned int)rmap->rm_flags);
-+}
-+#else
-+# define dump_rmap(m, a, r)
-+#endif
-diff --git a/repair/rmap.h b/repair/rmap.h
-new file mode 100644
-index 0000000..0832790
---- /dev/null
-+++ b/repair/rmap.h
-@@ -0,0 +1,32 @@
 +/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ * Merge adjacent raw rmaps and add them to the main rmap list.
 + */
-+#ifndef RMAP_H_
-+#define RMAP_H_
++int
++fold_raw_rmaps(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_slab_cursor	*cur = NULL;
++	struct xfs_rmap_irec	*prev, *rec;
++	size_t			old_sz;
++	int			error;
 +
-+extern bool collect_rmaps;
++	old_sz = slab_count(ag_rmaps[agno].ar_rmaps);
++	if (slab_count(ag_rmaps[agno].ar_raw_rmaps) == 0)
++		goto no_raw;
++	qsort_slab(ag_rmaps[agno].ar_raw_rmaps, rmap_compare);
++	error = init_slab_cursor(ag_rmaps[agno].ar_raw_rmaps, rmap_compare,
++			&cur);
++	if (error)
++		goto err;
 +
-+extern bool needs_rmap_work(struct xfs_mount *);
++	prev = pop_slab_cursor(cur);
++	rec = pop_slab_cursor(cur);
++	while (rec) {
++		if (mergeable_rmaps(prev, rec)) {
++			prev->rm_blockcount += rec->rm_blockcount;
++			rec = pop_slab_cursor(cur);
++			continue;
++		}
++		error = slab_add(ag_rmaps[agno].ar_rmaps, prev);
++		if (error)
++			goto err;
++		prev = rec;
++		rec = pop_slab_cursor(cur);
++	}
++	if (prev) {
++		error = slab_add(ag_rmaps[agno].ar_rmaps, prev);
++		if (error)
++			goto err;
++	}
++	free_slab(&ag_rmaps[agno].ar_raw_rmaps);
++	error = init_slab(&ag_rmaps[agno].ar_raw_rmaps,
++			sizeof(struct xfs_rmap_irec));
++	if (error)
++		do_error(
++_("Insufficient memory while allocating raw metadata reverse mapping slabs."));
++no_raw:
++	if (old_sz)
++		qsort_slab(ag_rmaps[agno].ar_rmaps, rmap_compare);
++err:
++	free_slab_cursor(&cur);
++	return error;
++}
 +
-+extern void init_rmaps(struct xfs_mount *);
-+extern void free_rmaps(struct xfs_mount *);
-+
-+extern int add_rmap(struct xfs_mount *, xfs_ino_t, int, struct xfs_bmbt_irec *);
-+
-+#endif /* RMAP_H_ */
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 3b63754..2ecd81d 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -32,6 +32,8 @@
- #include "threads.h"
- #include "progress.h"
- #include "dinode.h"
-+#include "slab.h"
-+#include "rmap.h"
+ #ifdef RMAP_DEBUG
+ static void
+ dump_rmap(
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 0832790..ca92623 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -28,5 +28,9 @@ extern void init_rmaps(struct xfs_mount *);
+ extern void free_rmaps(struct xfs_mount *);
  
- #define	rounddown(x, y)	(((x)/(y))*(y))
+ extern int add_rmap(struct xfs_mount *, xfs_ino_t, int, struct xfs_bmbt_irec *);
++extern int add_ag_rmap(struct xfs_mount *, xfs_agnumber_t agno,
++		xfs_agblock_t agbno, xfs_extlen_t len, uint64_t owner);
++extern int fold_raw_rmaps(struct xfs_mount *mp, xfs_agnumber_t agno);
++extern bool mergeable_rmaps(struct xfs_rmap_irec *r1, struct xfs_rmap_irec *r2);
  
-@@ -898,6 +900,7 @@ main(int argc, char **argv)
- 	init_bmaps(mp);
- 	incore_ino_init(mp);
- 	incore_ext_init(mp);
-+	init_rmaps(mp);
- 
- 	/* initialize random globals now that we know the fs geometry */
- 	inodes_per_block = mp->m_sb.sb_inopblock;
-@@ -931,6 +934,7 @@ main(int argc, char **argv)
- 	/*
- 	 * Done with the block usage maps, toss them...
- 	 */
-+	free_rmaps(mp);
- 	free_bmaps(mp);
- 
- 	if (!bad_ino_btree)  {
+ #endif /* RMAP_H_ */
 
 _______________________________________________
 xfs mailing list
