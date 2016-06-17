@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4F6D3802E
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:31:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F60830405F
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:31:14 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E044D7FA7
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:31:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 77865AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:31:20 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id rs4eZZZGvjlX9N6T (version=TLSv1.2
+	cuda.sgi.com with ESMTP id iAaYGxuYe4XwmKNm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:31:12 -0700 (PDT)
-Subject: [PATCH 003/145] libxfs: backport changes from 4.5
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:31:18 -0700 (PDT)
+Subject: [PATCH 004/145] libxfs: backport kernel 4.6 changes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:31:04 -0700
-Message-ID: <146612706430.16048.5914881403419597862.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:31:10 -0700
+Message-ID: <146612707046.16048.7170232600634665075.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,253 +31,366 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Backport changes from kernel 4.3 -> 4.5.
+Backport the changes from kernel 4.5 -> 4.6.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/libxfs.h          |    1 +
- libxfs/libxfs_api_defs.h  |    2 +-
- libxfs/libxfs_priv.h      |    8 --------
- libxfs/xfs_alloc_btree.c  |    4 ----
- libxfs/xfs_attr.c         |    2 ++
- libxfs/xfs_dir2.h         |    3 +--
- libxfs/xfs_dir2_data.c    |   14 +++++++-------
- libxfs/xfs_dquot_buf.c    |    4 ++--
- libxfs/xfs_ialloc_btree.c |    2 --
- repair/dir2.c             |    3 +--
- repair/dir2.h             |   20 ++++++++++++++++++++
- repair/phase6.c           |    2 +-
- 12 files changed, 36 insertions(+), 29 deletions(-)
+ include/xfs_trans.h     |    1 
+ libxfs/libxfs_priv.h    |    2 -
+ libxfs/trans.c          |    1 
+ libxfs/xfs_bmap.c       |  170 +++++++++++++++++++++++++++++++++--------------
+ libxfs/xfs_bmap_btree.c |    4 +
+ libxfs/xfs_dir2_node.c  |    4 +
+ libxfs/xfs_ialloc.c     |    4 +
+ 7 files changed, 129 insertions(+), 57 deletions(-)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index cf2e20e..a34a3a9 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -163,6 +163,7 @@ extern unsigned int	libxfs_log2_roundup(unsigned int i);
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 5467c7f..d7ee1fd 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -81,6 +81,7 @@ typedef struct xfs_trans {
+ 	long		t_fdblocks_delta;	/* superblock fdblocks chg */
+ 	long		t_frextents_delta;	/* superblock freextents chg */
+ 	struct list_head	t_items;	/* first log item desc chunk */
++	unsigned int	t_blk_res;
+ } xfs_trans_t;
  
- extern int	libxfs_alloc_file_space (struct xfs_inode *, xfs_off_t,
- 				xfs_off_t, int, int);
-+extern int	libxfs_bmap_finish(xfs_trans_t **, xfs_bmap_free_t *, struct xfs_inode *);
- 
- extern void 	libxfs_fs_repair_cmn_err(int, struct xfs_mount *, char *, ...);
- extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 685c7a7..bb502e0 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -85,7 +85,7 @@
- #define xfs_dir_replace			libxfs_dir_replace
- #define xfs_dir2_isblock		libxfs_dir2_isblock
- #define xfs_dir2_isleaf			libxfs_dir2_isleaf
--#define __xfs_dir2_data_freescan	libxfs_dir2_data_freescan
-+#define xfs_dir2_data_freescan		libxfs_dir2_data_freescan
- #define xfs_dir2_data_log_entry		libxfs_dir2_data_log_entry
- #define xfs_dir2_data_log_header	libxfs_dir2_data_log_header
- #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
+ void	xfs_trans_init(struct xfs_mount *);
 diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 2c5aba0..ef9ff3b 100644
+index ef9ff3b..ecd75e7 100644
 --- a/libxfs/libxfs_priv.h
 +++ b/libxfs/libxfs_priv.h
-@@ -49,14 +49,6 @@
- #ifndef __LIBXFS_INTERNAL_XFS_H__
- #define __LIBXFS_INTERNAL_XFS_H__
- 
--/*
-- * Repair doesn't have a inode when it calls libxfs_dir2_data_freescan,
-- * so we to work around this internally for now.
-- */
--#define xfs_dir2_data_freescan(ip, hdr, loghead) \
--	__xfs_dir2_data_freescan((ip)->i_mount->m_dir_geo, \
--				 (ip)->d_ops, hdr, loghead)
--
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
- #include "xfs.h"
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index 79d0fb9..094135f 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -289,8 +289,6 @@ xfs_allocbt_verify(
- 	level = be16_to_cpu(block->bb_level);
- 	switch (block->bb_magic) {
- 	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-@@ -302,8 +300,6 @@ xfs_allocbt_verify(
- 			return false;
- 		break;
- 	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index afe3dcb..82a7c5e 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -134,6 +134,8 @@ xfs_attr_get(
- 
- 	args.value = value;
- 	args.valuelen = *valuelenp;
-+	/* Entirely possible to look up a name which doesn't exist */
-+	args.op_flags = XFS_DA_OP_OKNOENT;
- 
- 	lock_mode = xfs_ilock_attr_map_shared(ip);
- 	if (!xfs_inode_hasattr(ip))
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 0129e37..0a62e73 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -157,8 +157,7 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
- 				struct xfs_buf *bp);
- 
--extern void __xfs_dir2_data_freescan(struct xfs_da_geometry *geo,
--		const struct xfs_dir_ops *ops,
-+extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
- 		struct xfs_dir2_data_hdr *hdr, int *loghead);
- extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
- 		struct xfs_buf *bp, struct xfs_dir2_data_entry *dep);
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 6ae5cd2..c80ab7e 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -502,9 +502,8 @@ xfs_dir2_data_freeremove(
-  * Given a data block, reconstruct its bestfree map.
+@@ -187,7 +187,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
   */
- void
--__xfs_dir2_data_freescan(
--	struct xfs_da_geometry	*geo,
--	const struct xfs_dir_ops *ops,
-+xfs_dir2_data_freescan(
-+	struct xfs_inode	*dp,
- 	struct xfs_dir2_data_hdr *hdr,
- 	int			*loghead)
+ #define prandom_u32()		0
+ 
+-#define PAGE_CACHE_SIZE		getpagesize()
++#define PAGE_SIZE		getpagesize()
+ 
+ static inline int __do_div(unsigned long long *n, unsigned base)
  {
-@@ -514,6 +513,7 @@ __xfs_dir2_data_freescan(
- 	struct xfs_dir2_data_free *bf;
- 	char			*endp;		/* end of block's data */
- 	char			*p;		/* current entry pointer */
-+	struct xfs_da_geometry	*geo = dp->i_mount->m_dir_geo;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-@@ -523,13 +523,13 @@ __xfs_dir2_data_freescan(
- 	/*
- 	 * Start by clearing the table.
- 	 */
--	bf = ops->data_bestfree_p(hdr);
-+	bf = dp->d_ops->data_bestfree_p(hdr);
- 	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
- 	*loghead = 1;
- 	/*
- 	 * Set up pointers.
- 	 */
--	p = (char *)ops->data_entry_p(hdr);
-+	p = (char *)dp->d_ops->data_entry_p(hdr);
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		btp = xfs_dir2_block_tail_p(geo, hdr);
-@@ -556,8 +556,8 @@ __xfs_dir2_data_freescan(
- 		else {
- 			dep = (xfs_dir2_data_entry_t *)p;
- 			ASSERT((char *)dep - (char *)hdr ==
--			       be16_to_cpu(*ops->data_entry_tag_p(dep)));
--			p += ops->data_entsize(dep->namelen);
-+			       be16_to_cpu(*dp->d_ops->data_entry_tag_p(dep)));
-+			p += dp->d_ops->data_entsize(dep->namelen);
- 		}
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 0388950..18ea010 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -193,6 +193,7 @@ libxfs_trans_reserve(
+ 	if (blocks > 0) {
+ 		if (mpsb->sb_fdblocks < blocks)
+ 			return -ENOSPC;
++		tp->t_blk_res += blocks;
  	}
- }
-diff --git a/libxfs/xfs_dquot_buf.c b/libxfs/xfs_dquot_buf.c
-index 7b7ea83..bfc6383 100644
---- a/libxfs/xfs_dquot_buf.c
-+++ b/libxfs/xfs_dquot_buf.c
-@@ -199,8 +199,8 @@ xfs_dquot_buf_verify_crc(
- 	if (mp->m_quotainfo)
- 		ndquots = mp->m_quotainfo->qi_dqperchunk;
- 	else
--		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
--//					XFS_BB_TO_FSB(mp, bp->b_length));
-+		ndquots = xfs_calc_dquots_per_chunk(
-+					XFS_BB_TO_FSB(mp, bp->b_length));
- 
- 	for (i = 0; i < ndquots; i++, d++) {
- 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index a077635..0a7d985 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -227,8 +227,6 @@ xfs_inobt_verify(
- 	switch (block->bb_magic) {
- 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
- 	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 61912d1..a2fe5c6 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -921,8 +921,7 @@ _("bad bestfree table in block %u in directory inode %" PRIu64 ": "),
- 			da_bno, ino);
- 		if (!no_modify) {
- 			do_warn(_("repairing table\n"));
--			libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp),
--						  d, &i);
-+			repair_dir2_data_freescan(mp, M_DIROPS(mp), d, &i);
- 			*dirty = 1;
- 		} else {
- 			do_warn(_("would repair table\n"));
-diff --git a/repair/dir2.h b/repair/dir2.h
-index e4d4eeb..a0d873e 100644
---- a/repair/dir2.h
-+++ b/repair/dir2.h
-@@ -43,4 +43,24 @@ int
- dir2_is_badino(
- 	xfs_ino_t	ino);
- 
-+/*
-+ * Repair doesn't have a inode when it calls libxfs_dir2_data_freescan,
-+ * so we to work around this internally for now.
-+ */
-+static inline void
-+repair_dir2_data_freescan(
-+	struct xfs_mount		*mp,
-+	const struct xfs_dir_ops	*d_ops,
-+	struct xfs_dir2_data_hdr	*hdr,
-+	int				*loghead)
-+{
-+	struct xfs_inode	ino;
+ 	/* user space, don't need log/RT stuff (preserve the API though) */
+ 	return 0;
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 40286e4..cbcfd72 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -469,10 +469,7 @@ xfs_bmap_check_leaf_extents(
+ 		}
+ 		block = XFS_BUF_TO_BLOCK(bp);
+ 	}
+-	if (bp_release) {
+-		bp_release = 0;
+-		xfs_trans_brelse(NULL, bp);
+-	}
 +
-+	ino.d_ops = d_ops;
-+	ino.i_mount = mp;
-+	return libxfs_dir2_data_freescan(&ino, hdr, loghead);
+ 	return;
+ 
+ error0:
+@@ -3737,11 +3734,11 @@ xfs_bmap_btalloc(
+ 		args.prod = align;
+ 		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
+ 			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+-	} else if (mp->m_sb.sb_blocksize >= PAGE_CACHE_SIZE) {
++	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+ 		args.prod = 1;
+ 		args.mod = 0;
+ 	} else {
+-		args.prod = PAGE_CACHE_SIZE >> mp->m_sb.sb_blocklog;
++		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+ 		if ((args.mod = (xfs_extlen_t)(do_mod(ap->offset, args.prod))))
+ 			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+ 	}
+@@ -4713,6 +4710,66 @@ error0:
+ }
+ 
+ /*
++ * When a delalloc extent is split (e.g., due to a hole punch), the original
++ * indlen reservation must be shared across the two new extents that are left
++ * behind.
++ *
++ * Given the original reservation and the worst case indlen for the two new
++ * extents (as calculated by xfs_bmap_worst_indlen()), split the original
++ * reservation fairly across the two new extents. If necessary, steal available
++ * blocks from a deleted extent to make up a reservation deficiency (e.g., if
++ * ores == 1). The number of stolen blocks is returned. The availability and
++ * subsequent accounting of stolen blocks is the responsibility of the caller.
++ */
++static xfs_filblks_t
++xfs_bmap_split_indlen(
++	xfs_filblks_t			ores,		/* original res. */
++	xfs_filblks_t			*indlen1,	/* ext1 worst indlen */
++	xfs_filblks_t			*indlen2,	/* ext2 worst indlen */
++	xfs_filblks_t			avail)		/* stealable blocks */
++{
++	xfs_filblks_t			len1 = *indlen1;
++	xfs_filblks_t			len2 = *indlen2;
++	xfs_filblks_t			nres = len1 + len2; /* new total res. */
++	xfs_filblks_t			stolen = 0;
++
++	/*
++	 * Steal as many blocks as we can to try and satisfy the worst case
++	 * indlen for both new extents.
++	 */
++	while (nres > ores && avail) {
++		nres--;
++		avail--;
++		stolen++;
++	}
++
++	/*
++	 * The only blocks available are those reserved for the original
++	 * extent and what we can steal from the extent being removed.
++	 * If this still isn't enough to satisfy the combined
++	 * requirements for the two new extents, skim blocks off of each
++	 * of the new reservations until they match what is available.
++	 */
++	while (nres > ores) {
++		if (len1) {
++			len1--;
++			nres--;
++		}
++		if (nres == ores)
++			break;
++		if (len2) {
++			len2--;
++			nres--;
++		}
++	}
++
++	*indlen1 = len1;
++	*indlen2 = len2;
++
++	return stolen;
 +}
 +
-+extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
++/*
+  * Called by xfs_bmapi to update file extent records and the btree
+  * after removing space (or undoing a delayed allocation).
+  */
+@@ -4976,28 +5033,29 @@ xfs_bmap_del_extent(
+ 			XFS_IFORK_NEXT_SET(ip, whichfork,
+ 				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 		} else {
++			xfs_filblks_t	stolen;
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			temp = xfs_bmap_worst_indlen(ip, temp);
 +
- #endif	/* _XR_DIR2_H */
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 0a71164..7353c3a 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1902,7 +1902,7 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
++			/*
++			 * Distribute the original indlen reservation across the
++			 * two new extents. Steal blocks from the deleted extent
++			 * if necessary. Stealing blocks simply fudges the
++			 * fdblocks accounting in xfs_bunmapi().
++			 */
++			temp = xfs_bmap_worst_indlen(ip, got.br_blockcount);
++			temp2 = xfs_bmap_worst_indlen(ip, new.br_blockcount);
++			stolen = xfs_bmap_split_indlen(da_old, &temp, &temp2,
++						       del->br_blockcount);
++			da_new = temp + temp2 - stolen;
++			del->br_blockcount -= stolen;
++
++			/*
++			 * Set the reservation for each extent. Warn if either
++			 * is zero as this can lead to delalloc problems.
++			 */
++			WARN_ON_ONCE(!temp || !temp2);
+ 			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+-			temp2 = xfs_bmap_worst_indlen(ip, temp2);
+ 			new.br_startblock = nullstartblock((int)temp2);
+-			da_new = temp + temp2;
+-			while (da_new > da_old) {
+-				if (temp) {
+-					temp--;
+-					da_new--;
+-					xfs_bmbt_set_startblock(ep,
+-						nullstartblock((int)temp));
+-				}
+-				if (da_new == da_old)
+-					break;
+-				if (temp2) {
+-					temp2--;
+-					da_new--;
+-					new.br_startblock =
+-						nullstartblock((int)temp2);
+-				}
+-			}
+ 		}
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 		xfs_iext_insert(ip, *idx + 1, 1, &new, state);
+@@ -5202,7 +5260,7 @@ xfs_bunmapi(
+ 			 * This is better than zeroing it.
+ 			 */
+ 			ASSERT(del.br_state == XFS_EXT_NORM);
+-			ASSERT(xfs_trans_get_block_res(tp) > 0);
++			ASSERT(tp->t_blk_res > 0);
+ 			/*
+ 			 * If this spans a realtime extent boundary,
+ 			 * chop it back to the start of the one we end at.
+@@ -5233,7 +5291,7 @@ xfs_bunmapi(
+ 				del.br_startblock += mod;
+ 			} else if ((del.br_startoff == start &&
+ 				    (del.br_state == XFS_EXT_UNWRITTEN ||
+-				     xfs_trans_get_block_res(tp) == 0)) ||
++				     tp->t_blk_res == 0)) ||
+ 				   !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+ 				/*
+ 				 * Can't make it unwritten.  There isn't
+@@ -5288,9 +5346,37 @@ xfs_bunmapi(
+ 				goto nodelete;
+ 			}
+ 		}
++
++		/*
++		 * If it's the case where the directory code is running
++		 * with no block reservation, and the deleted block is in
++		 * the middle of its extent, and the resulting insert
++		 * of an extent would cause transformation to btree format,
++		 * then reject it.  The calling code will then swap
++		 * blocks around instead.
++		 * We have to do this now, rather than waiting for the
++		 * conversion to btree format, since the transaction
++		 * will be dirty.
++		 */
++		if (!wasdel && tp->t_blk_res == 0 &&
++		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
++		    XFS_IFORK_NEXTENTS(ip, whichfork) >= /* Note the >= */
++			XFS_IFORK_MAXEXT(ip, whichfork) &&
++		    del.br_startoff > got.br_startoff &&
++		    del.br_startoff + del.br_blockcount <
++		    got.br_startoff + got.br_blockcount) {
++			error = -ENOSPC;
++			goto error0;
++		}
++
++		/*
++		 * Unreserve quota and update realtime free space, if
++		 * appropriate. If delayed allocation, update the inode delalloc
++		 * counter now and wait to update the sb counters as
++		 * xfs_bmap_del_extent() might need to borrow some blocks.
++		 */
+ 		if (wasdel) {
+ 			ASSERT(startblockval(del.br_startblock) > 0);
+-			/* Update realtime/data freespace, unreserve quota */
+ 			if (isrt) {
+ 				xfs_filblks_t rtexts;
+ 
+@@ -5301,8 +5387,6 @@ xfs_bunmapi(
+ 					ip, -((long)del.br_blockcount), 0,
+ 					XFS_QMOPT_RES_RTBLKS);
+ 			} else {
+-				xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount,
+-						 false);
+ 				(void)xfs_trans_reserve_quota_nblks(NULL,
+ 					ip, -((long)del.br_blockcount), 0,
+ 					XFS_QMOPT_RES_REGBLKS);
+@@ -5313,32 +5397,16 @@ xfs_bunmapi(
+ 					XFS_BTCUR_BPRV_WASDEL;
+ 		} else if (cur)
+ 			cur->bc_private.b.flags &= ~XFS_BTCUR_BPRV_WASDEL;
+-		/*
+-		 * If it's the case where the directory code is running
+-		 * with no block reservation, and the deleted block is in
+-		 * the middle of its extent, and the resulting insert
+-		 * of an extent would cause transformation to btree format,
+-		 * then reject it.  The calling code will then swap
+-		 * blocks around instead.
+-		 * We have to do this now, rather than waiting for the
+-		 * conversion to btree format, since the transaction
+-		 * will be dirty.
+-		 */
+-		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
+-		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+-		    XFS_IFORK_NEXTENTS(ip, whichfork) >= /* Note the >= */
+-			XFS_IFORK_MAXEXT(ip, whichfork) &&
+-		    del.br_startoff > got.br_startoff &&
+-		    del.br_startoff + del.br_blockcount <
+-		    got.br_startoff + got.br_blockcount) {
+-			error = -ENOSPC;
+-			goto error0;
+-		}
++
+ 		error = xfs_bmap_del_extent(ip, tp, &lastx, flist, cur, &del,
+ 				&tmp_logflags, whichfork);
+ 		logflags |= tmp_logflags;
+ 		if (error)
+ 			goto error0;
++
++		if (!isrt && wasdel)
++			xfs_mod_fdblocks(mp, (int64_t)del.br_blockcount, false);
++
+ 		bno = del.br_startoff - 1;
+ nodelete:
+ 		/*
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index a63379b..022d4b6 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -458,7 +458,7 @@ xfs_bmbt_alloc_block(
+ 		 * reservation amount is insufficient then we may fail a
+ 		 * block allocation here and corrupt the filesystem.
+ 		 */
+-		args.minleft = xfs_trans_get_block_res(args.tp);
++		args.minleft = args.tp->t_blk_res;
+ 	} else if (cur->bc_private.b.flist->xbf_low) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+@@ -467,7 +467,7 @@ xfs_bmbt_alloc_block(
+ 
+ 	args.minlen = args.maxlen = args.prod = 1;
+ 	args.wasdel = cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL;
+-	if (!args.wasdel && xfs_trans_get_block_res(args.tp) == 0) {
++	if (!args.wasdel && args.tp->t_blk_res == 0) {
+ 		error = -ENOSPC;
+ 		goto error0;
  	}
- 	*num_illegal += nbad;
- 	if (needscan)
--		libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp), d, &i);
-+		repair_dir2_data_freescan(mp, M_DIROPS(mp), d, &i);
- 	if (needlog)
- 		libxfs_dir2_data_log_header(&da, bp);
- 	libxfs_bmap_finish(&tp, &flist, ip);
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 04fecf1..b75b432 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -2232,6 +2232,9 @@ xfs_dir2_node_trim_free(
+ 
+ 	dp = args->dp;
+ 	tp = args->trans;
++
++	*rvalp = 0;
++
+ 	/*
+ 	 * Read the freespace block.
+ 	 */
+@@ -2252,7 +2255,6 @@ xfs_dir2_node_trim_free(
+ 	 */
+ 	if (freehdr.nused > 0) {
+ 		xfs_trans_brelse(tp, bp);
+-		*rvalp = 0;
+ 		return 0;
+ 	}
+ 	/*
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 72e9ff7..4f0e4ee 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -2396,8 +2396,8 @@ xfs_ialloc_compute_maxlevels(
+ 
+ 	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
+ 		XFS_INODES_PER_CHUNK_LOG;
+-	minleafrecs = mp->m_alloc_mnr[0];
+-	minnoderecs = mp->m_alloc_mnr[1];
++	minleafrecs = mp->m_inobt_mnr[0];
++	minnoderecs = mp->m_inobt_mnr[1];
+ 	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+ 	for (level = 1; maxblocks > 1; level++)
+ 		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
 
 _______________________________________________
 xfs mailing list
