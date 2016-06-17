@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B04108091
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3692EAC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:18 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4C1C98095
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B8C20AC003
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:24 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id j5RfEIUNt0uHRlpM (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ELGHDP6WYe4fpkFU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:16 -0700 (PDT)
-Subject: [PATCH 014/145] xfs: create a standard btree size calculator code
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:22 -0700 (PDT)
+Subject: [PATCH 015/145] xfs: refactor btree maxlevels computation
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:32:12 -0700
-Message-ID: <146612713249.16048.10611335362447244031.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:32:18 -0700
+Message-ID: <146612713862.16048.9572556591745823314.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,70 +31,124 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create a helper to generate AG btree height calculator functions.
-This will be used (much) later when we get to the refcount btree.
+Create a common function to calculate the maximum height of a per-AG
+btree.  This will eventually be used by the rmapbt and refcountbt code
+to calculate appropriate maxlevels values for each.  This is important
+because the verifiers and the transaction block reservations depend on
+accurate estimates of many blocks are needed to satisfy a btree split.
 
-v2: Use a helper function instead of a macro.
-v3: We can (theoretically) store more than 2^32 records in a btree, so
-    widen the fields to accept that.
-v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
-    is to estimate the worst-case number of blocks needed for a bmbt
-    expansion, not to calculate the space required to store nr records.
+We were mistakenly using the max bnobt height for all the btrees,
+which creates a dangerous situation since the larger records and keys
+in an rmapbt make it very possible that the rmapbt will be taller than
+the bnobt and so we can run out of transaction block reservation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_btree.c |   27 +++++++++++++++++++++++++++
- libxfs/xfs_btree.h |    3 +++
- 2 files changed, 30 insertions(+)
+ libxfs/xfs_alloc.c  |   15 ++-------------
+ libxfs/xfs_btree.c  |   19 +++++++++++++++++++
+ libxfs/xfs_btree.h  |    2 ++
+ libxfs/xfs_ialloc.c |   19 +++++--------------
+ 4 files changed, 28 insertions(+), 27 deletions(-)
 
 
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 2998af8..7276419 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -1835,19 +1835,8 @@ void
+ xfs_alloc_compute_maxlevels(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
+ {
+-	int		level;
+-	uint		maxblocks;
+-	uint		maxleafents;
+-	int		minleafrecs;
+-	int		minnoderecs;
+-
+-	maxleafents = (mp->m_sb.sb_agblocks + 1) / 2;
+-	minleafrecs = mp->m_alloc_mnr[0];
+-	minnoderecs = mp->m_alloc_mnr[1];
+-	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+-	for (level = 1; maxblocks > 1; level++)
+-		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+-	mp->m_ag_maxlevels = level;
++	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_alloc_mnr,
++			(mp->m_sb.sb_agblocks + 1) / 2);
+ }
+ 
+ /*
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 1448fd6..27e58b2 100644
+index 27e58b2..623841f 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -4152,3 +4152,30 @@ xfs_btree_sblock_verify(
- 
- 	return true;
+@@ -4154,6 +4154,25 @@ xfs_btree_sblock_verify(
  }
-+
-+/*
-+ * Calculate the number of blocks needed to store a given number of records
-+ * in a short-format (per-AG metadata) btree.
+ 
+ /*
++ * Calculate the number of btree levels needed to store a given number of
++ * records in a short-format btree.
 + */
-+xfs_extlen_t
-+xfs_btree_calc_size(
++uint
++xfs_btree_compute_maxlevels(
 +	struct xfs_mount	*mp,
 +	uint			*limits,
-+	unsigned long long	len)
++	unsigned long		len)
 +{
-+	int			level;
-+	int			maxrecs;
-+	xfs_extlen_t		rval;
++	uint			level;
++	unsigned long		maxblocks;
 +
-+	maxrecs = limits[0];
-+	for (level = 0, rval = 0; len > 0; level++) {
-+		len += maxrecs - 1;
-+		do_div(len, maxrecs);
-+		rval += len;
-+		if (len == 1)
-+			return rval;
-+		if (level == 0)
-+			maxrecs = limits[1];
-+	}
-+	return rval;
++	maxblocks = (len + limits[0] - 1) / limits[0];
++	for (level = 1; maxblocks > 1; level++)
++		maxblocks = (maxblocks + limits[1] - 1) / limits[1];
++	return level;
 +}
++
++/*
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+  */
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 9a88839..b330f19 100644
+index b330f19..b955e5d 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -475,4 +475,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
- bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
- bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+@@ -477,5 +477,7 @@ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
  
-+xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-+		unsigned long long len);
-+
+ xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+ 		unsigned long long len);
++uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
++		unsigned long len);
+ 
  #endif	/* __XFS_BTREE_H__ */
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 4f0e4ee..249512b 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -2388,20 +2388,11 @@ void
+ xfs_ialloc_compute_maxlevels(
+ 	xfs_mount_t	*mp)		/* file system mount structure */
+ {
+-	int		level;
+-	uint		maxblocks;
+-	uint		maxleafents;
+-	int		minleafrecs;
+-	int		minnoderecs;
+-
+-	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
+-		XFS_INODES_PER_CHUNK_LOG;
+-	minleafrecs = mp->m_inobt_mnr[0];
+-	minnoderecs = mp->m_inobt_mnr[1];
+-	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+-	for (level = 1; maxblocks > 1; level++)
+-		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+-	mp->m_in_maxlevels = level;
++	uint		inodes;
++
++	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
++	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_inobt_mnr,
++							 inodes);
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
