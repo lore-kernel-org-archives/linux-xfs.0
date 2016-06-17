@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1B4EB8201
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:37:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78399AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:02 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A62A4820A
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:37:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 670BD8F804C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:07 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id nv04VHDhzHuGZ57v (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mI65Ot2MiscU8qxL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:36:59 -0700 (PDT)
-Subject: [PATCH 058/145] xfs_repair: create a slab API for allocating arrays
-	in large chunks
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:04 -0700 (PDT)
+Subject: [PATCH 059/145] xfs_repair: collect reverse-mapping data for
+	refcount/rmap tree rebuilding
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:36:51 -0700
-Message-ID: <146612741099.16048.10004724516227132773.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:36:57 -0700
+Message-ID: <146612741720.16048.10495862880874161170.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,46 +32,100 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create a slab-based array and a bag-of-pointers data structure to
-facilitate rapid linear scans of reverse-mapping data for later
-reconstruction of the refcount and rmap btrees.
+Collect reverse-mapping data for the entire filesystem so that we can
+later check and rebuild the reference count tree and the reverse mapping
+tree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/Makefile |    4 
- repair/slab.c   |  456 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/slab.h   |   60 +++++++
- 3 files changed, 518 insertions(+), 2 deletions(-)
- create mode 100644 repair/slab.c
- create mode 100644 repair/slab.h
+ repair/Makefile     |    4 +
+ repair/dinode.c     |    9 ++
+ repair/phase4.c     |    5 +
+ repair/rmap.c       |  191 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h       |   32 +++++++++
+ repair/xfs_repair.c |    4 +
+ 6 files changed, 243 insertions(+), 2 deletions(-)
+ create mode 100644 repair/rmap.c
+ create mode 100644 repair/rmap.h
 
 
 diff --git a/repair/Makefile b/repair/Makefile
-index 251722b..756ba95 100644
+index 756ba95..81c2b9f 100644
 --- a/repair/Makefile
 +++ b/repair/Makefile
 @@ -11,13 +11,13 @@ LTCOMMAND = xfs_repair
  
  HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h btree.h \
  	da_util.h dinode.h dir2.h err_protos.h globals.h incore.h protos.h \
--	rt.h progress.h scan.h versions.h prefetch.h threads.h
-+	rt.h progress.h scan.h versions.h prefetch.h slab.h threads.h
+-	rt.h progress.h scan.h versions.h prefetch.h slab.h threads.h
++	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h
  
  CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
  	da_util.c dino_chunks.c dinode.c dir2.c globals.c incore.c \
  	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
  	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
--	progress.c prefetch.c rt.c sb.c scan.c threads.c \
-+	progress.c prefetch.c rt.c sb.c scan.c slab.c threads.c \
+-	progress.c prefetch.c rt.c sb.c scan.c slab.c threads.c \
++	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
  	versions.c xfs_repair.c
  
  LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-diff --git a/repair/slab.c b/repair/slab.c
+diff --git a/repair/dinode.c b/repair/dinode.c
+index c1e60ff..89163b1 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -30,6 +30,8 @@
+ #include "attr_repair.h"
+ #include "bmap.h"
+ #include "threads.h"
++#include "slab.h"
++#include "rmap.h"
+ 
+ /*
+  * gettext lookups for translations of strings use mutexes internally to
+@@ -779,6 +781,13 @@ _("illegal state %d in block map %" PRIu64 "\n"),
+ 					state, b);
+ 			}
+ 		}
++		if (collect_rmaps) { /* && !check_dups */
++			error = add_rmap(mp, ino, whichfork, &irec);
++			if (error)
++				do_error(
++_("couldn't add reverse mapping\n")
++					);
++		}
+ 		*tot += irec.br_blockcount;
+ 	}
+ 	error = 0;
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 1a7d7b5..b4264df 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -30,7 +30,10 @@
+ #include "versions.h"
+ #include "dir2.h"
+ #include "progress.h"
++#include "slab.h"
++#include "rmap.h"
+ 
++bool collect_rmaps;
+ 
+ /*
+  * null out quota inode fields in sb if they point to non-existent inodes.
+@@ -170,6 +173,8 @@ phase4(xfs_mount_t *mp)
+ 	int			ag_hdr_block;
+ 	int			bstate;
+ 
++	if (needs_rmap_work(mp))
++		collect_rmaps = true;
+ 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
+ 
+ 	do_log(_("Phase 4 - check for duplicate blocks...\n"));
+diff --git a/repair/rmap.c b/repair/rmap.c
 new file mode 100644
-index 0000000..97c13d3
+index 0000000..e78115e
 --- /dev/null
-+++ b/repair/slab.c
-@@ -0,0 +1,456 @@
++++ b/repair/rmap.c
+@@ -0,0 +1,191 @@
 +/*
 + * Copyright (C) 2016 Oracle.  All Rights Reserved.
 + *
@@ -92,448 +146,183 @@ index 0000000..97c13d3
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
 +#include <libxfs.h>
++#include "btree.h"
++#include "err_protos.h"
++#include "libxlog.h"
++#include "incore.h"
++#include "globals.h"
++#include "dinode.h"
 +#include "slab.h"
++#include "rmap.h"
 +
-+#undef SLAB_DEBUG
++#undef RMAP_DEBUG
 +
-+#ifdef SLAB_DEBUG
++#ifdef RMAP_DEBUG
 +# define dbg_printf(f, a...)  do {printf(f, ## a); fflush(stdout); } while (0)
 +#else
 +# define dbg_printf(f, a...)
 +#endif
 +
-+/*
-+ * Slab Arrays and Bags
-+ *
-+ * The slab array is a dynamically growable linear array.  Internally it
-+ * maintains a list of slabs of increasing size; when a slab fills up, another
-+ * is allocated.  Each slab is sorted individually, which means that one must
-+ * use an iterator to walk the entire logical array, sorted order or otherwise.
-+ * Array items can neither be removed nor accessed randomly, since (at the
-+ * moment) the only user of them (storing reverse mappings) doesn't need either
-+ * piece.  Pointers are not stable across sort operations.
-+ *
-+ * A bag is a collection of pointers.  The bag can be added to or removed from
-+ * arbitrarily, and the bag items can be iterated.  Bags are used to process
-+ * rmaps into refcount btree entries.
-+ */
-+
-+/*
-+ * Slabs -- each slab_hdr holds an array of items; when a slab_hdr fills up, we
-+ * allocate a new one and add to that one.  The slab object coordinates the
-+ * slab_hdrs.
-+ */
-+
-+/* Each slab holds at least 4096 items */
-+#define MIN_SLAB_NR		4096
-+/* and cannot be larger than 128M */
-+#define MAX_SLAB_SIZE		(128 * 1048576)
-+struct xfs_slab_hdr {
-+	size_t			sh_nr;
-+	size_t			sh_inuse;	/* items in use */
-+	struct xfs_slab_hdr	*sh_next;	/* next slab hdr */
-+						/* objects follow */
++/* per-AG rmap object anchor */
++struct xfs_ag_rmap {
++	struct xfs_slab	*ar_rmaps;		/* rmap observations, p4 */
 +};
 +
-+struct xfs_slab {
-+	size_t			s_item_sz;	/* item size */
-+	size_t			s_nr_slabs;	/* # of slabs */
-+	size_t			s_nr_items;	/* # of items */
-+	struct xfs_slab_hdr	*s_first;	/* first slab header */
-+	struct xfs_slab_hdr	*s_last;	/* last sh_next pointer */
-+};
++static struct xfs_ag_rmap *ag_rmaps;
 +
 +/*
-+ * Slab cursors -- each slab_hdr_cursor tracks a slab_hdr; the slab_cursor
-+ * tracks the slab_hdr_cursors.  If a compare_fn is specified, the cursor
-+ * returns objects in increasing order (if you've previously sorted the
-+ * slabs with qsort_slab()).  If compare_fn == NULL, it returns slab items
-+ * in order.
++ * Compare rmap observations for array sorting.
 + */
-+struct xfs_slab_hdr_cursor {
-+	struct xfs_slab_hdr	*hdr;		/* a slab header */
-+	size_t			loc;		/* where we are in the slab */
-+};
-+
-+typedef int (*xfs_slab_compare_fn)(const void *, const void *);
-+
-+struct xfs_slab_cursor {
-+	size_t				nr;		/* # of per-slab cursors */
-+	struct xfs_slab			*slab;		/* pointer to the slab */
-+	struct xfs_slab_hdr_cursor	*last_hcur;	/* last header we took from */
-+	xfs_slab_compare_fn		compare_fn;	/* compare items */
-+	struct xfs_slab_hdr_cursor	hcur[0];	/* per-slab cursors */
-+};
-+
-+/*
-+ * Bags -- each bag is an array of pointers items; when a bag fills up, we
-+ * resize it.
-+ */
-+#define MIN_BAG_SIZE	4096
-+struct xfs_bag {
-+	size_t			bg_nr;		/* number of pointers */
-+	size_t			bg_inuse;	/* number of slots in use */
-+	void			**bg_ptrs;	/* pointers */
-+};
-+#define BAG_SIZE(nr)	(sizeof(struct xfs_bag) + ((nr) * sizeof(void *)))
-+#define BAG_END(bag)	(&(bag)->bg_ptrs[(bag)->bg_nr])
-+
-+/*
-+ * Create a slab to hold some objects of a particular size.
-+ */
-+int
-+init_slab(
-+	struct xfs_slab	**slab,
-+	size_t		item_size)
++static int
++rmap_compare(
++	const void		*a,
++	const void		*b)
 +{
-+	struct xfs_slab	*ptr;
++	const struct xfs_rmap_irec	*pa;
++	const struct xfs_rmap_irec	*pb;
++	__u64			oa;
++	__u64			ob;
 +
-+	ptr = calloc(1, sizeof(struct xfs_slab));
-+	if (!ptr)
-+		return -ENOMEM;
-+	ptr->s_item_sz = item_size;
-+	ptr->s_last = NULL;
-+	*slab = ptr;
++	pa = a; pb = b;
++	oa = xfs_rmap_irec_offset_pack(pa);
++	ob = xfs_rmap_irec_offset_pack(pb);
 +
-+	return 0;
++	if (pa->rm_startblock < pb->rm_startblock)
++		return -1;
++	else if (pa->rm_startblock > pb->rm_startblock)
++		return 1;
++	else if (pa->rm_owner < pb->rm_owner)
++		return -1;
++	else if (pa->rm_owner > pb->rm_owner)
++		return 1;
++	else if (oa < ob)
++		return -1;
++	else if (oa > ob)
++		return 1;
++	else
++		return 0;
 +}
 +
 +/*
-+ * Frees a slab.
++ * Returns true if we must reconstruct either the reference count or reverse
++ * mapping trees.
++ */
++bool
++needs_rmap_work(
++	struct xfs_mount	*mp)
++{
++	return xfs_sb_version_hasrmapbt(&mp->m_sb);
++}
++
++/*
++ * Initialize per-AG reverse map data.
 + */
 +void
-+free_slab(
-+	struct xfs_slab		**slab)
++init_rmaps(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_slab		*ptr;
-+	struct xfs_slab_hdr	*hdr;
-+	struct xfs_slab_hdr	*nhdr;
++	xfs_agnumber_t		i;
++	int			error;
 +
-+	ptr = *slab;
-+	if (!ptr)
++	if (!needs_rmap_work(mp))
 +		return;
-+	hdr = ptr->s_first;
-+	while (hdr) {
-+		nhdr = hdr->sh_next;
-+		free(hdr);
-+		hdr = nhdr;
++
++	ag_rmaps = calloc(mp->m_sb.sb_agcount, sizeof(struct xfs_ag_rmap));
++	if (!ag_rmaps)
++		do_error(_("couldn't allocate per-AG reverse map roots\n"));
++
++	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++		error = init_slab(&ag_rmaps[i].ar_rmaps,
++				sizeof(struct xfs_rmap_irec));
++		if (error)
++			do_error(
++_("Insufficient memory while allocating reverse mapping slabs."));
 +	}
-+	free(ptr);
-+	*slab = NULL;
-+}
-+
-+static void *
-+slab_ptr(
-+	struct xfs_slab		*slab,
-+	struct xfs_slab_hdr	*hdr,
-+	size_t			idx)
-+{
-+	char			*p;
-+
-+	ASSERT(idx < hdr->sh_inuse);
-+	p = (char *)(hdr + 1);
-+	p += slab->s_item_sz * idx;
-+	return p;
 +}
 +
 +/*
-+ * Add an item to the slab.
-+ */
-+int
-+slab_add(
-+	struct xfs_slab		*slab,
-+	void			*item)
-+{
-+	struct xfs_slab_hdr		*hdr;
-+	void			*p;
-+
-+	hdr = slab->s_last;
-+	if (!hdr || hdr->sh_inuse == hdr->sh_nr) {
-+		size_t n;
-+
-+		n = (hdr ? hdr->sh_nr * 2 : MIN_SLAB_NR);
-+		if (n * slab->s_item_sz > MAX_SLAB_SIZE)
-+			n = MAX_SLAB_SIZE / slab->s_item_sz;
-+		hdr = malloc(sizeof(struct xfs_slab_hdr) + (n * slab->s_item_sz));
-+		if (!hdr)
-+			return -ENOMEM;
-+		hdr->sh_nr = n;
-+		hdr->sh_inuse = 0;
-+		hdr->sh_next = NULL;
-+		if (slab->s_last)
-+			slab->s_last->sh_next = hdr;
-+		if (!slab->s_first)
-+			slab->s_first = hdr;
-+		slab->s_last = hdr;
-+		slab->s_nr_slabs++;
-+	}
-+	hdr->sh_inuse++;
-+	p = slab_ptr(slab, hdr, hdr->sh_inuse - 1);
-+	memcpy(p, item, slab->s_item_sz);
-+	slab->s_nr_items++;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Sort the items in the slab.  Do not run this method if there are any
-+ * cursors holding on to the slab.
++ * Free the per-AG reverse-mapping data.
 + */
 +void
-+qsort_slab(
-+	struct xfs_slab		*slab,
-+	int (*compare_fn)(const void *, const void *))
++free_rmaps(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_slab_hdr	*hdr;
++	xfs_agnumber_t		i;
 +
-+	hdr = slab->s_first;
-+	while (hdr) {
-+		qsort(slab_ptr(slab, hdr, 0), hdr->sh_inuse, slab->s_item_sz,
-+		      compare_fn);
-+		hdr = hdr->sh_next;
-+	}
-+}
-+
-+/*
-+ * init_slab_cursor() -- Create a slab cursor to iterate the slab items.
-+ *
-+ * @slab: The slab.
-+ * @compare_fn: If specified, use this function to return items in ascending order.
-+ * @cur: The new cursor.
-+ */
-+int
-+init_slab_cursor(
-+	struct xfs_slab		*slab,
-+	int (*compare_fn)(const void *, const void *),
-+	struct xfs_slab_cursor	**cur)
-+{
-+	struct xfs_slab_cursor	*c;
-+	struct xfs_slab_hdr_cursor	*hcur;
-+	struct xfs_slab_hdr	*hdr;
-+
-+	c = malloc(sizeof(struct xfs_slab_cursor) +
-+		   (sizeof(struct xfs_slab_hdr_cursor) * slab->s_nr_slabs));
-+	if (!c)
-+		return -ENOMEM;
-+	c->nr = slab->s_nr_slabs;
-+	c->slab = slab;
-+	c->compare_fn = compare_fn;
-+	c->last_hcur = NULL;
-+	hcur = (struct xfs_slab_hdr_cursor *)(c + 1);
-+	hdr = slab->s_first;
-+	while (hdr) {
-+		hcur->hdr = hdr;
-+		hcur->loc = 0;
-+		hcur++;
-+		hdr = hdr->sh_next;
-+	}
-+	*cur = c;
-+	return 0;
-+}
-+
-+/*
-+ * Free the slab cursor.
-+ */
-+void
-+free_slab_cursor(
-+	struct xfs_slab_cursor	**cur)
-+{
-+	if (!*cur)
++	if (!needs_rmap_work(mp))
 +		return;
-+	free(*cur);
-+	*cur = NULL;
++
++	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++		free_slab(&ag_rmaps[i].ar_rmaps);
++	free(ag_rmaps);
++	ag_rmaps = NULL;
 +}
 +
 +/*
-+ * Return the smallest item in the slab, without advancing the iterator.
-+ * The slabs must be sorted prior to the creation of the cursor.
-+ */
-+void *
-+peek_slab_cursor(
-+	struct xfs_slab_cursor	*cur)
-+{
-+	struct xfs_slab_hdr_cursor	*hcur;
-+	void			*p = NULL;
-+	void			*q;
-+	size_t			i;
-+
-+	cur->last_hcur = NULL;
-+
-+	/* no compare function; inorder traversal */
-+	if (!cur->compare_fn) {
-+		if (!cur->last_hcur)
-+			cur->last_hcur = &cur->hcur[0];
-+		hcur = cur->last_hcur;
-+		while (hcur < &cur->hcur[cur->nr] &&
-+			hcur->loc >= hcur->hdr->sh_inuse)
-+			hcur++;
-+		if (hcur == &cur->hcur[cur->nr])
-+			return NULL;
-+		p = slab_ptr(cur->slab, hcur->hdr, hcur->loc);
-+		cur->last_hcur = hcur;
-+		return p;
-+	}
-+
-+	/* otherwise return things in increasing order */
-+	for (i = 0, hcur = &cur->hcur[i]; i < cur->nr; i++, hcur++) {
-+		if (hcur->loc >= hcur->hdr->sh_inuse)
-+			continue;
-+		q = slab_ptr(cur->slab, hcur->hdr, hcur->loc);
-+		if (!p || cur->compare_fn(p, q) > 0) {
-+			p = q;
-+			cur->last_hcur = hcur;
-+		}
-+	}
-+
-+	return p;
-+}
-+
-+/*
-+ * After a peek operation, advance the cursor.
-+ */
-+void
-+advance_slab_cursor(
-+	struct xfs_slab_cursor	*cur)
-+{
-+	ASSERT(cur->last_hcur);
-+	cur->last_hcur->loc++;
-+}
-+
-+/*
-+ * Retrieve the next item in the slab and advance the cursor.
-+ */
-+void *
-+pop_slab_cursor(
-+	struct xfs_slab_cursor	*cur)
-+{
-+	void			*p;
-+
-+	p = peek_slab_cursor(cur);
-+	if (p)
-+		advance_slab_cursor(cur);
-+	return p;
-+}
-+
-+/*
-+ * Return the number of items in the slab.
-+ */
-+size_t
-+slab_count(
-+	struct xfs_slab	*slab)
-+{
-+	return slab->s_nr_items;
-+}
-+
-+/*
-+ * Create a bag to point to some objects.
++ * Add an observation about a block mapping in an inode's data or attribute
++ * fork for later btree reconstruction.
 + */
 +int
-+init_bag(
-+	struct xfs_bag	**bag)
++add_rmap(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	int			whichfork,
++	struct xfs_bmbt_irec	*irec)
 +{
-+	struct xfs_bag	*ptr;
++	struct xfs_slab		*rmaps;
++	struct xfs_rmap_irec	rmap;
++	xfs_agnumber_t		agno;
++	xfs_agblock_t		agbno;
 +
-+	ptr = calloc(1, sizeof(struct xfs_bag));
-+	if (!ptr)
-+		return -ENOMEM;
-+	ptr->bg_ptrs = calloc(MIN_BAG_SIZE, sizeof(void *));
-+	if (!ptr->bg_ptrs) {
-+		free(ptr);
-+		return -ENOMEM;
-+	}
-+	ptr->bg_nr = MIN_BAG_SIZE;
-+	*bag = ptr;
-+	return 0;
++	if (!needs_rmap_work(mp))
++		return 0;
++
++	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
++	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
++	ASSERT(agno != NULLAGNUMBER);
++	ASSERT(agno < mp->m_sb.sb_agcount);
++	ASSERT(agbno + irec->br_blockcount <= mp->m_sb.sb_agblocks);
++	ASSERT(ino != NULLFSINO);
++	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
++
++	rmaps = ag_rmaps[agno].ar_rmaps;
++	rmap.rm_owner = ino;
++	rmap.rm_offset = irec->br_startoff;
++	rmap.rm_flags = 0;
++	if (whichfork == XFS_ATTR_FORK)
++		rmap.rm_flags |= XFS_RMAP_ATTR_FORK;
++	rmap.rm_startblock = agbno;
++	rmap.rm_blockcount = irec->br_blockcount;
++	if (irec->br_state == XFS_EXT_UNWRITTEN)
++		rmap.rm_flags |= XFS_RMAP_UNWRITTEN;
++	return slab_add(rmaps, &rmap);
 +}
 +
-+/*
-+ * Free a bag of pointers.
-+ */
-+void
-+free_bag(
-+	struct xfs_bag	**bag)
++#ifdef RMAP_DEBUG
++static void
++dump_rmap(
++	const char		*msg,
++	xfs_agnumber_t		agno,
++	struct xfs_rmap_irec	*rmap)
 +{
-+	struct xfs_bag	*ptr;
-+
-+	ptr = *bag;
-+	if (!ptr)
-+		return;
-+	free(ptr->bg_ptrs);
-+	free(ptr);
-+	*bag = NULL;
++	printf("%s: %p agno=%u pblk=%llu own=%lld lblk=%llu len=%u flags=0x%x\n",
++		msg, rmap,
++		(unsigned int)agno,
++		(unsigned long long)rmap->rm_startblock,
++		(unsigned long long)rmap->rm_owner,
++		(unsigned long long)rmap->rm_offset,
++		(unsigned int)rmap->rm_blockcount,
++		(unsigned int)rmap->rm_flags);
 +}
-+
-+/*
-+ * Add an object to the pointer bag.
-+ */
-+int
-+bag_add(
-+	struct xfs_bag	*bag,
-+	void		*ptr)
-+{
-+	void		**p, **x;
-+
-+	p = &bag->bg_ptrs[bag->bg_inuse];
-+	if (p == BAG_END(bag)) {
-+		/* No free space, alloc more pointers */
-+		size_t nr;
-+
-+		nr = bag->bg_nr * 2;
-+		x = realloc(bag->bg_ptrs, nr * sizeof(void *));
-+		if (!x)
-+			return -ENOMEM;
-+		bag->bg_ptrs = x;
-+		memset(BAG_END(bag), 0, bag->bg_nr * sizeof(void *));
-+		bag->bg_nr = nr;
-+	}
-+	bag->bg_ptrs[bag->bg_inuse] = ptr;
-+	bag->bg_inuse++;
-+	return 0;
-+}
-+
-+/*
-+ * Remove a pointer from a bag.
-+ */
-+int
-+bag_remove(
-+	struct xfs_bag	*bag,
-+	size_t		nr)
-+{
-+	ASSERT(nr < bag->bg_inuse);
-+	memmove(&bag->bg_ptrs[nr], &bag->bg_ptrs[nr + 1],
-+		(bag->bg_inuse - nr) * sizeof(void *));
-+	bag->bg_inuse--;
-+	return 0;
-+}
-+
-+/*
-+ * Return the number of items in a bag.
-+ */
-+size_t
-+bag_count(
-+	struct xfs_bag	*bag)
-+{
-+	return bag->bg_inuse;
-+}
-+
-+/*
-+ * Return the nth item in a bag.
-+ */
-+void *
-+bag_item(
-+	struct xfs_bag	*bag,
-+	size_t		nr)
-+{
-+	if (nr >= bag->bg_inuse)
-+		return NULL;
-+	return bag->bg_ptrs[nr];
-+}
-diff --git a/repair/slab.h b/repair/slab.h
++#else
++# define dump_rmap(m, a, r)
++#endif
+diff --git a/repair/rmap.h b/repair/rmap.h
 new file mode 100644
-index 0000000..4aa5512
+index 0000000..0832790
 --- /dev/null
-+++ b/repair/slab.h
-@@ -0,0 +1,60 @@
++++ b/repair/rmap.h
+@@ -0,0 +1,32 @@
 +/*
 + * Copyright (C) 2016 Oracle.  All Rights Reserved.
 + *
@@ -553,47 +342,48 @@ index 0000000..4aa5512
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#ifndef SLAB_H_
-+#define SLAB_H_
++#ifndef RMAP_H_
++#define RMAP_H_
 +
-+struct xfs_slab;
-+struct xfs_slab_cursor;
++extern bool collect_rmaps;
 +
-+extern int init_slab(struct xfs_slab **, size_t);
-+extern void free_slab(struct xfs_slab **);
++extern bool needs_rmap_work(struct xfs_mount *);
 +
-+extern int slab_add(struct xfs_slab *, void *);
-+extern void qsort_slab(struct xfs_slab *, int (*)(const void *, const void *));
-+extern size_t slab_count(struct xfs_slab *);
++extern void init_rmaps(struct xfs_mount *);
++extern void free_rmaps(struct xfs_mount *);
 +
-+extern int init_slab_cursor(struct xfs_slab *,
-+	int (*)(const void *, const void *), struct xfs_slab_cursor **);
-+extern void free_slab_cursor(struct xfs_slab_cursor **);
++extern int add_rmap(struct xfs_mount *, xfs_ino_t, int, struct xfs_bmbt_irec *);
 +
-+extern void *peek_slab_cursor(struct xfs_slab_cursor *);
-+extern void advance_slab_cursor(struct xfs_slab_cursor *);
-+extern void *pop_slab_cursor(struct xfs_slab_cursor *);
-+
-+struct xfs_bag;
-+
-+extern int init_bag(struct xfs_bag **);
-+extern void free_bag(struct xfs_bag **);
-+extern int bag_add(struct xfs_bag *, void *);
-+extern int bag_remove(struct xfs_bag *, size_t);
-+extern size_t bag_count(struct xfs_bag *);
-+extern void *bag_item(struct xfs_bag *, size_t);
-+
-+#define foreach_bag_ptr(bag, idx, ptr) \
-+	for ((idx) = 0, (ptr) = bag_item((bag), (idx)); \
-+	     (idx) < bag_count(bag); \
-+	     (idx)++, (ptr) = bag_item((bag), (idx)))
-+
-+#define foreach_bag_ptr_reverse(bag, idx, ptr) \
-+	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
-+	     (idx) >= 0 && (ptr) != NULL; \
-+	     (idx)--, (ptr) = bag_item((bag), (idx)))
-+
-+#endif /* SLAB_H_ */
++#endif /* RMAP_H_ */
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 3b63754..2ecd81d 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -32,6 +32,8 @@
+ #include "threads.h"
+ #include "progress.h"
+ #include "dinode.h"
++#include "slab.h"
++#include "rmap.h"
+ 
+ #define	rounddown(x, y)	(((x)/(y))*(y))
+ 
+@@ -898,6 +900,7 @@ main(int argc, char **argv)
+ 	init_bmaps(mp);
+ 	incore_ino_init(mp);
+ 	incore_ext_init(mp);
++	init_rmaps(mp);
+ 
+ 	/* initialize random globals now that we know the fs geometry */
+ 	inodes_per_block = mp->m_sb.sb_inopblock;
+@@ -931,6 +934,7 @@ main(int argc, char **argv)
+ 	/*
+ 	 * Done with the block usage maps, toss them...
+ 	 */
++	free_rmaps(mp);
+ 	free_bmaps(mp);
+ 
+ 	if (!bad_ino_btree)  {
 
 _______________________________________________
 xfs mailing list
