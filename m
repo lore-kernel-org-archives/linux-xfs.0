@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D750B84B6
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:46:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A8AA18F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:39 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 96831850C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:46:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D857AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:44 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id ZGD4KCA5zFBriRzs (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mr8l44wq9D8FelEg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:37 -0700 (PDT)
-Subject: [PATCH 04/20] xfs: test per-ag allocation accounting during
-	truncate-caused refcountbt expansion
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:42 -0700 (PDT)
+Subject: [PATCH 05/20] reflink: test interaction with swap files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:46:27 -0700
-Message-ID: <146612798735.25024.15150901661628191347.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:46:33 -0700
+Message-ID: <146612799371.25024.16214922782653970895.stgit@birch.djwong.org>
 In-Reply-To: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
 References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,36 +31,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Ensure that refcountbt allocations during truncate operations come
-from the per-AG reservation and are not charged to the transaction.
+Since none of the current filesystems support reflinked swap files,
+make sure that we prohibit reflinking of swapfiles and swapon of
+reflinked files.
 
-Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
 ---
- tests/xfs/855     |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/855.out |   10 ++++++
- tests/xfs/group   |    1 +
- 3 files changed, 106 insertions(+)
- create mode 100755 tests/xfs/855
- create mode 100644 tests/xfs/855.out
+ tests/generic/923     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/923.out |    6 ++++
+ tests/generic/924     |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/924.out |    5 +++
+ tests/generic/group   |    2 +
+ 5 files changed, 160 insertions(+)
+ create mode 100755 tests/generic/923
+ create mode 100644 tests/generic/923.out
+ create mode 100755 tests/generic/924
+ create mode 100644 tests/generic/924.out
 
 
-diff --git a/tests/xfs/855 b/tests/xfs/855
+diff --git a/tests/generic/923 b/tests/generic/923
 new file mode 100755
-index 0000000..93bd286
+index 0000000..73c1621
 --- /dev/null
-+++ b/tests/xfs/855
-@@ -0,0 +1,95 @@
++++ b/tests/generic/923
+@@ -0,0 +1,74 @@
 +#! /bin/bash
-+# FS QA Test No. 855
++# FS QA Test No. 923
 +#
-+# Ensure that we can create enough distinct reflink entries to force creation
-+# of a multi-level refcount btree by reflinking a file a number of times and
-+# truncating the copies at successively lower sizes.  Delete and recreate a few
-+# times to exercise the refcount btree grow/shrink functions.
++# Check that we can't reflink a swapfile.
 +#
 +#-----------------------------------------------------------------------
-+# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -76,6 +77,7 @@ index 0000000..93bd286
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +#-----------------------------------------------------------------------
++#
 +
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -83,14 +85,14 @@ index 0000000..93bd286
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
 +
 +_cleanup()
 +{
 +    cd /
-+    umount $SCRATCH_MNT > /dev/null 2>&1
 +    rm -rf $tmp.*
++    wait
 +}
 +
 +# get standard environment, filters and checks
@@ -100,78 +102,146 @@ index 0000000..93bd286
 +
 +# real QA test starts here
 +_supported_os Linux
-+_supported_fs xfs
 +_require_scratch_reflink
 +_require_cp_reflink
 +
-+rm -f $seqres.full
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
 +
 +testdir=$SCRATCH_MNT/test-$seq
 +mkdir $testdir
 +
-+echo "Create the original file blocks"
-+blksz="$(stat -f $testdir -c '%S')"
-+nr_blks=$((2 * blksz / 12))
++blocks=160
++blksz=65536
 +
-+for i in 1 2 x; do
-+	_pwrite_byte 0x61 0 $((blksz * nr_blks)) $testdir/file1 >> $seqres.full
++echo "Initialize file"
++echo > $seqres.full
++_pwrite_byte 0x61 0 $((blocks * blksz)) $testdir/file1 >> $seqres.full
++mkswap -U 27376b42-ff65-42ca-919f-6c9b62292a5c $testdir/file1 >> $seqres.full
++swapon $testdir/file1
 +
-+	echo "$i: Reflink a bunch of times"
-+	seq 1 $nr_blks | while read nr; do
-+		_cp_reflink $testdir/file1 $testdir/file1.$nr >> $seqres.full
-+	done
-+	sync
++echo "Try to reflink"
++_cp_reflink $testdir/file1 $testdir/file2 2>&1 | _filter_scratch
 +
-+	echo "$i: Truncate files"
-+	seq 1 $nr_blks | while read nr; do
-+		truncate -s $((blksz * (nr_blks - nr))) $testdir/file1.$nr >> $seqres.full
-+	done
-+
-+	umount $SCRATCH_MNT
-+	_check_scratch_fs
-+	_scratch_mount
-+
-+	test $i = "x" && break
-+
-+	echo "$i: Delete both files"
-+	rm -rf $testdir
-+	mkdir -p $testdir
-+	umount $SCRATCH_MNT
-+	_check_scratch_fs
-+	_scratch_mount
-+done
++echo "Tear it down"
++swapoff $testdir/file1
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/855.out b/tests/xfs/855.out
+diff --git a/tests/generic/923.out b/tests/generic/923.out
 new file mode 100644
-index 0000000..d196352
+index 0000000..97c18cf
 --- /dev/null
-+++ b/tests/xfs/855.out
-@@ -0,0 +1,10 @@
-+QA output created by 855
-+Create the original file blocks
-+1: Reflink a bunch of times
-+1: Truncate files
-+1: Delete both files
-+2: Reflink a bunch of times
-+2: Truncate files
-+2: Delete both files
-+x: Reflink a bunch of times
-+x: Truncate files
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4ac62c1..f0ca410 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -287,3 +287,4 @@
- 305 auto quota
- 853 auto quick clone
- 854 auto quick clone
-+855 auto clone
++++ b/tests/generic/923.out
+@@ -0,0 +1,6 @@
++QA output created by 923
++Format and mount
++Initialize file
++Try to reflink
++cp: failed to clone 'SCRATCH_MNT/test-923/file2' from 'SCRATCH_MNT/test-923/file1': Text file busy
++Tear it down
+diff --git a/tests/generic/924 b/tests/generic/924
+new file mode 100755
+index 0000000..86c2a39
+--- /dev/null
++++ b/tests/generic/924
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# FS QA Test No. 924
++#
++# Check that we can't swapon a reflinked file.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++    wait
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++
++blocks=160
++blksz=65536
++
++echo "Initialize file"
++echo > $seqres.full
++_pwrite_byte 0x61 0 $((blocks * blksz)) $testdir/file1 >> $seqres.full
++mkswap -U 27376b42-ff65-42ca-919f-6c9b62292a5c $testdir/file1 >> $seqres.full
++_cp_reflink $testdir/file1 $testdir/file2 2>&1 | _filter_scratch
++
++echo "Try to swapon"
++swapon $testdir/file1 2>&1 | _filter_scratch
++
++swapoff $testdir/file1 >> $seqres.full 2>&1
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/924.out b/tests/generic/924.out
+new file mode 100644
+index 0000000..b67e6fa
+--- /dev/null
++++ b/tests/generic/924.out
+@@ -0,0 +1,5 @@
++QA output created by 924
++Format and mount
++Initialize file
++Try to swapon
++swapon: SCRATCH_MNT/test-924/file1: swapon failed: Invalid argument
+diff --git a/tests/generic/group b/tests/generic/group
+index 36fb759..6fdf109 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -354,3 +354,5 @@
+ 349 blockdev quick rw
+ 350 blockdev quick rw
+ 351 blockdev quick rw
++923 auto quick clone
++924 auto quick clone
 
 _______________________________________________
 xfs mailing list
