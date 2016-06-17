@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A0CE17CB5
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:19:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 71AD28F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:19:51 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6206F7D0E
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:19:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EF8B0AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:19:54 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id mmedWZcN8Sv6N4wF (version=TLSv1.2
+	cuda.sgi.com with ESMTP id gDkNIcjVSgjofmv2 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:19:49 -0700 (PDT)
-Subject: [PATCH 017/119] xfs: add tracepoints for the deferred ops mechanism
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:19:53 -0700 (PDT)
+Subject: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
+	extents to free
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:19:40 -0700
-Message-ID: <146612638080.12839.2097094526348177968.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:19:47 -0700
+Message-ID: <146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,357 +32,151 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Add tracepoints for the internals of the deferred ops mechanism
-and tracepoint classes for clients of the dops, to make debugging
-easier.
+Connect the xfs_defer mechanism with the pieces that we'll need to
+handle deferred extent freeing.  We'll wire up the existing code to
+our new deferred mechanism later.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |   19 ++++
- fs/xfs/xfs_defer_item.c   |    1 
- fs/xfs/xfs_trace.c        |    1 
- fs/xfs/xfs_trace.h        |  198 +++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 219 insertions(+)
+ fs/xfs/libxfs/xfs_defer.h |    1 
+ fs/xfs/xfs_defer_item.c   |  108 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 109 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index ad14e33e..b4e7faa 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -163,6 +163,7 @@ xfs_defer_intake_work(
- 	struct xfs_defer_pending	*dfp;
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index 85c7a3a..743fc32 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -51,6 +51,7 @@ struct xfs_defer_pending {
+  * find all the space it needs.
+  */
+ enum xfs_defer_ops_type {
++	XFS_DEFER_OPS_TYPE_FREE,
+ 	XFS_DEFER_OPS_TYPE_MAX,
+ };
  
- 	list_for_each_entry(dfp, &dop->dop_intake, dfp_list) {
-+		trace_xfs_defer_intake_work(tp->t_mountp, dfp);
- 		dfp->dfp_intent = dfp->dfp_type->create_intent(tp,
- 				dfp->dfp_count);
- 		list_sort(tp->t_mountp, &dfp->dfp_work,
-@@ -183,6 +184,7 @@ xfs_defer_trans_abort(
- {
- 	struct xfs_defer_pending	*dfp;
- 
-+	trace_xfs_defer_trans_abort(tp->t_mountp, dop);
- 	/*
- 	 * If the transaction was committed, drop the intent reference
- 	 * since we're bailing out of here. The other reference is
-@@ -195,6 +197,7 @@ xfs_defer_trans_abort(
- 
- 	/* Abort intent items. */
- 	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
-+		trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
- 		if (dfp->dfp_committed)
- 			dfp->dfp_type->abort_intent(dfp->dfp_intent);
- 	}
-@@ -221,9 +224,12 @@ xfs_defer_trans_roll(
- 		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
- 	}
- 
-+	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
-+
- 	/* Roll the transaction. */
- 	error = xfs_trans_roll(tp, ip);
- 	if (error) {
-+		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
- 		xfs_defer_trans_abort(*tp, dop, error);
- 		return error;
- 	}
-@@ -295,6 +301,8 @@ xfs_defer_finish(
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 
-+	trace_xfs_defer_finish((*tp)->t_mountp, dop);
-+
- 	/* Until we run out of pending work to finish... */
- 	while (xfs_defer_has_unfinished_work(dop)) {
- 		/* Log intents for work items sitting in the intake. */
-@@ -309,12 +317,14 @@ xfs_defer_finish(
- 		list_for_each_entry_reverse(dfp, &dop->dop_pending, dfp_list) {
- 			if (dfp->dfp_committed)
- 				break;
-+			trace_xfs_defer_pending_commit((*tp)->t_mountp, dfp);
- 			dfp->dfp_committed = true;
- 		}
- 
- 		/* Log an intent-done item for the first pending item. */
- 		dfp = list_first_entry(&dop->dop_pending,
- 				struct xfs_defer_pending, dfp_list);
-+		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
- 		done_item = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
- 				dfp->dfp_count);
- 		cleanup_fn = dfp->dfp_type->finish_cleanup;
-@@ -370,6 +380,10 @@ xfs_defer_finish(
- 	}
- 
- out:
-+	if (error)
-+		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
-+	else
-+		trace_xfs_defer_finish_done((*tp)->t_mountp, dop);
- 	return error;
- }
- 
-@@ -385,11 +399,14 @@ xfs_defer_cancel(
- 	struct list_head		*pwi;
- 	struct list_head		*n;
- 
-+	trace_xfs_defer_cancel(NULL, dop);
-+
- 	/*
- 	 * Free the pending items.  Caller should already have arranged
- 	 * for the intent items to be released.
- 	 */
- 	list_for_each_entry_safe(dfp, pli, &dop->dop_intake, dfp_list) {
-+		trace_xfs_defer_intake_cancel(NULL, dfp);
- 		list_del(&dfp->dfp_list);
- 		list_for_each_safe(pwi, n, &dfp->dfp_work) {
- 			list_del(pwi);
-@@ -400,6 +417,7 @@ xfs_defer_cancel(
- 		kmem_free(dfp);
- 	}
- 	list_for_each_entry_safe(dfp, pli, &dop->dop_pending, dfp_list) {
-+		trace_xfs_defer_pending_cancel(NULL, dfp);
- 		list_del(&dfp->dfp_list);
- 		list_for_each_safe(pwi, n, &dfp->dfp_work) {
- 			list_del(pwi);
-@@ -468,4 +486,5 @@ xfs_defer_init(
- 	*fbp = NULLFSBLOCK;
- 	INIT_LIST_HEAD(&dop->dop_intake);
- 	INIT_LIST_HEAD(&dop->dop_pending);
-+	trace_xfs_defer_init(NULL, dop);
- }
 diff --git a/fs/xfs/xfs_defer_item.c b/fs/xfs/xfs_defer_item.c
-index 849088d..4c2ba28 100644
+index 4c2ba28..127a54e 100644
 --- a/fs/xfs/xfs_defer_item.c
 +++ b/fs/xfs/xfs_defer_item.c
-@@ -28,6 +28,7 @@
- #include "xfs_mount.h"
+@@ -29,9 +29,117 @@
  #include "xfs_defer.h"
  #include "xfs_trans.h"
-+#include "xfs_trace.h"
+ #include "xfs_trace.h"
++#include "xfs_bmap.h"
++#include "xfs_extfree_item.h"
++
++/* Extent Freeing */
++
++/* Sort bmap items by AG. */
++static int
++xfs_bmap_free_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_mount		*mp = priv;
++	struct xfs_bmap_free_item	*ra;
++	struct xfs_bmap_free_item	*rb;
++
++	ra = container_of(a, struct xfs_bmap_free_item, xbfi_list);
++	rb = container_of(b, struct xfs_bmap_free_item, xbfi_list);
++	return  XFS_FSB_TO_AGNO(mp, ra->xbfi_startblock) -
++		XFS_FSB_TO_AGNO(mp, rb->xbfi_startblock);
++}
++
++/* Get an EFI. */
++STATIC void *
++xfs_bmap_free_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	return xfs_trans_get_efi(tp, count);
++}
++
++/* Log a free extent to the intent item. */
++STATIC void
++xfs_bmap_free_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++	struct xfs_bmap_free_item	*free;
++
++	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
++	xfs_trans_log_efi_extent(tp, intent, free->xbfi_startblock,
++			free->xbfi_blockcount);
++}
++
++/* Get an EFD so we can process all the free extents. */
++STATIC void *
++xfs_bmap_free_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return xfs_trans_get_efd(tp, intent, count);
++}
++
++/* Process a free extent. */
++STATIC int
++xfs_bmap_free_finish_item(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dop,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_bmap_free_item	*free;
++	int				error;
++
++	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
++	error = xfs_trans_free_extent(tp, done_item,
++			free->xbfi_startblock,
++			free->xbfi_blockcount);
++	kmem_free(free);
++	return error;
++}
++
++/* Abort all pending EFIs. */
++STATIC void
++xfs_bmap_free_abort_intent(
++	void				*intent)
++{
++	xfs_efi_release(intent);
++}
++
++/* Cancel a free extent. */
++STATIC void
++xfs_bmap_free_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_bmap_free_item	*free;
++
++	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
++	kmem_free(free);
++}
++
++const struct xfs_defer_op_type xfs_extent_free_defer_type = {
++	.type		= XFS_DEFER_OPS_TYPE_FREE,
++	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
++	.diff_items	= xfs_bmap_free_diff_items,
++	.create_intent	= xfs_bmap_free_create_intent,
++	.abort_intent	= xfs_bmap_free_abort_intent,
++	.log_item	= xfs_bmap_free_log_item,
++	.create_done	= xfs_bmap_free_create_done,
++	.finish_item	= xfs_bmap_free_finish_item,
++	.cancel_item	= xfs_bmap_free_cancel_item,
++};
++
++/* Deferred Item Initialization */
  
  /* Initialize the deferred operation types. */
  void
-diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-index 13a0298..3971527 100644
---- a/fs/xfs/xfs_trace.c
-+++ b/fs/xfs/xfs_trace.c
-@@ -22,6 +22,7 @@
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_mount.h"
-+#include "xfs_defer.h"
- #include "xfs_da_format.h"
- #include "xfs_inode.h"
- #include "xfs_btree.h"
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index f0ac9c9..5923014 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2220,6 +2220,204 @@ DEFINE_EVENT(xfs_btree_cur_class, name, \
- DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
- DEFINE_BTREE_CUR_EVENT(xfs_btree_overlapped_query_range);
- 
-+/* deferred ops */
-+struct xfs_defer_pending;
-+struct xfs_defer_intake;
-+struct xfs_defer_ops;
-+
-+DECLARE_EVENT_CLASS(xfs_defer_class,
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop),
-+	TP_ARGS(mp, dop),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(void *, dop)
-+		__field(bool, committed)
-+		__field(bool, low)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp ? mp->m_super->s_dev : 0;
-+		__entry->dop = dop;
-+		__entry->committed = dop->dop_committed;
-+		__entry->low = dop->dop_low;
-+	),
-+	TP_printk("dev %d:%d ops %p committed %d low %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->dop,
-+		  __entry->committed,
-+		  __entry->low)
-+)
-+#define DEFINE_DEFER_EVENT(name) \
-+DEFINE_EVENT(xfs_defer_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop), \
-+	TP_ARGS(mp, dop))
-+
-+DECLARE_EVENT_CLASS(xfs_defer_error_class,
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
-+	TP_ARGS(mp, dop, error),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(void *, dop)
-+		__field(bool, committed)
-+		__field(bool, low)
-+		__field(int, error)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp ? mp->m_super->s_dev : 0;
-+		__entry->dop = dop;
-+		__entry->committed = dop->dop_committed;
-+		__entry->low = dop->dop_low;
-+		__entry->error = error;
-+	),
-+	TP_printk("dev %d:%d ops %p committed %d low %d err %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->dop,
-+		  __entry->committed,
-+		  __entry->low,
-+		  __entry->error)
-+)
-+#define DEFINE_DEFER_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_defer_error_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error), \
-+	TP_ARGS(mp, dop, error))
-+
-+DECLARE_EVENT_CLASS(xfs_defer_pending_class,
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp),
-+	TP_ARGS(mp, dfp),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, type)
-+		__field(void *, intent)
-+		__field(bool, committed)
-+		__field(int, nr)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp ? mp->m_super->s_dev : 0;
-+		__entry->type = dfp->dfp_type->type;
-+		__entry->intent = dfp->dfp_intent;
-+		__entry->committed = dfp->dfp_committed;
-+		__entry->nr = dfp->dfp_count;
-+	),
-+	TP_printk("dev %d:%d optype %d intent %p committed %d nr %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->type,
-+		  __entry->intent,
-+		  __entry->committed,
-+		  __entry->nr)
-+)
-+#define DEFINE_DEFER_PENDING_EVENT(name) \
-+DEFINE_EVENT(xfs_defer_pending_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp), \
-+	TP_ARGS(mp, dfp))
-+
-+DECLARE_EVENT_CLASS(xfs_phys_extent_deferred_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 int type, xfs_agblock_t agbno, xfs_extlen_t len),
-+	TP_ARGS(mp, agno, type, agbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(int, type)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->type = type;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d op %d agno %u agbno %u len %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->type,
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len)
-+);
-+#define DEFINE_PHYS_EXTENT_DEFERRED_EVENT(name) \
-+DEFINE_EVENT(xfs_phys_extent_deferred_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 int type, \
-+		 xfs_agblock_t bno, \
-+		 xfs_extlen_t len), \
-+	TP_ARGS(mp, agno, type, bno, len))
-+
-+DECLARE_EVENT_CLASS(xfs_map_extent_deferred_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 int op,
-+		 xfs_agblock_t agbno,
-+		 xfs_ino_t ino,
-+		 int whichfork,
-+		 xfs_fileoff_t offset,
-+		 xfs_filblks_t len,
-+		 xfs_exntst_t state),
-+	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_agblock_t, agbno)
-+		__field(int, whichfork)
-+		__field(xfs_fileoff_t, l_loff)
-+		__field(xfs_filblks_t, l_len)
-+		__field(xfs_exntst_t, l_state)
-+		__field(int, op)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->ino = ino;
-+		__entry->agbno = agbno;
-+		__entry->whichfork = whichfork;
-+		__entry->l_loff = offset;
-+		__entry->l_len = len;
-+		__entry->l_state = state;
-+		__entry->op = op;
-+	),
-+	TP_printk("dev %d:%d op %d agno %u agbno %u owner %lld %s offset %llu len %llu state %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->op,
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->ino,
-+		  __entry->whichfork == XFS_ATTR_FORK ? "attr" : "data",
-+		  __entry->l_loff,
-+		  __entry->l_len,
-+		  __entry->l_state)
-+);
-+#define DEFINE_MAP_EXTENT_DEFERRED_EVENT(name) \
-+DEFINE_EVENT(xfs_map_extent_deferred_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 int op, \
-+		 xfs_agblock_t agbno, \
-+		 xfs_ino_t ino, \
-+		 int whichfork, \
-+		 xfs_fileoff_t offset, \
-+		 xfs_filblks_t len, \
-+		 xfs_exntst_t state), \
-+	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state))
-+
-+DEFINE_DEFER_EVENT(xfs_defer_init);
-+DEFINE_DEFER_EVENT(xfs_defer_cancel);
-+DEFINE_DEFER_EVENT(xfs_defer_trans_roll);
-+DEFINE_DEFER_EVENT(xfs_defer_trans_abort);
-+DEFINE_DEFER_EVENT(xfs_defer_finish);
-+DEFINE_DEFER_EVENT(xfs_defer_finish_done);
-+
-+DEFINE_DEFER_ERROR_EVENT(xfs_defer_trans_roll_error);
-+DEFINE_DEFER_ERROR_EVENT(xfs_defer_finish_error);
-+DEFINE_DEFER_ERROR_EVENT(xfs_defer_op_finish_error);
-+
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_work);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_cancel);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_commit);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
-+
-+DEFINE_PHYS_EXTENT_DEFERRED_EVENT(xfs_defer_phys_extent);
-+DEFINE_MAP_EXTENT_DEFERRED_EVENT(xfs_defer_map_extent);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+ xfs_defer_init_types(void)
+ {
++	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+ }
 
 _______________________________________________
 xfs mailing list
