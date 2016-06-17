@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A60E48552
+	by oss.sgi.com (Postfix) with ESMTP id A72468582
 	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:48:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3DB67AC004
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C644AC003
 	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:27 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id dz2i5jigBwbuyk84 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Fgpz8Qq0KIvEEH3o (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:22 -0700 (PDT)
-Subject: [PATCH 1/6] journaling_log: fix some typos in the section about EFDs
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:25 -0700 (PDT)
+Subject: [PATCH 2/6] xfsdocs: document known testing procedures
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:48:15 -0700
-Message-ID: <146612809529.25586.12927884450458378559.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:48:21 -0700
+Message-ID: <146612810138.25586.1436538015885713552.stgit@birch.djwong.org>
 In-Reply-To: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
 References: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,35 +33,78 @@ Cc: xfs@oss.sgi.com
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../journaling_log.asciidoc                        |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ design/XFS_Filesystem_Structure/docinfo.xml        |   14 ++++++++++++
+ design/XFS_Filesystem_Structure/testing.asciidoc   |   23 ++++++++++++++++++++
+ .../xfs_filesystem_structure.asciidoc              |    2 ++
+ 3 files changed, 39 insertions(+)
+ create mode 100644 design/XFS_Filesystem_Structure/testing.asciidoc
 
 
-diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-index a67fcc2..67d209f 100644
---- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-+++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-@@ -368,7 +368,7 @@ typedef struct xfs_efd_log_format {
- ----
+diff --git a/design/XFS_Filesystem_Structure/docinfo.xml b/design/XFS_Filesystem_Structure/docinfo.xml
+index ba97809..cc5596d 100644
+--- a/design/XFS_Filesystem_Structure/docinfo.xml
++++ b/design/XFS_Filesystem_Structure/docinfo.xml
+@@ -108,4 +108,18 @@
+ 			</simplelist>
+ 		</revdescription>
+ 	</revision>
++	<revision>
++		<revnumber>3.14</revnumber>
++		<date>January 2016</date>
++		<author>
++			<firstname>Darrick</firstname>
++			<surname>Wong</surname>
++			<email></email>
++		</author>
++		<revdescription>
++			<simplelist>
++				<member>Document disk format change testing.</member>
++			</simplelist>
++		</revdescription>
++	</revision>
+ </revhistory>
+diff --git a/design/XFS_Filesystem_Structure/testing.asciidoc b/design/XFS_Filesystem_Structure/testing.asciidoc
+new file mode 100644
+index 0000000..f1c90bc
+--- /dev/null
++++ b/design/XFS_Filesystem_Structure/testing.asciidoc
+@@ -0,0 +1,23 @@
++[[Testing]]
++= Testing Filesystem Changes
++
++People put a lot of trust in filesystems to preserve their data in a reliable
++fashion.  To that end, it is very important that users and developers have
++access to a suite of regression tests that can be used to prove correct
++operation of any given filesystem code, or to analyze failures to fix problems
++found in the code.  The XFS regression test suite, +xfstests+, is hosted at
+++git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git+.  Most tests apply to
++filesystems in general, but the suite also contains tests for features specific
++to each filesystem.
++
++When fixing bugs, it is important to provide a testcase exposing the bug so
++that the developers can avoid a future re-occurrence of the regression.
++Furthermore, if you're developing a new user-visible feature for XFS, please
++help the rest of the development community to sustain and maintain the whole
++codebase by providing generous test coverage to check its behavior.
++
++When altering, adding, or removing an on-disk data structure, please remember
++to update both the in-kernel structure size checks in +xfs_ondisk.h+ and to
++ensure that your changes are reflected in xfstest xfs/122.  These regression
++tests enable us to detect compiler bugs, alignment problems, and anything
++else that might result in the creation of incompatible filesystem images.
+diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+index 53262bf..f580aab 100644
+--- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
++++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
+@@ -52,6 +52,8 @@ include::common_types.asciidoc[]
  
- *efd_type*::
--The signature of an EFI operation, 0x1236.  This value is in host-endian order,
-+The signature of an EFD operation, 0x1237.  This value is in host-endian order,
- not big-endian like the rest of XFS.
+ include::magic.asciidoc[]
  
- *efd_size*::
-@@ -382,9 +382,9 @@ A 64-bit number that binds the corresponding EFI log item to this EFD log item.
++include::testing.asciidoc[]
++
+ // return titles to normal
+ :leveloffset: 0
  
- *efd_extents*::
- Variable-length array of extents to be freed.  The array length is given by
--+efi_nextents+.  The record type will be either +xfs_extent_64_t+ or
-++efd_nextents+.  The record type will be either +xfs_extent_64_t+ or
- +xfs_extent_32_t+; this can be determined from the log item size (+oh_len+) and
--the number of extents (+efi_nextents+).
-+the number of extents (+efd_nextents+).
- 
- [[Inode_Log_Item]]
- === Inode Updates
 
 _______________________________________________
 xfs mailing list
