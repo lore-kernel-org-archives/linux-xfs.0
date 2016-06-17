@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3EE2F7CA1
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2016 14:29:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CADEAC006
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2016 12:29:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1OSDj1yBAiFMSY4R for <xfs@oss.sgi.com>;
-	Wed, 29 Jun 2016 12:29:06 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 6F4A21F1C
-	for <xfs@oss.sgi.com>; Wed, 29 Jun 2016 14:29:06 -0500 (CDT)
-Subject: Re: Question: Old Irix tape backup. Recovery on Linux
-	(xfsdump/xfsrestore)
-References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7e2ec911-1079-2339-b72d-8f86b13d5501@sandeen.net>
-Date: Wed, 29 Jun 2016 14:29:05 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 89A88857B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:48:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4A2DC8F804C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:19 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id aRQdEU3uAD5JSzgW (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:12 -0700 (PDT)
+Subject: [PATCH 20/20] xfs: scrub fs (if still mounted) at the end of the test
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:48:07 -0700
+Message-ID: <146612808781.25024.9354886387434772563.stgit@birch.djwong.org>
+In-Reply-To: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
+References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,92 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 6/29/16 1:48 PM, Anthony l wrote:
-> Hello Anthony here,
-> 
-> I'm not sure if this is the correct place to send a question, If I am
-> wrong I would appreciate if you could send me in the right direction.
-> I have come across the oss.sgi forums a lot looking for a solution to
-> my problem but I could not find much.
-> 
+Teach _check_xfs_filesystem to scrub mounted filesystems before
+unmounting and fscking them.  This is mostly to test the online
+scrub tool...
 
-Sure, it's a fine place.  Question below.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/config |    1 +
+ common/rc     |    7 +++++++
+ 2 files changed, 8 insertions(+)
 
-> 
-> Here's my situation.
-> 
-> I have a bunch a tapes that were created way back when using an IRIX
-> system. Some kind of version 6, perhaps even the latest version.
-> anyway I am able to peak at the headers to determind the the file
-> type on the drive is indeed:
-> 
-> xFSdump0.... or when I make a sample using 'dd if=/dev/nst0
-> of=./test.img' '+ 'file test.img' I get XFSDUMP archive (version 2)
-> 
-> So, instinctively to get the data off the tapes I would think would
-> be as simple as:
-> 
-> sudo xfsrestore -f /dev/nst0 ./path to where I want it stored
-> 
-> Then I get:
-> 
-> using dump format 3
-> 
-> xfsrestore: searching media for dump
-> 
-> xfsrestore: preparing drive
-> 
-> xfsrestore: examining media file 1
-> 
-> ...
-> 
-> xfsrestore examining media file xx
-> 
-> the following dump has been found on drive 0:
-> 
-> hostname: isp---------(stuff)
-> 
-> mount point: /isp-iga
-> 
-> volume: /dev/rdsk/sks0d2s7
-> 
-> session time: Mon Jan 10 11:47:42 2005
-> 
-> media label: "backup"
-> 
-> file system id: xxx....
-> 
-> session id: xxx...
-> 
-> media id:...
-> 
-> restore this dump?
-> 
-> 1: skip
-> 
-> 2: restore (default)
-> 
->> 2 (enter)
-> 
 
-> ====== 
-> 
-> examining media file 0
-> reading directories
-> examining media file 1
-> reading directories
-> ... and so on
-> no files selected for restoral
-
-That doesn't seem to be an actual xfsdump error string, is it?
-
-Maybe you can capture and include the entire xfsdump output, or put it
-in a pastebin somewhere?  By the time things get hand-transcribed it's
-easy to lose important bits.
-
--Eric
+diff --git a/common/config b/common/config
+index cacd815..41edb0c 100644
+--- a/common/config
++++ b/common/config
+@@ -163,6 +163,7 @@ export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
+ export XFS_DB_PROG="`set_prog_path xfs_db`"
+ export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
+ export XFS_IO_PROG="`set_prog_path xfs_io`"
++export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
+ export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
+ export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
+ export __XFSDUMP_PROG="`set_prog_path xfsdump`"
+diff --git a/common/rc b/common/rc
+index 847191e..ea5baea 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2188,6 +2188,13 @@ _check_xfs_filesystem()
+ 
+     if [ "$type" = "xfs" ]
+     then
++	if [ -x "$XFS_SCRUB_PROG" ]; then
++		"$XFS_SCRUB_PROG" $scrubflag -vd $device >>$seqres.full
++		if [ $? -ne 0 ]; then
++			echo "filesystem on $device failed scrub (see $seqres.full)"
++			ok=0
++		fi
++	fi
+         # mounted ...
+         mountpoint=`_umount_or_remount_ro $device`
+     fi
 
 _______________________________________________
 xfs mailing list
