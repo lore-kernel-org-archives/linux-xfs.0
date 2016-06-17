@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 92F718241
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:37:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1B433AC002
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:56 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B4F3F81DE
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:38:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 41E2DAC003
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:38:04 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 8wOAJYhbQGAhuTdi (version=TLSv1.2
+	cuda.sgi.com with ESMTP id OOGkVBAAgrBsoQui (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:37:55 -0700 (PDT)
-Subject: [PATCH 067/145] xfs_repair: look for mergeable rmaps
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:38:02 -0700 (PDT)
+Subject: [PATCH 068/145] xfs_repair: check for impossible rmap record field
+	combinations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:37:51 -0700
-Message-ID: <146612747153.16048.4165884380771843048.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:37:57 -0700
+Message-ID: <146612747761.16048.15516327575501310985.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,8 +32,8 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Check for adjacent mergeable rmaps; this is a sign that we've
-screwed up somehow.
+Make sure there are no records or keys with impossible field
+combinations, such as non-inode records with offsets or flags.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
@@ -41,42 +42,28 @@ Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 
 diff --git a/repair/scan.c b/repair/scan.c
-index 6106d93..d72b257 100644
+index d72b257..ec41ba6 100644
 --- a/repair/scan.c
 +++ b/repair/scan.c
-@@ -787,6 +787,7 @@ ino_issparse(
- struct rmap_priv {
- 	struct aghdr_cnts	*agcnts;
- 	struct xfs_rmap_irec	high_key;
-+	struct xfs_rmap_irec	last_rec;
- };
+@@ -926,6 +926,18 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 	_("invalid owner in rmap btree record %d (%"PRId64" %u) block %u/%u\n"),
+ 						i, owner, len, agno, bno);
  
- static void
-@@ -943,6 +944,16 @@ advance:
- 					goto advance;
- 			}
- 
-+			/* Is this mergeable with the previous record? */
-+			if (mergeable_rmaps(&rmap_priv->last_rec, &key)) {
-+				do_warn(
-+	_("record %d in block (%u/%u) of %s tree should be merged with previous record\n"),
-+					i, agno, bno, name);
-+				rmap_priv->last_rec.rm_blockcount +=
-+						key.rm_blockcount;
-+			} else
-+				rmap_priv->last_rec = key;
++			/* Look for impossible record field combinations. */
++			if (XFS_RMAP_NON_INODE_OWNER(key.rm_owner)) {
++				if (key.rm_flags)
++					do_warn(
++	_("record %d of block (%u/%u) in %s btree cannot have non-inode owner with flags\n"),
++						i, agno, bno, name);
++				if (key.rm_offset)
++					do_warn(
++	_("record %d of block (%u/%u) in %s btree cannot have non-inode owner with offset\n"),
++						i, agno, bno, name);
++			}
 +
- 			/* Check that we don't go past the high key. */
- 			key.rm_startblock += key.rm_blockcount - 1;
- 			if (!XFS_RMAP_NON_INODE_OWNER(key.rm_owner) &&
-@@ -1896,6 +1907,7 @@ validate_agf(
- 		memset(&priv.high_key, 0xFF, sizeof(priv.high_key));
- 		priv.high_key.rm_blockcount = 0;
- 		priv.agcnts = agcnts;
-+		priv.last_rec.rm_owner = XFS_RMAP_OWN_UNKNOWN;
- 		bno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]);
- 		if (bno != 0 && verify_agbno(mp, agno, bno)) {
- 			scan_sbtree(bno,
+ 			/* Check for out of order records. */
+ 			if (i == 0) {
+ advance:
 
 _______________________________________________
 xfs mailing list
