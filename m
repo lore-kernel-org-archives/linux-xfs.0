@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C44748436
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 738EE8F8050
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:52 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id nc8bBBEcObl3w2eO (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B68178474
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2A8A0AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:56 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ees1io5VaHKZ0r7u (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:49 -0700 (PDT)
-Subject: [PATCH 131/145] xfs_repair: complain about copy-on-write leftovers
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:54 -0700 (PDT)
+Subject: [PATCH 133/145] xfs_repair: use range query when while checking rmaps
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:44:32 -0700
-Message-ID: <146612787245.16048.8651678769147816626.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:44:44 -0700
+Message-ID: <146612788463.16048.1497238555000280268.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,110 +31,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Complain about leftover CoW allocations that are hanging off the
-refcount btree.  These are cleaned out at mount time, but we could be
-louder about flagging down evidence of trouble.
+For shared extents, we ought to use a range query on the rmapbt to
+find the corresponding rmap.  However, most of the time the observed
+rmap will be an exact match for the rmapbt rmap, in which case we
+could have used the (much faster) regular lookup.  Therefore, try the
+regular lookup first and resort to the range lookup if that doesn't
+get us what we want.  This can cut the run time of the rmap check of
+xfs_repair in half.
 
-Since these extents aren't "owned" by anything, we'll free them up by
-reconstructing the free space btrees.
+Theoretically, the only reason why an observed rmap wouldn't be an
+exact match for an rmapbt rmap is because we modified some file on
+account of a metadata error.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c      |   21 +++++++++++++++++----
- repair/incore.h |    3 ++-
- repair/scan.c   |   25 ++++++++++++++++++++++++-
- 3 files changed, 43 insertions(+), 6 deletions(-)
+ repair/rmap.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
 
-diff --git a/db/check.c b/db/check.c
-index 3b17585..841a605 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -45,7 +45,7 @@ typedef enum {
- 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
- 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
- 	DBM_SYMLINK,	DBM_BTFINO,	DBM_BTRMAP,	DBM_BTREFC,
--	DBM_RLDATA,
-+	DBM_RLDATA,	DBM_COWDATA,
- 	DBM_NDBM
- } dbm_t;
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 5c0e015..1b89d4c 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -909,6 +909,20 @@ lookup_rmap(
+ 	return xfs_rmap_get_rec(bt_cur, tmp, have);
+ }
  
-@@ -4821,9 +4821,22 @@ scanfunc_refcnt(
- 		rp = XFS_REFCOUNT_REC_ADDR(block, 1);
- 		lastblock = 0;
- 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
--			set_dbmap(seqno, be32_to_cpu(rp[i].rc_startblock),
--				be32_to_cpu(rp[i].rc_blockcount), DBM_RLDATA,
--				seqno, bno);
-+			if (be32_to_cpu(rp[i].rc_refcount) == 1) {
-+				dbprintf(_(
-+		"leftover CoW extent (%u/%u) len %u\n"),
-+					seqno,
-+					be32_to_cpu(rp[i].rc_startblock),
-+					be32_to_cpu(rp[i].rc_blockcount));
-+				set_dbmap(seqno,
-+					be32_to_cpu(rp[i].rc_startblock),
-+					be32_to_cpu(rp[i].rc_blockcount),
-+					DBM_COWDATA, seqno, bno);
-+			} else {
-+				set_dbmap(seqno,
-+					be32_to_cpu(rp[i].rc_startblock),
-+					be32_to_cpu(rp[i].rc_blockcount),
-+					DBM_RLDATA, seqno, bno);
-+			}
- 			if (be32_to_cpu(rp[i].rc_startblock) < lastblock) {
- 				dbprintf(_(
- 		"out-of-order refcnt btree record %d (%u %u) block %u/%u\n"),
-diff --git a/repair/incore.h b/repair/incore.h
-index bcd2f4b..c23a3a3 100644
---- a/repair/incore.h
-+++ b/repair/incore.h
-@@ -107,7 +107,8 @@ typedef struct rt_extent_tree_node  {
- #define XR_E_INO1	10	/* used by inodes (marked by rmap btree) */
- #define XR_E_FS_MAP1	11	/* used by fs space/inode maps (rmap btree) */
- #define XR_E_REFC	12	/* used by fs ag reference count btree */
--#define XR_E_BAD_STATE	13
-+#define XR_E_COW	13	/* leftover cow extent */
-+#define XR_E_BAD_STATE	14
- 
- /* separate state bit, OR'ed into high (4th) bit of ex_state field */
- 
-diff --git a/repair/scan.c b/repair/scan.c
-index 4e78335..1c2afb6 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1293,7 +1293,30 @@ _("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 				continue;
- 			}
- 
--			if (nr < 2 || nr > MAXREFCOUNT) {
-+			if (nr == 1) {
-+				xfs_agblock_t	c;
-+				xfs_extlen_t	cnr;
++/* Look for an rmap in the rmapbt that matches a given rmap. */
++static int
++lookup_rmap_overlapped(
++	struct xfs_btree_cur	*bt_cur,
++	struct xfs_rmap_irec	*rm_rec,
++	struct xfs_rmap_irec	*tmp,
++	int			*have)
++{
++	/* Have to use our fancy version for overlapped */
++	return xfs_rmap_lookup_le_range(bt_cur, rm_rec->rm_startblock,
++				rm_rec->rm_owner, rm_rec->rm_offset,
++				rm_rec->rm_flags, tmp, have);
++}
 +
-+				for (c = b; c < end; c += cnr) {
-+					state = get_bmap_ext(agno, c, end, &cnr);
-+					switch (state) {
-+					case XR_E_COW:
-+						break;
-+					case XR_E_UNKNOWN:
-+						do_warn(
-+_("leftover CoW extent (%u/%u) len %u\n"),
-+						agno, c, cnr);
-+						set_bmap_ext(agno, c, cnr, XR_E_FREE);
-+						break;
-+					default:
-+						do_warn(
-+_("extent (%u/%u) len %u claimed, state is %d\n"),
-+						agno, c, cnr, state);
-+						set_bmap_ext(agno, c, cnr, XR_E_FREE);
-+						break;
-+					}
-+				}
-+			} else if (nr < 2 || nr > MAXREFCOUNT) {
- 				do_warn(
- 	_("invalid reference count %u in record %u of %s btree block %u/%u\n"),
- 					nr, i, name, agno, bno);
+ /* Does the btree rmap cover the observed rmap? */
+ #define NEXTP(x)	((x)->rm_startblock + (x)->rm_blockcount)
+ #define NEXTL(x)	((x)->rm_offset + (x)->rm_blockcount)
+@@ -997,6 +1011,18 @@ check_rmaps(
+ 		error = lookup_rmap(bt_cur, rm_rec, &tmp, &have);
+ 		if (error)
+ 			goto err;
++		/*
++		 * Using the range query is expensive, so only do it if
++		 * the regular lookup doesn't find anything or if it doesn't
++		 * match the observed rmap.
++		 */
++		if (xfs_sb_version_hasreflink(&bt_cur->bc_mp->m_sb) &&
++				(!have || !is_good_rmap(rm_rec, &tmp))) {
++			error = lookup_rmap_overlapped(bt_cur, rm_rec,
++					&tmp, &have);
++			if (error)
++				goto err;
++		}
+ 		if (!have) {
+ 			do_warn(
+ _("Missing reverse-mapping record for (%u/%u) %slen %u owner %"PRId64" \
 
 _______________________________________________
 xfs mailing list
