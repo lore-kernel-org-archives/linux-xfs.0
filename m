@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ED50D83B7
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABFF2304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:29 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AB9B88383
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 25F5CAC004
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:22 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id JeT2Al8fKYwHKUlu (version=TLSv1.2
+	cuda.sgi.com with ESMTP id FJHoRAgGcPl91GzU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:27 -0700 (PDT)
-Subject: [PATCH 120/145] xfs_logprint: support bmap redo items
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:19 -0700 (PDT)
+Subject: [PATCH 128/145] xfs_repair: fix inode reflink flags
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:43:21 -0700
-Message-ID: <146612780162.16048.16369479141761925697.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:44:12 -0700
+Message-ID: <146612785261.16048.12190820987789813213.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,243 +31,232 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Print block mapping update redo items.
+While we're computing reference counts, record which inodes actually
+share blocks with other files and fix the flags as necessary.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- logprint/log_misc.c      |   11 +++
- logprint/log_print_all.c |   12 ++++
- logprint/log_redo.c      |  152 ++++++++++++++++++++++++++++++++++++++++++++++
- logprint/logprint.h      |    5 ++
- 4 files changed, 180 insertions(+)
+ repair/phase4.c |   20 ++++++++
+ repair/rmap.c   |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h   |    1 
+ 3 files changed, 154 insertions(+)
 
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 5389b72..c10a1d1 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -1019,6 +1019,17 @@ xlog_print_record(
- 					be32_to_cpu(op_head->oh_len));
- 			break;
- 		    }
-+		    case XFS_LI_BUI: {
-+			skip = xlog_print_trans_bui(&ptr,
-+					be32_to_cpu(op_head->oh_len),
-+					continued);
-+			break;
-+		    }
-+		    case XFS_LI_BUD: {
-+			skip = xlog_print_trans_bud(&ptr,
-+					be32_to_cpu(op_head->oh_len));
-+			break;
-+		    }
- 		    case XFS_LI_QUOTAOFF: {
- 			skip = xlog_print_trans_qoff(&ptr,
- 					be32_to_cpu(op_head->oh_len));
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index eb3e326..f49316e 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -424,6 +424,12 @@ xlog_recover_print_logitem(
- 	case XFS_LI_CUI:
- 		xlog_recover_print_cui(item);
- 		break;
-+	case XFS_LI_BUD:
-+		xlog_recover_print_bud(item);
-+		break;
-+	case XFS_LI_BUI:
-+		xlog_recover_print_bui(item);
-+		break;
- 	case XFS_LI_DQUOT:
- 		xlog_recover_print_dquot(item);
- 		break;
-@@ -470,6 +476,12 @@ xlog_recover_print_item(
- 	case XFS_LI_CUI:
- 		printf("CUI");
- 		break;
-+	case XFS_LI_BUD:
-+		printf("BUD");
-+		break;
-+	case XFS_LI_BUI:
-+		printf("BUI");
-+		break;
- 	case XFS_LI_DQUOT:
- 		printf("DQ ");
- 		break;
-diff --git a/logprint/log_redo.c b/logprint/log_redo.c
-index 1539be1..7a1bbef 100644
---- a/logprint/log_redo.c
-+++ b/logprint/log_redo.c
-@@ -532,3 +532,155 @@ xlog_recover_print_cud(
- 	f = item->ri_buf[0].i_addr;
- 	xlog_print_trans_cud(&f, sizeof(struct xfs_cud_log_format));
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 021d51d..59bb9fb 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -208,6 +208,21 @@ _("%s while computing reference count records.\n"),
  }
-+
-+/* Block Mapping Update Items */
-+
-+static int
-+xfs_bui_copy_format(
-+	char			  *buf,
-+	uint			  len,
-+	struct xfs_bui_log_format *dst_fmt,
-+	int			  continued)
+ 
+ static void
++process_inode_reflink_flags(
++	struct work_queue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
 +{
-+	uint nextents = ((struct xfs_bui_log_format *)buf)->bui_nextents;
-+	uint dst_len = sizeof(struct xfs_bui_log_format) +
-+			(nextents - 1) * sizeof(struct xfs_map_extent);
++	int			error;
 +
-+	if (len == dst_len || continued) {
-+		memcpy((char *)dst_fmt, buf, len);
-+		return 0;
-+	}
-+	fprintf(stderr, _("%s: bad size of BUI format: %u; expected %u; nextents = %u\n"),
-+		progname, len, dst_len, nextents);
-+	return 1;
++	error = fix_inode_reflink_flags(wq->mp, agno);
++	if (error)
++		do_error(
++_("%s while fixing inode reflink flags.\n"),
++			 strerror(-error));
 +}
 +
-+int
-+xlog_print_trans_bui(
-+	char			**ptr,
-+	uint			src_len,
-+	int			continued)
-+{
-+	struct xfs_bui_log_format	*src_f, *f = NULL;
-+	uint			dst_len;
-+	uint			nextents;
-+	struct xfs_map_extent	*ex;
-+	int			i;
-+	int			error = 0;
-+	int			core_size;
++static void
+ process_rmap_data(
+ 	struct xfs_mount	*mp)
+ {
+@@ -229,6 +244,11 @@ process_rmap_data(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+ 		queue_work(&wq, compute_ag_refcounts, i, NULL);
+ 	destroy_work_queue(&wq);
 +
-+	core_size = offsetof(struct xfs_bui_log_format, bui_extents);
++	create_work_queue(&wq, mp, libxfs_nproc());
++	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++		queue_work(&wq, process_inode_reflink_flags, i, NULL);
++	destroy_work_queue(&wq);
+ }
+ 
+ void
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 6a62665..124173d 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -665,6 +665,39 @@ dump_rmap(
+  */
+ 
+ /*
++ * Mark all inodes in the reverse-mapping observation stack as requiring the
++ * reflink inode flag, if the stack depth is greater than 1.
++ */
++static void
++mark_inode_rl(
++	struct xfs_mount		*mp,
++	struct xfs_bag		*rmaps)
++{
++	xfs_agnumber_t		iagno;
++	struct xfs_rmap_irec	*rmap;
++	struct ino_tree_node	*irec;
++	int			off;
++	size_t			idx;
++	xfs_agino_t		ino;
++
++	if (bag_count(rmaps) < 2)
++		return;
++
++	/* Reflink flag accounting */
++	foreach_bag_ptr(rmaps, idx, rmap) {
++		ASSERT(!XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner));
++		iagno = XFS_INO_TO_AGNO(mp, rmap->rm_owner);
++		ino = XFS_INO_TO_AGINO(mp, rmap->rm_owner);
++		pthread_mutex_lock(&ag_locks[iagno].lock);
++		irec = find_inode_rec(mp, iagno, ino);
++		off = get_inode_offset(mp, rmap->rm_owner, irec);
++		/* lock here because we might go outside this ag */
++		set_inode_is_rl(irec, off);
++		pthread_mutex_unlock(&ag_locks[iagno].lock);
++	}
++}
++
++/*
+  * Emit a refcount object for refcntbt reconstruction during phase 5.
+  */
+ #define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
+@@ -745,6 +778,7 @@ compute_refcounts(
+ 			if (error)
+ 				goto err;
+ 		}
++		mark_inode_rl(mp, stack_top);
+ 
+ 		/* Set nbno to the bno of the next refcount change */
+ 		if (n < slab_count(rmaps))
+@@ -781,6 +815,7 @@ compute_refcounts(
+ 				if (error)
+ 					goto err;
+ 			}
++			mark_inode_rl(mp, stack_top);
+ 
+ 			/* Emit refcount if necessary */
+ 			ASSERT(nbno > cbno);
+@@ -1099,6 +1134,104 @@ record_inode_reflink_flag(
+ }
+ 
+ /*
++ * Fix an inode's reflink flag.
++ */
++static int
++fix_inode_reflink_flag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino,
++	bool			set)
++{
++	struct xfs_dinode	*dino;
++	struct xfs_buf		*buf;
++
++	if (set)
++		do_warn(
++_("setting reflink flag on inode %"PRIu64"\n"),
++			XFS_AGINO_TO_INO(mp, agno, agino));
++	else if (!no_modify) /* && !set */
++		do_warn(
++_("clearing reflink flag on inode %"PRIu64"\n"),
++			XFS_AGINO_TO_INO(mp, agno, agino));
++	if (no_modify)
++		return 0;
++
++	buf = get_agino_buf(mp, agno, agino, &dino);
++	if (!buf)
++		return 1;
++	ASSERT(XFS_AGINO_TO_INO(mp, agno, agino) == be64_to_cpu(dino->di_ino));
++	if (set)
++		dino->di_flags2 |= cpu_to_be64(XFS_DIFLAG2_REFLINK);
++	else
++		dino->di_flags2 &= cpu_to_be64(~XFS_DIFLAG2_REFLINK);
++	libxfs_dinode_calc_crc(mp, dino);
++	libxfs_writebuf(buf, 0);
++
++	return 0;
++}
++
++/*
++ * Fix discrepancies between the state of the inode reflink flag and our
++ * observations as to whether or not the inode really needs it.
++ */
++int
++fix_inode_reflink_flags(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct ino_tree_node	*irec;
++	int			bit;
++	__uint64_t		was;
++	__uint64_t		is;
++	__uint64_t		diff;
++	__uint64_t		mask;
++	int			error = 0;
++	xfs_agino_t		agino;
 +
 +	/*
-+	 * memmove to ensure 8-byte alignment for the long longs in
-+	 * struct xfs_bui_log_format structure
++	 * Update the reflink flag for any inode where there's a discrepancy
++	 * between the inode flag and whether or not we found any reflinked
++	 * extents.
 +	 */
-+	src_f = malloc(src_len);
-+	if (src_f == NULL) {
-+		fprintf(stderr, _("%s: %s: malloc failed\n"),
-+			progname, __func__);
-+		exit(1);
-+	}
-+	memmove((char*)src_f, *ptr, src_len);
-+	*ptr += src_len;
++	for (irec = findfirst_inode_rec(agno);
++	     irec != NULL;
++	     irec = next_ino_rec(irec)) {
++		ASSERT((irec->ino_was_rl & irec->ir_free) == 0);
++		ASSERT((irec->ino_is_rl & irec->ir_free) == 0);
++		was = irec->ino_was_rl;
++		is = irec->ino_is_rl;
++		if (was == is)
++			continue;
++		diff = was ^ is;
++		dbg_printf("mismatch ino=%llu was=0x%lx is=0x%lx dif=0x%lx\n",
++			(unsigned long long)XFS_AGINO_TO_INO(mp, agno,
++						irec->ino_startnum),
++			was, is, diff);
 +
-+	/* convert to native format */
-+	nextents = src_f->bui_nextents;
-+	dst_len = sizeof(struct xfs_bui_log_format) +
-+			(nextents - 1) * sizeof(struct xfs_map_extent);
-+
-+	if (continued && src_len < core_size) {
-+		printf(_("BUI: Not enough data to decode further\n"));
-+		error = 1;
-+		goto error;
-+	}
-+
-+	f = malloc(dst_len);
-+	if (f == NULL) {
-+		fprintf(stderr, _("%s: %s: malloc failed\n"),
-+			progname, __func__);
-+		exit(1);
-+	}
-+	if (xfs_bui_copy_format((char *)src_f, src_len, f, continued)) {
-+		error = 1;
-+		goto error;
-+	}
-+
-+	printf(_("BUI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
-+		f->bui_size, f->bui_nextents, (unsigned long long)f->bui_id);
-+
-+	if (continued) {
-+		printf(_("BUI extent data skipped (CONTINUE set, no space)\n"));
-+		goto error;
++		for (bit = 0, mask = 1; bit < 64; bit++, mask <<= 1) {
++			agino = bit + irec->ino_startnum;
++			if (!(diff & mask))
++				continue;
++			else if (was & mask)
++				error = fix_inode_reflink_flag(mp, agno, agino,
++						false);
++			else if (is & mask)
++				error = fix_inode_reflink_flag(mp, agno, agino,
++						true);
++			else
++				ASSERT(0);
++			if (error)
++				do_error(
++_("Unable to fix reflink flag on inode %"PRIu64".\n"),
++					XFS_AGINO_TO_INO(mp, agno, agino));
++		}
 +	}
 +
-+	ex = f->bui_extents;
-+	for (i=0; i < f->bui_nextents; i++) {
-+		printf("(s: 0x%llx, l: %d, own: %lld, off: %llu, f: 0x%x) ",
-+			(unsigned long long)ex->me_startblock, ex->me_len,
-+			(long long)ex->me_owner,
-+			(unsigned long long)ex->me_startoff, ex->me_flags);
-+		printf("\n");
-+		ex++;
-+	}
-+error:
-+	free(src_f);
-+	free(f);
 +	return error;
 +}
 +
-+void
-+xlog_recover_print_bui(
-+	struct xlog_recover_item	*item)
-+{
-+	char				*src_f;
-+	uint				src_len;
-+
-+	src_f = item->ri_buf[0].i_addr;
-+	src_len = item->ri_buf[0].i_len;
-+
-+	xlog_print_trans_bui(&src_f, src_len, 0);
-+}
-+
-+int
-+xlog_print_trans_bud(
-+	char				**ptr,
-+	uint				len)
-+{
-+	struct xfs_bud_log_format	*f;
-+	struct xfs_bud_log_format	lbuf;
-+
-+	/* size without extents at end */
-+	uint core_size = sizeof(struct xfs_bud_log_format) -
-+		sizeof(struct xfs_map_extent);
-+
-+	/*
-+	 * memmove to ensure 8-byte alignment for the long longs in
-+	 * xfs_efd_log_format_t structure
-+	 */
-+	memmove(&lbuf, *ptr, MIN(core_size, len));
-+	f = &lbuf;
-+	*ptr += len;
-+	if (len >= core_size) {
-+		printf(_("BUD:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
-+			f->bud_size, f->bud_nextents,
-+			(unsigned long long)f->bud_bui_id);
-+
-+		/* don't print extents as they are not used */
-+
-+		return 0;
-+	} else {
-+		printf(_("BUD: Not enough data to decode further\n"));
-+		return 1;
-+	}
-+}
-+
-+void
-+xlog_recover_print_bud(
-+	struct xlog_recover_item	*item)
-+{
-+	char				*f;
-+
-+	f = item->ri_buf[0].i_addr;
-+	xlog_print_trans_bud(&f, sizeof(struct xfs_bud_log_format));
-+}
-diff --git a/logprint/logprint.h b/logprint/logprint.h
-index a1115e2..81feff3 100644
---- a/logprint/logprint.h
-+++ b/logprint/logprint.h
-@@ -61,4 +61,9 @@ extern void xlog_recover_print_cui(struct xlog_recover_item *item);
- extern int xlog_print_trans_cud(char **ptr, uint len);
- extern void xlog_recover_print_cud(struct xlog_recover_item *item);
++/*
+  * Regenerate the AGFL so that we don't run out of it while rebuilding the
+  * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
+  * because we're updating the rmapbt).
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 47b2f3b..d6d360f 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -52,6 +52,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
+ extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
+ 	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
++extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
  
-+extern int xlog_print_trans_bui(char **ptr, uint src_len, int continued);
-+extern void xlog_recover_print_bui(struct xlog_recover_item *item);
-+extern int xlog_print_trans_bud(char **ptr, uint len);
-+extern void xlog_recover_print_bud(struct xlog_recover_item *item);
-+
- #endif	/* LOGPRINT_H */
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
 
 _______________________________________________
 xfs mailing list
