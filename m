@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B349C845C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 49DF7AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:43 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AAA65846A
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 72E738F8050
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:47 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 0NMoCqkCFCSdmC0I (version=TLSv1.2
+	cuda.sgi.com with ESMTP id m6plnk4s8txckiGS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:38 -0700 (PDT)
-Subject: [PATCH 129/145] xfs_repair: check the refcount btree against our
-	observed reference counts when -n
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:46 -0700 (PDT)
+Subject: [PATCH 132/145] xfs_repair: check the CoW extent size hint
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:44:18 -0700
-Message-ID: <146612785877.16048.4642751275301910078.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:44:38 -0700
+Message-ID: <146612787853.16048.11239305835199080494.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,237 +31,85 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Check the observed reference counts against whatever's in the refcount
-btree for discrepancies.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase4.c |   20 +++++++++
- repair/rmap.c   |  126 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/rmap.h   |    5 ++
- repair/scan.c   |    3 +
- 4 files changed, 154 insertions(+)
+ repair/dinode.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 
-diff --git a/repair/phase4.c b/repair/phase4.c
-index 59bb9fb..9f4e0d0 100644
---- a/repair/phase4.c
-+++ b/repair/phase4.c
-@@ -223,6 +223,21 @@ _("%s while fixing inode reflink flags.\n"),
- }
+diff --git a/repair/dinode.c b/repair/dinode.c
+index d48e415..9973f3e 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2531,6 +2531,38 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			goto clear_bad_out;
+ 		}
  
- static void
-+check_refcount_btrees(
-+	work_queue_t	*wq,
-+	xfs_agnumber_t	agno,
-+	void		*arg)
-+{
-+	int		error;
-+
-+	error = check_refcounts(wq->mp, agno);
-+	if (error)
-+		do_error(
-+_("%s while checking reference counts"),
-+			 strerror(-error));
-+}
-+
-+static void
- process_rmap_data(
- 	struct xfs_mount	*mp)
- {
-@@ -249,6 +264,11 @@ process_rmap_data(
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
- 		queue_work(&wq, process_inode_reflink_flags, i, NULL);
- 	destroy_work_queue(&wq);
-+
-+	create_work_queue(&wq, mp, libxfs_nproc());
-+	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+		queue_work(&wq, check_refcount_btrees, i, NULL);
-+	destroy_work_queue(&wq);
- }
- 
- void
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 124173d..5c0e015 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -47,6 +47,7 @@ struct xfs_ag_rmap {
- 
- static struct xfs_ag_rmap *ag_rmaps;
- static bool rmapbt_suspect;
-+static bool refcbt_suspect;
- 
- /*
-  * Compare rmap observations for array sorting.
-@@ -1232,6 +1233,131 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
- }
- 
- /*
-+ * Return the number of refcount objects for an AG.
-+ */
-+size_t
-+refcount_record_count(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	return slab_count(ag_rmaps[agno].ar_refcount_items);
-+}
-+
-+/*
-+ * Return a slab cursor that will return refcount objects in order.
-+ */
-+int
-+init_refcount_cursor(
-+	xfs_agnumber_t		agno,
-+	struct xfs_slab_cursor	**cur)
-+{
-+	return init_slab_cursor(ag_rmaps[agno].ar_refcount_items, NULL, cur);
-+}
-+
-+/*
-+ * Disable the refcount btree check.
-+ */
-+void
-+refcount_avoid_check(void)
-+{
-+	refcbt_suspect = true;
-+}
-+
-+/*
-+ * Compare the observed reference counts against what's in the ag btree.
-+ */
-+int
-+check_refcounts(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	struct xfs_slab_cursor	*rl_cur;
-+	struct xfs_btree_cur	*bt_cur = NULL;
-+	int			error;
-+	int			have;
-+	int			i;
-+	struct xfs_buf		*agbp = NULL;
-+	struct xfs_refcount_irec	*rl_rec;
-+	struct xfs_refcount_irec	tmp;
-+	struct xfs_perag	*pag;		/* per allocation group data */
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 0;
-+	if (refcbt_suspect) {
-+		if (no_modify && agno == 0)
-+			do_warn(_("would rebuild corrupt refcount btrees.\n"));
-+		return 0;
-+	}
-+
-+	/* Create cursors to refcount structures */
-+	error = init_refcount_cursor(agno, &rl_cur);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+	if (error)
-+		goto err;
-+
-+	/* Leave the per-ag data "uninitialized" since we rewrite it later */
-+	pag = xfs_perag_get(mp, agno);
-+	pag->pagf_init = 0;
-+	xfs_perag_put(pag);
-+
-+	bt_cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-+	if (!bt_cur) {
-+		error = -ENOMEM;
-+		goto err;
-+	}
-+
-+	rl_rec = pop_slab_cursor(rl_cur);
-+	while (rl_rec) {
-+		/* Look for a refcount record in the btree */
-+		error = xfs_refcountbt_lookup_le(bt_cur,
-+				rl_rec->rc_startblock, &have);
-+		if (error)
-+			goto err;
-+		if (!have) {
-+			do_warn(
-+_("Missing reference count record for (%u/%u) len %u count %u\n"),
-+				agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+			goto next_loop;
++		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++		    !xfs_sb_version_hasreflink(&mp->m_sb)) {
++			if (!uncertain) {
++				do_warn(
++	_("inode %" PRIu64 " has CoW extent size hint but file system does not support reflink\n"),
++					lino);
++			}
++			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
 +		}
 +
-+		error = xfs_refcountbt_get_rec(bt_cur, &tmp, &i);
-+		if (error)
-+			goto err;
-+		if (!i) {
-+			do_warn(
-+_("Missing reference count record for (%u/%u) len %u count %u\n"),
-+				agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+			goto next_loop;
++		if (flags2 & XFS_DIFLAG2_COWEXTSIZE) {
++			/* must be a directory or file */
++			if (di_mode && !S_ISDIR(di_mode) && !S_ISREG(di_mode)) {
++				if (!uncertain) {
++					do_warn(
++	_("CoW extent size flag set on non-file, non-directory inode %" PRIu64 "\n" ),
++						lino);
++				}
++				flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++			}
 +		}
 +
-+		/* Compare each refcount observation against the btree's */
-+		if (tmp.rc_startblock != rl_rec->rc_startblock ||
-+		    tmp.rc_blockcount < rl_rec->rc_blockcount ||
-+		    tmp.rc_refcount < rl_rec->rc_refcount)
++		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++		    (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT))) {
++			if (!uncertain) {
++				do_warn(
++	_("Cannot have CoW extent size hint on a realtime inode %" PRIu64 "\n"),
++					lino);
++			}
++			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++		}
++
+ 		if (!verify_mode && flags2 != be64_to_cpu(dino->di_flags2)) {
+ 			if (!no_modify) {
+ 				do_warn(_("fixing bad flags2.\n"));
+@@ -2624,6 +2656,29 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+ 	}
+ 
+ 	/*
++	 * Only (regular files and directories) with COWEXTSIZE flags
++	 * set can have extsize set.
++	 */
++	if (dino->di_version >= 3 &&
++	    be32_to_cpu(dino->di_cowextsize) != 0) {
++		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
++		    (be64_to_cpu(dino->di_flags2) &
++					XFS_DIFLAG2_COWEXTSIZE)) {
++			/* s'okay */ ;
++		} else {
 +			do_warn(
-+_("Incorrect reference count: saw (%u/%u) len %u nlinks %u; should be (%u/%u) len %u nlinks %u\n"),
-+				agno, tmp.rc_startblock, tmp.rc_blockcount,
-+				tmp.rc_refcount, agno, rl_rec->rc_startblock,
-+				rl_rec->rc_blockcount, rl_rec->rc_refcount);
-+next_loop:
-+		rl_rec = pop_slab_cursor(rl_cur);
++_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
++					be32_to_cpu(dino->di_cowextsize), lino);
++			if (!no_modify)  {
++				do_warn(_("resetting to zero\n"));
++				dino->di_cowextsize = 0;
++				*dirty = 1;
++			} else
++				do_warn(_("would reset to zero\n"));
++		}
 +	}
 +
-+err:
-+	if (bt_cur)
-+		xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+	if (agbp)
-+		libxfs_putbuf(agbp);
-+	free_slab_cursor(&rl_cur);
-+	return 0;
-+}
-+
-+/*
-  * Regenerate the AGFL so that we don't run out of it while rebuilding the
-  * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
-  * because we're updating the rmapbt).
-diff --git a/repair/rmap.h b/repair/rmap.h
-index d6d360f..d26c259 100644
---- a/repair/rmap.h
-+++ b/repair/rmap.h
-@@ -50,6 +50,11 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
- 		struct xfs_rmap_irec *key);
- 
- extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
-+extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
-+extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
-+extern void refcount_avoid_check(void);
-+extern int check_refcounts(struct xfs_mount *, xfs_agnumber_t);
-+
- extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
- 	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
- extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
-diff --git a/repair/scan.c b/repair/scan.c
-index 8938341..4e78335 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1353,6 +1353,8 @@ _("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 		}
- 	}
- out:
-+	if (suspect)
-+		refcount_avoid_check();
- 	return;
- }
- 
-@@ -2151,6 +2153,7 @@ validate_agf(
- 		} else  {
- 			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
- 				bno, agno);
-+			refcount_avoid_check();
- 		}
- 	}
- 
++	/*
+ 	 * general size/consistency checks:
+ 	 */
+ 	if (process_check_inode_sizes(mp, dino, lino, type) != 0)
 
 _______________________________________________
 xfs mailing list
