@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7ED837CB8
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EB6607CBA
 	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 41D828F804C
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 77753AC002
 	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:11 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id znNmQDuzZfe8jCNR (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yBOWyFTlpZWJXMX6 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:10 -0700 (PDT)
-Subject: [PATCH 1/3] block: invalidate the page cache when issuing BLKZEROOUT.
+Subject: [PATCH 2/3] block: require write_same and discard requests align to
+	logical block size
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:17:34 -0700
-Message-ID: <146612625412.12764.6647932282740152837.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:17:41 -0700
+Message-ID: <146612626092.12764.773833541076937471.stgit@birch.djwong.org>
 In-Reply-To: <146612624734.12764.4316680863289411106.stgit@birch.djwong.org>
 References: <146612624734.12764.4316680863289411106.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,73 +32,70 @@ Sender: xfs-bounces@oss.sgi.com
 To: axboe@kernel.dk, darrick.wong@oracle.com
 Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
-returning stale cache contents at a later time.
-
-v5: Refactor the 4.4 refactoring of the ioctl code into separate functions.
-Split the page invalidation and the new ioctl into separate patches.
+Make sure that the offset and length arguments that we're using to
+construct WRITE SAME and DISCARD requests are actually aligned to the
+logical block size.  Failure to do this causes other errors in other
+parts of the block layer or the SCSI layer because disks don't support
+partial logical block writes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/ioctl.c |   29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
+ block/blk-lib.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..d001f52 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -225,7 +225,9 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg)
- {
- 	uint64_t range[2];
--	uint64_t start, len;
-+	struct address_space *mapping;
-+	uint64_t start, end, len;
-+	int ret;
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 9e29dc3..012aa98 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -29,6 +29,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	struct bio *bio = *biop;
+ 	unsigned int granularity;
+ 	int alignment;
++	sector_t bs_mask;
  
- 	if (!(mode & FMODE_WRITE))
- 		return -EBADF;
-@@ -235,18 +237,33 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+ 	if (!q)
+ 		return -ENXIO;
+@@ -37,6 +38,10 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	if ((type & REQ_SECURE) && !blk_queue_secdiscard(q))
+ 		return -EOPNOTSUPP;
  
- 	start = range[0];
- 	len = range[1];
-+	end = start + len - 1;
- 
- 	if (start & 511)
- 		return -EINVAL;
- 	if (len & 511)
- 		return -EINVAL;
--	start >>= 9;
--	len >>= 9;
--
--	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
-+	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
 +		return -EINVAL;
-+	if (end < start)
- 		return -EINVAL;
- 
--	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
-+	/* Invalidate the page cache, including dirty pages */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
 +
-+	ret = blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
-+				    false);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Invalidate again; if someone wandered in and dirtied a page,
-+	 * the caller will be given -EBUSY.
-+	 */
-+	return invalidate_inode_pages2_range(mapping,
-+					     start >> PAGE_SHIFT,
-+					     end >> PAGE_SHIFT);
- }
+ 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+ 	granularity = max(q->limits.discard_granularity >> 9, 1U);
+ 	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
+@@ -140,10 +145,15 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 	unsigned int max_write_same_sectors;
+ 	struct bio *bio = NULL;
+ 	int ret = 0;
++	sector_t bs_mask;
  
- static int put_ushort(unsigned long arg, unsigned short val)
+ 	if (!q)
+ 		return -ENXIO;
+ 
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
++
+ 	/* Ensure that max_write_same_sectors doesn't overflow bi_size */
+ 	max_write_same_sectors = UINT_MAX >> 9;
+ 
+@@ -191,6 +201,11 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	int ret;
+ 	struct bio *bio = NULL;
+ 	unsigned int sz;
++	sector_t bs_mask;
++
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
+ 
+ 	while (nr_sects != 0) {
+ 		bio = next_bio(bio, WRITE,
 
 _______________________________________________
 xfs mailing list
