@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DF8A7FC8
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:30:11 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B7D377F8B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:30:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A9EB304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:11 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 5byMWYv0RRqpOPgX (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FD35AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:13 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id wdxkCocmbP94H7W8 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:07 -0700 (PDT)
-Subject: [PATCH 112/119] xfs: introduce the XFS_IOC_GETFSMAPX ioctl
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:09 -0700 (PDT)
+Subject: [PATCH 113/119] xfs: scrub btree records and pointers while querying
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:29:57 -0700
-Message-ID: <146612699713.12839.10667733856057619716.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:30:03 -0700
+Message-ID: <146612700354.12839.18272855403371334654.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,777 +31,746 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
+Create a function that walks a btree, checking the integrity of each
+btree block (headers, keys, records) and calling back to the caller
+to perform further checks on the records.
 
-v2: shorten the device field to u32 since that's all we need for
-dev_t.
+v2: Prefix function names with xfs_
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h       |   62 ++++++++
- fs/xfs/libxfs/xfs_refcount.c |   51 +++++-
- fs/xfs/libxfs/xfs_refcount.h |    4 
- fs/xfs/xfs_fsops.c           |  338 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_fsops.h           |    6 +
- fs/xfs/xfs_ioctl.c           |   76 +++++++++
- fs/xfs/xfs_ioctl32.c         |    1 
- fs/xfs/xfs_trace.h           |   76 +++++++++
- 8 files changed, 600 insertions(+), 14 deletions(-)
+ fs/xfs/Makefile                |    1 
+ fs/xfs/libxfs/xfs_alloc.c      |   33 +++
+ fs/xfs/libxfs/xfs_alloc.h      |    3 
+ fs/xfs/libxfs/xfs_btree.c      |   12 +
+ fs/xfs/libxfs/xfs_btree.h      |   15 +-
+ fs/xfs/libxfs/xfs_format.h     |    2 
+ fs/xfs/libxfs/xfs_rmap.c       |   39 ++++
+ fs/xfs/libxfs/xfs_rmap_btree.h |    3 
+ fs/xfs/libxfs/xfs_scrub.c      |  396 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_scrub.h      |   76 ++++++++
+ 10 files changed, 571 insertions(+), 9 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_scrub.c
+ create mode 100644 fs/xfs/libxfs/xfs_scrub.h
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 10ebf99..8a1b96a 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -93,6 +93,67 @@ struct getbmapx {
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
- 
- /*
-+ *	Structure for XFS_IOC_GETFSMAPX.
-+ *
-+ *	Similar to XFS_IOC_GETBMAPX, the first two elements in the array are
-+ *	used to constrain the output.  The first element in the array should
-+ *	represent the lowest disk address that the user wants to learn about.
-+ *	The second element in the array should represent the highest disk
-+ *	address to query.  Subsequent array elements will be filled out by the
-+ *	command.
-+ *
-+ *	The fmv_iflags field is only used in the first structure.  The
-+ *	fmv_oflags field is filled in for each returned structure after the
-+ *	second structure.  The fmv_unused1 fields in the first two array
-+ *	elements must be zero.
-+ *
-+ *	The fmv_count, fmv_entries, and fmv_iflags fields in the second array
-+ *	element must be zero.
-+ *
-+ *	fmv_block, fmv_offset, and fmv_length are expressed in units of 512
-+ *	byte sectors.
-+ */
-+#ifndef HAVE_GETFSMAPX
-+struct getfsmapx {
-+	__u32		fmv_device;	/* device id */
-+	__u32		fmv_unused1;	/* future use, must be zero */
-+	__u64		fmv_block;	/* starting block */
-+	__u64		fmv_owner;	/* owner id */
-+	__u64		fmv_offset;	/* file offset of segment */
-+	__u64		fmv_length;	/* length of segment, blocks */
-+	__u32		fmv_oflags;	/* mapping flags */
-+	__u32		fmv_iflags;	/* control flags (1st structure) */
-+	__u32		fmv_count;	/* # of entries in array incl. input */
-+	__u32		fmv_entries;	/* # of entries filled in (output). */
-+	__u64		fmv_unused2;	/* future use, must be zero */
-+};
-+#endif
-+
-+/*	fmv_flags values - set by XFS_IOC_GETFSMAPX caller.	*/
-+/* no flags defined yet */
-+#define FMV_IF_VALID	0
-+
-+/*	fmv_flags values - returned for each non-header segment */
-+#define FMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMV_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMV_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMV_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMV_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMV_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/*	fmv_owner special values */
-+#define	FMV_OWN_FREE		(-1ULL)	/* free space */
-+#define FMV_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
-+#define FMV_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define FMV_OWN_LOG		(-4ULL)	/* journalling log */
-+#define FMV_OWN_AG		(-5ULL)	/* per-AG metadata */
-+#define FMV_OWN_INOBT		(-6ULL)	/* inode btree blocks */
-+#define FMV_OWN_INODES		(-7ULL)	/* inodes */
-+#define FMV_OWN_REFC		(-8ULL) /* refcount tree */
-+#define FMV_OWN_COW		(-9ULL) /* cow allocations */
-+#define FMV_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
-+
-+/*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-@@ -502,6 +563,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+#define XFS_IOC_GETFSMAPX	_IOWR('X', 59, struct getfsmapx)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index fd4369f..e8d8702 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1172,8 +1172,9 @@ xfs_refcount_decrease_extent(
-  * extent we find.  If no shared blocks are found, flen will be set to zero.
-  */
- int
--xfs_refcount_find_shared(
-+__xfs_refcount_find_shared(
- 	struct xfs_mount	*mp,
-+	struct xfs_buf		*agbp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		agbno,
- 	xfs_extlen_t		aglen,
-@@ -1182,23 +1183,13 @@ xfs_refcount_find_shared(
- 	bool			find_maximal)
- {
- 	struct xfs_btree_cur	*cur;
--	struct xfs_buf		*agbp;
- 	struct xfs_refcount_irec	tmp;
--	int			error;
- 	int			i, have;
- 	int			bt_error = XFS_BTREE_ERROR;
-+	int			error;
- 
- 	trace_xfs_refcount_find_shared(mp, agno, agbno, aglen);
- 
--	if (xfs_always_cow) {
--		*fbno = agbno;
--		*flen = aglen;
--		return 0;
--	}
--
--	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
--	if (error)
--		goto out;
- 	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
- 
- 	/* By default, skip the whole range */
-@@ -1273,14 +1264,46 @@ done:
- 
- out_error:
- 	xfs_btree_del_cursor(cur, bt_error);
--	xfs_buf_relse(agbp);
--out:
- 	if (error)
- 		trace_xfs_refcount_find_shared_error(mp, agno, error, _RET_IP_);
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 56c384b..8942390 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -58,6 +58,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_refcount.o \
+ 				   xfs_refcount_btree.o \
+ 				   xfs_sb.o \
++				   xfs_scrub.o \
+ 				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o \
+ 				   )
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 188c359a..6fc1981 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2924,3 +2924,36 @@ err:
+ 	xfs_trans_brelse(tp, agbp);
  	return error;
  }
- 
- /*
-+ * Given an AG extent, find the lowest-numbered run of shared blocks within
-+ * that range and return the range in fbno/flen.
-+ */
++
++/* Is there a record covering a given extent? */
 +int
-+xfs_refcount_find_shared(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	xfs_extlen_t		aglen,
-+	xfs_agblock_t		*fbno,
-+	xfs_extlen_t		*flen,
-+	bool			find_maximal)
-+{
-+	struct xfs_buf		*agbp;
-+	int			error;
-+
-+	if (xfs_always_cow) {
-+		*fbno = agbno;
-+		*flen = aglen;
-+		return 0;
-+	}
-+
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+	if (error)
-+		return error;
-+
-+	error = __xfs_refcount_find_shared(mp, agbp, agno, agbno, aglen,
-+			fbno, flen, find_maximal);
-+
-+	xfs_buf_relse(agbp);
-+	return error;
-+}
-+
-+/*
-  * Recovering CoW Blocks After a Crash
-  *
-  * Due to the way that the copy on write mechanism works, there's a window of
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 6665eeb..44b0346 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -53,6 +53,10 @@ extern int xfs_refcount_finish_one(struct xfs_trans *tp,
- 		xfs_fsblock_t startblock, xfs_extlen_t blockcount,
- 		xfs_extlen_t *adjusted, struct xfs_btree_cur **pcur);
- 
-+extern int __xfs_refcount_find_shared(struct xfs_mount *mp,
-+		struct xfs_buf *agbp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		xfs_extlen_t aglen, xfs_agblock_t *fbno, xfs_extlen_t *flen,
-+		bool find_maximal);
- extern int xfs_refcount_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
- 		xfs_extlen_t *flen, bool find_maximal);
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index e76aefc..e69d9cf 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -44,6 +44,8 @@
- #include "xfs_filestream.h"
- #include "xfs_refcount_btree.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_bit.h"
-+#include "xfs_refcount.h"
- 
- /*
-  * File system operations
-@@ -1027,3 +1029,339 @@ xfs_fs_unreserve_ag_blocks(
- 	if (error)
- 		xfs_warn(mp, "Error %d unreserving metadata blocks.", error);
- }
-+
-+struct xfs_getfsmap_info {
-+	struct getfsmapx	*fmv;
-+	xfs_fsmap_format_t	formatter;
-+	void			*format_arg;
-+	xfs_daddr_t		next_daddr;
-+	bool			last;
-+	xfs_agnumber_t		start_ag;
-+	struct xfs_rmap_irec	low;
-+};
-+
-+/* Compare a record against our starting point */
-+static bool
-+xfs_getfsmap_compare(
-+	xfs_agnumber_t			agno,
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_rmap_irec		*rec)
-+{
-+	uint64_t			x, y;
-+
-+	if (rec->rm_startblock < info->low.rm_startblock)
-+		return true;
-+	if (rec->rm_startblock > info->low.rm_startblock)
-+		return false;
-+
-+	if (rec->rm_owner < info->low.rm_owner)
-+		return true;
-+	if (rec->rm_owner > info->low.rm_owner)
-+		return false;
-+
-+	x = xfs_rmap_irec_offset_pack(rec);
-+	y = xfs_rmap_irec_offset_pack(&info->low);
-+	if (x < y)
-+		return true;
-+	return false;
-+}
-+
-+STATIC bool
-+xfs_getfsmap_is_shared(
++xfs_alloc_record_exists(
 +	struct xfs_btree_cur	*cur,
-+	struct xfs_rmap_irec	*rec)
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	bool			*is_freesp)
 +{
++	int			stat;
 +	xfs_agblock_t		fbno;
 +	xfs_extlen_t		flen;
 +	int			error;
 +
-+	if (!xfs_sb_version_hasreflink(&cur->bc_mp->m_sb))
-+		return false;
-+
-+	/* Are there any shared blocks here? */
-+	flen = 0;
-+	error = __xfs_refcount_find_shared(cur->bc_mp, cur->bc_private.a.agbp,
-+			cur->bc_private.a.agno, rec->rm_startblock,
-+			rec->rm_blockcount, &fbno, &flen, false);
-+	return error == 0 && flen > 0;
-+}
-+
-+/* Transform a rmap irec into a fsmapx */
-+STATIC int
-+xfs_getfsmap_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_getfsmap_info	*info = priv;
-+	xfs_fsblock_t			fsb;
-+	struct getfsmapx		fmv;
-+	xfs_daddr_t			rec_daddr;
-+	int				error;
-+
-+	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno,
-+			rec->rm_startblock);
-+	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
-+
-+	/*
-+	 * Filter out records that start before our startpoint, if the caller
-+	 * requested that.
-+	 */
-+	if (info->fmv->fmv_length &&
-+	    xfs_getfsmap_compare(cur->bc_private.a.agno, info, rec)) {
-+		rec_daddr = XFS_FSB_TO_DADDR(mp, fsb +
-+				rec->rm_blockcount);
-+		if (info->next_daddr < rec_daddr)
-+			info->next_daddr = rec_daddr;
-+		return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+	}
-+
-+	/* We're just counting mappings */
-+	if (info->fmv->fmv_count == 2) {
-+		if (rec_daddr > info->next_daddr)
-+			info->fmv->fmv_entries++;
-+
-+		if (info->last)
-+			return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+
-+		info->fmv->fmv_entries++;
-+
-+		rec_daddr = XFS_FSB_TO_DADDR(mp, fsb +
-+				rec->rm_blockcount);
-+		if (info->next_daddr < rec_daddr)
-+			info->next_daddr = rec_daddr;
-+		return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+	}
-+
-+	/* Did we find some free space? */
-+	if (rec_daddr > info->next_daddr) {
-+		if (info->fmv->fmv_entries >= info->fmv->fmv_count - 2)
-+			return XFS_BTREE_QUERY_RANGE_ABORT;
-+
-+		trace_xfs_fsmap_mapping(mp, cur->bc_private.a.agno,
-+				XFS_DADDR_TO_FSB(mp, info->next_daddr),
-+				XFS_DADDR_TO_FSB(mp, rec_daddr -
-+						info->next_daddr),
-+				FMV_OWN_FREE, 0);
-+
-+		fmv.fmv_device = new_encode_dev(mp->m_ddev_targp->bt_dev);
-+		fmv.fmv_block = info->next_daddr;
-+		fmv.fmv_owner = FMV_OWN_FREE;
-+		fmv.fmv_offset = 0;
-+		fmv.fmv_length = rec_daddr - info->next_daddr;
-+		fmv.fmv_oflags = FMV_OF_SPECIAL_OWNER;
-+		fmv.fmv_count = 0;
-+		fmv.fmv_entries = 0;
-+		fmv.fmv_unused1 = 0;
-+		fmv.fmv_unused2 = 0;
-+		error = info->formatter(&fmv, info->format_arg);
-+		if (error)
-+			return error;
-+		info->fmv->fmv_entries++;
-+	}
-+
-+	if (info->last)
-+		goto out;
-+
-+	/* Fill out the extent we found */
-+	if (info->fmv->fmv_entries >= info->fmv->fmv_count - 2)
-+		return XFS_BTREE_QUERY_RANGE_ABORT;
-+
-+	trace_xfs_fsmap_mapping(mp, cur->bc_private.a.agno,
-+			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
-+			rec->rm_offset);
-+
-+	fmv.fmv_device = new_encode_dev(mp->m_ddev_targp->bt_dev);
-+	fmv.fmv_block = rec_daddr;
-+	fmv.fmv_owner = rec->rm_owner;
-+	fmv.fmv_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
-+	fmv.fmv_length = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
-+	fmv.fmv_oflags = 0;
-+	fmv.fmv_count = 0;
-+	fmv.fmv_entries = 0;
-+	fmv.fmv_unused1 = 0;
-+	fmv.fmv_unused2 = 0;
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
-+		fmv.fmv_oflags |= FMV_OF_SPECIAL_OWNER;
-+	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
-+		fmv.fmv_oflags |= FMV_OF_PREALLOC;
-+	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
-+		fmv.fmv_oflags |= FMV_OF_ATTR_FORK;
-+	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		fmv.fmv_oflags |= FMV_OF_EXTENT_MAP;
-+	if (fmv.fmv_oflags == 0 && xfs_getfsmap_is_shared(cur, rec))
-+		fmv.fmv_oflags |= FMV_OF_SHARED;
-+	error = info->formatter(&fmv, info->format_arg);
++	error = xfs_alloc_lookup_le(cur, bno, len, &stat);
 +	if (error)
 +		return error;
-+	info->fmv->fmv_entries++;
++	if (!stat) {
++		*is_freesp = false;
++		return 0;
++	}
 +
-+out:
-+	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb + rec->rm_blockcount);
-+	if (info->next_daddr < rec_daddr)
-+		info->next_daddr = rec_daddr;
-+	return XFS_BTREE_QUERY_RANGE_CONTINUE;
++	error = xfs_alloc_get_rec(cur, &fbno, &flen, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*is_freesp = false;
++		return 0;
++	}
++
++	*is_freesp = (fbno <= bno && fbno + flen >= bno + len);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 9f6373a4..4f2ce38 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -210,4 +210,7 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 
+ xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+ 
++int xfs_alloc_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, bool *is_freesp);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 9c84184..5260085 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -549,7 +549,7 @@ xfs_btree_ptr_offset(
+ /*
+  * Return a pointer to the n-th record in the btree block.
+  */
+-STATIC union xfs_btree_rec *
++union xfs_btree_rec *
+ xfs_btree_rec_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -562,7 +562,7 @@ xfs_btree_rec_addr(
+ /*
+  * Return a pointer to the n-th key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -575,7 +575,7 @@ xfs_btree_key_addr(
+ /*
+  * Return a pointer to the n-th high key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_high_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -588,7 +588,7 @@ xfs_btree_high_key_addr(
+ /*
+  * Return a pointer to the n-th block pointer in the btree block.
+  */
+-STATIC union xfs_btree_ptr *
++union xfs_btree_ptr *
+ xfs_btree_ptr_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -622,7 +622,7 @@ xfs_btree_get_iroot(
+  * Retrieve the block pointer from the cursor at the given level.
+  * This may be an inode btree root or from a buffer.
+  */
+-STATIC struct xfs_btree_block *		/* generic btree block pointer */
++struct xfs_btree_block *		/* generic btree block pointer */
+ xfs_btree_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in btree */
+@@ -1733,7 +1733,7 @@ error0:
+ 	return error;
+ }
+ 
+-STATIC int
++int
+ xfs_btree_lookup_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in the btree */
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index dbf299f..6f22cb0 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -194,7 +194,6 @@ struct xfs_btree_ops {
+ 
+ 	const struct xfs_buf_ops	*buf_ops;
+ 
+-#if defined(DEBUG) || defined(XFS_WARN)
+ 	/* check that k1 is lower than k2 */
+ 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
+ 				union xfs_btree_key *k1,
+@@ -204,7 +203,6 @@ struct xfs_btree_ops {
+ 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
+ 				union xfs_btree_rec *r1,
+ 				union xfs_btree_rec *r2);
+-#endif
+ };
+ 
+ /* btree ops flags */
+@@ -537,4 +535,17 @@ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+ 
+ int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
+ 
++union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_high_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_ptr *xfs_btree_ptr_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
++		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
++struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
++		int level, struct xfs_buf **bpp);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 211a8b5..6ea8a84 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -518,7 +518,7 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
+ 
+-static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+ {
+ 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 29d08fc..e7673ec 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2328,3 +2328,42 @@ xfs_rmap_free_defer(
+ 
+ 	return __xfs_rmap_add(mp, dfops, &ri);
+ }
++
++/* Is there a record covering a given extent? */
++int
++xfs_rmap_record_exists(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo,
++	bool			*has_rmap)
++{
++	uint64_t		owner;
++	uint64_t		offset;
++	unsigned int		flags;
++	int			stat;
++	struct xfs_rmap_irec	irec;
++	int			error;
++
++	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
++
++	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
++	}
++
++	error = xfs_rmap_get_rec(cur, &irec, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
++	}
++
++	*has_rmap = (irec.rm_startblock <= bno &&
++		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 5baa81f..2f072c8 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -144,4 +144,7 @@ extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
+ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+ 
++extern int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo, bool *has_rmap);
++
+ #endif	/* __XFS_RMAP_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_scrub.c b/fs/xfs/libxfs/xfs_scrub.c
+new file mode 100644
+index 0000000..d43d5c5
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_scrub.c
+@@ -0,0 +1,396 @@
++/*
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_ialloc.h"
++#include "xfs_refcount.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_scrub.h"
++
++static const char * const btree_types[] = {
++	[XFS_BTNUM_BNO]		= "bnobt",
++	[XFS_BTNUM_CNT]		= "cntbt",
++	[XFS_BTNUM_RMAP]	= "rmapbt",
++	[XFS_BTNUM_BMAP]	= "bmapbt",
++	[XFS_BTNUM_INO]		= "inobt",
++	[XFS_BTNUM_FINO]	= "finobt",
++	[XFS_BTNUM_REFC]	= "refcountbt",
++};
++
++/* Report a scrub corruption in dmesg. */
++void
++xfs_btree_scrub_error(
++	struct xfs_btree_cur		*cur,
++	int				level,
++	const char			*file,
++	int				line,
++	const char			*check)
++{
++	char				buf[16];
++	xfs_fsblock_t			fsbno;
++
++	if (cur->bc_ptrs[level] >= 1)
++		snprintf(buf, 16, " ptr %d", cur->bc_ptrs[level]);
++	else
++		buf[0] = 0;
++
++	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, cur->bc_bufs[level]->b_bn);
++	xfs_alert(cur->bc_mp, "scrub: %s btree corruption in block %u/%u%s: %s, file: %s, line: %d",
++			btree_types[cur->bc_btnum],
++			XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
++			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
++			buf, check, file, line);
 +}
 +
-+/* Do we recognize the device? */
-+STATIC bool
-+xfs_getfsmap_is_valid_device(
-+	struct xfs_mount	*mp,
-+	struct getfsmapx	*fmv)
++/* AG metadata scrubbing */
++
++/*
++ * Make sure this record is in order and doesn't stray outside of the parent
++ * keys.
++ */
++static int
++xfs_btree_scrub_rec(
++	struct xfs_btree_scrub	*bs)
 +{
-+	return fmv->fmv_device == 0 || fmv->fmv_device == UINT_MAX ||
-+	       fmv->fmv_device == new_encode_dev(mp->m_ddev_targp->bt_dev);
++	struct xfs_btree_cur	*cur = bs->cur;
++	union xfs_btree_rec	*rec;
++	union xfs_btree_key	key;
++	union xfs_btree_key	*keyp;
++	struct xfs_btree_block	*block;
++	struct xfs_btree_block	*keyblock;
++
++	block = XFS_BUF_TO_BLOCK(cur->bc_bufs[0]);
++	rec = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
++
++	/* If this isn't the first record, are they in order? */
++	XFS_BTREC_SCRUB_CHECK(bs, bs->firstrec ||
++			cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec));
++	bs->firstrec = false;
++	bs->lastrec = *rec;
++
++	if (cur->bc_nlevels == 1)
++		return 0;
++
++	/* Is this at least as large as the parent low key? */
++	cur->bc_ops->init_key_from_rec(&key, rec);
++	keyblock = XFS_BUF_TO_BLOCK(cur->bc_bufs[1]);
++	keyp = xfs_btree_key_addr(cur, cur->bc_ptrs[1], keyblock);
++
++	XFS_BTKEY_SCRUB_CHECK(bs, 0,
++			cur->bc_ops->diff_two_keys(cur, keyp, &key) >= 0);
++
++	if (!(cur->bc_ops->flags & XFS_BTREE_OPS_OVERLAPPING))
++		return 0;
++
++	/* Is this no larger than the parent high key? */
++	keyp = xfs_btree_high_key_addr(cur, cur->bc_ptrs[1], keyblock);
++
++	XFS_BTKEY_SCRUB_CHECK(bs, 0,
++			cur->bc_ops->diff_two_keys(cur, &key, keyp) >= 0);
++
++	return 0;
 +}
 +
 +/*
-+ * Get filesystem's extents as described in fmv, and format for
-+ * output.  Calls formatter to fill the user's buffer until all
-+ * extents are mapped, until the passed-in fmv->fmv_count slots have
-+ * been filled, or until the formatter short-circuits the loop, if it
-+ * is tracking filled-in extents on its own.
++ * Make sure this key is in order and doesn't stray outside of the parent
++ * keys.
++ */
++static int
++xfs_btree_scrub_key(
++	struct xfs_btree_scrub	*bs,
++	int			level)
++{
++	struct xfs_btree_cur	*cur = bs->cur;
++	union xfs_btree_key	*key;
++	union xfs_btree_key	*keyp;
++	struct xfs_btree_block	*block;
++	struct xfs_btree_block	*keyblock;
++
++	block = XFS_BUF_TO_BLOCK(cur->bc_bufs[level]);
++	key = xfs_btree_key_addr(cur, cur->bc_ptrs[level], block);
++
++	/* If this isn't the first key, are they in order? */
++	XFS_BTKEY_SCRUB_CHECK(bs, level, bs->firstkey[level] ||
++			cur->bc_ops->keys_inorder(cur, &bs->lastkey[level],
++					key));
++	bs->firstkey[level] = false;
++	bs->lastkey[level] = *key;
++
++	if (level + 1 >= cur->bc_nlevels)
++		return 0;
++
++	/* Is this at least as large as the parent low key? */
++	keyblock = XFS_BUF_TO_BLOCK(cur->bc_bufs[level + 1]);
++	keyp = xfs_btree_key_addr(cur, cur->bc_ptrs[level + 1], keyblock);
++
++	XFS_BTKEY_SCRUB_CHECK(bs, level,
++			cur->bc_ops->diff_two_keys(cur, keyp, key) >= 0);
++
++	if (!(cur->bc_ops->flags & XFS_BTREE_OPS_OVERLAPPING))
++		return 0;
++
++	/* Is this no larger than the parent high key? */
++	key = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level], block);
++	keyp = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level + 1], keyblock);
++
++	XFS_BTKEY_SCRUB_CHECK(bs, level,
++			cur->bc_ops->diff_two_keys(cur, key, keyp) >= 0);
++
++	return 0;
++}
++
++struct check_owner {
++	struct list_head	list;
++	xfs_agblock_t		bno;
++};
++
++/*
++ * Make sure this btree block isn't in the free list and that there's
++ * an rmap record for it.
++ */
++static int
++xfs_btree_block_check_owner(
++	struct xfs_btree_scrub		*bs,
++	xfs_agblock_t			bno)
++{
++	bool				has_rmap;
++	bool				is_freesp;
++	int				error;
++
++	/* Check that this block isn't free */
++	error = xfs_alloc_record_exists(bs->bno_cur, bno, 1, &is_freesp);
++	if (error)
++		goto err;
++	XFS_BTREC_SCRUB_CHECK(bs, !is_freesp);
++
++	if (!bs->rmap_cur)
++		return 0;
++
++	/* Check that there's an rmap record for this */
++	error = xfs_rmap_record_exists(bs->rmap_cur, bno, 1, &bs->oinfo,
++			&has_rmap);
++	if (error)
++		goto err;
++	XFS_BTREC_SCRUB_CHECK(bs, has_rmap);
++err:
++	return error;
++}
++
++/* Check the owner of a btree block. */
++static int
++xfs_btree_scrub_check_owner(
++	struct xfs_btree_scrub		*bs,
++	struct xfs_buf			*bp)
++{
++	struct xfs_btree_cur		*cur = bs->cur;
++	xfs_agblock_t			bno;
++	xfs_fsblock_t			fsbno;
++	struct check_owner		*co;
++
++	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	bno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
++
++	/* Do we need to defer this one? */
++	if ((!bs->rmap_cur && xfs_sb_version_hasrmapbt(&cur->bc_mp->m_sb)) ||
++	    !bs->bno_cur) {
++		co = kmem_alloc(sizeof(struct check_owner), KM_SLEEP | KM_NOFS);
++		co->bno = bno;
++		list_add_tail(&co->list, &bs->to_check);
++		return 0;
++	}
++
++	return xfs_btree_block_check_owner(bs, bno);
++}
++
++/*
++ * Visit all nodes and leaves of a btree.  Check that all pointers and
++ * records are in order, that the keys reflect the records, and use a callback
++ * so that the caller can verify individual records.  The callback is the same
++ * as the one for xfs_btree_query_range, so therefore this function also
++ * returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a negative error code.
 + */
 +int
-+xfs_getfsmap(
-+	struct xfs_mount	*mp,
-+	struct getfsmapx	*fmv,
-+	xfs_fsmap_format_t	formatter,
-+	void			*arg)
++xfs_btree_scrub(
++	struct xfs_btree_scrub		*bs)
 +{
-+	struct xfs_getfsmap_info	info;
-+	struct xfs_buf		*agbp = NULL;
-+	struct xfs_btree_cur	*bt_cur = NULL;
-+	struct getfsmapx	*fmv_low;
-+	struct getfsmapx	*fmv_high;
-+	struct xfs_rmap_irec	high;
-+	xfs_fsblock_t		start_fsb;
-+	xfs_fsblock_t		end_fsb;
-+	xfs_agnumber_t		end_ag;
-+	xfs_agnumber_t		agno;
-+	xfs_daddr_t		eofs;
-+	xfs_extlen_t		extlen;
-+	int			error = 0;
++	struct xfs_btree_cur		*cur = bs->cur;
++	union xfs_btree_ptr		ptr;
++	union xfs_btree_ptr		*pp;
++	union xfs_btree_rec		*recp;
++	struct xfs_btree_block		*block;
++	int				level;
++	struct xfs_buf			*bp;
++	int				i;
++	struct check_owner		*co, *n;
++	int				error;
 +
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+	if (fmv->fmv_count < 2)
-+		return -EINVAL;
-+	if (fmv->fmv_iflags & (~FMV_IF_VALID))
-+		return -EINVAL;
-+	fmv_low = fmv;
-+	fmv_high = fmv + 1;
-+	if (!xfs_getfsmap_is_valid_device(mp, fmv) ||
-+	    !xfs_getfsmap_is_valid_device(mp, fmv_high) ||
-+	    fmv_high->fmv_iflags || fmv_high->fmv_count ||
-+	    fmv_high->fmv_length || fmv_high->fmv_entries ||
-+	    fmv_high->fmv_unused1 || fmv->fmv_unused1 ||
-+	    fmv_high->fmv_unused2 || fmv->fmv_unused2)
-+		return -EINVAL;
++	/* Finish filling out the scrub state */
++	bs->error = 0;
++	bs->firstrec = true;
++	for (i = 0; i < XFS_BTREE_MAXLEVELS; i++)
++		bs->firstkey[i] = true;
++	bs->bno_cur = bs->rmap_cur = NULL;
++	INIT_LIST_HEAD(&bs->to_check);
++	if (bs->cur->bc_btnum != XFS_BTNUM_BNO)
++		bs->bno_cur = xfs_allocbt_init_cursor(cur->bc_mp, NULL,
++				bs->agf_bp, bs->cur->bc_private.a.agno,
++				XFS_BTNUM_BNO);
++	if (bs->cur->bc_btnum != XFS_BTNUM_RMAP &&
++	    xfs_sb_version_hasrmapbt(&cur->bc_mp->m_sb))
++		bs->rmap_cur = xfs_rmapbt_init_cursor(cur->bc_mp, NULL,
++				bs->agf_bp, bs->cur->bc_private.a.agno);
 +
-+	fmv->fmv_entries = 0;
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (fmv->fmv_block >= eofs)
-+		return 0;
-+	if (fmv_high->fmv_block >= eofs)
-+		fmv_high->fmv_block = eofs - 1;
-+	start_fsb = XFS_DADDR_TO_FSB(mp, fmv->fmv_block);
-+	end_fsb = XFS_DADDR_TO_FSB(mp, fmv_high->fmv_block);
++	/* Load the root of the btree. */
++	level = cur->bc_nlevels - 1;
++	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
++	error = xfs_btree_lookup_get_block(cur, level, &ptr, &block);
++	if (error)
++		goto out;
 +
-+	/* Set up search keys */
-+	info.low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
-+	info.low.rm_offset = XFS_DADDR_TO_FSB(mp, fmv->fmv_offset);
-+	info.low.rm_owner = fmv->fmv_owner;
-+	info.low.rm_blockcount = 0;
-+	extlen = XFS_DADDR_TO_FSB(mp, fmv->fmv_length);
-+	if (fmv->fmv_oflags & (FMV_OF_SPECIAL_OWNER | FMV_OF_EXTENT_MAP)) {
-+		info.low.rm_startblock += extlen;
-+		info.low.rm_owner = 0;
-+		info.low.rm_offset = 0;
-+	} else
-+		info.low.rm_offset += extlen;
-+	if (fmv->fmv_oflags & FMV_OF_ATTR_FORK)
-+		info.low.rm_flags |= XFS_RMAP_ATTR_FORK;
-+	if (fmv->fmv_oflags & FMV_OF_EXTENT_MAP)
-+		info.low.rm_flags |= XFS_RMAP_BMBT_BLOCK;
-+	if (fmv->fmv_oflags & FMV_OF_PREALLOC)
-+		info.low.rm_flags |= XFS_RMAP_UNWRITTEN;
++	xfs_btree_get_block(cur, level, &bp);
++	error = xfs_btree_check_block(cur, block, level, bp);
++	if (error)
++		goto out;
++	error = xfs_btree_scrub_check_owner(bs, bp);
++	if (error)
++		goto out;
 +
-+	high.rm_startblock = -1U;
-+	high.rm_owner = ULLONG_MAX;
-+	high.rm_offset = ULLONG_MAX;
-+	high.rm_blockcount = 0;
-+	high.rm_flags = XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK |
-+			XFS_RMAP_UNWRITTEN;
-+	info.fmv = fmv;
-+	info.formatter = formatter;
-+	info.format_arg = arg;
-+	info.last = false;
++	cur->bc_ptrs[level] = 1;
 +
-+	info.start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
-+	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
-+	info.next_daddr = XFS_FSB_TO_DADDR(mp, XFS_AGB_TO_FSB(mp, info.start_ag,
-+			info.low.rm_startblock));
++	while (level < cur->bc_nlevels) {
++		block = XFS_BUF_TO_BLOCK(cur->bc_bufs[level]);
 +
-+	/* Query each AG */
-+	for (agno = info.start_ag; agno <= end_ag; agno++) {
-+		if (agno == end_ag) {
-+			high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsb);
-+			high.rm_offset = XFS_DADDR_TO_FSB(mp,
-+					fmv_high->fmv_offset);
-+			high.rm_owner = fmv_high->fmv_owner;
-+			if (fmv_high->fmv_oflags & FMV_OF_ATTR_FORK)
-+				high.rm_flags |= XFS_RMAP_ATTR_FORK;
-+			if (fmv_high->fmv_oflags & FMV_OF_EXTENT_MAP)
-+				high.rm_flags |= XFS_RMAP_BMBT_BLOCK;
-+			if (fmv_high->fmv_oflags & FMV_OF_PREALLOC)
-+				high.rm_flags |= XFS_RMAP_UNWRITTEN;
++		if (level == 0) {
++			/* End of leaf, pop back towards the root. */
++			if (cur->bc_ptrs[level] >
++			    be16_to_cpu(block->bb_numrecs)) {
++				if (level < cur->bc_nlevels - 1)
++					cur->bc_ptrs[level + 1]++;
++				level++;
++				continue;
++			}
++
++			/* Records in order for scrub? */
++			error = xfs_btree_scrub_rec(bs);
++			if (error)
++				goto out;
++
++			recp = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
++			error = bs->scrub_rec(bs, recp);
++			if (error < 0 ||
++			    error == XFS_BTREE_QUERY_RANGE_ABORT)
++				break;
++
++			cur->bc_ptrs[level]++;
++			continue;
 +		}
 +
-+		if (bt_cur) {
-+			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+			xfs_trans_brelse(NULL, agbp);
-+			bt_cur = NULL;
-+			agbp = NULL;
++		/* End of node, pop back towards the root. */
++		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
++			if (level < cur->bc_nlevels - 1)
++				cur->bc_ptrs[level + 1]++;
++			level++;
++			continue;
 +		}
 +
-+		error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++		/* Keys in order for scrub? */
++		error = xfs_btree_scrub_key(bs, level);
 +		if (error)
-+			goto err;
++			goto out;
 +
-+		trace_xfs_fsmap_low_key(mp, agno, info.low.rm_startblock,
-+				info.low.rm_blockcount, info.low.rm_owner,
-+				info.low.rm_offset);
-+
-+		trace_xfs_fsmap_high_key(mp, agno, high.rm_startblock,
-+				high.rm_blockcount, high.rm_owner,
-+				high.rm_offset);
-+
-+		bt_cur = xfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
-+		error = xfs_rmapbt_query_range(bt_cur, &info.low, &high,
-+				xfs_getfsmap_helper, &info);
++		/* Drill another level deeper. */
++		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
++		level--;
++		error = xfs_btree_lookup_get_block(cur, level, pp,
++				&block);
 +		if (error)
-+			goto err;
++			goto out;
 +
-+		if (agno == info.start_ag) {
-+			info.low.rm_startblock = 0;
-+			info.low.rm_owner = 0;
-+			info.low.rm_offset = 0;
-+			info.low.rm_flags = 0;
++		xfs_btree_get_block(cur, level, &bp);
++		error = xfs_btree_check_block(cur, block, level, bp);
++		if (error)
++			goto out;
++
++		error = xfs_btree_scrub_check_owner(bs, bp);
++		if (error)
++			goto out;
++
++		cur->bc_ptrs[level] = 1;
++	}
++
++out:
++	/*
++	 * If we don't end this function with the cursor pointing at a record
++	 * block, a subsequent non-error cursor deletion will not release
++	 * node-level buffers, causing a buffer leak.  This is quite possible
++	 * with a zero-results range query, so release the buffers if we
++	 * failed to return any results.
++	 */
++	if (cur->bc_bufs[0] == NULL) {
++		for (i = 0; i < cur->bc_nlevels; i++) {
++			if (cur->bc_bufs[i]) {
++				xfs_trans_brelse(cur->bc_tp, cur->bc_bufs[i]);
++				cur->bc_bufs[i] = NULL;
++				cur->bc_ptrs[i] = 0;
++				cur->bc_ra[i] = 0;
++			}
 +		}
 +	}
 +
-+	/* Report any free space at the end of the AG */
-+	info.last = true;
-+	error = xfs_getfsmap_helper(bt_cur, &high, &info);
-+	if (error)
-+		goto err;
++	/* Check the deferred stuff */
++	if (!error) {
++		if (bs->cur->bc_btnum == XFS_BTNUM_BNO)
++			bs->bno_cur = bs->cur;
++		else if (bs->cur->bc_btnum == XFS_BTNUM_RMAP)
++			bs->rmap_cur = bs->cur;
++		list_for_each_entry(co, &bs->to_check, list) {
++			error = xfs_btree_block_check_owner(bs, co->bno);
++			if (error)
++				break;
++		}
++	}
++	list_for_each_entry_safe(co, n, &bs->to_check, list) {
++		list_del(&co->list);
++		kmem_free(co);
++	}
 +
-+err:
-+	if (bt_cur)
-+		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
-+							 XFS_BTREE_NOERROR);
-+	if (agbp)
-+		xfs_trans_brelse(NULL, agbp);
++	if (bs->bno_cur && bs->bno_cur != bs->cur)
++		xfs_btree_del_cursor(bs->bno_cur, XFS_BTREE_ERROR);
++	if (bs->rmap_cur && bs->rmap_cur != bs->cur)
++		xfs_btree_del_cursor(bs->rmap_cur, XFS_BTREE_ERROR);
++
++	if (error || bs->error)
++		xfs_alert(cur->bc_mp,
++			"Corruption detected. Unmount and run xfs_repair.");
 +
 +	return error;
 +}
-diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-index 71e3248..8101fb9 100644
---- a/fs/xfs/xfs_fsops.h
-+++ b/fs/xfs/xfs_fsops.h
-@@ -29,4 +29,10 @@ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
- extern void xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
- extern void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
- 
-+/* fsmap to userspace formatter - copy to user & advance pointer */
-+typedef int (*xfs_fsmap_format_t)(struct getfsmapx *, void *);
+diff --git a/fs/xfs/libxfs/xfs_scrub.h b/fs/xfs/libxfs/xfs_scrub.h
+new file mode 100644
+index 0000000..af80a9d
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_scrub.h
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_SCRUB_H__
++#define	__XFS_SCRUB_H__
 +
-+int	xfs_getfsmap(struct xfs_mount *mp, struct getfsmapx *fmv,
-+		xfs_fsmap_format_t formatter, void *arg);
++/* btree scrub */
++struct xfs_btree_scrub;
 +
- #endif	/* __XFS_FSOPS_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index aa9645c..736e747 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -42,6 +42,7 @@
- #include "xfs_pnfs.h"
- #include "xfs_acl.h"
- #include "xfs_reflink.h"
-+#include "xfs_btree.h"
- 
- #include <linux/capability.h>
- #include <linux/dcache.h>
-@@ -1611,6 +1612,76 @@ xfs_ioc_getbmapx(
- 	return 0;
- }
- 
-+struct getfsmapx_info {
-+	struct xfs_mount	*mp;
-+	struct getfsmapx __user	*data;
-+	__s64			last_flags;
++typedef int (*xfs_btree_scrub_rec_fn)(
++	struct xfs_btree_scrub	*bs,
++	union xfs_btree_rec	*rec);
++
++struct xfs_btree_scrub {
++	/* caller-provided scrub state */
++	struct xfs_btree_cur		*cur;
++	xfs_btree_scrub_rec_fn		scrub_rec;
++	struct xfs_buf			*agi_bp;
++	struct xfs_buf			*agf_bp;
++	struct xfs_buf			*agfl_bp;
++	struct xfs_owner_info		oinfo;
++
++	/* internal scrub state */
++	union xfs_btree_rec		lastrec;
++	bool				firstrec;
++	union xfs_btree_key		lastkey[XFS_BTREE_MAXLEVELS];
++	bool				firstkey[XFS_BTREE_MAXLEVELS];
++	struct xfs_btree_cur		*rmap_cur;
++	struct xfs_btree_cur		*bno_cur;
++	struct list_head		to_check;
++	int				error;
 +};
 +
-+STATIC int
-+xfs_getfsmapx_format(struct getfsmapx *fmv, void *priv)
-+{
-+	struct getfsmapx_info	*info = priv;
-+
-+	trace_xfs_getfsmap_mapping(info->mp, fmv->fmv_block,
-+			fmv->fmv_length, fmv->fmv_owner,
-+			fmv->fmv_offset, fmv->fmv_oflags);
-+
-+	info->last_flags = fmv->fmv_oflags;
-+	if (copy_to_user(info->data, fmv, sizeof(struct getfsmapx)))
-+		return -EFAULT;
-+
-+	info->data++;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_ioc_getfsmapx(
-+	struct xfs_inode	*ip,
-+	void			__user *arg)
-+{
-+	struct getfsmapx_info	info;
-+	struct getfsmapx	fmx[2];
-+	bool			aborted = false;
-+	int			error;
-+
-+	if (copy_from_user(&fmx, arg, 2 * sizeof(struct getfsmapx)))
-+		return -EFAULT;
-+
-+	trace_xfs_getfsmap_low_key(ip->i_mount, fmx[0].fmv_block,
-+			fmx[0].fmv_length, fmx[0].fmv_owner,
-+			fmx[0].fmv_offset, fmx[0].fmv_oflags);
-+
-+	trace_xfs_getfsmap_high_key(ip->i_mount, fmx[1].fmv_block,
-+			fmx[1].fmv_length, fmx[1].fmv_owner,
-+			fmx[1].fmv_offset, fmx[1].fmv_oflags);
-+
-+	info.mp = ip->i_mount;
-+	info.data = (__force struct getfsmapx *)arg + 2;
-+	error = xfs_getfsmap(ip->i_mount, fmx, xfs_getfsmapx_format, &info);
-+	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
-+		error = 0;
-+		aborted = true;
++int xfs_btree_scrub(struct xfs_btree_scrub *bs);
++void xfs_btree_scrub_error(struct xfs_btree_cur *cur, int level,
++		const char *file, int line, const char *check);
++#define XFS_BTREC_SCRUB_CHECK(bs, fs_ok) \
++	if (!(fs_ok)) { \
++		xfs_btree_scrub_error((bs)->cur, 0, __FILE__, __LINE__, #fs_ok); \
++		(bs)->error = -EFSCORRUPTED; \
 +	}
-+	if (error)
-+		return error;
-+
-+	/* If we didn't abort, set the "last" flag in the last fmx */
-+	if (!aborted && fmx[0].fmv_entries) {
-+		info.data--;
-+		info.last_flags |= FMV_OF_LAST;
-+		if (copy_to_user(&info.data->fmv_oflags, &info.last_flags,
-+				sizeof(info.last_flags)))
-+			return -EFAULT;
++#define XFS_BTREC_SCRUB_GOTO(bs, fs_ok, label) \
++	if (!(fs_ok)) { \
++		xfs_btree_scrub_error((bs)->cur, 0, __FILE__, __LINE__, #fs_ok); \
++		(bs)->error = -EFSCORRUPTED; \
++		goto label; \
++	}
++#define XFS_BTKEY_SCRUB_CHECK(bs, level, fs_ok) \
++	if (!(fs_ok)) { \
++		xfs_btree_scrub_error((bs)->cur, (level), __FILE__, __LINE__, #fs_ok); \
++		(bs)->error = -EFSCORRUPTED; \
++	}
++#define XFS_BTKEY_SCRUB_GOTO(bs, level, fs_ok, label) \
++	if (!(fs_ok)) { \
++		xfs_btree_scrub_error((bs)->cur, 0, __FILE__, __LINE__, #fs_ok); \
++		(bs)->error = -EFSCORRUPTED; \
++		goto label; \
 +	}
 +
-+	/* copy back header */
-+	if (copy_to_user(arg, fmx, 2 * sizeof(struct getfsmapx)))
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
- int
- xfs_ioc_swapext(
- 	xfs_swapext_t	*sxp)
-@@ -1784,6 +1855,11 @@ xfs_file_ioctl(
- 	case XFS_IOC_GETBMAPX:
- 		return xfs_ioc_getbmapx(ip, arg);
- 
-+	case XFS_IOC_GETFSMAPX:
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EPERM;
-+		return xfs_ioc_getfsmapx(ip, arg);
-+
- 	case XFS_IOC_FD_TO_HANDLE:
- 	case XFS_IOC_PATH_TO_HANDLE:
- 	case XFS_IOC_PATH_TO_FSHANDLE: {
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 1a05d8a..337e436 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -558,6 +558,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
-+	case XFS_IOC_GETFSMAPX:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d64bab7..9fe812f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3352,6 +3352,82 @@ DEFINE_INODE_EVENT(xfs_reflink_cancel_pending_cow);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cancel_cow);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_pending_cow_error);
- 
-+/* fsmap traces */
-+DECLARE_EVENT_CLASS(xfs_fsmap_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 xfs_extlen_t len, __uint64_t owner, __uint64_t offset),
-+	TP_ARGS(mp, agno, agbno, len, owner, offset),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+		__field(__uint64_t, owner)
-+		__field(__uint64_t, offset)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset 0x%llx\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset)
-+)
-+#define DEFINE_FSMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_fsmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len, __uint64_t owner, \
-+		 __uint64_t offset), \
-+	TP_ARGS(mp, agno, agbno, len, owner, offset))
-+DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
-+DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
-+DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
-+
-+DECLARE_EVENT_CLASS(xfs_getfsmap_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_daddr_t block, xfs_daddr_t len,
-+		 __uint64_t owner, __uint64_t offset, __uint64_t flags),
-+	TP_ARGS(mp, block, len, owner, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_daddr_t, block)
-+		__field(xfs_daddr_t, len)
-+		__field(__uint64_t, owner)
-+		__field(__uint64_t, offset)
-+		__field(__uint64_t, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->block = block;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->block,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+)
-+#define DEFINE_GETFSMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_getfsmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_daddr_t block, xfs_daddr_t len, \
-+		 __uint64_t owner, __uint64_t offset, __uint64_t flags), \
-+	TP_ARGS(mp, block, len, owner, offset, flags))
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
++#endif	/* __XFS_SCRUB_H__ */
 
 _______________________________________________
 xfs mailing list
