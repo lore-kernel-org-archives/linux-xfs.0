@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4C1C98095
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8D25080A5
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:32:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B8C20AC003
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:24 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id ELGHDP6WYe4fpkFU (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5EC008F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:34 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id k8FP0gZCDU0LtDW1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:22 -0700 (PDT)
-Subject: [PATCH 015/145] xfs: refactor btree maxlevels computation
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:32:31 -0700 (PDT)
+Subject: [PATCH 016/145] xfs: during btree split,
+	save new block key & ptr for future insertion
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:32:18 -0700
-Message-ID: <146612713862.16048.9572556591745823314.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:32:24 -0700
+Message-ID: <146612714473.16048.8382772114027261883.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,124 +32,308 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create a common function to calculate the maximum height of a per-AG
-btree.  This will eventually be used by the rmapbt and refcountbt code
-to calculate appropriate maxlevels values for each.  This is important
-because the verifiers and the transaction block reservations depend on
-accurate estimates of many blocks are needed to satisfy a btree split.
+When a btree block has to be split, we pass the new block's ptr from
+xfs_btree_split() back to xfs_btree_insert() via a pointer parameter;
+however, we pass the block's key through the cursor's record.  It is a
+little weird to "initialize" a record from a key since the non-key
+attributes will have garbage values.
 
-We were mistakenly using the max bnobt height for all the btrees,
-which creates a dangerous situation since the larger records and keys
-in an rmapbt make it very possible that the rmapbt will be taller than
-the bnobt and so we can run out of transaction block reservation.
+When we go to add support for interval queries, we have to be able to
+pass the lowest and highest keys accessible via a pointer.  There's no
+clean way to pass this back through the cursor's record field.
+Therefore, pass the key directly back to xfs_btree_insert() the same
+way that we pass the btree_ptr.
+
+As a bonus, we no longer need init_rec_from_key and can drop it from the
+codebase.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_alloc.c  |   15 ++-------------
- libxfs/xfs_btree.c  |   19 +++++++++++++++++++
- libxfs/xfs_btree.h  |    2 ++
- libxfs/xfs_ialloc.c |   19 +++++--------------
- 4 files changed, 28 insertions(+), 27 deletions(-)
+ libxfs/xfs_alloc_btree.c  |   12 ------------
+ libxfs/xfs_bmap_btree.c   |   12 ------------
+ libxfs/xfs_btree.c        |   44 ++++++++++++++++++++++----------------------
+ libxfs/xfs_btree.h        |    2 --
+ libxfs/xfs_ialloc_btree.c |   10 ----------
+ 5 files changed, 22 insertions(+), 58 deletions(-)
 
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 2998af8..7276419 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -1835,19 +1835,8 @@ void
- xfs_alloc_compute_maxlevels(
- 	xfs_mount_t	*mp)	/* file system mount structure */
- {
--	int		level;
--	uint		maxblocks;
--	uint		maxleafents;
--	int		minleafrecs;
--	int		minnoderecs;
--
--	maxleafents = (mp->m_sb.sb_agblocks + 1) / 2;
--	minleafrecs = mp->m_alloc_mnr[0];
--	minnoderecs = mp->m_alloc_mnr[1];
--	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
--	for (level = 1; maxblocks > 1; level++)
--		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
--	mp->m_ag_maxlevels = level;
-+	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_alloc_mnr,
-+			(mp->m_sb.sb_agblocks + 1) / 2);
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index 094135f..ff4bae4 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -210,17 +210,6 @@ xfs_allocbt_init_key_from_rec(
  }
  
- /*
+ STATIC void
+-xfs_allocbt_init_rec_from_key(
+-	union xfs_btree_key	*key,
+-	union xfs_btree_rec	*rec)
+-{
+-	ASSERT(key->alloc.ar_startblock != 0);
+-
+-	rec->alloc.ar_startblock = key->alloc.ar_startblock;
+-	rec->alloc.ar_blockcount = key->alloc.ar_blockcount;
+-}
+-
+-STATIC void
+ xfs_allocbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+@@ -404,7 +393,6 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.get_minrecs		= xfs_allocbt_get_minrecs,
+ 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+-	.init_rec_from_key	= xfs_allocbt_init_rec_from_key,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_allocbt_key_diff,
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 022d4b6..2ae701e 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -597,17 +597,6 @@ xfs_bmbt_init_key_from_rec(
+ }
+ 
+ STATIC void
+-xfs_bmbt_init_rec_from_key(
+-	union xfs_btree_key	*key,
+-	union xfs_btree_rec	*rec)
+-{
+-	ASSERT(key->bmbt.br_startoff != 0);
+-
+-	xfs_bmbt_disk_set_allf(&rec->bmbt, be64_to_cpu(key->bmbt.br_startoff),
+-			       0, 0, XFS_EXT_NORM);
+-}
+-
+-STATIC void
+ xfs_bmbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+@@ -757,7 +746,6 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.get_minrecs		= xfs_bmbt_get_minrecs,
+ 	.get_dmaxrecs		= xfs_bmbt_get_dmaxrecs,
+ 	.init_key_from_rec	= xfs_bmbt_init_key_from_rec,
+-	.init_rec_from_key	= xfs_bmbt_init_rec_from_key,
+ 	.init_rec_from_cur	= xfs_bmbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
+ 	.key_diff		= xfs_bmbt_key_diff,
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 27e58b2..623841f 100644
+index 623841f..9a92c65 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -4154,6 +4154,25 @@ xfs_btree_sblock_verify(
+@@ -2858,10 +2858,9 @@ xfs_btree_make_block_unfull(
+ 	int			*index,	/* new tree index */
+ 	union xfs_btree_ptr	*nptr,	/* new btree ptr */
+ 	struct xfs_btree_cur	**ncur,	/* new btree cursor */
+-	union xfs_btree_rec	*nrec,	/* new record */
++	union xfs_btree_key	*key, /* key of new block */
+ 	int			*stat)
+ {
+-	union xfs_btree_key	key;	/* new btree key value */
+ 	int			error = 0;
+ 
+ 	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+@@ -2906,13 +2905,12 @@ xfs_btree_make_block_unfull(
+ 	 * If this works we have to re-set our variables because we
+ 	 * could be in a different block now.
+ 	 */
+-	error = xfs_btree_split(cur, level, nptr, &key, ncur, stat);
++	error = xfs_btree_split(cur, level, nptr, key, ncur, stat);
+ 	if (error || *stat == 0)
+ 		return error;
+ 
+ 
+ 	*index = cur->bc_ptrs[level];
+-	cur->bc_ops->init_rec_from_key(&key, nrec);
+ 	return 0;
  }
  
- /*
-+ * Calculate the number of btree levels needed to store a given number of
-+ * records in a short-format btree.
-+ */
-+uint
-+xfs_btree_compute_maxlevels(
-+	struct xfs_mount	*mp,
-+	uint			*limits,
-+	unsigned long		len)
-+{
-+	uint			level;
-+	unsigned long		maxblocks;
+@@ -2925,16 +2923,16 @@ xfs_btree_insrec(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level to insert record at */
+ 	union xfs_btree_ptr	*ptrp,	/* i/o: block number inserted */
+-	union xfs_btree_rec	*recp,	/* i/o: record data inserted */
++	union xfs_btree_key	*key,	/* i/o: block key for ptrp */
+ 	struct xfs_btree_cur	**curp,	/* output: new cursor replacing cur */
+ 	int			*stat)	/* success/failure */
+ {
+ 	struct xfs_btree_block	*block;	/* btree block */
+ 	struct xfs_buf		*bp;	/* buffer for block */
+-	union xfs_btree_key	key;	/* btree key */
+ 	union xfs_btree_ptr	nptr;	/* new block ptr */
+ 	struct xfs_btree_cur	*ncur;	/* new btree cursor */
+-	union xfs_btree_rec	nrec;	/* new record count */
++	union xfs_btree_key	nkey;	/* new block key */
++	union xfs_btree_rec	rec;	/* record to insert */
+ 	int			optr;	/* old key/record index */
+ 	int			ptr;	/* key/record index */
+ 	int			numrecs;/* number of records */
+@@ -2943,8 +2941,14 @@ xfs_btree_insrec(
+ 	int			i;
+ #endif
+ 
++	/* Make a key out of the record data to be inserted, and save it. */
++	if (level == 0) {
++		cur->bc_ops->init_rec_from_cur(cur, &rec);
++		cur->bc_ops->init_key_from_rec(key, &rec);
++	}
 +
-+	maxblocks = (len + limits[0] - 1) / limits[0];
-+	for (level = 1; maxblocks > 1; level++)
-+		maxblocks = (maxblocks + limits[1] - 1) / limits[1];
-+	return level;
-+}
-+
-+/*
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
-  */
+ 	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+-	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, recp);
++	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
+ 
+ 	ncur = NULL;
+ 
+@@ -2969,9 +2973,6 @@ xfs_btree_insrec(
+ 		return 0;
+ 	}
+ 
+-	/* Make a key out of the record data to be inserted, and save it. */
+-	cur->bc_ops->init_key_from_rec(&key, recp);
+-
+ 	optr = ptr;
+ 
+ 	XFS_BTREE_STATS_INC(cur, insrec);
+@@ -2988,10 +2989,10 @@ xfs_btree_insrec(
+ 	/* Check that the new entry is being inserted in the right place. */
+ 	if (ptr <= numrecs) {
+ 		if (level == 0) {
+-			ASSERT(cur->bc_ops->recs_inorder(cur, recp,
++			ASSERT(cur->bc_ops->recs_inorder(cur, &rec,
+ 				xfs_btree_rec_addr(cur, ptr, block)));
+ 		} else {
+-			ASSERT(cur->bc_ops->keys_inorder(cur, &key,
++			ASSERT(cur->bc_ops->keys_inorder(cur, key,
+ 				xfs_btree_key_addr(cur, ptr, block)));
+ 		}
+ 	}
+@@ -3004,7 +3005,7 @@ xfs_btree_insrec(
+ 	xfs_btree_set_ptr_null(cur, &nptr);
+ 	if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
+ 		error = xfs_btree_make_block_unfull(cur, level, numrecs,
+-					&optr, &ptr, &nptr, &ncur, &nrec, stat);
++					&optr, &ptr, &nptr, &ncur, &nkey, stat);
+ 		if (error || *stat == 0)
+ 			goto error0;
+ 	}
+@@ -3054,7 +3055,7 @@ xfs_btree_insrec(
+ #endif
+ 
+ 		/* Now put the new data in, bump numrecs and log it. */
+-		xfs_btree_copy_keys(cur, kp, &key, 1);
++		xfs_btree_copy_keys(cur, kp, key, 1);
+ 		xfs_btree_copy_ptrs(cur, pp, ptrp, 1);
+ 		numrecs++;
+ 		xfs_btree_set_numrecs(block, numrecs);
+@@ -3075,7 +3076,7 @@ xfs_btree_insrec(
+ 		xfs_btree_shift_recs(cur, rp, 1, numrecs - ptr + 1);
+ 
+ 		/* Now put the new data in, bump numrecs and log it. */
+-		xfs_btree_copy_recs(cur, rp, recp, 1);
++		xfs_btree_copy_recs(cur, rp, &rec, 1);
+ 		xfs_btree_set_numrecs(block, ++numrecs);
+ 		xfs_btree_log_recs(cur, bp, ptr, numrecs);
+ #ifdef DEBUG
+@@ -3091,7 +3092,7 @@ xfs_btree_insrec(
+ 
+ 	/* If we inserted at the start of a block, update the parents' keys. */
+ 	if (optr == 1) {
+-		error = xfs_btree_updkey(cur, &key, level + 1);
++		error = xfs_btree_updkey(cur, key, level + 1);
+ 		if (error)
+ 			goto error0;
+ 	}
+@@ -3101,7 +3102,7 @@ xfs_btree_insrec(
+ 	 * we are at the far right edge of the tree, update it.
+ 	 */
+ 	if (xfs_btree_is_lastrec(cur, block, level)) {
+-		cur->bc_ops->update_lastrec(cur, block, recp,
++		cur->bc_ops->update_lastrec(cur, block, &rec,
+ 					    ptr, LASTREC_INSREC);
+ 	}
+ 
+@@ -3111,7 +3112,7 @@ xfs_btree_insrec(
+ 	 */
+ 	*ptrp = nptr;
+ 	if (!xfs_btree_ptr_is_null(cur, &nptr)) {
+-		*recp = nrec;
++		*key = nkey;
+ 		*curp = ncur;
+ 	}
+ 
+@@ -3142,14 +3143,13 @@ xfs_btree_insert(
+ 	union xfs_btree_ptr	nptr;	/* new block number (split result) */
+ 	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
+ 	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
+-	union xfs_btree_rec	rec;	/* record to insert */
++	union xfs_btree_key	key;	/* key of block to insert */
+ 
+ 	level = 0;
+ 	ncur = NULL;
+ 	pcur = cur;
+ 
+ 	xfs_btree_set_ptr_null(cur, &nptr);
+-	cur->bc_ops->init_rec_from_cur(cur, &rec);
+ 
+ 	/*
+ 	 * Loop going up the tree, starting at the leaf level.
+@@ -3161,7 +3161,7 @@ xfs_btree_insert(
+ 		 * Insert nrec/nptr into this level of the tree.
+ 		 * Note if we fail, nptr will be null.
+ 		 */
+-		error = xfs_btree_insrec(pcur, level, &nptr, &rec, &ncur, &i);
++		error = xfs_btree_insrec(pcur, level, &nptr, &key, &ncur, &i);
+ 		if (error) {
+ 			if (pcur != cur)
+ 				xfs_btree_del_cursor(pcur, XFS_BTREE_ERROR);
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index b330f19..b955e5d 100644
+index b955e5d..b99c018 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -477,5 +477,7 @@ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
- 
- xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
- 		unsigned long long len);
-+uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
-+		unsigned long len);
- 
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 4f0e4ee..249512b 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -2388,20 +2388,11 @@ void
- xfs_ialloc_compute_maxlevels(
- 	xfs_mount_t	*mp)		/* file system mount structure */
- {
--	int		level;
--	uint		maxblocks;
--	uint		maxleafents;
--	int		minleafrecs;
--	int		minnoderecs;
--
--	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
--		XFS_INODES_PER_CHUNK_LOG;
--	minleafrecs = mp->m_inobt_mnr[0];
--	minnoderecs = mp->m_inobt_mnr[1];
--	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
--	for (level = 1; maxblocks > 1; level++)
--		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
--	mp->m_in_maxlevels = level;
-+	uint		inodes;
-+
-+	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
-+	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_inobt_mnr,
-+							 inodes);
+@@ -158,8 +158,6 @@ struct xfs_btree_ops {
+ 	/* init values of btree structures */
+ 	void	(*init_key_from_rec)(union xfs_btree_key *key,
+ 				     union xfs_btree_rec *rec);
+-	void	(*init_rec_from_key)(union xfs_btree_key *key,
+-				     union xfs_btree_rec *rec);
+ 	void	(*init_rec_from_cur)(struct xfs_btree_cur *cur,
+ 				     union xfs_btree_rec *rec);
+ 	void	(*init_ptr_from_cur)(struct xfs_btree_cur *cur,
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 0a7d985..cd61419 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -145,14 +145,6 @@ xfs_inobt_init_key_from_rec(
  }
  
- /*
+ STATIC void
+-xfs_inobt_init_rec_from_key(
+-	union xfs_btree_key	*key,
+-	union xfs_btree_rec	*rec)
+-{
+-	rec->inobt.ir_startino = key->inobt.ir_startino;
+-}
+-
+-STATIC void
+ xfs_inobt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+@@ -313,7 +305,6 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.get_minrecs		= xfs_inobt_get_minrecs,
+ 	.get_maxrecs		= xfs_inobt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+-	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
+ 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
+ 	.key_diff		= xfs_inobt_key_diff,
+@@ -335,7 +326,6 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.get_minrecs		= xfs_inobt_get_minrecs,
+ 	.get_maxrecs		= xfs_inobt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+-	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
+ 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
+ 	.key_diff		= xfs_inobt_key_diff,
 
 _______________________________________________
 xfs mailing list
