@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1583281A3
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:35:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D9CCE304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B439F81A5
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:35:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 81A61304048
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:56 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 70M8EaXWNQrBtSSF (version=TLSv1.2
+	cuda.sgi.com with ESMTP id F556fwLhUp16NOI3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:50 -0700 (PDT)
-Subject: [PATCH 047/145] xfs: add rmap btree geometry feature flag
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:55 -0700 (PDT)
+Subject: [PATCH 048/145] xfs: don't update rmapbt when fixing agfl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:35:41 -0700
-Message-ID: <146612734137.16048.1164157172789537615.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:35:47 -0700
+Message-ID: <146612734754.16048.4355394142113008748.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,31 +29,92 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Allow a caller of xfs_alloc_fix_freelist to disable rmapbt updates
+when fixing the AG freelist.  xfs_repair needs this during phase 5
+to be able to adjust the freelist while it's reconstructing the rmap
+btree; the missing entries will be added back at the very end of
+phase 5 once the AGFL contents settle down.
 
-So xfs_info and other userspace utilities know the filesystem is
-using this feature.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_fs.h |    1 +
- 1 file changed, 1 insertion(+)
+ libxfs/xfs_alloc.c |   40 ++++++++++++++++++++++++++--------------
+ libxfs/xfs_alloc.h |    3 +++
+ 2 files changed, 29 insertions(+), 14 deletions(-)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 1f17e1c..085ea6f 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -230,6 +230,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
- #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
-+#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* Reverse mapping btree */
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 7d680da..2f943db 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -2088,26 +2088,38 @@ xfs_alloc_fix_freelist(
+ 	 * anything other than extra overhead when we need to put more blocks
+ 	 * back on the free list? Maybe we should only do this when space is
+ 	 * getting low or the AGFL is more than half full?
++	 *
++	 * The NOSHRINK flag prevents the AGFL from being shrunk if it's too
++	 * big; the NORMAP flag prevents AGFL expand/shrink operations from
++	 * updating the rmapbt.  Both flags are used in xfs_repair while we're
++	 * rebuilding the rmapbt, and neither are used by the kernel.  They're
++	 * both required to ensure that rmaps are correctly recorded for the
++	 * regenerated AGFL, bnobt, and cntbt.  See repair/phase5.c and
++	 * repair/rmap.c in xfsprogs for details.
+ 	 */
+-	xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
+-	while (pag->pagf_flcount > need) {
+-		struct xfs_buf	*bp;
++	memset(&targs, 0, sizeof(targs));
++	if (!(flags & XFS_ALLOC_FLAG_NOSHRINK)) {
++		if (!(flags & XFS_ALLOC_FLAG_NORMAP))
++			xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
++		while (pag->pagf_flcount > need) {
++			struct xfs_buf	*bp;
+ 
+-		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+-		if (error)
+-			goto out_agbp_relse;
+-		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+-					   &targs.oinfo, 1);
+-		if (error)
+-			goto out_agbp_relse;
+-		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
+-		xfs_trans_binval(tp, bp);
++			error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
++			if (error)
++				goto out_agbp_relse;
++			error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
++						   &targs.oinfo, 1);
++			if (error)
++				goto out_agbp_relse;
++			bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
++			xfs_trans_binval(tp, bp);
++		}
+ 	}
+ 
+-	memset(&targs, 0, sizeof(targs));
+ 	targs.tp = tp;
+ 	targs.mp = mp;
+-	xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
++	if (!(flags & XFS_ALLOC_FLAG_NORMAP))
++		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
+ 	targs.agbp = agbp;
+ 	targs.agno = args->agno;
+ 	targs.alignment = targs.minlen = targs.prod = targs.isfl = 1;
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index 7b6c66b..7b9e67e 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -54,6 +54,9 @@ typedef unsigned int xfs_alloctype_t;
+  */
+ #define	XFS_ALLOC_FLAG_TRYLOCK	0x00000001  /* use trylock for buffer locking */
+ #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
++#define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
++#define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
++
  
  /*
-  * Minimum and maximum sizes need for growth checks.
+  * Argument structure for xfs_alloc routines.
 
 _______________________________________________
 xfs mailing list
