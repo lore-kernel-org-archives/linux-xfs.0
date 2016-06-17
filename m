@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A9F984EA
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:46:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CE7E584EA
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:46:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D9EBFAC002
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:26 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 1PdihesRLb5K07y5 (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C5E7AC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:28 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id DGBdBwkhEOjSDYXU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:24 -0700 (PDT)
-Subject: [PATCH 02/20] tests: don't put loop control files on the scratch mount
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:46:25 -0700 (PDT)
+Subject: [PATCH 03/20] xfs: test copy-on-write leftover recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:46:14 -0700
-Message-ID: <146612797466.25024.4591042273728464399.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:46:21 -0700
+Message-ID: <146612798101.25024.17766898485265622934.stgit@birch.djwong.org>
 In-Reply-To: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
 References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,470 +31,441 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-If we're doing write/overwrite/snapshot/resource exhaustion tests on
-the scratch device, use the test directory to hold the loop
-termination signal files.  This way we don't run infinitely because we
-can't create the flag due to ENOSPC.
-
-v2: put the control files in /tmp, not $TEST_DIR
+Test recovery of CoW leftovers in xfs_repair.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/162 |    8 +++++---
- tests/generic/163 |    8 +++++---
- tests/generic/164 |    8 +++++---
- tests/generic/165 |    8 +++++---
- tests/generic/166 |    8 +++++---
- tests/generic/167 |    8 +++++---
- tests/generic/168 |    8 +++++---
- tests/generic/170 |    8 +++++---
- tests/generic/333 |   20 ++++++++++++--------
- tests/generic/334 |   20 ++++++++++++--------
- 10 files changed, 64 insertions(+), 40 deletions(-)
+ tests/xfs/853     |  179 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/853.out |   13 ++++
+ tests/xfs/854     |  180 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/854.out |   13 ++++
+ tests/xfs/group   |    2 +
+ 5 files changed, 387 insertions(+)
+ create mode 100755 tests/xfs/853
+ create mode 100644 tests/xfs/853.out
+ create mode 100755 tests/xfs/854
+ create mode 100644 tests/xfs/854.out
 
 
-diff --git a/tests/generic/162 b/tests/generic/162
-index 5ff2ee2..61cf463 100755
---- a/tests/generic/162
-+++ b/tests/generic/162
-@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -51,6 +51,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=512
-@@ -64,7 +66,7 @@ _pwrite_byte 0x61 0 $((loops * blksz)) $testdir/file2 >> $seqres.full
- _scratch_cycle_mount
- 
- overwrite() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		seq $nr_loops -1 0 | while read i; do
- 			_pwrite_byte 0x61 $((i * blksz)) $blksz $testdir/file2 >> $seqres.full
- 		done
-@@ -81,7 +83,7 @@ for i in `seq 1 2`; do
- 	done
- done
- echo "Finished dedupeing"
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/163 b/tests/generic/163
-index fcba677..e2c6042 100755
---- a/tests/generic/163
-+++ b/tests/generic/163
-@@ -33,7 +33,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -51,6 +51,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=512
-@@ -64,7 +66,7 @@ _pwrite_byte 0x61 0 $((loops * blksz)) $testdir/file2 >> $seqres.full
- _scratch_cycle_mount
- 
- overwrite() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		seq $nr_loops -1 0 | while read i; do
- 			_pwrite_byte 0x61 $((i * blksz)) $blksz $testdir/file1 >> $seqres.full
- 		done
-@@ -81,7 +83,7 @@ for i in `seq 1 2`; do
- 	done
- done
- echo "Finished dedupeing"
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/164 b/tests/generic/164
-index acacb7f..78ea787 100755
---- a/tests/generic/164
-+++ b/tests/generic/164
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=512
-@@ -71,7 +73,7 @@ fbytes() {
- }
- 
- reader() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		_read_range $testdir/file3 0 $((loops * blksz)) | fbytes
- 	done
- }
-@@ -91,7 +93,7 @@ for i in `seq 1 2`; do
- 	done
- done
- echo "Finished reflinking"
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/165 b/tests/generic/165
-index b742d19..ca11e1e 100755
---- a/tests/generic/165
-+++ b/tests/generic/165
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -54,6 +54,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=512
-@@ -72,7 +74,7 @@ fbytes() {
- }
- 
- reader() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		_read_range $testdir/file3 0 $((loops * blksz)) -d | fbytes
- 	done
- }
-@@ -92,7 +94,7 @@ for i in `seq 1 2`; do
- 	done
- done
- echo "Finished reflinking"
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/166 b/tests/generic/166
-index 0e31f2e..8600a13 100755
---- a/tests/generic/166
-+++ b/tests/generic/166
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -54,6 +54,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=1024
-@@ -68,7 +70,7 @@ _scratch_cycle_mount
- # Snapshot creator...
- snappy() {
- 	n=0
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
- 		res=$?
- 		echo "$out" | grep -q "No space left" && break
-@@ -83,7 +85,7 @@ snappy &
- seq $nr_loops -1 0 | while read i; do
- 	_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file1 >> $seqres.full
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/167 b/tests/generic/167
-index b2d6c87..261506b 100755
---- a/tests/generic/167
-+++ b/tests/generic/167
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=1024
-@@ -67,7 +69,7 @@ _scratch_cycle_mount
- # Snapshot creator...
- snappy() {
- 	n=0
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
- 		res=$?
- 		echo "$out" | grep -q "No space left" && break
-@@ -82,7 +84,7 @@ snappy &
- seq $nr_loops -1 0 | while read i; do
- 	_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file1 >> $seqres.full
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/168 b/tests/generic/168
-index 7047d10..ceee264 100755
---- a/tests/generic/168
-+++ b/tests/generic/168
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -52,6 +52,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=1024
-@@ -66,7 +68,7 @@ _scratch_cycle_mount
- 
- # Direct I/O overwriter...
- overwrite() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		seq $nr_loops -1 0 | while read i; do
- 			_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file2 >> $seqres.full
- 		done
-@@ -82,7 +84,7 @@ seq 1 10 | while read j; do
- 		[ $? -ne 0 ] && exit
- 	done
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/170 b/tests/generic/170
-index 4861052..6559243 100755
---- a/tests/generic/170
-+++ b/tests/generic/170
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file
-     wait
- }
- 
-@@ -53,6 +53,8 @@ _scratch_mkfs > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
- mkdir $testdir
- 
- loops=1024
-@@ -67,7 +69,7 @@ _scratch_cycle_mount
- 
- # Direct I/O overwriter...
- overwrite() {
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		seq $nr_loops -1 0 | while read i; do
- 			_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file2 >> $seqres.full
- 		done
-@@ -83,7 +85,7 @@ seq 1 10 | while read j; do
- 		[ $? -ne 0 ] && exit
- 	done
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/333 b/tests/generic/333
-index 8db86e3..3d874d7 100755
---- a/tests/generic/333
-+++ b/tests/generic/333
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file $abort_file
-     wait
- }
- 
-@@ -54,6 +54,10 @@ _scratch_mkfs_sized $((400 * 1048576)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
-+abort_file=/tmp/abort
-+rm -rf $abort_file
- mkdir $testdir
- 
- loops=1024
-@@ -68,7 +72,7 @@ _scratch_cycle_mount
- # Snapshot creator...
- snappy() {
- 	n=0
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
- 		res=$?
- 		echo $out | grep -q "No space left" && break
-@@ -76,7 +80,7 @@ snappy() {
- 		test $res -ne 0 && break
- 		n=$((n + 1))
- 	done
--	touch $testdir/abort
-+	touch $abort_file
- }
- 
- echo "Snapshot a file undergoing directio rewrite"
-@@ -85,13 +89,13 @@ seq 1 1000 | while read j; do
- 	seq $nr_loops -1 0 | while read i; do
- 		out="$(_pwrite_byte 0x63 $((i * blksz)) $blksz -d $testdir/file1 2>&1)"
- 		echo $out >> $seqres.full
--		echo $out | grep -q "No space left" && touch $testdir/abort
--		echo $out | grep -qi "error" && touch $testdir/abort
--		test -e $testdir/abort && break
-+		echo $out | grep -q "No space left" && touch $abort_file
-+		echo $out | grep -qi "error" && touch $abort_file
-+		test -e $abort_file && break
- 	done
--	test -e $testdir/abort && break
-+	test -e $abort_file && break
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
-diff --git a/tests/generic/334 b/tests/generic/334
-index 5714125..fb21d4f 100755
---- a/tests/generic/334
-+++ b/tests/generic/334
-@@ -34,7 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 7 15
- _cleanup()
- {
-     cd /
--    rm -rf $tmp.*
-+    rm -rf $tmp.* $finished_file $abort_file
-     wait
- }
- 
-@@ -53,6 +53,10 @@ _scratch_mkfs_sized $((400 * 1048576)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
-+finished_file=/tmp/finished
-+rm -rf $finished_file
-+abort_file=/tmp/abort
-+rm -rf $abort_file
- mkdir $testdir
- 
- loops=1024
-@@ -67,7 +71,7 @@ _scratch_cycle_mount
- # Snapshot creator...
- snappy() {
- 	n=0
--	while [ ! -e $testdir/finished ]; do
-+	while [ ! -e $finished_file ]; do
- 		out="$(_cp_reflink $testdir/file1 $testdir/snap_$n 2>&1)"
- 		res=$?
- 		echo $out | grep -q "No space left" && break
-@@ -75,7 +79,7 @@ snappy() {
- 		test $res -ne 0 && break
- 		n=$((n + 1))
- 	done
--	touch $testdir/abort
-+	touch $abort_file
- }
- 
- echo "Snapshot a file undergoing buffered rewrite"
-@@ -84,13 +88,13 @@ seq 1 1000 | while read j; do
- 	seq $nr_loops -1 0 | while read i; do
- 		out="$(_pwrite_byte 0x63 $((i * blksz)) $blksz $testdir/file1 2>&1)"
- 		echo $out >> $seqres.full
--		echo $out | grep -q "No space left" && touch $testdir/abort
--		echo $out | grep -qi "error" && touch $testdir/abort
--		test -e $testdir/abort && break
-+		echo $out | grep -q "No space left" && touch $abort_file
-+		echo $out | grep -qi "error" && touch $abort_file
-+		test -e $abort_file && break
- 	done
--	test -e $testdir/abort && break
-+	test -e $abort_file && break
- done
--touch $testdir/finished
-+touch $finished_file
- wait
- 
- # success, all done
+diff --git a/tests/xfs/853 b/tests/xfs/853
+new file mode 100755
+index 0000000..14a6940
+--- /dev/null
++++ b/tests/xfs/853
+@@ -0,0 +1,179 @@
++#! /bin/bash
++# FS QA Test No. 853
++#
++# Test recovery of "lost" CoW blocks:
++# - Use the debugger to fake a leftover CoW extent
++# - See if xfs_repair fixes it
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_reflink
++
++rm -f $seqres.full
++
++echo "Format"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full
++is_rmap=$(xfs_info $SCRATCH_MNT | grep -c "rmapbt=1")
++umount $SCRATCH_MNT
++
++_get_agf_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'agf 1' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_agf_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'agf 1' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_get_sb_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'sb 0' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_sb_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_filter_leftover() {
++	grep "^leftover" | sed -e "s/[0-9]\+/NR/g"
++}
++
++_dump_status() {
++	echo "** " "$@"
++	xfs_db -c 'sb 0' -c p $SCRATCH_DEV
++	echo "** agf header"
++	xfs_db -c 'agf 1' -c p $SCRATCH_DEV
++	echo "** refcntbt"
++	xfs_db -c 'agf 1' -c 'addr refcntroot' -c p $SCRATCH_DEV
++	echo "** rmapbt"
++	test $is_rmap -gt 0 && xfs_db -c 'agf 1' -c 'addr rmaproot' -c p $SCRATCH_DEV
++	echo "** bnobt"
++	xfs_db -c 'agf 1' -c 'addr bnoroot' -c p $SCRATCH_DEV
++	echo "** cntbt"
++	xfs_db -c 'agf 1' -c 'addr cntroot' -c p $SCRATCH_DEV
++}
++
++echo "We need AG1 to have a single free extent"
++bno_lvl=$(_get_agf_data level -c 'addr bnoroot')
++bno_nr=$(_get_agf_data numrecs -c 'addr bnoroot')
++refc_lvl=$(_get_agf_data level -c 'addr refcntroot')
++refc_nr=$(_get_agf_data numrecs -c 'addr refcntroot')
++
++test $bno_lvl -eq 0 || echo "  AG 1 bnobt must only have one level"
++test $bno_nr -eq 1 || echo "  AG 1 bnobt must only have one record"
++test $refc_lvl -eq 0 || echo "  AG 1 refcountbt must only have one level"
++test $refc_nr -eq 0 || echo "  AG 1 refcountbt must only have one record"
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_lvl=$(_get_agf_data level -c 'addr rmaproot')
++	rmap_nr=$(_get_agf_data numrecs -c 'addr rmaproot')
++	test $rmap_lvl -eq 0 || echo "  AG 1 rmapbt must only have one level"
++fi
++
++echo "Find our extent and old counter values"
++bno=$(_get_agf_data "recs[1].startblock" -c 'addr bnoroot')
++len=$(_get_agf_data "recs[1].blockcount" -c 'addr bnoroot')
++agf_freeblks=$(_get_agf_data freeblks)
++sb_fdblocks=$(_get_sb_data fdblocks)
++
++test $len -ge 200 || echo "  AG 1 doesn't have enough free blocks"
++
++# Take the last 100 blocks of the free extent
++debris_len=100
++debris_bno=$((bno + len - debris_len))
++
++echo "Remove the extent from the freesp btrees"
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr bnoroot'
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr cntroot'
++_set_agf_data freeblks $((agf_freeblks - debris_len))
++_set_agf_data longest $((len - debris_len))
++_set_sb_data fdblocks $((sb_fdblocks - debris_len))
++
++echo "Add the extent to the refcount btree"
++_set_agf_data numrecs 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
++_set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
++_set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_nr=$((rmap_nr + 1))
++	_set_agf_data numrecs $rmap_nr -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].startblock" $debris_bno -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].blockcount" $debris_len -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].owner" -9 -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].offset" 0 -c 'addr rmaproot'
++fi
++
++_dump_status "broken fs config" >> $seqres.full
++
++echo "Look for leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++echo "Fix filesystem"
++_scratch_xfs_repair >> $seqres.full 2>&1 || echo "xfs_repair failed?"
++
++_dump_status "supposedly fixed fs config" >> $seqres.full
++
++echo "Look for no more leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for no more leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/853.out b/tests/xfs/853.out
+new file mode 100644
+index 0000000..3224e8d
+--- /dev/null
++++ b/tests/xfs/853.out
+@@ -0,0 +1,13 @@
++QA output created by 853
++Format
++We need AG1 to have a single free extent
++Find our extent and old counter values
++Remove the extent from the freesp btrees
++Add the extent to the refcount btree
++Look for leftover warning in xfs_check
++leftover CoW extent (NR/NR) len NR
++Look for leftover warning in xfs_repair
++leftover CoW extent (NR/NR) len NR
++Fix filesystem
++Look for no more leftover warning in xfs_check
++Look for no more leftover warning in xfs_repair
+diff --git a/tests/xfs/854 b/tests/xfs/854
+new file mode 100755
+index 0000000..5c6bec9
+--- /dev/null
++++ b/tests/xfs/854
+@@ -0,0 +1,180 @@
++#! /bin/bash
++# FS QA Test No. 854
++#
++# Test recovery of "lost" CoW blocks:
++# - Use the debugger to fake a leftover CoW extent
++# - See if mount/umount fixes it
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_reflink
++
++rm -f $seqres.full
++
++echo "Format"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full
++is_rmap=$(xfs_info $SCRATCH_MNT | grep -c "rmapbt=1")
++umount $SCRATCH_MNT
++
++_get_agf_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'agf 1' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_agf_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'agf 1' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_get_sb_data() {
++	field="$1"
++	shift
++
++	xfs_db -c 'sb 0' "$@" -c "p $field" $SCRATCH_DEV | awk '{print $3}'
++}
++
++_set_sb_data() {
++	field="$1"
++	value="$2"
++	shift; shift
++
++	xfs_db -x -c 'sb 0' "$@" -c "write $field -- $value" $SCRATCH_DEV >> $seqres.full
++}
++
++_filter_leftover() {
++	grep "^leftover" | sed -e "s/[0-9]\+/NR/g"
++}
++
++_dump_status() {
++	echo "** " "$@"
++	xfs_db -c 'sb 0' -c p $SCRATCH_DEV
++	echo "** agf header"
++	xfs_db -c 'agf 1' -c p $SCRATCH_DEV
++	echo "** refcntbt"
++	xfs_db -c 'agf 1' -c 'addr refcntroot' -c p $SCRATCH_DEV
++	echo "** rmapbt"
++	test $is_rmap -gt 0 && xfs_db -c 'agf 1' -c 'addr rmaproot' -c p $SCRATCH_DEV
++	echo "** bnobt"
++	xfs_db -c 'agf 1' -c 'addr bnoroot' -c p $SCRATCH_DEV
++	echo "** cntbt"
++	xfs_db -c 'agf 1' -c 'addr cntroot' -c p $SCRATCH_DEV
++}
++
++echo "We need AG1 to have a single free extent"
++bno_lvl=$(_get_agf_data level -c 'addr bnoroot')
++bno_nr=$(_get_agf_data numrecs -c 'addr bnoroot')
++refc_lvl=$(_get_agf_data level -c 'addr refcntroot')
++refc_nr=$(_get_agf_data numrecs -c 'addr refcntroot')
++
++test $bno_lvl -eq 0 || echo "  AG 1 bnobt must only have one level"
++test $bno_nr -eq 1 || echo "  AG 1 bnobt must only have one record"
++test $refc_lvl -eq 0 || echo "  AG 1 refcountbt must only have one level"
++test $refc_nr -eq 0 || echo "  AG 1 refcountbt must only have one record"
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_lvl=$(_get_agf_data level -c 'addr rmaproot')
++	rmap_nr=$(_get_agf_data numrecs -c 'addr rmaproot')
++	test $rmap_lvl -eq 0 || echo "  AG 1 rmapbt must only have one level"
++fi
++
++echo "Find our extent and old counter values"
++bno=$(_get_agf_data "recs[1].startblock" -c 'addr bnoroot')
++len=$(_get_agf_data "recs[1].blockcount" -c 'addr bnoroot')
++agf_freeblks=$(_get_agf_data freeblks)
++sb_fdblocks=$(_get_sb_data fdblocks)
++
++test $len -ge 200 || echo "  AG 1 doesn't have enough free blocks"
++
++# Take the last 100 blocks of the free extent
++debris_len=100
++debris_bno=$((bno + len - debris_len))
++
++echo "Remove the extent from the freesp btrees"
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr bnoroot'
++_set_agf_data "recs[1].blockcount" $((len - debris_len)) -c 'addr cntroot'
++_set_agf_data freeblks $((agf_freeblks - debris_len))
++_set_agf_data longest $((len - debris_len))
++_set_sb_data fdblocks $((sb_fdblocks - debris_len))
++
++echo "Add the extent to the refcount btree"
++_set_agf_data numrecs 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
++_set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
++_set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++
++if [ $is_rmap -gt 0 ]; then
++	rmap_nr=$((rmap_nr + 1))
++	_set_agf_data numrecs $rmap_nr -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].startblock" $debris_bno -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].blockcount" $debris_len -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].owner" -9 -c 'addr rmaproot'
++	_set_agf_data "recs[$rmap_nr].offset" 0 -c 'addr rmaproot'
++fi
++
++_dump_status "broken fs config" >> $seqres.full
++
++echo "Look for leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++echo "Mount filesystem"
++_scratch_mount
++umount $SCRATCH_MNT
++
++_dump_status "supposedly fixed fs config" >> $seqres.full
++
++echo "Look for no more leftover warning in xfs_check"
++_scratch_xfs_check | _filter_leftover
++
++echo "Look for no more leftover warning in xfs_repair"
++_scratch_xfs_repair -n 2>&1 | _filter_leftover
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/854.out b/tests/xfs/854.out
+new file mode 100644
+index 0000000..aae2fd7
+--- /dev/null
++++ b/tests/xfs/854.out
+@@ -0,0 +1,13 @@
++QA output created by 854
++Format
++We need AG1 to have a single free extent
++Find our extent and old counter values
++Remove the extent from the freesp btrees
++Add the extent to the refcount btree
++Look for leftover warning in xfs_check
++leftover CoW extent (NR/NR) len NR
++Look for leftover warning in xfs_repair
++leftover CoW extent (NR/NR) len NR
++Mount filesystem
++Look for no more leftover warning in xfs_check
++Look for no more leftover warning in xfs_repair
+diff --git a/tests/xfs/group b/tests/xfs/group
+index f4c6816..4ac62c1 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -285,3 +285,5 @@
+ 303 auto quick quota
+ 304 auto quick quota
+ 305 auto quota
++853 auto quick clone
++854 auto quick clone
 
 _______________________________________________
 xfs mailing list
