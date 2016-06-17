@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 827847D20
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:20:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41F79304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:20:29 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A1F527CA4
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:20:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 73AE18F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:20:33 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id iEM2PFgt8uLm8Z1y (version=TLSv1.2
+	cuda.sgi.com with ESMTP id esIOSnVF9KtDVTMj (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:20:26 -0700 (PDT)
-Subject: [PATCH 023/119] xfs: introduce rmap btree definitions
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:20:32 -0700 (PDT)
+Subject: [PATCH 024/119] xfs: add rmap btree stats infrastructure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:20:19 -0700
-Message-ID: <146612641935.12839.2545862100454514832.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:20:26 -0700
+Message-ID: <146612642642.12839.4422813555398236765.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -33,172 +33,82 @@ Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchin
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add new per-ag rmap btree definitions to the per-ag structures. The
-rmap btree will sit in the empty slots on disk after the free space
-btrees, and hence form a part of the array of space management
-btrees. This requires the definition of the btree to be contiguous
-with the free space btrees.
+The rmap btree will require the same stats as all the other generic
+btrees, so add al the code for that now.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  |    6 ++++++
- fs/xfs/libxfs/xfs_btree.c  |    4 ++--
- fs/xfs/libxfs/xfs_btree.h  |    3 +++
- fs/xfs/libxfs/xfs_format.h |   22 +++++++++++++++++-----
- fs/xfs/libxfs/xfs_types.h  |    4 ++--
- 5 files changed, 30 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_btree.h |    5 +++--
+ fs/xfs/xfs_stats.c        |    1 +
+ fs/xfs/xfs_stats.h        |   18 +++++++++++++++++-
+ 3 files changed, 21 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 56c8690..b61e9c6 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2272,6 +2272,10 @@ xfs_agf_verify(
- 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
- 		return false;
- 
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
-+	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS)
-+		return false;
-+
- 	/*
- 	 * during growfs operations, the perag is not fully initialised,
- 	 * so we can't use it for any useful checking. growfs ensures we can't
-@@ -2403,6 +2407,8 @@ xfs_alloc_read_agf(
- 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
- 		pag->pagf_levels[XFS_BTNUM_CNTi] =
- 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
-+		pag->pagf_levels[XFS_BTNUM_RMAPi] =
-+			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
- 		spin_lock_init(&pag->pagb_lock);
- 		pag->pagb_count = 0;
- #ifdef __KERNEL__
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 5b3743a..624b572 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -44,9 +44,9 @@ kmem_zone_t	*xfs_btree_cur_zone;
-  * Btree magic numbers.
-  */
- static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
--	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
-+	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
- 	  XFS_FIBT_MAGIC },
--	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC,
-+	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
- 	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
- };
- #define xfs_btree_magic(cur) \
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 7483cac..202fdd3 100644
+index 202fdd3..a29067c 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -63,6 +63,7 @@ union xfs_btree_rec {
- #define	XFS_BTNUM_BMAP	((xfs_btnum_t)XFS_BTNUM_BMAPi)
- #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
- #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
-+#define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
- 
- /*
-  * For logging record fields.
-@@ -95,6 +96,7 @@ do {    \
+@@ -96,7 +96,7 @@ do {    \
  	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(__mp, bmbt, stat); break; \
  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
-+	case XFS_BTNUM_RMAP: break;	\
+-	case XFS_BTNUM_RMAP: break;	\
++	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(__mp, rmap, stat); break; \
  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
  	}       \
  } while (0)
-@@ -115,6 +117,7 @@ do {    \
+@@ -117,7 +117,8 @@ do {    \
  		__XFS_BTREE_STATS_ADD(__mp, ibt, stat, val); break; \
  	case XFS_BTNUM_FINO:	\
  		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
-+	case XFS_BTNUM_RMAP: break; \
+-	case XFS_BTNUM_RMAP: break; \
++	case XFS_BTNUM_RMAP:	\
++		__XFS_BTREE_STATS_ADD(__mp, rmap, stat, val); break; \
  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
  	}       \
  } while (0)
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index ba528b3..8ca4a3d 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -455,6 +455,7 @@ xfs_sb_has_compat_feature(
- }
- 
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
-+#define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
-@@ -538,6 +539,12 @@ static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
- 		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
- }
- 
-+static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
-+{
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
-+}
-+
- /*
-  * end of superblock version macros
-  */
-@@ -598,10 +605,10 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
- #define	XFS_AGI_GOOD_VERSION(v)	((v) == XFS_AGI_VERSION)
- 
- /*
-- * Btree number 0 is bno, 1 is cnt.  This value gives the size of the
-+ * Btree number 0 is bno, 1 is cnt, 2 is rmap. This value gives the size of the
-  * arrays below.
-  */
--#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_CNTi + 1)
-+#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_RMAPi + 1)
- 
- /*
-  * The second word of agf_levels in the first a.g. overlaps the EFS
-@@ -618,12 +625,10 @@ typedef struct xfs_agf {
- 	__be32		agf_seqno;	/* sequence # starting from 0 */
- 	__be32		agf_length;	/* size in blocks of a.g. */
- 	/*
--	 * Freespace information
-+	 * Freespace and rmap information
- 	 */
- 	__be32		agf_roots[XFS_BTNUM_AGF];	/* root blocks */
--	__be32		agf_spare0;	/* spare field */
- 	__be32		agf_levels[XFS_BTNUM_AGF];	/* btree levels */
--	__be32		agf_spare1;	/* spare field */
- 
- 	__be32		agf_flfirst;	/* first freelist block's index */
- 	__be32		agf_fllast;	/* last freelist block's index */
-@@ -1307,6 +1312,13 @@ typedef __be32 xfs_inobt_ptr_t;
- #define	XFS_FIBT_BLOCK(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
- 
- /*
-+ * Reverse mapping btree format definitions
-+ *
-+ * There is a btree for the reverse map per allocation group
-+ */
-+#define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
-+
-+/*
-  * The first data block of an AG depends on whether the filesystem was formatted
-  * with the finobt feature. If so, account for the finobt reserved root btree
-  * block.
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index f0d145a..da87796 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -111,8 +111,8 @@ typedef enum {
- } xfs_lookup_t;
- 
- typedef enum {
--	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_BMAPi, XFS_BTNUM_INOi,
--	XFS_BTNUM_FINOi, XFS_BTNUM_MAX
-+	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
-+	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
- } xfs_btnum_t;
- 
- struct xfs_name {
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 8686df6..f04f547 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -61,6 +61,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
+ 		{ "ibt2",		XFSSTAT_END_IBT_V2		},
+ 		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
++		{ "rmapbt",		XFSSTAT_END_RMAP_V2		},
+ 		/* we print both series of quota information together */
+ 		{ "qm",			XFSSTAT_END_QM			},
+ 	};
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index 483b0ef..657865f 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -197,7 +197,23 @@ struct xfsstats {
+ 	__uint32_t		xs_fibt_2_alloc;
+ 	__uint32_t		xs_fibt_2_free;
+ 	__uint32_t		xs_fibt_2_moves;
+-#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_FIBT_V2+6)
++#define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+15)
++	__uint32_t		xs_rmap_2_lookup;
++	__uint32_t		xs_rmap_2_compare;
++	__uint32_t		xs_rmap_2_insrec;
++	__uint32_t		xs_rmap_2_delrec;
++	__uint32_t		xs_rmap_2_newroot;
++	__uint32_t		xs_rmap_2_killroot;
++	__uint32_t		xs_rmap_2_increment;
++	__uint32_t		xs_rmap_2_decrement;
++	__uint32_t		xs_rmap_2_lshift;
++	__uint32_t		xs_rmap_2_rshift;
++	__uint32_t		xs_rmap_2_split;
++	__uint32_t		xs_rmap_2_join;
++	__uint32_t		xs_rmap_2_alloc;
++	__uint32_t		xs_rmap_2_free;
++	__uint32_t		xs_rmap_2_moves;
++#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
+ 	__uint32_t		xs_qm_dqreclaims;
+ 	__uint32_t		xs_qm_dqreclaim_misses;
+ 	__uint32_t		xs_qm_dquot_dups;
 
 _______________________________________________
 xfs mailing list
