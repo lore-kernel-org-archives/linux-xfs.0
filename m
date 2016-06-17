@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 05E0F8189
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:35:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E54EAC002
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:31 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F2CC08152
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:35:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C4CEAC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:38 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Tt2btjvfHf89LtYE (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ozjmMWjjkAWa4Tir (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:29 -0700 (PDT)
-Subject: [PATCH 044/145] xfs: create rmap update intent log items
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:35:36 -0700 (PDT)
+Subject: [PATCH 045/145] xfs: enable the xfs_defer mechanism to process
+	rmaps to update
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:35:22 -0700
-Message-ID: <146612732200.16048.15503614314390802694.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:35:29 -0700
+Message-ID: <146612732898.16048.12128402877492848247.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,148 +32,152 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Create rmap update intent/done log items to record redo information in
-the log.  Because we need to roll transactions between updating the
-bmbt mapping and updating the reverse mapping, we also have to track
-the status of the metadata updates that will be recorded in the
-post-roll transactions, just in case we crash before committing the
-final transaction.  This mechanism enables log recovery to finish what
-was already started.
+Connect the xfs_defer mechanism with the pieces that we'll need to
+handle deferred rmap updates.  We'll wire up the existing code to
+our new deferred mechanism later.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_log_format.h |   67 ++++++++++++++++++++++++++++++++++++++++++++++-
- libxfs/xfs_rmap_btree.h |   19 +++++++++++++
- 2 files changed, 84 insertions(+), 2 deletions(-)
+ libxfs/defer_item.c |  100 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_defer.h  |    1 +
+ 2 files changed, 101 insertions(+)
 
 
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index e5baba3..b9627b7 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -110,7 +110,9 @@ static inline uint xlog_get_cycle(char *ptr)
- #define XLOG_REG_TYPE_COMMIT		18
- #define XLOG_REG_TYPE_TRANSHDR		19
- #define XLOG_REG_TYPE_ICREATE		20
--#define XLOG_REG_TYPE_MAX		20
-+#define XLOG_REG_TYPE_RUI_FORMAT	21
-+#define XLOG_REG_TYPE_RUD_FORMAT	22
-+#define XLOG_REG_TYPE_MAX		22
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 777875c..cd88cfd 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -30,6 +30,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_bmap.h"
+ #include "xfs_alloc.h"
++#include "xfs_rmap_btree.h"
  
- /*
-  * Flags to log operation header
-@@ -227,6 +229,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_DQUOT		0x123d
- #define	XFS_LI_QUOTAOFF		0x123e
- #define	XFS_LI_ICREATE		0x123f
-+#define	XFS_LI_RUI		0x1240	/* rmap update intent */
-+#define	XFS_LI_RUD		0x1241
+ /* Extent Freeing */
  
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -236,7 +240,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
- 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
- 	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
--	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }, \
-+	{ XFS_LI_RUI,		"XFS_LI_RUI" }, \
-+	{ XFS_LI_RUD,		"XFS_LI_RUD" }
+@@ -126,11 +127,110 @@ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+ 	.cancel_item	= xfs_bmap_free_cancel_item,
+ };
  
- /*
-  * Inode Log Item Format definitions.
-@@ -604,6 +610,63 @@ typedef struct xfs_efd_log_format_64 {
- } xfs_efd_log_format_64_t;
- 
- /*
-+ * RUI/RUD (reverse mapping) log format definitions
-+ */
-+struct xfs_map_extent {
-+	__uint64_t		me_owner;
-+	__uint64_t		me_startblock;
-+	__uint64_t		me_startoff;
-+	__uint32_t		me_len;
-+	__uint32_t		me_flags;
++/* Reverse Mapping */
++
++/* Sort rmap intents by AG. */
++static int
++xfs_rmap_update_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_mount		*mp = priv;
++	struct xfs_rmap_intent		*ra;
++	struct xfs_rmap_intent		*rb;
++
++	ra = container_of(a, struct xfs_rmap_intent, ri_list);
++	rb = container_of(b, struct xfs_rmap_intent, ri_list);
++	return  XFS_FSB_TO_AGNO(mp, ra->ri_bmap.br_startblock) -
++		XFS_FSB_TO_AGNO(mp, rb->ri_bmap.br_startblock);
++}
++
++/* Get an RUI. */
++STATIC void *
++xfs_rmap_update_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	return NULL;
++}
++
++/* Log rmap updates in the intent item. */
++STATIC void
++xfs_rmap_update_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++}
++
++/* Get an RUD so we can process all the deferred rmap updates. */
++STATIC void *
++xfs_rmap_update_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return NULL;
++}
++
++/* Process a deferred rmap update. */
++STATIC int
++xfs_rmap_update_finish_item(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dop,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	return -EFSCORRUPTED;
++}
++
++/* Clean up after processing deferred rmaps. */
++STATIC void
++xfs_rmap_update_finish_cleanup(
++	struct xfs_trans	*tp,
++	void			*state,
++	int			error)
++{
++}
++
++/* Abort all pending RUIs. */
++STATIC void
++xfs_rmap_update_abort_intent(
++	void				*intent)
++{
++}
++
++/* Cancel a deferred rmap update. */
++STATIC void
++xfs_rmap_update_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_rmap_intent		*rmap;
++
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++	kmem_free(rmap);
++}
++
++const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
++	.type		= XFS_DEFER_OPS_TYPE_RMAP,
++	.diff_items	= xfs_rmap_update_diff_items,
++	.create_intent	= xfs_rmap_update_create_intent,
++	.abort_intent	= xfs_rmap_update_abort_intent,
++	.log_item	= xfs_rmap_update_log_item,
++	.create_done	= xfs_rmap_update_create_done,
++	.finish_item	= xfs_rmap_update_finish_item,
++	.finish_cleanup = xfs_rmap_update_finish_cleanup,
++	.cancel_item	= xfs_rmap_update_cancel_item,
 +};
 +
-+/* rmap me_flags: upper bits are flags, lower byte is type code */
-+#define XFS_RMAP_EXTENT_MAP		1
-+#define XFS_RMAP_EXTENT_MAP_SHARED	2
-+#define XFS_RMAP_EXTENT_UNMAP		3
-+#define XFS_RMAP_EXTENT_UNMAP_SHARED	4
-+#define XFS_RMAP_EXTENT_CONVERT		5
-+#define XFS_RMAP_EXTENT_CONVERT_SHARED	6
-+#define XFS_RMAP_EXTENT_ALLOC		7
-+#define XFS_RMAP_EXTENT_FREE		8
-+#define XFS_RMAP_EXTENT_TYPE_MASK	0xFF
-+
-+#define XFS_RMAP_EXTENT_ATTR_FORK	(1U << 31)
-+#define XFS_RMAP_EXTENT_BMBT_BLOCK	(1U << 30)
-+#define XFS_RMAP_EXTENT_UNWRITTEN	(1U << 29)
-+
-+#define XFS_RMAP_EXTENT_FLAGS		(XFS_RMAP_EXTENT_TYPE_MASK | \
-+					 XFS_RMAP_EXTENT_ATTR_FORK | \
-+					 XFS_RMAP_EXTENT_BMBT_BLOCK | \
-+					 XFS_RMAP_EXTENT_UNWRITTEN)
-+
-+/*
-+ * This is the structure used to lay out an rui log item in the
-+ * log.  The rui_extents field is a variable size array whose
-+ * size is given by rui_nextents.
-+ */
-+struct xfs_rui_log_format {
-+	__uint16_t		rui_type;	/* rui log item type */
-+	__uint16_t		rui_size;	/* size of this item */
-+	__uint32_t		rui_nextents;	/* # extents to free */
-+	__uint64_t		rui_id;		/* rui identifier */
-+	struct xfs_map_extent	rui_extents[1];	/* array of extents to rmap */
-+};
-+
-+/*
-+ * This is the structure used to lay out an rud log item in the
-+ * log.  The rud_extents array is a variable size array whose
-+ * size is given by rud_nextents;
-+ */
-+struct xfs_rud_log_format {
-+	__uint16_t		rud_type;	/* rud log item type */
-+	__uint16_t		rud_size;	/* size of this item */
-+	__uint32_t		rud_nextents;	/* # of extents freed */
-+	__uint64_t		rud_rui_id;	/* id of corresponding rui */
-+	struct xfs_map_extent	rud_extents[1];	/* array of extents rmapped */
-+};
-+
-+/*
-  * Dquot Log format definitions.
-  *
-  * The first two fields must be the type and size fitting into
-diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
-index 6674340..aff60dc 100644
---- a/libxfs/xfs_rmap_btree.h
-+++ b/libxfs/xfs_rmap_btree.h
-@@ -87,4 +87,23 @@ int xfs_rmapbt_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmapbt_query_range_fn fn, void *priv);
+ /* Deferred Item Initialization */
  
-+enum xfs_rmap_intent_type {
-+	XFS_RMAP_MAP,
-+	XFS_RMAP_MAP_SHARED,
-+	XFS_RMAP_UNMAP,
-+	XFS_RMAP_UNMAP_SHARED,
-+	XFS_RMAP_CONVERT,
-+	XFS_RMAP_CONVERT_SHARED,
-+	XFS_RMAP_ALLOC,
-+	XFS_RMAP_FREE,
-+};
-+
-+struct xfs_rmap_intent {
-+	struct list_head			ri_list;
-+	enum xfs_rmap_intent_type		ri_type;
-+	__uint64_t				ri_owner;
-+	int					ri_whichfork;
-+	struct xfs_bmbt_irec			ri_bmap;
-+};
-+
- #endif	/* __XFS_RMAP_BTREE_H__ */
+ /* Initialize the deferred operation types. */
+ void
+ xfs_defer_init_types(void)
+ {
++	xfs_defer_init_op_type(&xfs_rmap_update_defer_type);
+ 	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+ }
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 743fc32..920642e 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -51,6 +51,7 @@ struct xfs_defer_pending {
+  * find all the space it needs.
+  */
+ enum xfs_defer_ops_type {
++	XFS_DEFER_OPS_TYPE_RMAP,
+ 	XFS_DEFER_OPS_TYPE_FREE,
+ 	XFS_DEFER_OPS_TYPE_MAX,
+ };
 
 _______________________________________________
 xfs mailing list
