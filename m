@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41C517E3E
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:24:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EE3797E3A
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:25:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12349304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:24:55 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ayrkDYUdtzW1NDAm (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B0FA88F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:01 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id gGwBvTe2fxlUcC6u (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:24:53 -0700 (PDT)
-Subject: [PATCH 065/119] xfs: adjust refcount when unmapping file blocks
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:00 -0700 (PDT)
+Subject: [PATCH 066/119] xfs: add refcount btree block detection to log
+	recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:24:48 -0700
-Message-ID: <146612668881.12839.2370993652366720708.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:24:55 -0700
+Message-ID: <146612669508.12839.12845120903495427776.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,51 +32,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-When we're unmapping blocks from a reflinked file, decrease the
-refcount of the affected blocks and free the extents that are no
-longer in use.
-
-v2: Use deferred ops system to avoid deadlocks and running out of
-transaction reservation.
+Teach log recovery how to deal with refcount btree blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log_recover.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 972dfc2..9044e39 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -48,6 +48,7 @@
- #include "xfs_filestream.h"
- #include "xfs_rmap_btree.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_refcount.h"
- 
- 
- kmem_zone_t		*xfs_bmap_free_item_zone;
-@@ -5061,9 +5062,16 @@ xfs_bmap_del_extent(
- 	/*
- 	 * If we need to, add to list of extents to delete.
- 	 */
--	if (do_fx)
--		xfs_bmap_add_free(mp, dfops, del->br_startblock,
--				  del->br_blockcount, NULL);
-+	if (do_fx) {
-+		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
-+			error = xfs_refcount_decrease_extent(mp, dfops, del);
-+			if (error)
-+				goto done;
-+		} else
-+			xfs_bmap_add_free(mp, dfops, del->br_startblock,
-+					  del->br_blockcount, NULL);
-+	}
-+
- 	/*
- 	 * Adjust inode # blocks in the file.
- 	 */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ee37dc5..2235d94 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2238,6 +2238,7 @@ xlog_recover_get_buf_lsn(
+ 	case XFS_ABTB_MAGIC:
+ 	case XFS_ABTC_MAGIC:
+ 	case XFS_RMAP_CRC_MAGIC:
++	case XFS_REFC_CRC_MAGIC:
+ 	case XFS_IBT_CRC_MAGIC:
+ 	case XFS_IBT_MAGIC: {
+ 		struct xfs_btree_block *btb = blk;
+@@ -2409,6 +2410,9 @@ xlog_recover_validate_buf_type(
+ 		case XFS_RMAP_CRC_MAGIC:
+ 			bp->b_ops = &xfs_rmapbt_buf_ops;
+ 			break;
++		case XFS_REFC_CRC_MAGIC:
++			bp->b_ops = &xfs_refcountbt_buf_ops;
++			break;
+ 		default:
+ 			xfs_warn(mp, "Bad btree block magic!");
+ 			ASSERT(0);
 
 _______________________________________________
 xfs mailing list
