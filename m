@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 938767CAF
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:21:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 655A78F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:21:36 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6DA787CDB
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:21:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3F212304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:21:43 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 5tIaNCTevPlrCYoe (version=TLSv1.2
+	cuda.sgi.com with ESMTP id DCuKYqleLMDy5pV2 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:21:34 -0700 (PDT)
-Subject: [PATCH 034/119] xfs: teach rmapbt to support interval queries
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:21:41 -0700 (PDT)
+Subject: [PATCH 035/119] xfs: add tracepoints for the rmap functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:21:30 -0700
-Message-ID: <146612649050.12839.2803288971604662823.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:21:36 -0700
+Message-ID: <146612649677.12839.16503733724386105697.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,88 +31,120 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Now that the generic btree code supports querying all records within a
-range of keys, use that functionality to allow us to ask for all the
-extents mapped to a range of physical blocks.
-
-v2: Move unwritten bit to rm_offset.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c       |   43 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap_btree.h |    9 ++++++++
- 2 files changed, 52 insertions(+)
+ fs/xfs/xfs_trace.h |   81 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 79 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index c6a5a0b..0e1721a 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -184,3 +184,46 @@ out_error:
- 	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, false, oinfo);
- 	return error;
- }
-+
-+struct xfs_rmapbt_query_range_info {
-+	xfs_rmapbt_query_range_fn	fn;
-+	void				*priv;
-+};
-+
-+/* Format btree record and pass to our callback. */
-+STATIC int
-+xfs_rmapbt_query_range_helper(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*rec,
-+	void			*priv)
-+{
-+	struct xfs_rmapbt_query_range_info	*query = priv;
-+	struct xfs_rmap_irec			irec;
-+	int					error;
-+
-+	error = xfs_rmapbt_btrec_to_irec(rec, &irec);
-+	if (error)
-+		return error;
-+	return query->fn(cur, &irec, query->priv);
-+}
-+
-+/* Find all rmaps between two keys. */
-+int
-+xfs_rmapbt_query_range(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*low_rec,
-+	struct xfs_rmap_irec		*high_rec,
-+	xfs_rmapbt_query_range_fn	fn,
-+	void				*priv)
-+{
-+	union xfs_btree_irec		low_brec;
-+	union xfs_btree_irec		high_brec;
-+	struct xfs_rmapbt_query_range_info	query;
-+
-+	low_brec.r = *low_rec;
-+	high_brec.r = *high_rec;
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-+			xfs_rmapbt_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 796071c..e926c6e 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -74,4 +74,13 @@ int xfs_rmap_free(struct xfs_trans *tp, struct xfs_buf *agbp,
- 		  xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
- 		  struct xfs_owner_info *oinfo);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 28bd991..6daafaf 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2415,8 +2415,6 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
  
-+typedef int (*xfs_rmapbt_query_range_fn)(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_rmap_irec	*rec,
-+	void			*priv);
+-DEFINE_MAP_EXTENT_DEFERRED_EVENT(xfs_defer_map_extent);
+-
+ #define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
+ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
+ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_deferred);
+@@ -2463,6 +2461,36 @@ DEFINE_EVENT(xfs_rmap_class, name, \
+ 		 struct xfs_owner_info *oinfo), \
+ 	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo))
+ 
++/* simple AG-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_ag_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, agno, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno %u error %d caller %ps",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
 +
-+int xfs_rmapbt_query_range(struct xfs_btree_cur *cur,
-+		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
-+		xfs_rmapbt_query_range_fn fn, void *priv);
++#define DEFINE_AG_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_ag_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agno, error, caller_ip))
 +
- #endif	/* __XFS_RMAP_BTREE_H__ */
+ DEFINE_RMAP_EVENT(xfs_rmap_free_extent);
+ DEFINE_RMAP_EVENT(xfs_rmap_free_extent_done);
+ DEFINE_RMAP_EVENT(xfs_rmap_free_extent_error);
+@@ -2470,8 +2498,57 @@ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent);
+ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_done);
+ DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_error);
+ 
++DECLARE_EVENT_CLASS(xfs_rmapbt_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 uint64_t owner, uint64_t offset, unsigned int flags),
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned int, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++		__entry->flags = flags;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++#define DEFINE_RMAPBT_EVENT(name) \
++DEFINE_EVENT(xfs_rmapbt_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 uint64_t owner, uint64_t offset, unsigned int flags), \
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
++
++#define DEFINE_RMAP_DEFERRED_EVENT DEFINE_MAP_EXTENT_DEFERRED_EVENT
++DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
++DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
++
+ DEFINE_BUSY_EVENT(xfs_rmapbt_alloc_block);
+ DEFINE_BUSY_EVENT(xfs_rmapbt_free_block);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_update);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_insert);
++DEFINE_RMAPBT_EVENT(xfs_rmapbt_delete);
++DEFINE_AG_ERROR_EVENT(xfs_rmapbt_insert_error);
++DEFINE_AG_ERROR_EVENT(xfs_rmapbt_delete_error);
++DEFINE_AG_ERROR_EVENT(xfs_rmapbt_update_error);
+ 
+ #endif /* _TRACE_XFS_H */
+ 
 
 _______________________________________________
 xfs mailing list
