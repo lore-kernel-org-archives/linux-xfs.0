@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E60438129
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:34:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FDB6AC001
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:34:23 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D02BA8137
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:34:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47F0FAC001
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:34:28 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id pr28hD1nF43aHK6f (version=TLSv1.2
+	cuda.sgi.com with ESMTP id dhE2atXGbq1HLyIo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:34:20 -0700 (PDT)
-Subject: [PATCH 033/145] xfs: define the on-disk rmap btree format
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:34:26 -0700 (PDT)
+Subject: [PATCH 034/145] xfs: rmap btree transaction reservations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:34:12 -0700
-Message-ID: <146612725229.16048.7815813365704135602.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:34:18 -0700
+Message-ID: <146612725864.16048.5510258305657258555.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,561 +31,227 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+The rmap btrees will use the AGFL as the block allocation source, so
+we need to ensure that the transaction reservations reflect the fact
+this tree is modified by allocation and freeing. Hence we need to
+extend all the extent allocation/free reservations used in
+transactions to handle this.
 
-Now we have all the surrounding call infrastructure in place, we can
-start filling out the rmap btree implementation. Start with the
-on-disk btree format; add everything needed to read, write and
-manipulate rmap btree blocks. This prepares the way for adding the
-btree operations implementation.
+Note that this also gets rid of the unused XFS_ALLOCFREE_LOG_RES
+macro, as we now do buffer reservations based on the number of
+buffers logged via xfs_calc_buf_res(). Hence we only need the buffer
+count calculation now.
 
-[darrick: record owner and offset info in rmap btree]
-[darrick: fork, bmbt and unwritten state in rmap btree]
-[darrick: flags are a separate field in xfs_rmap_irec]
-[darrick: calculate maxlevels separately]
-[darrick: move 'unwritten' bit to rm_offset]
+[darrick: use rmap_maxlevels when calculating log block resv]
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/xfs_mount.h     |    3 +
- libxfs/Makefile         |    1 
- libxfs/init.c           |    2 +
- libxfs/xfs_btree.c      |    3 +
- libxfs/xfs_btree.h      |   18 +++--
- libxfs/xfs_format.h     |  140 +++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rmap_btree.c |  178 +++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rmap_btree.h |   32 ++++++++
- libxfs/xfs_sb.c         |    6 ++
- libxfs/xfs_shared.h     |    2 +
- 10 files changed, 377 insertions(+), 8 deletions(-)
- create mode 100644 libxfs/xfs_rmap_btree.c
+ libxfs/xfs_trans_resv.c |   58 +++++++++++++++++++++++++++++++++--------------
+ libxfs/xfs_trans_resv.h |   10 --------
+ 2 files changed, 41 insertions(+), 27 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 2c7c72e..7d63c93 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -64,9 +64,12 @@ typedef struct xfs_mount {
- 	uint			m_bmap_dmnr[2];	/* XFS_BMAP_BLOCK_DMINRECS */
- 	uint			m_inobt_mxr[2];	/* XFS_INOBT_BLOCK_MAXRECS */
- 	uint			m_inobt_mnr[2];	/* XFS_INOBT_BLOCK_MINRECS */
-+	uint			m_rmap_mxr[2];	/* max rmap btree records */
-+	uint			m_rmap_mnr[2];	/* min rmap btree records */
- 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
- 	uint			m_in_maxlevels;	/* XFS_IN_MAXLEVELS */
-+	uint			m_rmap_maxlevels; /* max rmap btree levels */
- 	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
- 	struct radix_tree_root	m_perag_tree;
- 	uint			m_flags;	/* global mount flags */
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index d7a3e57..df47da2 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -84,6 +84,7 @@ CFILES = cache.c \
- 	xfs_ialloc_btree.c \
- 	xfs_log_rlimit.c \
- 	xfs_rmap.c \
-+	xfs_rmap_btree.c \
- 	xfs_rtbitmap.c \
- 	xfs_sb.c \
- 	xfs_symlink_remote.c \
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 7b618da..c56d123 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -31,6 +31,7 @@
- #include "xfs_inode_fork.h"
- #include "xfs_inode.h"
- #include "xfs_trans.h"
-+#include "xfs_rmap_btree.h"
- 
- #include "libxfs.h"		/* for now */
- 
-@@ -683,6 +684,7 @@ libxfs_mount(
- 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
- 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
- 	xfs_ialloc_compute_maxlevels(mp);
-+	xfs_rmapbt_compute_maxlevels(mp);
- 
- 	if (sbp->sb_imax_pct) {
- 		/* Make sure the maximum inode count is a multiple of the
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 8f66e14..db0267a 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -1206,6 +1206,9 @@ xfs_btree_set_refs(
- 	case XFS_BTNUM_BMAP:
- 		xfs_buf_set_ref(bp, XFS_BMAP_BTREE_REF);
- 		break;
-+	case XFS_BTNUM_RMAP:
-+		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
-+		break;
- 	default:
- 		ASSERT(0);
- 	}
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index a29067c..90ea2a7 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -38,17 +38,19 @@ union xfs_btree_ptr {
- };
- 
- union xfs_btree_key {
--	xfs_bmbt_key_t		bmbt;
--	xfs_bmdr_key_t		bmbr;	/* bmbt root block */
--	xfs_alloc_key_t		alloc;
--	xfs_inobt_key_t		inobt;
-+	struct xfs_bmbt_key		bmbt;
-+	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
-+	xfs_alloc_key_t			alloc;
-+	struct xfs_inobt_key		inobt;
-+	struct xfs_rmap_key		rmap;
- };
- 
- union xfs_btree_rec {
--	xfs_bmbt_rec_t		bmbt;
--	xfs_bmdr_rec_t		bmbr;	/* bmbt root block */
--	xfs_alloc_rec_t		alloc;
--	xfs_inobt_rec_t		inobt;
-+	struct xfs_bmbt_rec		bmbt;
-+	xfs_bmdr_rec_t			bmbr;	/* bmbt root block */
-+	struct xfs_alloc_rec		alloc;
-+	struct xfs_inobt_rec		inobt;
-+	struct xfs_rmap_rec		rmap;
- };
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index c55220f..2ed80a5 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -63,6 +63,30 @@ xfs_calc_buf_res(
+ }
  
  /*
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 1b63315..2525004 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -1383,11 +1383,151 @@ xfs_rmap_ino_owner(
- #define XFS_RMAP_OWN_INODES	(-7ULL)	/* Inode chunk */
- #define XFS_RMAP_OWN_MIN	(-8ULL) /* guard */
- 
-+#define XFS_RMAP_NON_INODE_OWNER(owner)	(!!((owner) & (1ULL << 63)))
-+
-+/*
-+ * Data record structure
-+ */
-+struct xfs_rmap_rec {
-+	__be32		rm_startblock;	/* extent start block */
-+	__be32		rm_blockcount;	/* extent length */
-+	__be64		rm_owner;	/* extent owner */
-+	__be64		rm_offset;	/* offset within the owner */
-+};
-+
-+/*
-+ * rmap btree record
-+ *  rm_offset:63 is the attribute fork flag
-+ *  rm_offset:62 is the bmbt block flag
-+ *  rm_offset:61 is the unwritten extent flag (same as l0:63 in bmbt)
-+ *  rm_offset:54-60 aren't used and should be zero
-+ *  rm_offset:0-53 is the block offset within the inode
-+ */
-+#define XFS_RMAP_OFF_ATTR_FORK	((__uint64_t)1ULL << 63)
-+#define XFS_RMAP_OFF_BMBT_BLOCK	((__uint64_t)1ULL << 62)
-+#define XFS_RMAP_OFF_UNWRITTEN	((__uint64_t)1ULL << 61)
-+
-+#define XFS_RMAP_LEN_MAX	((__uint32_t)~0U)
-+#define XFS_RMAP_OFF_FLAGS	(XFS_RMAP_OFF_ATTR_FORK | \
-+				 XFS_RMAP_OFF_BMBT_BLOCK | \
-+				 XFS_RMAP_OFF_UNWRITTEN)
-+#define XFS_RMAP_OFF_MASK	((__uint64_t)0x3FFFFFFFFFFFFFULL)
-+
-+#define XFS_RMAP_OFF(off)		((off) & XFS_RMAP_OFF_MASK)
-+
-+#define XFS_RMAP_IS_BMBT_BLOCK(off)	(!!((off) & XFS_RMAP_OFF_BMBT_BLOCK))
-+#define XFS_RMAP_IS_ATTR_FORK(off)	(!!((off) & XFS_RMAP_OFF_ATTR_FORK))
-+#define XFS_RMAP_IS_UNWRITTEN(len)	(!!((off) & XFS_RMAP_OFF_UNWRITTEN))
-+
-+#define RMAPBT_STARTBLOCK_BITLEN	32
-+#define RMAPBT_BLOCKCOUNT_BITLEN	32
-+#define RMAPBT_OWNER_BITLEN		64
-+#define RMAPBT_ATTRFLAG_BITLEN		1
-+#define RMAPBT_BMBTFLAG_BITLEN		1
-+#define RMAPBT_EXNTFLAG_BITLEN		1
-+#define RMAPBT_UNUSED_OFFSET_BITLEN	7
-+#define RMAPBT_OFFSET_BITLEN		54
-+
-+#define XFS_RMAP_ATTR_FORK		(1 << 0)
-+#define XFS_RMAP_BMBT_BLOCK		(1 << 1)
-+#define XFS_RMAP_UNWRITTEN		(1 << 2)
-+#define XFS_RMAP_KEY_FLAGS		(XFS_RMAP_ATTR_FORK | \
-+					 XFS_RMAP_BMBT_BLOCK)
-+#define XFS_RMAP_REC_FLAGS		(XFS_RMAP_UNWRITTEN)
-+struct xfs_rmap_irec {
-+	xfs_agblock_t	rm_startblock;	/* extent start block */
-+	xfs_extlen_t	rm_blockcount;	/* extent length */
-+	__uint64_t	rm_owner;	/* extent owner */
-+	__uint64_t	rm_offset;	/* offset within the owner */
-+	unsigned int	rm_flags;	/* state flags */
-+};
-+
-+static inline __u64
-+xfs_rmap_irec_offset_pack(
-+	const struct xfs_rmap_irec	*irec)
-+{
-+	__u64			x;
-+
-+	x = XFS_RMAP_OFF(irec->rm_offset);
-+	if (irec->rm_flags & XFS_RMAP_ATTR_FORK)
-+		x |= XFS_RMAP_OFF_ATTR_FORK;
-+	if (irec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		x |= XFS_RMAP_OFF_BMBT_BLOCK;
-+	if (irec->rm_flags & XFS_RMAP_UNWRITTEN)
-+		x |= XFS_RMAP_OFF_UNWRITTEN;
-+	return x;
-+}
-+
-+static inline int
-+xfs_rmap_irec_offset_unpack(
-+	__u64			offset,
-+	struct xfs_rmap_irec	*irec)
-+{
-+	if (offset & ~(XFS_RMAP_OFF_MASK | XFS_RMAP_OFF_FLAGS))
-+		return -EFSCORRUPTED;
-+	irec->rm_offset = XFS_RMAP_OFF(offset);
-+	if (offset & XFS_RMAP_OFF_ATTR_FORK)
-+		irec->rm_flags |= XFS_RMAP_ATTR_FORK;
-+	if (offset & XFS_RMAP_OFF_BMBT_BLOCK)
-+		irec->rm_flags |= XFS_RMAP_BMBT_BLOCK;
-+	if (offset & XFS_RMAP_OFF_UNWRITTEN)
-+		irec->rm_flags |= XFS_RMAP_UNWRITTEN;
-+	return 0;
-+}
-+
-+/*
-+ * Key structure
++ * Per-extent log reservation for the btree changes involved in freeing or
++ * allocating an extent.  In classic XFS there were two trees that will be
++ * modified (bnobt + cntbt).  With rmap enabled, there are three trees
++ * (rmapbt).  The number of blocks reserved is based on the formula:
 + *
-+ * We don't use the length for lookups
++ * num trees * ((2 blocks/level * max depth) - 1)
++ *
++ * Keep in mind that max depth is calculated separately for each type of tree.
 + */
-+struct xfs_rmap_key {
-+	__be32		rm_startblock;	/* extent start block */
-+	__be64		rm_owner;	/* extent owner */
-+	__be64		rm_offset;	/* offset within the owner */
-+} __attribute__((packed));
-+
-+/* btree pointer type */
-+typedef __be32 xfs_rmap_ptr_t;
-+
- #define	XFS_RMAP_BLOCK(mp) \
- 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
- 	 XFS_FIBT_BLOCK(mp) + 1 : \
- 	 XFS_IBT_BLOCK(mp) + 1)
- 
-+static inline void
-+xfs_owner_info_unpack(
-+	struct xfs_owner_info	*oinfo,
-+	uint64_t		*owner,
-+	uint64_t		*offset,
-+	unsigned int		*flags)
++static uint
++xfs_allocfree_log_count(
++	struct xfs_mount *mp,
++	uint		num_ops)
 +{
-+	unsigned int		r = 0;
++	uint		blocks;
 +
-+	*owner = oinfo->oi_owner;
-+	*offset = oinfo->oi_offset;
-+	if (oinfo->oi_flags & XFS_OWNER_INFO_ATTR_FORK)
-+		r |= XFS_RMAP_ATTR_FORK;
-+	if (oinfo->oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
-+		r |= XFS_RMAP_BMBT_BLOCK;
-+	*flags = r;
++	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
++
++	return blocks;
 +}
-+
-+static inline void
-+xfs_owner_info_pack(
-+	struct xfs_owner_info	*oinfo,
-+	uint64_t		owner,
-+	uint64_t		offset,
-+	unsigned int		flags)
-+{
-+	oinfo->oi_owner = owner;
-+	oinfo->oi_offset = XFS_RMAP_OFF(offset);
-+	oinfo->oi_flags = 0;
-+	if (flags & XFS_RMAP_ATTR_FORK)
-+		oinfo->oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
-+	if (flags & XFS_RMAP_BMBT_BLOCK)
-+		oinfo->oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
-+}
-+
- /*
-  * BMAP Btree format definitions
-  *
-diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-new file mode 100644
-index 0000000..02636f6
---- /dev/null
-+++ b/libxfs/xfs_rmap_btree.c
-@@ -0,0 +1,178 @@
-+/*
-+ * Copyright (c) 2014 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "libxfs_priv.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_bit.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_inode.h"
-+#include "xfs_trans.h"
-+#include "xfs_alloc.h"
-+#include "xfs_btree.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_trace.h"
-+#include "xfs_cksum.h"
-+
-+static struct xfs_btree_cur *
-+xfs_rmapbt_dup_cursor(
-+	struct xfs_btree_cur	*cur)
-+{
-+	return xfs_rmapbt_init_cursor(cur->bc_mp, cur->bc_tp,
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno);
-+}
-+
-+static bool
-+xfs_rmapbt_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	struct xfs_perag	*pag = bp->b_pag;
-+	unsigned int		level;
-+
-+	/*
-+	 * magic number and level verification
-+	 *
-+	 * During growfs operations, we can't verify the exact level or owner as
-+	 * the perag is not fully initialised and hence not attached to the
-+	 * buffer.  In this case, check against the maximum tree depth.
-+	 *
-+	 * Similarly, during log recovery we will have a perag structure
-+	 * attached, but the agf information will not yet have been initialised
-+	 * from the on disk AGF. Again, we can only check against maximum limits
-+	 * in this case.
-+	 */
-+	if (block->bb_magic != cpu_to_be32(XFS_RMAP_CRC_MAGIC))
-+		return false;
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return false;
-+	if (!xfs_btree_sblock_v5hdr_verify(bp))
-+		return false;
-+
-+	level = be16_to_cpu(block->bb_level);
-+	if (pag && pag->pagf_init) {
-+		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
-+			return false;
-+	} else if (level >= mp->m_rmap_maxlevels)
-+		return false;
-+
-+	return xfs_btree_sblock_verify(bp, mp->m_rmap_mxr[level != 0]);
-+}
-+
-+static void
-+xfs_rmapbt_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	if (!xfs_btree_sblock_verify_crc(bp))
-+		xfs_buf_ioerror(bp, -EFSBADCRC);
-+	else if (!xfs_rmapbt_verify(bp))
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
-+
-+	if (bp->b_error) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_verifier_error(bp);
-+	}
-+}
-+
-+static void
-+xfs_rmapbt_write_verify(
-+	struct xfs_buf	*bp)
-+{
-+	if (!xfs_rmapbt_verify(bp)) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		xfs_buf_ioerror(bp, -EFSCORRUPTED);
-+		xfs_verifier_error(bp);
-+		return;
-+	}
-+	xfs_btree_sblock_calc_crc(bp);
-+
-+}
-+
-+const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
-+	.name			= "xfs_rmapbt",
-+	.verify_read		= xfs_rmapbt_read_verify,
-+	.verify_write		= xfs_rmapbt_write_verify,
-+};
-+
-+static const struct xfs_btree_ops xfs_rmapbt_ops = {
-+	.rec_len		= sizeof(struct xfs_rmap_rec),
-+	.key_len		= sizeof(struct xfs_rmap_key),
-+
-+	.dup_cursor		= xfs_rmapbt_dup_cursor,
-+	.buf_ops		= &xfs_rmapbt_buf_ops,
-+};
 +
 +/*
-+ * Allocate a new allocation btree cursor.
-+ */
-+struct xfs_btree_cur *
-+xfs_rmapbt_init_cursor(
+  * Logging inodes is really tricksy. They are logged in memory format,
+  * which means that what we write into the log doesn't directly translate into
+  * the amount of space they use on disk.
+@@ -125,7 +149,7 @@ xfs_calc_inode_res(
+  */
+ STATIC uint
+ xfs_calc_finobt_res(
+-	struct xfs_mount 	*mp,
 +	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*agbp,
-+	xfs_agnumber_t		agno)
-+{
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
-+	struct xfs_btree_cur	*cur;
-+
-+	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
-+	cur->bc_tp = tp;
-+	cur->bc_mp = mp;
-+	cur->bc_btnum = XFS_BTNUM_RMAP;
-+	cur->bc_flags = XFS_BTREE_CRC_BLOCKS;
-+	cur->bc_blocklog = mp->m_sb.sb_blocklog;
-+	cur->bc_ops = &xfs_rmapbt_ops;
-+	cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
-+
-+	cur->bc_private.a.agbp = agbp;
-+	cur->bc_private.a.agno = agno;
-+
-+	return cur;
-+}
-+
-+/*
-+ * Calculate number of records in an rmap btree block.
-+ */
-+int
-+xfs_rmapbt_maxrecs(
-+	struct xfs_mount	*mp,
-+	int			blocklen,
-+	int			leaf)
-+{
-+	blocklen -= XFS_RMAP_BLOCK_LEN;
-+
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_rmap_rec);
-+	return blocklen /
-+		(sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
-+}
-+
-+/* Compute the maximum height of an rmap btree. */
-+void
-+xfs_rmapbt_compute_maxlevels(
-+	struct xfs_mount		*mp)
-+{
-+	mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
-+			mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
-+}
-diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
-index a3b8f90..462767f 100644
---- a/libxfs/xfs_rmap_btree.h
-+++ b/libxfs/xfs_rmap_btree.h
-@@ -19,6 +19,38 @@
- #define	__XFS_RMAP_BTREE_H__
+ 	int			alloc,
+ 	int			modify)
+ {
+@@ -136,7 +160,7 @@ xfs_calc_finobt_res(
  
- struct xfs_buf;
-+struct xfs_btree_cur;
-+struct xfs_mount;
-+
-+/* rmaps only exist on crc enabled filesystems */
-+#define XFS_RMAP_BLOCK_LEN	XFS_BTREE_SBLOCK_CRC_LEN
-+
-+/*
-+ * Record, key, and pointer address macros for btree blocks.
-+ *
-+ * (note that some of these may appear unused, but they are used in userspace)
-+ */
-+#define XFS_RMAP_REC_ADDR(block, index) \
-+	((struct xfs_rmap_rec *) \
-+		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-+		 (((index) - 1) * sizeof(struct xfs_rmap_rec))))
-+
-+#define XFS_RMAP_KEY_ADDR(block, index) \
-+	((struct xfs_rmap_key *) \
-+		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-+		 ((index) - 1) * sizeof(struct xfs_rmap_key)))
-+
-+#define XFS_RMAP_PTR_ADDR(block, index, maxrecs) \
-+	((xfs_rmap_ptr_t *) \
-+		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-+		 (maxrecs) * sizeof(struct xfs_rmap_key) + \
-+		 ((index) - 1) * sizeof(xfs_rmap_ptr_t)))
-+
-+struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
-+				struct xfs_trans *tp, struct xfs_buf *bp,
-+				xfs_agnumber_t agno);
-+int xfs_rmapbt_maxrecs(struct xfs_mount *mp, int blocklen, int leaf);
-+extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
+ 	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
+ 	if (alloc)
+-		res += xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		res += xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 					XFS_FSB_TO_B(mp, 1));
+ 	if (modify)
+ 		res += (uint)XFS_FSB_TO_B(mp, 1);
+@@ -187,10 +211,10 @@ xfs_calc_write_reservation(
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
  
- int xfs_rmap_alloc(struct xfs_trans *tp, struct xfs_buf *agbp,
- 		   xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index a4ee48e..0dfa179 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -34,6 +34,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_ialloc_btree.h"
-+#include "xfs_rmap_btree.h"
+@@ -216,10 +240,10 @@ xfs_calc_itruncate_reservation(
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		    xfs_calc_buf_res(5, 0) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				     XFS_FSB_TO_B(mp, 1)) +
+ 		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+ 				     mp->m_in_maxlevels, 0)));
+@@ -246,7 +270,7 @@ xfs_calc_rename_reservation(
+ 		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 3),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -285,7 +309,7 @@ xfs_calc_link_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -323,7 +347,7 @@ xfs_calc_remove_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -370,7 +394,7 @@ xfs_calc_create_resv_alloc(
+ 		mp->m_sb.sb_sectsize +
+ 		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -398,7 +422,7 @@ xfs_calc_icreate_resv_alloc(
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		mp->m_sb.sb_sectsize +
+ 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_finobt_res(mp, 0, 0);
+ }
+@@ -482,7 +506,7 @@ xfs_calc_ifree_reservation(
+ 		xfs_calc_buf_res(1, 0) +
+ 		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+ 				 mp->m_in_maxlevels, 0) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_finobt_res(mp, 0, 1);
+ }
+@@ -512,7 +536,7 @@ xfs_calc_growdata_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -534,7 +558,7 @@ xfs_calc_growrtalloc_reservation(
+ 		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_inode_res(mp, 1) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -610,7 +634,7 @@ xfs_calc_addafork_reservation(
+ 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+ 		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+ 				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -633,7 +657,7 @@ xfs_calc_attrinval_reservation(
+ 		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+ 				     XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -700,7 +724,7 @@ xfs_calc_attrrm_reservation(
+ 					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
+index 7978150..0eb46ed 100644
+--- a/libxfs/xfs_trans_resv.h
++++ b/libxfs/xfs_trans_resv.h
+@@ -68,16 +68,6 @@ struct xfs_trans_resv {
+ #define M_RES(mp)	(&(mp)->m_resv)
  
  /*
-  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
-@@ -731,6 +732,11 @@ xfs_sb_mount_common(
- 	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
- 	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
- 
-+	mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, 1);
-+	mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
-+	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
-+
- 	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
- 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
- 					sbp->sb_inopblock);
-diff --git a/libxfs/xfs_shared.h b/libxfs/xfs_shared.h
-index 16002b5..0c5b30b 100644
---- a/libxfs/xfs_shared.h
-+++ b/libxfs/xfs_shared.h
-@@ -38,6 +38,7 @@ extern const struct xfs_buf_ops xfs_agi_buf_ops;
- extern const struct xfs_buf_ops xfs_agf_buf_ops;
- extern const struct xfs_buf_ops xfs_agfl_buf_ops;
- extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
-+extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
- extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
- extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
- extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
-@@ -116,6 +117,7 @@ int	xfs_log_calc_minimum_size(struct xfs_mount *);
- #define	XFS_INO_BTREE_REF	3
- #define	XFS_ALLOC_BTREE_REF	2
- #define	XFS_BMAP_BTREE_REF	2
-+#define	XFS_RMAP_BTREE_REF	2
- #define	XFS_DIR_BTREE_REF	2
- #define	XFS_INO_REF		2
- #define	XFS_ATTR_BTREE_REF	1
+- * Per-extent log reservation for the allocation btree changes
+- * involved in freeing or allocating an extent.
+- * 2 trees * (2 blocks/level * max depth - 1) * block size
+- */
+-#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
+-	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * (mp)->m_ag_maxlevels - 1)))
+-#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
+-	((nx) * (2 * (2 * (mp)->m_ag_maxlevels - 1)))
+-
+-/*
+  * Per-directory log reservation for any directory change.
+  * dir blocks: (1 btree block per level + data block + free block) * dblock size
+  * bmap btree: (levels + 2) * max depth * block size
 
 _______________________________________________
 xfs mailing list
