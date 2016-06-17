@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AAA65846A
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 72E738F8050
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:47 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id m6plnk4s8txckiGS (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id C44748436
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:44:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 738EE8F8050
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:52 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id nc8bBBEcObl3w2eO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:46 -0700 (PDT)
-Subject: [PATCH 132/145] xfs_repair: check the CoW extent size hint
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:44:49 -0700 (PDT)
+Subject: [PATCH 131/145] xfs_repair: complain about copy-on-write leftovers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:44:38 -0700
-Message-ID: <146612787853.16048.11239305835199080494.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:44:32 -0700
+Message-ID: <146612787245.16048.8651678769147816626.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,85 +31,110 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
+Complain about leftover CoW allocations that are hanging off the
+refcount btree.  These are cleaned out at mount time, but we could be
+louder about flagging down evidence of trouble.
+
+Since these extents aren't "owned" by anything, we'll free them up by
+reconstructing the free space btrees.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/dinode.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+ db/check.c      |   21 +++++++++++++++++----
+ repair/incore.h |    3 ++-
+ repair/scan.c   |   25 ++++++++++++++++++++++++-
+ 3 files changed, 43 insertions(+), 6 deletions(-)
 
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index d48e415..9973f3e 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2531,6 +2531,38 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 			goto clear_bad_out;
- 		}
+diff --git a/db/check.c b/db/check.c
+index 3b17585..841a605 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -45,7 +45,7 @@ typedef enum {
+ 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
+ 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
+ 	DBM_SYMLINK,	DBM_BTFINO,	DBM_BTRMAP,	DBM_BTREFC,
+-	DBM_RLDATA,
++	DBM_RLDATA,	DBM_COWDATA,
+ 	DBM_NDBM
+ } dbm_t;
  
-+		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
-+		    !xfs_sb_version_hasreflink(&mp->m_sb)) {
-+			if (!uncertain) {
-+				do_warn(
-+	_("inode %" PRIu64 " has CoW extent size hint but file system does not support reflink\n"),
-+					lino);
+@@ -4821,9 +4821,22 @@ scanfunc_refcnt(
+ 		rp = XFS_REFCOUNT_REC_ADDR(block, 1);
+ 		lastblock = 0;
+ 		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
+-			set_dbmap(seqno, be32_to_cpu(rp[i].rc_startblock),
+-				be32_to_cpu(rp[i].rc_blockcount), DBM_RLDATA,
+-				seqno, bno);
++			if (be32_to_cpu(rp[i].rc_refcount) == 1) {
++				dbprintf(_(
++		"leftover CoW extent (%u/%u) len %u\n"),
++					seqno,
++					be32_to_cpu(rp[i].rc_startblock),
++					be32_to_cpu(rp[i].rc_blockcount));
++				set_dbmap(seqno,
++					be32_to_cpu(rp[i].rc_startblock),
++					be32_to_cpu(rp[i].rc_blockcount),
++					DBM_COWDATA, seqno, bno);
++			} else {
++				set_dbmap(seqno,
++					be32_to_cpu(rp[i].rc_startblock),
++					be32_to_cpu(rp[i].rc_blockcount),
++					DBM_RLDATA, seqno, bno);
 +			}
-+			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-+		}
+ 			if (be32_to_cpu(rp[i].rc_startblock) < lastblock) {
+ 				dbprintf(_(
+ 		"out-of-order refcnt btree record %d (%u %u) block %u/%u\n"),
+diff --git a/repair/incore.h b/repair/incore.h
+index bcd2f4b..c23a3a3 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -107,7 +107,8 @@ typedef struct rt_extent_tree_node  {
+ #define XR_E_INO1	10	/* used by inodes (marked by rmap btree) */
+ #define XR_E_FS_MAP1	11	/* used by fs space/inode maps (rmap btree) */
+ #define XR_E_REFC	12	/* used by fs ag reference count btree */
+-#define XR_E_BAD_STATE	13
++#define XR_E_COW	13	/* leftover cow extent */
++#define XR_E_BAD_STATE	14
+ 
+ /* separate state bit, OR'ed into high (4th) bit of ex_state field */
+ 
+diff --git a/repair/scan.c b/repair/scan.c
+index 4e78335..1c2afb6 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1293,7 +1293,30 @@ _("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 				continue;
+ 			}
+ 
+-			if (nr < 2 || nr > MAXREFCOUNT) {
++			if (nr == 1) {
++				xfs_agblock_t	c;
++				xfs_extlen_t	cnr;
 +
-+		if (flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-+			/* must be a directory or file */
-+			if (di_mode && !S_ISDIR(di_mode) && !S_ISREG(di_mode)) {
-+				if (!uncertain) {
-+					do_warn(
-+	_("CoW extent size flag set on non-file, non-directory inode %" PRIu64 "\n" ),
-+						lino);
++				for (c = b; c < end; c += cnr) {
++					state = get_bmap_ext(agno, c, end, &cnr);
++					switch (state) {
++					case XR_E_COW:
++						break;
++					case XR_E_UNKNOWN:
++						do_warn(
++_("leftover CoW extent (%u/%u) len %u\n"),
++						agno, c, cnr);
++						set_bmap_ext(agno, c, cnr, XR_E_FREE);
++						break;
++					default:
++						do_warn(
++_("extent (%u/%u) len %u claimed, state is %d\n"),
++						agno, c, cnr, state);
++						set_bmap_ext(agno, c, cnr, XR_E_FREE);
++						break;
++					}
 +				}
-+				flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-+			}
-+		}
-+
-+		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
-+		    (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT))) {
-+			if (!uncertain) {
-+				do_warn(
-+	_("Cannot have CoW extent size hint on a realtime inode %" PRIu64 "\n"),
-+					lino);
-+			}
-+			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-+		}
-+
- 		if (!verify_mode && flags2 != be64_to_cpu(dino->di_flags2)) {
- 			if (!no_modify) {
- 				do_warn(_("fixing bad flags2.\n"));
-@@ -2624,6 +2656,29 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
- 	}
- 
- 	/*
-+	 * Only (regular files and directories) with COWEXTSIZE flags
-+	 * set can have extsize set.
-+	 */
-+	if (dino->di_version >= 3 &&
-+	    be32_to_cpu(dino->di_cowextsize) != 0) {
-+		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
-+		    (be64_to_cpu(dino->di_flags2) &
-+					XFS_DIFLAG2_COWEXTSIZE)) {
-+			/* s'okay */ ;
-+		} else {
-+			do_warn(
-+_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
-+					be32_to_cpu(dino->di_cowextsize), lino);
-+			if (!no_modify)  {
-+				do_warn(_("resetting to zero\n"));
-+				dino->di_cowextsize = 0;
-+				*dirty = 1;
-+			} else
-+				do_warn(_("would reset to zero\n"));
-+		}
-+	}
-+
-+	/*
- 	 * general size/consistency checks:
- 	 */
- 	if (process_check_inode_sizes(mp, dino, lino, type) != 0)
++			} else if (nr < 2 || nr > MAXREFCOUNT) {
+ 				do_warn(
+ 	_("invalid reference count %u in record %u of %s btree block %u/%u\n"),
+ 					nr, i, name, agno, bno);
 
 _______________________________________________
 xfs mailing list
