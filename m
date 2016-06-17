@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 81661830C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 403638F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:53 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8F5AD8314
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2689CAC002
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:59 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id vcTAgRql7uEUq41S (version=TLSv1.2
+	cuda.sgi.com with ESMTP id oBCQ6Jnsbr0v54eE (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:51 -0700 (PDT)
-Subject: [PATCH 094/145] xfs: support bmapping delalloc extents in the CoW fork
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:57 -0700 (PDT)
+Subject: [PATCH 095/145] xfs: support allocating delayed extents in CoW fork
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:40:42 -0700
-Message-ID: <146612764201.16048.17050341682992352093.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:40:48 -0700
+Message-ID: <146612764817.16048.15047976798476564439.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,149 +31,215 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Allow the creation of delayed allocation extents in the CoW fork.
-In a subsequent patch we'll wire up write_begin and page_mkwrite to
-actually do this.
+Modify xfs_bmap_add_extent_delay_real() so that we can convert delayed
+allocation extents in the CoW fork to real allocations, and wire this
+up all the way back to xfs_iomap_write_allocate().  In a subsequent
+patch, we'll modify the writepage handler to call this.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_bmap.c |   29 ++++++++++++++++++-----------
- libxfs/xfs_bmap.h |    2 +-
- 2 files changed, 19 insertions(+), 12 deletions(-)
+ libxfs/xfs_bmap.c |   51 +++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 35 insertions(+), 16 deletions(-)
 
 
 diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 2ec3385..acb3011 100644
+index acb3011..18dcd5f 100644
 --- a/libxfs/xfs_bmap.c
 +++ b/libxfs/xfs_bmap.c
-@@ -2752,6 +2752,7 @@ done:
- STATIC void
- xfs_bmap_add_extent_hole_delay(
- 	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_bmbt_irec_t		*new)	/* new data to add to file extents */
+@@ -133,7 +133,8 @@ xfs_bmbt_lookup_ge(
+  */
+ static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
  {
-@@ -2763,8 +2764,10 @@ xfs_bmap_add_extent_hole_delay(
- 	int			state;  /* state bits, accessed thru macros */
- 	xfs_filblks_t		temp=0;	/* temp for indirect calculations */
+-	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
++	return whichfork != XFS_COW_FORK &&
++		XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+ 		XFS_IFORK_NEXTENTS(ip, whichfork) >
+ 			XFS_IFORK_MAXEXT(ip, whichfork);
+ }
+@@ -143,7 +144,8 @@ static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
+  */
+ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+ {
+-	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
++	return whichfork != XFS_COW_FORK &&
++		XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+ 		XFS_IFORK_NEXTENTS(ip, whichfork) <=
+ 			XFS_IFORK_MAXEXT(ip, whichfork);
+ }
+@@ -633,6 +635,7 @@ xfs_bmap_btree_to_extents(
  
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	state = 0;
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
++	ASSERT(whichfork != XFS_COW_FORK);
+ 	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
+ 	rblock = ifp->if_broot;
+@@ -699,6 +702,7 @@ xfs_bmap_extents_to_btree(
+ 	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
+ 
+ 	mp = ip->i_mount;
++	ASSERT(whichfork != XFS_COW_FORK);
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
+ 
+@@ -830,6 +834,7 @@ xfs_bmap_local_to_extents_empty(
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
++	ASSERT(whichfork != XFS_COW_FORK);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
+ 	ASSERT(ifp->if_bytes == 0);
+ 	ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
+@@ -1663,7 +1668,8 @@ xfs_bmap_one_block(
+  */
+ STATIC int				/* error */
+ xfs_bmap_add_extent_delay_real(
+-	struct xfs_bmalloca	*bma)
++	struct xfs_bmalloca	*bma,
++	int			whichfork)
+ {
+ 	struct xfs_bmbt_irec	*new = &bma->got;
+ 	int			diff;	/* temp value */
+@@ -1682,10 +1688,13 @@ xfs_bmap_add_extent_delay_real(
+ 	xfs_filblks_t		temp2=0;/* value for da_new calculations */
+ 	int			tmp_rval;	/* partial logging flags */
+ 	struct xfs_mount	*mp;
+-	int			whichfork = XFS_DATA_FORK;
++	xfs_extnum_t		*nextents;
+ 
+ 	mp = bma->ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
++	ASSERT(whichfork != XFS_ATTR_FORK);
++	nextents = (whichfork == XFS_COW_FORK ? &bma->ip->i_cnextents :
++						&bma->ip->i_d.di_nextents);
+ 
+ 	ASSERT(bma->idx >= 0);
+ 	ASSERT(bma->idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
+@@ -1699,6 +1708,9 @@ xfs_bmap_add_extent_delay_real(
+ #define	RIGHT		r[1]
+ #define	PREV		r[2]
+ 
 +	if (whichfork == XFS_COW_FORK)
 +		state |= BMAP_COWFORK;
- 	ASSERT(isnullstartblock(new->br_startblock));
- 
++
  	/*
-@@ -2782,7 +2785,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 * Check and set flags if the current (right) segment exists.
- 	 * If it doesn't exist, we're converting the hole at end-of-file.
+ 	 * Set up a bunch of variables to make the tests simpler.
  	 */
--	if (*idx < ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
-+	if (*idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
- 		state |= BMAP_RIGHT_VALID;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
+@@ -1785,7 +1797,7 @@ xfs_bmap_add_extent_delay_real(
+ 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
  
-@@ -4132,6 +4135,7 @@ xfs_bmapi_read(
- STATIC int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-+	int			whichfork,
- 	xfs_fileoff_t		aoff,
- 	xfs_filblks_t		len,
- 	struct xfs_bmbt_irec	*got,
-@@ -4140,7 +4144,7 @@ xfs_bmapi_reserve_delalloc(
- 	int			eof)
+ 		xfs_iext_remove(bma->ip, bma->idx + 1, 2, state);
+-		bma->ip->i_d.di_nextents--;
++		(*nextents)--;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -1887,7 +1899,7 @@ xfs_bmap_add_extent_delay_real(
+ 		xfs_bmbt_set_startblock(ep, new->br_startblock);
+ 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+ 
+-		bma->ip->i_d.di_nextents++;
++		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -1957,7 +1969,7 @@ xfs_bmap_add_extent_delay_real(
+ 		temp = PREV.br_blockcount - new->br_blockcount;
+ 		xfs_bmbt_set_blockcount(ep, temp);
+ 		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
+-		bma->ip->i_d.di_nextents++;
++		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -2041,7 +2053,7 @@ xfs_bmap_add_extent_delay_real(
+ 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+ 		xfs_bmbt_set_blockcount(ep, temp);
+ 		xfs_iext_insert(bma->ip, bma->idx + 1, 1, new, state);
+-		bma->ip->i_d.di_nextents++;
++		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -2110,7 +2122,7 @@ xfs_bmap_add_extent_delay_real(
+ 		RIGHT.br_blockcount = temp2;
+ 		/* insert LEFT (r[0]) and RIGHT (r[1]) at the same time */
+ 		xfs_iext_insert(bma->ip, bma->idx + 1, 2, &LEFT, state);
+-		bma->ip->i_d.di_nextents++;
++		(*nextents)++;
+ 		if (bma->cur == NULL)
+ 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
+ 		else {
+@@ -2208,7 +2220,8 @@ xfs_bmap_add_extent_delay_real(
+ 
+ 	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
+ done:
+-	bma->logflags |= rval;
++	if (whichfork != XFS_COW_FORK)
++		bma->logflags |= rval;
+ 	return error;
+ #undef	LEFT
+ #undef	RIGHT
+@@ -3848,7 +3861,8 @@ xfs_bmap_btalloc(
+ 		ASSERT(nullfb || fb_agno == args.agno ||
+ 		       (ap->dfops->dop_low && fb_agno < args.agno));
+ 		ap->length = args.len;
+-		ap->ip->i_d.di_nblocks += args.len;
++		if (!(ap->flags & XFS_BMAPI_COWFORK))
++			ap->ip->i_d.di_nblocks += args.len;
+ 		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+ 		if (ap->wasdel)
+ 			ap->ip->i_delayed_blks -= args.len;
+@@ -4322,8 +4336,7 @@ xfs_bmapi_allocate(
+ 	struct xfs_bmalloca	*bma)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	xfs_extlen_t		alen;
- 	xfs_extlen_t		indlen;
- 	char			rt = XFS_IS_REALTIME_INODE(ip);
-@@ -4199,7 +4203,7 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, lastx, got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
+ 	struct xfs_mount	*mp = bma->ip->i_mount;
+-	int			whichfork = (bma->flags & XFS_BMAPI_ATTRFORK) ?
+-						XFS_ATTR_FORK : XFS_DATA_FORK;
++	int			whichfork = xfs_bmapi_whichfork(bma->flags);
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 	int			tmp_logflags = 0;
+ 	int			error;
+@@ -4412,7 +4425,7 @@ xfs_bmapi_allocate(
+ 		bma->got.br_state = XFS_EXT_UNWRITTEN;
  
- 	/*
- 	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
-@@ -4231,6 +4235,7 @@ out_unreserve_quota:
- int
- xfs_bmapi_delay(
- 	struct xfs_inode	*ip,	/* incore inode */
-+	int			whichfork, /* data or cow fork? */
- 	xfs_fileoff_t		bno,	/* starting file offs. mapped */
- 	xfs_filblks_t		len,	/* length to map in file */
- 	struct xfs_bmbt_irec	*mval,	/* output: map values */
-@@ -4238,7 +4243,7 @@ xfs_bmapi_delay(
- 	int			flags)	/* XFS_BMAPI_... */
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	struct xfs_bmbt_irec	got;	/* current file extent record */
- 	struct xfs_bmbt_irec	prev;	/* previous file extent record */
- 	xfs_fileoff_t		obno;	/* old block number (offset) */
-@@ -4248,14 +4253,15 @@ xfs_bmapi_delay(
- 	int			n = 0;	/* current extent index */
- 	int			error = 0;
+ 	if (bma->wasdel)
+-		error = xfs_bmap_add_extent_delay_real(bma);
++		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
+ 	else
+ 		error = xfs_bmap_add_extent_hole_real(bma, whichfork);
  
-+	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK);
+@@ -4566,8 +4579,7 @@ xfs_bmapi_write(
+ 	orig_mval = mval;
+ 	orig_nmap = *nmap;
+ #endif
+-	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-		XFS_ATTR_FORK : XFS_DATA_FORK;
++	whichfork = xfs_bmapi_whichfork(flags);
+ 
  	ASSERT(*nmap >= 1);
  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & ~XFS_BMAPI_ENTIRE));
+@@ -4578,6 +4590,11 @@ xfs_bmapi_write(
  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		ASSERT(!(flags & XFS_BMAPI_REMAP));
++	if (whichfork == XFS_COW_FORK) {
++		ASSERT(!(flags & XFS_BMAPI_REMAP));
++		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
++		ASSERT(!(flags & XFS_BMAPI_CONVERT));
++	}
+ 	if (flags & XFS_BMAPI_REMAP) {
+ 		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
+ 		ASSERT(!(flags & XFS_BMAPI_CONVERT));
+@@ -4647,6 +4664,8 @@ xfs_bmapi_write(
+ 		 */
+ 		if (flags & XFS_BMAPI_REMAP)
+ 			ASSERT(inhole);
++		if (flags & XFS_BMAPI_COWFORK)
++			ASSERT(!inhole);
  
- 	if (unlikely(XFS_TEST_ERROR(
--	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT("xfs_bmapi_delay", XFS_ERRLEVEL_LOW, mp);
- 		return -EFSCORRUPTED;
-@@ -4266,19 +4272,20 @@ xfs_bmapi_delay(
- 
- 	XFS_STATS_INC(mp, xs_blk_mapw);
- 
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+	if (whichfork == XFS_DATA_FORK && !(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(NULL, ip, whichfork);
- 		if (error)
- 			return error;
- 	}
- 
--	xfs_bmap_search_extents(ip, bno, XFS_DATA_FORK, &eof, &lastx, &got, &prev);
-+	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got, &prev);
- 	end = bno + len;
- 	obno = bno;
- 
- 	while (bno < end && n < *nmap) {
- 		if (eof || got.br_startoff > bno) {
--			error = xfs_bmapi_reserve_delalloc(ip, bno, len, &got,
-+			error = xfs_bmapi_reserve_delalloc(ip, whichfork,
-+							   bno, len, &got,
- 							   &prev, &lastx, eof);
- 			if (error) {
- 				if (n == 0) {
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index a8ef1c6..d90f88e 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -205,7 +205,7 @@ int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
- 		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
- 		int *nmap, int flags);
--int	xfs_bmapi_delay(struct xfs_inode *ip, xfs_fileoff_t bno,
-+int	xfs_bmapi_delay(struct xfs_inode *ip, int whichfork, xfs_fileoff_t bno,
- 		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
- 		int *nmap, int flags);
- int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		/*
+ 		 * First, deal with the hole before the allocated space
 
 _______________________________________________
 xfs mailing list
