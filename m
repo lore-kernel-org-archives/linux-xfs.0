@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2C40F7CA2
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 15:33:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E59F38F8040
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 13:33:00 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id CLyEOzpNioGMfQeH for
-	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 13:32:59 -0700 (PDT)
-Date: Fri, 17 Jun 2016 14:32:38 -0600
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [RFC PATCH 2/2] xfs: initial/partial support for badblocks
-Message-ID: <20160617203237.GD5893@omniknight.lm.intel.com>
-References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
-	<1466125419-17736-3-git-send-email-vishal.l.verma@intel.com>
-	<20160617022606.GC11810@birch.djwong.org>
-	<20160617192647.GC5893@omniknight.lm.intel.com>
-	<20160617195345.GA5046@birch.djwong.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CC7FC7EF3
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:28:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65809AC002
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:21 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id ZmGhYMn6FfPgzSU9 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:28:20 -0700 (PDT)
+Subject: [PATCH 096/119] xfs: support FS_XFLAG_REFLINK on reflink filesystems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:28:10 -0700
+Message-ID: <146612689065.12839.12038513561394516073.stgit@birch.djwong.org>
+In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160617195345.GA5046@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,322 +28,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-nvdimm@ml01.01.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On 06/17, Darrick J. Wong wrote:
-> On Fri, Jun 17, 2016 at 01:26:47PM -0600, Vishal Verma wrote:
-> > On 06/16, Darrick J. Wong wrote:
-> > > On Thu, Jun 16, 2016 at 07:03:39PM -0600, Vishal Verma wrote:
-> > > > RFC/WIP commit.
-> > > > 
-> > > > This adds the foollowing:
-> > > > 1. In xfs_mountfs(), get an initial badblocks list from gendisk's
-> > > > badblocks infrastructure.
-> > > > 2. Register with the badblocks notifier to get updates for this disk's
-> > > > badblocks
-> > > > 
-> > > > TODO:
-> > > > 1. Add badblocks info to the reverse mapping tree (and remove if a
-> > > > badblock was cleared).
-> > > 
-> > > Well... there are a number of things we /could/ do... theoretically one
-> > > could use the rmap info to find all the affected inodes and simply convert
-> > > that part of their extent trees to 'unwritten'.  Reads will just get zeroes,
-> > 
-> > Hm, not sure we can do that - if a block became bad at some point,
-> > subsequent reads _have to_ error out (-EIO) so that the user doesn't see
-> > silent data corruption.
-> 
-> Ooh, right, forgot about that whole MCE-on-bad-read thing...
-> 
-> > > and writes will remove the unwritten flag (for that file, anyway).  Will a
-> > > successful write trigger the BB_CLEAR notifier?
-> > 
-> > Currently, a successful write that goes through the driver (i.e. not
-> > DAX) will cause the badblock to get cleared, and trigger BB_CLEAR. DAX
-> > is trickier, and currently DAX writes won't clear errors.
-> 
-> Oh...?
+Add support for reporting the "reflink" inode flag in the XFS-specific
+getxflags ioctl, and allow the user to clear the flag if file size is
+zero.
 
-I should expand.. post 4.7, DAX and badblocks can co-exist, and there
-are a couple of scenarios:
+v2: Move the reflink flag out of the way of the DAX flag, and add the
+new cowextsize flag.
 
-1. When we take a DAX fault for the first time, we now check if the range
-we're faulting for has bad blocks (see the is_bad_pmem check in
-pmem_direct_access), and if it does, we signal a VM_FAULT_SIGBUS from the
-fault handler.
+v3: do not report (or allow changes to) FL_NOCOW_FL, since we don't
+support a flag to prevent CoWing and the reflink flag is a poor
+proxy.  We'll try to design away the need for the NOCOW flag.
 
-2. If a latent error develops in a region that has been mmapped and faulted
-in, then any attempts to load/store from/to it will cause a machine
-check.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c   |    2 ++
+ fs/xfs/xfs_ioctl.c   |    4 ++++
+ fs/xfs/xfs_reflink.c |   26 ++++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.h |    4 ++++
+ 4 files changed, 36 insertions(+)
 
-There isn't much that can be done for the second scenario - and the
-dax-error-handling stuff in 4.7 should handle everything for the first
-scenario (i.e. not cause a machine check induced crash). What we
-probably still have to do is have a well defined recovery flow for an
-application that gets a SIGBUS when accessing an mmaped file due to a
-known bad block. Currently (4.7), what works is deleting, truncating,
-or hole-punching the file, causing the sector (extent) to become
-free/unwritten, and then a subsequent zeroout of it before the next time
-it is used will go through the driver and clear the error.
 
-The one thing missing is that When a filesystem is mounted with DAX, all
-IO goes through dax_do_io, which is currently unable to clear any
-errors. The ideal user experience, IMO, should be:
-1. Get a SIGBUS accessing a mmaped file
-2. Be told of an (offset+length) of the file that is 'gone'
-3. Be able to open(), seek(), and write() to that offset to restore data
-4. Be able to mmap etc. again and go on as usual
-
-> 
-> > > 
-> > > I guess you could punch out the bad blocks too... not clear if you'd want
-> > > all the owner files staying mapped to data they'll never get back.
-> > 
-> > The block mappings don't have to be maintained, but some sort of a flag
-> > needs to be kept that will allow us to return errors on reads like I
-> > said above.
-> 
-> What happens if pmem signals a bad block and we try to read anyway?  I know
-> about the read-error-MCE thing, but what's the "more expensive" alternative?
-> CPU exception?
-
-MCE is the CPU exception, and is what we want to avoid at all costs, as
-it can cause the machine to crash. Currently, the driver also checks
-every IO (every bvec in fact) for badblocks before reading/writing.
-Presumably, once we are able to push this checking into the filesystem,
-we can signal the driver to stop doing this extra check (Dan points out
-that it is good to have the redundant checking as a safety net till the
-filesystem implementation is fully baked/tested). But yes in either of
-these cases, we we know it is a bad block and choose to read (memcpy)
-from it anyway, we get the machine check exception.
-
-> 
-> (Really what I'm digging at is, if the whole thing becomes a soft exception
-> that we can handle in the OS by, say, 2020, do we care about reintroducing
-> the whole ext2 badblocks thing?)
-
-Not sure if this is something the OS can just learn to handle as the
-machine check recovery stuff is a hardware/platform feature that only
-some CPUs have. ('machine check recovery' allows the mce code in linux
-to unmap the offending page(s) from the address space of any processes
-that have it mapped, and sends them a SIGBUS). On CPUs without this
-recovery feature, the CPU goes into a fault state and needs to be
-restarted.
-
-> 
-> (Beats me...)
-> 
-> --D
-> 
-> > 
-> > > 
-> > > We could also create another rmap "special owner" (XFS_RMAP_OWN_BAD?) for bad
-> > > blocks, so we'd know which parts are just plain bad.  It might be useful to
-> > > know that kind of thing.
-> > > 
-> > > I think earlier Dave was talking about adding a new 'badblocks' bit to both
-> > > the file extent records and the rmap records to signify that something's
-> > > wrong with the extent.  <shrug> I'll let him write about that.
-> > > 
-> > > > 2. Before doing file IO, refer the rmap/badblocks to error out early if
-> > > > the IO will attempt wo read a bad sector
-> > > > 3. Figure out interactions with mmap/DAX.
-> > > 
-> > > Woot.
-> > > 
-> > > > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > Cc: Dave Chinner <david@fromorbit.com>
-> > > > Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> > > > ---
-> > > >  fs/xfs/xfs_linux.h |   1 +
-> > > >  fs/xfs/xfs_mount.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  fs/xfs/xfs_mount.h |   1 +
-> > > >  3 files changed, 106 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> > > > index 7e749be..f66d181 100644
-> > > > --- a/fs/xfs/xfs_linux.h
-> > > > +++ b/fs/xfs/xfs_linux.h
-> > > > @@ -78,6 +78,7 @@ typedef __u32			xfs_nlink_t;
-> > > >  #include <linux/freezer.h>
-> > > >  #include <linux/list_sort.h>
-> > > >  #include <linux/ratelimit.h>
-> > > > +#include <linux/badblocks.h>
-> > > >  
-> > > >  #include <asm/page.h>
-> > > >  #include <asm/div64.h>
-> > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > > index 5e68b2c..1a47737 100644
-> > > > --- a/fs/xfs/xfs_mount.c
-> > > > +++ b/fs/xfs/xfs_mount.c
-> > > > @@ -618,6 +618,96 @@ xfs_default_resblks(xfs_mount_t *mp)
-> > > >  	return resblks;
-> > > >  }
-> > > >  
-> > > > +STATIC int
-> > > > +xfs_notifier_call(
-> > > > +	struct notifier_block	*nb,
-> > > > +	unsigned long		action,
-> > > > +	void			*data)
-> > > > +{
-> > > > +	struct bb_notifier_data *bb_data = data;
-> > > > +	struct xfs_mount *mp;
-> > > > +
-> > > > +	mp = container_of(nb, struct xfs_mount, m_badblocks_nb);
-> > > > +	/* TODO xfs_add_bb_to_rmap(mp, bb_data->sector, bb_data->count); */
-> > > > +	xfs_warn(mp, "xfs badblock %s sector %lu (count %d)\n",
-> > > > +		(action == BB_ADD)?"added":"cleared",
-> > > > +		bb_data->sector, bb_data->count);
-> > > > +	return 0;
-> > > 
-> > > Probably a xfs_rmapbt_query_range here?
-> > > 
-> > > > +}
-> > > > +
-> > > > +STATIC int
-> > > > +xfs_init_badblocks(struct xfs_mount *mp)
-> > > > +{
-> > > > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-> > > > +	int done = 0, error = 0;
-> > > > +	ssize_t len, off = 0;
-> > > > +	char *p;
-> > > > +
-> > > > +	/*
-> > > > +	 * TODO: get a list of known badblocks so far and process it.
-> > > > +	 * Can we just parse the sysfs format that badblocks_show()
-> > > > +	 * returns? That should be the fastest way to get this.
-> > > > +	 * Something like: (Is this too hacky? Should we just do
-> > > > +	 * badblocks_check() in a (rather large) loop?)
-> > > > +	 */
-> > > > +	p = kzalloc(PAGE_SIZE, GFP_KERNEL);
-> > > > +	len = badblocks_show(bb, p, 0);
-> > > > +	while (len) {
-> > > > +		int count, n;
-> > > > +		sector_t s;
-> > > > +
-> > > > +		/*
-> > > > +		 * The sysfs badblocks format is multiple lines of:
-> > > > +		 * "<sector> <count>"
-> > > > +		 */
-> > > > +		n = sscanf(p + off, "%lu %d\n%n", &s, &count, &done);
-> > > 
-> > > Ick, there's got to be a better way to iterate the badblocks list than this.
-> > > 
-> > > It would be very nice to have a single function that deals with a change in
-> > > badness status, which would be called by both the notifier and the badblocks
-> > > iterator.
-> > > 
-> > There is a function in block/badblocks.c - badblocks_check() which can
-> > tell you for a given range, what is the first bad sector in that range,
-> > and the number of bad sectors after that first sector. Using that would
-> > certainly be cleaner, as it uses the well-defined API, but it would be
-> > much slower, as you have to iterate through the entire address space.
-> > The above function - badblocks_show - just looks at the actual stored
-> > representation of the badblocks, and lists them out, which is quick
-> > (reading a 4K page from memory), and so in the above, I just parse it..
-> > 
-> > > > +		if (n < 2 || done < 3) {
-> > > > +			error = -1;
-> > > > +			break;
-> > > > +		}
-> > > > +		off += done;
-> > > > +		len -= done;
-> > > > +		xfs_warn(mp, "got badblocks: sector %ld, count %d", s, count);
-> > > > +		/* TODO xfs_add_bb_to_rmap(mp, s, count); */
-> > > > +	}
-> > > > +	kfree(p);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +
-> > > > +	mp->m_badblocks_nb.notifier_call = xfs_notifier_call;
-> > > > +	error = bb_notifier_register(bb, &mp->m_badblocks_nb);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +
-> > > > +	/*
-> > > > +	 * TODO: There is probably a TOCTOU race hiding here - what if the
-> > > > +	 * badblocks list gets updated before we register for notifications..
-> > > > +	 * Can likely be solved by registering for notifications _first_ (the
-> > > > +	 * above xfs_add_bb_to_rmap function has to be ready to accept new
-> > > > +	 * blocks), then querying for the initial list (there could be overlap
-> > > > +	 * here, shich the above function could handle), and then setting the
-> > > > +	 * mount flag below.
-> > > > +	 */
-> > > 
-> > > (Yeah, pretty much. :))
-> > > 
-> > > > +
-> > > > +	/*
-> > > > +	 * TODO: set some flag (mount flag?) in xfs so that xfs knows
-> > > > +	 * it will be doing error checking, and can possibly, later,
-> > > > +	 * tell the block layer (possibly using a REQ_ flag in its IO
-> > > > +	 * requests) not to do further badblock checking for those IOs.
-> > > > +	 */
-> > > > +
-> > > > +	/* mp->m_flags |= XFS_MOUNT_FS_BADBLOCKS; */
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > > +STATIC void
-> > > > +xfs_badblocks_unmount(struct xfs_mount *mp)
-> > > > +{
-> > > > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-> > > > +
-> > > > +	bb_notifier_unregister(bb, &mp->m_badblocks_nb);
-> > > > +}
-> > > > +
-> > > >  /*
-> > > >   * This function does the following on an initial mount of a file system:
-> > > >   *	- reads the superblock from disk and init the mount struct
-> > > > @@ -955,6 +1045,19 @@ xfs_mountfs(
-> > > >  	}
-> > > >  
-> > > >  	/*
-> > > > +	 * Register with the badblocks notifier chain
-> > > > +	 */
-> > > > +	error = xfs_init_badblocks(mp);
-> > > > +	if (error) {
-> > > > +		xfs_warn(mp, "Unable to register to badblocks notifications\n");
-> > > > +		/*
-> > > > +		 * TODO is this a hard error or can we simply
-> > > > +		 * warn and continue?
-> > > > +		 */
-> > > > +		goto out_rtunmount;
-> > > > +	}
-> > > > +
-> > > > +	/*
-> > > >  	 * Now we are mounted, reserve a small amount of unused space for
-> > > >  	 * privileged transactions. This is needed so that transaction
-> > > >  	 * space required for critical operations can dip into this pool
-> > > > @@ -1085,6 +1188,7 @@ xfs_unmountfs(
-> > > >  	xfs_log_unmount(mp);
-> > > >  	xfs_da_unmount(mp);
-> > > >  	xfs_uuid_unmount(mp);
-> > > > +	xfs_badblocks_unmount(mp);
-> > > >  
-> > > >  #if defined(DEBUG)
-> > > >  	xfs_errortag_clearall(mp, 0);
-> > > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > > > index 0ca9244..f0d1111 100644
-> > > > --- a/fs/xfs/xfs_mount.h
-> > > > +++ b/fs/xfs/xfs_mount.h
-> > > > @@ -139,6 +139,7 @@ typedef struct xfs_mount {
-> > > >  						/* low free space thresholds */
-> > > >  	struct xfs_kobj		m_kobj;
-> > > >  	struct xstats		m_stats;	/* per-fs stats */
-> > > > +	struct notifier_block	m_badblocks_nb;	/* disk badblocks notifier */
-> > > >  
-> > > >  	struct workqueue_struct *m_buf_workqueue;
-> > > >  	struct workqueue_struct	*m_data_workqueue;
-> > > > -- 
-> > > > 2.5.5
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b8d3c4f..127bf54 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -652,6 +652,8 @@ _xfs_dic2xflags(
+ 	if (di_flags2 & XFS_DIFLAG2_ANY) {
+ 		if (di_flags2 & XFS_DIFLAG2_DAX)
+ 			flags |= FS_XFLAG_DAX;
++		if (di_flags2 & XFS_DIFLAG2_REFLINK)
++			flags |= FS_XFLAG_REFLINK;
+ 	}
+ 
+ 	if (has_attr)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0e06a82..b8eceee 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1258,6 +1258,10 @@ xfs_ioctl_setattr(
+ 
+ 	trace_xfs_ioctl_setattr(ip);
+ 
++	code = xfs_reflink_check_flag_adjust(ip, &fa->fsx_xflags);
++	if (code)
++		return code;
++
+ 	code = xfs_ioctl_setattr_check_projid(ip, fa);
+ 	if (code)
+ 		return code;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index b42ffb0..7c64104 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1782,3 +1782,29 @@ out_unlock:
+ 	trace_xfs_reflink_cow_eof_block_error(ip, error, _RET_IP_);
+ 	return error;
+ }
++
++/*
++ * Ensure that the only change we allow to the inode reflink flag is to clear
++ * it when the fs supports reflink and the size is zero.
++ */
++int
++xfs_reflink_check_flag_adjust(
++	struct xfs_inode	*ip,
++	unsigned int		*xflags)
++{
++	unsigned int		chg;
++
++	chg = !!(*xflags & FS_XFLAG_REFLINK) ^ !!xfs_is_reflink_inode(ip);
++
++	if (!chg)
++		return 0;
++	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
++		return -EOPNOTSUPP;
++	if (i_size_read(VFS_I(ip)) != 0)
++		return -EINVAL;
++	if (*xflags & FS_XFLAG_REFLINK) {
++		*xflags &= ~FS_XFLAG_REFLINK;
++		return 0;
++	}
++	return 0;
++}
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 437087c5..97e8705 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -52,6 +52,10 @@ extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len);
+ extern int xfs_reflink_cow_eof_block(struct xfs_inode *ip, xfs_off_t newsize);
+ 
++extern void xfs_reflink_get_lxflags(struct xfs_inode *ip, unsigned int *flags);
++extern int xfs_reflink_check_flag_adjust(struct xfs_inode *ip,
++		unsigned int *xflags);
++
+ /* xfs_aops.c */
+ extern int xfs_map_cow_blocks(struct inode *inode, xfs_off_t offset,
+ 		struct xfs_bmbt_irec *imap);
 
 _______________________________________________
 xfs mailing list
