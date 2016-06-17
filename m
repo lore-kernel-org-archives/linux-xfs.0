@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 396A383A9
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F05658F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:08 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8D4468375
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E3938F804C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:14 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id K3A4OZHZPTJIwWYU (version=TLSv1.2
+	cuda.sgi.com with ESMTP id qjbfodgUUvyfRtMn (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:07 -0700 (PDT)
-Subject: [PATCH 117/145] xfs_io: add refcount+bmap error injection types
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:13 -0700 (PDT)
+Subject: [PATCH 118/145] xfs_logprint: support cowextsize reporting in log
+	contents
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:43:03 -0700
-Message-ID: <146612778322.16048.5833598458395784088.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:43:09 -0700
+Message-ID: <146612778940.16048.13738003970479416066.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,34 +32,43 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Add refcount and bmap deferred finish to the types of errors we can
-inject.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/inject.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ logprint/log_misc.c      |    4 ++++
+ logprint/log_print_all.c |    4 ++++
+ 2 files changed, 8 insertions(+)
 
 
-diff --git a/io/inject.c b/io/inject.c
-index 16ac925..56642b8 100644
---- a/io/inject.c
-+++ b/io/inject.c
-@@ -78,7 +78,13 @@ error_tag(char *name)
- 		{ XFS_ERRTAG_FREE_EXTENT,		"free_extent" },
- #define XFS_ERRTAG_RMAP_FINISH_ONE			23
- 		{ XFS_ERRTAG_RMAP_FINISH_ONE,		"rmap_finish_one" },
--#define XFS_ERRTAG_MAX                                  24
-+#define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
-+		{ XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE,	"refcount_continue_update" },
-+#define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
-+		{ XFS_ERRTAG_REFCOUNT_FINISH_ONE,	"refcount_finish_one" },
-+#define XFS_ERRTAG_BMAP_FINISH_ONE			26
-+		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
-+#define XFS_ERRTAG_MAX                                  27
- 		{ XFS_ERRTAG_MAX,			NULL }
- 	};
- 	int	count;
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 479fc14..f6488d9 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -513,6 +513,10 @@ xlog_print_trans_inode_core(
+ 	   ip->di_dmstate);
+     printf(_("flags 0x%x gen 0x%x\n"),
+ 	   ip->di_flags, ip->di_gen);
++    if (ip->di_version == 3) {
++        printf(_("flags2 0x%llx cowextsize 0x%x\n"),
++            (unsigned long long)ip->di_flags2, ip->di_cowextsize);
++    }
+ }
+ 
+ void
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 0fe354b..46952c4 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -272,6 +272,10 @@ xlog_recover_print_inode_core(
+ 	     "gen:%d\n"),
+ 	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
+ 	       (int)di->di_flags, di->di_gen);
++	if (di->di_version == 3) {
++		printf(_("flags2 0x%llx cowextsize 0x%x\n"),
++			(unsigned long long)di->di_flags2, di->di_cowextsize);
++	}
+ }
+ 
+ STATIC void
 
 _______________________________________________
 xfs mailing list
