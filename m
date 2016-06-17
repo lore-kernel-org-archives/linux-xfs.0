@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C41A38457
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:45:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CB688F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:09 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 873DE8494
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:45:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4987F8F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:23 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id sWJjWambzLTy4JaK (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BuV9BSCH9ZGQLWFr (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:07 -0700 (PDT)
-Subject: [PATCH 136/145] xfs: introduce the XFS_IOC_GETFSMAPX ioctl
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:19 -0700 (PDT)
+Subject: [PATCH 138/145] xfs_io: support the new getfsmap ioctl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:45:03 -0700
-Message-ID: <146612790296.16048.8214179908320601737.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:45:15 -0700
+Message-ID: <146612791523.16048.4631582604422386010.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,201 +31,606 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_fs.h       |   62 +++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_refcount.c |   51 +++++++++++++++++++++++++++++-----------
- libxfs/xfs_refcount.h |    4 +++
- 3 files changed, 103 insertions(+), 14 deletions(-)
+ io/Makefile       |    2 
+ io/fsmap.c        |  488 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ io/init.c         |    1 
+ io/io.h           |    1 
+ man/man8/xfs_io.8 |   47 +++++
+ 5 files changed, 538 insertions(+), 1 deletion(-)
+ create mode 100644 io/fsmap.c
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index df58c1c..236a5a7 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -117,6 +117,67 @@ struct getbmapx {
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
+diff --git a/io/Makefile b/io/Makefile
+index 0b53f41..6439e1d 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -11,7 +11,7 @@ HFILES = init.h io.h
+ CFILES = init.c \
+ 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+-	sync.c truncate.c reflink.c
++	sync.c truncate.c reflink.c fsmap.c
  
- /*
-+ *	Structure for XFS_IOC_GETFSMAPX.
-+ *
-+ *	Similar to XFS_IOC_GETBMAPX, the first two elements in the array are
-+ *	used to constrain the output.  The first element in the array should
-+ *	represent the lowest disk address that the user wants to learn about.
-+ *	The second element in the array should represent the highest disk
-+ *	address to query.  Subsequent array elements will be filled out by the
-+ *	command.
-+ *
-+ *	The fmv_iflags field is only used in the first structure.  The
-+ *	fmv_oflags field is filled in for each returned structure after the
-+ *	second structure.  The fmv_unused1 fields in the first two array
-+ *	elements must be zero.
-+ *
-+ *	The fmv_count, fmv_entries, and fmv_iflags fields in the second array
-+ *	element must be zero.
-+ *
-+ *	fmv_block, fmv_offset, and fmv_length are expressed in units of 512
-+ *	byte sectors.
-+ */
-+#ifndef HAVE_GETFSMAPX
-+struct getfsmapx {
-+	__u32		fmv_device;	/* device id */
-+	__u32		fmv_unused1;	/* future use, must be zero */
-+	__u64		fmv_block;	/* starting block */
-+	__u64		fmv_owner;	/* owner id */
-+	__u64		fmv_offset;	/* file offset of segment */
-+	__u64		fmv_length;	/* length of segment, blocks */
-+	__u32		fmv_oflags;	/* mapping flags */
-+	__u32		fmv_iflags;	/* control flags (1st structure) */
-+	__u32		fmv_count;	/* # of entries in array incl. input */
-+	__u32		fmv_entries;	/* # of entries filled in (output). */
-+	__u64		fmv_unused2;	/* future use, must be zero */
-+};
-+#endif
-+
-+/*	fmv_flags values - set by XFS_IOC_GETFSMAPX caller.	*/
-+/* no flags defined yet */
-+#define FMV_IF_VALID	0
-+
-+/*	fmv_flags values - returned for each non-header segment */
-+#define FMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMV_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMV_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMV_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMV_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMV_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/*	fmv_owner special values */
-+#define	FMV_OWN_FREE		(-1ULL)	/* free space */
-+#define FMV_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
-+#define FMV_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define FMV_OWN_LOG		(-4ULL)	/* journalling log */
-+#define FMV_OWN_AG		(-5ULL)	/* per-AG metadata */
-+#define FMV_OWN_INOBT		(-6ULL)	/* inode btree blocks */
-+#define FMV_OWN_INODES		(-7ULL)	/* inodes */
-+#define FMV_OWN_REFC		(-8ULL) /* refcount tree */
-+#define FMV_OWN_COW		(-9ULL) /* cow allocations */
-+#define FMV_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
-+
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+diff --git a/io/fsmap.c b/io/fsmap.c
+new file mode 100644
+index 0000000..7cf3776
+--- /dev/null
++++ b/io/fsmap.c
+@@ -0,0 +1,488 @@
 +/*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-@@ -523,6 +584,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+#define XFS_IOC_GETFSMAPX	_IOWR('X', 59, struct getfsmapx)
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 855ab54..a19cb45 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -1171,8 +1171,9 @@ xfs_refcount_decrease_extent(
-  * extent we find.  If no shared blocks are found, flen will be set to zero.
-  */
- int
--xfs_refcount_find_shared(
-+__xfs_refcount_find_shared(
- 	struct xfs_mount	*mp,
-+	struct xfs_buf		*agbp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		agbno,
- 	xfs_extlen_t		aglen,
-@@ -1181,23 +1182,13 @@ xfs_refcount_find_shared(
- 	bool			find_maximal)
- {
- 	struct xfs_btree_cur	*cur;
--	struct xfs_buf		*agbp;
- 	struct xfs_refcount_irec	tmp;
--	int			error;
- 	int			i, have;
- 	int			bt_error = XFS_BTREE_ERROR;
-+	int			error;
- 
- 	trace_xfs_refcount_find_shared(mp, agno, agbno, aglen);
- 
--	if (xfs_always_cow) {
--		*fbno = agbno;
--		*flen = aglen;
--		return 0;
--	}
--
--	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
--	if (error)
--		goto out;
- 	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
- 
- 	/* By default, skip the whole range */
-@@ -1272,14 +1263,46 @@ done:
- 
- out_error:
- 	xfs_btree_del_cursor(cur, bt_error);
--	xfs_buf_relse(agbp);
--out:
- 	if (error)
- 		trace_xfs_refcount_find_shared_error(mp, agno, error, _RET_IP_);
- 	return error;
- }
- 
- /*
-+ * Given an AG extent, find the lowest-numbered run of shared blocks within
-+ * that range and return the range in fbno/flen.
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+int
-+xfs_refcount_find_shared(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	xfs_extlen_t		aglen,
-+	xfs_agblock_t		*fbno,
-+	xfs_extlen_t		*flen,
-+	bool			find_maximal)
++#include "platform_defs.h"
++#include "command.h"
++#include "init.h"
++#include "io.h"
++#include "input.h"
++
++static cmdinfo_t fsmap_cmd;
++
++static void
++fsmap_help(void)
 +{
-+	struct xfs_buf		*agbp;
-+	int			error;
++	printf(_(
++"\n"
++" prints the block mapping for an XFS filesystem"
++"\n"
++" Example:\n"
++" 'fsmap -vp' - tabular format verbose map, including unwritten extents\n"
++"\n"
++" fsmap prints the map of disk blocks used by the whole filesystem.\n"
++" The map lists each extent used by the file, as well as regions in the\n"
++" filesystem that do not have any corresponding blocks (free space).\n"
++" By default, each line of the listing takes the following form:\n"
++"     extent: [startoffset..endoffset] owner startblock..endblock\n"
++" All the file offsets and disk blocks are in units of 512-byte blocks.\n"
++" -n -- query n extents.\n"
++" -v -- Verbose information, specify ag info.  Show flags legend on 2nd -v\n"
++"\n"));
++}
 +
-+	if (xfs_always_cow) {
-+		*fbno = agbno;
-+		*flen = aglen;
-+		return 0;
++static int
++numlen(
++	off64_t	val)
++{
++	off64_t	tmp;
++	int	len;
++
++	for (len = 0, tmp = val; tmp > 0; tmp = tmp/10)
++		len++;
++	return (len == 0 ? 1 : len);
++}
++
++static const char *
++special_owner(
++	__int64_t	owner)
++{
++	switch (owner) {
++	case FMV_OWN_FREE:
++		return _("free space");
++	case FMV_OWN_UNKNOWN:
++		return _("unknown");
++	case FMV_OWN_FS:
++		return _("static fs metadata");
++	case FMV_OWN_LOG:
++		return _("journalling log");
++	case FMV_OWN_AG:
++		return _("per-AG metadata");
++	case FMV_OWN_INOBT:
++		return _("inode btree");
++	case FMV_OWN_INODES:
++		return _("inodes");
++	case FMV_OWN_REFC:
++		return _("refcount btree");
++	case FMV_OWN_COW:
++		return _("cow reservation");
++	case FMV_OWN_DEFECTIVE:
++		return _("defective");
++	default:
++		return _("unknown");
 +	}
++}
 +
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+	if (error)
-+		return error;
++static void
++dump_map(
++	unsigned long long	nr,
++	struct getfsmapx	*map)
++{
++	unsigned long long	i;
++	struct getfsmapx	*p;
 +
-+	error = __xfs_refcount_find_shared(mp, agbp, agno, agbno, aglen,
-+			fbno, flen, find_maximal);
-+
-+	xfs_buf_relse(agbp);
-+	return error;
++	for (i = 0, p = map + 2; i < map->fmv_entries; i++, p++) {
++		printf("\t%llu: %u:%u [%lld..%lld]: ", i + nr,
++			major(p->fmv_device), minor(p->fmv_device),
++			(long long) p->fmv_block,
++			(long long)(p->fmv_block + p->fmv_length - 1));
++		if (p->fmv_oflags & FMV_OF_SPECIAL_OWNER)
++			printf("%s", special_owner(p->fmv_owner));
++		else if (p->fmv_oflags & FMV_OF_EXTENT_MAP)
++			printf(_("inode %lld extent map"),
++				(long long) p->fmv_owner);
++		else
++			printf(_("inode %lld %lld..%lld"),
++				(long long) p->fmv_owner,
++				(long long) p->fmv_offset,
++				(long long)(p->fmv_offset + p->fmv_length - 1));
++		printf(_(" %lld blocks\n"),
++			(long long)p->fmv_length);
++	}
 +}
 +
 +/*
-  * Recovering CoW Blocks After a Crash
-  *
-  * Due to the way that the copy on write mechanism works, there's a window of
-diff --git a/libxfs/xfs_refcount.h b/libxfs/xfs_refcount.h
-index 6665eeb..44b0346 100644
---- a/libxfs/xfs_refcount.h
-+++ b/libxfs/xfs_refcount.h
-@@ -53,6 +53,10 @@ extern int xfs_refcount_finish_one(struct xfs_trans *tp,
- 		xfs_fsblock_t startblock, xfs_extlen_t blockcount,
- 		xfs_extlen_t *adjusted, struct xfs_btree_cur **pcur);
- 
-+extern int __xfs_refcount_find_shared(struct xfs_mount *mp,
-+		struct xfs_buf *agbp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		xfs_extlen_t aglen, xfs_agblock_t *fbno, xfs_extlen_t *flen,
-+		bool find_maximal);
- extern int xfs_refcount_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
- 		xfs_extlen_t *flen, bool find_maximal);
++ * Verbose mode displays:
++ *   extent: major:minor [startblock..endblock]: startoffset..endoffset \
++ *	ag# (agoffset..agendoffset) totalbbs flags
++ */
++#define MINRANGE_WIDTH	16
++#define MINAG_WIDTH	2
++#define MINTOT_WIDTH	5
++#define NFLG		7		/* count of flags */
++#define	FLG_NULL	00000000	/* Null flag */
++#define	FLG_SHARED	01000000	/* shared extent */
++#define	FLG_ATTR_FORK	00100000	/* attribute fork */
++#define	FLG_PRE		00010000	/* Unwritten extent */
++#define	FLG_BSU		00001000	/* Not on begin of stripe unit  */
++#define	FLG_ESU		00000100	/* Not on end   of stripe unit  */
++#define	FLG_BSW		00000010	/* Not on begin of stripe width */
++#define	FLG_ESW		00000001	/* Not on end   of stripe width */
++static void
++dump_map_verbose(
++	unsigned long long	nr,
++	struct getfsmapx	*map,
++	bool			*dumped_flags,
++	struct xfs_fsop_geom	*fsgeo)
++{
++	unsigned long long	i;
++	struct getfsmapx	*p;
++	int			agno;
++	off64_t			agoff, bbperag;
++	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w, nr_w, dev_w;
++	char			rbuf[32], bbuf[32], abuf[32], obuf[32], nbuf[32], dbuf[32];
++	int			sunit, swidth;
++	int			flg = 0;
++
++	foff_w = boff_w = aoff_w = own_w = MINRANGE_WIDTH;
++	dev_w = 3;
++	nr_w = 4;
++	tot_w = MINTOT_WIDTH;
++	bbperag = (off64_t)fsgeo->agblocks *
++		  (off64_t)fsgeo->blocksize / BBSIZE;
++	sunit = (fsgeo->sunit * fsgeo->blocksize) / BBSIZE;
++	swidth = (fsgeo->swidth * fsgeo->blocksize) / BBSIZE;
++
++	/*
++	 * Go through the extents and figure out the width
++	 * needed for all columns.
++	 */
++	for (i = 0, p = map + 2; i < map->fmv_entries; i++, p++) {
++		if (p->fmv_oflags & FMV_OF_PREALLOC ||
++		    p->fmv_oflags & FMV_OF_ATTR_FORK ||
++		    p->fmv_oflags & FMV_OF_SHARED)
++			flg = 1;
++		if (sunit &&
++		    (p->fmv_block  % sunit != 0 ||
++		     ((p->fmv_block + p->fmv_length) % sunit) != 0 ||
++		     p->fmv_block % swidth != 0 ||
++		     ((p->fmv_block + p->fmv_length) % swidth) != 0))
++			flg = 1;
++		if (flg)
++			*dumped_flags = true;
++		snprintf(nbuf, sizeof(nbuf), "%llu", nr + i);
++		nr_w = max(nr_w, strlen(nbuf));
++		snprintf(dbuf, sizeof(dbuf), "%u:%u", major(p->fmv_device),
++			minor(p->fmv_device));
++		dev_w = max(dev_w, strlen(dbuf));
++		snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
++			(long long) p->fmv_block,
++			(long long)(p->fmv_block + p->fmv_length - 1));
++		boff_w = max(boff_w, strlen(bbuf));
++		if (p->fmv_oflags & FMV_OF_SPECIAL_OWNER)
++			own_w = max(own_w, strlen(special_owner(p->fmv_owner)));
++		else {
++			snprintf(obuf, sizeof(obuf), "%lld",
++				(long long)p->fmv_owner);
++			own_w = max(own_w, strlen(obuf));
++		}
++		if (p->fmv_oflags & FMV_OF_EXTENT_MAP)
++			foff_w = max(foff_w, strlen(_("extent_map")));
++		else if (p->fmv_oflags & FMV_OF_SPECIAL_OWNER)
++			;
++		else {
++			snprintf(rbuf, sizeof(rbuf), "%lld..%lld",
++				(long long) p->fmv_offset,
++				(long long)(p->fmv_offset + p->fmv_length - 1));
++			foff_w = max(foff_w, strlen(rbuf));
++		}
++		agno = p->fmv_block / bbperag;
++		agoff = p->fmv_block - (agno * bbperag);
++		snprintf(abuf, sizeof(abuf),
++			"(%lld..%lld)",
++			(long long)agoff,
++			(long long)(agoff + p->fmv_length - 1));
++		aoff_w = max(aoff_w, strlen(abuf));
++		tot_w = max(tot_w,
++			numlen(p->fmv_length));
++	}
++	agno_w = max(MINAG_WIDTH, numlen(fsgeo->agcount));
++	if (nr == 0)
++		printf("%*s: %-*s %-*s %-*s %-*s %*s %-*s %*s%s\n",
++			nr_w, _("EXT"),
++			dev_w, _("DEV"),
++			boff_w, _("BLOCK-RANGE"),
++			own_w, _("OWNER"),
++			foff_w, _("FILE-OFFSET"),
++			agno_w, _("AG"),
++			aoff_w, _("AG-OFFSET"),
++			tot_w, _("TOTAL"),
++			flg ? _(" FLAGS") : "");
++	for (i = 0, p = map + 2; i < map->fmv_entries; i++, p++) {
++		flg = FLG_NULL;
++		if (p->fmv_oflags & FMV_OF_PREALLOC)
++			flg |= FLG_PRE;
++		if (p->fmv_oflags & FMV_OF_ATTR_FORK)
++			flg |= FLG_ATTR_FORK;
++		if (p->fmv_oflags & FMV_OF_SHARED)
++			flg |= FLG_SHARED;
++		/*
++		 * If striping enabled, determine if extent starts/ends
++		 * on a stripe unit boundary.
++		 */
++		if (sunit) {
++			if (p->fmv_block  % sunit != 0)
++				flg |= FLG_BSU;
++			if (((p->fmv_block +
++			      p->fmv_length ) % sunit ) != 0)
++				flg |= FLG_ESU;
++			if (p->fmv_block % swidth != 0)
++				flg |= FLG_BSW;
++			if (((p->fmv_block +
++			      p->fmv_length ) % swidth ) != 0)
++				flg |= FLG_ESW;
++		}
++		snprintf(dbuf, sizeof(dbuf), "%u:%u", major(p->fmv_device),
++			minor(p->fmv_device));
++		snprintf(bbuf, sizeof(bbuf), "[%lld..%lld]:",
++			(long long) p->fmv_block,
++			(long long)(p->fmv_block + p->fmv_length - 1));
++		if (p->fmv_oflags & FMV_OF_SPECIAL_OWNER) {
++			snprintf(obuf, sizeof(obuf), "%s",
++				special_owner(p->fmv_owner));
++			snprintf(rbuf, sizeof(rbuf), " ");
++		} else {
++			snprintf(obuf, sizeof(obuf), "%lld",
++				(long long)p->fmv_owner);
++			snprintf(rbuf, sizeof(rbuf), "%lld..%lld",
++				(long long) p->fmv_offset,
++				(long long)(p->fmv_offset + p->fmv_length - 1));
++		}
++		agno = p->fmv_block / bbperag;
++		agoff = p->fmv_block - (agno * bbperag);
++		snprintf(abuf, sizeof(abuf),
++			"(%lld..%lld)",
++			(long long)agoff,
++			(long long)(agoff + p->fmv_length - 1));
++		if (p->fmv_oflags & FMV_OF_EXTENT_MAP)
++			printf("%*llu: %-*s %-*s %-*s %-*s %*d %-*s %*lld\n",
++				nr_w, nr + i,
++				dev_w, dbuf,
++				boff_w, bbuf,
++				own_w, obuf,
++				foff_w, _("extent map"),
++				agno_w, agno,
++				aoff_w, abuf,
++				tot_w, (long long)p->fmv_length);
++		else {
++			printf("%*llu: %-*s %-*s %-*s %-*s", nr_w, nr + i,
++				dev_w, dbuf, boff_w, bbuf, own_w, obuf,
++				foff_w, rbuf);
++			printf(" %*d %-*s", agno_w, agno,
++				aoff_w, abuf);
++			printf(" %*lld", tot_w,
++				(long long)p->fmv_length);
++			if (flg == FLG_NULL)
++				printf("\n");
++			else
++				printf(" %-*.*o\n", NFLG, NFLG, flg);
++		}
++	}
++}
++
++static void
++dump_verbose_key(void)
++{
++	printf(_(" FLAG Values:\n"));
++	printf(_("    %*.*o Shared extent\n"),
++		NFLG+1, NFLG+1, FLG_SHARED);
++	printf(_("    %*.*o Attribute fork\n"),
++		NFLG+1, NFLG+1, FLG_ATTR_FORK);
++	printf(_("    %*.*o Unwritten preallocated extent\n"),
++		NFLG+1, NFLG+1, FLG_PRE);
++	printf(_("    %*.*o Doesn't begin on stripe unit\n"),
++		NFLG+1, NFLG+1, FLG_BSU);
++	printf(_("    %*.*o Doesn't end   on stripe unit\n"),
++		NFLG+1, NFLG+1, FLG_ESU);
++	printf(_("    %*.*o Doesn't begin on stripe width\n"),
++		NFLG+1, NFLG+1, FLG_BSW);
++	printf(_("    %*.*o Doesn't end   on stripe width\n"),
++		NFLG+1, NFLG+1, FLG_ESW);
++}
++
++int
++fsmap_f(
++	int			argc,
++	char			**argv)
++{
++	struct getfsmapx	*p;
++	struct getfsmapx	*nmap;
++	struct getfsmapx	*map;
++	struct xfs_fsop_geom	fsgeo;
++	long long		start = 0;
++	long long		end = -1;
++	int			nmap_size;
++	int			map_size;
++	int			nflag = 0;
++	int			vflag = 0;
++	int			fmv_iflags = 0;	/* flags for GETFSMAPX */
++	int			i = 0;
++	int			c;
++	unsigned long long	nr = 0;
++	size_t			fsblocksize, fssectsize;
++	bool			dumped_flags = false;
++
++	init_cvtnum(&fsblocksize, &fssectsize);
++
++	while ((c = getopt(argc, argv, "n:v")) != EOF) {
++		switch (c) {
++		case 'n':	/* number of extents specified */
++			nflag = atoi(optarg);
++			break;
++		case 'v':	/* Verbose output */
++			vflag++;
++			break;
++		default:
++			return command_usage(&fsmap_cmd);
++		}
++	}
++
++	if (argc > optind) {
++		start = cvtnum(fsblocksize, fssectsize, argv[optind]);
++		if (start < 0) {
++			fprintf(stderr,
++				_("Bad rmap start_fsb %s.\n"),
++				argv[optind]);
++			return 0;
++		}
++	}
++
++	if (argc > optind + 1) {
++		end = cvtnum(fsblocksize, fssectsize, argv[optind + 1]);
++		if (end < 0) {
++			fprintf(stderr,
++				_("Bad rmap end_fsb %s.\n"),
++				argv[optind + 1]);
++			return 0;
++		}
++	}
++
++	if (vflag) {
++		c = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo);
++		if (c < 0) {
++			fprintf(stderr,
++				_("%s: can't get geometry [\"%s\"]: %s\n"),
++				progname, file->name, strerror(errno));
++			exitcode = 1;
++			return 0;
++		}
++	}
++
++	map_size = nflag ? nflag + 2 : 32;	/* initial guess - 32 */
++	map = malloc(map_size * sizeof(*map));
++	if (map == NULL) {
++		fprintf(stderr, _("%s: malloc of %zu bytes failed.\n"),
++			progname, map_size * sizeof(*map));
++		exitcode = 1;
++		return 0;
++	}
++
++	memset(map, 0, sizeof(*map) * 2);
++	map->fmv_iflags = fmv_iflags;
++	map->fmv_block = start / 512;
++	(map + 1)->fmv_device = UINT_MAX;
++	(map + 1)->fmv_block = (unsigned long long)end / 512;
++	(map + 1)->fmv_owner = ULLONG_MAX;
++	(map + 1)->fmv_offset = ULLONG_MAX;
++
++	/* Count mappings */
++	if (!nflag) {
++		map->fmv_count = 2;
++		i = xfsctl(file->name, file->fd, XFS_IOC_GETFSMAPX, map);
++		if (i < 0) {
++			fprintf(stderr, _("%s: xfsctl(XFS_IOC_GETFSMAPX)"
++				" iflags=0x%x [\"%s\"]: %s\n"),
++				progname, map->fmv_iflags, file->name,
++				strerror(errno));
++			free(map);
++			exitcode = 1;
++			return 0;
++		}
++		if (map->fmv_entries > map_size * 2) {
++			unsigned long long nr;
++
++			nr = 5ULL * map->fmv_entries / 4 + 2;
++			nmap_size = nr > INT_MAX ? INT_MAX : nr;
++			nmap = realloc(map, nmap_size * sizeof(*map));
++			if (nmap == NULL) {
++				fprintf(stderr,
++					_("%s: cannot realloc %zu bytes\n"),
++					progname, map_size*sizeof(*map));
++			} else {
++				map = nmap;
++				map_size = nmap_size;
++			}
++		}
++	}
++
++	map->fmv_count = map_size;
++	do {
++		/* Get some extents */
++		i = xfsctl(file->name, file->fd, XFS_IOC_GETFSMAPX, map);
++		if (i < 0) {
++			fprintf(stderr, _("%s: xfsctl(XFS_IOC_GETFSMAPX)"
++				" iflags=0x%x [\"%s\"]: %s\n"),
++				progname, map->fmv_iflags, file->name,
++				strerror(errno));
++			free(map);
++			exitcode = 1;
++			return 0;
++		}
++
++		if (map->fmv_entries == 0)
++			break;
++
++		if (!vflag)
++			dump_map(nr, map);
++		else
++			dump_map_verbose(nr, map, &dumped_flags, &fsgeo);
++
++		p = map + 1 + map->fmv_entries;
++		if (p->fmv_oflags & FMV_OF_LAST)
++			break;
++
++		nr += map->fmv_entries;
++		map->fmv_device = p->fmv_device;
++		map->fmv_block = p->fmv_block;
++		map->fmv_owner = p->fmv_owner;
++		map->fmv_offset = p->fmv_offset;
++		map->fmv_oflags = p->fmv_oflags;
++		map->fmv_length = p->fmv_length;
++	} while (true);
++
++	if (dumped_flags)
++		dump_verbose_key();
++
++	free(map);
++	return 0;
++}
++
++void
++fsmap_init(void)
++{
++	fsmap_cmd.name = "fsmap";
++	fsmap_cmd.cfunc = fsmap_f;
++	fsmap_cmd.argmin = 0;
++	fsmap_cmd.argmax = -1;
++	fsmap_cmd.flags = CMD_NOMAP_OK;
++	fsmap_cmd.args = _("[-v] [-n nx] [start] [end]");
++	fsmap_cmd.oneline = _("print filesystem mapping for a range of blocks");
++	fsmap_cmd.help = fsmap_help;
++
++	add_command(&fsmap_cmd);
++}
+diff --git a/io/init.c b/io/init.c
+index 51f1f5c..4ae8274 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -60,6 +60,7 @@ init_commands(void)
+ 	file_init();
+ 	flink_init();
+ 	freeze_init();
++	fsmap_init();
+ 	fsync_init();
+ 	getrusage_init();
+ 	help_init();
+diff --git a/io/io.h b/io/io.h
+index 172b1f8..cef1763 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -97,6 +97,7 @@ extern void		bmap_init(void);
+ extern void		file_init(void);
+ extern void		flink_init(void);
+ extern void		freeze_init(void);
++extern void		fsmap_init(void);
+ extern void		fsync_init(void);
+ extern void		getrusage_init(void);
+ extern void		help_init(void);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index cc70b7c..2872f13 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -267,6 +267,53 @@ ioctl.  Options behave as described in the
+ .BR xfs_bmap (8)
+ manual page.
+ .TP
++.BI "fsmap [ \-v ] [ \-n " nx " ] [ " start " ] [ " end " ]
++Prints the mapping of disk blocks used by an XFS filesystem.  The map
++lists each extent used by files, allocation group metadata,
++journalling logs, and static filesystem metadata, as well as any
++regions that are unused.  Each line of the listings takes the
++following form:
++.PP
++.RS
++.IR extent ": " major ":" minor " [" startblock .. endblock "]: " owner " " startoffset .. endoffset " " length
++.PP
++Static filesystem metadata, allocation group metadata, btrees,
++journalling logs, and free space are marked by replacing the
++.IR startoffset .. endoffset
++with the appropriate marker.  All blocks, offsets, and lengths are specified
++in units of 512-byte blocks, no matter what the filesystem's block size is.
++.BI "The optional " start " and " end " arguments can be used to constrain
++the output to a particular range of disk blocks.
++.RE
++.RS 1.0i
++.PD 0
++.TP
++.BI \-n " num_extents"
++If this option is given,
++.B xfs_fsmap
++obtains the extent list of the file in groups of
++.I num_extents
++extents. In the absence of
++.BR \-n ", " xfs_fsmap
++queries the system for the number of extents in the filesystem and uses that
++value to compute the group size.
++.TP
++.B \-v
++Shows verbose information. When this flag is specified, additional AG
++specific information is appended to each line in the following form:
++.IP
++.RS 1.2i
++.IR agno " (" startagblock .. endagblock ") " nblocks " " flags
++.RE
++.IP
++A second
++.B \-v
++option will print out the
++.I flags
++legend.
++.RE
++.PD
++.TP
+ .BI "extsize [ \-R | \-D ] [ " value " ]"
+ Display and/or modify the preferred extent size used when allocating
+ space for the currently open file. If the
 
 _______________________________________________
 xfs mailing list
