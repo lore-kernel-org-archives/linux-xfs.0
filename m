@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 21C2C7CB4
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:25:09 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A50D87DDC
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:25:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D76038F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:08 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id w55Kp5ddNcLI1xAN (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 312B7AC003
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:15 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id CyMFeXVT8lf0fMC1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:07 -0700 (PDT)
-Subject: [PATCH 067/119] xfs: refcount btree requires more reserved space
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:25:13 -0700 (PDT)
+Subject: [PATCH 068/119] xfs: introduce reflink utility functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:25:01 -0700
-Message-ID: <146612670132.12839.1688051800857080032.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:25:07 -0700
+Message-ID: <146612670758.12839.3762058851402658987.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,89 +31,146 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-The reference count btree is allocated from the free space, which
-means that we have to ensure that an AG can't run out of free space
-while performing a refcount operation.  In the pathological case each
-AG block has its own refcntbt record, so we have to keep that much
-space available.
+These functions will be used by the other reflink functions to find
+the maximum length of a range of shared blocks.
 
-v2: Calculate the maximum possible size of the rmap and refcount
-btrees based on minimally-full btree blocks.  This increases the
-per-AG block reservations to handle the worst case btree size.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.coM>
 ---
- fs/xfs/libxfs/xfs_alloc.c          |    3 +++
- fs/xfs/libxfs/xfs_refcount_btree.c |   23 +++++++++++++++++++++++
- fs/xfs/libxfs/xfs_refcount_btree.h |    4 ++++
- 3 files changed, 30 insertions(+)
+ fs/xfs/libxfs/xfs_refcount.c |  109 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_refcount.h |    4 ++
+ 2 files changed, 113 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index be5d0df..c46db76 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -38,6 +38,7 @@
- #include "xfs_buf_item.h"
- #include "xfs_log.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_refcount_btree.h"
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index bfbdbad..ebbb714 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1129,3 +1129,112 @@ xfs_refcount_decrease_extent(
  
- struct workqueue_struct *xfs_alloc_wq;
- 
-@@ -138,6 +139,8 @@ xfs_alloc_ag_max_usable(struct xfs_mount *mp)
- 		/* rmap root block + full tree split on full AG */
- 		blocks += 1 + (2 * mp->m_ag_maxlevels) - 1;
- 	}
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		blocks += xfs_refcountbt_max_size(mp);
- 
- 	return mp->m_sb.sb_agblocks - blocks;
+ 	return __xfs_refcount_add(mp, dfops, &ri);
  }
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 7093c71..a944fca 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -373,3 +373,26 @@ xfs_refcountbt_compute_maxlevels(
- 	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(mp,
- 			mp->m_refc_mnr, mp->m_sb.sb_agblocks);
- }
-+
-+/* Calculate the refcount btree size for some records. */
-+xfs_extlen_t
-+xfs_refcountbt_calc_size(
-+	struct xfs_mount	*mp,
-+	unsigned long long	len)
-+{
-+	return xfs_btree_calc_size(mp, mp->m_refc_mnr, len);
-+}
 +
 +/*
-+ * Calculate the maximum refcount btree size.
++ * Given an AG extent, find the lowest-numbered run of shared blocks within
++ * that range and return the range in fbno/flen.  If find_maximal is set,
++ * return the longest extent of shared blocks; if not, just return the first
++ * extent we find.  If no shared blocks are found, flen will be set to zero.
 + */
-+xfs_extlen_t
-+xfs_refcountbt_max_size(
-+	struct xfs_mount	*mp)
++int
++xfs_refcount_find_shared(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		aglen,
++	xfs_agblock_t		*fbno,
++	xfs_extlen_t		*flen,
++	bool			find_maximal)
 +{
-+	/* Bail out if we're uninitialized, which can happen in mkfs. */
-+	if (mp->m_refc_mxr[0] == 0)
-+		return 0;
++	struct xfs_btree_cur	*cur;
++	struct xfs_buf		*agbp;
++	struct xfs_refcount_irec	tmp;
++	int			error;
++	int			i, have;
++	int			bt_error = XFS_BTREE_ERROR;
 +
-+	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
++	trace_xfs_refcount_find_shared(mp, agno, agbno, aglen);
++
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		goto out;
++	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++
++	/* By default, skip the whole range */
++	*fbno = agbno + aglen;
++	*flen = 0;
++
++	/* Try to find a refcount extent that crosses the start */
++	error = xfs_refcountbt_lookup_le(cur, agbno, &have);
++	if (error)
++		goto out_error;
++	if (!have) {
++		/* No left extent, look at the next one */
++		error = xfs_btree_increment(cur, 0, &have);
++		if (error)
++			goto out_error;
++		if (!have)
++			goto done;
++	}
++	error = xfs_refcountbt_get_rec(cur, &tmp, &i);
++	if (error)
++		goto out_error;
++	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++
++	/* If the extent ends before the start, look at the next one */
++	if (tmp.rc_startblock + tmp.rc_blockcount <= agbno) {
++		error = xfs_btree_increment(cur, 0, &have);
++		if (error)
++			goto out_error;
++		if (!have)
++			goto done;
++		error = xfs_refcountbt_get_rec(cur, &tmp, &i);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++	}
++
++	/* If the extent ends after the range we want, bail out */
++	if (tmp.rc_startblock >= agbno + aglen)
++		goto done;
++
++	/* We found the start of a shared extent! */
++	if (tmp.rc_startblock < agbno) {
++		tmp.rc_blockcount -= (agbno - tmp.rc_startblock);
++		tmp.rc_startblock = agbno;
++	}
++
++	*fbno = tmp.rc_startblock;
++	*flen = min(tmp.rc_blockcount, agbno + aglen - *fbno);
++	if (!find_maximal)
++		goto done;
++
++	/* Otherwise, find the end of this shared extent */
++	while (*fbno + *flen < agbno + aglen) {
++		error = xfs_btree_increment(cur, 0, &have);
++		if (error)
++			goto out_error;
++		if (!have)
++			break;
++		error = xfs_refcountbt_get_rec(cur, &tmp, &i);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++		if (tmp.rc_startblock >= agbno + aglen ||
++		    tmp.rc_startblock != *fbno + *flen)
++			break;
++		*flen = min(*flen + tmp.rc_blockcount, agbno + aglen - *fbno);
++	}
++
++done:
++	bt_error = XFS_BTREE_NOERROR;
++	trace_xfs_refcount_find_shared_result(mp, agno, *fbno, *flen);
++
++out_error:
++	xfs_btree_del_cursor(cur, bt_error);
++	xfs_buf_relse(agbp);
++out:
++	if (error)
++		trace_xfs_refcount_find_shared_error(mp, agno, error, _RET_IP_);
++	return error;
 +}
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index 9e9ad7c..780b02f 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -64,4 +64,8 @@ extern int xfs_refcountbt_maxrecs(struct xfs_mount *mp, int blocklen,
- 		bool leaf);
- extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 92c05ea..b7b83b8 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -53,4 +53,8 @@ extern int xfs_refcount_finish_one(struct xfs_trans *tp,
+ 		xfs_fsblock_t startblock, xfs_extlen_t blockcount,
+ 		xfs_extlen_t *adjusted, struct xfs_btree_cur **pcur);
  
-+extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
-+		unsigned long long len);
-+extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
++extern int xfs_refcount_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
++		xfs_extlen_t *flen, bool find_maximal);
 +
- #endif	/* __XFS_REFCOUNT_BTREE_H__ */
+ #endif	/* __XFS_REFCOUNT_H__ */
 
 _______________________________________________
 xfs mailing list
