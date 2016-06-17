@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 92DCF85A0
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:48:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E7448F8054
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:55 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id bK5t8WKJCkIKCMej (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0C7AB7CA2
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 14:53:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5EF0BAC002
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:53:54 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id uTlO5Kc3NokzfZjO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:48:37 -0700 (PDT)
-Subject: [PATCH 4/6] xfsdocs: move the discussions of short and long format
-	btrees to a separate chapter
+	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:53:51 -0700 (PDT)
+Date: Fri, 17 Jun 2016 12:53:45 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:48:33 -0700
-Message-ID: <146612811355.25586.2303327639177399141.stgit@birch.djwong.org>
-In-Reply-To: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
-References: <146612808918.25586.1147874927753492795.stgit@birch.djwong.org>
+Subject: Re: [RFC PATCH 2/2] xfs: initial/partial support for badblocks
+Message-ID: <20160617195345.GA5046@birch.djwong.org>
+References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
+	<1466125419-17736-3-git-send-email-vishal.l.verma@intel.com>
+	<20160617022606.GC11810@birch.djwong.org>
+	<20160617192647.GC5893@omniknight.lm.intel.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160617192647.GC5893@omniknight.lm.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,400 +32,270 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: xfs@oss.sgi.com
+To: Vishal Verma <vishal.l.verma@intel.com>
+Cc: linux-nvdimm@ml01.01.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Move the discussion of short and long format btrees into a separate
-chapter.
+On Fri, Jun 17, 2016 at 01:26:47PM -0600, Vishal Verma wrote:
+> On 06/16, Darrick J. Wong wrote:
+> > On Thu, Jun 16, 2016 at 07:03:39PM -0600, Vishal Verma wrote:
+> > > RFC/WIP commit.
+> > > 
+> > > This adds the foollowing:
+> > > 1. In xfs_mountfs(), get an initial badblocks list from gendisk's
+> > > badblocks infrastructure.
+> > > 2. Register with the badblocks notifier to get updates for this disk's
+> > > badblocks
+> > > 
+> > > TODO:
+> > > 1. Add badblocks info to the reverse mapping tree (and remove if a
+> > > badblock was cleared).
+> > 
+> > Well... there are a number of things we /could/ do... theoretically one
+> > could use the rmap info to find all the affected inodes and simply convert
+> > that part of their extent trees to 'unwritten'.  Reads will just get zeroes,
+> 
+> Hm, not sure we can do that - if a block became bad at some point,
+> subsequent reads _have to_ error out (-EIO) so that the user doesn't see
+> silent data corruption.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- .../allocation_groups.asciidoc                     |   59 ------
- design/XFS_Filesystem_Structure/btrees.asciidoc    |  200 ++++++++++++++++++++
- .../XFS_Filesystem_Structure/data_extents.asciidoc |   71 -------
- .../xfs_filesystem_structure.asciidoc              |    2 
- 4 files changed, 206 insertions(+), 126 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/btrees.asciidoc
+Ooh, right, forgot about that whole MCE-on-bad-read thing...
 
+> > and writes will remove the unwritten flag (for that file, anyway).  Will a
+> > successful write trigger the BB_CLEAR notifier?
+> 
+> Currently, a successful write that goes through the driver (i.e. not
+> DAX) will cause the badblock to get cleared, and trigger BB_CLEAR. DAX
+> is trickier, and currently DAX writes won't clear errors.
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index 0633175..55bbc50 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -612,65 +612,6 @@ Checksum of the AGF sector.
- *agf_spare2*::
- Empty space in the unlogged part of the AGF sector.
- 
--[[Short_Format_Btrees]]
--=== Short Format B+trees
--
--Each allocation group uses a ``short format'' B+tree to index various
--information about the allocation group.  The structure is called short format
--because all block pointers are AG block numbers.  The trees use the following
--header:
--
--[source, c]
------
--struct xfs_btree_sblock {
--     __be32                    bb_magic;
--     __be16                    bb_level;
--     __be16                    bb_numrecs;
--     __be32                    bb_leftsib;
--     __be32                    bb_rightsib;
--
--     /* version 5 filesystem fields start here */
--     __be64                    bb_blkno;
--     __be64                    bb_lsn;
--     uuid_t                    bb_uuid;
--     __be32                    bb_owner;
--     __le32                    bb_crc;
--};
------
--
--*bb_magic*::
--Specifies the magic number for the per-AG B+tree block.
--
--*bb_level*::
--The level of the tree in which this block is found.  If this value is 0, this
--is a leaf block and contains records; otherwise, it is a node block and
--contains keys and pointers.
--
--*bb_numrecs*::
--Number of records in this block.
--
--*bb_leftsib*::
--AG block number of the left sibling of this B+tree node.
--
--*bb_rightsib*::
--AG block number of the right sibling of this B+tree node.
--
--*bb_blkno*::
--FS block number of this B+tree block.
--
--*bb_lsn*::
--Log sequence number of the last write to this block.
--
--*bb_uuid*::
--The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
--depending on which features are set.
--
--*bb_owner*::
--The AG number that this B+tree block ought to be in.
--
--*bb_crc*::
--Checksum of the B+tree block.
--
- [[AG_Free_Space_Btrees]]
- === AG Free Space B+trees
- 
-diff --git a/design/XFS_Filesystem_Structure/btrees.asciidoc b/design/XFS_Filesystem_Structure/btrees.asciidoc
-new file mode 100644
-index 0000000..c67669c
---- /dev/null
-+++ b/design/XFS_Filesystem_Structure/btrees.asciidoc
-@@ -0,0 +1,200 @@
-+= B+trees
-+
-+XFS uses b+trees to index all metadata records.  This well known data structure
-+is used to provide efficient random and sequential access to metadata records
-+while minimizing seek times.  There are two btree formats: a short format
-+for records pertaining to a single allocation group, since all block pointers
-+in an AG are 32-bits in size; and a long format for records pertaining to a
-+file, since file data can have 64-bit block offsets.  Each b+tree block is
-+either a leaf node containing records, or an internal node containing keys and
-+pointers to other b+tree blocks.  The tree consists of a root block which may
-+point to some number of other blocks; blocks in the bottom level of the b+tree
-+contains only records.
-+
-+Leaf blocks of both types of b+trees have the same general format: a header
-+describing the data in the block, and an array of records.  The specific header
-+formats are given in the next two sections, and the record format is provided
-+by the b+tree client itself.  The generic b+tree code does not have any
-+specific knowledge of the record format.
-+
-+----
-++--------+------------+------------+
-+| header |   record   | records... |
-++--------+------------+------------+
-+----
-+
-+Internal node blocks of both types of b+trees also have the same general
-+format: a header describing the data in the block, an array of keys, and an
-+array of pointers.  Each pointer may be associated with one or two keys.  The
-+first key uniquely identifies the first record accessible via the leftmost path
-+down the branch of the tree.
-+
-+If the records in a b+tree are indexed by an interval, then a range of keys can
-+uniquely identify a single record.  For example, if a record covers blocks
-+12-16, then any one of the keys 12, 13, 14, 15, or 16 return the same record.
-+In this case, the key for the record describing "12-16" is 12.  If none of the
-+records overlap, we only need to store one key.
-+
-+This is the format of a standard b+tree node:
-+
-+----
-++--------+---------+---------+---------+---------+
-+| header |   key   | keys... |   ptr   | ptrs... |
-++--------+---------+---------+---------+---------+
-+----
-+
-+If the b+tree records do not overlap, performing a b+tree lookup is simple.
-+Start with the root.  If it is a leaf block, perform a binary search of the
-+records until we find the record with a lower key than our search key.  If the
-+block is a node block, perform a binary search of the keys until we find a
-+key lower than our search key, then follow the pointer to the next block.
-+Repeat until we find a record.
-+
-+However, if b+tree records contain intervals and are allowed to overlap, the
-+internal nodes of the b+tree become larger:
-+
-+----
-++--------+---------+----------+---------+-------------+---------+---------+
-+| header | low key | high key | low key | high key... |   ptr   | ptrs... |
-++--------+---------+----------+---------+-------------+---------+---------+
-+----
-+
-+The low keys are exactly the same as the keys in the non-overlapping b+tree.
-+High keys, however, are a little different.  Recall that a record with a key
-+consisting of an interval can be referenced by a number of keys.  Since the low
-+key of a record indexes the low end of that key range, the high key indexes the
-+high end of the key range.  Returning to the example above, the high key for
-+the record describing "12-16" is 16.  The high key recorded in a b+tree node
-+is the largest of the high keys of all records accessible under the subtree
-+rooted by the pointer.  For a level 1 node, this is the largest high key in
-+the pointed-to leaf node; for any other node, this is the largest of the high
-+keys in the pointed-to node.
-+
-+Nodes and leaves use the same magic numbers.
-+
-+[[Short_Format_Btrees]]
-+== Short Format B+trees
-+
-+Each allocation group uses a ``short format'' B+tree to index various
-+information about the allocation group.  The structure is called short format
-+because all block pointers are AG block numbers.  The trees use the following
-+header:
-+
-+[source, c]
-+----
-+struct xfs_btree_sblock {
-+     __be32                    bb_magic;
-+     __be16                    bb_level;
-+     __be16                    bb_numrecs;
-+     __be32                    bb_leftsib;
-+     __be32                    bb_rightsib;
-+
-+     /* version 5 filesystem fields start here */
-+     __be64                    bb_blkno;
-+     __be64                    bb_lsn;
-+     uuid_t                    bb_uuid;
-+     __be32                    bb_owner;
-+     __le32                    bb_crc;
-+};
-+----
-+
-+*bb_magic*::
-+Specifies the magic number for the per-AG B+tree block.
-+
-+*bb_level*::
-+The level of the tree in which this block is found.  If this value is 0, this
-+is a leaf block and contains records; otherwise, it is a node block and
-+contains keys and pointers.
-+
-+*bb_numrecs*::
-+Number of records in this block.
-+
-+*bb_leftsib*::
-+AG block number of the left sibling of this B+tree node.
-+
-+*bb_rightsib*::
-+AG block number of the right sibling of this B+tree node.
-+
-+*bb_blkno*::
-+FS block number of this B+tree block.
-+
-+*bb_lsn*::
-+Log sequence number of the last write to this block.
-+
-+*bb_uuid*::
-+The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
-+depending on which features are set.
-+
-+*bb_owner*::
-+The AG number that this B+tree block ought to be in.
-+
-+*bb_crc*::
-+Checksum of the B+tree block.
-+
-+[[Long_Format_Btrees]]
-+== Long Format B+trees
-+
-+If an inode's block map requires more records than fit into the inode's fork
-+area, it will use a b+tree to index the records.  The nodes and leaves of this
-+B+tree use the +xfs_btree_lblock+ declaration:
-+
-+[source, c]
-+----
-+struct xfs_btree_lblock {
-+     __be32                    bb_magic;
-+     __be16                    bb_level;
-+     __be16                    bb_numrecs;
-+     __be64                    bb_leftsib;
-+     __be64                    bb_rightsib;
-+
-+     /* version 5 filesystem fields start here */
-+     __be64                    bb_blkno;
-+     __be64                    bb_lsn;
-+     uuid_t                    bb_uuid;
-+     __be64                    bb_owner;
-+     __le32                    bb_crc;
-+     __be32                    bb_pad;
-+};
-+----
-+
-+*bb_magic*::
-+Specifies the magic number for the BMBT block: ``BMAP'' (0x424d4150).
-+On a v5 filesystem, this is ``BMA3'' (0x424d4133).
-+
-+*bb_level*::
-+The level of the tree in which this block is found.  If this value is 0, this
-+is a leaf block and contains records; otherwise, it is a node block and
-+contains keys and pointers.
-+
-+*bb_numrecs*::
-+Number of records in this block.
-+
-+*bb_leftsib*::
-+FS block number of the left sibling of this B+tree node.
-+
-+*bb_rightsib*::
-+FS block number of the right sibling of this B+tree node.
-+
-+*bb_blkno*::
-+FS block number of this B+tree block.
-+
-+*bb_lsn*::
-+Log sequence number of the last write to this block.
-+
-+*bb_uuid*::
-+The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
-+depending on which features are set.
-+
-+*bb_owner*::
-+The AG number that this B+tree block ought to be in.
-+
-+*bb_crc*::
-+Checksum of the B+tree block.
-+
-+*bb_pad*::
-+Pads the structure to 64 bytes.
-+
-+// force-split the lists
-+
-+* Long format b+trees are rooted in an inode, not a separate block.
-+
-diff --git a/design/XFS_Filesystem_Structure/data_extents.asciidoc b/design/XFS_Filesystem_Structure/data_extents.asciidoc
-index a39045d..530406d 100644
---- a/design/XFS_Filesystem_Structure/data_extents.asciidoc
-+++ b/design/XFS_Filesystem_Structure/data_extents.asciidoc
-@@ -203,9 +203,10 @@ u.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
- [[Btree_Extent_List]]
- == B+tree Extent List
- 
--To manage extent maps that cannot fit in the inode fork area, XFS uses long
--format B+trees.  The root node of the B+tree is stored in the inode's data
--fork.  All block pointers for extent B+trees are 64-bit absolute block numbers.
-+To manage extent maps that cannot fit in the inode fork area, XFS uses
-+xref:Long_Format_Btrees[long format B+trees].  The root node of the B+tree is
-+stored in the inode's data fork.  All block pointers for extent B+trees are
-+64-bit absolute block numbers.
- 
- For a single level B+tree, the root node points to the B+tree's leaves. Each
- leaf occupies one filesystem block and contains a header and an array of extents
-@@ -242,70 +243,6 @@ standard 256 byte inode before a new level of nodes is added between the root
- and the leaves. This will be less if +di_forkoff+ is not zero (i.e. attributes
- are in use on the inode).
- 
--[[Long_Format_Btrees]]
--=== Long Format B+trees
--
--The subsequent nodes and leaves of the B+tree use the +xfs_btree_lblock+
--declaration:
--
--[source, c]
------
--struct xfs_btree_lblock {
--     __be32                    bb_magic;
--     __be16                    bb_level;
--     __be16                    bb_numrecs;
--     __be64                    bb_leftsib;
--     __be64                    bb_rightsib;
--
--     /* version 5 filesystem fields start here */
--     __be64                    bb_blkno;
--     __be64                    bb_lsn;
--     uuid_t                    bb_uuid;
--     __be64                    bb_owner;
--     __le32                    bb_crc;
--     __be32                    bb_pad;
--};
------
--
--*bb_magic*::
--Specifies the magic number for the BMBT block: ``BMAP'' (0x424d4150).
--On a v5 filesystem, this is ``BMA3'' (0x424d4133).
--
--*bb_level*::
--The level of the tree in which this block is found.  If this value is 0, this
--is a leaf block and contains records; otherwise, it is a node block and
--contains keys and pointers.
--
--*bb_numrecs*::
--Number of records in this block.
--
--*bb_leftsib*::
--FS block number of the left sibling of this B+tree node.
--
--*bb_rightsib*::
--FS block number of the right sibling of this B+tree node.
--
--*bb_blkno*::
--FS block number of this B+tree block.
--
--*bb_lsn*::
--Log sequence number of the last write to this block.
--
--*bb_uuid*::
--The UUID of this block, which must match either +sb_uuid+ or +sb_meta_uuid+
--depending on which features are set.
--
--*bb_owner*::
--The AG number that this B+tree block ought to be in.
--
--*bb_crc*::
--Checksum of the B+tree block.
--
--*bb_pad*::
--Pads the structure to 64 bytes.
--
--// force-split the lists
--
- * For intermediate nodes, the data following +xfs_btree_lblock+ is the same as
- the root node: array of +xfs_bmbt_key+ value followed by an array of
- +xfs_bmbt_ptr_t+ values that starts halfway through the block (offset 0x808 for
-diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-index f580aab..62502b3 100644
---- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-+++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-@@ -62,6 +62,8 @@ Global Structures
- 
- :leveloffset: 1
- 
-+include::btrees.asciidoc[]
-+
- include::allocation_groups.asciidoc[]
- 
- include::journaling_log.asciidoc[]
+Oh...?
+
+> > 
+> > I guess you could punch out the bad blocks too... not clear if you'd want
+> > all the owner files staying mapped to data they'll never get back.
+> 
+> The block mappings don't have to be maintained, but some sort of a flag
+> needs to be kept that will allow us to return errors on reads like I
+> said above.
+
+What happens if pmem signals a bad block and we try to read anyway?  I know
+about the read-error-MCE thing, but what's the "more expensive" alternative?
+CPU exception?
+
+(Really what I'm digging at is, if the whole thing becomes a soft exception
+that we can handle in the OS by, say, 2020, do we care about reintroducing
+the whole ext2 badblocks thing?)
+
+(Beats me...)
+
+--D
+
+> 
+> > 
+> > We could also create another rmap "special owner" (XFS_RMAP_OWN_BAD?) for bad
+> > blocks, so we'd know which parts are just plain bad.  It might be useful to
+> > know that kind of thing.
+> > 
+> > I think earlier Dave was talking about adding a new 'badblocks' bit to both
+> > the file extent records and the rmap records to signify that something's
+> > wrong with the extent.  <shrug> I'll let him write about that.
+> > 
+> > > 2. Before doing file IO, refer the rmap/badblocks to error out early if
+> > > the IO will attempt wo read a bad sector
+> > > 3. Figure out interactions with mmap/DAX.
+> > 
+> > Woot.
+> > 
+> > > Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> > > Cc: Dave Chinner <david@fromorbit.com>
+> > > Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
+> > > ---
+> > >  fs/xfs/xfs_linux.h |   1 +
+> > >  fs/xfs/xfs_mount.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_mount.h |   1 +
+> > >  3 files changed, 106 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> > > index 7e749be..f66d181 100644
+> > > --- a/fs/xfs/xfs_linux.h
+> > > +++ b/fs/xfs/xfs_linux.h
+> > > @@ -78,6 +78,7 @@ typedef __u32			xfs_nlink_t;
+> > >  #include <linux/freezer.h>
+> > >  #include <linux/list_sort.h>
+> > >  #include <linux/ratelimit.h>
+> > > +#include <linux/badblocks.h>
+> > >  
+> > >  #include <asm/page.h>
+> > >  #include <asm/div64.h>
+> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > index 5e68b2c..1a47737 100644
+> > > --- a/fs/xfs/xfs_mount.c
+> > > +++ b/fs/xfs/xfs_mount.c
+> > > @@ -618,6 +618,96 @@ xfs_default_resblks(xfs_mount_t *mp)
+> > >  	return resblks;
+> > >  }
+> > >  
+> > > +STATIC int
+> > > +xfs_notifier_call(
+> > > +	struct notifier_block	*nb,
+> > > +	unsigned long		action,
+> > > +	void			*data)
+> > > +{
+> > > +	struct bb_notifier_data *bb_data = data;
+> > > +	struct xfs_mount *mp;
+> > > +
+> > > +	mp = container_of(nb, struct xfs_mount, m_badblocks_nb);
+> > > +	/* TODO xfs_add_bb_to_rmap(mp, bb_data->sector, bb_data->count); */
+> > > +	xfs_warn(mp, "xfs badblock %s sector %lu (count %d)\n",
+> > > +		(action == BB_ADD)?"added":"cleared",
+> > > +		bb_data->sector, bb_data->count);
+> > > +	return 0;
+> > 
+> > Probably a xfs_rmapbt_query_range here?
+> > 
+> > > +}
+> > > +
+> > > +STATIC int
+> > > +xfs_init_badblocks(struct xfs_mount *mp)
+> > > +{
+> > > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
+> > > +	int done = 0, error = 0;
+> > > +	ssize_t len, off = 0;
+> > > +	char *p;
+> > > +
+> > > +	/*
+> > > +	 * TODO: get a list of known badblocks so far and process it.
+> > > +	 * Can we just parse the sysfs format that badblocks_show()
+> > > +	 * returns? That should be the fastest way to get this.
+> > > +	 * Something like: (Is this too hacky? Should we just do
+> > > +	 * badblocks_check() in a (rather large) loop?)
+> > > +	 */
+> > > +	p = kzalloc(PAGE_SIZE, GFP_KERNEL);
+> > > +	len = badblocks_show(bb, p, 0);
+> > > +	while (len) {
+> > > +		int count, n;
+> > > +		sector_t s;
+> > > +
+> > > +		/*
+> > > +		 * The sysfs badblocks format is multiple lines of:
+> > > +		 * "<sector> <count>"
+> > > +		 */
+> > > +		n = sscanf(p + off, "%lu %d\n%n", &s, &count, &done);
+> > 
+> > Ick, there's got to be a better way to iterate the badblocks list than this.
+> > 
+> > It would be very nice to have a single function that deals with a change in
+> > badness status, which would be called by both the notifier and the badblocks
+> > iterator.
+> > 
+> There is a function in block/badblocks.c - badblocks_check() which can
+> tell you for a given range, what is the first bad sector in that range,
+> and the number of bad sectors after that first sector. Using that would
+> certainly be cleaner, as it uses the well-defined API, but it would be
+> much slower, as you have to iterate through the entire address space.
+> The above function - badblocks_show - just looks at the actual stored
+> representation of the badblocks, and lists them out, which is quick
+> (reading a 4K page from memory), and so in the above, I just parse it..
+> 
+> > > +		if (n < 2 || done < 3) {
+> > > +			error = -1;
+> > > +			break;
+> > > +		}
+> > > +		off += done;
+> > > +		len -= done;
+> > > +		xfs_warn(mp, "got badblocks: sector %ld, count %d", s, count);
+> > > +		/* TODO xfs_add_bb_to_rmap(mp, s, count); */
+> > > +	}
+> > > +	kfree(p);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	mp->m_badblocks_nb.notifier_call = xfs_notifier_call;
+> > > +	error = bb_notifier_register(bb, &mp->m_badblocks_nb);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	/*
+> > > +	 * TODO: There is probably a TOCTOU race hiding here - what if the
+> > > +	 * badblocks list gets updated before we register for notifications..
+> > > +	 * Can likely be solved by registering for notifications _first_ (the
+> > > +	 * above xfs_add_bb_to_rmap function has to be ready to accept new
+> > > +	 * blocks), then querying for the initial list (there could be overlap
+> > > +	 * here, shich the above function could handle), and then setting the
+> > > +	 * mount flag below.
+> > > +	 */
+> > 
+> > (Yeah, pretty much. :))
+> > 
+> > > +
+> > > +	/*
+> > > +	 * TODO: set some flag (mount flag?) in xfs so that xfs knows
+> > > +	 * it will be doing error checking, and can possibly, later,
+> > > +	 * tell the block layer (possibly using a REQ_ flag in its IO
+> > > +	 * requests) not to do further badblock checking for those IOs.
+> > > +	 */
+> > > +
+> > > +	/* mp->m_flags |= XFS_MOUNT_FS_BADBLOCKS; */
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +STATIC void
+> > > +xfs_badblocks_unmount(struct xfs_mount *mp)
+> > > +{
+> > > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
+> > > +
+> > > +	bb_notifier_unregister(bb, &mp->m_badblocks_nb);
+> > > +}
+> > > +
+> > >  /*
+> > >   * This function does the following on an initial mount of a file system:
+> > >   *	- reads the superblock from disk and init the mount struct
+> > > @@ -955,6 +1045,19 @@ xfs_mountfs(
+> > >  	}
+> > >  
+> > >  	/*
+> > > +	 * Register with the badblocks notifier chain
+> > > +	 */
+> > > +	error = xfs_init_badblocks(mp);
+> > > +	if (error) {
+> > > +		xfs_warn(mp, "Unable to register to badblocks notifications\n");
+> > > +		/*
+> > > +		 * TODO is this a hard error or can we simply
+> > > +		 * warn and continue?
+> > > +		 */
+> > > +		goto out_rtunmount;
+> > > +	}
+> > > +
+> > > +	/*
+> > >  	 * Now we are mounted, reserve a small amount of unused space for
+> > >  	 * privileged transactions. This is needed so that transaction
+> > >  	 * space required for critical operations can dip into this pool
+> > > @@ -1085,6 +1188,7 @@ xfs_unmountfs(
+> > >  	xfs_log_unmount(mp);
+> > >  	xfs_da_unmount(mp);
+> > >  	xfs_uuid_unmount(mp);
+> > > +	xfs_badblocks_unmount(mp);
+> > >  
+> > >  #if defined(DEBUG)
+> > >  	xfs_errortag_clearall(mp, 0);
+> > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > > index 0ca9244..f0d1111 100644
+> > > --- a/fs/xfs/xfs_mount.h
+> > > +++ b/fs/xfs/xfs_mount.h
+> > > @@ -139,6 +139,7 @@ typedef struct xfs_mount {
+> > >  						/* low free space thresholds */
+> > >  	struct xfs_kobj		m_kobj;
+> > >  	struct xstats		m_stats;	/* per-fs stats */
+> > > +	struct notifier_block	m_badblocks_nb;	/* disk badblocks notifier */
+> > >  
+> > >  	struct workqueue_struct *m_buf_workqueue;
+> > >  	struct workqueue_struct	*m_data_workqueue;
+> > > -- 
+> > > 2.5.5
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
