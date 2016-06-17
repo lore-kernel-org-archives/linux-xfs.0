@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D0A87CA0
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 10:40:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0648F7CA2
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22625AC002
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 08:40:17 -0700 (PDT)
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id I6ccsaE77HDA0CGt (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BAC6A304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:19 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id JwkBUDRDPPsUVnQb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 18 Jun 2016 08:40:12 -0700 (PDT)
-Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id A41C420B45
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 17:40:10 +0200 (CEST)
-Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3rX1XV3S73z5vN8
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 17:40:10 +0200 (CEST)
-Date: Sat, 18 Jun 2016 17:38:55 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH 2/4] Simplify workaround for old glibc getsubopt()
-Message-ID: <20160618153855.GA2091@nyan>
-References: <20160618145253.GB17768@nyan>
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:18 -0700 (PDT)
+Subject: [PATCH 003/119] xfs: check offsets of variable length structures
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:18:12 -0700
+Message-ID: <146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
+In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160618145253.GB17768@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,20 +28,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Please ignore this patch and the next:
+Some of the directory/attr structures contain variable-length objects,
+so the enclosing structure doesn't have a meaningful fixed size at
+compile time.  We can check the offsets of the members before the
+variable-length member, so do those.
 
-The installed header linux.h should not redefine the
-standard function getsubopt().
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
 
-Instead might it be possible to remove the workaround all together?
-glibc-2.2 (first version which does not need the workaround) was
-released in 2000 and even with older glibc when removing the
-workaround, it should only make the compiler emit a warning.
-
-Felix
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index 184c44e..0272301 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -22,6 +22,11 @@
+ 	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
+ 		#structname ") is wrong, expected " #size)
+ 
++#define XFS_CHECK_OFFSET(structname, member, off) \
++	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
++		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
++		"expected " #off)
++
+ static inline void __init
+ xfs_check_ondisk_structs(void)
+ {
+@@ -75,15 +80,28 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+ 	 */
+ 
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
++	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+-	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
++	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+-	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
++	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
++	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+@@ -94,6 +112,9 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
++	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+ 
 
 _______________________________________________
 xfs mailing list
