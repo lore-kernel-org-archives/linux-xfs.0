@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE01584A6
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:45:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF61A8F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:48 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id fEvs1qfCyetXIV7a (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 6BAE384A7
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:45:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D02E8F804C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:49 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id EDPfJKMdlO4MRFYQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:43 -0700 (PDT)
-Subject: [PATCH 137/145] xfs_db: introduce the 'fsmap' command to find what
-	owns a set of fsblocks
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:45:47 -0700 (PDT)
+Subject: [PATCH 142/145] xfs: support scrubbing rmap btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:45:09 -0700
-Message-ID: <146612790910.16048.446600163243739830.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:45:40 -0700
+Message-ID: <146612794031.16048.1037164649883976756.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,270 +31,150 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Introduce a new 'fsmap' command to the fs debugger that will query the
-rmap btree to report the file/metadata extents mapped to a range of
-physical blocks.
+Plumb in the pieces necessary to check the rmap btree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/Makefile       |    2 -
- db/command.c      |    2 +
- db/fsmap.c        |  163 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/fsmap.h        |   20 +++++++
- man/man8/xfs_db.8 |    9 +++
- 5 files changed, 195 insertions(+), 1 deletion(-)
- create mode 100644 db/fsmap.c
- create mode 100644 db/fsmap.h
+ libxfs/xfs_rmap.c       |   77 +++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_rmap_btree.c |    4 --
+ libxfs/xfs_rmap_btree.h |    2 +
+ 3 files changed, 79 insertions(+), 4 deletions(-)
 
 
-diff --git a/db/Makefile b/db/Makefile
-index 8260da3..5adea48 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -12,7 +12,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
- 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
--	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h
-+	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h
- CFILES = $(HFILES:.h=.c)
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
+index 3ec9a35..4e0e472 100644
+--- a/libxfs/xfs_rmap.c
++++ b/libxfs/xfs_rmap.c
+@@ -36,6 +36,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_bmap.h"
+ #include "xfs_inode.h"
++#include "xfs_scrub.h"
  
-diff --git a/db/command.c b/db/command.c
-index 3c17a1e..278c357 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -49,6 +49,7 @@
- #include "write.h"
- #include "malloc.h"
- #include "dquot.h"
-+#include "fsmap.h"
- 
- cmdinfo_t	*cmdtab;
- int		ncmds;
-@@ -128,6 +129,7 @@ init_commands(void)
- 	echo_init();
- 	frag_init();
- 	freesp_init();
-+	fsmap_init();
- 	help_init();
- 	hash_init();
- 	inode_init();
-diff --git a/db/fsmap.c b/db/fsmap.c
-new file mode 100644
-index 0000000..a9de401
---- /dev/null
-+++ b/db/fsmap.c
-@@ -0,0 +1,163 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "libxfs.h"
-+#include "command.h"
-+#include "fsmap.h"
-+#include "output.h"
-+#include "init.h"
+ /*
+  * Lookup the first record less than or equal to [bno, len, owner, offset]
+@@ -2365,3 +2366,79 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
 +
-+struct fsmap_info {
-+	unsigned long long	nr;
-+	xfs_agnumber_t		agno;
-+};
-+
-+static int
-+fsmap_fn(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_rmap_irec	*rec,
-+	void			*priv)
++STATIC int
++xfs_rmapbt_scrub_helper(
++	struct xfs_btree_scrub		*bs,
++	union xfs_btree_rec		*rec)
 +{
-+	struct fsmap_info	*info = priv;
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	struct xfs_rmap_irec		irec;
++	bool				is_freesp;
++	bool				non_inode;
++	bool				is_unwritten;
++	bool				is_bmbt;
++	bool				is_attr;
++	int				error;
 +
-+	dbprintf(_("%llu: %u/%u len %u owner %lld offset %llu bmbt %d attrfork %d extflag %d\n"),
-+		info->nr, info->agno, rec->rm_startblock,
-+		rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
-+		!!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK),
-+		!!(rec->rm_flags & XFS_RMAP_ATTR_FORK),
-+		!!(rec->rm_flags & XFS_RMAP_UNWRITTEN));
-+	info->nr++;
++	error = xfs_rmapbt_btrec_to_irec(rec, &irec);
++	if (error)
++		return error;
 +
-+	return 0;
++	XFS_BTREC_SCRUB_CHECK(bs, irec.rm_startblock < mp->m_sb.sb_agblocks)
++	XFS_BTREC_SCRUB_CHECK(bs, irec.rm_startblock < irec.rm_startblock +
++			irec.rm_blockcount);
++	XFS_BTREC_SCRUB_CHECK(bs, (unsigned long long)irec.rm_startblock +
++			irec.rm_blockcount <= mp->m_sb.sb_agblocks)
++
++	non_inode = XFS_RMAP_NON_INODE_OWNER(irec.rm_owner);
++	is_bmbt = irec.rm_flags & XFS_RMAP_ATTR_FORK;
++	is_attr = irec.rm_flags & XFS_RMAP_BMBT_BLOCK;
++	is_unwritten = irec.rm_flags & XFS_RMAP_UNWRITTEN;
++
++	XFS_BTREC_SCRUB_CHECK(bs, !is_bmbt || irec.rm_offset == 0);
++	XFS_BTREC_SCRUB_CHECK(bs, !non_inode || irec.rm_offset == 0);
++	XFS_BTREC_SCRUB_CHECK(bs, !is_unwritten || !(is_bmbt || non_inode ||
++			is_attr));
++	XFS_BTREC_SCRUB_CHECK(bs, !non_inode || !(is_bmbt || is_unwritten ||
++			is_attr));
++
++	/* check there's no record in freesp btrees */
++	error = xfs_alloc_record_exists(bs->bno_cur, irec.rm_startblock,
++			irec.rm_blockcount, &is_freesp);
++	if (error)
++		goto err;
++	XFS_BTREC_SCRUB_CHECK(bs, !is_freesp);
++
++	/* XXX: check with the owner */
++
++err:
++	return error;
 +}
 +
++/* Scrub the rmap btree for some AG. */
 +int
-+fsmap_f(
-+	int			argc,
-+	char			**argv)
++xfs_rmapbt_scrub(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
 +{
-+	char			*p;
-+	struct fsmap_info	info;
-+	xfs_agnumber_t		start_ag;
-+	xfs_agnumber_t		end_ag;
-+	xfs_agnumber_t		agno;
-+	xfs_fsblock_t		start_fsb = 0;
-+	xfs_fsblock_t		end_fsb = NULLFSBLOCK;
-+	struct xfs_rmap_irec	low;
-+	struct xfs_rmap_irec	high;
-+	struct xfs_btree_cur	*bt_cur;
-+	struct xfs_buf		*agbp;
-+	int			c;
-+	xfs_daddr_t		eofs;
++	struct xfs_btree_scrub	bs;
 +	int			error;
 +
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		dbprintf(_("Filesystem does not support reverse mapping btree.\n"));
-+		return 0;
-+	}
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &bs.agf_bp);
++	if (error)
++		return error;
 +
-+	while ((c = getopt(argc, argv, "")) != EOF) {
-+		switch (c) {
-+		default:
-+			dbprintf(_("Bad option for fsmap command.\n"));
-+			return 0;
-+		}
-+	}
++	bs.cur = xfs_rmapbt_init_cursor(mp, NULL, bs.agf_bp, agno);
++	bs.scrub_rec = xfs_rmapbt_scrub_helper;
++	xfs_rmap_ag_owner(&bs.oinfo, XFS_RMAP_OWN_AG);
++	error = xfs_btree_scrub(&bs);
++	xfs_btree_del_cursor(bs.cur,
++			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_trans_brelse(NULL, bs.agf_bp);
 +
-+	if (argc > optind) {
-+		start_fsb = strtoull(argv[optind], &p, 0);
-+		if (*p != '\0' || start_fsb >= mp->m_sb.sb_dblocks) {
-+			dbprintf(_("Bad fsmap start_fsb %s.\n"), argv[optind]);
-+			return 0;
-+		}
-+	}
++	if (!error && bs.error)
++		error = bs.error;
 +
-+	if (argc > optind + 1) {
-+		end_fsb = strtoull(argv[optind + 1], &p, 0);
-+		if (*p != '\0') {
-+			dbprintf(_("Bad fsmap end_fsb %s.\n"), argv[optind + 1]);
-+			return 0;
-+		}
-+	}
-+
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (XFS_FSB_TO_DADDR(mp, end_fsb) >= eofs)
-+		end_fsb = XFS_DADDR_TO_FSB(mp, eofs - 1);
-+
-+	low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
-+	low.rm_owner = 0;
-+	low.rm_offset = 0;
-+	low.rm_flags = 0;
-+	high.rm_startblock = -1U;
-+	high.rm_owner = ULLONG_MAX;
-+	high.rm_offset = ULLONG_MAX;
-+	high.rm_flags = XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK | XFS_RMAP_UNWRITTEN;
-+
-+	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
-+	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
-+
-+	info.nr = 0;
-+	for (agno = start_ag; agno <= end_ag; agno++) {
-+		if (agno == end_ag)
-+			high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsb);
-+
-+		error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+		if (error) {
-+			dbprintf(_("Error %d while reading AGF.\n"), error);
-+			return 0;
-+		}
-+
-+		bt_cur = xfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
-+		if (!bt_cur) {
-+			libxfs_putbuf(agbp);
-+			dbprintf(_("Not enough memory.\n"));
-+			return 0;
-+		}
-+
-+		info.agno = agno;
-+		error = xfs_rmapbt_query_range(bt_cur, &low, &high,
-+				fsmap_fn, &info);
-+		if (error) {
-+			xfs_btree_del_cursor(bt_cur, XFS_BTREE_ERROR);
-+			libxfs_putbuf(agbp);
-+			dbprintf(_("Error %d while querying fsmap btree.\n"),
-+				error);
-+			return 0;
-+		}
-+
-+		xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+		libxfs_putbuf(agbp);
-+
-+		if (agno == start_ag)
-+			low.rm_startblock = 0;
-+	}
-+
-+	return 0;
++	return error;
 +}
+diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
+index 0b7da82..e592833 100644
+--- a/libxfs/xfs_rmap_btree.c
++++ b/libxfs/xfs_rmap_btree.c
+@@ -370,7 +370,6 @@ const struct xfs_buf_ops xfs_rmapbt_buf_ops = {
+ 	.verify_write		= xfs_rmapbt_write_verify,
+ };
+ 
+-#if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+ xfs_rmapbt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+@@ -406,7 +405,6 @@ xfs_rmapbt_recs_inorder(
+ 		return 1;
+ 	return 0;
+ }
+-#endif	/* DEBUG */
+ 
+ static const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_rmap_rec),
+@@ -426,10 +424,8 @@ static const struct xfs_btree_ops xfs_rmapbt_ops = {
+ 	.key_diff		= xfs_rmapbt_key_diff,
+ 	.buf_ops		= &xfs_rmapbt_buf_ops,
+ 	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
+-#if defined(DEBUG) || defined(XFS_WARN)
+ 	.keys_inorder		= xfs_rmapbt_keys_inorder,
+ 	.recs_inorder		= xfs_rmapbt_recs_inorder,
+-#endif
+ };
+ 
+ /*
+diff --git a/libxfs/xfs_rmap_btree.h b/libxfs/xfs_rmap_btree.h
+index 2f072c8..3f8742d 100644
+--- a/libxfs/xfs_rmap_btree.h
++++ b/libxfs/xfs_rmap_btree.h
+@@ -147,4 +147,6 @@ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+ extern int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, struct xfs_owner_info *oinfo, bool *has_rmap);
+ 
++int xfs_rmapbt_scrub(struct xfs_mount *mp, xfs_agnumber_t agno);
 +
-+static const cmdinfo_t	fsmap_cmd =
-+	{ "fsmap", NULL, fsmap_f, 0, 2, 0,
-+	  N_("start_fsb [end_fsb]"),
-+	  N_("display reverse mapping(s)"), NULL };
-+
-+void
-+fsmap_init(void)
-+{
-+	add_command(&fsmap_cmd);
-+}
-diff --git a/db/fsmap.h b/db/fsmap.h
-new file mode 100644
-index 0000000..f8aacd3
---- /dev/null
-+++ b/db/fsmap.h
-@@ -0,0 +1,20 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+extern void	fsmap_init(void);
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index b6d2f64..514e3aa 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -568,6 +568,15 @@ command to convert to and from this form. Block numbers given for file blocks
- .B bmap
- command) are in this form.
- .TP
-+.BI "fsmap [ " start " ] [ " end " ]
-+Prints the mapping of disk blocks used by an XFS filesystem.  The map
-+lists each extent used by files, allocation group metadata,
-+journalling logs, and static filesystem metadata, as well as any
-+regions that are unused.  All blocks, offsets, and lengths are specified
-+in units of 512-byte blocks, no matter what the filesystem's block size is.
-+.BI "The optional " start " and " end " arguments can be used to constrain
-+the output to a particular range of disk blocks.
-+.TP
- .BI hash " string
- Prints the hash value of
- .I string
+ #endif	/* __XFS_RMAP_BTREE_H__ */
 
 _______________________________________________
 xfs mailing list
