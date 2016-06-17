@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8FBCC800B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:30:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6B97B7CB1
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:34:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F6148F804C
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:52 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id efYMYlt6G9hC5zAc (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3AE3AC001
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 10:34:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Jm07AzBbtalhVc0p (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:30:49 -0700 (PDT)
-Subject: [PATCH 119/119] xfs: add btree scrub tracepoints
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:30:41 -0700
-Message-ID: <146612704152.12839.9204196958776547302.stgit@birch.djwong.org>
-In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 10:34:29 -0700 (PDT)
+Date: Fri, 17 Jun 2016 13:34:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 003/119] xfs: check offsets of variable length structures
+Message-ID: <20160617173426.GA46309@bfoster.bfoster>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,106 +30,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_scrub.c |   14 ++++++++++++++
- fs/xfs/xfs_trace.h        |   40 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 54 insertions(+)
+On Thu, Jun 16, 2016 at 06:18:12PM -0700, Darrick J. Wong wrote:
+> Some of the directory/attr structures contain variable-length objects,
+> so the enclosing structure doesn't have a meaningful fixed size at
+> compile time.  We can check the offsets of the members before the
+> variable-length member, so do those.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
+I'm missing why this is necessary. Is the intent still to catch
+alignment and/or padding issues? If so, isn't the size check sufficient,
+regardless of trailing variable size fields?
 
-diff --git a/fs/xfs/libxfs/xfs_scrub.c b/fs/xfs/libxfs/xfs_scrub.c
-index d43d5c5..d43e742 100644
---- a/fs/xfs/libxfs/xfs_scrub.c
-+++ b/fs/xfs/libxfs/xfs_scrub.c
-@@ -34,6 +34,7 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
-+#include "xfs_trace.h"
- #include "xfs_scrub.h"
- 
- static const char * const btree_types[] = {
-@@ -88,6 +89,12 @@ xfs_btree_scrub_rec(
- 	struct xfs_btree_block	*block;
- 	struct xfs_btree_block	*keyblock;
- 
-+	trace_xfs_btree_scrub_rec(cur->bc_mp, cur->bc_private.a.agno,
-+			XFS_FSB_TO_AGBNO(cur->bc_mp,
-+				XFS_DADDR_TO_FSB(cur->bc_mp,
-+					cur->bc_bufs[0]->b_bn)),
-+			cur->bc_btnum, 0, cur->bc_nlevels, cur->bc_ptrs[0]);
-+
- 	block = XFS_BUF_TO_BLOCK(cur->bc_bufs[0]);
- 	rec = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
- 
-@@ -135,6 +142,13 @@ xfs_btree_scrub_key(
- 	struct xfs_btree_block	*block;
- 	struct xfs_btree_block	*keyblock;
- 
-+	trace_xfs_btree_scrub_key(cur->bc_mp, cur->bc_private.a.agno,
-+			XFS_FSB_TO_AGBNO(cur->bc_mp,
-+				XFS_DADDR_TO_FSB(cur->bc_mp,
-+					cur->bc_bufs[level]->b_bn)),
-+			cur->bc_btnum, level, cur->bc_nlevels,
-+			cur->bc_ptrs[level]);
-+
- 	block = XFS_BUF_TO_BLOCK(cur->bc_bufs[level]);
- 	key = xfs_btree_key_addr(cur, cur->bc_ptrs[level], block);
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 9fe812f..e295374 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3428,6 +3428,46 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
- DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
- DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 
-+/* scrub */
-+DECLARE_EVENT_CLASS(xfs_scrub_sbtree_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
-+		 xfs_btnum_t btnum, int level, int nlevels, int ptr),
-+	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_btnum_t, btnum)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__field(int, level)
-+		__field(int, nlevels)
-+		__field(int, ptr)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->btnum = btnum;
-+		__entry->bno = bno;
-+		__entry->level = level;
-+		__entry->nlevels = nlevels;
-+		__entry->ptr = ptr;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u btnum %d level %d nlevels %d ptr %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __entry->btnum,
-+		  __entry->level,
-+		  __entry->nlevels,
-+		  __entry->ptr)
-+)
-+#define DEFINE_SCRUB_SBTREE_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno, \
-+		 xfs_btnum_t btnum, int level, int nlevels, int ptr), \
-+	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr))
-+DEFINE_SCRUB_SBTREE_EVENT(xfs_btree_scrub_rec);
-+DEFINE_SCRUB_SBTREE_EVENT(xfs_btree_scrub_key);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+Perhaps the goal here is to reduce the scope of checking from where it
+isn't needed..? For example, xfs_dir2_data_unused_t looks like it has a
+field where the offset in the structure is irrelevant, so that's a
+possible false positive if that changes down the road. On the flip side,
+that doesn't appear to be the case for other structures such as
+xfs_attr_leaf_name_[local|remote]_t.
+
+Brian
+
+>  fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
+>  1 file changed, 23 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index 184c44e..0272301 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -22,6 +22,11 @@
+>  	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
+>  		#structname ") is wrong, expected " #size)
+>  
+> +#define XFS_CHECK_OFFSET(structname, member, off) \
+> +	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
+> +		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
+> +		"expected " #off)
+> +
+>  static inline void __init
+>  xfs_check_ondisk_structs(void)
+>  {
+> @@ -75,15 +80,28 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+>  	 */
+>  
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+> -	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
+> +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> -	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
+> +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
+> +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+> @@ -94,6 +112,9 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+>  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
