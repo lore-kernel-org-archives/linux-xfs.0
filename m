@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C26EE7CAF
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 06:34:48 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C8EE57CA6
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 962BE8F8035
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 04:34:45 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id ywWiZx66wEvTBrGe (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 04:34:44 -0700 (PDT)
-Date: Fri, 17 Jun 2016 04:34:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 005/119] xfs: check for a valid error_tag in errortag_add
-Message-ID: <20160617113442.GD19042@infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CBC18F804C
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:45 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id CzYCp1LIm5utKklF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:43 -0700 (PDT)
+Subject: [PATCH 007/119] xfs: rearrange xfs_bmap_add_free parameters
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 16 Jun 2016 18:18:37 -0700
+Message-ID: <146612631720.12839.5804944531874278200.stgit@birch.djwong.org>
+In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612630452.12839.3528211000490660021.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612630452.12839.3528211000490660021.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +28,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, Jun 16, 2016 at 06:18:24PM -0700, Darrick J. Wong wrote:
-> Currently we don't check the error_tag when someone's trying to set up
-> error injection testing.  If userspace passes in a value we don't know
-> about, send back an error.  This will help xfstests to _notrun a test
-> that uses error injection to test things like log replay.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This is already in xfsprogs' libxfs, so port it to the kernel.
 
-Looks fine,
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c       |   12 ++++++------
+ fs/xfs/libxfs/xfs_bmap.h       |    4 ++--
+ fs/xfs/libxfs/xfs_bmap_btree.c |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.c     |    9 ++++-----
+ 4 files changed, 13 insertions(+), 14 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 499e980..ea7b3df 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -570,10 +570,10 @@ xfs_bmap_validate_ret(
+  */
+ void
+ xfs_bmap_add_free(
++	struct xfs_mount	*mp,		/* mount point structure */
++	struct xfs_bmap_free	*flist,		/* list of extents */
+ 	xfs_fsblock_t		bno,		/* fs block number of extent */
+-	xfs_filblks_t		len,		/* length of extent */
+-	xfs_bmap_free_t		*flist,		/* list of extents */
+-	xfs_mount_t		*mp)		/* mount point structure */
++	xfs_filblks_t		len)		/* length of extent */
+ {
+ 	xfs_bmap_free_item_t	*cur;		/* current (next) element */
+ 	xfs_bmap_free_item_t	*new;		/* new element */
+@@ -699,7 +699,7 @@ xfs_bmap_btree_to_extents(
+ 	cblock = XFS_BUF_TO_BLOCK(cbp);
+ 	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
+ 		return error;
+-	xfs_bmap_add_free(cbno, 1, cur->bc_private.b.flist, mp);
++	xfs_bmap_add_free(mp, cur->bc_private.b.flist, cbno, 1);
+ 	ip->i_d.di_nblocks--;
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+ 	xfs_trans_binval(tp, cbp);
+@@ -5073,8 +5073,8 @@ xfs_bmap_del_extent(
+ 	 * If we need to, add to list of extents to delete.
+ 	 */
+ 	if (do_fx)
+-		xfs_bmap_add_free(del->br_startblock, del->br_blockcount, flist,
+-			mp);
++		xfs_bmap_add_free(mp, flist, del->br_startblock,
++			del->br_blockcount);
+ 	/*
+ 	 * Adjust inode # blocks in the file.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 79e3ebe..0b2f72c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -191,8 +191,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+ 
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+-void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
+-		struct xfs_bmap_free *flist, struct xfs_mount *mp);
++void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_bmap_free *flist,
++			  xfs_fsblock_t bno, xfs_filblks_t len);
+ void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
+ int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+ 			struct xfs_inode *ip);
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 6282f6e..db0c71e 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -526,7 +526,7 @@ xfs_bmbt_free_block(
+ 	struct xfs_trans	*tp = cur->bc_tp;
+ 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+ 
+-	xfs_bmap_add_free(fsbno, 1, cur->bc_private.b.flist, mp);
++	xfs_bmap_add_free(mp, cur->bc_private.b.flist, fsbno, 1);
+ 	ip->i_d.di_nblocks--;
+ 
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 77b5990..9d0003c 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1828,9 +1828,8 @@ xfs_difree_inode_chunk(
+ 
+ 	if (!xfs_inobt_issparse(rec->ir_holemask)) {
+ 		/* not sparse, calculate extent info directly */
+-		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
+-				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
+-				  mp->m_ialloc_blks, flist, mp);
++		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, sagbno),
++				  mp->m_ialloc_blks);
+ 		return;
+ 	}
+ 
+@@ -1873,8 +1872,8 @@ xfs_difree_inode_chunk(
+ 
+ 		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
+ 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
+-		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
+-				  flist, mp);
++		xfs_bmap_add_free(mp, flist, XFS_AGB_TO_FSB(mp, agno, agbno),
++				  contigblk);
+ 
+ 		/* reset range to current bit and carry on... */
+ 		startidx = endidx = nextbit;
 
 _______________________________________________
 xfs mailing list
