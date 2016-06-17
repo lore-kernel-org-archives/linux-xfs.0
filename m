@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A53B480DB
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CC5F304048
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A2D4980E9
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:43:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 728AC8F804B
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:48 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id uqgS4PcUj0h7spkS (version=TLSv1.2
+	cuda.sgi.com with ESMTP id s9nv6xBxyZBxUTzN (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:39 -0700 (PDT)
-Subject: [PATCH 122/145] man: document the inode cowextsize flags & fields
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:43:45 -0700 (PDT)
+Subject: [PATCH 123/145] xfs_repair: fix get_agino_buf to avoid corrupting
+	inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:43:33 -0700
-Message-ID: <146612781384.16048.1828413487089680067.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:43:39 -0700
+Message-ID: <146612781992.16048.3010681907202444358.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,71 +32,166 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Document the new copy-on-write extent size fields and inode flags
-available in struct fsxattr.
+The inode buffering code tries to read inodes in units of chunks,
+which are the larger of 8K or 1 FSB.  Each chunk gets its own xfs_buf,
+which means that get_agino_buf must calculate the disk address of the
+chunk and feed that to libxfs_readbuf in order to find the inode data
+correctly.  The current code simply grabs the chunk for the start
+inode and indexes from that, which corrupts memory because the start
+inode and the target inode could be in different inode chunks.  That
+causes the assert in rmap.c to blow when we clear the reflink flag.
+
+(Also fix some minor errors in the debugging printfs.)
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man3/xfsctl.3 |   24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ libxfs/rdwr.c   |    8 +++---
+ repair/dinode.c |   73 +++++++++++++++++++++++++++++++++----------------------
+ repair/dinode.h |   12 +++++----
+ 3 files changed, 54 insertions(+), 39 deletions(-)
 
 
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index ef6c992..77506aa 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -150,6 +150,15 @@ value returned indicates that a preferred extent size was previously
- set on the file, a
- .B fsx_extsize
- of zero indicates that the defaults for that filesystem will be used.
-+A
-+.B fsx_cowextsize
-+value returned indicates that a preferred copy on write extent size was
-+previously set on the file, whereas a
-+.B fsx_cowextsize
-+of zero indicates that the defaults for that filesystem will be used.
-+The current default for
-+.B fsx_cowextsize
-+is 128 blocks.
- Currently the meaningful bits for the
- .B fsx_xflags
- field are:
-@@ -240,6 +249,15 @@ and
- .BR XFS_XFLAG_DAX
- set at the same time, that is to say that DAX files cannot share blocks.
- .TP
-+.SM "Bit 17 (0x20000) \- XFS_XFLAG_COWEXTSIZE"
-+Copy on Write Extent size bit - if a CoW extent size value is set on the file,
-+the allocator will allocate extents for staging a copy on write operation
-+in multiples of the set size for this file (see
-+.B XFS_IOC_FSSETXATTR
-+below).
-+If the CoW extent size is set on a directory, then new file and directories
-+created in the directory will inherit the parent's CoW extent size value.
-+.TP
- .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
- The file has extended attributes associated with it.
- .RE
-@@ -261,7 +279,8 @@ The final argument points to a variable of type
- .BR "struct fsxattr" ,
- but only the following fields are used in this call:
- .BR fsx_xflags ,
--.B fsx_extsize
-+.BR fsx_extsize ,
-+.BR fsx_cowextsize ,
- and
- .BR fsx_projid .
- The
-@@ -271,6 +290,9 @@ when the file is empty, except in the case of a directory where
- the extent size can be set at any time (this value is only used
- for regular file allocations, so should only be set on a directory
- in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
-+The copy on write extent size,
-+.BR fsx_cowextsize ,
-+can be set at any time.
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 533a064..9fcc319 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1038,9 +1038,9 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
+ 	if (!error)
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+ #ifdef IO_DEBUG
+-	printf("%lx: %s: read %u bytes, error %d, blkno=0x%llx(0x%llx), %p\n",
+-		pthread_self(), __FUNCTION__, , error,
+-		(long long)LIBXFS_BBTOOFF64(blkno), (long long)blkno, bp);
++	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
++		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
++		(long long)LIBXFS_BBTOOFF64(bp->b_bn), (long long)bp->b_bn, bp);
+ #endif
+ 	return error;
+ }
+@@ -1070,7 +1070,7 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+ 	if (!error)
+ 		libxfs_readbuf_verify(bp, ops);
  
- .TP
- .B XFS_IOC_GETBMAP
+-#ifdef IO_DEBUG
++#ifdef IO_DEBUGX
+ 	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
+ 		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
+ 		(long long)LIBXFS_BBTOOFF64(bp->b_bn), (long long)bp->b_bn, bp);
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 89163b1..e9b4f8f 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -847,43 +847,58 @@ scan_bmbt_reclist(
+ }
+ 
+ /*
+- * these two are meant for routines that read and work with inodes
+- * one at a time where the inodes may be in any order (like walking
+- * the unlinked lists to look for inodes).  the caller is responsible
+- * for writing/releasing the buffer.
++ * Grab the buffer backing an inode.  This is meant for routines that
++ * work with inodes one at a time in any order (like walking the
++ * unlinked lists to look for inodes).  The caller is responsible for
++ * writing/releasing the buffer.
+  */
+-xfs_buf_t *
+-get_agino_buf(xfs_mount_t	 *mp,
+-		xfs_agnumber_t	agno,
+-		xfs_agino_t	agino,
+-		xfs_dinode_t	**dipp)
++struct xfs_buf *
++get_agino_buf(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino,
++	struct xfs_dinode	**dipp)
+ {
+-	ino_tree_node_t *irec;
+-	xfs_buf_t *bp;
+-	int size;
+-
+-	if ((irec = find_inode_rec(mp, agno, agino)) == NULL)
+-		return(NULL);
++	struct xfs_buf		*bp;
++	int			cluster_size;
++	int			ino_per_cluster;
++	xfs_agino_t		cluster_agino;
++	xfs_daddr_t		cluster_daddr;
++	xfs_daddr_t		cluster_blks;
+ 
+-	size = MAX(1, XFS_FSB_TO_BB(mp,
++	/*
++	 * Inode buffers have been read into memory in inode_cluster_size
++	 * chunks (or one FSB).  To find the correct buffer for an inode,
++	 * we must find the buffer for its cluster, add the appropriate
++	 * offset, and return that.
++	 */
++	cluster_size = MAX(mp->m_inode_cluster_size, mp->m_sb.sb_blocksize);
++	ino_per_cluster = cluster_size / mp->m_sb.sb_inodesize;
++	cluster_agino = agino & ~(ino_per_cluster - 1);
++	cluster_blks = XFS_FSB_TO_DADDR(mp, MAX(1,
+ 			mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog));
+-	bp = libxfs_readbuf(mp->m_dev, XFS_AGB_TO_DADDR(mp, agno,
+-		XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)), size, 0,
+-		&xfs_inode_buf_ops);
++	cluster_daddr = XFS_AGB_TO_DADDR(mp, agno,
++			XFS_AGINO_TO_AGBNO(mp, cluster_agino));
++
++#ifdef XR_INODE_TRACE
++	printf("cluster_size %d ipc %d clusagino %d daddr %lld sectors %lld\n",
++		cluster_size, ino_per_cluster, cluster_agino, cluster_daddr,
++		cluster_blks);
++#endif
++
++	bp = libxfs_readbuf(mp->m_dev, cluster_daddr, cluster_blks,
++			0, &xfs_inode_buf_ops);
+ 	if (!bp) {
+ 		do_warn(_("cannot read inode (%u/%u), disk block %" PRIu64 "\n"),
+-			agno, irec->ino_startnum,
+-			XFS_AGB_TO_DADDR(mp, agno,
+-				XFS_AGINO_TO_AGBNO(mp, irec->ino_startnum)));
+-		return(NULL);
++			agno, cluster_agino, cluster_daddr);
++		return NULL;
+ 	}
+ 
+-	*dipp = xfs_make_iptr(mp, bp, agino -
+-		XFS_OFFBNO_TO_AGINO(mp, XFS_AGINO_TO_AGBNO(mp,
+-						irec->ino_startnum),
+-		0));
+-
+-	return(bp);
++	*dipp = xfs_make_iptr(mp, bp, agino - cluster_agino);
++	ASSERT(!xfs_sb_version_hascrc(&mp->m_sb) ||
++			XFS_AGINO_TO_INO(mp, agno, agino) ==
++			be64_to_cpu((*dipp)->di_ino));
++	return bp;
+ }
+ 
+ /*
+diff --git a/repair/dinode.h b/repair/dinode.h
+index 5aebf5b..61d0736 100644
+--- a/repair/dinode.h
++++ b/repair/dinode.h
+@@ -113,12 +113,12 @@ void
+ check_uncertain_aginodes(xfs_mount_t	*mp,
+ 			xfs_agnumber_t	agno);
+ 
+-xfs_buf_t *
+-get_agino_buf(xfs_mount_t	*mp,
+-		xfs_agnumber_t	agno,
+-		xfs_agino_t	agino,
+-		xfs_dinode_t	**dipp);
+-
++struct xfs_buf *
++get_agino_buf(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino,
++	struct xfs_dinode	**dipp);
+ 
+ void dinode_bmbt_translation_init(void);
+ char * get_forkname(int whichfork);
 
 _______________________________________________
 xfs mailing list
