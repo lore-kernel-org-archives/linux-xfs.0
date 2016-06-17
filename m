@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 950897CBC
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:23:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5691B30404E
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:23:22 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 528CF7CB4
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:23:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D35B8AC004
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:23:28 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zEZ0cPgOx926nLaV (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yo7VkwSnJh5tz0Ew (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:23:20 -0700 (PDT)
-Subject: [PATCH 050/119] xfs: count the blocks in a btree
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:23:27 -0700 (PDT)
+Subject: [PATCH 051/119] xfs: introduce tracepoints for AG reservation code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:23:12 -0700
-Message-ID: <146612659218.12839.17928675947317698460.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:23:18 -0700
+Message-ID: <146612659841.12839.7635720851652960531.stgit@birch.djwong.org>
 In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,61 +31,92 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Provide a helper method to count the number of blocks in a short form
-btree.  The refcount and rmap btrees need to know the number of blocks
-already in use to set up their per-AG block reservations during mount.
-
-v2: Use btree_visit_blocks instead of open-coding our own traversal
-routine.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |   22 ++++++++++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |    2 ++
- 2 files changed, 24 insertions(+)
+ fs/xfs/xfs_trace.h |   69 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 4b90419..50b2c32 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4803,3 +4803,25 @@ xfs_btree_query_range(
- 	return xfs_btree_overlapped_query_range(cur, low_rec, high_rec,
- 			fn, priv);
- }
-+
-+int
-+xfs_btree_count_blocks_helper(
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	void			*data)
-+{
-+	xfs_extlen_t		*blocks = data;
-+	(*blocks)++;
-+
-+	return 0;
-+}
-+
-+/* Count the blocks in a btree and return the result in *blocks. */
-+int
-+xfs_btree_count_blocks(
-+	struct xfs_btree_cur	*cur,
-+	xfs_extlen_t		*blocks)
-+{
-+	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
-+			blocks);
-+}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 9963c48..6fa13a9 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -519,4 +519,6 @@ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
- int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
- 		xfs_btree_visit_blocks_fn fn, void *data);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6466adc..c50479a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2558,6 +2558,75 @@ DEFINE_RMAPBT_EVENT(xfs_rmap_map_gtrec);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_convert_gtrec);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
  
-+int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
++/* dummy definitions to avoid breaking bisectability; will be removed later */
++#ifndef XFS_AG_RESV_DUMMY
++#define XFS_AG_RESV_DUMMY
++enum xfs_ag_resv_type {
++	XFS_AG_RESV_NONE = 0,
++	XFS_AG_RESV_METADATA,
++	XFS_AG_RESV_AGFL,
++};
++struct xfs_ag_resv {
++	xfs_extlen_t	ar_reserved;
++	xfs_extlen_t	ar_asked;
++};
++#define xfs_perag_resv(...)	NULL
++#endif
 +
- #endif	/* __XFS_BTREE_H__ */
++/* per-AG reservation */
++DECLARE_EVENT_CLASS(xfs_ag_resv_class,
++	TP_PROTO(struct xfs_perag *pag, enum xfs_ag_resv_type resv,
++		 xfs_extlen_t len),
++	TP_ARGS(pag, resv, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, resv)
++		__field(xfs_extlen_t, freeblks)
++		__field(xfs_extlen_t, flcount)
++		__field(xfs_extlen_t, reserved)
++		__field(xfs_extlen_t, asked)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		struct xfs_ag_resv	*r = xfs_perag_resv(pag, resv);
++
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->resv = resv;
++		__entry->freeblks = pag->pagf_freeblks;
++		__entry->flcount = pag->pagf_flcount;
++		__entry->reserved = r ? r->ar_reserved : 0;
++		__entry->asked = r ? r->ar_asked : 0;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d agno %u resv %d freeblks %u flcount %u resv %u ask %u len %u\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->resv,
++		  __entry->freeblks,
++		  __entry->flcount,
++		  __entry->reserved,
++		  __entry->asked,
++		  __entry->len)
++)
++#define DEFINE_AG_RESV_EVENT(name) \
++DEFINE_EVENT(xfs_ag_resv_class, name, \
++	TP_PROTO(struct xfs_perag *pag, enum xfs_ag_resv_type type, \
++		 xfs_extlen_t len), \
++	TP_ARGS(pag, type, len))
++
++/* per-AG reservation tracepoints */
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_init);
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_free);
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_alloc_extent);
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_free_extent);
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_critical);
++DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
++
++DEFINE_AG_ERROR_EVENT(xfs_ag_resv_free_error);
++DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
 
 _______________________________________________
 xfs mailing list
