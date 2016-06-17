@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EFC898300
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B04DC8F804B
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:37 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id WAMMHDhv9K9ALPei (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 14C248306
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:40:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C81D6304039
+	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:45 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id xMvYuUU6jEnYap3X (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:36 -0700 (PDT)
-Subject: [PATCH 092/145] xfs: don't allow reflinked dir/dev/fifo/socket/pipe
-	files
+	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:40:42 -0700 (PDT)
+Subject: [PATCH 093/145] xfs: introduce the CoW fork
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:40:29 -0700
-Message-ID: <146612762967.16048.12520252071197307755.stgit@birch.djwong.org>
+Date: Thu, 16 Jun 2016 18:40:35 -0700
+Message-ID: <146612763578.16048.16178899612338631224.stgit@birch.djwong.org>
 In-Reply-To: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 References: <146612704434.16048.12932915166928562654.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,56 +31,403 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Only non-rt files can be reflinked, so check that when we load an
-inode.  Also, don't leak the attr fork if there's a failure.
+Introduce a new in-core fork for storing copy-on-write delalloc
+reservations and allocated extents that are in the process of being
+written out.
+
+v2: fix up bmapi_read so that we can query the CoW fork, and have it
+return a "hole" extent if there's no CoW fork.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_inode_fork.c |   23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+ include/xfs_inode.h     |    3 +++
+ libxfs/rdwr.c           |    2 ++
+ libxfs/xfs_bmap.c       |   27 ++++++++++++++++++++-------
+ libxfs/xfs_bmap.h       |   22 +++++++++++++++++++---
+ libxfs/xfs_bmap_btree.c |    1 +
+ libxfs/xfs_inode_fork.c |   47 ++++++++++++++++++++++++++++++++++++++++++++---
+ libxfs/xfs_inode_fork.h |   28 ++++++++++++++++++++++------
+ libxfs/xfs_rmap.c       |    2 ++
+ libxfs/xfs_types.h      |    1 +
+ 9 files changed, 114 insertions(+), 19 deletions(-)
 
 
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 3876fa6..b7623c0 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -50,6 +50,7 @@ typedef struct xfs_inode {
+ 	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 	struct xfs_buftarg	i_dev;		/* dev for this inode */
+ 	struct xfs_ifork	*i_afp;		/* attribute fork pointer */
++	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
+ 	struct xfs_ifork	i_df;		/* data fork */
+ 	struct xfs_trans	*i_transp;	/* ptr to owning transaction */
+ 	struct xfs_inode_log_item *i_itemp;	/* logging information */
+@@ -58,6 +59,8 @@ typedef struct xfs_inode {
+ 	xfs_fsize_t		i_size;		/* in-memory size */
+ 	const struct xfs_dir_ops *d_ops;	/* directory ops vector */
+ 	struct inode		i_vnode;
++	xfs_extnum_t		i_cnextents;	/* # of extents in cow fork */
++	unsigned int		i_cformat;	/* format of cow fork */
+ } xfs_inode_t;
+ 
+ static inline struct inode *VFS_I(struct xfs_inode *ip)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index aa30522..533a064 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1372,6 +1372,8 @@ libxfs_idestroy(xfs_inode_t *ip)
+ 	}
+ 	if (ip->i_afp)
+ 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
++	if (ip->i_cowfp)
++		xfs_idestroy_fork(ip, XFS_COW_FORK);
+ }
+ 
+ void
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index f0c0871..2ec3385 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -2916,6 +2916,7 @@ xfs_bmap_add_extent_hole_real(
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 	ASSERT(!bma->cur ||
+ 	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
++	ASSERT(whichfork != XFS_COW_FORK);
+ 
+ 	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+@@ -4050,12 +4051,11 @@ xfs_bmapi_read(
+ 	int			error;
+ 	int			eof;
+ 	int			n = 0;
+-	int			whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-						XFS_ATTR_FORK : XFS_DATA_FORK;
++	int			whichfork = xfs_bmapi_whichfork(flags);
+ 
+ 	ASSERT(*nmap >= 1);
+ 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
+-			   XFS_BMAPI_IGSTATE)));
++			   XFS_BMAPI_IGSTATE|XFS_BMAPI_COWFORK)));
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+@@ -4073,6 +4073,16 @@ xfs_bmapi_read(
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
++	/* No CoW fork?  Return a hole. */
++	if (whichfork == XFS_COW_FORK && !ifp) {
++		mval->br_startoff = bno;
++		mval->br_startblock = HOLESTARTBLOCK;
++		mval->br_blockcount = len;
++		mval->br_state = XFS_EXT_NORM;
++		*nmap = 1;
++		return 0;
++	}
++
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(NULL, ip, whichfork);
+ 		if (error)
+@@ -4425,8 +4435,7 @@ xfs_bmapi_convert_unwritten(
+ 	xfs_filblks_t		len,
+ 	int			flags)
+ {
+-	int			whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-						XFS_ATTR_FORK : XFS_DATA_FORK;
++	int			whichfork = xfs_bmapi_whichfork(flags);
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 	int			tmp_logflags = 0;
+ 	int			error;
+@@ -4442,6 +4451,8 @@ xfs_bmapi_convert_unwritten(
+ 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
+ 		return 0;
+ 
++	ASSERT(whichfork != XFS_COW_FORK);
++
+ 	/*
+ 	 * Modify (by adding) the state flag, if writing.
+ 	 */
+@@ -4854,6 +4865,8 @@ xfs_bmap_del_extent(
+ 
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		state |= BMAP_ATTRFORK;
++	else if (whichfork == XFS_COW_FORK)
++		state |= BMAP_COWFORK;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT((*idx >= 0) && (*idx < ifp->if_bytes /
+@@ -5192,8 +5205,8 @@ __xfs_bunmapi(
+ 
+ 	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
+ 
+-	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-		XFS_ATTR_FORK : XFS_DATA_FORK;
++	whichfork = xfs_bmapi_whichfork(flags);
++	ASSERT(whichfork != XFS_COW_FORK);
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	if (unlikely(
+ 	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index 97828c5..a8ef1c6 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -104,6 +104,9 @@ struct xfs_bmap_free_item
+  */
+ #define XFS_BMAPI_REMAP		0x100
+ 
++/* Map something in the CoW fork. */
++#define XFS_BMAPI_COWFORK	0x200
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -113,12 +116,23 @@ struct xfs_bmap_free_item
+ 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
+ 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+ 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+-	{ XFS_BMAPI_REMAP,	"REMAP" }
++	{ XFS_BMAPI_REMAP,	"REMAP" }, \
++	{ XFS_BMAPI_COWFORK,	"COWFORK" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
+ {
+-	return (w == XFS_ATTR_FORK ? XFS_BMAPI_ATTRFORK : 0);
++	return (w == XFS_ATTR_FORK ? XFS_BMAPI_ATTRFORK :
++	       (w == XFS_COW_FORK ? XFS_BMAPI_COWFORK : 0));
++}
++
++static inline int xfs_bmapi_whichfork(int bmapi_flags)
++{
++	if (bmapi_flags & XFS_BMAPI_COWFORK)
++		return XFS_COW_FORK;
++	else if (bmapi_flags & XFS_BMAPI_ATTRFORK)
++		return XFS_ATTR_FORK;
++	return XFS_DATA_FORK;
+ }
+ 
+ /*
+@@ -139,13 +153,15 @@ static inline int xfs_bmapi_aflag(int w)
+ #define BMAP_LEFT_VALID		(1 << 6)
+ #define BMAP_RIGHT_VALID	(1 << 7)
+ #define BMAP_ATTRFORK		(1 << 8)
++#define BMAP_COWFORK		(1 << 9)
+ 
+ #define XFS_BMAP_EXT_FLAGS \
+ 	{ BMAP_LEFT_CONTIG,	"LC" }, \
+ 	{ BMAP_RIGHT_CONTIG,	"RC" }, \
+ 	{ BMAP_LEFT_FILLING,	"LF" }, \
+ 	{ BMAP_RIGHT_FILLING,	"RF" }, \
+-	{ BMAP_ATTRFORK,	"ATTR" }
++	{ BMAP_ATTRFORK,	"ATTR" }, \
++	{ BMAP_COWFORK,		"COW" }
+ 
+ 
+ /*
+diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
+index 404e321..2145ac0 100644
+--- a/libxfs/xfs_bmap_btree.c
++++ b/libxfs/xfs_bmap_btree.c
+@@ -773,6 +773,7 @@ xfs_bmbt_init_cursor(
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	struct xfs_btree_cur	*cur;
++	ASSERT(whichfork != XFS_COW_FORK);
+ 
+ 	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
+ 
 diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 799873a..83fd4f3 100644
+index 83fd4f3..ab708dc 100644
 --- a/libxfs/xfs_inode_fork.c
 +++ b/libxfs/xfs_inode_fork.c
-@@ -117,6 +117,26 @@ xfs_iformat_fork(
+@@ -202,9 +202,14 @@ xfs_iformat_fork(
+ 		XFS_ERROR_REPORT("xfs_iformat(7)", XFS_ERRLEVEL_LOW, ip->i_mount);
  		return -EFSCORRUPTED;
  	}
- 
-+	if (unlikely(xfs_is_reflink_inode(ip) &&
-+	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
-+		xfs_warn(ip->i_mount,
-+			"corrupt dinode %llu, wrong file type for reflink.",
-+			ip->i_ino);
-+		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-+				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-+		return -EFSCORRUPTED;
-+	}
+-	if (error) {
++	if (error)
+ 		return error;
 +
-+	if (unlikely(xfs_is_reflink_inode(ip) &&
-+	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
-+		xfs_warn(ip->i_mount,
-+			"corrupt dinode %llu, has reflink+realtime flag set.",
-+			ip->i_ino);
-+		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
-+				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
-+		return -EFSCORRUPTED;
-+	}
++	if (xfs_is_reflink_inode(ip)) {
++		ASSERT(ip->i_cowfp == NULL);
++		xfs_ifork_init_cow(ip);
+ 	}
 +
- 	switch (VFS_I(ip)->i_mode & S_IFMT) {
- 	case S_IFIFO:
- 	case S_IFCHR:
-@@ -204,7 +224,8 @@ xfs_iformat_fork(
- 			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
- 					     XFS_ERRLEVEL_LOW,
- 					     ip->i_mount, dip);
--			return -EFSCORRUPTED;
-+			error = -EFSCORRUPTED;
-+			break;
- 		}
+ 	if (!XFS_DFORK_Q(dip))
+ 		return 0;
  
- 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+@@ -243,6 +248,9 @@ xfs_iformat_fork(
+ 	if (error) {
+ 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+ 		ip->i_afp = NULL;
++		if (ip->i_cowfp)
++			kmem_zone_free(xfs_ifork_zone, ip->i_cowfp);
++		ip->i_cowfp = NULL;
+ 		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+ 	}
+ 	return error;
+@@ -757,6 +765,9 @@ xfs_idestroy_fork(
+ 	if (whichfork == XFS_ATTR_FORK) {
+ 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+ 		ip->i_afp = NULL;
++	} else if (whichfork == XFS_COW_FORK) {
++		kmem_zone_free(xfs_ifork_zone, ip->i_cowfp);
++		ip->i_cowfp = NULL;
+ 	}
+ }
+ 
+@@ -944,6 +955,19 @@ xfs_iext_get_ext(
+ 	}
+ }
+ 
++/* XFS_IEXT_STATE_TO_FORK() -- Convert BMAP state flags to an inode fork. */
++xfs_ifork_t *
++XFS_IEXT_STATE_TO_FORK(
++	struct xfs_inode	*ip,
++	int			state)
++{
++	if (state & BMAP_COWFORK)
++		return ip->i_cowfp;
++	else if (state & BMAP_ATTRFORK)
++		return ip->i_afp;
++	return &ip->i_df;
++}
++
+ /*
+  * Insert new item(s) into the extent records for incore inode
+  * fork 'ifp'.  'count' new items are inserted at index 'idx'.
+@@ -956,7 +980,7 @@ xfs_iext_insert(
+ 	xfs_bmbt_irec_t	*new,		/* items to insert */
+ 	int		state)		/* type of extent conversion */
+ {
+-	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
++	xfs_ifork_t	*ifp = XFS_IEXT_STATE_TO_FORK(ip, state);
+ 	xfs_extnum_t	i;		/* extent record index */
+ 
+ 	trace_xfs_iext_insert(ip, idx, new, state, _RET_IP_);
+@@ -1206,7 +1230,7 @@ xfs_iext_remove(
+ 	int		ext_diff,	/* number of extents to remove */
+ 	int		state)		/* type of extent conversion */
+ {
+-	xfs_ifork_t	*ifp = (state & BMAP_ATTRFORK) ? ip->i_afp : &ip->i_df;
++	xfs_ifork_t	*ifp = XFS_IEXT_STATE_TO_FORK(ip, state);
+ 	xfs_extnum_t	nextents;	/* number of extents in file */
+ 	int		new_size;	/* size of extents after removal */
+ 
+@@ -1951,3 +1975,20 @@ xfs_iext_irec_update_extoffs(
+ 		ifp->if_u1.if_ext_irec[i].er_extoff += ext_diff;
+ 	}
+ }
++
++/*
++ * Initialize an inode's copy-on-write fork.
++ */
++void
++xfs_ifork_init_cow(
++	struct xfs_inode	*ip)
++{
++	if (ip->i_cowfp)
++		return;
++
++	ip->i_cowfp = kmem_zone_zalloc(xfs_ifork_zone,
++				       KM_SLEEP | KM_NOFS);
++	ip->i_cowfp->if_flags = XFS_IFEXTENTS;
++	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
++	ip->i_cnextents = 0;
++}
+diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
+index f95e072..44d38eb 100644
+--- a/libxfs/xfs_inode_fork.h
++++ b/libxfs/xfs_inode_fork.h
+@@ -92,7 +92,9 @@ typedef struct xfs_ifork {
+ #define XFS_IFORK_PTR(ip,w)		\
+ 	((w) == XFS_DATA_FORK ? \
+ 		&(ip)->i_df : \
+-		(ip)->i_afp)
++		((w) == XFS_ATTR_FORK ? \
++			(ip)->i_afp : \
++			(ip)->i_cowfp))
+ #define XFS_IFORK_DSIZE(ip) \
+ 	(XFS_IFORK_Q(ip) ? \
+ 		XFS_IFORK_BOFF(ip) : \
+@@ -105,26 +107,38 @@ typedef struct xfs_ifork {
+ #define XFS_IFORK_SIZE(ip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		XFS_IFORK_DSIZE(ip) : \
+-		XFS_IFORK_ASIZE(ip))
++		((w) == XFS_ATTR_FORK ? \
++			XFS_IFORK_ASIZE(ip) : \
++			0))
+ #define XFS_IFORK_FORMAT(ip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		(ip)->i_d.di_format : \
+-		(ip)->i_d.di_aformat)
++		((w) == XFS_ATTR_FORK ? \
++			(ip)->i_d.di_aformat : \
++			(ip)->i_cformat))
+ #define XFS_IFORK_FMT_SET(ip,w,n) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		((ip)->i_d.di_format = (n)) : \
+-		((ip)->i_d.di_aformat = (n)))
++		((w) == XFS_ATTR_FORK ? \
++			((ip)->i_d.di_aformat = (n)) : \
++			((ip)->i_cformat = (n))))
+ #define XFS_IFORK_NEXTENTS(ip,w) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		(ip)->i_d.di_nextents : \
+-		(ip)->i_d.di_anextents)
++		((w) == XFS_ATTR_FORK ? \
++			(ip)->i_d.di_anextents : \
++			(ip)->i_cnextents))
+ #define XFS_IFORK_NEXT_SET(ip,w,n) \
+ 	((w) == XFS_DATA_FORK ? \
+ 		((ip)->i_d.di_nextents = (n)) : \
+-		((ip)->i_d.di_anextents = (n)))
++		((w) == XFS_ATTR_FORK ? \
++			((ip)->i_d.di_anextents = (n)) : \
++			((ip)->i_cnextents = (n))))
+ #define XFS_IFORK_MAXEXT(ip, w) \
+ 	(XFS_IFORK_SIZE(ip, w) / sizeof(xfs_bmbt_rec_t))
+ 
++xfs_ifork_t	*XFS_IEXT_STATE_TO_FORK(struct xfs_inode *ip, int state);
++
+ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+ void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+ 				struct xfs_inode_log_item *, int);
+@@ -169,4 +183,6 @@ void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
+ 
+ extern struct kmem_zone	*xfs_ifork_zone;
+ 
++extern void xfs_ifork_init_cow(struct xfs_inode *ip);
++
+ #endif	/* __XFS_INODE_FORK_H__ */
+diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
+index 7637903..6e69208 100644
+--- a/libxfs/xfs_rmap.c
++++ b/libxfs/xfs_rmap.c
+@@ -1344,6 +1344,8 @@ __xfs_rmap_add(
+ 
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return 0;
++	if (ri->ri_whichfork == XFS_COW_FORK)
++		return 0;
+ 
+ 	trace_xfs_rmap_defer(mp, XFS_FSB_TO_AGNO(mp, ri->ri_bmap.br_startblock),
+ 			ri->ri_type,
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index 690d616..cf044c0 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -93,6 +93,7 @@ typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
+  */
+ #define	XFS_DATA_FORK	0
+ #define	XFS_ATTR_FORK	1
++#define	XFS_COW_FORK	2
+ 
+ /*
+  * Min numbers of data/attr fork btree root pointers.
 
 _______________________________________________
 xfs mailing list
