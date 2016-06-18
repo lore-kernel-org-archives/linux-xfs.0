@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E5DDA7CB6
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:38:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C88BAC002
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 10:38:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E67067CA0
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 22:41:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F923AC002
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 20:41:10 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6BhZAbFpkpkgtwyq (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BQycTAJrz0mmuAIF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 10:38:50 -0700 (PDT)
-Date: Fri, 17 Jun 2016 13:38:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 002/119] vfs: support FS_XFLAG_REFLINK and
-	FS_XFLAG_COWEXTSIZE
-Message-ID: <20160617173847.GB46309@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612628567.12839.3246258786290141903.stgit@birch.djwong.org>
-	<20160617114117.GF19042@infradead.org>
-	<20160617121604.GB23661@bfoster.bfoster>
-	<20160617165400.GC6376@birch.djwong.org>
+	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 20:41:09 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 22F52D47B0
+	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 03:41:09 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u5I3f777014582
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 23:41:08 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: set rsumino version to 2
+Message-ID: <ebc1e9d3-a68b-115f-3a41-12e5579a085e@redhat.com>
+Date: Fri, 17 Jun 2016 22:41:07 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160617165400.GC6376@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,109 +37,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jun 17, 2016 at 09:54:00AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 17, 2016 at 08:16:05AM -0400, Brian Foster wrote:
-> > On Fri, Jun 17, 2016 at 04:41:17AM -0700, Christoph Hellwig wrote:
-> > > On Thu, Jun 16, 2016 at 06:18:05PM -0700, Darrick J. Wong wrote:
-> > > > Introduce XFLAGs for the new XFS reflink inode flag and the CoW extent
-> > > > size hint, and actually plumb the CoW extent size hint into the fsxattr
-> > > > structure.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Should go behind all the updates that are useful without any new
-> > > rmap or reflink functionality.  In fact it would be great if you
-> > > could send out a series with just those little fixes and cleanups
-> > > first.
-> > > 
-> > 
-> > I'd take that a step further and suggest the entire series be split into
-> > independent feature series, as appropriate. Unless I'm missing
-> > something, I don't think there's any reason these all need to be bundled
-> > together. Further, my expectation is that they probably end up being
-> > merged as independent units, so I think it's easier for everybody for
-> > Darrick to carve that up on the logical boundaries rather than assume
-> > all reviewers and maintainer are going to do so consistently.
-> > 
-> > Note that I'm not saying this has to be reposted.. I think I can pull
-> > off the rmap bits for the time being. I'm just suggesting that if a
-> > repost is required from this point forward for any of the logical
-> > subunits (deps, rmap, reflink, scrub), I'd suggest to post, version and
-> > changelog those units independently.
-> 
-> I'd thought about continuing my old practice of listing which patches
-> go with which feature... but then got lazy. :(  Cleanups/rmap/reflink/scrub
-> actually are in their own contiguous sections of the patchbomb, though that
-> isn't obvious from looking at it.
-> 
+If we run xfs/033 with "-m crc=0", the test fails
+with a repair output difference:
 
-Yeah, I figured as much. I was able to surmise where the rmap stuff
-ends. It's not so clear where the line between cleanups vs.
-dependencies is, however, and as hch mentioned, some of that stuff
-apparently stands on its own (i.e, can be merged without being blocked
-on rmap review/test/dev cycles).
+     Phase 7 - verify and correct link counts...
+    +resetting inode INO nlinks from 0 to 1
+     done
 
-> You ought to be able to pull only as far as the end of the rmap series and
-> still have a working XFS.  I only did the intensive testing with the full
-> patchset, but the quick xfstests group ran fine with just the rmap pieces.
-> 
+This is because when we zero out the realtime summary
+inode and rebuild it, we set its version to 1, then
+set its ip->i_d.di_nlink to 1.  This is a little odd,
+because v1 inodes store their link count in di_onlink...
 
-Ok. I'll probably end up testing more with just the rmap bits.
+Then, later in repair we call xfs_inode_from_disk(),
+which sees the version one inode, and converts it to
+version 2 in part by copying di_onlink to di_nlink.
+But we never *set* di_onlink, so di_nlink gets reset to
+zero, and this error is discovered later in repair.
 
-> Kernel patches:
-> ===============
-> Cleanups, 1-11
-> rmap + dependencies, 12-49
->     Overlapped interval btree, 12-15
->     Deferred operations, 16-22
->     rmap, 23-49
+Interestingly, mk_rbmino() was changed in 138659f1
+to set version 2; it looks like mk_rsumino was just
+missed.
 
-Thanks. I still stand by my previous comment wrt to splitting any
-subsequent postings, if necessary, into separate series though. ;)
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Brian
+My only other point of confusion is that prior to
+ff105f7 libxfs: update to 3.16 kernel code
+the "resetting inode..." message wasn't emitted; I'm
+not sure what changed there to affect this.  :/
 
-> reflink + dependencies, 50-111
->     AG reservations, 50-52
->     refcount btree, 53-68
->     deferred remap, 69-73
->     cow, 74-88
->     reflink, 89-111
-> getfsmapx, 112
-> scrub, 113-119
-> 
-> xfsprogs:
-> =========
-> Cleanups, 1-15
-> rmap + deps, 16-70
->     Overlapped interval btree, 16-19
->     Deferred operations, 20-27
->     rmap, 28-70
-> reflink + dependencies, 71-135
->     AG reservations, 71-72
->     refcount btree, 73-85
->     deferred remap, 86-90
->     reflink, 91-135
-> getfsmapx, 136-138
-> scrub, 139-145
-> 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 0a71164..774e2cd 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -760,7 +760,7 @@ mk_rsumino(xfs_mount_t *mp)
+ 			error);
+ 	}
+ 
+-	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
++	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 2;
+ 	memset(&ip->i_d, 0, sizeof(ip->i_d));
+ 
+ 	VFS_I(ip)->i_mode = S_IFREG;
 
 _______________________________________________
 xfs mailing list
