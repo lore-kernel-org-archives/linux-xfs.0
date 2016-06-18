@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0648F7CA2
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 20:18:20 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 174F47CA0
+	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 08:27:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BAC6A304039
-	for <xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:19 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id JwkBUDRDPPsUVnQb (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE4A304048
+	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 06:27:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hCkYCkJIBBhQx0yF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Jun 2016 18:18:18 -0700 (PDT)
-Subject: [PATCH 003/119] xfs: check offsets of variable length structures
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 16 Jun 2016 18:18:12 -0700
-Message-ID: <146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
-In-Reply-To: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Sat, 18 Jun 2016 06:27:44 -0700 (PDT)
+Date: Sat, 18 Jun 2016 09:27:42 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: on-disk free blocks B-Tree update
+Message-ID: <20160618132742.GB47303@bfoster.bfoster>
+References: <97A4F433DEE099488FE21C1718A641D213A0320A@wmsexchsvr02.winmagic.local>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <97A4F433DEE099488FE21C1718A641D213A0320A@wmsexchsvr02.winmagic.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +29,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Benjamin Wirth <Benjamin.Wirth@winmagic.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Some of the directory/attr structures contain variable-length objects,
-so the enclosing structure doesn't have a meaningful fixed size at
-compile time.  We can check the offsets of the members before the
-variable-length member, so do those.
+On Fri, Jun 17, 2016 at 08:02:59PM +0000, Benjamin Wirth wrote:
+> Hello XFS community,
+> 
+> I have code that parses the free blocks B-Tree from the disk but it seems to me that the on-disk version of the B-Tree is not updated even when sync() is called, so that the disk version of the B-Tree becomes outdated. Is that correct?
+> 
+> I have debug information from the kernel BIO layer where I see sectors/blocks being flushed out by the sync but the B-Tree on disk still lists those blocks as free. At what time is the on-disk B-Tree updated, only at umount?
+> 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+Calling sync() will first flush out all cached user data. This, in turn,
+may result in block allocation transactions, etc. sync() then calls into
+the fs superblock ->sync_fs() handler, which on XFS forces the log to
+disk. This means the metadata changes associated with the user data are
+persistent in the log, but not necessarily written back to disk. This
+occurs some time later according to the internal state of the fs.
 
+> Is there any way to force the in-memory B-Tree to be flushed to disk?
+> 
 
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 184c44e..0272301 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -22,6 +22,11 @@
- 	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
- 		#structname ") is wrong, expected " #size)
- 
-+#define XFS_CHECK_OFFSET(structname, member, off) \
-+	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
-+		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
-+		"expected " #off)
-+
- static inline void __init
- xfs_check_ondisk_structs(void)
- {
-@@ -75,15 +80,28 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
- 	 */
- 
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
-+	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
- 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
--	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
-+	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
-+	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
-+	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
-@@ -94,6 +112,9 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
-+	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
-+	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
-+	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
- 
+The only thing that comes to mind is to freeze ('fsfreeze -f <mnt>') the
+fs, which appears to push the AIL. This is really the only way to get a
+coherent view of the fs on disk while mounted, anyways. I also assume
+you're using direct I/O, as the underlying disk buffer/page cache is not
+coherent with XFS I/O.
+
+Brian
+
+> Thanks for any help,
+> Ben
+> 
+> Benjamin Wirth | Senior Software Developer
+> WinMagic Inc.
+> 5600A Cancross Court
+> Mississauga, ON  |  L5R 3E9 |  Canada
+> 
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
