@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD00F7CA0
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 15:15:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 49451AC004
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 13:15:48 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id qP0wyjJEByWKjNOW (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6D8617CA4
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 09:31:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22799304032
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 07:31:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jb6xkekIyD0VxPrU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 18 Jun 2016 13:15:43 -0700 (PDT)
-Date: Sat, 18 Jun 2016 13:15:10 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 009/119] xfs: convert list of extents to free into a
-	regular list
-Message-ID: <20160618201509.GA5042@birch.djwong.org>
+	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 07:31:51 -0700 (PDT)
+Date: Mon, 20 Jun 2016 10:31:49 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 010/119] xfs: create a standard btree size calculator code
+Message-ID: <20160620143148.GA2465@bfoster.bfoster>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612632997.12839.18026491074892368053.stgit@birch.djwong.org>
-	<20160617115930.GH19042@infradead.org>
+	<146612633632.12839.13314497569643567486.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160617115930.GH19042@infradead.org>
+In-Reply-To: <146612633632.12839.13314497569643567486.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,71 +30,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On Fri, Jun 17, 2016 at 04:59:30AM -0700, Christoph Hellwig wrote:
-> >  {
-> > +	struct xfs_bmap_free_item	*new;		/* new element */
-> >  #ifdef DEBUG
-> >  	xfs_agnumber_t		agno;
-> >  	xfs_agblock_t		agbno;
-> > @@ -597,17 +595,7 @@ xfs_bmap_add_free(
-> >  	new = kmem_zone_alloc(xfs_bmap_free_item_zone, KM_SLEEP);
-> >  	new->xbfi_startblock = bno;
-> >  	new->xbfi_blockcount = (xfs_extlen_t)len;
-> > +	list_add(&new->xbfi_list, &flist->xbf_flist);
-> >  	flist->xbf_count++;
+On Thu, Jun 16, 2016 at 06:18:56PM -0700, Darrick J. Wong wrote:
+> Create a helper to generate AG btree height calculator functions.
+> This will be used (much) later when we get to the refcount btree.
 > 
-> Please kill xbf_count while you're at it, it's entirely superflous.
-
-The deferred ops conversion patch kills this off by moving the whole
-"defer an op to the next transaction by logging redo items" logic
-into a separate file and mechanism.
-
-This patch is just a cleanup to reduce some of the open coded list ugliness
-before starting on the rmap stuff.  Once the deferred ops code lands, all
-three of these functions go away.
-
-> > @@ -617,14 +605,10 @@ xfs_bmap_add_free(
-> >   */
-> >  void
-> >  xfs_bmap_del_free(
-> > -	xfs_bmap_free_t		*flist,	/* free item list header */
-> > -	xfs_bmap_free_item_t	*prev,	/* previous item on list, if any */
-> > -	xfs_bmap_free_item_t	*free)	/* list item to be freed */
-> > +	struct xfs_bmap_free		*flist,	/* free item list header */
-> > +	struct xfs_bmap_free_item	*free)	/* list item to be freed */
+> v2: Use a helper function instead of a macro.
+> v3: We can (theoretically) store more than 2^32 records in a btree, so
+>     widen the fields to accept that.
+> v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
+>     is to estimate the worst-case number of blocks needed for a bmbt
+>     expansion, not to calculate the space required to store nr records.
 > 
-> Which then also gets rid of the flist argument here.
-> 
-> > @@ -634,17 +618,16 @@ xfs_bmap_del_free(
-> >   */
-> >  void
-> >  xfs_bmap_cancel(
-> > +	struct xfs_bmap_free		*flist)	/* list of bmap_free_items */
-> >  {
-> > +	struct xfs_bmap_free_item	*free;	/* free list item */
-> >  
-> >  	if (flist->xbf_count == 0)
-> >  		return;
-> > +	while (!list_empty(&flist->xbf_flist)) {
-> > +		free = list_first_entry(&flist->xbf_flist,
-> > +				struct xfs_bmap_free_item, xbfi_list);
-> 
-> 	while ((free = list_first_entry_or_null(...))
-> 
-> > +	list_sort((*tp)->t_mountp, &flist->xbf_flist, xfs_bmap_free_list_cmp);
-> 
-> Can you add a comment on why we are sorting the list?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-We sort the list so that we process the freed extents in AG order to
-avoid deadlocking.
+I think this one should probably be pushed out to where it is used
+(easier to review with an example imo). I don't see it used anywhere up
+through the rmapbt stuff, anyways...
 
-I'll add a comment to the deferred ops code if there isn't one already.
+>  fs/xfs/libxfs/xfs_btree.c |   27 +++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_btree.h |    3 +++
+>  2 files changed, 30 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 105979d..5eb4e40 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -4156,3 +4156,30 @@ xfs_btree_sblock_verify(
+>  
+>  	return true;
+>  }
+> +
+> +/*
+> + * Calculate the number of blocks needed to store a given number of records
+> + * in a short-format (per-AG metadata) btree.
+> + */
+> +xfs_extlen_t
+> +xfs_btree_calc_size(
+> +	struct xfs_mount	*mp,
+> +	uint			*limits,
+> +	unsigned long long	len)
+> +{
+> +	int			level;
+> +	int			maxrecs;
+> +	xfs_extlen_t		rval;
+> +
+> +	maxrecs = limits[0];
+> +	for (level = 0, rval = 0; len > 0; level++) {
 
---D
+len is unsigned, so len > 0 is kind of pointless. Perhaps check len > 1
+and kill the check in the loop?
 
+Brian
+
+> +		len += maxrecs - 1;
+> +		do_div(len, maxrecs);
+> +		rval += len;
+> +		if (len == 1)
+> +			return rval;
+> +		if (level == 0)
+> +			maxrecs = limits[1];
+> +	}
+> +	return rval;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 9a88839..b330f19 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -475,4 +475,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+>  bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+>  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+>  
+> +xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+> +		unsigned long long len);
+> +
+>  #endif	/* __XFS_BTREE_H__ */
 > 
 > _______________________________________________
 > xfs mailing list
