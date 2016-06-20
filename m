@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E67067CA0
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 22:41:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EBB037CA1
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 01:55:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F923AC002
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 20:41:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BQycTAJrz0mmuAIF (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 79A12AC001
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 23:55:14 -0700 (PDT)
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
+	cuda.sgi.com with ESMTP id hS2wdU1wBbkcxW7o (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 20:41:09 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 22F52D47B0
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 03:41:09 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u5I3f777014582
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 23:41:08 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: set rsumino version to 2
-Message-ID: <ebc1e9d3-a68b-115f-3a41-12e5579a085e@redhat.com>
-Date: Fri, 17 Jun 2016 22:41:07 -0500
+	<xfs@oss.sgi.com>; Sun, 19 Jun 2016 23:55:08 -0700 (PDT)
+Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
+	by mout01.posteo.de (Postfix) with ESMTPS id 9F2C220C5A
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 08:55:05 +0200 (CEST)
+Date: Mon, 20 Jun 2016 08:53:48 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: Re: [PATCH 1/4] Remove off64_t from linux.h
+Message-ID: <20160620065348.GA431@nyan>
+References: <20160618145238.GA17768@nyan>
+ <20160620020414.GH26977@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160620020414.GH26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,51 +33,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-If we run xfs/033 with "-m crc=0", the test fails
-with a repair output difference:
+Dave Chinner wrote:
 
-     Phase 7 - verify and correct link counts...
-    +resetting inode INO nlinks from 0 to 1
-     done
+Thanks for asking for clarification.
 
-This is because when we zero out the realtime summary
-inode and rebuild it, we set its version to 1, then
-set its ip->i_d.di_nlink to 1.  This is a little odd,
-because v1 inodes store their link count in di_onlink...
+> On Sat, Jun 18, 2016 at 04:52:38PM +0200, Felix Janda wrote:
+> > The off64_t type is usually only conditionally exposed under the
+> > feature test macro _LARGEFILE64_SOURCE (also defined by _GNU_SOURCE).
+> > To make the public xfs headers more standalone therefore off64_t should
+> > be avoided.
+> 
+> "more standalone"?
+> 
+> What does that mean?
 
-Then, later in repair we call xfs_inode_from_disk(),
-which sees the version one inode, and converts it to
-version 2 in part by copying di_onlink to di_nlink.
-But we never *set* di_onlink, so di_nlink gets reset to
-zero, and this error is discovered later in repair.
+Programs including the xfs headers while not defining _GNU_SOURCE or
+_LARGEFILE64_SOURCE will not fail with compile errors. My previous
+patch changing loff_t to off64_t had the unintented consequences that
+downstreams of xfs-progs like ceph had to define _LARGEFILE64_SOURCE
+on linux.
 
-Interestingly, mk_rbmino() was changed in 138659f1
-to set version 2; it looks like mk_rsumino was just
-missed.
+> And what does it mean for all the xfsprogs code that still uses
+> off64_t?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+off_t and off64_t are now synomyms and 64 bit on all architectures.
+So no difference for code using off64_t.
 
-My only other point of confusion is that prior to
-ff105f7 libxfs: update to 3.16 kernel code
-the "resetting inode..." message wasn't emitted; I'm
-not sure what changed there to affect this.  :/
+Under some conditions there can be a difference for code using
+off_t.
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 0a71164..774e2cd 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -760,7 +760,7 @@ mk_rsumino(xfs_mount_t *mp)
- 			error);
- 	}
- 
--	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 1;
-+	vers = xfs_sb_version_hascrc(&mp->m_sb) ? 3 : 2;
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
- 	VFS_I(ip)->i_mode = S_IFREG;
+> i.e. if you are going to make xfsprogs fail to compile on configs
+> that don't define off64_t, then it makes no sense to leave all the
+> users of off64_t in the xfsprogs code....
+
+On all supported systems except for current default linux (glibc)
+configurations either there does not exist off64_t or it is the same
+as off_t. The configure test will define _FILE_OFFSET_BITS=64 on linux
+systems (i.e. enabling transparent large file support) with the result
+that now even on linux off_t is 64 bit wide in all cases.
+
+The "assert" ensures that programs using the xfs headers do not
+compile when the expectation sizeof(off_t)=8 is not met. This makes
+programs on 32 bit linux systems using the xfs headers but not
+defining _FILE_OFFSET_BITS=64 not compile. I would consider this as
+beneficial because such programs easily can have bugs regarding
+support of files of size >2GB on 32 bit systems.
+
+Felix
 
 _______________________________________________
 xfs mailing list
