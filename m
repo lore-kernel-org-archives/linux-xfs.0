@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2BC127CA1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 17:58:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ECB00304032
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 15:58:20 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	EvAkowORjjvMtSIK for <xfs@oss.sgi.com>;
-	Wed, 22 Jun 2016 15:58:18 -0700 (PDT)
-Date: Thu, 23 Jun 2016 08:58:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20160622225816.GY12670@dastard>
-References: <20160601181617.GV3190@twins.programming.kicks-ass.net>
-	<20160602145048.GS1995@dhcp22.suse.cz>
-	<20160602151116.GD3190@twins.programming.kicks-ass.net>
-	<20160602154619.GU1995@dhcp22.suse.cz>
-	<20160602232254.GR12670@dastard>
-	<20160606122022.GH11895@dhcp22.suse.cz>
-	<20160615072154.GF26977@dastard>
-	<20160621142628.GG30848@dhcp22.suse.cz>
-	<20160622010320.GR12670@dastard>
-	<20160622123822.GG9208@dhcp22.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160622123822.GG9208@dhcp22.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0D4577CA3
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 12:12:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D38348F8040
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 10:12:07 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id nvE1DNysLEDmT9yn (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 10:12:06 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 0C4B3DF203
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 17:12:06 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-179.bos.redhat.com [10.18.41.179])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u5KHC5VP028225
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:12:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/3] xfs: create helper to delete multiple inobt records
+Date: Mon, 20 Jun 2016 13:12:02 -0400
+Message-Id: <1466442724-13544-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1466442724-13544-1-git-send-email-bfoster@redhat.com>
+References: <1466442724-13544-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +33,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, Peter Zijlstra <peterz@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com, Qu Wenruo <quwenruo@cn.fujitsu.com>, Ingo Molnar <mingo@kernel.org>
+To: xfs@oss.sgi.com
 
-On Wed, Jun 22, 2016 at 02:38:22PM +0200, Michal Hocko wrote:
-> On Wed 22-06-16 11:03:20, Dave Chinner wrote:
-> > On Tue, Jun 21, 2016 at 04:26:28PM +0200, Michal Hocko wrote:
-> > > On Wed 15-06-16 17:21:54, Dave Chinner wrote:
-> [...]
-> > > > There are allocations outside transaction context which need to be
-> > > > GFP_NOFS - this is what KM_NOFS was originally intended for.
-> > > 
-> > > Is it feasible to mark those by the scope NOFS api as well and drop
-> > > the direct KM_NOFS usage? This should help to identify those that are
-> > > lockdep only and use the annotation to prevent from the false positives.
-> > 
-> > I don't understand what you are suggesting here. This all started
-> > because we use GFP_NOFS in a handful of places to shut up lockdep
-> > and you didn't want us to use GFP_NOFS like that. Now it sounds to
-> > me like you are advocating setting unconditional GFP_NOFS allocation
-> > contexts for entire XFS code paths - whether it's necessary or
-> > not - to avoid problems with lockdep false positives.
-> 
-> No, I meant only those paths which need GFP_NOFS for other than lockdep
-> purposes would use the scope api.
-> 
-> Anyway, it seems that we are not getting closer to a desired solution
-> here. Or I am not following it at least...
-> 
-> It seems that we have effectively two possibilities (from the
-> MM/lockdep) POV. Either add an explicit API to disable the reclaim
-> lockdep machinery for all allocation in a certain scope or a GFP mask
-> to to achieve the same for a particular allocation. Which one would work
-> better for the xfs usecase?
+In most cases an inode chunk is tracked by a single inode record. With
+large block size support up to 64k, however, XFS supports conditions
+where a single block might be large enough to allocate an inode chunk
+that requires multiple inobt records. For example, an inode record is
+fixed at 64 inodes. With a 64k block size, a 512b inode size results in
+128-inode chunks and thus requires 2 inobt records per-chunk.
 
-As I've said - if we annotate the XFS call sites appropriately (e.g.
-KM_NOLOCKDEP rather than KM_NOFS), we don't care what lockdep
-mechanism is used to turn off warnings as it will be wholly
-encapsulated inside kmem_alloc() and friends.  This will end up
-similar to how we are currently encapsulate the memalloc_noio_save()
-wrappers in kmem_zalloc_large().
+This is handled appropriately at inode allocation time via insertion of
+multiple inobt records to span the chunk. We currently have no mechanism
+to delete multiple records nor broader chunk context for a particular
+record at inode deletion time. Therefore, inode chunks on such
+filesystems are never freed and result in non-recoverable space
+consumption for the lifetime of the filesystem.
 
-IOWs, it doesn't matter to XFS whether it be a GFP flag or a PF flag
-here, because it's not going to be exposed to the higher level code.
+Create the xfs_inobt_delete() helper to remove several inobt records at
+a time. Call the helper from the appropriate locations instead of
+xfs_btree_delete(). Note that we still do not have the requisite chunk
+context at inode deletion time to delete multiple records and therefore
+can still only delete records that map to full chunks.
 
-Cheers,
+This patch does not alter current behavior but provides a mechanism to
+be used by future work that provides the appropriate chunk context.
 
-Dave.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 56 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 53 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 22297f9..67a4f3f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -200,6 +200,53 @@ xfs_inobt_insert(
+ }
+ 
+ /*
++ * Delete a series of records from the inode btree. Handle multiple records as
++ * an inode chunk might consist of more than one record for large block sizes.
++ */
++static int
++xfs_inobt_delete(
++	struct xfs_mount		*mp,
++	struct xfs_btree_cur		*cur,
++	xfs_agnumber_t			agno,
++	xfs_agino_t			agino,
++	int				ilen)
++{
++	struct xfs_inobt_rec_incore	rec;
++	int				error;
++	int				i;
++
++	ASSERT(ilen % XFS_INODES_PER_CHUNK == 0);
++
++	while (ilen > 0) {
++		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_EQ, &i);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++
++		/* make sure the record is what we expect */
++		error = xfs_inobt_get_rec(cur, &rec, &i);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++		XFS_WANT_CORRUPTED_GOTO(mp, rec.ir_startino == agino,
++					out_error);
++
++		error = xfs_btree_delete(cur, &i);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
++
++		agino += XFS_INODES_PER_CHUNK;
++		ilen -= XFS_INODES_PER_CHUNK;
++	}
++
++	return 0;
++
++out_error:
++	return error;
++}
++
++/*
+  * Verify that the number of free inodes in the AGI is correct.
+  */
+ #ifdef DEBUG
+@@ -1971,8 +2018,10 @@ xfs_difree_inobt(
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
+ 
+-		if ((error = xfs_btree_delete(cur, &i))) {
+-			xfs_warn(mp, "%s: xfs_btree_delete returned error %d.",
++		error = xfs_inobt_delete(mp, cur, agno, rec.ir_startino,
++					 XFS_INODES_PER_CHUNK);
++		if (error) {
++			xfs_warn(mp, "%s: xfs_inobt_delete returned error %d.",
+ 				__func__, error);
+ 			goto error0;
+ 		}
+@@ -2089,7 +2138,8 @@ xfs_difree_finobt(
+ 	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
+ 	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK &&
+ 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+-		error = xfs_btree_delete(cur, &i);
++		error = xfs_inobt_delete(mp, cur, agno, rec.ir_startino,
++					 XFS_INODES_PER_CHUNK);
+ 		if (error)
+ 			goto error;
+ 		ASSERT(i == 1);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.5
 
 _______________________________________________
 xfs mailing list
