@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E49EA7CA0
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 07:22:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D24AAC003
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 05:22:51 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F8977CA3
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:23:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72978304032
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:23:26 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id YYizKLz3t1qQFZel (version=TLSv1.2
+	cuda.sgi.com with ESMTP id X4adREbH9BB3pjrW (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 05:22:49 -0700 (PDT)
-Date: Fri, 24 Jun 2016 15:22:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] xfs: don't allow negative error tags
-Message-ID: <20160624122234.GA23169@mwanda>
+	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:23:23 -0700 (PDT)
+Date: Mon, 20 Jun 2016 11:23:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 011/119] xfs: refactor btree maxlevels computation
+Message-ID: <20160620182316.GA29055@birch.djwong.org>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612634260.12839.10495592169777117935.stgit@birch.djwong.org>
+	<20160620143158.GB2465@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160620143158.GB2465@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,41 +31,145 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: kernel-janitors@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Errors go from zero which means no error to XFS_ERRTAG_MAX (22).  My
-static checker complains that xfs_errortag_add() puts an upper bound on
-this but not a lower bound.  Let's fix it by making it unsigned.
+On Mon, Jun 20, 2016 at 10:31:59AM -0400, Brian Foster wrote:
+> On Thu, Jun 16, 2016 at 06:19:02PM -0700, Darrick J. Wong wrote:
+> > Create a common function to calculate the maximum height of a per-AG
+> > btree.  This will eventually be used by the rmapbt and refcountbt code
+> > to calculate appropriate maxlevels values for each.  This is important
+> > because the verifiers and the transaction block reservations depend on
+> > accurate estimates of many blocks are needed to satisfy a btree split.
+> 
+> 			how many
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Got it, will change for the next posting.
 
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 4ed3042..2e4f67f 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -128,7 +128,7 @@ extern int xfs_error_test(int, int *, char *, int, char *, unsigned long);
- 	 xfs_error_test((tag), (mp)->m_fixedfsid, "expr", __LINE__, __FILE__, \
- 			(rf))))
- 
--extern int xfs_errortag_add(int error_tag, struct xfs_mount *mp);
-+extern int xfs_errortag_add(unsigned int error_tag, struct xfs_mount *mp);
- extern int xfs_errortag_clearall(struct xfs_mount *mp, int loud);
- #else
- #define XFS_TEST_ERROR(expr, mp, tag, rf)	(expr)
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 355619a..ed7ee4e 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -55,7 +55,7 @@ xfs_error_test(int error_tag, int *fsidp, char *expression,
- }
- 
- int
--xfs_errortag_add(int error_tag, xfs_mount_t *mp)
-+xfs_errortag_add(unsigned int error_tag, xfs_mount_t *mp)
- {
- 	int i;
- 	int len;
+--D
+
+> 
+> > 
+> > We were mistakenly using the max bnobt height for all the btrees,
+> > which creates a dangerous situation since the larger records and keys
+> > in an rmapbt make it very possible that the rmapbt will be taller than
+> > the bnobt and so we can run out of transaction block reservation.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  fs/xfs/libxfs/xfs_alloc.c  |   15 ++-------------
+> >  fs/xfs/libxfs/xfs_btree.c  |   19 +++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_btree.h  |    2 ++
+> >  fs/xfs/libxfs/xfs_ialloc.c |   19 +++++--------------
+> >  4 files changed, 28 insertions(+), 27 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index 1c76a0e..c366889 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -1839,19 +1839,8 @@ void
+> >  xfs_alloc_compute_maxlevels(
+> >  	xfs_mount_t	*mp)	/* file system mount structure */
+> >  {
+> > -	int		level;
+> > -	uint		maxblocks;
+> > -	uint		maxleafents;
+> > -	int		minleafrecs;
+> > -	int		minnoderecs;
+> > -
+> > -	maxleafents = (mp->m_sb.sb_agblocks + 1) / 2;
+> > -	minleafrecs = mp->m_alloc_mnr[0];
+> > -	minnoderecs = mp->m_alloc_mnr[1];
+> > -	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+> > -	for (level = 1; maxblocks > 1; level++)
+> > -		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+> > -	mp->m_ag_maxlevels = level;
+> > +	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_alloc_mnr,
+> > +			(mp->m_sb.sb_agblocks + 1) / 2);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > index 5eb4e40..046fbcf 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > @@ -4158,6 +4158,25 @@ xfs_btree_sblock_verify(
+> >  }
+> >  
+> >  /*
+> > + * Calculate the number of btree levels needed to store a given number of
+> > + * records in a short-format btree.
+> > + */
+> > +uint
+> > +xfs_btree_compute_maxlevels(
+> > +	struct xfs_mount	*mp,
+> > +	uint			*limits,
+> > +	unsigned long		len)
+> > +{
+> > +	uint			level;
+> > +	unsigned long		maxblocks;
+> > +
+> > +	maxblocks = (len + limits[0] - 1) / limits[0];
+> > +	for (level = 1; maxblocks > 1; level++)
+> > +		maxblocks = (maxblocks + limits[1] - 1) / limits[1];
+> > +	return level;
+> > +}
+> > +
+> > +/*
+> >   * Calculate the number of blocks needed to store a given number of records
+> >   * in a short-format (per-AG metadata) btree.
+> >   */
+> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > index b330f19..b955e5d 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > @@ -477,5 +477,7 @@ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+> >  
+> >  xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+> >  		unsigned long long len);
+> > +uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+> > +		unsigned long len);
+> >  
+> >  #endif	/* __XFS_BTREE_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > index 9d0003c..cda7269 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > @@ -2394,20 +2394,11 @@ void
+> >  xfs_ialloc_compute_maxlevels(
+> >  	xfs_mount_t	*mp)		/* file system mount structure */
+> >  {
+> > -	int		level;
+> > -	uint		maxblocks;
+> > -	uint		maxleafents;
+> > -	int		minleafrecs;
+> > -	int		minnoderecs;
+> > -
+> > -	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
+> > -		XFS_INODES_PER_CHUNK_LOG;
+> > -	minleafrecs = mp->m_inobt_mnr[0];
+> > -	minnoderecs = mp->m_inobt_mnr[1];
+> > -	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
+> > -	for (level = 1; maxblocks > 1; level++)
+> > -		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+> > -	mp->m_in_maxlevels = level;
+> > +	uint		inodes;
+> > +
+> > +	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
+> > +	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_inobt_mnr,
+> > +							 inodes);
+> >  }
+> >  
+> >  /*
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
