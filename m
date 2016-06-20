@@ -1,18 +1,17 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 86A457CA1
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 10:49:05 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48F157CA1
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 00:32:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 467CF304032
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 08:49:02 -0700 (PDT)
-Received: from offer.com ([223.73.2.38]) by cuda.sgi.com with SMTP id
-	lWcu42HnZwyBfFcE for <xfs@oss.sgi.com>;
-	Tue, 21 Jun 2016 08:48:30 -0700 (PDT)
-From: "liguoyan2@163.com" <liguoyan2@163.com>
-Subject: re:cell phone anti lost alarm
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B3CF8F8040
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 22:32:36 -0700 (PDT)
+Received: from [122.170.205.113] ([122.170.205.113]) by cuda.sgi.com with
+	ESMTP id J0iSRcOyb7NlFEIK for <xfs@oss.sgi.com>;
+	Sun, 19 Jun 2016 22:32:33 -0700 (PDT)
+Date: Mon, 20 Jun 2016 10:53:53 +0530
+Message-ID: <7039964.20160620105353@mail.ru>
+From: =?koi8-r?B?98zBxMnL?= <deflatedvtw@gmail.com>
+Subject: =?koi8-r?B?7s/X2cUg2sHLwdreycvJIC0g09DP08/CINLB2s/C0sHU2NPRINMgzg==?=	=?koi8-r?B?xc/QzMHexc7O2c3JIMTPzMfBzck=?=
 MIME-Version: 1.0
-Date: Tue, 21 Jun 2016 23:45:59 +0800
-Message-Id: <20160621154901.CBD58A420A0@cuda.sgi.com>
-Reply-To: liguoyan2@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,81 +20,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3908668075420096930=="
+Content-Type: multipart/mixed; boundary="===============6974893868405266609=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============3908668075420096930==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+--===============6974893868405266609==
+Content-Type: text/html; charset=koi8-r
+Content-Transfer-Encoding: quoted-printable
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
-Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCAxMS4wMC4xMDU4Ni4wIj48L0hFQUQ+DQo8Qk9EWT4NCjxQIGNsYXNzPU1zb05v
-cm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsg
-Rk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZv
-bnQta2VybmluZzogMS4wMDAwcHQiPmhpIA0KZnJpZW5kPEJSPjwvU1BBTj48U1BBTiANCnN0eWxl
-PSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBWZXJkYW5hOyBtc28tc3BhY2VydW46ICYj
-Mzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48QlI+PC9TUEFOPjxTUEFO
-IA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFj
-ZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPkdsYWQgDQp0
-byBoZWFyIHRoYXQgeW91JiMzOTtyZSBvbiB0aGUgbWFya2V0IGZvciBwcm9tb3Rpb25hbCBpdGVt
-cy48L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTogVmVy
-ZGFuYTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAw
-MDBwdCI+PEJSPjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFN
-SUxZOiBWZXJkYW5hOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5p
-bmc6IDEuMDAwMHB0Ij48QlI+PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsg
-Rk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZv
-bnQta2VybmluZzogMS4wMDAwcHQiPlRoaXMgDQppcyZuYnNwO0dyYWNlIGxpJm5ic3A7ZnJvbSZu
-YnNwO3NoZW56aGVuIGpveXdheSB0ZWNobm9sb2d5IGNvLjwvU1BBTj48U1BBTiANCnN0eWxlPSJG
-T05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBWZXJkYW5hOyBtc28tc3BhY2VydW46ICYjMzk7
-eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij4mbmJzcDtMdGQgDQppbiBDaGlu
-YS4gV2Ugc3BlY2lhbGl6ZWQgaW4mbmJzcDtwcm9tb3Rpb25hbCBpdGVtcyBmb3ImbmJzcDttYW55
-IHllYXJzLCANCjxTVFJPTkc+d2l0aCB0aGUgYmx1ZXRvb3RoIGtleWZpbmRlciwgaWJlYWNvbiwg
-cGVyc29uYWwgYWxhcm08L1NUUk9ORz4gYW5kIGhvcGUgDQp0byBmaW5kIGEgd2F5IHRvIGNvb3Bl
-cmF0ZSB3aXRoIHlvdSE8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05U
-LUZBTUlMWTogVmVyZGFuYTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1r
-ZXJuaW5nOiAxLjAwMDBwdCI+PEJSPjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEy
-cHQ7IEZPTlQtRkFNSUxZOiBWZXJkYW5hOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
-by1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48QlI+PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQt
-U0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
-IzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPkZSRUUgDQpTQU1QTEVTIGNhbiBiZSBz
-ZW50IG9uIHJlcXVlc3QuIENhbGwgbWUsIGxldCYjMzk7cyB0YWxrIG1vcmUhPC9TUEFOPjxTUEFO
-IA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFj
-ZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxCUj48L1NQ
-QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTogVmVyZGFuYTsg
-bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+
-Umdkcyw8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTog
-5a6L5L2TOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWls
-eTogVmVyZGFuYTsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiBWZXJkYW5hOyBtc28tZm9udC1rZXJu
-aW5nOiAxLjAwMDBwdCI+PD94bWw6bmFtZXNwYWNlIA0KcHJlZml4ID0gIm8iIG5zID0gInVybjpz
-Y2hlbWFzLW1pY3Jvc29mdC1jb206b2ZmaWNlOm9mZmljZSIgDQovPjxvOnA+PC9vOnA+PC9TUEFO
-PjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQiPjxTUEFOIA0Kc3R5
-bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1zcGFjZXJ1bjog
-JiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxvOnA+Jm5ic3A7PC9v
-OnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQiPjxT
-UEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1zby1z
-cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPkdyYWNl
-IA0KbGkgPC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQi
-PjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1z
-by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjwv
-U1BBTj4mbmJzcDs8L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgc3R5bGU9Ik1BUkdJTjogMHB0Ij48
-U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEwLjVwdDsgRk9OVC1GQU1JTFk6IFZlcmRhbmE7IG1z
-by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPnNr
-eXBlOiANCmdyYWNlX2Jlc3RvbmVyPC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHls
-ZT0iTUFSR0lOOiAwcHQiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZB
-TUlMWTogVmVyZGFuYTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJu
-aW5nOiAxLjAwMDBwdCI+d2VjaGF0L21vYmlsZS93aGF0c2FwcDowMDg2LTEzNTEwNzI2NzE2PC9T
-UEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQiPjxTUEFOIA0K
-c3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlMWTogVmVyZGFuYTsgbXNvLXNwYWNl
-cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+PC9TUEFOPiZu
-YnNwOzwvUD4NCjxQPjwhLS1FbmRGcmFnbWVudC0tPjwvUD48L0JPRFk+PC9IVE1MPg0KDQo=
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE></TITLE>
+</HEAD>
+<BODY>
+
+<div align=3D"center">
+  <p><font color=3D"#DF0001" size=3D"6" face=3D"Impact">=E4=C1=CE=CE=D9=
+=CA =D3=D0=CF=D3=CF=C2 =D0=D2=CF=C4=D7=C9=D6=C5=CE=C9=D1 - =D2=C5=C1=CC=
+=D8=CE=CF =D0=D2=C9=D7=CF=C4=C9=D4 =CE=CF=D7=D9=C8 =CB=CC=C9=C5=CE=D4=CF=
+=D7</font></p>
+  <p><font color=3D"#404040" size=3D"6" face=3D"Impact">=EE=C5=C4=CF=D2=
+=CF=C7=CF</font></p>
+  <p><font color=3D"#404040" size=3D"6" face=3D"Impact"><br />
+    =FA=C1=CB=C1=D6=C9=D4=C5 =D2=C1=D3=D3=D9=CC=CB=D5 =D0=CF =D4=C5=CC=C5=
+=C6=CF=CE=D5:</font><font color=3D"#666666" size=3D"6"><br />
+    <font face=3D"impact">\9 2 5\  5   =EF  2   -  6   1  -  8   5</font>=
+</font></p>
+</div>
+
+</BODY></HTML>
 
 
---===============3908668075420096930==
+--===============6974893868405266609==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -106,4 +62,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============3908668075420096930==--
+--===============6974893868405266609==--
