@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D3A787CA1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 22:17:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 982EB8F8037
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 20:17:29 -0700 (PDT)
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [119.145.14.65])
-	by cuda.sgi.com with ESMTP id Q3qXb05W3yoOpxs2 (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jun 2016 20:17:26 -0700 (PDT)
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH] xfs: remove the magic numbers in xfs_btree_block-related len
-	macros
-Date: Thu, 23 Jun 2016 11:10:20 +0800
-Message-ID: <1466651420-126472-1-git-send-email-houtao1@huawei.com>
+	by oss.sgi.com (Postfix) with ESMTP id 9A0497CA1
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:48:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C32D8F8037
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:48:49 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	n7ROS310f2nhu5Tb for <xfs@oss.sgi.com>;
+	Mon, 20 Jun 2016 11:48:48 -0700 (PDT)
+Date: Mon, 20 Jun 2016 12:48:27 -0600
+From: Vishal Verma <vishal.l.verma@intel.com>
+Subject: Re: [RFC PATCH 0/2] Initial support for badblock checking in xfs
+Message-ID: <20160620184812.GA21878@omniknight.lm.intel.com>
+References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,119 +28,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-nvdimm@lists.01.org, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-replace the magic numbers by offsetof(...) and sizeof(...), and add two
-extra checks on xfs_check_ondisk_structs()
+On 06/16, Vishal Verma wrote:
+> These are early/RFC patches to add badblock support in xfs.
+> 
+> Patch 1 should be relatively straightforward - it adds a notifier chain
+> to badblocks that filesystems can register with.
+> 
+> Patch 2 is the beginnings of xfs support. So far, I have the notifier
+> registration and building the initial badblock list happening in
+> xfs_mountfs. The next steps (and I may need some help with this as I'm
+> no (x)fs developer :)) are to add this badblocks info to the reverse
+> mapping tree, and then to check for it before accessing the media.
+> 
+> Right now, this just prints the sector numbers/counts/{added, removed}
+> to the kernel log, for both the initial list, and subsequent notifier
+> hits.
+> 
+> While I've tested this with a fake pmem device using libnvdimm's
+> nfit_test framework, it should also work using badblock injection with
+> any block device:
+> 
+> # mkfs.xfs -f /dev/<device>
+> # echo 122 1 > /sys/block/<device>/badblocks
+> # echo 124 1 > /sys/block/<device>/badblocks
+> # mount -t xfs /dev/<device> /mnt
+> ... in log:
+> [  +8.803776] XFS (pmem7): Mounting V4 Filesystem
+> [  +0.009633] XFS (pmem7): Ending clean mount
+> [  +0.001655] XFS (pmem7): got badblocks: sector 122, count 1
+> [  +0.002018] XFS (pmem7): got badblocks: sector 124, count 1
+> 
+> # echo 132 5 | > /sys/block/<device>/badblocks
+> [Jun16 18:56] XFS (pmem7): xfs badblock added sector 132 (count 5)
+> 
+> This is all based on Darrik's rmap work at:
+> https://github.com/djwong/linux/tree/rmap-reflink-devel
+> 
+> Since this is based on a v4.5-rc kernel, it lacks pmem support for
+> clearing badblocks on zeroing/writing, so those parts can't easily
+> be tested yet. The clearing work is in 4.7-rs kernels, and once we
+> rebase to that, that should also be available.
 
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
- fs/xfs/libxfs/xfs_format.h | 66 ++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_ondisk.h        |  2 ++
- 2 files changed, 43 insertions(+), 25 deletions(-)
+Just fyi, These patches should also cleanly apply to Darrick's for-next
+rebase:
+	https://github.com/djwong/linux/tree/djwong-devel
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index dc97eb21..d3069be 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1435,41 +1435,57 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
-  * with the crc feature bit, and all accesses to them must be conditional on
-  * that flag.
-  */
-+/* short form block */
-+struct xfs_btree_sblock_part {
-+	__be32		bb_leftsib;
-+	__be32		bb_rightsib;
-+
-+	__be64		bb_blkno;
-+	__be64		bb_lsn;
-+	uuid_t		bb_uuid;
-+	__be32		bb_owner;
-+	__le32		bb_crc;
-+};
-+
-+/* long form block */
-+struct xfs_btree_lblock_part {
-+	__be64		bb_leftsib;
-+	__be64		bb_rightsib;
-+
-+	__be64		bb_blkno;
-+	__be64		bb_lsn;
-+	uuid_t		bb_uuid;
-+	__be64		bb_owner;
-+	__le32		bb_crc;
-+	__be32		bb_pad; /* padding for alignment */
-+};
-+
- struct xfs_btree_block {
- 	__be32		bb_magic;	/* magic number for block type */
- 	__be16		bb_level;	/* 0 is a leaf */
- 	__be16		bb_numrecs;	/* current # of data records */
- 	union {
--		struct {
--			__be32		bb_leftsib;
--			__be32		bb_rightsib;
--
--			__be64		bb_blkno;
--			__be64		bb_lsn;
--			uuid_t		bb_uuid;
--			__be32		bb_owner;
--			__le32		bb_crc;
--		} s;			/* short form pointers */
--		struct	{
--			__be64		bb_leftsib;
--			__be64		bb_rightsib;
--
--			__be64		bb_blkno;
--			__be64		bb_lsn;
--			uuid_t		bb_uuid;
--			__be64		bb_owner;
--			__le32		bb_crc;
--			__be32		bb_pad; /* padding for alignment */
--		} l;			/* long form pointers */
-+		struct xfs_btree_sblock_part s;
-+		struct xfs_btree_lblock_part l;
- 	} bb_u;				/* rest */
- };
- 
--#define XFS_BTREE_SBLOCK_LEN	16	/* size of a short form block */
--#define XFS_BTREE_LBLOCK_LEN	24	/* size of a long form block */
-+/* size of a short form block */
-+#define XFS_BTREE_SBLOCK_LEN \
-+	(offsetof(struct xfs_btree_block, bb_u) + \
-+	 offsetof(struct xfs_btree_sblock_part, bb_blkno))
-+/* size of a long form block */
-+#define XFS_BTREE_LBLOCK_LEN \
-+	(offsetof(struct xfs_btree_block, bb_u) + \
-+	 offsetof(struct xfs_btree_lblock_part, bb_blkno))
- 
- /* sizes of CRC enabled btree blocks */
--#define XFS_BTREE_SBLOCK_CRC_LEN	(XFS_BTREE_SBLOCK_LEN + 40)
--#define XFS_BTREE_LBLOCK_CRC_LEN	(XFS_BTREE_LBLOCK_LEN + 48)
-+#define XFS_BTREE_SBLOCK_CRC_LEN \
-+	(offsetof(struct xfs_btree_block, bb_u) + \
-+	 sizeof(struct xfs_btree_sblock_part))
-+#define XFS_BTREE_LBLOCK_CRC_LEN \
-+	(offsetof(struct xfs_btree_block, bb_u) + \
-+	 sizeof(struct xfs_btree_lblock_part))
- 
- #define XFS_BTREE_SBLOCK_CRC_OFF \
- 	offsetof(struct xfs_btree_block, bb_u.s.bb_crc)
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 184c44e..6f06c48 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -34,6 +34,8 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_sblock_part,	48);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_lblock_part,	64);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
--- 
-2.5.5
+With this, I can now test badblock clearing also:
+
+$ cat /sys/block/pmem7/badblocks 
+122 1
+124 1
+126 1
+128 1
+
+$ sudo dd if=/dev/zero of=/dev/pmem7 bs=512 count=8 seek=120
+oflag=direct
+8+0 records in
+8+0 records out
+4096 bytes (4.1 kB) copied, 0.0206735 s, 198 kB/s
+
+[  +9.510106] nd_pmem namespace7.0: pmem_clear_poison: 78 clear 1 sector
+[  +0.001827] XFS (pmem7): xfs badblock cleared sector 120 (count 1)
+
+[  +0.002772] nd_pmem namespace7.0: pmem_clear_poison: 7a clear 1 sector
+[  +0.002527] XFS (pmem7): xfs badblock cleared sector 122 (count 1)
+
+[  +0.003004] nd_pmem namespace7.0: pmem_clear_poison: 7c clear 1 sector
+[  +0.002215] XFS (pmem7): xfs badblock cleared sector 124 (count 1)
+
+[  +0.003063] nd_pmem namespace7.0: pmem_clear_poison: 7e clear 1 sector
+[  +0.002307] XFS (pmem7): xfs badblock cleared sector 126 (count 1)
+
+
+> 
+> 
+> Vishal Verma (2):
+>   block, badblocks: add a notifier for badblocks
+>   xfs: initial/partial support for badblocks
+> 
+>  block/badblocks.c         |  79 +++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_linux.h        |   1 +
+>  fs/xfs/xfs_mount.c        | 104 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_mount.h        |   1 +
+>  include/linux/badblocks.h |  19 +++++++++
+>  5 files changed, 201 insertions(+), 3 deletions(-)
+> 
+> -- 
+> 2.5.5
+> 
 
 _______________________________________________
 xfs mailing list
