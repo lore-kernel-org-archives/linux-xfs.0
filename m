@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D4577CA3
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 12:12:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D38348F8040
+	by oss.sgi.com (Postfix) with ESMTP id A88AE7CAF
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 12:12:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 67FC98F8037
 	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 10:12:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nvE1DNysLEDmT9yn (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 9rIxVUgyCuoR5W3R (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
 	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 10:12:06 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 0C4B3DF203
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 17:12:06 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id C80332D2F0A
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 17:12:05 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-179.bos.redhat.com [10.18.41.179])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u5KHC5VP028225
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u5KHC5UT007093
 	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:12:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 1/3] xfs: create helper to delete multiple inobt records
-Date: Mon, 20 Jun 2016 13:12:02 -0400
-Message-Id: <1466442724-13544-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1466442724-13544-1-git-send-email-bfoster@redhat.com>
-References: <1466442724-13544-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 0/3] xfs: support removal of multi-record inode chunks
+Date: Mon, 20 Jun 2016 13:12:01 -0400
+Message-Id: <1466442724-13544-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,115 +38,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In most cases an inode chunk is tracked by a single inode record. With
-large block size support up to 64k, however, XFS supports conditions
-where a single block might be large enough to allocate an inode chunk
-that requires multiple inobt records. For example, an inode record is
-fixed at 64 inodes. With a 64k block size, a 512b inode size results in
-128-inode chunks and thus requires 2 inobt records per-chunk.
+Hi all,
 
-This is handled appropriately at inode allocation time via insertion of
-multiple inobt records to span the chunk. We currently have no mechanism
-to delete multiple records nor broader chunk context for a particular
-record at inode deletion time. Therefore, inode chunks on such
-filesystems are never freed and result in non-recoverable space
-consumption for the lifetime of the filesystem.
+This is an old series I'm dusting off that helps extend XFS' typical
+dynamic inode chunk behavior to large block size filesystems. While XFS
+currently supports such large block sizes, we don't ever remove inode
+records on filesystems with a block size large enough such that a single
+block covers more than one inode chunk.
 
-Create the xfs_inobt_delete() helper to remove several inobt records at
-a time. Call the helper from the appropriate locations instead of
-xfs_btree_delete(). Note that we still do not have the requisite chunk
-context at inode deletion time to delete multiple records and therefore
-can still only delete records that map to full chunks.
+This has been tested on ppc64 with a 64k block size and on other arches
+(x86-64, i386) with more standard 4k blocksize configurations.
 
-This patch does not alter current behavior but provides a mechanism to
-be used by future work that provides the appropriate chunk context.
+Brian
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 56 +++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 53 insertions(+), 3 deletions(-)
+v2:
+- Rebase to latest for-next.
+v1: http://oss.sgi.com/pipermail/xfs/2015-May/041814.html
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 22297f9..67a4f3f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -200,6 +200,53 @@ xfs_inobt_insert(
- }
- 
- /*
-+ * Delete a series of records from the inode btree. Handle multiple records as
-+ * an inode chunk might consist of more than one record for large block sizes.
-+ */
-+static int
-+xfs_inobt_delete(
-+	struct xfs_mount		*mp,
-+	struct xfs_btree_cur		*cur,
-+	xfs_agnumber_t			agno,
-+	xfs_agino_t			agino,
-+	int				ilen)
-+{
-+	struct xfs_inobt_rec_incore	rec;
-+	int				error;
-+	int				i;
-+
-+	ASSERT(ilen % XFS_INODES_PER_CHUNK == 0);
-+
-+	while (ilen > 0) {
-+		error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_EQ, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+
-+		/* make sure the record is what we expect */
-+		error = xfs_inobt_get_rec(cur, &rec, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+		XFS_WANT_CORRUPTED_GOTO(mp, rec.ir_startino == agino,
-+					out_error);
-+
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+
-+		agino += XFS_INODES_PER_CHUNK;
-+		ilen -= XFS_INODES_PER_CHUNK;
-+	}
-+
-+	return 0;
-+
-+out_error:
-+	return error;
-+}
-+
-+/*
-  * Verify that the number of free inodes in the AGI is correct.
-  */
- #ifdef DEBUG
-@@ -1971,8 +2018,10 @@ xfs_difree_inobt(
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
- 
--		if ((error = xfs_btree_delete(cur, &i))) {
--			xfs_warn(mp, "%s: xfs_btree_delete returned error %d.",
-+		error = xfs_inobt_delete(mp, cur, agno, rec.ir_startino,
-+					 XFS_INODES_PER_CHUNK);
-+		if (error) {
-+			xfs_warn(mp, "%s: xfs_inobt_delete returned error %d.",
- 				__func__, error);
- 			goto error0;
- 		}
-@@ -2089,7 +2138,8 @@ xfs_difree_finobt(
- 	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
- 	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK &&
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
--		error = xfs_btree_delete(cur, &i);
-+		error = xfs_inobt_delete(mp, cur, agno, rec.ir_startino,
-+					 XFS_INODES_PER_CHUNK);
- 		if (error)
- 			goto error;
- 		ASSERT(i == 1);
+Brian Foster (3):
+  xfs: create helper to delete multiple inobt records
+  xfs: remove entire inode chunks when all inodes are free
+  xfs: inobt record insert/delete tracepoints
+
+ fs/xfs/libxfs/xfs_ialloc.c | 270 +++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trace.h         |  32 ++++++
+ 2 files changed, 281 insertions(+), 21 deletions(-)
+
 -- 
 2.5.5
 
