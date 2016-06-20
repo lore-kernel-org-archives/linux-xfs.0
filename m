@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 63F607CB0
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 14:27:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 297128F8054
-	for <xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:27:10 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
-	cuda.sgi.com with ESMTP id 51dDgYiJFmDiLFLI for
-	<xfs@oss.sgi.com>; Fri, 17 Jun 2016 12:27:08 -0700 (PDT)
-Date: Fri, 17 Jun 2016 13:26:47 -0600
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [RFC PATCH 2/2] xfs: initial/partial support for badblocks
-Message-ID: <20160617192647.GC5893@omniknight.lm.intel.com>
-References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
-	<1466125419-17736-3-git-send-email-vishal.l.verma@intel.com>
-	<20160617022606.GC11810@birch.djwong.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B52BF7CB3
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 07:38:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E718AC003
+	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:38:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FWaEOb21qRq6zQlH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:38:41 -0700 (PDT)
+Date: Mon, 20 Jun 2016 08:38:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 003/119] xfs: check offsets of variable length structures
+Message-ID: <20160620123836.GA9474@laptop.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
+	<20160617173426.GA46309@bfoster.bfoster>
+	<20160618180133.GB5046@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160617022606.GC11810@birch.djwong.org>
+In-Reply-To: <20160618180133.GB5046@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,251 +33,118 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-nvdimm@ml01.01.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On 06/16, Darrick J. Wong wrote:
-> On Thu, Jun 16, 2016 at 07:03:39PM -0600, Vishal Verma wrote:
-> > RFC/WIP commit.
+On Sat, Jun 18, 2016 at 11:01:33AM -0700, Darrick J. Wong wrote:
+> On Fri, Jun 17, 2016 at 01:34:27PM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2016 at 06:18:12PM -0700, Darrick J. Wong wrote:
+> > > Some of the directory/attr structures contain variable-length objects,
+> > > so the enclosing structure doesn't have a meaningful fixed size at
+> > > compile time.  We can check the offsets of the members before the
+> > > variable-length member, so do those.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
 > > 
-> > This adds the foollowing:
-> > 1. In xfs_mountfs(), get an initial badblocks list from gendisk's
-> > badblocks infrastructure.
-> > 2. Register with the badblocks notifier to get updates for this disk's
-> > badblocks
+> > I'm missing why this is necessary. Is the intent still to catch
+> > alignment and/or padding issues? If so, isn't the size check sufficient,
+> > regardless of trailing variable size fields?
 > > 
-> > TODO:
-> > 1. Add badblocks info to the reverse mapping tree (and remove if a
-> > badblock was cleared).
+> > Perhaps the goal here is to reduce the scope of checking from where it
+> > isn't needed..? For example, xfs_dir2_data_unused_t looks like it has a
+> > field where the offset in the structure is irrelevant, so that's a
+> > possible false positive if that changes down the road. On the flip side,
+> > that doesn't appear to be the case for other structures such as
+> > xfs_attr_leaf_name_[local|remote]_t.
 > 
-> Well... there are a number of things we /could/ do... theoretically one
-> could use the rmap info to find all the affected inodes and simply convert
-> that part of their extent trees to 'unwritten'.  Reads will just get zeroes,
+> ISTR making this change to work around behavioral variances in how
+> much padding gcc adds to structures across its various targets.  The
+> macros that go along with the variable sized structures work fine,
+> but testing the sizeof() doesn't work reliably.
+> 
 
-Hm, not sure we can do that - if a block became bad at some point,
-subsequent reads _have to_ error out (-EIO) so that the user doesn't see
-silent data corruption.
+Ok, I take that to mean that we may or may not have padding in some of
+the variable structures depending on architecture (and we really only
+care about certain fields in those structures). Fair enough, thanks!
 
-> and writes will remove the unwritten flag (for that file, anyway).  Will a
-> successful write trigger the BB_CLEAR notifier?
+Brian
 
-Currently, a successful write that goes through the driver (i.e. not
-DAX) will cause the badblock to get cleared, and trigger BB_CLEAR. DAX
-is trickier, and currently DAX writes won't clear errors.
-
+> --D
 > 
-> I guess you could punch out the bad blocks too... not clear if you'd want
-> all the owner files staying mapped to data they'll never get back.
-
-The block mappings don't have to be maintained, but some sort of a flag
-needs to be kept that will allow us to return errors on reads like I
-said above.
-
-> 
-> We could also create another rmap "special owner" (XFS_RMAP_OWN_BAD?) for bad
-> blocks, so we'd know which parts are just plain bad.  It might be useful to
-> know that kind of thing.
-> 
-> I think earlier Dave was talking about adding a new 'badblocks' bit to both
-> the file extent records and the rmap records to signify that something's
-> wrong with the extent.  <shrug> I'll let him write about that.
-> 
-> > 2. Before doing file IO, refer the rmap/badblocks to error out early if
-> > the IO will attempt wo read a bad sector
-> > 3. Figure out interactions with mmap/DAX.
-> 
-> Woot.
-> 
-> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Vishal Verma <vishal.l.verma@intel.com>
-> > ---
-> >  fs/xfs/xfs_linux.h |   1 +
-> >  fs/xfs/xfs_mount.c | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_mount.h |   1 +
-> >  3 files changed, 106 insertions(+)
 > > 
-> > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> > index 7e749be..f66d181 100644
-> > --- a/fs/xfs/xfs_linux.h
-> > +++ b/fs/xfs/xfs_linux.h
-> > @@ -78,6 +78,7 @@ typedef __u32			xfs_nlink_t;
-> >  #include <linux/freezer.h>
-> >  #include <linux/list_sort.h>
-> >  #include <linux/ratelimit.h>
-> > +#include <linux/badblocks.h>
-> >  
-> >  #include <asm/page.h>
-> >  #include <asm/div64.h>
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index 5e68b2c..1a47737 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -618,6 +618,96 @@ xfs_default_resblks(xfs_mount_t *mp)
-> >  	return resblks;
-> >  }
-> >  
-> > +STATIC int
-> > +xfs_notifier_call(
-> > +	struct notifier_block	*nb,
-> > +	unsigned long		action,
-> > +	void			*data)
-> > +{
-> > +	struct bb_notifier_data *bb_data = data;
-> > +	struct xfs_mount *mp;
-> > +
-> > +	mp = container_of(nb, struct xfs_mount, m_badblocks_nb);
-> > +	/* TODO xfs_add_bb_to_rmap(mp, bb_data->sector, bb_data->count); */
-> > +	xfs_warn(mp, "xfs badblock %s sector %lu (count %d)\n",
-> > +		(action == BB_ADD)?"added":"cleared",
-> > +		bb_data->sector, bb_data->count);
-> > +	return 0;
-> 
-> Probably a xfs_rmapbt_query_range here?
-> 
-> > +}
-> > +
-> > +STATIC int
-> > +xfs_init_badblocks(struct xfs_mount *mp)
-> > +{
-> > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-> > +	int done = 0, error = 0;
-> > +	ssize_t len, off = 0;
-> > +	char *p;
-> > +
-> > +	/*
-> > +	 * TODO: get a list of known badblocks so far and process it.
-> > +	 * Can we just parse the sysfs format that badblocks_show()
-> > +	 * returns? That should be the fastest way to get this.
-> > +	 * Something like: (Is this too hacky? Should we just do
-> > +	 * badblocks_check() in a (rather large) loop?)
-> > +	 */
-> > +	p = kzalloc(PAGE_SIZE, GFP_KERNEL);
-> > +	len = badblocks_show(bb, p, 0);
-> > +	while (len) {
-> > +		int count, n;
-> > +		sector_t s;
-> > +
-> > +		/*
-> > +		 * The sysfs badblocks format is multiple lines of:
-> > +		 * "<sector> <count>"
-> > +		 */
-> > +		n = sscanf(p + off, "%lu %d\n%n", &s, &count, &done);
-> 
-> Ick, there's got to be a better way to iterate the badblocks list than this.
-> 
-> It would be very nice to have a single function that deals with a change in
-> badness status, which would be called by both the notifier and the badblocks
-> iterator.
-> 
-There is a function in block/badblocks.c - badblocks_check() which can
-tell you for a given range, what is the first bad sector in that range,
-and the number of bad sectors after that first sector. Using that would
-certainly be cleaner, as it uses the well-defined API, but it would be
-much slower, as you have to iterate through the entire address space.
-The above function - badblocks_show - just looks at the actual stored
-representation of the badblocks, and lists them out, which is quick
-(reading a 4K page from memory), and so in the above, I just parse it..
-
-> > +		if (n < 2 || done < 3) {
-> > +			error = -1;
-> > +			break;
-> > +		}
-> > +		off += done;
-> > +		len -= done;
-> > +		xfs_warn(mp, "got badblocks: sector %ld, count %d", s, count);
-> > +		/* TODO xfs_add_bb_to_rmap(mp, s, count); */
-> > +	}
-> > +	kfree(p);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	mp->m_badblocks_nb.notifier_call = xfs_notifier_call;
-> > +	error = bb_notifier_register(bb, &mp->m_badblocks_nb);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * TODO: There is probably a TOCTOU race hiding here - what if the
-> > +	 * badblocks list gets updated before we register for notifications..
-> > +	 * Can likely be solved by registering for notifications _first_ (the
-> > +	 * above xfs_add_bb_to_rmap function has to be ready to accept new
-> > +	 * blocks), then querying for the initial list (there could be overlap
-> > +	 * here, shich the above function could handle), and then setting the
-> > +	 * mount flag below.
-> > +	 */
-> 
-> (Yeah, pretty much. :))
-> 
-> > +
-> > +	/*
-> > +	 * TODO: set some flag (mount flag?) in xfs so that xfs knows
-> > +	 * it will be doing error checking, and can possibly, later,
-> > +	 * tell the block layer (possibly using a REQ_ flag in its IO
-> > +	 * requests) not to do further badblock checking for those IOs.
-> > +	 */
-> > +
-> > +	/* mp->m_flags |= XFS_MOUNT_FS_BADBLOCKS; */
-> > +	return 0;
-> > +}
-> > +
-> > +STATIC void
-> > +xfs_badblocks_unmount(struct xfs_mount *mp)
-> > +{
-> > +	struct badblocks *bb = mp->m_super->s_bdev->bd_disk->bb;
-> > +
-> > +	bb_notifier_unregister(bb, &mp->m_badblocks_nb);
-> > +}
-> > +
-> >  /*
-> >   * This function does the following on an initial mount of a file system:
-> >   *	- reads the superblock from disk and init the mount struct
-> > @@ -955,6 +1045,19 @@ xfs_mountfs(
-> >  	}
-> >  
-> >  	/*
-> > +	 * Register with the badblocks notifier chain
-> > +	 */
-> > +	error = xfs_init_badblocks(mp);
-> > +	if (error) {
-> > +		xfs_warn(mp, "Unable to register to badblocks notifications\n");
-> > +		/*
-> > +		 * TODO is this a hard error or can we simply
-> > +		 * warn and continue?
-> > +		 */
-> > +		goto out_rtunmount;
-> > +	}
-> > +
-> > +	/*
-> >  	 * Now we are mounted, reserve a small amount of unused space for
-> >  	 * privileged transactions. This is needed so that transaction
-> >  	 * space required for critical operations can dip into this pool
-> > @@ -1085,6 +1188,7 @@ xfs_unmountfs(
-> >  	xfs_log_unmount(mp);
-> >  	xfs_da_unmount(mp);
-> >  	xfs_uuid_unmount(mp);
-> > +	xfs_badblocks_unmount(mp);
-> >  
-> >  #if defined(DEBUG)
-> >  	xfs_errortag_clearall(mp, 0);
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 0ca9244..f0d1111 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -139,6 +139,7 @@ typedef struct xfs_mount {
-> >  						/* low free space thresholds */
-> >  	struct xfs_kobj		m_kobj;
-> >  	struct xstats		m_stats;	/* per-fs stats */
-> > +	struct notifier_block	m_badblocks_nb;	/* disk badblocks notifier */
-> >  
-> >  	struct workqueue_struct *m_buf_workqueue;
-> >  	struct workqueue_struct	*m_data_workqueue;
-> > -- 
-> > 2.5.5
+> > Brian
 > > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> > >  fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
+> > >  1 file changed, 23 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > > index 184c44e..0272301 100644
+> > > --- a/fs/xfs/xfs_ondisk.h
+> > > +++ b/fs/xfs/xfs_ondisk.h
+> > > @@ -22,6 +22,11 @@
+> > >  	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
+> > >  		#structname ") is wrong, expected " #size)
+> > >  
+> > > +#define XFS_CHECK_OFFSET(structname, member, off) \
+> > > +	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
+> > > +		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
+> > > +		"expected " #off)
+> > > +
+> > >  static inline void __init
+> > >  xfs_check_ondisk_structs(void)
+> > >  {
+> > > @@ -75,15 +80,28 @@ xfs_check_ondisk_structs(void)
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+> > >  	 */
+> > >  
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
+> > > -	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
+> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> > > -	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
+> > > +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
+> > > +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
+> > > @@ -94,6 +112,9 @@ xfs_check_ondisk_structs(void)
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
+> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
+> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+> > >  
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
