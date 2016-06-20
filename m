@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4479E7CAE
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 09:54:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 16ABF30404E
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 07:54:25 -0700 (PDT)
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65]) by
-	cuda.sgi.com with ESMTP id 226YA186CyDFMJKc (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 18 Jun 2016 07:54:23 -0700 (PDT)
-Received: from dovecot03.posteo.de (dovecot03.posteo.de [172.16.0.13])
-	by mout01.posteo.de (Postfix) with ESMTPS id 6F5B9209F6
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 16:54:21 +0200 (CEST)
-Received: from mail.posteo.de (localhost [127.0.0.1])
-	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3rX0Wd238Pz5vMs
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 16:54:21 +0200 (CEST)
-Date: Sat, 18 Jun 2016 16:53:07 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH 3/4] Make workaround for old glibc getsubopt() glibc-specific
-Message-ID: <20160618145307.GC17768@nyan>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D60E97CA0
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 21:29:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D258AC001
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 19:29:57 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	4nkl4TqlsZWSJG6c for <xfs@oss.sgi.com>;
+	Sun, 19 Jun 2016 19:29:54 -0700 (PDT)
+Date: Mon, 20 Jun 2016 12:29:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/14] fs: introduce iomap infrastructure
+Message-ID: <20160620022952.GJ26977@dastard>
+References: <1464792297-13185-1-git-send-email-hch@lst.de>
+	<1464792297-13185-3-git-send-email-hch@lst.de>
+	<20160616161242.GB2106@quack2.suse.cz>
+	<20160617120144.GA333@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160617120144.GA333@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,28 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- include/linux.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Fri, Jun 17, 2016 at 02:01:44PM +0200, Christoph Hellwig wrote:
+> On Thu, Jun 16, 2016 at 06:12:42PM +0200, Jan Kara wrote:
+> > This is actually in 512-byte units, not in fs blocks as the comment
+> > suggests, right?
+> 
+> Indeed, thanks for spotting this!
 
-diff --git a/include/linux.h b/include/linux.h
-index f6d0f80..873b682 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -132,7 +132,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 	return 0;
- }
- 
--#if (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1))
-+#if defined(__GLIBC__) && ((__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1)))
- # define getsubopt(p, s, v)	getsubopt(p, (const char * const *)s, v)
- #endif
- 
+I'll update the patches I've already tested, Christoph, so you don't
+have to post an update just for this.
+
+Cheers,
+
+Dave.
 -- 
-2.7.3
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
