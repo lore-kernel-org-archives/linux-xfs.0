@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 174F47CA0
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 08:27:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE4A304048
-	for <xfs@oss.sgi.com>; Sat, 18 Jun 2016 06:27:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hCkYCkJIBBhQx0yF (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 18 Jun 2016 06:27:44 -0700 (PDT)
-Date: Sat, 18 Jun 2016 09:27:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: on-disk free blocks B-Tree update
-Message-ID: <20160618132742.GB47303@bfoster.bfoster>
-References: <97A4F433DEE099488FE21C1718A641D213A0320A@wmsexchsvr02.winmagic.local>
+	by oss.sgi.com (Postfix) with ESMTP id BAB2C7CA0
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 21:05:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73AE6304032
+	for <xfs@oss.sgi.com>; Sun, 19 Jun 2016 19:05:02 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	1AD0jMuuTG0G7HYo for <xfs@oss.sgi.com>;
+	Sun, 19 Jun 2016 19:04:59 -0700 (PDT)
+Date: Mon, 20 Jun 2016 12:04:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4] Remove off64_t from linux.h
+Message-ID: <20160620020414.GH26977@dastard>
+References: <20160618145238.GA17768@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <97A4F433DEE099488FE21C1718A641D213A0320A@wmsexchsvr02.winmagic.local>
+In-Reply-To: <20160618145238.GA17768@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Benjamin Wirth <Benjamin.Wirth@winmagic.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Felix Janda <felix.janda@posteo.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 17, 2016 at 08:02:59PM +0000, Benjamin Wirth wrote:
-> Hello XFS community,
-> 
-> I have code that parses the free blocks B-Tree from the disk but it seems to me that the on-disk version of the B-Tree is not updated even when sync() is called, so that the disk version of the B-Tree becomes outdated. Is that correct?
-> 
-> I have debug information from the kernel BIO layer where I see sectors/blocks being flushed out by the sync but the B-Tree on disk still lists those blocks as free. At what time is the on-disk B-Tree updated, only at umount?
-> 
+On Sat, Jun 18, 2016 at 04:52:38PM +0200, Felix Janda wrote:
+> The off64_t type is usually only conditionally exposed under the
+> feature test macro _LARGEFILE64_SOURCE (also defined by _GNU_SOURCE).
+> To make the public xfs headers more standalone therefore off64_t should
+> be avoided.
 
-Calling sync() will first flush out all cached user data. This, in turn,
-may result in block allocation transactions, etc. sync() then calls into
-the fs superblock ->sync_fs() handler, which on XFS forces the log to
-disk. This means the metadata changes associated with the user data are
-persistent in the log, but not necessarily written back to disk. This
-occurs some time later according to the internal state of the fs.
+"more standalone"?
 
-> Is there any way to force the in-memory B-Tree to be flushed to disk?
-> 
+What does that mean? And what does it mean for all the xfsprogs code
+that still uses off64_t?
 
-The only thing that comes to mind is to freeze ('fsfreeze -f <mnt>') the
-fs, which appears to push the AIL. This is really the only way to get a
-coherent view of the fs on disk while mounted, anyways. I also assume
-you're using direct I/O, as the underlying disk buffer/page cache is not
-coherent with XFS I/O.
+i.e. if you are going to make xfsprogs fail to compile on configs
+that don't define off64_t, then it makes no sense to leave all the
+users of off64_t in the xfsprogs code....
 
-Brian
+Cheers,
 
-> Thanks for any help,
-> Ben
-> 
-> Benjamin Wirth | Senior Software Developer
-> WinMagic Inc.
-> 5600A Cancross Court
-> Mississauga, ON  |  L5R 3E9 |  Canada
-> 
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
