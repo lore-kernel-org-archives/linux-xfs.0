@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C818B7CA1
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 10:04:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 956CD304039
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 08:04:52 -0700 (PDT)
-Received: from mail-lf0-f50.google.com (mail-lf0-f50.google.com
-	[209.85.215.50]) by cuda.sgi.com with ESMTP id uwxKlHV6ndzzYL6y
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Jun 2016 08:04:49 -0700 (PDT)
-Received: by mail-lf0-f50.google.com with SMTP id f6so97418525lfg.0
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 08:04:49 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A3EF27CA0
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 08:00:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3C305AC001
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 06:00:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id g8E7rYzEjBCCEoSO (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 21 Jun 2016 06:00:46 -0700 (PDT)
+Date: Tue, 21 Jun 2016 09:00:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 012/119] xfs: during btree split, save new block key &
+	ptr for future insertion
+Message-ID: <20160621130043.GA62352@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612634887.12839.6210102273046676244.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20160622225117.GX12670@dastard>
-References: <CAC=x_0jDYb17Vh97Led7XXDiUMcUTJbpJ2Dw45gn=D0_w0K5VQ@mail.gmail.com>
-	<20160622225117.GX12670@dastard>
-From: Danny Shavit <danny@zadarastorage.com>
-Date: Thu, 23 Jun 2016 18:04:46 +0300
-Message-ID: <CAC=x_0hdvm7SSP8EOAdUwLa-k3a3p7p7CRj8tyCnEx=As7A6jw@mail.gmail.com>
-Subject: Re: xfs metadata overhead
+Content-Disposition: inline
+In-Reply-To: <146612634887.12839.6210102273046676244.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,125 +27,258 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0787762644722944672=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
---===============0787762644722944672==
-Content-Type: multipart/alternative; boundary=001a113ca60601c33b0535f3605e
+On Thu, Jun 16, 2016 at 06:19:08PM -0700, Darrick J. Wong wrote:
+> When a btree block has to be split, we pass the new block's ptr from
+> xfs_btree_split() back to xfs_btree_insert() via a pointer parameter;
+> however, we pass the block's key through the cursor's record.  It is a
+> little weird to "initialize" a record from a key since the non-key
+> attributes will have garbage values.
+> 
+> When we go to add support for interval queries, we have to be able to
+> pass the lowest and highest keys accessible via a pointer.  There's no
+> clean way to pass this back through the cursor's record field.
+> Therefore, pass the key directly back to xfs_btree_insert() the same
+> way that we pass the btree_ptr.
+> 
+> As a bonus, we no longer need init_rec_from_key and can drop it from the
+> codebase.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc_btree.c  |   12 ----------
+>  fs/xfs/libxfs/xfs_bmap_btree.c   |   12 ----------
+>  fs/xfs/libxfs/xfs_btree.c        |   44 +++++++++++++++++++-------------------
+>  fs/xfs/libxfs/xfs_btree.h        |    2 --
+>  fs/xfs/libxfs/xfs_ialloc_btree.c |   10 ---------
+>  5 files changed, 22 insertions(+), 58 deletions(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 046fbcf..a096539 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+...
+> @@ -2929,16 +2927,16 @@ xfs_btree_insrec(
+>  	struct xfs_btree_cur	*cur,	/* btree cursor */
+>  	int			level,	/* level to insert record at */
+>  	union xfs_btree_ptr	*ptrp,	/* i/o: block number inserted */
+> -	union xfs_btree_rec	*recp,	/* i/o: record data inserted */
+> +	union xfs_btree_key	*key,	/* i/o: block key for ptrp */
+>  	struct xfs_btree_cur	**curp,	/* output: new cursor replacing cur */
+>  	int			*stat)	/* success/failure */
+>  {
+>  	struct xfs_btree_block	*block;	/* btree block */
+>  	struct xfs_buf		*bp;	/* buffer for block */
+> -	union xfs_btree_key	key;	/* btree key */
+>  	union xfs_btree_ptr	nptr;	/* new block ptr */
+>  	struct xfs_btree_cur	*ncur;	/* new btree cursor */
+> -	union xfs_btree_rec	nrec;	/* new record count */
+> +	union xfs_btree_key	nkey;	/* new block key */
+> +	union xfs_btree_rec	rec;	/* record to insert */
+>  	int			optr;	/* old key/record index */
+>  	int			ptr;	/* key/record index */
+>  	int			numrecs;/* number of records */
+> @@ -2947,8 +2945,14 @@ xfs_btree_insrec(
+>  	int			i;
+>  #endif
+>  
+> +	/* Make a key out of the record data to be inserted, and save it. */
+> +	if (level == 0) {
+> +		cur->bc_ops->init_rec_from_cur(cur, &rec);
+> +		cur->bc_ops->init_key_from_rec(key, &rec);
+> +	}
 
---001a113ca60601c33b0535f3605e
-Content-Type: text/plain; charset=UTF-8
+The level == 0 check looks a bit hacky to me. IOW, I think it's cleaner
+that the key is initialized once in the caller rather than check for a
+particular iteration down in xfs_btree_insrec(). That said,
+xfs_btree_insrec() still needs rec initialized in the level == 0 case.
 
-I see. We will try this direction.
-BTW: I thought that good estimate would be "volume_size - allocated_size -
-free_space". But it produced quite a difference compared to metadata dump
-size.
-Is there a specific reason?
+I wonder if we could create an inline xfs_btree_init_key_from_cur()
+helper to combine the above calls, invoke it once in xfs_btree_insert(),
+then push down the ->init_rec_from_cur() calls to the contexts further
+down in this function where rec is actually required. There are only two
+and one of them is DEBUG code. Thoughts?
 
-Thanks,
-Danny
+> +
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, recp);
+> +	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
+>  
 
-On Thu, Jun 23, 2016 at 1:51 AM, Dave Chinner <david@fromorbit.com> wrote:
+So these look like unimplemented dummy tracing hooks. It sounds like
+previously rec could have a junk value after a btree split, but now it
+looks like rec is junk for every non-zero level. Kind of annoying, I
+wonder if we can just kill these.. :/
 
-> On Wed, Jun 22, 2016 at 06:58:16PM +0300, Danny Shavit wrote:
-> > Hi,
-> >
-> > We are looking for a method to estimate the size of metadata overhead
-> for a
-> > given file system.
-> > We would like to use this value as indicator for the amount of cache
-> memory
-> > a system for faster operation.
-> > Are there any counters that are maintained in the on-disk data
-> > structures like free space for examples?
->
-> No.
->
-> Right now, you'll need to take a metadump of the filesystem to
-> measure it. The size of the dump file will be a close indication of
-> the amount of metadata in the filesystem as it only contains
-> the filesystem metadata.
->
-> In future, querying the rmap will enable us to calculate it on the
-> fly, (i.e. not requiring the filesystem to be snapshotted/taken off
-> line to do a metadump).
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+Brian
 
-
-
--- 
-Regards,
-Danny
-
---001a113ca60601c33b0535f3605e
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div>I see. We will try this direction.</div><div>BTW: I t=
-hought that good estimate would be &quot;volume_size - allocated_size - fre=
-e_space&quot;. But it produced quite a difference compared to metadata dump=
- size.</div><div>Is there a specific reason?</div><div><br></div><div>Thank=
-s,</div><div>Danny</div></div><div class=3D"gmail_extra"><br><div class=3D"=
-gmail_quote">On Thu, Jun 23, 2016 at 1:51 AM, Dave Chinner <span dir=3D"ltr=
-">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromor=
-bit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D=
-"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=
-=3D"">On Wed, Jun 22, 2016 at 06:58:16PM +0300, Danny Shavit wrote:<br>
-&gt; Hi,<br>
-&gt;<br>
-&gt; We are looking for a method to estimate the size of metadata overhead =
-for a<br>
-&gt; given file system.<br>
-&gt; We would like to use this value as indicator for the amount of cache m=
-emory<br>
-&gt; a system for faster operation.<br>
-&gt; Are there any counters that are maintained in the on-disk data<br>
-&gt; structures like free space for examples?<br>
-<br>
-</span>No.<br>
-<br>
-Right now, you&#39;ll need to take a metadump of the filesystem to<br>
-measure it. The size of the dump file will be a close indication of<br>
-the amount of metadata in the filesystem as it only contains<br>
-the filesystem metadata.<br>
-<br>
-In future, querying the rmap will enable us to calculate it on the<br>
-fly, (i.e. not requiring the filesystem to be snapshotted/taken off<br>
-line to do a metadump).<br>
-<br>
-Cheers,<br>
-<br>
-Dave.<br>
-<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</font></span></blockquote></div><br><br clear=3D"all"><div><br></div>-- <b=
-r><div class=3D"gmail_signature" data-smartmail=3D"gmail_signature"><div di=
-r=3D"ltr"><div>Regards,<br></div>Danny<br></div></div>
-</div>
-
---001a113ca60601c33b0535f3605e--
-
-
---===============0787762644722944672==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>  	ncur = NULL;
+>  
+> @@ -2973,9 +2977,6 @@ xfs_btree_insrec(
+>  		return 0;
+>  	}
+>  
+> -	/* Make a key out of the record data to be inserted, and save it. */
+> -	cur->bc_ops->init_key_from_rec(&key, recp);
+> -
+>  	optr = ptr;
+>  
+>  	XFS_BTREE_STATS_INC(cur, insrec);
+> @@ -2992,10 +2993,10 @@ xfs_btree_insrec(
+>  	/* Check that the new entry is being inserted in the right place. */
+>  	if (ptr <= numrecs) {
+>  		if (level == 0) {
+> -			ASSERT(cur->bc_ops->recs_inorder(cur, recp,
+> +			ASSERT(cur->bc_ops->recs_inorder(cur, &rec,
+>  				xfs_btree_rec_addr(cur, ptr, block)));
+>  		} else {
+> -			ASSERT(cur->bc_ops->keys_inorder(cur, &key,
+> +			ASSERT(cur->bc_ops->keys_inorder(cur, key,
+>  				xfs_btree_key_addr(cur, ptr, block)));
+>  		}
+>  	}
+> @@ -3008,7 +3009,7 @@ xfs_btree_insrec(
+>  	xfs_btree_set_ptr_null(cur, &nptr);
+>  	if (numrecs == cur->bc_ops->get_maxrecs(cur, level)) {
+>  		error = xfs_btree_make_block_unfull(cur, level, numrecs,
+> -					&optr, &ptr, &nptr, &ncur, &nrec, stat);
+> +					&optr, &ptr, &nptr, &ncur, &nkey, stat);
+>  		if (error || *stat == 0)
+>  			goto error0;
+>  	}
+> @@ -3058,7 +3059,7 @@ xfs_btree_insrec(
+>  #endif
+>  
+>  		/* Now put the new data in, bump numrecs and log it. */
+> -		xfs_btree_copy_keys(cur, kp, &key, 1);
+> +		xfs_btree_copy_keys(cur, kp, key, 1);
+>  		xfs_btree_copy_ptrs(cur, pp, ptrp, 1);
+>  		numrecs++;
+>  		xfs_btree_set_numrecs(block, numrecs);
+> @@ -3079,7 +3080,7 @@ xfs_btree_insrec(
+>  		xfs_btree_shift_recs(cur, rp, 1, numrecs - ptr + 1);
+>  
+>  		/* Now put the new data in, bump numrecs and log it. */
+> -		xfs_btree_copy_recs(cur, rp, recp, 1);
+> +		xfs_btree_copy_recs(cur, rp, &rec, 1);
+>  		xfs_btree_set_numrecs(block, ++numrecs);
+>  		xfs_btree_log_recs(cur, bp, ptr, numrecs);
+>  #ifdef DEBUG
+> @@ -3095,7 +3096,7 @@ xfs_btree_insrec(
+>  
+>  	/* If we inserted at the start of a block, update the parents' keys. */
+>  	if (optr == 1) {
+> -		error = xfs_btree_updkey(cur, &key, level + 1);
+> +		error = xfs_btree_updkey(cur, key, level + 1);
+>  		if (error)
+>  			goto error0;
+>  	}
+> @@ -3105,7 +3106,7 @@ xfs_btree_insrec(
+>  	 * we are at the far right edge of the tree, update it.
+>  	 */
+>  	if (xfs_btree_is_lastrec(cur, block, level)) {
+> -		cur->bc_ops->update_lastrec(cur, block, recp,
+> +		cur->bc_ops->update_lastrec(cur, block, &rec,
+>  					    ptr, LASTREC_INSREC);
+>  	}
+>  
+> @@ -3115,7 +3116,7 @@ xfs_btree_insrec(
+>  	 */
+>  	*ptrp = nptr;
+>  	if (!xfs_btree_ptr_is_null(cur, &nptr)) {
+> -		*recp = nrec;
+> +		*key = nkey;
+>  		*curp = ncur;
+>  	}
+>  
+> @@ -3146,14 +3147,13 @@ xfs_btree_insert(
+>  	union xfs_btree_ptr	nptr;	/* new block number (split result) */
+>  	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
+>  	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
+> -	union xfs_btree_rec	rec;	/* record to insert */
+> +	union xfs_btree_key	key;	/* key of block to insert */
+>  
+>  	level = 0;
+>  	ncur = NULL;
+>  	pcur = cur;
+>  
+>  	xfs_btree_set_ptr_null(cur, &nptr);
+> -	cur->bc_ops->init_rec_from_cur(cur, &rec);
+>  
+>  	/*
+>  	 * Loop going up the tree, starting at the leaf level.
+> @@ -3165,7 +3165,7 @@ xfs_btree_insert(
+>  		 * Insert nrec/nptr into this level of the tree.
+>  		 * Note if we fail, nptr will be null.
+>  		 */
+> -		error = xfs_btree_insrec(pcur, level, &nptr, &rec, &ncur, &i);
+> +		error = xfs_btree_insrec(pcur, level, &nptr, &key, &ncur, &i);
+>  		if (error) {
+>  			if (pcur != cur)
+>  				xfs_btree_del_cursor(pcur, XFS_BTREE_ERROR);
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index b955e5d..b99c018 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -158,8 +158,6 @@ struct xfs_btree_ops {
+>  	/* init values of btree structures */
+>  	void	(*init_key_from_rec)(union xfs_btree_key *key,
+>  				     union xfs_btree_rec *rec);
+> -	void	(*init_rec_from_key)(union xfs_btree_key *key,
+> -				     union xfs_btree_rec *rec);
+>  	void	(*init_rec_from_cur)(struct xfs_btree_cur *cur,
+>  				     union xfs_btree_rec *rec);
+>  	void	(*init_ptr_from_cur)(struct xfs_btree_cur *cur,
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index 89c21d7..88da2ad 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -146,14 +146,6 @@ xfs_inobt_init_key_from_rec(
+>  }
+>  
+>  STATIC void
+> -xfs_inobt_init_rec_from_key(
+> -	union xfs_btree_key	*key,
+> -	union xfs_btree_rec	*rec)
+> -{
+> -	rec->inobt.ir_startino = key->inobt.ir_startino;
+> -}
+> -
+> -STATIC void
+>  xfs_inobt_init_rec_from_cur(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_rec	*rec)
+> @@ -314,7 +306,6 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
+>  	.get_minrecs		= xfs_inobt_get_minrecs,
+>  	.get_maxrecs		= xfs_inobt_get_maxrecs,
+>  	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+> -	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
+>  	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
+>  	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
+>  	.key_diff		= xfs_inobt_key_diff,
+> @@ -336,7 +327,6 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+>  	.get_minrecs		= xfs_inobt_get_minrecs,
+>  	.get_maxrecs		= xfs_inobt_get_maxrecs,
+>  	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+> -	.init_rec_from_key	= xfs_inobt_init_rec_from_key,
+>  	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
+>  	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
+>  	.key_diff		= xfs_inobt_key_diff,
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0787762644722944672==--
