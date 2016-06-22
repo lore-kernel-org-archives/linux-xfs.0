@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B52BF7CB3
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 07:38:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E718AC003
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:38:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FWaEOb21qRq6zQlH (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:38:41 -0700 (PDT)
-Date: Mon, 20 Jun 2016 08:38:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 003/119] xfs: check offsets of variable length structures
-Message-ID: <20160620123836.GA9474@laptop.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612629195.12839.14090954204243398929.stgit@birch.djwong.org>
-	<20160617173426.GA46309@bfoster.bfoster>
-	<20160618180133.GB5046@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 92FBB7CA3
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 01:39:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E2F26AC002
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 23:39:49 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	LvQftz0TtDpMGNMj for <xfs@oss.sgi.com>;
+	Tue, 21 Jun 2016 23:39:47 -0700 (PDT)
+Date: Wed, 22 Jun 2016 16:39:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: indentation fix in xfs_btree_get_iroot()
+Message-ID: <20160622063943.GU12670@dastard>
+References: <1466568697.14061.1.camel@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160618180133.GB5046@birch.djwong.org>
+In-Reply-To: <1466568697.14061.1.camel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,123 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Kaho Ng <ngkaho1234@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, Jun 18, 2016 at 11:01:33AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 17, 2016 at 01:34:27PM -0400, Brian Foster wrote:
-> > On Thu, Jun 16, 2016 at 06:18:12PM -0700, Darrick J. Wong wrote:
-> > > Some of the directory/attr structures contain variable-length objects,
-> > > so the enclosing structure doesn't have a meaningful fixed size at
-> > > compile time.  We can check the offsets of the members before the
-> > > variable-length member, so do those.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > 
-> > I'm missing why this is necessary. Is the intent still to catch
-> > alignment and/or padding issues? If so, isn't the size check sufficient,
-> > regardless of trailing variable size fields?
-> > 
-> > Perhaps the goal here is to reduce the scope of checking from where it
-> > isn't needed..? For example, xfs_dir2_data_unused_t looks like it has a
-> > field where the offset in the structure is irrelevant, so that's a
-> > possible false positive if that changes down the road. On the flip side,
-> > that doesn't appear to be the case for other structures such as
-> > xfs_attr_leaf_name_[local|remote]_t.
-> 
-> ISTR making this change to work around behavioral variances in how
-> much padding gcc adds to structures across its various targets.  The
-> macros that go along with the variable sized structures work fine,
-> but testing the sizeof() doesn't work reliably.
-> 
+On Wed, Jun 22, 2016 at 12:11:37PM +0800, Kaho Ng wrote:
+> The indentation in this function is different from the other functions.
+> Those spacebars are converted to tabs to improve readability.
+> =
 
-Ok, I take that to mean that we may or may not have padding in some of
-the variable structures depending on architecture (and we really only
-care about certain fields in those structures). Fair enough, thanks!
+> Signed-off-by: Kaho Ng <ngkaho1234@gmail.com>
+> ---
+> =A0fs/xfs/libxfs/xfs_btree.c | 8 ++++----
+> =A01 file changed, 4 insertions(+), 4 deletions(-)
+> =
 
-Brian
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 1f88e1c..4f84dde 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -543,12 +543,12 @@ xfs_btree_ptr_addr(
+> =A0 */
+> =A0STATIC struct xfs_btree_block *
+> =A0xfs_btree_get_iroot(
+> -=A0=A0=A0=A0=A0=A0=A0struct xfs_btree_cur=A0=A0=A0=A0*cur)
+> +	struct xfs_btree_cur	*cur)
+> =A0{
+> -=A0=A0=A0=A0=A0=A0=A0struct xfs_ifork=A0=A0=A0=A0=A0=A0=A0=A0*ifp;
+> +	struct xfs_ifork	*ifp;
+> =A0
+> -=A0=A0=A0=A0=A0=A0=A0ifp =3D XFS_IFORK_PTR(cur->bc_private.b.ip, cur-
+> >bc_private.b.whichfork);
+> -=A0=A0=A0=A0=A0=A0=A0return (struct xfs_btree_block *)ifp->if_broot;
+> +	ifp =3D XFS_IFORK_PTR(cur->bc_private.b.ip, cur-
+> >bc_private.b.whichfork);
+> +	return (struct xfs_btree_block *)ifp->if_broot;
+> =A0}
 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > >  fs/xfs/xfs_ondisk.h |   25 +++++++++++++++++++++++--
-> > >  1 file changed, 23 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> > > index 184c44e..0272301 100644
-> > > --- a/fs/xfs/xfs_ondisk.h
-> > > +++ b/fs/xfs/xfs_ondisk.h
-> > > @@ -22,6 +22,11 @@
-> > >  	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
-> > >  		#structname ") is wrong, expected " #size)
-> > >  
-> > > +#define XFS_CHECK_OFFSET(structname, member, off) \
-> > > +	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
-> > > +		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
-> > > +		"expected " #off)
-> > > +
-> > >  static inline void __init
-> > >  xfs_check_ondisk_structs(void)
-> > >  {
-> > > @@ -75,15 +80,28 @@ xfs_check_ondisk_structs(void)
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
-> > >  	 */
-> > >  
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
-> > > -	XFS_CHECK_STRUCT_SIZE(xfs_attr_shortform_t,		8);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
-> > > +	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
-> > > -	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_unused_t,		6);
-> > > +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
-> > > +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_ino4_t,			4);
-> > > @@ -94,6 +112,9 @@ xfs_check_ondisk_structs(void)
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
-> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
-> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
-> > > +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
-> > >  	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
-> > >  
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+That's better, but your mailer is still doing weird things to the
+patch. It line wrapped it this time, and converted all the spaces to
+some wierd multi-byte character instead of a plain ascii space.
+
+What you should do is send the patch to yourself, extract it from
+the email you receive, and try to apply it to a clean tree. If you
+can do that, then the patch is not getting mangled when you send it.
+See Documentation/SubmittingPatches and
+Documentation/email-clients.txt for help.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
