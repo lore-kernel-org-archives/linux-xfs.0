@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F1957CA0
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:27:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F04B9304084
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:25 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5A3767CCE
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:27:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 266DC8F8059
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:38 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id IWxgWOFQNwrpNmTm (version=TLSv1.2
+	ESMTP id kBQ3pru0URxQkmiI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:23 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:36 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/8] xfs: don't pass ioflags around in the ioctl path
-Date: Wed, 22 Jun 2016 17:27:09 +0200
-Message-Id: <1466609236-23801-2-git-send-email-hch@lst.de>
+Subject: [PATCH 6/8] xfs: direct calls in the direct I/O path
+Date: Wed, 22 Jun 2016 17:27:14 +0200
+Message-Id: <1466609236-23801-7-git-send-email-hch@lst.de>
 In-Reply-To: <1466609236-23801-1-git-send-email-hch@lst.de>
 References: <1466609236-23801-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,141 +31,107 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-Instead check the file pointer for the invisble I/O flag directly, and
-use the chance to drop redundant arguments from the xfs_ioc_space
-prototype.
+We control both the callers and callees of ->direct_IO, so remove the
+indirect calls.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ioctl.c   | 22 ++++++++--------------
- fs/xfs/xfs_ioctl.h   |  3 ---
- fs/xfs/xfs_ioctl32.c |  6 +-----
- 3 files changed, 9 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_aops.c | 24 +++++-------------------
+ fs/xfs/xfs_aops.h |  3 +++
+ fs/xfs/xfs_file.c | 17 +++++++++++++++--
+ 3 files changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index dbca737..6ab5a24 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -595,13 +595,12 @@ xfs_attrmulti_by_handle(
- 
- int
- xfs_ioc_space(
--	struct xfs_inode	*ip,
--	struct inode		*inode,
- 	struct file		*filp,
--	int			ioflags,
- 	unsigned int		cmd,
- 	xfs_flock64_t		*bf)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80714eb..b368277 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1303,7 +1303,7 @@ xfs_get_blocks_dax_fault(
+  * whereas if we have flags set we will always be called in task context
+  * (i.e. from a workqueue).
+  */
+-STATIC int
++int
+ xfs_end_io_direct_write(
+ 	struct kiocb		*iocb,
+ 	loff_t			offset,
+@@ -1374,24 +1374,10 @@ xfs_vm_direct_IO(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*iter)
  {
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
- 	uint			iolock = XFS_IOLOCK_EXCL;
-@@ -626,7 +625,7 @@ xfs_ioc_space(
- 
- 	if (filp->f_flags & O_DSYNC)
- 		flags |= XFS_PREALLOC_SYNC;
--	if (ioflags & XFS_IO_INVIS)
-+	if (filp->f_mode & FMODE_NOCMTIME)
- 		flags |= XFS_PREALLOC_INVISIBLE;
- 
- 	error = mnt_want_write_file(filp);
-@@ -1464,8 +1463,7 @@ xfs_getbmap_format(void **ap, struct getbmapx *bmv, int *full)
- 
- STATIC int
- xfs_ioc_getbmap(
--	struct xfs_inode	*ip,
--	int			ioflags,
-+	struct file		*file,
- 	unsigned int		cmd,
- 	void			__user *arg)
- {
-@@ -1479,10 +1477,10 @@ xfs_ioc_getbmap(
- 		return -EINVAL;
- 
- 	bmx.bmv_iflags = (cmd == XFS_IOC_GETBMAPA ? BMV_IF_ATTRFORK : 0);
--	if (ioflags & XFS_IO_INVIS)
-+	if (file->f_mode & FMODE_NOCMTIME)
- 		bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
- 
--	error = xfs_getbmap(ip, &bmx, xfs_getbmap_format,
-+	error = xfs_getbmap(XFS_I(file_inode(file)), &bmx, xfs_getbmap_format,
- 			    (__force struct getbmap *)arg+1);
- 	if (error)
- 		return error;
-@@ -1619,12 +1617,8 @@ xfs_file_ioctl(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	void			__user *arg = (void __user *)p;
--	int			ioflags = 0;
- 	int			error;
- 
--	if (filp->f_mode & FMODE_NOCMTIME)
--		ioflags |= XFS_IO_INVIS;
+-	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+-	dio_iodone_t		*endio = NULL;
+-	int			flags = 0;
+-	struct block_device	*bdev;
 -
- 	trace_xfs_file_ioctl(ip);
- 
- 	switch (cmd) {
-@@ -1643,7 +1637,7 @@ xfs_file_ioctl(
- 
- 		if (copy_from_user(&bf, arg, sizeof(bf)))
- 			return -EFAULT;
--		return xfs_ioc_space(ip, inode, filp, ioflags, cmd, &bf);
-+		return xfs_ioc_space(filp, cmd, &bf);
- 	}
- 	case XFS_IOC_DIOINFO: {
- 		struct dioattr	da;
-@@ -1702,7 +1696,7 @@ xfs_file_ioctl(
- 
- 	case XFS_IOC_GETBMAP:
- 	case XFS_IOC_GETBMAPA:
--		return xfs_ioc_getbmap(ip, ioflags, cmd, arg);
-+		return xfs_ioc_getbmap(filp, cmd, arg);
- 
- 	case XFS_IOC_GETBMAPX:
- 		return xfs_ioc_getbmapx(ip, arg);
-diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-index 77c02c7..8b52881 100644
---- a/fs/xfs/xfs_ioctl.h
-+++ b/fs/xfs/xfs_ioctl.h
-@@ -20,10 +20,7 @@
- 
- extern int
- xfs_ioc_space(
--	struct xfs_inode	*ip,
--	struct inode		*inode,
- 	struct file		*filp,
--	int			ioflags,
- 	unsigned int		cmd,
- 	xfs_flock64_t		*bf);
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 1a05d8a..321f577 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -532,12 +532,8 @@ xfs_file_compat_ioctl(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	void			__user *arg = (void __user *)p;
--	int			ioflags = 0;
- 	int			error;
- 
--	if (filp->f_mode & FMODE_NOCMTIME)
--		ioflags |= XFS_IO_INVIS;
+-	if (iov_iter_rw(iter) == WRITE) {
+-		endio = xfs_end_io_direct_write;
+-		flags = DIO_ASYNC_EXTEND;
+-	}
 -
- 	trace_xfs_file_compat_ioctl(ip);
+-	if (IS_DAX(inode)) {
+-		return dax_do_io(iocb, inode, iter,
+-				 xfs_get_blocks_direct, endio, 0);
+-	}
+-
+-	bdev = xfs_find_bdev_for_inode(inode);
+-	return  __blockdev_direct_IO(iocb, inode, bdev, iter,
+-			xfs_get_blocks_direct, endio, NULL, flags);
++	/*
++	 * We just need the method present so that open/fcntl allow direct I/O.
++	 */
++	return -EINVAL;
+ }
  
- 	switch (cmd) {
-@@ -589,7 +585,7 @@ xfs_file_compat_ioctl(
- 		if (xfs_compat_flock64_copyin(&bf, arg))
- 			return -EFAULT;
- 		cmd = _NATIVE_IOC(cmd, struct xfs_flock64);
--		return xfs_ioc_space(ip, inode, filp, ioflags, cmd, &bf);
-+		return xfs_ioc_space(filp, cmd, &bf);
+ STATIC sector_t
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 814aab7..bf2d9a1 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -60,6 +60,9 @@ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+ int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+ 			         struct buffer_head *map_bh, int create);
+ 
++int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
++		ssize_t size, void *private);
++
+ extern void xfs_count_page_state(struct page *, int *, int *);
+ extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index f761f49..24b267d 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -317,7 +317,13 @@ xfs_file_dio_aio_read(
  	}
- 	case XFS_IOC_FSGEOMETRY_V1_32:
- 		return xfs_compat_ioc_fsgeometry_v1(mp, arg);
+ 
+ 	data = *to;
+-	ret = mapping->a_ops->direct_IO(iocb, &data);
++	if (IS_DAX(inode)) {
++		ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct,
++				NULL, 0);
++	} else {
++		ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
++				xfs_get_blocks_direct, NULL, NULL, 0);
++	}
+ 	if (ret > 0) {
+ 		iocb->ki_pos += ret;
+ 		iov_iter_advance(to, ret);
+@@ -650,7 +656,14 @@ xfs_file_dio_aio_write(
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+ 
+ 	data = *from;
+-	ret = mapping->a_ops->direct_IO(iocb, &data);
++	if (IS_DAX(inode)) {
++		ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct,
++				xfs_end_io_direct_write, 0);
++	} else {
++		ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
++				xfs_get_blocks_direct, xfs_end_io_direct_write,
++				NULL, DIO_ASYNC_EXTEND);
++	}
+ 
+ 	/* see generic_file_direct_write() for why this is necessary */
+ 	if (mapping->nrpages) {
 -- 
 2.1.4
 
