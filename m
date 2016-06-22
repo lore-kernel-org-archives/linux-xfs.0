@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 44F1D7CA1
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 15:09:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CCF01AC002
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 13:09:03 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id 4avL0mknIlHZLT9m (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 21 Jun 2016 13:09:00 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id BF48C20988
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 22:08:58 +0200 (CEST)
-Date: Tue, 21 Jun 2016 22:07:34 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH 1/4] Remove off64_t from linux.h
-Message-ID: <20160621200734.GA1151@nyan>
-References: <20160618145238.GA17768@nyan> <20160620020414.GH26977@dastard>
-	<20160620065348.GA431@nyan> <20160620231804.GK26977@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 50EF37CA3
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 20:43:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AC85BAC002
+	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 18:42:59 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	b8pKdXImHb0UmRol for <xfs@oss.sgi.com>;
+	Tue, 21 Jun 2016 18:42:56 -0700 (PDT)
+Date: Wed, 22 Jun 2016 11:42:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: crash in xfs in current
+Message-ID: <20160622014253.GS12670@dastard>
+References: <48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+	<20160607134442.GA1803@infradead.org>
+	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+	<CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
+	<CAAA5faEDdR_L6y9ShhUcermgvjtmzNCzwoYeENjx+8RUEMdwaA@mail.gmail.com>
+	<20160609022238.GY26977@dastard>
+	<CAAA5faGL_Nyu=jW2Vrgr_m7crhnB9BriWWzMAPODbiQATFhS=Q@mail.gmail.com>
+	<00bbe658-a891-3771-ca1d-5661a8b6ab61@sandeen.net>
+	<CAAA5faH7RA=_WByj6uh4yVCLgwxkLh88CkrtTOa-qJqdyEDT-A@mail.gmail.com>
+	<CAAA5faGTL4i3YS_oLxoeetpsEt+q59dmc2L7Kc-b5khzoV0GvA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160620231804.GK26977@dastard>
+In-Reply-To: <CAAA5faGTL4i3YS_oLxoeetpsEt+q59dmc2L7Kc-b5khzoV0GvA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,82 +38,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Daniel Wagner <wagi@monom.org>, Eric Sandeen <sandeen@sandeen.net>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Mon, Jun 20, 2016 at 08:53:48AM +0200, Felix Janda wrote:
-> > Dave Chinner wrote:
-> > 
-> > Thanks for asking for clarification.
-> > 
-> > > On Sat, Jun 18, 2016 at 04:52:38PM +0200, Felix Janda wrote:
-> > > > The off64_t type is usually only conditionally exposed under the
-> > > > feature test macro _LARGEFILE64_SOURCE (also defined by _GNU_SOURCE).
-> > > > To make the public xfs headers more standalone therefore off64_t should
-> > > > be avoided.
-> > > 
-> > > "more standalone"?
-> > > 
-> > > What does that mean?
-> > 
-> > Programs including the xfs headers while not defining _GNU_SOURCE or
-> > _LARGEFILE64_SOURCE will not fail with compile errors. My previous
-> > patch changing loff_t to off64_t had the unintented consequences that
-> > downstreams of xfs-progs like ceph had to define _LARGEFILE64_SOURCE
-> > on linux.
+On Tue, Jun 14, 2016 at 11:40:23PM -0600, Reinoud Koornstra wrote:
+> On Wed, Jun 8, 2016 at 9:42 PM, Reinoud Koornstra
+> <reinoudkoornstra@gmail.com> wrote:
+> > On Wed, Jun 8, 2016 at 8:56 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> >> On 6/8/16 9:53 PM, Reinoud Koornstra wrote:
+> >>
+> >>>> In your Linus git tree:
+> >>>>
+> >>>> $ git remote add xfsdev git://git.kernel.org/git/dgc/linux-xfs.git
+> >>>> $ git remote update
+> >>>> $ git checkout -b xfsdev-merge v4.6
+> >>>> $ git merge xfsdev/xfs-for-linus-4.7-rc1
+> >>>
+> >>> Tried to do this:
+> >>>
+> >>> reinoud@router-dev:~/Downloads/kernel_current$  git remote add xfsdev
+> >>> git://git.kernel.org/git/dgc/linux-xfs.git
+> >>
+> >> I think that should be:
+> >>
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+> >
+> > Ok That worked better indeed. :)
 > 
-> That needs to be in the patch description - it's the motivation for
-> the change (i.e. that downstream apps need to add new defines).
+> I've tested the way you and Dave described.
+> Indeed, I do not see the issues appearing in that xfsdev tree.
+> So it works good there.
+> For verification, I tried when I was upon this state (so this is a good state):
 
-Sure.
+Ok, that's good to hear. Now for some more testing: Al Viro just
+pushed some fixes to the parallel lookup code that may fix this
+problem. Al asked this question:
 
-> > > And what does it mean for all the xfsprogs code that still uses
-> > > off64_t?
-> > 
-> > off_t and off64_t are now synomyms and 64 bit on all architectures.
-> > So no difference for code using off64_t.
-> > 
-> > Under some conditions there can be a difference for code using
-> > off_t.
-> 
-> Right, I understand that there is a difference - what I'm asking for
-> is a description of the difference and an explanation of why:
-> 
-> $ git grep off64_t | wc -l
-> 62
-> $
-> 
-> the other ~60 uses of off64_t in the xfsprogs code are not being
-> removed, too. i.e. if the code now won't compile if off_t isn't 64
-> bits, then why keep off64_t at all in any of the code?
+| Can that be triggered on 4e82901 + cherry-pick of e7d6ef979?
+| Same for 9f541801 + e7d6ef979?
 
-On 32bit systems using glibc the following changes happen:
+Those commits are all in the current Linus tree - would you be
+able to test them? (i.e. check out tree to 4e82901, then just
+cherry pick the single commit (e7d6ef979) on top of that).
 
-1. off_t is now 64 bit instead of 32 bit
-2. all functions and structures using off_t are mapped to versions
-   using the 64 bit off_t
+Cheers,
 
-1. means that off_t and off64_t are now equivalents, whereas 2. means
-that struct stat and struct stat64, open() and open64() and many others
-become equivalent.
-
-Because, in addition to off64_t, "64"-functions and structures are
-used very consistently in the code I have hold off sending a patch
-changing these. I recall also seeing in some commit messages that at
-some sites off64_t was changed to int64_t (or __int64_t...) for header
-portability; for these sites it might be nice to change back to off_t.
-
-Grepping the code I found one occurence in fsr/xfs_fsr.c of off_t (not
-off64_t) which will be affected by the change (on 32bit linux). Right
-now the F_GETLK fcntl with the struct flock is used there instead of
-F_GETLK64 with struct flock64. The current usage is ok because the
-off_t arguments are only used for the value 0 which happily fits into
-variables of any size. After the change, the fcntl F_GETLK64, struct
-flock64 and off64_t will be used instead, leading to no visible change
-in behavior.
-
-Felix
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
