@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8A2C87CA3
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 02:42:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04061AC003
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 00:42:35 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 3OHdHFQpatoRUfTA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 00:42:33 -0700 (PDT)
-Date: Wed, 22 Jun 2016 00:42:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [xfs:xfs-4.8-misc-fixes-2 3/9] fs/xfs/xfs_ondisk.h:116:2: error:
-	call to '__compiletime_assert_116' declared with attribute error: XFS:
-	offsetof(xfs_dir2_sf_entry_t, offset) is wrong, expected 1
-Message-ID: <20160622074230.GA9508@infradead.org>
-References: <201606221448.UGgis4S6%fengguang.wu@intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5B3777CA1
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 03:23:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D122304032
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 01:23:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GOiclbrQccDHQ0eb (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 01:23:38 -0700 (PDT)
+Date: Wed, 22 Jun 2016 10:23:32 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v2] xfs: indentation fix in xfs_btree_get_iroot()
+Message-ID: <20160622082332.GH28212@redhat.com>
+References: <1466568697.14061.1.camel@gmail.com>
+	<20160622063943.GU12670@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201606221448.UGgis4S6%fengguang.wu@intel.com>
+In-Reply-To: <20160622063943.GU12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,117 +26,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: jonas@southpole.se, xfs@oss.sgi.com, kbuild-all@01.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Kaho Ng <ngkaho1234@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Jun 22, 2016 at 02:06:49PM +0800, kbuild test robot wrote:
-> config: openrisc-allmodconfig (attached as .config)
-> compiler: or32-linux-gcc (GCC) 4.5.1-or32-1.0rc1
+On Wed, Jun 22, 2016 at 04:39:43PM +1000, Dave Chinner wrote:
+> On Wed, Jun 22, 2016 at 12:11:37PM +0800, Kaho Ng wrote:
+> > The indentation in this function is different from the other functions.
+> > Those spacebars are converted to tabs to improve readability.
+> > =
 
-This looks openrisc copied it's weird packing rules from the old ARM
-ABI and would need to define __arch_pack similar to ARM.  Alternatively
-we could try to get rid of our struct types that wrap the char
-arrays for the unaligned fields.   For the SF dir offset that would
-looks something like this (untested):
+> > Signed-off-by: Kaho Ng <ngkaho1234@gmail.com>
+> > ---
+> > =A0fs/xfs/libxfs/xfs_btree.c | 8 ++++----
+> > =A01 file changed, 4 insertions(+), 4 deletions(-)
+> > =
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 8d4d8bc..e1d8e59 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -192,12 +192,6 @@ typedef	__uint16_t	xfs_dir2_data_off_t;
- typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
- 
- /*
-- * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
-- * Only need 16 bits, this is the byte offset into the single block form.
-- */
--typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
--
--/*
-  * Offset in data space of a data entry.
-  */
- typedef	__uint32_t	xfs_dir2_dataptr_t;
-@@ -251,7 +245,7 @@ typedef struct xfs_dir2_sf_hdr {
- 
- typedef struct xfs_dir2_sf_entry {
- 	__u8			namelen;	/* actual name length */
--	xfs_dir2_sf_off_t	offset;		/* saved offset */
-+	__u8			offset[2];	/* saved offset */
- 	__u8			name[];		/* name, variable size */
- 	/*
- 	 * A single byte containing the file type field follows the inode
-@@ -272,13 +266,13 @@ static inline int xfs_dir2_sf_hdr_size(int i8count)
- static inline xfs_dir2_data_aoff_t
- xfs_dir2_sf_get_offset(xfs_dir2_sf_entry_t *sfep)
- {
--	return get_unaligned_be16(&sfep->offset.i);
-+	return get_unaligned_be16(sfep->offset);
- }
- 
- static inline void
- xfs_dir2_sf_put_offset(xfs_dir2_sf_entry_t *sfep, xfs_dir2_data_aoff_t off)
- {
--	put_unaligned_be16(off, &sfep->offset.i);
-+	put_unaligned_be16(off, sfep->offset);
- }
- 
- static inline struct xfs_dir2_sf_entry *
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index e5bb9cc..18cc6c7 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -126,11 +126,10 @@ xfs_dir2_block_sfsize(
- 		/*
- 		 * Calculate the new size, see if we should give up yet.
- 		 */
--		size = xfs_dir2_sf_hdr_size(i8count) +		/* header */
--		       count +					/* namelen */
--		       count * (uint)sizeof(xfs_dir2_sf_off_t) + /* offset */
--		       namelen +				/* name */
--		       (i8count ?				/* inumber */
-+		size = xfs_dir2_sf_hdr_size(i8count) +	/* header */
-+		       count * 3 * sizeof(u8) +		/* namelen + offset */
-+		       namelen +			/* name */
-+		       (i8count ?			/* inumber */
- 				(uint)sizeof(xfs_dir2_ino8_t) * count :
- 				(uint)sizeof(xfs_dir2_ino4_t) * count);
- 		if (size > XFS_IFORK_DSIZE(dp))
-@@ -1048,7 +1047,8 @@ xfs_dir2_sf_toino4(
- 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
- 		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
--		sfep->offset = oldsfep->offset;
-+		sfep->offset[0] = oldsfep->offset[0];
-+		sfep->offset[1] = oldsfep->offset[1];
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
- 		dp->d_ops->sf_put_ino(sfp, sfep,
- 				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
-@@ -1124,7 +1124,8 @@ xfs_dir2_sf_toino8(
- 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
- 		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
- 		sfep->namelen = oldsfep->namelen;
--		sfep->offset = oldsfep->offset;
-+		sfep->offset[0] = oldsfep->offset[0];
-+		sfep->offset[1] = oldsfep->offset[1];
- 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
- 		dp->d_ops->sf_put_ino(sfp, sfep,
- 				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 0272301..3cbc1f8 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -116,7 +116,6 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
- 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
- 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
--	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
- 
- 	/* log structures */
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > index 1f88e1c..4f84dde 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > @@ -543,12 +543,12 @@ xfs_btree_ptr_addr(
+> > =A0 */
+> > =A0STATIC struct xfs_btree_block *
+> > =A0xfs_btree_get_iroot(
+> > -=A0=A0=A0=A0=A0=A0=A0struct xfs_btree_cur=A0=A0=A0=A0*cur)
+> > +	struct xfs_btree_cur	*cur)
+> > =A0{
+> > -=A0=A0=A0=A0=A0=A0=A0struct xfs_ifork=A0=A0=A0=A0=A0=A0=A0=A0*ifp;
+> > +	struct xfs_ifork	*ifp;
+> > =A0
+> > -=A0=A0=A0=A0=A0=A0=A0ifp =3D XFS_IFORK_PTR(cur->bc_private.b.ip, cur-
+> > >bc_private.b.whichfork);
+> > -=A0=A0=A0=A0=A0=A0=A0return (struct xfs_btree_block *)ifp->if_broot;
+> > +	ifp =3D XFS_IFORK_PTR(cur->bc_private.b.ip, cur-
+> > >bc_private.b.whichfork);
+> > +	return (struct xfs_btree_block *)ifp->if_broot;
+> > =A0}
+> =
+
+> That's better, but your mailer is still doing weird things to the
+> patch. It line wrapped it this time, and converted all the spaces to
+> some wierd multi-byte character instead of a plain ascii space.
+> =
+
+> What you should do is send the patch to yourself, extract it from
+> the email you receive, and try to apply it to a clean tree. If you
+> can do that, then the patch is not getting mangled when you send it.
+> See Documentation/SubmittingPatches and
+> Documentation/email-clients.txt for help.
+> =
+
+
+This is a problem when sending patches from a gmail account. It's converted=
+ to a
+base64 format, instead of pure clean text.
+
+I'd setup git to send the patch through the gmail smtp using git send-email=
+. So
+it won't screw up with the file format. Well, at least, that's what I do wh=
+en I
+need to send patches through a gmail account :)
+
+-- =
+
+Carlos
 
 _______________________________________________
 xfs mailing list
