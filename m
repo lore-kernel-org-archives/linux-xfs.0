@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 50EF37CA3
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 20:43:03 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8A2C87CA3
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 02:42:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AC85BAC002
-	for <xfs@oss.sgi.com>; Tue, 21 Jun 2016 18:42:59 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	b8pKdXImHb0UmRol for <xfs@oss.sgi.com>;
-	Tue, 21 Jun 2016 18:42:56 -0700 (PDT)
-Date: Wed, 22 Jun 2016 11:42:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: crash in xfs in current
-Message-ID: <20160622014253.GS12670@dastard>
-References: <48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
-	<20160607134442.GA1803@infradead.org>
-	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
-	<CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
-	<CAAA5faEDdR_L6y9ShhUcermgvjtmzNCzwoYeENjx+8RUEMdwaA@mail.gmail.com>
-	<20160609022238.GY26977@dastard>
-	<CAAA5faGL_Nyu=jW2Vrgr_m7crhnB9BriWWzMAPODbiQATFhS=Q@mail.gmail.com>
-	<00bbe658-a891-3771-ca1d-5661a8b6ab61@sandeen.net>
-	<CAAA5faH7RA=_WByj6uh4yVCLgwxkLh88CkrtTOa-qJqdyEDT-A@mail.gmail.com>
-	<CAAA5faGTL4i3YS_oLxoeetpsEt+q59dmc2L7Kc-b5khzoV0GvA@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04061AC003
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 00:42:35 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 3OHdHFQpatoRUfTA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 00:42:33 -0700 (PDT)
+Date: Wed, 22 Jun 2016 00:42:30 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [xfs:xfs-4.8-misc-fixes-2 3/9] fs/xfs/xfs_ondisk.h:116:2: error:
+	call to '__compiletime_assert_116' declared with attribute error: XFS:
+	offsetof(xfs_dir2_sf_entry_t, offset) is wrong, expected 1
+Message-ID: <20160622074230.GA9508@infradead.org>
+References: <201606221448.UGgis4S6%fengguang.wu@intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAAA5faGTL4i3YS_oLxoeetpsEt+q59dmc2L7Kc-b5khzoV0GvA@mail.gmail.com>
+In-Reply-To: <201606221448.UGgis4S6%fengguang.wu@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,55 +31,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Daniel Wagner <wagi@monom.org>, Eric Sandeen <sandeen@sandeen.net>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: jonas@southpole.se, xfs@oss.sgi.com, kbuild-all@01.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Jun 14, 2016 at 11:40:23PM -0600, Reinoud Koornstra wrote:
-> On Wed, Jun 8, 2016 at 9:42 PM, Reinoud Koornstra
-> <reinoudkoornstra@gmail.com> wrote:
-> > On Wed, Jun 8, 2016 at 8:56 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >> On 6/8/16 9:53 PM, Reinoud Koornstra wrote:
-> >>
-> >>>> In your Linus git tree:
-> >>>>
-> >>>> $ git remote add xfsdev git://git.kernel.org/git/dgc/linux-xfs.git
-> >>>> $ git remote update
-> >>>> $ git checkout -b xfsdev-merge v4.6
-> >>>> $ git merge xfsdev/xfs-for-linus-4.7-rc1
-> >>>
-> >>> Tried to do this:
-> >>>
-> >>> reinoud@router-dev:~/Downloads/kernel_current$  git remote add xfsdev
-> >>> git://git.kernel.org/git/dgc/linux-xfs.git
-> >>
-> >> I think that should be:
-> >>
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-> >
-> > Ok That worked better indeed. :)
-> 
-> I've tested the way you and Dave described.
-> Indeed, I do not see the issues appearing in that xfsdev tree.
-> So it works good there.
-> For verification, I tried when I was upon this state (so this is a good state):
+On Wed, Jun 22, 2016 at 02:06:49PM +0800, kbuild test robot wrote:
+> config: openrisc-allmodconfig (attached as .config)
+> compiler: or32-linux-gcc (GCC) 4.5.1-or32-1.0rc1
 
-Ok, that's good to hear. Now for some more testing: Al Viro just
-pushed some fixes to the parallel lookup code that may fix this
-problem. Al asked this question:
+This looks openrisc copied it's weird packing rules from the old ARM
+ABI and would need to define __arch_pack similar to ARM.  Alternatively
+we could try to get rid of our struct types that wrap the char
+arrays for the unaligned fields.   For the SF dir offset that would
+looks something like this (untested):
 
-| Can that be triggered on 4e82901 + cherry-pick of e7d6ef979?
-| Same for 9f541801 + e7d6ef979?
-
-Those commits are all in the current Linus tree - would you be
-able to test them? (i.e. check out tree to 4e82901, then just
-cherry pick the single commit (e7d6ef979) on top of that).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 8d4d8bc..e1d8e59 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -192,12 +192,6 @@ typedef	__uint16_t	xfs_dir2_data_off_t;
+ typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
+ 
+ /*
+- * Normalized offset (in a data block) of the entry, really xfs_dir2_data_off_t.
+- * Only need 16 bits, this is the byte offset into the single block form.
+- */
+-typedef struct { __uint8_t i[2]; } __arch_pack xfs_dir2_sf_off_t;
+-
+-/*
+  * Offset in data space of a data entry.
+  */
+ typedef	__uint32_t	xfs_dir2_dataptr_t;
+@@ -251,7 +245,7 @@ typedef struct xfs_dir2_sf_hdr {
+ 
+ typedef struct xfs_dir2_sf_entry {
+ 	__u8			namelen;	/* actual name length */
+-	xfs_dir2_sf_off_t	offset;		/* saved offset */
++	__u8			offset[2];	/* saved offset */
+ 	__u8			name[];		/* name, variable size */
+ 	/*
+ 	 * A single byte containing the file type field follows the inode
+@@ -272,13 +266,13 @@ static inline int xfs_dir2_sf_hdr_size(int i8count)
+ static inline xfs_dir2_data_aoff_t
+ xfs_dir2_sf_get_offset(xfs_dir2_sf_entry_t *sfep)
+ {
+-	return get_unaligned_be16(&sfep->offset.i);
++	return get_unaligned_be16(sfep->offset);
+ }
+ 
+ static inline void
+ xfs_dir2_sf_put_offset(xfs_dir2_sf_entry_t *sfep, xfs_dir2_data_aoff_t off)
+ {
+-	put_unaligned_be16(off, &sfep->offset.i);
++	put_unaligned_be16(off, sfep->offset);
+ }
+ 
+ static inline struct xfs_dir2_sf_entry *
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index e5bb9cc..18cc6c7 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -126,11 +126,10 @@ xfs_dir2_block_sfsize(
+ 		/*
+ 		 * Calculate the new size, see if we should give up yet.
+ 		 */
+-		size = xfs_dir2_sf_hdr_size(i8count) +		/* header */
+-		       count +					/* namelen */
+-		       count * (uint)sizeof(xfs_dir2_sf_off_t) + /* offset */
+-		       namelen +				/* name */
+-		       (i8count ?				/* inumber */
++		size = xfs_dir2_sf_hdr_size(i8count) +	/* header */
++		       count * 3 * sizeof(u8) +		/* namelen + offset */
++		       namelen +			/* name */
++		       (i8count ?			/* inumber */
+ 				(uint)sizeof(xfs_dir2_ino8_t) * count :
+ 				(uint)sizeof(xfs_dir2_ino4_t) * count);
+ 		if (size > XFS_IFORK_DSIZE(dp))
+@@ -1048,7 +1047,8 @@ xfs_dir2_sf_toino4(
+ 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
+ 		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
+ 		sfep->namelen = oldsfep->namelen;
+-		sfep->offset = oldsfep->offset;
++		sfep->offset[0] = oldsfep->offset[0];
++		sfep->offset[1] = oldsfep->offset[1];
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+ 		dp->d_ops->sf_put_ino(sfp, sfep,
+ 				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
+@@ -1124,7 +1124,8 @@ xfs_dir2_sf_toino8(
+ 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep),
+ 		  oldsfep = dp->d_ops->sf_nextentry(oldsfp, oldsfep)) {
+ 		sfep->namelen = oldsfep->namelen;
+-		sfep->offset = oldsfep->offset;
++		sfep->offset[0] = oldsfep->offset[0];
++		sfep->offset[1] = oldsfep->offset[1];
+ 		memcpy(sfep->name, oldsfep->name, sfep->namelen);
+ 		dp->d_ops->sf_put_ino(sfp, sfep,
+ 				      dp->d_ops->sf_get_ino(oldsfp, oldsfep));
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index 0272301..3cbc1f8 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -116,7 +116,6 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
+ 	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+-	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_off_t,		2);
+ 
+ 	/* log structures */
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
 
 _______________________________________________
 xfs mailing list
