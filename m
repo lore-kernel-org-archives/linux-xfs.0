@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1C3477CA1
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 05:42:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 953FFAC002
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 03:41:59 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D62287CA1
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 06:25:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9AEDF8F8033
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 04:25:29 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SFHKyvBLFvP0D7Qf (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ZxGQCeowBTHShbjG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 03:41:55 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 76F5C46203
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 10:41:54 +0000 (UTC)
-Date: Mon, 20 Jun 2016 12:41:50 +0200
+	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 04:25:28 -0700 (PDT)
+Date: Wed, 22 Jun 2016 13:25:23 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs_copy: fix minor sparse endian nit
-Message-ID: <20160620104150.GA28212@redhat.com>
-References: <a51bba5e-01ba-d73b-6fe6-ac3a411c7283@redhat.com>
+Subject: Re: [PATCH v3] xfs: indentation fix in xfs_btree_get_iroot()
+Message-ID: <20160622112523.GA27894@redhat.com>
+References: <20160622191137.26d0725d@zenbook.lan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <a51bba5e-01ba-d73b-6fe6-ac3a411c7283@redhat.com>
+In-Reply-To: <20160622191137.26d0725d@zenbook.lan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,34 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Kaho Ng <ngkaho1234@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 17, 2016 at 11:44:44AM -0500, Eric Sandeen wrote:
-> The intermediate variable should not have been endian-annotated;
-> it is the local cpu representation not the on-disk representation.
+
+On Wed, Jun 22, 2016 at 07:11:37PM +0800, Kaho Ng wrote:
+> The indentation in this function is different from the other functions.
+> Those spacebars are converted to tabs to improve readability.
 > 
+> Signed-off-by: Kaho Ng <ngkaho1234@gmail.com>
 
-Looks good, you can add:
+Ah, much better.
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
+>  fs/xfs/libxfs/xfs_btree.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 2119a0b..1bc5163 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -506,7 +506,7 @@ sb_update_uuid(
->  	 */
->  	if (!uuid_equal(&tcarg->uuid, &ag_hdr->xfs_sb->sb_uuid) &&
->  	    xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb)) {
-> -		__be32 feat;
-> +		__uint32_t feat;
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 1f88e1c..4f84dde 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -543,12 +543,12 @@ xfs_btree_ptr_addr(
+>   */
+>  STATIC struct xfs_btree_block *
+>  xfs_btree_get_iroot(
+> -       struct xfs_btree_cur    *cur)
+> +	struct xfs_btree_cur	*cur)
+>  {
+> -       struct xfs_ifork        *ifp;
+> +	struct xfs_ifork	*ifp;
 >  
->  		feat = be32_to_cpu(ag_hdr->xfs_sb->sb_features_incompat);
->  		feat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
+> -       ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, cur->bc_private.b.whichfork);
+> -       return (struct xfs_btree_block *)ifp->if_broot;
+> +	ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, cur->bc_private.b.whichfork);
+> +	return (struct xfs_btree_block *)ifp->if_broot;
+>  }
+>  
+>  /*
+> -- 
+> 2.9.0
 > 
 > _______________________________________________
 > xfs mailing list
