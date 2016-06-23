@@ -1,39 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3DA537CA1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 12:40:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 03A26304048
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:40:33 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id voN1or8ECsRRWeok (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:40:31 -0700 (PDT)
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id u5MHeUWw013790
-	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 17:40:30 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-	by aserv0021.oracle.com (8.13.8/8.13.8) with ESMTP id u5MHeUqo010674
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 17:40:30 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-	by aserv0122.oracle.com (8.13.8/8.13.8) with ESMTP id u5MHeSSJ031954
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 17:40:29 GMT
-Date: Wed, 22 Jun 2016 10:40:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs_check: process sparse inode chunks correctly
-Message-ID: <20160622174025.GB5042@birch.djwong.org>
-References: <1466441562-12317-1-git-send-email-bfoster@redhat.com>
-	<1466441562-12317-3-git-send-email-bfoster@redhat.com>
-	<20160621090153.GB28212@redhat.com>
-	<de32a39e-864d-bd4d-8d5d-7a019b8e445f@sandeen.net>
-	<20160621232940.GQ12670@dastard>
-	<20160622080324.GG28212@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 356477CA1
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 20:42:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E6832304032
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 18:42:24 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	HdXUCrCdcCoyEzuo for <xfs@oss.sgi.com>;
+	Wed, 22 Jun 2016 18:42:21 -0700 (PDT)
+Date: Thu, 23 Jun 2016 11:42:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Bug (?) : cumulative xfsrestore does not restore files and
+	folders in a directory which was renamed
+Message-ID: <20160623014217.GZ12670@dastard>
+References: <a08ae222-7654-4a6f-d9ba-f70017784f74@recia.fr>
+	<20160622220959.GV12670@dastard> <20160622222328.GW12670@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160622080324.GG28212@redhat.com>
+In-Reply-To: <20160622222328.GW12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,95 +31,180 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Damien Gombault <damien.gombault@recia.fr>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 22, 2016 at 10:03:24AM +0200, Carlos Maiolino wrote:
-> On Wed, Jun 22, 2016 at 09:29:40AM +1000, Dave Chinner wrote:
-> > On Tue, Jun 21, 2016 at 08:54:04AM -0500, Eric Sandeen wrote:
-> > > 
-> > > 
-> > > On 6/21/16 4:01 AM, Carlos Maiolino wrote:
-> > > > On Mon, Jun 20, 2016 at 12:52:42PM -0400, Brian Foster wrote:
-> > > >> Update the inode btree scanning functions to process sparse inode chunks
-> > > >> correctly. For filesystems with sparse inode support enabled, process
-> > > >> each chunk a cluster at a time. Each cluster is checked against the
-> > > >> inobt record to determine if it is a hole and skipped if so.
-> > > >>
-> > > >> Note that since xfs_check is deprecated in favor of xfs_repair,  this
-> > > >> adds the minimum support necessary to process sparse inode enabled
-> > > >> filesystems. In other words, this adds no sparse inode specific checks
-> > > >> or verifications. We only update the inobt scanning functions to extend
-> > > >> the existing level of verification to sparse inode enabled filesystems
-> > > >> (e.g., avoid incorrectly tracking sparse regions as inodes). Problems
-> > > >> or corruptions associated with sparse inode records must be detected and
-> > > >> recovered via xfs_repair.
-> > > >>
-> > > > 
-> > > > Hi,
-> > > > 
-> > > > I'm not quite sure, but a while ago, I thought I've heard some rumors about
-> > > > deprecating xfs_check, is this true or something that my mind made up for some
-> > > > weird reason?
-> > > 
-> > > Yes, like Brian said above.  ;)
-> > > 
-> > > bfc541e xfsprogs: remove xfs_check
-> > > 12a48f5 xfsprogs: remove xfs_check references from fsck.xfs script & manpage
-> > > 
-> > > However, we still run check inside xfs_db in xfstests as an independent
-> > > verification step:
-> > > 
-> > > 187bccd xfstests: Remove dependence of xfs_check script
-> > > 
-> > > +# xfs_check script is planned to be deprecated. But, we want to
-> > > +# be able to invoke "xfs_check" behavior in xfstests in order to
-> > > +# maintain the current verification levels.
-> > > +_xfs_check()
+On Thu, Jun 23, 2016 at 08:23:28AM +1000, Dave Chinner wrote:
+> On Thu, Jun 23, 2016 at 08:09:59AM +1000, Dave Chinner wrote:
+> > But it seems that dirb hasn't been created before the file in it
+> > is being restored. THis can happen because the inventory is not
+> > correct, whichmay in fact be a problem with dump rather than
+> > restore...
 > > 
-> > Right - it's a secondary set of code that effectively tells us
-> > whether repair is detecting all the problems it should. i.e. if
-> > check fails and repair doesn't, then we've got a bug in repair that
-> > needs fixing.
-> > 
+> > I'll have a bit of a play around here, see if I can reproduce it.
 > 
-> Just out of curiosity here, have we hit any case like that for the past few
-> versions?
+> Yes, i can reproduce it, so I'll have a deeper look.
 
-I have, while writing reflink.  Granted, that only happened /once/.
+Can you try this patch?
 
-While we're talking about repair/xfstests, I also started running
-xfs_repair and then xfs_repair -n to _check_xfs_filesystem, which
-helped me find some cases where the rmapbt rebuild wasn't quite right.
+-Dave
+-- 
+Dave Chinner
+david@fromorbit.com
 
---D
+restore: make new directories after renames
 
-> 
-> > Also, the check code is really just an "addon" to other
-> > functionality in xfs_db (e.g. blockget) that we have to keep, so
-> > removing check doesn't really gain us all that much in terms of
-> > reduced maintenance overhead. So long as we can easily keep check up
-> > to date with new features I think we shoul dbe keeping it...
-> > 
-> 
-> Good to know.
-> 
-> Cheers o/
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> 
-> -- 
-> Carlos
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+From: Dave Chinner <dchinner@redhat.com>
+
+Damien Gombault reported that restores of cumulative dumps with
+renamed directories were throwing an error and were incomplete:
+
+xfsrestore: file 0 in stream, file 0 in dump 0 on object
+xfsrestore: restoring dirA/dirb/fileb (526337 1283006502)
+xfsrestore: restoring regular file ino 526337 dirA/dirb/fileb
+xfsrestore: WARNING: open of dirA/dirb/fileb failed: Aucun fichier ou dossier de
+ce type: discarding ino 526337
+
+This was triggered by a level 1 dump containing a directory rename
+and a new directory being created inside the renamed directory. i.e:
+
+$ mv dira dirA
+$ mkdir dirA/dirb
+$ echo foo > dirA/dirb/fileb
+
+xfs_restore handles directory renames by first moving the old
+directory to the orphanage, then renaming it from the orphanage to
+it's new location. This, in itself is fine.
+
+The problem is that restore creates the new directories between
+these two steps. Hence any new directory created in a renamed
+directory cannot be restored from a cumulative dump because when
+restore tries to create the new directory neither the old directory
+path nor the new directory path exists.  Hence it silently drops the
+new directory, resulting in subsequent errors tryin gto restore
+files within that new directory.
+
+The simple fix - just change the order of operations
+in tree_post() so that new directories are created after all the
+renames are processed - is not useful. All that does is break the
+case of renames into newly created directories.
+
+However, because the making of directories that already exist or
+can't be made silently fails, and the create process does not modify
+the internal directory tree, we can run the directory creation
+function multiple times. Hence we can run directory creation both
+before and after the directory rename step, hence ensuring both
+new parents and new child directories are created appropriately.
+
+This still may not be sufficient for complex directory
+reorganisations, but it does address the reported problem in a
+manner that is unlikely to cause regresssions. This is important,
+because this code has not changed at all since it was first publicly
+released in early 2001. Hence the minimum change we can make to fix
+the reported problem is the least risky approach we can take.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ restore/tree.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+diff --git a/restore/tree.c b/restore/tree.c
+index 0336e77..8e6fab1 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -1163,15 +1163,35 @@ tree_subtree_parse( bool_t sensepr, char *path )
+ 	return BOOL_TRUE;
+ }
+ 
+-/* tree_post - called after the dirdump has been applied.
+- * first phase is to eliminate all unreferenced dirents.
+- * done by recursive depth-wise descent of the tree. on the way
+- * up, unlink or orphan unreferenced nondirs, unlink unreferenced
+- * dirs, orphan dirs to be renamed. if a dir is unreferenced, but
++/* tree_post - called after the dirdump has been applied.  first phase is to
++ * eliminate all unreferenced dirents.  done by recursive depth-wise descent of
++ * the tree. on the way up, unlink or orphan unreferenced nondirs, unlink
++ * unreferenced dirs, orphan dirs to be renamed. if a dir is unreferenced, but
+  * contains referenced dirents, orphan those dirents. orphan unreferenced
+  * nondirs if they are the last link to an inode referenced but not real
+  * somewhere else in the tree. next, make new directories. then rename
+  * directories. finally, create hardlinks from orphanage.
++ *
++ * Note: the way renamed directories are handled by first orphaning them leads
++ * to a chicken and egg problem - the directory does not exist when we try to
++ * make a new directory inside the renamed directory destination. This fails
++ * silently, leaving us with ENOENT errors when trying to restore files within
++ * that new directory.
++ *
++ * To prevent this from happening, we need to create new subdirectories *after*
++ * we have processed all the renamed directories. However, so that the renames
++ * succeed, we also have to create any new parent directories that the renames
++ * depend on.
++ *
++ * Hence we have to do two mkdir passes: one before the renames to create new
++ * ancestors for rename destinations and one after the rename to create new
++ * children in rename destinations.
++ *
++ * NOTE: a simple before/after creation as done below may be too simple for
++ * complex directory structure manipulations. e.g. rename into a new child in
++ * the destination of another rename. This may have to become an iterative loop
++ * that runs until all renames and mkdirs are resolved. We'll cross that bridge
++ * when we need to, not now.
+  */
+ static bool_t noref_elim_recurse( nh_t parh,
+ 				  nh_t cldh,
+@@ -1216,7 +1236,14 @@ tree_post( char *path1, char *path2 )
+ 		}
+ 	}
+ 
+-	/* make new directories
++#ifdef TREE_CHK
++	assert( tree_chk( ));
++#endif /* TREE_CHK */
++
++	/*
++	 * make new directories to ensure rename destination ancestors are
++	 * present before attempting the renames. This will silently skip all
++	 * the creations that are in rename destinations.
+ 	 */
+ 	mlog( MLOG_DEBUG | MLOG_TREE,
+ 	      "making new directories\n" );
+@@ -1228,10 +1255,6 @@ tree_post( char *path1, char *path2 )
+ 		return BOOL_FALSE;
+ 	}
+ 
+-#ifdef TREE_CHK
+-	assert( tree_chk( ));
+-#endif /* TREE_CHK */
+-
+ 	/* rename directories
+ 	 */
+ 	if ( ! persp->p_fullpr ) {
+@@ -1250,6 +1273,24 @@ tree_post( char *path1, char *path2 )
+ 	assert( tree_chk( ));
+ #endif /* TREE_CHK */
+ 
++	/*
++	 * Repeat making new directories to create directories in rename
++	 * destinations that were skipped in the first pass.
++	 */
++	mlog( MLOG_DEBUG | MLOG_TREE,
++	      "making new directories in renamed ancestors\n" );
++	rootp = Node_map( persp->p_rooth );
++	cldh = rootp->n_cldh;
++	Node_unmap( persp->p_rooth, &rootp );
++	ok = mkdirs_recurse( persp->p_rooth, cldh, path1 );
++	if ( ! ok ) {
++		return BOOL_FALSE;
++	}
++
++#ifdef TREE_CHK
++	assert( tree_chk( ));
++#endif /* TREE_CHK */
++
+ 	/* process hard links
+ 	 */
+ 	if ( ! persp->p_fullpr ) {
 
 _______________________________________________
 xfs mailing list
