@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A2C887CB1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:27:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 73CB98F8059
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:35 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id PBSa1jlfKcxDviFT (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:33 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/8] xfs: stop using generic_file_read_iter for direct I/O
-Date: Wed, 22 Jun 2016 17:27:13 +0200
-Message-Id: <1466609236-23801-6-git-send-email-hch@lst.de>
-In-Reply-To: <1466609236-23801-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 641A27CA1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 18:25:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E0892AC003
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 16:24:58 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	WacvkWjcMwBec3TK for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2016 16:24:55 -0700 (PDT)
+Date: Fri, 24 Jun 2016 09:24:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
+Message-ID: <20160623232446.GA12670@dastard>
 References: <1466609236-23801-1-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1466609236-23801-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,76 +25,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
 
-XFS already implement it's own flushing of the pagecache because it
-implements proper synchronization for direct I/O reads.  This means
-calling generic_file_read_iter for direct I/O is rather useless,
-as it doesn't do much but updating the atime and iocb position for
-us.  This also gets rid of the buffered I/O fallback that isn't used
-for XFS.
+On Wed, Jun 22, 2016 at 05:27:08PM +0200, Christoph Hellwig wrote:
+> The last patch is what started the series:  XFS currently uses the
+> direct I/O locking strategy for DAX because DAX was overloaded onto
+> the direct I/O path.  For XFS this means that we only take a shared
+> inode lock instead of the normal exclusive one for writes IFF they
+> are properly aligned.  While this is fine for O_DIRECT which requires
+> explicit opt-in from the application it's not fine for DAX where we'll
+> suddenly lose expected and required synchronization of the file system
+> happens to use DAX undeneath.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+Except we did that *intentionally* - by definition there is no
+cache to bypass with DAX and so all IO is "direct". That, combined
+with the fact that all Linux filesystems except XFS break the POSIX
+exclusive writer rule you are quoting to begin with, it seemed
+pointless to enforce it for DAX....
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e584333..f761f49 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -246,12 +246,17 @@ xfs_file_dio_aio_read(
- 	struct address_space	*mapping = iocb->ki_filp->f_mapping;
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
-+	loff_t			isize = i_size_read(inode);
- 	size_t			count = iov_iter_count(to);
-+	struct iov_iter		data;
- 	struct xfs_buftarg	*target;
- 	ssize_t			ret = 0;
- 
- 	trace_xfs_file_direct_read(ip, count, iocb->ki_pos);
- 
-+	if (!count)
-+		return 0; /* skip atime */
-+
- 	if (XFS_IS_REALTIME_INODE(ip))
- 		target = ip->i_mount->m_rtdev_targp;
- 	else
-@@ -260,7 +265,7 @@ xfs_file_dio_aio_read(
- 	if (!IS_DAX(inode)) {
- 		/* DIO must be aligned to device logical sector size */
- 		if ((iocb->ki_pos | count) & target->bt_logical_sectormask) {
--			if (iocb->ki_pos == i_size_read(inode))
-+			if (iocb->ki_pos == isize)
- 				return 0;
- 			return -EINVAL;
- 		}
-@@ -311,9 +316,15 @@ xfs_file_dio_aio_read(
- 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
- 	}
- 
--	ret = generic_file_read_iter(iocb, to);
-+	data = *to;
-+	ret = mapping->a_ops->direct_IO(iocb, &data);
-+	if (ret > 0) {
-+		iocb->ki_pos += ret;
-+		iov_iter_advance(to, ret);
-+	}
- 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
- 
-+	file_accessed(iocb->ki_filp);
- 	return ret;
- }
- 
+So, before taking any patches to change that behaviour in XFS, a
+wider discussion about the policy needs to be had. I don't think
+we should care about POSIX here - if you have an application that
+needs this serialisation, turn off DAX. That's why I made it a
+per-inode inheritable flag and why the mount option will go away
+over time.
+
+Cheers,
+
+Dave.
 -- 
-2.1.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
