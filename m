@@ -1,21 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E7ED17CB5
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 10:27:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B00D9304084
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:41 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id tSAfwONIKtpJZsMS (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 22 Jun 2016 08:27:38 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/8] xfs: split direct I/O and DAX path
-Date: Wed, 22 Jun 2016 17:27:15 +0200
-Message-Id: <1466609236-23801-8-git-send-email-hch@lst.de>
-In-Reply-To: <1466609236-23801-1-git-send-email-hch@lst.de>
-References: <1466609236-23801-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AEA187CA1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 06:35:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8165A8F8033
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 04:35:21 -0700 (PDT)
+Received: from mail-wm0-f45.google.com (mail-wm0-f45.google.com
+	[74.125.82.45]) by cuda.sgi.com with ESMTP id uVYBG4NEpJhBBYtt
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2016 04:35:19 -0700 (PDT)
+Received: by mail-wm0-f45.google.com with SMTP id a66so45718561wme.0
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 04:35:19 -0700 (PDT)
+Date: Thu, 23 Jun 2016 13:35:16 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20160623113516.GG30077@dhcp22.suse.cz>
+References: <20160602145048.GS1995@dhcp22.suse.cz>
+	<20160602151116.GD3190@twins.programming.kicks-ass.net>
+	<20160602154619.GU1995@dhcp22.suse.cz>
+	<20160602232254.GR12670@dastard>
+	<20160606122022.GH11895@dhcp22.suse.cz>
+	<20160615072154.GF26977@dastard>
+	<20160621142628.GG30848@dhcp22.suse.cz>
+	<20160622010320.GR12670@dastard>
+	<20160622123822.GG9208@dhcp22.suse.cz>
+	<20160622225816.GY12670@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160622225816.GY12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,133 +37,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: Peter Zijlstra <peterz@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, xfs@oss.sgi.com, Ingo Molnar <mingo@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-U28gZmFyIHRoZSBEQVggY29kZSBvdmVybG9hZGVkIHRoZSBkaXJlY3QgSS9PIGNvZGUgcGF0aC4g
-IFRoZXJlIGlzIHZlcnkgbGl0dGxlCmluIGNvbW1vbiBiZXR3ZWVuIHRoZSB0d28sIGFuZCB1bnRh
-bmdsaW5nIHRoZW0gYWxsb3dzIHRvIGNsZWFuIHVwIGJvdGggdmFyaWFudHMuCgpBcyBhINGVaWRl
-IGVmZmVjdCB3ZSBhbHNvIGdldCBzZXBhcmF0ZSB0cmFjZSBwb2ludHMgZm9yIGJvdGggSS9PIHR5
-cGVzLgoKU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0tLQog
-ZnMveGZzL3hmc19maWxlLmMgIHwgMTM5ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKy0tLS0tLS0tLS0tCiBmcy94ZnMveGZzX3RyYWNlLmggfCAgIDIgKwogMiBmaWxl
-cyBjaGFuZ2VkLCAxMTIgaW5zZXJ0aW9ucygrKSwgMjkgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
-IGEvZnMveGZzL3hmc19maWxlLmMgYi9mcy94ZnMveGZzX2ZpbGUuYwppbmRleCAyNGIyNjdkLi4w
-ZTc0MzI1IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2ZpbGUuYworKysgYi9mcy94ZnMveGZzX2Zp
-bGUuYwpAQCAtMjYyLDEzICsyNjIsMTEgQEAgeGZzX2ZpbGVfZGlvX2Fpb19yZWFkKAogCWVsc2UK
-IAkJdGFyZ2V0ID0gaXAtPmlfbW91bnQtPm1fZGRldl90YXJncDsKIAotCWlmICghSVNfREFYKGlu
-b2RlKSkgewotCQkvKiBESU8gbXVzdCBiZSBhbGlnbmVkIHRvIGRldmljZSBsb2dpY2FsIHNlY3Rv
-ciBzaXplICovCi0JCWlmICgoaW9jYi0+a2lfcG9zIHwgY291bnQpICYgdGFyZ2V0LT5idF9sb2dp
-Y2FsX3NlY3Rvcm1hc2spIHsKLQkJCWlmIChpb2NiLT5raV9wb3MgPT0gaXNpemUpCi0JCQkJcmV0
-dXJuIDA7Ci0JCQlyZXR1cm4gLUVJTlZBTDsKLQkJfQorCS8qIERJTyBtdXN0IGJlIGFsaWduZWQg
-dG8gZGV2aWNlIGxvZ2ljYWwgc2VjdG9yIHNpemUgKi8KKwlpZiAoKGlvY2ItPmtpX3BvcyB8IGNv
-dW50KSAmIHRhcmdldC0+YnRfbG9naWNhbF9zZWN0b3JtYXNrKSB7CisJCWlmIChpb2NiLT5raV9w
-b3MgPT0gaXNpemUpCisJCQlyZXR1cm4gMDsKKwkJcmV0dXJuIC1FSU5WQUw7CiAJfQogCiAJLyoK
-QEAgLTMxNywxMyArMzE1LDM3IEBAIHhmc19maWxlX2Rpb19haW9fcmVhZCgKIAl9CiAKIAlkYXRh
-ID0gKnRvOwotCWlmIChJU19EQVgoaW5vZGUpKSB7Ci0JCXJldCA9IGRheF9kb19pbyhpb2NiLCBp
-bm9kZSwgJmRhdGEsIHhmc19nZXRfYmxvY2tzX2RpcmVjdCwKLQkJCQlOVUxMLCAwKTsKLQl9IGVs
-c2UgewotCQlyZXQgPSBfX2Jsb2NrZGV2X2RpcmVjdF9JTyhpb2NiLCBpbm9kZSwgdGFyZ2V0LT5i
-dF9iZGV2LCAmZGF0YSwKLQkJCQl4ZnNfZ2V0X2Jsb2Nrc19kaXJlY3QsIE5VTEwsIE5VTEwsIDAp
-OworCXJldCA9IF9fYmxvY2tkZXZfZGlyZWN0X0lPKGlvY2IsIGlub2RlLCB0YXJnZXQtPmJ0X2Jk
-ZXYsICZkYXRhLAorCQkJeGZzX2dldF9ibG9ja3NfZGlyZWN0LCBOVUxMLCBOVUxMLCAwKTsKKwlp
-ZiAocmV0ID4gMCkgeworCQlpb2NiLT5raV9wb3MgKz0gcmV0OworCQlpb3ZfaXRlcl9hZHZhbmNl
-KHRvLCByZXQpOwogCX0KKwl4ZnNfcndfaXVubG9jayhpcCwgWEZTX0lPTE9DS19TSEFSRUQpOwor
-CisJZmlsZV9hY2Nlc3NlZChpb2NiLT5raV9maWxwKTsKKwlyZXR1cm4gcmV0OworfQorCitTVEFU
-SUMgc3NpemVfdAoreGZzX2ZpbGVfZGF4X3JlYWQoCisJc3RydWN0IGtpb2NiCQkqaW9jYiwKKwlz
-dHJ1Y3QgaW92X2l0ZXIJCSp0bykKK3sKKwlzdHJ1Y3QgYWRkcmVzc19zcGFjZQkqbWFwcGluZyA9
-IGlvY2ItPmtpX2ZpbHAtPmZfbWFwcGluZzsKKwlzdHJ1Y3QgaW5vZGUJCSppbm9kZSA9IG1hcHBp
-bmctPmhvc3Q7CisJc3RydWN0IHhmc19pbm9kZQkqaXAgPSBYRlNfSShpbm9kZSk7CisJc3RydWN0
-IGlvdl9pdGVyCQlkYXRhID0gKnRvOworCXNpemVfdAkJCWNvdW50ID0gaW92X2l0ZXJfY291bnQo
-dG8pOworCXNzaXplX3QJCQlyZXQgPSAwOworCisJdHJhY2VfeGZzX2ZpbGVfZGF4X3JlYWQoaXAs
-IGNvdW50LCBpb2NiLT5raV9wb3MpOworCisJaWYgKCFjb3VudCkKKwkJcmV0dXJuIDA7IC8qIHNr
-aXAgYXRpbWUgKi8KKworCXhmc19yd19pbG9jayhpcCwgWEZTX0lPTE9DS19TSEFSRUQpOworCXJl
-dCA9IGRheF9kb19pbyhpb2NiLCBpbm9kZSwgJmRhdGEsIHhmc19nZXRfYmxvY2tzX2RpcmVjdCwg
-TlVMTCwgMCk7CiAJaWYgKHJldCA+IDApIHsKIAkJaW9jYi0+a2lfcG9zICs9IHJldDsKIAkJaW92
-X2l0ZXJfYWR2YW5jZSh0bywgcmV0KTsKQEAgLTM1Niw3ICszNzgsOCBAQCB4ZnNfZmlsZV9yZWFk
-X2l0ZXIoCiAJc3RydWN0IGtpb2NiCQkqaW9jYiwKIAlzdHJ1Y3QgaW92X2l0ZXIJCSp0bykKIHsK
-LQlzdHJ1Y3QgeGZzX21vdW50CSptcCA9IFhGU19JKGZpbGVfaW5vZGUoaW9jYi0+a2lfZmlscCkp
-LT5pX21vdW50OworCXN0cnVjdCBpbm9kZQkJKmlub2RlID0gZmlsZV9pbm9kZShpb2NiLT5raV9m
-aWxwKTsKKwlzdHJ1Y3QgeGZzX21vdW50CSptcCA9IFhGU19JKGlub2RlKS0+aV9tb3VudDsKIAlz
-c2l6ZV90CQkJcmV0ID0gMDsKIAogCVhGU19TVEFUU19JTkMobXAsIHhzX3JlYWRfY2FsbHMpOwpA
-QCAtMzY0LDcgKzM4Nyw5IEBAIHhmc19maWxlX3JlYWRfaXRlcigKIAlpZiAoWEZTX0ZPUkNFRF9T
-SFVURE9XTihtcCkpCiAJCXJldHVybiAtRUlPOwogCi0JaWYgKGlvY2ItPmtpX2ZsYWdzICYgSU9D
-Ql9ESVJFQ1QpCisJaWYgKElTX0RBWChpbm9kZSkpCisJCXJldCA9IHhmc19maWxlX2RheF9yZWFk
-KGlvY2IsIHRvKTsKKwllbHNlIGlmIChpb2NiLT5raV9mbGFncyAmIElPQ0JfRElSRUNUKQogCQly
-ZXQgPSB4ZnNfZmlsZV9kaW9fYWlvX3JlYWQoaW9jYiwgdG8pOwogCWVsc2UKIAkJcmV0ID0geGZz
-X2ZpbGVfYnVmZmVyZWRfYWlvX3JlYWQoaW9jYiwgdG8pOwpAQCAtNTg2LDggKzYxMSw3IEBAIHhm
-c19maWxlX2Rpb19haW9fd3JpdGUoCiAJCQkJCW1wLT5tX3J0ZGV2X3RhcmdwIDogbXAtPm1fZGRl
-dl90YXJncDsKIAogCS8qIERJTyBtdXN0IGJlIGFsaWduZWQgdG8gZGV2aWNlIGxvZ2ljYWwgc2Vj
-dG9yIHNpemUgKi8KLQlpZiAoIUlTX0RBWChpbm9kZSkgJiYKLQkgICAgKChpb2NiLT5raV9wb3Mg
-fCBjb3VudCkgJiB0YXJnZXQtPmJ0X2xvZ2ljYWxfc2VjdG9ybWFzaykpCisJaWYgKChpb2NiLT5r
-aV9wb3MgfCBjb3VudCkgJiB0YXJnZXQtPmJ0X2xvZ2ljYWxfc2VjdG9ybWFzaykKIAkJcmV0dXJu
-IC1FSU5WQUw7CiAKIAkvKiAidW5hbGlnbmVkIiBoZXJlIG1lYW5zIG5vdCBhbGlnbmVkIHRvIGEg
-ZmlsZXN5c3RlbSBibG9jayAqLwpAQCAtNjU2LDE0ICs2ODAsOSBAQCB4ZnNfZmlsZV9kaW9fYWlv
-X3dyaXRlKAogCXRyYWNlX3hmc19maWxlX2RpcmVjdF93cml0ZShpcCwgY291bnQsIGlvY2ItPmtp
-X3Bvcyk7CiAKIAlkYXRhID0gKmZyb207Ci0JaWYgKElTX0RBWChpbm9kZSkpIHsKLQkJcmV0ID0g
-ZGF4X2RvX2lvKGlvY2IsIGlub2RlLCAmZGF0YSwgeGZzX2dldF9ibG9ja3NfZGlyZWN0LAotCQkJ
-CXhmc19lbmRfaW9fZGlyZWN0X3dyaXRlLCAwKTsKLQl9IGVsc2UgewotCQlyZXQgPSBfX2Jsb2Nr
-ZGV2X2RpcmVjdF9JTyhpb2NiLCBpbm9kZSwgdGFyZ2V0LT5idF9iZGV2LCAmZGF0YSwKLQkJCQl4
-ZnNfZ2V0X2Jsb2Nrc19kaXJlY3QsIHhmc19lbmRfaW9fZGlyZWN0X3dyaXRlLAotCQkJCU5VTEws
-IERJT19BU1lOQ19FWFRFTkQpOwotCX0KKwlyZXQgPSBfX2Jsb2NrZGV2X2RpcmVjdF9JTyhpb2Ni
-LCBpbm9kZSwgdGFyZ2V0LT5idF9iZGV2LCAmZGF0YSwKKwkJCXhmc19nZXRfYmxvY2tzX2RpcmVj
-dCwgeGZzX2VuZF9pb19kaXJlY3Rfd3JpdGUsCisJCQlOVUxMLCBESU9fQVNZTkNfRVhURU5EKTsK
-IAogCS8qIHNlZSBnZW5lcmljX2ZpbGVfZGlyZWN0X3dyaXRlKCkgZm9yIHdoeSB0aGlzIGlzIG5l
-Y2Vzc2FyeSAqLwogCWlmIChtYXBwaW5nLT5ucnBhZ2VzKSB7CkBAIC02ODAsMTAgKzY5OSw3MCBA
-QCBvdXQ6CiAJeGZzX3J3X2l1bmxvY2soaXAsIGlvbG9jayk7CiAKIAkvKgotCSAqIE5vIGZhbGxi
-YWNrIHRvIGJ1ZmZlcmVkIElPIG9uIGVycm9ycyBmb3IgWEZTLiBEQVggY2FuIHJlc3VsdCBpbgot
-CSAqIHBhcnRpYWwgd3JpdGVzLCBidXQgZGlyZWN0IElPIHdpbGwgZWl0aGVyIGNvbXBsZXRlIGZ1
-bGx5IG9yIGZhaWwuCisJICogTm8gZmFsbGJhY2sgdG8gYnVmZmVyZWQgSU8gb24gZXJyb3JzIGZv
-ciBYRlMsIGRpcmVjdCBJTyB3aWxsIGVpdGhlcgorCSAqIGNvbXBsZXRlIGZ1bGx5IG9yIGZhaWwu
-CisJICovCisJQVNTRVJUKHJldCA8IDAgfHwgcmV0ID09IGNvdW50KTsKKwlyZXR1cm4gcmV0Owor
-fQorCitTVEFUSUMgc3NpemVfdAoreGZzX2ZpbGVfZGF4X3dyaXRlKAorCXN0cnVjdCBraW9jYgkJ
-KmlvY2IsCisJc3RydWN0IGlvdl9pdGVyCQkqZnJvbSkKK3sKKwlzdHJ1Y3QgYWRkcmVzc19zcGFj
-ZQkqbWFwcGluZyA9IGlvY2ItPmtpX2ZpbHAtPmZfbWFwcGluZzsKKwlzdHJ1Y3QgaW5vZGUJCSpp
-bm9kZSA9IG1hcHBpbmctPmhvc3Q7CisJc3RydWN0IHhmc19pbm9kZQkqaXAgPSBYRlNfSShpbm9k
-ZSk7CisJc3RydWN0IHhmc19tb3VudAkqbXAgPSBpcC0+aV9tb3VudDsKKwlzc2l6ZV90CQkJcmV0
-ID0gMDsKKwlpbnQJCQl1bmFsaWduZWRfaW8gPSAwOworCWludAkJCWlvbG9jazsKKwlzdHJ1Y3Qg
-aW92X2l0ZXIJCWRhdGE7CisKKwkvKiAidW5hbGlnbmVkIiBoZXJlIG1lYW5zIG5vdCBhbGlnbmVk
-IHRvIGEgZmlsZXN5c3RlbSBibG9jayAqLworCWlmICgoaW9jYi0+a2lfcG9zICYgbXAtPm1fYmxv
-Y2ttYXNrKSB8fAorCSAgICAoKGlvY2ItPmtpX3BvcyArIGlvdl9pdGVyX2NvdW50KGZyb20pKSAm
-IG1wLT5tX2Jsb2NrbWFzaykpIHsKKwkJdW5hbGlnbmVkX2lvID0gMTsKKwkJaW9sb2NrID0gWEZT
-X0lPTE9DS19FWENMOworCX0gZWxzZSBpZiAobWFwcGluZy0+bnJwYWdlcykgeworCQlpb2xvY2sg
-PSBYRlNfSU9MT0NLX0VYQ0w7CisJfSBlbHNlIHsKKwkJaW9sb2NrID0gWEZTX0lPTE9DS19TSEFS
-RUQ7CisJfQorCXhmc19yd19pbG9jayhpcCwgaW9sb2NrKTsKKworCXJldCA9IHhmc19maWxlX2Fp
-b193cml0ZV9jaGVja3MoaW9jYiwgZnJvbSwgJmlvbG9jayk7CisJaWYgKHJldCkKKwkJZ290byBv
-dXQ7CisKKwkvKgorCSAqIFllcywgZXZlbiBEQVggZmlsZXMgY2FuIGhhdmUgcGFnZSBjYWNoZSBh
-dHRhY2hlZCB0byB0aGVtOiAgQSB6ZXJvZWQKKwkgKiBwYWdlIGlzIGluc2VydGVkIGludG8gdGhl
-IHBhZ2VjYWNoZSB3aGVuIHdlIGhhdmUgdG8gc2VydmUgYSB3cml0ZQorCSAqIGZhdWx0IG9uIGEg
-aG9sZS4gIEl0IHNob3VsZCBuZXZlciBiZSBkaXJ0aWVkIGFuZCBjYW4gc2ltcGx5IGJlCisJICog
-ZHJvcHBlZCBmcm9tIHRoZSBwYWdlY2FjaGUgb25jZSB3ZSBnZXQgcmVhbCBkYXRhIGZvciB0aGUg
-cGFnZS4KIAkgKi8KLQlBU1NFUlQocmV0IDwgMCB8fCByZXQgPT0gY291bnQgfHwgSVNfREFYKFZG
-U19JKGlwKSkpOworCWlmIChtYXBwaW5nLT5ucnBhZ2VzKSB7CisJCXJldCA9IGludmFsaWRhdGVf
-aW5vZGVfcGFnZXMyKG1hcHBpbmcpOworCQlXQVJOX09OX09OQ0UocmV0KTsKKwl9CisKKwlpZiAo
-aW9sb2NrID09IFhGU19JT0xPQ0tfRVhDTCAmJiAhdW5hbGlnbmVkX2lvKSB7CisJCXhmc19yd19p
-bG9ja19kZW1vdGUoaXAsIFhGU19JT0xPQ0tfRVhDTCk7CisJCWlvbG9jayA9IFhGU19JT0xPQ0tf
-U0hBUkVEOworCX0KKworCXRyYWNlX3hmc19maWxlX2RheF93cml0ZShpcCwgaW92X2l0ZXJfY291
-bnQoZnJvbSksIGlvY2ItPmtpX3Bvcyk7CisKKwlkYXRhID0gKmZyb207CisJcmV0ID0gZGF4X2Rv
-X2lvKGlvY2IsIGlub2RlLCAmZGF0YSwgeGZzX2dldF9ibG9ja3NfZGlyZWN0LAorCQkJeGZzX2Vu
-ZF9pb19kaXJlY3Rfd3JpdGUsIDApOworCWlmIChyZXQgPiAwKSB7CisJCWlvY2ItPmtpX3BvcyAr
-PSByZXQ7CisJCWlvdl9pdGVyX2FkdmFuY2UoZnJvbSwgcmV0KTsKKwl9CitvdXQ6CisJeGZzX3J3
-X2l1bmxvY2soaXAsIGlvbG9jayk7CiAJcmV0dXJuIHJldDsKIH0KIApAQCAtNzY1LDcgKzg0NCw5
-IEBAIHhmc19maWxlX3dyaXRlX2l0ZXIoCiAJaWYgKFhGU19GT1JDRURfU0hVVERPV04oaXAtPmlf
-bW91bnQpKQogCQlyZXR1cm4gLUVJTzsKIAotCWlmICgoaW9jYi0+a2lfZmxhZ3MgJiBJT0NCX0RJ
-UkVDVCkgfHwgSVNfREFYKGlub2RlKSkKKwlpZiAoSVNfREFYKGlub2RlKSkKKwkJcmV0ID0geGZz
-X2ZpbGVfZGF4X3dyaXRlKGlvY2IsIGZyb20pOworCWVsc2UgaWYgKGlvY2ItPmtpX2ZsYWdzICYg
-SU9DQl9ESVJFQ1QpCiAJCXJldCA9IHhmc19maWxlX2Rpb19haW9fd3JpdGUoaW9jYiwgZnJvbSk7
-CiAJZWxzZQogCQlyZXQgPSB4ZnNfZmlsZV9idWZmZXJlZF9haW9fd3JpdGUoaW9jYiwgZnJvbSk7
-CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX3RyYWNlLmggYi9mcy94ZnMveGZzX3RyYWNlLmgKaW5k
-ZXggMjUwNGY5NC4uMTQ1MTY5MCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc190cmFjZS5oCisrKyBi
-L2ZzL3hmcy94ZnNfdHJhY2UuaApAQCAtMTE2NSw4ICsxMTY1LDEwIEBAIERFRklORV9FVkVOVCh4
-ZnNfZmlsZV9jbGFzcywgbmFtZSwJXAogCVRQX0FSR1MoaXAsIGNvdW50LCBvZmZzZXQpKQogREVG
-SU5FX1JXX0VWRU5UKHhmc19maWxlX2J1ZmZlcmVkX3JlYWQpOwogREVGSU5FX1JXX0VWRU5UKHhm
-c19maWxlX2RpcmVjdF9yZWFkKTsKK0RFRklORV9SV19FVkVOVCh4ZnNfZmlsZV9kYXhfcmVhZCk7
-CiBERUZJTkVfUldfRVZFTlQoeGZzX2ZpbGVfYnVmZmVyZWRfd3JpdGUpOwogREVGSU5FX1JXX0VW
-RU5UKHhmc19maWxlX2RpcmVjdF93cml0ZSk7CitERUZJTkVfUldfRVZFTlQoeGZzX2ZpbGVfZGF4
-X3dyaXRlKTsKIERFRklORV9SV19FVkVOVCh4ZnNfZmlsZV9zcGxpY2VfcmVhZCk7CiAKIERFQ0xB
-UkVfRVZFTlRfQ0xBU1MoeGZzX3BhZ2VfY2xhc3MsCi0tIAoyLjEuNAoKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
-LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu 23-06-16 08:58:16, Dave Chinner wrote:
+> On Wed, Jun 22, 2016 at 02:38:22PM +0200, Michal Hocko wrote:
+> > On Wed 22-06-16 11:03:20, Dave Chinner wrote:
+> > > On Tue, Jun 21, 2016 at 04:26:28PM +0200, Michal Hocko wrote:
+> > > > On Wed 15-06-16 17:21:54, Dave Chinner wrote:
+> > [...]
+> > > > > There are allocations outside transaction context which need to be
+> > > > > GFP_NOFS - this is what KM_NOFS was originally intended for.
+> > > > 
+> > > > Is it feasible to mark those by the scope NOFS api as well and drop
+> > > > the direct KM_NOFS usage? This should help to identify those that are
+> > > > lockdep only and use the annotation to prevent from the false positives.
+> > > 
+> > > I don't understand what you are suggesting here. This all started
+> > > because we use GFP_NOFS in a handful of places to shut up lockdep
+> > > and you didn't want us to use GFP_NOFS like that. Now it sounds to
+> > > me like you are advocating setting unconditional GFP_NOFS allocation
+> > > contexts for entire XFS code paths - whether it's necessary or
+> > > not - to avoid problems with lockdep false positives.
+> > 
+> > No, I meant only those paths which need GFP_NOFS for other than lockdep
+> > purposes would use the scope api.
+> > 
+> > Anyway, it seems that we are not getting closer to a desired solution
+> > here. Or I am not following it at least...
+> > 
+> > It seems that we have effectively two possibilities (from the
+> > MM/lockdep) POV. Either add an explicit API to disable the reclaim
+> > lockdep machinery for all allocation in a certain scope or a GFP mask
+> > to to achieve the same for a particular allocation. Which one would work
+> > better for the xfs usecase?
+> 
+> As I've said - if we annotate the XFS call sites appropriately (e.g.
+> KM_NOLOCKDEP rather than KM_NOFS), we don't care what lockdep
+> mechanism is used to turn off warnings as it will be wholly
+> encapsulated inside kmem_alloc() and friends.  This will end up
+> similar to how we are currently encapsulate the memalloc_noio_save()
+> wrappers in kmem_zalloc_large().
+
+OK, I see. So which way do we go Peter? Are you going to send the GFP
+one or is there a way to bribe you to go with a thread flag?
+
+-- 
+Michal Hocko
+SUSE Labs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
