@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 86A347CA2
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 17:51:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 579E38F8037
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 15:51:51 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	tPPaDse7teuoWInR for <xfs@oss.sgi.com>;
-	Fri, 24 Jun 2016 15:51:48 -0700 (PDT)
-Date: Sat, 25 Jun 2016 08:51:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs metadata overhead
-Message-ID: <20160624225145.GF12670@dastard>
-References: <CAC=x_0jDYb17Vh97Led7XXDiUMcUTJbpJ2Dw45gn=D0_w0K5VQ@mail.gmail.com>
-	<20160622225117.GX12670@dastard>
-	<CAC=x_0hdvm7SSP8EOAdUwLa-k3a3p7p7CRj8tyCnEx=As7A6jw@mail.gmail.com>
-	<71fbc905-ef05-126a-5c7f-c68c9018763c@sandeen.net>
-	<CAC=x_0hnGQHAenv985+FusWxK_63AatB_XK_mqbAmyt=OxqYrg@mail.gmail.com>
-	<b920a8ec-6410-1daa-809c-04b48db24c0a@sandeen.net>
-	<CAC=x_0g_iktOKOKiRF5Ku7N-PSbCXOR+Amhm577YjNYQaRPjeA@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 00D037CA1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 09:22:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BAACC304032
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 07:22:47 -0700 (PDT)
+Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
+	[74.125.82.47]) by cuda.sgi.com with ESMTP id GYpXWz1fxGkE5Sai
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2016 07:22:44 -0700 (PDT)
+Received: by mail-wm0-f47.google.com with SMTP id 187so4091534wmz.1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 07:22:44 -0700 (PDT)
+Message-ID: <576BF0B0.5080904@plexistor.com>
+Date: Thu, 23 Jun 2016 17:22:40 +0300
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAC=x_0g_iktOKOKiRF5Ku7N-PSbCXOR+Amhm577YjNYQaRPjeA@mail.gmail.com>
+Subject: Re: [PATCH 8/8] xfs: fix locking for DAX writes
+References: <1466609236-23801-1-git-send-email-hch@lst.de>
+	<1466609236-23801-9-git-send-email-hch@lst.de>
+In-Reply-To: <1466609236-23801-9-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,30 +32,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Danny Shavit <danny@zadarastorage.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Fri, Jun 24, 2016 at 04:21:39PM +0300, Danny Shavit wrote:
-> I see.
-> So using bulk_stat ioctl in similar way to xfs_fsr and summing allocated
-> size will result with  more accurate number?
+On 06/22/2016 06:27 PM, Christoph Hellwig wrote:
+> So far DAX writes inherited the locking from direct I/O writes, but the direct
+> I/O model of using shared locks for writes is actually wrong for DAX.  For
+> direct I/O we're out of any standards and don't have to provide the Posix
+> required exclusion between writers, but for DAX which gets transparently
+> enable on applications without any knowledge of it we can't simply drop the
+> requirement.  Even worse this only happens for aligned writes and thus
+> doesn't show up for many typical use cases.
+> 
 
-No. du includes *directory blocks* in it's sum. bulkstat only counts
-inodes, which is not counted by du and is part of the metadata you
-have already accounted for. Even then, bulkstat doesn't give an
-accurate account o space used by inodes because they can be sparsely
-allocated from within inode chunks.
+Hi Sir Christoph
 
-Just snapshot the volume, run metadump on the snapshot - it's the
-fastest, most reliable way to work out how much metadata is in a
-filesystem right now...
+You raise a very interesting point and I would please like to ask questions.
+Is this a theoretical standards problem or a real applications problem that
+you know of?
 
-Cheers,
+You say above: " Posix required exclusion between writers"
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+As I understand, what it means is that if two threads/processes A & B write to the
+same offset-length, in parallel. then a consistent full version will hold
+of either A or B, which ever comes last. But never a torn version of both.
+
+Is this really POSIX. I mean I knew POSIX is silly but so much so?
+What about NFS CEPH Luster and all these network shared stuff. Does POSIX
+say "On a single Node?". (Trond been yelling about file locks for *any* kind
+of synchronization for years.)
+
+And even with the write-lock to serialize writers (Or i_mute in case of ext4)
+I do not see how this serialization works, because in a cached environment a
+write_back can start and crash while the second thread above starts his memcopy
+and on disk we still get a torn version of the record that was half from
+A half from B. (Or maybe I do not understand what your automicity means)
+
+Is not a rant I would really like to know what application uses this
+"single-writer" facility and how does it actually works for them? I honestly
+don't see how it works. (And do they really check that they are only working
+on a local file system?)
+Sorry for my slowness please explain?
+
+BTW: I think that all the patches except this one makes a lot of sense
+because of all the hidden quirks of direct_IO code paths. Just for example the
+difference between "aligned and none align writes" as you mentioned above.
+
+My $0.017:
+Who In the real world would actually break without this patch, which
+is not already broken?
+And why sacrifice the vast majority of good applications for the sake
+of an already broken (theoretical?) applications.
+
+Thank you
+Boaz
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 20 +-------------------
+>  1 file changed, 1 insertion(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 0e74325..413c9e0 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -714,24 +714,11 @@ xfs_file_dax_write(
+>  	struct address_space	*mapping = iocb->ki_filp->f_mapping;
+>  	struct inode		*inode = mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> -	struct xfs_mount	*mp = ip->i_mount;
+>  	ssize_t			ret = 0;
+> -	int			unaligned_io = 0;
+> -	int			iolock;
+> +	int			iolock = XFS_IOLOCK_EXCL;
+>  	struct iov_iter		data;
+>  
+> -	/* "unaligned" here means not aligned to a filesystem block */
+> -	if ((iocb->ki_pos & mp->m_blockmask) ||
+> -	    ((iocb->ki_pos + iov_iter_count(from)) & mp->m_blockmask)) {
+> -		unaligned_io = 1;
+> -		iolock = XFS_IOLOCK_EXCL;
+> -	} else if (mapping->nrpages) {
+> -		iolock = XFS_IOLOCK_EXCL;
+> -	} else {
+> -		iolock = XFS_IOLOCK_SHARED;
+> -	}
+>  	xfs_rw_ilock(ip, iolock);
+> -
+>  	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+>  	if (ret)
+>  		goto out;
+> @@ -747,11 +734,6 @@ xfs_file_dax_write(
+>  		WARN_ON_ONCE(ret);
+>  	}
+>  
+> -	if (iolock == XFS_IOLOCK_EXCL && !unaligned_io) {
+> -		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+> -		iolock = XFS_IOLOCK_SHARED;
+> -	}
+> -
+>  	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
+>  
+>  	data = *from;
+> 
 
 _______________________________________________
 xfs mailing list
