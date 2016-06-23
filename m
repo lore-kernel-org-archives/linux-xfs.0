@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F8977CA3
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:23:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 72978304032
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:23:26 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id X4adREbH9BB3pjrW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:23:23 -0700 (PDT)
-Date: Mon, 20 Jun 2016 11:23:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 011/119] xfs: refactor btree maxlevels computation
-Message-ID: <20160620182316.GA29055@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612634260.12839.10495592169777117935.stgit@birch.djwong.org>
-	<20160620143158.GB2465@bfoster.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D3A787CA1
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 22:17:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 982EB8F8037
+	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 20:17:29 -0700 (PDT)
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [119.145.14.65])
+	by cuda.sgi.com with ESMTP id Q3qXb05W3yoOpxs2 (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 Jun 2016 20:17:26 -0700 (PDT)
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH] xfs: remove the magic numbers in xfs_btree_block-related len
+	macros
+Date: Thu, 23 Jun 2016 11:10:20 +0800
+Message-ID: <1466651420-126472-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160620143158.GB2465@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,145 +27,119 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jun 20, 2016 at 10:31:59AM -0400, Brian Foster wrote:
-> On Thu, Jun 16, 2016 at 06:19:02PM -0700, Darrick J. Wong wrote:
-> > Create a common function to calculate the maximum height of a per-AG
-> > btree.  This will eventually be used by the rmapbt and refcountbt code
-> > to calculate appropriate maxlevels values for each.  This is important
-> > because the verifiers and the transaction block reservations depend on
-> > accurate estimates of many blocks are needed to satisfy a btree split.
-> 
-> 			how many
+replace the magic numbers by offsetof(...) and sizeof(...), and add two
+extra checks on xfs_check_ondisk_structs()
 
-Got it, will change for the next posting.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ fs/xfs/libxfs/xfs_format.h | 66 ++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_ondisk.h        |  2 ++
+ 2 files changed, 43 insertions(+), 25 deletions(-)
 
---D
-
-> 
-> > 
-> > We were mistakenly using the max bnobt height for all the btrees,
-> > which creates a dangerous situation since the larger records and keys
-> > in an rmapbt make it very possible that the rmapbt will be taller than
-> > the bnobt and so we can run out of transaction block reservation.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  fs/xfs/libxfs/xfs_alloc.c  |   15 ++-------------
-> >  fs/xfs/libxfs/xfs_btree.c  |   19 +++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_btree.h  |    2 ++
-> >  fs/xfs/libxfs/xfs_ialloc.c |   19 +++++--------------
-> >  4 files changed, 28 insertions(+), 27 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 1c76a0e..c366889 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -1839,19 +1839,8 @@ void
-> >  xfs_alloc_compute_maxlevels(
-> >  	xfs_mount_t	*mp)	/* file system mount structure */
-> >  {
-> > -	int		level;
-> > -	uint		maxblocks;
-> > -	uint		maxleafents;
-> > -	int		minleafrecs;
-> > -	int		minnoderecs;
-> > -
-> > -	maxleafents = (mp->m_sb.sb_agblocks + 1) / 2;
-> > -	minleafrecs = mp->m_alloc_mnr[0];
-> > -	minnoderecs = mp->m_alloc_mnr[1];
-> > -	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
-> > -	for (level = 1; maxblocks > 1; level++)
-> > -		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
-> > -	mp->m_ag_maxlevels = level;
-> > +	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_alloc_mnr,
-> > +			(mp->m_sb.sb_agblocks + 1) / 2);
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index 5eb4e40..046fbcf 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -4158,6 +4158,25 @@ xfs_btree_sblock_verify(
-> >  }
-> >  
-> >  /*
-> > + * Calculate the number of btree levels needed to store a given number of
-> > + * records in a short-format btree.
-> > + */
-> > +uint
-> > +xfs_btree_compute_maxlevels(
-> > +	struct xfs_mount	*mp,
-> > +	uint			*limits,
-> > +	unsigned long		len)
-> > +{
-> > +	uint			level;
-> > +	unsigned long		maxblocks;
-> > +
-> > +	maxblocks = (len + limits[0] - 1) / limits[0];
-> > +	for (level = 1; maxblocks > 1; level++)
-> > +		maxblocks = (maxblocks + limits[1] - 1) / limits[1];
-> > +	return level;
-> > +}
-> > +
-> > +/*
-> >   * Calculate the number of blocks needed to store a given number of records
-> >   * in a short-format (per-AG metadata) btree.
-> >   */
-> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > index b330f19..b955e5d 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > @@ -477,5 +477,7 @@ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
-> >  
-> >  xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-> >  		unsigned long long len);
-> > +uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
-> > +		unsigned long len);
-> >  
-> >  #endif	/* __XFS_BTREE_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 9d0003c..cda7269 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -2394,20 +2394,11 @@ void
-> >  xfs_ialloc_compute_maxlevels(
-> >  	xfs_mount_t	*mp)		/* file system mount structure */
-> >  {
-> > -	int		level;
-> > -	uint		maxblocks;
-> > -	uint		maxleafents;
-> > -	int		minleafrecs;
-> > -	int		minnoderecs;
-> > -
-> > -	maxleafents = (1LL << XFS_INO_AGINO_BITS(mp)) >>
-> > -		XFS_INODES_PER_CHUNK_LOG;
-> > -	minleafrecs = mp->m_inobt_mnr[0];
-> > -	minnoderecs = mp->m_inobt_mnr[1];
-> > -	maxblocks = (maxleafents + minleafrecs - 1) / minleafrecs;
-> > -	for (level = 1; maxblocks > 1; level++)
-> > -		maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
-> > -	mp->m_in_maxlevels = level;
-> > +	uint		inodes;
-> > +
-> > +	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
-> > +	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_inobt_mnr,
-> > +							 inodes);
-> >  }
-> >  
-> >  /*
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index dc97eb21..d3069be 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1435,41 +1435,57 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
+  * with the crc feature bit, and all accesses to them must be conditional on
+  * that flag.
+  */
++/* short form block */
++struct xfs_btree_sblock_part {
++	__be32		bb_leftsib;
++	__be32		bb_rightsib;
++
++	__be64		bb_blkno;
++	__be64		bb_lsn;
++	uuid_t		bb_uuid;
++	__be32		bb_owner;
++	__le32		bb_crc;
++};
++
++/* long form block */
++struct xfs_btree_lblock_part {
++	__be64		bb_leftsib;
++	__be64		bb_rightsib;
++
++	__be64		bb_blkno;
++	__be64		bb_lsn;
++	uuid_t		bb_uuid;
++	__be64		bb_owner;
++	__le32		bb_crc;
++	__be32		bb_pad; /* padding for alignment */
++};
++
+ struct xfs_btree_block {
+ 	__be32		bb_magic;	/* magic number for block type */
+ 	__be16		bb_level;	/* 0 is a leaf */
+ 	__be16		bb_numrecs;	/* current # of data records */
+ 	union {
+-		struct {
+-			__be32		bb_leftsib;
+-			__be32		bb_rightsib;
+-
+-			__be64		bb_blkno;
+-			__be64		bb_lsn;
+-			uuid_t		bb_uuid;
+-			__be32		bb_owner;
+-			__le32		bb_crc;
+-		} s;			/* short form pointers */
+-		struct	{
+-			__be64		bb_leftsib;
+-			__be64		bb_rightsib;
+-
+-			__be64		bb_blkno;
+-			__be64		bb_lsn;
+-			uuid_t		bb_uuid;
+-			__be64		bb_owner;
+-			__le32		bb_crc;
+-			__be32		bb_pad; /* padding for alignment */
+-		} l;			/* long form pointers */
++		struct xfs_btree_sblock_part s;
++		struct xfs_btree_lblock_part l;
+ 	} bb_u;				/* rest */
+ };
+ 
+-#define XFS_BTREE_SBLOCK_LEN	16	/* size of a short form block */
+-#define XFS_BTREE_LBLOCK_LEN	24	/* size of a long form block */
++/* size of a short form block */
++#define XFS_BTREE_SBLOCK_LEN \
++	(offsetof(struct xfs_btree_block, bb_u) + \
++	 offsetof(struct xfs_btree_sblock_part, bb_blkno))
++/* size of a long form block */
++#define XFS_BTREE_LBLOCK_LEN \
++	(offsetof(struct xfs_btree_block, bb_u) + \
++	 offsetof(struct xfs_btree_lblock_part, bb_blkno))
+ 
+ /* sizes of CRC enabled btree blocks */
+-#define XFS_BTREE_SBLOCK_CRC_LEN	(XFS_BTREE_SBLOCK_LEN + 40)
+-#define XFS_BTREE_LBLOCK_CRC_LEN	(XFS_BTREE_LBLOCK_LEN + 48)
++#define XFS_BTREE_SBLOCK_CRC_LEN \
++	(offsetof(struct xfs_btree_block, bb_u) + \
++	 sizeof(struct xfs_btree_sblock_part))
++#define XFS_BTREE_LBLOCK_CRC_LEN \
++	(offsetof(struct xfs_btree_block, bb_u) + \
++	 sizeof(struct xfs_btree_lblock_part))
+ 
+ #define XFS_BTREE_SBLOCK_CRC_OFF \
+ 	offsetof(struct xfs_btree_block, bb_u.s.bb_crc)
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index 184c44e..6f06c48 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -34,6 +34,8 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_sblock_part,	48);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_lblock_part,	64);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
