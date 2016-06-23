@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9A0497CA1
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 13:48:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C32D8F8037
-	for <xfs@oss.sgi.com>; Mon, 20 Jun 2016 11:48:49 -0700 (PDT)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	n7ROS310f2nhu5Tb for <xfs@oss.sgi.com>;
-	Mon, 20 Jun 2016 11:48:48 -0700 (PDT)
-Date: Mon, 20 Jun 2016 12:48:27 -0600
-From: Vishal Verma <vishal.l.verma@intel.com>
-Subject: Re: [RFC PATCH 0/2] Initial support for badblock checking in xfs
-Message-ID: <20160620184812.GA21878@omniknight.lm.intel.com>
-References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7E4DF7CA1
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 13:12:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 514818F8033
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 11:12:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id AjZoEWlO7ZsAJF1o for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2016 11:12:20 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 6690915B3B
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 13:12:20 -0500 (CDT)
+Subject: Re: xfs metadata overhead
+References: <CAC=x_0jDYb17Vh97Led7XXDiUMcUTJbpJ2Dw45gn=D0_w0K5VQ@mail.gmail.com>
+	<20160622225117.GX12670@dastard>
+	<CAC=x_0hdvm7SSP8EOAdUwLa-k3a3p7p7CRj8tyCnEx=As7A6jw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <71fbc905-ef05-126a-5c7f-c68c9018763c@sandeen.net>
+Date: Thu, 23 Jun 2016 13:12:20 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
+In-Reply-To: <CAC=x_0hdvm7SSP8EOAdUwLa-k3a3p7p7CRj8tyCnEx=As7A6jw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,96 +34,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@lists.01.org, xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: xfs@oss.sgi.com
 
-On 06/16, Vishal Verma wrote:
-> These are early/RFC patches to add badblock support in xfs.
+On 6/23/16 10:04 AM, Danny Shavit wrote:
+> I see. We will try this direction.
+> BTW: I thought that good estimate would be "volume_size -
+> allocated_size - free_space". But it produced quite a difference
+> compared to metadata dump size.
+> Is there a specific reason?
+
+How do you determine allocated_size, with du?
+
+How different?  Can you show an example?
+
+-Eric
+ 
+> Thanks,
+> Danny
 > 
-> Patch 1 should be relatively straightforward - it adds a notifier chain
-> to badblocks that filesystems can register with.
+> On Thu, Jun 23, 2016 at 1:51 AM, Dave Chinner <david@fromorbit.com <mailto:david@fromorbit.com>> wrote:
 > 
-> Patch 2 is the beginnings of xfs support. So far, I have the notifier
-> registration and building the initial badblock list happening in
-> xfs_mountfs. The next steps (and I may need some help with this as I'm
-> no (x)fs developer :)) are to add this badblocks info to the reverse
-> mapping tree, and then to check for it before accessing the media.
+>     On Wed, Jun 22, 2016 at 06:58:16PM +0300, Danny Shavit wrote:
+>     > Hi,
+>     >
+>     > We are looking for a method to estimate the size of metadata overhead for a
+>     > given file system.
+>     > We would like to use this value as indicator for the amount of cache memory
+>     > a system for faster operation.
+>     > Are there any counters that are maintained in the on-disk data
+>     > structures like free space for examples?
 > 
-> Right now, this just prints the sector numbers/counts/{added, removed}
-> to the kernel log, for both the initial list, and subsequent notifier
-> hits.
+>     No.
 > 
-> While I've tested this with a fake pmem device using libnvdimm's
-> nfit_test framework, it should also work using badblock injection with
-> any block device:
+>     Right now, you'll need to take a metadump of the filesystem to
+>     measure it. The size of the dump file will be a close indication of
+>     the amount of metadata in the filesystem as it only contains
+>     the filesystem metadata.
 > 
-> # mkfs.xfs -f /dev/<device>
-> # echo 122 1 > /sys/block/<device>/badblocks
-> # echo 124 1 > /sys/block/<device>/badblocks
-> # mount -t xfs /dev/<device> /mnt
-> ... in log:
-> [  +8.803776] XFS (pmem7): Mounting V4 Filesystem
-> [  +0.009633] XFS (pmem7): Ending clean mount
-> [  +0.001655] XFS (pmem7): got badblocks: sector 122, count 1
-> [  +0.002018] XFS (pmem7): got badblocks: sector 124, count 1
+>     In future, querying the rmap will enable us to calculate it on the
+>     fly, (i.e. not requiring the filesystem to be snapshotted/taken off
+>     line to do a metadump).
 > 
-> # echo 132 5 | > /sys/block/<device>/badblocks
-> [Jun16 18:56] XFS (pmem7): xfs badblock added sector 132 (count 5)
+>     Cheers,
 > 
-> This is all based on Darrik's rmap work at:
-> https://github.com/djwong/linux/tree/rmap-reflink-devel
-> 
-> Since this is based on a v4.5-rc kernel, it lacks pmem support for
-> clearing badblocks on zeroing/writing, so those parts can't easily
-> be tested yet. The clearing work is in 4.7-rs kernels, and once we
-> rebase to that, that should also be available.
-
-Just fyi, These patches should also cleanly apply to Darrick's for-next
-rebase:
-	https://github.com/djwong/linux/tree/djwong-devel
-
-With this, I can now test badblock clearing also:
-
-$ cat /sys/block/pmem7/badblocks 
-122 1
-124 1
-126 1
-128 1
-
-$ sudo dd if=/dev/zero of=/dev/pmem7 bs=512 count=8 seek=120
-oflag=direct
-8+0 records in
-8+0 records out
-4096 bytes (4.1 kB) copied, 0.0206735 s, 198 kB/s
-
-[  +9.510106] nd_pmem namespace7.0: pmem_clear_poison: 78 clear 1 sector
-[  +0.001827] XFS (pmem7): xfs badblock cleared sector 120 (count 1)
-
-[  +0.002772] nd_pmem namespace7.0: pmem_clear_poison: 7a clear 1 sector
-[  +0.002527] XFS (pmem7): xfs badblock cleared sector 122 (count 1)
-
-[  +0.003004] nd_pmem namespace7.0: pmem_clear_poison: 7c clear 1 sector
-[  +0.002215] XFS (pmem7): xfs badblock cleared sector 124 (count 1)
-
-[  +0.003063] nd_pmem namespace7.0: pmem_clear_poison: 7e clear 1 sector
-[  +0.002307] XFS (pmem7): xfs badblock cleared sector 126 (count 1)
-
-
+>     Dave.
+>     --
+>     Dave Chinner
+>     david@fromorbit.com <mailto:david@fromorbit.com>
 > 
 > 
-> Vishal Verma (2):
->   block, badblocks: add a notifier for badblocks
->   xfs: initial/partial support for badblocks
 > 
->  block/badblocks.c         |  79 +++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_linux.h        |   1 +
->  fs/xfs/xfs_mount.c        | 104 ++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_mount.h        |   1 +
->  include/linux/badblocks.h |  19 +++++++++
->  5 files changed, 201 insertions(+), 3 deletions(-)
 > 
 > -- 
-> 2.5.5
+> Regards,
+> Danny
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
 
 _______________________________________________
