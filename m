@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 645337CA2
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 13:10:59 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6E17F7CA2
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 18:00:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C4849AC002
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 11:10:55 -0700 (PDT)
-Received: from mailuogwdur.emc.com (mailuogwdur.emc.com [128.221.224.79]) by
-	cuda.sgi.com with ESMTP id O2eXU5GBrtFWT7a3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 11:10:53 -0700 (PDT)
-Received: from maildlpprd53.lss.emc.com (maildlpprd53.lss.emc.com
-	[10.106.48.157])
-	by mailuogwprd51.lss.emc.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.0)
-	with ESMTP id u5OIAqxD001814
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 14:10:52 -0400
-Received: from mailusrhubprd54.lss.emc.com (mailusrhubprd54.lss.emc.com
-	[10.106.48.19]) by maildlpprd53.lss.emc.com (RSA Interceptor)
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 14:10:29 -0400
-Received: from MXHUB201.corp.emc.com (MXHUB201.corp.emc.com [10.253.68.27])
-	by mailusrhubprd54.lss.emc.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.0)
-	with ESMTP id u5OIAef9005505
-	(version=TLSv1.2 cipher=AES128-SHA256 bits=128 verify=FAIL)
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 14:10:40 -0400
-From: "Chang, Brady" <Brady.Chang@emc.com>
-Subject: xfs_irecover question
-Date: Fri, 24 Jun 2016 18:10:38 +0000
-Message-ID: <D392E1CC.3E982%brady.chang@emc.com>
-Content-Language: en-US
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DE44BAC003
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 16:00:49 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Wa3vAto4VzIZHpbU for <xfs@oss.sgi.com>;
+	Fri, 24 Jun 2016 16:00:47 -0700 (PDT)
+Date: Sat, 25 Jun 2016 09:00:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
+Message-ID: <20160624230045.GG12670@dastard>
+References: <1466609236-23801-1-git-send-email-hch@lst.de>
+	<20160623232446.GA12670@dastard> <20160624072612.GA22205@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160624072612.GA22205@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,81 +26,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8651353073922334466=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
 
---===============8651353073922334466==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_D392E1CC3E982bradychangemccom_"
+On Fri, Jun 24, 2016 at 09:26:12AM +0200, Christoph Hellwig wrote:
+> On Fri, Jun 24, 2016 at 09:24:46AM +1000, Dave Chinner wrote:
+> > Except we did that *intentionally* - by definition there is no
+> > cache to bypass with DAX and so all IO is "direct". That, combined
+> > with the fact that all Linux filesystems except XFS break the POSIX
+> > exclusive writer rule you are quoting to begin with, it seemed
+> > pointless to enforce it for DAX....
+> 
+> No file system breaks the exclusive writer rule - most filesystem
+> don't make writers atomic vs readers.
+> 
+> More importantly every other filesystem (well there only are ext2
+> and ext4..) exludes DAX writers against other DAX writers.
+> 
+> > So, before taking any patches to change that behaviour in XFS, a
+> > wider discussion about the policy needs to be had. I don't think
+> > we should care about POSIX here - if you have an application that
+> > needs this serialisation, turn off DAX. That's why I made it a
+> > per-inode inheritable flag and why the mount option will go away
+> > over time.
+> 
+> Sorry, but this is simply broken - allowing apps to opt-in behavior
+> (e.g. like we're using O_DIRECT) is always fine.  Requriring
+> filesystem-specific tuning that has affect outside the app to get
+> existing documented behavior is not how to design APIs.
 
---_000_D392E1CC3E982bradychangemccom_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Using DAX is an *admin decision*, not an application decision.
+Indeed, it's a mount option right now, and that's most definitely not
+something the application can turn on or off! Inode flags allow the
+admin to decide that two apps working on the same filesystem can use
+(or not use) DAX independently, rather than needing to put them on
+different filesystems.
 
-Hi,
-Is there a way to find fullpath to the  file generated by  xfs_irecover ?
+> Maybe we'll need to opt-in to use DAX for mmap, but giving the same
+> existing behavior for read and write and avoiding a copy to the pagecache
+> is an obvious win.
 
-For example:
-[root@sdw2 recover]# ls -l 532946
--rw------- 1 root root 33461216 Jun 23 21:07 532946
-[root@sdw2 recover]# file 532946
-532946: SGI XFS filesystem data (blksz 4096, inosz 256, v2 dirs)
+You can't use DAX just for mmap. It's an inode scope behaviour -
+once it's turned on, all accesses to that inode - regardless of user
+interface - must use DAX. It's all or nothing, not a per file
+descript/mmap context option.
 
-Thanks
--Brady
+Cheers,
 
-
-
---_000_D392E1CC3E982bradychangemccom_
-Content-Type: text/html; charset="us-ascii"
-Content-ID: <EC42135312078B499F250DD64A3FFB0F@mail.corp.emc.com>
-Content-Transfer-Encoding: quoted-printable
-
-<html>
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
->
-</head>
-<body style=3D"word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-lin=
-e-break: after-white-space; color: rgb(0, 0, 0); font-size: 14px; font-fami=
-ly: Calibri, sans-serif; ">
-<div>Hi,</div>
-<div>Is there a way to find fullpath to the &nbsp;file generated by &nbsp;x=
-fs_irecover ?</div>
-<div>
-<div><br>
-</div>
-<div>For example:</div>
-<div>[root@sdw2 recover]# ls -l 532946</div>
-<div>-rw------- 1 root root 33461216 Jun 23 21:07 532946</div>
-<div>[root@sdw2 recover]# file 532946</div>
-<div>532946: SGI XFS filesystem data (blksz 4096, inosz 256, v2 dirs)</div>
-</div>
-<div><br>
-</div>
-<div>Thanks</div>
-<div>-Brady</div>
-<div><br>
-</div>
-<br>
-</body>
-</html>
-
---_000_D392E1CC3E982bradychangemccom_--
-
-
---===============8651353073922334466==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8651353073922334466==--
