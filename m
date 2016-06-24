@@ -1,19 +1,18 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C3447CA0
-	for <xfs@oss.sgi.com>; Sun, 26 Jun 2016 17:54:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ABAF0AC003
-	for <xfs@oss.sgi.com>; Sun, 26 Jun 2016 15:54:25 -0700 (PDT)
-Received: from server.vieiragroup.com ([192.163.228.28]) by cuda.sgi.com with
-	ESMTP id zWGszxinog6o8ExX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 26 Jun 2016 15:54:16 -0700 (PDT)
-From: Cyril Brulebois <jaonary@free.fr>
-Subject: 
-Date: Mon, 27 Jun 2016 01:54:01 +0300
-Message-ID: <0000d114e3c2$6e494448$3dd15fac$@free.fr>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0D1A37CA0
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 01:42:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C1DF9304039
+	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 23:42:19 -0700 (PDT)
+Received: from offer.com ([219.133.162.97]) by cuda.sgi.com with SMTP id
+	f4XLAFmuklQdBnO4 for <xfs@oss.sgi.com>;
+	Thu, 23 Jun 2016 23:42:17 -0700 (PDT)
+From: "liguoyan2@163.com" <liguoyan2@163.com>
+Subject: re:bluetooth keyfinfer, ibeacon, personal alarm
 MIME-Version: 1.0
-Content-Language: en-us
+Date: Fri, 24 Jun 2016 13:58:35 +0800
+Message-Id: <20160624064219.A0BB7129608C@cuda.sgi.com>
+Reply-To: liguoyan2@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,84 +21,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1211893827785362835=="
+Content-Type: multipart/mixed; boundary="===============7920259515982584836=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Miles Fidelman <mfidelman@meetinghouse.net>, 793495 <793495@bugs.debian.org>, xfs <xfs@oss.sgi.com>, 751731 <751731@bugs.debian.org>
+To: xfs@oss.sgi.com
 
-This is a multipart message in MIME format.
+--===============7920259515982584836==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
---===============1211893827785362835==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_000_0001_0BA29374.4DD8F346"
-Content-Language: en-us
-
-This is a multipart message in MIME format.
-
-------=_NextPart_000_0001_0BA29374.4DD8F346
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-
-
-
-
-------=_NextPart_000_0001_0BA29374.4DD8F346
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas=
--microsoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:off=
-ice:word" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"=
- xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META HTTP-EQUIV=3D"C=
-ontent-Type" CONTENT=3D"text/html; charset=3Dus-ascii"><meta name=3DGe=
-nerator content=3D"Microsoft Word 15 (filtered medium)"><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;
-	mso-fareast-language:EN-US;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-=2EMsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri",sans-serif;
-	mso-fareast-language:EN-US;}
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:2.0cm 42.5pt 2.0cm 3.0cm;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]--></head><body lang=3DEN link=3D"#0563=
-C1" vlink=3D"#954F72"><div class=3DWordSection1></div></body></html>
-
-------=_NextPart_000_0001_0BA29374.4DD8F346--
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
+Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
+bnQ9Ik1TSFRNTCAxMS4wMC4xMDU4Ni4wIj48L0hFQUQ+DQo8Qk9EWT4NCjxESVYgDQpzdHlsZT0i
+V0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBu
+b25lOyBDT0xPUjogcmdiKDAsMCwwKTsgRk9OVDogMTRweC8yMHB4IFZlcmRhbmE7IFdJRE9XUzog
+MTsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0
+LXN0cm9rZS13aWR0aDogMHB4Ij4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVj
+aWRhIEdyYW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5F
+LUhFSUdIVDogMjNweCI+PEI+Jm5ic3A7aGkgDQpEZWFyICw8L0I+PC9ESVY+DQo8RElWIA0Kc3R5
+bGU9IkZPTlQtRkFNSUxZOiAmIzM5O2x1Y2lkYSBHcmFuZGUmIzM5OywgVmVyZGFuYSwgJiMzOTtN
+aWNyb3NvZnQgWWFIZWkmIzM5OzsgTElORS1IRUlHSFQ6IDIzcHgiPjxTVFJPTkc+PC9TVFJPTkc+
+Jm5ic3A7PC9ESVY+DQo8RElWIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O2x1Y2lkYSBHcmFu
+ZGUmIzM5OywgVmVyZGFuYSwgJiMzOTtNaWNyb3NvZnQgWWFIZWkmIzM5OzsgTElORS1IRUlHSFQ6
+IDIzcHgiPjxCPk91ciANCk1BTlVGQUNUVVJFUiBmb2N1cyBvbiBCbHVldG9vdGggNC4wIChMb3cg
+RW5lcmd5KSwgcHJvZHVjZTo8L0I+PC9ESVY+DQo8RElWIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAm
+IzM5O2x1Y2lkYSBHcmFuZGUmIzM5OywgVmVyZGFuYSwgJiMzOTtNaWNyb3NvZnQgWWFIZWkmIzM5
+OzsgTElORS1IRUlHSFQ6IDIzcHgiPjxCPjEsIA0KQmVhY29uL2lCZWFjb246PC9CPiZuYnNwO2Zv
+ciBuYXZpZ2F0aW9uIFdJVEhPVVQgR1BTLCBjYW4gd29yayBwcm9wZXJseSBJTkRPT1IgDQphbmQg
+T1VURE9PUi48L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVjaWRhIEdy
+YW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5FLUhFSUdI
+VDogMjNweCI+PEI+MiwgDQpBbnRpLWxvc3QgQWxhcm06PC9CPiZuYnNwO2tlZXAgdmFsdWFibGUg
+dGhpbmdzIGluIHNhZmUgcmFuZ2UsIHByb3RlY3QgdGhlbSBmcm9tIA0KYmVpbmcgbG9zdDwvRElW
+Pg0KPERJViANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtsdWNpZGEgR3JhbmRlJiMzOTssIFZl
+cmRhbmEsICYjMzk7TWljcm9zb2Z0IFlhSGVpJiMzOTs7IExJTkUtSEVJR0hUOiAyM3B4Ij5TdXBw
+b3J0IA0KbGFuZ3VhZ2UgOiBFbmdsaXNoLCBDaGluZXNlLER1dGNoLGZyZW5jaCxBcmFiaWMsIEtv
+cmVhbiwgSmFwYW5lc2UgLi4uIGFuZCBzbyANCm9uPC9ESVY+DQo8RElWIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiAmIzM5O2x1Y2lkYSBHcmFuZGUmIzM5OywgVmVyZGFuYSwgJiMzOTtNaWNyb3NvZnQg
+WWFIZWkmIzM5OzsgTElORS1IRUlHSFQ6IDIzcHgiPjxCIA0Kc3R5bGU9IkxJTkUtSEVJR0hUOiAy
+M3B4Ij4zLCBQZXJzb25hbCBBbGFybTo8U1BBTiANCmNsYXNzPUFwcGxlLWNvbnZlcnRlZC1zcGFj
+ZT4mbmJzcDs8L1NQQU4+PC9CPjxTUEFOIA0Kc3R5bGU9IkxJTkUtSEVJR0hUOiAyM3B4Ij5zdWl0
+YWJsZSBmb3IgSG9tZXMgZm9yIHRoZSBlbGRlcmx5LCBjaGlsZHJlbiwgcGVvcGxlIA0Kb24gZmll
+bGQgdHJpcDwvU1BBTj48L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVj
+aWRhIEdyYW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5F
+LUhFSUdIVDogMjNweCI+PFNQQU4gDQpzdHlsZT0iTElORS1IRUlHSFQ6IDIzcHgiPjwvU1BBTj4m
+bmJzcDs8L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVjaWRhIEdyYW5k
+ZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5FLUhFSUdIVDog
+MjNweCI+PFNQQU4gDQpzdHlsZT0iTElORS1IRUlHSFQ6IDIzcHgiPndlbGNvbWUgdG8gcGxhY2Ug
+YW4gb3JkZXIgITwvU1BBTj48L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7
+bHVjaWRhIEdyYW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBM
+SU5FLUhFSUdIVDogMjNweCI+PFNQQU4gDQpzdHlsZT0iTElORS1IRUlHSFQ6IDIzcHgiPjwvU1BB
+Tj4mbmJzcDs8L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVjaWRhIEdy
+YW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01pY3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5FLUhFSUdI
+VDogMjNweCI+PFNQQU4gDQpzdHlsZT0iTElORS1IRUlHSFQ6IDIzcHgiPlRoYW5rcyBhbmQgQmVz
+dCByZWdhcmRzPEJSPmdyYWNlIGxpIGZyb20gDQo8U1RST05HPigmbmJzcDtzaGVuemhlbiBqb3l3
+YXkgdGVjaG5vbG9neSBjby4sbHRkKTwvU1RST05HPjwvU1BBTj48L0RJVj4NCjxESVYgDQpzdHls
+ZT0iRk9OVC1GQU1JTFk6ICYjMzk7bHVjaWRhIEdyYW5kZSYjMzk7LCBWZXJkYW5hLCAmIzM5O01p
+Y3Jvc29mdCBZYUhlaSYjMzk7OyBMSU5FLUhFSUdIVDogMjNweCI+PFNQQU4gDQpzdHlsZT0iTElO
+RS1IRUlHSFQ6IDIzcHgiPjxTVFJPTkc+PC9TVFJPTkc+PC9TUEFOPiZuYnNwOzwvRElWPg0KPERJ
+ViANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtsdWNpZGEgR3JhbmRlJiMzOTssIFZlcmRhbmEs
+ICYjMzk7TWljcm9zb2Z0IFlhSGVpJiMzOTs7IExJTkUtSEVJR0hUOiAyM3B4Ij48U1BBTiANCnN0
+eWxlPSJMSU5FLUhFSUdIVDogMjNweCI+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgc3R5bGU9Ik1BUkdJ
+TjogMHB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEwLjVwdDsgRk9OVC1GQU1JTFk6IFZl
+cmRhbmE7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4w
+MDAwcHQiPnNreXBlOiANCmdyYWNlX2Jlc3RvbmVyPC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05v
+cm1hbCBzdHlsZT0iTUFSR0lOOiAwcHQiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0
+OyBGT05ULUZBTUlMWTogVmVyZGFuYTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28t
+Zm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+d2VjaGF0L21vYmlsZS93aGF0c2FwcDowMDg2LTEzNTEw
+NzI2NzE2PC9TUEFOPjwvUD48L1NQQU4+PC9ESVY+PC9ESVY+PC9CT0RZPjwvSFRNTD4NCg0K
 
 
---===============1211893827785362835==
+--===============7920259515982584836==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -110,4 +103,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1211893827785362835==--
+--===============7920259515982584836==--
