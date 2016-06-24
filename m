@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F6BE7CA1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 06:11:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3380B304032
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 04:11:45 -0700 (PDT)
-Received: from mail-pa0-f66.google.com (mail-pa0-f66.google.com
-	[209.85.220.66]) by cuda.sgi.com with ESMTP id OGsEbKNy42GiQyRL
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Jun 2016 04:11:43 -0700 (PDT)
-Received: by mail-pa0-f66.google.com with SMTP id us13so3756996pab.1
-	for <xfs@oss.sgi.com>; Wed, 22 Jun 2016 04:11:43 -0700 (PDT)
-Date: Wed, 22 Jun 2016 19:11:37 +0800
-From: Kaho Ng <ngkaho1234@gmail.com>
-Subject: [PATCH v3] xfs: indentation fix in xfs_btree_get_iroot()
-Message-ID: <20160622191137.26d0725d@zenbook.lan>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 86A347CA2
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 17:51:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 579E38F8037
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 15:51:51 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	tPPaDse7teuoWInR for <xfs@oss.sgi.com>;
+	Fri, 24 Jun 2016 15:51:48 -0700 (PDT)
+Date: Sat, 25 Jun 2016 08:51:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs metadata overhead
+Message-ID: <20160624225145.GF12670@dastard>
+References: <CAC=x_0jDYb17Vh97Led7XXDiUMcUTJbpJ2Dw45gn=D0_w0K5VQ@mail.gmail.com>
+	<20160622225117.GX12670@dastard>
+	<CAC=x_0hdvm7SSP8EOAdUwLa-k3a3p7p7CRj8tyCnEx=As7A6jw@mail.gmail.com>
+	<71fbc905-ef05-126a-5c7f-c68c9018763c@sandeen.net>
+	<CAC=x_0hnGQHAenv985+FusWxK_63AatB_XK_mqbAmyt=OxqYrg@mail.gmail.com>
+	<b920a8ec-6410-1daa-809c-04b48db24c0a@sandeen.net>
+	<CAC=x_0g_iktOKOKiRF5Ku7N-PSbCXOR+Amhm577YjNYQaRPjeA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAC=x_0g_iktOKOKiRF5Ku7N-PSbCXOR+Amhm577YjNYQaRPjeA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +35,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Danny Shavit <danny@zadarastorage.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
 
-The indentation in this function is different from the other functions.
-Those spacebars are converted to tabs to improve readability.
+On Fri, Jun 24, 2016 at 04:21:39PM +0300, Danny Shavit wrote:
+> I see.
+> So using bulk_stat ioctl in similar way to xfs_fsr and summing allocated
+> size will result with  more accurate number?
 
-Signed-off-by: Kaho Ng <ngkaho1234@gmail.com>
----
- fs/xfs/libxfs/xfs_btree.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+No. du includes *directory blocks* in it's sum. bulkstat only counts
+inodes, which is not counted by du and is part of the metadata you
+have already accounted for. Even then, bulkstat doesn't give an
+accurate account o space used by inodes because they can be sparsely
+allocated from within inode chunks.
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 1f88e1c..4f84dde 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -543,12 +543,12 @@ xfs_btree_ptr_addr(
-  */
- STATIC struct xfs_btree_block *
- xfs_btree_get_iroot(
--       struct xfs_btree_cur    *cur)
-+	struct xfs_btree_cur	*cur)
- {
--       struct xfs_ifork        *ifp;
-+	struct xfs_ifork	*ifp;
- 
--       ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, cur->bc_private.b.whichfork);
--       return (struct xfs_btree_block *)ifp->if_broot;
-+	ifp = XFS_IFORK_PTR(cur->bc_private.b.ip, cur->bc_private.b.whichfork);
-+	return (struct xfs_btree_block *)ifp->if_broot;
- }
- 
- /*
+Just snapshot the volume, run metadump on the snapshot - it's the
+fastest, most reliable way to work out how much metadata is in a
+filesystem right now...
+
+Cheers,
+
+Dave.
 -- 
-2.9.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
