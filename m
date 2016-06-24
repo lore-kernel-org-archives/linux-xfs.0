@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A02F67CA0
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 20:41:08 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DA7397CA0
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 08:52:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 70002304051
-	for <xfs@oss.sgi.com>; Thu, 23 Jun 2016 18:41:08 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id J9wNLmdvwCJxazib (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4526FAC006
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 06:52:02 -0700 (PDT)
+Received: from mx.recia.fr (mx.recia.fr [95.128.41.47]) by cuda.sgi.com with
+	ESMTP id KkxvRfmxDAccTXLE (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 23 Jun 2016 18:41:06 -0700 (PDT)
-Date: Thu, 23 Jun 2016 18:40:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 0/2] Initial support for badblock checking in xfs
-Message-ID: <20160624014053.GB18415@birch.djwong.org>
-References: <1466125419-17736-1-git-send-email-vishal.l.verma@intel.com>
-	<20160620184812.GA21878@omniknight.lm.intel.com>
+	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 06:51:59 -0700 (PDT)
+Subject: Re: Bug (?) : cumulative xfsrestore does not restore files and
+	folders in a directory which was renamed
+References: <a08ae222-7654-4a6f-d9ba-f70017784f74@recia.fr>
+	<20160622220959.GV12670@dastard> <20160622222328.GW12670@dastard>
+	<20160623014217.GZ12670@dastard>
+From: Damien Gombault <damien.gombault@recia.fr>
+Message-ID: <eacabe85-cdff-7fbc-8bb6-c8eb51fc0dac@recia.fr>
+Date: Fri, 24 Jun 2016 15:51:57 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160620184812.GA21878@omniknight.lm.intel.com>
+In-Reply-To: <20160623014217.GZ12670@dastard>
+Content-Type: multipart/mixed; boundary="------------02BA962CC061415C1E234270"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,158 +28,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Vishal Verma <vishal.l.verma@intel.com>
-Cc: linux-nvdimm@ml01.01.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 20, 2016 at 12:48:27PM -0600, Vishal Verma wrote:
-> On 06/16, Vishal Verma wrote:
-> > These are early/RFC patches to add badblock support in xfs.
-> > 
-> > Patch 1 should be relatively straightforward - it adds a notifier chain
-> > to badblocks that filesystems can register with.
-> > 
-> > Patch 2 is the beginnings of xfs support. So far, I have the notifier
-> > registration and building the initial badblock list happening in
-> > xfs_mountfs. The next steps (and I may need some help with this as I'm
-> > no (x)fs developer :)) are to add this badblocks info to the reverse
-> > mapping tree, and then to check for it before accessing the media.
-> > 
-> > Right now, this just prints the sector numbers/counts/{added, removed}
-> > to the kernel log, for both the initial list, and subsequent notifier
-> > hits.
-> > 
-> > While I've tested this with a fake pmem device using libnvdimm's
-> > nfit_test framework, it should also work using badblock injection with
-> > any block device:
-> > 
-> > # mkfs.xfs -f /dev/<device>
-> > # echo 122 1 > /sys/block/<device>/badblocks
-> > # echo 124 1 > /sys/block/<device>/badblocks
-> > # mount -t xfs /dev/<device> /mnt
-> > ... in log:
-> > [  +8.803776] XFS (pmem7): Mounting V4 Filesystem
-> > [  +0.009633] XFS (pmem7): Ending clean mount
-> > [  +0.001655] XFS (pmem7): got badblocks: sector 122, count 1
-> > [  +0.002018] XFS (pmem7): got badblocks: sector 124, count 1
-> > 
-> > # echo 132 5 | > /sys/block/<device>/badblocks
-> > [Jun16 18:56] XFS (pmem7): xfs badblock added sector 132 (count 5)
-> > 
-> > This is all based on Darrik's rmap work at:
-> > https://github.com/djwong/linux/tree/rmap-reflink-devel
-> > 
-> > Since this is based on a v4.5-rc kernel, it lacks pmem support for
-> > clearing badblocks on zeroing/writing, so those parts can't easily
-> > be tested yet. The clearing work is in 4.7-rs kernels, and once we
-> > rebase to that, that should also be available.
-> 
-> Just fyi, These patches should also cleanly apply to Darrick's for-next
-> rebase:
-> 	https://github.com/djwong/linux/tree/djwong-devel
-> 
-> With this, I can now test badblock clearing also:
-> 
-> $ cat /sys/block/pmem7/badblocks 
-> 122 1
-> 124 1
-> 126 1
-> 128 1
-> 
-> $ sudo dd if=/dev/zero of=/dev/pmem7 bs=512 count=8 seek=120
-> oflag=direct
-> 8+0 records in
-> 8+0 records out
-> 4096 bytes (4.1 kB) copied, 0.0206735 s, 198 kB/s
-> 
-> [  +9.510106] nd_pmem namespace7.0: pmem_clear_poison: 78 clear 1 sector
-> [  +0.001827] XFS (pmem7): xfs badblock cleared sector 120 (count 1)
-> 
-> [  +0.002772] nd_pmem namespace7.0: pmem_clear_poison: 7a clear 1 sector
-> [  +0.002527] XFS (pmem7): xfs badblock cleared sector 122 (count 1)
-> 
-> [  +0.003004] nd_pmem namespace7.0: pmem_clear_poison: 7c clear 1 sector
-> [  +0.002215] XFS (pmem7): xfs badblock cleared sector 124 (count 1)
-> 
-> [  +0.003063] nd_pmem namespace7.0: pmem_clear_poison: 7e clear 1 sector
-> [  +0.002307] XFS (pmem7): xfs badblock cleared sector 126 (count 1)
+This is a multi-part message in MIME format.
+--------------02BA962CC061415C1E234270
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-I guess the next step looks something like this?
+Hi.
 
-static int
-xfs_whine_about_corruption(
-	struct getfsmapx	*fmv,
-	void			*priv)
-{
-	struct xfs_mount	*mp = priv;
+Thank you for the patch.
 
-	if (fmv->fmv_owner < 0) {
-		xfs_err(mp, "fs metadata corrupt, bye bye!");
-		/* XXX: maybe shut down now? */
-		return 0;
-	}
+The patch fixes simple cases (like my reproducer) but it does not fix
+restoration of more complex directory structures : I have tested the 
+patch on my
+real data, it fixes some but not all warnings (a user renamed/moved a 
+lots of
+files and directory between the 2 dumps).
 
-	xfs_err(mp, "inode %llu is corrupt at offset %llu length %u",
-			fmv->fmv_owner, fmv->fmv_offset, fmv->fmv_length);
-	return 0;
-}
+Here is another testcase which fails (with the patch) :
 
-int
-xfs_whine_about_badblocks(
-	struct xfs_mount	*mp,
-	sector_t		low,
-	sector_t		high)
-{
-	struct getfsmapx	fmv[2];
-	struct getfsmapx	*l, *h;
-	int			error;
+mkdir dira
+mkdir dira/dirc
+touch dira/dirc/filea
+mkdir dirb
 
-	memset(l, 0, sizeof(*l));
-	memset(h, 0xFF, sizeof(*h));
-	l = fmv;
-	h = fmv + 1;
-	l->fmv_block = low;
-	h->fmv_block = high;
-	l->fmv_count = 2;
+.
+├── dira
+│   └── dirc
+│       └── filea
+└── dirb
 
-	return xfs_getfsmap(mp, fmv, xfs_whine_about_corruption, mp);
-}
+Make a level 0 dump.
 
-static int
-xfs_notifier_call(...)
-{
-	...all the stuff that's already there...
-	xfs_whine_about_badblocks(mp, bb_data->sector,
-			bb_data->sector + bb_data->count - 1);
-}
+mv dirb dira/dirB
+mv dira/dirc/ dira/dirB/dirC
+touch dira/dirB/dirC/fileb
 
-(Yeah, you need rmap for this to do anything useful.)
+.
+└── dira
+     └── dirB
+         └── dirC
+             ├── filea
+             └── fileb
 
---D
+Make a level 1 dump.
 
-> 
-> 
-> > 
-> > 
-> > Vishal Verma (2):
-> >   block, badblocks: add a notifier for badblocks
-> >   xfs: initial/partial support for badblocks
-> > 
-> >  block/badblocks.c         |  79 +++++++++++++++++++++++++++++++++--
-> >  fs/xfs/xfs_linux.h        |   1 +
-> >  fs/xfs/xfs_mount.c        | 104 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_mount.h        |   1 +
-> >  include/linux/badblocks.h |  19 +++++++++
-> >  5 files changed, 201 insertions(+), 3 deletions(-)
-> > 
-> > -- 
-> > 2.5.5
-> > 
+Restore level 0 then level 1 dump, you will get :
+
+xfsrestore: directory post-processing
+xfsrestore: WARNING: unable to set secure extended attribute for 
+dira/dirB: No
+such file or directory (2)
+xfsrestore: restoring non-directory files
+xfsrestore: WARNING: open of dira/dirB/dirC/fileb failed: No such file or
+directory: discarding ino 524386
+xfsrestore: WARNING: unable to set secure extended attribute for
+dira/dirB/dirC/fileb: No such file or directory (2)
+xfsrestore: WARNING: path_to_handle of dira/dirB/dirC failed:No such file or
+directory
+xfsrestore: could not set access and modification times of 
+dira/dirB/dirC: No
+such file or directory
+xfsrestore: chown (uid=0, gid=0) dira/dirB/dirC failed: No such file or
+directory
+xfsrestore: chmod dira/dirB/dirC failed: No such file or directory
+xfsrestore: WARNING: attempt to set extended attributes (xflags 0x80000000,
+extsize = 0x0, projid = 0x0) of dira/dirB/dirC failed: Bad file descriptor
+xfsrestore: WARNING: path_to_handle of dira/dirB failed:No such file or
+directory
+xfsrestore: could not set access and modification times of dira/dirB: No 
+such
+file or directory
+xfsrestore: chown (uid=0, gid=0) dira/dirB failed: No such file or directory
+xfsrestore: chmod dira/dirB failed: No such file or directory
+xfsrestore: WARNING: attempt to set extended attributes (xflags 0x80000000,
+extsize = 0x0, projid = 0x0) of dira/dirB failed: Bad file descriptor
+xfsrestore: WARNING: unable to rmdir /mnt/test//orphanage: Directory not 
+empty
+
+Directory dirB is placed in orphanage folder and fileb is not restored :
+
+.
+├── dira
+├── orphanage
+│   └── 1069152.734839917
+│       └── dirC
+│           └── filea
+└── xfsrestorehousekeepingdir
+     ├── dirattr
+     ├── dirextattr
+     ├── namreg
+     ├── state
+     └── tree
+
+--
+Damien Gombault
+
+Le 23/06/2016 à 03:42, Dave Chinner a écrit :
+> On Thu, Jun 23, 2016 at 08:23:28AM +1000, Dave Chinner wrote:
+>> On Thu, Jun 23, 2016 at 08:09:59AM +1000, Dave Chinner wrote:
+>>> But it seems that dirb hasn't been created before the file in it
+>>> is being restored. THis can happen because the inventory is not
+>>> correct, whichmay in fact be a problem with dump rather than
+>>> restore...
+>>>
+>>> I'll have a bit of a play around here, see if I can reproduce it.
+>> Yes, i can reproduce it, so I'll have a deeper look.
+> Can you try this patch?
+>
+> -Dave
+
+
+--------------02BA962CC061415C1E234270
+Content-Type: text/x-vcard; charset=utf-8;
+ name="damien_gombault.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="damien_gombault.vcf"
+
+begin:vcard
+fn:Damien Gombault
+n:Gombault;Damien
+org;quoted-printable:GIP Recia =E2=88=92 Centre de ressources r=C3=A9gional du num=C3=A9rique
+adr;quoted-printable;dom:Parc d'Activit=C3=A9s les Aulnaies;;151, Rue de la Juine;Olivet;;45160
+email;internet:damien.gombault@recia.fr
+title;quoted-printable:Responsable des syst=C3=A8mes informatiques
+tel;work:02 38 42 14 71
+tel;cell:06 42 62 78 19
+url:http://recia.fr
+version:2.1
+end:vcard
+
+
+--------------02BA962CC061415C1E234270
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------02BA962CC061415C1E234270--
