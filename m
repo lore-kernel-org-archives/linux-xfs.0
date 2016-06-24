@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B5EA27CA0
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 08:28:08 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 167827CA0
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 02:52:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E555AC005
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 06:28:04 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 8gvTRTkguPpFLzJD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 06:28:03 -0700 (PDT)
-Date: Fri, 24 Jun 2016 16:27:49 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] xfs: don't allow negative error tags
-Message-ID: <20160624132749.GP32247@mwanda>
-References: <20160624122234.GA23169@mwanda>
- <576D31B9.8010908@easystack.cn>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <576D31B9.8010908@easystack.cn>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FF7EAC002
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:52:53 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id IFMT1bNgbRYhrpiH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:52:51 -0700 (PDT)
+Received: from [91.114.64.3] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1bGLv0-0002rC-Ez
+	for xfs@oss.sgi.com; Fri, 24 Jun 2016 07:52:50 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: get rid of unaligned embedded structs in on-disk structures
+Date: Fri, 24 Jun 2016 09:52:44 +0200
+Message-Id: <1466754767-10657-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,34 +25,17 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@easystack.cn>
-Cc: kernel-janitors@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jun 24, 2016 at 09:12:25PM +0800, Jeff Liu wrote:
-> Hi Dan,
-> 
-> xfs_errortag_add() is called by xfs_file_ioctl(), which accept the 1st
-> argument as signed, i.e,
-> 
-> typedef struct xfs_error_injection {
-> __s32 fd;
-> __s32 errtag;
-> } xfs_error_injection_t;
-> 
-> Should we make it happy as well? Also, the typedef can be converted to
-> to struct xfs_error_injection by removing the depreciated
-> xfs_error_injection_t
-> syntax if so.
-
-That has been the user interface for a while so I didn't want to change
-it.
-
-regards,
-dan carpenter
+Recent build bot reports show that besides ARM old ABI at least openrisc
+and cris also have problems with our unaligned structures in the on-disk
+format.  This series gets rid of our structs that just wrap u8 arrays
+used for get_unaligned_be* and the __arch_pack magic.
 
 _______________________________________________
 xfs mailing list
