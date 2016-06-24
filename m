@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9BF737CA0
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 02:14:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 52D348F8035
-	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:14:02 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2rNk6zCBf7G2I5O6 for <xfs@oss.sgi.com>;
-	Fri, 24 Jun 2016 00:13:58 -0700 (PDT)
-Date: Fri, 24 Jun 2016 17:13:18 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id EC45A7CA0
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 02:26:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B154D8F8033
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:26:17 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id 8GBfFaW2Kb3CeZ41 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:26:15 -0700 (PDT)
+Date: Fri, 24 Jun 2016 09:26:12 +0200
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
-Message-ID: <20160624071318.GE12670@dastard>
+Message-ID: <20160624072612.GA22205@lst.de>
 References: <1466609236-23801-1-git-send-email-hch@lst.de>
 	<20160623232446.GA12670@dastard>
-	<CAPcyv4iWVyJ3vb+_dtehGRxT9WXwAxNXoDMNeNtxO+=njHNAhg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4iWVyJ3vb+_dtehGRxT9WXwAxNXoDMNeNtxO+=njHNAhg@mail.gmail.com>
+In-Reply-To: <20160623232446.GA12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,83 +30,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, Christoph Hellwig <hch@lst.de>, XFS Developers <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, Jun 23, 2016 at 06:14:47PM -0700, Dan Williams wrote:
-> On Thu, Jun 23, 2016 at 4:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Jun 22, 2016 at 05:27:08PM +0200, Christoph Hellwig wrote:
-> >> The last patch is what started the series:  XFS currently uses the
-> >> direct I/O locking strategy for DAX because DAX was overloaded onto
-> >> the direct I/O path.  For XFS this means that we only take a shared
-> >> inode lock instead of the normal exclusive one for writes IFF they
-> >> are properly aligned.  While this is fine for O_DIRECT which requires
-> >> explicit opt-in from the application it's not fine for DAX where we'll
-> >> suddenly lose expected and required synchronization of the file system
-> >> happens to use DAX undeneath.
-> >
-> > Except we did that *intentionally* - by definition there is no
-> > cache to bypass with DAX and so all IO is "direct". That, combined
-> > with the fact that all Linux filesystems except XFS break the POSIX
-> > exclusive writer rule you are quoting to begin with, it seemed
-> > pointless to enforce it for DAX....
-> 
-> If we're going to be strict about POSIX fsync() semantics we should be
-> strict about this exclusive write semantic.  In other words why is it
-> ok to loosen one and not the other, if application compatibility is
-> the concern?
+On Fri, Jun 24, 2016 at 09:24:46AM +1000, Dave Chinner wrote:
+> Except we did that *intentionally* - by definition there is no
+> cache to bypass with DAX and so all IO is "direct". That, combined
+> with the fact that all Linux filesystems except XFS break the POSIX
+> exclusive writer rule you are quoting to begin with, it seemed
+> pointless to enforce it for DAX....
 
-This is a POSIX compliant fsync() implementation:
+No file system breaks the exclusive writer rule - most filesystem
+don't make writers atomic vs readers.
 
-int fsync(int fd)
-{
-	return 0;
-}
+More importantly every other filesystem (well there only are ext2
+and ext4..) exludes DAX writers against other DAX writers.
 
-That's not what we require from Linux filesystems and storage
-subsystems.  Our data integrity requirements are not actually
-defined by POSIX - we go way beyond what POSIX actually requires us
-to implement. If all we cared about is POSIX, then the above is how
-we'd implement fsync() simply because it's fast. Everyone implements
-fsync differently, so portable applications can't actually rely on
-the POSIX standard fsync() implementation to keep their data safe...
+> So, before taking any patches to change that behaviour in XFS, a
+> wider discussion about the policy needs to be had. I don't think
+> we should care about POSIX here - if you have an application that
+> needs this serialisation, turn off DAX. That's why I made it a
+> per-inode inheritable flag and why the mount option will go away
+> over time.
 
-IOWs, we don't give a shit about what POSIX says about fsync
-because, in practice, it's useless. Instead, we implement something
-that *works* and provides users with real data integrity guarantees.
+Sorry, but this is simply broken - allowing apps to opt-in behavior
+(e.g. like we're using O_DIRECT) is always fine.  Requriring
+filesystem-specific tuning that has affect outside the app to get
+existing documented behavior is not how to design APIs.
 
-If you like the POSIX specs for data integrity, go use
-sync_file_range() - it doesn't guarantee data integrity, just like
-posix compliant fsync(). And yes, applications that use
-sync_file_range() are known to lose data when systems crash...
-
-The POSIX exclusive write requirement is a different case. No linux
-filesystem except XFS has ever met that requirement (in 20 something
-years), yet I don't see applications falling over with corrupt data
-from non-exclusive writes all the time, nor do I see application
-developers shouting at us to provide it. i.e. reality tells us this
-isn't a POSIX behaviour that applications rely on because everyone
-implements it differently.
-
-So, like fsync(), if everyone implements it differently,
-applications don't rely on posix smeantics to serialise access to
-overlapping ranges of a file. And if that's the case, then
-why even bother exclusive write locking in the filesystem when there
-is no need for serialisation of page cache contents?
-
-We don't do it because POSIX says so, because we already ignore what
-POSIX says about this topic for technical reasons. So why should we
-make DAX conform to POSIX exclusive writer behaviour when DAX is
-being specifically aimed at high performance, highly concurrent
-applications where exclusive writer behaviour will cause major
-performance issues?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Maybe we'll need to opt-in to use DAX for mmap, but giving the same
+existing behavior for read and write and avoiding a copy to the pagecache
+is an obvious win.
 
 _______________________________________________
 xfs mailing list
