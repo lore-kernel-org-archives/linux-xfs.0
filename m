@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 521C17CA1
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 07:32:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 24A058F8035
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 05:32:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qebSWrxlPHHNm2N7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 05:32:40 -0700 (PDT)
-Date: Tue, 28 Jun 2016 08:32:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
-	extents to free
-Message-ID: <20160628123238.GE4212@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
-	<20160627131508.GC23076@bfoster.bfoster>
-	<20160627214145.GC4921@birch.djwong.org>
-	<20160627220003.GA4917@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 9BF737CA0
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 02:14:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 52D348F8035
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 00:14:02 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	2rNk6zCBf7G2I5O6 for <xfs@oss.sgi.com>;
+	Fri, 24 Jun 2016 00:13:58 -0700 (PDT)
+Date: Fri, 24 Jun 2016 17:13:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
+Message-ID: <20160624071318.GE12670@dastard>
+References: <1466609236-23801-1-git-send-email-hch@lst.de>
+	<20160623232446.GA12670@dastard>
+	<CAPcyv4iWVyJ3vb+_dtehGRxT9WXwAxNXoDMNeNtxO+=njHNAhg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160627220003.GA4917@birch.djwong.org>
+In-Reply-To: <CAPcyv4iWVyJ3vb+_dtehGRxT9WXwAxNXoDMNeNtxO+=njHNAhg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,140 +27,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>, Christoph Hellwig <hch@lst.de>, XFS Developers <xfs@oss.sgi.com>
 
-T24gTW9uLCBKdW4gMjcsIDIwMTYgYXQgMDM6MDA6MDNQTSAtMDcwMCwgRGFycmljayBKLiBXb25n
-IHdyb3RlOgo+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDAyOjQxOjQ1UE0gLTA3MDAsIERhcnJp
-Y2sgSi4gV29uZyB3cm90ZToKPiA+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDA5OjE1OjA4QU0g
-LTA0MDAsIEJyaWFuIEZvc3RlciB3cm90ZToKPiA+ID4gT24gVGh1LCBKdW4gMTYsIDIwMTYgYXQg
-MDY6MTk6NDdQTSAtMDcwMCwgRGFycmljayBKLiBXb25nIHdyb3RlOgo+ID4gPiA+IENvbm5lY3Qg
-dGhlIHhmc19kZWZlciBtZWNoYW5pc20gd2l0aCB0aGUgcGllY2VzIHRoYXQgd2UnbGwgbmVlZCB0
-bwo+ID4gPiA+IGhhbmRsZSBkZWZlcnJlZCBleHRlbnQgZnJlZWluZy4gIFdlJ2xsIHdpcmUgdXAg
-dGhlIGV4aXN0aW5nIGNvZGUgdG8KPiA+ID4gPiBvdXIgbmV3IGRlZmVycmVkIG1lY2hhbmlzbSBs
-YXRlci4KPiA+ID4gPiAKPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBEYXJyaWNrIEouIFdvbmcgPGRh
-cnJpY2sud29uZ0BvcmFjbGUuY29tPgo+ID4gPiA+IC0tLQo+ID4gPiAKPiA+ID4gQ291bGQgd2Ug
-bWVyZ2UgdGhpcyB3aXRoIHRoZSB4ZnNfdHJhbnNfKmVmaS9lZmQqIGJpdHM/IFdlJ2QgbmVlZCB0
-bwo+ID4gPiBwcmVzZXJ2ZSBzb21lIGNhbGxzIGZvciByZWNvdmVyeSwgYnV0IGl0IGxvb2tzIGxp
-a2Ugb3RoZXIgcGFydHMgYXJlIG9ubHkKPiA+ID4gdXNlZCBieSB0aGUgZGVmZXJyZWQgb3BzIGlu
-ZnJhc3RydWN0dXJlIGF0IHRoaXMgcG9pbnQuCj4gPiAKPiA+IFllcywgd2UgY291bGQgcmVwbGFj
-ZSB4ZnNfYm1hcF9mcmVlX2NyZWF0ZV97aW50ZW50LGRvbmV9IHdpdGgKPiA+IHhmc190cmFuc19n
-ZXRfZWZbaWRdIGFuZCBsb3NlIHRoZSBzaWxseSBmdW5jdGlvbnMuICBJJ2xsIGdvIHRha2UKPiA+
-IGNhcmUgb2YgYWxsIG9mIHRoZW0uCj4gCj4gSGFoLCBnY2MgY29tcGxhaW5zIGFib3V0IHRoZSBt
-aXNtYXRjaCBpbiBwb2ludGVyIHR5cGVzIGZvciB0aGUgc2Vjb25kCj4gYXJndW1lbnQuCj4gCj4g
-ZnMveGZzL3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBlcnJvcjogaW5pdGlhbGl6YXRpb24gZnJv
-bSBpbmNvbXBhdGlibGUgcG9pbnRlciB0eXBlIFstV2Vycm9yPWluY29tcGF0aWJsZS1wb2ludGVy
-LXR5cGVzXQo+ICAgLmNyZWF0ZV9kb25lID0geGZzX3RyYW5zX2dldF9idWQsCj4gICAgICAgICAg
-ICAgICAgICBeCj4gZnMveGZzL3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBub3RlOiAobmVhciBp
-bml0aWFsaXphdGlvbiBmb3Ig4oCYeGZzX2JtYXBfdXBkYXRlX2RlZmVyX3R5cGUuY3JlYXRlX2Rv
-bmXigJkpCj4gCj4gSSBndWVzcyBvbmUgY291bGQgcHV0IGluIGFuIHVnbHkgY2FzdCB0byBjb2Vy
-Y2UgdGhlIHR5cGVzIGF0IGEgY29zdCBvZgo+IHVnbGlmeWluZyB0aGUgY29kZS4gIDxzaHJ1Zz4g
-T3BpbmlvbnM/Cj4gCgpOb3Qgc3VyZSB3aGF0IHlvdSBtZWFuIGhlcmUuLi4gSSBzaG91bGQgYmUg
-bW9yZSBjbGVhci4gV2hhdCBJIHdhcwp0aGlua2luZyBpcyB0byBudWtlIHhmc19kZWZlcl9pdGVt
-LmMsIGRlZmluZSB0aGUgJ2NvbnN0IHN0cnVjdAp4ZnNfZGVmZXJfb3BfdHlwZSB4ZnNfZXh0ZW50
-X2ZyZWVfZGVmZXJfdHlwZScgcmlnaHQgaW4KeGZzX3RyYW5zX2V4dGZyZWUuYyAocGVyaGFwcyBy
-ZW5hbWUgdGhlIGZpbGUpIGFuZCB3aXJlIHVwIHRoZSBmdW5jdGlvbnMKYXBwcm9wcmlhdGVseS4g
-SnVzdCBjaGFuZ2UgdGhlIGZ1bmN0aW9uIHNpZ25hdHVyZXMgaWYgeW91IG5lZWQgdG8uIEZvcgpz
-b21ldGhpbmcgbGlrZSB4ZnNfdHJhbnNfZ2V0X2VmZCgpLCBtYXliZSByZWZhY3RvciB0aGUgZ3V0
-cyBpbnRvIGEKc3RhdGljIGhlbHBlciB0aGF0IGJvdGggdGhlIGRlZmVyIGNhbGxiYWNrIGFuZCB4
-ZnNfdHJhbnNfZ2V0X2VmZCgpIGNhbgp1c2UsIHNpbmNlIHdlIG5lZWQgdGhlIGxhdHRlciBmb3Ig
-bG9nIHJlY292ZXJ5LiBXaWxsIHNvbWV0aGluZyBsaWtlIHRoYXQKd29yaz8KClRvIHB1dCBpdCBz
-aW1wbHksIGl0IGxvb2tzIGxpa2Ugd2UgaGF2ZSBhdCBsZWFzdCBhIGZldyBwbGFjZXMgd2hlcmUK
-ZGVmZXIgaXRlbSBoYXMgYSBjYWxsYmFjayB0aGF0IGNhbGxzIHlldCBhbm90aGVyIGludGVyZmFj
-ZSwgYnV0IGlzIHRoZQpvbmx5IGNhbGxlciBvZiB0aGUgbGF0dGVyIChlLmcuLAp4ZnNfYm1hcF9m
-cmVlX2NyZWF0ZV9pbnRlbnQoKS0+eGZzX3RyYW5zX2dldF9lZmkoKSkuIAoKQnJpYW4KCj4gLS1E
-Cj4gCj4gPiAKPiA+IC0tRAo+ID4gCj4gPiA+IAo+ID4gPiBCcmlhbgo+ID4gPiAKPiA+ID4gPiAg
-ZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaCB8ICAgIDEgCj4gPiA+ID4gIGZzL3hmcy94ZnNfZGVm
-ZXJfaXRlbS5jICAgfCAgMTA4ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKwo+ID4gPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDEwOSBpbnNlcnRpb25zKCspCj4gPiA+
-ID4gCj4gPiA+ID4gCj4gPiA+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX2RlZmVy
-LmggYi9mcy94ZnMvbGlieGZzL3hmc19kZWZlci5oCj4gPiA+ID4gaW5kZXggODVjN2EzYS4uNzQz
-ZmMzMiAxMDA2NDQKPiA+ID4gPiAtLS0gYS9mcy94ZnMvbGlieGZzL3hmc19kZWZlci5oCj4gPiA+
-ID4gKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+ID4gPiA+IEBAIC01MSw2ICs1MSw3
-IEBAIHN0cnVjdCB4ZnNfZGVmZXJfcGVuZGluZyB7Cj4gPiA+ID4gICAqIGZpbmQgYWxsIHRoZSBz
-cGFjZSBpdCBuZWVkcy4KPiA+ID4gPiAgICovCj4gPiA+ID4gIGVudW0geGZzX2RlZmVyX29wc190
-eXBlIHsKPiA+ID4gPiArCVhGU19ERUZFUl9PUFNfVFlQRV9GUkVFLAo+ID4gPiA+ICAJWEZTX0RF
-RkVSX09QU19UWVBFX01BWCwKPiA+ID4gPiAgfTsKPiA+ID4gPiAgCj4gPiA+ID4gZGlmZiAtLWdp
-dCBhL2ZzL3hmcy94ZnNfZGVmZXJfaXRlbS5jIGIvZnMveGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+
-ID4gPiBpbmRleCA0YzJiYTI4Li4xMjdhNTRlIDEwMDY0NAo+ID4gPiA+IC0tLSBhL2ZzL3hmcy94
-ZnNfZGVmZXJfaXRlbS5jCj4gPiA+ID4gKysrIGIvZnMveGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+
-ID4gPiBAQCAtMjksOSArMjksMTE3IEBACj4gPiA+ID4gICNpbmNsdWRlICJ4ZnNfZGVmZXIuaCIK
-PiA+ID4gPiAgI2luY2x1ZGUgInhmc190cmFucy5oIgo+ID4gPiA+ICAjaW5jbHVkZSAieGZzX3Ry
-YWNlLmgiCj4gPiA+ID4gKyNpbmNsdWRlICJ4ZnNfYm1hcC5oIgo+ID4gPiA+ICsjaW5jbHVkZSAi
-eGZzX2V4dGZyZWVfaXRlbS5oIgo+ID4gPiA+ICsKPiA+ID4gPiArLyogRXh0ZW50IEZyZWVpbmcg
-Ki8KPiA+ID4gPiArCj4gPiA+ID4gKy8qIFNvcnQgYm1hcCBpdGVtcyBieSBBRy4gKi8KPiA+ID4g
-PiArc3RhdGljIGludAo+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMoCj4gPiA+ID4g
-Kwl2b2lkCQkJCSpwcml2LAo+ID4gPiA+ICsJc3RydWN0IGxpc3RfaGVhZAkJKmEsCj4gPiA+ID4g
-KwlzdHJ1Y3QgbGlzdF9oZWFkCQkqYikKPiA+ID4gPiArewo+ID4gPiA+ICsJc3RydWN0IHhmc19t
-b3VudAkJKm1wID0gcHJpdjsKPiA+ID4gPiArCXN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0JKnJh
-Owo+ID4gPiA+ICsJc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbQkqcmI7Cj4gPiA+ID4gKwo+ID4g
-PiA+ICsJcmEgPSBjb250YWluZXJfb2YoYSwgc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJm
-aV9saXN0KTsKPiA+ID4gPiArCXJiID0gY29udGFpbmVyX29mKGIsIHN0cnVjdCB4ZnNfYm1hcF9m
-cmVlX2l0ZW0sIHhiZmlfbGlzdCk7Cj4gPiA+ID4gKwlyZXR1cm4gIFhGU19GU0JfVE9fQUdOTyht
-cCwgcmEtPnhiZmlfc3RhcnRibG9jaykgLQo+ID4gPiA+ICsJCVhGU19GU0JfVE9fQUdOTyhtcCwg
-cmItPnhiZmlfc3RhcnRibG9jayk7Cj4gPiA+ID4gK30KPiA+ID4gPiArCj4gPiA+ID4gKy8qIEdl
-dCBhbiBFRkkuICovCj4gPiA+ID4gK1NUQVRJQyB2b2lkICoKPiA+ID4gPiAreGZzX2JtYXBfZnJl
-ZV9jcmVhdGVfaW50ZW50KAo+ID4gPiA+ICsJc3RydWN0IHhmc190cmFucwkJKnRwLAo+ID4gPiA+
-ICsJdW5zaWduZWQgaW50CQkJY291bnQpCj4gPiA+ID4gK3sKPiA+ID4gPiArCXJldHVybiB4ZnNf
-dHJhbnNfZ2V0X2VmaSh0cCwgY291bnQpOwo+ID4gPiA+ICt9Cj4gPiA+ID4gKwo+ID4gPiA+ICsv
-KiBMb2cgYSBmcmVlIGV4dGVudCB0byB0aGUgaW50ZW50IGl0ZW0uICovCj4gPiA+ID4gK1NUQVRJ
-QyB2b2lkCj4gPiA+ID4gK3hmc19ibWFwX2ZyZWVfbG9nX2l0ZW0oCj4gPiA+ID4gKwlzdHJ1Y3Qg
-eGZzX3RyYW5zCQkqdHAsCj4gPiA+ID4gKwl2b2lkCQkJCSppbnRlbnQsCj4gPiA+ID4gKwlzdHJ1
-Y3QgbGlzdF9oZWFkCQkqaXRlbSkKPiA+ID4gPiArewo+ID4gPiA+ICsJc3RydWN0IHhmc19ibWFw
-X2ZyZWVfaXRlbQkqZnJlZTsKPiA+ID4gPiArCj4gPiA+ID4gKwlmcmVlID0gY29udGFpbmVyX29m
-KGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlfbGlzdCk7Cj4gPiA+ID4gKwl4
-ZnNfdHJhbnNfbG9nX2VmaV9leHRlbnQodHAsIGludGVudCwgZnJlZS0+eGJmaV9zdGFydGJsb2Nr
-LAo+ID4gPiA+ICsJCQlmcmVlLT54YmZpX2Jsb2NrY291bnQpOwo+ID4gPiA+ICt9Cj4gPiA+ID4g
-Kwo+ID4gPiA+ICsvKiBHZXQgYW4gRUZEIHNvIHdlIGNhbiBwcm9jZXNzIGFsbCB0aGUgZnJlZSBl
-eHRlbnRzLiAqLwo+ID4gPiA+ICtTVEFUSUMgdm9pZCAqCj4gPiA+ID4gK3hmc19ibWFwX2ZyZWVf
-Y3JlYXRlX2RvbmUoCj4gPiA+ID4gKwlzdHJ1Y3QgeGZzX3RyYW5zCQkqdHAsCj4gPiA+ID4gKwl2
-b2lkCQkJCSppbnRlbnQsCj4gPiA+ID4gKwl1bnNpZ25lZCBpbnQJCQljb3VudCkKPiA+ID4gPiAr
-ewo+ID4gPiA+ICsJcmV0dXJuIHhmc190cmFuc19nZXRfZWZkKHRwLCBpbnRlbnQsIGNvdW50KTsK
-PiA+ID4gPiArfQo+ID4gPiA+ICsKPiA+ID4gPiArLyogUHJvY2VzcyBhIGZyZWUgZXh0ZW50LiAq
-Lwo+ID4gPiA+ICtTVEFUSUMgaW50Cj4gPiA+ID4gK3hmc19ibWFwX2ZyZWVfZmluaXNoX2l0ZW0o
-Cj4gPiA+ID4gKwlzdHJ1Y3QgeGZzX3RyYW5zCQkqdHAsCj4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2Rl
-ZmVyX29wcwkJKmRvcCwKPiA+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSppdGVtLAo+ID4gPiA+
-ICsJdm9pZAkJCQkqZG9uZV9pdGVtLAo+ID4gPiA+ICsJdm9pZAkJCQkqKnN0YXRlKQo+ID4gPiA+
-ICt7Cj4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ICsJ
-aW50CQkJCWVycm9yOwo+ID4gPiA+ICsKPiA+ID4gPiArCWZyZWUgPSBjb250YWluZXJfb2YoaXRl
-bSwgc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiArCWVycm9y
-ID0geGZzX3RyYW5zX2ZyZWVfZXh0ZW50KHRwLCBkb25lX2l0ZW0sCj4gPiA+ID4gKwkJCWZyZWUt
-PnhiZmlfc3RhcnRibG9jaywKPiA+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9ja2NvdW50KTsKPiA+
-ID4gPiArCWttZW1fZnJlZShmcmVlKTsKPiA+ID4gPiArCXJldHVybiBlcnJvcjsKPiA+ID4gPiAr
-fQo+ID4gPiA+ICsKPiA+ID4gPiArLyogQWJvcnQgYWxsIHBlbmRpbmcgRUZJcy4gKi8KPiA+ID4g
-PiArU1RBVElDIHZvaWQKPiA+ID4gPiAreGZzX2JtYXBfZnJlZV9hYm9ydF9pbnRlbnQoCj4gPiA+
-ID4gKwl2b2lkCQkJCSppbnRlbnQpCj4gPiA+ID4gK3sKPiA+ID4gPiArCXhmc19lZmlfcmVsZWFz
-ZShpbnRlbnQpOwo+ID4gPiA+ICt9Cj4gPiA+ID4gKwo+ID4gPiA+ICsvKiBDYW5jZWwgYSBmcmVl
-IGV4dGVudC4gKi8KPiA+ID4gPiArU1RBVElDIHZvaWQKPiA+ID4gPiAreGZzX2JtYXBfZnJlZV9j
-YW5jZWxfaXRlbSgKPiA+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSppdGVtKQo+ID4gPiA+ICt7
-Cj4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ICsKPiA+
-ID4gPiArCWZyZWUgPSBjb250YWluZXJfb2YoaXRlbSwgc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRl
-bSwgeGJmaV9saXN0KTsKPiA+ID4gPiArCWttZW1fZnJlZShmcmVlKTsKPiA+ID4gPiArfQo+ID4g
-PiA+ICsKPiA+ID4gPiArY29uc3Qgc3RydWN0IHhmc19kZWZlcl9vcF90eXBlIHhmc19leHRlbnRf
-ZnJlZV9kZWZlcl90eXBlID0gewo+ID4gPiA+ICsJLnR5cGUJCT0gWEZTX0RFRkVSX09QU19UWVBF
-X0ZSRUUsCj4gPiA+ID4gKwkubWF4X2l0ZW1zCT0gWEZTX0VGSV9NQVhfRkFTVF9FWFRFTlRTLAo+
-ID4gPiA+ICsJLmRpZmZfaXRlbXMJPSB4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMsCj4gPiA+ID4g
-KwkuY3JlYXRlX2ludGVudAk9IHhmc19ibWFwX2ZyZWVfY3JlYXRlX2ludGVudCwKPiA+ID4gPiAr
-CS5hYm9ydF9pbnRlbnQJPSB4ZnNfYm1hcF9mcmVlX2Fib3J0X2ludGVudCwKPiA+ID4gPiArCS5s
-b2dfaXRlbQk9IHhmc19ibWFwX2ZyZWVfbG9nX2l0ZW0sCj4gPiA+ID4gKwkuY3JlYXRlX2RvbmUJ
-PSB4ZnNfYm1hcF9mcmVlX2NyZWF0ZV9kb25lLAo+ID4gPiA+ICsJLmZpbmlzaF9pdGVtCT0geGZz
-X2JtYXBfZnJlZV9maW5pc2hfaXRlbSwKPiA+ID4gPiArCS5jYW5jZWxfaXRlbQk9IHhmc19ibWFw
-X2ZyZWVfY2FuY2VsX2l0ZW0sCj4gPiA+ID4gK307Cj4gPiA+ID4gKwo+ID4gPiA+ICsvKiBEZWZl
-cnJlZCBJdGVtIEluaXRpYWxpemF0aW9uICovCj4gPiA+ID4gIAo+ID4gPiA+ICAvKiBJbml0aWFs
-aXplIHRoZSBkZWZlcnJlZCBvcGVyYXRpb24gdHlwZXMuICovCj4gPiA+ID4gIHZvaWQKPiA+ID4g
-PiAgeGZzX2RlZmVyX2luaXRfdHlwZXModm9pZCkKPiA+ID4gPiAgewo+ID4gPiA+ICsJeGZzX2Rl
-ZmVyX2luaXRfb3BfdHlwZSgmeGZzX2V4dGVudF9mcmVlX2RlZmVyX3R5cGUpOwo+ID4gPiA+ICB9
-Cj4gPiA+ID4gCj4gPiA+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KPiA+ID4gPiB4ZnMgbWFpbGluZyBsaXN0Cj4gPiA+ID4geGZzQG9zcy5zZ2kuY29t
-Cj4gPiA+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gPiAKPiA+
-IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gPiB4ZnMg
-bWFpbGluZyBsaXN0Cj4gPiB4ZnNAb3NzLnNnaS5jb20KPiA+IGh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Jun 23, 2016 at 06:14:47PM -0700, Dan Williams wrote:
+> On Thu, Jun 23, 2016 at 4:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Jun 22, 2016 at 05:27:08PM +0200, Christoph Hellwig wrote:
+> >> The last patch is what started the series:  XFS currently uses the
+> >> direct I/O locking strategy for DAX because DAX was overloaded onto
+> >> the direct I/O path.  For XFS this means that we only take a shared
+> >> inode lock instead of the normal exclusive one for writes IFF they
+> >> are properly aligned.  While this is fine for O_DIRECT which requires
+> >> explicit opt-in from the application it's not fine for DAX where we'll
+> >> suddenly lose expected and required synchronization of the file system
+> >> happens to use DAX undeneath.
+> >
+> > Except we did that *intentionally* - by definition there is no
+> > cache to bypass with DAX and so all IO is "direct". That, combined
+> > with the fact that all Linux filesystems except XFS break the POSIX
+> > exclusive writer rule you are quoting to begin with, it seemed
+> > pointless to enforce it for DAX....
+> 
+> If we're going to be strict about POSIX fsync() semantics we should be
+> strict about this exclusive write semantic.  In other words why is it
+> ok to loosen one and not the other, if application compatibility is
+> the concern?
+
+This is a POSIX compliant fsync() implementation:
+
+int fsync(int fd)
+{
+	return 0;
+}
+
+That's not what we require from Linux filesystems and storage
+subsystems.  Our data integrity requirements are not actually
+defined by POSIX - we go way beyond what POSIX actually requires us
+to implement. If all we cared about is POSIX, then the above is how
+we'd implement fsync() simply because it's fast. Everyone implements
+fsync differently, so portable applications can't actually rely on
+the POSIX standard fsync() implementation to keep their data safe...
+
+IOWs, we don't give a shit about what POSIX says about fsync
+because, in practice, it's useless. Instead, we implement something
+that *works* and provides users with real data integrity guarantees.
+
+If you like the POSIX specs for data integrity, go use
+sync_file_range() - it doesn't guarantee data integrity, just like
+posix compliant fsync(). And yes, applications that use
+sync_file_range() are known to lose data when systems crash...
+
+The POSIX exclusive write requirement is a different case. No linux
+filesystem except XFS has ever met that requirement (in 20 something
+years), yet I don't see applications falling over with corrupt data
+from non-exclusive writes all the time, nor do I see application
+developers shouting at us to provide it. i.e. reality tells us this
+isn't a POSIX behaviour that applications rely on because everyone
+implements it differently.
+
+So, like fsync(), if everyone implements it differently,
+applications don't rely on posix smeantics to serialise access to
+overlapping ranges of a file. And if that's the case, then
+why even bother exclusive write locking in the filesystem when there
+is no need for serialisation of page cache contents?
+
+We don't do it because POSIX says so, because we already ignore what
+POSIX says about this topic for technical reasons. So why should we
+make DAX conform to POSIX exclusive writer behaviour when DAX is
+being specifically aimed at high performance, highly concurrent
+applications where exclusive writer behaviour will cause major
+performance issues?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
