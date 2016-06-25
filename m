@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EE5887CA4
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:39:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ADFFD8F8033
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:39:32 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id fq8EJO6hcXy41eMp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:39:30 -0700 (PDT)
-Date: Tue, 28 Jun 2016 15:39:28 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
-Message-ID: <20160628133928.GB31283@lst.de>
-References: <1466609236-23801-1-git-send-email-hch@lst.de>
-	<20160623232446.GA12670@dastard> <20160624072612.GA22205@lst.de>
-	<20160624230045.GG12670@dastard> <20160628131059.GA30475@lst.de>
-	<57727B27.7060104@plexistor.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <57727B27.7060104@plexistor.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2DC487CA0
+	for <xfs@oss.sgi.com>; Sat, 25 Jun 2016 00:21:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CB43AC002
+	for <xfs@oss.sgi.com>; Fri, 24 Jun 2016 22:21:30 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Q35e6w6F8XHax2qs for <xfs@oss.sgi.com>;
+	Fri, 24 Jun 2016 22:21:27 -0700 (PDT)
+Mime-Version: 1.0 (1.0)
+Subject: Re: Some xfstests failures on non-crc xfs with latest xfsprogs
+	(v4.5.0-rc1)
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20160625044410.GD23649@eguan.usersys.redhat.com>
+Date: Sat, 25 Jun 2016 00:21:26 -0500
+Message-Id: <DFDE1D5E-8FC3-424F-B9B2-3701EA5A339A@sandeen.net>
+References: <20160304112354.GX11419@eguan.usersys.redhat.com>
+	<727b405b-7df2-641a-d4d0-24333e003374@sandeen.net>
+	<20160625044410.GD23649@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <boaz@plexistor.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 28, 2016 at 04:27:03PM +0300, Boaz Harrosh wrote:
-> > Right.  And an existing application can get DAX turned on under its
-> > back, and will now suddently get different synchronization behavior.
-> > That is if it's writes happen to be aligned to the fs block size.
-> > 
-> 
-> Is there an actual application that does that? or is this purely
-> theoretical right now?
 
-Lots of them.  The typical case is multithreaded (or preforked like old
-apache) daemons that use O_APPEND to write to a common log file.  Then
-again those log records will usually not be 4k aligned, so they'd still
-accidentally get the exclusive locking even without this patch.  But
-beware the case where a log record actually matches the alignment..
+> On Jun 24, 2016, at 11:44 PM, Eryu Guan <eguan@redhat.com> wrote:
+> 
+>> On Fri, Jun 24, 2016 at 05:37:10PM -0500, Eric Sandeen wrote:
+>>> On 3/4/16 5:23 AM, Eryu Guan wrote:
+>>> Hi,
+>>> 
+>>> I noticed some xfstests failures while testing v4 XFS with latest
+>>> v4.5.0-rc1 xfsprogs on v4.5-rc6 kernel, and all these failures are gone
+>>> if I use v3.2.4 xfsprogs, or if test on v5 XFS.
+>>> 
+>>> So either xfstests needs update or xfsprogs breaks something for non-crc
+>>> XFS. But I'm not sure which is which, so I post them out for broader
+>>> review.
+>>> 
+>>> (All tests are checked with 'MKFS_OPTIONS="-m crc=0" ./check <sometest>')
+>> 
+>> Eryu, sorry you didn't get a reply on this in March.  We should have
+>> listened!  ;)  The patches I sent in the pat day or two should
+> 
+> Thanks for looking at them! :)
+> 
+>> fix some of these ...
+>> 
+>>> == 1. xfs/032 fsck failure (xfs_db check) on ppc64 host ==
+>> 
+>> but not this one.  Do you still see this?
+> 
+> My recent test with 4.7-rc4 kernel and latest xfsprogs (June 22nd) shows
+> xfs/032 passed on ppc64 host. But I'll retest to be sure.
 
-> 
-> 
-> Thanks
-> Boaz
----end quoted text---
+I wasn't thinking.  Brian's recent sparse inode patches fix this one.
+
+Eric
 
 _______________________________________________
 xfs mailing list
