@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 843F07CA1
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 13:52:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54E0D30404E
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 11:52:01 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6764E7CA0
+	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 16:41:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5A93AC005
+	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 14:41:54 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id BuqHzcly4NrqnbD7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id A1EHOdPosIoDjEQ6 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 11:51:57 -0700 (PDT)
-Date: Tue, 28 Jun 2016 11:51:50 -0700
+	<xfs@oss.sgi.com>; Mon, 27 Jun 2016 14:41:52 -0700 (PDT)
+Date: Mon, 27 Jun 2016 14:41:45 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 016/119] xfs: move deferred operations into a separate file
-Message-ID: <20160628185150.GD16181@birch.djwong.org>
+Subject: Re: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
+	extents to free
+Message-ID: <20160627214145.GC4921@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612637438.12839.12318902006860455847.stgit@birch.djwong.org>
-	<20160627131452.GA23076@bfoster.bfoster>
-	<20160627191401.GA4921@birch.djwong.org>
-	<20160628123232.GD4212@bfoster.bfoster>
+	<146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
+	<20160627131508.GC23076@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160628123232.GD4212@bfoster.bfoster>
+In-Reply-To: <20160627131508.GC23076@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,573 +35,167 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On Tue, Jun 28, 2016 at 08:32:32AM -0400, Brian Foster wrote:
-> On Mon, Jun 27, 2016 at 12:14:01PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 27, 2016 at 09:14:54AM -0400, Brian Foster wrote:
-> > > On Thu, Jun 16, 2016 at 06:19:34PM -0700, Darrick J. Wong wrote:
-> > > > All the code around struct xfs_bmap_free basically implements a
-> > > > deferred operation framework through which we can roll transactions
-> > > > (to unlock buffers and avoid violating lock order rules) while
-> > > > managing all the necessary log redo items.  Previously we only used
-> > > > this code to free extents after some sort of mapping operation, but
-> > > > with the advent of rmap and reflink, we suddenly need to do more than
-> > > > that.
-> > > > 
-> > > > With that in mind, xfs_bmap_free really becomes a deferred ops control
-> > > > structure.  Rename the structure and move the deferred ops into their
-> > > > own file to avoid further bloating of the bmap code.
-> > > > 
-> > > > v2: actually sort the work items by AG to avoid deadlocks
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > 
-> > > So if I'm following this correctly, we 1.) abstract the bmap freeing
-> > > infrastructure into a generic mechanism and 2.) enhance it a bit to
-> > > provide things like partial intent completion, etc.
+On Mon, Jun 27, 2016 at 09:15:08AM -0400, Brian Foster wrote:
+> On Thu, Jun 16, 2016 at 06:19:47PM -0700, Darrick J. Wong wrote:
+> > Connect the xfs_defer mechanism with the pieces that we'll need to
+> > handle deferred extent freeing.  We'll wire up the existing code to
+> > our new deferred mechanism later.
 > > 
-> > [Back from vacation]
-> > 
-> > Yup.  The partial intent completion code is for use by the refcount adjust
-> > function because in the worst case an adjustment of N blocks could require
-> > N record updates.
-> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> Ok, technically those bits could be punted off to the reflink series.
-> 
-> > > If so and for future
-> > > reference, this would probably be easier to review if the abstraction
-> > > and enhancement were done separately. It's probably not worth that at
-> > > this point, however...
-> > 
-> > It wouldn't be difficult to separate them; the partial intent completion
-> > are the two code blocks below that handle the -EAGAIN case.
-> > 
-> 
-> That's kind of what I figured, since otherwise most of the rest of the
-> code maps to the xfs_bmap_*() stuff.
-> 
-> > (On the other hand it's so little code that I figured I might as well
-> > just do the whole file all at once.)
-> > 
-> 
-> It's more a matter of simplifying review when a change is explicitly
-> refactoring vs. having to read through and identify where the
-> enhancements actually are. It leaves a cleaner git history and tends to
-> simplify backporting as well, fwiw.
+> Could we merge this with the xfs_trans_*efi/efd* bits? We'd need to
+> preserve some calls for recovery, but it looks like other parts are only
+> used by the deferred ops infrastructure at this point.
 
-Point taken, the new functionality could be a separate patch.
-
-Or rather, the two chunks of code and a gigantic comment explaining how it
-should be used will become a separate patch.
-
-> That said, I don't mind leaving this one as is at this point.
-> 
-> > > >  fs/xfs/Makefile           |    2 
-> > > >  fs/xfs/libxfs/xfs_defer.c |  471 +++++++++++++++++++++++++++++++++++++++++++++
-> > > >  fs/xfs/libxfs/xfs_defer.h |   96 +++++++++
-> > > >  fs/xfs/xfs_defer_item.c   |   36 +++
-> > > >  fs/xfs/xfs_super.c        |    2 
-> > > >  5 files changed, 607 insertions(+)
-> > > >  create mode 100644 fs/xfs/libxfs/xfs_defer.c
-> > > >  create mode 100644 fs/xfs/libxfs/xfs_defer.h
-> > > >  create mode 100644 fs/xfs/xfs_defer_item.c
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> > > > index 3542d94..ad46a2d 100644
-> > > > --- a/fs/xfs/Makefile
-> > > > +++ b/fs/xfs/Makefile
-> > > > @@ -39,6 +39,7 @@ xfs-y				+= $(addprefix libxfs/, \
-> > > >  				   xfs_btree.o \
-> > > >  				   xfs_da_btree.o \
-> > > >  				   xfs_da_format.o \
-> > > > +				   xfs_defer.o \
-> > > >  				   xfs_dir2.o \
-> > > >  				   xfs_dir2_block.o \
-> > > >  				   xfs_dir2_data.o \
-> > > > @@ -66,6 +67,7 @@ xfs-y				+= xfs_aops.o \
-> > > >  				   xfs_attr_list.o \
-> > > >  				   xfs_bmap_util.o \
-> > > >  				   xfs_buf.o \
-> > > > +				   xfs_defer_item.o \
-> > > >  				   xfs_dir2_readdir.o \
-> > > >  				   xfs_discard.o \
-> > > >  				   xfs_error.o \
-> > > > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > > > new file mode 100644
-> > > > index 0000000..ad14e33e
-> > > > --- /dev/null
-> > > > +++ b/fs/xfs/libxfs/xfs_defer.c
-> ...
-> > > > +int
-> > > > +xfs_defer_finish(
-> > > > +	struct xfs_trans		**tp,
-> > > > +	struct xfs_defer_ops		*dop,
-> > > > +	struct xfs_inode		*ip)
-> > > > +{
-> > > > +	struct xfs_defer_pending	*dfp;
-> > > > +	struct list_head		*li;
-> > > > +	struct list_head		*n;
-> > > > +	void				*done_item = NULL;
-> > > > +	void				*state;
-> > > > +	int				error = 0;
-> > > > +	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
-> > > > +
-> > > > +	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
-> > > > +
-> > > > +	/* Until we run out of pending work to finish... */
-> > > > +	while (xfs_defer_has_unfinished_work(dop)) {
-> > > > +		/* Log intents for work items sitting in the intake. */
-> > > > +		xfs_defer_intake_work(*tp, dop);
-> > > > +
-> > > > +		/* Roll the transaction. */
-> > > > +		error = xfs_defer_trans_roll(tp, dop, ip);
-> > > > +		if (error)
-> > > > +			goto out;
-> > > > +
-> > > > +		/* Mark all pending intents as committed. */
-> > > > +		list_for_each_entry_reverse(dfp, &dop->dop_pending, dfp_list) {
-> > > > +			if (dfp->dfp_committed)
-> > > > +				break;
-> > > > +			dfp->dfp_committed = true;
-> > > > +		}
-> > > > +
-> > > > +		/* Log an intent-done item for the first pending item. */
-> > > > +		dfp = list_first_entry(&dop->dop_pending,
-> > > > +				struct xfs_defer_pending, dfp_list);
-> > > > +		done_item = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
-> > > > +				dfp->dfp_count);
-> > > > +		cleanup_fn = dfp->dfp_type->finish_cleanup;
-> > > > +
-> > > > +		/* Finish the work items. */
-> > > > +		state = NULL;
-> > > > +		list_for_each_safe(li, n, &dfp->dfp_work) {
-> > > > +			list_del(li);
-> > > > +			dfp->dfp_count--;
-> > > > +			error = dfp->dfp_type->finish_item(*tp, dop, li,
-> > > > +					done_item, &state);
-> > > > +			if (error == -EAGAIN) {
-> > > > +				/*
-> > > > +				 * If the caller needs to try again, put the
-> > > > +				 * item back on the pending list and jump out
-> > > > +				 * for further processing.
-> > > 
-> > > A little confused by the terminology here. Perhaps better to say "back
-> > > on the work list" rather than "pending list?"
-> > 
-> > Yes.
-> > 
-> > > Also, what is the meaning/purpose of -EAGAIN here? This isn't used by
-> > > the extent free bits so I'm missing some context.
-> > 
-> > Generally, the ->finish_item() uses -EAGAIN to signal that it couldn't finish
-> > the work item and that it's necessary to log a new redo item and try again.
-> > 
-> 
-> Ah, Ok. So it is explicitly part of the dfops interface/infrastructure.
-> I think that is worth documenting above with a comment (i.e., "certain
-> callers might require many transactions, use -EAGAIN to indicate ...
-> blah blah").
-> 
-> > Practically, the only user of this mechanism is the refcountbt adjust function.
-> > It might be the case that we want to adjust N blocks, but some pathological
-> > user has creatively used reflink to create many refcount records.  In that
-> > case we could blow out the transaction reservation logging all the updates.
-> > 
-> > To avoid that, the refcount code tries to guess (conservatively) when it
-> > might be getting close and returns a short *adjusted.  See the call sites of
-> > xfs_refcount_still_have_space().  Next, xfs_trans_log_finish_refcount_update()
-> > will notice the short adjust returned and fixes up the CUD item to have a
-> > reduced cud_nextents and to reflect where the operation stopped.  Then,
-> > xfs_refcount_update_finish_item() notices the short return, updates the work
-> > item list, and returns -EAGAIN.  Finally, xfs_defer_finish() sees the -EAGAIN
-> > and requeues the work item so that we resume refcount adjusting after the
-> > transaction rolls.
-> > 
-> 
-> Hmm, this makes me think that maybe it is better to split this up into
-> two patches for now after all. I'm expecting this is going to be merged
-> along with the rmap bits before the refcount stuff and I'm not a huge
-> fan of putting in infrastructure code without users, moreso without
-> fully understanding how/why said code is going to be used (and I'm not
-> really looking to jump ahead into the refcount stuff yet).
-
-<nod>
-
-> > > For example, is there
-> > > an issue with carrying a done_item with an unexpected list count?
-> > 
-> > AFAICT, nothing in log recovery ever checks that the list counts of the
-> > intent and done items actually match, let alone the extents logged with
-> > them.  It only seems to care if there's an efd such that efd->efd_efi_id ==
-> > efi->efi_id, in which case it won't replay the efi.
-> > 
-> 
-> Yeah, I didn't notice any issues with respect to EFI/EFD handling,
-> though I didn't look too hard because it doesn't use this -EAGAIN
-> mechanism. If it did, I think you might hit the odd ASSERT() check here
-> or there (see xfs_efd_item_format()), but that's probably not
-> catastrophic. I think it also affects the size of the transaction
-> written to the log, fwiw.
-
-Yes, xfs_trans_log_finish_refcount_update fixes the list count in the
-CUD to avoid triggering the ASSERT in xfs_cud_item_format().
-
-> I ask more because it's unexpected to have a structure with a list count
-> that doesn't match the actual number of items and I don't see it called
-> out anywhere. This might be another good reason to punt this part off to
-> the reflink series...
-> 
-> > I don't know if that was a deliberate part of the log design, but the
-> > lack of checking helps us here.
-> > 
-> > > Is it
-> > > expected that xfs_defer_finish() will not return until -EAGAIN is
-> > > "cleared" (does relogging below and rolling somehow address this)?
-> > 
-> > Yes, relogging and rolling gives us a fresh transaction with which to
-> > continue updating.
-> > 
-> > > > +				 */
-> > > > +				list_add(li, &dfp->dfp_work);
-> > > > +				dfp->dfp_count++;
-> > > > +				break;
-> > > > +			} else if (error) {
-> > > > +				/*
-> > > > +				 * Clean up after ourselves and jump out.
-> > > > +				 * xfs_defer_cancel will take care of freeing
-> > > > +				 * all these lists and stuff.
-> > > > +				 */
-> > > > +				if (cleanup_fn)
-> > > > +					cleanup_fn(*tp, state, error);
-> > > > +				xfs_defer_trans_abort(*tp, dop, error);
-> > > > +				goto out;
-> > > > +			}
-> > > > +		}
-> > > > +		if (error == -EAGAIN) {
-> > > > +			/*
-> > > > +			 * Log a new intent, relog all the remaining work
-> > > > +			 * item to the new intent, attach the new intent to
-> > > > +			 * the dfp, and leave the dfp at the head of the list
-> > > > +			 * for further processing.
-> > > > +			 */
-> > > 
-> > > Similar to the above, could you elaborate on the mechanics of this with
-> > > respect to the log?  E.g., the comment kind of just repeats what the
-> > > code does as opposed to explain why it's here. Is the point here to log
-> > > a new intent in the same transaction as the done item to ensure that we
-> > > (atomically) indicate that certain operations need to be replayed if
-> > > this transaction hits the log and then we crash?
-> > 
-> > Yes.
-> > 
-> > "This effectively replaces the old intent item with a new one listing only
-> > the work items that were not completed when ->finish_item() returned -EAGAIN.
-> > After the subsequent transaction roll, we'll resume where we left off with a
-> > fresh transaction."
-> > 
-> 
-> I'd point out the relevance of doing so in the same transaction,
-> otherwise sounds good.
-
-Ok.
+Yes, we could replace xfs_bmap_free_create_{intent,done} with
+xfs_trans_get_ef[id] and lose the silly functions.  I'll go take
+care of all of them.
 
 --D
 
 > 
 > Brian
 > 
-> > Thank you for the review!
+> >  fs/xfs/libxfs/xfs_defer.h |    1 
+> >  fs/xfs/xfs_defer_item.c   |  108 +++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 109 insertions(+)
 > > 
-> > --D
 > > 
-> > > Brian
-> > > 
-> > > > +			dfp->dfp_intent = dfp->dfp_type->create_intent(*tp,
-> > > > +					dfp->dfp_count);
-> > > > +			list_for_each(li, &dfp->dfp_work)
-> > > > +				dfp->dfp_type->log_item(*tp, dfp->dfp_intent,
-> > > > +						li);
-> > > > +		} else {
-> > > > +			/* Done with the dfp, free it. */
-> > > > +			list_del(&dfp->dfp_list);
-> > > > +			kmem_free(dfp);
-> > > > +		}
-> > > > +
-> > > > +		if (cleanup_fn)
-> > > > +			cleanup_fn(*tp, state, error);
-> > > > +	}
-> > > > +
-> > > > +out:
-> > > > +	return error;
-> > > > +}
-> > > > +
-> > > > +/*
-> > > > + * Free up any items left in the list.
-> > > > + */
-> > > > +void
-> > > > +xfs_defer_cancel(
-> > > > +	struct xfs_defer_ops		*dop)
-> > > > +{
-> > > > +	struct xfs_defer_pending	*dfp;
-> > > > +	struct xfs_defer_pending	*pli;
-> > > > +	struct list_head		*pwi;
-> > > > +	struct list_head		*n;
-> > > > +
-> > > > +	/*
-> > > > +	 * Free the pending items.  Caller should already have arranged
-> > > > +	 * for the intent items to be released.
-> > > > +	 */
-> > > > +	list_for_each_entry_safe(dfp, pli, &dop->dop_intake, dfp_list) {
-> > > > +		list_del(&dfp->dfp_list);
-> > > > +		list_for_each_safe(pwi, n, &dfp->dfp_work) {
-> > > > +			list_del(pwi);
-> > > > +			dfp->dfp_count--;
-> > > > +			dfp->dfp_type->cancel_item(pwi);
-> > > > +		}
-> > > > +		ASSERT(dfp->dfp_count == 0);
-> > > > +		kmem_free(dfp);
-> > > > +	}
-> > > > +	list_for_each_entry_safe(dfp, pli, &dop->dop_pending, dfp_list) {
-> > > > +		list_del(&dfp->dfp_list);
-> > > > +		list_for_each_safe(pwi, n, &dfp->dfp_work) {
-> > > > +			list_del(pwi);
-> > > > +			dfp->dfp_count--;
-> > > > +			dfp->dfp_type->cancel_item(pwi);
-> > > > +		}
-> > > > +		ASSERT(dfp->dfp_count == 0);
-> > > > +		kmem_free(dfp);
-> > > > +	}
-> > > > +}
-> > > > +
-> > > > +/* Add an item for later deferred processing. */
-> > > > +void
-> > > > +xfs_defer_add(
-> > > > +	struct xfs_defer_ops		*dop,
-> > > > +	enum xfs_defer_ops_type		type,
-> > > > +	struct list_head		*li)
-> > > > +{
-> > > > +	struct xfs_defer_pending	*dfp = NULL;
-> > > > +
-> > > > +	/*
-> > > > +	 * Add the item to a pending item at the end of the intake list.
-> > > > +	 * If the last pending item has the same type, reuse it.  Else,
-> > > > +	 * create a new pending item at the end of the intake list.
-> > > > +	 */
-> > > > +	if (!list_empty(&dop->dop_intake)) {
-> > > > +		dfp = list_last_entry(&dop->dop_intake,
-> > > > +				struct xfs_defer_pending, dfp_list);
-> > > > +		if (dfp->dfp_type->type != type ||
-> > > > +		    (dfp->dfp_type->max_items &&
-> > > > +		     dfp->dfp_count >= dfp->dfp_type->max_items))
-> > > > +			dfp = NULL;
-> > > > +	}
-> > > > +	if (!dfp) {
-> > > > +		dfp = kmem_alloc(sizeof(struct xfs_defer_pending),
-> > > > +				KM_SLEEP | KM_NOFS);
-> > > > +		dfp->dfp_type = defer_op_types[type];
-> > > > +		dfp->dfp_committed = false;
-> > > > +		dfp->dfp_intent = NULL;
-> > > > +		dfp->dfp_count = 0;
-> > > > +		INIT_LIST_HEAD(&dfp->dfp_work);
-> > > > +		list_add_tail(&dfp->dfp_list, &dop->dop_intake);
-> > > > +	}
-> > > > +
-> > > > +	list_add_tail(li, &dfp->dfp_work);
-> > > > +	dfp->dfp_count++;
-> > > > +}
-> > > > +
-> > > > +/* Initialize a deferred operation list. */
-> > > > +void
-> > > > +xfs_defer_init_op_type(
-> > > > +	const struct xfs_defer_op_type	*type)
-> > > > +{
-> > > > +	defer_op_types[type->type] = type;
-> > > > +}
-> > > > +
-> > > > +/* Initialize a deferred operation. */
-> > > > +void
-> > > > +xfs_defer_init(
-> > > > +	struct xfs_defer_ops		*dop,
-> > > > +	xfs_fsblock_t			*fbp)
-> > > > +{
-> > > > +	dop->dop_committed = false;
-> > > > +	dop->dop_low = false;
-> > > > +	memset(&dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> > > > +	*fbp = NULLFSBLOCK;
-> > > > +	INIT_LIST_HEAD(&dop->dop_intake);
-> > > > +	INIT_LIST_HEAD(&dop->dop_pending);
-> > > > +}
-> > > > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > > > new file mode 100644
-> > > > index 0000000..85c7a3a
-> > > > --- /dev/null
-> > > > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > > > @@ -0,0 +1,96 @@
-> > > > +/*
-> > > > + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> > > > + *
-> > > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > + *
-> > > > + * This program is free software; you can redistribute it and/or
-> > > > + * modify it under the terms of the GNU General Public License
-> > > > + * as published by the Free Software Foundation; either version 2
-> > > > + * of the License, or (at your option) any later version.
-> > > > + *
-> > > > + * This program is distributed in the hope that it would be useful,
-> > > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > > + * GNU General Public License for more details.
-> > > > + *
-> > > > + * You should have received a copy of the GNU General Public License
-> > > > + * along with this program; if not, write the Free Software Foundation,
-> > > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> > > > + */
-> > > > +#ifndef __XFS_DEFER_H__
-> > > > +#define	__XFS_DEFER_H__
-> > > > +
-> > > > +struct xfs_defer_op_type;
-> > > > +
-> > > > +/*
-> > > > + * Save a log intent item and a list of extents, so that we can replay
-> > > > + * whatever action had to happen to the extent list and file the log done
-> > > > + * item.
-> > > > + */
-> > > > +struct xfs_defer_pending {
-> > > > +	const struct xfs_defer_op_type	*dfp_type;	/* function pointers */
-> > > > +	struct list_head		dfp_list;	/* pending items */
-> > > > +	bool				dfp_committed;	/* committed trans? */
-> > > > +	void				*dfp_intent;	/* log intent item */
-> > > > +	struct list_head		dfp_work;	/* work items */
-> > > > +	unsigned int			dfp_count;	/* # extent items */
-> > > > +};
-> > > > +
-> > > > +/*
-> > > > + * Header for deferred operation list.
-> > > > + *
-> > > > + * dop_low is used by the allocator to activate the lowspace algorithm -
-> > > > + * when free space is running low the extent allocator may choose to
-> > > > + * allocate an extent from an AG without leaving sufficient space for
-> > > > + * a btree split when inserting the new extent.  In this case the allocator
-> > > > + * will enable the lowspace algorithm which is supposed to allow further
-> > > > + * allocations (such as btree splits and newroots) to allocate from
-> > > > + * sequential AGs.  In order to avoid locking AGs out of order the lowspace
-> > > > + * algorithm will start searching for free space from AG 0.  If the correct
-> > > > + * transaction reservations have been made then this algorithm will eventually
-> > > > + * find all the space it needs.
-> > > > + */
-> > > > +enum xfs_defer_ops_type {
-> > > > +	XFS_DEFER_OPS_TYPE_MAX,
-> > > > +};
-> > > > +
-> > > > +#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-> > > > +
-> > > > +struct xfs_defer_ops {
-> > > > +	bool			dop_committed;	/* did any trans commit? */
-> > > > +	bool			dop_low;	/* alloc in low mode */
-> > > > +	struct list_head	dop_intake;	/* unlogged pending work */
-> > > > +	struct list_head	dop_pending;	/* logged pending work */
-> > > > +
-> > > > +	/* relog these inodes with each roll */
-> > > > +	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-> > > > +};
-> > > > +
-> > > > +void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-> > > > +		struct list_head *h);
-> > > > +int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop,
-> > > > +		struct xfs_inode *ip);
-> > > > +void xfs_defer_cancel(struct xfs_defer_ops *dop);
-> > > > +void xfs_defer_init(struct xfs_defer_ops *dop, xfs_fsblock_t *fbp);
-> > > > +bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-> > > > +int xfs_defer_join(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-> > > > +
-> > > > +/* Description of a deferred type. */
-> > > > +struct xfs_defer_op_type {
-> > > > +	enum xfs_defer_ops_type	type;
-> > > > +	unsigned int		max_items;
-> > > > +	void (*abort_intent)(void *);
-> > > > +	void *(*create_done)(struct xfs_trans *, void *, unsigned int);
-> > > > +	int (*finish_item)(struct xfs_trans *, struct xfs_defer_ops *,
-> > > > +			struct list_head *, void *, void **);
-> > > > +	void (*finish_cleanup)(struct xfs_trans *, void *, int);
-> > > > +	void (*cancel_item)(struct list_head *);
-> > > > +	int (*diff_items)(void *, struct list_head *, struct list_head *);
-> > > > +	void *(*create_intent)(struct xfs_trans *, uint);
-> > > > +	void (*log_item)(struct xfs_trans *, void *, struct list_head *);
-> > > > +};
-> > > > +
-> > > > +void xfs_defer_init_op_type(const struct xfs_defer_op_type *type);
-> > > > +void xfs_defer_init_types(void);
-> > > > +
-> > > > +#endif /* __XFS_DEFER_H__ */
-> > > > diff --git a/fs/xfs/xfs_defer_item.c b/fs/xfs/xfs_defer_item.c
-> > > > new file mode 100644
-> > > > index 0000000..849088d
-> > > > --- /dev/null
-> > > > +++ b/fs/xfs/xfs_defer_item.c
-> > > > @@ -0,0 +1,36 @@
-> > > > +/*
-> > > > + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> > > > + *
-> > > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > + *
-> > > > + * This program is free software; you can redistribute it and/or
-> > > > + * modify it under the terms of the GNU General Public License
-> > > > + * as published by the Free Software Foundation; either version 2
-> > > > + * of the License, or (at your option) any later version.
-> > > > + *
-> > > > + * This program is distributed in the hope that it would be useful,
-> > > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > > + * GNU General Public License for more details.
-> > > > + *
-> > > > + * You should have received a copy of the GNU General Public License
-> > > > + * along with this program; if not, write the Free Software Foundation,
-> > > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> > > > + */
-> > > > +#include "xfs.h"
-> > > > +#include "xfs_fs.h"
-> > > > +#include "xfs_shared.h"
-> > > > +#include "xfs_format.h"
-> > > > +#include "xfs_log_format.h"
-> > > > +#include "xfs_trans_resv.h"
-> > > > +#include "xfs_bit.h"
-> > > > +#include "xfs_sb.h"
-> > > > +#include "xfs_mount.h"
-> > > > +#include "xfs_defer.h"
-> > > > +#include "xfs_trans.h"
-> > > > +
-> > > > +/* Initialize the deferred operation types. */
-> > > > +void
-> > > > +xfs_defer_init_types(void)
-> > > > +{
-> > > > +}
-> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > index 09722a7..bf63f6d 100644
-> > > > --- a/fs/xfs/xfs_super.c
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > > @@ -46,6 +46,7 @@
-> > > >  #include "xfs_quota.h"
-> > > >  #include "xfs_sysfs.h"
-> > > >  #include "xfs_ondisk.h"
-> > > > +#include "xfs_defer.h"
-> > > >  
-> > > >  #include <linux/namei.h>
-> > > >  #include <linux/init.h>
-> > > > @@ -1850,6 +1851,7 @@ init_xfs_fs(void)
-> > > >  	printk(KERN_INFO XFS_VERSION_STRING " with "
-> > > >  			 XFS_BUILD_OPTIONS " enabled\n");
-> > > >  
-> > > > +	xfs_defer_init_types();
-> > > >  	xfs_dir_startup();
-> > > >  
-> > > >  	error = xfs_init_zones();
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> > index 85c7a3a..743fc32 100644
+> > --- a/fs/xfs/libxfs/xfs_defer.h
+> > +++ b/fs/xfs/libxfs/xfs_defer.h
+> > @@ -51,6 +51,7 @@ struct xfs_defer_pending {
+> >   * find all the space it needs.
+> >   */
+> >  enum xfs_defer_ops_type {
+> > +	XFS_DEFER_OPS_TYPE_FREE,
+> >  	XFS_DEFER_OPS_TYPE_MAX,
+> >  };
+> >  
+> > diff --git a/fs/xfs/xfs_defer_item.c b/fs/xfs/xfs_defer_item.c
+> > index 4c2ba28..127a54e 100644
+> > --- a/fs/xfs/xfs_defer_item.c
+> > +++ b/fs/xfs/xfs_defer_item.c
+> > @@ -29,9 +29,117 @@
+> >  #include "xfs_defer.h"
+> >  #include "xfs_trans.h"
+> >  #include "xfs_trace.h"
+> > +#include "xfs_bmap.h"
+> > +#include "xfs_extfree_item.h"
+> > +
+> > +/* Extent Freeing */
+> > +
+> > +/* Sort bmap items by AG. */
+> > +static int
+> > +xfs_bmap_free_diff_items(
+> > +	void				*priv,
+> > +	struct list_head		*a,
+> > +	struct list_head		*b)
+> > +{
+> > +	struct xfs_mount		*mp = priv;
+> > +	struct xfs_bmap_free_item	*ra;
+> > +	struct xfs_bmap_free_item	*rb;
+> > +
+> > +	ra = container_of(a, struct xfs_bmap_free_item, xbfi_list);
+> > +	rb = container_of(b, struct xfs_bmap_free_item, xbfi_list);
+> > +	return  XFS_FSB_TO_AGNO(mp, ra->xbfi_startblock) -
+> > +		XFS_FSB_TO_AGNO(mp, rb->xbfi_startblock);
+> > +}
+> > +
+> > +/* Get an EFI. */
+> > +STATIC void *
+> > +xfs_bmap_free_create_intent(
+> > +	struct xfs_trans		*tp,
+> > +	unsigned int			count)
+> > +{
+> > +	return xfs_trans_get_efi(tp, count);
+> > +}
+> > +
+> > +/* Log a free extent to the intent item. */
+> > +STATIC void
+> > +xfs_bmap_free_log_item(
+> > +	struct xfs_trans		*tp,
+> > +	void				*intent,
+> > +	struct list_head		*item)
+> > +{
+> > +	struct xfs_bmap_free_item	*free;
+> > +
+> > +	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
+> > +	xfs_trans_log_efi_extent(tp, intent, free->xbfi_startblock,
+> > +			free->xbfi_blockcount);
+> > +}
+> > +
+> > +/* Get an EFD so we can process all the free extents. */
+> > +STATIC void *
+> > +xfs_bmap_free_create_done(
+> > +	struct xfs_trans		*tp,
+> > +	void				*intent,
+> > +	unsigned int			count)
+> > +{
+> > +	return xfs_trans_get_efd(tp, intent, count);
+> > +}
+> > +
+> > +/* Process a free extent. */
+> > +STATIC int
+> > +xfs_bmap_free_finish_item(
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_defer_ops		*dop,
+> > +	struct list_head		*item,
+> > +	void				*done_item,
+> > +	void				**state)
+> > +{
+> > +	struct xfs_bmap_free_item	*free;
+> > +	int				error;
+> > +
+> > +	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
+> > +	error = xfs_trans_free_extent(tp, done_item,
+> > +			free->xbfi_startblock,
+> > +			free->xbfi_blockcount);
+> > +	kmem_free(free);
+> > +	return error;
+> > +}
+> > +
+> > +/* Abort all pending EFIs. */
+> > +STATIC void
+> > +xfs_bmap_free_abort_intent(
+> > +	void				*intent)
+> > +{
+> > +	xfs_efi_release(intent);
+> > +}
+> > +
+> > +/* Cancel a free extent. */
+> > +STATIC void
+> > +xfs_bmap_free_cancel_item(
+> > +	struct list_head		*item)
+> > +{
+> > +	struct xfs_bmap_free_item	*free;
+> > +
+> > +	free = container_of(item, struct xfs_bmap_free_item, xbfi_list);
+> > +	kmem_free(free);
+> > +}
+> > +
+> > +const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+> > +	.type		= XFS_DEFER_OPS_TYPE_FREE,
+> > +	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+> > +	.diff_items	= xfs_bmap_free_diff_items,
+> > +	.create_intent	= xfs_bmap_free_create_intent,
+> > +	.abort_intent	= xfs_bmap_free_abort_intent,
+> > +	.log_item	= xfs_bmap_free_log_item,
+> > +	.create_done	= xfs_bmap_free_create_done,
+> > +	.finish_item	= xfs_bmap_free_finish_item,
+> > +	.cancel_item	= xfs_bmap_free_cancel_item,
+> > +};
+> > +
+> > +/* Deferred Item Initialization */
+> >  
+> >  /* Initialize the deferred operation types. */
+> >  void
+> >  xfs_defer_init_types(void)
+> >  {
+> > +	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+> >  }
 > > 
 > > _______________________________________________
 > > xfs mailing list
