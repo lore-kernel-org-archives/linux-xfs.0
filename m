@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C31027CA0
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 17:00:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 92567304032
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 15:00:12 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id FxMX2aeeE05YpN1M (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 27 Jun 2016 15:00:09 -0700 (PDT)
-Date: Mon, 27 Jun 2016 15:00:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
-	extents to free
-Message-ID: <20160627220003.GA4917@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
-	<20160627131508.GC23076@bfoster.bfoster>
-	<20160627214145.GC4921@birch.djwong.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8A8ED7CA4
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:56:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C651AC003
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:56:36 -0700 (PDT)
+Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
+	[74.125.82.43]) by cuda.sgi.com with ESMTP id 1F3vvhW58WC3AjCA
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Jun 2016 06:56:34 -0700 (PDT)
+Received: by mail-wm0-f43.google.com with SMTP id v199so141049471wmv.0
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:56:34 -0700 (PDT)
+Message-ID: <5772820E.2080403@plexistor.com>
+Date: Tue, 28 Jun 2016 16:56:30 +0300
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160627214145.GC4921@birch.djwong.org>
+Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
+References: <1466609236-23801-1-git-send-email-hch@lst.de>
+	<20160623232446.GA12670@dastard> <20160624072612.GA22205@lst.de>
+	<20160624230045.GG12670@dastard> <20160628131059.GA30475@lst.de>
+	<57727B27.7060104@plexistor.com> <20160628133928.GB31283@lst.de>
+In-Reply-To: <20160628133928.GB31283@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,117 +30,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
 
-T24gTW9uLCBKdW4gMjcsIDIwMTYgYXQgMDI6NDE6NDVQTSAtMDcwMCwgRGFycmljayBKLiBXb25n
-IHdyb3RlOgo+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDA5OjE1OjA4QU0gLTA0MDAsIEJyaWFu
-IEZvc3RlciB3cm90ZToKPiA+IE9uIFRodSwgSnVuIDE2LCAyMDE2IGF0IDA2OjE5OjQ3UE0gLTA3
-MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPiA+ID4gQ29ubmVjdCB0aGUgeGZzX2RlZmVyIG1l
-Y2hhbmlzbSB3aXRoIHRoZSBwaWVjZXMgdGhhdCB3ZSdsbCBuZWVkIHRvCj4gPiA+IGhhbmRsZSBk
-ZWZlcnJlZCBleHRlbnQgZnJlZWluZy4gIFdlJ2xsIHdpcmUgdXAgdGhlIGV4aXN0aW5nIGNvZGUg
-dG8KPiA+ID4gb3VyIG5ldyBkZWZlcnJlZCBtZWNoYW5pc20gbGF0ZXIuCj4gPiA+IAo+ID4gPiBT
-aWduZWQtb2ZmLWJ5OiBEYXJyaWNrIEouIFdvbmcgPGRhcnJpY2sud29uZ0BvcmFjbGUuY29tPgo+
-ID4gPiAtLS0KPiA+IAo+ID4gQ291bGQgd2UgbWVyZ2UgdGhpcyB3aXRoIHRoZSB4ZnNfdHJhbnNf
-KmVmaS9lZmQqIGJpdHM/IFdlJ2QgbmVlZCB0bwo+ID4gcHJlc2VydmUgc29tZSBjYWxscyBmb3Ig
-cmVjb3ZlcnksIGJ1dCBpdCBsb29rcyBsaWtlIG90aGVyIHBhcnRzIGFyZSBvbmx5Cj4gPiB1c2Vk
-IGJ5IHRoZSBkZWZlcnJlZCBvcHMgaW5mcmFzdHJ1Y3R1cmUgYXQgdGhpcyBwb2ludC4KPiAKPiBZ
-ZXMsIHdlIGNvdWxkIHJlcGxhY2UgeGZzX2JtYXBfZnJlZV9jcmVhdGVfe2ludGVudCxkb25lfSB3
-aXRoCj4geGZzX3RyYW5zX2dldF9lZltpZF0gYW5kIGxvc2UgdGhlIHNpbGx5IGZ1bmN0aW9ucy4g
-IEknbGwgZ28gdGFrZQo+IGNhcmUgb2YgYWxsIG9mIHRoZW0uCgpIYWgsIGdjYyBjb21wbGFpbnMg
-YWJvdXQgdGhlIG1pc21hdGNoIGluIHBvaW50ZXIgdHlwZXMgZm9yIHRoZSBzZWNvbmQKYXJndW1l
-bnQuCgpmcy94ZnMveGZzX2RlZmVyX2l0ZW0uYzo1MDQ6MTc6IGVycm9yOiBpbml0aWFsaXphdGlv
-biBmcm9tIGluY29tcGF0aWJsZSBwb2ludGVyIHR5cGUgWy1XZXJyb3I9aW5jb21wYXRpYmxlLXBv
-aW50ZXItdHlwZXNdCiAgLmNyZWF0ZV9kb25lID0geGZzX3RyYW5zX2dldF9idWQsCiAgICAgICAg
-ICAgICAgICAgXgpmcy94ZnMveGZzX2RlZmVyX2l0ZW0uYzo1MDQ6MTc6IG5vdGU6IChuZWFyIGlu
-aXRpYWxpemF0aW9uIGZvciDigJh4ZnNfYm1hcF91cGRhdGVfZGVmZXJfdHlwZS5jcmVhdGVfZG9u
-ZeKAmSkKCkkgZ3Vlc3Mgb25lIGNvdWxkIHB1dCBpbiBhbiB1Z2x5IGNhc3QgdG8gY29lcmNlIHRo
-ZSB0eXBlcyBhdCBhIGNvc3Qgb2YKdWdsaWZ5aW5nIHRoZSBjb2RlLiAgPHNocnVnPiBPcGluaW9u
-cz8KCi0tRAoKPiAKPiAtLUQKPiAKPiA+IAo+ID4gQnJpYW4KPiA+IAo+ID4gPiAgZnMveGZzL2xp
-Ynhmcy94ZnNfZGVmZXIuaCB8ICAgIDEgCj4gPiA+ICBmcy94ZnMveGZzX2RlZmVyX2l0ZW0uYyAg
-IHwgIDEwOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiA+
-ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTA5IGluc2VydGlvbnMoKykKPiA+ID4gCj4gPiA+IAo+ID4g
-PiBkaWZmIC0tZ2l0IGEvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaCBiL2ZzL3hmcy9saWJ4ZnMv
-eGZzX2RlZmVyLmgKPiA+ID4gaW5kZXggODVjN2EzYS4uNzQzZmMzMiAxMDA2NDQKPiA+ID4gLS0t
-IGEvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+ID4gPiArKysgYi9mcy94ZnMvbGlieGZzL3hm
-c19kZWZlci5oCj4gPiA+IEBAIC01MSw2ICs1MSw3IEBAIHN0cnVjdCB4ZnNfZGVmZXJfcGVuZGlu
-ZyB7Cj4gPiA+ICAgKiBmaW5kIGFsbCB0aGUgc3BhY2UgaXQgbmVlZHMuCj4gPiA+ICAgKi8KPiA+
-ID4gIGVudW0geGZzX2RlZmVyX29wc190eXBlIHsKPiA+ID4gKwlYRlNfREVGRVJfT1BTX1RZUEVf
-RlJFRSwKPiA+ID4gIAlYRlNfREVGRVJfT1BTX1RZUEVfTUFYLAo+ID4gPiAgfTsKPiA+ID4gIAo+
-ID4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19kZWZlcl9pdGVtLmMgYi9mcy94ZnMveGZzX2Rl
-ZmVyX2l0ZW0uYwo+ID4gPiBpbmRleCA0YzJiYTI4Li4xMjdhNTRlIDEwMDY0NAo+ID4gPiAtLS0g
-YS9mcy94ZnMveGZzX2RlZmVyX2l0ZW0uYwo+ID4gPiArKysgYi9mcy94ZnMveGZzX2RlZmVyX2l0
-ZW0uYwo+ID4gPiBAQCAtMjksOSArMjksMTE3IEBACj4gPiA+ICAjaW5jbHVkZSAieGZzX2RlZmVy
-LmgiCj4gPiA+ICAjaW5jbHVkZSAieGZzX3RyYW5zLmgiCj4gPiA+ICAjaW5jbHVkZSAieGZzX3Ry
-YWNlLmgiCj4gPiA+ICsjaW5jbHVkZSAieGZzX2JtYXAuaCIKPiA+ID4gKyNpbmNsdWRlICJ4ZnNf
-ZXh0ZnJlZV9pdGVtLmgiCj4gPiA+ICsKPiA+ID4gKy8qIEV4dGVudCBGcmVlaW5nICovCj4gPiA+
-ICsKPiA+ID4gKy8qIFNvcnQgYm1hcCBpdGVtcyBieSBBRy4gKi8KPiA+ID4gK3N0YXRpYyBpbnQK
-PiA+ID4gK3hmc19ibWFwX2ZyZWVfZGlmZl9pdGVtcygKPiA+ID4gKwl2b2lkCQkJCSpwcml2LAo+
-ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSphLAo+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSpi
-KQo+ID4gPiArewo+ID4gPiArCXN0cnVjdCB4ZnNfbW91bnQJCSptcCA9IHByaXY7Cj4gPiA+ICsJ
-c3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbQkqcmE7Cj4gPiA+ICsJc3RydWN0IHhmc19ibWFwX2Zy
-ZWVfaXRlbQkqcmI7Cj4gPiA+ICsKPiA+ID4gKwlyYSA9IGNvbnRhaW5lcl9vZihhLCBzdHJ1Y3Qg
-eGZzX2JtYXBfZnJlZV9pdGVtLCB4YmZpX2xpc3QpOwo+ID4gPiArCXJiID0gY29udGFpbmVyX29m
-KGIsIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlfbGlzdCk7Cj4gPiA+ICsJcmV0dXJu
-ICBYRlNfRlNCX1RPX0FHTk8obXAsIHJhLT54YmZpX3N0YXJ0YmxvY2spIC0KPiA+ID4gKwkJWEZT
-X0ZTQl9UT19BR05PKG1wLCByYi0+eGJmaV9zdGFydGJsb2NrKTsKPiA+ID4gK30KPiA+ID4gKwo+
-ID4gPiArLyogR2V0IGFuIEVGSS4gKi8KPiA+ID4gK1NUQVRJQyB2b2lkICoKPiA+ID4gK3hmc19i
-bWFwX2ZyZWVfY3JlYXRlX2ludGVudCgKPiA+ID4gKwlzdHJ1Y3QgeGZzX3RyYW5zCQkqdHAsCj4g
-PiA+ICsJdW5zaWduZWQgaW50CQkJY291bnQpCj4gPiA+ICt7Cj4gPiA+ICsJcmV0dXJuIHhmc190
-cmFuc19nZXRfZWZpKHRwLCBjb3VudCk7Cj4gPiA+ICt9Cj4gPiA+ICsKPiA+ID4gKy8qIExvZyBh
-IGZyZWUgZXh0ZW50IHRvIHRoZSBpbnRlbnQgaXRlbS4gKi8KPiA+ID4gK1NUQVRJQyB2b2lkCj4g
-PiA+ICt4ZnNfYm1hcF9mcmVlX2xvZ19pdGVtKAo+ID4gPiArCXN0cnVjdCB4ZnNfdHJhbnMJCSp0
-cCwKPiA+ID4gKwl2b2lkCQkJCSppbnRlbnQsCj4gPiA+ICsJc3RydWN0IGxpc3RfaGVhZAkJKml0
-ZW0pCj4gPiA+ICt7Cj4gPiA+ICsJc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbQkqZnJlZTsKPiA+
-ID4gKwo+ID4gPiArCWZyZWUgPSBjb250YWluZXJfb2YoaXRlbSwgc3RydWN0IHhmc19ibWFwX2Zy
-ZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gKwl4ZnNfdHJhbnNfbG9nX2VmaV9leHRlbnQodHAs
-IGludGVudCwgZnJlZS0+eGJmaV9zdGFydGJsb2NrLAo+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9j
-a2NvdW50KTsKPiA+ID4gK30KPiA+ID4gKwo+ID4gPiArLyogR2V0IGFuIEVGRCBzbyB3ZSBjYW4g
-cHJvY2VzcyBhbGwgdGhlIGZyZWUgZXh0ZW50cy4gKi8KPiA+ID4gK1NUQVRJQyB2b2lkICoKPiA+
-ID4gK3hmc19ibWFwX2ZyZWVfY3JlYXRlX2RvbmUoCj4gPiA+ICsJc3RydWN0IHhmc190cmFucwkJ
-KnRwLAo+ID4gPiArCXZvaWQJCQkJKmludGVudCwKPiA+ID4gKwl1bnNpZ25lZCBpbnQJCQljb3Vu
-dCkKPiA+ID4gK3sKPiA+ID4gKwlyZXR1cm4geGZzX3RyYW5zX2dldF9lZmQodHAsIGludGVudCwg
-Y291bnQpOwo+ID4gPiArfQo+ID4gPiArCj4gPiA+ICsvKiBQcm9jZXNzIGEgZnJlZSBleHRlbnQu
-ICovCj4gPiA+ICtTVEFUSUMgaW50Cj4gPiA+ICt4ZnNfYm1hcF9mcmVlX2ZpbmlzaF9pdGVtKAo+
-ID4gPiArCXN0cnVjdCB4ZnNfdHJhbnMJCSp0cCwKPiA+ID4gKwlzdHJ1Y3QgeGZzX2RlZmVyX29w
-cwkJKmRvcCwKPiA+ID4gKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqaXRlbSwKPiA+ID4gKwl2b2lkCQkJ
-CSpkb25lX2l0ZW0sCj4gPiA+ICsJdm9pZAkJCQkqKnN0YXRlKQo+ID4gPiArewo+ID4gPiArCXN0
-cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0JKmZyZWU7Cj4gPiA+ICsJaW50CQkJCWVycm9yOwo+ID4g
-PiArCj4gPiA+ICsJZnJlZSA9IGNvbnRhaW5lcl9vZihpdGVtLCBzdHJ1Y3QgeGZzX2JtYXBfZnJl
-ZV9pdGVtLCB4YmZpX2xpc3QpOwo+ID4gPiArCWVycm9yID0geGZzX3RyYW5zX2ZyZWVfZXh0ZW50
-KHRwLCBkb25lX2l0ZW0sCj4gPiA+ICsJCQlmcmVlLT54YmZpX3N0YXJ0YmxvY2ssCj4gPiA+ICsJ
-CQlmcmVlLT54YmZpX2Jsb2NrY291bnQpOwo+ID4gPiArCWttZW1fZnJlZShmcmVlKTsKPiA+ID4g
-KwlyZXR1cm4gZXJyb3I7Cj4gPiA+ICt9Cj4gPiA+ICsKPiA+ID4gKy8qIEFib3J0IGFsbCBwZW5k
-aW5nIEVGSXMuICovCj4gPiA+ICtTVEFUSUMgdm9pZAo+ID4gPiAreGZzX2JtYXBfZnJlZV9hYm9y
-dF9pbnRlbnQoCj4gPiA+ICsJdm9pZAkJCQkqaW50ZW50KQo+ID4gPiArewo+ID4gPiArCXhmc19l
-ZmlfcmVsZWFzZShpbnRlbnQpOwo+ID4gPiArfQo+ID4gPiArCj4gPiA+ICsvKiBDYW5jZWwgYSBm
-cmVlIGV4dGVudC4gKi8KPiA+ID4gK1NUQVRJQyB2b2lkCj4gPiA+ICt4ZnNfYm1hcF9mcmVlX2Nh
-bmNlbF9pdGVtKAo+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSppdGVtKQo+ID4gPiArewo+ID4g
-PiArCXN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0JKmZyZWU7Cj4gPiA+ICsKPiA+ID4gKwlmcmVl
-ID0gY29udGFpbmVyX29mKGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlfbGlz
-dCk7Cj4gPiA+ICsJa21lbV9mcmVlKGZyZWUpOwo+ID4gPiArfQo+ID4gPiArCj4gPiA+ICtjb25z
-dCBzdHJ1Y3QgeGZzX2RlZmVyX29wX3R5cGUgeGZzX2V4dGVudF9mcmVlX2RlZmVyX3R5cGUgPSB7
-Cj4gPiA+ICsJLnR5cGUJCT0gWEZTX0RFRkVSX09QU19UWVBFX0ZSRUUsCj4gPiA+ICsJLm1heF9p
-dGVtcwk9IFhGU19FRklfTUFYX0ZBU1RfRVhURU5UUywKPiA+ID4gKwkuZGlmZl9pdGVtcwk9IHhm
-c19ibWFwX2ZyZWVfZGlmZl9pdGVtcywKPiA+ID4gKwkuY3JlYXRlX2ludGVudAk9IHhmc19ibWFw
-X2ZyZWVfY3JlYXRlX2ludGVudCwKPiA+ID4gKwkuYWJvcnRfaW50ZW50CT0geGZzX2JtYXBfZnJl
-ZV9hYm9ydF9pbnRlbnQsCj4gPiA+ICsJLmxvZ19pdGVtCT0geGZzX2JtYXBfZnJlZV9sb2dfaXRl
-bSwKPiA+ID4gKwkuY3JlYXRlX2RvbmUJPSB4ZnNfYm1hcF9mcmVlX2NyZWF0ZV9kb25lLAo+ID4g
-PiArCS5maW5pc2hfaXRlbQk9IHhmc19ibWFwX2ZyZWVfZmluaXNoX2l0ZW0sCj4gPiA+ICsJLmNh
-bmNlbF9pdGVtCT0geGZzX2JtYXBfZnJlZV9jYW5jZWxfaXRlbSwKPiA+ID4gK307Cj4gPiA+ICsK
-PiA+ID4gKy8qIERlZmVycmVkIEl0ZW0gSW5pdGlhbGl6YXRpb24gKi8KPiA+ID4gIAo+ID4gPiAg
-LyogSW5pdGlhbGl6ZSB0aGUgZGVmZXJyZWQgb3BlcmF0aW9uIHR5cGVzLiAqLwo+ID4gPiAgdm9p
-ZAo+ID4gPiAgeGZzX2RlZmVyX2luaXRfdHlwZXModm9pZCkKPiA+ID4gIHsKPiA+ID4gKwl4ZnNf
-ZGVmZXJfaW5pdF9vcF90eXBlKCZ4ZnNfZXh0ZW50X2ZyZWVfZGVmZXJfdHlwZSk7Cj4gPiA+ICB9
-Cj4gPiA+IAo+ID4gPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwo+ID4gPiB4ZnMgbWFpbGluZyBsaXN0Cj4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiBo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiAKPiBfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4
-ZnNAb3NzLnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+On 06/28/2016 04:39 PM, Christoph Hellwig wrote:
+> On Tue, Jun 28, 2016 at 04:27:03PM +0300, Boaz Harrosh wrote:
+>>> Right.  And an existing application can get DAX turned on under its
+>>> back, and will now suddently get different synchronization behavior.
+>>> That is if it's writes happen to be aligned to the fs block size.
+>>>
+>>
+>> Is there an actual application that does that? or is this purely
+>> theoretical right now?
+> 
+> Lots of them.  The typical case is multithreaded (or preforked like old
+> apache) daemons that use O_APPEND to write to a common log file.  Then
+> again those log records will usually not be 4k aligned, so they'd still
+> accidentally get the exclusive locking even without this patch.  But
+> beware the case where a log record actually matches the alignment..
+> 
+
+But O_APPEND is exclusion problem of i_size update not of the actual memcpy
+done in parallel or not.
+
+Actually with O_APPEND each write request should write a different region
+of the file, there are no overlapping writes. And no issue of which version of the
+write came last and got its data written.
+
+If it is the issue of isize update vs O_APPEND is a different issue don't
+you think? One way that we solved it is to update isize = isize + len;
+atomically before starting the IO, then on the error case sub the unwritten
+bytes. And still allow concurrent writers. I agree that isize updates needs
+to be atomic, but why does the memcpy?
+
+And BTW in NFS O_APPEND concurrent readers to a writer may see
+ZEROs in the interim.
+
+I still don't see how an application can use the fact that two writers
+will not give them mixed records. And surly it does not work on a shared
+FS. So I was really wondering if you know of any such app
+
+Thanks
+Boaz
+
+>>
+>>
+>> Thanks
+>> Boaz
+> ---end quoted text---
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
