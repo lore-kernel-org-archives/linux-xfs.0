@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A31587CA4
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 11:33:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5954B8F8039
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:33:56 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id KyGdmVECabcXo0VJ (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 206527CA1
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 12:37:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CF90AC001
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:37:08 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id oxMteaGtgDuCCvdx (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:33:53 -0700 (PDT)
-Date: Tue, 28 Jun 2016 09:33:48 -0700
+	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:37:04 -0700 (PDT)
+Date: Tue, 28 Jun 2016 10:36:57 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
-	extents to free
-Message-ID: <20160628163348.GB16181@birch.djwong.org>
+Subject: Re: [PATCH 013/119] xfs: support btrees with overlapping intervals
+	for keys
+Message-ID: <20160628173657.GC16181@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
-	<20160627131508.GC23076@bfoster.bfoster>
-	<20160627214145.GC4921@birch.djwong.org>
-	<20160627220003.GA4917@birch.djwong.org>
-	<20160628123238.GE4212@bfoster.bfoster>
+	<146612635526.12839.13865365567940815077.stgit@birch.djwong.org>
+	<20160622151706.GB5423@bfoster.bfoster>
+	<20160628032621.GB4917@birch.djwong.org>
+	<20160628123203.GB4212@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160628123238.GE4212@bfoster.bfoster>
+In-Reply-To: <20160628123203.GB4212@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,153 +30,450 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-T24gVHVlLCBKdW4gMjgsIDIwMTYgYXQgMDg6MzI6MzlBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdy
-b3RlOgo+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDAzOjAwOjAzUE0gLTA3MDAsIERhcnJpY2sg
-Si4gV29uZyB3cm90ZToKPiA+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDAyOjQxOjQ1UE0gLTA3
-MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPiA+ID4gT24gTW9uLCBKdW4gMjcsIDIwMTYgYXQg
-MDk6MTU6MDhBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+ID4gPiA+IE9uIFRodSwgSnVu
-IDE2LCAyMDE2IGF0IDA2OjE5OjQ3UE0gLTA3MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPiA+
-ID4gPiA+IENvbm5lY3QgdGhlIHhmc19kZWZlciBtZWNoYW5pc20gd2l0aCB0aGUgcGllY2VzIHRo
-YXQgd2UnbGwgbmVlZCB0bwo+ID4gPiA+ID4gaGFuZGxlIGRlZmVycmVkIGV4dGVudCBmcmVlaW5n
-LiAgV2UnbGwgd2lyZSB1cCB0aGUgZXhpc3RpbmcgY29kZSB0bwo+ID4gPiA+ID4gb3VyIG5ldyBk
-ZWZlcnJlZCBtZWNoYW5pc20gbGF0ZXIuCj4gPiA+ID4gPiAKPiA+ID4gPiA+IFNpZ25lZC1vZmYt
-Ynk6IERhcnJpY2sgSi4gV29uZyA8ZGFycmljay53b25nQG9yYWNsZS5jb20+Cj4gPiA+ID4gPiAt
-LS0KPiA+ID4gPiAKPiA+ID4gPiBDb3VsZCB3ZSBtZXJnZSB0aGlzIHdpdGggdGhlIHhmc190cmFu
-c18qZWZpL2VmZCogYml0cz8gV2UnZCBuZWVkIHRvCj4gPiA+ID4gcHJlc2VydmUgc29tZSBjYWxs
-cyBmb3IgcmVjb3ZlcnksIGJ1dCBpdCBsb29rcyBsaWtlIG90aGVyIHBhcnRzIGFyZSBvbmx5Cj4g
-PiA+ID4gdXNlZCBieSB0aGUgZGVmZXJyZWQgb3BzIGluZnJhc3RydWN0dXJlIGF0IHRoaXMgcG9p
-bnQuCj4gPiA+IAo+ID4gPiBZZXMsIHdlIGNvdWxkIHJlcGxhY2UgeGZzX2JtYXBfZnJlZV9jcmVh
-dGVfe2ludGVudCxkb25lfSB3aXRoCj4gPiA+IHhmc190cmFuc19nZXRfZWZbaWRdIGFuZCBsb3Nl
-IHRoZSBzaWxseSBmdW5jdGlvbnMuICBJJ2xsIGdvIHRha2UKPiA+ID4gY2FyZSBvZiBhbGwgb2Yg
-dGhlbS4KPiA+IAo+ID4gSGFoLCBnY2MgY29tcGxhaW5zIGFib3V0IHRoZSBtaXNtYXRjaCBpbiBw
-b2ludGVyIHR5cGVzIGZvciB0aGUgc2Vjb25kCj4gPiBhcmd1bWVudC4KPiA+IAo+ID4gZnMveGZz
-L3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBlcnJvcjogaW5pdGlhbGl6YXRpb24gZnJvbSBpbmNv
-bXBhdGlibGUgcG9pbnRlciB0eXBlIFstV2Vycm9yPWluY29tcGF0aWJsZS1wb2ludGVyLXR5cGVz
-XQo+ID4gICAuY3JlYXRlX2RvbmUgPSB4ZnNfdHJhbnNfZ2V0X2J1ZCwKPiA+ICAgICAgICAgICAg
-ICAgICAgXgo+ID4gZnMveGZzL3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBub3RlOiAobmVhciBp
-bml0aWFsaXphdGlvbiBmb3Ig4oCYeGZzX2JtYXBfdXBkYXRlX2RlZmVyX3R5cGUuY3JlYXRlX2Rv
-bmXigJkpCj4gPiAKPiA+IEkgZ3Vlc3Mgb25lIGNvdWxkIHB1dCBpbiBhbiB1Z2x5IGNhc3QgdG8g
-Y29lcmNlIHRoZSB0eXBlcyBhdCBhIGNvc3Qgb2YKPiA+IHVnbGlmeWluZyB0aGUgY29kZS4gIDxz
-aHJ1Zz4gT3BpbmlvbnM/Cj4gPiAKPiAKPiBOb3Qgc3VyZSB3aGF0IHlvdSBtZWFuIGhlcmUuLi4g
-SSBzaG91bGQgYmUgbW9yZSBjbGVhci4gV2hhdCBJIHdhcwo+IHRoaW5raW5nIGlzIHRvIG51a2Ug
-eGZzX2RlZmVyX2l0ZW0uYywgZGVmaW5lIHRoZSAnY29uc3Qgc3RydWN0Cj4geGZzX2RlZmVyX29w
-X3R5cGUgeGZzX2V4dGVudF9mcmVlX2RlZmVyX3R5cGUnIHJpZ2h0IGluCj4geGZzX3RyYW5zX2V4
-dGZyZWUuYyAocGVyaGFwcyByZW5hbWUgdGhlIGZpbGUpIGFuZCB3aXJlIHVwIHRoZSBmdW5jdGlv
-bnMKPiBhcHByb3ByaWF0ZWx5LiBKdXN0IGNoYW5nZSB0aGUgZnVuY3Rpb24gc2lnbmF0dXJlcyBp
-ZiB5b3UgbmVlZCB0by4gRm9yCj4gc29tZXRoaW5nIGxpa2UgeGZzX3RyYW5zX2dldF9lZmQoKSwg
-bWF5YmUgcmVmYWN0b3IgdGhlIGd1dHMgaW50byBhCj4gc3RhdGljIGhlbHBlciB0aGF0IGJvdGgg
-dGhlIGRlZmVyIGNhbGxiYWNrIGFuZCB4ZnNfdHJhbnNfZ2V0X2VmZCgpIGNhbgo+IHVzZSwgc2lu
-Y2Ugd2UgbmVlZCB0aGUgbGF0dGVyIGZvciBsb2cgcmVjb3ZlcnkuIFdpbGwgc29tZXRoaW5nIGxp
-a2UgdGhhdAo+IHdvcms/Cj4gCj4gVG8gcHV0IGl0IHNpbXBseSwgaXQgbG9va3MgbGlrZSB3ZSBo
-YXZlIGF0IGxlYXN0IGEgZmV3IHBsYWNlcyB3aGVyZQo+IGRlZmVyIGl0ZW0gaGFzIGEgY2FsbGJh
-Y2sgdGhhdCBjYWxscyB5ZXQgYW5vdGhlciBpbnRlcmZhY2UsIGJ1dCBpcyB0aGUKPiBvbmx5IGNh
-bGxlciBvZiB0aGUgbGF0dGVyIChlLmcuLAo+IHhmc19ibWFwX2ZyZWVfY3JlYXRlX2ludGVudCgp
-LT54ZnNfdHJhbnNfZ2V0X2VmaSgpKS4gCgoqT2gqLiAgWWVzLCBjZXJ0YWlubHkgYWxsIHRoZSBz
-dHVmZiBpbiB4ZnNfZGVmZXJfaXRlbS5jIGNhbiBiZSBicm9rZW4gdXAgYnkKdHlwZSBhbmQgbW92
-ZWQgaW50byB4ZnNfdHJhbnNfKi5jLgoKVGhlIGxpYnhmcyB2ZXJzaW9uIHdpbGwgcmV0YWluIGxp
-Ynhmcy9kZWZlcl9pdGVtLmMgc2luY2UgdGhlIGRlZmVycmVkIG9wIHR5cGVzCnRoZXJlIHNpbXBs
-eSBjYWxsIHRoZSBhcHByb3ByaWF0ZSBsaWJ4ZnMgZnVuY3Rpb25zIHdpdGhvdXQgYW55IGxvZ2dp
-bmcuCgotLUQKCj4gCj4gQnJpYW4KPiAKPiA+IC0tRAo+ID4gCj4gPiA+IAo+ID4gPiAtLUQKPiA+
-ID4gCj4gPiA+ID4gCj4gPiA+ID4gQnJpYW4KPiA+ID4gPiAKPiA+ID4gPiA+ICBmcy94ZnMvbGli
-eGZzL3hmc19kZWZlci5oIHwgICAgMSAKPiA+ID4gPiA+ICBmcy94ZnMveGZzX2RlZmVyX2l0ZW0u
-YyAgIHwgIDEwOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysK
-PiA+ID4gPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDEwOSBpbnNlcnRpb25zKCspCj4gPiA+ID4gPiAK
-PiA+ID4gPiA+IAo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX2RlZmVy
-LmggYi9mcy94ZnMvbGlieGZzL3hmc19kZWZlci5oCj4gPiA+ID4gPiBpbmRleCA4NWM3YTNhLi43
-NDNmYzMyIDEwMDY0NAo+ID4gPiA+ID4gLS0tIGEvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+
-ID4gPiA+ID4gKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+ID4gPiA+ID4gQEAgLTUx
-LDYgKzUxLDcgQEAgc3RydWN0IHhmc19kZWZlcl9wZW5kaW5nIHsKPiA+ID4gPiA+ICAgKiBmaW5k
-IGFsbCB0aGUgc3BhY2UgaXQgbmVlZHMuCj4gPiA+ID4gPiAgICovCj4gPiA+ID4gPiAgZW51bSB4
-ZnNfZGVmZXJfb3BzX3R5cGUgewo+ID4gPiA+ID4gKwlYRlNfREVGRVJfT1BTX1RZUEVfRlJFRSwK
-PiA+ID4gPiA+ICAJWEZTX0RFRkVSX09QU19UWVBFX01BWCwKPiA+ID4gPiA+ICB9Owo+ID4gPiA+
-ID4gIAo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZGVmZXJfaXRlbS5jIGIvZnMv
-eGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+ID4gPiA+IGluZGV4IDRjMmJhMjguLjEyN2E1NGUgMTAw
-NjQ0Cj4gPiA+ID4gPiAtLS0gYS9mcy94ZnMveGZzX2RlZmVyX2l0ZW0uYwo+ID4gPiA+ID4gKysr
-IGIvZnMveGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+ID4gPiA+IEBAIC0yOSw5ICsyOSwxMTcgQEAK
-PiA+ID4gPiA+ICAjaW5jbHVkZSAieGZzX2RlZmVyLmgiCj4gPiA+ID4gPiAgI2luY2x1ZGUgInhm
-c190cmFucy5oIgo+ID4gPiA+ID4gICNpbmNsdWRlICJ4ZnNfdHJhY2UuaCIKPiA+ID4gPiA+ICsj
-aW5jbHVkZSAieGZzX2JtYXAuaCIKPiA+ID4gPiA+ICsjaW5jbHVkZSAieGZzX2V4dGZyZWVfaXRl
-bS5oIgo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEV4dGVudCBGcmVlaW5nICovCj4gPiA+ID4g
-PiArCj4gPiA+ID4gPiArLyogU29ydCBibWFwIGl0ZW1zIGJ5IEFHLiAqLwo+ID4gPiA+ID4gK3N0
-YXRpYyBpbnQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMoCj4gPiA+ID4gPiAr
-CXZvaWQJCQkJKnByaXYsCj4gPiA+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSphLAo+ID4gPiA+
-ID4gKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqYikKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiArCXN0cnVj
-dCB4ZnNfbW91bnQJCSptcCA9IHByaXY7Cj4gPiA+ID4gPiArCXN0cnVjdCB4ZnNfYm1hcF9mcmVl
-X2l0ZW0JKnJhOwo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpyYjsKPiA+
-ID4gPiA+ICsKPiA+ID4gPiA+ICsJcmEgPSBjb250YWluZXJfb2YoYSwgc3RydWN0IHhmc19ibWFw
-X2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJcmIgPSBjb250YWluZXJfb2YoYiwg
-c3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJcmV0dXJu
-ICBYRlNfRlNCX1RPX0FHTk8obXAsIHJhLT54YmZpX3N0YXJ0YmxvY2spIC0KPiA+ID4gPiA+ICsJ
-CVhGU19GU0JfVE9fQUdOTyhtcCwgcmItPnhiZmlfc3RhcnRibG9jayk7Cj4gPiA+ID4gPiArfQo+
-ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEdldCBhbiBFRkkuICovCj4gPiA+ID4gPiArU1RBVElD
-IHZvaWQgKgo+ID4gPiA+ID4gK3hmc19ibWFwX2ZyZWVfY3JlYXRlX2ludGVudCgKPiA+ID4gPiA+
-ICsJc3RydWN0IHhmc190cmFucwkJKnRwLAo+ID4gPiA+ID4gKwl1bnNpZ25lZCBpbnQJCQljb3Vu
-dCkKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiArCXJldHVybiB4ZnNfdHJhbnNfZ2V0X2VmaSh0cCwg
-Y291bnQpOwo+ID4gPiA+ID4gK30KPiA+ID4gPiA+ICsKPiA+ID4gPiA+ICsvKiBMb2cgYSBmcmVl
-IGV4dGVudCB0byB0aGUgaW50ZW50IGl0ZW0uICovCj4gPiA+ID4gPiArU1RBVElDIHZvaWQKPiA+
-ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2xvZ19pdGVtKAo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX3Ry
-YW5zCQkqdHAsCj4gPiA+ID4gPiArCXZvaWQJCQkJKmludGVudCwKPiA+ID4gPiA+ICsJc3RydWN0
-IGxpc3RfaGVhZAkJKml0ZW0pCj4gPiA+ID4gPiArewo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2Jt
-YXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKwlmcmVlID0gY29udGFp
-bmVyX29mKGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlfbGlzdCk7Cj4gPiA+
-ID4gPiArCXhmc190cmFuc19sb2dfZWZpX2V4dGVudCh0cCwgaW50ZW50LCBmcmVlLT54YmZpX3N0
-YXJ0YmxvY2ssCj4gPiA+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9ja2NvdW50KTsKPiA+ID4gPiA+
-ICt9Cj4gPiA+ID4gPiArCj4gPiA+ID4gPiArLyogR2V0IGFuIEVGRCBzbyB3ZSBjYW4gcHJvY2Vz
-cyBhbGwgdGhlIGZyZWUgZXh0ZW50cy4gKi8KPiA+ID4gPiA+ICtTVEFUSUMgdm9pZCAqCj4gPiA+
-ID4gPiAreGZzX2JtYXBfZnJlZV9jcmVhdGVfZG9uZSgKPiA+ID4gPiA+ICsJc3RydWN0IHhmc190
-cmFucwkJKnRwLAo+ID4gPiA+ID4gKwl2b2lkCQkJCSppbnRlbnQsCj4gPiA+ID4gPiArCXVuc2ln
-bmVkIGludAkJCWNvdW50KQo+ID4gPiA+ID4gK3sKPiA+ID4gPiA+ICsJcmV0dXJuIHhmc190cmFu
-c19nZXRfZWZkKHRwLCBpbnRlbnQsIGNvdW50KTsKPiA+ID4gPiA+ICt9Cj4gPiA+ID4gPiArCj4g
-PiA+ID4gPiArLyogUHJvY2VzcyBhIGZyZWUgZXh0ZW50LiAqLwo+ID4gPiA+ID4gK1NUQVRJQyBp
-bnQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2ZpbmlzaF9pdGVtKAo+ID4gPiA+ID4gKwlzdHJ1
-Y3QgeGZzX3RyYW5zCQkqdHAsCj4gPiA+ID4gPiArCXN0cnVjdCB4ZnNfZGVmZXJfb3BzCQkqZG9w
-LAo+ID4gPiA+ID4gKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqaXRlbSwKPiA+ID4gPiA+ICsJdm9pZAkJ
-CQkqZG9uZV9pdGVtLAo+ID4gPiA+ID4gKwl2b2lkCQkJCSoqc3RhdGUpCj4gPiA+ID4gPiArewo+
-ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwlp
-bnQJCQkJZXJyb3I7Cj4gPiA+ID4gPiArCj4gPiA+ID4gPiArCWZyZWUgPSBjb250YWluZXJfb2Yo
-aXRlbSwgc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJ
-ZXJyb3IgPSB4ZnNfdHJhbnNfZnJlZV9leHRlbnQodHAsIGRvbmVfaXRlbSwKPiA+ID4gPiA+ICsJ
-CQlmcmVlLT54YmZpX3N0YXJ0YmxvY2ssCj4gPiA+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9ja2Nv
-dW50KTsKPiA+ID4gPiA+ICsJa21lbV9mcmVlKGZyZWUpOwo+ID4gPiA+ID4gKwlyZXR1cm4gZXJy
-b3I7Cj4gPiA+ID4gPiArfQo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEFib3J0IGFsbCBwZW5k
-aW5nIEVGSXMuICovCj4gPiA+ID4gPiArU1RBVElDIHZvaWQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9m
-cmVlX2Fib3J0X2ludGVudCgKPiA+ID4gPiA+ICsJdm9pZAkJCQkqaW50ZW50KQo+ID4gPiA+ID4g
-K3sKPiA+ID4gPiA+ICsJeGZzX2VmaV9yZWxlYXNlKGludGVudCk7Cj4gPiA+ID4gPiArfQo+ID4g
-PiA+ID4gKwo+ID4gPiA+ID4gKy8qIENhbmNlbCBhIGZyZWUgZXh0ZW50LiAqLwo+ID4gPiA+ID4g
-K1NUQVRJQyB2b2lkCj4gPiA+ID4gPiAreGZzX2JtYXBfZnJlZV9jYW5jZWxfaXRlbSgKPiA+ID4g
-PiA+ICsJc3RydWN0IGxpc3RfaGVhZAkJKml0ZW0pCj4gPiA+ID4gPiArewo+ID4gPiA+ID4gKwlz
-dHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKwlm
-cmVlID0gY29udGFpbmVyX29mKGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlf
-bGlzdCk7Cj4gPiA+ID4gPiArCWttZW1fZnJlZShmcmVlKTsKPiA+ID4gPiA+ICt9Cj4gPiA+ID4g
-PiArCj4gPiA+ID4gPiArY29uc3Qgc3RydWN0IHhmc19kZWZlcl9vcF90eXBlIHhmc19leHRlbnRf
-ZnJlZV9kZWZlcl90eXBlID0gewo+ID4gPiA+ID4gKwkudHlwZQkJPSBYRlNfREVGRVJfT1BTX1RZ
-UEVfRlJFRSwKPiA+ID4gPiA+ICsJLm1heF9pdGVtcwk9IFhGU19FRklfTUFYX0ZBU1RfRVhURU5U
-UywKPiA+ID4gPiA+ICsJLmRpZmZfaXRlbXMJPSB4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMsCj4g
-PiA+ID4gPiArCS5jcmVhdGVfaW50ZW50CT0geGZzX2JtYXBfZnJlZV9jcmVhdGVfaW50ZW50LAo+
-ID4gPiA+ID4gKwkuYWJvcnRfaW50ZW50CT0geGZzX2JtYXBfZnJlZV9hYm9ydF9pbnRlbnQsCj4g
-PiA+ID4gPiArCS5sb2dfaXRlbQk9IHhmc19ibWFwX2ZyZWVfbG9nX2l0ZW0sCj4gPiA+ID4gPiAr
-CS5jcmVhdGVfZG9uZQk9IHhmc19ibWFwX2ZyZWVfY3JlYXRlX2RvbmUsCj4gPiA+ID4gPiArCS5m
-aW5pc2hfaXRlbQk9IHhmc19ibWFwX2ZyZWVfZmluaXNoX2l0ZW0sCj4gPiA+ID4gPiArCS5jYW5j
-ZWxfaXRlbQk9IHhmc19ibWFwX2ZyZWVfY2FuY2VsX2l0ZW0sCj4gPiA+ID4gPiArfTsKPiA+ID4g
-PiA+ICsKPiA+ID4gPiA+ICsvKiBEZWZlcnJlZCBJdGVtIEluaXRpYWxpemF0aW9uICovCj4gPiA+
-ID4gPiAgCj4gPiA+ID4gPiAgLyogSW5pdGlhbGl6ZSB0aGUgZGVmZXJyZWQgb3BlcmF0aW9uIHR5
-cGVzLiAqLwo+ID4gPiA+ID4gIHZvaWQKPiA+ID4gPiA+ICB4ZnNfZGVmZXJfaW5pdF90eXBlcyh2
-b2lkKQo+ID4gPiA+ID4gIHsKPiA+ID4gPiA+ICsJeGZzX2RlZmVyX2luaXRfb3BfdHlwZSgmeGZz
-X2V4dGVudF9mcmVlX2RlZmVyX3R5cGUpOwo+ID4gPiA+ID4gIH0KPiA+ID4gPiA+IAo+ID4gPiA+
-ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiA+ID4g
-PiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+ID4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiA+ID4g
-aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gPiA+IAo+ID4gPiBfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4gPiB4ZnMgbWFp
-bGluZyBsaXN0Cj4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiBodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMKPiA+IAo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KPiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+IHhmc0Bvc3Muc2dp
-LmNvbQo+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Jun 28, 2016 at 08:32:04AM -0400, Brian Foster wrote:
+> On Mon, Jun 27, 2016 at 08:26:21PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 22, 2016 at 11:17:06AM -0400, Brian Foster wrote:
+> > > On Thu, Jun 16, 2016 at 06:19:15PM -0700, Darrick J. Wong wrote:
+> > > > On a filesystem with both reflink and reverse mapping enabled, it's
+> > > > possible to have multiple rmap records referring to the same blocks on
+> > > > disk.  When overlapping intervals are possible, querying a classic
+> > > > btree to find all records intersecting a given interval is inefficient
+> > > > because we cannot use the left side of the search interval to filter
+> > > > out non-matching records the same way that we can use the existing
+> > > > btree key to filter out records coming after the right side of the
+> > > > search interval.  This will become important once we want to use the
+> > > > rmap btree to rebuild BMBTs, or implement the (future) fsmap ioctl.
+> > > > 
+> > > > (For the non-overlapping case, we can perform such queries trivially
+> > > > by starting at the left side of the interval and walking the tree
+> > > > until we pass the right side.)
+> > > > 
+> > > > Therefore, extend the btree code to come closer to supporting
+> > > > intervals as a first-class record attribute.  This involves widening
+> > > > the btree node's key space to store both the lowest key reachable via
+> > > > the node pointer (as the btree does now) and the highest key reachable
+> > > > via the same pointer and teaching the btree modifying functions to
+> > > > keep the highest-key records up to date.
+> > > > 
+> > > > This behavior can be turned on via a new btree ops flag so that btrees
+> > > > that cannot store overlapping intervals don't pay the overhead costs
+> > > > in terms of extra code and disk format changes.
+> > > > 
+> > > > v2: When we're deleting a record in a btree that supports overlapped
+> > > > interval records and the deletion results in two btree blocks being
+> > > > joined, we defer updating the high/low keys until after all possible
+> > > > joining (at higher levels in the tree) have finished.  At this point,
+> > > > the btree pointers at all levels have been updated to remove the empty
+> > > > blocks and we can update the low and high keys.
+> > > > 
+> > > > When we're doing this, we must be careful to update the keys of all
+> > > > node pointers up to the root instead of stopping at the first set of
+> > > > keys that don't need updating.  This is because it's possible for a
+> > > > single deletion to cause joining of multiple levels of tree, and so
+> > > > we need to update everything going back to the root.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > 
+> > > I think I get the gist of this and it mostly looks Ok to me. A few
+> > > questions and minor comments...
+> > 
+> > Ok.
+> > 
+> > > >  fs/xfs/libxfs/xfs_btree.c |  379 +++++++++++++++++++++++++++++++++++++++++----
+> > > >  fs/xfs/libxfs/xfs_btree.h |   16 ++
+> > > >  fs/xfs/xfs_trace.h        |   36 ++++
+> > > >  3 files changed, 395 insertions(+), 36 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > > > index a096539..afcafd6 100644
+> > > > --- a/fs/xfs/libxfs/xfs_btree.c
+> > > > +++ b/fs/xfs/libxfs/xfs_btree.c
+> ...
+> > > > @@ -2149,7 +2392,9 @@ xfs_btree_lshift(
+> > > >  		rkp = &key;
+> > > >  	}
+> > > >  
+> > > > -	/* Update the parent key values of right. */
+> > > > +	/* Update the parent key values of left and right. */
+> > > > +	xfs_btree_sibling_updkeys(cur, level, XFS_BB_LEFTSIB, left, lbp);
+> > > > +	xfs_btree_updkeys(cur, level);
+> > > >  	error = xfs_btree_updkey(cur, rkp, level + 1);
+> > > >  	if (error)
+> > > >  		goto error0;
+> > > > @@ -2321,6 +2566,9 @@ xfs_btree_rshift(
+> > > >  	if (error)
+> > > >  		goto error1;
+> > > >  
+> > > > +	/* Update left and right parent pointers */
+> > > > +	xfs_btree_updkeys(cur, level);
+> > > > +	xfs_btree_updkeys(tcur, level);
+> > > 
+> > > In this case, we grab the last record of the block, increment from there
+> > > and update using the cursor. This is much more straightforward, imo.
+> > > Could we use this approach in the left shift case as well?
+> > 
+> > Yes, I think so.  I might have started refactoring btree_sibling_updkeys
+> > out of existence and got distracted, since there isn't anything that uses
+> > the RIGHTSIB ptr value.
+> > 
+> 
+> Ok, I think that would be much cleaner.
+
+Done.
+
+> > > >  	error = xfs_btree_updkey(tcur, rkp, level + 1);
+> > > >  	if (error)
+> > > >  		goto error1;
+> > > > @@ -2356,7 +2604,7 @@ __xfs_btree_split(
+> > > >  	struct xfs_btree_cur	*cur,
+> > > >  	int			level,
+> > > >  	union xfs_btree_ptr	*ptrp,
+> > > > -	union xfs_btree_key	*key,
+> > > > +	struct xfs_btree_double_key	*key,
+> > > >  	struct xfs_btree_cur	**curp,
+> > > >  	int			*stat)		/* success/failure */
+> > > >  {
+> > > > @@ -2452,9 +2700,6 @@ __xfs_btree_split(
+> > > >  
+> > > >  		xfs_btree_log_keys(cur, rbp, 1, rrecs);
+> > > >  		xfs_btree_log_ptrs(cur, rbp, 1, rrecs);
+> > > > -
+> > > > -		/* Grab the keys to the entries moved to the right block */
+> > > > -		xfs_btree_copy_keys(cur, key, rkp, 1);
+> > > >  	} else {
+> > > >  		/* It's a leaf.  Move records.  */
+> > > >  		union xfs_btree_rec	*lrp;	/* left record pointer */
+> > > > @@ -2465,12 +2710,8 @@ __xfs_btree_split(
+> > > >  
+> > > >  		xfs_btree_copy_recs(cur, rrp, lrp, rrecs);
+> > > >  		xfs_btree_log_recs(cur, rbp, 1, rrecs);
+> > > > -
+> > > > -		cur->bc_ops->init_key_from_rec(key,
+> > > > -			xfs_btree_rec_addr(cur, 1, right));
+> > > >  	}
+> > > >  
+> > > > -
+> > > >  	/*
+> > > >  	 * Find the left block number by looking in the buffer.
+> > > >  	 * Adjust numrecs, sibling pointers.
+> > > > @@ -2484,6 +2725,12 @@ __xfs_btree_split(
+> > > >  	xfs_btree_set_numrecs(left, lrecs);
+> > > >  	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
+> > > >  
+> > > > +	/* Find the low & high keys for the new block. */
+> > > > +	if (level > 0)
+> > > > +		xfs_btree_find_node_keys(cur, right, &key->low, &key->high);
+> > > > +	else
+> > > > +		xfs_btree_find_leaf_keys(cur, right, &key->low, &key->high);
+> > > > +
+> > > 
+> > > Why not push these into the above if/else where the previous key
+> > > copy/init calls were removed from?
+> > 
+> > We don't set bb_numrecs on the right block until the line above the new
+> > hunk, and the btree_find_*_keys functions require numrecs to be set.
+> > 
+> > The removed key copy/init calls only looked at keys[1].
+> > 
+> > That said, it's trivial to move the set_numrecs calls above the if statement.
+> > 
+> 
+> Ok, thanks. No need to shuffle it around. I'd suggest a one-liner
+> comment though so somebody doesn't blindly refactor this down the road.
+> It also sounds like the find keys functions could use ASSERT() checks
+> for a sane bb_numrecs.
+
+Hmm.  I already moved it, oh well.
+
+It _does_ make the function less messy, so I'll leave it unless anyone yells.
+
+> > > >  	xfs_btree_log_block(cur, rbp, XFS_BB_ALL_BITS);
+> > > >  	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
+> > > >  
+> ...
+> > > > @@ -3095,8 +3365,24 @@ xfs_btree_insrec(
+> > > >  	xfs_btree_log_block(cur, bp, XFS_BB_NUMRECS);
+> > > >  
+> > > >  	/* If we inserted at the start of a block, update the parents' keys. */
+> > > 
+> > > This comment is associated with the codeblock that has been pushed
+> > > further down, no?
+> > 
+> > Correct.  I think that got mismerged somewhere along the way.
+> > 
+> > > > +	if (ncur && bp->b_bn != old_bn) {
+> > > > +		/*
+> > > > +		 * We just inserted into a new tree block, which means that
+> > > > +		 * the key for the block is in nkey, not the tree.
+> > > > +		 */
+> > > > +		if (level == 0)
+> > > > +			xfs_btree_find_leaf_keys(cur, block, &nkey.low,
+> > > > +					&nkey.high);
+> > > > +		else
+> > > > +			xfs_btree_find_node_keys(cur, block, &nkey.low,
+> > > > +					&nkey.high);
+> > > > +	} else {
+> > > > +		/* Updating the left block, do it the standard way. */
+> > > > +		xfs_btree_updkeys(cur, level);
+> > > > +	}
+> > > > +
+> > > 
+> > > Not quite sure I follow the purpose of this hunk. Is this for the case
+> > > where a btree split occurs, nkey is filled in for the new/right block
+> > > and then (after nkey is filled in) the new record ends up being added to
+> > > the new block? If so, what about the case where ncur is not created?
+> > > (It looks like that's possible from the code, but I could easily be
+> > > missing some context as to why that's not the case.)
+> > 
+> > Yes, the first part of the if-else hunk is to fill out nkey when we've
+> > split a btree block.  Now that I look at it again, I think that whole
+> > weird conditional could be replaced with the same xfs_btree_ptr_is_null()
+> > check later on.  I think it can also be combined with it.
+
+This is incorrect.  The only time we want to perform the nkey recalculation
+is in the specific case where we split a btree block and the cursor ends up
+pointing into the new block for the insertion.  We cannot gate the nkey
+recalc on whether or not &nptr is null, because if we insert into the left
+block after a split we'll recalculate nkey (the right block's keys) using
+the left block's data, which is incorrect.  We probably want to do the key
+recalc ahead of calling ->update_lastrec because the callback could modify
+the cursor.
+
+So I'll just leave the code mostly as is, clarify the comments about what
+we're doing and why, and change the if statement to:
+
+if (bp && bp->b_bn != old_bn)
+
+Also for some reason I neglected to check the return code from
+xfs_btree_updkeys, so I will go fix that.  At the moment it doesn't matter
+because updkeys never fails, but I might as well fix it now.
+
+> Ok.
+> 
+> > Commentage for now:
+> > 
+> > /*
+> >  * If we just inserted a new tree block, we have to find the low
+> >  * and high keys for the new block and arrange to pass them back
+> >  * separately.  If we're just updating a block we can use the
+> >  * regular tree update mechanism.
+> >  */
+> > 
+> 
+> Couldn't you just point out that nkey may not be coherent with the new
+> block if the new record was inserted therein..?
+
+Yes, that would be less convoluted.  Done. :)
+
+> > > In any event, I think we could elaborate a bit in the comment on why
+> > > this is necessary. I'd also move it above the top-level if/else.
+> > > 
+> > > >  	if (optr == 1) {
+> > > > -		error = xfs_btree_updkey(cur, key, level + 1);
+> > > > +		error = xfs_btree_updkey(cur, &key->low, level + 1);
+> > > >  		if (error)
+> > > >  			goto error0;
+> > > >  	}
+> > > > @@ -3147,7 +3433,7 @@ xfs_btree_insert(
+> > > >  	union xfs_btree_ptr	nptr;	/* new block number (split result) */
+> > > >  	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
+> > > >  	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
+> > > > -	union xfs_btree_key	key;	/* key of block to insert */
+> > > > +	struct xfs_btree_double_key	key;	/* key of block to insert */
+> > > 
+> > > Probably should fix up the function param alignment here and the couple
+> > > other or so places we make this change.
+> > 
+> > I changed the name to xfs_btree_bigkey, which avoids the alignment problems.
+> > 
+> 
+> Sounds good.
+
+--D
+
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > >  
+> > > >  	level = 0;
+> > > >  	ncur = NULL;
+> > > > @@ -3552,6 +3838,7 @@ xfs_btree_delrec(
+> > > >  	 * If we deleted the leftmost entry in the block, update the
+> > > >  	 * key values above us in the tree.
+> > > >  	 */
+> > > > +	xfs_btree_updkeys(cur, level);
+> > > >  	if (ptr == 1) {
+> > > >  		error = xfs_btree_updkey(cur, keyp, level + 1);
+> > > >  		if (error)
+> > > > @@ -3882,6 +4169,16 @@ xfs_btree_delrec(
+> > > >  	if (level > 0)
+> > > >  		cur->bc_ptrs[level]--;
+> > > >  
+> > > > +	/*
+> > > > +	 * We combined blocks, so we have to update the parent keys if the
+> > > > +	 * btree supports overlapped intervals.  However, bc_ptrs[level + 1]
+> > > > +	 * points to the old block so that the caller knows which record to
+> > > > +	 * delete.  Therefore, the caller must be savvy enough to call updkeys
+> > > > +	 * for us if we return stat == 2.  The other exit points from this
+> > > > +	 * function don't require deletions further up the tree, so they can
+> > > > +	 * call updkeys directly.
+> > > > +	 */
+> > > > +
+> > > >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+> > > >  	/* Return value means the next level up has something to do. */
+> > > >  	*stat = 2;
+> > > > @@ -3907,6 +4204,7 @@ xfs_btree_delete(
+> > > >  	int			error;	/* error return value */
+> > > >  	int			level;
+> > > >  	int			i;
+> > > > +	bool			joined = false;
+> > > >  
+> > > >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> > > >  
+> > > > @@ -3920,8 +4218,17 @@ xfs_btree_delete(
+> > > >  		error = xfs_btree_delrec(cur, level, &i);
+> > > >  		if (error)
+> > > >  			goto error0;
+> > > > +		if (i == 2)
+> > > > +			joined = true;
+> > > >  	}
+> > > >  
+> > > > +	/*
+> > > > +	 * If we combined blocks as part of deleting the record, delrec won't
+> > > > +	 * have updated the parent keys so we have to do that here.
+> > > > +	 */
+> > > > +	if (joined)
+> > > > +		xfs_btree_updkeys_force(cur, 0);
+> > > > +
+> > > >  	if (i == 0) {
+> > > >  		for (level = 1; level < cur->bc_nlevels; level++) {
+> > > >  			if (cur->bc_ptrs[level] == 0) {
+> > > > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > > > index b99c018..a5ec6c7 100644
+> > > > --- a/fs/xfs/libxfs/xfs_btree.h
+> > > > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > > > @@ -126,6 +126,9 @@ struct xfs_btree_ops {
+> > > >  	size_t	key_len;
+> > > >  	size_t	rec_len;
+> > > >  
+> > > > +	/* flags */
+> > > > +	uint	flags;
+> > > > +
+> > > >  	/* cursor operations */
+> > > >  	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
+> > > >  	void	(*update_cursor)(struct xfs_btree_cur *src,
+> > > > @@ -162,11 +165,21 @@ struct xfs_btree_ops {
+> > > >  				     union xfs_btree_rec *rec);
+> > > >  	void	(*init_ptr_from_cur)(struct xfs_btree_cur *cur,
+> > > >  				     union xfs_btree_ptr *ptr);
+> > > > +	void	(*init_high_key_from_rec)(union xfs_btree_key *key,
+> > > > +					  union xfs_btree_rec *rec);
+> > > >  
+> > > >  	/* difference between key value and cursor value */
+> > > >  	__int64_t (*key_diff)(struct xfs_btree_cur *cur,
+> > > >  			      union xfs_btree_key *key);
+> > > >  
+> > > > +	/*
+> > > > +	 * Difference between key2 and key1 -- positive if key2 > key1,
+> > > > +	 * negative if key2 < key1, and zero if equal.
+> > > > +	 */
+> > > > +	__int64_t (*diff_two_keys)(struct xfs_btree_cur *cur,
+> > > > +				   union xfs_btree_key *key1,
+> > > > +				   union xfs_btree_key *key2);
+> > > > +
+> > > >  	const struct xfs_buf_ops	*buf_ops;
+> > > >  
+> > > >  #if defined(DEBUG) || defined(XFS_WARN)
+> > > > @@ -182,6 +195,9 @@ struct xfs_btree_ops {
+> > > >  #endif
+> > > >  };
+> > > >  
+> > > > +/* btree ops flags */
+> > > > +#define XFS_BTREE_OPS_OVERLAPPING	(1<<0)	/* overlapping intervals */
+> > > > +
+> > > >  /*
+> > > >   * Reasons for the update_lastrec method to be called.
+> > > >   */
+> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > > index 68f27f7..ffea28c 100644
+> > > > --- a/fs/xfs/xfs_trace.h
+> > > > +++ b/fs/xfs/xfs_trace.h
+> > > > @@ -38,6 +38,7 @@ struct xlog_recover_item;
+> > > >  struct xfs_buf_log_format;
+> > > >  struct xfs_inode_log_format;
+> > > >  struct xfs_bmbt_irec;
+> > > > +struct xfs_btree_cur;
+> > > >  
+> > > >  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> > > >  	TP_PROTO(struct xfs_attr_list_context *ctx),
+> > > > @@ -2183,6 +2184,41 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
+> > > >  DEFINE_DISCARD_EVENT(xfs_discard_exclude);
+> > > >  DEFINE_DISCARD_EVENT(xfs_discard_busy);
+> > > >  
+> > > > +/* btree cursor events */
+> > > > +DECLARE_EVENT_CLASS(xfs_btree_cur_class,
+> > > > +	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
+> > > > +	TP_ARGS(cur, level, bp),
+> > > > +	TP_STRUCT__entry(
+> > > > +		__field(dev_t, dev)
+> > > > +		__field(xfs_btnum_t, btnum)
+> > > > +		__field(int, level)
+> > > > +		__field(int, nlevels)
+> > > > +		__field(int, ptr)
+> > > > +		__field(xfs_daddr_t, daddr)
+> > > > +	),
+> > > > +	TP_fast_assign(
+> > > > +		__entry->dev = cur->bc_mp->m_super->s_dev;
+> > > > +		__entry->btnum = cur->bc_btnum;
+> > > > +		__entry->level = level;
+> > > > +		__entry->nlevels = cur->bc_nlevels;
+> > > > +		__entry->ptr = cur->bc_ptrs[level];
+> > > > +		__entry->daddr = bp->b_bn;
+> > > > +	),
+> > > > +	TP_printk("dev %d:%d btnum %d level %d/%d ptr %d daddr 0x%llx",
+> > > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > > > +		  __entry->btnum,
+> > > > +		  __entry->level,
+> > > > +		  __entry->nlevels,
+> > > > +		  __entry->ptr,
+> > > > +		  (unsigned long long)__entry->daddr)
+> > > > +)
+> > > > +
+> > > > +#define DEFINE_BTREE_CUR_EVENT(name) \
+> > > > +DEFINE_EVENT(xfs_btree_cur_class, name, \
+> > > > +	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp), \
+> > > > +	TP_ARGS(cur, level, bp))
+> > > > +DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
+> > > > +
+> > > >  #endif /* _TRACE_XFS_H */
+> > > >  
+> > > >  #undef TRACE_INCLUDE_PATH
+> > > > 
+> > > > _______________________________________________
+> > > > xfs mailing list
+> > > > xfs@oss.sgi.com
+> > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
