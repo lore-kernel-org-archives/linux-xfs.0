@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9641D7CA0
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 10:34:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A4C8304048
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 08:34:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id nnjyXHEF92vCZxfU for <xfs@oss.sgi.com>;
-	Mon, 27 Jun 2016 08:34:40 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id BCE132A9D
-	for <xfs@oss.sgi.com>; Mon, 27 Jun 2016 10:34:39 -0500 (CDT)
-Subject: Re: [PATCH] xfs_repair: don't call xfs_sb_quota_from_disk twice
-References: <13dd3974-956d-c3af-86ed-f6ce5cc1b996@redhat.com>
-	<20160627094855.GC29774@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5c408cf1-e9fa-8bee-106e-93e553fc98a7@sandeen.net>
-Date: Mon, 27 Jun 2016 10:34:39 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 980D17CA4
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:27:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 65BEA304032
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:27:12 -0700 (PDT)
+Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
+	[74.125.82.43]) by cuda.sgi.com with ESMTP id pyCiPv7nv0LrU3L8
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Jun 2016 06:27:07 -0700 (PDT)
+Received: by mail-wm0-f43.google.com with SMTP id a66so27864657wme.0
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 06:27:07 -0700 (PDT)
+Message-ID: <57727B27.7060104@plexistor.com>
+Date: Tue, 28 Jun 2016 16:27:03 +0300
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
-In-Reply-To: <20160627094855.GC29774@redhat.com>
+Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
+References: <1466609236-23801-1-git-send-email-hch@lst.de>
+	<20160623232446.GA12670@dastard> <20160624072612.GA22205@lst.de>
+	<20160624230045.GG12670@dastard> <20160628131059.GA30475@lst.de>
+In-Reply-To: <20160628131059.GA30475@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +33,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
 
-
-
-On 6/27/16 4:48 AM, Carlos Maiolino wrote:
-> On Fri, Jun 24, 2016 at 04:24:58PM -0500, Eric Sandeen wrote:
->> kernel commit 5ef828c4
->> xfs: avoid false quotacheck after unclean shutdown
->>
->> made xfs_sb_from_disk() also call xfs_sb_quota_from_disk
->> by default.
->>
->> However, when this was merged to libxfs, existing separate
->> calls to libxfs_sb_quota_from_disk remained, and calling it
->> twice in a row on a V4 superblock leads to issues, because:
->>
->>
->>         if (sbp->sb_qflags & XFS_PQUOTA_ACCT)  {
->> ...
->>                 sbp->sb_pquotino = sbp->sb_gquotino;
->>                 sbp->sb_gquotino = NULLFSINO;
->>
->> and after the second call, we have set both pquotino and gquotino
->> to NULLFSINO.
->>
->> Fix this by making it safe to call twice, and also remove the extra
->> calls to libxfs_sb_quota_from_disk.
->>
->> This is only spotted when running xfstests with "-m crc=0" because
->> the sb_from_disk change came about after V5 became default, and
->> the above behavior only exists on a V4 superblock.
->>
->> Reported-by: Eryu Guan <eguan@redhat.com>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->>
->> diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
->> index 45db6ae..44f3e3e 100644
->> --- a/libxfs/xfs_sb.c
->> +++ b/libxfs/xfs_sb.c
->> @@ -316,13 +316,16 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
->>  					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
->>  	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
->>  
->> -	if (sbp->sb_qflags & XFS_PQUOTA_ACCT)  {
->> +	if (sbp->sb_qflags & XFS_PQUOTA_ACCT &&
->> +	    sbp->sb_gquotino != NULLFSINO)  {
+On 06/28/2016 04:10 PM, Christoph Hellwig wrote:
+> On Sat, Jun 25, 2016 at 09:00:45AM +1000, Dave Chinner wrote:
+<>
 > 
-> Although I agree with this check, shouldn't we report some sort of error when it
-> happens? Once, it's not supposed to happen, and, might be a sign of corruption?
+> Right.  And an existing application can get DAX turned on under its
+> back, and will now suddently get different synchronization behavior.
+> That is if it's writes happen to be aligned to the fs block size.
+> 
 
-I dunno, it would also happen if it gets called twice, which is intentionally
-made harmless by this change.  We don't warn on free(NULL) for example...
+Is there an actual application that does that? or is this purely
+theoretical right now?
 
-I don't think it needs a warning.
 
--Eric
- 
+Thanks
+Boaz
 
 _______________________________________________
 xfs mailing list
