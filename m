@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF75A7CA1
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:39:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9FC938F8039
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:39:32 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id rDXx8QPA9xEzhrNK (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:39:27 -0700 (PDT)
-Date: Tue, 28 Jun 2016 17:39:25 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: xfs: untangle the direct I/O and DAX path, fix DAX locking
-Message-ID: <20160628153925.GA2643@lst.de>
-References: <1466609236-23801-1-git-send-email-hch@lst.de>
-	<20160623232446.GA12670@dastard> <20160624072612.GA22205@lst.de>
-	<20160624230045.GG12670@dastard> <20160628131059.GA30475@lst.de>
-	<57727B27.7060104@plexistor.com> <20160628133928.GB31283@lst.de>
-	<5772820E.2080403@plexistor.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5401A7CA1
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:40:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 269F08F8040
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 08:40:35 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 5jGLkNHAf9GyZ2o5 for <xfs@oss.sgi.com>;
+	Tue, 28 Jun 2016 08:40:32 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 679E62A9D
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:40:32 -0500 (CDT)
+Subject: Re: [PATCH] xfs_repair: don't call xfs_sb_quota_from_disk twice
+References: <13dd3974-956d-c3af-86ed-f6ce5cc1b996@redhat.com>
+	<20160627094855.GC29774@redhat.com>
+	<5c408cf1-e9fa-8bee-106e-93e553fc98a7@sandeen.net>
+	<20160628085726.GA4397@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c72e1f9a-0f83-aa2b-48f1-bc6deccc6315@sandeen.net>
+Date: Tue, 28 Jun 2016 10:40:31 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5772820E.2080403@plexistor.com>
+In-Reply-To: <20160628085726.GA4397@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +35,129 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <boaz@plexistor.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jun 28, 2016 at 04:56:30PM +0300, Boaz Harrosh wrote:
-> Actually with O_APPEND each write request should write a different region
-> of the file, there are no overlapping writes. And no issue of which version of the
-> write came last and got its data written.
 
-You have one fd for multiple threads or processes (it doesn't matter if
-you're using O_APPEND or not), and all of them write to it.
 
-i_size is only updated once the write finishes, so having multiple
-concurrent writes will mean multiple records go into the same regions.
-Now to be fair in current XFS writes beyond i_size will always take
-the lock exclusively, so for this case we will not get concurrent
-writes and thus data corruption anyway.  But if you have a cycling
-log that gets overwritten (say a database journal) we're back to
-square one.
+On 6/28/16 3:57 AM, Carlos Maiolino wrote:
+> On Mon, Jun 27, 2016 at 10:34:39AM -0500, Eric Sandeen wrote:
+>>
+>>
+>> On 6/27/16 4:48 AM, Carlos Maiolino wrote:
+>>> On Fri, Jun 24, 2016 at 04:24:58PM -0500, Eric Sandeen wrote:
+>>>> kernel commit 5ef828c4
+>>>> xfs: avoid false quotacheck after unclean shutdown
+>>>>
+>>>> made xfs_sb_from_disk() also call xfs_sb_quota_from_disk
+>>>> by default.
+>>>>
+>>>> However, when this was merged to libxfs, existing separate
+>>>> calls to libxfs_sb_quota_from_disk remained, and calling it
+>>>> twice in a row on a V4 superblock leads to issues, because:
+>>>>
+>>>>
+>>>>         if (sbp->sb_qflags & XFS_PQUOTA_ACCT)  {
+>>>> ...
+>>>>                 sbp->sb_pquotino = sbp->sb_gquotino;
+>>>>                 sbp->sb_gquotino = NULLFSINO;
+>>>>
+>>>> and after the second call, we have set both pquotino and gquotino
+>>>> to NULLFSINO.
+>>>>
+>>>> Fix this by making it safe to call twice, and also remove the extra
+>>>> calls to libxfs_sb_quota_from_disk.
+>>>>
+>>>> This is only spotted when running xfstests with "-m crc=0" because
+>>>> the sb_from_disk change came about after V5 became default, and
+>>>> the above behavior only exists on a V4 superblock.
+>>>>
+>>>> Reported-by: Eryu Guan <eguan@redhat.com>
+>>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>>> ---
+>>>>
+>>>>
+>>>> diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+>>>> index 45db6ae..44f3e3e 100644
+>>>> --- a/libxfs/xfs_sb.c
+>>>> +++ b/libxfs/xfs_sb.c
+>>>> @@ -316,13 +316,16 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+>>>>  					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
+>>>>  	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
+>>>>  
+>>>> -	if (sbp->sb_qflags & XFS_PQUOTA_ACCT)  {
+>>>> +	if (sbp->sb_qflags & XFS_PQUOTA_ACCT &&
+>>>> +	    sbp->sb_gquotino != NULLFSINO)  {
+>>>
+>>> Although I agree with this check, shouldn't we report some sort of error when it
+>>> happens? Once, it's not supposed to happen, and, might be a sign of corruption?
+>>
+>> I dunno, it would also happen if it gets called twice, which is intentionally
+>> made harmless by this change.  We don't warn on free(NULL) for example...
+>>
+> 
+> Well, I don't 100% agree with not having a warning here, but it doesn't make the
+> patch less valuable.
 
-> I still don't see how an application can use the fact that two writers
-> will not give them mixed records. And surly it does not work on a shared
-> FS. So I was really wondering if you know of any such app
+Thanks Carlos - 
 
-If it doesn't work for two threads using the same fd on a shared fs
-the fs is broken.
+Maybe I don't understand what you want to warn about.
+
+If we get here with:
+
+	if (sbp->sb_qflags & XFS_PQUOTA_ACCT &&
+	    sbp->sb_gquotino != NULLFSINO)  {
+
+that means we have an on-disk super without the pquotino field,
+the XFS_PQUOTA_ACCT flag is set, and so the gquotino field was
+used for the project quota; this is valid, and there is
+nothing to warn about in this case.
+
+If we get here with:
+
+	if (sbp->sb_qflags & XFS_PQUOTA_ACCT &&
+	    sbp->sb_gquotino == NULLFSINO)  {
+
+that means we have an on-disk super without the pquotino field,
+the XFS_PQUOTA_ACCT flag is set, and the gquotino was not set
+to a valid value.  This could happen either from a bad on-disk
+value, or it could mean that we called the function twice in a
+row.  Without maintaining more state, we can't know which, and
+warning the user about a programming error wouldn't be helpful.
+
+Actually, repair already handles this case elsewhere:
+
+quota_sb_check(xfs_mount_t *mp)
+{
+        /*
+         * if the sb says we have quotas and we lost both,
+         * signal a superblock downgrade.  that will cause
+         * the quota flags to get zeroed.  (if we only lost
+         * one quota inode, do nothing and complain later.)
+         *
+         * if the sb says we have quotas but we didn't start out
+         * with any quota inodes, signal a superblock downgrade.
+
+In the case where quota flags are on but all quota inodes are
+zero, it silently clears the quota flags.  Whether or not that
+should be silent I'm not sure, but I think that is separate
+from this patch.
+
+Thanks,
+-Eric
+
+
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+>> I don't think it needs a warning.
+>>
+>> -Eric
+>>  
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
