@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0EE647CA4
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 11:30:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A904D8F8039
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:30:00 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id vAeias3JX7PCLeaY (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id A31587CA4
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 11:33:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5954B8F8039
+	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:33:56 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id KyGdmVECabcXo0VJ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:29:56 -0700 (PDT)
-Date: Tue, 28 Jun 2016 09:29:51 -0700
+	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 09:33:53 -0700 (PDT)
+Date: Tue, 28 Jun 2016 09:33:48 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 014/119] xfs: introduce interval queries on btrees
-Message-ID: <20160628162951.GA16181@birch.djwong.org>
+Subject: Re: [PATCH 018/119] xfs: enable the xfs_defer mechanism to process
+	extents to free
+Message-ID: <20160628163348.GB16181@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612636170.12839.675596870201079078.stgit@birch.djwong.org>
-	<20160622151800.GC5423@bfoster.bfoster>
-	<20160627210746.GB4921@birch.djwong.org>
-	<20160628123218.GC4212@bfoster.bfoster>
+	<146612638717.12839.11007379793448761871.stgit@birch.djwong.org>
+	<20160627131508.GC23076@bfoster.bfoster>
+	<20160627214145.GC4921@birch.djwong.org>
+	<20160627220003.GA4917@birch.djwong.org>
+	<20160628123238.GE4212@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160628123218.GC4212@bfoster.bfoster>
+In-Reply-To: <20160628123238.GE4212@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,479 +31,153 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On Tue, Jun 28, 2016 at 08:32:19AM -0400, Brian Foster wrote:
-> On Mon, Jun 27, 2016 at 02:07:46PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 22, 2016 at 11:18:00AM -0400, Brian Foster wrote:
-> > > On Thu, Jun 16, 2016 at 06:19:21PM -0700, Darrick J. Wong wrote:
-> > > > Create a function to enable querying of btree records mapping to a
-> > > > range of keys.  This will be used in subsequent patches to allow
-> > > > querying the reverse mapping btree to find the extents mapped to a
-> > > > range of physical blocks, though the generic code can be used for
-> > > > any range query.
-> > > > 
-> > > > v2: add some shortcuts so that we can jump out of processing once
-> > > > we know there won't be any more records to find.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_btree.c |  249 +++++++++++++++++++++++++++++++++++++++++++++
-> > > >  fs/xfs/libxfs/xfs_btree.h |   22 +++-
-> > > >  fs/xfs/xfs_trace.h        |    1 
-> > > >  3 files changed, 267 insertions(+), 5 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > > > index afcafd6..5f5cf23 100644
-> > > > --- a/fs/xfs/libxfs/xfs_btree.c
-> > > > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > > > @@ -4509,3 +4509,252 @@ xfs_btree_calc_size(
-> > > >  	}
-> > > >  	return rval;
-> > > >  }
-> > > > +
-> > > > +/* Query a regular btree for all records overlapping a given interval. */
-> > > 
-> > > Can you elaborate on the search algorithm used? (More for reference
-> > > against the overlapped query, as that one is more complex).
-> > 
-> > Ok.  Both query_range functions aim to return all records intersecting the
-> > given range.
-> > 
-> > For non-overlapped btrees, we start with a LE lookup of the low key and
-> > return each record we find a the record with a key greater than the
-> > high key.
-> > 
-> > For overlapped btrees, we follow the procedure in the "Interval trees"
-> > section of _Introduction to Algorithms_, which is 14.3 in the 2nd and
-> > 3rd editions.  The query algorithm is roughly as follows:
-> > 
-> > For any leaf btree node, generate the low and high keys for the record.
-> > If there's a range overlap with the query's low and high keys, pass the
-> > record to the iterator function.
-> > 
-> > For any internal btree node, compare the low and high keys for each pointer
-> > against the query's low and high keys.  If there's an overlap, follow the
-> > pointer downwards in the tree.
-> > 
-> > (I could render the figures in the book as ASCII art if anyone wants.)
-> > 
-> 
-> Thanks. I meant more to update the comments above each function. :) No
-> need to go as far as ASCII art I don't think (the external reference
-> might be good though). I was really just looking for something that says
-> "this function is supposed to do <whatever>" so somebody reading through
-> it has a starting point of reference.
-
-Ok, I pasted a (somewhat reworded) version of the above in the comments.
-
-> > > 
-> > > > +STATIC int
-> > > > +xfs_btree_simple_query_range(
-> > > > +	struct xfs_btree_cur		*cur,
-> > > > +	union xfs_btree_irec		*low_rec,
-> > > > +	union xfs_btree_irec		*high_rec,
-> > > > +	xfs_btree_query_range_fn	fn,
-> > > > +	void				*priv)
-> > > > +{
-> > > > +	union xfs_btree_rec		*recp;
-> > > > +	union xfs_btree_rec		rec;
-> > > > +	union xfs_btree_key		low_key;
-> > > > +	union xfs_btree_key		high_key;
-> > > > +	union xfs_btree_key		rec_key;
-> > > > +	__int64_t			diff;
-> > > > +	int				stat;
-> > > > +	bool				firstrec = true;
-> > > > +	int				error;
-> > > > +
-> > > > +	ASSERT(cur->bc_ops->init_high_key_from_rec);
-> > > > +
-> > > > +	/* Find the keys of both ends of the interval. */
-> > > > +	cur->bc_rec = *high_rec;
-> > > > +	cur->bc_ops->init_rec_from_cur(cur, &rec);
-> > > > +	cur->bc_ops->init_key_from_rec(&high_key, &rec);
-> > > > +
-> > > > +	cur->bc_rec = *low_rec;
-> > > > +	cur->bc_ops->init_rec_from_cur(cur, &rec);
-> > > > +	cur->bc_ops->init_key_from_rec(&low_key, &rec);
-> > > > +
-> > > > +	/* Find the leftmost record. */
-> > > > +	stat = 0;
-> > > > +	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, &stat);
-> > > > +	if (error)
-> > > > +		goto out;
-> > > > +
-> > > > +	while (stat) {
-> > > > +		/* Find the record. */
-> > > > +		error = xfs_btree_get_rec(cur, &recp, &stat);
-> > > > +		if (error || !stat)
-> > > > +			break;
-> > > > +
-> > > > +		/* Can we tell if this record is too low? */
-> > > > +		if (firstrec) {
-> > > > +			cur->bc_rec = *low_rec;
-> > > > +			cur->bc_ops->init_high_key_from_rec(&rec_key, recp);
-> > > > +			diff = cur->bc_ops->key_diff(cur, &rec_key);
-> > > > +			if (diff < 0)
-> > > > +				goto advloop;
-> > > > +		}
-> > > > +		firstrec = false;
-> > > 
-> > > This could move up into the if block.
-> > 
-> > Ok.
-> > 
-> > > > +
-> > > > +		/* Have we gone past the end? */
-> > > > +		cur->bc_rec = *high_rec;
-> > > > +		cur->bc_ops->init_key_from_rec(&rec_key, recp);
-> > > 
-> > > I'd move this up to immediately after the xfs_btree_get_rec() call and
-> > > eliminate the duplicate in the 'if (firstrec)' block above.
-> > 
-> > Ok.  That key ought to be named rec_hkey too.
-> > 
-> > > > +		diff = cur->bc_ops->key_diff(cur, &rec_key);
-> > > > +		if (diff > 0)
-> > > > +			break;
-> > > > +
-> > > > +		/* Callback */
-> > > > +		error = fn(cur, recp, priv);
-> > > > +		if (error < 0 || error == XFS_BTREE_QUERY_RANGE_ABORT)
-> > > > +			break;
-> > > > +
-> > > > +advloop:
-> > > > +		/* Move on to the next record. */
-> > > > +		error = xfs_btree_increment(cur, 0, &stat);
-> > > > +		if (error)
-> > > > +			break;
-> > > > +	}
-> > > > +
-> > > > +out:
-> > > > +	return error;
-> > > > +}
-> > > > +
-> > > > +/*
-> > > > + * Query an overlapped interval btree for all records overlapping a given
-> > > > + * interval.
-> > > > + */
-> > > 
-> > > Same comment here, can you elaborate on the search algorithm? Also, I
-> > > think an example or generic description of the rules around what records
-> > > this query returns (e.g., low_rec/high_rec vs. record low/high keys)
-> > > would be useful, particularly since I, at least, don't have much context
-> > > on the rmap+reflink scenarios quite yet.
-> > 
-> > Let's say you have a bunch of (overlapped) rmap records:
-> > 
-> > 1: +- file A startblock B offset C length D -----------+
-> > 2:      +- file E startblock F offset G length H --------------+
-> > 3:      +- file I startblock F offset J length K --+
-> > 4:                                                        +- file L... --+
-> > 
-> > Now say we want to map block (B+D) into file A at offset (C+D).  Ideally, we'd
-> > simply increment the length of record 1.  But how do we find that record that
-> > ends at (B+D-1)?  A LE lookup of (B+D-1) would return record 3 because the
-> > keys are ordered first by startblock.  An interval query would return records
-> > 1 and 2 because they both overlap (B+D-1), and from that we can pick out
-> > record 1 as the appropriate left neighbor.
-> > 
-> 
-> Great, thanks.. can you include this content in the comment above the
-> function as well?
-
-Added this to the comments as well, since it documents the only justification
-for any of this overlapped interval btree stuff. :)
-
---D
-
-> 
-> Brian
-> 
-> > In the non-overlapped case you can do a LE lookup and decrement the cursor
-> > because a record's interval must end before the next record.
-> > 
-> > > > +STATIC int
-> > > > +xfs_btree_overlapped_query_range(
-> > > > +	struct xfs_btree_cur		*cur,
-> > > > +	union xfs_btree_irec		*low_rec,
-> > > > +	union xfs_btree_irec		*high_rec,
-> > > > +	xfs_btree_query_range_fn	fn,
-> > > > +	void				*priv)
-> > > > +{
-> > > > +	union xfs_btree_ptr		ptr;
-> > > > +	union xfs_btree_ptr		*pp;
-> > > > +	union xfs_btree_key		rec_key;
-> > > > +	union xfs_btree_key		low_key;
-> > > > +	union xfs_btree_key		high_key;
-> > > > +	union xfs_btree_key		*lkp;
-> > > > +	union xfs_btree_key		*hkp;
-> > > > +	union xfs_btree_rec		rec;
-> > > > +	union xfs_btree_rec		*recp;
-> > > > +	struct xfs_btree_block		*block;
-> > > > +	__int64_t			ldiff;
-> > > > +	__int64_t			hdiff;
-> > > > +	int				level;
-> > > > +	struct xfs_buf			*bp;
-> > > > +	int				i;
-> > > > +	int				error;
-> > > > +
-> > > > +	/* Find the keys of both ends of the interval. */
-> > > > +	cur->bc_rec = *high_rec;
-> > > > +	cur->bc_ops->init_rec_from_cur(cur, &rec);
-> > > > +	cur->bc_ops->init_key_from_rec(&high_key, &rec);
-> > > > +
-> > > > +	cur->bc_rec = *low_rec;
-> > > > +	cur->bc_ops->init_rec_from_cur(cur, &rec);
-> > > > +	cur->bc_ops->init_key_from_rec(&low_key, &rec);
-> > > > +
-> > > > +	/* Load the root of the btree. */
-> > > > +	level = cur->bc_nlevels - 1;
-> > > > +	cur->bc_ops->init_ptr_from_cur(cur, &ptr);
-> > > > +	error = xfs_btree_lookup_get_block(cur, level, &ptr, &block);
-> > > > +	if (error)
-> > > > +		return error;
-> > > > +	xfs_btree_get_block(cur, level, &bp);
-> > > > +	trace_xfs_btree_overlapped_query_range(cur, level, bp);
-> > > > +#ifdef DEBUG
-> > > > +	error = xfs_btree_check_block(cur, block, level, bp);
-> > > > +	if (error)
-> > > > +		goto out;
-> > > > +#endif
-> > > > +	cur->bc_ptrs[level] = 1;
-> > > > +
-> > > > +	while (level < cur->bc_nlevels) {
-> > > > +		block = XFS_BUF_TO_BLOCK(cur->bc_bufs[level]);
-> > > > +
-> > > > +		if (level == 0) {
-> > > > +			/* End of leaf, pop back towards the root. */
-> > > > +			if (cur->bc_ptrs[level] >
-> > > > +			    be16_to_cpu(block->bb_numrecs)) {
-> > > > +leaf_pop_up:
-> > > > +				if (level < cur->bc_nlevels - 1)
-> > > > +					cur->bc_ptrs[level + 1]++;
-> > > > +				level++;
-> > > > +				continue;
-> > > > +			}
-> > > > +
-> > > > +			recp = xfs_btree_rec_addr(cur, cur->bc_ptrs[0], block);
-> > > > +
-> > > > +			cur->bc_ops->init_high_key_from_rec(&rec_key, recp);
-> > > > +			ldiff = cur->bc_ops->diff_two_keys(cur, &low_key,
-> > > > +					&rec_key);
-> > > > +
-> > > > +			cur->bc_ops->init_key_from_rec(&rec_key, recp);
-> > > > +			hdiff = cur->bc_ops->diff_two_keys(cur, &rec_key,
-> > > > +					&high_key);
-> > > > +
-> > > 
-> > > This looked a little funny to me because I expected diff_two_keys() to
-> > > basically be param1 - param2. Looking ahead at the rmapbt code, it is in
-> > > fact the other way around. I'm not sure we have precedent for either
-> > > way, tbh. I still have to stare at this some more, but I wonder if a
-> > > "does record overlap" helper (with comments) would help clean this up a
-> > > bit.
-> > 
-> > You're correct this is exactly the opposite of the compare functions in
-> > the C library and the rest of the kernel.  I'll fix that up.
-> > 
-> > > > +			/* If the record matches, callback */
-> > > > +			if (ldiff >= 0 && hdiff >= 0) {
-> > 
-> > Ok, I'll make it a little clearer what we're testing here:
-> > 
-> > /*
-> >  * If (record's high key >= query's low key) and
-> >  *    (query's high key >= record's low key), then
-> >  * this record overlaps the query range, so callback.
-> >  */
-> > 
-> > 
-> > > > +				error = fn(cur, recp, priv);
-> > > > +				if (error < 0 ||
-> > > > +				    error == XFS_BTREE_QUERY_RANGE_ABORT)
-> > > > +					break;
-> > > > +			} else if (hdiff < 0) {
-> > > > +				/* Record is larger than high key; pop. */
-> > > > +				goto leaf_pop_up;
-> > > > +			}
-> > > > +			cur->bc_ptrs[level]++;
-> > > > +			continue;
-> > > > +		}
-> > > > +
-> > > > +		/* End of node, pop back towards the root. */
-> > > > +		if (cur->bc_ptrs[level] > be16_to_cpu(block->bb_numrecs)) {
-> > > > +node_pop_up:
-> > > > +			if (level < cur->bc_nlevels - 1)
-> > > > +				cur->bc_ptrs[level + 1]++;
-> > > > +			level++;
-> > > > +			continue;
-> > > 
-> > > Looks like same code as leaf_pop_up. I wonder if we can bury this at the
-> > > end of the loop with a common label.
-> > 
-> > Yep.
-> > 
-> > > > +		}
-> > > > +
-> > > > +		lkp = xfs_btree_key_addr(cur, cur->bc_ptrs[level], block);
-> > > > +		hkp = xfs_btree_high_key_addr(cur, cur->bc_ptrs[level], block);
-> > > > +		pp = xfs_btree_ptr_addr(cur, cur->bc_ptrs[level], block);
-> > > > +
-> > > > +		ldiff = cur->bc_ops->diff_two_keys(cur, &low_key, hkp);
-> > > > +		hdiff = cur->bc_ops->diff_two_keys(cur, lkp, &high_key);
-> > > > +
-> > > > +		/* If the key matches, drill another level deeper. */
-> > > > +		if (ldiff >= 0 && hdiff >= 0) {
-> > > > +			level--;
-> > > > +			error = xfs_btree_lookup_get_block(cur, level, pp,
-> > > > +					&block);
-> > > > +			if (error)
-> > > > +				goto out;
-> > > > +			xfs_btree_get_block(cur, level, &bp);
-> > > > +			trace_xfs_btree_overlapped_query_range(cur, level, bp);
-> > > > +#ifdef DEBUG
-> > > > +			error = xfs_btree_check_block(cur, block, level, bp);
-> > > > +			if (error)
-> > > > +				goto out;
-> > > > +#endif
-> > > > +			cur->bc_ptrs[level] = 1;
-> > > > +			continue;
-> > > > +		} else if (hdiff < 0) {
-> > > > +			/* The low key is larger than the upper range; pop. */
-> > > > +			goto node_pop_up;
-> > > > +		}
-> > > > +		cur->bc_ptrs[level]++;
-> > > > +	}
-> > > > +
-> > > > +out:
-> > > > +	/*
-> > > > +	 * If we don't end this function with the cursor pointing at a record
-> > > > +	 * block, a subsequent non-error cursor deletion will not release
-> > > > +	 * node-level buffers, causing a buffer leak.  This is quite possible
-> > > > +	 * with a zero-results range query, so release the buffers if we
-> > > > +	 * failed to return any results.
-> > > > +	 */
-> > > > +	if (cur->bc_bufs[0] == NULL) {
-> > > > +		for (i = 0; i < cur->bc_nlevels; i++) {
-> > > > +			if (cur->bc_bufs[i]) {
-> > > > +				xfs_trans_brelse(cur->bc_tp, cur->bc_bufs[i]);
-> > > > +				cur->bc_bufs[i] = NULL;
-> > > > +				cur->bc_ptrs[i] = 0;
-> > > > +				cur->bc_ra[i] = 0;
-> > > > +			}
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > > +	return error;
-> > > > +}
-> > > > +
-> > > > +/*
-> > > > + * Query a btree for all records overlapping a given interval of keys.  The
-> > > > + * supplied function will be called with each record found; return one of the
-> > > > + * XFS_BTREE_QUERY_RANGE_{CONTINUE,ABORT} values or the usual negative error
-> > > > + * code.  This function returns XFS_BTREE_QUERY_RANGE_ABORT, zero, or a
-> > > > + * negative error code.
-> > > > + */
-> > > > +int
-> > > > +xfs_btree_query_range(
-> > > > +	struct xfs_btree_cur		*cur,
-> > > > +	union xfs_btree_irec		*low_rec,
-> > > > +	union xfs_btree_irec		*high_rec,
-> > > > +	xfs_btree_query_range_fn	fn,
-> > > > +	void				*priv)
-> > > > +{
-> > > > +	if (!(cur->bc_ops->flags & XFS_BTREE_OPS_OVERLAPPING))
-> > > > +		return xfs_btree_simple_query_range(cur, low_rec,
-> > > > +				high_rec, fn, priv);
-> > > > +	return xfs_btree_overlapped_query_range(cur, low_rec, high_rec,
-> > > > +			fn, priv);
-> > > > +}
-> > > > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > > > index a5ec6c7..898fee5 100644
-> > > > --- a/fs/xfs/libxfs/xfs_btree.h
-> > > > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > > > @@ -206,6 +206,12 @@ struct xfs_btree_ops {
-> > > >  #define LASTREC_DELREC	2
-> > > >  
-> > > >  
-> > > > +union xfs_btree_irec {
-> > > > +	xfs_alloc_rec_incore_t		a;
-> > > > +	xfs_bmbt_irec_t			b;
-> > > > +	xfs_inobt_rec_incore_t		i;
-> > > > +};
-> > > > +
-> > > 
-> > > We might as well kill off the typedef usage here.
-> > 
-> > Ok.  Thx for the review!
-> > 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > >  /*
-> > > >   * Btree cursor structure.
-> > > >   * This collects all information needed by the btree code in one place.
-> > > > @@ -216,11 +222,7 @@ typedef struct xfs_btree_cur
-> > > >  	struct xfs_mount	*bc_mp;	/* file system mount struct */
-> > > >  	const struct xfs_btree_ops *bc_ops;
-> > > >  	uint			bc_flags; /* btree features - below */
-> > > > -	union {
-> > > > -		xfs_alloc_rec_incore_t	a;
-> > > > -		xfs_bmbt_irec_t		b;
-> > > > -		xfs_inobt_rec_incore_t	i;
-> > > > -	}		bc_rec;		/* current insert/search record value */
-> > > > +	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
-> > > >  	struct xfs_buf	*bc_bufs[XFS_BTREE_MAXLEVELS];	/* buf ptr per level */
-> > > >  	int		bc_ptrs[XFS_BTREE_MAXLEVELS];	/* key/record # */
-> > > >  	__uint8_t	bc_ra[XFS_BTREE_MAXLEVELS];	/* readahead bits */
-> > > > @@ -494,4 +496,14 @@ xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-> > > >  uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
-> > > >  		unsigned long len);
-> > > >  
-> > > > +/* return codes */
-> > > > +#define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
-> > > > +#define XFS_BTREE_QUERY_RANGE_ABORT	1	/* stop iterating */
-> > > > +typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
-> > > > +		union xfs_btree_rec *rec, void *priv);
-> > > > +
-> > > > +int xfs_btree_query_range(struct xfs_btree_cur *cur,
-> > > > +		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
-> > > > +		xfs_btree_query_range_fn fn, void *priv);
-> > > > +
-> > > >  #endif	/* __XFS_BTREE_H__ */
-> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > > > index ffea28c..f0ac9c9 100644
-> > > > --- a/fs/xfs/xfs_trace.h
-> > > > +++ b/fs/xfs/xfs_trace.h
-> > > > @@ -2218,6 +2218,7 @@ DEFINE_EVENT(xfs_btree_cur_class, name, \
-> > > >  	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp), \
-> > > >  	TP_ARGS(cur, level, bp))
-> > > >  DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
-> > > > +DEFINE_BTREE_CUR_EVENT(xfs_btree_overlapped_query_range);
-> > > >  
-> > > >  #endif /* _TRACE_XFS_H */
-> > > >  
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBKdW4gMjgsIDIwMTYgYXQgMDg6MzI6MzlBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdy
+b3RlOgo+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDAzOjAwOjAzUE0gLTA3MDAsIERhcnJpY2sg
+Si4gV29uZyB3cm90ZToKPiA+IE9uIE1vbiwgSnVuIDI3LCAyMDE2IGF0IDAyOjQxOjQ1UE0gLTA3
+MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPiA+ID4gT24gTW9uLCBKdW4gMjcsIDIwMTYgYXQg
+MDk6MTU6MDhBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+ID4gPiA+IE9uIFRodSwgSnVu
+IDE2LCAyMDE2IGF0IDA2OjE5OjQ3UE0gLTA3MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPiA+
+ID4gPiA+IENvbm5lY3QgdGhlIHhmc19kZWZlciBtZWNoYW5pc20gd2l0aCB0aGUgcGllY2VzIHRo
+YXQgd2UnbGwgbmVlZCB0bwo+ID4gPiA+ID4gaGFuZGxlIGRlZmVycmVkIGV4dGVudCBmcmVlaW5n
+LiAgV2UnbGwgd2lyZSB1cCB0aGUgZXhpc3RpbmcgY29kZSB0bwo+ID4gPiA+ID4gb3VyIG5ldyBk
+ZWZlcnJlZCBtZWNoYW5pc20gbGF0ZXIuCj4gPiA+ID4gPiAKPiA+ID4gPiA+IFNpZ25lZC1vZmYt
+Ynk6IERhcnJpY2sgSi4gV29uZyA8ZGFycmljay53b25nQG9yYWNsZS5jb20+Cj4gPiA+ID4gPiAt
+LS0KPiA+ID4gPiAKPiA+ID4gPiBDb3VsZCB3ZSBtZXJnZSB0aGlzIHdpdGggdGhlIHhmc190cmFu
+c18qZWZpL2VmZCogYml0cz8gV2UnZCBuZWVkIHRvCj4gPiA+ID4gcHJlc2VydmUgc29tZSBjYWxs
+cyBmb3IgcmVjb3ZlcnksIGJ1dCBpdCBsb29rcyBsaWtlIG90aGVyIHBhcnRzIGFyZSBvbmx5Cj4g
+PiA+ID4gdXNlZCBieSB0aGUgZGVmZXJyZWQgb3BzIGluZnJhc3RydWN0dXJlIGF0IHRoaXMgcG9p
+bnQuCj4gPiA+IAo+ID4gPiBZZXMsIHdlIGNvdWxkIHJlcGxhY2UgeGZzX2JtYXBfZnJlZV9jcmVh
+dGVfe2ludGVudCxkb25lfSB3aXRoCj4gPiA+IHhmc190cmFuc19nZXRfZWZbaWRdIGFuZCBsb3Nl
+IHRoZSBzaWxseSBmdW5jdGlvbnMuICBJJ2xsIGdvIHRha2UKPiA+ID4gY2FyZSBvZiBhbGwgb2Yg
+dGhlbS4KPiA+IAo+ID4gSGFoLCBnY2MgY29tcGxhaW5zIGFib3V0IHRoZSBtaXNtYXRjaCBpbiBw
+b2ludGVyIHR5cGVzIGZvciB0aGUgc2Vjb25kCj4gPiBhcmd1bWVudC4KPiA+IAo+ID4gZnMveGZz
+L3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBlcnJvcjogaW5pdGlhbGl6YXRpb24gZnJvbSBpbmNv
+bXBhdGlibGUgcG9pbnRlciB0eXBlIFstV2Vycm9yPWluY29tcGF0aWJsZS1wb2ludGVyLXR5cGVz
+XQo+ID4gICAuY3JlYXRlX2RvbmUgPSB4ZnNfdHJhbnNfZ2V0X2J1ZCwKPiA+ICAgICAgICAgICAg
+ICAgICAgXgo+ID4gZnMveGZzL3hmc19kZWZlcl9pdGVtLmM6NTA0OjE3OiBub3RlOiAobmVhciBp
+bml0aWFsaXphdGlvbiBmb3Ig4oCYeGZzX2JtYXBfdXBkYXRlX2RlZmVyX3R5cGUuY3JlYXRlX2Rv
+bmXigJkpCj4gPiAKPiA+IEkgZ3Vlc3Mgb25lIGNvdWxkIHB1dCBpbiBhbiB1Z2x5IGNhc3QgdG8g
+Y29lcmNlIHRoZSB0eXBlcyBhdCBhIGNvc3Qgb2YKPiA+IHVnbGlmeWluZyB0aGUgY29kZS4gIDxz
+aHJ1Zz4gT3BpbmlvbnM/Cj4gPiAKPiAKPiBOb3Qgc3VyZSB3aGF0IHlvdSBtZWFuIGhlcmUuLi4g
+SSBzaG91bGQgYmUgbW9yZSBjbGVhci4gV2hhdCBJIHdhcwo+IHRoaW5raW5nIGlzIHRvIG51a2Ug
+eGZzX2RlZmVyX2l0ZW0uYywgZGVmaW5lIHRoZSAnY29uc3Qgc3RydWN0Cj4geGZzX2RlZmVyX29w
+X3R5cGUgeGZzX2V4dGVudF9mcmVlX2RlZmVyX3R5cGUnIHJpZ2h0IGluCj4geGZzX3RyYW5zX2V4
+dGZyZWUuYyAocGVyaGFwcyByZW5hbWUgdGhlIGZpbGUpIGFuZCB3aXJlIHVwIHRoZSBmdW5jdGlv
+bnMKPiBhcHByb3ByaWF0ZWx5LiBKdXN0IGNoYW5nZSB0aGUgZnVuY3Rpb24gc2lnbmF0dXJlcyBp
+ZiB5b3UgbmVlZCB0by4gRm9yCj4gc29tZXRoaW5nIGxpa2UgeGZzX3RyYW5zX2dldF9lZmQoKSwg
+bWF5YmUgcmVmYWN0b3IgdGhlIGd1dHMgaW50byBhCj4gc3RhdGljIGhlbHBlciB0aGF0IGJvdGgg
+dGhlIGRlZmVyIGNhbGxiYWNrIGFuZCB4ZnNfdHJhbnNfZ2V0X2VmZCgpIGNhbgo+IHVzZSwgc2lu
+Y2Ugd2UgbmVlZCB0aGUgbGF0dGVyIGZvciBsb2cgcmVjb3ZlcnkuIFdpbGwgc29tZXRoaW5nIGxp
+a2UgdGhhdAo+IHdvcms/Cj4gCj4gVG8gcHV0IGl0IHNpbXBseSwgaXQgbG9va3MgbGlrZSB3ZSBo
+YXZlIGF0IGxlYXN0IGEgZmV3IHBsYWNlcyB3aGVyZQo+IGRlZmVyIGl0ZW0gaGFzIGEgY2FsbGJh
+Y2sgdGhhdCBjYWxscyB5ZXQgYW5vdGhlciBpbnRlcmZhY2UsIGJ1dCBpcyB0aGUKPiBvbmx5IGNh
+bGxlciBvZiB0aGUgbGF0dGVyIChlLmcuLAo+IHhmc19ibWFwX2ZyZWVfY3JlYXRlX2ludGVudCgp
+LT54ZnNfdHJhbnNfZ2V0X2VmaSgpKS4gCgoqT2gqLiAgWWVzLCBjZXJ0YWlubHkgYWxsIHRoZSBz
+dHVmZiBpbiB4ZnNfZGVmZXJfaXRlbS5jIGNhbiBiZSBicm9rZW4gdXAgYnkKdHlwZSBhbmQgbW92
+ZWQgaW50byB4ZnNfdHJhbnNfKi5jLgoKVGhlIGxpYnhmcyB2ZXJzaW9uIHdpbGwgcmV0YWluIGxp
+Ynhmcy9kZWZlcl9pdGVtLmMgc2luY2UgdGhlIGRlZmVycmVkIG9wIHR5cGVzCnRoZXJlIHNpbXBs
+eSBjYWxsIHRoZSBhcHByb3ByaWF0ZSBsaWJ4ZnMgZnVuY3Rpb25zIHdpdGhvdXQgYW55IGxvZ2dp
+bmcuCgotLUQKCj4gCj4gQnJpYW4KPiAKPiA+IC0tRAo+ID4gCj4gPiA+IAo+ID4gPiAtLUQKPiA+
+ID4gCj4gPiA+ID4gCj4gPiA+ID4gQnJpYW4KPiA+ID4gPiAKPiA+ID4gPiA+ICBmcy94ZnMvbGli
+eGZzL3hmc19kZWZlci5oIHwgICAgMSAKPiA+ID4gPiA+ICBmcy94ZnMveGZzX2RlZmVyX2l0ZW0u
+YyAgIHwgIDEwOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysK
+PiA+ID4gPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDEwOSBpbnNlcnRpb25zKCspCj4gPiA+ID4gPiAK
+PiA+ID4gPiA+IAo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX2RlZmVy
+LmggYi9mcy94ZnMvbGlieGZzL3hmc19kZWZlci5oCj4gPiA+ID4gPiBpbmRleCA4NWM3YTNhLi43
+NDNmYzMyIDEwMDY0NAo+ID4gPiA+ID4gLS0tIGEvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+
+ID4gPiA+ID4gKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfZGVmZXIuaAo+ID4gPiA+ID4gQEAgLTUx
+LDYgKzUxLDcgQEAgc3RydWN0IHhmc19kZWZlcl9wZW5kaW5nIHsKPiA+ID4gPiA+ICAgKiBmaW5k
+IGFsbCB0aGUgc3BhY2UgaXQgbmVlZHMuCj4gPiA+ID4gPiAgICovCj4gPiA+ID4gPiAgZW51bSB4
+ZnNfZGVmZXJfb3BzX3R5cGUgewo+ID4gPiA+ID4gKwlYRlNfREVGRVJfT1BTX1RZUEVfRlJFRSwK
+PiA+ID4gPiA+ICAJWEZTX0RFRkVSX09QU19UWVBFX01BWCwKPiA+ID4gPiA+ICB9Owo+ID4gPiA+
+ID4gIAo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZGVmZXJfaXRlbS5jIGIvZnMv
+eGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+ID4gPiA+IGluZGV4IDRjMmJhMjguLjEyN2E1NGUgMTAw
+NjQ0Cj4gPiA+ID4gPiAtLS0gYS9mcy94ZnMveGZzX2RlZmVyX2l0ZW0uYwo+ID4gPiA+ID4gKysr
+IGIvZnMveGZzL3hmc19kZWZlcl9pdGVtLmMKPiA+ID4gPiA+IEBAIC0yOSw5ICsyOSwxMTcgQEAK
+PiA+ID4gPiA+ICAjaW5jbHVkZSAieGZzX2RlZmVyLmgiCj4gPiA+ID4gPiAgI2luY2x1ZGUgInhm
+c190cmFucy5oIgo+ID4gPiA+ID4gICNpbmNsdWRlICJ4ZnNfdHJhY2UuaCIKPiA+ID4gPiA+ICsj
+aW5jbHVkZSAieGZzX2JtYXAuaCIKPiA+ID4gPiA+ICsjaW5jbHVkZSAieGZzX2V4dGZyZWVfaXRl
+bS5oIgo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEV4dGVudCBGcmVlaW5nICovCj4gPiA+ID4g
+PiArCj4gPiA+ID4gPiArLyogU29ydCBibWFwIGl0ZW1zIGJ5IEFHLiAqLwo+ID4gPiA+ID4gK3N0
+YXRpYyBpbnQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMoCj4gPiA+ID4gPiAr
+CXZvaWQJCQkJKnByaXYsCj4gPiA+ID4gPiArCXN0cnVjdCBsaXN0X2hlYWQJCSphLAo+ID4gPiA+
+ID4gKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqYikKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiArCXN0cnVj
+dCB4ZnNfbW91bnQJCSptcCA9IHByaXY7Cj4gPiA+ID4gPiArCXN0cnVjdCB4ZnNfYm1hcF9mcmVl
+X2l0ZW0JKnJhOwo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpyYjsKPiA+
+ID4gPiA+ICsKPiA+ID4gPiA+ICsJcmEgPSBjb250YWluZXJfb2YoYSwgc3RydWN0IHhmc19ibWFw
+X2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJcmIgPSBjb250YWluZXJfb2YoYiwg
+c3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJcmV0dXJu
+ICBYRlNfRlNCX1RPX0FHTk8obXAsIHJhLT54YmZpX3N0YXJ0YmxvY2spIC0KPiA+ID4gPiA+ICsJ
+CVhGU19GU0JfVE9fQUdOTyhtcCwgcmItPnhiZmlfc3RhcnRibG9jayk7Cj4gPiA+ID4gPiArfQo+
+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEdldCBhbiBFRkkuICovCj4gPiA+ID4gPiArU1RBVElD
+IHZvaWQgKgo+ID4gPiA+ID4gK3hmc19ibWFwX2ZyZWVfY3JlYXRlX2ludGVudCgKPiA+ID4gPiA+
+ICsJc3RydWN0IHhmc190cmFucwkJKnRwLAo+ID4gPiA+ID4gKwl1bnNpZ25lZCBpbnQJCQljb3Vu
+dCkKPiA+ID4gPiA+ICt7Cj4gPiA+ID4gPiArCXJldHVybiB4ZnNfdHJhbnNfZ2V0X2VmaSh0cCwg
+Y291bnQpOwo+ID4gPiA+ID4gK30KPiA+ID4gPiA+ICsKPiA+ID4gPiA+ICsvKiBMb2cgYSBmcmVl
+IGV4dGVudCB0byB0aGUgaW50ZW50IGl0ZW0uICovCj4gPiA+ID4gPiArU1RBVElDIHZvaWQKPiA+
+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2xvZ19pdGVtKAo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX3Ry
+YW5zCQkqdHAsCj4gPiA+ID4gPiArCXZvaWQJCQkJKmludGVudCwKPiA+ID4gPiA+ICsJc3RydWN0
+IGxpc3RfaGVhZAkJKml0ZW0pCj4gPiA+ID4gPiArewo+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2Jt
+YXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKwlmcmVlID0gY29udGFp
+bmVyX29mKGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlfbGlzdCk7Cj4gPiA+
+ID4gPiArCXhmc190cmFuc19sb2dfZWZpX2V4dGVudCh0cCwgaW50ZW50LCBmcmVlLT54YmZpX3N0
+YXJ0YmxvY2ssCj4gPiA+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9ja2NvdW50KTsKPiA+ID4gPiA+
+ICt9Cj4gPiA+ID4gPiArCj4gPiA+ID4gPiArLyogR2V0IGFuIEVGRCBzbyB3ZSBjYW4gcHJvY2Vz
+cyBhbGwgdGhlIGZyZWUgZXh0ZW50cy4gKi8KPiA+ID4gPiA+ICtTVEFUSUMgdm9pZCAqCj4gPiA+
+ID4gPiAreGZzX2JtYXBfZnJlZV9jcmVhdGVfZG9uZSgKPiA+ID4gPiA+ICsJc3RydWN0IHhmc190
+cmFucwkJKnRwLAo+ID4gPiA+ID4gKwl2b2lkCQkJCSppbnRlbnQsCj4gPiA+ID4gPiArCXVuc2ln
+bmVkIGludAkJCWNvdW50KQo+ID4gPiA+ID4gK3sKPiA+ID4gPiA+ICsJcmV0dXJuIHhmc190cmFu
+c19nZXRfZWZkKHRwLCBpbnRlbnQsIGNvdW50KTsKPiA+ID4gPiA+ICt9Cj4gPiA+ID4gPiArCj4g
+PiA+ID4gPiArLyogUHJvY2VzcyBhIGZyZWUgZXh0ZW50LiAqLwo+ID4gPiA+ID4gK1NUQVRJQyBp
+bnQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9mcmVlX2ZpbmlzaF9pdGVtKAo+ID4gPiA+ID4gKwlzdHJ1
+Y3QgeGZzX3RyYW5zCQkqdHAsCj4gPiA+ID4gPiArCXN0cnVjdCB4ZnNfZGVmZXJfb3BzCQkqZG9w
+LAo+ID4gPiA+ID4gKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqaXRlbSwKPiA+ID4gPiA+ICsJdm9pZAkJ
+CQkqZG9uZV9pdGVtLAo+ID4gPiA+ID4gKwl2b2lkCQkJCSoqc3RhdGUpCj4gPiA+ID4gPiArewo+
+ID4gPiA+ID4gKwlzdHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwlp
+bnQJCQkJZXJyb3I7Cj4gPiA+ID4gPiArCj4gPiA+ID4gPiArCWZyZWUgPSBjb250YWluZXJfb2Yo
+aXRlbSwgc3RydWN0IHhmc19ibWFwX2ZyZWVfaXRlbSwgeGJmaV9saXN0KTsKPiA+ID4gPiA+ICsJ
+ZXJyb3IgPSB4ZnNfdHJhbnNfZnJlZV9leHRlbnQodHAsIGRvbmVfaXRlbSwKPiA+ID4gPiA+ICsJ
+CQlmcmVlLT54YmZpX3N0YXJ0YmxvY2ssCj4gPiA+ID4gPiArCQkJZnJlZS0+eGJmaV9ibG9ja2Nv
+dW50KTsKPiA+ID4gPiA+ICsJa21lbV9mcmVlKGZyZWUpOwo+ID4gPiA+ID4gKwlyZXR1cm4gZXJy
+b3I7Cj4gPiA+ID4gPiArfQo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKy8qIEFib3J0IGFsbCBwZW5k
+aW5nIEVGSXMuICovCj4gPiA+ID4gPiArU1RBVElDIHZvaWQKPiA+ID4gPiA+ICt4ZnNfYm1hcF9m
+cmVlX2Fib3J0X2ludGVudCgKPiA+ID4gPiA+ICsJdm9pZAkJCQkqaW50ZW50KQo+ID4gPiA+ID4g
+K3sKPiA+ID4gPiA+ICsJeGZzX2VmaV9yZWxlYXNlKGludGVudCk7Cj4gPiA+ID4gPiArfQo+ID4g
+PiA+ID4gKwo+ID4gPiA+ID4gKy8qIENhbmNlbCBhIGZyZWUgZXh0ZW50LiAqLwo+ID4gPiA+ID4g
+K1NUQVRJQyB2b2lkCj4gPiA+ID4gPiAreGZzX2JtYXBfZnJlZV9jYW5jZWxfaXRlbSgKPiA+ID4g
+PiA+ICsJc3RydWN0IGxpc3RfaGVhZAkJKml0ZW0pCj4gPiA+ID4gPiArewo+ID4gPiA+ID4gKwlz
+dHJ1Y3QgeGZzX2JtYXBfZnJlZV9pdGVtCSpmcmVlOwo+ID4gPiA+ID4gKwo+ID4gPiA+ID4gKwlm
+cmVlID0gY29udGFpbmVyX29mKGl0ZW0sIHN0cnVjdCB4ZnNfYm1hcF9mcmVlX2l0ZW0sIHhiZmlf
+bGlzdCk7Cj4gPiA+ID4gPiArCWttZW1fZnJlZShmcmVlKTsKPiA+ID4gPiA+ICt9Cj4gPiA+ID4g
+PiArCj4gPiA+ID4gPiArY29uc3Qgc3RydWN0IHhmc19kZWZlcl9vcF90eXBlIHhmc19leHRlbnRf
+ZnJlZV9kZWZlcl90eXBlID0gewo+ID4gPiA+ID4gKwkudHlwZQkJPSBYRlNfREVGRVJfT1BTX1RZ
+UEVfRlJFRSwKPiA+ID4gPiA+ICsJLm1heF9pdGVtcwk9IFhGU19FRklfTUFYX0ZBU1RfRVhURU5U
+UywKPiA+ID4gPiA+ICsJLmRpZmZfaXRlbXMJPSB4ZnNfYm1hcF9mcmVlX2RpZmZfaXRlbXMsCj4g
+PiA+ID4gPiArCS5jcmVhdGVfaW50ZW50CT0geGZzX2JtYXBfZnJlZV9jcmVhdGVfaW50ZW50LAo+
+ID4gPiA+ID4gKwkuYWJvcnRfaW50ZW50CT0geGZzX2JtYXBfZnJlZV9hYm9ydF9pbnRlbnQsCj4g
+PiA+ID4gPiArCS5sb2dfaXRlbQk9IHhmc19ibWFwX2ZyZWVfbG9nX2l0ZW0sCj4gPiA+ID4gPiAr
+CS5jcmVhdGVfZG9uZQk9IHhmc19ibWFwX2ZyZWVfY3JlYXRlX2RvbmUsCj4gPiA+ID4gPiArCS5m
+aW5pc2hfaXRlbQk9IHhmc19ibWFwX2ZyZWVfZmluaXNoX2l0ZW0sCj4gPiA+ID4gPiArCS5jYW5j
+ZWxfaXRlbQk9IHhmc19ibWFwX2ZyZWVfY2FuY2VsX2l0ZW0sCj4gPiA+ID4gPiArfTsKPiA+ID4g
+PiA+ICsKPiA+ID4gPiA+ICsvKiBEZWZlcnJlZCBJdGVtIEluaXRpYWxpemF0aW9uICovCj4gPiA+
+ID4gPiAgCj4gPiA+ID4gPiAgLyogSW5pdGlhbGl6ZSB0aGUgZGVmZXJyZWQgb3BlcmF0aW9uIHR5
+cGVzLiAqLwo+ID4gPiA+ID4gIHZvaWQKPiA+ID4gPiA+ICB4ZnNfZGVmZXJfaW5pdF90eXBlcyh2
+b2lkKQo+ID4gPiA+ID4gIHsKPiA+ID4gPiA+ICsJeGZzX2RlZmVyX2luaXRfb3BfdHlwZSgmeGZz
+X2V4dGVudF9mcmVlX2RlZmVyX3R5cGUpOwo+ID4gPiA+ID4gIH0KPiA+ID4gPiA+IAo+ID4gPiA+
+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiA+ID4g
+PiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+ID4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiA+ID4g
+aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gPiA+IAo+ID4gPiBfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+ID4gPiB4ZnMgbWFp
+bGluZyBsaXN0Cj4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiBodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMKPiA+IAo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KPiA+IHhmcyBtYWlsaW5nIGxpc3QKPiA+IHhmc0Bvc3Muc2dp
+LmNvbQo+ID4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
+Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
