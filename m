@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5A3827CA0
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:35:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B6648F80B5
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:35:20 -0700 (PDT)
-Received: from COL004-OMC4S6.hotmail.com (col004-omc4s6.hotmail.com
-	[65.55.34.208]) by cuda.sgi.com with ESMTP id 5ljze55H3kTwoClM
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 30 Jun 2016 08:35:16 -0700 (PDT)
-From: Anthony l <Martinezant2141@live.com>
-Subject: Re: Question: Old Irix tape backup. Recovery on Linux
-	(xfsdump/xfsrestore)
-Date: Thu, 30 Jun 2016 15:35:14 +0000
-Message-ID: <SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
-References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
-In-Reply-To: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
-Content-Language: en-US
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 00D197CA0
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 18:18:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DE40AC005
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 16:18:19 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	IFsgH34EYwOADzNf for <xfs@oss.sgi.com>;
+	Thu, 30 Jun 2016 16:16:03 -0700 (PDT)
+Date: Fri, 1 Jul 2016 09:16:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: iomap infrastructure and multipage writes V5
+Message-ID: <20160630231601.GU12670@dastard>
+References: <1464792297-13185-1-git-send-email-hch@lst.de>
+	<20160628002649.GI12670@dastard> <20160630172239.GA23082@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160630172239.GA23082@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,86 +26,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7373490209837101629=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
---===============7373490209837101629==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_"
+On Thu, Jun 30, 2016 at 07:22:39PM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 28, 2016 at 10:26:49AM +1000, Dave Chinner wrote:
+> > Christoph, it look slike there's an ENOSPC+ENOMEM behavioural regression here.
+> > generic/224 on my 1p/1GB RAM VM using a 1k lock size filesystem has
+> > significantly different behaviour once ENOSPC is hit withi this patchset.
+> > 
+> > It ends up with an endless stream of errors like this:
+> 
+> I've spent some time trying to reproduce this.  I'm actually getting
+> the OOM killer almost reproducible for for-next without the iomap
+> patches as well when just using 1GB of mem.  1400 MB is the minimum
+> I can reproducibly finish the test with either code base.
+> 
+> But with the 1400 MB setup I see a few interesting things.  Even
+> with the baseline, no-iomap case I see a few errors in the log:
+> 
+> [   70.407465] Filesystem "vdc": reserve blocks depleted! Consider increasing
+> reserve pool
+> size.
+> [   70.195645] XFS (vdc): page discard on page ffff88005682a988, inode 0xd3, offset 761856.
+> [   70.408079] Buffer I/O error on dev vdc, logical block 1048513, lost async
+> page write
+> [   70.408598] Buffer I/O error on dev vdc, logical block 1048514, lost async
+> page write
+>  27s
+> 
+> With iomap I also see the spew of page discard errors your see, but while
+> I see a lot of them, the rest still finishes after a reasonable time,
+> just a few seconds more than the pre-iomap baseline.  I also see the
+> reserve block depleted message in this case.
 
---_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+The reserve block pool depleted message is normal for me in this
+test.  We're throwing a thousand concurrent processes at the
+filesystem at ENOSPC, and so the metadata reservation for the
+delayed allocation totals quite a lot. We only reserve 8192 blocks
+for the reserve pool, so a delalloc reservation for one page on each
+file (4 blocks per page, which means a couple of blocks for the
+metadata reservation via the indlen calculation) is going to consume
+the reserve pool quite quickly if the up front reservation
+overshoots the XFS_ALLOC_SET_ASIDE() ENOSPC threshold.
 
-Thanks for replying. I made a Paste bin of the output I'm getting. This tim=
-e I used the -K option which is to force use compatibility with older versi=
-ons of xfs I think.
+> Digging into the reserve block depleted message - it seems we have
+> too many parallel iomap_allocate transactions going on.  I suspect
+> this might be because the writeback code will not finish a writeback
+> context if we have multiple blocks inside a page, which can
+> happen easily for this 1k ENOSPC setup.
 
-http://pastebin.com/vrL6iiW2
+Right - this test has regularly triggered that warning on this
+particular test setup for me - it's not something new to the iomap
+patchset.
 
+> I've not had time to fully
+> check if this is what really happens, but I did a quick hack (see below)
+> to only allocate 1k at a time in iomap_begin, and with that generic/224
+> finishes without the warning spew.  Of course this isn't a real fix,
+> and I need to fully understand what's going on in writeback due to
+> different allocation / dirtying patterns from the iomap change.
 
+Which tends to indicate that the multi-block allocation has a larger
+indlen reservation, and that's what is causing the code to hit
+whatever edge-case that is leading to it not recovering. However,
+I'm still wondering how we are not throwing ENOSPC back to userspace
+at XFS_ALLOC_SET_ASIDE limits.
 
-There is my full output to what I am getting. Not actually getting an error=
- code I just don't understand why this wouldn't work. Also If I chose skip =
-instead of restore ill get to some different dumps. But same thing happens =
-if I choose restore on those too.
+Cheers,
 
-Thanks for the reply Dave and Eric
-
-
---_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-<html>
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
-1">
-<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
-n-bottom:0;} --></style>
-</head>
-<body dir=3D"ltr">
-<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;back=
-ground-color:#FFFFFF;font-family:Calibri,Arial,Helvetica,sans-serif;">
-<p>Thanks for replying. I made a Paste bin of the output I'm getting. This =
-time I used the -K option which is to force use compatibility with older ve=
-rsions of xfs I think.
-<br>
-</p>
-<p><a id=3D"LPlnk675788" href=3D"http://pastebin.com/vrL6iiW2" class=3D"OWA=
-AutoLink">http://pastebin.com/vrL6iiW2</a></p>
-<p><br>
-</p>
-<p><br>
-</p>
-<p>There is my full output to what I am getting. Not actually getting an er=
-ror code I just don't understand why this wouldn't work. Also If I chose sk=
-ip instead of restore ill get to some different dumps. But same thing happe=
-ns if I choose restore on those
- too. <br>
-</p>
-<p>Thanks for the reply Dave and Eric <br>
-<br>
-</p>
-</div>
-</body>
-</html>
-
---_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_--
-
-
---===============7373490209837101629==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7373490209837101629==--
