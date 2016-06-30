@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B0BB57CA0
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 18:56:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2940CAC005
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 16:56:28 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6BA6D7CA2
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:47:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FA3130404E
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:24 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jimjGyMW3C38B29x (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3Ov1Ampyik5GtHDb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 16:56:24 -0700 (PDT)
-Date: Thu, 30 Jun 2016 19:56:21 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
-	post-unmount panic
-Message-ID: <20160630235621.GA44823@bfoster.bfoster>
-References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
-	<20160630224457.GT12670@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160630224457.GT12670@dastard>
+	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:22 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v23 00/22] Richacls (Core and Ext4)
+Date: Thu, 30 Jun 2016 15:46:51 +0200
+Message-Id: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,161 +21,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Jul 01, 2016 at 08:44:57AM +1000, Dave Chinner wrote:
-> On Thu, Jun 30, 2016 at 08:53:49AM -0400, Brian Foster wrote:
-> > Newly allocated XFS metadata buffers are added to the LRU once the hold
-> > count is released, which typically occurs after I/O completion. There is
-> > no other mechanism at current that tracks the existence or I/O state of
-> > a new buffer. Further, readahead I/O tends to be submitted
-> > asynchronously by nature, which means the I/O can remain in flight and
-> > actually complete long after the calling context is gone. This means
-> > that file descriptors or any other holds on the filesystem can be
-> > released, allowing the filesystem to be unmounted while I/O is still in
-> > flight. When I/O completion occurs, core data structures may have been
-> > freed, causing completion to run into invalid memory accesses and likely
-> > to panic.
-> > 
-> > This problem is reproduced on XFS via directory readahead. A filesystem
-> > is mounted, a directory is opened/closed and the filesystem immediately
-> > unmounted. The open/close cycle triggers a directory readahead that if
-> > delayed long enough, runs buffer I/O completion after the unmount has
-> > completed.
-> > 
-> > To work around this problem, add readahead buffers to the LRU earlier
-> > than other buffers (when the buffer is allocated, specifically). The
-> > buffer hold count will ultimately remain until I/O completion, which
-> > means any shrinker activity will skip the buffer until then. This makes
-> > the buffer visible to xfs_wait_buftarg(), however, which ensures that an
-> > unmount or quiesce waits for I/O completion appropriately.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > This addresses the problem reproduced by the recently posted xfstests
-> > test:
-> > 
-> >   http://thread.gmane.org/gmane.comp.file-systems.fstests/2740
-> > 
-> > This could probably be made more involved, i.e., to create another list
-> > of buffers in flight or some such. This seems more simple/sane to me,
-> > however, and survives my testing so far...
-> > 
-> > Brian
-> > 
-> >  fs/xfs/xfs_buf.c | 12 ++++++++++++
-> >  1 file changed, 12 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 4665ff6..3f03df9 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -590,8 +590,20 @@ xfs_buf_get_map(
-> >  		return NULL;
-> >  	}
-> >  
-> > +	/*
-> > +	 * If the buffer found doesn't match the one allocated above, somebody
-> > +	 * else beat us to insertion and we can toss the new one.
-> > +	 *
-> > +	 * If we did add the buffer and it happens to be readahead, add to the
-> > +	 * LRU now rather than waiting until the hold is released. Otherwise,
-> > +	 * the buffer is not visible to xfs_wait_buftarg() while in flight and
-> > +	 * nothing else prevents an unmount before I/O completion.
-> > +	 */
-> >  	if (bp != new_bp)
-> >  		xfs_buf_free(new_bp);
-> > +	else if (flags & XBF_READ_AHEAD &&
-> > +		 list_lru_add(&bp->b_target->bt_lru, &bp->b_lru))
-> > +		atomic_inc(&bp->b_hold);
-> 
-> This doesn't sit right with me. The LRU is for "unused" objects, and
-> readahead objects are not unused until IO completes and nobody is
-> waiting on them.
-> 
+Here is another update of the richacl patches.  Changes since the last posting
+(https://lwn.net/Articles/689151/):
 
-Sure, but don't buffers remain on the LRU once they are reused? My
-impression is that this patch really doesn't change behavior in that
-regard. IOWs, the buffer is going to end up on the LRU either way and
-either end up disposed if it is never actually accessed or "used"
-otherwise and the hold count is bumped. Further, isn't the hold count
-mechanism precisely to handle "used" buffers on the LRU?
+ * Rebase on top of 4.7-rc5+ because of commit 999653786d "nfsd: check
+   permissions when setting ACLs".
 
-> As it is, this points out another problem with readahead buffers -
-> they aren't actually being cached properly because b_lru_ref == 0,
-> which means they are immediately reclaimed on IO completion rather
-> than being added to the LRU....
-> 
+ * Introduce set_richacl() similar to set_posix_acl() and use it in nfsd
+   to avoid going through the richacl xattr representation.
 
-Not following... _xfs_buf_alloc() sets b_lru_ref to 1 and I don't see it
-set/decremented unless we stale or dispose it. What am I missing?
 
-> I also think that it's not sufficient to cover the generic case of
-> async IO that has no waiter. i.e. we could do get_buf, submit async
-> write, drop submitter reference, and now we have the same problem
-> but on a write.  i.e. this problem is and async IO issue, not a
-> readahead issue.
-> 
+The complete patch queue is available here:
 
-Indeed. I thought about making the current patch check for ASYNC, but
-opted to try and make it more isolated (I suppose ASYNC|READAHEAD would
-have been moreso).
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+	richacl-2016-06-30
 
-The other thought I had was to change where buffers are added to the LRU
-altogether, but didn't want to jump right to that. Is there any issue
-with populating the LRU with initially held buffers as such, or any
-particular reason LRU addition was deferred to I/O completion in the
-first place?
 
-> I think that it might be better to fix it by doing this:
-> 
-> 	1. ensure async IO submission always has b_lru_ref set, and
-> 	if it isn't, set it to 1. This ensures the buffer will be
-> 	added to the LRU on completion if it isn't already there.
-> 
+The richacl user-space utilitites, man pages, and test suite are available
+here:
 
-See above. I'm not following why this is necessary (if it is, it seems
-indicative of a bug).
+  https://github.com/andreas-gruenbacher/richacl
 
-> 	2. keep a count of async buffer IO in progress. A per-cpu
-> 	counter in the buftarg will be fine for this. Increment in
-> 	xfs_buf_submit(), decrement in the xfs_buf_rele() call from
-> 	xfs_buf_iodone() once we've determined if the buffer needs
-> 	adding to the LRU or not.
-> 
-> 	3. make xfs_wait_buftarg() wait until the async IO count
-> 	goes to zero before it gives up trying to release buffers on
-> 	the LRU.
-> 
 
-This is along the lines of what I was thinking wrt to a list (explicit
-I/O tracking one way or another). The count is more simple and does
-cover the arbitrary read/write case, but is still more code and seems
-slightly duplicative to me because in most cases the LRU wait already
-handles this. I'm also not totally sure we need to handle the write
-case. Are we susceptible to this issue anywhere that isn't already
-protected by the sb write protection mechanism, for example?
+Changes to other user-space packages for richacl:
 
-OTOH, explicit tracking might provide a more generic way to deal with
-uncached buffers as opposed to lock cycling.
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/samba
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
 
-Brian
 
-> That will ensure readahead buffers are cached, and we capture both
-> async read and async write buffers in xfs_wait_buftarg().
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+What more needs to be done to get this initial set of patches merged?
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (20):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Make the inode passed to inode_change_ok non-const
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Compute maximum file masks from an acl
+  richacl: Permission check algorithm
+  posix_acl: Improve xattr fixup code
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/9p/acl.c                                     |   8 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   1 +
+ fs/attr.c                                       |  81 ++-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |   5 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 134 ++++
+ fs/ext4/richacl.h                               |  40 ++
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  43 +-
+ fs/jffs2/acl.c                                  |   6 +-
+ fs/namei.c                                      | 152 +++-
+ fs/nfs/nfs3acl.c                                |  14 +-
+ fs/posix_acl.c                                  |  69 +-
+ fs/richacl.c                                    | 915 ++++++++++++++++++++++++
+ fs/richacl_xattr.c                              | 222 ++++++
+ fs/xattr.c                                      |  29 +-
+ include/linux/acl.h                             |  15 +
+ include/linux/fs.h                              |  67 +-
+ include/linux/posix_acl.h                       |  21 +-
+ include/linux/richacl.h                         | 211 ++++++
+ include/linux/richacl_xattr.h                   |  31 +
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 ++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 35 files changed, 2209 insertions(+), 160 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/acl.h
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
