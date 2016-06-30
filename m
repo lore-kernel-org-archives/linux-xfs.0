@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 81E187CAF
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:32:49 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D2ABC7CA2
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:04:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F12D304048
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NJejylpbFfEmpZAA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:48 -0700 (PDT)
-Date: Thu, 30 Jun 2016 13:32:45 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 024/119] xfs: add rmap btree stats infrastructure
-Message-ID: <20160630173245.GB27303@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612642642.12839.4422813555398236765.stgit@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 96B653040AA
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:04:10 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id OBX6Pb2O11HJlUD7 for <xfs@oss.sgi.com>;
+	Thu, 30 Jun 2016 10:04:07 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id B8EF5142F
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:04:07 -0500 (CDT)
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
+Date: Thu, 30 Jun 2016 12:04:07 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612642642.12839.4422813555398236765.stgit@birch.djwong.org>
+In-Reply-To: <SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,99 +36,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jun 16, 2016 at 06:20:26PM -0700, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The rmap btree will require the same stats as all the other generic
-> btrees, so add al the code for that now.
 
-		 all
 
+On 6/30/16 11:59 AM, Anthony l wrote:
+> I don't think this is a multi tape dump. But then again i don't know for sure. I recently got a job and this is my first 'project'. I have about 10 tapes each are labeled a month and a year, so I don't think they are multi tape because they span like 3 years 2004-2007 . Although for the current tape I am working on right now if I select 1 skip, I'll get to another back up labeled "incremental backup 1" or something similar. Using the verbosity output here is what I got. (also using interactive restore). I went ahead and specified byte size 4096. Through earlier test using the dd command I determined that was the correct size. Ill post one without byte size specified too. I just saw it in that post and thought it might help.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
+> Here is the output with verbosity.
+> 
+> http://pastebin.com/Nd6BqNc5
+> 
+> The out is the same with or without -b 4096.
+> 
+> http://pastebin.com/0dxbCvyc (no -b)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_btree.h |    5 +++--
->  fs/xfs/xfs_stats.c        |    1 +
->  fs/xfs/xfs_stats.h        |   18 +++++++++++++++++-
->  3 files changed, 21 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index 202fdd3..a29067c 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -96,7 +96,7 @@ do {    \
->  	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(__mp, bmbt, stat); break; \
->  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
->  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
-> -	case XFS_BTNUM_RMAP: break;	\
-> +	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(__mp, rmap, stat); break; \
->  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
->  	}       \
->  } while (0)
-> @@ -117,7 +117,8 @@ do {    \
->  		__XFS_BTREE_STATS_ADD(__mp, ibt, stat, val); break; \
->  	case XFS_BTNUM_FINO:	\
->  		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
-> -	case XFS_BTNUM_RMAP: break; \
-> +	case XFS_BTNUM_RMAP:	\
-> +		__XFS_BTREE_STATS_ADD(__mp, rmap, stat, val); break; \
->  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
->  	}       \
->  } while (0)
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 8686df6..f04f547 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -61,6 +61,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
->  		{ "ibt2",		XFSSTAT_END_IBT_V2		},
->  		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
-> +		{ "rmapbt",		XFSSTAT_END_RMAP_V2		},
->  		/* we print both series of quota information together */
->  		{ "qm",			XFSSTAT_END_QM			},
->  	};
-> diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-> index 483b0ef..657865f 100644
-> --- a/fs/xfs/xfs_stats.h
-> +++ b/fs/xfs/xfs_stats.h
-> @@ -197,7 +197,23 @@ struct xfsstats {
->  	__uint32_t		xs_fibt_2_alloc;
->  	__uint32_t		xs_fibt_2_free;
->  	__uint32_t		xs_fibt_2_moves;
-> -#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_FIBT_V2+6)
-> +#define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+15)
-> +	__uint32_t		xs_rmap_2_lookup;
-> +	__uint32_t		xs_rmap_2_compare;
-> +	__uint32_t		xs_rmap_2_insrec;
-> +	__uint32_t		xs_rmap_2_delrec;
-> +	__uint32_t		xs_rmap_2_newroot;
-> +	__uint32_t		xs_rmap_2_killroot;
-> +	__uint32_t		xs_rmap_2_increment;
-> +	__uint32_t		xs_rmap_2_decrement;
-> +	__uint32_t		xs_rmap_2_lshift;
-> +	__uint32_t		xs_rmap_2_rshift;
-> +	__uint32_t		xs_rmap_2_split;
-> +	__uint32_t		xs_rmap_2_join;
-> +	__uint32_t		xs_rmap_2_alloc;
-> +	__uint32_t		xs_rmap_2_free;
-> +	__uint32_t		xs_rmap_2_moves;
-> +#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
->  	__uint32_t		xs_qm_dqreclaims;
->  	__uint32_t		xs_qm_dqreclaim_misses;
->  	__uint32_t		xs_qm_dquot_dups;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+interactively restore from this dump?
+1: skip
+2: interactively restore
+ (default)
+->2
+++++================++++
+missing some stuff------
+
+^^^ is that your comment, or actual output?
+
+Looks like it eventually encountered a short read:
+
+xfsrestore: drive op: read: wanted 131072 (0x20000)
+xfsrestore: tape op: reading 245760 bytes
+xfsrestore: tape op read of 245760 bytes short: nread == 4096
+xfsrestore: tape op: get status
+xfsrestore: tape status = wprot onl
+xfsrestore: short read record 1 (nread == 4096)
+xfsrestore: drive op read returning error rval=1
+
+in dmesg, is there any sort of IO error from the tape?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
