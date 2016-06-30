@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E7D067CB0
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:47:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 638FDAC007
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qYQ3saIH5t6ER9X9 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:43 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v23 03/22] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
-	permission flags
-Date: Thu, 30 Jun 2016 15:46:54 +0200
-Message-Id: <1467294433-3222-4-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5A3827CA0
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:35:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B6648F80B5
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:35:20 -0700 (PDT)
+Received: from COL004-OMC4S6.hotmail.com (col004-omc4s6.hotmail.com
+	[65.55.34.208]) by cuda.sgi.com with ESMTP id 5ljze55H3kTwoClM
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 Jun 2016 08:35:16 -0700 (PDT)
+From: Anthony l <Martinezant2141@live.com>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+Date: Thu, 30 Jun 2016 15:35:14 +0000
+Message-ID: <SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+In-Reply-To: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,98 +27,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7373490209837101629=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Normally, deleting a file requires MAY_WRITE access to the parent
-directory.  With richacls, a file may be deleted with MAY_DELETE_CHILD access
-to the parent directory or with MAY_DELETE_SELF access to the file.
+--===============7373490209837101629==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_"
 
-To support that, pass the MAY_DELETE_CHILD mask flag to inode_permission()
-when checking for delete access inside a directory, and MAY_DELETE_SELF
-when checking for delete access to a file itelf.
+--_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-The MAY_DELETE_SELF permission overrides the sticky directory check.
+Thanks for replying. I made a Paste bin of the output I'm getting. This tim=
+e I used the -K option which is to force use compatibility with older versi=
+ons of xfs I think.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Steve French <steve.french@primarydata.com>
----
- fs/namei.c         | 20 ++++++++++++--------
- include/linux/fs.h |  2 ++
- 2 files changed, 14 insertions(+), 8 deletions(-)
+http://pastebin.com/vrL6iiW2
 
-diff --git a/fs/namei.c b/fs/namei.c
-index dc91858..663933e 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -454,9 +454,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
-  * this, letting us set arbitrary permissions for filesystem access without
-  * changing the "normal" UIDs which are used for other things.
-  *
-- * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE, or
-- * MAY_CREATE_DIR are set.  That way, file systems that don't support these
-- * permissions will check for MAY_WRITE instead.
-+ * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE,
-+ * MAY_CREATE_DIR, or MAY_DELETE_CHILD are set.  That way, file systems that
-+ * don't support these permissions will check for MAY_WRITE instead.
-  */
- int inode_permission(struct inode *inode, int mask)
- {
-@@ -2778,14 +2778,18 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
- 	BUG_ON(victim->d_parent->d_inode != dir);
- 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
- 
--	error = inode_permission(dir, mask);
-+	error = inode_permission(dir, mask | MAY_WRITE | MAY_DELETE_CHILD);
-+	if (!error && check_sticky(dir, inode))
-+		error = -EPERM;
-+	if (error && IS_RICHACL(inode) &&
-+	    inode_permission(inode, MAY_DELETE_SELF) == 0 &&
-+	    inode_permission(dir, mask) == 0)
-+		error = 0;
- 	if (error)
- 		return error;
- 	if (IS_APPEND(dir))
- 		return -EPERM;
--
--	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
--	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
-+	if (IS_APPEND(inode) || IS_IMMUTABLE(inode) || IS_SWAPFILE(inode))
- 		return -EPERM;
- 	if (isdir) {
- 		if (!d_is_dir(victim))
-@@ -2803,7 +2807,7 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
- 
- static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
- {
--	return may_delete_or_replace(dir, victim, isdir, MAY_WRITE | MAY_EXEC);
-+	return may_delete_or_replace(dir, victim, isdir, MAY_EXEC);
- }
- 
- static int may_replace(struct inode *dir, struct dentry *victim, bool isdir)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index dd614ad..86bfa10 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -86,6 +86,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- #define MAY_NOT_BLOCK		0x00000080
- #define MAY_CREATE_FILE		0x00000100
- #define MAY_CREATE_DIR		0x00000200
-+#define MAY_DELETE_CHILD	0x00000400
-+#define MAY_DELETE_SELF		0x00000800
- 
- /*
-  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
--- 
-2.5.5
+
+
+There is my full output to what I am getting. Not actually getting an error=
+ code I just don't understand why this wouldn't work. Also If I chose skip =
+instead of restore ill get to some different dumps. But same thing happens =
+if I choose restore on those too.
+
+Thanks for the reply Dave and Eric
+
+
+--_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;back=
+ground-color:#FFFFFF;font-family:Calibri,Arial,Helvetica,sans-serif;">
+<p>Thanks for replying. I made a Paste bin of the output I'm getting. This =
+time I used the -K option which is to force use compatibility with older ve=
+rsions of xfs I think.
+<br>
+</p>
+<p><a id=3D"LPlnk675788" href=3D"http://pastebin.com/vrL6iiW2" class=3D"OWA=
+AutoLink">http://pastebin.com/vrL6iiW2</a></p>
+<p><br>
+</p>
+<p><br>
+</p>
+<p>There is my full output to what I am getting. Not actually getting an er=
+ror code I just don't understand why this wouldn't work. Also If I chose sk=
+ip instead of restore ill get to some different dumps. But same thing happe=
+ns if I choose restore on those
+ too. <br>
+</p>
+<p>Thanks for the reply Dave and Eric <br>
+<br>
+</p>
+</div>
+</body>
+</html>
+
+--_000_SN1PR05MB23175D5BF190CCC3F22E2EB0CC240SN1PR05MB2317namp_--
+
+
+--===============7373490209837101629==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7373490209837101629==--
