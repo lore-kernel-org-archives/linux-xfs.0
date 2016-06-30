@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3C7C87CA1
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 22:37:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F1C1304048
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 20:36:58 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id NiMcxux8bwlD1DNV (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1E18B7CB4
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:47:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9AEDAAC007
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:46 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HvaChjLNKfYppGcU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 20:36:53 -0700 (PDT)
-Date: Tue, 28 Jun 2016 20:36:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 21/20] xfs/128: cycle_mount the scratch device, not the test
-	device
-Message-ID: <20160629033648.GA7108@birch.djwong.org>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:29 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v23 01/22] vfs: Add IS_ACL() and IS_RICHACL() tests
+Date: Thu, 30 Jun 2016 15:46:52 +0200
+Message-Id: <1467294433-3222-2-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,56 +23,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-This test uses the scratch device, so cycle that, not the test dev.
+The vfs does not apply the umask for file systems that support acls.
+The test used for this used to be called IS_POSIXACL().  Switch to a new
+IS_ACL() test to check for either posix acls or richacls instead.  Add a
+new MS_RICHACL flag and IS_RICHACL() test for richacls alone.  The
+IS_POSIXACL() test is still needed in some places like nfsd.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Andreas Dilger <adilger@dilger.ca>
+Reviewed-by: Steve French <steve.french@primarydata.com>
 ---
- tests/xfs/128 |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/Kconfig              |  3 +++
+ fs/namei.c              |  6 +++---
+ include/linux/fs.h      | 12 ++++++++++++
+ include/uapi/linux/fs.h |  3 ++-
+ 4 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/tests/xfs/128 b/tests/xfs/128
-index 8758d7e..2e756d5 100755
---- a/tests/xfs/128
-+++ b/tests/xfs/128
-@@ -66,7 +66,7 @@ _pwrite_byte 0x61 0 $((blks * blksz)) $testdir/file1 >> $seqres.full
- _cp_reflink $testdir/file1 $testdir/file2
- _cp_reflink $testdir/file2 $testdir/file3
- _cp_reflink $testdir/file3 $testdir/file4
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks1=$(stat -f $testdir -c '%f')
+diff --git a/fs/Kconfig b/fs/Kconfig
+index b8fcb41..de6de55 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -64,6 +64,9 @@ endif # BLOCK
+ config FS_POSIX_ACL
+ 	def_bool n
  
- md5sum $testdir/file1 | _filter_scratch
-@@ -82,7 +82,7 @@ c04=$(_md5_checksum $testdir/file4)
- echo "CoW the reflink copies"
- _pwrite_byte 0x62 $blksz $blksz $testdir/file2 >> $seqres.full
- _pwrite_byte 0x63 $(( blksz * (blks - 1) )) $blksz $testdir/file3 >> $seqres.full
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks2=$(stat -f $testdir -c '%f')
++config FS_RICHACL
++	def_bool n
++
+ config EXPORTFS
+ 	tristate
  
- md5sum $testdir/file1 | _filter_scratch
-@@ -97,11 +97,12 @@ c14=$(_md5_checksum $testdir/file4)
+diff --git a/fs/namei.c b/fs/namei.c
+index 70580ab..7cc5487 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3115,7 +3115,7 @@ static int lookup_open(struct nameidata *nd, struct path *path,
+ 	 * O_EXCL open we want to return EEXIST not EROFS).
+ 	 */
+ 	if (open_flag & O_CREAT) {
+-		if (!IS_POSIXACL(dir->d_inode))
++		if (!IS_ACL(dir->d_inode))
+ 			mode &= ~current_umask();
+ 		if (unlikely(!got_write)) {
+ 			create_error = -EROFS;
+@@ -3709,7 +3709,7 @@ retry:
+ 	if (IS_ERR(dentry))
+ 		return PTR_ERR(dentry);
  
- echo "Defragment"
- lsattr -l $testdir/ | _filter_scratch | _filter_spaces
-+filefrag -v $testdir/file* >> $seqres.full
- $XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full
- $XFS_FSR_PROG -v -d $testdir/file2 >> $seqres.full # fsr probably breaks the link
- $XFS_FSR_PROG -v -d $testdir/file3 >> $seqres.full # fsr probably breaks the link
- $XFS_FSR_PROG -v -d $testdir/file4 >> $seqres.full # fsr probably ignores this file
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks3=$(stat -f $testdir -c '%f')
+-	if (!IS_POSIXACL(path.dentry->d_inode))
++	if (!IS_ACL(path.dentry->d_inode))
+ 		mode &= ~current_umask();
+ 	error = security_path_mknod(&path, dentry, mode, dev);
+ 	if (error)
+@@ -3780,7 +3780,7 @@ retry:
+ 	if (IS_ERR(dentry))
+ 		return PTR_ERR(dentry);
  
- md5sum $testdir/file1 | _filter_scratch
+-	if (!IS_POSIXACL(path.dentry->d_inode))
++	if (!IS_ACL(path.dentry->d_inode))
+ 		mode &= ~current_umask();
+ 	error = security_path_mkdir(&path, dentry, mode);
+ 	if (!error)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index dd28814..4ad130c 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1850,6 +1850,12 @@ struct super_operations {
+ #define IS_IMMUTABLE(inode)	((inode)->i_flags & S_IMMUTABLE)
+ #define IS_POSIXACL(inode)	__IS_FLG(inode, MS_POSIXACL)
+ 
++#ifdef CONFIG_FS_RICHACL
++#define IS_RICHACL(inode)	__IS_FLG(inode, MS_RICHACL)
++#else
++#define IS_RICHACL(inode)	0
++#endif
++
+ #define IS_DEADDIR(inode)	((inode)->i_flags & S_DEAD)
+ #define IS_NOCMTIME(inode)	((inode)->i_flags & S_NOCMTIME)
+ #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
+@@ -1863,6 +1869,12 @@ struct super_operations {
+ 				 (inode)->i_rdev == WHITEOUT_DEV)
+ 
+ /*
++ * IS_ACL() tells the VFS to not apply the umask
++ * and use check_acl for acl permission checks when defined.
++ */
++#define IS_ACL(inode)		__IS_FLG(inode, MS_POSIXACL | MS_RICHACL)
++
++/*
+  * Inode state bits.  Protected by inode->i_lock
+  *
+  * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 3b00f7c..f9c41ef 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -120,7 +120,7 @@ struct inodes_stat_t {
+ #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
+ 				   MS_VERBOSE is deprecated. */
+ #define MS_SILENT	32768
+-#define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
++#define MS_POSIXACL	(1<<16)	/* Supports POSIX ACLs */
+ #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
+ #define MS_PRIVATE	(1<<18)	/* change to private */
+ #define MS_SLAVE	(1<<19)	/* change to slave */
+@@ -130,6 +130,7 @@ struct inodes_stat_t {
+ #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
+ #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
+ #define MS_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
++#define MS_RICHACL	(1<<26) /* Supports richacls */
+ 
+ /* These sb flags are internal to the kernel */
+ #define MS_NOSEC	(1<<28)
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
