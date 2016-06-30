@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F3DDA7CBC
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:47:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 610ADAC007
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:51 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 318D57CA1
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:32:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 02206304067
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dErVISdRGgWUTp90 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id NlyfFkQdpJCAEh5g (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:50 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v23 04/22] vfs: Make the inode passed to inode_change_ok
-	non-const
-Date: Thu, 30 Jun 2016 15:46:55 +0200
-Message-Id: <1467294433-3222-5-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:53 -0700 (PDT)
+Date: Thu, 30 Jun 2016 13:32:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 025/119] xfs: rmap btree add more reserved blocks
+Message-ID: <20160630173250.GC27303@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612643276.12839.2224272649304333643.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <146612643276.12839.2224272649304333643.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +26,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-We will need to call iop->permission and iop->get_acl from
-inode_change_ok() for additional permission checks, and both take a
-non-const inode.
+On Thu, Jun 16, 2016 at 06:20:32PM -0700, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> XFS reserves a small amount of space in each AG for the minimum
+> number of free blocks needed for operation. Adding the rmap btree
+> increases the number of reserved blocks, but it also increases the
+> complexity of the calculation as the free inode btree is optional
+> (like the rmbt).
+> 
+> Rather than calculate the prealloc blocks every time we need to
+> check it, add a function to calculate it at mount time and store it
+> in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
+> just to use the xfs-mount variable directly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
-Reviewed-by: Steve French <steve.french@primarydata.com>
----
- fs/attr.c          | 2 +-
- include/linux/fs.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/attr.c b/fs/attr.c
-index 25b24d0..7ca7fa0 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -28,7 +28,7 @@
-  * Should be called as the first thing in ->setattr implementations,
-  * possibly after taking additional locks.
-  */
--int inode_change_ok(const struct inode *inode, struct iattr *attr)
-+int inode_change_ok(struct inode *inode, struct iattr *attr)
- {
- 	unsigned int ia_valid = attr->ia_valid;
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 86bfa10..208f73b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2993,7 +2993,7 @@ extern int buffer_migrate_page(struct address_space *,
- #define buffer_migrate_page NULL
- #endif
- 
--extern int inode_change_ok(const struct inode *, struct iattr *);
-+extern int inode_change_ok(struct inode *, struct iattr *);
- extern int inode_newsize_ok(const struct inode *, loff_t offset);
- extern void setattr_copy(struct inode *inode, const struct iattr *attr);
- 
--- 
-2.5.5
+>  fs/xfs/libxfs/xfs_alloc.c  |   11 +++++++++++
+>  fs/xfs/libxfs/xfs_alloc.h  |    2 ++
+>  fs/xfs/libxfs/xfs_format.h |    9 +--------
+>  fs/xfs/xfs_fsops.c         |    6 +++---
+>  fs/xfs/xfs_mount.c         |    2 ++
+>  fs/xfs/xfs_mount.h         |    1 +
+>  6 files changed, 20 insertions(+), 11 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index b61e9c6..fb00042 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -50,6 +50,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+>  STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+>  		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+>  
+> +xfs_extlen_t
+> +xfs_prealloc_blocks(
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		return XFS_RMAP_BLOCK(mp) + 1;
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+> +		return XFS_FIBT_BLOCK(mp) + 1;
+> +	return XFS_IBT_BLOCK(mp) + 1;
+> +}
+> +
+>  /*
+>   * Lookup the record equal to [bno, len] in the btree given by cur.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index cf268b2..20b54aa 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -232,4 +232,6 @@ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+>  int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+>  		struct xfs_buf **agbp);
+>  
+> +xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+> +
+>  #endif	/* __XFS_ALLOC_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 8ca4a3d..b5b0901 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1318,18 +1318,11 @@ typedef __be32 xfs_inobt_ptr_t;
+>   */
+>  #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+>  
+> -/*
+> - * The first data block of an AG depends on whether the filesystem was formatted
+> - * with the finobt feature. If so, account for the finobt reserved root btree
+> - * block.
+> - */
+> -#define XFS_PREALLOC_BLOCKS(mp) \
+> +#define	XFS_RMAP_BLOCK(mp) \
+>  	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
+>  	 XFS_FIBT_BLOCK(mp) + 1 : \
+>  	 XFS_IBT_BLOCK(mp) + 1)
+>  
+> -
+> -
+>  /*
+>   * BMAP Btree format definitions
+>   *
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 064fce1..62162d4 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -243,7 +243,7 @@ xfs_growfs_data_private(
+>  		agf->agf_flfirst = cpu_to_be32(1);
+>  		agf->agf_fllast = 0;
+>  		agf->agf_flcount = 0;
+> -		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
+> +		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+>  		agf->agf_freeblks = cpu_to_be32(tmpsize);
+>  		agf->agf_longest = cpu_to_be32(tmpsize);
+>  		if (xfs_sb_version_hascrc(&mp->m_sb))
+> @@ -340,7 +340,7 @@ xfs_growfs_data_private(
+>  						agno, 0);
+>  
+>  		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
+> +		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+>  		arec->ar_blockcount = cpu_to_be32(
+>  			agsize - be32_to_cpu(arec->ar_startblock));
+>  
+> @@ -369,7 +369,7 @@ xfs_growfs_data_private(
+>  						agno, 0);
+>  
+>  		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
+> +		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+>  		arec->ar_blockcount = cpu_to_be32(
+>  			agsize - be32_to_cpu(arec->ar_startblock));
+>  		nfree += be32_to_cpu(arec->ar_blockcount);
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index bf63682..b4153f0 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -231,6 +231,8 @@ xfs_initialize_perag(
+>  
+>  	if (maxagi)
+>  		*maxagi = index;
+> +
+> +	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+>  	return 0;
+>  
+>  out_unwind:
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index c1b798c..0537b1f 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -119,6 +119,7 @@ typedef struct xfs_mount {
+>  	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+>  	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+>  	uint			m_in_maxlevels;	/* max inobt btree levels. */
+> +	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
+>  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+>  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+>  	struct mutex		m_growlock;	/* growfs mutex */
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
