@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1E18B7CB4
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:47:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9AEDAAC007
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HvaChjLNKfYppGcU (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 06:47:29 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v23 01/22] vfs: Add IS_ACL() and IS_RICHACL() tests
-Date: Thu, 30 Jun 2016 15:46:52 +0200
-Message-Id: <1467294433-3222-2-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 34E207CA1
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 11:59:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 07E738F8084
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 09:59:07 -0700 (PDT)
+Received: from SNT004-OMC4S14.hotmail.com (snt004-omc4s14.hotmail.com
+	[65.55.90.217]) by cuda.sgi.com with ESMTP id IdKtTBfAELXEX06v
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 Jun 2016 09:59:04 -0700 (PDT)
+From: Anthony l <Martinezant2141@live.com>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+Date: Thu, 30 Jun 2016 16:59:01 +0000
+Message-ID: <SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>,
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+In-Reply-To: <4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,131 +29,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1319584185262345010=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-The vfs does not apply the umask for file systems that support acls.
-The test used for this used to be called IS_POSIXACL().  Switch to a new
-IS_ACL() test to check for either posix acls or richacls instead.  Add a
-new MS_RICHACL flag and IS_RICHACL() test for richacls alone.  The
-IS_POSIXACL() test is still needed in some places like nfsd.
+--===============1319584185262345010==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_SN1PR05MB2317E464B2CFB5A06CC4B66BCC240SN1PR05MB2317namp_"
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
-Reviewed-by: Steve French <steve.french@primarydata.com>
----
- fs/Kconfig              |  3 +++
- fs/namei.c              |  6 +++---
- include/linux/fs.h      | 12 ++++++++++++
- include/uapi/linux/fs.h |  3 ++-
- 4 files changed, 20 insertions(+), 4 deletions(-)
+--_000_SN1PR05MB2317E464B2CFB5A06CC4B66BCC240SN1PR05MB2317namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/Kconfig b/fs/Kconfig
-index b8fcb41..de6de55 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -64,6 +64,9 @@ endif # BLOCK
- config FS_POSIX_ACL
- 	def_bool n
- 
-+config FS_RICHACL
-+	def_bool n
-+
- config EXPORTFS
- 	tristate
- 
-diff --git a/fs/namei.c b/fs/namei.c
-index 70580ab..7cc5487 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -3115,7 +3115,7 @@ static int lookup_open(struct nameidata *nd, struct path *path,
- 	 * O_EXCL open we want to return EEXIST not EROFS).
- 	 */
- 	if (open_flag & O_CREAT) {
--		if (!IS_POSIXACL(dir->d_inode))
-+		if (!IS_ACL(dir->d_inode))
- 			mode &= ~current_umask();
- 		if (unlikely(!got_write)) {
- 			create_error = -EROFS;
-@@ -3709,7 +3709,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mknod(&path, dentry, mode, dev);
- 	if (error)
-@@ -3780,7 +3780,7 @@ retry:
- 	if (IS_ERR(dentry))
- 		return PTR_ERR(dentry);
- 
--	if (!IS_POSIXACL(path.dentry->d_inode))
-+	if (!IS_ACL(path.dentry->d_inode))
- 		mode &= ~current_umask();
- 	error = security_path_mkdir(&path, dentry, mode);
- 	if (!error)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index dd28814..4ad130c 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1850,6 +1850,12 @@ struct super_operations {
- #define IS_IMMUTABLE(inode)	((inode)->i_flags & S_IMMUTABLE)
- #define IS_POSIXACL(inode)	__IS_FLG(inode, MS_POSIXACL)
- 
-+#ifdef CONFIG_FS_RICHACL
-+#define IS_RICHACL(inode)	__IS_FLG(inode, MS_RICHACL)
-+#else
-+#define IS_RICHACL(inode)	0
-+#endif
-+
- #define IS_DEADDIR(inode)	((inode)->i_flags & S_DEAD)
- #define IS_NOCMTIME(inode)	((inode)->i_flags & S_NOCMTIME)
- #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
-@@ -1863,6 +1869,12 @@ struct super_operations {
- 				 (inode)->i_rdev == WHITEOUT_DEV)
- 
- /*
-+ * IS_ACL() tells the VFS to not apply the umask
-+ * and use check_acl for acl permission checks when defined.
-+ */
-+#define IS_ACL(inode)		__IS_FLG(inode, MS_POSIXACL | MS_RICHACL)
-+
-+/*
-  * Inode state bits.  Protected by inode->i_lock
-  *
-  * Three bits determine the dirty state of the inode, I_DIRTY_SYNC,
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 3b00f7c..f9c41ef 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -120,7 +120,7 @@ struct inodes_stat_t {
- #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
- 				   MS_VERBOSE is deprecated. */
- #define MS_SILENT	32768
--#define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
-+#define MS_POSIXACL	(1<<16)	/* Supports POSIX ACLs */
- #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
- #define MS_PRIVATE	(1<<18)	/* change to private */
- #define MS_SLAVE	(1<<19)	/* change to slave */
-@@ -130,6 +130,7 @@ struct inodes_stat_t {
- #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
- #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
- #define MS_LAZYTIME	(1<<25) /* Update the on-disk [acm]times lazily */
-+#define MS_RICHACL	(1<<26) /* Supports richacls */
- 
- /* These sb flags are internal to the kernel */
- #define MS_NOSEC	(1<<28)
--- 
-2.5.5
+I don't think this is a multi tape dump. But then again i don't know for su=
+re. I recently got a job and this is my first 'project'. I have about 10 ta=
+pes each are labeled a month and a year, so I don't think they are multi ta=
+pe because they span like 3 years 2004-2007 . Although for the current tape=
+ I am working on right now if I select 1 skip, I'll get to another back up =
+labeled "incremental backup 1" or something similar. Using the verbosity ou=
+tput here is what I got. (also using interactive restore). I went ahead and=
+ specified byte size 4096. Through earlier test using the dd command I dete=
+rmined that was the correct size. Ill post one without byte size specified =
+too. I just saw it in that post and thought it might help.
+
+Here is the output with verbosity.
+
+http://pastebin.com/Nd6BqNc5
+
+The out is the same with or without -b 4096.
+
+http://pastebin.com/0dxbCvyc (no -b)
+
+
+-Anthony
+
+<http://oss.sgi.com/mailman/listinfo/xfs>
+
+--_000_SN1PR05MB2317E464B2CFB5A06CC4B66BCC240SN1PR05MB2317namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;back=
+ground-color:#FFFFFF;font-family:Calibri,Arial,Helvetica,sans-serif;">
+<p><span style=3D"font-size: 8pt;"><span style=3D"font-size: 10pt;"></span>=
+<span style=3D"font-size: 10pt;">I don't think this is a multi tape dump. B=
+ut then again i don't know for sure. I recently got a job and this is my fi=
+rst 'project'. I have about 10 tapes each
+ are labeled a month and a year, so I don't think they are multi tape becau=
+se they span like 3 years 2004-2007 . Although for the current tape I am wo=
+rking on right now if I select 1 skip, I'll get to another back up labeled =
+&quot;incremental backup 1&quot; or something
+ similar. Using the verbosity output here is what I got. (also using intera=
+ctive restore). I went ahead and specified byte size 4096. Through earlier =
+test using the dd command I determined that was the correct size. Ill post =
+one without byte size specified
+ too. I just saw it in that post and thought it might help.<br>
+</span></span></p>
+<p><span style=3D"font-size: 8pt;"><span style=3D"font-size: 10pt;"></span>=
+</span><font size=3D"2"><span style=3D"font-size:10pt;"></span></font>Here =
+is the output with verbosity.
+<br>
+</p>
+<p><a id=3D"LPlnk552761" href=3D"http://pastebin.com/Nd6BqNc5" class=3D"OWA=
+AutoLink">http://pastebin.com/Nd6BqNc5</a></p>
+<p><span style=3D"font-size: 10pt;">The out is the same with or without -b =
+4096. <br>
+</span></p>
+<p><span style=3D"font-size: 10pt;"></span><a id=3D"LPlnk828460" href=3D"ht=
+tp://pastebin.com/0dxbCvyc" class=3D"OWAAutoLink">http://pastebin.com/0dxbC=
+vyc</a> (no -b)</p>
+<p><br>
+</p>
+<p>-Anthony<br>
+</p>
+<font size=3D"2"><span style=3D"font-size:10pt;">
+<div class=3D"PlainText"><a href=3D"http://oss.sgi.com/mailman/listinfo/xfs=
+"></a></div>
+</span></font><font size=3D"2"><span style=3D"font-size:10pt;">
+<div class=3D"PlainText"></div>
+</span></font>
+<div style=3D"color: rgb(0, 0, 0);"><font size=3D"2"><span style=3D"font-si=
+ze:10pt;"></span></font></div>
+</div>
+</body>
+</html>
+
+--_000_SN1PR05MB2317E464B2CFB5A06CC4B66BCC240SN1PR05MB2317namp_--
+
+
+--===============1319584185262345010==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1319584185262345010==--
