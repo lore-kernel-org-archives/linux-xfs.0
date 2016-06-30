@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 206527CA1
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 12:37:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9CF90AC001
-	for <xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:37:08 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id oxMteaGtgDuCCvdx (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AE8DB7CA1
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:32:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7188D8F8065
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id B26BIHGSqiOzYuBO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 28 Jun 2016 10:37:04 -0700 (PDT)
-Date: Tue, 28 Jun 2016 10:36:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 013/119] xfs: support btrees with overlapping intervals
-	for keys
-Message-ID: <20160628173657.GC16181@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 10:32:42 -0700 (PDT)
+Date: Thu, 30 Jun 2016 13:32:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 023/119] xfs: introduce rmap btree definitions
+Message-ID: <20160630173238.GA27303@bfoster.bfoster>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612635526.12839.13865365567940815077.stgit@birch.djwong.org>
-	<20160622151706.GB5423@bfoster.bfoster>
-	<20160628032621.GB4917@birch.djwong.org>
-	<20160628123203.GB4212@bfoster.bfoster>
+	<146612641935.12839.2545862100454514832.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160628123203.GB4212@bfoster.bfoster>
+In-Reply-To: <146612641935.12839.2545862100454514832.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,444 +30,186 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Jun 28, 2016 at 08:32:04AM -0400, Brian Foster wrote:
-> On Mon, Jun 27, 2016 at 08:26:21PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 22, 2016 at 11:17:06AM -0400, Brian Foster wrote:
-> > > On Thu, Jun 16, 2016 at 06:19:15PM -0700, Darrick J. Wong wrote:
-> > > > On a filesystem with both reflink and reverse mapping enabled, it's
-> > > > possible to have multiple rmap records referring to the same blocks on
-> > > > disk.  When overlapping intervals are possible, querying a classic
-> > > > btree to find all records intersecting a given interval is inefficient
-> > > > because we cannot use the left side of the search interval to filter
-> > > > out non-matching records the same way that we can use the existing
-> > > > btree key to filter out records coming after the right side of the
-> > > > search interval.  This will become important once we want to use the
-> > > > rmap btree to rebuild BMBTs, or implement the (future) fsmap ioctl.
-> > > > 
-> > > > (For the non-overlapping case, we can perform such queries trivially
-> > > > by starting at the left side of the interval and walking the tree
-> > > > until we pass the right side.)
-> > > > 
-> > > > Therefore, extend the btree code to come closer to supporting
-> > > > intervals as a first-class record attribute.  This involves widening
-> > > > the btree node's key space to store both the lowest key reachable via
-> > > > the node pointer (as the btree does now) and the highest key reachable
-> > > > via the same pointer and teaching the btree modifying functions to
-> > > > keep the highest-key records up to date.
-> > > > 
-> > > > This behavior can be turned on via a new btree ops flag so that btrees
-> > > > that cannot store overlapping intervals don't pay the overhead costs
-> > > > in terms of extra code and disk format changes.
-> > > > 
-> > > > v2: When we're deleting a record in a btree that supports overlapped
-> > > > interval records and the deletion results in two btree blocks being
-> > > > joined, we defer updating the high/low keys until after all possible
-> > > > joining (at higher levels in the tree) have finished.  At this point,
-> > > > the btree pointers at all levels have been updated to remove the empty
-> > > > blocks and we can update the low and high keys.
-> > > > 
-> > > > When we're doing this, we must be careful to update the keys of all
-> > > > node pointers up to the root instead of stopping at the first set of
-> > > > keys that don't need updating.  This is because it's possible for a
-> > > > single deletion to cause joining of multiple levels of tree, and so
-> > > > we need to update everything going back to the root.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > 
-> > > I think I get the gist of this and it mostly looks Ok to me. A few
-> > > questions and minor comments...
-> > 
-> > Ok.
-> > 
-> > > >  fs/xfs/libxfs/xfs_btree.c |  379 +++++++++++++++++++++++++++++++++++++++++----
-> > > >  fs/xfs/libxfs/xfs_btree.h |   16 ++
-> > > >  fs/xfs/xfs_trace.h        |   36 ++++
-> > > >  3 files changed, 395 insertions(+), 36 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > > > index a096539..afcafd6 100644
-> > > > --- a/fs/xfs/libxfs/xfs_btree.c
-> > > > +++ b/fs/xfs/libxfs/xfs_btree.c
-> ...
-> > > > @@ -2149,7 +2392,9 @@ xfs_btree_lshift(
-> > > >  		rkp = &key;
-> > > >  	}
-> > > >  
-> > > > -	/* Update the parent key values of right. */
-> > > > +	/* Update the parent key values of left and right. */
-> > > > +	xfs_btree_sibling_updkeys(cur, level, XFS_BB_LEFTSIB, left, lbp);
-> > > > +	xfs_btree_updkeys(cur, level);
-> > > >  	error = xfs_btree_updkey(cur, rkp, level + 1);
-> > > >  	if (error)
-> > > >  		goto error0;
-> > > > @@ -2321,6 +2566,9 @@ xfs_btree_rshift(
-> > > >  	if (error)
-> > > >  		goto error1;
-> > > >  
-> > > > +	/* Update left and right parent pointers */
-> > > > +	xfs_btree_updkeys(cur, level);
-> > > > +	xfs_btree_updkeys(tcur, level);
-> > > 
-> > > In this case, we grab the last record of the block, increment from there
-> > > and update using the cursor. This is much more straightforward, imo.
-> > > Could we use this approach in the left shift case as well?
-> > 
-> > Yes, I think so.  I might have started refactoring btree_sibling_updkeys
-> > out of existence and got distracted, since there isn't anything that uses
-> > the RIGHTSIB ptr value.
-> > 
+On Thu, Jun 16, 2016 at 06:20:19PM -0700, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Ok, I think that would be much cleaner.
-
-Done.
-
-> > > >  	error = xfs_btree_updkey(tcur, rkp, level + 1);
-> > > >  	if (error)
-> > > >  		goto error1;
-> > > > @@ -2356,7 +2604,7 @@ __xfs_btree_split(
-> > > >  	struct xfs_btree_cur	*cur,
-> > > >  	int			level,
-> > > >  	union xfs_btree_ptr	*ptrp,
-> > > > -	union xfs_btree_key	*key,
-> > > > +	struct xfs_btree_double_key	*key,
-> > > >  	struct xfs_btree_cur	**curp,
-> > > >  	int			*stat)		/* success/failure */
-> > > >  {
-> > > > @@ -2452,9 +2700,6 @@ __xfs_btree_split(
-> > > >  
-> > > >  		xfs_btree_log_keys(cur, rbp, 1, rrecs);
-> > > >  		xfs_btree_log_ptrs(cur, rbp, 1, rrecs);
-> > > > -
-> > > > -		/* Grab the keys to the entries moved to the right block */
-> > > > -		xfs_btree_copy_keys(cur, key, rkp, 1);
-> > > >  	} else {
-> > > >  		/* It's a leaf.  Move records.  */
-> > > >  		union xfs_btree_rec	*lrp;	/* left record pointer */
-> > > > @@ -2465,12 +2710,8 @@ __xfs_btree_split(
-> > > >  
-> > > >  		xfs_btree_copy_recs(cur, rrp, lrp, rrecs);
-> > > >  		xfs_btree_log_recs(cur, rbp, 1, rrecs);
-> > > > -
-> > > > -		cur->bc_ops->init_key_from_rec(key,
-> > > > -			xfs_btree_rec_addr(cur, 1, right));
-> > > >  	}
-> > > >  
-> > > > -
-> > > >  	/*
-> > > >  	 * Find the left block number by looking in the buffer.
-> > > >  	 * Adjust numrecs, sibling pointers.
-> > > > @@ -2484,6 +2725,12 @@ __xfs_btree_split(
-> > > >  	xfs_btree_set_numrecs(left, lrecs);
-> > > >  	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
-> > > >  
-> > > > +	/* Find the low & high keys for the new block. */
-> > > > +	if (level > 0)
-> > > > +		xfs_btree_find_node_keys(cur, right, &key->low, &key->high);
-> > > > +	else
-> > > > +		xfs_btree_find_leaf_keys(cur, right, &key->low, &key->high);
-> > > > +
-> > > 
-> > > Why not push these into the above if/else where the previous key
-> > > copy/init calls were removed from?
-> > 
-> > We don't set bb_numrecs on the right block until the line above the new
-> > hunk, and the btree_find_*_keys functions require numrecs to be set.
-> > 
-> > The removed key copy/init calls only looked at keys[1].
-> > 
-> > That said, it's trivial to move the set_numrecs calls above the if statement.
-> > 
+> Add new per-ag rmap btree definitions to the per-ag structures. The
+> rmap btree will sit in the empty slots on disk after the free space
+> btrees, and hence form a part of the array of space management
+> btrees. This requires the definition of the btree to be contiguous
+> with the free space btrees.
 > 
-> Ok, thanks. No need to shuffle it around. I'd suggest a one-liner
-> comment though so somebody doesn't blindly refactor this down the road.
-> It also sounds like the find keys functions could use ASSERT() checks
-> for a sane bb_numrecs.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
 
-Hmm.  I already moved it, oh well.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-It _does_ make the function less messy, so I'll leave it unless anyone yells.
-
-> > > >  	xfs_btree_log_block(cur, rbp, XFS_BB_ALL_BITS);
-> > > >  	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
-> > > >  
-> ...
-> > > > @@ -3095,8 +3365,24 @@ xfs_btree_insrec(
-> > > >  	xfs_btree_log_block(cur, bp, XFS_BB_NUMRECS);
-> > > >  
-> > > >  	/* If we inserted at the start of a block, update the parents' keys. */
-> > > 
-> > > This comment is associated with the codeblock that has been pushed
-> > > further down, no?
-> > 
-> > Correct.  I think that got mismerged somewhere along the way.
-> > 
-> > > > +	if (ncur && bp->b_bn != old_bn) {
-> > > > +		/*
-> > > > +		 * We just inserted into a new tree block, which means that
-> > > > +		 * the key for the block is in nkey, not the tree.
-> > > > +		 */
-> > > > +		if (level == 0)
-> > > > +			xfs_btree_find_leaf_keys(cur, block, &nkey.low,
-> > > > +					&nkey.high);
-> > > > +		else
-> > > > +			xfs_btree_find_node_keys(cur, block, &nkey.low,
-> > > > +					&nkey.high);
-> > > > +	} else {
-> > > > +		/* Updating the left block, do it the standard way. */
-> > > > +		xfs_btree_updkeys(cur, level);
-> > > > +	}
-> > > > +
-> > > 
-> > > Not quite sure I follow the purpose of this hunk. Is this for the case
-> > > where a btree split occurs, nkey is filled in for the new/right block
-> > > and then (after nkey is filled in) the new record ends up being added to
-> > > the new block? If so, what about the case where ncur is not created?
-> > > (It looks like that's possible from the code, but I could easily be
-> > > missing some context as to why that's not the case.)
-> > 
-> > Yes, the first part of the if-else hunk is to fill out nkey when we've
-> > split a btree block.  Now that I look at it again, I think that whole
-> > weird conditional could be replaced with the same xfs_btree_ptr_is_null()
-> > check later on.  I think it can also be combined with it.
-
-This is incorrect.  The only time we want to perform the nkey recalculation
-is in the specific case where we split a btree block and the cursor ends up
-pointing into the new block for the insertion.  We cannot gate the nkey
-recalc on whether or not &nptr is null, because if we insert into the left
-block after a split we'll recalculate nkey (the right block's keys) using
-the left block's data, which is incorrect.  We probably want to do the key
-recalc ahead of calling ->update_lastrec because the callback could modify
-the cursor.
-
-So I'll just leave the code mostly as is, clarify the comments about what
-we're doing and why, and change the if statement to:
-
-if (bp && bp->b_bn != old_bn)
-
-Also for some reason I neglected to check the return code from
-xfs_btree_updkeys, so I will go fix that.  At the moment it doesn't matter
-because updkeys never fails, but I might as well fix it now.
-
-> Ok.
+>  fs/xfs/libxfs/xfs_alloc.c  |    6 ++++++
+>  fs/xfs/libxfs/xfs_btree.c  |    4 ++--
+>  fs/xfs/libxfs/xfs_btree.h  |    3 +++
+>  fs/xfs/libxfs/xfs_format.h |   22 +++++++++++++++++-----
+>  fs/xfs/libxfs/xfs_types.h  |    4 ++--
+>  5 files changed, 30 insertions(+), 9 deletions(-)
 > 
-> > Commentage for now:
-> > 
-> > /*
-> >  * If we just inserted a new tree block, we have to find the low
-> >  * and high keys for the new block and arrange to pass them back
-> >  * separately.  If we're just updating a block we can use the
-> >  * regular tree update mechanism.
-> >  */
-> > 
 > 
-> Couldn't you just point out that nkey may not be coherent with the new
-> block if the new record was inserted therein..?
-
-Yes, that would be less convoluted.  Done. :)
-
-> > > In any event, I think we could elaborate a bit in the comment on why
-> > > this is necessary. I'd also move it above the top-level if/else.
-> > > 
-> > > >  	if (optr == 1) {
-> > > > -		error = xfs_btree_updkey(cur, key, level + 1);
-> > > > +		error = xfs_btree_updkey(cur, &key->low, level + 1);
-> > > >  		if (error)
-> > > >  			goto error0;
-> > > >  	}
-> > > > @@ -3147,7 +3433,7 @@ xfs_btree_insert(
-> > > >  	union xfs_btree_ptr	nptr;	/* new block number (split result) */
-> > > >  	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
-> > > >  	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
-> > > > -	union xfs_btree_key	key;	/* key of block to insert */
-> > > > +	struct xfs_btree_double_key	key;	/* key of block to insert */
-> > > 
-> > > Probably should fix up the function param alignment here and the couple
-> > > other or so places we make this change.
-> > 
-> > I changed the name to xfs_btree_bigkey, which avoids the alignment problems.
-> > 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 56c8690..b61e9c6 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2272,6 +2272,10 @@ xfs_agf_verify(
+>  	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
+>  		return false;
+>  
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
+> +	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS)
+> +		return false;
+> +
+>  	/*
+>  	 * during growfs operations, the perag is not fully initialised,
+>  	 * so we can't use it for any useful checking. growfs ensures we can't
+> @@ -2403,6 +2407,8 @@ xfs_alloc_read_agf(
+>  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
+>  		pag->pagf_levels[XFS_BTNUM_CNTi] =
+>  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+> +		pag->pagf_levels[XFS_BTNUM_RMAPi] =
+> +			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
+>  		spin_lock_init(&pag->pagb_lock);
+>  		pag->pagb_count = 0;
+>  #ifdef __KERNEL__
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 5b3743a..624b572 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -44,9 +44,9 @@ kmem_zone_t	*xfs_btree_cur_zone;
+>   * Btree magic numbers.
+>   */
+>  static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
+> -	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
+> +	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
+>  	  XFS_FIBT_MAGIC },
+> -	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC,
+> +	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
+>  	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
+>  };
+>  #define xfs_btree_magic(cur) \
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 7483cac..202fdd3 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -63,6 +63,7 @@ union xfs_btree_rec {
+>  #define	XFS_BTNUM_BMAP	((xfs_btnum_t)XFS_BTNUM_BMAPi)
+>  #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
+>  #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
+> +#define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
+>  
+>  /*
+>   * For logging record fields.
+> @@ -95,6 +96,7 @@ do {    \
+>  	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(__mp, bmbt, stat); break; \
+>  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
+>  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
+> +	case XFS_BTNUM_RMAP: break;	\
+>  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+>  	}       \
+>  } while (0)
+> @@ -115,6 +117,7 @@ do {    \
+>  		__XFS_BTREE_STATS_ADD(__mp, ibt, stat, val); break; \
+>  	case XFS_BTNUM_FINO:	\
+>  		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
+> +	case XFS_BTNUM_RMAP: break; \
+>  	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+>  	}       \
+>  } while (0)
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index ba528b3..8ca4a3d 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -455,6 +455,7 @@ xfs_sb_has_compat_feature(
+>  }
+>  
+>  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+> +#define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>  		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
+>  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+> @@ -538,6 +539,12 @@ static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
+>  		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
+>  }
+>  
+> +static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
+> +{
+> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
+> +}
+> +
+>  /*
+>   * end of superblock version macros
+>   */
+> @@ -598,10 +605,10 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+>  #define	XFS_AGI_GOOD_VERSION(v)	((v) == XFS_AGI_VERSION)
+>  
+>  /*
+> - * Btree number 0 is bno, 1 is cnt.  This value gives the size of the
+> + * Btree number 0 is bno, 1 is cnt, 2 is rmap. This value gives the size of the
+>   * arrays below.
+>   */
+> -#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_CNTi + 1)
+> +#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_RMAPi + 1)
+>  
+>  /*
+>   * The second word of agf_levels in the first a.g. overlaps the EFS
+> @@ -618,12 +625,10 @@ typedef struct xfs_agf {
+>  	__be32		agf_seqno;	/* sequence # starting from 0 */
+>  	__be32		agf_length;	/* size in blocks of a.g. */
+>  	/*
+> -	 * Freespace information
+> +	 * Freespace and rmap information
+>  	 */
+>  	__be32		agf_roots[XFS_BTNUM_AGF];	/* root blocks */
+> -	__be32		agf_spare0;	/* spare field */
+>  	__be32		agf_levels[XFS_BTNUM_AGF];	/* btree levels */
+> -	__be32		agf_spare1;	/* spare field */
+>  
+>  	__be32		agf_flfirst;	/* first freelist block's index */
+>  	__be32		agf_fllast;	/* last freelist block's index */
+> @@ -1307,6 +1312,13 @@ typedef __be32 xfs_inobt_ptr_t;
+>  #define	XFS_FIBT_BLOCK(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
+>  
+>  /*
+> + * Reverse mapping btree format definitions
+> + *
+> + * There is a btree for the reverse map per allocation group
+> + */
+> +#define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+> +
+> +/*
+>   * The first data block of an AG depends on whether the filesystem was formatted
+>   * with the finobt feature. If so, account for the finobt reserved root btree
+>   * block.
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index f0d145a..da87796 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -111,8 +111,8 @@ typedef enum {
+>  } xfs_lookup_t;
+>  
+>  typedef enum {
+> -	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_BMAPi, XFS_BTNUM_INOi,
+> -	XFS_BTNUM_FINOi, XFS_BTNUM_MAX
+> +	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+> +	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
+>  } xfs_btnum_t;
+>  
+>  struct xfs_name {
 > 
-> Sounds good.
-
---D
-
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > >  
-> > > >  	level = 0;
-> > > >  	ncur = NULL;
-> > > > @@ -3552,6 +3838,7 @@ xfs_btree_delrec(
-> > > >  	 * If we deleted the leftmost entry in the block, update the
-> > > >  	 * key values above us in the tree.
-> > > >  	 */
-> > > > +	xfs_btree_updkeys(cur, level);
-> > > >  	if (ptr == 1) {
-> > > >  		error = xfs_btree_updkey(cur, keyp, level + 1);
-> > > >  		if (error)
-> > > > @@ -3882,6 +4169,16 @@ xfs_btree_delrec(
-> > > >  	if (level > 0)
-> > > >  		cur->bc_ptrs[level]--;
-> > > >  
-> > > > +	/*
-> > > > +	 * We combined blocks, so we have to update the parent keys if the
-> > > > +	 * btree supports overlapped intervals.  However, bc_ptrs[level + 1]
-> > > > +	 * points to the old block so that the caller knows which record to
-> > > > +	 * delete.  Therefore, the caller must be savvy enough to call updkeys
-> > > > +	 * for us if we return stat == 2.  The other exit points from this
-> > > > +	 * function don't require deletions further up the tree, so they can
-> > > > +	 * call updkeys directly.
-> > > > +	 */
-> > > > +
-> > > >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> > > >  	/* Return value means the next level up has something to do. */
-> > > >  	*stat = 2;
-> > > > @@ -3907,6 +4204,7 @@ xfs_btree_delete(
-> > > >  	int			error;	/* error return value */
-> > > >  	int			level;
-> > > >  	int			i;
-> > > > +	bool			joined = false;
-> > > >  
-> > > >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
-> > > >  
-> > > > @@ -3920,8 +4218,17 @@ xfs_btree_delete(
-> > > >  		error = xfs_btree_delrec(cur, level, &i);
-> > > >  		if (error)
-> > > >  			goto error0;
-> > > > +		if (i == 2)
-> > > > +			joined = true;
-> > > >  	}
-> > > >  
-> > > > +	/*
-> > > > +	 * If we combined blocks as part of deleting the record, delrec won't
-> > > > +	 * have updated the parent keys so we have to do that here.
-> > > > +	 */
-> > > > +	if (joined)
-> > > > +		xfs_btree_updkeys_force(cur, 0);
-> > > > +
-> > > >  	if (i == 0) {
-> > > >  		for (level = 1; level < cur->bc_nlevels; level++) {
-> > > >  			if (cur->bc_ptrs[level] == 0) {
-> > > > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > > > index b99c018..a5ec6c7 100644
-> > > > --- a/fs/xfs/libxfs/xfs_btree.h
-> > > > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > > > @@ -126,6 +126,9 @@ struct xfs_btree_ops {
-> > > >  	size_t	key_len;
-> > > >  	size_t	rec_len;
-> > > >  
-> > > > +	/* flags */
-> > > > +	uint	flags;
-> > > > +
-> > > >  	/* cursor operations */
-> > > >  	struct xfs_btree_cur *(*dup_cursor)(struct xfs_btree_cur *);
-> > > >  	void	(*update_cursor)(struct xfs_btree_cur *src,
-> > > > @@ -162,11 +165,21 @@ struct xfs_btree_ops {
-> > > >  				     union xfs_btree_rec *rec);
-> > > >  	void	(*init_ptr_from_cur)(struct xfs_btree_cur *cur,
-> > > >  				     union xfs_btree_ptr *ptr);
-> > > > +	void	(*init_high_key_from_rec)(union xfs_btree_key *key,
-> > > > +					  union xfs_btree_rec *rec);
-> > > >  
-> > > >  	/* difference between key value and cursor value */
-> > > >  	__int64_t (*key_diff)(struct xfs_btree_cur *cur,
-> > > >  			      union xfs_btree_key *key);
-> > > >  
-> > > > +	/*
-> > > > +	 * Difference between key2 and key1 -- positive if key2 > key1,
-> > > > +	 * negative if key2 < key1, and zero if equal.
-> > > > +	 */
-> > > > +	__int64_t (*diff_two_keys)(struct xfs_btree_cur *cur,
-> > > > +				   union xfs_btree_key *key1,
-> > > > +				   union xfs_btree_key *key2);
-> > > > +
-> > > >  	const struct xfs_buf_ops	*buf_ops;
-> > > >  
-> > > >  #if defined(DEBUG) || defined(XFS_WARN)
-> > > > @@ -182,6 +195,9 @@ struct xfs_btree_ops {
-> > > >  #endif
-> > > >  };
-> > > >  
-> > > > +/* btree ops flags */
-> > > > +#define XFS_BTREE_OPS_OVERLAPPING	(1<<0)	/* overlapping intervals */
-> > > > +
-> > > >  /*
-> > > >   * Reasons for the update_lastrec method to be called.
-> > > >   */
-> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > > > index 68f27f7..ffea28c 100644
-> > > > --- a/fs/xfs/xfs_trace.h
-> > > > +++ b/fs/xfs/xfs_trace.h
-> > > > @@ -38,6 +38,7 @@ struct xlog_recover_item;
-> > > >  struct xfs_buf_log_format;
-> > > >  struct xfs_inode_log_format;
-> > > >  struct xfs_bmbt_irec;
-> > > > +struct xfs_btree_cur;
-> > > >  
-> > > >  DECLARE_EVENT_CLASS(xfs_attr_list_class,
-> > > >  	TP_PROTO(struct xfs_attr_list_context *ctx),
-> > > > @@ -2183,6 +2184,41 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
-> > > >  DEFINE_DISCARD_EVENT(xfs_discard_exclude);
-> > > >  DEFINE_DISCARD_EVENT(xfs_discard_busy);
-> > > >  
-> > > > +/* btree cursor events */
-> > > > +DECLARE_EVENT_CLASS(xfs_btree_cur_class,
-> > > > +	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp),
-> > > > +	TP_ARGS(cur, level, bp),
-> > > > +	TP_STRUCT__entry(
-> > > > +		__field(dev_t, dev)
-> > > > +		__field(xfs_btnum_t, btnum)
-> > > > +		__field(int, level)
-> > > > +		__field(int, nlevels)
-> > > > +		__field(int, ptr)
-> > > > +		__field(xfs_daddr_t, daddr)
-> > > > +	),
-> > > > +	TP_fast_assign(
-> > > > +		__entry->dev = cur->bc_mp->m_super->s_dev;
-> > > > +		__entry->btnum = cur->bc_btnum;
-> > > > +		__entry->level = level;
-> > > > +		__entry->nlevels = cur->bc_nlevels;
-> > > > +		__entry->ptr = cur->bc_ptrs[level];
-> > > > +		__entry->daddr = bp->b_bn;
-> > > > +	),
-> > > > +	TP_printk("dev %d:%d btnum %d level %d/%d ptr %d daddr 0x%llx",
-> > > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > > > +		  __entry->btnum,
-> > > > +		  __entry->level,
-> > > > +		  __entry->nlevels,
-> > > > +		  __entry->ptr,
-> > > > +		  (unsigned long long)__entry->daddr)
-> > > > +)
-> > > > +
-> > > > +#define DEFINE_BTREE_CUR_EVENT(name) \
-> > > > +DEFINE_EVENT(xfs_btree_cur_class, name, \
-> > > > +	TP_PROTO(struct xfs_btree_cur *cur, int level, struct xfs_buf *bp), \
-> > > > +	TP_ARGS(cur, level, bp))
-> > > > +DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
-> > > > +
-> > > >  #endif /* _TRACE_XFS_H */
-> > > >  
-> > > >  #undef TRACE_INCLUDE_PATH
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
