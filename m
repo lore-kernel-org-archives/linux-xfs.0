@@ -1,29 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1BBD87CA0
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 07:53:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3DBE304039
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 05:53:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id J5qwsiDSIHsfimk1 (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 658D87CA0
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 01:04:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 261D4304032
+	for <xfs@oss.sgi.com>; Wed, 29 Jun 2016 23:04:15 -0700 (PDT)
+Received: from hotel311.server4you.de (hotel311.server4you.de [85.25.146.15])
+	by cuda.sgi.com with ESMTP id TTufZYY2pKALjPgg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 05:53:51 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 9BDE563171
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 12:53:50 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-180.bos.redhat.com [10.18.41.180])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u5UCroSu017061
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 08:53:50 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: add readahead bufs to lru early to prevent post-unmount
-	panic
-Date: Thu, 30 Jun 2016 08:53:49 -0400
-Message-Id: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 29 Jun 2016 23:04:12 -0700 (PDT)
+Subject: Re: crash in xfs in current
+References: <48817b4c-26f4-5eb6-8a97-d8fa34fe7f6a@monom.org>
+	<20160607134442.GA1803@infradead.org>
+	<CAAA5faFWyPDienm2NbHkafZh-RvbjJp6f_zDq62z6rC1d1Vzyw@mail.gmail.com>
+	<CAAA5faGXHJZPWkkxDM-kvHqh--hPhnD1Y8RuaaSmuzgiz=_LDg@mail.gmail.com>
+	<CAAA5faEDdR_L6y9ShhUcermgvjtmzNCzwoYeENjx+8RUEMdwaA@mail.gmail.com>
+	<20160609022238.GY26977@dastard>
+	<CAAA5faGL_Nyu=jW2Vrgr_m7crhnB9BriWWzMAPODbiQATFhS=Q@mail.gmail.com>
+	<00bbe658-a891-3771-ca1d-5661a8b6ab61@sandeen.net>
+	<CAAA5faH7RA=_WByj6uh4yVCLgwxkLh88CkrtTOa-qJqdyEDT-A@mail.gmail.com>
+	<CAAA5faGTL4i3YS_oLxoeetpsEt+q59dmc2L7Kc-b5khzoV0GvA@mail.gmail.com>
+	<20160622014253.GS12670@dastard>
+From: Daniel Wagner <wagi@monom.org>
+Message-ID: <c5c53ec1-cc9f-2b50-079a-4d0b4f405558@monom.org>
+Date: Thu, 30 Jun 2016 08:04:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160622014253.GS12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,82 +34,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
 
-Newly allocated XFS metadata buffers are added to the LRU once the hold
-count is released, which typically occurs after I/O completion. There is
-no other mechanism at current that tracks the existence or I/O state of
-a new buffer. Further, readahead I/O tends to be submitted
-asynchronously by nature, which means the I/O can remain in flight and
-actually complete long after the calling context is gone. This means
-that file descriptors or any other holds on the filesystem can be
-released, allowing the filesystem to be unmounted while I/O is still in
-flight. When I/O completion occurs, core data structures may have been
-freed, causing completion to run into invalid memory accesses and likely
-to panic.
+> Ok, that's good to hear. Now for some more testing: Al Viro just
+> pushed some fixes to the parallel lookup code that may fix this
+> problem. Al asked this question:
+> 
+> | Can that be triggered on 4e82901 + cherry-pick of e7d6ef979?
+> | Same for 9f541801 + e7d6ef979?
+> 
+> Those commits are all in the current Linus tree - would you be
+> able to test them? (i.e. check out tree to 4e82901, then just
+> cherry pick the single commit (e7d6ef979) on top of that).
 
-This problem is reproduced on XFS via directory readahead. A filesystem
-is mounted, a directory is opened/closed and the filesystem immediately
-unmounted. The open/close cycle triggers a directory readahead that if
-delayed long enough, runs buffer I/O completion after the unmount has
-completed.
+Finally I found some time to do some testing.
 
-To work around this problem, add readahead buffers to the LRU earlier
-than other buffers (when the buffer is allocated, specifically). The
-buffer hold count will ultimately remain until I/O completion, which
-means any shrinker activity will skip the buffer until then. This makes
-the buffer visible to xfs_wait_buftarg(), however, which ensures that an
-unmount or quiesce waits for I/O completion appropriately.
+In one shell, git did some checkouts:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+  while true; do git checkout master && git checkout b4.0; done
 
-This addresses the problem reproduced by the recently posted xfstests
-test:
+While in the other shell I just rebuild a kernel:
 
-  http://thread.gmane.org/gmane.comp.file-systems.fstests/2740
+  while true; do make clean && make -j200; done
 
-This could probably be made more involved, i.e., to create another list
-of buffers in flight or some such. This seems more simple/sane to me,
-however, and survives my testing so far...
+4e82901              crashed after 10 minutes
+4e82901 + e7d6ef979  no crash after 4 hours
+9f541801             no crash after 2 hours
+9f541801 + e7d6ef979 no crash after 12 hours
 
-Brian
-
- fs/xfs/xfs_buf.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4665ff6..3f03df9 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -590,8 +590,20 @@ xfs_buf_get_map(
- 		return NULL;
- 	}
- 
-+	/*
-+	 * If the buffer found doesn't match the one allocated above, somebody
-+	 * else beat us to insertion and we can toss the new one.
-+	 *
-+	 * If we did add the buffer and it happens to be readahead, add to the
-+	 * LRU now rather than waiting until the hold is released. Otherwise,
-+	 * the buffer is not visible to xfs_wait_buftarg() while in flight and
-+	 * nothing else prevents an unmount before I/O completion.
-+	 */
- 	if (bp != new_bp)
- 		xfs_buf_free(new_bp);
-+	else if (flags & XBF_READ_AHEAD &&
-+		 list_lru_add(&bp->b_target->bt_lru, &bp->b_lru))
-+		atomic_inc(&bp->b_hold);
- 
- found:
- 	if (!bp->b_addr) {
--- 
-2.5.5
+cheers,
+daniel
 
 _______________________________________________
 xfs mailing list
