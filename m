@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7C43F7CA2
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2016 01:51:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E4F08F8033
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2016 23:51:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 71yOb3lXaYUyVUHZ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jul 2016 23:51:39 -0700 (PDT)
-Date: Mon, 4 Jul 2016 14:51:37 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 16/20] reflink: test cross-mountpoint reflink and dedupe
-Message-ID: <20160704065137.GW23649@eguan.usersys.redhat.com>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-	<146612806287.25024.6626531953151914169.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 917927CA3
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 13:23:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62252304051
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 11:23:26 -0700 (PDT)
+Received: from COL004-OMC2S17.hotmail.com (col004-omc2s17.hotmail.com
+	[65.55.34.91]) by cuda.sgi.com with ESMTP id eEukQUJwVTAnoAVf
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 01 Jul 2016 11:23:24 -0700 (PDT)
+From: Anthony l <Martinezant2141@live.com>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+Date: Fri, 1 Jul 2016 18:23:21 +0000
+Message-ID: <SN1PR05MB23179FAACBDA0B885FE11D06CC250@SN1PR05MB2317.namprd05.prod.outlook.com>
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
+	<20160630220737.GS12670@dastard>,
+	<BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
+In-Reply-To: <BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612806287.25024.6626531953151914169.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +33,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3580839966424512389=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Andrew Ho <andrewho@animezone.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Jun 16, 2016 at 06:47:42PM -0700, Darrick J. Wong wrote:
-> Test sharing blocks via reflink and dedupe between two different
-> mountpoints of the same filesystem.  This shouldn't work, since
-> we don't allow cross-mountpoint functions.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/reflink        |    2 +
->  tests/generic/927     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/927.out |    9 +++++
->  tests/generic/928     |   86 ++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/928.out |   10 ++++++
->  tests/generic/group   |    2 +
->  6 files changed, 196 insertions(+), 1 deletion(-)
->  create mode 100755 tests/generic/927
->  create mode 100644 tests/generic/927.out
->  create mode 100755 tests/generic/928
->  create mode 100644 tests/generic/928.out
-> 
-> 
-> diff --git a/common/reflink b/common/reflink
-> index 4ec390d..1363971 100644
-> --- a/common/reflink
-> +++ b/common/reflink
-> @@ -107,7 +107,7 @@ _require_scratch_dedupe()
->  	_scratch_mount
->  	"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 65536" "$SCRATCH_MNT/file1" > /dev/null
->  	"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 65536" "$SCRATCH_MNT/file2" > /dev/null
-> -	testio="$("$XFS_IO_PROG" -f -c "dedupe $TEST_DIR/file1 0 0 65536" "$TEST_DIR/file2" 2>&1)"
-> +	testio="$("$XFS_IO_PROG" -f -c "dedupe $SCRATCH_MNT/file1 0 0 65536" "$SCRATCH_MNT/file2" 2>&1)"
->  	echo $testio | grep -q "Operation not supported" && \
->  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
->  	echo $testio | grep -q "Inappropriate ioctl for device" && \
+--===============3580839966424512389==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_SN1PR05MB23179FAACBDA0B885FE11D06CC250SN1PR05MB2317namp_"
 
-I think this hunk belongs to a seperate patch.
+--_000_SN1PR05MB23179FAACBDA0B885FE11D06CC250SN1PR05MB2317namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Eryu
+Thanks for the suggestions again.
+
+Still banging my head against a wall.
+
+So  I was trying a bunch of xfsrestore commands anything from -m -k -b to a=
+ll three but still the same result every time.
+
+xfsrestore -K -m -b 4096 -f /dev/nst0 ./
+
+xfsrestore  -K -r -f /dev/nst0 ./
+
+
+I don't think this is a corrupt tape or anything because I have around 7 -1=
+0 tapes that are all made on the irix machine, but all behave the same. I h=
+ave tried tar before but I get this is not a tar file or gzip file somethin=
+g like that.
+
+But I do have an observation. I had a tape (not made on the irix system) an=
+d I was able to pull a direct transfer of files with the dd command. i.e dd=
+ if=3D/dev/nst0 of=3D./somefile1 ibs =3D64k
+
+And I would only have to do this 3 -4 times to get like 30+ GBs of data off=
+ the tapes and a simple tar xvf command extracted these files just fine. Bu=
+t my question is how come when I try to do these with the tapes made on the=
+ Irix machine I only get about 200 mb at a time and there are like 190+ fil=
+es on each tape. Is this normal for an xfs file system on a tape drive?
+
+
+--_000_SN1PR05MB23179FAACBDA0B885FE11D06CC250SN1PR05MB2317namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;back=
+ground-color:#FFFFFF;font-family:Calibri,Arial,Helvetica,sans-serif;">
+<p>Thanks for the suggestions again.&nbsp;</p>
+<p>Still banging my head against a wall.&nbsp;</p>
+<p>So &nbsp;I was trying a bunch of xfsrestore commands anything from -m -k=
+ -b to all three but still the same result every&nbsp;time.&nbsp;</p>
+<p>xfsrestore -K -m -b 4096 -f /dev/nst0 ./</p>
+<p>xfsrestore&nbsp;&nbsp;-K -r -f /dev/nst0 ./&nbsp;</p>
+<p><br>
+</p>
+<p>I don't think this is a corrupt tape or anything because I have around 7=
+ -10 tapes that are all made on the irix machine, but all behave the same. =
+I have tried tar before but I get this is not a tar file or gzip file somet=
+hing like that.&nbsp;</p>
+<p>But I do have an observation. I had a tape (not made on the irix system)=
+ and I was able to pull a direct transfer of files with the dd command. i.e=
+ dd if=3D/dev/nst0 of=3D./somefile1 ibs =3D64k&nbsp;</p>
+<p>And I would only have to do this 3 -4 times to get like 30&#43; GBs of d=
+ata off the tapes and a simple tar xvf command extracted these files just f=
+ine. But my question is how come when I try to do these with the tapes made=
+ on the Irix machine I only get about
+ 200 mb at a time and there are like 190&#43; files on each tape. Is this n=
+ormal for an xfs file system on a tape drive?</p>
+<p><br>
+</p>
+<div style=3D"color: rgb(0, 0, 0);"></div>
+</div>
+</body>
+</html>
+
+--_000_SN1PR05MB23179FAACBDA0B885FE11D06CC250SN1PR05MB2317namp_--
+
+
+--===============3580839966424512389==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3580839966424512389==--
