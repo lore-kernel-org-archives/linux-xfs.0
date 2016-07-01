@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 396667CA3
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 14:45:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EF08C8F8040
-	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 12:45:26 -0700 (PDT)
-Received: from mx142.netapp.com (mx142.netapp.com [216.240.21.19]) by
-	cuda.sgi.com with ESMTP id CRK1q2Zz9ZJ8wAgG (version=TLSv1.2
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 01 Jul 2016 12:45:23 -0700 (PDT)
-From: Anna Schumaker <Anna.Schumaker@netapp.com>
-Subject: [PATCH] xfs_io: implement 'copy_range' command
-Date: Fri, 1 Jul 2016 15:45:20 -0400
-Message-ID: <20160701194520.28088-1-Anna.Schumaker@Netapp.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 98B317CA3
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 17:30:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 59B42304048
+	for <xfs@oss.sgi.com>; Fri,  1 Jul 2016 15:30:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EEwmRXOVNMSHLw7b (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 01 Jul 2016 15:30:15 -0700 (PDT)
+Date: Fri, 1 Jul 2016 18:30:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
+	post-unmount panic
+Message-ID: <20160701223011.GA28130@bfoster.bfoster>
+References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
+	<20160630224457.GT12670@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160630224457.GT12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,277 +31,141 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, david@fromorbit.com
-Cc: anna.schumaker@netapp.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Implements a new xfs_io command, named 'copy_range', which is supposed
-to be used to copy a range of data from one file to another.
+On Fri, Jul 01, 2016 at 08:44:57AM +1000, Dave Chinner wrote:
+> On Thu, Jun 30, 2016 at 08:53:49AM -0400, Brian Foster wrote:
+> > Newly allocated XFS metadata buffers are added to the LRU once the hold
+> > count is released, which typically occurs after I/O completion. There is
+> > no other mechanism at current that tracks the existence or I/O state of
+> > a new buffer. Further, readahead I/O tends to be submitted
+> > asynchronously by nature, which means the I/O can remain in flight and
+> > actually complete long after the calling context is gone. This means
+> > that file descriptors or any other holds on the filesystem can be
+> > released, allowing the filesystem to be unmounted while I/O is still in
+> > flight. When I/O completion occurs, core data structures may have been
+> > freed, causing completion to run into invalid memory accesses and likely
+> > to panic.
+> > 
+> > This problem is reproduced on XFS via directory readahead. A filesystem
+> > is mounted, a directory is opened/closed and the filesystem immediately
+> > unmounted. The open/close cycle triggers a directory readahead that if
+> > delayed long enough, runs buffer I/O completion after the unmount has
+> > completed.
+> > 
+> > To work around this problem, add readahead buffers to the LRU earlier
+> > than other buffers (when the buffer is allocated, specifically). The
+> > buffer hold count will ultimately remain until I/O completion, which
+> > means any shrinker activity will skip the buffer until then. This makes
+> > the buffer visible to xfs_wait_buftarg(), however, which ensures that an
+> > unmount or quiesce waits for I/O completion appropriately.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > This addresses the problem reproduced by the recently posted xfstests
+> > test:
+> > 
+> >   http://thread.gmane.org/gmane.comp.file-systems.fstests/2740
+> > 
+> > This could probably be made more involved, i.e., to create another list
+> > of buffers in flight or some such. This seems more simple/sane to me,
+> > however, and survives my testing so far...
+> > 
+> > Brian
+> > 
+> >  fs/xfs/xfs_buf.c | 12 ++++++++++++
+> >  1 file changed, 12 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 4665ff6..3f03df9 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -590,8 +590,20 @@ xfs_buf_get_map(
+> >  		return NULL;
+> >  	}
+> >  
+> > +	/*
+> > +	 * If the buffer found doesn't match the one allocated above, somebody
+> > +	 * else beat us to insertion and we can toss the new one.
+> > +	 *
+> > +	 * If we did add the buffer and it happens to be readahead, add to the
+> > +	 * LRU now rather than waiting until the hold is released. Otherwise,
+> > +	 * the buffer is not visible to xfs_wait_buftarg() while in flight and
+> > +	 * nothing else prevents an unmount before I/O completion.
+> > +	 */
+> >  	if (bp != new_bp)
+> >  		xfs_buf_free(new_bp);
+> > +	else if (flags & XBF_READ_AHEAD &&
+> > +		 list_lru_add(&bp->b_target->bt_lru, &bp->b_lru))
+> > +		atomic_inc(&bp->b_hold);
+> 
+> This doesn't sit right with me. The LRU is for "unused" objects, and
+> readahead objects are not unused until IO completes and nobody is
+> waiting on them.
+> 
+> As it is, this points out another problem with readahead buffers -
+> they aren't actually being cached properly because b_lru_ref == 0,
+> which means they are immediately reclaimed on IO completion rather
+> than being added to the LRU....
+> 
+> I also think that it's not sufficient to cover the generic case of
+> async IO that has no waiter. i.e. we could do get_buf, submit async
+> write, drop submitter reference, and now we have the same problem
+> but on a write.  i.e. this problem is and async IO issue, not a
+> readahead issue.
+> 
+> I think that it might be better to fix it by doing this:
+> 
+> 	1. ensure async IO submission always has b_lru_ref set, and
+> 	if it isn't, set it to 1. This ensures the buffer will be
+> 	added to the LRU on completion if it isn't already there.
+> 
+> 	2. keep a count of async buffer IO in progress. A per-cpu
+> 	counter in the buftarg will be fine for this. Increment in
+> 	xfs_buf_submit(), decrement in the xfs_buf_rele() call from
+> 	xfs_buf_iodone() once we've determined if the buffer needs
+> 	adding to the LRU or not.
+> 
+> 	3. make xfs_wait_buftarg() wait until the async IO count
+> 	goes to zero before it gives up trying to release buffers on
+> 	the LRU.
+> 
 
-Signed-off-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
----
- configure.ac          |   1 +
- include/builddefs.in  |   1 +
- io/Makefile           |   5 ++
- io/copy_file_range.c  | 148 ++++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c             |   1 +
- io/io.h               |   6 ++
- m4/package_libcdev.m4 |  17 ++++++
- 7 files changed, 179 insertions(+)
- create mode 100644 io/copy_file_range.c
+After playing with this a bit this afternoon, I don't think it is so
+straightforward to maintain consistency between xfs_buf_submit() and
+xfs_buf_rele(). Some buffers are actually never released (superblock,
+log buffers). Other buffers can actually be submitted for I/O multiple
+times before they are ultimately released (e.g., log recovery buffer
+read -> delwri submission).
 
-diff --git a/configure.ac b/configure.ac
-index 83f9020..464b314 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -122,6 +122,7 @@ AC_HAVE_GETMNTINFO
- AC_HAVE_FALLOCATE
- AC_HAVE_FIEMAP
- AC_HAVE_PREADV
-+AC_HAVE_COPY_FILE_RANGE
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_MNTENT
- AC_HAVE_FLS
-diff --git a/include/builddefs.in b/include/builddefs.in
-index b5ce336..7153d7a 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -102,6 +102,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
- HAVE_FALLOCATE = @have_fallocate@
- HAVE_FIEMAP = @have_fiemap@
- HAVE_PREADV = @have_preadv@
-+HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
- HAVE_READDIR = @have_readdir@
- HAVE_MNTENT = @have_mntent@
-diff --git a/io/Makefile b/io/Makefile
-index 0b53f41..62bc03b 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -59,6 +59,11 @@ CFILES += inject.c resblks.c
- LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
- endif
- 
-+ifeq ($(HAVE_COPY_FILE_RANGE),yes)
-+CFILES += copy_file_range.c
-+LCFLAGS += -DHAVE_COPY_FILE_RANGE
-+endif
-+
- ifeq ($(HAVE_SYNC_FILE_RANGE),yes)
- CFILES += sync_file_range.c
- LCFLAGS += -DHAVE_SYNC_FILE_RANGE
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-new file mode 100644
-index 0000000..eddc634
---- /dev/null
-+++ b/io/copy_file_range.c
-@@ -0,0 +1,148 @@
-+/*
-+ *  Copyright (c) 2016 Netapp, Inc. All rights reserved.
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-+ */
-+
-+#include <sys/syscall.h>
-+#include <sys/uio.h>
-+#include <xfs/xfs.h>
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "io.h"
-+
-+static cmdinfo_t copy_range_cmd;
-+
-+static void
-+copy_range_help(void)
-+{
-+	printf(_("\n\
-+ Copies a range of bytes from a file into the open file, overwriting any data\n\
-+ already there.\n\
-+\n\
-+ Example:\n\
-+ 'copy_range -s 100 -d 200 -l 300 some_file' - copies 300 bytes from some_file\n\
-+                                               at offset 100 into the open\n\
-+					       file at offset 200\n\
-+ 'copy_range some_file' - copies all bytes from some_file into the open file\n\
-+                          at position 0\n\
-+"));
-+}
-+
-+static loff_t
-+copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
-+{
-+	loff_t ret;
-+
-+	do {
-+		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
-+		if (ret == -1)
-+			return errno;
-+		len -= ret;
-+	} while (len > 0);
-+
-+	return 0;
-+}
-+
-+static off64_t
-+copy_src_filesize(int fd)
-+{
-+	struct stat64 st;
-+
-+	if (fstat64(fd, &st) < 0) {
-+		perror("fstat64");
-+		return -1;
-+	};
-+	return st.st_size;
-+}
-+
-+static int
-+copy_dst_truncate(void)
-+{
-+	int ret = ftruncate64(file->fd, 0);
-+	if (ret < 0)
-+		perror("ftruncate64");
-+	return ret;
-+}
-+
-+static int
-+copy_range_f(int argc, char **argv)
-+{
-+	loff_t src = 0;
-+	loff_t dst = 0;
-+	size_t len = 0;
-+	char *sp;
-+	int opt;
-+	int ret;
-+	int fd;
-+
-+	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
-+		switch (opt) {
-+		case 's':
-+			src = strtoull(optarg, &sp, 10);
-+			if (!sp || sp == optarg) {
-+				printf(_("invalid source offset -- %s\n"), sp);
-+				return 0;
-+			}
-+			break;
-+		case 'd':
-+			dst = strtoull(optarg, &sp, 10);
-+			if (!sp || sp == optarg) {
-+				printf(_("invalid destination offset -- %s\n"), sp);
-+				return 0;
-+			}
-+			break;
-+		case 'l':
-+			len = strtoull(optarg, &sp, 10);
-+			if (!sp || sp == optarg) {
-+				printf(_("invalid length -- %s\n"), sp);
-+				return 0;
-+			}
-+			break;
-+		}
-+	}
-+
-+	if (optind != argc - 1)
-+		return command_usage(&copy_range_cmd);
-+
-+	fd = openfile(argv[optind], NULL, IO_READONLY, 0);
-+	if (fd < 0)
-+		return 0;
-+
-+	if (src == 0 && dst == 0 && len == 0) {
-+		len = copy_src_filesize(fd);
-+		copy_dst_truncate();
-+	}
-+
-+	ret = copy_file_range(fd, &src, &dst, len);
-+	close(fd);
-+	return ret;
-+}
-+
-+void
-+copy_range_init(void)
-+{
-+	copy_range_cmd.name = "copy_range";
-+	copy_range_cmd.cfunc = copy_range_f;
-+	copy_range_cmd.argmin = 1;
-+	copy_range_cmd.argmax = 7;
-+	copy_range_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file");
-+	copy_range_cmd.oneline = _("Copy a range of data between two files");
-+	copy_range_cmd.help = copy_range_help;
-+
-+	add_command(&copy_range_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index 51f1f5c..efe7390 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -56,6 +56,7 @@ init_commands(void)
- {
- 	attr_init();
- 	bmap_init();
-+	copy_range_init();
- 	fadvise_init();
- 	file_init();
- 	flink_init();
-diff --git a/io/io.h b/io/io.h
-index 172b1f8..2bc7ac4 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -150,6 +150,12 @@ extern void		fiemap_init(void);
- #define fiemap_init()	do { } while (0)
- #endif
- 
-+#ifdef HAVE_COPY_FILE_RANGE
-+extern void		copy_range_init(void);
-+#else
-+#define copy_range_init()	do { } while (0)
-+#endif
-+
- #ifdef HAVE_SYNC_FILE_RANGE
- extern void		sync_range_init(void);
- #else
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 0165310..7a847e9 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -154,6 +154,23 @@ AC_DEFUN([AC_HAVE_PREADV],
-   ])
- 
- #
-+# Check if we have a copy_file_range system call (Linux)
-+#
-+AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
-+  [ AC_MSG_CHECKING([for copy_file_range])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/syscall.h>
-+#include <unistd.h>
-+    ], [
-+         syscall(__NR_copy_file_range, 0, 0, 0, 0, 0, 0);
-+    ], have_copy_file_range=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_copy_file_range)
-+  ])
-+
-+#
- # Check if we have a sync_file_range libc call (Linux)
- #
- AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
--- 
-2.9.0
+I have a semi-functional patch that holds more of a pure I/O count,
+which means the count is decremented immediately in xfs_buf_ioend()
+rather than deferred to release. One downside is that while this
+technically still resolves the original problem, it's racy in that the
+count is dropped before the buffer is added to the LRU. This still works
+for the original problem because we also drain the ioend workqueue in
+xfs_wait_buftarg(), but it's not correct because we allow for
+non-deferred completion in the event of I/O errors (i.e.,
+xfs_buf_ioend() called directly from xfs_buf_submit()).
+
+Brian
+
+> That will ensure readahead buffers are cached, and we capture both
+> async read and async write buffers in xfs_wait_buftarg().
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
