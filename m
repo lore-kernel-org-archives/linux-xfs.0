@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 00D197CA0
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 18:18:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DE40AC005
-	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 16:18:19 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	IFsgH34EYwOADzNf for <xfs@oss.sgi.com>;
-	Thu, 30 Jun 2016 16:16:03 -0700 (PDT)
-Date: Fri, 1 Jul 2016 09:16:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: iomap infrastructure and multipage writes V5
-Message-ID: <20160630231601.GU12670@dastard>
-References: <1464792297-13185-1-git-send-email-hch@lst.de>
-	<20160628002649.GI12670@dastard> <20160630172239.GA23082@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160630172239.GA23082@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 640617CA1
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 23:44:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 244508F8040
+	for <xfs@oss.sgi.com>; Thu, 30 Jun 2016 21:44:32 -0700 (PDT)
+Received: from nm17-vm5.access.bullet.mail.gq1.yahoo.com
+	(nm17-vm5.access.bullet.mail.gq1.yahoo.com [216.39.63.135]) by
+	cuda.sgi.com with ESMTP id eVhqNHrquKNn5GJu (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 30 Jun 2016 21:44:29 -0700 (PDT)
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
+	<20160630220737.GS12670@dastard>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <20160630220737.GS12670@dastard>
+Message-Id: <BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
+From: Andrew Ho <andrewho@animezone.org>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+Date: Fri, 1 Jul 2016 00:44:26 -0400
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,79 +35,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Thu, Jun 30, 2016 at 07:22:39PM +0200, Christoph Hellwig wrote:
-> On Tue, Jun 28, 2016 at 10:26:49AM +1000, Dave Chinner wrote:
-> > Christoph, it look slike there's an ENOSPC+ENOMEM behavioural regression here.
-> > generic/224 on my 1p/1GB RAM VM using a 1k lock size filesystem has
-> > significantly different behaviour once ENOSPC is hit withi this patchset.
-> > 
-> > It ends up with an endless stream of errors like this:
+I did restore the irix tape on Linux by using the command "tar".  tar xv is for restore.
+If the tape was backup by a propriety backup software on SGI Irix, it is difficult to restore on Linux.
+
+     Andrew
+
+     Pressure creates diamond.
+
+> On Jun 30, 2016, at 6:07 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
-> I've spent some time trying to reproduce this.  I'm actually getting
-> the OOM killer almost reproducible for for-next without the iomap
-> patches as well when just using 1GB of mem.  1400 MB is the minimum
-> I can reproducibly finish the test with either code base.
+>> On Thu, Jun 30, 2016 at 12:04:07PM -0500, Eric Sandeen wrote:
+>> 
+>> 
+>>> On 6/30/16 11:59 AM, Anthony l wrote:
+>>> I don't think this is a multi tape dump. But then again i don't know for sure. I recently got a job and this is my first 'project'. I have about 10 tapes each are labeled a month and a year, so I don't think they are multi tape because they span like 3 years 2004-2007 . Although for the current tape I am working on right now if I select 1 skip, I'll get to another back up labeled "incremental backup 1" or something similar. Using the verbosity output here is what I got. (also using interactive restore). I went ahead and specified byte size 4096. Through earlier test using the dd command I determined that was the correct size. Ill post one without byte size specified too. I just saw it in that post and thought it might help.
+>>> 
+>>> Here is the output with verbosity.
+>>> 
+>>> http://pastebin.com/Nd6BqNc5
+>>> 
+>>> The out is the same with or without -b 4096.
+>>> 
+>>> http://pastebin.com/0dxbCvyc (no -b)
+>> 
+>> 
+>> interactively restore from this dump?
+>> 1: skip
+>> 2: interactively restore
+>> (default)
+>> ->2
+>> ++++================++++
+>> missing some stuff------
+>> 
+>> ^^^ is that your comment, or actual output?
+>> 
+>> Looks like it eventually encountered a short read:
+>> 
+>> xfsrestore: drive op: read: wanted 131072 (0x20000)
+>> xfsrestore: tape op: reading 245760 bytes
+>> xfsrestore: tape op read of 245760 bytes short: nread == 4096
+>> xfsrestore: tape op: get status
+>> xfsrestore: tape status = wprot onl
+>> xfsrestore: short read record 1 (nread == 4096)
+>> xfsrestore: drive op read returning error rval=1
+>> 
+>> in dmesg, is there any sort of IO error from the tape?
 > 
-> But with the 1400 MB setup I see a few interesting things.  Even
-> with the baseline, no-iomap case I see a few errors in the log:
+> So xfs_reatore is wanting to find the session inventory in that
+> last media file, and it would appear that it isn't there or shorter
+> than expected. A tape problem, perhaps? Have you tried running
+> xfs_restore using the minimal tape protocol (-m)?
 > 
-> [   70.407465] Filesystem "vdc": reserve blocks depleted! Consider increasing
-> reserve pool
-> size.
-> [   70.195645] XFS (vdc): page discard on page ffff88005682a988, inode 0xd3, offset 761856.
-> [   70.408079] Buffer I/O error on dev vdc, logical block 1048513, lost async
-> page write
-> [   70.408598] Buffer I/O error on dev vdc, logical block 1048514, lost async
-> page write
->  27s
+> Another option is to try to restore the dump files from tape to a
+> local file on disk and see if that can be parsed instead.
 > 
-> With iomap I also see the spew of page discard errors your see, but while
-> I see a lot of them, the rest still finishes after a reasonable time,
-> just a few seconds more than the pre-iomap baseline.  I also see the
-> reserve block depleted message in this case.
-
-The reserve block pool depleted message is normal for me in this
-test.  We're throwing a thousand concurrent processes at the
-filesystem at ENOSPC, and so the metadata reservation for the
-delayed allocation totals quite a lot. We only reserve 8192 blocks
-for the reserve pool, so a delalloc reservation for one page on each
-file (4 blocks per page, which means a couple of blocks for the
-metadata reservation via the indlen calculation) is going to consume
-the reserve pool quite quickly if the up front reservation
-overshoots the XFS_ALLOC_SET_ASIDE() ENOSPC threshold.
-
-> Digging into the reserve block depleted message - it seems we have
-> too many parallel iomap_allocate transactions going on.  I suspect
-> this might be because the writeback code will not finish a writeback
-> context if we have multiple blocks inside a page, which can
-> happen easily for this 1k ENOSPC setup.
-
-Right - this test has regularly triggered that warning on this
-particular test setup for me - it's not something new to the iomap
-patchset.
-
-> I've not had time to fully
-> check if this is what really happens, but I did a quick hack (see below)
-> to only allocate 1k at a time in iomap_begin, and with that generic/224
-> finishes without the warning spew.  Of course this isn't a real fix,
-> and I need to fully understand what's going on in writeback due to
-> different allocation / dirtying patterns from the iomap change.
-
-Which tends to indicate that the multi-block allocation has a larger
-indlen reservation, and that's what is causing the code to hit
-whatever edge-case that is leading to it not recovering. However,
-I'm still wondering how we are not throwing ENOSPC back to userspace
-at XFS_ALLOC_SET_ASIDE limits.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> The other thing you might want to do is upgrade xfsdump to the
+> latest version - you're running 3.1.1 and the current version is
+> 3.1.6. I doubt it will change the behaviour, but at least it will
+> give us something to work from...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
