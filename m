@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E05FA7CA1
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2016 19:15:44 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5AFA97CA3
+	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 15:41:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 766B9AC002
-	for <xfs@oss.sgi.com>; Sun,  3 Jul 2016 17:15:44 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	lErTIETPOwYidyEu for <xfs@oss.sgi.com>;
-	Sun, 03 Jul 2016 17:15:41 -0700 (PDT)
-Date: Mon, 4 Jul 2016 10:15:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question: Old Irix tape backup. Recovery on Linux
-	(xfsdump/xfsrestore)
-Message-ID: <20160704001540.GX12670@dastard>
-References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
-	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
-	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
-	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
-	<dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
-	<20160630220737.GS12670@dastard>
-	<BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
-	<SN1PR05MB23179FAACBDA0B885FE11D06CC250@SN1PR05MB2317.namprd05.prod.outlook.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D15B8F8033
+	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 13:41:32 -0700 (PDT)
+Received: from mail-vk0-f42.google.com (mail-vk0-f42.google.com
+	[209.85.213.42]) by cuda.sgi.com with ESMTP id hVNqDoHjdBQUykvs
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 02 Jul 2016 13:41:30 -0700 (PDT)
+Received: by mail-vk0-f42.google.com with SMTP id c2so192258467vkg.1
+	for <xfs@oss.sgi.com>; Sat, 02 Jul 2016 13:41:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <SN1PR05MB23179FAACBDA0B885FE11D06CC250@SN1PR05MB2317.namprd05.prod.outlook.com>
+In-Reply-To: <57781AE6.10605@clear.net.nz>
+References: <57781AE6.10605@clear.net.nz>
+From: Nick Fisk <friskyfisk10@googlemail.com>
+Date: Sat, 2 Jul 2016 21:41:28 +0100
+Message-ID: <CAC5UwBhzdrJymG6doGbG7pDk5C+-xzvdaQH10aRsQSMRN+i1ew@mail.gmail.com>
+Subject: Re: High Fragmentation with XFS and NFS Sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,50 +31,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Anthony l <Martinezant2141@live.com>
-Cc: Andrew Ho <andrewho@animezone.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Richard Scobie <r.scobie@clear.net.nz>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 01, 2016 at 06:23:21PM +0000, Anthony l wrote:
-> But I do have an observation. I had a tape (not made on the irix
-> system) and I was able to pull a direct transfer of files with the
-> dd command. i.e dd if=/dev/nst0 of=./somefile1 ibs =64k
-> 
-> And I would only have to do this 3 -4 times to get like 30+ GBs of
-> data off the tapes and a simple tar xvf command extracted these
-> files just fine. But my question is how come when I try to do
-> these with the tapes made on the Irix machine I only get about 200
-> mb at a time and there are like 190+ files on each tape. Is this
-> normal for an xfs file system on a tape drive?
+On 2 July 2016 at 20:49, Richard Scobie <r.scobie@clear.net.nz> wrote:
+>
+>  Nick Fisk wrote:
+>
+> "So it looks like each parallel IO thread is being
+> allocated next to each other rather than at spaced out regions of the disk."
+>
+> It's possible that the "filestreams" XFS mount option may help you out. See:
+>
+>
+> http://www.xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch06s16.html
 
->From the xfsrestore man page:
+Thanks, I will see if this helps. Should I have any concern about
+ongoing IO once the VM has been copied? That link seems to suggest
+problems if the file is appended again at a later date. I believe the
+holes shown below are due to it being a sparse file.
 
-Media Errors
+Would also using swalloc and a large swidth have any effect, or is
+this like the allocsize, ignored once the file is closed?
 
-       xfsdump  is  tolerant of media errors, but cannot do error
-       correction.  If a media error occurs in the body of a media
-       file, the filesystem file represented at that point is lost.
-       The bad portion of the media is skipped, and the restoration
-       resumes at the next filesystem file after the bad portion of
-       the media.
+I've been doing a bit more digging and I think the problem is a bit
+more complex than I first thought. ESX seems to multithread the copy
+with lots of parallel 64kb io's, I believe looking at xfs_bmap that
+some these threads are also getting written out of order, which
+properly isn't helping, although this is probably a minor problem in
+comparison. This example file is 40GB and has nearly 50,000 extents.
 
-       If a media error occurs in the beginning of the media file,
-       the entire media file is lost.  For this reason, large dumps
-       are broken into a number of reasonably sized media files.
-       The restore resumes with the next media file.
+        0: [0..127]: 5742779480..5742779607 128 blocks
+        1: [128..2047]: hole 1920 blocks
+        2: [2048..2175]: 5742779736..5742779863 128 blocks
+        3: [2176..2303]: 5742779608..5742779735 128 blocks
+        4: [2304..2431]: 5742779864..5742779991 128 blocks
+        5: [2432..4351]: hole 1920 blocks
+        6: [4352..4607]: 5742779992..5742780247 256 blocks
+        7: [4608..12543]: hole 7936 blocks
+        8: [12544..12671]: 5742780248..5742780375 128 blocks
+        9: [12672..13695]: 5742798928..5742799951 1024 blocks
+        10: [13696..13823]: 5742813392..5742813519 128 blocks
+        11: [13824..13951]: 5742813648..5742813775 128 blocks
+        12: [13952..14079]: 5742813264..5742813391 128 blocks
+        13: [14080..14207]: 5742813520..5742813647 128 blocks <-- Next
+to 10 on disk
+        14: [14208..14719]: 5742813776..5742814287 512 blocks <-- Next
+to 11 on disk
+        15: [14720..15359]: 5742837840..5742838479 640 blocks
+        16: [15360..15487]: 5743255760..5743255887 128 blocks
+        17: [15488..15743]: 5742838608..5742838863 256 blocks
+        18: [15744..15871]: 5743133904..5743134031 128 blocks
+        19: [15872..15999]: 5743134288..5743134415 128 blocks
+        20: [16000..16127]: 5743255632..5743255759 128 blocks
+        21: [16128..16255]: 5743133776..5743133903 128 blocks
+        22: [16256..16383]: 5743134032..5743134159 128 blocks
+        23: [16384..16511]: 5742838480..5742838607 128 blocks
+        24: [16512..16895]: 5743255888..5743256271 384 blocks
+        25: [16896..17023]: 5743134416..5743134543 128 blocks
+        26: [17024..17151]: 5743134160..5743134287 128 blocks
 
+Thanks,
+Nick
 
-The error you are seeing is with the last media file in the dump
-which, IIRC, contains critical inventory information and so restore
-cannot continue without that media file. You need to work out why
-that last media file is returning a short read, once once you solve
-that problem xfsrestore should work correctly.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>
+> Regards,
+>
+> Richard
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
