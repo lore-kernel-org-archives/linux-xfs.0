@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 117927CA3
-	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 03:52:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B82EA304039
-	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 01:52:50 -0700 (PDT)
-Received: from mail-vk0-f52.google.com (mail-vk0-f52.google.com
-	[209.85.213.52]) by cuda.sgi.com with ESMTP id FL2Z4AX5Q3XXQ2mH
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6445F7CA2
+	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 16:31:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D2A22AC001
+	for <xfs@oss.sgi.com>; Sat,  2 Jul 2016 14:31:00 -0700 (PDT)
+Received: from mail-vk0-f53.google.com (mail-vk0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id aD8agDhBfA2U0cm0
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 02 Jul 2016 01:52:42 -0700 (PDT)
-Received: by mail-vk0-f52.google.com with SMTP id m127so120811235vkb.3
-	for <xfs@oss.sgi.com>; Sat, 02 Jul 2016 01:52:42 -0700 (PDT)
+	Sat, 02 Jul 2016 14:30:58 -0700 (PDT)
+Received: by mail-vk0-f53.google.com with SMTP id c2so192939618vkg.1
+	for <xfs@oss.sgi.com>; Sat, 02 Jul 2016 14:30:58 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAC5UwBgS-q4e9KQmHNEZ9SNDQ8G9t8=U5+-YVs9vjZ_VCGiokQ@mail.gmail.com>
+References: <CAC5UwBi8Skjx90_XC5Z5B8P+CadawBZ3iUabKtm-2ZvrkgocZQ@mail.gmail.com>
+	<20160702201249.GH4917@birch.djwong.org>
+	<CAC5UwBgS-q4e9KQmHNEZ9SNDQ8G9t8=U5+-YVs9vjZ_VCGiokQ@mail.gmail.com>
 From: Nick Fisk <friskyfisk10@googlemail.com>
-Date: Sat, 2 Jul 2016 09:52:40 +0100
-Message-ID: <CAC5UwBi8Skjx90_XC5Z5B8P+CadawBZ3iUabKtm-2ZvrkgocZQ@mail.gmail.com>
-Subject: High Fragmentation with XFS and NFS Sync
+Date: Sat, 2 Jul 2016 22:30:56 +0100
+Message-ID: <CAC5UwBhQATvw2=nHz3ebgU04cqm=BLq0OfzE8CRSSkexcd9_eQ@mail.gmail.com>
+Subject: Re: High Fragmentation with XFS and NFS Sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,230 +29,163 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0041416797174361698=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs@oss.sgi.com
 
---===============0041416797174361698==
-Content-Type: multipart/alternative; boundary=94eb2c149e94d27fee0536a339e6
+On 2 July 2016 at 22:00, Nick Fisk <friskyfisk10@googlemail.com> wrote:
+> On 2 July 2016 at 21:12, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>> On Sat, Jul 02, 2016 at 09:52:40AM +0100, Nick Fisk wrote:
+>>> Hi, hope someone can help me here.
+>>>
+>>> I'm exporting some XFS fs's to ESX via NFS with the sync option enabled. I'm
+>>> seeing really heavy fragmentation when multiple VM's are copied onto the
+>>> share at the same time. I'm also seeing kmem_alloc failures, which is
+>>> probably the biggest problem as this effectively takes everything down.
+>>
+>> (Probably a result of loading the millions of bmbt extents into memory?)
+>
+> Yes I thought that was the case.
+>
+>>
+>>> Underlying storage is a Ceph RBD, the server the FS is running on, is
+>>> running kernel 4.5.7. Mount options are currently default. I'm seeing
+>>> Millions of extents, where the ideal is listed as a couple of thousand when
+>>> running xfs_db, there is only a couple of 100 files on the FS. It looks
+>>> like roughly the extent sizes roughly match the IO size that the VM's were
+>>> written to XFS with. So it looks like each parallel IO thread is being
+>>> allocated next to each other rather than at spaced out regions of the disk.
+>>>
+>>> From what I understand, this is because each NFS write opens and closes the
+>>> file which throws off any chance that XFS will be able to use its allocation
+>>> features to stop parallel write streams from interleaving with each other.
+>>>
+>>> Is there anything I can tune to try and give each write to each file a
+>>> little bit of space, so that it at least gives readahead a chance when
+>>> reading, that it might hit at least a few MB of sequential data?
+>>
+>> /me wonders if setting an extent size hint on the rootdir before copying
+>> the files over would help here...
+>
+> I've set a 16M hint and will copy a new VM over, interested to see
+> what happens. Thanks for the suggestion.
 
---94eb2c149e94d27fee0536a339e6
-Content-Type: text/plain; charset=UTF-8
-
-Hi, hope someone can help me here.
-
-I'm exporting some XFS fs's to ESX via NFS with the sync option enabled. I'm
-seeing really heavy fragmentation when multiple VM's are copied onto the
-share at the same time. I'm also seeing kmem_alloc failures, which is
-probably the biggest problem as this effectively takes everything down.
-
-Underlying storage is a Ceph RBD, the server the FS is running on, is
-running kernel 4.5.7. Mount options are currently default. I'm seeing
-Millions of extents, where the ideal is listed as a couple of thousand when
-running xfs_db, there is only a couple of 100 files on the FS. It looks
-like roughly the extent sizes roughly match the IO size that the VM's were
-written to XFS with. So it looks like each parallel IO thread is being
-allocated next to each other rather than at spaced out regions of the disk.
-
->From what I understand, this is because each NFS write opens and closes the
-file which throws off any chance that XFS will be able to use its allocation
-features to stop parallel write streams from interleaving with each other.
-
-Is there anything I can tune to try and give each write to each file a
-little bit of space, so that it at least gives readahead a chance when
-reading, that it might hit at least a few MB of sequential data?
-
-I have read that inode32 allocates more randomly compared to inode64, so I'm
-not sure if it's worth trying this as there will likely be less than a 1000
-files per FS.
-
-Or am I best just to run fsr after everything has been copied on?
-
-Thanks for any advice
-Nick
-
---94eb2c149e94d27fee0536a339e6
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><span style=3D"color:rgb(0,0,0);font-family:monospace;font=
--size:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-=
-spacing:normal;line-height:normal;text-align:start;text-indent:0px;text-tra=
-nsform:none;white-space:normal;word-spacing:0px;background-color:rgb(255,25=
-5,255);display:inline!important;float:none">Hi, hope someone can help me he=
-re.</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15p=
-x;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:n=
-ormal;line-height:normal;text-align:start;text-indent:0px;text-transform:no=
-ne;white-space:normal;word-spacing:0px"><br style=3D"color:rgb(0,0,0);font-=
-family:monospace;font-size:15px;font-style:normal;font-variant:normal;font-=
-weight:normal;letter-spacing:normal;line-height:normal;text-align:start;tex=
-t-indent:0px;text-transform:none;white-space:normal;word-spacing:0px"><span=
- style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:=
-normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-he=
-ight:normal;text-align:start;text-indent:0px;text-transform:none;white-spac=
-e:normal;word-spacing:0px;background-color:rgb(255,255,255);display:inline!=
-important;float:none">I&#39;m exporting some XFS fs&#39;s to ESX via NFS wi=
-th the sync option enabled. I&#39;m</span><br style=3D"color:rgb(0,0,0);fon=
-t-family:monospace;font-size:15px;font-style:normal;font-variant:normal;fon=
-t-weight:normal;letter-spacing:normal;line-height:normal;text-align:start;t=
-ext-indent:0px;text-transform:none;white-space:normal;word-spacing:0px"><sp=
-an style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-styl=
-e:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-=
-height:normal;text-align:start;text-indent:0px;text-transform:none;white-sp=
-ace:normal;word-spacing:0px;background-color:rgb(255,255,255);display:inlin=
-e!important;float:none">seeing really heavy fragmentation when multiple VM&=
-#39;s are copied onto the</span><br style=3D"color:rgb(0,0,0);font-family:m=
-onospace;font-size:15px;font-style:normal;font-variant:normal;font-weight:n=
-ormal;letter-spacing:normal;line-height:normal;text-align:start;text-indent=
-:0px;text-transform:none;white-space:normal;word-spacing:0px"><span style=
-=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:normal=
-;font-variant:normal;font-weight:normal;letter-spacing:normal;line-height:n=
-ormal;text-align:start;text-indent:0px;text-transform:none;white-space:norm=
-al;word-spacing:0px;background-color:rgb(255,255,255);display:inline!import=
-ant;float:none">share at the same time. I&#39;m also seeing kmem_alloc fail=
-ures, which is probably the biggest problem as this effectively takes every=
-thing down. <br><br>Underlying storage is a Ceph RBD, the server the FS is =
-running on, is running kernel 4.5.7. Mount options are currently default. I=
-&#39;m seeing Millions of extents, where the ideal is listed as a couple of=
- thousand when running xfs_db, there is only a couple of 100 files on the F=
-S. It looks like roughly the extent sizes roughly match the IO size that th=
-e VM&#39;s were written to XFS with. So it looks like each parallel IO thre=
-ad is being allocated next to each other rather than at spaced out regions =
-of the disk.</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font=
--size:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-=
-spacing:normal;line-height:normal;text-align:start;text-indent:0px;text-tra=
-nsform:none;white-space:normal;word-spacing:0px"><br style=3D"color:rgb(0,0=
-,0);font-family:monospace;font-size:15px;font-style:normal;font-variant:nor=
-mal;font-weight:normal;letter-spacing:normal;line-height:normal;text-align:=
-start;text-indent:0px;text-transform:none;white-space:normal;word-spacing:0=
-px"><span style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;fo=
-nt-style:normal;font-variant:normal;font-weight:normal;letter-spacing:norma=
-l;line-height:normal;text-align:start;text-indent:0px;text-transform:none;w=
-hite-space:normal;word-spacing:0px;background-color:rgb(255,255,255);displa=
-y:inline!important;float:none">From what I understand, this is because each=
- NFS write opens and closes the</span><br style=3D"color:rgb(0,0,0);font-fa=
-mily:monospace;font-size:15px;font-style:normal;font-variant:normal;font-we=
-ight:normal;letter-spacing:normal;line-height:normal;text-align:start;text-=
-indent:0px;text-transform:none;white-space:normal;word-spacing:0px"><span s=
-tyle=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:no=
-rmal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-heig=
-ht:normal;text-align:start;text-indent:0px;text-transform:none;white-space:=
-normal;word-spacing:0px;background-color:rgb(255,255,255);display:inline!im=
-portant;float:none">file which throws off any chance that XFS will be able =
-to use its allocation</span><br style=3D"color:rgb(0,0,0);font-family:monos=
-pace;font-size:15px;font-style:normal;font-variant:normal;font-weight:norma=
-l;letter-spacing:normal;line-height:normal;text-align:start;text-indent:0px=
-;text-transform:none;white-space:normal;word-spacing:0px"><span style=3D"co=
-lor:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:normal;font-=
-variant:normal;font-weight:normal;letter-spacing:normal;line-height:normal;=
-text-align:start;text-indent:0px;text-transform:none;white-space:normal;wor=
-d-spacing:0px;background-color:rgb(255,255,255);display:inline!important;fl=
-oat:none">features to stop parallel write streams from interleaving with ea=
-ch other.</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-si=
-ze:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-spa=
-cing:normal;line-height:normal;text-align:start;text-indent:0px;text-transf=
-orm:none;white-space:normal;word-spacing:0px"><br style=3D"color:rgb(0,0,0)=
-;font-family:monospace;font-size:15px;font-style:normal;font-variant:normal=
-;font-weight:normal;letter-spacing:normal;line-height:normal;text-align:sta=
-rt;text-indent:0px;text-transform:none;white-space:normal;word-spacing:0px"=
-><span style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-=
-style:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;l=
-ine-height:normal;text-align:start;text-indent:0px;text-transform:none;whit=
-e-space:normal;word-spacing:0px;background-color:rgb(255,255,255);display:i=
-nline!important;float:none">Is there anything I can tune to try and give ea=
-ch write to each file a</span><br style=3D"color:rgb(0,0,0);font-family:mon=
-ospace;font-size:15px;font-style:normal;font-variant:normal;font-weight:nor=
-mal;letter-spacing:normal;line-height:normal;text-align:start;text-indent:0=
-px;text-transform:none;white-space:normal;word-spacing:0px"><span style=3D"=
-color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:normal;fon=
-t-variant:normal;font-weight:normal;letter-spacing:normal;line-height:norma=
-l;text-align:start;text-indent:0px;text-transform:none;white-space:normal;w=
-ord-spacing:0px;background-color:rgb(255,255,255);display:inline!important;=
-float:none">little bit of space, so that it at least gives readahead a chan=
-ce when</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-size=
-:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-spaci=
-ng:normal;line-height:normal;text-align:start;text-indent:0px;text-transfor=
-m:none;white-space:normal;word-spacing:0px"><span style=3D"color:rgb(0,0,0)=
-;font-family:monospace;font-size:15px;font-style:normal;font-variant:normal=
-;font-weight:normal;letter-spacing:normal;line-height:normal;text-align:sta=
-rt;text-indent:0px;text-transform:none;white-space:normal;word-spacing:0px;=
-background-color:rgb(255,255,255);display:inline!important;float:none">read=
-ing, that it might hit at least a few MB of sequential data?</span><br styl=
-e=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:norma=
-l;font-variant:normal;font-weight:normal;letter-spacing:normal;line-height:=
-normal;text-align:start;text-indent:0px;text-transform:none;white-space:nor=
-mal;word-spacing:0px"><br style=3D"color:rgb(0,0,0);font-family:monospace;f=
-ont-size:15px;font-style:normal;font-variant:normal;font-weight:normal;lett=
-er-spacing:normal;line-height:normal;text-align:start;text-indent:0px;text-=
-transform:none;white-space:normal;word-spacing:0px"><span style=3D"color:rg=
-b(0,0,0);font-family:monospace;font-size:15px;font-style:normal;font-varian=
-t:normal;font-weight:normal;letter-spacing:normal;line-height:normal;text-a=
-lign:start;text-indent:0px;text-transform:none;white-space:normal;word-spac=
-ing:0px;background-color:rgb(255,255,255);display:inline!important;float:no=
-ne">I have read that inode32 allocates more randomly compared to inode64, s=
-o I&#39;m</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-si=
-ze:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-spa=
-cing:normal;line-height:normal;text-align:start;text-indent:0px;text-transf=
-orm:none;white-space:normal;word-spacing:0px"><span style=3D"color:rgb(0,0,=
-0);font-family:monospace;font-size:15px;font-style:normal;font-variant:norm=
-al;font-weight:normal;letter-spacing:normal;line-height:normal;text-align:s=
-tart;text-indent:0px;text-transform:none;white-space:normal;word-spacing:0p=
-x;background-color:rgb(255,255,255);display:inline!important;float:none">no=
-t sure if it&#39;s worth trying this as there will likely be less than a 10=
-00</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px=
-;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:no=
-rmal;line-height:normal;text-align:start;text-indent:0px;text-transform:non=
-e;white-space:normal;word-spacing:0px"><span style=3D"color:rgb(0,0,0);font=
--family:monospace;font-size:15px;font-style:normal;font-variant:normal;font=
--weight:normal;letter-spacing:normal;line-height:normal;text-align:start;te=
-xt-indent:0px;text-transform:none;white-space:normal;word-spacing:0px;backg=
-round-color:rgb(255,255,255);display:inline!important;float:none">files per=
- FS.</span><br style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15=
-px;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:=
-normal;line-height:normal;text-align:start;text-indent:0px;text-transform:n=
-one;white-space:normal;word-spacing:0px"><br style=3D"color:rgb(0,0,0);font=
--family:monospace;font-size:15px;font-style:normal;font-variant:normal;font=
--weight:normal;letter-spacing:normal;line-height:normal;text-align:start;te=
-xt-indent:0px;text-transform:none;white-space:normal;word-spacing:0px"><spa=
-n style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;font-style=
-:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-h=
-eight:normal;text-align:start;text-indent:0px;text-transform:none;white-spa=
-ce:normal;word-spacing:0px;background-color:rgb(255,255,255);display:inline=
-!important;float:none">Or am I best just to run fsr after everything has be=
-en copied on?</span><br style=3D"color:rgb(0,0,0);font-family:monospace;fon=
-t-size:15px;font-style:normal;font-variant:normal;font-weight:normal;letter=
--spacing:normal;line-height:normal;text-align:start;text-indent:0px;text-tr=
-ansform:none;white-space:normal;word-spacing:0px"><br style=3D"color:rgb(0,=
-0,0);font-family:monospace;font-size:15px;font-style:normal;font-variant:no=
-rmal;font-weight:normal;letter-spacing:normal;line-height:normal;text-align=
-:start;text-indent:0px;text-transform:none;white-space:normal;word-spacing:=
-0px"><span style=3D"color:rgb(0,0,0);font-family:monospace;font-size:15px;f=
-ont-style:normal;font-variant:normal;font-weight:normal;letter-spacing:norm=
-al;line-height:normal;text-align:start;text-indent:0px;text-transform:none;=
-white-space:normal;word-spacing:0px;background-color:rgb(255,255,255);displ=
-ay:inline!important;float:none">Thanks for any advice</span><br style=3D"co=
-lor:rgb(0,0,0);font-family:monospace;font-size:15px;font-style:normal;font-=
-variant:normal;font-weight:normal;letter-spacing:normal;line-height:normal;=
-text-align:start;text-indent:0px;text-transform:none;white-space:normal;wor=
-d-spacing:0px"><span style=3D"color:rgb(0,0,0);font-family:monospace;font-s=
-ize:15px;font-style:normal;font-variant:normal;font-weight:normal;letter-sp=
-acing:normal;line-height:normal;text-align:start;text-indent:0px;text-trans=
-form:none;white-space:normal;word-spacing:0px;background-color:rgb(255,255,=
-255);display:inline!important;float:none">Nick</span></div>
-
---94eb2c149e94d27fee0536a339e6--
+Well, I set the 16M hint at the root of the FS and proceeded to copy
+two VM's in parallel and got this after ~30-60s. But after rebooting,
+it looks like the extents were being allocated in larger blocks, so I
+guess you can call it progress. Any ideas?
 
 
---===============0041416797174361698==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jul  2 22:11:56 Proxy3 kernel: [48777.591415] XFS (rbd8): Access to
+block zero in inode 7054483473 start_block: 0 start_off: 0 blkcnt: 0
+extent-state: 0 lastx: 30d18
+Jul  2 22:11:56 Proxy3 kernel: [48777.602725] XFS (rbd8): Internal
+error XFS_WANT_CORRUPTED_GOTO at line 1947 of file
+/home/kernel/COD/linux/fs/xfs/libxfs/xfs_bmap.c.  Caller
+xfs_bmapi_write+0x749/0xa00 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608381] CPU: 3 PID: 1463 Comm:
+nfsd Tainted: G           OE   4.5.7-040507-generic #201606100436
+Jul  2 22:11:56 Proxy3 kernel: [48777.608385] Hardware name: VMware,
+Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS
+6.00 09/17/2015
+Jul  2 22:11:56 Proxy3 kernel: [48777.608389]  0000000000000286
+000000008a69edda ffff8800b76fb548 ffffffff813e1173
+Jul  2 22:11:56 Proxy3 kernel: [48777.608395]  00000000000000cc
+ffff8800b76fb6e0 ffff8800b76fb560 ffffffffc07ad60c
+Jul  2 22:11:56 Proxy3 kernel: [48777.608399]  ffffffffc077c959
+ffff8800b76fb658 ffffffffc0777a13 ffff8802116c9000
+Jul  2 22:11:56 Proxy3 kernel: [48777.608403] Call Trace:
+Jul  2 22:11:56 Proxy3 kernel: [48777.608471]  [<ffffffff813e1173>]
+dump_stack+0x63/0x90
+Jul  2 22:11:56 Proxy3 kernel: [48777.608566]  [<ffffffffc07ad60c>]
+xfs_error_report+0x3c/0x40 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608620]  [<ffffffffc077c959>] ?
+xfs_bmapi_write+0x749/0xa00 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608669]  [<ffffffffc0777a13>]
+xfs_bmap_add_extent_delay_real+0x883/0x1ce0 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608721]  [<ffffffffc077c959>]
+xfs_bmapi_write+0x749/0xa00 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608777]  [<ffffffffc07b8a8d>]
+xfs_iomap_write_allocate+0x16d/0x380 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608822]  [<ffffffffc07a25d3>]
+xfs_map_blocks+0x173/0x240 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608871]  [<ffffffffc07a33a8>]
+xfs_vm_writepage+0x198/0x660 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608902]  [<ffffffff811993a3>]
+__writepage+0x13/0x30
+Jul  2 22:11:56 Proxy3 kernel: [48777.608908]  [<ffffffff81199efe>]
+write_cache_pages+0x1fe/0x530
+Jul  2 22:11:56 Proxy3 kernel: [48777.608912]  [<ffffffff81199390>] ?
+wb_position_ratio+0x1f0/0x1f0
+Jul  2 22:11:56 Proxy3 kernel: [48777.608961]  [<ffffffffc07bbbaa>] ?
+xfs_iunlock+0xea/0x120 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.608970]  [<ffffffff8119a281>]
+generic_writepages+0x51/0x80
+Jul  2 22:11:56 Proxy3 kernel: [48777.609019]  [<ffffffffc07a31c3>]
+xfs_vm_writepages+0x53/0xa0 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609028]  [<ffffffff8119c73e>]
+do_writepages+0x1e/0x30
+Jul  2 22:11:56 Proxy3 kernel: [48777.609048]  [<ffffffff8118f516>]
+__filemap_fdatawrite_range+0xc6/0x100
+Jul  2 22:11:56 Proxy3 kernel: [48777.609053]  [<ffffffff8118f691>]
+filemap_write_and_wait_range+0x41/0x90
+Jul  2 22:11:56 Proxy3 kernel: [48777.609103]  [<ffffffffc07af7d3>]
+xfs_file_fsync+0x63/0x210 [xfs]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609130]  [<ffffffff81249e9b>]
+vfs_fsync_range+0x4b/0xb0
+Jul  2 22:11:56 Proxy3 kernel: [48777.609156]  [<ffffffffc04b856d>]
+nfsd_vfs_write+0x14d/0x380 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609176]  [<ffffffffc04babf0>]
+nfsd_write+0x120/0x2f0 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609190]  [<ffffffffc04c105c>]
+nfsd3_proc_write+0xbc/0x150 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609207]  [<ffffffffc04b3348>]
+nfsd_dispatch+0xb8/0x200 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609243]  [<ffffffffc03cd21c>]
+svc_process_common+0x40c/0x650 [sunrpc]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609267]  [<ffffffffc03ce5c3>]
+svc_process+0x103/0x1b0 [sunrpc]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609286]  [<ffffffffc04b2d8f>]
+nfsd+0xef/0x160 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609297]  [<ffffffffc04b2ca0>] ?
+nfsd_destroy+0x60/0x60 [nfsd]
+Jul  2 22:11:56 Proxy3 kernel: [48777.609322]  [<ffffffff810a06a8>]
+kthread+0xd8/0xf0
+Jul  2 22:11:56 Proxy3 kernel: [48777.609329]  [<ffffffff810a05d0>] ?
+kthread_create_on_node+0x1a0/0x1a0
+Jul  2 22:11:56 Proxy3 kernel: [48777.609369]  [<ffffffff81825bcf>]
+ret_from_fork+0x3f/0x70
+Jul  2 22:11:56 Proxy3 kernel: [48777.609374]  [<ffffffff810a05d0>] ?
+kthread_create_on_node+0x1a0/0x1a0
+Jul  2 22:11:56 Proxy3 kernel: [48777.609444] XFS (rbd8): Internal
+error xfs_trans_cancel at line 990 of file
+/home/kernel/COD/linux/fs/xfs/xfs_trans.c.  Caller
+xfs_iomap_write_allocate+0x270/0x380 [xfs]
+
+>
+>>
+>> --D
+>>
+>>>
+>>> I have read that inode32 allocates more randomly compared to inode64, so I'm
+>>> not sure if it's worth trying this as there will likely be less than a 1000
+>>> files per FS.
+>>>
+>>> Or am I best just to run fsr after everything has been copied on?
+>>>
+>>> Thanks for any advice
+>>> Nick
+>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0041416797174361698==--
