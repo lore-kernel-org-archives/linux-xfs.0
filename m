@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EE95E7CD3
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 08:21:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B1820304039
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 06:21:25 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6nfGJ0MWpBhCtUZ9 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jul 2016 06:21:23 -0700 (PDT)
-Date: Fri, 8 Jul 2016 09:21:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 030/119] xfs: rmap btree transaction reservations
-Message-ID: <20160708132120.GB59278@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612646482.12839.12293815646683700594.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612646482.12839.12293815646683700594.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6C61E7CB9
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 06:00:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2CE998F8033
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 04:00:29 -0700 (PDT)
+Received: from mail-qk0-f172.google.com (mail-qk0-f172.google.com
+	[209.85.220.172]) by cuda.sgi.com with ESMTP id
+	r68pfgo8qPIqvUMI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 04:00:18 -0700 (PDT)
+Received: by mail-qk0-f172.google.com with SMTP id s126so517532qkh.2
+	for <xfs@oss.sgi.com>; Tue, 05 Jul 2016 04:00:18 -0700 (PDT)
+Message-ID: <1467716413.3800.1.camel@redhat.com>
+Subject: Re: [PATCH v23 01/22] vfs: Add IS_ACL() and IS_RICHACL() tests
+From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 05 Jul 2016 07:00:13 -0400
+In-Reply-To: <1467294433-3222-2-git-send-email-agruenba@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-2-git-send-email-agruenba@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,245 +28,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Jun 16, 2016 at 06:21:04PM -0700, Darrick J. Wong wrote:
-> The rmap btrees will use the AGFL as the block allocation source, so
-> we need to ensure that the transaction reservations reflect the fact
-> this tree is modified by allocation and freeing. Hence we need to
-> extend all the extent allocation/free reservations used in
-> transactions to handle this.
-> 
-> Note that this also gets rid of the unused XFS_ALLOCFREE_LOG_RES
-> macro, as we now do buffer reservations based on the number of
-> buffers logged via xfs_calc_buf_res(). Hence we only need the buffer
-> count calculation now.
-> 
-> [darrick: use rmap_maxlevels when calculating log block resv]
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_trans_resv.c |   58 ++++++++++++++++++++++++++++------------
->  fs/xfs/libxfs/xfs_trans_resv.h |   10 -------
->  2 files changed, 41 insertions(+), 27 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 4c7eb9d..301ef2f 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -64,6 +64,30 @@ xfs_calc_buf_res(
->  }
->  
->  /*
-> + * Per-extent log reservation for the btree changes involved in freeing or
-> + * allocating an extent.  In classic XFS there were two trees that will be
-> + * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-> + * (rmapbt).  The number of blocks reserved is based on the formula:
-> + *
-> + * num trees * ((2 blocks/level * max depth) - 1)
-> + *
-> + * Keep in mind that max depth is calculated separately for each type of tree.
-> + */
-> +static uint
-> +xfs_allocfree_log_count(
-> +	struct xfs_mount *mp,
-> +	uint		num_ops)
-> +{
-> +	uint		blocks;
-> +
-> +	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-> +
-> +	return blocks;
-> +}
-> +
-> +/*
->   * Logging inodes is really tricksy. They are logged in memory format,
->   * which means that what we write into the log doesn't directly translate into
->   * the amount of space they use on disk.
-> @@ -126,7 +150,7 @@ xfs_calc_inode_res(
->   */
->  STATIC uint
->  xfs_calc_finobt_res(
-> -	struct xfs_mount 	*mp,
-> +	struct xfs_mount	*mp,
->  	int			alloc,
->  	int			modify)
->  {
-> @@ -137,7 +161,7 @@ xfs_calc_finobt_res(
->  
->  	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
->  	if (alloc)
-> -		res += xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1), 
-> +		res += xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  					XFS_FSB_TO_B(mp, 1));
->  	if (modify)
->  		res += (uint)XFS_FSB_TO_B(mp, 1);
-> @@ -188,10 +212,10 @@ xfs_calc_write_reservation(
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
->  				      XFS_FSB_TO_B(mp, 1)) +
->  		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
->  				      XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> @@ -217,10 +241,10 @@ xfs_calc_itruncate_reservation(
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
->  				      XFS_FSB_TO_B(mp, 1)) +
->  		    xfs_calc_buf_res(5, 0) +
-> -		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				     XFS_FSB_TO_B(mp, 1)) +
->  		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
->  				     mp->m_in_maxlevels, 0)));
-> @@ -247,7 +271,7 @@ xfs_calc_rename_reservation(
->  		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 3),
->  				      XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> @@ -286,7 +310,7 @@ xfs_calc_link_reservation(
->  		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				      XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> @@ -324,7 +348,7 @@ xfs_calc_remove_reservation(
->  		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
->  				      XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> @@ -371,7 +395,7 @@ xfs_calc_create_resv_alloc(
->  		mp->m_sb.sb_sectsize +
->  		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1));
->  }
->  
-> @@ -399,7 +423,7 @@ xfs_calc_icreate_resv_alloc(
->  	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
->  		mp->m_sb.sb_sectsize +
->  		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_finobt_res(mp, 0, 0);
->  }
-> @@ -483,7 +507,7 @@ xfs_calc_ifree_reservation(
->  		xfs_calc_buf_res(1, 0) +
->  		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
->  				 mp->m_in_maxlevels, 0) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_finobt_res(mp, 0, 1);
->  }
-> @@ -513,7 +537,7 @@ xfs_calc_growdata_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1));
->  }
->  
-> @@ -535,7 +559,7 @@ xfs_calc_growrtalloc_reservation(
->  		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
->  				 XFS_FSB_TO_B(mp, 1)) +
->  		xfs_calc_inode_res(mp, 1) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1));
->  }
->  
-> @@ -611,7 +635,7 @@ xfs_calc_addafork_reservation(
->  		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
->  		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
->  				 XFS_FSB_TO_B(mp, 1)) +
-> -		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-> +		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
->  				 XFS_FSB_TO_B(mp, 1));
->  }
->  
-> @@ -634,7 +658,7 @@ xfs_calc_attrinval_reservation(
->  		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
->  				     XFS_FSB_TO_B(mp, 1))),
->  		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> -		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
-> +		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
->  				     XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> @@ -701,7 +725,7 @@ xfs_calc_attrrm_reservation(
->  					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
->  		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-> -		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-> +		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
->  				      XFS_FSB_TO_B(mp, 1))));
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-> index 7978150..0eb46ed 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.h
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
-> @@ -68,16 +68,6 @@ struct xfs_trans_resv {
->  #define M_RES(mp)	(&(mp)->m_resv)
->  
->  /*
-> - * Per-extent log reservation for the allocation btree changes
-> - * involved in freeing or allocating an extent.
-> - * 2 trees * (2 blocks/level * max depth - 1) * block size
-> - */
-> -#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
-> -	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * (mp)->m_ag_maxlevels - 1)))
-> -#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
-> -	((nx) * (2 * (2 * (mp)->m_ag_maxlevels - 1)))
-> -
-> -/*
->   * Per-directory log reservation for any directory change.
->   * dir blocks: (1 btree block per level + data block + free block) * dblock size
->   * bmap btree: (levels + 2) * max depth * block size
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ2ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
+b3RlOgo+IFRoZSB2ZnMgZG9lcyBub3QgYXBwbHkgdGhlIHVtYXNrIGZvciBmaWxlIHN5c3RlbXMg
+dGhhdCBzdXBwb3J0IGFjbHMuCj4gVGhlIHRlc3QgdXNlZCBmb3IgdGhpcyB1c2VkIHRvIGJlIGNh
+bGxlZCBJU19QT1NJWEFDTCgpLsKgwqBTd2l0Y2ggdG8gYSBuZXcKPiBJU19BQ0woKSB0ZXN0IHRv
+IGNoZWNrIGZvciBlaXRoZXIgcG9zaXggYWNscyBvciByaWNoYWNscyBpbnN0ZWFkLsKgwqBBZGQg
+YQo+IG5ldyBNU19SSUNIQUNMIGZsYWcgYW5kIElTX1JJQ0hBQ0woKSB0ZXN0IGZvciByaWNoYWNs
+cyBhbG9uZS7CoMKgVGhlCj4gSVNfUE9TSVhBQ0woKSB0ZXN0IGlzIHN0aWxsIG5lZWRlZCBpbiBz
+b21lIHBsYWNlcyBsaWtlIG5mc2QuCj4gCj4gU2lnbmVkLW9mZi1ieTogQW5kcmVhcyBHcnVlbmJh
+Y2hlciA8YWdydWVuYmFAcmVkaGF0LmNvbT4KPiBSZXZpZXdlZC1ieTogSi4gQnJ1Y2UgRmllbGRz
+IDxiZmllbGRzQHJlZGhhdC5jb20+Cj4gUmV2aWV3ZWQtYnk6IEFuZHJlYXMgRGlsZ2VyIDxhZGls
+Z2VyQGRpbGdlci5jYT4KPiBSZXZpZXdlZC1ieTogU3RldmUgRnJlbmNoIDxzdGV2ZS5mcmVuY2hA
+cHJpbWFyeWRhdGEuY29tPgo+IC0tLQo+IMKgZnMvS2NvbmZpZ8KgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqB8wqDCoDMgKysrCj4gwqBmcy9uYW1laS5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoHzCoMKgNiArKystLS0KPiDCoGluY2x1ZGUvbGludXgvZnMuaMKgwqDCoMKgwqDCoHwgMTIg
+KysrKysrKysrKysrCj4gwqBpbmNsdWRlL3VhcGkvbGludXgvZnMuaCB8wqDCoDMgKystCj4gwqA0
+IGZpbGVzIGNoYW5nZWQsIDIwIGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pCj4gCj4gZGlm
+ZiAtLWdpdCBhL2ZzL0tjb25maWcgYi9mcy9LY29uZmlnCj4gaW5kZXggYjhmY2I0MS4uZGU2ZGU1
+NSAxMDA2NDQKPiAtLS0gYS9mcy9LY29uZmlnCj4gKysrIGIvZnMvS2NvbmZpZwo+IEBAIC02NCw2
+ICs2NCw5IEBAIGVuZGlmICMgQkxPQ0sKPiDCoGNvbmZpZyBGU19QT1NJWF9BQ0wKPiDCoAlkZWZf
+Ym9vbCBuCj4gwqAKPiArY29uZmlnIEZTX1JJQ0hBQ0wKPiArCWRlZl9ib29sIG4KPiArCj4gwqBj
+b25maWcgRVhQT1JURlMKPiDCoAl0cmlzdGF0ZQo+IMKgCj4gZGlmZiAtLWdpdCBhL2ZzL25hbWVp
+LmMgYi9mcy9uYW1laS5jCj4gaW5kZXggNzA1ODBhYi4uN2NjNTQ4NyAxMDA2NDQKPiAtLS0gYS9m
+cy9uYW1laS5jCj4gKysrIGIvZnMvbmFtZWkuYwo+IEBAIC0zMTE1LDcgKzMxMTUsNyBAQCBzdGF0
+aWMgaW50IGxvb2t1cF9vcGVuKHN0cnVjdCBuYW1laWRhdGEgKm5kLCBzdHJ1Y3QgcGF0aCAqcGF0
+aCwKPiDCoAnCoCogT19FWENMIG9wZW4gd2Ugd2FudCB0byByZXR1cm4gRUVYSVNUIG5vdCBFUk9G
+UykuCj4gwqAJwqAqLwo+IMKgCWlmIChvcGVuX2ZsYWcgJiBPX0NSRUFUKSB7Cj4gLQkJaWYgKCFJ
+U19QT1NJWEFDTChkaXItPmRfaW5vZGUpKQo+ICsJCWlmICghSVNfQUNMKGRpci0+ZF9pbm9kZSkp
+Cj4gwqAJCQltb2RlICY9IH5jdXJyZW50X3VtYXNrKCk7Cj4gwqAJCWlmICh1bmxpa2VseSghZ290
+X3dyaXRlKSkgewo+IMKgCQkJY3JlYXRlX2Vycm9yID0gLUVST0ZTOwo+IEBAIC0zNzA5LDcgKzM3
+MDksNyBAQCByZXRyeToKPiDCoAlpZiAoSVNfRVJSKGRlbnRyeSkpCj4gwqAJCXJldHVybiBQVFJf
+RVJSKGRlbnRyeSk7Cj4gwqAKPiAtCWlmICghSVNfUE9TSVhBQ0wocGF0aC5kZW50cnktPmRfaW5v
+ZGUpKQo+ICsJaWYgKCFJU19BQ0wocGF0aC5kZW50cnktPmRfaW5vZGUpKQo+IMKgCQltb2RlICY9
+IH5jdXJyZW50X3VtYXNrKCk7Cj4gwqAJZXJyb3IgPSBzZWN1cml0eV9wYXRoX21rbm9kKCZwYXRo
+LCBkZW50cnksIG1vZGUsIGRldik7Cj4gwqAJaWYgKGVycm9yKQo+IEBAIC0zNzgwLDcgKzM3ODAs
+NyBAQCByZXRyeToKPiDCoAlpZiAoSVNfRVJSKGRlbnRyeSkpCj4gwqAJCXJldHVybiBQVFJfRVJS
+KGRlbnRyeSk7Cj4gwqAKPiAtCWlmICghSVNfUE9TSVhBQ0wocGF0aC5kZW50cnktPmRfaW5vZGUp
+KQo+ICsJaWYgKCFJU19BQ0wocGF0aC5kZW50cnktPmRfaW5vZGUpKQo+IMKgCQltb2RlICY9IH5j
+dXJyZW50X3VtYXNrKCk7Cj4gwqAJZXJyb3IgPSBzZWN1cml0eV9wYXRoX21rZGlyKCZwYXRoLCBk
+ZW50cnksIG1vZGUpOwo+IMKgCWlmICghZXJyb3IpCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGlu
+dXgvZnMuaCBiL2luY2x1ZGUvbGludXgvZnMuaAo+IGluZGV4IGRkMjg4MTQuLjRhZDEzMGMgMTAw
+NjQ0Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9mcy5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9mcy5o
+Cj4gQEAgLTE4NTAsNiArMTg1MCwxMiBAQCBzdHJ1Y3Qgc3VwZXJfb3BlcmF0aW9ucyB7Cj4gwqAj
+ZGVmaW5lIElTX0lNTVVUQUJMRShpbm9kZSkJKChpbm9kZSktPmlfZmxhZ3MgJiBTX0lNTVVUQUJM
+RSkKPiDCoCNkZWZpbmUgSVNfUE9TSVhBQ0woaW5vZGUpCV9fSVNfRkxHKGlub2RlLCBNU19QT1NJ
+WEFDTCkKPiDCoAo+ICsjaWZkZWYgQ09ORklHX0ZTX1JJQ0hBQ0wKPiArI2RlZmluZSBJU19SSUNI
+QUNMKGlub2RlKQlfX0lTX0ZMRyhpbm9kZSwgTVNfUklDSEFDTCkKPiArI2Vsc2UKPiArI2RlZmlu
+ZSBJU19SSUNIQUNMKGlub2RlKQkwCj4gKyNlbmRpZgo+ICsKPiDCoCNkZWZpbmUgSVNfREVBRERJ
+Uihpbm9kZSkJKChpbm9kZSktPmlfZmxhZ3MgJiBTX0RFQUQpCj4gwqAjZGVmaW5lIElTX05PQ01U
+SU1FKGlub2RlKQkoKGlub2RlKS0+aV9mbGFncyAmIFNfTk9DTVRJTUUpCj4gwqAjZGVmaW5lIElT
+X1NXQVBGSUxFKGlub2RlKQkoKGlub2RlKS0+aV9mbGFncyAmIFNfU1dBUEZJTEUpCj4gQEAgLTE4
+NjMsNiArMTg2OSwxMiBAQCBzdHJ1Y3Qgc3VwZXJfb3BlcmF0aW9ucyB7Cj4gwqAJCQkJwqAoaW5v
+ZGUpLT5pX3JkZXYgPT0gV0hJVEVPVVRfREVWKQo+IMKgCj4gwqAvKgo+ICsgKiBJU19BQ0woKSB0
+ZWxscyB0aGUgVkZTIHRvIG5vdCBhcHBseSB0aGUgdW1hc2sKPiArICogYW5kIHVzZSBjaGVja19h
+Y2wgZm9yIGFjbCBwZXJtaXNzaW9uIGNoZWNrcyB3aGVuIGRlZmluZWQuCj4gKyAqLwo+ICsjZGVm
+aW5lIElTX0FDTChpbm9kZSkJCV9fSVNfRkxHKGlub2RlLCBNU19QT1NJWEFDTCB8IE1TX1JJQ0hB
+Q0wpCj4gKwo+ICsvKgo+IMKgICogSW5vZGUgc3RhdGUgYml0cy7CoMKgUHJvdGVjdGVkIGJ5IGlu
+b2RlLT5pX2xvY2sKPiDCoCAqCj4gwqAgKiBUaHJlZSBiaXRzIGRldGVybWluZSB0aGUgZGlydHkg
+c3RhdGUgb2YgdGhlIGlub2RlLCBJX0RJUlRZX1NZTkMsCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUv
+dWFwaS9saW51eC9mcy5oIGIvaW5jbHVkZS91YXBpL2xpbnV4L2ZzLmgKPiBpbmRleCAzYjAwZjdj
+Li5mOWM0MWVmIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvdWFwaS9saW51eC9mcy5oCj4gKysrIGIv
+aW5jbHVkZS91YXBpL2xpbnV4L2ZzLmgKPiBAQCAtMTIwLDcgKzEyMCw3IEBAIHN0cnVjdCBpbm9k
+ZXNfc3RhdF90IHsKPiDCoCNkZWZpbmUgTVNfVkVSQk9TRQkzMjc2OAkvKiBXYXIgaXMgcGVhY2Uu
+IFZlcmJvc2l0eSBpcyBzaWxlbmNlLgo+IMKgCQkJCcKgwqDCoE1TX1ZFUkJPU0UgaXMgZGVwcmVj
+YXRlZC4gKi8KPiDCoCNkZWZpbmUgTVNfU0lMRU5UCTMyNzY4Cj4gLSNkZWZpbmUgTVNfUE9TSVhB
+Q0wJKDE8PDE2KQkvKiBWRlMgZG9lcyBub3QgYXBwbHkgdGhlIHVtYXNrICovCj4gKyNkZWZpbmUg
+TVNfUE9TSVhBQ0wJKDE8PDE2KQkvKiBTdXBwb3J0cyBQT1NJWCBBQ0xzICovCj4gwqAjZGVmaW5l
+IE1TX1VOQklOREFCTEUJKDE8PDE3KQkvKiBjaGFuZ2UgdG8gdW5iaW5kYWJsZSAqLwo+IMKgI2Rl
+ZmluZSBNU19QUklWQVRFCSgxPDwxOCkJLyogY2hhbmdlIHRvIHByaXZhdGUgKi8KPiDCoCNkZWZp
+bmUgTVNfU0xBVkUJKDE8PDE5KQkvKiBjaGFuZ2UgdG8gc2xhdmUgKi8KPiBAQCAtMTMwLDYgKzEz
+MCw3IEBAIHN0cnVjdCBpbm9kZXNfc3RhdF90IHsKPiDCoCNkZWZpbmUgTVNfSV9WRVJTSU9OCSgx
+PDwyMykgLyogVXBkYXRlIGlub2RlIElfdmVyc2lvbiBmaWVsZCAqLwo+IMKgI2RlZmluZSBNU19T
+VFJJQ1RBVElNRQkoMTw8MjQpIC8qIEFsd2F5cyBwZXJmb3JtIGF0aW1lIHVwZGF0ZXMgKi8KPiDC
+oCNkZWZpbmUgTVNfTEFaWVRJTUUJKDE8PDI1KSAvKiBVcGRhdGUgdGhlIG9uLWRpc2sgW2FjbV10
+aW1lcyBsYXppbHkgKi8KPiArI2RlZmluZSBNU19SSUNIQUNMCSgxPDwyNikgLyogU3VwcG9ydHMg
+cmljaGFjbHMgKi8KPiDCoAo+IMKgLyogVGhlc2Ugc2IgZmxhZ3MgYXJlIGludGVybmFsIHRvIHRo
+ZSBrZXJuZWwgKi8KPiDCoCNkZWZpbmUgTVNfTk9TRUMJKDE8PDI4KQoKUmV2aWV3ZWQtYnk6IEpl
+ZmYgTGF5dG9uIDxqbGF5dG9uQHJlZGhhdC5jb20+CgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
