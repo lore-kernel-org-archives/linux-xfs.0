@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 29AFE7CA3
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 17:55:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D0457304138
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 15:55:20 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	UlXNsfNRYeOjLZ1M for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2016 15:55:18 -0700 (PDT)
-Date: Fri, 8 Jul 2016 08:55:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 026/119] xfs: add owner field to extent allocation and
-	freeing
-Message-ID: <20160707225516.GI12670@dastard>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612643914.12839.17925699349002137545.stgit@birch.djwong.org>
-	<20160707151227.GA33740@bfoster.bfoster>
-	<20160707190956.GA12567@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id E77047CE1
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 12:02:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B8C7A304048
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 10:01:59 -0700 (PDT)
+Received: from BAY004-OMC4S2.hotmail.com (bay004-omc4s2.hotmail.com
+	[65.54.190.204]) by cuda.sgi.com with ESMTP id ARzct2TQ3RW3SGTP
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 Jul 2016 10:01:54 -0700 (PDT)
+From: Anthony l <Martinezant2141@live.com>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+Date: Tue, 5 Jul 2016 17:01:48 +0000
+Message-ID: <SN1PR05MB2317EA24D96CB85D8CBDF33DCC390@SN1PR05MB2317.namprd05.prod.outlook.com>
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
+	<20160630220737.GS12670@dastard>	,
+	<BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
+	<SN1PR05MB23179FAACBDA0B885FE11D06CC250@SN1PR05MB2317.namprd05.prod.outlook.com>,
+	<1467401339.7631.221.camel@filmlight.ltd.uk>
+In-Reply-To: <1467401339.7631.221.camel@filmlight.ltd.uk>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160707190956.GA12567@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,72 +35,122 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4088481683207692496=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Roger Willcocks <roger@filmlight.ltd.uk>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Jul 07, 2016 at 12:09:56PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2016 at 11:12:27AM -0400, Brian Foster wrote:
-> > On Thu, Jun 16, 2016 at 06:20:39PM -0700, Darrick J. Wong wrote:
-> > > For the rmap btree to work, we have to feed the extent owner
-> > > information to the the allocation and freeing functions. This
-> > > information is what will end up in the rmap btree that tracks
-> > > allocated extents. While we technically don't need the owner
-> > > information when freeing extents, passing it allows us to validate
-> > > that the extent we are removing from the rmap btree actually
-> > > belonged to the owner we expected it to belong to.
-....
-> > > +/*
-> > > + * Special owner types.
-> > > + *
-> > > + * Seeing as we only support up to 8EB, we have the upper bit of the owner field
-> > > + * to tell us we have a special owner value. We use these for static metadata
-> > > + * allocated at mkfs/growfs time, as well as for freespace management metadata.
-> > > + */
-> > > +#define XFS_RMAP_OWN_NULL	(-1ULL)	/* No owner, for growfs */
-> > > +#define XFS_RMAP_OWN_UNKNOWN	(-2ULL)	/* Unknown owner, for EFI recovery */
-> > > +#define XFS_RMAP_OWN_FS		(-3ULL)	/* static fs metadata */
-> > > +#define XFS_RMAP_OWN_LOG	(-4ULL)	/* static fs metadata */
-> > > +#define XFS_RMAP_OWN_AG		(-5ULL)	/* AG freespace btree blocks */
-> > 
-> > How about XFS_RMAP_OWN_AGFL? OWN_AG confuses me into thinking it's for
-> > AG headers, but IIUC that is covered by OWN_FS.
+--===============4088481683207692496==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_SN1PR05MB2317EA24D96CB85D8CBDF33DCC390SN1PR05MB2317namp_"
 
-AG headers are static metadata, laid down by mkfs. They are always
-owned by the filesystem, hence the "OWN_FS" name.
+--_000_SN1PR05MB2317EA24D96CB85D8CBDF33DCC390SN1PR05MB2317namp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-> or _SPACEBT for AG {free,rmap} space btrees?
+Yes so no luck yet. Even specifying the block size as 24576.
 
-IIRC, the reason I simply named them as "Owned by the AG" is that
-the space tracking btree blocks are always considered free space. THey can
-move between the freespace tree and the AGFL without consuming free
-space and it's not trivial to separate their classification to
-anything other than "blocks used by the AG but are free space" e.g.
-in he middle of a transaction that allocates and free
-blocks the same block can move like this:
+But I did come across something interesting. I decided to give up on these =
+tapes and try out some other ones. One tape in particular was listed as an =
+Amanda dump file. upon researching I came across a page labeled Amanda Chea=
+t Sheet. http://www.mast.queensu.ca/computing/department/service.catalogue/=
+backup/cheat-sheet.html
 
- bnobt block -> AGFL -> cntbt block -> AGFL -> rmapbt block
+On that site there is a section talking about XFS file systems, SGI, and re=
+storing them using Amanda + xfsrestore. Ill give this a shot I just got to =
+figure out how to use Amanda on a local machine.
 
-Hence blocks on the AGFL are considered to be the same as
-bno/cnt/rmapbt blocks for the purpose of owner identification.
-Otherwise we'd have to modify the rmapbt every time we move a block
-to/from the AGFL, and that then leads to recursion problems and lots
-of unnecessary overhead...
+Does anyone think this may be my problem, and or any advice?
+Thanks.
 
-Feel free to change the names, but I don't think we can change owner
-classifications of the blocks they represent...
+--_000_SN1PR05MB2317EA24D96CB85D8CBDF33DCC390SN1PR05MB2317namp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"><!-- P {margin-top:0;margi=
+n-bottom:0;} --></style>
+</head>
+<body dir=3D"ltr">
+<div id=3D"divtagdefaultwrapper" style=3D"font-size:12pt;color:#000000;back=
+ground-color:#FFFFFF;font-family:Calibri,Arial,Helvetica,sans-serif;">
+<p><span style=3D"font-size: 10pt;">Yes so no luck yet. Even specifying the=
+ block size as</span><span style=3D"font-size: 10pt;">
+</span><font size=3D"2"><span style=3D"font-size: 10pt;">24576.</span></fon=
+t></p>
+<p><font size=3D"2"><span style=3D"font-size:10pt;"><span style=3D"font-siz=
+e: 10pt;">But I did come ac</span><span style=3D"font-size: 10pt;">ro</span=
+><span style=3D"font-size: 10pt;">ss something i</span><span style=3D"font-=
+size: 10pt;">nteresting. I decided to give up
+ on </span><span style=3D"font-size: 10pt;">t</span><span style=3D"font-siz=
+e: 10pt;">hese tapes and try out some ot</span><span style=3D"font-size: 10=
+pt;">her ones</span><span style=3D"font-size: 10pt;">.</span><span style=3D=
+"font-size: 10pt;"> One tape
+</span><span style=3D"font-size: 10pt;">in particular</span><span style=3D"=
+font-size: 10pt;">
+</span><span style=3D"font-size: 10pt;">was listed a</span><span style=3D"f=
+ont-size: 10pt;">s an
+</span><span style=3D"font-size: 10pt;">Amanda</span><span style=3D"font-si=
+ze: 10pt;"> dump file.
+</span><span style=3D"font-size: 10pt;">upon researchi</span><span style=3D=
+"font-size: 10pt;">ng I came across a page
+</span><span style=3D"font-size: 10pt;">labeled</span><span style=3D"font-s=
+ize: 10pt;">
+</span><span style=3D"font-size: 10pt;">Amanda</span><span style=3D"font-si=
+ze: 10pt;">
+</span><span style=3D"font-size: 10pt;">Cheat</span><span style=3D"font-siz=
+e: 10pt;"> Sheet</span><span style=3D"font-size: 10pt;">.
+</span><a id=3D"LPlnk963857" href=3D"http://www.mast.queensu.ca/computing/d=
+epartment/service.catalogue/backup/cheat-sheet.html" class=3D"OWAAutoLink">=
+<span style=3D"font-size: 10pt;">http://www.mast.queensu.ca/computing/depar=
+tment/service.catalogue/backup/cheat-sheet.html</span></a></span></font></p=
+>
+<p><font size=3D"2"><span style=3D"font-size:10pt;"><span style=3D"font-siz=
+e: 10pt;">On that site there is a section talking about XFS file
+</span><span style=3D"font-size: 10pt;">syste</span><span style=3D"font-siz=
+e: 10pt;">ms, SGI,</span><span style=3D"font-size: 10pt;"> and restor</span=
+><span style=3D"font-size: 10pt;">ing them using</span><span style=3D"font-=
+size: 10pt;">
+</span><span style=3D"font-size: 10pt;">Amanda</span><span style=3D"font-si=
+ze: 10pt;"> &#43; xfsrestore</span><span style=3D"font-size: 10pt;">.</span=
+><span style=3D"font-size: 10pt;"> Ill give this a shot
+</span><span style=3D"font-size: 10pt;">I just got to figure out how to use=
+ </span>
+<span style=3D"font-size: 10pt;">Amanda</span><span style=3D"font-size: 10p=
+t;"> on a local machi</span><span style=3D"font-size: 10pt;">ne.
+</span><br>
+</span></font><span style=3D"font-size: 10pt;"></span></p>
+<span style=3D"font-size: 10pt;"></span>
+<div style=3D"color: rgb(0, 0, 0);"><font size=3D"2"><span style=3D"font-si=
+ze:10pt;"><span style=3D"font-size: 10pt;"></span>
+<div class=3D"PlainText"><br>
+<span style=3D"font-size: 10pt;">Does anyone think this may be my problem, =
+and or any ad</span><span style=3D"font-size: 10pt;">vice?
+</span><br>
+Thanks. <br>
+</div>
+</span></font></div>
+</div>
+</body>
+</html>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--_000_SN1PR05MB2317EA24D96CB85D8CBDF33DCC390SN1PR05MB2317namp_--
+
+
+--===============4088481683207692496==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4088481683207692496==--
