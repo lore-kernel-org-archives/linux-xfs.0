@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7CC787CDC
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 08:21:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41EDB304048
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 06:21:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uTCfCHFpsQUEnQqa (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jul 2016 06:21:57 -0700 (PDT)
-Date: Fri, 8 Jul 2016 09:21:55 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 031/119] xfs: rmap btree requires more reserved free space
-Message-ID: <20160708132154.GC59278@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612647122.12839.13018596528662402580.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146612647122.12839.13018596528662402580.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9338A7CD5
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 09:22:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 660388F8039
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 07:22:26 -0700 (PDT)
+Received: from mail-qk0-f179.google.com (mail-qk0-f179.google.com
+	[209.85.220.179]) by cuda.sgi.com with ESMTP id
+	8NKxiatT7mGmdrPX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:22:20 -0700 (PDT)
+Received: by mail-qk0-f179.google.com with SMTP id t127so289341053qkf.1
+	for <xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:22:20 -0700 (PDT)
+Message-ID: <1467728537.3800.32.camel@redhat.com>
+Subject: Re: [PATCH v23 08/22] richacl: Compute maximum file masks from an acl
+From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 05 Jul 2016 10:22:17 -0400
+In-Reply-To: <1467294433-3222-9-git-send-email-agruenba@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-9-git-send-email-agruenba@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,345 +28,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Jun 16, 2016 at 06:21:11PM -0700, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The rmap btree is allocated from the AGFL, which means we have to
-> ensure ENOSPC is reported to userspace before we run out of free
-> space in each AG. The last allocation in an AG can cause a full
-> height rmap btree split, and that means we have to reserve at least
-> this many blocks *in each AG* to be placed on the AGFL at ENOSPC.
-> Update the various space calculation functiosn to handle this.
-
-				       functions
-
-> 
-> Also, because the macros are now executing conditional code and are called quite
-> frequently, convert them to functions that initialise varaibles in the struct
-> xfs_mount, use the new variables everywhere and document the calculations
-> better.
-> 
-> v2: If rmapbt is disabled, it is incorrect to require 1 extra AGFL block
-> for the rmapbt (due to the + 1); the entire clause needs to be gated
-> on the feature flag.
-> 
-> v3: Use m_rmap_maxlevels to determine min_free.
-> 
-> [darrick.wong@oracle.com: don't reserve blocks if !rmap]
-> [dchinner@redhat.com: update m_ag_max_usable after growfs]
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |   71 +++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_alloc.h |   41 +++-----------------------
->  fs/xfs/libxfs/xfs_bmap.c  |    2 +
->  fs/xfs/libxfs/xfs_sb.c    |    2 +
->  fs/xfs/xfs_discard.c      |    2 +
->  fs/xfs/xfs_fsops.c        |    5 ++-
->  fs/xfs/xfs_log_recover.c  |    1 +
->  fs/xfs/xfs_mount.c        |    2 +
->  fs/xfs/xfs_mount.h        |    2 +
->  fs/xfs/xfs_super.c        |    2 +
->  10 files changed, 88 insertions(+), 42 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 570ca17..4c8ffd4 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -63,6 +63,72 @@ xfs_prealloc_blocks(
->  }
->  
->  /*
-> + * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
-> + * AGF buffer (PV 947395), we place constraints on the relationship among
-> + * actual allocations for data blocks, freelist blocks, and potential file data
-> + * bmap btree blocks. However, these restrictions may result in no actual space
-> + * allocated for a delayed extent, for example, a data block in a certain AG is
-> + * allocated but there is no additional block for the additional bmap btree
-> + * block due to a split of the bmap btree of the file. The result of this may
-> + * lead to an infinite loop when the file gets flushed to disk and all delayed
-> + * extents need to be actually allocated. To get around this, we explicitly set
-> + * aside a few blocks which will not be reserved in delayed allocation.
-> + *
-> + * The minimum number of needed freelist blocks is 4 fsbs _per AG_ when we are
-> + * not using rmap btrees a potential split of file's bmap btree requires 1 fsb,
-> + * so we set the number of set-aside blocks to 4 + 4*agcount when not using
-> + * rmap btrees.
-> + *
-
-That's a bit wordy.
-
-> + * When rmap btrees are active, we have to consider that using the last block
-> + * in the AG can cause a full height rmap btree split and we need enough blocks
-> + * on the AGFL to be able to handle this. That means we have, in addition to
-> + * the above consideration, another (2 * mp->m_rmap_levels) - 1 blocks required
-> + * to be available to the free list.
-
-I'm probably missing something, but why does a full tree split require 2
-blocks per-level (minus 1)? Wouldn't that involve an allocated block per
-level (and possibly a new root block)?
-
-Otherwise, the rest looks good to me.
-
-Brian
-
-> + */
-> +unsigned int
-> +xfs_alloc_set_aside(
-> +	struct xfs_mount *mp)
-> +{
-> +	unsigned int	blocks;
-> +
-> +	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
-> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		return blocks;
-> +	return blocks + (mp->m_sb.sb_agcount * (2 * mp->m_rmap_maxlevels) - 1);
-> +}
-> +
-> +/*
-> + * When deciding how much space to allocate out of an AG, we limit the
-> + * allocation maximum size to the size the AG. However, we cannot use all the
-> + * blocks in the AG - some are permanently used by metadata. These
-> + * blocks are generally:
-> + *	- the AG superblock, AGF, AGI and AGFL
-> + *	- the AGF (bno and cnt) and AGI btree root blocks, and optionally
-> + *	  the AGI free inode and rmap btree root blocks.
-> + *	- blocks on the AGFL according to xfs_alloc_set_aside() limits
-> + *
-> + * The AG headers are sector sized, so the amount of space they take up is
-> + * dependent on filesystem geometry. The others are all single blocks.
-> + */
-> +unsigned int
-> +xfs_alloc_ag_max_usable(struct xfs_mount *mp)
-> +{
-> +	unsigned int	blocks;
-> +
-> +	blocks = XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)); /* ag headers */
-> +	blocks += XFS_ALLOC_AGFL_RESERVE;
-> +	blocks += 3;			/* AGF, AGI btree root blocks */
-> +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> +		blocks++;		/* finobt root block */
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> +		/* rmap root block + full tree split on full AG */
-> +		blocks += 1 + (2 * mp->m_ag_maxlevels) - 1;
-> +	}
-> +
-> +	return mp->m_sb.sb_agblocks - blocks;
-> +}
-> +
-> +/*
->   * Lookup the record equal to [bno, len] in the btree given by cur.
->   */
->  STATIC int				/* error */
-> @@ -1904,6 +1970,11 @@ xfs_alloc_min_freelist(
->  	/* space needed by-size freespace btree */
->  	min_free += min_t(unsigned int, pag->pagf_levels[XFS_BTNUM_CNTi] + 1,
->  				       mp->m_ag_maxlevels);
-> +	/* space needed reverse mapping used space btree */
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		min_free += min_t(unsigned int,
-> +				  pag->pagf_levels[XFS_BTNUM_RMAPi] + 1,
-> +				  mp->m_rmap_maxlevels);
->  
->  	return min_free;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 0721a48..7b6c66b 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -56,42 +56,6 @@ typedef unsigned int xfs_alloctype_t;
->  #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
->  
->  /*
-> - * In order to avoid ENOSPC-related deadlock caused by
-> - * out-of-order locking of AGF buffer (PV 947395), we place
-> - * constraints on the relationship among actual allocations for
-> - * data blocks, freelist blocks, and potential file data bmap
-> - * btree blocks. However, these restrictions may result in no
-> - * actual space allocated for a delayed extent, for example, a data
-> - * block in a certain AG is allocated but there is no additional
-> - * block for the additional bmap btree block due to a split of the
-> - * bmap btree of the file. The result of this may lead to an
-> - * infinite loop in xfssyncd when the file gets flushed to disk and
-> - * all delayed extents need to be actually allocated. To get around
-> - * this, we explicitly set aside a few blocks which will not be
-> - * reserved in delayed allocation. Considering the minimum number of
-> - * needed freelist blocks is 4 fsbs _per AG_, a potential split of file's bmap
-> - * btree requires 1 fsb, so we set the number of set-aside blocks
-> - * to 4 + 4*agcount.
-> - */
-> -#define XFS_ALLOC_SET_ASIDE(mp)  (4 + ((mp)->m_sb.sb_agcount * 4))
-> -
-> -/*
-> - * When deciding how much space to allocate out of an AG, we limit the
-> - * allocation maximum size to the size the AG. However, we cannot use all the
-> - * blocks in the AG - some are permanently used by metadata. These
-> - * blocks are generally:
-> - *	- the AG superblock, AGF, AGI and AGFL
-> - *	- the AGF (bno and cnt) and AGI btree root blocks
-> - *	- 4 blocks on the AGFL according to XFS_ALLOC_SET_ASIDE() limits
-> - *
-> - * The AG headers are sector sized, so the amount of space they take up is
-> - * dependent on filesystem geometry. The others are all single blocks.
-> - */
-> -#define XFS_ALLOC_AG_MAX_USABLE(mp)	\
-> -	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) - 7)
-> -
-> -
-> -/*
->   * Argument structure for xfs_alloc routines.
->   * This is turned into a structure to avoid having 20 arguments passed
->   * down several levels of the stack.
-> @@ -133,6 +97,11 @@ typedef struct xfs_alloc_arg {
->  #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
->  #define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
->  
-> +/* freespace limit calculations */
-> +#define XFS_ALLOC_AGFL_RESERVE	4
-> +unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
-> +unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
-> +
->  xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
->  		struct xfs_perag *pag, xfs_extlen_t need);
->  unsigned int xfs_alloc_min_freelist(struct xfs_mount *mp,
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2c28f2a..61c0231 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3672,7 +3672,7 @@ xfs_bmap_btalloc(
->  	args.fsbno = ap->blkno;
->  
->  	/* Trim the allocation back to the maximum an AG can fit. */
-> -	args.maxlen = MIN(ap->length, XFS_ALLOC_AG_MAX_USABLE(mp));
-> +	args.maxlen = MIN(ap->length, mp->m_ag_max_usable);
->  	args.firstblock = *ap->firstblock;
->  	blen = 0;
->  	if (nullfb) {
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index f86226b..59c9f59 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -749,6 +749,8 @@ xfs_sb_mount_common(
->  		mp->m_ialloc_min_blks = sbp->sb_spino_align;
->  	else
->  		mp->m_ialloc_min_blks = mp->m_ialloc_blks;
-> +	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
-> +	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> index 272c3f8..4ff499a 100644
-> --- a/fs/xfs/xfs_discard.c
-> +++ b/fs/xfs/xfs_discard.c
-> @@ -179,7 +179,7 @@ xfs_ioc_trim(
->  	 * matter as trimming blocks is an advisory interface.
->  	 */
->  	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
-> -	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)) ||
-> +	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
->  	    range.len < mp->m_sb.sb_blocksize)
->  		return -EINVAL;
->  
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 8a85e49..3772f6c 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -583,6 +583,7 @@ xfs_growfs_data_private(
->  	} else
->  		mp->m_maxicount = 0;
->  	xfs_set_low_space_thresholds(mp);
-> +	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
->  	/* update secondary superblocks. */
->  	for (agno = 1; agno < nagcount; agno++) {
-> @@ -720,7 +721,7 @@ xfs_fs_counts(
->  	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
->  	cnt->freeino = percpu_counter_read_positive(&mp->m_ifree);
->  	cnt->freedata = percpu_counter_read_positive(&mp->m_fdblocks) -
-> -							XFS_ALLOC_SET_ASIDE(mp);
-> +						mp->m_alloc_set_aside;
->  
->  	spin_lock(&mp->m_sb_lock);
->  	cnt->freertx = mp->m_sb.sb_frextents;
-> @@ -793,7 +794,7 @@ retry:
->  		__int64_t	free;
->  
->  		free = percpu_counter_sum(&mp->m_fdblocks) -
-> -							XFS_ALLOC_SET_ASIDE(mp);
-> +						mp->m_alloc_set_aside;
->  		if (!free)
->  			goto out; /* ENOSPC and fdblks_delta = 0 */
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 0c41bd2..b33187b 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -5027,6 +5027,7 @@ xlog_do_recover(
->  		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
->  		return error;
->  	}
-> +	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
->  
->  	xlog_recover_check_summary(log);
->  
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 8af1c88..879f3ef 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1219,7 +1219,7 @@ xfs_mod_fdblocks(
->  		batch = XFS_FDBLOCKS_BATCH;
->  
->  	__percpu_counter_add(&mp->m_fdblocks, delta, batch);
-> -	if (__percpu_counter_compare(&mp->m_fdblocks, XFS_ALLOC_SET_ASIDE(mp),
-> +	if (__percpu_counter_compare(&mp->m_fdblocks, mp->m_alloc_set_aside,
->  				     XFS_FDBLOCKS_BATCH) >= 0) {
->  		/* we had space! */
->  		return 0;
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 0ed0f29..b36676c 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -123,6 +123,8 @@ typedef struct xfs_mount {
->  	uint			m_in_maxlevels;	/* max inobt btree levels. */
->  	uint			m_rmap_maxlevels; /* max rmap btree levels */
->  	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
-> +	uint			m_alloc_set_aside; /* space we can't use */
-> +	uint			m_ag_max_usable; /* max space per AG */
->  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
->  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
->  	struct mutex		m_growlock;	/* growfs mutex */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index bf63f6d..1575849 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1076,7 +1076,7 @@ xfs_fs_statfs(
->  	statp->f_blocks = sbp->sb_dblocks - lsize;
->  	spin_unlock(&mp->m_sb_lock);
->  
-> -	statp->f_bfree = fdblocks - XFS_ALLOC_SET_ASIDE(mp);
-> +	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
->  	statp->f_bavail = statp->f_bfree;
->  
->  	fakeinos = statp->f_bfree << sbp->sb_inopblog;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ2ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
+b3RlOgo+IENvbXB1dGUgdXBwZXIgYm91bmQgb3duZXIsIGdyb3VwLCBhbmQgb3RoZXIgZmlsZSBt
+YXNrcyB3aXRoIGFzIGZldwo+IHBlcm1pc3Npb25zIGFzIHBvc3NpYmxlIHdpdGhvdXQgZGVueWlu
+ZyBhbnkgcGVybWlzc2lvbnMgdGhhdCB0aGUgTkZTdjQKPiBhY2wgaW4gYSByaWNoYWNsIGdyYW50
+cy4KPiAKPiBUaGlzIGFsZ29yaXRobSBpcyB1c2VkIHdoZW4gYSBmaWxlIGluaGVyaXRzIGFuIGFj
+bCBhdCBjcmVhdGUgdGltZSBhbmQKPiB3aGVuIGFuIGFjbCBpcyBzZXQgdmlhIGEgbWVjaGFuaXNt
+IHRoYXQgZG9lcyBub3QgcHJvdmlkZSBmaWxlIG1hc2tzCj4gKHN1Y2ggYXMgc2V0dGluZyBhbiBh
+Y2wgdmlhIG5mc2QpLsKgwqBXaGVuIHVzZXItc3BhY2Ugc2V0cyBhbiBhY2wgdmlhCj4gc2V0eGF0
+dHIsIHRoZSBleHRlbmRlZCBhdHRyaWJ1dGUgYWxyZWFkeSBpbmNsdWRlcyB0aGUgZmlsZSBtYXNr
+cy4KPiAKPiBTZXR0aW5nIGFuIGFjbCBhbHNvIHNldHMgdGhlIGZpbGUgbW9kZSBwZXJtaXNzaW9u
+IGJpdHM6IHRoZXkgYXJlCj4gZGV0ZXJtaW5lZCBieSB0aGUgZmlsZSBtYXNrczsgc2VlIHJpY2hh
+Y2xfbWFza3NfdG9fbW9kZSgpLgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1ZW5iYWNo
+ZXIgPGFncnVlbmJhQHJlZGhhdC5jb20+Cj4gUmV2aWV3ZWQtYnk6IEouIEJydWNlIEZpZWxkcyA8
+YmZpZWxkc0ByZWRoYXQuY29tPgo+IC0tLQo+IMKgZnMvcmljaGFjbC5jwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgfCAxNTcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrCj4gwqBpbmNsdWRlL2xpbnV4L3JpY2hhY2wuaCB8wqDCoMKgMSArCj4gwqAyIGZpbGVz
+IGNoYW5nZWQsIDE1OCBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3JpY2hhY2wu
+YyBiL2ZzL3JpY2hhY2wuYwo+IGluZGV4IGQwYTQxMzUuLjA1NjIyOGYgMTAwNjQ0Cj4gLS0tIGEv
+ZnMvcmljaGFjbC5jCj4gKysrIGIvZnMvcmljaGFjbC5jCj4gQEAgLTE4MSwzICsxODEsMTYwIEBA
+IHJpY2hhY2xfd2FudF90b19tYXNrKHVuc2lnbmVkIGludCB3YW50KQo+IMKgCXJldHVybiBtYXNr
+Owo+IMKgfQo+IMKgRVhQT1JUX1NZTUJPTF9HUEwocmljaGFjbF93YW50X3RvX21hc2spOwo+ICsK
+PiArLyoKPiArICogTm90ZTogZnVuY3Rpb25zIGxpa2UgcmljaGFjbF9hbGxvd2VkX3RvX3dobygp
+LCByaWNoYWNsX2dyb3VwX2NsYXNzX2FsbG93ZWQoKSwKPiArICogYW5kIHJpY2hhY2xfY29tcHV0
+ZV9tYXhfbWFza3MoKSBpdGVyYXRlIHRocm91Z2ggdGhlIGVudGlyZSBhY2wgaW4gcmV2ZXJzZQo+
+ICsgKiBvcmRlciBhcyBhbiBvcHRpbWl6YXRpb24uCj4gKyAqCj4gKyAqIEluIHRoZSBzdGFuZGFy
+ZCBhbGdvcml0aG0sIGFjZXMgYXJlIGNvbnNpZGVyZWQgaW4gZm9yd2FyZCBvcmRlci7CoMKgV2hl
+biBhCj4gKyAqIHByb2Nlc3MgbWF0Y2hlcyBhbiBhY2UsIHRoZSBwZXJtaXNzaW9ucyBpbiB0aGUg
+YWNlIGFyZSBlaXRoZXIgYWxsb3dlZCBvcgo+ICsgKiBkZW5pZWQgZGVwZW5kaW5nIG9uIHRoZSBh
+Y2UgdHlwZS7CoMKgT25jZSBhIHBlcm1pc3Npb24gaGFzIGJlZW4gYWxsb3dlZCBvcgo+ICsgKiBk
+ZW5pZWQsIGl0IGlzIG5vIGxvbmdlciBjb25zaWRlcmVkIGluIGZ1cnRoZXIgYWNlcy4KPiArICoK
+PiArICogQnkgaXRlcmF0aW5nIHRocm91Z2ggdGhlIGFjbCBpbiByZXZlcnNlIG9yZGVyLCB3ZSBj
+YW4gY29tcHV0ZSB0aGUgc2FtZQo+ICsgKiByZXN1bHQgd2l0aG91dCBoYXZpbmcgdG8ga2VlcCB0
+cmFjayBvZiB3aGljaCBwZXJtaXNzaW9ucyBoYXZlIGJlZW4gYWxsb3dlZAo+ICsgKiBhbmQgZGVu
+aWVkIGFscmVhZHkuCj4gKyAqLwo+IAoKQ2xldmVyIQoKCj4gKwo+ICsvKioKPiArICogcmljaGFj
+bF9hbGxvd2VkX3RvX3dob8KgwqAtwqDCoHBlcm1pc3Npb25zIGFsbG93ZWQgdG8gYSBzcGVjaWZp
+YyB3aG8gdmFsdWUKPiArICoKPiArICogQ29tcHV0ZSB0aGUgbWF4aW11bSBtYXNrIHZhbHVlcyBh
+bGxvd2VkIHRvIGEgc3BlY2lmaWMgd2hvIHZhbHVlLCB0YWtpbmcKPiArICogZXZlcnlvbmVAIGFj
+ZXMgaW50byBhY2NvdW50Lgo+ICsgKi8KPiArc3RhdGljIHVuc2lnbmVkIGludCByaWNoYWNsX2Fs
+bG93ZWRfdG9fd2hvKHN0cnVjdCByaWNoYWNsICphY2wsCj4gKwkJCQkJwqDCoMKgc3RydWN0IHJp
+Y2hhY2UgKndobykKPiArewo+ICsJc3RydWN0IHJpY2hhY2UgKmFjZTsKPiArCXVuc2lnbmVkIGlu
+dCBhbGxvd2VkID0gMDsKPiArCj4gKwlyaWNoYWNsX2Zvcl9lYWNoX2VudHJ5X3JldmVyc2UoYWNl
+LCBhY2wpIHsKPiArCQlpZiAocmljaGFjZV9pc19pbmhlcml0X29ubHkoYWNlKSkKPiArCQkJY29u
+dGludWU7Cj4gKwkJaWYgKHJpY2hhY2VfaXNfc2FtZV9pZGVudGlmaWVyKGFjZSwgd2hvKSB8fAo+
+ICsJCcKgwqDCoMKgcmljaGFjZV9pc19ldmVyeW9uZShhY2UpKSB7Cj4gKwkJCWlmIChyaWNoYWNl
+X2lzX2FsbG93KGFjZSkpCj4gKwkJCQlhbGxvd2VkIHw9IGFjZS0+ZV9tYXNrOwo+ICsJCQllbHNl
+IGlmIChyaWNoYWNlX2lzX2RlbnkoYWNlKSkKPiArCQkJCWFsbG93ZWQgJj0gfmFjZS0+ZV9tYXNr
+Owo+ICsJCX0KPiArCX0KPiArCXJldHVybiBhbGxvd2VkOwo+ICt9Cj4gKwo+ICsvKioKPiArICog
+cmljaGFjbF9ncm91cF9jbGFzc19hbGxvd2VkwqDCoC3CoMKgbWF4aW11bSBwZXJtaXNzaW9ucyBv
+ZiB0aGUgZ3JvdXAgY2xhc3MKPiArICoKPiArICogQ29tcHV0ZSB0aGUgbWF4aW11bSBtYXNrIHZh
+bHVlcyBhbGxvd2VkIHRvIGEgcHJvY2VzcyBpbiB0aGUgZ3JvdXAgY2xhc3MKPiArICogKGkuZS4s
+IGEgcHJvY2VzcyB3aGljaCBpcyBub3QgdGhlIG93bmVyIGJ1dCBpcyBpbiB0aGUgb3duaW5nIGdy
+b3VwIG9yCj4gKyAqIG1hdGNoZXMgYSB1c2VyIG9yIGdyb3VwIGFjbCBlbnRyeSkuwqDCoFRoaXMg
+aW5jbHVkZXMgcGVybWlzc2lvbnMgZ3JhbnRlZCBvcgo+ICsgKiBkZW5pZWQgYnkgZXZlcnlvbmVA
+IGFjZXMuCj4gKyAqCj4gKyAqIFNlZSByaWNoYWNsX2NvbXB1dGVfbWF4X21hc2tzKCkuCj4gKyAq
+Lwo+ICtzdGF0aWMgdW5zaWduZWQgaW50IHJpY2hhY2xfZ3JvdXBfY2xhc3NfYWxsb3dlZChzdHJ1
+Y3QgcmljaGFjbCAqYWNsKQo+ICt7Cj4gKwlzdHJ1Y3QgcmljaGFjZSAqYWNlOwo+ICsJdW5zaWdu
+ZWQgaW50IGV2ZXJ5b25lX2FsbG93ZWQgPSAwLCBncm91cF9jbGFzc19hbGxvd2VkID0gMDsKPiAr
+CWludCBoYWRfZ3JvdXBfYWNlID0gMDsKPiArCj4gKwlyaWNoYWNsX2Zvcl9lYWNoX2VudHJ5X3Jl
+dmVyc2UoYWNlLCBhY2wpIHsKPiArCQlpZiAocmljaGFjZV9pc19pbmhlcml0X29ubHkoYWNlKSB8
+fAo+ICsJCcKgwqDCoMKgcmljaGFjZV9pc19vd25lcihhY2UpKQo+ICsJCQljb250aW51ZTsKPiAr
+Cj4gKwkJaWYgKHJpY2hhY2VfaXNfZXZlcnlvbmUoYWNlKSkgewo+ICsJCQlpZiAocmljaGFjZV9p
+c19hbGxvdyhhY2UpKQo+ICsJCQkJZXZlcnlvbmVfYWxsb3dlZCB8PSBhY2UtPmVfbWFzazsKPiAr
+CQkJZWxzZSBpZiAocmljaGFjZV9pc19kZW55KGFjZSkpCj4gKwkJCQlldmVyeW9uZV9hbGxvd2Vk
+ICY9IH5hY2UtPmVfbWFzazsKPiArCQl9IGVsc2Ugewo+ICsJCQlncm91cF9jbGFzc19hbGxvd2Vk
+IHw9Cj4gKwkJCQlyaWNoYWNsX2FsbG93ZWRfdG9fd2hvKGFjbCwgYWNlKTsKPiArCj4gKwkJCWlm
+IChyaWNoYWNlX2lzX2dyb3VwKGFjZSkpCj4gKwkJCQloYWRfZ3JvdXBfYWNlID0gMTsKPiArCQl9
+Cj4gKwl9Cj4gKwkvKgo+ICsJwqAqIElmIHRoZSBhY2wgZG9lc24ndCBjb250YWluIGFueSBncm91
+cEAgYWNlcywgcmljaGFjbF9hbGxvd2VkX3RvX3dobygpCj4gKwnCoCogd2Fzbid0IGNhbGxlZCBm
+b3IgdGhlIG93bmluZyBncm91cC7CoMKgV2UgY291bGQgbWFrZSB0aGF0IGNhbGwgbm93LCBidXQK
+PiArCcKgKiB3ZSBhbHJlYWR5IGtub3cgdGhlIHJlc3VsdCAoZXZlcnlvbmVfYWxsb3dlZCkuCj4g
+KwnCoCovCj4gKwlpZiAoIWhhZF9ncm91cF9hY2UpCj4gKwkJZ3JvdXBfY2xhc3NfYWxsb3dlZCB8
+PSBldmVyeW9uZV9hbGxvd2VkOwo+ICsJcmV0dXJuIGdyb3VwX2NsYXNzX2FsbG93ZWQ7Cj4gK30K
+PiArCj4gKy8qKgo+ICsgKiByaWNoYWNsX2NvbXB1dGVfbWF4X21hc2tzwqDCoC3CoMKgY29tcHV0
+ZSB1cHBlciBib3VuZCBtYXNrcwo+ICsgKgo+ICsgKiBDb21wdXRlcyB1cHBlciBib3VuZCBvd25l
+ciwgZ3JvdXAsIGFuZCBvdGhlciBtYXNrcyBzbyB0aGF0IG5vbmUgb2YgdGhlCj4gKyAqIHBlcm1p
+c3Npb25zIGFsbG93ZWQgYnkgdGhlIGFjbCBhcmUgZGlzYWJsZWQuCj4gKyAqCj4gKyAqIFdlIGRv
+bid0IG1ha2UgYXNzdW1wdGlvbnMgYWJvdXQgd2hvIHRoZSBvd25lciBpcyBzbyB0aGF0IHRoZSBv
+d25lciBjYW4KPiArICogY2hhbmdlIHdpdGggbm8gZWZmZWN0IG9uIHRoZSBmaWxlIG1hc2tzIG9y
+IGZpbGUgbW9kZSBwZXJtaXNzaW9uIGJpdHM7IHRoaXMKPiArICogbWVhbnMgdGhhdCB3ZSBtdXN0
+IGFzc3VtZSB0aGF0IGFsbCBlbnRyaWVzIGNhbiBtYXRjaCB0aGUgb3duZXIuCj4gKyAqLwo+ICt2
+b2lkIHJpY2hhY2xfY29tcHV0ZV9tYXhfbWFza3Moc3RydWN0IHJpY2hhY2wgKmFjbCkKPiArewo+
+ICsJdW5zaWduZWQgaW50IGdtYXNrID0gfjA7Cj4gKwlzdHJ1Y3QgcmljaGFjZSAqYWNlOwo+ICsK
+PiArCS8qCj4gKwnCoCogQGdtYXNrIGNvbnRhaW5zIGFsbCBwZXJtaXNzaW9ucyB3aGljaCB0aGUg
+Z3JvdXAgY2xhc3MgaXMgZXZlcgo+ICsJwqAqIGFsbG93ZWQuwqDCoFdlIHVzZSBpdCB0byBhdm9p
+ZCBhZGRpbmcgcGVybWlzc2lvbnMgdG8gdGhlIGdyb3VwIG1hc2sKPiArCcKgKiBmcm9tIGV2ZXJ5
+b25lQCBhbGxvdyBhY2VzIHdoaWNoIHRoZSBncm91cCBjbGFzcyBpcyBhbHdheXMgZGVuaWVkCj4g
+KwnCoCogdGhyb3VnaCBvdGhlciBhY2VzLsKgwqBGb3IgZXhhbXBsZSwgdGhlIGZvbGxvd2luZyBh
+Y2wgd291bGQgb3RoZXJ3aXNlCj4gKwnCoCogcmVzdWx0IGluIGEgZ3JvdXAgbWFzayBvZiBydzoK
+PiArCcKgKgo+ICsJwqAqCWdyb3VwQDp3OjpkZW55Cj4gKwnCoCoJZXZlcnlvbmVAOnJ3OjphbGxv
+dwo+ICsJwqAqCj4gKwnCoCogQXZvaWQgY29tcHV0aW5nIEBnbWFzayBmb3IgYWNscyB3aGljaCBk
+byBub3QgaW5jbHVkZSBhbnkgZ3JvdXAgY2xhc3MKPiArCcKgKiBkZW55IGFjZXM6IGluIHN1Y2gg
+YWNscywgdGhlIGdyb3VwIGNsYXNzIGlzIG5ldmVyIGRlbmllZCBhbnkKPiArCcKgKiBwZXJtaXNz
+aW9ucyBmcm9tIGV2ZXJ5b25lQCBhbGxvdyBhY2VzLCBhbmQgdGhlIGdyb3VwIGNsYXNzIGNhbm5v
+dAo+ICsJwqAqIGhhdmUgZmV3ZXIgcGVybWlzc2lvbnMgdGhhbiB0aGUgb3RoZXIgY2xhc3MuCj4g
+KwnCoCovCj4gKwo+ICtyZXN0YXJ0Ogo+ICsJYWNsLT5hX293bmVyX21hc2sgPSAwOwo+ICsJYWNs
+LT5hX2dyb3VwX21hc2sgPSAwOwo+ICsJYWNsLT5hX290aGVyX21hc2sgPSAwOwo+ICsKPiArCXJp
+Y2hhY2xfZm9yX2VhY2hfZW50cnlfcmV2ZXJzZShhY2UsIGFjbCkgewo+ICsJCWlmIChyaWNoYWNl
+X2lzX2luaGVyaXRfb25seShhY2UpKQo+ICsJCQljb250aW51ZTsKPiArCj4gKwkJaWYgKHJpY2hh
+Y2VfaXNfb3duZXIoYWNlKSkgewo+ICsJCQlpZiAocmljaGFjZV9pc19hbGxvdyhhY2UpKQo+ICsJ
+CQkJYWNsLT5hX293bmVyX21hc2sgfD0gYWNlLT5lX21hc2s7Cj4gKwkJCWVsc2UgaWYgKHJpY2hh
+Y2VfaXNfZGVueShhY2UpKQo+ICsJCQkJYWNsLT5hX293bmVyX21hc2sgJj0gfmFjZS0+ZV9tYXNr
+Owo+ICsJCX0gZWxzZSBpZiAocmljaGFjZV9pc19ldmVyeW9uZShhY2UpKSB7Cj4gKwkJCWlmIChy
+aWNoYWNlX2lzX2FsbG93KGFjZSkpIHsKPiArCQkJCWFjbC0+YV9vd25lcl9tYXNrIHw9IGFjZS0+
+ZV9tYXNrOwo+ICsJCQkJYWNsLT5hX2dyb3VwX21hc2sgfD0gYWNlLT5lX21hc2sgJiBnbWFzazsK
+PiArCQkJCWFjbC0+YV9vdGhlcl9tYXNrIHw9IGFjZS0+ZV9tYXNrOwo+ICsJCQl9IGVsc2UgaWYg
+KHJpY2hhY2VfaXNfZGVueShhY2UpKSB7Cj4gKwkJCQlhY2wtPmFfb3duZXJfbWFzayAmPSB+YWNl
+LT5lX21hc2s7Cj4gKwkJCQlhY2wtPmFfZ3JvdXBfbWFzayAmPSB+YWNlLT5lX21hc2s7Cj4gKwkJ
+CQlhY2wtPmFfb3RoZXJfbWFzayAmPSB+YWNlLT5lX21hc2s7Cj4gKwkJCX0KPiArCQl9IGVsc2Ug
+ewo+ICsJCQlpZiAocmljaGFjZV9pc19hbGxvdyhhY2UpKSB7Cj4gKwkJCQlhY2wtPmFfb3duZXJf
+bWFzayB8PSBhY2UtPmVfbWFzayAmIGdtYXNrOwo+ICsJCQkJYWNsLT5hX2dyb3VwX21hc2sgfD0g
+YWNlLT5lX21hc2sgJiBnbWFzazsKPiArCQkJfSBlbHNlIGlmIChyaWNoYWNlX2lzX2RlbnkoYWNl
+KSAmJiBnbWFzayA9PSB+MCkgewo+ICsJCQkJZ21hc2sgPSByaWNoYWNsX2dyb3VwX2NsYXNzX2Fs
+bG93ZWQoYWNsKTsKPiArCQkJCWlmIChsaWtlbHkoZ21hc2sgIT0gfjApKQo+ICsJCQkJCS8qIHNo
+b3VsZCBhbHdheXMgYmUgdHJ1ZSAqLwo+ICsJCQkJCWdvdG8gcmVzdGFydDsKPiArCQkJfQo+ICsJ
+CX0KPiArCX0KPiArCj4gKwlhY2wtPmFfZmxhZ3MgJj0gfihSSUNIQUNMX1dSSVRFX1RIUk9VR0gg
+fCBSSUNIQUNMX01BU0tFRCk7Cj4gK30KPiArRVhQT1JUX1NZTUJPTF9HUEwocmljaGFjbF9jb21w
+dXRlX21heF9tYXNrcyk7Cj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcmljaGFjbC5oIGIv
+aW5jbHVkZS9saW51eC9yaWNoYWNsLmgKPiBpbmRleCA5MTAyZWYwLi4zNTU5YjJjIDEwMDY0NAo+
+IC0tLSBhL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9yaWNo
+YWNsLmgKPiBAQCAtMTc4LDUgKzE3OCw2IEBAIGV4dGVybiB2b2lkIHJpY2hhY2VfY29weShzdHJ1
+Y3QgcmljaGFjZSAqLCBjb25zdCBzdHJ1Y3QgcmljaGFjZSAqKTsKPiDCoGV4dGVybiBpbnQgcmlj
+aGFjbF9tYXNrc190b19tb2RlKGNvbnN0IHN0cnVjdCByaWNoYWNsICopOwo+IMKgZXh0ZXJuIHVu
+c2lnbmVkIGludCByaWNoYWNsX21vZGVfdG9fbWFzayh1bW9kZV90KTsKPiDCoGV4dGVybiB1bnNp
+Z25lZCBpbnQgcmljaGFjbF93YW50X3RvX21hc2sodW5zaWduZWQgaW50KTsKPiArZXh0ZXJuIHZv
+aWQgcmljaGFjbF9jb21wdXRlX21heF9tYXNrcyhzdHJ1Y3QgcmljaGFjbCAqKTsKPiDCoAo+IMKg
+I2VuZGlmIC8qIF9fUklDSEFDTF9IICovCgpSZXZpZXdlZC1ieTogSmVmZiBMYXl0b24gPGpsYXl0
+b25AcmVkaGF0LmNvbT4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
