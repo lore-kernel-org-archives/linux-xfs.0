@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 59FC47CE5
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 18:58:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E34FAAC057
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 16:58:23 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id WfBI6E6d6PuTzB1L (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Jul 2016 16:58:22 -0700 (PDT)
-Date: Thu, 7 Jul 2016 16:58:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 028/119] xfs: define the on-disk rmap btree format
-Message-ID: <20160707235813.GA17991@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612645206.12839.17008642336898856662.stgit@birch.djwong.org>
-	<20160707184156.GB33740@bfoster.bfoster>
-	<20160707191813.GB12567@birch.djwong.org>
-	<20160707231455.GJ12670@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160707231455.GJ12670@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id DE5FC7CE4
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 13:21:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 49FDEAC001
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 11:21:35 -0700 (PDT)
+Received: from c.mx.filmlight.ltd.uk (c.mx.filmlight.ltd.uk [54.76.112.217])
+	by cuda.sgi.com with ESMTP id DuKowrFGTRkuQBai for
+	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 11:21:26 -0700 (PDT)
+Message-ID: <1467742885.7631.246.camel@filmlight.ltd.uk>
+Subject: Re: Question: Old Irix tape backup. Recovery on Linux
+	(xfsdump/xfsrestore)
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+Date: Tue, 05 Jul 2016 19:21:25 +0100
+In-Reply-To: <20160704001540.GX12670@dastard>
+References: <SN1PR05MB231785E5196A5D31D0D833EACC230@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<SN1PR05MB23175D5BF190CCC3F22E2EB0CC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<4d9d00ef-82d5-a658-e88c-ba75fb7a6023@sandeen.net>
+	<SN1PR05MB2317E464B2CFB5A06CC4B66BCC240@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<dc20d8ae-d57f-53f1-72b8-d623529c695b@sandeen.net>
+	<20160630220737.GS12670@dastard>
+	<BFF5CB1A-BA65-4212-9607-2F25F427433B@animezone.org>
+	<SN1PR05MB23179FAACBDA0B885FE11D06CC250@SN1PR05MB2317.namprd05.prod.outlook.com>
+	<20160704001540.GX12670@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,57 +37,60 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+Cc: Anthony l <Martinezant2141@live.com>, Andrew Ho <andrewho@animezone.org>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Jul 08, 2016 at 09:14:55AM +1000, Dave Chinner wrote:
-> On Thu, Jul 07, 2016 at 12:18:13PM -0700, Darrick J. Wong wrote:
-> > On Thu, Jul 07, 2016 at 02:41:56PM -0400, Brian Foster wrote:
-> > > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > > > +		return false;
-> > > > +	if (!xfs_btree_sblock_v5hdr_verify(bp))
-> > > > +		return false;
-> > > > +
-> > > > +	level = be16_to_cpu(block->bb_level);
-> > > > +	if (pag && pag->pagf_init) {
-> > > > +		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
-> > > > +			return false;
-> > > > +	} else if (level >= mp->m_rmap_maxlevels)
-> > > > +		return false;
-> > > 
-> > > It looks like the above (level >= mp->m_rmap_maxlevels) check could be
-> > > independent (rather than an 'else). Otherwise looks good:
-> > 
-> > Hmmm.... at first I wondered, "Shouldn't we have already checked that
-> > pag->pagf_levels[XFS_BTNUM_RMAPi] <= mp->m_rmap_maxlevels?"  But then I
-> > realized that no, we don't do that anywhere.  Nor does the bnobt/cntbt
-> > verifier.  Am I missing something?
+On Mon, 2016-07-04 at 10:15 +1000, Dave Chinner wrote:
 
-(Yes, I am.)
-
-> It should have been ranged checked when the AGF is first read in
-> (i.e. in the verifier), in ASSERTS every time xfs_alloc_read_agf()
-> is called after initialisation, and then every time the verifier is
-> run on write of the AGF.
-
-You're right.  I missed that. :(
-
-> > I did see that we at least check the AGF/AGI levels to make sure they don't
-> > overflow XFS_BTREE_MAXLEVELS, so we're probably fine here.
+> The error you are seeing is with the last media file in the dump
+> which, IIRC, contains critical inventory information and so restore
+> cannot continue without that media file. You need to work out why
+> that last media file is returning a short read, once once you solve
+> that problem xfsrestore should work correctly.
 > 
-> Precisely - if the AGF verifier doesn't have a max level check in it
-> for the rmapbt, then we need to add one there.
 
-There's a check there, so we're fine.
+I think every media file is returning a short read; looking at
+http://pastebin.com/UW9zRAZ0 this pattern repeats:
 
---D
+xfsrestore: drive op: end read
+xfsrestore: drive op: begin read
+xfsrestore: tape op: get status
+xfsrestore: tape status = wprot onl
+xfsrestore: tape op: forward space file 1
+xfsrestore: tape op: get status
+xfsrestore: tape status = fmk wprot onl
+xfsrestore: tape op: reading 245760 bytes
+xfsrestore: tape op read of 245760 bytes short: nread == 4096
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+i.e. it skips to the next filemark and the first read is short. 
+
+Ah...
+
+https://wiki.zmanda.com/index.php/Installation/OS_Specific_Notes/Installing_Amanda_on_IRIX
+
+"When setting the tape device name in either amanda.conf or one of the
+changer configuration files, make sure you specify the "variable" device
+name, which has a 'v' on the end. If not, IRIX will write 4KByte blocks
+instead of the 32KByte blocks AMANDA tells it to. This apparantly works
+OK unless you take the tape to a non-IRIX system, where amrestore will
+complain about a short (4096) read."
+
+The page goes on to suggest using dd to skip the first eight 4k blocks,
+but that doesn't seem right to me (since the first blocks evidently
+contain sensible data.)
+
+So on the face of it this is a tape with fixed length blocks, in which
+case 
+
+# mt -f /dev/<name> setblk 4096
+
+might do the trick. (Also use '-m -b 4096' with xfsrestore.)
+
+--
+Roger
+
+
+
+
 
 _______________________________________________
 xfs mailing list
