@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D7097CD1
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 08:39:52 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 828607CD3
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 08:42:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C981304062
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 06:39:52 -0700 (PDT)
-Received: from mail-qt0-f180.google.com (mail-qt0-f180.google.com
-	[209.85.216.180]) by cuda.sgi.com with ESMTP id
-	idgDWutFB6r6YiKY (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 06:39:49 -0700 (PDT)
-Received: by mail-qt0-f180.google.com with SMTP id c34so100735979qte.0
-	for <xfs@oss.sgi.com>; Tue, 05 Jul 2016 06:39:49 -0700 (PDT)
-Message-ID: <1467725986.3800.22.camel@redhat.com>
-Subject: Re: [PATCH v23 07/22] richacl: Permission mapping functions
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 05 Jul 2016 09:39:46 -0400
-In-Reply-To: <1467294433-3222-8-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-8-git-send-email-agruenba@redhat.com>
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 53CAA304032
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 06:42:37 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id khLMfLnKvrIU7wzF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 06:42:35 -0700 (PDT)
+Date: Tue, 5 Jul 2016 09:42:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
+	post-unmount panic
+Message-ID: <20160705134232.GA56444@bfoster.bfoster>
+References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
+	<20160630224457.GT12670@dastard>
+	<20160630235621.GA44823@bfoster.bfoster>
+	<20160701043331.GV12670@dastard>
+	<20160701125303.GA1098@laptop.bfoster>
+	<20160704000838.GW12670@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160704000838.GW12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,145 +31,310 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ2ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
-b3RlOgo+IFdlIG5lZWQgdG8gbWFwIGZyb20gUE9TSVggcGVybWlzc2lvbnMgdG8gTkZTdjQgcGVy
-bWlzc2lvbnMgd2hlbiBhCj4gY2htb2QoKSBpcyBkb25lLCBmcm9tIE5GU3Y0IHBlcm1pc3Npb25z
-IHRvIFBPU0lYIHBlcm1pc3Npb25zIHdoZW4gYW4gYWNsCj4gaXMgc2V0ICh3aGljaCBpbXBsaWNp
-dGx5IHNldHMgdGhlIGZpbGUgcGVybWlzc2lvbiBiaXRzKSwgYW5kIGZyb20gdGhlCj4gTUFZX1JF
-QUQvTUFZX1dSSVRFL01BWV9FWEVDL01BWV9BUFBFTkQgZmxhZ3MgdG8gTkZTdjQgcGVybWlzc2lv
-bnMgd2hlbgo+IGRvaW5nIGFuIGFjY2VzcyBjaGVjayBpbiBhIHJpY2hhY2wuCj4gCj4gU2lnbmVk
-LW9mZi1ieTogQW5kcmVhcyBHcnVlbmJhY2hlciA8YWdydWVuYmFAcmVkaGF0LmNvbT4KPiBSZXZp
-ZXdlZC1ieTogSi4gQnJ1Y2UgRmllbGRzIDxiZmllbGRzQHJlZGhhdC5jb20+Cj4gLS0tCj4gwqBm
-cy9yaWNoYWNsLmPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfCAxMTggKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+IMKgaW5jbHVkZS9saW51eC9y
-aWNoYWNsLmjCoMKgwqDCoMKgwqB8wqDCoMKgMyArKwo+IMKgaW5jbHVkZS91YXBpL2xpbnV4L3Jp
-Y2hhY2wuaCB8wqDCoDQ0ICsrKysrKysrKysrKysrKysKPiDCoDMgZmlsZXMgY2hhbmdlZCwgMTY1
-IGluc2VydGlvbnMoKykKPiAKPiBkaWZmIC0tZ2l0IGEvZnMvcmljaGFjbC5jIGIvZnMvcmljaGFj
-bC5jCj4gaW5kZXggYmNjNjU5MS4uZDBhNDEzNSAxMDA2NDQKPiAtLS0gYS9mcy9yaWNoYWNsLmMK
-PiArKysgYi9mcy9yaWNoYWNsLmMKPiBAQCAtNjMsMyArNjMsMTIxIEBAIHJpY2hhY2VfY29weShz
-dHJ1Y3QgcmljaGFjZSAqdG8sIGNvbnN0IHN0cnVjdCByaWNoYWNlICpmcm9tKQo+IMKgewo+IMKg
-CW1lbWNweSh0bywgZnJvbSwgc2l6ZW9mKHN0cnVjdCByaWNoYWNlKSk7Cj4gwqB9Cj4gKwo+ICsv
-Kgo+ICsgKiByaWNoYWNsX21hc2tfdG9fbW9kZcKgwqAtwqDCoGNvbXB1dGUgdGhlIGZpbGUgcGVy
-bWlzc2lvbiBiaXRzIGZyb20gbWFzawo+ICsgKiBAbWFzazoJJVJJQ0hBQ0VfKiBwZXJtaXNzaW9u
-IG1hc2sKPiArICoKPiArICogQ29tcHV0ZSB0aGUgZmlsZSBwZXJtaXNzaW9uIGJpdHMgY29ycmVz
-cG9uZGluZyB0byBhIHBhcnRpY3VsYXIgc2V0IG9mCj4gKyAqIHJpY2hhY2wgcGVybWlzc2lvbnMu
-Cj4gKyAqCj4gKyAqIFNlZSByaWNoYWNsX21hc2tzX3RvX21vZGUoKS4KPiArICovCj4gK3N0YXRp
-YyBpbnQKPiArcmljaGFjbF9tYXNrX3RvX21vZGUodW5zaWduZWQgaW50IG1hc2spCj4gK3sKPiAr
-CWludCBtb2RlID0gMDsKPiArCj4gKwlpZiAobWFzayAmIFJJQ0hBQ0VfUE9TSVhfTU9ERV9SRUFE
-KQo+ICsJCW1vZGUgfD0gU19JUk9USDsKPiArCWlmIChtYXNrICYgUklDSEFDRV9QT1NJWF9NT0RF
-X1dSSVRFKQo+ICsJCW1vZGUgfD0gU19JV09USDsKPiArCWlmIChtYXNrICYgUklDSEFDRV9QT1NJ
-WF9NT0RFX0VYRUMpCj4gKwkJbW9kZSB8PSBTX0lYT1RIOwo+ICsKPiArCXJldHVybiBtb2RlOwo+
-ICt9Cj4gKwo+ICsvKioKPiArICogcmljaGFjbF9tYXNrc190b19tb2RlwqDCoC3CoMKgY29tcHV0
-ZSBmaWxlIHBlcm1pc3Npb24gYml0cyBmcm9tIGZpbGUgbWFza3MKPiArICoKPiArICogV2hlbiBz
-ZXR0aW5nIGEgcmljaGFjbCwgd2Ugc2V0IHRoZSBmaWxlIHBlcm1pc3Npb24gYml0cyB0byBpbmRp
-Y2F0ZSBtYXhpbXVtCj4gKyAqIHBlcm1pc3Npb25zOiBmb3IgZXhhbXBsZSwgd2Ugc2V0IHRoZSBX
-cml0ZSBwZXJtaXNzaW9uIHdoZW4gYSBtYXNrIGNvbnRhaW5zCj4gKyAqIFJJQ0hBQ0VfQVBQRU5E
-X0RBVEEgZXZlbiBpZiBpdCBkb2VzIG5vdCBhbHNvIGNvbnRhaW4gUklDSEFDRV9XUklURV9EQVRB
-Lgo+ICsgKgo+ICsgKiBQZXJtaXNzaW9ucyB3aGljaCBhcmUgbm90IGluIFJJQ0hBQ0VfUE9TSVhf
-TU9ERV9SRUFELAo+ICsgKiBSSUNIQUNFX1BPU0lYX01PREVfV1JJVEUsIG9yIFJJQ0hBQ0VfUE9T
-SVhfTU9ERV9FWEVDIGNhbm5vdCBiZSByZXByZXNlbnRlZAo+ICsgKiBpbiB0aGUgZmlsZSBwZXJt
-aXNzaW9uIGJpdHMuwqDCoFN1Y2ggcGVybWlzc2lvbnMgY2FuIHN0aWxsIGJlIGVmZmVjdGl2ZSwg
-YnV0Cj4gKyAqIG5vdCBmb3IgbmV3IGZpbGVzIG9yIGFmdGVyIGEgY2htb2QoKTsgdGhleSBtdXN0
-IGJlIGV4cGxpY2l0bHkgZW5hYmxlZCBpbiB0aGUKPiArICogcmljaGFjbC4KPiArICovCj4gK2lu
-dAo+ICtyaWNoYWNsX21hc2tzX3RvX21vZGUoY29uc3Qgc3RydWN0IHJpY2hhY2wgKmFjbCkKPiAr
-ewo+ICsJcmV0dXJuIHJpY2hhY2xfbWFza190b19tb2RlKGFjbC0+YV9vd25lcl9tYXNrKSA8PCA2
-IHwKPiArCcKgwqDCoMKgwqDCoMKgcmljaGFjbF9tYXNrX3RvX21vZGUoYWNsLT5hX2dyb3VwX21h
-c2spIDw8IDMgfAo+ICsJwqDCoMKgwqDCoMKgwqByaWNoYWNsX21hc2tfdG9fbW9kZShhY2wtPmFf
-b3RoZXJfbWFzayk7Cj4gK30KPiArRVhQT1JUX1NZTUJPTF9HUEwocmljaGFjbF9tYXNrc190b19t
-b2RlKTsKPiArCj4gKy8qKgo+ICsgKiByaWNoYWNsX21vZGVfdG9fbWFza8KgwqAtIGNvbXB1dGUg
-YSBmaWxlIG1hc2sgZnJvbSB0aGUgbG93ZXN0IHRocmVlIG1vZGUgYml0cwo+ICsgKiBAbW9kZToJ
-bW9kZSB0byBjb252ZXJ0IHRvIHJpY2hhY2wgcGVybWlzc2lvbnMKPiArICoKPiArICogV2hlbiB0
-aGUgZmlsZSBwZXJtaXNzaW9uIGJpdHMgb2YgYSBmaWxlIGFyZSBzZXQgd2l0aCBjaG1vZCgpLCB0
-aGlzIHNwZWNpZmllcwo+ICsgKiB0aGUgbWF4aW11bSBwZXJtaXNzaW9ucyB0aGF0IHByb2Nlc3Nl
-cyB3aWxsIGdldC7CoMKgQWxsIHBlcm1pc3Npb25zIGJleW9uZAo+ICsgKiB0aGF0IHdpbGwgYmUg
-cmVtb3ZlZCBmcm9tIHRoZSBmaWxlIG1hc2tzLCBhbmQgYmVjb21lIGluZWZmZWN0aXZlLgo+ICsg
-Ki8KPiArdW5zaWduZWQgaW50Cj4gK3JpY2hhY2xfbW9kZV90b19tYXNrKHVtb2RlX3QgbW9kZSkK
-PiArewo+ICsJdW5zaWduZWQgaW50IG1hc2sgPSAwOwo+ICsKPiArCWlmIChtb2RlICYgU19JUk9U
-SCkKPiArCQltYXNrIHw9IFJJQ0hBQ0VfUE9TSVhfTU9ERV9SRUFEOwo+ICsJaWYgKG1vZGUgJiBT
-X0lXT1RIKQo+ICsJCW1hc2sgfD0gUklDSEFDRV9QT1NJWF9NT0RFX1dSSVRFOwo+ICsJaWYgKG1v
-ZGUgJiBTX0lYT1RIKQo+ICsJCW1hc2sgfD0gUklDSEFDRV9QT1NJWF9NT0RFX0VYRUM7Cj4gKwo+
-ICsJcmV0dXJuIG1hc2s7Cj4gK30KPiArCj4gKy8qKgo+ICsgKiByaWNoYWNsX3dhbnRfdG9fbWFz
-a8KgwqAtIGNvbnZlcnQgdGhlIGlvcC0+cGVybWlzc2lvbiB3YW50IGFyZ3VtZW50IHRvIGEgbWFz
-awo+ICsgKiBAd2FudDoJQHdhbnQgYXJndW1lbnQgb2YgdGhlIHBlcm1pc3Npb24gaW5vZGUgb3Bl
-cmF0aW9uCj4gKyAqCj4gKyAqIFdoZW4gY2hlY2tpbmcgZm9yIGFwcGVuZCwgQHdhbnQgaXMgKE1B
-WV9XUklURSB8IE1BWV9BUFBFTkQpLgo+ICsgKgo+ICsgKiBSaWNoYWNscyB1c2UgdGhlIGlvcC0+
-bWF5X2NyZWF0ZSBhbmQgaW9wLT5tYXlfZGVsZXRlIGhvb2tzIHdoaWNoIGFyZSB1c2VkCj4gKyAq
-IGZvciBjaGVja2luZyBpZiBjcmVhdGluZyBhbmQgZGVsZXRpbmcgZmlsZXMgaXMgYWxsb3dlZC7C
-oMKgVGhlc2UgaG9va3MgZG8gbm90Cj4gKyAqIHVzZSByaWNoYWNsX3dhbnRfdG9fbWFzaygpLCBz
-byB3ZSBkbyBub3QgaGF2ZSB0byBkZWFsIHdpdGggbWFwcGluZyBNQVlfV1JJVEUKPiArICogdG8g
-UklDSEFDRV9BRERfRklMRSwgUklDSEFDRV9BRERfU1VCRElSRUNUT1JZLCBhbmQgUklDSEFDRV9E
-RUxFVEVfQ0hJTEQKPiArICogaGVyZS4KPiArICovCgpUaGlzIGNvbW1lbnQgaXMgY29uZnVzaW5n
-IGFzIEkgZG9uJ3Qgc2VlIGFueSBtYXlfY3JlYXRlIG9yIG1heV9kZWxldGUKaW9wcyBpbiB0aGUg
-ZmluYWwgcGF0Y2hzZXQuIERvIHlvdSBtZWFuIG1heV9jcmVhdGUoKSBhbmQgbWF5X2RlbGV0ZSgp
-CmhlcmU/Cgo+ICt1bnNpZ25lZCBpbnQKPiArcmljaGFjbF93YW50X3RvX21hc2sodW5zaWduZWQg
-aW50IHdhbnQpCj4gK3sKPiArCXVuc2lnbmVkIGludCBtYXNrID0gMDsKPiArCj4gKwlpZiAod2Fu
-dCAmIE1BWV9SRUFEKQo+ICsJCW1hc2sgfD0gUklDSEFDRV9SRUFEX0RBVEE7Cj4gKwlpZiAod2Fu
-dCAmIE1BWV9ERUxFVEVfU0VMRikKPiArCQltYXNrIHw9IFJJQ0hBQ0VfREVMRVRFOwo+ICsJaWYg
-KHdhbnQgJiBNQVlfVEFLRV9PV05FUlNISVApCj4gKwkJbWFzayB8PSBSSUNIQUNFX1dSSVRFX09X
-TkVSOwo+ICsJaWYgKHdhbnQgJiBNQVlfQ0hNT0QpCj4gKwkJbWFzayB8PSBSSUNIQUNFX1dSSVRF
-X0FDTDsKPiArCWlmICh3YW50ICYgTUFZX1NFVF9USU1FUykKPiArCQltYXNrIHw9IFJJQ0hBQ0Vf
-V1JJVEVfQVRUUklCVVRFUzsKPiArCWlmICh3YW50ICYgTUFZX0VYRUMpCj4gKwkJbWFzayB8PSBS
-SUNIQUNFX0VYRUNVVEU7Cj4gKwkvKgo+ICsJwqAqIGRpZmZlcmVudGlhdGUgTUFZX1dSSVRFIGZy
-b20gdGhlc2UgcmVxdWVzdAo+ICsJwqAqLwo+ICsJaWYgKHdhbnQgJiAoTUFZX0FQUEVORCB8Cj4g
-KwkJwqDCoMKgwqBNQVlfQ1JFQVRFX0ZJTEUgfCBNQVlfQ1JFQVRFX0RJUiB8Cj4gKwkJwqDCoMKg
-wqBNQVlfREVMRVRFX0NISUxEKSkgewo+ICsJCWlmICh3YW50ICYgTUFZX0FQUEVORCkKPiArCQkJ
-bWFzayB8PSBSSUNIQUNFX0FQUEVORF9EQVRBOwo+ICsJCWlmICh3YW50ICYgTUFZX0NSRUFURV9G
-SUxFKQo+ICsJCQltYXNrIHw9IFJJQ0hBQ0VfQUREX0ZJTEU7Cj4gKwkJaWYgKHdhbnQgJiBNQVlf
-Q1JFQVRFX0RJUikKPiArCQkJbWFzayB8PSBSSUNIQUNFX0FERF9TVUJESVJFQ1RPUlk7Cj4gKwkJ
-aWYgKHdhbnQgJiBNQVlfREVMRVRFX0NISUxEKQo+ICsJCQltYXNrIHw9IFJJQ0hBQ0VfREVMRVRF
-X0NISUxEOwo+ICsJfSBlbHNlIGlmICh3YW50ICYgTUFZX1dSSVRFKQo+ICsJCW1hc2sgfD0gUklD
-SEFDRV9XUklURV9EQVRBOwo+ICsJcmV0dXJuIG1hc2s7Cj4gK30KPiArRVhQT1JUX1NZTUJPTF9H
-UEwocmljaGFjbF93YW50X3RvX21hc2spOwo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3Jp
-Y2hhY2wuaCBiL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gaW5kZXggZWRiODQ4MC4uOTEwMmVm
-MCAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3JpY2hhY2wuaAo+ICsrKyBiL2luY2x1ZGUv
-bGludXgvcmljaGFjbC5oCj4gQEAgLTE3NSw1ICsxNzUsOCBAQCByaWNoYWNlX2lzX3NhbWVfaWRl
-bnRpZmllcihjb25zdCBzdHJ1Y3QgcmljaGFjZSAqYSwgY29uc3Qgc3RydWN0IHJpY2hhY2UgKmIp
-Cj4gwqBleHRlcm4gc3RydWN0IHJpY2hhY2wgKnJpY2hhY2xfYWxsb2MoaW50LCBnZnBfdCk7Cj4g
-wqBleHRlcm4gc3RydWN0IHJpY2hhY2wgKnJpY2hhY2xfY2xvbmUoY29uc3Qgc3RydWN0IHJpY2hh
-Y2wgKiwgZ2ZwX3QpOwo+IMKgZXh0ZXJuIHZvaWQgcmljaGFjZV9jb3B5KHN0cnVjdCByaWNoYWNl
-ICosIGNvbnN0IHN0cnVjdCByaWNoYWNlICopOwo+ICtleHRlcm4gaW50IHJpY2hhY2xfbWFza3Nf
-dG9fbW9kZShjb25zdCBzdHJ1Y3QgcmljaGFjbCAqKTsKPiArZXh0ZXJuIHVuc2lnbmVkIGludCBy
-aWNoYWNsX21vZGVfdG9fbWFzayh1bW9kZV90KTsKPiArZXh0ZXJuIHVuc2lnbmVkIGludCByaWNo
-YWNsX3dhbnRfdG9fbWFzayh1bnNpZ25lZCBpbnQpOwo+IMKgCj4gwqAjZW5kaWYgLyogX19SSUNI
-QUNMX0ggKi8KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS91YXBpL2xpbnV4L3JpY2hhY2wuaCBiL2lu
-Y2x1ZGUvdWFwaS9saW51eC9yaWNoYWNsLmgKPiBpbmRleCAwODg1NmY4Li4xZWQ0OGFjIDEwMDY0
-NAo+IC0tLSBhL2luY2x1ZGUvdWFwaS9saW51eC9yaWNoYWNsLmgKPiArKysgYi9pbmNsdWRlL3Vh
-cGkvbGludXgvcmljaGFjbC5oCj4gQEAgLTk2LDQgKzk2LDQ4IEBACj4gwqAJUklDSEFDRV9XUklU
-RV9PV05FUiB8CQkJCQlcCj4gwqAJUklDSEFDRV9TWU5DSFJPTklaRSApCj4gwqAKPiArLyoKPiAr
-ICogVGhlIFBPU0lYIHBlcm1pc3Npb25zIGFyZSBzdXBlcnNldHMgb2YgdGhlIGZvbGxvd2luZyBy
-aWNoYWNsIHBlcm1pc3Npb25zOgo+ICsgKgo+ICsgKsKgwqAtIE1BWV9SRUFEIG1hcHMgdG8gUkVB
-RF9EQVRBIG9yIExJU1RfRElSRUNUT1JZLCBkZXBlbmRpbmcgb24gdGhlIHR5cGUKPiArICrCoMKg
-wqDCoG9mIHRoZSBmaWxlIHN5c3RlbSBvYmplY3QuCj4gKyAqCj4gKyAqwqDCoC0gTUFZX1dSSVRF
-IG1hcHMgdG8gV1JJVEVfREFUQSBvciBSSUNIQUNFX0FQUEVORF9EQVRBIGZvciBmaWxlcywgYW5k
-IHRvCj4gKyAqwqDCoMKgwqBBRERfRklMRSwgUklDSEFDRV9BRERfU1VCRElSRUNUT1JZLCBvciBS
-SUNIQUNFX0RFTEVURV9DSElMRCBmb3IgZGlyZWN0b3JpZXMuCj4gKyAqCj4gKyAqwqDCoC0gTUFZ
-X0VYRUNVVEUgbWFwcyB0byBSSUNIQUNFX0VYRUNVVEUuCj4gKyAqCj4gKyAqwqDCoChTb21lIG9m
-IHRoZXNlIHJpY2hhY2wgcGVybWlzc2lvbnMgaGF2ZSB0aGUgc2FtZSBiaXQgdmFsdWVzLikKPiAr
-ICovCj4gKyNkZWZpbmUgUklDSEFDRV9QT1NJWF9NT0RFX1JFQUQgKAkJCVwKPiArCQlSSUNIQUNF
-X1JFQURfREFUQSB8CQkJXAo+ICsJCVJJQ0hBQ0VfTElTVF9ESVJFQ1RPUlkpCj4gKyNkZWZpbmUg
-UklDSEFDRV9QT1NJWF9NT0RFX1dSSVRFICgJCQlcCj4gKwkJUklDSEFDRV9XUklURV9EQVRBIHwJ
-CQlcCj4gKwkJUklDSEFDRV9BRERfRklMRSB8CQkJXAo+ICsJCVJJQ0hBQ0VfQVBQRU5EX0RBVEEg
-fAkJCVwKPiArCQlSSUNIQUNFX0FERF9TVUJESVJFQ1RPUlkgfAkJXAo+ICsJCVJJQ0hBQ0VfREVM
-RVRFX0NISUxEKQo+ICsjZGVmaW5lIFJJQ0hBQ0VfUE9TSVhfTU9ERV9FWEVDIFJJQ0hBQ0VfRVhF
-Q1VURQo+ICsjZGVmaW5lIFJJQ0hBQ0VfUE9TSVhfTU9ERV9BTEwgKAkJCVwKPiArCQlSSUNIQUNF
-X1BPU0lYX01PREVfUkVBRCB8CQlcCj4gKwkJUklDSEFDRV9QT1NJWF9NT0RFX1dSSVRFIHwJCVwK
-PiArCQlSSUNIQUNFX1BPU0lYX01PREVfRVhFQykKPiArCj4gKy8qCj4gKyAqIFRoZXNlIHBlcm1p
-c3Npb25zIGFyZSBhbHdheXMgYWxsb3dlZCBubyBtYXR0ZXIgd2hhdCB0aGUgYWNsIHNheXMuCj4g
-KyAqLwo+ICsjZGVmaW5lIFJJQ0hBQ0VfUE9TSVhfQUxXQVlTX0FMTE9XRUQgKAkJCVwKPiArCQlS
-SUNIQUNFX1NZTkNIUk9OSVpFIHwJCQlcCj4gKwkJUklDSEFDRV9SRUFEX0FUVFJJQlVURVMgfAkJ
-XAo+ICsJCVJJQ0hBQ0VfUkVBRF9BQ0wpCj4gKwo+ICsvKgo+ICsgKiBUaGUgb3duZXIgaXMgaW1w
-bGljaXRseSBncmFudGVkIHRoZXNlIHBlcm1pc3Npb25zIHVuZGVyIFBPU0lYLgo+ICsgKi8KPiAr
-I2RlZmluZSBSSUNIQUNFX1BPU0lYX09XTkVSX0FMTE9XRUQgKAkJCVwKPiArCQlSSUNIQUNFX1dS
-SVRFX0FUVFJJQlVURVMgfAkJXAo+ICsJCVJJQ0hBQ0VfV1JJVEVfT1dORVIgfAkJCVwKPiArCQlS
-SUNIQUNFX1dSSVRFX0FDTCkKPiArCj4gwqAjZW5kaWYgLyogX19VQVBJX1JJQ0hBQ0xfSCAqLwoK
-T3RoZXIgdGhhbiB0aGUgY29uZnVzaW5nIGNvbW1lbnQsIHRoaXMgbG9va3Mgb2suCgpSZXZpZXdl
-ZC1ieTogSmVmZiBMYXl0b24gPGpsYXl0b25AcmVkaGF0LmNvbT4KCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
-Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Jul 04, 2016 at 10:08:38AM +1000, Dave Chinner wrote:
+> On Fri, Jul 01, 2016 at 08:53:03AM -0400, Brian Foster wrote:
+> > On Fri, Jul 01, 2016 at 02:33:31PM +1000, Dave Chinner wrote:
+> > > On Thu, Jun 30, 2016 at 07:56:21PM -0400, Brian Foster wrote:
+> > > Note also that buffers that contain stale data (i.e. XBF_STALE) are
+> > > not added to the LRU and xfs_buf_stale() removes buffers from the
+> > > LRU, so shortcutting the above reclaim lifecycle in the case where a
+> > > user invalidates the contents of the buffer. The end result is the
+> > > same - there are no buffers with stale contents on the LRU.
+> > > 
+> > 
+> > Yes, but this seems arbitrary. The buffer may or may not be on the LRU
+> > when it is marked stale.
+> 
+> Yes, because (as I've already explained) we can mark buffers stale
+> without needing to fill them with data. But whether or not the
+> buffer is in the LRU when we mark it stale is irrelevant, because we
+> only have a requirement that stale buffers are removed from the LRU
+> so that they are torn down immediately on release.
+> 
+> This is actually very important because this is how we prevent
+> duplicate buffers from entering the cache when we free metadata.
+> Once we free a metadata buffer and finish committing the transaction,
+> the buffer must not be kept in the cache because the extent it
+> covers could be reallocated at any time, and in a different shape.
+> It could even be user data. In all cases, the buffer needs to be
+> removed from the cache immediately, and that's why xfs_buf_stale()
+> behaves like this.
+> 
+
+Yes, I understand. I think we're talking past eachother on this
+particular train of thought. Your original point was that the LRU is for
+"unused" buffers, and/or buffers aren't on the LRU until "their content
+is used." The example given was that stale buffers are immediately
+removed from the LRU and thus "buffers with stale data are never on the
+LRU."
+
+My response to that is that's an implementation detail of XBF_STALE
+buffers and not necessarily true in other cases. We do actually end up
+with buffers with "stale" (as opposed to XBF_STALE, perhaps "invalid" is
+a better term) data in the event of I/O error. If a callsite allocates a
+buffer, never issues I/O on it (i.e., it is !XBF_DONE) and releases it,
+it ends up on the LRU. (I don't know that we do that anywhere given this
+is a filesystem after all ;), but that's the natural lifecycle in that
+particular case afaict).
+
+So nothing about the LRU suggests to me that the contents must have
+valid data. AFAICT, it's primarily memory management mechanism to allow
+priority-ordered releasing of "unused" buffers, where an unused buffer
+is defined as a buffer without any active references, regardless of what
+the buffer contains.
+
+I'm sympathetic to the argument that in the ideal case the LRU might not
+contain buffers actively in use, but IMO that's beyond the scope of the
+original patch. IOW, if we want to change that, we should approach it
+separately.
+
+> > > readahead is a special case - there is no accessor to say "cache
+> > > this buffer for N references", but we have to keep it around for
+> > > some time so that readahead is effective. We don't want to add it
+> > > before we've done IO on it, and realistically we should only add it
+> > > to the LRU if there was no IO error. We've had to work around bugs
+> > > introduced by caching failed readahead buffers on the LRU in the
+> > > past....
+> > > 
+> > 
+> > Ok, that makes sense. At least, I get the sense that you have a view of
+> > the LRU that is slightly different from what the code actually does
+> > (e.g., buffers w/ I/O errors on the LRU when they shouldn't be), which
+> > is why I'm trying to reconcile some of the reasoning here.
+> > 
+> > In other words, if the LRU was an unused only buffer list where used or
+> > stale buffers were pulled off and later reinserted/reprioritized (in
+> > terms of reclaim), then this would all make complete sense to me. In
+> > actuality, we have an LRU list that has buffers with I/O errors, buffers
+> > in use, buffers that might or might not be stale, etc.
+> 
+> Nothing is as simple as it seems - clean design never remains that
+> way once reality intrudes. However, the general rule is that buffers are not added to the LRU until the initial
+> user has finished and release them. THis is done for many reasons.
+> 
+
+Agreed on the first point. :) I think that's the only reason for the
+original patch to exist. ;) (As noted previously, I agree that it is a
+hack).
+
+> Firstly, We do not add them a lookup time because we do not know if
+> the caller wants them to be added to the LRU.
+> 
+
+We set b_lru_ref to 1 on buffer allocation. But it's true that we don't
+know if it's going to be marked stale before it is released, of course.
+
+> Secondly, we also don't add at lookup time because buffer lookup is
+> the single hottest path in the XFS codebase. i.e.  xfs_buf_find()
+> and the struct xfs_buf are one of the few places where we've
+> actually optimised the code to minimise cache footprint and CPU
+> overhead.
+> 
+
+Ok...
+
+> Currently, all of th einformation that a buffer lookup
+> accesses is in the first cacheline of the struct xfs_buf, ensuring
+> that we only take one cache miss penalty per buffer we walk through
+> the rb-tree. If we now add a check to see if the buffer is on the
+> LRU into the lookup path, we are - at minimum - adding an extra
+> cacheline miss to the hot path. If we have to add the buffer to the
+> LRU, then we're adding another couple of cacheline misses and
+> another lock, all of which will have an impact on performance.
+> 
+
+Performance is a fair point against adding all buffers to the LRU
+immediately. I take that to mean we'd have to test such a change with
+that in mind, but it sounds like this path is already optimized without
+any more room in the first cacheline, thus probably not likely to be an
+option.
+
+I'm not sure this is as as critical applied solely to read ahead
+buffers, however...
+
+> THird, we add/remove buffers to/from the LRU lazily in paths that
+> are not performance critical as a result. This is exactly the same
+> algorithms the VFS uses for the inode and dentry cache LRUs, and we
+> also use this for the XFS dquot LRU, too. The b_lru_ref count
+> replaces the single referenced flag that the inode/dentry caches use
+> so we can prioritise reclaim to match typical btree and directory
+> access patterns (i.e. reclaim data before leaf before node before
+> root) but otherwise the buffer LRU is no different to the VFS cache
+> algorithms....
+> 
+> Finally, and perhaps the most important, is behaviour under low memory
+> conditions. If we add the buffer to the LRU when we first look it up
+> in the cache, the shrinker can now see it and decrement the
+> b_lru_ref count while we are doing the first operation on that
+> buffer. Say this transaction generates sufficient memory pressure
+> that it causes the shrinker to completely decrement b_lru_ref - it
+> will then remove the buffer from the LRU *before we've even finished
+> with it*. This will cause the buffer to be freed immediately after
+> the caller releases it (because b_lru_ref is zero), and so the next
+> access requires the buffer to be read from disk again.  What we end
+> up with here is a situation where the buffer cache cannot maintian a
+> working set of buffers between operations because the memory
+> pressure within an operation causes the buffers to be removed from
+> the LRU before the operation completes.
+> 
+
+This makes sense, we probably don't want to subject active buffers to
+deprioritization via the shrinker before their initial use. It sounds
+like this could technically be a flaw for buffers once they're actually
+reused, as well. I could see an argument for reused buffers remaining on
+the LRU such that their b_lru_ref remains consistent (in terms of
+priority) with associated buffers (e.g., btree node vs. leaf priority
+ordering) in the event of shrinker activity, but it seems like there are
+other ways for that to get out of sync just the same. It could also be
+the case that such buffers tend to be "held" together.
+
+Again, I'm not sure how important this is to readahead buffers since
+they are released on I/O completion. If we're waiting on the readahead
+before it completes then the buffer is not fully released, but that's a
+matter of timing more than anything. E.g., faster storage could disrupt
+that just as much as this particular change. Otherwise, this just means
+the readahead buffer could be freed before we try to use it, which is
+already the case today.
+
+> So, yeah, there's lots of "assumed knowledge" in why the buffer
+> cache LRU is structured the way it is. That, unfortunately, is
+> pretty much typical of all the linux slab caches that are controlled
+> by shrinkers....
+> 
+> FWIW, readahead is often not complete before the followup read
+> comes in, which means there's a caller blocked on the buffer with an
+> active reference by the time IO completion runs xfs_buf_relse() to
+> unlock the buffer. In these cases, the readahead buffer does not go
+> onto the LRU until after the blocked caller has finished with the
+> buffer and called xfs_buf_rele() itself (i.e. after the transaction
+> subsystem is done with it).
+> 
+> > > > The other thought I had was to change where buffers are added
+> > > > to the LRU altogether, but didn't want to jump right to that.
+> > > > Is there any issue with populating the LRU with initially held
+> > > > buffers as such, or any particular reason LRU addition was
+> > > > deferred to I/O completion in the first place?
+> > > 
+> > > Yes, because then we have to deal with buffers that fail memory
+> > > allocation, read IO or are allocated just to invalidate a range
+> > > of disk blocks during a transaction (e.g. removing a remote
+> > > attribute).  There are probably other cases where we don't want
+> > > to put buffers we allocate onto the LRU, but I can't think of
+> > > any more right now.
+> > 
+> > I was thinking more along the lines of insertion on I/O submission
+> > rather than allocation. I.e., similar the proposed #1 below, but
+> > to actually insert to the list such that we never lose track of
+> > the buffer.
+> 
+> Why do we need a list?
+> 
+
+I was referring to the LRU.
+
+> It's a similar situation to inode_dio_wait(): we don't track direct
+> IO because of the per-IO overhead of doing so, especially as we only
+> need to implement a "drain barrier". i.e. it only needs a counter to
+> implement the barrier needed for truncate/hole punch operations.
+> That's exactly the same case here xfs_wait_buftarg() is a drain
+> barrier; we could simply count every single IO in flight and wait
+> for that to return to zero before walking the LRU, and it would
+> solve the problem for everything, regardless of the type of buffer
+> or whether it is in or going to be put in the LRU....
+> 
+> Also, remember that xfs_wait_buftarg() is run with the assumption
+> that all high level processing has been stopped, and we are only
+> waiting for remaining users to drop their locks and go away (e.g.
+> complete async IO from AIL pushing). It's not a general use case we
+> are working on here...
+> 
+> > I guess my initial approach was to make the fix as isolated as possible
+> > because this code is hairy and it seems we have a lot of little hacks
+> > around to deal with other corner cases such as this. Surely this adds
+> > yet another one, but afaics, so does a counter mechanism. At the end of
+> > the day, the only real issue we know it fixes is this readahead corner
+> > case.
+> > 
+> > I think that if we're going to go as far as adding a list/counter
+> > mechanism, we should try to fix this in a way that is more broadly
+> > useful. By that I mean fix up the existing mechanism or add something
+> > that allows us to start unwinding some of the preexisting hacks such as
+> > cycling buffer locks to ensure I/O completion (perhaps alleviating the
+> > need to hold locks across I/O in the first place), etc.
+> > 
+> > Perhaps the counter approach opens the door for that, I have to think
+> > about it some more..
+> 
+> I don't think we can get rid of lock cycling - the counter can only
+> exist within the IO context which is within the lock context. Hence
+> to guarantee that all users of a buffer have finished, lock cycling
+> is still necessary. i.e. lock cycling is a life cycle barrier, not
+> an IO barrier...
+> 
+
+Ok, but we apparently use it as such in places like
+xfs_buf_delwri_submit().
+
+> > > We can do metadata buffer writes outside the superblock write
+> > > protection context.  A good example of that is log recovery on
+> > > read-only filesystems....
+> > > 
+> > 
+> > This waits for I/O to complete so is unaffected by this problem.
+> 
+> Sure, but that's not what you were asking about. My point was that
+> there is no specific high level superblock protection against
+> async metadata IO being issued from non-VFS interfacing, internal
+> filesystem subsystems.
+> 
+
+Ok, I wasn't being clear... the sb protection was just an example. The
+fundamental question was whether we have to handle the write case due to
+not otherwise having some kind of synchronization or protection against
+tearing down infrastructure before I/Os complete. IOW, I don't care as
+much about the sb write protection specifically as whether we can
+identify any places where this is an actual, real problem that needs to
+be solved.
+
+(Again, I'm not against stepping back and taking a larger look at the
+current buffer mechanisms to try and resolve such problems in theory,
+but I would prefer to do that separately from this fix).
+
+> > Now
+> > that I take a look at that, I'm not sure we'd be able to replace that
+> > with an I/O counter wait since technically that would wait for all
+> > in-flight I/O to complete. This context (xfs_buf_delwri_submit()) is
+> > only looking to wait for the locally submitted I/O to complete. Ugh.
+> 
+> I'm not advocating doing that at all.
+> 
+
+I know, I was. I was hoping that if we go down the path of a more
+generic mechanism we might come up with something more useful beyond
+this particular readahead problem.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
