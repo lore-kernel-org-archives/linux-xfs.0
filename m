@@ -1,23 +1,18 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1F67A7CD5
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 09:23:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3EBC8F8035
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 07:23:18 -0700 (PDT)
-Received: from askeventz.com ([198.1.98.128]) by cuda.sgi.com with ESMTP id
-	LXHxU2OmRcS6jPq5 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:23:15 -0700 (PDT)
-Received: from [106.51.234.215] (port=28507 helo=md8PC)
-	by 162-144-216-88.webhostbox.net with esmtpa (Exim 4.87)
-	(envelope-from <debra.smith@askeventz.com>) id 1bKPGB-0002c1-Rh
-	for xfs@oss.sgi.com; Tue, 05 Jul 2016 12:15:28 +0000
-From: "Debra Smith" <debra.smith@askeventz.com>
-Subject: RE:ODI (Open Data Institute) 
-Date: Tue, 5 Jul 2016 07:16:17 -0500
-Message-ID: <!&!AAAAAAAAAAAYAAAAAAAAAAt0q05AO31JgeCQg8364DnCgAAAEAAAALiNO/Y7GpBFpdRKI7MJaWMBAAAAAA==@askeventz.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7636A7CBB
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 05:14:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F25D3AC003
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 03:14:18 -0700 (PDT)
+Received: from tg.com ([110.251.61.51]) by cuda.sgi.com with SMTP id
+	Tx4O9a2krmHJ78aj for <xfs@oss.sgi.com>;
+	Tue, 05 Jul 2016 03:14:15 -0700 (PDT)
+From: "pennywang81@163.com" <pennywang81@163.com>
+Subject: Re: Bed business
 MIME-Version: 1.0
-Content-Language: en-us
+Date: Tue, 5 Jul 2016 18:11:51 +0800
+Message-Id: <20160705101418.73AF9A420A8@cuda.sgi.com>
+Reply-To: pennywang81@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,196 +21,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1836600018656939300=="
+Content-Type: multipart/mixed; boundary="===============2708808764843456323=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is a multipart message in MIME format.
+--===============2708808764843456323==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
---===============1836600018656939300==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_000_23D8_01D1D68D.2051A750"
-Content-Language: en-us
-
-This is a multipart message in MIME format.
-
-------=_NextPart_000_23D8_01D1D68D.2051A750
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-
-Hi,
-
- 
-
-I found your profile in "ODI" (Open Data Institute) would you interested to
-sell your product or promote worldwide. If yes please let me know below
-parameters so that I can get you potential clients and customer in there
-company name, contact name, email address, direct phone number and much more
-as per your requirements.
-
- 
-
-If you interested please provide below information so that I can take it
-further.
-
- 
-
-Target Industry: _______________
-
- 
-
-Target Location: _____________
-
- 
-
-Target Titles: _____________________
-
- 
-
-Waiting for your positive response.
-
- 
-
-Thanks and best regards
-
-Debra Smith
-
-Marketing Manager.
-
- 
-
-If you don't wish Leave-Out" in subject line to receive our newsletters,
-reply back with" 
-
- 
-
- 
-
- 
-
-
-------=_NextPart_000_23D8_01D1D68D.2051A750
-Content-Type: text/html;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
-xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
-xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
-xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META =
-HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
-charset=3Dus-ascii"><meta name=3DGenerator content=3D"Microsoft Word 15 =
-(filtered medium)"><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:Verdana;
-	panose-1:2 11 6 4 3 5 4 4 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri","sans-serif";}
-.MsoPapDefault
-	{mso-style-type:export-only;
-	margin-bottom:8.0pt;
-	line-height:107%;}
-@page WordSection1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US><div =
-class=3DWordSection1><p class=3DMsoNormal =
-style=3D'line-height:12.0pt;background:white;vertical-align:baseline'><sp=
-an =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Hi,<o:p></o:=
-p></span></p><p class=3DMsoNormal =
-style=3D'line-height:12.0pt;background:white;vertical-align:baseline'><sp=
-an =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal =
-style=3D'line-height:12.0pt;background:white;vertical-align:baseline'><sp=
-an style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>I found =
-your profile in </span><b><span =
-style=3D'font-size:10.0pt;font-family:"Verdana","sans-serif"'>&#8220;</sp=
-an><span style=3D'color:black'>ODI</span></b><b><span =
-style=3D'font-size:10.0pt;font-family:"Verdana","sans-serif"'>&#8221; =
-(Open Data Institute)</span></b><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'> would you =
-interested </span><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>to sell =
-your product or promote worldwide. If yes please let me know below =
-parameters so that I can get you potential clients and customer in there =
-company name, contact name, email address, direct phone number and much =
-more as per your requirements.<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>If you =
-interested please provide below information so that I can take it =
-further.<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Target =
-Industry: _______________<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Target =
-Location: _____________<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Target =
-Titles: _____________________<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Waiting for =
-your positive response.<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Thanks and =
-best regards<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><b><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Debra =
-Smith<o:p></o:p></span></b></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'>Marketing =
-Manager.<o:p></o:p></span></p><p class=3DMsoNormal =
-style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif"'><o:p>&nbsp;<=
-/o:p></span></p><p class=3DMsoNormal style=3D'text-autospace:none'><span =
-style=3D'font-size:9.0pt;font-family:"Verdana","sans-serif";color:#BFBFBF=
-'>If you don't wish Leave-Out&quot; in subject line to receive our =
-newsletters, reply back with&#8221; <o:p></o:p></span></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
-class=3DMsoNormal><o:p>&nbsp;</o:p></p></div></body></html>
-------=_NextPart_000_23D8_01D1D68D.2051A750--
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
+aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
+U0hUTUwgOS4wMC44MTEyLjE2Njg0Ij48L0hFQUQ+DQo8Qk9EWT4NCjxQIHN0eWxlPSJNQVJHSU46
+IDMuNzVwdCBhdXRvIiBjbGFzcz1wPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsg
+Rk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQt
+a2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMiPkhlbGxv
+IA0KLDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTog
+MTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAu
+MDAwMHB0OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj48bzpwPjwvbzpwPjwvU1BB
+Tj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiA2cHQgMHB0OyBtc28t
+cGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiANCmNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxl
+PSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTogOXB0OyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250LWZh
+bWlseTog5a6L5L2TIj5XZSANCmFyZSBhIHByb2Zlc3Npb25hbCBhbmQgbGVhZGluZyA8L1NQQU4+
+PFU+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgVEVY
+VC1ERUNPUkFUSU9OOiB1bmRlcmxpbmU7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7
+IHRleHQtdW5kZXJsaW5lOiBzaW5nbGUiPmJlZHMgDQo8L1NQQU4+PC9VPjxTUEFOIA0Kc3R5bGU9
+IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiA5cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFt
+aWx5OiDlrovkvZMiPm1hbnVmYWN0dXJlciANCmFuZCBleHBvcnRlciBpbiBub3J0aCBvZiBDaGlu
+YS48L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IE1BUkdJTjogNnB0IDBw
+dDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQpjbGFzcz1Nc29Ob3JtYWw+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNlcnVu
+OiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLWZhcmVhc3Qt
+Zm9udC1mYW1pbHk6IOWui+S9kyI+Jm5ic3A7T3VyIA0KZmFjdG9yeSBuYW1lZCA8L1NQQU4+PFNQ
+QU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNl
+cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLWZhcmVh
+c3QtZm9udC1mYW1pbHk6IOWui+S9kyI+Jm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
+IzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5
+OiDlrovkvZMiPkhvbmRlIA0KRnVybml0dXJlIEluZHVzdHJpYWwgQ29tcGFueSBsaW1pdGVkPC9T
+UEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiAxMC41cHQ7
+IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7
+IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMiPiZuYnNwOzwvU1BBTj48U1BBTiANCnN0
+eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTogOXB0OyBtc28tc3BhY2VydW46ICYj
+Mzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TIj5oYXMgDQpiZWVuIG1hbnVmYWN0dXJpbmcgaGlnaGVzdCBxdWFsaXR5
+IDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTogOXB0
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0
+OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj48U1RST05HPjxGT05UIA0KY29sb3I9
+I2ZmMDAwMD5sZWF0aGVyIGJlZHMgYW5kIGZhYnJpYyBiZWRzPC9GT05UPjwvU1RST05HPiA8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNv
+LXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNv
+LWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+YW5kIA0Kc2VydmVkIGdsb2JhbCBtYXJrZXQg
+Zm9yIG1hbnkgeWVhcnMuIDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7
+IEZPTlQtU0laRTogOXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtl
+cm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj48bzpwPjwv
+bzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiA2cHQg
+MHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiANCmNsYXNzPU1zb05vcm1hbD48U1BB
+TiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTogOXB0OyBtc28tc3BhY2Vy
+dW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFz
+dC1mb250LWZhbWlseTog5a6L5L2TIj5PdXIgDQpwcm9kdWN0cyBoYWQgcmVndWxhcmx5IGV4cG9y
+dGVkIHRvIFUuUy4sIENhbmFkYSwgPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBB
+cmlhbDsgRk9OVC1TSVpFOiA5cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZv
+bnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMiPlVL
+LCANCjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTog
+OXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAw
+MHB0OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj5GcmFuY2UgDQosIEtvcmVhLCBH
+ZXJtYW55ICxTaW5nYXBvcmUsIDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJp
+YWw7IEZPTlQtU0laRTogOXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250
+LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj5TcGFp
+biwgDQpHcmVlY2UsSXRhbHkgYW5kIHNvIG9uIC48L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1G
+QU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7
+OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWu
+i+S9kyI+Jm5ic3A7PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBNQVJH
+SU46IDZwdCAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIA0KY2xhc3M9TXNvTm9y
+bWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiA5cHQ7IG1z
+by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1z
+by1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMiPkhvcGUgDQp0aGVyZSBpcyBhIGNoYW5jZSB0
+byBkbyBzb21lIGJ1c2luZXNzIHdpdGggeW91LiA8L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJ
+TjogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFs
+OyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1r
+ZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+VGhhbmtz
+IA0KJmFtcDsgcmVnYXJkcyw8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFs
+OyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1r
+ZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+PG86cD48
+L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+
+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNvLXNw
+YWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+UGVubnkgDQo8L1NQQU4+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDlwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3ll
+cyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1p
+bHk6IOWui+S9kyI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMy43
+NXB0IGF1dG8iIGNsYXNzPXA+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05U
+LVNJWkU6IDEwLjVwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJu
+aW5nOiAwLjAwMDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+Q29tcGFueSAN
+Cm5hbWUgOkhvbmRlIEZ1cm5pdHVyZSBJbmR1c3RyaWFsIENvbXBhbnkgbGltaXRlZDwvU1BBTj48
+L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAzLjc1cHQgYXV0byIgY2xhc3M9cD48U1BBTiANCnN0eWxl
+PSJGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYj
+Mzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TIj5UZWwvRmF4Ojg2LTMxNi0yMDg3MDE5PC9TUEFOPjxTUEFOIA0Kc3R5
+bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYj
+Mzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TIj48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lO
+OiAzLjc1cHQgYXV0byIgY2xhc3M9cD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7
+IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250
+LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj5NQi9X
+aGF0c2FwcDowMDg2MTM4MzE2NTA5OTc8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+IEFyaWFsOyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMi
+PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDMuNzVwdCBhdXRvIiBj
+bGFzcz1wPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiAxMC41
+cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAw
+cHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZMiPldlLWNoYXQ6NTA1NTA2ODI8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVNJWkU6IDEwLjVwdDsg
+bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsg
+bXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+Jm5ic3A74oCLPC9TUEFOPjxTUEFOIA0K
+c3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1
+bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0
+LWZvbnQtZmFtaWx5OiDlrovkvZMiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQPjwhLS1FbmRG
+cmFnbWVudC0tPjwhLS1FbmRGcmFnbWVudC0tPjwvUD48L0JPRFk+PC9IVE1MPg0KDQo=
 
 
---===============1836600018656939300==
+--===============2708808764843456323==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -226,4 +158,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1836600018656939300==--
+--===============2708808764843456323==--
