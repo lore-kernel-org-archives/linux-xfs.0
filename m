@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 482367D11
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 17:16:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0581E8F809C
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 15:16:54 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BD6FA7D17
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 18:06:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6B6DD30408C
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 16:06:22 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Jk4FWrBPd3SLqpyj for <xfs@oss.sgi.com>;
-	Wed, 06 Jul 2016 15:16:51 -0700 (PDT)
-Date: Thu, 7 Jul 2016 08:16:48 +1000
+	8I7AdCH38wgvKRNf for <xfs@oss.sgi.com>;
+	Wed, 06 Jul 2016 16:06:20 -0700 (PDT)
+Date: Thu, 7 Jul 2016 09:05:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] nfsd: allow SCSI layout support without Block layout
-Message-ID: <20160706221648.GE12670@dastard>
-References: <74871b1ce0d09b21fb67c1b2176695cc1c19169e.1467624319.git.bcodding@redhat.com>
-	<20160706091953.GD12670@dastard>
-	<73B22D64-6A0B-4B8B-8A4D-6AA7AC26F30D@redhat.com>
-	<20160706124326.GA18856@fieldses.org>
+Subject: Re: Bad Metadata performances for XFS?
+Message-ID: <20160706230535.GF12670@dastard>
+References: <3ED34739A4E85E4F894367D57617CDEF9ED9518B@LAX-EX-MB2.datadirect.datadirectnet.com>
+	<20160704225226.GD27480@dastard> <20160705001854.GY12670@dastard>
+	<3ED34739A4E85E4F894367D57617CDEF9ED955AB@LAX-EX-MB2.datadirect.datadirectnet.com>
+	<CAJCQCtRiznrWAmCEgd=uMETnBubh1ZttGP4xF9PLu0_j7XBRuw@mail.gmail.com>
+	<1467805769.7631.249.camel@filmlight.ltd.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160706124326.GA18856@fieldses.org>
+In-Reply-To: <1467805769.7631.249.camel@filmlight.ltd.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,47 +33,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Benjamin Coddington <bcodding@redhat.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Roger Willcocks <roger@filmlight.ltd.uk>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Chris Murphy <lists@colorremedies.com>, Wang Shilong <wshilong@ddn.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Jul 06, 2016 at 08:43:26AM -0400, J. Bruce Fields wrote:
-> On Wed, Jul 06, 2016 at 05:58:09AM -0400, Benjamin Coddington wrote:
-> > On 6 Jul 2016, at 5:19, Dave Chinner wrote:
-> > 
-> > >On Tue, Jul 05, 2016 at 09:48:47PM -0400, Benjamin Coddington wrote:
-> > >>We shouldn't have to configure both NFSD_BLOCKLAYOUT and
-> > >>NFSD_SCSILAYOUT if
-> > >>all we want are SCSI layouts on the server, so define the xfs export
-> > >>operations for either configuration.
-> > >>
-> > >>Signed-off-by: Benjamin Coddington <bcodding@redhat.com>
+On Wed, Jul 06, 2016 at 12:49:29PM +0100, Roger Willcocks wrote:
+> On Tue, 2016-07-05 at 14:34 -0600, Chris Murphy wrote:
+> > On Mon, Jul 4, 2016 at 7:43 PM, Wang Shilong <wshilong@ddn.com> wrote:
 > > >
-> > >I don't really like exploding config option dependencies into
-> > >subsystems that aren't actually related to the config options.
-> > >It's confusing enough laready that we've got XFS code dependent on
-> > >PNFSD config options without adding more to it. Instead, I'd
-> > >suggest this should be resolved in the kconfig files. i.e. make
-> > >CONFIG_NFSD_SCSILAYOUT=y select CONFIG_NFSD_BLOCKLAYOUT to resolve
-> > >the config dependency at config time.
+> > >
+> > > I understand that this is single thread Limit, but I guess there are some
+> > > other Limit here, because even single thread creating 50W files speed
+> > > is twice than 200W files.
 > > 
-> > But the point is to leave CONFIG_NFSD_BLOCKLAYOUT undefined
-> > otherwise knfsd
-> > will advertise block layouts to clients -- which we don't want.
+> > Watts or Wolframs (tungsten)?
+> > 
+> > 50W!=50000. You could write it as 50k and 200k. It's unlikely to get
+> > confused with 50K and 200K, which are temperatures, because of
+> > context. But W makes no sense.
+> > 
+> > 
+> > 
+> 
+> I suspect it's an abbreviation for the (Chinese) unit 'wan'
+> 
+> https://www.quora.com/Why-do-Chinese-people-count-in-units-of-10-000
+> 
+> so it makes perfect sense but it's not an SI unit.
 
-Pnfsd layout is determined at compile time?  That's seems less than
-useful to me for distros wanting to support for multiple layout
-types in the one kernel. i.e. Shouldn't the layout to be advertised
-be something like a per-export configuration option rather than
-determined at compile time define?
-
-> > Would a third define specific for xfs_export_operations that gets
-> > set in kconfig files work for you?  Something like XFS_PNFS_EXPORT_OPS.
->
-> That makes sense to me....
-
-Sounds good, but I'd drop the "XFS_" prefix because when multiple
-filesytems end up supporting it, we don't want to have to select
-every single one of them from the PNFSD config options...
+Thanks, Roger - it does make sense now the unit being used has been
+explained. This is a canonical example of how being explicit about
+units being used and what they mean is of prime importance to
+understanding what each other are saying.
 
 Cheers,
 
