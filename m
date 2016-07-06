@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ADB0C7CE7
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 13:34:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 26B0E8F8039
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 11:33:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id E4uAP9FmOEJ3Zp3r (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0A7307CF2
+	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 01:44:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BE891304053
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 23:44:23 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5ibAIuQ3ayRiXPQR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jul 2016 11:33:58 -0700 (PDT)
-Date: Fri, 8 Jul 2016 14:33:55 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 033/119] xfs: support overlapping intervals in the rmap
-	btree
-Message-ID: <20160708183355.GE59278@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 23:44:20 -0700 (PDT)
+Date: Tue, 5 Jul 2016 23:44:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 026/119] xfs: add owner field to extent allocation and
+	freeing
+Message-ID: <20160706064410.GC18951@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612648418.12839.17068915263834486145.stgit@birch.djwong.org>
+	<146612643914.12839.17925699349002137545.stgit@birch.djwong.org>
+	<20160706040120.GA12670@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146612648418.12839.17068915263834486145.stgit@birch.djwong.org>
+In-Reply-To: <20160706040120.GA12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,176 +32,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Jun 16, 2016 at 06:21:24PM -0700, Darrick J. Wong wrote:
-> Now that the generic btree code supports overlapping intervals, plug
-> in the rmap btree to this functionality.  We will need it to find
-> potential left neighbors in xfs_rmap_{alloc,free} later in the patch
-> set.
+On Wed, Jul 06, 2016 at 02:01:20PM +1000, Dave Chinner wrote:
+> On Thu, Jun 16, 2016 at 06:20:39PM -0700, Darrick J. Wong wrote:
+> > For the rmap btree to work, we have to feed the extent owner
+> > information to the the allocation and freeing functions. This
+> > information is what will end up in the rmap btree that tracks
+> > allocated extents. While we technically don't need the owner
+> > information when freeing extents, passing it allows us to validate
+> > that the extent we are removing from the rmap btree actually
+> > belonged to the owner we expected it to belong to.
+> ....
 > 
-> v2: Fix bit manipulation bug when generating high key offset.
-> v3: Move unwritten bit to rm_offset.
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -1318,6 +1318,71 @@ typedef __be32 xfs_inobt_ptr_t;
+> >   */
+> >  #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+> >  
+> > +/*
+> > + * Ownership info for an extent.  This is used to create reverse-mapping
+> > + * entries.
+> > + */
+> > +#define XFS_OWNER_INFO_ATTR_FORK	(1 << 0)
+> > +#define XFS_OWNER_INFO_BMBT_BLOCK	(1 << 1)
+> > +struct xfs_owner_info {
+> > +	uint64_t		oi_owner;
+> > +	xfs_fileoff_t		oi_offset;
+> > +	unsigned int		oi_flags;
+> > +};
+> > +
+> > +static inline void
+> > +xfs_rmap_ag_owner(
+> > +	struct xfs_owner_info	*oi,
+> > +	uint64_t		owner)
+> > +{
+> > +	oi->oi_owner = owner;
+> > +	oi->oi_offset = 0;
+> > +	oi->oi_flags = 0;
+> > +}
+> > +
+> > +static inline void
+> > +xfs_rmap_ino_bmbt_owner(
+> > +	struct xfs_owner_info	*oi,
+> > +	xfs_ino_t		ino,
+> > +	int			whichfork)
+> > +{
+> > +	oi->oi_owner = ino;
+> > +	oi->oi_offset = 0;
+> > +	oi->oi_flags = XFS_OWNER_INFO_BMBT_BLOCK;
+> > +	if (whichfork == XFS_ATTR_FORK)
+> > +		oi->oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
+> > +}
+> > +
+> > +static inline void
+> > +xfs_rmap_ino_owner(
+> > +	struct xfs_owner_info	*oi,
+> > +	xfs_ino_t		ino,
+> > +	int			whichfork,
+> > +	xfs_fileoff_t		offset)
+> > +{
+> > +	oi->oi_owner = ino;
+> > +	oi->oi_offset = offset;
+> > +	oi->oi_flags = 0;
+> > +	if (whichfork == XFS_ATTR_FORK)
+> > +		oi->oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
+> > +}
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_rmap_btree.c |   59 +++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_rmap_btree.h |   10 +++++--
->  2 files changed, 66 insertions(+), 3 deletions(-)
+> One of the things we've avaoided doing so far is putting functions
+> like this into xfs_format.h. xfs_format.h is really just for the
+> on disk format definitions, not the code to access/pack/unpack it.
+> Hence I think think these sorts of functions need to be moved to
+> xfs_rmap.h....
+
+Yes.
+
+I've already split xfs_rmap_btree.h into xfs_rmap.h (high level rmap
+functions) and xfs_rmap_btree.h (low level btree functions) for the
+realtime rmapbt code split.  Won't be difficult to move these over
+from xfs_format.h.
+
+Speaking of which, I've pushed that along to the point that the
+kernel-side implementation is at pre-alpha eatmydata stage, check
+works well enough that xfstests doesn't explode, and we can collect
+rt rmaps for checking and rebuilding of the tree.  I'll try to finish
+that tomorrow.
+
+--D
+
 > 
+> Cheers,
 > 
-> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-> index c50c725..9adb930 100644
-> --- a/fs/xfs/libxfs/xfs_rmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-> @@ -181,6 +181,28 @@ xfs_rmapbt_init_key_from_rec(
->  }
->  
->  STATIC void
-> +xfs_rmapbt_init_high_key_from_rec(
-> +	union xfs_btree_key	*key,
-> +	union xfs_btree_rec	*rec)
-> +{
-> +	__uint64_t		off;
-> +	int			adj;
-> +
-> +	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
-> +
-
-Comments please. I had to stare at this for too long than I care to
-admit to grok why it is modifying values. :) One liners along the lines
-of "shift the startblock/offset to the highest value to form the high
-key" or "don't convert offset for non-inode owners because ..." go a
-long way for those not familiar with the code.
-
-With regard to rm_offset, could we just copy it unconditionally here
-(should it not be 0)?
-
-> +	key->rmap.rm_startblock = rec->rmap.rm_startblock;
-> +	be32_add_cpu(&key->rmap.rm_startblock, adj);
-> +	key->rmap.rm_owner = rec->rmap.rm_owner;
-> +	key->rmap.rm_offset = rec->rmap.rm_offset;
-> +	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rmap.rm_owner)) ||
-> +	    XFS_RMAP_IS_BMBT_BLOCK(be64_to_cpu(rec->rmap.rm_offset)))
-> +		return;
-> +	off = be64_to_cpu(key->rmap.rm_offset);
-> +	off = (XFS_RMAP_OFF(off) + adj) | (off & ~XFS_RMAP_OFF_MASK);
-> +	key->rmap.rm_offset = cpu_to_be64(off);
-> +}
-> +
-> +STATIC void
->  xfs_rmapbt_init_rec_from_cur(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_rec	*rec)
-> @@ -235,6 +257,38 @@ xfs_rmapbt_key_diff(
->  	return 0;
->  }
->  
-> +STATIC __int64_t
-> +xfs_rmapbt_diff_two_keys(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*k1,
-> +	union xfs_btree_key	*k2)
-> +{
-> +	struct xfs_rmap_key	*kp1 = &k1->rmap;
-> +	struct xfs_rmap_key	*kp2 = &k2->rmap;
-> +	__int64_t		d;
-> +	__u64			x, y;
-> +
-> +	d = (__int64_t)be32_to_cpu(kp2->rm_startblock) -
-> +		       be32_to_cpu(kp1->rm_startblock);
-> +	if (d)
-> +		return d;
-> +
-> +	x = be64_to_cpu(kp2->rm_owner);
-> +	y = be64_to_cpu(kp1->rm_owner);
-> +	if (x > y)
-> +		return 1;
-> +	else if (y > x)
-> +		return -1;
-> +
-> +	x = XFS_RMAP_OFF(be64_to_cpu(kp2->rm_offset));
-> +	y = XFS_RMAP_OFF(be64_to_cpu(kp1->rm_offset));
-> +	if (x > y)
-> +		return 1;
-> +	else if (y > x)
-> +		return -1;
-> +	return 0;
-> +}
-> +
->  static bool
->  xfs_rmapbt_verify(
->  	struct xfs_buf		*bp)
-> @@ -350,6 +404,7 @@ xfs_rmapbt_recs_inorder(
->  static const struct xfs_btree_ops xfs_rmapbt_ops = {
->  	.rec_len		= sizeof(struct xfs_rmap_rec),
->  	.key_len		= sizeof(struct xfs_rmap_key),
-> +	.flags			= XFS_BTREE_OPS_OVERLAPPING,
->  
->  	.dup_cursor		= xfs_rmapbt_dup_cursor,
->  	.set_root		= xfs_rmapbt_set_root,
-> @@ -358,10 +413,12 @@ static const struct xfs_btree_ops xfs_rmapbt_ops = {
->  	.get_minrecs		= xfs_rmapbt_get_minrecs,
->  	.get_maxrecs		= xfs_rmapbt_get_maxrecs,
->  	.init_key_from_rec	= xfs_rmapbt_init_key_from_rec,
-> +	.init_high_key_from_rec	= xfs_rmapbt_init_high_key_from_rec,
->  	.init_rec_from_cur	= xfs_rmapbt_init_rec_from_cur,
->  	.init_ptr_from_cur	= xfs_rmapbt_init_ptr_from_cur,
->  	.key_diff		= xfs_rmapbt_key_diff,
->  	.buf_ops		= &xfs_rmapbt_buf_ops,
-> +	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
->  #if defined(DEBUG) || defined(XFS_WARN)
->  	.keys_inorder		= xfs_rmapbt_keys_inorder,
->  	.recs_inorder		= xfs_rmapbt_recs_inorder,
-> @@ -410,7 +467,7 @@ xfs_rmapbt_maxrecs(
->  	if (leaf)
->  		return blocklen / sizeof(struct xfs_rmap_rec);
->  	return blocklen /
-> -		(sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
-> +		(2 * sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
-
-Same here.. one-liner comment that reminds why we have the 2x please.
-
->  }
->  
->  /* Compute the maximum height of an rmap btree. */
-> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-> index 17fa383..796071c 100644
-> --- a/fs/xfs/libxfs/xfs_rmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-> @@ -38,12 +38,18 @@ struct xfs_mount;
->  #define XFS_RMAP_KEY_ADDR(block, index) \
->  	((struct xfs_rmap_key *) \
->  		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-> -		 ((index) - 1) * sizeof(struct xfs_rmap_key)))
-> +		 ((index) - 1) * 2 * sizeof(struct xfs_rmap_key)))
-> +
-> +#define XFS_RMAP_HIGH_KEY_ADDR(block, index) \
-> +	((struct xfs_rmap_key *) \
-> +		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-> +		 sizeof(struct xfs_rmap_key) + \
-> +		 ((index) - 1) * 2 * sizeof(struct xfs_rmap_key)))
->  
-
-Could this just be 'XFS_RMAP_KEY_ADDR(block, index) + sizeof(struct
-xfs_rmap_key)'?
-
-Brian
-
->  #define XFS_RMAP_PTR_ADDR(block, index, maxrecs) \
->  	((xfs_rmap_ptr_t *) \
->  		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
-> -		 (maxrecs) * sizeof(struct xfs_rmap_key) + \
-> +		 (maxrecs) * 2 * sizeof(struct xfs_rmap_key) + \
->  		 ((index) - 1) * sizeof(xfs_rmap_ptr_t)))
->  
->  struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
+> Dave.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
