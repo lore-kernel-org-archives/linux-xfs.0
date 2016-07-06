@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CE2537D13
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 17:44:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 217CCAC017
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 15:44:25 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id SDRtz0HVOSmpGQRp (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jul 2016 15:44:22 -0700 (PDT)
-Date: Wed, 6 Jul 2016 15:44:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 00/20] xfstests: minor fixes for the reflink/dedupe
-	tests
-Message-ID: <20160706224416.GA26279@birch.djwong.org>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-	<20160705043130.GF23649@eguan.usersys.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id DEFBF7CBB
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 23:06:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56E0FAC003
+	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 21:06:01 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	BgTmyvFpzZXPmIxK for <xfs@oss.sgi.com>;
+	Tue, 05 Jul 2016 21:05:57 -0700 (PDT)
+Date: Wed, 6 Jul 2016 14:05:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 028/119] xfs: define the on-disk rmap btree format
+Message-ID: <20160706040555.GB12670@dastard>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612645206.12839.17008642336898856662.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160705043130.GF23649@eguan.usersys.redhat.com>
+In-Reply-To: <146612645206.12839.17008642336898856662.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,101 +30,173 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Jul 05, 2016 at 12:31:30PM +0800, Eryu Guan wrote:
-> Hi Darrick,
+On Thu, Jun 16, 2016 at 06:20:52PM -0700, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On Thu, Jun 16, 2016 at 06:46:02PM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > This is the sixth revision of a patchset that adds to xfstests
-> > support for testing reverse-mappings of physical blocks to file and
-> > metadata (rmap); support for testing multiple file logical blocks to
-> > the same physical block (reflink); and implements the beginnings of
-> > online metadata scrubbing.
-> > 
-> > The first eight patches are in Eryu Guan's pull request on 2016-06-15.
-> > Those patches haven't changed, but they're not yet in the upstream
-> > repo.
-> > 
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-> > There are also updates for xfs-docs[4].  The kernel patches should
-> > apply to dchinner's for-next; xfsprogs patches to for-next; and
-> > xfstest to master.  The kernel git tree already has for-next included.
-> > 
-> > The patches have been xfstested with x64, i386, and armv7l--arm64,
-> > ppc64, and ppc64le no longer boot in qemu.  All three architectures
-> > pass all 'clone' group tests except xfs/128 (which is the swapext
-> > test), and AFAICT don't cause any new failures for the 'auto' group.
-> > 
-> > This is an extraordinary way to eat your data.  Enjoy! 
-> > Comments and questions are, as always, welcome.
+> Now we have all the surrounding call infrastructure in place, we can
+> start filling out the rmap btree implementation. Start with the
+> on-disk btree format; add everything needed to read, write and
+> manipulate rmap btree blocks. This prepares the way for adding the
+> btree operations implementation.
 > 
-> I tested your xfstests patches with your kernel(HEAD f0b34b6 xfs: add
-> btree scrub tracepoints) and xfsprogs(HEAD 34bd754 xfs_scrub: create
-> online filesystem scrub program), with x86_64 host & 4k block size XFS.
-> 
-> A './check -g auto' run looked fine overall. Besides the comments I
-> replied to some patches, other common minor issues are:
-> - space indention in _cleanup not tab
-> - bare 'umount $SCRATCH_MNT' not _scratch_unmount
-> - whitespace issues in _test|scratch_inject_error
-> 
-> (I can fix all these minor issues at commit time, if you don't have
-> other major updates to these patches).
+> [darrick: record owner and offset info in rmap btree]
+> [darrick: fork, bmbt and unwritten state in rmap btree]
+> [darrick: flags are a separate field in xfs_rmap_irec]
+> [darrick: calculate maxlevels separately]
+> [darrick: move the 'unwritten' bit into unused parts of rm_offset]
+.....
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 97f354f..6efc7a3 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1383,11 +1383,151 @@ xfs_rmap_ino_owner(
+>  #define XFS_RMAP_OWN_INODES	(-7ULL)	/* Inode chunk */
+>  #define XFS_RMAP_OWN_MIN	(-8ULL) /* guard */
+>  
+> +#define XFS_RMAP_NON_INODE_OWNER(owner)	(!!((owner) & (1ULL << 63)))
+> +
+> +/*
+> + * Data record structure
+> + */
+> +struct xfs_rmap_rec {
+> +	__be32		rm_startblock;	/* extent start block */
+> +	__be32		rm_blockcount;	/* extent length */
+> +	__be64		rm_owner;	/* extent owner */
+> +	__be64		rm_offset;	/* offset within the owner */
+> +};
+> +
+> +/*
+> + * rmap btree record
+> + *  rm_offset:63 is the attribute fork flag
+> + *  rm_offset:62 is the bmbt block flag
+> + *  rm_offset:61 is the unwritten extent flag (same as l0:63 in bmbt)
+> + *  rm_offset:54-60 aren't used and should be zero
+> + *  rm_offset:0-53 is the block offset within the inode
+> + */
+> +#define XFS_RMAP_OFF_ATTR_FORK	((__uint64_t)1ULL << 63)
+> +#define XFS_RMAP_OFF_BMBT_BLOCK	((__uint64_t)1ULL << 62)
+> +#define XFS_RMAP_OFF_UNWRITTEN	((__uint64_t)1ULL << 61)
+> +
+> +#define XFS_RMAP_LEN_MAX	((__uint32_t)~0U)
+> +#define XFS_RMAP_OFF_FLAGS	(XFS_RMAP_OFF_ATTR_FORK | \
+> +				 XFS_RMAP_OFF_BMBT_BLOCK | \
+> +				 XFS_RMAP_OFF_UNWRITTEN)
+> +#define XFS_RMAP_OFF_MASK	((__uint64_t)0x3FFFFFFFFFFFFFULL)
+> +
+> +#define XFS_RMAP_OFF(off)		((off) & XFS_RMAP_OFF_MASK)
+> +
+> +#define XFS_RMAP_IS_BMBT_BLOCK(off)	(!!((off) & XFS_RMAP_OFF_BMBT_BLOCK))
+> +#define XFS_RMAP_IS_ATTR_FORK(off)	(!!((off) & XFS_RMAP_OFF_ATTR_FORK))
+> +#define XFS_RMAP_IS_UNWRITTEN(len)	(!!((off) & XFS_RMAP_OFF_UNWRITTEN))
+> +
+> +#define RMAPBT_STARTBLOCK_BITLEN	32
+> +#define RMAPBT_BLOCKCOUNT_BITLEN	32
+> +#define RMAPBT_OWNER_BITLEN		64
+> +#define RMAPBT_ATTRFLAG_BITLEN		1
+> +#define RMAPBT_BMBTFLAG_BITLEN		1
+> +#define RMAPBT_EXNTFLAG_BITLEN		1
+> +#define RMAPBT_UNUSED_OFFSET_BITLEN	7
+> +#define RMAPBT_OFFSET_BITLEN		54
+> +
+> +#define XFS_RMAP_ATTR_FORK		(1 << 0)
+> +#define XFS_RMAP_BMBT_BLOCK		(1 << 1)
+> +#define XFS_RMAP_UNWRITTEN		(1 << 2)
+> +#define XFS_RMAP_KEY_FLAGS		(XFS_RMAP_ATTR_FORK | \
+> +					 XFS_RMAP_BMBT_BLOCK)
+> +#define XFS_RMAP_REC_FLAGS		(XFS_RMAP_UNWRITTEN)
+> +struct xfs_rmap_irec {
+> +	xfs_agblock_t	rm_startblock;	/* extent start block */
+> +	xfs_extlen_t	rm_blockcount;	/* extent length */
+> +	__uint64_t	rm_owner;	/* extent owner */
+> +	__uint64_t	rm_offset;	/* offset within the owner */
+> +	unsigned int	rm_flags;	/* state flags */
+> +};
 
-I don't have any major updates to any of those patches; go ahead.
+Same as my last comment about xfs_format.h. Up to here is all good -
+they are format definitions. But these:
 
-FWIW I usually have unposted patches at all points in time, so if you want to
-fix minor nits in things I've already posted for review and commit them to
-upstream, that's fine.  I pull down the latest xfstest git and rebase prior to
-sending a new patch series, so I'll absorb whatever you change. :)
+> +
+> +static inline __u64
+> +xfs_rmap_irec_offset_pack(
+> +	const struct xfs_rmap_irec	*irec)
+> +{
+> +	__u64			x;
+> +
+> +	x = XFS_RMAP_OFF(irec->rm_offset);
+> +	if (irec->rm_flags & XFS_RMAP_ATTR_FORK)
+> +		x |= XFS_RMAP_OFF_ATTR_FORK;
+> +	if (irec->rm_flags & XFS_RMAP_BMBT_BLOCK)
+> +		x |= XFS_RMAP_OFF_BMBT_BLOCK;
+> +	if (irec->rm_flags & XFS_RMAP_UNWRITTEN)
+> +		x |= XFS_RMAP_OFF_UNWRITTEN;
+> +	return x;
+> +}
+> +
+> +static inline int
+> +xfs_rmap_irec_offset_unpack(
+> +	__u64			offset,
+> +	struct xfs_rmap_irec	*irec)
+> +{
+> +	if (offset & ~(XFS_RMAP_OFF_MASK | XFS_RMAP_OFF_FLAGS))
+> +		return -EFSCORRUPTED;
+> +	irec->rm_offset = XFS_RMAP_OFF(offset);
+> +	if (offset & XFS_RMAP_OFF_ATTR_FORK)
+> +		irec->rm_flags |= XFS_RMAP_ATTR_FORK;
+> +	if (offset & XFS_RMAP_OFF_BMBT_BLOCK)
+> +		irec->rm_flags |= XFS_RMAP_BMBT_BLOCK;
+> +	if (offset & XFS_RMAP_OFF_UNWRITTEN)
+> +		irec->rm_flags |= XFS_RMAP_UNWRITTEN;
+> +	return 0;
+> +}
 
-When I'm getting ready to do another big release, I inquire with the
-maintainers if they're about to push commits upstream to avoid the race
-post patches -> upstream push -> rebase patches -> repost patches.
+And these:
 
-> And the review of changes to xfs/122 needs help from other XFS
-> developers :) (09/20 and 10/20)
+> +static inline void
+> +xfs_owner_info_unpack(
+> +	struct xfs_owner_info	*oinfo,
+> +	uint64_t		*owner,
+> +	uint64_t		*offset,
+> +	unsigned int		*flags)
+> +{
+> +	unsigned int		r = 0;
+> +
+> +	*owner = oinfo->oi_owner;
+> +	*offset = oinfo->oi_offset;
+> +	if (oinfo->oi_flags & XFS_OWNER_INFO_ATTR_FORK)
+> +		r |= XFS_RMAP_ATTR_FORK;
+> +	if (oinfo->oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
+> +		r |= XFS_RMAP_BMBT_BLOCK;
+> +	*flags = r;
+> +}
+> +
+> +static inline void
+> +xfs_owner_info_pack(
+> +	struct xfs_owner_info	*oinfo,
+> +	uint64_t		owner,
+> +	uint64_t		offset,
+> +	unsigned int		flags)
+> +{
+> +	oinfo->oi_owner = owner;
+> +	oinfo->oi_offset = XFS_RMAP_OFF(offset);
+> +	oinfo->oi_flags = 0;
+> +	if (flags & XFS_RMAP_ATTR_FORK)
+> +		oinfo->oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
+> +	if (flags & XFS_RMAP_BMBT_BLOCK)
+> +		oinfo->oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
+> +}
+> +
 
-09/20 (remove rmapx cruft) should be pretty straightforward, since I withdrew
-'rmapx' and related changes from xfs.
+really belong in xfs_rmap.h or xfs_rmap_btree.h.
 
-10/20 (new log items) will probably remain outstanding for a while since
-those changes haven't really made it upstream yet.
+Cheers,
 
-> And besides the first 8 patches, 15/20 has been in upstream as well.
-
-Oh, ok.
-
-> Thanks,
-> Eryu
-> 
-> P.S.
-> The failed tests I saw when testing with reflink-enabled kernel &
-> xfsprogs:
-> 
-> Failures: generic/054 generic/055 generic/108 generic/204 generic/356 generic/357 xfs/004 xfs/096 xfs/122 xfs/293
-> 
-> generic/108 generic/204 and xfs/004 are new failures compared to stock
-> kernel and xfsprogs (kernel 4.7-rc5, xfsprogs 4.7-rc1).
-
-I think I have fixes for some of those that will go out during the next
-patchbomb.  But thanks for the heads up, I'll have a look at a -g auto
-run before I submit again.
-
---D
-
-> 
-> Just FYI.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
