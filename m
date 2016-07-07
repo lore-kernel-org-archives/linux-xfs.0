@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8ADFA7CE5
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 18:15:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 13B10AC056
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 16:14:59 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	MQ828B7jDsSBHqtn for <xfs@oss.sgi.com>;
-	Thu, 07 Jul 2016 16:14:57 -0700 (PDT)
-Date: Fri, 8 Jul 2016 09:14:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 028/119] xfs: define the on-disk rmap btree format
-Message-ID: <20160707231455.GJ12670@dastard>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612645206.12839.17008642336898856662.stgit@birch.djwong.org>
-	<20160707184156.GB33740@bfoster.bfoster>
-	<20160707191813.GB12567@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160707191813.GB12567@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 919B97CEB
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 06:02:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 709DF8F80F9
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 04:02:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 31nZhsFZXQ7A9z2D (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Jul 2016 04:02:35 -0700 (PDT)
+From: Benjamin Coddington <bcodding@redhat.com>
+Subject: [PATCH 1/2] nfsd: allow SCSI layout support without block layout
+Date: Thu,  7 Jul 2016 07:02:31 -0400
+Message-Id: <5ff05b585226b689866f4604adddffc94910f63f.1467889001.git.bcodding@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,52 +21,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org
+Cc: bfields@fieldses.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Jul 07, 2016 at 12:18:13PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 07, 2016 at 02:41:56PM -0400, Brian Foster wrote:
-> > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > > +		return false;
-> > > +	if (!xfs_btree_sblock_v5hdr_verify(bp))
-> > > +		return false;
-> > > +
-> > > +	level = be16_to_cpu(block->bb_level);
-> > > +	if (pag && pag->pagf_init) {
-> > > +		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
-> > > +			return false;
-> > > +	} else if (level >= mp->m_rmap_maxlevels)
-> > > +		return false;
-> > 
-> > It looks like the above (level >= mp->m_rmap_maxlevels) check could be
-> > independent (rather than an 'else). Otherwise looks good:
-> 
-> Hmmm.... at first I wondered, "Shouldn't we have already checked that
-> pag->pagf_levels[XFS_BTNUM_RMAPi] <= mp->m_rmap_maxlevels?"  But then I
-> realized that no, we don't do that anywhere.  Nor does the bnobt/cntbt
-> verifier.  Am I missing something?
+We shouldn't have to configure both NFSD_BLOCKLAYOUT and NFSD_SCSILAYOUT if
+all we want are SCSI layouts on the server, so define the xfs export
+operations for either configuration.
 
-It should have been ranged checked when the AGF is first read in
-(i.e. in the verifier), in ASSERTS every time xfs_alloc_read_agf()
-is called after initialisation, and then every time the verifier is
-run on write of the AGF.
+Signed-off-by: Benjamin Coddington <bcodding@redhat.com>
+---
+ fs/xfs/xfs_export.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> I did see that we at least check the AGF/AGI levels to make sure they don't
-> overflow XFS_BTREE_MAXLEVELS, so we're probably fine here.
-
-Precisely - if the AGF verifier doesn't have a max level check in it
-for the rmapbt, then we need to add one there.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index a1b2dd828b9d..b08a5541f292 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -246,7 +246,7 @@ const struct export_operations xfs_export_operations = {
+ 	.fh_to_parent		= xfs_fs_fh_to_parent,
+ 	.get_parent		= xfs_fs_get_parent,
+ 	.commit_metadata	= xfs_fs_nfs_commit_metadata,
+-#ifdef CONFIG_NFSD_BLOCKLAYOUT
++#if defined(CONFIG_NFSD_BLOCKLAYOUT) || defined(CONFIG_NFSD_SCSILAYOUT)
+ 	.get_uuid		= xfs_fs_get_uuid,
+ 	.map_blocks		= xfs_fs_map_blocks,
+ 	.commit_blocks		= xfs_fs_commit_blocks,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.5.5
 
 _______________________________________________
 xfs mailing list
