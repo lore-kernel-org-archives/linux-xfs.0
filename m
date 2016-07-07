@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9338A7CD5
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 09:22:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 660388F8039
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 07:22:26 -0700 (PDT)
-Received: from mail-qk0-f179.google.com (mail-qk0-f179.google.com
-	[209.85.220.179]) by cuda.sgi.com with ESMTP id
-	8NKxiatT7mGmdrPX (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:22:20 -0700 (PDT)
-Received: by mail-qk0-f179.google.com with SMTP id t127so289341053qkf.1
-	for <xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:22:20 -0700 (PDT)
-Message-ID: <1467728537.3800.32.camel@redhat.com>
-Subject: Re: [PATCH v23 08/22] richacl: Compute maximum file masks from an acl
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 05 Jul 2016 10:22:17 -0400
-In-Reply-To: <1467294433-3222-9-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-9-git-send-email-agruenba@redhat.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D8F117CB6
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 07:13:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5EDA3AC038
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 05:13:27 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id SaZGe8IUEctExkIY (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Jul 2016 05:13:26 -0700 (PDT)
+Date: Thu, 7 Jul 2016 08:13:23 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [QUESTION] about the freelist allocator in XFS
+Message-ID: <20160707121323.GA10134@laptop.bfoster>
+References: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,139 +25,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Kaho Ng <ngkaho1234@gmail.com>
+Cc: xfs@oss.sgi.com
 
-T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ2ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
-b3RlOgo+IENvbXB1dGUgdXBwZXIgYm91bmQgb3duZXIsIGdyb3VwLCBhbmQgb3RoZXIgZmlsZSBt
-YXNrcyB3aXRoIGFzIGZldwo+IHBlcm1pc3Npb25zIGFzIHBvc3NpYmxlIHdpdGhvdXQgZGVueWlu
-ZyBhbnkgcGVybWlzc2lvbnMgdGhhdCB0aGUgTkZTdjQKPiBhY2wgaW4gYSByaWNoYWNsIGdyYW50
-cy4KPiAKPiBUaGlzIGFsZ29yaXRobSBpcyB1c2VkIHdoZW4gYSBmaWxlIGluaGVyaXRzIGFuIGFj
-bCBhdCBjcmVhdGUgdGltZSBhbmQKPiB3aGVuIGFuIGFjbCBpcyBzZXQgdmlhIGEgbWVjaGFuaXNt
-IHRoYXQgZG9lcyBub3QgcHJvdmlkZSBmaWxlIG1hc2tzCj4gKHN1Y2ggYXMgc2V0dGluZyBhbiBh
-Y2wgdmlhIG5mc2QpLsKgwqBXaGVuIHVzZXItc3BhY2Ugc2V0cyBhbiBhY2wgdmlhCj4gc2V0eGF0
-dHIsIHRoZSBleHRlbmRlZCBhdHRyaWJ1dGUgYWxyZWFkeSBpbmNsdWRlcyB0aGUgZmlsZSBtYXNr
-cy4KPiAKPiBTZXR0aW5nIGFuIGFjbCBhbHNvIHNldHMgdGhlIGZpbGUgbW9kZSBwZXJtaXNzaW9u
-IGJpdHM6IHRoZXkgYXJlCj4gZGV0ZXJtaW5lZCBieSB0aGUgZmlsZSBtYXNrczsgc2VlIHJpY2hh
-Y2xfbWFza3NfdG9fbW9kZSgpLgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1ZW5iYWNo
-ZXIgPGFncnVlbmJhQHJlZGhhdC5jb20+Cj4gUmV2aWV3ZWQtYnk6IEouIEJydWNlIEZpZWxkcyA8
-YmZpZWxkc0ByZWRoYXQuY29tPgo+IC0tLQo+IMKgZnMvcmljaGFjbC5jwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgfCAxNTcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrCj4gwqBpbmNsdWRlL2xpbnV4L3JpY2hhY2wuaCB8wqDCoMKgMSArCj4gwqAyIGZpbGVz
-IGNoYW5nZWQsIDE1OCBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3JpY2hhY2wu
-YyBiL2ZzL3JpY2hhY2wuYwo+IGluZGV4IGQwYTQxMzUuLjA1NjIyOGYgMTAwNjQ0Cj4gLS0tIGEv
-ZnMvcmljaGFjbC5jCj4gKysrIGIvZnMvcmljaGFjbC5jCj4gQEAgLTE4MSwzICsxODEsMTYwIEBA
-IHJpY2hhY2xfd2FudF90b19tYXNrKHVuc2lnbmVkIGludCB3YW50KQo+IMKgCXJldHVybiBtYXNr
-Owo+IMKgfQo+IMKgRVhQT1JUX1NZTUJPTF9HUEwocmljaGFjbF93YW50X3RvX21hc2spOwo+ICsK
-PiArLyoKPiArICogTm90ZTogZnVuY3Rpb25zIGxpa2UgcmljaGFjbF9hbGxvd2VkX3RvX3dobygp
-LCByaWNoYWNsX2dyb3VwX2NsYXNzX2FsbG93ZWQoKSwKPiArICogYW5kIHJpY2hhY2xfY29tcHV0
-ZV9tYXhfbWFza3MoKSBpdGVyYXRlIHRocm91Z2ggdGhlIGVudGlyZSBhY2wgaW4gcmV2ZXJzZQo+
-ICsgKiBvcmRlciBhcyBhbiBvcHRpbWl6YXRpb24uCj4gKyAqCj4gKyAqIEluIHRoZSBzdGFuZGFy
-ZCBhbGdvcml0aG0sIGFjZXMgYXJlIGNvbnNpZGVyZWQgaW4gZm9yd2FyZCBvcmRlci7CoMKgV2hl
-biBhCj4gKyAqIHByb2Nlc3MgbWF0Y2hlcyBhbiBhY2UsIHRoZSBwZXJtaXNzaW9ucyBpbiB0aGUg
-YWNlIGFyZSBlaXRoZXIgYWxsb3dlZCBvcgo+ICsgKiBkZW5pZWQgZGVwZW5kaW5nIG9uIHRoZSBh
-Y2UgdHlwZS7CoMKgT25jZSBhIHBlcm1pc3Npb24gaGFzIGJlZW4gYWxsb3dlZCBvcgo+ICsgKiBk
-ZW5pZWQsIGl0IGlzIG5vIGxvbmdlciBjb25zaWRlcmVkIGluIGZ1cnRoZXIgYWNlcy4KPiArICoK
-PiArICogQnkgaXRlcmF0aW5nIHRocm91Z2ggdGhlIGFjbCBpbiByZXZlcnNlIG9yZGVyLCB3ZSBj
-YW4gY29tcHV0ZSB0aGUgc2FtZQo+ICsgKiByZXN1bHQgd2l0aG91dCBoYXZpbmcgdG8ga2VlcCB0
-cmFjayBvZiB3aGljaCBwZXJtaXNzaW9ucyBoYXZlIGJlZW4gYWxsb3dlZAo+ICsgKiBhbmQgZGVu
-aWVkIGFscmVhZHkuCj4gKyAqLwo+IAoKQ2xldmVyIQoKCj4gKwo+ICsvKioKPiArICogcmljaGFj
-bF9hbGxvd2VkX3RvX3dob8KgwqAtwqDCoHBlcm1pc3Npb25zIGFsbG93ZWQgdG8gYSBzcGVjaWZp
-YyB3aG8gdmFsdWUKPiArICoKPiArICogQ29tcHV0ZSB0aGUgbWF4aW11bSBtYXNrIHZhbHVlcyBh
-bGxvd2VkIHRvIGEgc3BlY2lmaWMgd2hvIHZhbHVlLCB0YWtpbmcKPiArICogZXZlcnlvbmVAIGFj
-ZXMgaW50byBhY2NvdW50Lgo+ICsgKi8KPiArc3RhdGljIHVuc2lnbmVkIGludCByaWNoYWNsX2Fs
-bG93ZWRfdG9fd2hvKHN0cnVjdCByaWNoYWNsICphY2wsCj4gKwkJCQkJwqDCoMKgc3RydWN0IHJp
-Y2hhY2UgKndobykKPiArewo+ICsJc3RydWN0IHJpY2hhY2UgKmFjZTsKPiArCXVuc2lnbmVkIGlu
-dCBhbGxvd2VkID0gMDsKPiArCj4gKwlyaWNoYWNsX2Zvcl9lYWNoX2VudHJ5X3JldmVyc2UoYWNl
-LCBhY2wpIHsKPiArCQlpZiAocmljaGFjZV9pc19pbmhlcml0X29ubHkoYWNlKSkKPiArCQkJY29u
-dGludWU7Cj4gKwkJaWYgKHJpY2hhY2VfaXNfc2FtZV9pZGVudGlmaWVyKGFjZSwgd2hvKSB8fAo+
-ICsJCcKgwqDCoMKgcmljaGFjZV9pc19ldmVyeW9uZShhY2UpKSB7Cj4gKwkJCWlmIChyaWNoYWNl
-X2lzX2FsbG93KGFjZSkpCj4gKwkJCQlhbGxvd2VkIHw9IGFjZS0+ZV9tYXNrOwo+ICsJCQllbHNl
-IGlmIChyaWNoYWNlX2lzX2RlbnkoYWNlKSkKPiArCQkJCWFsbG93ZWQgJj0gfmFjZS0+ZV9tYXNr
-Owo+ICsJCX0KPiArCX0KPiArCXJldHVybiBhbGxvd2VkOwo+ICt9Cj4gKwo+ICsvKioKPiArICog
-cmljaGFjbF9ncm91cF9jbGFzc19hbGxvd2VkwqDCoC3CoMKgbWF4aW11bSBwZXJtaXNzaW9ucyBv
-ZiB0aGUgZ3JvdXAgY2xhc3MKPiArICoKPiArICogQ29tcHV0ZSB0aGUgbWF4aW11bSBtYXNrIHZh
-bHVlcyBhbGxvd2VkIHRvIGEgcHJvY2VzcyBpbiB0aGUgZ3JvdXAgY2xhc3MKPiArICogKGkuZS4s
-IGEgcHJvY2VzcyB3aGljaCBpcyBub3QgdGhlIG93bmVyIGJ1dCBpcyBpbiB0aGUgb3duaW5nIGdy
-b3VwIG9yCj4gKyAqIG1hdGNoZXMgYSB1c2VyIG9yIGdyb3VwIGFjbCBlbnRyeSkuwqDCoFRoaXMg
-aW5jbHVkZXMgcGVybWlzc2lvbnMgZ3JhbnRlZCBvcgo+ICsgKiBkZW5pZWQgYnkgZXZlcnlvbmVA
-IGFjZXMuCj4gKyAqCj4gKyAqIFNlZSByaWNoYWNsX2NvbXB1dGVfbWF4X21hc2tzKCkuCj4gKyAq
-Lwo+ICtzdGF0aWMgdW5zaWduZWQgaW50IHJpY2hhY2xfZ3JvdXBfY2xhc3NfYWxsb3dlZChzdHJ1
-Y3QgcmljaGFjbCAqYWNsKQo+ICt7Cj4gKwlzdHJ1Y3QgcmljaGFjZSAqYWNlOwo+ICsJdW5zaWdu
-ZWQgaW50IGV2ZXJ5b25lX2FsbG93ZWQgPSAwLCBncm91cF9jbGFzc19hbGxvd2VkID0gMDsKPiAr
-CWludCBoYWRfZ3JvdXBfYWNlID0gMDsKPiArCj4gKwlyaWNoYWNsX2Zvcl9lYWNoX2VudHJ5X3Jl
-dmVyc2UoYWNlLCBhY2wpIHsKPiArCQlpZiAocmljaGFjZV9pc19pbmhlcml0X29ubHkoYWNlKSB8
-fAo+ICsJCcKgwqDCoMKgcmljaGFjZV9pc19vd25lcihhY2UpKQo+ICsJCQljb250aW51ZTsKPiAr
-Cj4gKwkJaWYgKHJpY2hhY2VfaXNfZXZlcnlvbmUoYWNlKSkgewo+ICsJCQlpZiAocmljaGFjZV9p
-c19hbGxvdyhhY2UpKQo+ICsJCQkJZXZlcnlvbmVfYWxsb3dlZCB8PSBhY2UtPmVfbWFzazsKPiAr
-CQkJZWxzZSBpZiAocmljaGFjZV9pc19kZW55KGFjZSkpCj4gKwkJCQlldmVyeW9uZV9hbGxvd2Vk
-ICY9IH5hY2UtPmVfbWFzazsKPiArCQl9IGVsc2Ugewo+ICsJCQlncm91cF9jbGFzc19hbGxvd2Vk
-IHw9Cj4gKwkJCQlyaWNoYWNsX2FsbG93ZWRfdG9fd2hvKGFjbCwgYWNlKTsKPiArCj4gKwkJCWlm
-IChyaWNoYWNlX2lzX2dyb3VwKGFjZSkpCj4gKwkJCQloYWRfZ3JvdXBfYWNlID0gMTsKPiArCQl9
-Cj4gKwl9Cj4gKwkvKgo+ICsJwqAqIElmIHRoZSBhY2wgZG9lc24ndCBjb250YWluIGFueSBncm91
-cEAgYWNlcywgcmljaGFjbF9hbGxvd2VkX3RvX3dobygpCj4gKwnCoCogd2Fzbid0IGNhbGxlZCBm
-b3IgdGhlIG93bmluZyBncm91cC7CoMKgV2UgY291bGQgbWFrZSB0aGF0IGNhbGwgbm93LCBidXQK
-PiArCcKgKiB3ZSBhbHJlYWR5IGtub3cgdGhlIHJlc3VsdCAoZXZlcnlvbmVfYWxsb3dlZCkuCj4g
-KwnCoCovCj4gKwlpZiAoIWhhZF9ncm91cF9hY2UpCj4gKwkJZ3JvdXBfY2xhc3NfYWxsb3dlZCB8
-PSBldmVyeW9uZV9hbGxvd2VkOwo+ICsJcmV0dXJuIGdyb3VwX2NsYXNzX2FsbG93ZWQ7Cj4gK30K
-PiArCj4gKy8qKgo+ICsgKiByaWNoYWNsX2NvbXB1dGVfbWF4X21hc2tzwqDCoC3CoMKgY29tcHV0
-ZSB1cHBlciBib3VuZCBtYXNrcwo+ICsgKgo+ICsgKiBDb21wdXRlcyB1cHBlciBib3VuZCBvd25l
-ciwgZ3JvdXAsIGFuZCBvdGhlciBtYXNrcyBzbyB0aGF0IG5vbmUgb2YgdGhlCj4gKyAqIHBlcm1p
-c3Npb25zIGFsbG93ZWQgYnkgdGhlIGFjbCBhcmUgZGlzYWJsZWQuCj4gKyAqCj4gKyAqIFdlIGRv
-bid0IG1ha2UgYXNzdW1wdGlvbnMgYWJvdXQgd2hvIHRoZSBvd25lciBpcyBzbyB0aGF0IHRoZSBv
-d25lciBjYW4KPiArICogY2hhbmdlIHdpdGggbm8gZWZmZWN0IG9uIHRoZSBmaWxlIG1hc2tzIG9y
-IGZpbGUgbW9kZSBwZXJtaXNzaW9uIGJpdHM7IHRoaXMKPiArICogbWVhbnMgdGhhdCB3ZSBtdXN0
-IGFzc3VtZSB0aGF0IGFsbCBlbnRyaWVzIGNhbiBtYXRjaCB0aGUgb3duZXIuCj4gKyAqLwo+ICt2
-b2lkIHJpY2hhY2xfY29tcHV0ZV9tYXhfbWFza3Moc3RydWN0IHJpY2hhY2wgKmFjbCkKPiArewo+
-ICsJdW5zaWduZWQgaW50IGdtYXNrID0gfjA7Cj4gKwlzdHJ1Y3QgcmljaGFjZSAqYWNlOwo+ICsK
-PiArCS8qCj4gKwnCoCogQGdtYXNrIGNvbnRhaW5zIGFsbCBwZXJtaXNzaW9ucyB3aGljaCB0aGUg
-Z3JvdXAgY2xhc3MgaXMgZXZlcgo+ICsJwqAqIGFsbG93ZWQuwqDCoFdlIHVzZSBpdCB0byBhdm9p
-ZCBhZGRpbmcgcGVybWlzc2lvbnMgdG8gdGhlIGdyb3VwIG1hc2sKPiArCcKgKiBmcm9tIGV2ZXJ5
-b25lQCBhbGxvdyBhY2VzIHdoaWNoIHRoZSBncm91cCBjbGFzcyBpcyBhbHdheXMgZGVuaWVkCj4g
-KwnCoCogdGhyb3VnaCBvdGhlciBhY2VzLsKgwqBGb3IgZXhhbXBsZSwgdGhlIGZvbGxvd2luZyBh
-Y2wgd291bGQgb3RoZXJ3aXNlCj4gKwnCoCogcmVzdWx0IGluIGEgZ3JvdXAgbWFzayBvZiBydzoK
-PiArCcKgKgo+ICsJwqAqCWdyb3VwQDp3OjpkZW55Cj4gKwnCoCoJZXZlcnlvbmVAOnJ3OjphbGxv
-dwo+ICsJwqAqCj4gKwnCoCogQXZvaWQgY29tcHV0aW5nIEBnbWFzayBmb3IgYWNscyB3aGljaCBk
-byBub3QgaW5jbHVkZSBhbnkgZ3JvdXAgY2xhc3MKPiArCcKgKiBkZW55IGFjZXM6IGluIHN1Y2gg
-YWNscywgdGhlIGdyb3VwIGNsYXNzIGlzIG5ldmVyIGRlbmllZCBhbnkKPiArCcKgKiBwZXJtaXNz
-aW9ucyBmcm9tIGV2ZXJ5b25lQCBhbGxvdyBhY2VzLCBhbmQgdGhlIGdyb3VwIGNsYXNzIGNhbm5v
-dAo+ICsJwqAqIGhhdmUgZmV3ZXIgcGVybWlzc2lvbnMgdGhhbiB0aGUgb3RoZXIgY2xhc3MuCj4g
-KwnCoCovCj4gKwo+ICtyZXN0YXJ0Ogo+ICsJYWNsLT5hX293bmVyX21hc2sgPSAwOwo+ICsJYWNs
-LT5hX2dyb3VwX21hc2sgPSAwOwo+ICsJYWNsLT5hX290aGVyX21hc2sgPSAwOwo+ICsKPiArCXJp
-Y2hhY2xfZm9yX2VhY2hfZW50cnlfcmV2ZXJzZShhY2UsIGFjbCkgewo+ICsJCWlmIChyaWNoYWNl
-X2lzX2luaGVyaXRfb25seShhY2UpKQo+ICsJCQljb250aW51ZTsKPiArCj4gKwkJaWYgKHJpY2hh
-Y2VfaXNfb3duZXIoYWNlKSkgewo+ICsJCQlpZiAocmljaGFjZV9pc19hbGxvdyhhY2UpKQo+ICsJ
-CQkJYWNsLT5hX293bmVyX21hc2sgfD0gYWNlLT5lX21hc2s7Cj4gKwkJCWVsc2UgaWYgKHJpY2hh
-Y2VfaXNfZGVueShhY2UpKQo+ICsJCQkJYWNsLT5hX293bmVyX21hc2sgJj0gfmFjZS0+ZV9tYXNr
-Owo+ICsJCX0gZWxzZSBpZiAocmljaGFjZV9pc19ldmVyeW9uZShhY2UpKSB7Cj4gKwkJCWlmIChy
-aWNoYWNlX2lzX2FsbG93KGFjZSkpIHsKPiArCQkJCWFjbC0+YV9vd25lcl9tYXNrIHw9IGFjZS0+
-ZV9tYXNrOwo+ICsJCQkJYWNsLT5hX2dyb3VwX21hc2sgfD0gYWNlLT5lX21hc2sgJiBnbWFzazsK
-PiArCQkJCWFjbC0+YV9vdGhlcl9tYXNrIHw9IGFjZS0+ZV9tYXNrOwo+ICsJCQl9IGVsc2UgaWYg
-KHJpY2hhY2VfaXNfZGVueShhY2UpKSB7Cj4gKwkJCQlhY2wtPmFfb3duZXJfbWFzayAmPSB+YWNl
-LT5lX21hc2s7Cj4gKwkJCQlhY2wtPmFfZ3JvdXBfbWFzayAmPSB+YWNlLT5lX21hc2s7Cj4gKwkJ
-CQlhY2wtPmFfb3RoZXJfbWFzayAmPSB+YWNlLT5lX21hc2s7Cj4gKwkJCX0KPiArCQl9IGVsc2Ug
-ewo+ICsJCQlpZiAocmljaGFjZV9pc19hbGxvdyhhY2UpKSB7Cj4gKwkJCQlhY2wtPmFfb3duZXJf
-bWFzayB8PSBhY2UtPmVfbWFzayAmIGdtYXNrOwo+ICsJCQkJYWNsLT5hX2dyb3VwX21hc2sgfD0g
-YWNlLT5lX21hc2sgJiBnbWFzazsKPiArCQkJfSBlbHNlIGlmIChyaWNoYWNlX2lzX2RlbnkoYWNl
-KSAmJiBnbWFzayA9PSB+MCkgewo+ICsJCQkJZ21hc2sgPSByaWNoYWNsX2dyb3VwX2NsYXNzX2Fs
-bG93ZWQoYWNsKTsKPiArCQkJCWlmIChsaWtlbHkoZ21hc2sgIT0gfjApKQo+ICsJCQkJCS8qIHNo
-b3VsZCBhbHdheXMgYmUgdHJ1ZSAqLwo+ICsJCQkJCWdvdG8gcmVzdGFydDsKPiArCQkJfQo+ICsJ
-CX0KPiArCX0KPiArCj4gKwlhY2wtPmFfZmxhZ3MgJj0gfihSSUNIQUNMX1dSSVRFX1RIUk9VR0gg
-fCBSSUNIQUNMX01BU0tFRCk7Cj4gK30KPiArRVhQT1JUX1NZTUJPTF9HUEwocmljaGFjbF9jb21w
-dXRlX21heF9tYXNrcyk7Cj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcmljaGFjbC5oIGIv
-aW5jbHVkZS9saW51eC9yaWNoYWNsLmgKPiBpbmRleCA5MTAyZWYwLi4zNTU5YjJjIDEwMDY0NAo+
-IC0tLSBhL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9yaWNo
-YWNsLmgKPiBAQCAtMTc4LDUgKzE3OCw2IEBAIGV4dGVybiB2b2lkIHJpY2hhY2VfY29weShzdHJ1
-Y3QgcmljaGFjZSAqLCBjb25zdCBzdHJ1Y3QgcmljaGFjZSAqKTsKPiDCoGV4dGVybiBpbnQgcmlj
-aGFjbF9tYXNrc190b19tb2RlKGNvbnN0IHN0cnVjdCByaWNoYWNsICopOwo+IMKgZXh0ZXJuIHVu
-c2lnbmVkIGludCByaWNoYWNsX21vZGVfdG9fbWFzayh1bW9kZV90KTsKPiDCoGV4dGVybiB1bnNp
-Z25lZCBpbnQgcmljaGFjbF93YW50X3RvX21hc2sodW5zaWduZWQgaW50KTsKPiArZXh0ZXJuIHZv
-aWQgcmljaGFjbF9jb21wdXRlX21heF9tYXNrcyhzdHJ1Y3QgcmljaGFjbCAqKTsKPiDCoAo+IMKg
-I2VuZGlmIC8qIF9fUklDSEFDTF9IICovCgpSZXZpZXdlZC1ieTogSmVmZiBMYXl0b24gPGpsYXl0
-b25AcmVkaGF0LmNvbT4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Jul 07, 2016 at 07:01:35PM +0800, Kaho Ng wrote:
+> I am trying to investigate how freelist allocator in xfs interacts
+> with freespace B+Tree allocator.
+> First I prepared a patch
+> <https://gist.github.com/22ffca35929e67c08759b057779b7566> on
+> linux-source/fs/xfs/libxfs/xfs_alloc.c to print debugging messages
+> (The kernel version used is linux-3.10.0-327.22.2.el7).
+> Then, I wrote a simple utility
+> <https://gist.github.com/992364ceca984d3f14099ec94aaacd9d> to make
+> TONS of
+> holes in a filesystem by calling fallocate() to punch holes in a file
+> that is almost as large as the volume size.
+> 
+> I created an XFS filesystem image by the following steps:
+> 1. fallocate -l 80G /mnt/disk2/xfs
+> 2. mkfs.xfs -f -d agcount=1 /mnt/disk2/xfs
+> 
+> Then I created a large file by fallocate:
+> fallocate -l 85823746048 /mnt/test/abc
+> 
+> which left only 4 blocks available in the volume finally:
+> /dev/loop0      20961280 20961276         4 100% /mnt/test
+> 
+> The result of xfs_bmap against /mnt/test/abc:
+> /mnt/test/abc:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET              TOTAL FLAGS
+>    0: [0..167624503]:  83000..167707503  0 (83000..167707503) 167624504 10000
+> 
+> After that, I used the hole-punching utility above to create holes on
+> the files, and captured the output of kmsg.
+> 
+> When reading the log output
+> <https://gist.github.com/890076405e1c13c0a952a579e25e6afe> , I
+> realised that there is no B+Tree split
+> triggered by xfs_alloc_fix_freelist() when calling xfs_free_extent().
+> Isn't B+Tree split possible in by-size B+Tree even when truncating a
+> longer freespace record to shorter one? But what I found in the log is
+> only a few tree shrinks... And when reading the source code of
+> freespace allocator I found that a B+Tree growth in this case is
+> impossible at least...
+> 
+
+I'd suggest to use a combination of xfs_db and tracepoints/xfsstats to
+identify what's happening in your test sequence. E.g., unmount and use
+xfs_db to identify the state of the free space btree(s) before and after
+various points of your test. See [1] for examples of how to use xfs_db
+to explore on-disk data structures. See 'man trace-cmd' to work with
+tracepoints and /proc/fs/xfs/stats (and /proc/sys/fs/xfs/stats_clear) to
+view runtime statistics (which I believe already includes the number of
+btree splits).
+
+Brian
+
+[1] http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/index.html
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
