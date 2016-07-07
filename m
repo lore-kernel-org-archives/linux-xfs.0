@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D32A07CA0
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2016 14:11:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 95E778F8037
-	for <xfs@oss.sgi.com>; Mon,  4 Jul 2016 12:11:46 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id r0VVNfBmGZEksrGY (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Jul 2016 12:11:43 -0700 (PDT)
-Date: Mon, 4 Jul 2016 12:11:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/20] reflink: test cross-mountpoint reflink and dedupe
-Message-ID: <20160704191135.GA5215@birch.djwong.org>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-	<146612806287.25024.6626531953151914169.stgit@birch.djwong.org>
-	<20160704065137.GW23649@eguan.usersys.redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 29AFE7CA3
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 17:55:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D0457304138
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 15:55:20 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	UlXNsfNRYeOjLZ1M for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2016 15:55:18 -0700 (PDT)
+Date: Fri, 8 Jul 2016 08:55:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 026/119] xfs: add owner field to extent allocation and
+	freeing
+Message-ID: <20160707225516.GI12670@dastard>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612643914.12839.17925699349002137545.stgit@birch.djwong.org>
+	<20160707151227.GA33740@bfoster.bfoster>
+	<20160707190956.GA12567@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160704065137.GW23649@eguan.usersys.redhat.com>
+In-Reply-To: <20160707190956.GA12567@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +33,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Mon, Jul 04, 2016 at 02:51:37PM +0800, Eryu Guan wrote:
-> On Thu, Jun 16, 2016 at 06:47:42PM -0700, Darrick J. Wong wrote:
-> > Test sharing blocks via reflink and dedupe between two different
-> > mountpoints of the same filesystem.  This shouldn't work, since
-> > we don't allow cross-mountpoint functions.
+On Thu, Jul 07, 2016 at 12:09:56PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 07, 2016 at 11:12:27AM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2016 at 06:20:39PM -0700, Darrick J. Wong wrote:
+> > > For the rmap btree to work, we have to feed the extent owner
+> > > information to the the allocation and freeing functions. This
+> > > information is what will end up in the rmap btree that tracks
+> > > allocated extents. While we technically don't need the owner
+> > > information when freeing extents, passing it allows us to validate
+> > > that the extent we are removing from the rmap btree actually
+> > > belonged to the owner we expected it to belong to.
+....
+> > > +/*
+> > > + * Special owner types.
+> > > + *
+> > > + * Seeing as we only support up to 8EB, we have the upper bit of the owner field
+> > > + * to tell us we have a special owner value. We use these for static metadata
+> > > + * allocated at mkfs/growfs time, as well as for freespace management metadata.
+> > > + */
+> > > +#define XFS_RMAP_OWN_NULL	(-1ULL)	/* No owner, for growfs */
+> > > +#define XFS_RMAP_OWN_UNKNOWN	(-2ULL)	/* Unknown owner, for EFI recovery */
+> > > +#define XFS_RMAP_OWN_FS		(-3ULL)	/* static fs metadata */
+> > > +#define XFS_RMAP_OWN_LOG	(-4ULL)	/* static fs metadata */
+> > > +#define XFS_RMAP_OWN_AG		(-5ULL)	/* AG freespace btree blocks */
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/reflink        |    2 +
-> >  tests/generic/927     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/927.out |    9 +++++
-> >  tests/generic/928     |   86 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/928.out |   10 ++++++
-> >  tests/generic/group   |    2 +
-> >  6 files changed, 196 insertions(+), 1 deletion(-)
-> >  create mode 100755 tests/generic/927
-> >  create mode 100644 tests/generic/927.out
-> >  create mode 100755 tests/generic/928
-> >  create mode 100644 tests/generic/928.out
-> > 
-> > 
-> > diff --git a/common/reflink b/common/reflink
-> > index 4ec390d..1363971 100644
-> > --- a/common/reflink
-> > +++ b/common/reflink
-> > @@ -107,7 +107,7 @@ _require_scratch_dedupe()
-> >  	_scratch_mount
-> >  	"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 65536" "$SCRATCH_MNT/file1" > /dev/null
-> >  	"$XFS_IO_PROG" -f -c "pwrite -S 0x61 0 65536" "$SCRATCH_MNT/file2" > /dev/null
-> > -	testio="$("$XFS_IO_PROG" -f -c "dedupe $TEST_DIR/file1 0 0 65536" "$TEST_DIR/file2" 2>&1)"
-> > +	testio="$("$XFS_IO_PROG" -f -c "dedupe $SCRATCH_MNT/file1 0 0 65536" "$SCRATCH_MNT/file2" 2>&1)"
-> >  	echo $testio | grep -q "Operation not supported" && \
-> >  		_notrun "Dedupe not supported by test filesystem type: $FSTYP"
-> >  	echo $testio | grep -q "Inappropriate ioctl for device" && \
-> 
-> I think this hunk belongs to a seperate patch.
+> > How about XFS_RMAP_OWN_AGFL? OWN_AG confuses me into thinking it's for
+> > AG headers, but IIUC that is covered by OWN_FS.
 
-Ok, will do.
+AG headers are static metadata, laid down by mkfs. They are always
+owned by the filesystem, hence the "OWN_FS" name.
 
---D
+> or _SPACEBT for AG {free,rmap} space btrees?
 
-> 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+IIRC, the reason I simply named them as "Owned by the AG" is that
+the space tracking btree blocks are always considered free space. THey can
+move between the freespace tree and the AGFL without consuming free
+space and it's not trivial to separate their classification to
+anything other than "blocks used by the AG but are free space" e.g.
+in he middle of a transaction that allocates and free
+blocks the same block can move like this:
+
+ bnobt block -> AGFL -> cntbt block -> AGFL -> rmapbt block
+
+Hence blocks on the AGFL are considered to be the same as
+bno/cnt/rmapbt blocks for the purpose of owner identification.
+Otherwise we'd have to modify the rmapbt every time we move a block
+to/from the AGFL, and that then leads to recursion problems and lots
+of unnecessary overhead...
+
+Feel free to change the names, but I don't think we can change owner
+classifications of the blocks they represent...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
