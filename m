@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEBF97CEB
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 06:01:41 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8ADFA7CE5
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 18:15:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9289F3040EF
-	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 04:01:38 -0700 (PDT)
-Received: from mail-pf0-f179.google.com (mail-pf0-f179.google.com
-	[209.85.192.179]) by cuda.sgi.com with ESMTP id
-	OcqsYDu6i7qokUzE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Jul 2016 04:01:37 -0700 (PDT)
-Received: by mail-pf0-f179.google.com with SMTP id i123so5413063pfg.0
-	for <xfs@oss.sgi.com>; Thu, 07 Jul 2016 04:01:37 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 13B10AC056
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 16:14:59 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	MQ828B7jDsSBHqtn for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2016 16:14:57 -0700 (PDT)
+Date: Fri, 8 Jul 2016 09:14:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 028/119] xfs: define the on-disk rmap btree format
+Message-ID: <20160707231455.GJ12670@dastard>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612645206.12839.17008642336898856662.stgit@birch.djwong.org>
+	<20160707184156.GB33740@bfoster.bfoster>
+	<20160707191813.GB12567@birch.djwong.org>
 MIME-Version: 1.0
-From: Kaho Ng <ngkaho1234@gmail.com>
-Date: Thu, 7 Jul 2016 19:01:35 +0800
-Message-ID: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
-Subject: [QUESTION] about the freelist allocator in XFS
+Content-Disposition: inline
+In-Reply-To: <20160707191813.GB12567@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +32,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-I am trying to investigate how freelist allocator in xfs interacts
-with freespace B+Tree allocator.
-First I prepared a patch
-<https://gist.github.com/22ffca35929e67c08759b057779b7566> on
-linux-source/fs/xfs/libxfs/xfs_alloc.c to print debugging messages
-(The kernel version used is linux-3.10.0-327.22.2.el7).
-Then, I wrote a simple utility
-<https://gist.github.com/992364ceca984d3f14099ec94aaacd9d> to make
-TONS of
-holes in a filesystem by calling fallocate() to punch holes in a file
-that is almost as large as the volume size.
+On Thu, Jul 07, 2016 at 12:18:13PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 07, 2016 at 02:41:56PM -0400, Brian Foster wrote:
+> > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > > +		return false;
+> > > +	if (!xfs_btree_sblock_v5hdr_verify(bp))
+> > > +		return false;
+> > > +
+> > > +	level = be16_to_cpu(block->bb_level);
+> > > +	if (pag && pag->pagf_init) {
+> > > +		if (level >= pag->pagf_levels[XFS_BTNUM_RMAPi])
+> > > +			return false;
+> > > +	} else if (level >= mp->m_rmap_maxlevels)
+> > > +		return false;
+> > 
+> > It looks like the above (level >= mp->m_rmap_maxlevels) check could be
+> > independent (rather than an 'else). Otherwise looks good:
+> 
+> Hmmm.... at first I wondered, "Shouldn't we have already checked that
+> pag->pagf_levels[XFS_BTNUM_RMAPi] <= mp->m_rmap_maxlevels?"  But then I
+> realized that no, we don't do that anywhere.  Nor does the bnobt/cntbt
+> verifier.  Am I missing something?
 
-I created an XFS filesystem image by the following steps:
-1. fallocate -l 80G /mnt/disk2/xfs
-2. mkfs.xfs -f -d agcount=1 /mnt/disk2/xfs
+It should have been ranged checked when the AGF is first read in
+(i.e. in the verifier), in ASSERTS every time xfs_alloc_read_agf()
+is called after initialisation, and then every time the verifier is
+run on write of the AGF.
 
-Then I created a large file by fallocate:
-fallocate -l 85823746048 /mnt/test/abc
+> I did see that we at least check the AGF/AGI levels to make sure they don't
+> overflow XFS_BTREE_MAXLEVELS, so we're probably fine here.
 
-which left only 4 blocks available in the volume finally:
-/dev/loop0      20961280 20961276         4 100% /mnt/test
+Precisely - if the AGF verifier doesn't have a max level check in it
+for the rmapbt, then we need to add one there.
 
-The result of xfs_bmap against /mnt/test/abc:
-/mnt/test/abc:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET              TOTAL FLAGS
-   0: [0..167624503]:  83000..167707503  0 (83000..167707503) 167624504 10000
+Cheers,
 
-After that, I used the hole-punching utility above to create holes on
-the files, and captured the output of kmsg.
-
-When reading the log output
-<https://gist.github.com/890076405e1c13c0a952a579e25e6afe> , I
-realised that there is no B+Tree split
-triggered by xfs_alloc_fix_freelist() when calling xfs_free_extent().
-Isn't B+Tree split possible in by-size B+Tree even when truncating a
-longer freespace record to shorter one? But what I found in the log is
-only a few tree shrinks... And when reading the source code of
-freespace allocator I found that a B+Tree growth in this case is
-impossible at least...
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
