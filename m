@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 987DE7D0D
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 13:31:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 210B6AC00D
-	for <xfs@oss.sgi.com>; Wed,  6 Jul 2016 11:31:18 -0700 (PDT)
-Received: from mail-qk0-f173.google.com (mail-qk0-f173.google.com
-	[209.85.220.173]) by cuda.sgi.com with ESMTP id
-	BMacTwAEik81l6Dy (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Jul 2016 11:31:17 -0700 (PDT)
-Received: by mail-qk0-f173.google.com with SMTP id t127so322465457qkf.1
-	for <xfs@oss.sgi.com>; Wed, 06 Jul 2016 11:31:17 -0700 (PDT)
-Message-ID: <1467829873.2908.1.camel@redhat.com>
-Subject: Re: [PATCH v23 12/22] vfs: Add get_richacl and set_richacl inode
-	operations
-From: Jeff Layton <jlayton@redhat.com>
-Date: Wed, 06 Jul 2016 14:31:13 -0400
-In-Reply-To: <1467294433-3222-13-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-13-git-send-email-agruenba@redhat.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E651B7CE8
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 21:29:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A4AE18F8127
+	for <xfs@oss.sgi.com>; Thu,  7 Jul 2016 19:29:42 -0700 (PDT)
+Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
+	[209.85.220.45]) by cuda.sgi.com with ESMTP id xgIIqtrbUTLuCQLy
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Jul 2016 19:29:41 -0700 (PDT)
+Received: by mail-pa0-f45.google.com with SMTP id b13so11084584pat.0
+	for <xfs@oss.sgi.com>; Thu, 07 Jul 2016 19:29:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGeO4WNAdmeXgL4+CAQ1Yqo18XFgv3NZxWVbDTS0xDZLyb3e2w@mail.gmail.com>
+References: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
+	<20160707222829.GG12670@dastard>
+	<CAGeO4WNAdmeXgL4+CAQ1Yqo18XFgv3NZxWVbDTS0xDZLyb3e2w@mail.gmail.com>
+From: Kaho Ng <ngkaho1234@gmail.com>
+Date: Fri, 8 Jul 2016 10:29:03 +0800
+Message-ID: <CAGeO4WNwoyF0-s0YcTJeW=U0H62ffJTfXipQ9KawHj7UFBjHpQ@mail.gmail.com>
+Subject: Fwd: [QUESTION] about the freelist allocator in XFS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +29,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ3ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
-b3RlOgo+IFRoZXNlIG9wZXJhdGlvbnMgYXJlIHNpbWlsYXIgdG8gdGhlIGdldF9hY2wgYW5kIHNl
-dF9hY2wgb3BlcmF0aW9ucyBmb3IKPiBQT1NJWCBBQ0xzLsKgwqBUaGUgZGlzdGluY3Rpb24gYmV0
-d2VlbiBhY2Nlc3MgYW5kIGRlZmF1bHQgQUNMcyBkb2Vzbid0IGV4aXN0Cj4gZm9yIHJpY2hhY2xz
-Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1ZW5iYWNoZXIgPGFncnVlbmJhQHJlZGhh
-dC5jb20+Cj4gUmV2aWV3ZWQtYnk6IFN0ZXZlIEZyZW5jaCA8c3RldmUuZnJlbmNoQHByaW1hcnlk
-YXRhLmNvbT4KPiAtLS0KPiDCoGluY2x1ZGUvbGludXgvZnMuaCB8IDIgKysKPiDCoDEgZmlsZSBj
-aGFuZ2VkLCAyIGluc2VydGlvbnMoKykKPiAKPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9m
-cy5oIGIvaW5jbHVkZS9saW51eC9mcy5oCj4gaW5kZXggMDZhMzBiMC4uYWM5NmJkYSAxMDA2NDQK
-PiAtLS0gYS9pbmNsdWRlL2xpbnV4L2ZzLmgKPiArKysgYi9pbmNsdWRlL2xpbnV4L2ZzLmgKPiBA
-QCAtMTcyNiw2ICsxNzI2LDcgQEAgc3RydWN0IGlub2RlX29wZXJhdGlvbnMgewo+IMKgCWNvbnN0
-IGNoYXIgKiAoKmdldF9saW5rKSAoc3RydWN0IGRlbnRyeSAqLCBzdHJ1Y3QgaW5vZGUgKiwgc3Ry
-dWN0IGRlbGF5ZWRfY2FsbCAqKTsKPiDCoAlpbnQgKCpwZXJtaXNzaW9uKSAoc3RydWN0IGlub2Rl
-ICosIGludCk7Cj4gwqAJc3RydWN0IHBvc2l4X2FjbCAqICgqZ2V0X2FjbCkoc3RydWN0IGlub2Rl
-ICosIGludCk7Cj4gKwlzdHJ1Y3QgcmljaGFjbCAqICgqZ2V0X3JpY2hhY2wpKHN0cnVjdCBpbm9k
-ZSAqKTsKPiDCoAo+IMKgCWludCAoKnJlYWRsaW5rKSAoc3RydWN0IGRlbnRyeSAqLCBjaGFyIF9f
-dXNlciAqLGludCk7Cj4gwqAKPiBAQCAtMTc1Niw2ICsxNzU3LDcgQEAgc3RydWN0IGlub2RlX29w
-ZXJhdGlvbnMgewo+IMKgCQkJwqDCoMKgdW1vZGVfdCBjcmVhdGVfbW9kZSwgaW50ICpvcGVuZWQp
-Owo+IMKgCWludCAoKnRtcGZpbGUpIChzdHJ1Y3QgaW5vZGUgKiwgc3RydWN0IGRlbnRyeSAqLCB1
-bW9kZV90KTsKPiDCoAlpbnQgKCpzZXRfYWNsKShzdHJ1Y3QgaW5vZGUgKiwgc3RydWN0IHBvc2l4
-X2FjbCAqLCBpbnQpOwo+ICsJaW50ICgqc2V0X3JpY2hhY2wpKHN0cnVjdCBpbm9kZSAqLCBzdHJ1
-Y3QgcmljaGFjbCAqKTsKPiDCoH0gX19fX2NhY2hlbGluZV9hbGlnbmVkOwo+IMKgCj4gwqBzc2l6
-ZV90IHJ3X2NvcHlfY2hlY2tfdXZlY3RvcihpbnQgdHlwZSwgY29uc3Qgc3RydWN0IGlvdmVjIF9f
-dXNlciAqIHV2ZWN0b3IsCgpMb29rcyBPSywgdGhvdWdoIGl0J3MgaGFyZCB0byByZXZpZXcgc29t
-ZXRoaW5nIGxpa2UgdGhpcyB3aXRob3V0IHNvbWUKY29udGV4dC4gTWF5YmUgdGhpcyBwYXRjaCBz
-aG91bGQgYmUgZm9sZGVkIGluIHdpdGggdGhlIHBhdGNoIHRoYXQKYWN0dWFsbHkgYWRkcyB0aGUg
-Y2FsbHMgZm9yIHRoZXNlIG9wZXJhdGlvbnM/CgpSZXZpZXdlZC1ieTogSmVmZiBMYXl0b24gPGps
-YXl0b25AcmVkaGF0LmNvbT4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+---------- Forwarded message ----------
+From: Kaho Ng <ngkaho1234@gmail.com>
+Date: Fri, Jul 8, 2016 at 10:26 AM
+Subject: Re: [QUESTION] about the freelist allocator in XFS
+To: Dave Chinner <david@fromorbit.com>
+
+
+Hmm, wouldn't xfs_alloc_ag_vextent_size() first remove the free extent
+record, and insert a new extent record into the freespace by-size
+btree if the found free extent record is longer than args->maxlen?
+
+On Fri, Jul 8, 2016 at 6:28 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jul 07, 2016 at 07:01:35PM +0800, Kaho Ng wrote:
+>> I am trying to investigate how freelist allocator in xfs interacts
+>> with freespace B+Tree allocator.
+>> First I prepared a patch
+>> <https://gist.github.com/22ffca35929e67c08759b057779b7566> on
+>> linux-source/fs/xfs/libxfs/xfs_alloc.c to print debugging messages
+>> (The kernel version used is linux-3.10.0-327.22.2.el7).
+> ......
+>> When reading the log output
+>> <https://gist.github.com/890076405e1c13c0a952a579e25e6afe> , I
+>> realised that there is no B+Tree split
+>> triggered by xfs_alloc_fix_freelist() when calling xfs_free_extent().
+>> Isn't B+Tree split possible in by-size B+Tree even when truncating a
+>> longer freespace record to shorter one? But what I found in the log is
+>> only a few tree shrinks... And when reading the source code of
+>> freespace allocator I found that a B+Tree growth in this case is
+>> impossible at least...
+>
+> args->isfl doesn't mean what you think it means.
+>
+> args->isfl is only set when moving blocks from the freespace btree
+> to the AGFL, which only occurs when a previous operation allocated a
+> new freespace btree block and depleted the current freelist. i.e.
+> "AG Free List" != "AG freespace btree" - they are different
+> structures on disk...
+>
+> And when you consider that a freelist refill can only remove records
+> from the the freespace btree, it's should be clear that a btree
+> split won't occur during a freelist refill...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
