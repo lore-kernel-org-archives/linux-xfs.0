@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 887547CD9
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 09:59:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 45D8C8F804B
-	for <xfs@oss.sgi.com>; Tue,  5 Jul 2016 07:59:12 -0700 (PDT)
-Received: from mail-qt0-f169.google.com (mail-qt0-f169.google.com
-	[209.85.216.169]) by cuda.sgi.com with ESMTP id
-	Bmv4Or5eWuBTakKv (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:59:09 -0700 (PDT)
-Received: by mail-qt0-f169.google.com with SMTP id m2so102175831qtd.1
-	for <xfs@oss.sgi.com>; Tue, 05 Jul 2016 07:59:09 -0700 (PDT)
-Message-ID: <1467730747.3800.34.camel@redhat.com>
-Subject: Re: [PATCH v23 09/22] richacl: Permission check algorithm
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 05 Jul 2016 10:59:07 -0400
-In-Reply-To: <1467294433-3222-10-git-send-email-agruenba@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-10-git-send-email-agruenba@redhat.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D8E2B7CC7
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 08:25:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9BB32304039
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 06:25:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KeG38uGBFbPorRfE (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 09 Jul 2016 06:25:51 -0700 (PDT)
+Date: Sat, 9 Jul 2016 09:25:49 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 033/119] xfs: support overlapping intervals in the rmap
+	btree
+Message-ID: <20160709132547.GA13175@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612648418.12839.17068915263834486145.stgit@birch.djwong.org>
+	<20160708183355.GE59278@bfoster.bfoster>
+	<20160709001428.GB30604@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160709001428.GB30604@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,112 +29,243 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ3ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
-b3RlOgo+IEEgcmljaGFjbCByb3VnaGx5IGdyYW50cyBhIHJlcXVlc3RlZCBhY2Nlc3MgaWYgdGhl
-IE5GU3Y0IGFjbCBpbiB0aGUKPiByaWNoYWNsIGdyYW50cyB0aGUgcmVxdWVzdGVkIHBlcm1pc3Np
-b25zIGFjY29yZGluZyB0byB0aGUgTkZTdjQKPiBwZXJtaXNzaW9uIGNoZWNrIGFsZ29yaXRobSBh
-bmQgdGhlIGZpbGUgbWFzayB0aGF0IGFwcGxpZXMgdG8gdGhlIHByb2Nlc3MKPiBpbmNsdWRlcyB0
-aGUgcmVxdWVzdGVkIHBlcm1pc3Npb25zLgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1
-ZW5iYWNoZXIgPGFncnVlbmJhQHJlZGhhdC5jb20+Cj4gUmV2aWV3ZWQtYnk6IEouIEJydWNlIEZp
-ZWxkcyA8YmZpZWxkc0BmaWVsZHNlcy5vcmc+Cj4gLS0tCj4gwqBmcy9yaWNoYWNsLmPCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqB8IDEyOCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysKPiDCoGluY2x1ZGUvbGludXgvcmljaGFjbC5oIHzCoMKgwqAxICsKPiDC
-oDIgZmlsZXMgY2hhbmdlZCwgMTI5IGluc2VydGlvbnMoKykKPiAKPiBkaWZmIC0tZ2l0IGEvZnMv
-cmljaGFjbC5jIGIvZnMvcmljaGFjbC5jCj4gaW5kZXggMDU2MjI4Zi4uY2IwZWYzZiAxMDA2NDQK
-PiAtLS0gYS9mcy9yaWNoYWNsLmMKPiArKysgYi9mcy9yaWNoYWNsLmMKPiBAQCAtMzM4LDMgKzMz
-OCwxMzEgQEAgcmVzdGFydDoKPiDCoAlhY2wtPmFfZmxhZ3MgJj0gfihSSUNIQUNMX1dSSVRFX1RI
-Uk9VR0ggfCBSSUNIQUNMX01BU0tFRCk7Cj4gwqB9Cj4gwqBFWFBPUlRfU1lNQk9MX0dQTChyaWNo
-YWNsX2NvbXB1dGVfbWF4X21hc2tzKTsKPiArCj4gKy8qKgo+ICsgKiByaWNoYWNsX3Blcm1pc3Np
-b27CoMKgLcKgwqByaWNoYWNsIHBlcm1pc3Npb24gY2hlY2sgYWxnb3JpdGhtCj4gKyAqIEBpbm9k
-ZToJaW5vZGUgdG8gY2hlY2sKPiArICogQGFjbDoJcmljaCBhY2wgb2YgdGhlIGlub2RlCj4gKyAq
-IEB3YW50OglyZXF1ZXN0ZWQgYWNjZXNzIChNQVlfKiBmbGFncykKPiArICoKPiArICogQ2hlY2tz
-IGlmIHRoZSBjdXJyZW50IHByb2Nlc3MgaXMgZ3JhbnRlZCBAbWFzayBmbGFncyBpbiBAYWNsLgo+
-ICsgKi8KCm5pdDogdGhlcmUgaXMgbm8gQG1hc2sgcGFybSBoZXJlLiBEbyB5b3UgbWVhbiBAd2Fu
-dCA/Cgo+ICtpbnQKPiArcmljaGFjbF9wZXJtaXNzaW9uKHN0cnVjdCBpbm9kZSAqaW5vZGUsIGNv
-bnN0IHN0cnVjdCByaWNoYWNsICphY2wsCj4gKwkJwqDCoMKgaW50IHdhbnQpCj4gK3sKPiArCWNv
-bnN0IHN0cnVjdCByaWNoYWNlICphY2U7Cj4gKwl1bnNpZ25lZCBpbnQgbWFzayA9IHJpY2hhY2xf
-d2FudF90b19tYXNrKHdhbnQpOwo+ICsJdW5zaWduZWQgaW50IHJlcXVlc3RlZCA9IG1hc2ssIGRl
-bmllZCA9IDA7Cj4gKwlpbnQgaW5fb3duaW5nX2dyb3VwID0gaW5fZ3JvdXBfcChpbm9kZS0+aV9n
-aWQpOwo+ICsJaW50IGluX293bmVyX29yX2dyb3VwX2NsYXNzID0gaW5fb3duaW5nX2dyb3VwOwo+
-ICsKPiArCS8qCj4gKwnCoCogQSBwcm9jZXNzIGlzCj4gKwnCoCrCoMKgwqAtIGluIHRoZSBvd25l
-ciBmaWxlIGNsYXNzIGlmIGl0IG93bnMgdGhlIGZpbGUsCj4gKwnCoCrCoMKgwqAtIGluIHRoZSBn
-cm91cCBmaWxlIGNsYXNzIGlmIGl0IGlzIGluIHRoZSBmaWxlJ3Mgb3duaW5nIGdyb3VwIG9yCj4g
-KwnCoCrCoMKgwqDCoMKgaXQgbWF0Y2hlcyBhbnkgb2YgdGhlIHVzZXIgb3IgZ3JvdXAgZW50cmll
-cywgYW5kCj4gKwnCoCrCoMKgwqAtIGluIHRoZSBvdGhlciBmaWxlIGNsYXNzIG90aGVyd2lzZS4K
-PiArCcKgKiBUaGUgZmlsZSBjbGFzcyBpcyBvbmx5IHJlbGV2YW50IGZvciBkZXRlcm1pbmluZyB3
-aGljaCBmaWxlIG1hc2sgdG8KPiArCcKgKiBhcHBseSwgd2hpY2ggb25seSBoYXBwZW5zIGZvciBt
-YXNrZWQgYWNscy4KPiArCcKgKi8KPiArCWlmIChhY2wtPmFfZmxhZ3MgJiBSSUNIQUNMX01BU0tF
-RCkgewo+ICsJCWlmICgoYWNsLT5hX2ZsYWdzICYgUklDSEFDTF9XUklURV9USFJPVUdIKSAmJgo+
-ICsJCcKgwqDCoMKgdWlkX2VxKGN1cnJlbnRfZnN1aWQoKSwgaW5vZGUtPmlfdWlkKSkgewo+ICsJ
-CQlkZW5pZWQgPSByZXF1ZXN0ZWQgJiB+YWNsLT5hX293bmVyX21hc2s7Cj4gKwkJCWdvdG8gb3V0
-Owo+ICsJCX0KPiArCX0gZWxzZSB7Cj4gKwkJLyoKPiArCQnCoCogV2hlbiB0aGUgYWNsIGlzIG5v
-dCBtYXNrZWQsIHRoZXJlIGlzIG5vIG5lZWQgdG8gZGV0ZXJtaW5lIGlmCj4gKwkJwqAqIHRoZSBw
-cm9jZXNzIGlzIGluIHRoZSBncm91cCBjbGFzcyBhbmQgd2UgY2FuIGJyZWFrIG91dAo+ICsJCcKg
-KiBlYXJsaWVyIG9mIHRoZSBsb29wIGJlbG93Lgo+ICsJCcKgKi8KPiArCQlpbl9vd25lcl9vcl9n
-cm91cF9jbGFzcyA9IDE7Cj4gKwl9Cj4gKwo+ICsJLyoKPiArCcKgKiBDaGVjayBpZiB0aGUgYWNs
-IGdyYW50cyB0aGUgcmVxdWVzdGVkIGFjY2VzcyBhbmQgZGV0ZXJtaW5lIHdoaWNoCj4gKwnCoCog
-ZmlsZSBjbGFzcyB0aGUgcHJvY2VzcyBpcyBpbi4KPiArCcKgKi8KPiArCXJpY2hhY2xfZm9yX2Vh
-Y2hfZW50cnkoYWNlLCBhY2wpIHsKPiArCQl1bnNpZ25lZCBpbnQgYWNlX21hc2sgPSBhY2UtPmVf
-bWFzazsKPiArCj4gKwkJaWYgKHJpY2hhY2VfaXNfaW5oZXJpdF9vbmx5KGFjZSkpCj4gKwkJCWNv
-bnRpbnVlOwo+ICsJCWlmIChyaWNoYWNlX2lzX293bmVyKGFjZSkpIHsKPiArCQkJaWYgKCF1aWRf
-ZXEoY3VycmVudF9mc3VpZCgpLCBpbm9kZS0+aV91aWQpKQo+ICsJCQkJY29udGludWU7Cj4gKwkJ
-CWdvdG8gZW50cnlfbWF0Y2hlc19vd25lcjsKPiArCQl9IGVsc2UgaWYgKHJpY2hhY2VfaXNfZ3Jv
-dXAoYWNlKSkgewo+ICsJCQlpZiAoIWluX293bmluZ19ncm91cCkKPiArCQkJCWNvbnRpbnVlOwo+
-ICsJCX0gZWxzZSBpZiAocmljaGFjZV9pc191bml4X3VzZXIoYWNlKSkgewo+ICsJCQlpZiAoIXVp
-ZF9lcShjdXJyZW50X2ZzdWlkKCksIGFjZS0+ZV9pZC51aWQpKQo+ICsJCQkJY29udGludWU7Cj4g
-KwkJCWlmICh1aWRfZXEoY3VycmVudF9mc3VpZCgpLCBpbm9kZS0+aV91aWQpKQo+ICsJCQkJZ290
-byBlbnRyeV9tYXRjaGVzX293bmVyOwo+ICsJCX0gZWxzZSBpZiAocmljaGFjZV9pc191bml4X2dy
-b3VwKGFjZSkpIHsKPiArCQkJaWYgKCFpbl9ncm91cF9wKGFjZS0+ZV9pZC5naWQpKQo+ICsJCQkJ
-Y29udGludWU7Cj4gKwkJfSBlbHNlCj4gKwkJCWdvdG8gZW50cnlfbWF0Y2hlc19ldmVyeW9uZTsK
-PiArCj4gKwkJLyoKPiArCQnCoCogQXBwbHkgdGhlIGdyb3VwIGZpbGUgbWFzayB0byBlbnRyaWVz
-IG90aGVyIHRoYW4gb3duZXJAIGFuZAo+ICsJCcKgKiBldmVyeW9uZUAgb3IgdXNlciBlbnRyaWVz
-IG1hdGNoaW5nIHRoZSBvd25lci7CoMKgVGhpcyBlbnN1cmVzCj4gKwkJwqAqIHRoYXQgd2UgZ3Jh
-bnQgdGhlIHNhbWUgcGVybWlzc2lvbnMgYXMgdGhlIGFjbCBjb21wdXRlZCBieQo+ICsJCcKgKiBy
-aWNoYWNsX2FwcGx5X21hc2tzKCkuCj4gKwkJwqAqCj4gKwkJwqAqIFdpdGhvdXQgdGhpcyByZXN0
-cmljdGlvbiwgdGhlIGZvbGxvd2luZyByaWNoYWNsIHdvdWxkIGdyYW50Cj4gKwkJwqAqIHJ3IGFj
-Y2VzcyB0byBwcm9jZXNzZXMgd2hpY2ggYXJlIGJvdGggdGhlIG93bmVyIGFuZCBpbiB0aGUKPiAr
-CQnCoCogb3duaW5nIGdyb3VwLCBidXQgbm90IHRvIG90aGVyIHVzZXJzIGluIHRoZSBvd25pbmcg
-Z3JvdXAsCj4gKwkJwqAqIHdoaWNoIGNvdWxkIG5vdCBiZSByZXByZXNlbnRlZCB3aXRob3V0IG1h
-c2tzOgo+ICsJCcKgKgo+ICsJCcKgKsKgwqBvd25lcjpydzo6bWFzawo+ICsJCcKgKsKgwqBncm91
-cEA6cnc6OmFsbG93Cj4gKwkJwqAqLwo+ICsJCWlmICgoYWNsLT5hX2ZsYWdzICYgUklDSEFDTF9N
-QVNLRUQpICYmIHJpY2hhY2VfaXNfYWxsb3coYWNlKSkKPiArCQkJYWNlX21hc2sgJj0gYWNsLT5h
-X2dyb3VwX21hc2s7Cj4gKwo+ICtlbnRyeV9tYXRjaGVzX293bmVyOgo+ICsJCS8qIFRoZSBwcm9j
-ZXNzIGlzIGluIHRoZSBvd25lciBvciBncm91cCBmaWxlIGNsYXNzLiAqLwo+ICsJCWluX293bmVy
-X29yX2dyb3VwX2NsYXNzID0gMTsKPiArCj4gK2VudHJ5X21hdGNoZXNfZXZlcnlvbmU6Cj4gKwkJ
-LyogQ2hlY2sgd2hpY2ggbWFzayBmbGFncyB0aGUgQUNFIGFsbG93cyBvciBkZW5pZXMuICovCj4g
-KwkJaWYgKHJpY2hhY2VfaXNfZGVueShhY2UpKQo+ICsJCQlkZW5pZWQgfD0gYWNlX21hc2sgJiBt
-YXNrOwo+ICsJCW1hc2sgJj0gfmFjZV9tYXNrOwo+ICsKPiArCQkvKgo+ICsJCcKgKiBLZWVwIGdv
-aW5nIHVudGlsIHdlIGtub3cgd2hpY2ggZmlsZSBjbGFzcwo+ICsJCcKgKiB0aGUgcHJvY2VzcyBp
-cyBpbi4KPiArCQnCoCovCj4gKwkJaWYgKCFtYXNrICYmIGluX293bmVyX29yX2dyb3VwX2NsYXNz
-KQo+ICsJCQlicmVhazsKPiArCX0KPiArCWRlbmllZCB8PSBtYXNrOwo+ICsKPiArCWlmIChhY2wt
-PmFfZmxhZ3MgJiBSSUNIQUNMX01BU0tFRCkgewo+ICsJCS8qCj4gKwkJwqAqIFRoZSBmaWxlIGNs
-YXNzIGEgcHJvY2VzcyBpcyBpbiBkZXRlcm1pbmVzIHdoaWNoIGZpbGUgbWFzawo+ICsJCcKgKiBh
-cHBsaWVzLsKgwqBDaGVjayBpZiB0aGF0IGZpbGUgbWFzayBhbHNvIGdyYW50cyB0aGUgcmVxdWVz
-dGVkCj4gKwkJwqAqIGFjY2Vzcy4KPiArCQnCoCovCj4gKwkJaWYgKHVpZF9lcShjdXJyZW50X2Zz
-dWlkKCksIGlub2RlLT5pX3VpZCkpCj4gKwkJCWRlbmllZCB8PSByZXF1ZXN0ZWQgJiB+YWNsLT5h
-X293bmVyX21hc2s7Cj4gKwkJZWxzZSBpZiAoaW5fb3duZXJfb3JfZ3JvdXBfY2xhc3MpCj4gKwkJ
-CWRlbmllZCB8PSByZXF1ZXN0ZWQgJiB+YWNsLT5hX2dyb3VwX21hc2s7Cj4gKwkJZWxzZSB7Cj4g
-KwkJCWlmIChhY2wtPmFfZmxhZ3MgJiBSSUNIQUNMX1dSSVRFX1RIUk9VR0gpCj4gKwkJCQlkZW5p
-ZWQgPSByZXF1ZXN0ZWQgJiB+YWNsLT5hX290aGVyX21hc2s7Cj4gKwkJCWVsc2UKPiArCQkJCWRl
-bmllZCB8PSByZXF1ZXN0ZWQgJiB+YWNsLT5hX290aGVyX21hc2s7Cj4gKwkJfQo+ICsJfQo+ICsK
-PiArb3V0Ogo+ICsJcmV0dXJuIGRlbmllZCA/IC1FQUNDRVMgOiAwOwo+ICt9Cj4gK0VYUE9SVF9T
-WU1CT0xfR1BMKHJpY2hhY2xfcGVybWlzc2lvbik7Cj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGlu
-dXgvcmljaGFjbC5oIGIvaW5jbHVkZS9saW51eC9yaWNoYWNsLmgKPiBpbmRleCAzNTU5YjJjLi5i
-ZTlmYjY1IDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gKysrIGIvaW5j
-bHVkZS9saW51eC9yaWNoYWNsLmgKPiBAQCAtMTc5LDUgKzE3OSw2IEBAIGV4dGVybiBpbnQgcmlj
-aGFjbF9tYXNrc190b19tb2RlKGNvbnN0IHN0cnVjdCByaWNoYWNsICopOwo+IMKgZXh0ZXJuIHVu
-c2lnbmVkIGludCByaWNoYWNsX21vZGVfdG9fbWFzayh1bW9kZV90KTsKPiDCoGV4dGVybiB1bnNp
-Z25lZCBpbnQgcmljaGFjbF93YW50X3RvX21hc2sodW5zaWduZWQgaW50KTsKPiDCoGV4dGVybiB2
-b2lkIHJpY2hhY2xfY29tcHV0ZV9tYXhfbWFza3Moc3RydWN0IHJpY2hhY2wgKik7Cj4gK2V4dGVy
-biBpbnQgcmljaGFjbF9wZXJtaXNzaW9uKHN0cnVjdCBpbm9kZSAqLCBjb25zdCBzdHJ1Y3Qgcmlj
-aGFjbCAqLCBpbnQpOwo+IMKgCj4gwqAjZW5kaWYgLyogX19SSUNIQUNMX0ggKi8KClJldmlld2Vk
-LWJ5OiBKZWZmIExheXRvbiA8amxheXRvbkByZWRoYXQuY29tPgoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Jul 08, 2016 at 05:14:28PM -0700, Darrick J. Wong wrote:
+> On Fri, Jul 08, 2016 at 02:33:55PM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2016 at 06:21:24PM -0700, Darrick J. Wong wrote:
+> > > Now that the generic btree code supports overlapping intervals, plug
+> > > in the rmap btree to this functionality.  We will need it to find
+> > > potential left neighbors in xfs_rmap_{alloc,free} later in the patch
+> > > set.
+> > > 
+> > > v2: Fix bit manipulation bug when generating high key offset.
+> > > v3: Move unwritten bit to rm_offset.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_rmap_btree.c |   59 +++++++++++++++++++++++++++++++++++++++-
+> > >  fs/xfs/libxfs/xfs_rmap_btree.h |   10 +++++--
+> > >  2 files changed, 66 insertions(+), 3 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > > index c50c725..9adb930 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > > @@ -181,6 +181,28 @@ xfs_rmapbt_init_key_from_rec(
+> > >  }
+> > >  
+> > >  STATIC void
+> > > +xfs_rmapbt_init_high_key_from_rec(
+> > > +	union xfs_btree_key	*key,
+> > > +	union xfs_btree_rec	*rec)
+> > > +{
+> > > +	__uint64_t		off;
+> > > +	int			adj;
+> > > +
+> > > +	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
+> > > +
+> > 
+> > Comments please. I had to stare at this for too long than I care to
+> > admit to grok why it is modifying values. :) One liners along the lines
+> > of "shift the startblock/offset to the highest value to form the high
+> > key" or "don't convert offset for non-inode owners because ..." go a
+> > long way for those not familiar with the code.
+> 
+> Fair enough.
+> 
+> /*
+>  * The high key for a reverse mapping record can be computed by shifting
+>  * the startblock and offset to the highest value that would still map
+>  * to that record.  In practice this means that we add blockcount-1 to
+>  * the startblock for all records, and if the record is for a data/attr
+>  * fork mapping, we add blockcount-1 to the offset too.
+>  */
+> 
+
+Sounds good. To be clear, that's even more than what I was asking for.
+Just something that calls out a potentially unexpected record
+transformation in this context is sufficient. E.g.,
+
+/*
+ * caller is asking for high key, transform on-disk start block and
+ * offset using blockcount
+ */
+
+... (but the above is fine too :).
+
+> > With regard to rm_offset, could we just copy it unconditionally here
+> > (should it not be 0)?
+> 
+> No, because one of the rmap operations (once we get to reflink) is to
+> find any potential left-mappings that we could extend in order to map
+> in an extent (pblk, owner, lblk) by searching for (pblk-1, owner,
+> lblk-1).
+> 
+> If the extent we're trying to map is, say, (15, 128, 5) and there's an
+> existing mapping (10, 128, 0, len=5), we have to be able to compute
+> the high key of that existing mapping as (14, 128, 4).  We can't
+> decrement the cursor here because the next record to the left might
+> be (12, 150, 2, len=1).
+> 
+> (Making that one search reasonably quick is the reason behind the entire
+> overlapping btree thing.)
+> 
+
+Ok. Can't say I grok this at the moment, but I'll worry about it when I
+have more context on the reflink bits. :)
+
+> > > +	key->rmap.rm_startblock = rec->rmap.rm_startblock;
+> > > +	be32_add_cpu(&key->rmap.rm_startblock, adj);
+> > > +	key->rmap.rm_owner = rec->rmap.rm_owner;
+> > > +	key->rmap.rm_offset = rec->rmap.rm_offset;
+> > > +	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rmap.rm_owner)) ||
+> > > +	    XFS_RMAP_IS_BMBT_BLOCK(be64_to_cpu(rec->rmap.rm_offset)))
+> > > +		return;
+> > > +	off = be64_to_cpu(key->rmap.rm_offset);
+> > > +	off = (XFS_RMAP_OFF(off) + adj) | (off & ~XFS_RMAP_OFF_MASK);
+> > > +	key->rmap.rm_offset = cpu_to_be64(off);
+> > > +}
+> > > +
+> > > +STATIC void
+> > >  xfs_rmapbt_init_rec_from_cur(
+> > >  	struct xfs_btree_cur	*cur,
+> > >  	union xfs_btree_rec	*rec)
+> > > @@ -235,6 +257,38 @@ xfs_rmapbt_key_diff(
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +STATIC __int64_t
+> > > +xfs_rmapbt_diff_two_keys(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	union xfs_btree_key	*k1,
+> > > +	union xfs_btree_key	*k2)
+> > > +{
+> > > +	struct xfs_rmap_key	*kp1 = &k1->rmap;
+> > > +	struct xfs_rmap_key	*kp2 = &k2->rmap;
+> > > +	__int64_t		d;
+> > > +	__u64			x, y;
+> > > +
+> > > +	d = (__int64_t)be32_to_cpu(kp2->rm_startblock) -
+> > > +		       be32_to_cpu(kp1->rm_startblock);
+> > > +	if (d)
+> > > +		return d;
+> > > +
+> > > +	x = be64_to_cpu(kp2->rm_owner);
+> > > +	y = be64_to_cpu(kp1->rm_owner);
+> > > +	if (x > y)
+> > > +		return 1;
+> > > +	else if (y > x)
+> > > +		return -1;
+> > > +
+> > > +	x = XFS_RMAP_OFF(be64_to_cpu(kp2->rm_offset));
+> > > +	y = XFS_RMAP_OFF(be64_to_cpu(kp1->rm_offset));
+> > > +	if (x > y)
+> > > +		return 1;
+> > > +	else if (y > x)
+> > > +		return -1;
+> > > +	return 0;
+> > > +}
+> > > +
+> > >  static bool
+> > >  xfs_rmapbt_verify(
+> > >  	struct xfs_buf		*bp)
+> > > @@ -350,6 +404,7 @@ xfs_rmapbt_recs_inorder(
+> > >  static const struct xfs_btree_ops xfs_rmapbt_ops = {
+> > >  	.rec_len		= sizeof(struct xfs_rmap_rec),
+> > >  	.key_len		= sizeof(struct xfs_rmap_key),
+> > > +	.flags			= XFS_BTREE_OPS_OVERLAPPING,
+> > >  
+> > >  	.dup_cursor		= xfs_rmapbt_dup_cursor,
+> > >  	.set_root		= xfs_rmapbt_set_root,
+> > > @@ -358,10 +413,12 @@ static const struct xfs_btree_ops xfs_rmapbt_ops = {
+> > >  	.get_minrecs		= xfs_rmapbt_get_minrecs,
+> > >  	.get_maxrecs		= xfs_rmapbt_get_maxrecs,
+> > >  	.init_key_from_rec	= xfs_rmapbt_init_key_from_rec,
+> > > +	.init_high_key_from_rec	= xfs_rmapbt_init_high_key_from_rec,
+> > >  	.init_rec_from_cur	= xfs_rmapbt_init_rec_from_cur,
+> > >  	.init_ptr_from_cur	= xfs_rmapbt_init_ptr_from_cur,
+> > >  	.key_diff		= xfs_rmapbt_key_diff,
+> > >  	.buf_ops		= &xfs_rmapbt_buf_ops,
+> > > +	.diff_two_keys		= xfs_rmapbt_diff_two_keys,
+> > >  #if defined(DEBUG) || defined(XFS_WARN)
+> > >  	.keys_inorder		= xfs_rmapbt_keys_inorder,
+> > >  	.recs_inorder		= xfs_rmapbt_recs_inorder,
+> > > @@ -410,7 +467,7 @@ xfs_rmapbt_maxrecs(
+> > >  	if (leaf)
+> > >  		return blocklen / sizeof(struct xfs_rmap_rec);
+> > >  	return blocklen /
+> > > -		(sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
+> > > +		(2 * sizeof(struct xfs_rmap_key) + sizeof(xfs_rmap_ptr_t));
+> > 
+> > Same here.. one-liner comment that reminds why we have the 2x please.
+> 
+> /*
+>  * Each btree pointer has two keys representing the lowest and highest
+>  * keys of all records in the subtree.
+>  */
+> 
+
+I suggest to correlate it to XFS_BTREE_OPS_OVERLAPPING support:
+
+/* double the key size for overlapping trees (2 keys per pointer) */
+
+Thanks!
+
+Brian
+
+> > >  }
+> > >  
+> > >  /* Compute the maximum height of an rmap btree. */
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > index 17fa383..796071c 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > @@ -38,12 +38,18 @@ struct xfs_mount;
+> > >  #define XFS_RMAP_KEY_ADDR(block, index) \
+> > >  	((struct xfs_rmap_key *) \
+> > >  		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
+> > > -		 ((index) - 1) * sizeof(struct xfs_rmap_key)))
+> > > +		 ((index) - 1) * 2 * sizeof(struct xfs_rmap_key)))
+> > > +
+> > > +#define XFS_RMAP_HIGH_KEY_ADDR(block, index) \
+> > > +	((struct xfs_rmap_key *) \
+> > > +		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
+> > > +		 sizeof(struct xfs_rmap_key) + \
+> > > +		 ((index) - 1) * 2 * sizeof(struct xfs_rmap_key)))
+> > >  
+> > 
+> > Could this just be 'XFS_RMAP_KEY_ADDR(block, index) + sizeof(struct
+> > xfs_rmap_key)'?
+> 
+> Yes.
+> 
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > >  #define XFS_RMAP_PTR_ADDR(block, index, maxrecs) \
+> > >  	((xfs_rmap_ptr_t *) \
+> > >  		((char *)(block) + XFS_RMAP_BLOCK_LEN + \
+> > > -		 (maxrecs) * sizeof(struct xfs_rmap_key) + \
+> > > +		 (maxrecs) * 2 * sizeof(struct xfs_rmap_key) + \
+> > >  		 ((index) - 1) * sizeof(xfs_rmap_ptr_t)))
+> > >  
+> > >  struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
