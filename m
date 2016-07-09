@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C00C27CDC
-	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 06:14:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 29F2AAC003
-	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 04:14:45 -0700 (PDT)
-Received: from mail-oi0-f51.google.com (mail-oi0-f51.google.com
-	[209.85.218.51]) by cuda.sgi.com with ESMTP id 2azTtI5t1PVT8smh
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 09 Jul 2016 04:14:38 -0700 (PDT)
-Received: by mail-oi0-f51.google.com with SMTP id r2so91484810oih.2
-	for <xfs@oss.sgi.com>; Sat, 09 Jul 2016 04:14:38 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8E23B7CF8
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 08:26:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE895AC005
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 06:25:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id q2rmMue81NcTVLsM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 09 Jul 2016 06:25:58 -0700 (PDT)
+Date: Sat, 9 Jul 2016 09:25:56 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 034/119] xfs: teach rmapbt to support interval queries
+Message-ID: <20160709132555.GB13175@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612649050.12839.2803288971604662823.stgit@birch.djwong.org>
+	<20160708183403.GF59278@bfoster.bfoster>
+	<20160709001635.GC30604@birch.djwong.org>
 MIME-Version: 1.0
-From: Marcin Sura <mailing-lists@sura.pl>
-Date: Sat, 9 Jul 2016 13:14:37 +0200
-Message-ID: <CACNifpXnSMcm6EfSjqLFPXXfqv7XWd4Yu_=UhqTcdn6-o+49Yw@mail.gmail.com>
-Subject: xfs + 100TB+ storage + lots of small files + NFS
+Content-Disposition: inline
+In-Reply-To: <20160709001635.GC30604@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,130 +28,126 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1817865374023151998=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
---===============1817865374023151998==
-Content-Type: multipart/alternative; boundary=001a113db552567e540537320636
+On Fri, Jul 08, 2016 at 05:16:35PM -0700, Darrick J. Wong wrote:
+> On Fri, Jul 08, 2016 at 02:34:03PM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2016 at 06:21:30PM -0700, Darrick J. Wong wrote:
+> > > Now that the generic btree code supports querying all records within a
+> > > range of keys, use that functionality to allow us to ask for all the
+> > > extents mapped to a range of physical blocks.
+> > > 
+> > > v2: Move unwritten bit to rm_offset.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_rmap.c       |   43 ++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_rmap_btree.h |    9 ++++++++
+> > >  2 files changed, 52 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > > index c6a5a0b..0e1721a 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > > @@ -184,3 +184,46 @@ out_error:
+> > >  	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, false, oinfo);
+> > >  	return error;
+> > >  }
+> > > +
+> > > +struct xfs_rmapbt_query_range_info {
+> > > +	xfs_rmapbt_query_range_fn	fn;
+> > > +	void				*priv;
+> > > +};
+> > > +
+> > > +/* Format btree record and pass to our callback. */
+> > > +STATIC int
+> > > +xfs_rmapbt_query_range_helper(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	union xfs_btree_rec	*rec,
+> > > +	void			*priv)
+> > > +{
+> > > +	struct xfs_rmapbt_query_range_info	*query = priv;
+> > > +	struct xfs_rmap_irec			irec;
+> > > +	int					error;
+> > > +
+> > > +	error = xfs_rmapbt_btrec_to_irec(rec, &irec);
+> > > +	if (error)
+> > > +		return error;
+> > > +	return query->fn(cur, &irec, query->priv);
+> > > +}
+> > > +
+> > > +/* Find all rmaps between two keys. */
+> > > +int
+> > > +xfs_rmapbt_query_range(
+> > > +	struct xfs_btree_cur		*cur,
+> > > +	struct xfs_rmap_irec		*low_rec,
+> > > +	struct xfs_rmap_irec		*high_rec,
+> > > +	xfs_rmapbt_query_range_fn	fn,
+> > > +	void				*priv)
+> > > +{
+> > > +	union xfs_btree_irec		low_brec;
+> > > +	union xfs_btree_irec		high_brec;
+> > > +	struct xfs_rmapbt_query_range_info	query;
+> > > +
+> > > +	low_brec.r = *low_rec;
+> > > +	high_brec.r = *high_rec;
+> > 
+> > Some checks or asserts that these are actually in order couldn't hurt.
+> > Otherwise looks good:
+> 
+> Ok.  If low_rec > high_rec then you'll get no results.  I'm not sure
+> if that's ok or if we should explicitly return -EINVAL for that case?
+> 
 
---001a113db552567e540537320636
-Content-Type: text/plain; charset=UTF-8
+IMO, it's more robust to short circuit this case one way or another
+rather than rely on the search implementation, but I'm happy as long as
+there's at least an assert. I have no strong preference really as to
+whether it returns an error or 0 and an empty set. If that is truly an
+unexpected usage, perhaps it's best to just return an error?
 
-Hi,
+Brian
 
-Friend of mine asked me about evaluation of XFS for their purposes.
-Currently I don't have physical access to their system, but here are the
-info I've got so far:
-
-SAN:
-- physical storage is from FSC array, thin provisioned raid 6 volume,
-- volumes are 100TB+ in size
-- there are SSD disks in the array, which potentially can be used for
-journal
-- storage is connected to the host via 10GbE iSCSI
-
-Host:
-- They are using CentOS 6.5, with stock kernel 2.6.32-*
-- System uses all default values, no optimization has beed done
-- OS installed on SSD
-- Don't know exact details of CPU, but I assume some recent multicore CPU
-- Don't know amount of RAM installed, I assume 32GB+
-
-NFS:
-- they are exporting filesystem via NFS to 10-20 clients (services), some
-VMs, some bare metal
-- clients are connected via 1GbE or 10GbE links
-
-Workload:
-- they are storing tens or hundreds of millions of small files
-- files are not in single directory
-- files are undek 1K, usually 200 - 500 bytes
-- I assume, that some NFS clients constantly write files
-- some NFS clients initiates massive reads, millions of random files
-- those reads are on demand, but during peak hours there can be many of
-such requests
-
-So far they were using Ext4, after some basic test they observed 40%
-improvement in application counters. But I'm afraid that those tests were
-done in environment not even close to the production (not so big size of
-filesystem, not so much files).
-
-I want to ask you what would be best mkfs.xfs settings for such setup.
-
-I assume, that they should use inode64 mount option for such large
-filesystem with that amount of files, but I'm a bit worried about
-compatibility with NFS (default shipped with CentOS 6.5). I think inode32
-is totally out of scope here.
-
-Any other hints for setting this stuff up?
-Probably some recent OS/kernel would also help a lot, right?
-
-Also, do you know any benchmark which can be used to simulate such
-workload? I've googled a lot, but there is quite short list of
-multi-threaded, small files oriented benchmarks. To be honest, I've found
-only https://github.com/bengland2/smallfile to be close to what I need. Any
-other alternatives?
-
-BR
-Marcin
-
---001a113db552567e540537320636
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi,<div><br></div><div>Friend of mine asked me about evalu=
-ation of XFS for their purposes. Currently I don&#39;t have physical access=
- to their system, but here are the info I&#39;ve got so far:</div><div><br>=
-</div><div>SAN:</div><div>- physical storage is from FSC array, thin provis=
-ioned raid 6 volume,=C2=A0</div><div>- volumes are 100TB+ in size<br></div>=
-<div>- there are SSD disks in the array, which potentially can be used for =
-journal</div><div>- storage is connected to the host via 10GbE iSCSI</div><=
-div><br></div><div>Host:</div><div>- They are using CentOS 6.5, with stock =
-kernel 2.6.32-*</div><div>- System uses all default values, no optimization=
- has beed done</div><div>- OS installed on SSD</div><div>- Don&#39;t know e=
-xact details of CPU, but I assume some recent multicore CPU</div><div>- Don=
-&#39;t know amount of RAM installed, I assume 32GB+</div><div><br></div><di=
-v>NFS:</div><div>- they are exporting filesystem via NFS to 10-20 clients (=
-services), some VMs, some bare metal</div><div>- clients are connected via =
-1GbE or 10GbE links</div><div><br></div><div>Workload:</div><div>- they are=
- storing=C2=A0tens or hundreds of millions of small files</div><div>- files=
- are not in single directory</div><div>- files are undek 1K, usually 200 - =
-500 bytes</div><div>- I assume, that some NFS clients constantly write file=
-s</div><div>- some NFS clients initiates massive reads, millions of random =
-files</div><div>- those reads are on demand, but during peak hours there ca=
-n be many of such requests</div><div><br></div><div>So far they were using =
-Ext4, after some basic test they observed 40% improvement in application co=
-unters. But I&#39;m afraid that those tests were done in environment not ev=
-en close to the production (not so big size of filesystem, not so much file=
-s).</div><div><br></div><div>I want to ask you what would be best mkfs.xfs =
-settings for such setup.<br></div><div><br></div><div>I assume, that they s=
-hould use inode64 mount option for such large filesystem with that amount o=
-f files, but I&#39;m a bit worried about compatibility with NFS (default sh=
-ipped with CentOS 6.5). I think inode32 is totally out of scope here.</div>=
-<div><br></div><div>Any other hints for setting this stuff up?</div><div>Pr=
-obably some recent OS/kernel would also help a lot, right?<br></div><div><b=
-r></div><div>Also, do you know any benchmark which can be used to simulate =
-such workload? I&#39;ve googled a lot, but there is quite short list of mul=
-ti-threaded, small files oriented benchmarks. To be honest, I&#39;ve found =
-only=C2=A0<a href=3D"https://github.com/bengland2/smallfile">https://github=
-.com/bengland2/smallfile</a> to be close to what I need. Any other alternat=
-ives?</div><div><br></div><div>BR</div><div>Marcin</div><div><br></div><div=
-><br></div><div><br></div><div><br></div></div>
-
---001a113db552567e540537320636--
-
-
---===============1817865374023151998==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> --D
+> 
+> > 
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > 
+> > > +	query.priv = priv;
+> > > +	query.fn = fn;
+> > > +	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+> > > +			xfs_rmapbt_query_range_helper, &query);
+> > > +}
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > index 796071c..e926c6e 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > @@ -74,4 +74,13 @@ int xfs_rmap_free(struct xfs_trans *tp, struct xfs_buf *agbp,
+> > >  		  xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+> > >  		  struct xfs_owner_info *oinfo);
+> > >  
+> > > +typedef int (*xfs_rmapbt_query_range_fn)(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	struct xfs_rmap_irec	*rec,
+> > > +	void			*priv);
+> > > +
+> > > +int xfs_rmapbt_query_range(struct xfs_btree_cur *cur,
+> > > +		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+> > > +		xfs_rmapbt_query_range_fn fn, void *priv);
+> > > +
+> > >  #endif	/* __XFS_RMAP_BTREE_H__ */
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1817865374023151998==--
