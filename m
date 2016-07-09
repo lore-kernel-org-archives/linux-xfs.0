@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CF7AD7CA7
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 17:31:52 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D6027CBE
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 07:27:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BE9EE304051
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 15:31:51 -0700 (PDT)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id Tyxn5yiohAO9iohU for
-	<xfs@oss.sgi.com>; Thu, 14 Jul 2016 15:30:53 -0700 (PDT)
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH 2/2] dax: remote unused fault wrappers
-Date: Thu, 14 Jul 2016 15:40:49 -0600
-Message-Id: <20160714214049.20075-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20160714214049.20075-1-ross.zwisler@linux.intel.com>
-References: <20160714214049.20075-1-ross.zwisler@linux.intel.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 706198F8035
+	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 05:27:06 -0700 (PDT)
+Received: from mail-pf0-f194.google.com (mail-pf0-f194.google.com
+	[209.85.192.194]) by cuda.sgi.com with ESMTP id
+	C1Z9tKclO0ZFJv5v (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 09 Jul 2016 05:27:00 -0700 (PDT)
+Received: by mail-pf0-f194.google.com with SMTP id i123so10175852pfg.3
+	for <xfs@oss.sgi.com>; Sat, 09 Jul 2016 05:27:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGeO4WMjuPs3Ze8U=vgWtY2_QqDnxAHH-dBUzAdRqdcSGPevkQ@mail.gmail.com>
+References: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
+	<CAGeO4WMjuPs3Ze8U=vgWtY2_QqDnxAHH-dBUzAdRqdcSGPevkQ@mail.gmail.com>
+From: Kaho Ng <ngkaho1234@gmail.com>
+Date: Sat, 9 Jul 2016 20:26:59 +0800
+Message-ID: <CAGeO4WMd3iLriUCtPatdjNvJwY3NqiPDRNSE--VuxcUJY_RuVg@mail.gmail.com>
+Subject: Re: [QUESTION] about the freelist allocator in XFS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,271 +28,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, xfs@oss.sgi.com, linux-nvdimm@lists.01.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: xfs@oss.sgi.com
 
-Remove the unused wrappers dax_fault() and dax_pmd_fault().  After this
-removal, rename __dax_fault() and __dax_pmd_fault() to dax_fault() and
-dax_pmd_fault() respectively, and update all callers.
+if ((error = xfs_alloc_lookup_eq(cnt_cur, nfbno1, nflen1, &i)))
+        return error;
+XFS_WANT_CORRUPTED_RETURN(mp, i == 0);
+if ((error = xfs_btree_insert(cnt_cur, &i)))
+        return error;
+XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
 
-The dax_fault() and dax_pmd_fault() wrappers were initially intended to
-capture some filesystem independent functionality around page faults
-(calling sb_start_pagefault() & sb_end_pagefault(), updating file
-mtime and ctime).  However, the following commits:
+The code is extracted from xfs_alloc_fixup_trees(). When the layout of
+the leaf in the by-size tree is like this:
++------------------------------+-------------------------------+----
+| blkcnt: 5, startblk: xxxx  | blkcnt: 7, startblk: yyyyy  | ...
++------------------------------+-------------------------------+----
+which is full of items with blkcnt == 7 in the remaining space, if the
+freelist refilling process requires 6 blocks to be allocated, wouldn't
+a tree split is required for the insertion to proceed in case the
+siblings are also full?
 
-commit 5726b27b09cc ("ext2: Add locking for DAX faults")
-commit ea3d7209ca01 ("ext4: fix races between page faults and hole punching")
-
-Added locking to the ext2 and ext4 filesystems after these common
-operations but before __dax_fault() and __dax_pmd_fault() were called.
-This means that these wrappers are no longer used, and are unlikely to be
-used in the future.  XFS has had locking analogous to what was recently
-added to ext2 and ext4 since DAX support was initially introduced by:
-
-commit 6b698edeeef0 ("xfs: add DAX file operations support")
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/dax.c            | 73 ++++++++++-------------------------------------------
- fs/ext2/file.c      |  4 +--
- fs/ext4/file.c      |  4 +--
- fs/xfs/xfs_file.c   |  6 ++---
- include/linux/dax.h |  5 ----
- 5 files changed, 21 insertions(+), 71 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index e207f8f..432b9e6 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -819,16 +819,16 @@ static int dax_insert_mapping(struct address_space *mapping,
- }
- 
- /**
-- * __dax_fault - handle a page fault on a DAX file
-+ * dax_fault - handle a page fault on a DAX file
-  * @vma: The virtual memory area where the fault occurred
-  * @vmf: The description of the fault
-  * @get_block: The filesystem method used to translate file offsets to blocks
-  *
-  * When a page fault occurs, filesystems may call this helper in their
-- * fault handler for DAX files. __dax_fault() assumes the caller has done all
-+ * fault handler for DAX files. dax_fault() assumes the caller has done all
-  * the necessary locking for the page fault to proceed successfully.
-  */
--int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			get_block_t get_block)
- {
- 	struct file *file = vma->vm_file;
-@@ -913,33 +913,6 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		return VM_FAULT_SIGBUS | major;
- 	return VM_FAULT_NOPAGE | major;
- }
--EXPORT_SYMBOL(__dax_fault);
--
--/**
-- * dax_fault - handle a page fault on a DAX file
-- * @vma: The virtual memory area where the fault occurred
-- * @vmf: The description of the fault
-- * @get_block: The filesystem method used to translate file offsets to blocks
-- *
-- * When a page fault occurs, filesystems may call this helper in their
-- * fault handler for DAX files.
-- */
--int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
--	      get_block_t get_block)
--{
--	int result;
--	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
--
--	if (vmf->flags & FAULT_FLAG_WRITE) {
--		sb_start_pagefault(sb);
--		file_update_time(vma->vm_file);
--	}
--	result = __dax_fault(vma, vmf, get_block);
--	if (vmf->flags & FAULT_FLAG_WRITE)
--		sb_end_pagefault(sb);
--
--	return result;
--}
- EXPORT_SYMBOL_GPL(dax_fault);
- 
- #if defined(CONFIG_TRANSPARENT_HUGEPAGE)
-@@ -967,7 +940,16 @@ static void __dax_dbg(struct buffer_head *bh, unsigned long address,
- 
- #define dax_pmd_dbg(bh, address, reason)	__dax_dbg(bh, address, reason, "dax_pmd")
- 
--int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
-+/**
-+ * dax_pmd_fault - handle a PMD fault on a DAX file
-+ * @vma: The virtual memory area where the fault occurred
-+ * @vmf: The description of the fault
-+ * @get_block: The filesystem method used to translate file offsets to blocks
-+ *
-+ * When a page fault occurs, filesystems may call this helper in their
-+ * pmd_fault handler for DAX files.
-+ */
-+int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		pmd_t *pmd, unsigned int flags, get_block_t get_block)
- {
- 	struct file *file = vma->vm_file;
-@@ -1119,7 +1101,7 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 		 *
- 		 * The PMD path doesn't have an equivalent to
- 		 * dax_pfn_mkwrite(), though, so for a read followed by a
--		 * write we traverse all the way through __dax_pmd_fault()
-+		 * write we traverse all the way through dax_pmd_fault()
- 		 * twice.  This means we can just skip inserting a radix tree
- 		 * entry completely on the initial read and just wait until
- 		 * the write to insert a dirty entry.
-@@ -1148,33 +1130,6 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 	result = VM_FAULT_FALLBACK;
- 	goto out;
- }
--EXPORT_SYMBOL_GPL(__dax_pmd_fault);
--
--/**
-- * dax_pmd_fault - handle a PMD fault on a DAX file
-- * @vma: The virtual memory area where the fault occurred
-- * @vmf: The description of the fault
-- * @get_block: The filesystem method used to translate file offsets to blocks
-- *
-- * When a page fault occurs, filesystems may call this helper in their
-- * pmd_fault handler for DAX files.
-- */
--int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
--			pmd_t *pmd, unsigned int flags, get_block_t get_block)
--{
--	int result;
--	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
--
--	if (flags & FAULT_FLAG_WRITE) {
--		sb_start_pagefault(sb);
--		file_update_time(vma->vm_file);
--	}
--	result = __dax_pmd_fault(vma, address, pmd, flags, get_block);
--	if (flags & FAULT_FLAG_WRITE)
--		sb_end_pagefault(sb);
--
--	return result;
--}
- EXPORT_SYMBOL_GPL(dax_pmd_fault);
- #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
- 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 868c023..5efeefe 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -51,7 +51,7 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = __dax_fault(vma, vmf, ext2_get_block);
-+	ret = dax_fault(vma, vmf, ext2_get_block);
- 
- 	up_read(&ei->dax_sem);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-@@ -72,7 +72,7 @@ static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = __dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
-+	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
- 
- 	up_read(&ei->dax_sem);
- 	if (flags & FAULT_FLAG_WRITE)
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index df44c87..6664f9c 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -202,7 +202,7 @@ static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	if (IS_ERR(handle))
- 		result = VM_FAULT_SIGBUS;
- 	else
--		result = __dax_fault(vma, vmf, ext4_dax_get_block);
-+		result = dax_fault(vma, vmf, ext4_dax_get_block);
- 
- 	if (write) {
- 		if (!IS_ERR(handle))
-@@ -237,7 +237,7 @@ static int ext4_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
- 	if (IS_ERR(handle))
- 		result = VM_FAULT_SIGBUS;
- 	else
--		result = __dax_pmd_fault(vma, addr, pmd, flags,
-+		result = dax_pmd_fault(vma, addr, pmd, flags,
- 					 ext4_dax_get_block);
- 
- 	if (write) {
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 47fc632..1b3dc9dd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1551,7 +1551,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = __dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault);
-+		ret = dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault);
- 	} else {
- 		ret = block_page_mkwrite(vma, vmf, xfs_get_blocks);
- 		ret = block_page_mkwrite_return(ret);
-@@ -1585,7 +1585,7 @@ xfs_filemap_fault(
- 		 * changes to xfs_get_blocks_direct() to map unwritten extent
- 		 * ioend for conversion on read-only mappings.
- 		 */
--		ret = __dax_fault(vma, vmf, xfs_get_blocks_dax_fault);
-+		ret = dax_fault(vma, vmf, xfs_get_blocks_dax_fault);
- 	} else
- 		ret = filemap_fault(vma, vmf);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-@@ -1622,7 +1622,7 @@ xfs_filemap_pmd_fault(
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = __dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault);
-+	ret = dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (flags & FAULT_FLAG_WRITE)
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 43d5f0b..9c6dc77 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -14,7 +14,6 @@ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
- int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
- int dax_truncate_page(struct inode *, loff_t from, get_block_t);
- int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
--int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- void dax_wake_mapping_entry_waiter(struct address_space *mapping,
- 				   pgoff_t index, bool wake_all);
-@@ -46,19 +45,15 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
- #if defined(CONFIG_TRANSPARENT_HUGEPAGE)
- int dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
- 				unsigned int flags, get_block_t);
--int __dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
--				unsigned int flags, get_block_t);
- #else
- static inline int dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
- 				pmd_t *pmd, unsigned int flags, get_block_t gb)
- {
- 	return VM_FAULT_FALLBACK;
- }
--#define __dax_pmd_fault dax_pmd_fault
- #endif
- int dax_pfn_mkwrite(struct vm_area_struct *, struct vm_fault *);
- #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
--#define __dax_mkwrite(vma, vmf, gb)	__dax_fault(vma, vmf, gb)
- 
- static inline bool vma_is_dax(struct vm_area_struct *vma)
- {
--- 
-2.9.0
+On Sat, Jul 9, 2016 at 3:17 AM, Kaho Ng <ngkaho1234@gmail.com> wrote:
+> Maybe i should clarify my inquiries first... It is about whether
+> freelist refilling will trigger any tree splits or even tree growths
+> in by-size freespace tree.
+>
+> When reading the source code of XFS(xfs_alloc.c) to find information
+> about freelist refilling in xfs_free_extent(), I found that insertion
+> to by-block B+ Tree is not possible to happen since there is only
+> record updates in this tree. That sounds clear to me.
+> But insertion to by-size B+ Tree may happen in xfs_alloc_fixup_trees()
+> after removing an record from the tree.
+>
+> Thus I come up with a doubt. Is tree split or tree growth in by-size
+> B+ Tree possible in the above case?
+>
+> On Thu, Jul 7, 2016 at 7:01 PM, Kaho Ng <ngkaho1234@gmail.com> wrote:
+>> I am trying to investigate how freelist allocator in xfs interacts
+>> with freespace B+Tree allocator.
+>> First I prepared a patch
+>> <https://gist.github.com/22ffca35929e67c08759b057779b7566> on
+>> linux-source/fs/xfs/libxfs/xfs_alloc.c to print debugging messages
+>> (The kernel version used is linux-3.10.0-327.22.2.el7).
+>> Then, I wrote a simple utility
+>> <https://gist.github.com/992364ceca984d3f14099ec94aaacd9d> to make
+>> TONS of
+>> holes in a filesystem by calling fallocate() to punch holes in a file
+>> that is almost as large as the volume size.
+>>
+>> I created an XFS filesystem image by the following steps:
+>> 1. fallocate -l 80G /mnt/disk2/xfs
+>> 2. mkfs.xfs -f -d agcount=1 /mnt/disk2/xfs
+>>
+>> Then I created a large file by fallocate:
+>> fallocate -l 85823746048 /mnt/test/abc
+>>
+>> which left only 4 blocks available in the volume finally:
+>> /dev/loop0      20961280 20961276         4 100% /mnt/test
+>>
+>> The result of xfs_bmap against /mnt/test/abc:
+>> /mnt/test/abc:
+>>  EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET              TOTAL FLAGS
+>>    0: [0..167624503]:  83000..167707503  0 (83000..167707503) 167624504 10000
+>>
+>> After that, I used the hole-punching utility above to create holes on
+>> the files, and captured the output of kmsg.
+>>
+>> When reading the log output
+>> <https://gist.github.com/890076405e1c13c0a952a579e25e6afe> , I
+>> realised that there is no B+Tree split
+>> triggered by xfs_alloc_fix_freelist() when calling xfs_free_extent().
+>> Isn't B+Tree split possible in by-size B+Tree even when truncating a
+>> longer freespace record to shorter one? But what I found in the log is
+>> only a few tree shrinks... And when reading the source code of
+>> freespace allocator I found that a B+Tree growth in this case is
+>> impossible at least...
 
 _______________________________________________
 xfs mailing list
