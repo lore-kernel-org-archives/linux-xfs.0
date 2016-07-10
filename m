@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BF79B7CA2
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 15:02:09 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 531607CC7
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2016 04:24:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E4738F804B
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 13:02:06 -0700 (PDT)
-Received: from mail-vk0-f48.google.com (mail-vk0-f48.google.com
-	[209.85.213.48]) by cuda.sgi.com with ESMTP id Hwan4K4NZodskZha
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 12FE08F8035
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2016 02:24:28 -0700 (PDT)
+Received: from mail-wm0-f53.google.com (mail-wm0-f53.google.com
+	[74.125.82.53]) by cuda.sgi.com with ESMTP id 2J4kmL2UVWA9MJQy
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2016 13:02:03 -0700 (PDT)
-Received: by mail-vk0-f48.google.com with SMTP id j126so72649076vkg.3
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 13:02:03 -0700 (PDT)
+	Sun, 10 Jul 2016 02:24:27 -0700 (PDT)
+Received: by mail-wm0-f53.google.com with SMTP id f65so32804258wmi.0
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2016 02:24:27 -0700 (PDT)
+Subject: Re: xfs + 100TB+ storage + lots of small files + NFS
+References: <CACNifpXnSMcm6EfSjqLFPXXfqv7XWd4Yu_=UhqTcdn6-o+49Yw@mail.gmail.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Message-ID: <0f365b8a-16e2-7814-06d2-d452e80c7c07@gmail.com>
+Date: Sun, 10 Jul 2016 12:24:22 +0300
 MIME-Version: 1.0
-In-Reply-To: <1467831425.2908.16.camel@redhat.com>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-14-git-send-email-agruenba@redhat.com>
-	<1467831425.2908.16.camel@redhat.com>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Thu, 14 Jul 2016 22:02:02 +0200
-Message-ID: <CAHc6FU4b2YLE80wFNGpKhimXebo-nF-jV29+agaY1YsmZYPV1A@mail.gmail.com>
-Subject: Re: [PATCH v23 13/22] vfs: Cache richacl in struct inode
+In-Reply-To: <CACNifpXnSMcm6EfSjqLFPXXfqv7XWd4Yu_=UhqTcdn6-o+49Yw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,237 +27,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Layton <jlayton@redhat.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
+To: Marcin Sura <mailing-lists@sura.pl>, xfs@oss.sgi.com
 
-On Wed, Jul 6, 2016 at 8:57 PM, Jeff Layton <jlayton@redhat.com> wrote:
-> On Thu, 2016-06-30 at 15:47 +0200, Andreas Gruenbacher wrote:
->> Cache richacls in struct inode so that this doesn't have to be done
->> individually in each filesystem.  This is similar to POSIX ACLs.
->>
->> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
->> ---
->>  fs/inode.c              | 13 +++++---
->>  fs/richacl.c            | 81 +++++++++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/fs.h      |  5 ++-
->>  include/linux/richacl.h | 11 +++++++
->>  4 files changed, 105 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/inode.c b/fs/inode.c
->> index 40c03a7..7dbb09c 100644
->> --- a/fs/inode.c
->> +++ b/fs/inode.c
->> @@ -181,8 +181,11 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
->>       inode->i_private = NULL;
->>       inode->i_mapping = mapping;
->>       INIT_HLIST_HEAD(&inode->i_dentry);      /* buggered by rcu freeing */
->> -#ifdef CONFIG_FS_POSIX_ACL
->> -     inode->i_acl = inode->i_default_acl = ACL_NOT_CACHED;
->> +#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
->> +     inode->i_acl = ACL_NOT_CACHED;
->> +# if defined(CONFIG_FS_POSIX_ACL)
->> +     inode->i_default_acl = ACL_NOT_CACHED;
->> +# endif
->>  #endif
->>
->>  #ifdef CONFIG_FSNOTIFY
->> @@ -238,17 +241,19 @@ void __destroy_inode(struct inode *inode)
->>               atomic_long_dec(&inode->i_sb->s_remove_count);
->>       }
->>
->> -#ifdef CONFIG_FS_POSIX_ACL
->> +#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
->>       if (inode->i_acl && !is_uncached_acl(inode->i_acl))
->>               base_acl_put(inode->i_acl);
->> +# if defined(CONFIG_FS_POSIX_ACL)
->>       if (inode->i_default_acl && !is_uncached_acl(inode->i_default_acl))
->>               base_acl_put(inode->i_default_acl);
->> +# endif
->>  #endif
->>       this_cpu_dec(nr_inodes);
->>  }
->>  EXPORT_SYMBOL(__destroy_inode);
->>
->> -#ifdef CONFIG_FS_POSIX_ACL
->> +#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
->>  struct base_acl *__get_cached_acl(struct base_acl **p)
->>  {
->>       struct base_acl *base_acl;
->> diff --git a/fs/richacl.c b/fs/richacl.c
->> index 8971ead..b2a03c1 100644
->> --- a/fs/richacl.c
->> +++ b/fs/richacl.c
->> @@ -20,6 +20,87 @@
->>  #include
->>  #include
->>
->> +void set_cached_richacl(struct inode *inode, struct richacl *acl)
->> +{
->> +     struct base_acl *old;
->> +
->> +     old = xchg(&inode->i_acl, &richacl_get(acl)->a_base);
->> +     if (!is_uncached_acl(old))
->> +             base_acl_put(old);
->> +}
->> +EXPORT_SYMBOL_GPL(set_cached_richacl);
->> +
->> +void forget_cached_richacl(struct inode *inode)
->> +{
->> +     __forget_cached_acl(&inode->i_acl);
->> +}
->> +EXPORT_SYMBOL_GPL(forget_cached_richacl);
->> +
->> +struct richacl *get_richacl(struct inode *inode)
->> +{
->> +     struct base_acl *sentinel, *base_acl;
->> +     struct richacl *acl;
->> +
->> +     if (!IS_RICHACL(inode))
->> +             return NULL;
->> +
->> +     /*
->> +      * The sentinel is used to detect when another operation like
->> +      * set_cached_richacl() or forget_cached_richacl() races with
->> +      * get_richacl().
->> +      * It is guaranteed that is_uncached_acl(sentinel) is true.
->> +      */
->> +
->> +     base_acl = __get_cached_acl(&inode->i_acl);
->> +     if (!is_uncached_acl(base_acl))
->> +             return richacl(base_acl);
->> +
->> +     sentinel = uncached_acl_sentinel(current);
->> +
->> +     /*
->> +      * If the ACL isn't being read yet, set our sentinel.  Otherwise, the
->> +      * current value of the ACL will not be ACL_NOT_CACHED and so our own
->> +      * sentinel will not be set; another task will update the cache.  We
->> +      * could wait for that other task to complete its job, but it's easier
->> +      * to just call ->get_acl to fetch the ACL ourself.  (This is going to
->> +      * be an unlikely race.)
->> +      */
->> +     if (cmpxchg(&inode->i_acl, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
->> +             /* fall through */ ;
->> +
+On 07/09/2016 02:14 PM, Marcin Sura wrote:
+> Hi,
 >
-> So you do the same thing regardless of the outcome of the above? Why
-> bother with the if at all here? Just do the cmpxchg and toss out the
-> result.
+> Friend of mine asked me about evaluation of XFS for their purposes. Currently 
+> I don't have physical access to their system, but here are the info I've got 
+> so far:
+>
+> SAN:
+> - physical storage is from FSC array, thin provisioned raid 6 volume,
+> - volumes are 100TB+ in size
+> - there are SSD disks in the array, which potentially can be used for journal
+> - storage is connected to the host via 10GbE iSCSI
+>
+> Host:
+> - They are using CentOS 6.5, with stock kernel 2.6.32-*
+> - System uses all default values, no optimization has beed done
+> - OS installed on SSD
+> - Don't know exact details of CPU, but I assume some recent multicore CPU
+> - Don't know amount of RAM installed, I assume 32GB+
+>
+> NFS:
+> - they are exporting filesystem via NFS to 10-20 clients (services), some VMs, 
+> some bare metal
+> - clients are connected via 1GbE or 10GbE links
+>
+> Workload:
+> - they are storing tens or hundreds of millions of small files
+> - files are not in single directory
+> - files are undek 1K, usually 200 - 500 bytes
+> - I assume, that some NFS clients constantly write files
+> - some NFS clients initiates massive reads, millions of random files
+> - those reads are on demand, but during peak hours there can be many of such 
+> requests
+>
+> So far they were using Ext4, after some basic test they observed 40% 
+> improvement in application counters. But I'm afraid that those tests were done 
+> in environment not even close to the production (not so big size of 
+> filesystem, not so much files).
+>
+> I want to ask you what would be best mkfs.xfs settings for such setup.
+>
+> I assume, that they should use inode64 mount option for such large filesystem 
+> with that amount of files, but I'm a bit worried about compatibility with NFS 
+> (default shipped with CentOS 6.5). I think inode32 is totally out of scope here.
+>
+> Any other hints for setting this stuff up?
+> Probably some recent OS/kernel would also help a lot, right?
+>
+> Also, do you know any benchmark which can be used to simulate such workload? 
+> I've googled a lot, but there is quite short list of multi-threaded, small 
+> files oriented benchmarks. To be honest, I've found only 
+> https://github.com/bengland2/smallfile to be close to what I need. Any other 
+> alternatives?
+>
+> BR
+> Marcin
 
-This is to document explicitly that we don't care either way ...
+I think that is a good test to explore - Ben wrote that for exactly this kind of 
+workload.
 
->> +     /*
->> +      * Normally, the ACL returned by ->get_richacl will be cached.
->> +      * A filesystem can prevent that by calling
->> +      * forget_cached_richacl(inode) in ->get_richacl.
->> +      *
->> +      * If the filesystem doesn't have a ->get_richacl function at all,
->> +      * we'll just create the negative cache entry.
->> +      */
->> +     if (!inode->i_op->get_richacl) {
->> +             set_cached_richacl(inode, NULL);
->> +             return NULL;
->> +     }
->> +
->> +     acl = inode->i_op->get_richacl(inode);
->> +     if (IS_ERR(acl)) {
->> +             /*
->> +              * Remove our sentinel so that we don't block future attempts
->> +              * to cache the ACL.
->> +              */
->> +             cmpxchg(&inode->i_acl, sentinel, ACL_NOT_CACHED);
->> +             return acl;
->> +     }
->> +
->
-> So this is sort of icky: only the task that sets the sentinel can set
-> the cached acl.
->
-> You could have one task set the sentinel, call get_richacl and fail, but then a concurrent task also issues a get_richacl and succeeds. That task will get its acl, but it doesn't end up getting cached and subsequent callers then have to reissue the request. It would be good if the first successful fetch of the acl sets it in the cache.
->
-> That said, getting the acl could be pretty expensive with some filesystems. NFS or CIFS are going to have to do an on the wire call to fetch them, for instance. I think it would be better to have concurrent callers wait for the first caller's result instead of issuing parallel get_richacl requests.
+For a single system (i.e., performance a single NFS client or local file 
+system), you could also test using fs_mark.
 
-Making successive callers wait on the first caller should certainly be
-possible, for POSIX ACLs as well as for Richacls. For network
-filesystems, an improvement should be measurable. I'm thinking of an
-approach similar to __wait_on_freeing_inode which uses a hash table of
-wait queues instead of per-inode ones. It's a bit tricky to get this
-right, though.
+Regards,
+Ric
 
->> +     /*
->> +      * Cache the result, but only if our sentinel is still in place.
->> +      */
->> +     richacl_get(acl);
->> +     if (unlikely(cmpxchg(&inode->i_acl, sentinel, &acl->a_base) != sentinel))
->> +             richacl_put(acl);
->> +     return acl;
->> +}
->> +EXPORT_SYMBOL_GPL(get_richacl);
->> +
->>  /**
->>   * richacl_alloc  -  allocate a richacl
->>   * @count:   number of entries
->> diff --git a/include/linux/fs.h b/include/linux/fs.h
->> index ac96bda..4d72a6d 100644
->> --- a/include/linux/fs.h
->> +++ b/include/linux/fs.h
->> @@ -589,6 +589,7 @@ struct base_acl {
->>       };
->>  };
->>  struct posix_acl;
->> +struct richacl;
->>  #define ACL_NOT_CACHED ((void *)(-1))
->>
->>  static inline struct base_acl *
->> @@ -619,9 +620,11 @@ struct inode {
->>       kgid_t                  i_gid;
->>       unsigned int            i_flags;
->>
->> -#if defined(CONFIG_FS_POSIX_ACL)
->> +#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
->>       struct base_acl         *i_acl;
->> +# if defined(CONFIG_FS_POSIX_ACL)
->>       struct base_acl         *i_default_acl;
->> +# endif
->>  #endif
->>
->
-> Oh, so if we compile in richacls and not posix acls, we shrink the
-> inode by a pointer. Nice!
->
->>       const struct inode_operations   *i_op;
->> diff --git a/include/linux/richacl.h b/include/linux/richacl.h
->> index 35a5bcb..3e05c94 100644
->> --- a/include/linux/richacl.h
->> +++ b/include/linux/richacl.h
->> @@ -70,6 +70,17 @@ richacl_put(struct richacl *acl)
->>       base_acl_put(&acl->a_base);
->>  }
->>
->> +static inline struct richacl *
->> +richacl(struct base_acl *base_acl)
->> +{
->> +     BUILD_BUG_ON(offsetof(struct richacl, a_base) != 0);
->> +     return container_of(base_acl, struct richacl, a_base);
->> +}
->> +
->> +extern void set_cached_richacl(struct inode *, struct richacl *);
->> +extern void forget_cached_richacl(struct inode *);
->> +extern struct richacl *get_richacl(struct inode *);
->> +
->>  /**
->>   * richace_is_owner  -  check if @ace is an OWNER@ entry
->>   */
->
-> --
-> Jeff Layton <jlayton@redhat.com>
-
-Thanks,
-Andreas
 
 _______________________________________________
 xfs mailing list
