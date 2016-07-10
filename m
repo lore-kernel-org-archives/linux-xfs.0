@@ -1,19 +1,21 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ABBB57CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 05:25:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6D9978F8037
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 03:25:36 -0700 (PDT)
-Received: from mail163-142.dm.aliyun.com (mail163-142.dm.aliyun.com
-	[42.120.163.142]) by cuda.sgi.com with ESMTP id
-	0guaVQAuDTnQPnRy for <xfs@oss.sgi.com>;
-	Mon, 11 Jul 2016 03:25:30 -0700 (PDT)
-Date: Mon, 11 Jul 2016 18:25:22 +0800
-From: "Sway Liu" <sales08@sznicklighting.cn>
-Message-ID: <742ee4a5-fe0c-4a6f-b666-bfa658a8d8a0@alibaba.com>
-Subject: =?UTF-8?B?VUwvRVRMIENlcnRpZmljYXRlZCBGaWxhbWVudCBMRUQgQnVsYg==?=
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 941517CB4
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2016 18:48:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E672DAC002
+	for <xfs@oss.sgi.com>; Sun, 10 Jul 2016 16:48:42 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	EzYgCk2scbOswN5e for <xfs@oss.sgi.com>;
+	Sun, 10 Jul 2016 16:48:40 -0700 (PDT)
+Date: Mon, 11 Jul 2016 09:48:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs + 100TB+ storage + lots of small files + NFS
+Message-ID: <20160710234801.GD1922@dastard>
+References: <CACNifpXnSMcm6EfSjqLFPXXfqv7XWd4Yu_=UhqTcdn6-o+49Yw@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: sales08@sznickled.com
+Content-Disposition: inline
+In-Reply-To: <CACNifpXnSMcm6EfSjqLFPXXfqv7XWd4Yu_=UhqTcdn6-o+49Yw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,153 +24,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3473760219436942731=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Marcin Sura <mailing-lists@sura.pl>
+Cc: xfs@oss.sgi.com
 
---===============3473760219436942731==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Sat, Jul 09, 2016 at 01:14:37PM +0200, Marcin Sura wrote:
+> Hi,
+> 
+> Friend of mine asked me about evaluation of XFS for their purposes.
+> Currently I don't have physical access to their system, but here are the
+> info I've got so far:
+> 
+> SAN:
+> - physical storage is from FSC array, thin provisioned raid 6 volume,
+> - volumes are 100TB+ in size
+> - there are SSD disks in the array, which potentially can be used for
+> journal
+> - storage is connected to the host via 10GbE iSCSI
+> 
+> Host:
+> - They are using CentOS6.5, with stock kernel 2.6.32-*
 
-<div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; color: rgb=
-(0, 0, 0); font-family: Tahoma, Arial; font-size: 14px; white-space: normal; l=
-ine-height: 23.3px; clear: both;"><span style=3D"margin: 0px; padding: 0px; bo=
-rder: 0px; outline: 0px; font-family: Tahoma, Arial, STHeiti, SimSun;"><div st=
-yle=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><sp=
-an style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px;"><p style=3D=
-"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><span sty=
-le=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px;">Dear Manager,</sp=
-an></p><p style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear=
-: both;"><span style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px;"=
->Good day for you!&nbsp;</span><span style=3D"margin: 0px; padding: 0px; borde=
-r: 0px; outline: 0px;"><span style=3D"margin: 0px; padding: 0px; border: 0px; =
-outline: 0px; line-height: 1.7;">Glad to find your e-mail address from website=
-.</span></span></p><div style=3D"margin: 0px; padding: 0px; border: 0px; outli=
-ne: 0px; clear: both;"><div style=3D"margin: 0px; padding: 0px; border: 0px; o=
-utline: 0px; clear: both;"><div style=3D"margin: 0px; padding: 0px; border: 0p=
-x; outline: 0px; clear: both;"><span style=3D"margin: 0px; padding: 0px; borde=
-r: 0px; outline: 0px; font-family: tahoma;">We mainly supply&nbsp;<span style=3D=
-"margin: 0px; padding: 0px; border: 0px; outline: 0px; font-size: 16px;"><stro=
-ng>Vintage LED filament Bulb</strong></span><strong>&nbsp;</strong>with high q=
-uality and competitive price, and our LED filament Bulb has<strong>&nbsp;</str=
-ong><span style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; font-=
-size: 16px;"><strong>ETL, CE,&nbsp;</strong><strong>RoHS</strong>&nbsp;</span>=
-Certificated.</span></div><div style=3D"margin: 0px; padding: 0px; border: 0px=
-; outline: 0px; clear: both;"><span style=3D"margin: 0px; padding: 0px; border=
-: 0px; outline: 0px; font-family: tahoma;"><div style=3D"margin: 0px; padding:=
- 0px; border: 0px; outline: 0px; clear: both;">The prototype of custom design =
-can be submitted to customers in the shortest time&nbsp;<strong>only 3 days</s=
-trong>, currently we have capacity of<strong>&nbsp;monthly 300,000-400,000 pcs=
-</strong>&nbsp;bullbs.</div><p style=3D"margin: 0px; padding: 0px; border: 0px=
-; outline: 0px; clear: both;">Here are some photos for our current hot-selling=
- products.</p><p style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px=
-; clear: both;"><img src=3D"http://a1.qpic.cn/psb?/V13HVoYc0n87i6/wDp9ti77NPSJ=
-DbbDCqx.murtdone.fmOgeo.NngEALc!/b/dAgBAAAAAAAA&bo=3DgAKAAgAAAAAFByQ!&rf=3Dvie=
-wer_4" _src=3D"http://a1.qpic.cn/psb?/V13HVoYc0n87i6/wDp9ti77NPSJDbbDCqx.murtd=
-one.fmOgeo.NngEALc!/b/dAgBAAAAAAAA&bo=3DgAKAAgAAAAAFByQ!&rf=3Dviewer_4" style=3D=
-"width: 431px; height: 320px;"/></p><p style=3D"margin: 0px; padding: 0px; bor=
-der: 0px; outline: 0px; clear: both;"><img src=3D"http://a3.qpic.cn/psb?/V13HV=
-oYc0n87i6/fIjA591J3bbtJ7hMYCUZuNtfJxZgX2rdLqXp*uql0ik!/b/dA0BAAAAAAAA&bo=3D9AG=
-UAfQBlAEFCSo!&rf=3Dviewer_4" _src=3D"http://a3.qpic.cn/psb?/V13HVoYc0n87i6/fIj=
-A591J3bbtJ7hMYCUZuNtfJxZgX2rdLqXp*uql0ik!/b/dA0BAAAAAAAA&bo=3D9AGUAfQBlAEFCSo!=
-&rf=3Dviewer_4"/></p><p style=3D"margin: 0px; padding: 0px; border: 0px; outli=
-ne: 0px; clear: both;"><br/></p><div style=3D"margin: 0px; padding: 0px; borde=
-r: 0px; outline: 0px; clear: both;">&nbsp;<br/></div><div style=3D"margin: 0px=
-; padding: 0px; border: 0px; outline: 0px; clear: both;">If you're interested =
-in those products, pls feel free to let me know. I will send you offer sheet i=
-n other separate e-mail soon.</div><div style=3D"margin: 0px; padding: 0px; bo=
-rder: 0px; outline: 0px; clear: both;"><br/>Hope you have a great day!</div><d=
-iv style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;=
-"><div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear: b=
-oth;">Best regards</div><div style=3D"margin: 0px; padding: 0px; border: 0px; =
-outline: 0px; clear: both;">Sway Liu</div></div></span></div><div style=3D"mar=
-gin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D=
-"margin: 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: =
-0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"marg=
-in: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><strong style=3D=
-"line-height: normal; font-family: Verdana, sans-serif; font-size: 13px;">Sale=
-s representative &amp; Marketing</strong></div></div></span></div><div style=3D=
-"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><span sty=
-le=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"mar=
-gin: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D=
-"margin: 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: =
-0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"marg=
-in: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><strong style=3D=
-"line-height: normal; font-family: Verdana, sans-serif; font-size: 13px;"><img=
- src=3D"http://a2.qpic.cn/psb?/V13HVoYc0n87i6/NkliSZOmUkWzib3AdmXgBIbkwjSJsaMv=
-rdSyY3ovQls!/b/dFcBAAAAAAAA&bo=3DZAAqAAAAAAAFB2o!&rf=3Dviewer_4" _src=3D"http:=
-//a2.qpic.cn/psb?/V13HVoYc0n87i6/NkliSZOmUkWzib3AdmXgBIbkwjSJsaMvrdSyY3ovQls!/=
-b/dFcBAAAAAAAA&bo=3DZAAqAAAAAAAFB2o!&rf=3Dviewer_4"/></strong></div></div></sp=
-an></div><div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; c=
-lear: both;"><span style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0=
-px;"><div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; clear=
-: both;"><div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0px; c=
-lear: both;"><div style=3D"margin: 0px; padding: 0px; border: 0px; outline: 0p=
-x; clear: both;">SHENZHEN NICK LED TECHNOLOGY CO., LTD</div></div></div></span=
-></div></span><p>Office:3F,C2 Building,Silicon Valley Power Qinghu Community,<=
-/p><p>Longhua District,Shenzhen City,China</p><span style=3D"margin: 0px; padd=
-ing: 0px; border: 0px; outline: 0px;"></span></div><div style=3D"margin: 0px; =
-padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: =
-0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; padd=
-ing: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: 0px;=
- padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; padding:=
- 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; padd=
-ing: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; =
-padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0=
-px; padding: 0px; border: 0px; outline: 0px; clear: both;">Web:www.sznickled.c=
-om</div></div></div></div></span></div></span></div><div style=3D"margin: 0px;=
- padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin:=
- 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; pad=
-ding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: 0px=
-; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; padding=
-: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; pad=
-ding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px;=
- padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: =
-0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"marg=
-in: 0px; padding: 0px; border: 0px; outline: 0px;">Office :0086-755-23772886</=
-div></div></div></div></div></span></div></span></div><div style=3D"margin: 0p=
-x; padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margi=
-n: 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; p=
-adding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: 0=
-px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; paddi=
-ng: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; p=
-adding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0p=
-x; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin=
-: 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"ma=
-rgin: 0px; padding: 0px; border: 0px; outline: 0px;">Fax :0086-755-23772884</d=
-iv></div></div></div></div></span></div></span></div><div style=3D"margin: 0px=
-; padding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin=
-: 0px; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; pa=
-dding: 0px; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: 0p=
-x; padding: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; paddin=
-g: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; pa=
-dding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px=
-; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin:=
- 0px; padding: 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"mar=
-gin: 0px; padding: 0px; border: 0px; outline: 0px;">Cell: 0086-15707157186</di=
-v></div></div></div></div></span></div><div style=3D"margin: 0px; padding: 0px=
-; border: 0px; outline: 0px; clear: both;"><span style=3D"margin: 0px; padding=
-: 0px; border: 0px; outline: 0px;"><div style=3D"margin: 0px; padding: 0px; bo=
-rder: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; padding: 0px=
-; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; padding:=
- 0px; border: 0px; outline: 0px; clear: both;"><div style=3D"margin: 0px; padd=
-ing: 0px; border: 0px; outline: 0px; clear: both;">Skype:sxliu3681 (<span styl=
-e=3D"color: rgb(0, 0, 0); font-family: Tahoma, Arial, STHeiti, SimSun; font-si=
-ze: 14px; line-height: 23.3px; white-space: normal;">Sway Liu&nbsp;</span>)</d=
-iv></div></div></div></span></div></span></div></div></div></span></div></span=
-></div><p><br/></p>
+I'd suggest the NFS server should use a kernel/distro as recent as
+possible. Doesn't affect client/application side OS choices, so
+I would suggest, at minimum, you use a kernel that supports metadata
+CRCs. You'll have hundreds of terabytes of data indexed by hundreds
+of gigabytes of metadata, and you're going to want things like free
+inode indexing to keep inode allocation as fast as possible as
+counts build up to the hundreds of millions of inodes.
 
+> - System uses all default values, no optimization has beed done
+> - OS installed on SSD
+> - Don't know exact details of CPU, but I assume some recent multicore CPU
+> - Don't know amount of RAM installed, I assume 32GB+
 
---===============3473760219436942731==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+With a peaky random read workload, you're going to want to cache
+tens of millions of inodes in RAM to get performance out of the
+machine. RAM is cheap compared to storage costs - I'd suggest
+hundreds of GB of RAM in the server....
+
+> NFS:
+> - they are exporting filesystem via NFS to 10-20 clients (services), some
+> VMs, some bare metal
+> - clients are connected via 1GbE or 10GbE links
+> 
+> Workload:
+> - they are storing tens or hundreds of millions of small files
+> - files are not in single directory
+
+How big are the directories?
+
+> - files are undek 1K, usually 200 - 500 bytes
+> - I assume, that some NFS clients constantly write files
+> - some NFS clients initiates massive reads, millions of random files
+> - those reads are on demand, but during peak hours there can be many of
+> such requests
+
+This sort of "efficiently indexing hundreds of millions of tiny
+objects" workload is what databases were designed for, not
+filesystems. Yes, you can use a filesystem for this sort of
+workload, but IMO it's not the right tool for this job.
+
+> So far they were using Ext4, after some basic test they observed 40%
+> improvement in application counters. But I'm afraid that those tests were
+> done in environment not even close to the production (not so big size of
+> filesystem, not so much files).
+> 
+> I want to ask you what would be best mkfs.xfs settings for such setup.
+
+How long is a piece of string?
+
+Working out how to optimise storage to this sort of workload
+requires an iterative measure/analyse/tweak approach. Anything else
+is just guesswork. i.e. start with the defaults, then measure
+performance, identify the bottlenecks in the system and then tweak
+the appropriate knob to alleviate the bottleneck.
+
+i.e. you may find that there are things you have to change in the
+NFS server config to get it to scale before you even start looking
+at XFS performance....
+
+> I assume, that they should use inode64 mount option for such large
+> filesystem with that amount of files, but I'm a bit worried about
+> compatibility with NFS (default shipped with CentOS 6.5). I think inode32
+> is totally out of scope here.
+
+inode32 will not support hundreds of millions of inodes - you'll
+ENOSPC the first AG long before that, and performance will be very
+bad as all inode/directory allocation will single thread. And it
+will only get worse as the inode count goes up.
+
+As it is, inode64 will be fine for 64bit NFS clients. It's only 32
+bit clients that have problems with 64 bit inode numbers, and even
+then it is only a problem on older linux and non-linux clients.
+
+> Also, do you know any benchmark which can be used to simulate such
+> workload?
+
+Test against your production workload. It's the only way to be sure
+you are optimising the right things.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3473760219436942731==--
