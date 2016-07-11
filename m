@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 12DB97CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 02:06:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D93B28F8035
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 00:06:06 -0700 (PDT)
-Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
-	[209.85.220.49]) by cuda.sgi.com with ESMTP id D8NZ69tyjHsYMRVS
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 66E097CA0
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 05:12:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3AF6AC002
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 03:12:01 -0700 (PDT)
+Received: from mail-vk0-f44.google.com (mail-vk0-f44.google.com
+	[209.85.213.44]) by cuda.sgi.com with ESMTP id JCw6RP9XpLhPG5vw
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 11 Jul 2016 00:06:05 -0700 (PDT)
-Received: by mail-pa0-f49.google.com with SMTP id hu1so19582018pad.3
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 00:06:05 -0700 (PDT)
+	Mon, 11 Jul 2016 03:11:57 -0700 (PDT)
+Received: by mail-vk0-f44.google.com with SMTP id x130so4803365vkc.0
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 03:11:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160710232217.GB1922@dastard>
-References: <CAGeO4WMZtYjaW=L7Hj8CgTd-sO38-xAUMhkZ-x-Z394YjOO7Xg@mail.gmail.com>
-	<20160707222829.GG12670@dastard>
-	<CAGeO4WN6iYLk7PjjrfU679wgF5NwFgE=1vkowEc_M8nF5W29HQ@mail.gmail.com>
-	<20160710232217.GB1922@dastard>
-From: Kaho Ng <ngkaho1234@gmail.com>
-Date: Mon, 11 Jul 2016 15:06:03 +0800
-Message-ID: <CAGeO4WOuQwA7wm_S6352ovDdgiJixn_ztP5=HUVO1d=VmRxfbA@mail.gmail.com>
-Subject: Re: [QUESTION] about the freelist allocator in XFS
+In-Reply-To: <1467718448.3800.16.camel@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-7-git-send-email-agruenba@redhat.com>
+	<1467718448.3800.16.camel@redhat.com>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Mon, 11 Jul 2016 12:11:56 +0200
+Message-ID: <CAHc6FU6B-3R=DZ08aMSxr2065sENHAi2V-VAeEqO8kFmpiOgHQ@mail.gmail.com>
+Subject: Re: [PATCH v23 06/22] richacl: In-memory representation and helper
+	functions
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,107 +34,436 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Mon, Jul 11, 2016 at 7:22 AM, Dave Chinner <david@fromorbit.com> wrote:
-> [please don't top post]
->
-> On Fri, Jul 08, 2016 at 01:48:43PM +0800, Kaho Ng wrote:
->> On Fri, Jul 8, 2016 at 6:28 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Thu, Jul 07, 2016 at 07:01:35PM +0800, Kaho Ng wrote:
->> >> I am trying to investigate how freelist allocator in xfs interacts
->> >> with freespace B+Tree allocator.
->> >> First I prepared a patch
->> >> <https://gist.github.com/22ffca35929e67c08759b057779b7566> on
->> >> linux-source/fs/xfs/libxfs/xfs_alloc.c to print debugging messages
->> >> (The kernel version used is linux-3.10.0-327.22.2.el7).
->> > ......
->> >> When reading the log output
->> >> <https://gist.github.com/890076405e1c13c0a952a579e25e6afe> , I
->> >> realised that there is no B+Tree split
->> >> triggered by xfs_alloc_fix_freelist() when calling xfs_free_extent().
->> >> Isn't B+Tree split possible in by-size B+Tree even when truncating a
->> >> longer freespace record to shorter one? But what I found in the log is
->> >> only a few tree shrinks... And when reading the source code of
->> >> freespace allocator I found that a B+Tree growth in this case is
->> >> impossible at least...
->> >
->> > args->isfl doesn't mean what you think it means.
->> >
->> > args->isfl is only set when moving blocks from the freespace btree
->> > to the AGFL, which only occurs when a previous operation allocated a
->> > new freespace btree block and depleted the current freelist. i.e.
->> > "AG Free List" != "AG freespace btree" - they are different
->> > structures on disk...
->> >
->> > And when you consider that a freelist refill can only remove records
->> > from the the freespace btree, it's should be clear that a btree
->> > split won't occur during a freelist refill...
+On Tue, Jul 5, 2016 at 1:34 PM, Jeff Layton <jlayton@redhat.com> wrote:
+> On Thu, 2016-06-30 at 15:46 +0200, Andreas Gruenbacher wrote:
+>> A richacl consists of an NFSv4 acl and an owner, group, and other mask.
+>> These three masks correspond to the owner, group, and other file
+>> permission bits, but they contain NFSv4 permissions instead of POSIX
+>> permissions.
 >>
->> Hmm, wouldn't xfs_alloc_ag_vextent_size() first remove the free extent
->> record, and insert a new extent record into the freespace by-size
->> btree if the found free extent record is longer than args->maxlen?
+>> Each entry in the NFSv4 acl applies to the file owner (OWNER@), the
+>> owning group (GROUP@), everyone (EVERYONE@), or to a specific uid or
+>> gid.
+>>
+>> As in the standard POSIX file permission model, each process is the
+>> owner, group, or other file class.  A richacl grants a requested access
+>> only if the NFSv4 acl in the richacl grants the access (according to the
+>> NFSv4 permission check algorithm), and the file mask that applies to the
+>> process includes the requested permissions.
+>>
+>> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>> Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+>> ---
+>>  fs/Makefile                  |   1 +
+>>  fs/richacl.c                 |  65 ++++++++++++++++
+>>  include/linux/richacl.h      | 179 +++++++++++++++++++++++++++++++++++++++++++
+>>  include/uapi/linux/Kbuild    |   1 +
+>>  include/uapi/linux/richacl.h |  99 ++++++++++++++++++++++++
+>>  5 files changed, 345 insertions(+)
+>>  create mode 100644 fs/richacl.c
+>>  create mode 100644 include/linux/richacl.h
+>>  create mode 100644 include/uapi/linux/richacl.h
+>>
+>> diff --git a/fs/Makefile b/fs/Makefile
+>> index 85b6e13..2b3e6f1 100644
+>> --- a/fs/Makefile
+>> +++ b/fs/Makefile
+>> @@ -49,6 +49,7 @@ obj-$(CONFIG_COREDUMP)              += coredump.o
+>>  obj-$(CONFIG_SYSCTL)         += drop_caches.o
+>>
+>>  obj-$(CONFIG_FHANDLE)                += fhandle.o
+>> +obj-$(CONFIG_FS_RICHACL)     += richacl.o
+>>
+>>  obj-y                                += quota/
+>>
+>> diff --git a/fs/richacl.c b/fs/richacl.c
+>> new file mode 100644
+>> index 0000000..bcc6591
+>> --- /dev/null
+>> +++ b/fs/richacl.c
+>> @@ -0,0 +1,65 @@
+>> +/*
+>> + * Copyright (C) 2006, 2010  Novell, Inc.
+>> + * Copyright (C) 2015  Red Hat, Inc.
+>> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify it
+>> + * under the terms of the GNU General Public License as published by the
+>> + * Free Software Foundation; either version 2, or (at your option) any
+>> + * later version.
+>> + *
+>> + * This program is distributed in the hope that it will be useful, but
+>> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>> + * General Public License for more details.
+>> + */
+>> +
+>> +#include
+>> +#include
+>> +#include
+>> +#include
+>> +#include
+>> +
+>> +/**
+>> + * richacl_alloc  -  allocate a richacl
+>> + * @count:   number of entries
+>> + */
+>> +struct richacl *
+>> +richacl_alloc(int count, gfp_t gfp)
+>> +{
+>> +     size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
+>> +     struct richacl *acl = kzalloc(size, gfp);
+>> +
+>> +     if (acl) {
+>> +             atomic_set(&acl->a_refcount, 1);
+>> +             acl->a_count = count;
+>> +     }
+>> +     return acl;
+>> +}
+>> +EXPORT_SYMBOL_GPL(richacl_alloc);
+>> +
 >
-> Good, you went and looked to verify what I said(*).  Indeed, when
-> you read xfs_alloc_fixup_trees() where the two trees are modified
-> after an extent has been selected for allocation:
->
-> ...
->         * Delete the entry from the by-size btree.
-> ...
->         * Add new by-size btree entry(s).
-> ...
->         * Fix up the by-block btree entry(s)
->
-> It's pretty clear what the answer is. IOWs, yes, you're correct - we
-> only ever modify or delete records from the by-bno freespace tree,
-> but the by-size tree does do a delete and insert and so can
-> split.(**)
->
-> So, while it is possible for a split to occur, you still didn't see
-> one in your test. That's because a split is rather unlikely in your
-> scenario because once we have a large enough freespace btree records
-> stored for a split to occur, we almost always have exact matches in
-> the by-count tree for freelist fills and so record deletes are the
-> usual operationon the by-count tree.
->
-> And even if we are doing a by-count insert, the chances the target
-> block for the insert is full is quite small, as are the chances the
-> target block for the insert is different to the block the original
-> record was deleted from (consider ordering, what record index the
-> initial lookup returns and that freelist fills usually only require
-> a block or two to be allocated).
->
-> Cheers,
->
-> Dave.
->
-> (*) That was what my answer was aimed at getting you to do as I get
-> a lot of timewasters asking me via direct email to answer their
-> homework questions for them. Anyone who is trying to understand the
-> basics of the freespace btrees should have realised the by-count
-> tree needs a delete/insert operation pair if we modify the length of
-> a freespace record.
->
-> (**) The lesson here is this: trust what people say, but always
-> verify it when you can. e.g. I now know you'll look at the
-> code to try to understand answers you are given, so my time
-> answering your questions is not going to be wasted.
->
-> --
-> Dave Chinner
-> david@fromorbit.com
+> I imagine we could have a lot of these at any given time. It might be
+> nice to consider how to do this with dedicated slabcaches for better
+> packing, but I think that would add to the complexity, unfortunately.
 
-Thanks for the detailed explaination!
+The objects are variable in size, so that wouldn't work.
 
-Just wonders why we prefer failing the request of refilling freelist
-with XFS_WANT_CORRUPTED_RETURN(mp, i == 1) in some rare case, rather
-than returning NULLAGBLOCK and allowing the loop in
-xfs_alloc_ag_vextent_size() to try xfs_alloc_ag_vextent_small()... In
-such corner case there will always be a lot of small extents at the
-front of the by-count tree, and any truncation changes to the first
-entry in the tree will not result in tree splits and triggering
-assertion failure.
+>> +/**
+>> + * richacl_clone  -  create a copy of a richacl
+>> + */
+>> +struct richacl *
+>> +richacl_clone(const struct richacl *acl, gfp_t gfp)
+>> +{
+>> +     int count = acl->a_count;
+>> +     size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
+>> +     struct richacl *dup = kmalloc(size, gfp);
+>> +
+>> +     if (dup) {
+>> +             memcpy(dup, acl, size);
+>> +             atomic_set(&dup->a_refcount, 1);
+>> +     }
+>> +     return dup;
+>> +}
+>> +
+>> +/**
+>> + * richace_copy  -  copy an acl entry
+>> + */
+>> +void
+>> +richace_copy(struct richace *to, const struct richace *from)
+>> +{
+>> +     memcpy(to, from, sizeof(struct richace));
+>> +}
+>> diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+>> new file mode 100644
+>> index 0000000..edb8480
+>> --- /dev/null
+>> +++ b/include/linux/richacl.h
+>> @@ -0,0 +1,179 @@
+>> +/*
+>> + * Copyright (C) 2006, 2010  Novell, Inc.
+>> + * Copyright (C) 2015  Red Hat, Inc.
+>> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify it
+>> + * under the terms of the GNU General Public License as published by the
+>> + * Free Software Foundation; either version 2, or (at your option) any
+>> + * later version.
+>> + *
+>> + * This program is distributed in the hope that it will be useful, but
+>> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>> + * General Public License for more details.
+>> + */
+>> +
+>> +#ifndef __RICHACL_H
+>> +#define __RICHACL_H
+>> +
+>> +#include
+>> +
+>> +struct richace {
+>> +     unsigned short  e_type;
+>> +     unsigned short  e_flags;
+>> +     unsigned int    e_mask;
+>> +     union {
+>> +             kuid_t          uid;
+>> +             kgid_t          gid;
+>> +             unsigned int    special;
+>> +     } e_id;
+>> +};
+>> +
+>> +struct richacl {
+>> +     atomic_t        a_refcount;
+>> +     unsigned int    a_owner_mask;
+>> +     unsigned int    a_group_mask;
+>> +     unsigned int    a_other_mask;
+>> +     unsigned short  a_count;
+>> +     unsigned short  a_flags;
+>> +     struct richace  a_entries[0];
+>> +};
+>> +
+>> +#define richacl_for_each_entry(_ace, _acl)                   \
+>> +     for (_ace = (_acl)->a_entries;                          \
+>> +          _ace != (_acl)->a_entries + (_acl)->a_count;       \
+>> +          _ace++)
+>> +
+>> +#define richacl_for_each_entry_reverse(_ace, _acl)           \
+>> +     for (_ace = (_acl)->a_entries + (_acl)->a_count - 1;    \
+>> +          _ace != (_acl)->a_entries - 1;                     \
+>> +          _ace--)
+>> +
+>> +/**
+>> + * richacl_get  -  grab another reference to a richacl handle
+>> + */
+>> +static inline struct richacl *
+>> +richacl_get(struct richacl *acl)
+>> +{
+>> +     if (acl)
+>> +             atomic_inc(&acl->a_refcount);
+>> +     return acl;
+>> +}
+>> +
+>> +/**
+>> + * richacl_put  -  free a richacl handle
+>> + */
+>> +static inline void
+>> +richacl_put(struct richacl *acl)
+>> +{
+>> +     if (acl && atomic_dec_and_test(&acl->a_refcount))
+>> +             kfree(acl);
+>> +}
+>> +
+>> +/**
+>> + * richace_is_owner  -  check if @ace is an OWNER@ entry
+>> + */
+>> +static inline bool
+>> +richace_is_owner(const struct richace *ace)
+>> +{
+>> +     return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
+>> +            ace->e_id.special == RICHACE_OWNER_SPECIAL_ID;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_group  -  check if @ace is a GROUP@ entry
+>> + */
+>> +static inline bool
+>> +richace_is_group(const struct richace *ace)
+>> +{
+>> +     return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
+>> +            ace->e_id.special == RICHACE_GROUP_SPECIAL_ID;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_everyone  -  check if @ace is an EVERYONE@ entry
+>> + */
+>> +static inline bool
+>> +richace_is_everyone(const struct richace *ace)
+>> +{
+>> +     return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
+>> +            ace->e_id.special == RICHACE_EVERYONE_SPECIAL_ID;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_unix_user  -  check if @ace applies to a specific user
+>> + */
+>> +static inline bool
+>> +richace_is_unix_user(const struct richace *ace)
+>> +{
+>> +     return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
+>> +            !(ace->e_flags & RICHACE_IDENTIFIER_GROUP);
+>> +}
+>> +
+>> +/**
+>> + * richace_is_unix_group  -  check if @ace applies to a specific group
+>> + */
+>> +static inline bool
+>> +richace_is_unix_group(const struct richace *ace)
+>> +{
+>> +     return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
+>> +            (ace->e_flags & RICHACE_IDENTIFIER_GROUP);
+>> +}
+>> +
+>> +/**
+>> + * richace_is_inherit_only  -  check if @ace is for inheritance only
+>> + *
+>> + * ACEs with the %RICHACE_INHERIT_ONLY_ACE flag set have no effect during
+>> + * permission checking.
+>> + */
+>> +static inline bool
+>> +richace_is_inherit_only(const struct richace *ace)
+>> +{
+>> +     return ace->e_flags & RICHACE_INHERIT_ONLY_ACE;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_inheritable  -  check if @ace is inheritable
+>> + */
+>> +static inline bool
+>> +richace_is_inheritable(const struct richace *ace)
+>> +{
+>> +     return ace->e_flags & (RICHACE_FILE_INHERIT_ACE |
+>> +                            RICHACE_DIRECTORY_INHERIT_ACE);
+>> +}
+>> +
+>> +/**
+>> + * richace_is_allow  -  check if @ace is an %ALLOW type entry
+>> + */
+>> +static inline bool
+>> +richace_is_allow(const struct richace *ace)
+>> +{
+>> +     return ace->e_type == RICHACE_ACCESS_ALLOWED_ACE_TYPE;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_deny  -  check if @ace is a %DENY type entry
+>> + */
+>> +static inline bool
+>> +richace_is_deny(const struct richace *ace)
+>> +{
+>> +     return ace->e_type == RICHACE_ACCESS_DENIED_ACE_TYPE;
+>> +}
+>> +
+>> +/**
+>> + * richace_is_same_identifier  -  are both identifiers the same?
+>> + */
+>> +static inline bool
+>> +richace_is_same_identifier(const struct richace *a, const struct richace *b)
+>> +{
+>> +     return !((a->e_flags ^ b->e_flags) &
+>> +              (RICHACE_SPECIAL_WHO | RICHACE_IDENTIFIER_GROUP)) &&
+>> +            !memcmp(&a->e_id, &b->e_id, sizeof(a->e_id));
+>> +}
+>> +
+>> +extern struct richacl *richacl_alloc(int, gfp_t);
+>> +extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+>> +extern void richace_copy(struct richace *, const struct richace *);
+>> +
+>> +#endif /* __RICHACL_H */
+>> diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+>> index 8bdae34..abeaa98 100644
+>> --- a/include/uapi/linux/Kbuild
+>> +++ b/include/uapi/linux/Kbuild
+>> @@ -355,6 +355,7 @@ header-y += reboot.h
+>>  header-y += reiserfs_fs.h
+>>  header-y += reiserfs_xattr.h
+>>  header-y += resource.h
+>> +header-y += richacl.h
+>>  header-y += rfkill.h
+>>  header-y += rio_mport_cdev.h
+>>  header-y += romfs_fs.h
+>> diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+>> new file mode 100644
+>> index 0000000..08856f8
+>> --- /dev/null
+>> +++ b/include/uapi/linux/richacl.h
+>> @@ -0,0 +1,99 @@
+>> +/*
+>> + * Copyright (C) 2006, 2010  Novell, Inc.
+>> + * Copyright (C) 2015  Red Hat, Inc.
+>> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> + *
+>> + * This file is free software; you can redistribute it and/or
+>> + * modify it under the terms of the GNU Lesser General Public
+>> + * License as published by the Free Software Foundation; either
+>> + * version 2.1 of the License, or (at your option) any later version.
+>> + *
+>> + * This file is distributed in the hope that it will be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+>> + * Lesser General Public License for more details.
+>> + */
+>> +
+>> +#ifndef __UAPI_RICHACL_H
+>> +#define __UAPI_RICHACL_H
+>> +
+>> +/* a_flags values */
+>> +#define RICHACL_WRITE_THROUGH                        0x40
+>> +#define RICHACL_MASKED                               0x80
+>> +
+>> +/* e_type values */
+>> +#define RICHACE_ACCESS_ALLOWED_ACE_TYPE              0x0000
+>> +#define RICHACE_ACCESS_DENIED_ACE_TYPE               0x0001
+>> +
+>> +/* e_flags bitflags */
+>> +#define RICHACE_FILE_INHERIT_ACE             0x0001
+>> +#define RICHACE_DIRECTORY_INHERIT_ACE                0x0002
+>> +#define RICHACE_NO_PROPAGATE_INHERIT_ACE     0x0004
+>> +#define RICHACE_INHERIT_ONLY_ACE             0x0008
+>> +#define RICHACE_IDENTIFIER_GROUP             0x0040
+>> +#define RICHACE_SPECIAL_WHO                  0x4000
+>> +
+>> +/* e_mask bitflags */
+>> +#define RICHACE_READ_DATA                    0x00000001
+>> +#define RICHACE_LIST_DIRECTORY                       0x00000001
+>> +#define RICHACE_WRITE_DATA                   0x00000002
+>> +#define RICHACE_ADD_FILE                     0x00000002
+>> +#define RICHACE_APPEND_DATA                  0x00000004
+>> +#define RICHACE_ADD_SUBDIRECTORY             0x00000004
+>> +#define RICHACE_READ_NAMED_ATTRS             0x00000008
+>> +#define RICHACE_WRITE_NAMED_ATTRS            0x00000010
+>> +#define RICHACE_EXECUTE                              0x00000020
+>> +#define RICHACE_DELETE_CHILD                 0x00000040
+>> +#define RICHACE_READ_ATTRIBUTES                      0x00000080
+>> +#define RICHACE_WRITE_ATTRIBUTES             0x00000100
+>> +#define RICHACE_WRITE_RETENTION                      0x00000200
+>> +#define RICHACE_WRITE_RETENTION_HOLD         0x00000400
+>> +#define RICHACE_DELETE                               0x00010000
+>> +#define RICHACE_READ_ACL                     0x00020000
+>> +#define RICHACE_WRITE_ACL                    0x00040000
+>> +#define RICHACE_WRITE_OWNER                  0x00080000
+>> +#define RICHACE_SYNCHRONIZE                  0x00100000
+>> +
+>> +/* e_id values */
+>> +#define RICHACE_OWNER_SPECIAL_ID             0
+>> +#define RICHACE_GROUP_SPECIAL_ID             1
+>> +#define RICHACE_EVERYONE_SPECIAL_ID          2
+>> +
+>> +#define RICHACL_VALID_FLAGS (                                        \
+>> +     RICHACL_WRITE_THROUGH |                                 \
+>> +     RICHACL_MASKED )
+>> +
+>> +#define RICHACE_VALID_FLAGS (                                        \
+>> +     RICHACE_FILE_INHERIT_ACE |                              \
+>> +     RICHACE_DIRECTORY_INHERIT_ACE |                         \
+>> +     RICHACE_NO_PROPAGATE_INHERIT_ACE |                      \
+>> +     RICHACE_INHERIT_ONLY_ACE |                              \
+>> +     RICHACE_IDENTIFIER_GROUP |                              \
+>> +     RICHACE_SPECIAL_WHO )
+>> +
+>> +#define RICHACE_INHERITANCE_FLAGS (                          \
+>> +     RICHACE_FILE_INHERIT_ACE |                              \
+>> +     RICHACE_DIRECTORY_INHERIT_ACE |                         \
+>> +     RICHACE_NO_PROPAGATE_INHERIT_ACE |                      \
+>> +     RICHACE_INHERIT_ONLY_ACE )
+>> +
+>> +/* Valid RICHACE_* flags for directories and non-directories */
+>> +#define RICHACE_VALID_MASK (                                 \
+>> +     RICHACE_READ_DATA | RICHACE_LIST_DIRECTORY |            \
+>> +     RICHACE_WRITE_DATA | RICHACE_ADD_FILE |                 \
+>> +     RICHACE_APPEND_DATA | RICHACE_ADD_SUBDIRECTORY |        \
+>> +     RICHACE_READ_NAMED_ATTRS |                              \
+>> +     RICHACE_WRITE_NAMED_ATTRS |                             \
+>> +     RICHACE_EXECUTE |                                       \
+>> +     RICHACE_DELETE_CHILD |                                  \
+>> +     RICHACE_READ_ATTRIBUTES |                               \
+>> +     RICHACE_WRITE_ATTRIBUTES |                              \
+>> +     RICHACE_WRITE_RETENTION |                               \
+>> +     RICHACE_WRITE_RETENTION_HOLD |                          \
+>> +     RICHACE_DELETE |                                        \
+>> +     RICHACE_READ_ACL |                                      \
+>> +     RICHACE_WRITE_ACL |                                     \
+>> +     RICHACE_WRITE_OWNER |                                   \
+>> +     RICHACE_SYNCHRONIZE )
+>> +
+>> +#endif /* __UAPI_RICHACL_H */
+>
+> Reviewed-by: Jeff Layton <jlayton@redhat.com>
+
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
