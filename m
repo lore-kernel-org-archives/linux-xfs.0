@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EBFD97CA2
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 18:17:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ABCA48F8035
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 16:17:25 -0700 (PDT)
-Received: from mail-vk0-f50.google.com (mail-vk0-f50.google.com
-	[209.85.213.50]) by cuda.sgi.com with ESMTP id TeAEWCU7MsuzmLxJ
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 764197CA0
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 08:26:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4AE0E304043
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 06:26:44 -0700 (PDT)
+Received: from mail-vk0-f54.google.com (mail-vk0-f54.google.com
+	[209.85.213.54]) by cuda.sgi.com with ESMTP id 75SveONjZEvcutQs
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2016 16:17:22 -0700 (PDT)
-Received: by mail-vk0-f50.google.com with SMTP id w127so74444513vkh.2
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 16:17:22 -0700 (PDT)
+	Mon, 11 Jul 2016 06:26:41 -0700 (PDT)
+Received: by mail-vk0-f54.google.com with SMTP id x130so11143109vkc.0
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 06:26:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1468324965.7798.17.camel@redhat.com>
+In-Reply-To: <1467725986.3800.22.camel@redhat.com>
 References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-19-git-send-email-agruenba@redhat.com>
-	<1468324965.7798.17.camel@redhat.com>
+	<1467294433-3222-8-git-send-email-agruenba@redhat.com>
+	<1467725986.3800.22.camel@redhat.com>
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Thu, 14 Jul 2016 22:33:18 +0200
-Message-ID: <CAHc6FU4OxssRFVNwrQ+x1-C-phNF+8wgty0iZqeOYQDfTy6AyA@mail.gmail.com>
-Subject: Re: [PATCH v23 18/22] richacl: xattr mapping functions
+Date: Mon, 11 Jul 2016 15:26:40 +0200
+Message-ID: <CAHc6FU7n13=g-v-X7y6_ojV2HOkt8qL6ywMzRzWxScTHm10Ynw@mail.gmail.com>
+Subject: Re: [PATCH v23 07/22] richacl: Permission mapping functions
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,329 +36,225 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jeff Layton <jlayton@redhat.com>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Tue, Jul 12, 2016 at 2:02 PM, Jeff Layton <jlayton@redhat.com> wrote:
-> On Thu, 2016-06-30 at 15:47 +0200, Andreas Gruenbacher wrote:
->> Map between "system.richacl" xattrs and the in-kernel representation.
+On Tue, Jul 5, 2016 at 3:39 PM, Jeff Layton <jlayton@redhat.com> wrote:
+> On Thu, 2016-06-30 at 15:46 +0200, Andreas Gruenbacher wrote:
+>> We need to map from POSIX permissions to NFSv4 permissions when a
+>> chmod() is done, from NFSv4 permissions to POSIX permissions when an acl
+>> is set (which implicitly sets the file permission bits), and from the
+>> MAY_READ/MAY_WRITE/MAY_EXEC/MAY_APPEND flags to NFSv4 permissions when
+>> doing an access check in a richacl.
 >>
 >> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+>> Reviewed-by: J. Bruce Fields <bfields@redhat.com>
 >> ---
->>  fs/Makefile                        |   2 +-
->>  fs/richacl_xattr.c                 | 161 +++++++++++++++++++++++++++++++++++++
->>  include/linux/richacl_xattr.h      |  29 +++++++
->>  include/uapi/linux/Kbuild          |   1 +
->>  include/uapi/linux/richacl_xattr.h |  44 ++++++++++
->>  include/uapi/linux/xattr.h         |   2 +
->>  6 files changed, 238 insertions(+), 1 deletion(-)
->>  create mode 100644 fs/richacl_xattr.c
->>  create mode 100644 include/linux/richacl_xattr.h
->>  create mode 100644 include/uapi/linux/richacl_xattr.h
+>>  fs/richacl.c                 | 118 +++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/richacl.h      |   3 ++
+>>  include/uapi/linux/richacl.h |  44 ++++++++++++++++
+>>  3 files changed, 165 insertions(+)
 >>
->> diff --git a/fs/Makefile b/fs/Makefile
->> index 2b3e6f1..262fd67 100644
->> --- a/fs/Makefile
->> +++ b/fs/Makefile
->> @@ -49,7 +49,7 @@ obj-$(CONFIG_COREDUMP)              += coredump.o
->>  obj-$(CONFIG_SYSCTL)         += drop_caches.o
->>
->>  obj-$(CONFIG_FHANDLE)                += fhandle.o
->> -obj-$(CONFIG_FS_RICHACL)     += richacl.o
->> +obj-$(CONFIG_FS_RICHACL)     += richacl.o richacl_xattr.o
->>
->>  obj-y                                += quota/
->>
->> diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
->> new file mode 100644
->> index 0000000..dc1ad36
->> --- /dev/null
->> +++ b/fs/richacl_xattr.c
->> @@ -0,0 +1,161 @@
+>> diff --git a/fs/richacl.c b/fs/richacl.c
+>> index bcc6591..d0a4135 100644
+>> --- a/fs/richacl.c
+>> +++ b/fs/richacl.c
+>> @@ -63,3 +63,121 @@ richace_copy(struct richace *to, const struct richace *from)
+>>  {
+>>       memcpy(to, from, sizeof(struct richace));
+>>  }
+>> +
 >> +/*
->> + * Copyright (C) 2006, 2010  Novell, Inc.
->> + * Copyright (C) 2015  Red Hat, Inc.
->> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> + * richacl_mask_to_mode  -  compute the file permission bits from mask
+>> + * @mask:    %RICHACE_* permission mask
 >> + *
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms of the GNU General Public License as published by the
->> + * Free Software Foundation; either version 2, or (at your option) any
->> + * later version.
+>> + * Compute the file permission bits corresponding to a particular set of
+>> + * richacl permissions.
 >> + *
->> + * This program is distributed in the hope that it will be useful, but
->> + * WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
->> + * General Public License for more details.
+>> + * See richacl_masks_to_mode().
 >> + */
->> +
->> +#include
->> +#include
->> +#include
->> +#include
->> +#include
->> +
->> +/**
->> + * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
->> + */
->> +struct richacl *
->> +richacl_from_xattr(struct user_namespace *user_ns,
->> +                const void *value, size_t size, int invalid_error)
+>> +static int
+>> +richacl_mask_to_mode(unsigned int mask)
 >> +{
->> +     const struct richacl_xattr *xattr_acl = value;
->> +     const struct richace_xattr *xattr_ace = (void *)(xattr_acl + 1);
->> +     struct richacl *acl;
->> +     struct richace *ace;
->> +     int count;
+>> +     int mode = 0;
 >> +
->> +     if (size < sizeof(*xattr_acl) ||
->> +         xattr_acl->a_version != RICHACL_XATTR_VERSION ||
->> +         (xattr_acl->a_flags & ~RICHACL_VALID_FLAGS))
->> +             goto invalid;
->> +     size -= sizeof(*xattr_acl);
->> +     count = le16_to_cpu(xattr_acl->a_count);
->> +     if (count > RICHACL_XATTR_MAX_COUNT)
->> +             goto invalid;
->> +     if (size != count * sizeof(*xattr_ace))
->> +             goto invalid;
+>> +     if (mask & RICHACE_POSIX_MODE_READ)
+>> +             mode |= S_IROTH;
+>> +     if (mask & RICHACE_POSIX_MODE_WRITE)
+>> +             mode |= S_IWOTH;
+>> +     if (mask & RICHACE_POSIX_MODE_EXEC)
+>> +             mode |= S_IXOTH;
 >> +
->> +     acl = richacl_alloc(count, GFP_NOFS);
->> +     if (!acl)
->> +             return ERR_PTR(-ENOMEM);
->> +
->> +     acl->a_flags = xattr_acl->a_flags;
->> +     acl->a_owner_mask = le32_to_cpu(xattr_acl->a_owner_mask);
->> +     if (acl->a_owner_mask & ~RICHACE_VALID_MASK)
->> +             goto put_invalid;
->> +     acl->a_group_mask = le32_to_cpu(xattr_acl->a_group_mask);
->> +     if (acl->a_group_mask & ~RICHACE_VALID_MASK)
->> +             goto put_invalid;
->> +     acl->a_other_mask = le32_to_cpu(xattr_acl->a_other_mask);
->> +     if (acl->a_other_mask & ~RICHACE_VALID_MASK)
->> +             goto put_invalid;
->> +
->> +     richacl_for_each_entry(ace, acl) {
->> +             ace->e_type  = le16_to_cpu(xattr_ace->e_type);
->> +             ace->e_flags = le16_to_cpu(xattr_ace->e_flags);
->> +             ace->e_mask  = le32_to_cpu(xattr_ace->e_mask);
->> +
->> +             if (ace->e_flags & ~RICHACE_VALID_FLAGS)
->> +                     goto put_invalid;
->> +             if (ace->e_flags & RICHACE_SPECIAL_WHO) {
->> +                     ace->e_id.special = le32_to_cpu(xattr_ace->e_id);
->> +                     if (ace->e_id.special > RICHACE_EVERYONE_SPECIAL_ID)
->> +                             goto put_invalid;
->> +             } else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP) {
->> +                     u32 id = le32_to_cpu(xattr_ace->e_id);
->> +
->> +                     ace->e_id.gid = make_kgid(user_ns, id);
->> +                     if (!gid_valid(ace->e_id.gid))
->> +                             goto put_invalid;
->> +             } else {
->> +                     u32 id = le32_to_cpu(xattr_ace->e_id);
->> +
->> +                     ace->e_id.uid = make_kuid(user_ns, id);
->> +                     if (!uid_valid(ace->e_id.uid))
->> +                             goto put_invalid;
->> +             }
->> +             if (ace->e_type > RICHACE_ACCESS_DENIED_ACE_TYPE ||
->> +                 (ace->e_mask & ~RICHACE_VALID_MASK))
->> +                     goto put_invalid;
->> +
->> +             xattr_ace++;
->> +     }
->> +
->> +     return acl;
->> +
->> +put_invalid:
->> +     richacl_put(acl);
->> +invalid:
->> +     return ERR_PTR(invalid_error);
+>> +     return mode;
 >> +}
->> +EXPORT_SYMBOL_GPL(richacl_from_xattr);
 >> +
 >> +/**
->> + * richacl_xattr_size  -  compute the size of the xattr representation of @acl
->> + */
->> +size_t
->> +richacl_xattr_size(const struct richacl *acl)
->> +{
->> +     size_t size = sizeof(struct richacl_xattr);
->> +
->> +     size += sizeof(struct richace_xattr) * acl->a_count;
->> +     return size;
->> +}
->> +EXPORT_SYMBOL_GPL(richacl_xattr_size);
->> +
->> +/**
->> + * richacl_to_xattr  -  convert @acl into its xattr representation
->> + * @acl:     the richacl to convert
->> + * @buffer:  buffer for the result
->> + * @size:    size of @buffer
+>> + * richacl_masks_to_mode  -  compute file permission bits from file masks
+>> + *
+>> + * When setting a richacl, we set the file permission bits to indicate maximum
+>> + * permissions: for example, we set the Write permission when a mask contains
+>> + * RICHACE_APPEND_DATA even if it does not also contain RICHACE_WRITE_DATA.
+>> + *
+>> + * Permissions which are not in RICHACE_POSIX_MODE_READ,
+>> + * RICHACE_POSIX_MODE_WRITE, or RICHACE_POSIX_MODE_EXEC cannot be represented
+>> + * in the file permission bits.  Such permissions can still be effective, but
+>> + * not for new files or after a chmod(); they must be explicitly enabled in the
+>> + * richacl.
 >> + */
 >> +int
->> +richacl_to_xattr(struct user_namespace *user_ns,
->> +              const struct richacl *acl, void *buffer, size_t size)
+>> +richacl_masks_to_mode(const struct richacl *acl)
 >> +{
->> +     struct richacl_xattr *xattr_acl = buffer;
->> +     struct richace_xattr *xattr_ace;
->> +     const struct richace *ace;
->> +     size_t real_size;
->> +
->> +     real_size = richacl_xattr_size(acl);
->> +     if (!buffer)
->> +             return real_size;
->> +     if (real_size > size)
->> +             return -ERANGE;
->> +
->> +     xattr_acl->a_version = RICHACL_XATTR_VERSION;
->> +     xattr_acl->a_flags = acl->a_flags;
->> +     xattr_acl->a_count = cpu_to_le16(acl->a_count);
->> +
->> +     xattr_acl->a_owner_mask = cpu_to_le32(acl->a_owner_mask);
->> +     xattr_acl->a_group_mask = cpu_to_le32(acl->a_group_mask);
->> +     xattr_acl->a_other_mask = cpu_to_le32(acl->a_other_mask);
->> +
->> +     xattr_ace = (void *)(xattr_acl + 1);
->> +     richacl_for_each_entry(ace, acl) {
->> +             xattr_ace->e_type = cpu_to_le16(ace->e_type);
->> +             xattr_ace->e_flags = cpu_to_le16(ace->e_flags);
->> +             xattr_ace->e_mask = cpu_to_le32(ace->e_mask);
->> +             if (ace->e_flags & RICHACE_SPECIAL_WHO)
->> +                     xattr_ace->e_id = cpu_to_le32(ace->e_id.special);
->> +             else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP)
->> +                     xattr_ace->e_id =
->> +                             cpu_to_le32(from_kgid(user_ns, ace->e_id.gid));
->> +             else
->> +                     xattr_ace->e_id =
->> +                             cpu_to_le32(from_kuid(user_ns, ace->e_id.uid));
->> +             xattr_ace++;
->> +     }
->> +     return real_size;
+>> +     return richacl_mask_to_mode(acl->a_owner_mask) << 6 |
+>> +            richacl_mask_to_mode(acl->a_group_mask) << 3 |
+>> +            richacl_mask_to_mode(acl->a_other_mask);
 >> +}
->> +EXPORT_SYMBOL_GPL(richacl_to_xattr);
->> diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
->> new file mode 100644
->> index 0000000..0efa14b
->> --- /dev/null
->> +++ b/include/linux/richacl_xattr.h
->> @@ -0,0 +1,29 @@
->> +/*
->> + * Copyright (C) 2006, 2010  Novell, Inc.
->> + * Copyright (C) 2015  Red Hat, Inc.
->> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> +EXPORT_SYMBOL_GPL(richacl_masks_to_mode);
+>> +
+>> +/**
+>> + * richacl_mode_to_mask  - compute a file mask from the lowest three mode bits
+>> + * @mode:    mode to convert to richacl permissions
 >> + *
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms of the GNU General Public License as published by the
->> + * Free Software Foundation; either version 2, or (at your option) any
->> + * later version.
->> + *
->> + * This program is distributed in the hope that it will be useful, but
->> + * WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
->> + * General Public License for more details.
+>> + * When the file permission bits of a file are set with chmod(), this specifies
+>> + * the maximum permissions that processes will get.  All permissions beyond
+>> + * that will be removed from the file masks, and become ineffective.
 >> + */
+>> +unsigned int
+>> +richacl_mode_to_mask(umode_t mode)
+>> +{
+>> +     unsigned int mask = 0;
 >> +
->> +#ifndef __RICHACL_XATTR_H
->> +#define __RICHACL_XATTR_H
+>> +     if (mode & S_IROTH)
+>> +             mask |= RICHACE_POSIX_MODE_READ;
+>> +     if (mode & S_IWOTH)
+>> +             mask |= RICHACE_POSIX_MODE_WRITE;
+>> +     if (mode & S_IXOTH)
+>> +             mask |= RICHACE_POSIX_MODE_EXEC;
 >> +
->> +#include
->> +#include
+>> +     return mask;
+>> +}
 >> +
->> +extern struct richacl *richacl_from_xattr(struct user_namespace *, const void *,
->> +                                       size_t, int);
->> +extern size_t richacl_xattr_size(const struct richacl *);
->> +extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
->> +                         void *, size_t);
->> +
->> +#endif /* __RICHACL_XATTR_H */
->> diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
->> index abeaa98..c24e106 100644
->> --- a/include/uapi/linux/Kbuild
->> +++ b/include/uapi/linux/Kbuild
->> @@ -356,6 +356,7 @@ header-y += reiserfs_fs.h
->>  header-y += reiserfs_xattr.h
->>  header-y += resource.h
->>  header-y += richacl.h
->> +header-y += richacl_xattr.h
->>  header-y += rfkill.h
->>  header-y += rio_mport_cdev.h
->>  header-y += romfs_fs.h
->> diff --git a/include/uapi/linux/richacl_xattr.h b/include/uapi/linux/richacl_xattr.h
->> new file mode 100644
->> index 0000000..20da204
->> --- /dev/null
->> +++ b/include/uapi/linux/richacl_xattr.h
->> @@ -0,0 +1,44 @@
->> +/*
->> + * Copyright (C) 2006, 2010  Novell, Inc.
->> + * Copyright (C) 2015  Red Hat, Inc.
->> + * Written by Andreas Gruenbacher <agruenba@redhat.com>
+>> +/**
+>> + * richacl_want_to_mask  - convert the iop->permission want argument to a mask
+>> + * @want:    @want argument of the permission inode operation
 >> + *
->> + * This file is free software; you can redistribute it and/or
->> + * modify it under the terms of the GNU Lesser General Public
->> + * License as published by the Free Software Foundation; either
->> + * version 2.1 of the License, or (at your option) any later version.
+>> + * When checking for append, @want is (MAY_WRITE | MAY_APPEND).
 >> + *
->> + * This file is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
->> + * Lesser General Public License for more details.
+>> + * Richacls use the iop->may_create and iop->may_delete hooks which are used
+>> + * for checking if creating and deleting files is allowed.  These hooks do not
+>> + * use richacl_want_to_mask(), so we do not have to deal with mapping MAY_WRITE
+>> + * to RICHACE_ADD_FILE, RICHACE_ADD_SUBDIRECTORY, and RICHACE_DELETE_CHILD
+>> + * here.
 >> + */
->> +
->> +#ifndef __UAPI_RICHACL_XATTR_H
->> +#define __UAPI_RICHACL_XATTR_H
->> +
->> +#include
->> +#include
->> +
->> +struct richace_xattr {
->> +     __le16  e_type;
->> +     __le16  e_flags;
->> +     __le32  e_mask;
->> +     __le32  e_id;
->> +};
->> +
->> +struct richacl_xattr {
->> +     __u8    a_version;
->> +     __u8    a_flags;
->> +     __le16  a_count;
->> +     __le32  a_owner_mask;
->> +     __le32  a_group_mask;
->> +     __le32  a_other_mask;
->> +};
->> +
->> +#define RICHACL_XATTR_VERSION 0
->> +#define RICHACL_XATTR_MAX_COUNT \
->> +     ((XATTR_SIZE_MAX - sizeof(struct richacl_xattr)) / \
->> +      sizeof(struct richace_xattr))
->> +
->> +#endif  /* __UAPI_RICHACL_XATTR_H */
->> diff --git a/include/uapi/linux/xattr.h b/include/uapi/linux/xattr.h
->> index 1590c49..1996903 100644
->> --- a/include/uapi/linux/xattr.h
->> +++ b/include/uapi/linux/xattr.h
->> @@ -73,5 +73,7 @@
->>  #define XATTR_POSIX_ACL_DEFAULT  "posix_acl_default"
->>  #define XATTR_NAME_POSIX_ACL_DEFAULT XATTR_SYSTEM_PREFIX XATTR_POSIX_ACL_DEFAULT
->>
->> +#define XATTR_RICHACL "richacl"
->> +#define XATTR_NAME_RICHACL XATTR_SYSTEM_PREFIX XATTR_RICHACL
->>
->>  #endif /* _UAPI_LINUX_XATTR_H */
 >
-> Fair enough. I do wonder a bit whether we might be better served with a
-> new set of syscalls for this instead of using xattrs (as I think
-> Christoph has suggested). What _is_ the rationale for doing this with
-> xattrs, btw?
+> This comment is confusing as I don't see any may_create or may_delete
+> iops in the final patchset. Do you mean may_create() and may_delete()
+> here?
 
-Xattrs are intended for exactly this kind of auxiliary file
-information. They are used for POSIX ACLs as well, and they are not
-going to go away. A number of utilities now include support for
-xattrs. By using xattrs for Richacls, those tools will automatically
-have at least basic Richacl support (for backup/restore and similar
-purposes, for example). In the kernel, supporting a new set of xattrs
-is pretty cheap and easy. So I really don't see the point of inventing
-yet another interface for basically the same type of information.
+Since this is only called from richacl_permission, the comment doesn't
+make much sense anymore; removing. Also, richacl_want_to_mask can be
+turned into a static function.
 
-> Regardless, this patch looks fine to me, assuming that we really do
-> want to do this xattrs:
+>> +unsigned int
+>> +richacl_want_to_mask(unsigned int want)
+>> +{
+>> +     unsigned int mask = 0;
+>> +
+>> +     if (want & MAY_READ)
+>> +             mask |= RICHACE_READ_DATA;
+>> +     if (want & MAY_DELETE_SELF)
+>> +             mask |= RICHACE_DELETE;
+>> +     if (want & MAY_TAKE_OWNERSHIP)
+>> +             mask |= RICHACE_WRITE_OWNER;
+>> +     if (want & MAY_CHMOD)
+>> +             mask |= RICHACE_WRITE_ACL;
+>> +     if (want & MAY_SET_TIMES)
+>> +             mask |= RICHACE_WRITE_ATTRIBUTES;
+>> +     if (want & MAY_EXEC)
+>> +             mask |= RICHACE_EXECUTE;
+>> +     /*
+>> +      * differentiate MAY_WRITE from these request
+>> +      */
+>> +     if (want & (MAY_APPEND |
+>> +                 MAY_CREATE_FILE | MAY_CREATE_DIR |
+>> +                 MAY_DELETE_CHILD)) {
+>> +             if (want & MAY_APPEND)
+>> +                     mask |= RICHACE_APPEND_DATA;
+>> +             if (want & MAY_CREATE_FILE)
+>> +                     mask |= RICHACE_ADD_FILE;
+>> +             if (want & MAY_CREATE_DIR)
+>> +                     mask |= RICHACE_ADD_SUBDIRECTORY;
+>> +             if (want & MAY_DELETE_CHILD)
+>> +                     mask |= RICHACE_DELETE_CHILD;
+>> +     } else if (want & MAY_WRITE)
+>> +             mask |= RICHACE_WRITE_DATA;
+>> +     return mask;
+>> +}
+>> +EXPORT_SYMBOL_GPL(richacl_want_to_mask);
+>> diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+>> index edb8480..9102ef0 100644
+>> --- a/include/linux/richacl.h
+>> +++ b/include/linux/richacl.h
+>> @@ -175,5 +175,8 @@ richace_is_same_identifier(const struct richace *a, const struct richace *b)
+>>  extern struct richacl *richacl_alloc(int, gfp_t);
+>>  extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+>>  extern void richace_copy(struct richace *, const struct richace *);
+>> +extern int richacl_masks_to_mode(const struct richacl *);
+>> +extern unsigned int richacl_mode_to_mask(umode_t);
+>> +extern unsigned int richacl_want_to_mask(unsigned int);
+>>
+>>  #endif /* __RICHACL_H */
+>> diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+>> index 08856f8..1ed48ac 100644
+>> --- a/include/uapi/linux/richacl.h
+>> +++ b/include/uapi/linux/richacl.h
+>> @@ -96,4 +96,48 @@
+>>       RICHACE_WRITE_OWNER |                                   \
+>>       RICHACE_SYNCHRONIZE )
+>>
+>> +/*
+>> + * The POSIX permissions are supersets of the following richacl permissions:
+>> + *
+>> + *  - MAY_READ maps to READ_DATA or LIST_DIRECTORY, depending on the type
+>> + *    of the file system object.
+>> + *
+>> + *  - MAY_WRITE maps to WRITE_DATA or RICHACE_APPEND_DATA for files, and to
+>> + *    ADD_FILE, RICHACE_ADD_SUBDIRECTORY, or RICHACE_DELETE_CHILD for directories.
+>> + *
+>> + *  - MAY_EXECUTE maps to RICHACE_EXECUTE.
+>> + *
+>> + *  (Some of these richacl permissions have the same bit values.)
+>> + */
+>> +#define RICHACE_POSIX_MODE_READ (                    \
+>> +             RICHACE_READ_DATA |                     \
+>> +             RICHACE_LIST_DIRECTORY)
+>> +#define RICHACE_POSIX_MODE_WRITE (                   \
+>> +             RICHACE_WRITE_DATA |                    \
+>> +             RICHACE_ADD_FILE |                      \
+>> +             RICHACE_APPEND_DATA |                   \
+>> +             RICHACE_ADD_SUBDIRECTORY |              \
+>> +             RICHACE_DELETE_CHILD)
+>> +#define RICHACE_POSIX_MODE_EXEC RICHACE_EXECUTE
+>> +#define RICHACE_POSIX_MODE_ALL (                     \
+>> +             RICHACE_POSIX_MODE_READ |               \
+>> +             RICHACE_POSIX_MODE_WRITE |              \
+>> +             RICHACE_POSIX_MODE_EXEC)
+>> +
+>> +/*
+>> + * These permissions are always allowed no matter what the acl says.
+>> + */
+>> +#define RICHACE_POSIX_ALWAYS_ALLOWED (                       \
+>> +             RICHACE_SYNCHRONIZE |                   \
+>> +             RICHACE_READ_ATTRIBUTES |               \
+>> +             RICHACE_READ_ACL)
+>> +
+>> +/*
+>> + * The owner is implicitly granted these permissions under POSIX.
+>> + */
+>> +#define RICHACE_POSIX_OWNER_ALLOWED (                        \
+>> +             RICHACE_WRITE_ATTRIBUTES |              \
+>> +             RICHACE_WRITE_OWNER |                   \
+>> +             RICHACE_WRITE_ACL)
+>> +
+>>  #endif /* __UAPI_RICHACL_H */
+>
+> Other than the confusing comment, this looks ok.
 >
 > Reviewed-by: Jeff Layton <jlayton@redhat.com>
 
