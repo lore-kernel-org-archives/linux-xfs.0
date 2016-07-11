@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 62C827CA0
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 10:29:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D074FAC004
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 08:29:26 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 212C67CA0
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 13:49:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E73A78F8037
+	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 11:49:13 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Qb2OlNjwkgCfS3lF (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kCXtnkRXN3BPYDJp (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jul 2016 08:29:24 -0700 (PDT)
-Date: Mon, 11 Jul 2016 11:29:22 -0400
+	<xfs@oss.sgi.com>; Mon, 11 Jul 2016 11:49:12 -0700 (PDT)
+Date: Mon, 11 Jul 2016 14:49:09 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
-	post-unmount panic
-Message-ID: <20160711152921.GB32896@bfoster.bfoster>
-References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
-	<20160630224457.GT12670@dastard>
-	<20160701223011.GA28130@bfoster.bfoster>
-	<20160705164552.GA6317@bfoster.bfoster>
-	<20160711052057.GE1922@dastard>
-	<20160711135251.GA32896@bfoster.bfoster>
+Subject: Re: [PATCH 036/119] xfs: add an extent to the rmap btree
+Message-ID: <20160711184908.GC32896@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612650302.12839.2761171937406229512.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160711135251.GA32896@bfoster.bfoster>
+In-Reply-To: <146612650302.12839.2761171937406229512.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,232 +30,329 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-On Mon, Jul 11, 2016 at 09:52:52AM -0400, Brian Foster wrote:
-> On Mon, Jul 11, 2016 at 03:20:57PM +1000, Dave Chinner wrote:
-> > On Tue, Jul 05, 2016 at 12:45:52PM -0400, Brian Foster wrote:
-> > > On Fri, Jul 01, 2016 at 06:30:12PM -0400, Brian Foster wrote:
-> > > > On Fri, Jul 01, 2016 at 08:44:57AM +1000, Dave Chinner wrote:
-> > > > > On Thu, Jun 30, 2016 at 08:53:49AM -0400, Brian Foster wrote:
-> > > > > > Newly allocated XFS metadata buffers are added to the LRU once the hold
-> > > > > > count is released, which typically occurs after I/O completion. There is
-> > > > > > no other mechanism at current that tracks the existence or I/O state of
-> > > > > > a new buffer. Further, readahead I/O tends to be submitted
-> > > > > > asynchronously by nature, which means the I/O can remain in flight and
-> > > > > > actually complete long after the calling context is gone. This means
-> > > > > > that file descriptors or any other holds on the filesystem can be
-> > > > > > released, allowing the filesystem to be unmounted while I/O is still in
-> > > > > > flight. When I/O completion occurs, core data structures may have been
-> > > > > > freed, causing completion to run into invalid memory accesses and likely
-> > > > > > to panic.
-> > > > > > 
-> > > > > > This problem is reproduced on XFS via directory readahead. A filesystem
-> > > > > > is mounted, a directory is opened/closed and the filesystem immediately
-> > > > > > unmounted. The open/close cycle triggers a directory readahead that if
-> > > > > > delayed long enough, runs buffer I/O completion after the unmount has
-> > > > > > completed.
-> > > > > > 
-> > > > > > To work around this problem, add readahead buffers to the LRU earlier
-> > > > > > than other buffers (when the buffer is allocated, specifically). The
-> > > > > > buffer hold count will ultimately remain until I/O completion, which
-> > > > > > means any shrinker activity will skip the buffer until then. This makes
-> > > > > > the buffer visible to xfs_wait_buftarg(), however, which ensures that an
-> > > > > > unmount or quiesce waits for I/O completion appropriately.
-> > > > > > 
-> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > This addresses the problem reproduced by the recently posted xfstests
-> > > > > > test:
-> > > > > > 
-> > > > > >   http://thread.gmane.org/gmane.comp.file-systems.fstests/2740
-> > > > > > 
-> > > > > > This could probably be made more involved, i.e., to create another list
-> > > > > > of buffers in flight or some such. This seems more simple/sane to me,
-> > > > > > however, and survives my testing so far...
-> > > > > > 
-> > > > > > Brian
-> > > > > > 
-> > > > > >  fs/xfs/xfs_buf.c | 12 ++++++++++++
-> > > > > >  1 file changed, 12 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > > > index 4665ff6..3f03df9 100644
-> > > > > > --- a/fs/xfs/xfs_buf.c
-> > > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > > @@ -590,8 +590,20 @@ xfs_buf_get_map(
-> > > > > >  		return NULL;
-> > > > > >  	}
-> > > > > >  
-> > > > > > +	/*
-> > > > > > +	 * If the buffer found doesn't match the one allocated above, somebody
-> > > > > > +	 * else beat us to insertion and we can toss the new one.
-> > > > > > +	 *
-> > > > > > +	 * If we did add the buffer and it happens to be readahead, add to the
-> > > > > > +	 * LRU now rather than waiting until the hold is released. Otherwise,
-> > > > > > +	 * the buffer is not visible to xfs_wait_buftarg() while in flight and
-> > > > > > +	 * nothing else prevents an unmount before I/O completion.
-> > > > > > +	 */
-> > > > > >  	if (bp != new_bp)
-> > > > > >  		xfs_buf_free(new_bp);
-> > > > > > +	else if (flags & XBF_READ_AHEAD &&
-> > > > > > +		 list_lru_add(&bp->b_target->bt_lru, &bp->b_lru))
-> > > > > > +		atomic_inc(&bp->b_hold);
-> > > > > 
-> > > > > This doesn't sit right with me. The LRU is for "unused" objects, and
-> > > > > readahead objects are not unused until IO completes and nobody is
-> > > > > waiting on them.
-> > > > > 
-> > > > > As it is, this points out another problem with readahead buffers -
-> > > > > they aren't actually being cached properly because b_lru_ref == 0,
-> > > > > which means they are immediately reclaimed on IO completion rather
-> > > > > than being added to the LRU....
-> > > > > 
-> > > > > I also think that it's not sufficient to cover the generic case of
-> > > > > async IO that has no waiter. i.e. we could do get_buf, submit async
-> > > > > write, drop submitter reference, and now we have the same problem
-> > > > > but on a write.  i.e. this problem is and async IO issue, not a
-> > > > > readahead issue.
-> > > > > 
-> > > > > I think that it might be better to fix it by doing this:
-> > > > > 
-> > > > > 	1. ensure async IO submission always has b_lru_ref set, and
-> > > > > 	if it isn't, set it to 1. This ensures the buffer will be
-> > > > > 	added to the LRU on completion if it isn't already there.
-> > > > > 
-> > > > > 	2. keep a count of async buffer IO in progress. A per-cpu
-> > > > > 	counter in the buftarg will be fine for this. Increment in
-> > > > > 	xfs_buf_submit(), decrement in the xfs_buf_rele() call from
-> > > > > 	xfs_buf_iodone() once we've determined if the buffer needs
-> > > > > 	adding to the LRU or not.
-> > > > > 
-> > > > > 	3. make xfs_wait_buftarg() wait until the async IO count
-> > > > > 	goes to zero before it gives up trying to release buffers on
-> > > > > 	the LRU.
-> > > > > 
-...
-> So what is your preference out of the possible approaches here? AFAICS,
-> we have the following options:
+On Thu, Jun 16, 2016 at 06:21:43PM -0700, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> 1.) The original "add readahead to LRU early" approach.
-> 	Pros: simple one-liner
-> 	Cons: bit of a hack, only covers readahead scenario
-> 2.) Defer I/O count decrement to buffer release (this patch).
-> 	Pros: should cover all cases (reads/writes)
-> 	Cons: more complex (requires per-buffer accounting, etc.)
-> 3.) Raw (buffer or bio?) I/O count (no defer to buffer release)
-> 	Pros: eliminates some complexity from #2
-> 	Cons: still more complex than #1, racy in that decrement does
-> 	not serialize against LRU addition (requires drain_workqueue(),
-> 	which still doesn't cover error conditions)
+> Now all the btree, free space and transaction infrastructure is in
+> place, we can finally add the code to insert reverse mappings to the
+> rmap btree. Freeing will be done in a separate patch, so just the
+> addition operation can be focussed on here.
 > 
-> As noted above, option #3 also allows for either a buffer based count or
-> bio based count, the latter of which might simplify things a bit further
-> (TBD). Thoughts?
+> v2: Update alloc function to handle non-shared file data.  Isolate the
+> part that makes changes from the part that initializes the rmap
+> cursor; this will be useful for deferred updates.
 > 
+> [darrick: handle owner offsets when adding rmaps]
+> [dchinner: remove remaining debug printk statements]
+> [darrick: move unwritten bit to rm_offset]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/libxfs/xfs_rmap.c       |  225 +++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_rmap_btree.h |    1 
+>  fs/xfs/xfs_trace.h             |    2 
+>  3 files changed, 223 insertions(+), 5 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> index 0e1721a..196e952 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.c
+> +++ b/fs/xfs/libxfs/xfs_rmap.c
+> @@ -159,6 +159,218 @@ out_error:
+>  	return error;
+>  }
+>  
+> +/*
+> + * A mergeable rmap should have the same owner, cannot be unwritten, and
 
-FWIW, the following is a slightly cleaned up version of my initial
-approach (option #3 above). Note that the flag is used to help deal with
-varying ioend behavior. E.g., xfs_buf_ioend() is called once for some
-buffers, multiple times for others with an iodone callback, that
-behavior changes in some cases when an error is set, etc. (I'll add
-comments before an official post.)
+Why can't it be unwritten? According to the code, it just looks like the
+unwritten state must match between extents..?
+
+> + * must be a bmbt rmap if we're asking about a bmbt rmap.
+> + */
+> +static bool
+> +xfs_rmap_is_mergeable(
+> +	struct xfs_rmap_irec	*irec,
+> +	uint64_t		owner,
+> +	uint64_t		offset,
+> +	xfs_extlen_t		len,
+> +	unsigned int		flags)
+> +{
+
+Also, why are we passing and not using offset and len? Is this modified
+later?
+
+One more comment nit below, otherwise looks good:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	if (irec->rm_owner == XFS_RMAP_OWN_NULL)
+> +		return false;
+> +	if (irec->rm_owner != owner)
+> +		return false;
+> +	if ((flags & XFS_RMAP_UNWRITTEN) ^
+> +	    (irec->rm_flags & XFS_RMAP_UNWRITTEN))
+> +		return false;
+> +	if ((flags & XFS_RMAP_ATTR_FORK) ^
+> +	    (irec->rm_flags & XFS_RMAP_ATTR_FORK))
+> +		return false;
+> +	if ((flags & XFS_RMAP_BMBT_BLOCK) ^
+> +	    (irec->rm_flags & XFS_RMAP_BMBT_BLOCK))
+> +		return false;
+> +	return true;
+> +}
+> +
+> +/*
+> + * When we allocate a new block, the first thing we do is add a reference to
+> + * the extent in the rmap btree. This takes the form of a [agbno, length,
+> + * owner, offset] record.  Flags are encoded in the high bits of the offset
+> + * field.
+> + */
+> +STATIC int
+> +__xfs_rmap_alloc(
+> +	struct xfs_btree_cur	*cur,
+> +	xfs_agblock_t		bno,
+> +	xfs_extlen_t		len,
+> +	bool			unwritten,
+> +	struct xfs_owner_info	*oinfo)
+> +{
+> +	struct xfs_mount	*mp = cur->bc_mp;
+> +	struct xfs_rmap_irec	ltrec;
+> +	struct xfs_rmap_irec	gtrec;
+> +	int			have_gt;
+> +	int			have_lt;
+> +	int			error = 0;
+> +	int			i;
+> +	uint64_t		owner;
+> +	uint64_t		offset;
+> +	unsigned int		flags = 0;
+> +	bool			ignore_off;
+> +
+> +	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
+> +	ignore_off = XFS_RMAP_NON_INODE_OWNER(owner) ||
+> +			(flags & XFS_RMAP_BMBT_BLOCK);
+> +	if (unwritten)
+> +		flags |= XFS_RMAP_UNWRITTEN;
+> +	trace_xfs_rmap_alloc_extent(mp, cur->bc_private.a.agno, bno, len,
+> +			unwritten, oinfo);
+> +
+> +	/*
+> +	 * For the initial lookup, look for and exact match or the left-adjacent
+
+					    an
 
 Brian
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4665ff6..45d3ddd 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1018,7 +1018,10 @@ xfs_buf_ioend(
- 
- 	trace_xfs_buf_iodone(bp, _RET_IP_);
- 
--	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-+	if (bp->b_flags & XBF_IN_FLIGHT)
-+		percpu_counter_dec(&bp->b_target->bt_io_count);
-+
-+	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD | XBF_IN_FLIGHT);
- 
- 	/*
- 	 * Pull in IO completion errors now. We are guaranteed to be running
-@@ -1341,6 +1344,11 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
-+	if (bp->b_flags & XBF_ASYNC) {
-+		percpu_counter_inc(&bp->b_target->bt_io_count);
-+		bp->b_flags |= XBF_IN_FLIGHT;
-+	}
-+
- 	_xfs_buf_ioapply(bp);
- 
- 	/*
-@@ -1533,6 +1541,8 @@ xfs_wait_buftarg(
- 	 * ensure here that all reference counts have been dropped before we
- 	 * start walking the LRU list.
- 	 */
-+	while (percpu_counter_sum(&btp->bt_io_count))
-+		delay(100);
- 	drain_workqueue(btp->bt_mount->m_buf_workqueue);
- 
- 	/* loop until there is nothing left on the lru list. */
-@@ -1629,6 +1639,8 @@ xfs_free_buftarg(
- 	struct xfs_buftarg	*btp)
- {
- 	unregister_shrinker(&btp->bt_shrinker);
-+	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-+	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
-@@ -1693,6 +1705,9 @@ xfs_alloc_buftarg(
- 	if (list_lru_init(&btp->bt_lru))
- 		goto error;
- 
-+	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-+		goto error;
-+
- 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
- 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 8bfb974..e1f95e0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -43,6 +43,7 @@ typedef enum {
- #define XBF_READ	 (1 << 0) /* buffer intended for reading from device */
- #define XBF_WRITE	 (1 << 1) /* buffer intended for writing to device */
- #define XBF_READ_AHEAD	 (1 << 2) /* asynchronous read-ahead */
-+#define XBF_IN_FLIGHT	 (1 << 3)
- #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
- #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
- #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
-@@ -115,6 +116,8 @@ typedef struct xfs_buftarg {
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
- 	struct list_lru		bt_lru;
-+
-+	struct percpu_counter	bt_io_count;
- } xfs_buftarg_t;
- 
- struct xfs_buf;
-
-> Brian
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> +	 * record for our insertion point. This will also give us the record for
+> +	 * start block contiguity tests.
+> +	 */
+> +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags,
+> +			&have_lt);
+> +	if (error)
+> +		goto out_error;
+> +	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
+> +
+> +	error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
+> +	if (error)
+> +		goto out_error;
+> +	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
+> +	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+> +			cur->bc_private.a.agno, ltrec.rm_startblock,
+> +			ltrec.rm_blockcount, ltrec.rm_owner,
+> +			ltrec.rm_offset, ltrec.rm_flags);
+> +
+> +	if (!xfs_rmap_is_mergeable(&ltrec, owner, offset, len, flags))
+> +		have_lt = 0;
+> +
+> +	XFS_WANT_CORRUPTED_GOTO(mp,
+> +		have_lt == 0 ||
+> +		ltrec.rm_startblock + ltrec.rm_blockcount <= bno, out_error);
+> +
+> +	/*
+> +	 * Increment the cursor to see if we have a right-adjacent record to our
+> +	 * insertion point. This will give us the record for end block
+> +	 * contiguity tests.
+> +	 */
+> +	error = xfs_btree_increment(cur, 0, &have_gt);
+> +	if (error)
+> +		goto out_error;
+> +	if (have_gt) {
+> +		error = xfs_rmap_get_rec(cur, &gtrec, &have_gt);
+> +		if (error)
+> +			goto out_error;
+> +		XFS_WANT_CORRUPTED_GOTO(mp, have_gt == 1, out_error);
+> +		XFS_WANT_CORRUPTED_GOTO(mp, bno + len <= gtrec.rm_startblock,
+> +					out_error);
+> +		trace_xfs_rmap_map_gtrec(cur->bc_mp,
+> +			cur->bc_private.a.agno, gtrec.rm_startblock,
+> +			gtrec.rm_blockcount, gtrec.rm_owner,
+> +			gtrec.rm_offset, gtrec.rm_flags);
+> +		if (!xfs_rmap_is_mergeable(&gtrec, owner, offset, len, flags))
+> +			have_gt = 0;
+> +	}
+> +
+> +	/*
+> +	 * Note: cursor currently points one record to the right of ltrec, even
+> +	 * if there is no record in the tree to the right.
+> +	 */
+> +	if (have_lt &&
+> +	    ltrec.rm_startblock + ltrec.rm_blockcount == bno &&
+> +	    (ignore_off || ltrec.rm_offset + ltrec.rm_blockcount == offset)) {
+> +		/*
+> +		 * left edge contiguous, merge into left record.
+> +		 *
+> +		 *       ltbno     ltlen
+> +		 * orig:   |ooooooooo|
+> +		 * adding:           |aaaaaaaaa|
+> +		 * result: |rrrrrrrrrrrrrrrrrrr|
+> +		 *                  bno       len
+> +		 */
+> +		ltrec.rm_blockcount += len;
+> +		if (have_gt &&
+> +		    bno + len == gtrec.rm_startblock &&
+> +		    (ignore_off || offset + len == gtrec.rm_offset) &&
+> +		    (unsigned long)ltrec.rm_blockcount + len +
+> +				gtrec.rm_blockcount <= XFS_RMAP_LEN_MAX) {
+> +			/*
+> +			 * right edge also contiguous, delete right record
+> +			 * and merge into left record.
+> +			 *
+> +			 *       ltbno     ltlen    gtbno     gtlen
+> +			 * orig:   |ooooooooo|         |ooooooooo|
+> +			 * adding:           |aaaaaaaaa|
+> +			 * result: |rrrrrrrrrrrrrrrrrrrrrrrrrrrrr|
+> +			 */
+> +			ltrec.rm_blockcount += gtrec.rm_blockcount;
+> +			trace_xfs_rmapbt_delete(mp, cur->bc_private.a.agno,
+> +					gtrec.rm_startblock,
+> +					gtrec.rm_blockcount,
+> +					gtrec.rm_owner,
+> +					gtrec.rm_offset,
+> +					gtrec.rm_flags);
+> +			error = xfs_btree_delete(cur, &i);
+> +			if (error)
+> +				goto out_error;
+> +			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
+> +		}
+> +
+> +		/* point the cursor back to the left record and update */
+> +		error = xfs_btree_decrement(cur, 0, &have_gt);
+> +		if (error)
+> +			goto out_error;
+> +		error = xfs_rmap_update(cur, &ltrec);
+> +		if (error)
+> +			goto out_error;
+> +	} else if (have_gt &&
+> +		   bno + len == gtrec.rm_startblock &&
+> +		   (ignore_off || offset + len == gtrec.rm_offset)) {
+> +		/*
+> +		 * right edge contiguous, merge into right record.
+> +		 *
+> +		 *                 gtbno     gtlen
+> +		 * Orig:             |ooooooooo|
+> +		 * adding: |aaaaaaaaa|
+> +		 * Result: |rrrrrrrrrrrrrrrrrrr|
+> +		 *        bno       len
+> +		 */
+> +		gtrec.rm_startblock = bno;
+> +		gtrec.rm_blockcount += len;
+> +		if (!ignore_off)
+> +			gtrec.rm_offset = offset;
+> +		error = xfs_rmap_update(cur, &gtrec);
+> +		if (error)
+> +			goto out_error;
+> +	} else {
+> +		/*
+> +		 * no contiguous edge with identical owner, insert
+> +		 * new record at current cursor position.
+> +		 */
+> +		cur->bc_rec.r.rm_startblock = bno;
+> +		cur->bc_rec.r.rm_blockcount = len;
+> +		cur->bc_rec.r.rm_owner = owner;
+> +		cur->bc_rec.r.rm_offset = offset;
+> +		cur->bc_rec.r.rm_flags = flags;
+> +		trace_xfs_rmapbt_insert(mp, cur->bc_private.a.agno, bno, len,
+> +			owner, offset, flags);
+> +		error = xfs_btree_insert(cur, &i);
+> +		if (error)
+> +			goto out_error;
+> +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
+> +	}
+> +
+> +	trace_xfs_rmap_alloc_extent_done(mp, cur->bc_private.a.agno, bno, len,
+> +			unwritten, oinfo);
+> +out_error:
+> +	if (error)
+> +		trace_xfs_rmap_alloc_extent_error(mp, cur->bc_private.a.agno,
+> +				bno, len, unwritten, oinfo);
+> +	return error;
+> +}
+> +
+> +/*
+> + * Add a reference to an extent in the rmap btree.
+> + */
+>  int
+>  xfs_rmap_alloc(
+>  	struct xfs_trans	*tp,
+> @@ -169,19 +381,22 @@ xfs_rmap_alloc(
+>  	struct xfs_owner_info	*oinfo)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+> -	int			error = 0;
+> +	struct xfs_btree_cur	*cur;
+> +	int			error;
+>  
+>  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+>  		return 0;
+>  
+> -	trace_xfs_rmap_alloc_extent(mp, agno, bno, len, false, oinfo);
+> -	if (1)
+> +	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+> +	error = __xfs_rmap_alloc(cur, bno, len, false, oinfo);
+> +	if (error)
+>  		goto out_error;
+> -	trace_xfs_rmap_alloc_extent_done(mp, agno, bno, len, false, oinfo);
+> +
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+>  	return 0;
+>  
+>  out_error:
+> -	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, false, oinfo);
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> index e926c6e..9d92da5 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> @@ -67,6 +67,7 @@ int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+>  int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
+>  		int *stat);
+>  
+> +/* functions for updating the rmapbt for bmbt blocks and AG btree blocks */
+>  int xfs_rmap_alloc(struct xfs_trans *tp, struct xfs_buf *agbp,
+>  		   xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+>  		   struct xfs_owner_info *oinfo);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 6daafaf..3ebceb0 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2549,6 +2549,8 @@ DEFINE_RMAPBT_EVENT(xfs_rmapbt_delete);
+>  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_insert_error);
+>  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_delete_error);
+>  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_update_error);
+> +DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
+> +DEFINE_RMAPBT_EVENT(xfs_rmap_map_gtrec);
+>  
+>  #endif /* _TRACE_XFS_H */
+>  
 > 
 > _______________________________________________
 > xfs mailing list
