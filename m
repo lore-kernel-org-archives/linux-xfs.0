@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6FD7C7CA2
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 18:33:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3ECF58F8054
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 16:33:33 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EQHJJmaWCQAHKKWi for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2016 16:33:29 -0700 (PDT)
-Date: Fri, 15 Jul 2016 09:33:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Advice needed with file system corruption
-Message-ID: <20160714233327.GT1922@dastard>
-References: <5787852A.7030900@st-andrews.ac.uk>
-	<20160714130546.GB16096@redhat.com>
-	<57879A45.6020307@st-andrews.ac.uk>
-	<20160714141751.GC16096@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9D8587CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 15:28:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 17B33AC003
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 13:28:18 -0700 (PDT)
+Received: from mail-vk0-f48.google.com (mail-vk0-f48.google.com
+	[209.85.213.48]) by cuda.sgi.com with ESMTP id eCjJuSEXZxFUMCyB
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Jul 2016 13:28:16 -0700 (PDT)
+Received: by mail-vk0-f48.google.com with SMTP id v6so38445804vkb.2
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 13:28:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160714141751.GC16096@redhat.com>
+In-Reply-To: <20160712191142.GE449@fieldses.org>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-18-git-send-email-agruenba@redhat.com>
+	<1468324560.7798.14.camel@redhat.com>
+	<20160712191142.GE449@fieldses.org>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Tue, 12 Jul 2016 22:28:15 +0200
+Message-ID: <CAHc6FU6k+eZ1Ozc8wofDBNOAHZzvXXWMAs1NJNTbd9Ntbqqsqw@mail.gmail.com>
+Subject: Re: [PATCH v23 17/22] richacl: Automatic Inheritance
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,48 +34,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steve Brooks <sjb14@st-andrews.ac.uk>, xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-cifs@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@redhat.com>, Linux API <linux-api@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, LKML <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Jul 14, 2016 at 04:17:51PM +0200, Carlos Maiolino wrote:
-> On Thu, Jul 14, 2016 at 02:57:25PM +0100, Steve Brooks wrote:
-> > Hi Carlos,
-> > 
-> > Many thanks again, for your good advice. I ran the version 4.3 of
-> > "xfs_repair" as suggested below and it did it's job very quickly in 50
-> > seconds exactly as reported in the "No modify mode". Is the time reported at
-> > the end of the "No modify mode" always a good approximation of running in
-> > "modify mode" ?
-> 
-> Good to know. But I'm not quite sure if the no modify mode could be used as a
-> good approximation of a real run. I would say to not take it as true giving that
-> xfs_repair can't predict the amount of time it will need to write all
-> modifications it needs to do on the filesystem's metadata, and it will certainly
-> can take much more time, depending on how corrupted the filesystem is.
+On Tue, Jul 12, 2016 at 9:11 PM, J. Bruce Fields <bfields@fieldses.org> wrote:
+> On Tue, Jul 12, 2016 at 07:56:00AM -0400, Jeff Layton wrote:
+>> Barf. AI seems like a trainwreck waiting to happen. What are the
+>> chances that userland is going to get this right?
+>
+> This is just taken from Windows, so presumably Samba should do the right
+> thing (with one workaround required--see the discussion of PROTECTED in
+> the changelog).
+>
+>> Still, I do applaud the fact that you're just doing the bare minimum in
+>> kernel to support userland apps that want this. Thanks for not trying
+>> to push the propagation of the changed ACEs into the kernel.
+>
+> Agreed.  But, again, this is just what Windows does.  (I wonder whether
+> there's an OS that's actually tried do any sort of atomic propagation.)
 
-Yup, the no-modify mode skips a couple of steps in repair - phase 5
-which rebuilds freespace btrees, and phase 7 which correctly link
-counts - and so can only be considered the minimum runtime in "fix
-it all up" mode. FWIW, Phase 6 can also blow out massively in
-runtime if there's significant directory damage that results in
-needing to move lots of inodes to the lost+found directory.
+NetWare's NSS filesystem did have automatic propagation, but I think
+that was implemented by composing the permissions along the path to a
+file at access time.
 
-> > > Hi steve.
-> > > 
-> > > On Thu, Jul 14, 2016 at 01:27:22PM +0100, Steve Brooks wrote:
-> > > > The "3.1.1"  version of "xfs_repair -n" ran in 1 minute, 32 seconds
-> > > > 
-> > > > The "4.3"     version of "xfs_repair -n" ran in 50 seconds
-
-And it's good to know that recent performance improvements show real
-world benefits, not just on the badly broken filesystems I used for
-testing.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Andreas
 
 _______________________________________________
 xfs mailing list
