@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 25D217CA3
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 23:06:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC277304039
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 21:06:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JzRXv9YteGg7lHSQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Jul 2016 21:06:52 -0700 (PDT)
-Date: Fri, 15 Jul 2016 12:06:50 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] common/rc: avoid mkfs option conflicts in
-	_scratch_mkfs_xfs_supported
-Message-ID: <20160715040650.GI2432@eguan.usersys.redhat.com>
-References: <1467697153-23189-1-git-send-email-eguan@redhat.com>
-	<20160715000129.GT12670@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160715000129.GT12670@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 626C07CA1
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 06:37:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27734304043
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 04:37:02 -0700 (PDT)
+Received: from mail-qt0-f170.google.com (mail-qt0-f170.google.com
+	[209.85.216.170]) by cuda.sgi.com with ESMTP id
+	vMF56e5mE5B7D51r (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 04:36:59 -0700 (PDT)
+Received: by mail-qt0-f170.google.com with SMTP id j35so6207253qtj.2
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 04:36:59 -0700 (PDT)
+Message-ID: <1468323416.7798.7.camel@redhat.com>
+Subject: Re: [PATCH v23 14/22] richacl: Update the file masks in chmod()
+From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 12 Jul 2016 07:36:56 -0400
+In-Reply-To: <1467294433-3222-15-git-send-email-agruenba@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-15-git-send-email-agruenba@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +28,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Jul 15, 2016 at 10:01:29AM +1000, Dave Chinner wrote:
-> On Tue, Jul 05, 2016 at 01:39:13PM +0800, Eryu Guan wrote:
-> > In recent mkfs.xfs updates in xfsprogs, commit 9090e187bc3e ("mkfs:
-> > add respecification detection to generic parsing") added
-> > re-specification detection to "-m" option, it causes several tests
-> > _notrun if MKFS_OPTIONS has the same options as those being tested
-> > in _scratch_mkfs_xfs_supported(), because they're specified multiple
-> > times.
-> > 
-> > 	MKFS_OPTIONS="-m crc=0" ./check xfs/001
-> > 	xfs/001 3s ... [not run] mkfs.xfs doesn't have crc feature
-> > 
-> > Fix it by creating XFS again without MKFS_OPTIONS in
-> > _scratch_mkfs_xfs_supported(), in case there's conflict between
-> > MKFS_OPTIONS and mkfs_opts, like what we do in _scratch_mkfs_xfs().
-> > 
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> >  common/rc | 11 ++++++++++-
-> >  1 file changed, 10 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 883bd7b..ad81461 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -473,11 +473,20 @@ _scratch_mkfs_xfs_opts()
-> >  
-> >  _scratch_mkfs_xfs_supported()
-> >  {
-> > -	mkfs_opts=$*
-> > +	local mkfs_opts=$*
-> >  
-> >  	_scratch_options mkfs
-> >  
-> >  	$MKFS_XFS_PROG -N $MKFS_OPTIONS $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
-> > +	local mkfs_status=$?
-> > +
-> > +	# if $mkfs_opts conflits with $MKFS_OPTIONS,
-> > +	# try again without $MKFS_OPTIONS
-> > +	if [ $mkfs_status -ne 0 -a -n "$MKFS_OPTIONS" ]; then
-> > +		$MKFS_XFS_PROG -N $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
-> > +		mkfs_status=$?
-> > +	fi
-> > +	return $mkfs_status
-> >  }
-> 
-> 
-> This should match what _scratch_mkfs_xfs does. i.e:
-> 
->         # a mkfs failure may be caused by conflicts between
->         # $MKFS_OPTIONS and $extra_mkfs_options
->         if [ $mkfs_status -ne 0 -a ! -z "$extra_mkfs_options" ]; then
->                 (
->                 echo -n "** mkfs failed with extra mkfs options "
->                 echo "added to \"$MKFS_OPTIONS\" by test $seq **"
->                 echo -n "** attempting to mkfs using only test $seq "
->                 echo "options: $extra_mkfs_options **"
->                 ) >> $seqres.full
-> 
->                 # running mkfs again. overwrite previous mkfs output files
->                 _scratch_mkfs_xfs_opts $extra_mkfs_options \
->                         2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
->                 local mkfs_status=$?
->         fi
-> 
-> i.e. it checks if $extra_mkfs_options is not empty, rather than
-> $MKFS_OPTIONS
-
-Thanks for the review!
-
-I thought about it too, but I realized that _scratch_mkfs_supported() is
-supposed to have "$extra_mkfs_options" (always non-empty), because what
-it tests is to check whether mkfs.xfs works well with these
-"$extra_mkfs_options".
-
-But making sure $mkfs_opts is not empty before using it makes more
-sense, and it matches _scratch_mkfs_xfs(). I'll send v2 patch.
-
-Thanks,
-Eryu
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ3ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
+b3RlOgo+IERvaW5nIGEgY2htb2QoKSBzZXRzIHRoZSBmaWxlIG1vZGUsIHdoaWNoIGluY2x1ZGVz
+IHRoZSBmaWxlIHBlcm1pc3Npb24KPiBiaXRzLsKgwqBXaGVuIGEgZmlsZSBoYXMgYSByaWNoYWNs
+LCB0aGUgcGVybWlzc2lvbnMgdGhhdCB0aGUgcmljaGFjbAo+IGdyYW50cyBuZWVkIHRvIGJlIGxp
+bWl0ZWQgdG8gd2hhdCB0aGUgbmV3IGZpbGUgcGVybWlzc2lvbiBiaXRzIGFsbG93Lgo+IAo+IFRo
+aXMgaXMgZG9uZSBieSBzZXR0aW5nIHRoZSBmaWxlIG1hc2tzIGluIHRoZSByaWNoYWNsIHRvIHdo
+YXQgdGhlIGZpbGUKPiBwZXJtaXNzaW9uIGJpdHMgbWFwIHRvLsKgwqBUaGUgcmljaGFjbCBhY2Nl
+c3MgY2hlY2sgYWxnb3JpdGhtIHRha2VzIHRoZQo+IGZpbGUgbWFza3MgaW50byBhY2NvdW50LCB3
+aGljaCBlbnN1cmVzIHRoYXQgdGhlIHJpY2hhY2wgY2Fubm90IGdyYW50IHRvbwo+IG1hbnkgcGVy
+bWlzc2lvbnMuCj4gCj4gSXQgaXMgcG9zc2libGUgdG8gZXhwbGljaXRseSBhZGQgcGVybWlzc2lv
+bnMgdG8gdGhlIGZpbGUgbWFza3Mgd2hpY2ggZ28KPiBiZXlvbmQgd2hhdCB0aGUgZmlsZSBwZXJt
+aXNzaW9uIGJpdHMgY2FuIGdyYW50IChsaWtlIHRoZQo+IFJJQ0hBQ0VfV1JJVEVfQUNMIHBlcm1p
+c3Npb24pLsKgwqBUaGUgUE9TSVguMSBzdGFuZGFyZCBjYWxscyB0aGlzIGFuCj4gYWx0ZXJuYXRl
+IGZpbGUgYWNjZXNzIGNvbnRyb2wgbWVjaGFuaXNtLsKgwqBBIHN1YnNlcXVlbnQgY2htb2QoKSB3
+b3VsZAo+IGVuc3VyZSB0aGF0IHRob3NlIHBlcm1pc3Npb25zIGFyZSBkaXNhYmxlZCBhZ2Fpbi4K
+PiAKPiBTaWduZWQtb2ZmLWJ5OiBBbmRyZWFzIEdydWVuYmFjaGVyIDxhZ3J1ZW5iYUByZWRoYXQu
+Y29tPgo+IFJldmlld2VkLWJ5OiBKLiBCcnVjZSBGaWVsZHMgPGJmaWVsZHNAcmVkaGF0LmNvbT4K
+PiAtLS0KPiDCoGZzL3JpY2hhY2wuY8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHwgNzEgKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+IMKgaW5jbHVkZS9s
+aW51eC9yaWNoYWNsLmggfMKgwqAxICsKPiDCoDIgZmlsZXMgY2hhbmdlZCwgNzIgaW5zZXJ0aW9u
+cygrKQo+IAo+IGRpZmYgLS1naXQgYS9mcy9yaWNoYWNsLmMgYi9mcy9yaWNoYWNsLmMKPiBpbmRl
+eCBiMmEwM2MxLi5iYTExMGE2IDEwMDY0NAo+IC0tLSBhL2ZzL3JpY2hhY2wuYwo+ICsrKyBiL2Zz
+L3JpY2hhY2wuYwo+IEBAIC01NDcsMyArNTQ3LDc0IEBAIG91dDoKPiDCoAlyZXR1cm4gZGVuaWVk
+ID8gLUVBQ0NFUyA6IDA7Cj4gwqB9Cj4gwqBFWFBPUlRfU1lNQk9MX0dQTChyaWNoYWNsX3Blcm1p
+c3Npb24pOwo+ICsKPiArLyoqCj4gKyAqIF9fcmljaGFjbF9jaG1vZMKgwqAtwqDCoHVwZGF0ZSB0
+aGUgZmlsZSBtYXNrcyB0byByZWZsZWN0IHRoZSBuZXcgbW9kZQo+ICsgKiBAYWNsOglhY2Nlc3Mg
+Y29udHJvbCBsaXN0Cj4gKyAqIEBtb2RlOgluZXcgZmlsZSBwZXJtaXNzaW9uIGJpdHMgaW5jbHVk
+aW5nIHRoZSBmaWxlIHR5cGUKPiArICoKPiArICogUmV0dXJuIGEgY29weSBvZiBAYWNsIHdoZXJl
+IHRoZSBmaWxlIG1hc2tzIGhhdmUgYmVlbiByZXBsYWNlZCBieSB0aGUgZmlsZQo+ICsgKiBtYXNr
+cyBjb3JyZXNwb25kaW5nIHRvIHRoZSBmaWxlIHBlcm1pc3Npb24gYml0cyBpbiBAbW9kZSwgb3Ig
+cmV0dXJucyBAYWNsCj4gKyAqIGl0c2VsZiBpZiB0aGUgZmlsZSBtYXNrcyBhcmUgYWxyZWFkeSB1
+cCB0byBkYXRlLsKgwqBUYWtlcyBvdmVyIGEgcmVmZXJlbmNlCj4gKyAqIHRvIEBhY2wuCj4gKyAq
+Lwo+ICtzdGF0aWMgc3RydWN0IHJpY2hhY2wgKgo+ICtfX3JpY2hhY2xfY2htb2Qoc3RydWN0IHJp
+Y2hhY2wgKmFjbCwgdW1vZGVfdCBtb2RlKQo+ICt7Cj4gKwl1bnNpZ25lZCBpbnQgeCA9IFNfSVNE
+SVIobW9kZSkgPyAwIDogUklDSEFDRV9ERUxFVEVfQ0hJTEQ7Cj4gKwl1bnNpZ25lZCBpbnQgb3du
+ZXJfbWFzaywgZ3JvdXBfbWFzaywgb3RoZXJfbWFzazsKPiArCXN0cnVjdCByaWNoYWNsICpjbG9u
+ZTsKPiArCj4gKwlvd25lcl9tYXNrID0gcmljaGFjbF9tb2RlX3RvX21hc2sobW9kZSA+PiA2KSAm
+IH54Owo+ICsJZ3JvdXBfbWFzayA9IHJpY2hhY2xfbW9kZV90b19tYXNrKG1vZGUgPj4gMykgJiB+
+eDsKPiArCW90aGVyX21hc2sgPSByaWNoYWNsX21vZGVfdG9fbWFzayhtb2RlKcKgwqDCoMKgwqDC
+oCYgfng7Cj4gKwo+ICsJaWYgKGFjbC0+YV9vd25lcl9tYXNrID09IG93bmVyX21hc2sgJiYKPiAr
+CcKgwqDCoMKgYWNsLT5hX2dyb3VwX21hc2sgPT0gZ3JvdXBfbWFzayAmJgo+ICsJwqDCoMKgwqBh
+Y2wtPmFfb3RoZXJfbWFzayA9PSBvdGhlcl9tYXNrICYmCj4gKwnCoMKgwqDCoChhY2wtPmFfZmxh
+Z3MgJiBSSUNIQUNMX01BU0tFRCkgJiYKPiArCcKgwqDCoMKgKGFjbC0+YV9mbGFncyAmIFJJQ0hB
+Q0xfV1JJVEVfVEhST1VHSCkpCj4gKwkJcmV0dXJuIGFjbDsKPiArCj4gKwljbG9uZSA9IHJpY2hh
+Y2xfY2xvbmUoYWNsLCBHRlBfS0VSTkVMKTsKPiArCXJpY2hhY2xfcHV0KGFjbCk7Cj4gKwlpZiAo
+IWNsb25lKQo+ICsJCXJldHVybiBFUlJfUFRSKC1FTk9NRU0pOwo+ICsKPiArCWNsb25lLT5hX2Zs
+YWdzIHw9IChSSUNIQUNMX1dSSVRFX1RIUk9VR0ggfCBSSUNIQUNMX01BU0tFRCk7Cj4gKwljbG9u
+ZS0+YV9vd25lcl9tYXNrID0gb3duZXJfbWFzazsKPiArCWNsb25lLT5hX2dyb3VwX21hc2sgPSBn
+cm91cF9tYXNrOwo+ICsJY2xvbmUtPmFfb3RoZXJfbWFzayA9IG90aGVyX21hc2s7Cj4gKwo+ICsJ
+cmV0dXJuIGNsb25lOwo+ICt9Cj4gKwo+ICsvKioKPiArICogcmljaGFjbF9jaG1vZMKgwqAtwqDC
+oGZpbGVzeXN0ZW0gY2htb2QgaGVscGVyCj4gKyAqIEBpbm9kZToJaW5vZGUgd2hvc2UgZmlsZSBw
+ZXJtaXNzaW9uIGJpdHMgdG8gY2hhbmdlCj4gKyAqIEBtb2RlOgluZXcgZmlsZSBwZXJtaXNzaW9u
+IGJpdHMgaW5jbHVkaW5nIHRoZSBmaWxlIHR5cGUKPiArICoKPiArICogSGVscGVyIGZvciBmaWxl
+c3lzdGVtcyB0byB1c2UgdG8gcGVyZm9ybSBhIGNobW9kIG9uIHRoZSByaWNoYWNsIG9mIGFuIGlu
+b2RlLgo+ICsgKi8KPiAraW50Cj4gK3JpY2hhY2xfY2htb2Qoc3RydWN0IGlub2RlICppbm9kZSwg
+dW1vZGVfdCBtb2RlKQo+ICt7Cj4gKwlzdHJ1Y3QgcmljaGFjbCAqYWNsOwo+ICsJaW50IHJldHZh
+bDsKPiArCj4gKwlpZiAoU19JU0xOSyhtb2RlKSkKPiArCQlyZXR1cm4gLUVPUE5PVFNVUFA7Cj4g
+KwlpZiAoIWlub2RlLT5pX29wLT5zZXRfcmljaGFjbCkKPiArCQlyZXR1cm4gLUVPUE5PVFNVUFA7
+Cj4gKwlhY2wgPSBnZXRfcmljaGFjbChpbm9kZSk7Cj4gKwlpZiAoSVNfRVJSX09SX05VTEwoYWNs
+KSkKPiArCQlyZXR1cm4gUFRSX0VSUihhY2wpOwo+ICsJYWNsID0gX19yaWNoYWNsX2NobW9kKGFj
+bCwgbW9kZSk7Cj4gKwlpZiAoSVNfRVJSKGFjbCkpCj4gKwkJcmV0dXJuIFBUUl9FUlIoYWNsKTsK
+PiArCXJldHZhbCA9IGlub2RlLT5pX29wLT5zZXRfcmljaGFjbChpbm9kZSwgYWNsKTsKPiArCXJp
+Y2hhY2xfcHV0KGFjbCk7Cj4gKwo+ICsJcmV0dXJuIHJldHZhbDsKPiArfQo+ICtFWFBPUlRfU1lN
+Qk9MKHJpY2hhY2xfY2htb2QpOwo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3JpY2hhY2wu
+aCBiL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gaW5kZXggM2UwNWM5NC4uZGI4MmZhYiAxMDA2
+NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3JpY2hhY2wuaAo+ICsrKyBiL2luY2x1ZGUvbGludXgv
+cmljaGFjbC5oCj4gQEAgLTE5MCw1ICsxOTAsNiBAQCBleHRlcm4gdW5zaWduZWQgaW50IHJpY2hh
+Y2xfbW9kZV90b19tYXNrKHVtb2RlX3QpOwo+IMKgZXh0ZXJuIHVuc2lnbmVkIGludCByaWNoYWNs
+X3dhbnRfdG9fbWFzayh1bnNpZ25lZCBpbnQpOwo+IMKgZXh0ZXJuIHZvaWQgcmljaGFjbF9jb21w
+dXRlX21heF9tYXNrcyhzdHJ1Y3QgcmljaGFjbCAqKTsKPiDCoGV4dGVybiBpbnQgcmljaGFjbF9w
+ZXJtaXNzaW9uKHN0cnVjdCBpbm9kZSAqLCBjb25zdCBzdHJ1Y3QgcmljaGFjbCAqLCBpbnQpOwo+
+ICtleHRlcm4gaW50IHJpY2hhY2xfY2htb2Qoc3RydWN0IGlub2RlICosIHVtb2RlX3QpOwo+IMKg
+Cj4gwqAjZW5kaWYgLyogX19SSUNIQUNMX0ggKi8KCkFja2VkLWJ5OiBKZWZmIExheXRvbiA8amxh
+eXRvbkByZWRoYXQuY29tPgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
