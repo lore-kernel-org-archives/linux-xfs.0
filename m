@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 746097CB0
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 07:03:23 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4C38E7CB3
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 07:13:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 47B588F8040
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 05:03:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YUTUjn0ucKWa3mJE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 05:03:19 -0700 (PDT)
-Date: Tue, 12 Jul 2016 08:03:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
-	post-unmount panic
-Message-ID: <20160712120315.GA4311@bfoster.bfoster>
-References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
-	<20160630224457.GT12670@dastard>
-	<20160701223011.GA28130@bfoster.bfoster>
-	<20160705164552.GA6317@bfoster.bfoster>
-	<20160711052057.GE1922@dastard>
-	<20160711135251.GA32896@bfoster.bfoster>
-	<20160711152921.GB32896@bfoster.bfoster>
-	<20160711224451.GF1922@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160711224451.GF1922@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FDAA8F8039
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 05:13:35 -0700 (PDT)
+Received: from mail-qk0-f170.google.com (mail-qk0-f170.google.com
+	[209.85.220.170]) by cuda.sgi.com with ESMTP id
+	0VJ0MXzLvCC9uZOU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 05:13:34 -0700 (PDT)
+Received: by mail-qk0-f170.google.com with SMTP id o67so11413565qke.1
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 05:13:34 -0700 (PDT)
+Message-ID: <1468325610.7798.23.camel@redhat.com>
+Subject: Re: [PATCH v23 19/22] richacl: Add richacl xattr handler
+From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 12 Jul 2016 08:13:30 -0400
+In-Reply-To: <1467294433-3222-20-git-send-email-agruenba@redhat.com>
+References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
+	<1467294433-3222-20-git-send-email-agruenba@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,139 +28,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Andreas Gruenbacher <agruenba@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Tue, Jul 12, 2016 at 08:44:51AM +1000, Dave Chinner wrote:
-> On Mon, Jul 11, 2016 at 11:29:22AM -0400, Brian Foster wrote:
-> > On Mon, Jul 11, 2016 at 09:52:52AM -0400, Brian Foster wrote:
-> > ...
-> > > So what is your preference out of the possible approaches here? AFAICS,
-> > > we have the following options:
-> > > 
-> > > 1.) The original "add readahead to LRU early" approach.
-> > > 	Pros: simple one-liner
-> > > 	Cons: bit of a hack, only covers readahead scenario
-> > > 2.) Defer I/O count decrement to buffer release (this patch).
-> > > 	Pros: should cover all cases (reads/writes)
-> > > 	Cons: more complex (requires per-buffer accounting, etc.)
-> > > 3.) Raw (buffer or bio?) I/O count (no defer to buffer release)
-> > > 	Pros: eliminates some complexity from #2
-> > > 	Cons: still more complex than #1, racy in that decrement does
-> > > 	not serialize against LRU addition (requires drain_workqueue(),
-> > > 	which still doesn't cover error conditions)
-> > > 
-> > > As noted above, option #3 also allows for either a buffer based count or
-> > > bio based count, the latter of which might simplify things a bit further
-> > > (TBD). Thoughts?
-> 
-> Pretty good summary :P
-> 
-> > FWIW, the following is a slightly cleaned up version of my initial
-> > approach (option #3 above). Note that the flag is used to help deal with
-> > varying ioend behavior. E.g., xfs_buf_ioend() is called once for some
-> > buffers, multiple times for others with an iodone callback, that
-> > behavior changes in some cases when an error is set, etc. (I'll add
-> > comments before an official post.)
-> 
-> The approach looks good - I think there's a couple of things we can
-> do to clean it up and make it robust. Comments inline.
-> 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 4665ff6..45d3ddd 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -1018,7 +1018,10 @@ xfs_buf_ioend(
-> >  
-> >  	trace_xfs_buf_iodone(bp, _RET_IP_);
-> >  
-> > -	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-> > +	if (bp->b_flags & XBF_IN_FLIGHT)
-> > +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> > +
-> > +	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD | XBF_IN_FLIGHT);
-> >  
-> >  	/*
-> >  	 * Pull in IO completion errors now. We are guaranteed to be running
-> 
-> I think the XBF_IN_FLIGHT can be moved to the final xfs_buf_rele()
-> processing if:
-> 
-> > @@ -1341,6 +1344,11 @@ xfs_buf_submit(
-> >  	 * xfs_buf_ioend too early.
-> >  	 */
-> >  	atomic_set(&bp->b_io_remaining, 1);
-> > +	if (bp->b_flags & XBF_ASYNC) {
-> > +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > +		bp->b_flags |= XBF_IN_FLIGHT;
-> > +	}
-> 
-> You change this to:
-> 
-> 	if (!(bp->b_flags & XBF_IN_FLIGHT)) {
-> 		percpu_counter_inc(&bp->b_target->bt_io_count);
-> 		bp->b_flags |= XBF_IN_FLIGHT;
-> 	}
-> 
-
-Ok, so use the flag to cap the I/O count and defer the decrement to
-release. I think that should work and addresses the raciness issue. I'll
-give it a try.
-
-> We shouldn't have to check for XBF_ASYNC in xfs_buf_submit() - it is
-> the path taken for async IO submission, so we should probably
-> ASSERT(bp->b_flags & XBF_ASYNC) in this function to ensure that is
-> the case.
-> 
-
-Yeah, that's unnecessary. There's already such an assert in
-xfs_buf_submit(), actually.
-
-> [Thinking aloud - __test_and_set_bit() might make this code a bit
-> cleaner]
-> 
-
-On a quick try, this complains about b_flags being an unsigned int. I
-think I'll leave the set bit as is and use a helper for the release,
-which also provides a location to explain how the count works.
-
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index 8bfb974..e1f95e0 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -43,6 +43,7 @@ typedef enum {
-> >  #define XBF_READ	 (1 << 0) /* buffer intended for reading from device */
-> >  #define XBF_WRITE	 (1 << 1) /* buffer intended for writing to device */
-> >  #define XBF_READ_AHEAD	 (1 << 2) /* asynchronous read-ahead */
-> > +#define XBF_IN_FLIGHT	 (1 << 3)
-> 
-> Hmmm - it's an internal flag, so probably should be prefixed with an
-> "_" and moved down to the section with _XBF_KMEM and friends.
-> 
-
-Indeed, thanks.
-
-Brian
-
-> Thoughts?
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ3ICswMjAwLCBBbmRyZWFzIEdydWVuYmFjaGVyIHdy
+b3RlOgo+IEFkZCByaWNoYWNsIHhhdHRyIGhhbmRsZXIgaW1wbGVtZW50aW5nIHRoZSB4YXR0ciBv
+cGVyYXRpb25zIGJhc2VkIG9uIHRoZQo+IGdldF9yaWNoYWNsIGFuZCBzZXRfcmljaGFjbCBpbm9k
+ZSBvcGVyYXRpb25zLgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1ZW5iYWNoZXIgPGFn
+cnVlbmJhQHJlZGhhdC5jb20+Cj4gLS0tCj4gwqBmcy9yaWNoYWNsLmPCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqB8IDIyICsrKysrKysrKysrKysrKysKPiDCoGZzL3JpY2hhY2xf
+eGF0dHIuY8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHwgNjEgKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKwo+IMKgaW5jbHVkZS9saW51eC9yaWNoYWNsLmjCoMKgwqDC
+oMKgwqDCoHzCoMKgMSArCj4gwqBpbmNsdWRlL2xpbnV4L3JpY2hhY2xfeGF0dHIuaCB8wqDCoDIg
+KysKPiDCoDQgZmlsZXMgY2hhbmdlZCwgODYgaW5zZXJ0aW9ucygrKQo+IAo+IGRpZmYgLS1naXQg
+YS9mcy9yaWNoYWNsLmMgYi9mcy9yaWNoYWNsLmMKPiBpbmRleCA0MGU0YWY5Li5iN2Q3MTA0IDEw
+MDY0NAo+IC0tLSBhL2ZzL3JpY2hhY2wuYwo+ICsrKyBiL2ZzL3JpY2hhY2wuYwo+IEBAIC01NDks
+NiArNTQ5LDI4IEBAIG91dDoKPiDCoEVYUE9SVF9TWU1CT0xfR1BMKHJpY2hhY2xfcGVybWlzc2lv
+bik7Cj4gwqAKPiDCoC8qKgo+ICsgKiBzZXRfcmljaGFjbMKgwqAtwqDCoHNldCB0aGUgcmljaGFj
+bCBvZiBhbiBpbm9kZQo+ICsgKiBAaW5vZGU6CWlub2RlIHdob3NlIHJpY2hhY2wgdG8gc2V0Cj4g
+KyAqIEBhY2w6CWFjY2VzcyBjb250cm9sIGxpc3QKPiArICovCj4gK2ludAo+ICtzZXRfcmljaGFj
+bChzdHJ1Y3QgaW5vZGUgKmlub2RlLCBzdHJ1Y3QgcmljaGFjbCAqYWNsKQo+ICt7Cj4gKwlpZiAo
+IUlTX1JJQ0hBQ0woaW5vZGUpKQo+ICsJCXJldHVybiAtRU9QTk9UU1VQUDsKPiArCWlmICghaW5v
+ZGUtPmlfb3AtPnNldF9yaWNoYWNsKQo+ICsJCXJldHVybiAtRU9QTk9UU1VQUDsKPiArCj4gKwlp
+ZiAoIXVpZF9lcShjdXJyZW50X2ZzdWlkKCksIGlub2RlLT5pX3VpZCkgJiYKPiArCcKgwqDCoMKg
+aW5vZGVfcGVybWlzc2lvbihpbm9kZSwgTUFZX0NITU9EKSAmJgo+ICsJwqDCoMKgwqAhY2FwYWJs
+ZShDQVBfRk9XTkVSKSkKPiArCQlyZXR1cm4gLUVQRVJNOwo+ICsKPiArCXJldHVybiBpbm9kZS0+
+aV9vcC0+c2V0X3JpY2hhY2woaW5vZGUsIGFjbCk7Cj4gK30KPiArRVhQT1JUX1NZTUJPTChzZXRf
+cmljaGFjbCk7Cj4gKwo+ICsvKioKPiDCoCAqIF9fcmljaGFjbF9jaG1vZMKgwqAtwqDCoHVwZGF0
+ZSB0aGUgZmlsZSBtYXNrcyB0byByZWZsZWN0IHRoZSBuZXcgbW9kZQo+IMKgICogQGFjbDoJYWNj
+ZXNzIGNvbnRyb2wgbGlzdAo+IMKgICogQG1vZGU6CW5ldyBmaWxlIHBlcm1pc3Npb24gYml0cyBp
+bmNsdWRpbmcgdGhlIGZpbGUgdHlwZQo+IGRpZmYgLS1naXQgYS9mcy9yaWNoYWNsX3hhdHRyLmMg
+Yi9mcy9yaWNoYWNsX3hhdHRyLmMKPiBpbmRleCBkYzFhZDM2Li41ZWI0YWJhIDEwMDY0NAo+IC0t
+LSBhL2ZzL3JpY2hhY2xfeGF0dHIuYwo+ICsrKyBiL2ZzL3JpY2hhY2xfeGF0dHIuYwo+IEBAIC0x
+OCw3ICsxOCw5IEBACj4gwqAjaW5jbHVkZSAKPiDCoCNpbmNsdWRlIAo+IMKgI2luY2x1ZGUgCj4g
+KyNpbmNsdWRlIAo+IMKgI2luY2x1ZGUgCj4gKyNpbmNsdWRlIAo+IMKgCj4gwqAvKioKPiDCoCAq
+IHJpY2hhY2xfZnJvbV94YXR0csKgwqAtwqDCoGNvbnZlcnQgYSByaWNoYWNsIHhhdHRyIGludG8g
+dGhlIGluLW1lbW9yeSByZXByZXNlbnRhdGlvbgo+IEBAIC0xNTksMyArMTYxLDYyIEBAIHJpY2hh
+Y2xfdG9feGF0dHIoc3RydWN0IHVzZXJfbmFtZXNwYWNlICp1c2VyX25zLAo+IMKgCXJldHVybiBy
+ZWFsX3NpemU7Cj4gwqB9Cj4gwqBFWFBPUlRfU1lNQk9MX0dQTChyaWNoYWNsX3RvX3hhdHRyKTsK
+PiArCj4gK3N0YXRpYyBib29sCj4gK3JpY2hhY2xfeGF0dHJfbGlzdChzdHJ1Y3QgZGVudHJ5ICpk
+ZW50cnkpCj4gK3sKPiArCXJldHVybiBJU19SSUNIQUNMKGRfYmFja2luZ19pbm9kZShkZW50cnkp
+KTsKPiArfQo+ICsKPiArc3RhdGljIGludAo+ICtyaWNoYWNsX3hhdHRyX2dldChjb25zdCBzdHJ1
+Y3QgeGF0dHJfaGFuZGxlciAqaGFuZGxlciwKPiArCQnCoMKgc3RydWN0IGRlbnRyeSAqdW51c2Vk
+LCBzdHJ1Y3QgaW5vZGUgKmlub2RlLAo+ICsJCcKgwqBjb25zdCBjaGFyICpuYW1lLCB2b2lkICpi
+dWZmZXIsIHNpemVfdCBidWZmZXJfc2l6ZSkKPiArewo+ICsJc3RydWN0IHJpY2hhY2wgKmFjbDsK
+PiArCWludCBlcnJvcjsKPiArCj4gKwlpZiAoKm5hbWUpCj4gKwkJcmV0dXJuIC1FSU5WQUw7Cj4g
+KwlpZiAoIUlTX1JJQ0hBQ0woaW5vZGUpKQo+ICsJCXJldHVybiAtRU9QTk9UU1VQUDsKPiArCWlm
+IChTX0lTTE5LKGlub2RlLT5pX21vZGUpKQo+ICsJCXJldHVybiAtRU9QTk9UU1VQUDsKPiArCWFj
+bCA9IGdldF9yaWNoYWNsKGlub2RlKTsKPiArCWlmIChJU19FUlIoYWNsKSkKPiArCQlyZXR1cm4g
+UFRSX0VSUihhY2wpOwo+ICsJaWYgKGFjbCA9PSBOVUxMKQo+ICsJCXJldHVybiAtRU5PREFUQTsK
+PiArCWVycm9yID0gcmljaGFjbF90b194YXR0cihjdXJyZW50X3VzZXJfbnMoKSwgYWNsLCBidWZm
+ZXIsIGJ1ZmZlcl9zaXplKTsKPiArCXJpY2hhY2xfcHV0KGFjbCk7Cj4gKwlyZXR1cm4gZXJyb3I7
+Cj4gK30KPiArCj4gK3N0YXRpYyBpbnQKPiArcmljaGFjbF94YXR0cl9zZXQoY29uc3Qgc3RydWN0
+IHhhdHRyX2hhbmRsZXIgKmhhbmRsZXIsCj4gKwkJwqDCoHN0cnVjdCBkZW50cnkgKnVudXNlZCwg
+c3RydWN0IGlub2RlICppbm9kZSwKPiArCQnCoMKgY29uc3QgY2hhciAqbmFtZSwgY29uc3Qgdm9p
+ZCAqdmFsdWUsIHNpemVfdCBzaXplLAo+ICsJCcKgwqBpbnQgZmxhZ3MpCj4gK3sKPiArCXN0cnVj
+dCByaWNoYWNsICphY2wgPSBOVUxMOwo+ICsJaW50IHJldDsKPiArCj4gKwlpZiAodmFsdWUpIHsK
+PiArCQlhY2wgPSByaWNoYWNsX2Zyb21feGF0dHIoY3VycmVudF91c2VyX25zKCksIHZhbHVlLCBz
+aXplLAo+ICsJCQkJCcKgLUVJTlZBTCk7Cj4gKwkJaWYgKElTX0VSUihhY2wpKQo+ICsJCQlyZXR1
+cm4gUFRSX0VSUihhY2wpOwo+ICsJfQo+ICsKPiArCXJldCA9IHNldF9yaWNoYWNsKGlub2RlLCBh
+Y2wpOwo+ICsJcmljaGFjbF9wdXQoYWNsKTsKPiArCXJldHVybiByZXQ7Cj4gK30KPiArCj4gK3N0
+cnVjdCB4YXR0cl9oYW5kbGVyIHJpY2hhY2xfeGF0dHJfaGFuZGxlciA9IHsKPiArCS5uYW1lID0g
+WEFUVFJfTkFNRV9SSUNIQUNMLAo+ICsJLmxpc3QgPSByaWNoYWNsX3hhdHRyX2xpc3QsCj4gKwku
+Z2V0ID0gcmljaGFjbF94YXR0cl9nZXQsCj4gKwkuc2V0ID0gcmljaGFjbF94YXR0cl9zZXQsCj4g
+K307Cj4gK0VYUE9SVF9TWU1CT0wocmljaGFjbF94YXR0cl9oYW5kbGVyKTsKPiBkaWZmIC0tZ2l0
+IGEvaW5jbHVkZS9saW51eC9yaWNoYWNsLmggYi9pbmNsdWRlL2xpbnV4L3JpY2hhY2wuaAo+IGlu
+ZGV4IGE0NDIzNzIuLmU3ZGIwNjYgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9yaWNoYWNs
+LmgKPiArKysgYi9pbmNsdWRlL2xpbnV4L3JpY2hhY2wuaAo+IEBAIC0yMDYsNSArMjA2LDYgQEAg
+ZXh0ZXJuIGludCByaWNoYWNsX2NobW9kKHN0cnVjdCBpbm9kZSAqLCB1bW9kZV90KTsKPiDCoGV4
+dGVybiBpbnQgcmljaGFjbF9lcXVpdl9tb2RlKGNvbnN0IHN0cnVjdCByaWNoYWNsICosIHVtb2Rl
+X3QgKik7Cj4gwqBleHRlcm4gc3RydWN0IHJpY2hhY2wgKnJpY2hhY2xfaW5oZXJpdChjb25zdCBz
+dHJ1Y3QgcmljaGFjbCAqLCBpbnQpOwo+IMKgZXh0ZXJuIHN0cnVjdCByaWNoYWNsICpyaWNoYWNs
+X2NyZWF0ZSh1bW9kZV90ICosIHN0cnVjdCBpbm9kZSAqKTsKPiArZXh0ZXJuIGludCBzZXRfcmlj
+aGFjbChzdHJ1Y3QgaW5vZGUgKiwgc3RydWN0IHJpY2hhY2wgKik7Cj4gwqAKPiDCoCNlbmRpZiAv
+KiBfX1JJQ0hBQ0xfSCAqLwo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3JpY2hhY2xfeGF0
+dHIuaCBiL2luY2x1ZGUvbGludXgvcmljaGFjbF94YXR0ci5oCj4gaW5kZXggMGVmYTE0Yi4uNmM2
+YWRiMSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3JpY2hhY2xfeGF0dHIuaAo+ICsrKyBi
+L2luY2x1ZGUvbGludXgvcmljaGFjbF94YXR0ci5oCj4gQEAgLTI2LDQgKzI2LDYgQEAgZXh0ZXJu
+IHNpemVfdCByaWNoYWNsX3hhdHRyX3NpemUoY29uc3Qgc3RydWN0IHJpY2hhY2wgKik7Cj4gwqBl
+eHRlcm4gaW50IHJpY2hhY2xfdG9feGF0dHIoc3RydWN0IHVzZXJfbmFtZXNwYWNlICosIGNvbnN0
+IHN0cnVjdCByaWNoYWNsICosCj4gwqAJCQnCoMKgwqDCoHZvaWQgKiwgc2l6ZV90KTsKPiDCoAo+
+ICtleHRlcm4gc3RydWN0IHhhdHRyX2hhbmRsZXIgcmljaGFjbF94YXR0cl9oYW5kbGVyOwo+ICsK
+PiDCoCNlbmRpZiAvKiBfX1JJQ0hBQ0xfWEFUVFJfSCAqLwoKQ3VlIHNhbWUgcmVmcmFpbiBhYm91
+dCBzeXNjYWxscyB2cy4geGF0dHJzLiBPdGhlcndpc2U6CgpSZXZpZXdlZC1ieTogSmVmZiBMYXl0
+b24gPGpsYXl0b25AcmVkaGF0LmNvbT4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
+c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
