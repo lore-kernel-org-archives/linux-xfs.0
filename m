@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 771867CA6
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:42:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 36A258F8035
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:42:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zAk3oViFoLzZdi0b (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E2B9F7CA4
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 15:44:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A43A8304048
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:44:08 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id RrnPAoIHyBQQ5Tyh (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:42:27 -0700 (PDT)
-Date: Wed, 13 Jul 2016 14:42:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 039/119] xfs: add rmap btree insert and delete helpers
-Message-ID: <20160713184224.GE34396@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:44:05 -0700 (PDT)
+Date: Wed, 13 Jul 2016 13:43:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 038/119] xfs: convert unwritten status of reverse mappings
+Message-ID: <20160713204358.GE12567@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612652222.12839.8353722216601177344.stgit@birch.djwong.org>
-	<20160713182813.GB34396@bfoster.bfoster>
-	<20160713183704.GC12567@birch.djwong.org>
+	<146612651582.12839.562287367335619574.stgit@birch.djwong.org>
+	<20160713182754.GA34396@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160713183704.GC12567@birch.djwong.org>
+In-Reply-To: <20160713182754.GA34396@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,103 +31,185 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On Wed, Jul 13, 2016 at 11:37:04AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 13, 2016 at 02:28:13PM -0400, Brian Foster wrote:
-> > On Thu, Jun 16, 2016 at 06:22:02PM -0700, Darrick J. Wong wrote:
-> > > Add a couple of helper functions to encapsulate rmap btree insert and
-> > > delete operations.  Add tracepoints to the update function.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > Signed-off-by: Dave Chinner <david@fromorbit.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_rmap.c       |   78 +++++++++++++++++++++++++++++++++++++++-
-> > >  fs/xfs/libxfs/xfs_rmap_btree.h |    3 ++
-> > >  2 files changed, 80 insertions(+), 1 deletion(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > > index 53ba14e..f92eaa1 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > > @@ -92,13 +92,89 @@ xfs_rmap_update(
-> > ...
-> > > +STATIC int
-> > > +xfs_rmapbt_delete(
+On Wed, Jul 13, 2016 at 02:27:55PM -0400, Brian Foster wrote:
+> On Thu, Jun 16, 2016 at 06:21:55PM -0700, Darrick J. Wong wrote:
+> > Provide a function to convert an unwritten extent to a real one and
+> > vice versa.
 > > 
-> > This throws an unused warning that persists to the end of the rmap
-> > patches..?
-> 
-> Oh, yeah, we don't need it until "xfs: use interval query for rmap alloc
-> operations on shared files".  Will move.
-> 
-
-Ok, with that snipped out:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> --D
-> 
+> > v2: Move unwritten bit to rm_offset.
 > > 
-> > Brian
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Just a few nits below. Those aside and with Darrick's bc_rec.b ->
+> bc_rec.r fix:
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> >  fs/xfs/libxfs/xfs_rmap.c |  442 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_trace.h       |    6 +
+> >  2 files changed, 448 insertions(+)
 > > 
-> > > +	struct xfs_btree_cur	*rcur,
-> > > +	xfs_agblock_t		agbno,
-> > > +	xfs_extlen_t		len,
-> > > +	uint64_t		owner,
-> > > +	uint64_t		offset,
-> > > +	unsigned int		flags)
-> > > +{
-> > > +	int			i;
-> > > +	int			error;
-> > > +
-> > > +	trace_xfs_rmapbt_delete(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
-> > > +			len, owner, offset, flags);
-> > > +
-> > > +	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, flags, &i);
-> > > +	if (error)
-> > > +		goto done;
-> > > +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
-> > > +
-> > > +	error = xfs_btree_delete(rcur, &i);
-> > > +	if (error)
-> > > +		goto done;
-> > > +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
-> > > +done:
-> > > +	if (error)
-> > > +		trace_xfs_rmapbt_delete_error(rcur->bc_mp,
-> > > +				rcur->bc_private.a.agno, error, _RET_IP_);
-> > > +	return error;
-> > >  }
-> > >  
-> > >  static int
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > index 9d92da5..6674340 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > @@ -64,6 +64,9 @@ int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-> > >  int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-> > >  		xfs_extlen_t len, uint64_t owner, uint64_t offset,
-> > >  		unsigned int flags, int *stat);
-> > > +int xfs_rmapbt_insert(struct xfs_btree_cur *rcur, xfs_agblock_t agbno,
-> > > +		xfs_extlen_t len, uint64_t owner, uint64_t offset,
-> > > +		unsigned int flags);
-> > >  int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
-> > >  		int *stat);
-> > >  
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > index 1043c63..53ba14e 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > @@ -610,6 +610,448 @@ out_error:
+> >  	return error;
+> >  }
+> >  
+> > +#define RMAP_LEFT_CONTIG	(1 << 0)
+> > +#define RMAP_RIGHT_CONTIG	(1 << 1)
+> > +#define RMAP_LEFT_FILLING	(1 << 2)
+> > +#define RMAP_RIGHT_FILLING	(1 << 3)
+> > +#define RMAP_LEFT_VALID		(1 << 6)
+> > +#define RMAP_RIGHT_VALID	(1 << 7)
+> > +
+> > +#define LEFT		r[0]
+> > +#define RIGHT		r[1]
+> > +#define PREV		r[2]
+> > +#define NEW		r[3]
+> > +
+> > +/*
+> > + * Convert an unwritten extent to a real extent or vice versa.
+> > + * Does not handle overlapping extents.
+> > + */
+> > +STATIC int
+> > +__xfs_rmap_convert(
+> > +	struct xfs_btree_cur	*cur,
+> > +	xfs_agblock_t		bno,
+> > +	xfs_extlen_t		len,
+> > +	bool			unwritten,
+> > +	struct xfs_owner_info	*oinfo)
+> > +{
+> ...
+> > +
+> > +	/*
+> > +	 * For the initial lookup, look for and exact match or the left-adjacent
+> 
+> Typo:					    an
+> 
+> > +	 * record for our insertion point. This will also give us the record for
+> > +	 * start block contiguity tests.
+> > +	 */
+> > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, oldext, &i);
+> > +	if (error)
+> > +		goto done;
+> > +	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> > +
+> ...
+> > +
+> > +	/*
+> > +	 * Switch out based on the FILLING and CONTIG state bits.
+> > +	 */
+> > +	switch (state & (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
+> > +			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) {
+> ...
+> > +	case RMAP_LEFT_FILLING | RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG:
+> > +		/*
+> > +		 * Setting all of a previous oldext extent to newext.
+> > +		 * The right neighbor is contiguous, the left is not.
+> > +		 */
+> > +		error = xfs_btree_increment(cur, 0, &i);
+> > +		if (error)
+> > +			goto done;
+> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> > +		trace_xfs_rmapbt_delete(mp, cur->bc_private.a.agno,
+> > +				RIGHT.rm_startblock, RIGHT.rm_blockcount,
+> > +				RIGHT.rm_owner, RIGHT.rm_offset,
+> > +				RIGHT.rm_flags);
+> > +		error = xfs_btree_delete(cur, &i);
+> > +		if (error)
+> > +			goto done;
+> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> > +		error = xfs_btree_decrement(cur, 0, &i);
+> > +		if (error)
+> > +			goto done;
+> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> > +		NEW.rm_startblock = bno;
+> > +		NEW.rm_owner = owner;
+> > +		NEW.rm_offset = offset;
+> 
+> 		NEW = PREV ?
+> 
+> > +		NEW.rm_blockcount = len + RIGHT.rm_blockcount;
+> > +		NEW.rm_flags = newext;
+> > +		error = xfs_rmap_update(cur, &NEW);
+> > +		if (error)
+> > +			goto done;
+> > +		break;
+> > +
+> ...
+> >  struct xfs_rmapbt_query_range_info {
+> >  	xfs_rmapbt_query_range_fn	fn;
+> >  	void				*priv;
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 3ebceb0..6466adc 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -2497,6 +2497,10 @@ DEFINE_RMAP_EVENT(xfs_rmap_free_extent_error);
+> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent);
+> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_done);
+> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_error);
+> > +DEFINE_RMAP_EVENT(xfs_rmap_convert);
+> > +DEFINE_RMAP_EVENT(xfs_rmap_convert_done);
+> > +DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_error);
+> > +DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_state);
+> >  
+> >  DECLARE_EVENT_CLASS(xfs_rmapbt_class,
+> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > @@ -2551,6 +2555,8 @@ DEFINE_AG_ERROR_EVENT(xfs_rmapbt_delete_error);
+> >  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_update_error);
+> >  DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
+> >  DEFINE_RMAPBT_EVENT(xfs_rmap_map_gtrec);
+> > +DEFINE_RMAPBT_EVENT(xfs_rmap_convert_gtrec);
+> > +DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
+> 
+> xfs_rmap_convert_ltrec ?
+
+Originally there was a xfs_rmap_convert_ltrec and a xfs_map_convert_ltrec.
+Then I had to create a real "find left extent" helper function for the
+reflink versions of map/convert, and that became
+xfs_rmap_find_left_neighbor*, with its own tracepoint.
+
+It seemed silly to have different tracepoints for "here's what I found when
+I went looking for a left-adjacent extent", so the non-reflink versions of
+map/convert simply started (ab)using the xfs_rmap_find_left_neighbor_result
+tracepoint, even though the non-shared versions open-code btree cursor
+manipulation without doing a lookup.
+
+I could refactor the whole mess to have functions to find the left and right
+neighbors in shared and not-shared mode, but I find it easier to keep track
+of the cursor manipulation if they all stay in one function.
+
+Oh.  Or I could just change the xfs_rmap_*_gtrec tracepoints into
+xfs_rmap_find_right_neighbor_result.
+
+Yeah, I'll do that since we already have a trace point at the top of the
+function so we already know what we're doing.
+
+--D
+
+> 
+> Brian
+> 
+> >  
+> >  #endif /* _TRACE_XFS_H */
+> >  
 > > 
 > > _______________________________________________
 > > xfs mailing list
 > > xfs@oss.sgi.com
 > > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
