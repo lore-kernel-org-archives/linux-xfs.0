@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CF41B7CB7
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:16:45 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6BAFE7CA4
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:28:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A225A8F8033
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 09:16:42 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 37EB230404E
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:28:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MYfDlBOhity2GWtj (version=TLSv1.2
+	cuda.sgi.com with ESMTP id hussdSlfKKzQBbxI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 09:16:37 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 263B016B1C0
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 16:16:37 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-134.bos.redhat.com [10.18.41.134])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u6DGGak9030650
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 12:16:36 -0400
+	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:28:16 -0700 (PDT)
+Date: Wed, 13 Jul 2016 14:28:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/3] xfs: track and serialize in-flight async buffers against
-	unmount
-Date: Wed, 13 Jul 2016 12:16:35 -0400
-Message-Id: <1468426595-35032-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1468426595-35032-1-git-send-email-bfoster@redhat.com>
-References: <1468426595-35032-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 039/119] xfs: add rmap btree insert and delete helpers
+Message-ID: <20160713182813.GB34396@bfoster.bfoster>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612652222.12839.8353722216601177344.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <146612652222.12839.8353722216601177344.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,294 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-Newly allocated XFS metadata buffers are added to the LRU once the hold
-count is released, which typically occurs after I/O completion. There is
-no other mechanism at current that tracks the existence or I/O state of
-a new buffer. Further, readahead I/O tends to be submitted
-asynchronously by nature, which means the I/O can remain in flight and
-actually complete long after the calling context is gone. This means
-that file descriptors or any other holds on the filesystem can be
-released, allowing the filesystem to be unmounted while I/O is still in
-flight. When I/O completion occurs, core data structures may have been
-freed, causing completion to run into invalid memory accesses and likely
-to panic.
+On Thu, Jun 16, 2016 at 06:22:02PM -0700, Darrick J. Wong wrote:
+> Add a couple of helper functions to encapsulate rmap btree insert and
+> delete operations.  Add tracepoints to the update function.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> ---
+>  fs/xfs/libxfs/xfs_rmap.c       |   78 +++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_rmap_btree.h |    3 ++
+>  2 files changed, 80 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> index 53ba14e..f92eaa1 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.c
+> +++ b/fs/xfs/libxfs/xfs_rmap.c
+> @@ -92,13 +92,89 @@ xfs_rmap_update(
+...
+> +STATIC int
+> +xfs_rmapbt_delete(
 
-This problem is reproduced on XFS via directory readahead. A filesystem
-is mounted, a directory is opened/closed and the filesystem immediately
-unmounted. The open/close cycle triggers a directory readahead that if
-delayed long enough, runs buffer I/O completion after the unmount has
-completed.
+This throws an unused warning that persists to the end of the rmap
+patches..?
 
-To address this problem, add a mechanism to track all in-flight,
-asynchronous buffers using per-cpu counters in the buftarg. The buffer
-is accounted on the first I/O submission after the current reference is
-acquired and unaccounted once the buffer is returned to the LRU or
-freed. Update xfs_wait_buftarg() to wait on all in-flight I/O before
-walking the LRU list. Once in-flight I/O has completed and the workqueue
-has drained, all new buffers should have been released onto the LRU.
+Brian
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 157 ++++++++++++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_buf.h |   3 ++
- 2 files changed, 119 insertions(+), 41 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index f007713..3708dea 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -80,6 +80,47 @@ xfs_buf_vmap_len(
- }
- 
- /*
-+ * Bump the I/O in flight count on the buftarg if we haven't yet done so for
-+ * this buffer. The count is incremented once per buffer (per hold cycle)
-+ * because the corresponding decrement is deferred to buffer release. Buffers
-+ * can undergo I/O multiple times in a hold-release cycle and per buffer I/O
-+ * tracking adds unnecessary overhead. This is used for sychronization purposes
-+ * with unmount (see xfs_wait_buftarg()), so all we really need is a count of
-+ * in-flight buffers.
-+ *
-+ * Buffers that are never released (e.g., superblock, iclog buffers) must set
-+ * the XBF_NO_IOACCT flag before I/O submission. Otherwise, the buftarg count
-+ * never reaches zero and unmount hangs indefinitely.
-+ */
-+static inline void
-+xfs_buf_ioacct_inc(
-+	struct xfs_buf	*bp)
-+{
-+	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-+		return;
-+
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	bp->b_flags |= _XBF_IN_FLIGHT;
-+	percpu_counter_inc(&bp->b_target->bt_io_count);
-+}
-+
-+/*
-+ * Clear the in-flight state on a buffer about to be released to the LRU or
-+ * freed and unaccount from the buftarg.
-+ */
-+static inline void
-+xfs_buf_ioacct_dec(
-+	struct xfs_buf	*bp)
-+{
-+	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-+		return;
-+
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	bp->b_flags &= ~_XBF_IN_FLIGHT;
-+	percpu_counter_dec(&bp->b_target->bt_io_count);
-+}
-+
-+/*
-  * When we mark a buffer stale, we remove the buffer from the LRU and clear the
-  * b_lru_ref count so that the buffer is freed immediately when the buffer
-  * reference count falls to zero. If the buffer is already on the LRU, we need
-@@ -880,63 +921,85 @@ xfs_buf_hold(
- }
- 
- /*
-- *	Releases a hold on the specified buffer.  If the
-- *	the hold count is 1, calls xfs_buf_free.
-+ * Release a hold on the specified buffer. If the hold count is 1, the buffer is
-+ * placed on LRU or freed (depending on b_lru_ref).
-  */
- void
- xfs_buf_rele(
- 	xfs_buf_t		*bp)
- {
- 	struct xfs_perag	*pag = bp->b_pag;
-+	bool			release;
-+	bool			freebuf = false;
- 
- 	trace_xfs_buf_rele(bp, _RET_IP_);
- 
- 	if (!pag) {
- 		ASSERT(list_empty(&bp->b_lru));
- 		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
--		if (atomic_dec_and_test(&bp->b_hold))
-+		if (atomic_dec_and_test(&bp->b_hold)) {
-+			xfs_buf_ioacct_dec(bp);
- 			xfs_buf_free(bp);
-+		}
- 		return;
- 	}
- 
- 	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
--	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
--		spin_lock(&bp->b_lock);
--		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
--			/*
--			 * If the buffer is added to the LRU take a new
--			 * reference to the buffer for the LRU and clear the
--			 * (now stale) dispose list state flag
--			 */
--			if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
--				bp->b_state &= ~XFS_BSTATE_DISPOSE;
--				atomic_inc(&bp->b_hold);
--			}
--			spin_unlock(&bp->b_lock);
--			spin_unlock(&pag->pag_buf_lock);
--		} else {
--			/*
--			 * most of the time buffers will already be removed from
--			 * the LRU, so optimise that case by checking for the
--			 * XFS_BSTATE_DISPOSE flag indicating the last list the
--			 * buffer was on was the disposal list
--			 */
--			if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
--				list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
--			} else {
--				ASSERT(list_empty(&bp->b_lru));
--			}
--			spin_unlock(&bp->b_lock);
- 
--			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
--			spin_unlock(&pag->pag_buf_lock);
--			xfs_perag_put(pag);
--			xfs_buf_free(bp);
-+	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	spin_lock(&bp->b_lock);
-+	if (!release) {
-+		/*
-+		 * Drop the in-flight state if the buffer is already on the LRU
-+		 * and it holds the only reference. This is racy because we
-+		 * haven't acquired the pag lock, but the use of _XBF_IN_FLIGHT
-+		 * ensures the decrement occurs only once per-buf.
-+		 */
-+		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-+			xfs_buf_ioacct_dec(bp);
-+		goto out_unlock;
-+	}
-+
-+	/* the last reference has been dropped ... */
-+	xfs_buf_ioacct_dec(bp);
-+	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+		/*
-+		 * If the buffer is added to the LRU take a new reference to the
-+		 * buffer for the LRU and clear the (now stale) dispose list
-+		 * state flag
-+		 */
-+		if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
-+			bp->b_state &= ~XFS_BSTATE_DISPOSE;
-+			atomic_inc(&bp->b_hold);
- 		}
-+		spin_unlock(&pag->pag_buf_lock);
-+	} else {
-+		/*
-+		 * most of the time buffers will already be removed from the
-+		 * LRU, so optimise that case by checking for the
-+		 * XFS_BSTATE_DISPOSE flag indicating the last list the buffer
-+		 * was on was the disposal list
-+		 */
-+		if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
-+			list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
-+		} else {
-+			ASSERT(list_empty(&bp->b_lru));
-+		}
-+
-+		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-+		rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
-+		spin_unlock(&pag->pag_buf_lock);
-+		xfs_perag_put(pag);
-+		freebuf = true;
- 	}
-+
-+out_unlock:
-+	spin_unlock(&bp->b_lock);
-+
-+	if (freebuf)
-+		xfs_buf_free(bp);
- }
- 
- 
-@@ -1355,6 +1418,7 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
-+	xfs_buf_ioacct_inc(bp);
- 	_xfs_buf_ioapply(bp);
- 
- 	/*
-@@ -1540,13 +1604,19 @@ xfs_wait_buftarg(
- 	int loop = 0;
- 
- 	/*
--	 * We need to flush the buffer workqueue to ensure that all IO
--	 * completion processing is 100% done. Just waiting on buffer locks is
--	 * not sufficient for async IO as the reference count held over IO is
--	 * not released until after the buffer lock is dropped. Hence we need to
--	 * ensure here that all reference counts have been dropped before we
--	 * start walking the LRU list.
-+	 * First wait on the buftarg I/O count for all in-flight buffers to be
-+	 * released. This is critical as new buffers do not make the LRU until
-+	 * they are released.
-+	 *
-+	 * Next, flush the buffer workqueue to ensure all completion processing
-+	 * has finished. Just waiting on buffer locks is not sufficient for
-+	 * async IO as the reference count held over IO is not released until
-+	 * after the buffer lock is dropped. Hence we need to ensure here that
-+	 * all reference counts have been dropped before we start walking the
-+	 * LRU list.
- 	 */
-+	while (percpu_counter_sum(&btp->bt_io_count))
-+		delay(100);
- 	drain_workqueue(btp->bt_mount->m_buf_workqueue);
- 
- 	/* loop until there is nothing left on the lru list. */
-@@ -1643,6 +1713,8 @@ xfs_free_buftarg(
- 	struct xfs_buftarg	*btp)
- {
- 	unregister_shrinker(&btp->bt_shrinker);
-+	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-+	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
-@@ -1707,6 +1779,9 @@ xfs_alloc_buftarg(
- 	if (list_lru_init(&btp->bt_lru))
- 		goto error;
- 
-+	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-+		goto error;
-+
- 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
- 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 9e1cca7..dbe4a74 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -63,6 +63,7 @@ typedef enum {
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
- #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-+#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -116,6 +117,8 @@ typedef struct xfs_buftarg {
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
- 	struct list_lru		bt_lru;
-+
-+	struct percpu_counter	bt_io_count;
- } xfs_buftarg_t;
- 
- struct xfs_buf;
--- 
-2.5.5
+> +	struct xfs_btree_cur	*rcur,
+> +	xfs_agblock_t		agbno,
+> +	xfs_extlen_t		len,
+> +	uint64_t		owner,
+> +	uint64_t		offset,
+> +	unsigned int		flags)
+> +{
+> +	int			i;
+> +	int			error;
+> +
+> +	trace_xfs_rmapbt_delete(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
+> +			len, owner, offset, flags);
+> +
+> +	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, flags, &i);
+> +	if (error)
+> +		goto done;
+> +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
+> +
+> +	error = xfs_btree_delete(rcur, &i);
+> +	if (error)
+> +		goto done;
+> +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
+> +done:
+> +	if (error)
+> +		trace_xfs_rmapbt_delete_error(rcur->bc_mp,
+> +				rcur->bc_private.a.agno, error, _RET_IP_);
+> +	return error;
+>  }
+>  
+>  static int
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> index 9d92da5..6674340 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> @@ -64,6 +64,9 @@ int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+>  int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+>  		xfs_extlen_t len, uint64_t owner, uint64_t offset,
+>  		unsigned int flags, int *stat);
+> +int xfs_rmapbt_insert(struct xfs_btree_cur *rcur, xfs_agblock_t agbno,
+> +		xfs_extlen_t len, uint64_t owner, uint64_t offset,
+> +		unsigned int flags);
+>  int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
+>  		int *stat);
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
