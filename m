@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B8B67CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 12:23:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD85C7CA1
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 00:36:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F14C68F8035
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 10:23:08 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TLRJ6fD2b5hQSuwb (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E9C4304043
+	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 22:36:49 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id hx285khUkPvrLWr0 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 10:23:01 -0700 (PDT)
-Date: Tue, 12 Jul 2016 13:22:59 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
-	post-unmount panic
-Message-ID: <20160712172259.GA22757@bfoster.bfoster>
-References: <1467291229-13548-1-git-send-email-bfoster@redhat.com>
-	<20160630224457.GT12670@dastard>
-	<20160701223011.GA28130@bfoster.bfoster>
-	<20160705164552.GA6317@bfoster.bfoster>
-	<20160711052057.GE1922@dastard>
-	<20160711135251.GA32896@bfoster.bfoster>
-	<20160711152921.GB32896@bfoster.bfoster>
-	<20160711224451.GF1922@dastard>
-	<20160712120315.GA4311@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 22:36:46 -0700 (PDT)
+Date: Tue, 12 Jul 2016 22:36:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC] allow enabling reflinks at runtime
+Message-ID: <20160713053639.GG13625@birch.djwong.org>
+References: <1464877150-20457-1-git-send-email-hch@lst.de>
+	<20160602225415.GP12670@dastard> <20160608071130.GB24663@lst.de>
+	<20160609233344.GA26977@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160712120315.GA4311@bfoster.bfoster>
+In-Reply-To: <20160609233344.GA26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,347 +32,71 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue, Jul 12, 2016 at 08:03:15AM -0400, Brian Foster wrote:
-> On Tue, Jul 12, 2016 at 08:44:51AM +1000, Dave Chinner wrote:
-> > On Mon, Jul 11, 2016 at 11:29:22AM -0400, Brian Foster wrote:
-> > > On Mon, Jul 11, 2016 at 09:52:52AM -0400, Brian Foster wrote:
-> > > ...
-> > > > So what is your preference out of the possible approaches here? AFAICS,
-> > > > we have the following options:
-> > > > 
-> > > > 1.) The original "add readahead to LRU early" approach.
-> > > > 	Pros: simple one-liner
-> > > > 	Cons: bit of a hack, only covers readahead scenario
-> > > > 2.) Defer I/O count decrement to buffer release (this patch).
-> > > > 	Pros: should cover all cases (reads/writes)
-> > > > 	Cons: more complex (requires per-buffer accounting, etc.)
-> > > > 3.) Raw (buffer or bio?) I/O count (no defer to buffer release)
-> > > > 	Pros: eliminates some complexity from #2
-> > > > 	Cons: still more complex than #1, racy in that decrement does
-> > > > 	not serialize against LRU addition (requires drain_workqueue(),
-> > > > 	which still doesn't cover error conditions)
-> > > > 
-> > > > As noted above, option #3 also allows for either a buffer based count or
-> > > > bio based count, the latter of which might simplify things a bit further
-> > > > (TBD). Thoughts?
+On Fri, Jun 10, 2016 at 09:33:44AM +1000, Dave Chinner wrote:
+> On Wed, Jun 08, 2016 at 09:11:30AM +0200, Christoph Hellwig wrote:
+> > On Fri, Jun 03, 2016 at 08:54:15AM +1000, Dave Chinner wrote:
+> > > On Thu, Jun 02, 2016 at 04:19:07PM +0200, Christoph Hellwig wrote:
+> > > > I've had some vocal user requests to allow enabling reflinks at run time,
+> > > > which happens to be a mostly trivial feature.  The only caveat is that we
+> > > > need a large enough log size to support the reflink requirements, but for
+> > > > typical large file systems that's not an issue.
+> > > 
+> > > Hmmm - how does this interact with all the rmap code? I was not
+> > > planning on enabling reflink without rmap and vice versa simply
+> > > because it makes the validation and testing matrix vastly more
+> > > complex.
 > > 
-> > Pretty good summary :P
-> > 
-> > > FWIW, the following is a slightly cleaned up version of my initial
-> > > approach (option #3 above). Note that the flag is used to help deal with
-> > > varying ioend behavior. E.g., xfs_buf_ioend() is called once for some
-> > > buffers, multiple times for others with an iodone callback, that
-> > > behavior changes in some cases when an error is set, etc. (I'll add
-> > > comments before an official post.)
-> > 
-> > The approach looks good - I think there's a couple of things we can
-> > do to clean it up and make it robust. Comments inline.
-> > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index 4665ff6..45d3ddd 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -1018,7 +1018,10 @@ xfs_buf_ioend(
-> > >  
-> > >  	trace_xfs_buf_iodone(bp, _RET_IP_);
-> > >  
-> > > -	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-> > > +	if (bp->b_flags & XBF_IN_FLIGHT)
-> > > +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> > > +
-> > > +	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD | XBF_IN_FLIGHT);
-> > >  
-> > >  	/*
-> > >  	 * Pull in IO completion errors now. We are guaranteed to be running
-> > 
-> > I think the XBF_IN_FLIGHT can be moved to the final xfs_buf_rele()
-> > processing if:
-> > 
-> > > @@ -1341,6 +1344,11 @@ xfs_buf_submit(
-> > >  	 * xfs_buf_ioend too early.
-> > >  	 */
-> > >  	atomic_set(&bp->b_io_remaining, 1);
-> > > +	if (bp->b_flags & XBF_ASYNC) {
-> > > +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > > +		bp->b_flags |= XBF_IN_FLIGHT;
-> > > +	}
-> > 
-> > You change this to:
-> > 
-> > 	if (!(bp->b_flags & XBF_IN_FLIGHT)) {
-> > 		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > 		bp->b_flags |= XBF_IN_FLIGHT;
-> > 	}
-> > 
+> > Uh.  So far I've only been testing pure reflink code, mostly because
+> > rmap really doesn't buy much for the use case I'm working on.
+> > Enabling rmap post-mkfs is defintively a different ballpark, and probably
+> > not worth it even if it would be doable.
 > 
-> Ok, so use the flag to cap the I/O count and defer the decrement to
-> release. I think that should work and addresses the raciness issue. I'll
-> give it a try.
+> Wasn't expecting rmap to ever be dynamically enabled ;)
 > 
+> So ignoring the testing side of things, and looking more at the
+> implementation of the enabling, I'm not sure I really like the idea
+> of doing this via a mount option. Because we've got to make
+> significant additions to the on disk format in each AG, this seems
+> more like a "growfs style" operation than anything. i.e. lock out
+> allocation, add all the structures to the AG headers and allocate
+> all the blocks needed, re-initialise the per-ag structures with all
+> the necessary info, then switch on the feature bit and commit the
+> change.
 
-This appears to be doable, but it reintroduces some ugliness from the
-previous approach. For example, we have to start filtering out uncached
-buffers again (if we defer the decrement to release, we must handle
-never-released buffers one way or another). Also, given the feedback on
-the previous patch with regard to filtering out non-new buffers from the
-I/O count, I've dropped that and replaced it with updates to
-xfs_buf_rele() to decrement when the buffer is returned to the LRU (we
-either have to filter out buffers already on the LRU at submit time or
-make sure that they are decremented when released back to the LRU).
+I'd been wondering if we could just make a new FS_SET_GEOMETRY xfsctl
+where you'd pass in the same xfs_fsop_geom you got from FSGEOMETRY.
+The kernel would either decide that it liked the changes and do them,
+or reject the whole thing with -EINVAL.
 
-Code follows...
+> It's probably a little more intricate than doing it at mount time,
+> but it gets around the fact that users have to add a mount option
+> and bounce the filesystem to turn on reflinks.
+> I can see this being much easier than a mount option in some
+> situations, (e.g. for the root filesystem), and I don't think it's
+> much harder to test than the mount option (e.g. the way growfs is
+> tested under stress by xfs/104)...
 
-Brian
+But otherwise we'd probably want to check log size and free counts, and then
+fill in the refcount btree root.  We'd also have to make sure that the root
+inode chunk doesn't change as a result of xfs_prealloc_blocks changing, since I
+think mkfs puts the root inode chunk in the first aligned space after all the
+AG metadata.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 4665ff6..b7afbac 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -80,6 +80,25 @@ xfs_buf_vmap_len(
- }
- 
- /*
-+ * Clear the in-flight state on a buffer about to be released to the LRU or
-+ * freed and unaccount from the buftarg. The buftarg I/O count maintains a count
-+ * of held buffers that have undergone at least one I/O in the current hold
-+ * cycle (e.g., not a total I/O count). This provides protection against unmount
-+ * for buffer I/O completion (see xfs_wait_buftarg()) processing.
-+ */
-+static inline void
-+xfs_buf_rele_in_flight(
-+	struct xfs_buf	*bp)
-+{
-+	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-+		return;
-+
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	bp->b_flags &= ~_XBF_IN_FLIGHT;
-+	percpu_counter_dec(&bp->b_target->bt_io_count);
-+}
-+
-+/*
-  * When we mark a buffer stale, we remove the buffer from the LRU and clear the
-  * b_lru_ref count so that the buffer is freed immediately when the buffer
-  * reference count falls to zero. If the buffer is already on the LRU, we need
-@@ -866,30 +885,37 @@ xfs_buf_hold(
- }
- 
- /*
-- *	Releases a hold on the specified buffer.  If the
-- *	the hold count is 1, calls xfs_buf_free.
-+ * Release a hold on the specified buffer. If the hold count is 1, the buffer is
-+ * placed on LRU or freed (depending on b_lru_ref).
-  */
- void
- xfs_buf_rele(
- 	xfs_buf_t		*bp)
- {
- 	struct xfs_perag	*pag = bp->b_pag;
-+	bool			release;
-+	bool			freebuf = false;
- 
- 	trace_xfs_buf_rele(bp, _RET_IP_);
- 
- 	if (!pag) {
- 		ASSERT(list_empty(&bp->b_lru));
- 		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
--		if (atomic_dec_and_test(&bp->b_hold))
-+		if (atomic_dec_and_test(&bp->b_hold)) {
-+			xfs_buf_rele_in_flight(bp);
- 			xfs_buf_free(bp);
-+		}
- 		return;
- 	}
- 
- 	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
--	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
--		spin_lock(&bp->b_lock);
-+
-+	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	spin_lock(&bp->b_lock);
-+	if (release) {
-+		xfs_buf_rele_in_flight(bp);
- 		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
- 			/*
- 			 * If the buffer is added to the LRU take a new
-@@ -900,7 +926,6 @@ xfs_buf_rele(
- 				bp->b_state &= ~XFS_BSTATE_DISPOSE;
- 				atomic_inc(&bp->b_hold);
- 			}
--			spin_unlock(&bp->b_lock);
- 			spin_unlock(&pag->pag_buf_lock);
- 		} else {
- 			/*
-@@ -914,15 +939,24 @@ xfs_buf_rele(
- 			} else {
- 				ASSERT(list_empty(&bp->b_lru));
- 			}
--			spin_unlock(&bp->b_lock);
- 
- 			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
- 			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
- 			spin_unlock(&pag->pag_buf_lock);
- 			xfs_perag_put(pag);
--			xfs_buf_free(bp);
-+			freebuf = true;
- 		}
-+	} else if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru)) {
-+		/*
-+		 * The buffer is already on the LRU and it holds the only
-+		 * reference. Drop the in flight state.
-+		 */
-+		xfs_buf_rele_in_flight(bp);
- 	}
-+	spin_unlock(&bp->b_lock);
-+
-+	if (freebuf)
-+		xfs_buf_free(bp);
- }
- 
- 
-@@ -1341,6 +1375,18 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
-+
-+	/*
-+	 * Bump the I/O in flight count on the buftarg if we haven't yet done
-+	 * so for this buffer. Skip uncached buffers because many of those
-+	 * (e.g., superblock, log buffers) are never released.
-+	 */
-+	if ((bp->b_bn != XFS_BUF_DADDR_NULL) &&
-+	    !(bp->b_flags & _XBF_IN_FLIGHT)) {
-+		bp->b_flags |= _XBF_IN_FLIGHT;
-+		percpu_counter_inc(&bp->b_target->bt_io_count);
-+	}
-+
- 	_xfs_buf_ioapply(bp);
- 
- 	/*
-@@ -1526,13 +1572,19 @@ xfs_wait_buftarg(
- 	int loop = 0;
- 
- 	/*
--	 * We need to flush the buffer workqueue to ensure that all IO
--	 * completion processing is 100% done. Just waiting on buffer locks is
--	 * not sufficient for async IO as the reference count held over IO is
--	 * not released until after the buffer lock is dropped. Hence we need to
--	 * ensure here that all reference counts have been dropped before we
--	 * start walking the LRU list.
-+	 * First wait on the buftarg I/O count for all in-flight buffers to be
-+	 * released. This is critical as new buffers do not make the LRU until
-+	 * they are released.
-+	 *
-+	 * Next, flush the buffer workqueue to ensure all completion processing
-+	 * has finished. Just waiting on buffer locks is not sufficient for
-+	 * async IO as the reference count held over IO is not released until
-+	 * after the buffer lock is dropped. Hence we need to ensure here that
-+	 * all reference counts have been dropped before we start walking the
-+	 * LRU list.
- 	 */
-+	while (percpu_counter_sum(&btp->bt_io_count))
-+		delay(100);
- 	drain_workqueue(btp->bt_mount->m_buf_workqueue);
- 
- 	/* loop until there is nothing left on the lru list. */
-@@ -1629,6 +1681,8 @@ xfs_free_buftarg(
- 	struct xfs_buftarg	*btp)
- {
- 	unregister_shrinker(&btp->bt_shrinker);
-+	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-+	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
-@@ -1693,6 +1747,9 @@ xfs_alloc_buftarg(
- 	if (list_lru_init(&btp->bt_lru))
- 		goto error;
- 
-+	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-+		goto error;
-+
- 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
- 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 8bfb974..19f70e2 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -62,6 +62,7 @@ typedef enum {
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
- #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-+#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -115,6 +116,8 @@ typedef struct xfs_buftarg {
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
- 	struct list_lru		bt_lru;
-+
-+	struct percpu_counter	bt_io_count;
- } xfs_buftarg_t;
- 
- struct xfs_buf;
+<shrug> It's been a while, I'll look at this closer when I get back to reflink.
 
-> > We shouldn't have to check for XBF_ASYNC in xfs_buf_submit() - it is
-> > the path taken for async IO submission, so we should probably
-> > ASSERT(bp->b_flags & XBF_ASYNC) in this function to ensure that is
-> > the case.
-> > 
+> Your thoughts, Christoph?
+
+--D
+
 > 
-> Yeah, that's unnecessary. There's already such an assert in
-> xfs_buf_submit(), actually.
+> Cheers,
 > 
-> > [Thinking aloud - __test_and_set_bit() might make this code a bit
-> > cleaner]
-> > 
-> 
-> On a quick try, this complains about b_flags being an unsigned int. I
-> think I'll leave the set bit as is and use a helper for the release,
-> which also provides a location to explain how the count works.
-> 
-> > > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > > index 8bfb974..e1f95e0 100644
-> > > --- a/fs/xfs/xfs_buf.h
-> > > +++ b/fs/xfs/xfs_buf.h
-> > > @@ -43,6 +43,7 @@ typedef enum {
-> > >  #define XBF_READ	 (1 << 0) /* buffer intended for reading from device */
-> > >  #define XBF_WRITE	 (1 << 1) /* buffer intended for writing to device */
-> > >  #define XBF_READ_AHEAD	 (1 << 2) /* asynchronous read-ahead */
-> > > +#define XBF_IN_FLIGHT	 (1 << 3)
-> > 
-> > Hmmm - it's an internal flag, so probably should be prefixed with an
-> > "_" and moved down to the section with _XBF_KMEM and friends.
-> > 
-> 
-> Indeed, thanks.
-> 
-> Brian
-> 
-> > Thoughts?
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
