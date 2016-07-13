@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EB4F97CA0
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 22:30:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51757AC001
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 20:30:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 1bHyUBcKKRQu6NSI for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2016 20:30:07 -0700 (PDT)
-Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
-	bits)) (No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 073D6EE6
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 22:30:06 -0500 (CDT)
-Subject: Re: [PATCH 009/119] xfs: convert list of extents to free into a
-	regular list
+	by oss.sgi.com (Postfix) with ESMTP id 624057CA3
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 18:39:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D2DE8AC004
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 16:39:11 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 8tr7ma0E7Wgnk9xc (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 16:39:09 -0700 (PDT)
+Date: Wed, 13 Jul 2016 16:39:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 006/119] xfs: port differences from xfsprogs libxfs
+Message-ID: <20160713233902.GI13625@birch.djwong.org>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612632997.12839.18026491074892368053.stgit@birch.djwong.org>
-	<20160617115930.GH19042@infradead.org>
-	<20160618201509.GA5042@birch.djwong.org>
-	<20160621005712.GN26977@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e34e300d-6e56-8617-4ba6-ef034bfc2e9f@sandeen.net>
-Date: Sun, 17 Jul 2016 20:30:04 -0700
+	<146612631079.12839.13685287438216197909.stgit@birch.djwong.org>
+	<20160620002107.GG26977@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160621005712.GN26977@dastard>
+Content-Disposition: inline
+In-Reply-To: <20160620002107.GG26977@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,63 +31,255 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On 6/20/16 5:57 PM, Dave Chinner wrote:
-> On Sat, Jun 18, 2016 at 01:15:10PM -0700, Darrick J. Wong wrote:
->> On Fri, Jun 17, 2016 at 04:59:30AM -0700, Christoph Hellwig wrote:
->>>>  {
->>>> +	struct xfs_bmap_free_item	*new;		/* new element */
->>>>  #ifdef DEBUG
->>>>  	xfs_agnumber_t		agno;
->>>>  	xfs_agblock_t		agbno;
->>>> @@ -597,17 +595,7 @@ xfs_bmap_add_free(
->>>>  	new = kmem_zone_alloc(xfs_bmap_free_item_zone, KM_SLEEP);
->>>>  	new->xbfi_startblock = bno;
->>>>  	new->xbfi_blockcount = (xfs_extlen_t)len;
->>>> +	list_add(&new->xbfi_list, &flist->xbf_flist);
->>>>  	flist->xbf_count++;
->>>
->>> Please kill xbf_count while you're at it, it's entirely superflous.
->>
->> The deferred ops conversion patch kills this off by moving the whole
->> "defer an op to the next transaction by logging redo items" logic
->> into a separate file and mechanism.
->>
->> This patch is just a cleanup to reduce some of the open coded list ugliness
->> before starting on the rmap stuff.  Once the deferred ops code lands, all
->> three of these functions go away.
+On Mon, Jun 20, 2016 at 10:21:07AM +1000, Dave Chinner wrote:
+> On Thu, Jun 16, 2016 at 06:18:30PM -0700, Darrick J. Wong wrote:
+> > Port various differences between xfsprogs and the kernel.  This
+> > cleans up both so that we can develop rmap and reflink on the
+> > same libxfs code.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Ok, so because all these functions go away, I'll take this patch now
-> without the suggested cleanups so that you don't have to rework it.
+> Nak. I'm essentially trying to keep the little hacks needed in 
+> userspace out of the kernel libxfs tree. We quite regularly get
+> people scanning the kernel tree and trying to remove things like
+> exported function prototypes that are not used in kernel space,
+> so the headers in userspace carry those simply to prevent people
+> continually sending kernel patches that we have to look at and then
+> ignore...
+
+Fair enough, I merely diff'd the two libxfs and figured I'd remove
+all the differences to try to develop atop as close to identical libxfs as I
+could get. :)
+
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index 99b077c..58bdca7 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -2415,7 +2415,9 @@ xfs_alloc_read_agf(
+> >  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+> >  		spin_lock_init(&pag->pagb_lock);
+> >  		pag->pagb_count = 0;
+> > +#ifdef __KERNEL__
+> >  		pag->pagb_tree = RB_ROOT;
+> > +#endif
+> >  		pag->pagf_init = 1;
+> >  	}
+> >  #ifdef DEBUG
 > 
-> ....
+> e.g. this is an indication that reminds us that there is
+> functionality in the libxfs kernel tree that isn't in userspace...
 > 
->>>> +	list_sort((*tp)->t_mountp, &flist->xbf_flist, xfs_bmap_free_list_cmp);
->>>
->>> Can you add a comment on why we are sorting the list?
->>
->> We sort the list so that we process the freed extents in AG order to
->> avoid deadlocking.
->>
->> I'll add a comment to the deferred ops code if there isn't one already.
+> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> > index 4f2aed0..8ef420a 100644
+> > --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> > @@ -51,7 +51,7 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+> >  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
+> >  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+> >  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+> > -int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+> > +int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+> >  void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
 > 
-> This seems best - add the clean up to the later patches rather than
-> have to rework lots of patches because of minor mods to early
-> patches...
+> Things like this are fine...
 
-I'm woefully late to the game here, but adding comments later doesn't
-help a future reader of commits like this, when neither the commit log
-nor the patch contents explains things like why it's being sorted.
+Ok.
 
-> then use list_sort to sort it prior to processing.
+> >  
+> >  /*
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 932381c..499e980 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -1425,7 +1425,7 @@ xfs_bmap_search_multi_extents(
+> >   * Else, *lastxp will be set to the index of the found
+> >   * entry; *gotp will contain the entry.
+> >   */
+> > -STATIC xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
+> > +xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
+> >  xfs_bmap_search_extents(
+> >  	xfs_inode_t     *ip,            /* incore inode pointer */
+> >  	xfs_fileoff_t   bno,            /* block number searched for */
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> > index 423a34e..79e3ebe 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.h
+> > +++ b/fs/xfs/libxfs/xfs_bmap.h
+> > @@ -231,4 +231,10 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+> >  		int num_exts);
+> >  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+> >  
+> > +struct xfs_bmbt_rec_host *
+> > +	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
+> > +				int fork, int *eofp, xfs_extnum_t *lastxp,
+> > +				struct xfs_bmbt_irec *gotp,
+> > +				struct xfs_bmbt_irec *prevp);
+> > +
+> >  #endif	/* __XFS_BMAP_H__ */
+> 
+> But these are the sort of "clean up the kernel patches" that I was
+> refering to. If there's a user in kernel space, then fine, otherwise
+> it doesn't hurt to keep it only in userspace. There are relatively
+> few of these....
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > index 1f88e1c..105979d 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > @@ -2532,6 +2532,7 @@ error0:
+> >  	return error;
+> >  }
+> >  
+> > +#ifdef __KERNEL__
+> >  struct xfs_btree_split_args {
+> >  	struct xfs_btree_cur	*cur;
+> >  	int			level;
+> > @@ -2609,6 +2610,9 @@ xfs_btree_split(
+> >  	destroy_work_on_stack(&args.work);
+> >  	return args.result;
+> >  }
+> > +#else /* !KERNEL */
+> > +#define xfs_btree_split	__xfs_btree_split
+> > +#endif
+> 
+> Same again -this is 4 lines of code that is userspace only. It's a
+> tiny amount compared to the original difference that these
+> kernel-only stack splits required, and so not a huge issue.
 
-The changelog should say *why* a thing was done, not just *what* was
-done; the diff already tells us that, right...
+Will drop these two.
 
-</soapbox>
+> > --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> > @@ -31,10 +31,16 @@
+> >  #include "xfs_cksum.h"
+> >  #include "xfs_trace.h"
+> >  
+> > +/*
+> > + * XXX: kernel implementation causes ndquots calc to go real
+> > + * bad. Just leaving the existing userspace calc here right now.
+> > + */
+> >  int
+> >  xfs_calc_dquots_per_chunk(
+> >  	unsigned int		nbblks)	/* basic block units */
+> >  {
+> > +#ifdef __KERNEL__
+> > +	/* kernel code that goes wrong in userspace! */
+> >  	unsigned int	ndquots;
+> >  
+> >  	ASSERT(nbblks > 0);
+> > @@ -42,6 +48,10 @@ xfs_calc_dquots_per_chunk(
+> >  	do_div(ndquots, sizeof(xfs_dqblk_t));
+> >  
+> >  	return ndquots;
+> > +#else
+> > +	ASSERT(nbblks > 0);
+> > +	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
+> > +#endif
+> >  }
+> 
+> This is a clear case that we need to fix the code to be
+> correct for both kernel and userspace without modification, not
+> propagate the userspace hack back into the kernel code.
 
--Eric
+I /think/ it does this because libxfs/libxfs_priv.h's __do_div expects
+to be passed a pointer to an unsigned long long (which is later dereferenced
+and used as an unsigned long), whereas ndquots is an int?
+
+I'm not sure why we need do_div either, since AFAICT we only ever process
+quota in chunks of 1FSB, for which 32-bit division should be fine.
+
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 9d9559e..794fa66 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -56,6 +56,17 @@ xfs_inobp_check(
+> >  }
+> >  #endif
+> >  
+> > +bool
+> > +xfs_dinode_good_version(
+> > +	struct xfs_mount *mp,
+> > +	__u8		version)
+> > +{
+> > +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> > +		return version == 3;
+> > +
+> > +	return version == 1 || version == 2;
+> > +}
+> 
+> This xfs_dinode_good_version() change needs to be a separate patch
+
+Ok.
+
+> >  void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+> >  #else
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> > index e8f49c0..e5baba3 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -462,8 +462,8 @@ static inline uint xfs_log_dinode_size(int version)
+> >  typedef struct xfs_buf_log_format {
+> >  	unsigned short	blf_type;	/* buf log item type indicator */
+> >  	unsigned short	blf_size;	/* size of this item */
+> > -	ushort		blf_flags;	/* misc state */
+> > -	ushort		blf_len;	/* number of blocks in this buf */
+> > +	unsigned short	blf_flags;	/* misc state */
+> > +	unsigned short	blf_len;	/* number of blocks in this buf */
+> >  	__int64_t	blf_blkno;	/* starting blkno of this buf */
+> >  	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+> >  	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+> 
+> The removal of ushort/uint from the kernel code needs to be a
+> separate patch that addresses all the users, not just the couple in
+> shared headers....
+
+Ok.
+
+> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > index 12ca867..09d6fd0 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.c
+> > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > @@ -261,6 +261,7 @@ xfs_mount_validate_sb(
+> >  	/*
+> >  	 * Until this is fixed only page-sized or smaller data blocks work.
+> >  	 */
+> > +#ifdef __KERNEL__
+> >  	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
+> >  		xfs_warn(mp,
+> >  		"File system with blocksize %d bytes. "
+> > @@ -268,6 +269,7 @@ xfs_mount_validate_sb(
+> >  				sbp->sb_blocksize, PAGE_SIZE);
+> >  		return -ENOSYS;
+> >  	}
+> > +#endif
+> >  
+> >  	/*
+> >  	 * Currently only very few inode sizes are supported.
+> > @@ -291,10 +293,12 @@ xfs_mount_validate_sb(
+> >  		return -EFBIG;
+> >  	}
+> >  
+> > +#ifdef __KERNEL__
+> >  	if (check_inprogress && sbp->sb_inprogress) {
+> >  		xfs_warn(mp, "Offline file system operation in progress!");
+> >  		return -EFSCORRUPTED;
+> >  	}
+> > +#endif
+> >  	return 0;
+> >  }
+> 
+> Again, I don't think this needs to be propagated back into the
+> kernel code...
+
+Will drop.
+
+--D
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
