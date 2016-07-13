@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8E23B7CF8
-	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 08:26:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE895AC005
-	for <xfs@oss.sgi.com>; Sat,  9 Jul 2016 06:25:59 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 744217CA1
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 04:06:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0319AC002
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 02:06:29 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id q2rmMue81NcTVLsM (version=TLSv1.2
+	cuda.sgi.com with ESMTP id VAPJRyTlGtwibZEa (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 09 Jul 2016 06:25:58 -0700 (PDT)
-Date: Sat, 9 Jul 2016 09:25:56 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 034/119] xfs: teach rmapbt to support interval queries
-Message-ID: <20160709132555.GB13175@bfoster.bfoster>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612649050.12839.2803288971604662823.stgit@birch.djwong.org>
-	<20160708183403.GF59278@bfoster.bfoster>
-	<20160709001635.GC30604@birch.djwong.org>
+	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 02:06:25 -0700 (PDT)
+Date: Wed, 13 Jul 2016 17:06:23 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] common/rc: avoid mkfs option conflicts in
+	_scratch_mkfs_xfs_supported
+Message-ID: <20160713090623.GQ2432@eguan.usersys.redhat.com>
+References: <1467697153-23189-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160709001635.GC30604@birch.djwong.org>
+In-Reply-To: <1467697153-23189-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,120 +30,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: fstests@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 08, 2016 at 05:16:35PM -0700, Darrick J. Wong wrote:
-> On Fri, Jul 08, 2016 at 02:34:03PM -0400, Brian Foster wrote:
-> > On Thu, Jun 16, 2016 at 06:21:30PM -0700, Darrick J. Wong wrote:
-> > > Now that the generic btree code supports querying all records within a
-> > > range of keys, use that functionality to allow us to ask for all the
-> > > extents mapped to a range of physical blocks.
-> > > 
-> > > v2: Move unwritten bit to rm_offset.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_rmap.c       |   43 ++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/libxfs/xfs_rmap_btree.h |    9 ++++++++
-> > >  2 files changed, 52 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > > index c6a5a0b..0e1721a 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > > @@ -184,3 +184,46 @@ out_error:
-> > >  	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, false, oinfo);
-> > >  	return error;
-> > >  }
-> > > +
-> > > +struct xfs_rmapbt_query_range_info {
-> > > +	xfs_rmapbt_query_range_fn	fn;
-> > > +	void				*priv;
-> > > +};
-> > > +
-> > > +/* Format btree record and pass to our callback. */
-> > > +STATIC int
-> > > +xfs_rmapbt_query_range_helper(
-> > > +	struct xfs_btree_cur	*cur,
-> > > +	union xfs_btree_rec	*rec,
-> > > +	void			*priv)
-> > > +{
-> > > +	struct xfs_rmapbt_query_range_info	*query = priv;
-> > > +	struct xfs_rmap_irec			irec;
-> > > +	int					error;
-> > > +
-> > > +	error = xfs_rmapbt_btrec_to_irec(rec, &irec);
-> > > +	if (error)
-> > > +		return error;
-> > > +	return query->fn(cur, &irec, query->priv);
-> > > +}
-> > > +
-> > > +/* Find all rmaps between two keys. */
-> > > +int
-> > > +xfs_rmapbt_query_range(
-> > > +	struct xfs_btree_cur		*cur,
-> > > +	struct xfs_rmap_irec		*low_rec,
-> > > +	struct xfs_rmap_irec		*high_rec,
-> > > +	xfs_rmapbt_query_range_fn	fn,
-> > > +	void				*priv)
-> > > +{
-> > > +	union xfs_btree_irec		low_brec;
-> > > +	union xfs_btree_irec		high_brec;
-> > > +	struct xfs_rmapbt_query_range_info	query;
-> > > +
-> > > +	low_brec.r = *low_rec;
-> > > +	high_brec.r = *high_rec;
-> > 
-> > Some checks or asserts that these are actually in order couldn't hurt.
-> > Otherwise looks good:
+On Tue, Jul 05, 2016 at 01:39:13PM +0800, Eryu Guan wrote:
+> In recent mkfs.xfs updates in xfsprogs, commit 9090e187bc3e ("mkfs:
+> add respecification detection to generic parsing") added
+> re-specification detection to "-m" option, it causes several tests
+> _notrun if MKFS_OPTIONS has the same options as those being tested
+> in _scratch_mkfs_xfs_supported(), because they're specified multiple
+> times.
 > 
-> Ok.  If low_rec > high_rec then you'll get no results.  I'm not sure
-> if that's ok or if we should explicitly return -EINVAL for that case?
+> 	MKFS_OPTIONS="-m crc=0" ./check xfs/001
+> 	xfs/001 3s ... [not run] mkfs.xfs doesn't have crc feature
 > 
-
-IMO, it's more robust to short circuit this case one way or another
-rather than rely on the search implementation, but I'm happy as long as
-there's at least an assert. I have no strong preference really as to
-whether it returns an error or 0 and an empty set. If that is truly an
-unexpected usage, perhaps it's best to just return an error?
-
-Brian
-
-> --D
+> Fix it by creating XFS again without MKFS_OPTIONS in
+> _scratch_mkfs_xfs_supported(), in case there's conflict between
+> MKFS_OPTIONS and mkfs_opts, like what we do in _scratch_mkfs_xfs().
 > 
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > 
-> > > +	query.priv = priv;
-> > > +	query.fn = fn;
-> > > +	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-> > > +			xfs_rmapbt_query_range_helper, &query);
-> > > +}
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > index 796071c..e926c6e 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > > @@ -74,4 +74,13 @@ int xfs_rmap_free(struct xfs_trans *tp, struct xfs_buf *agbp,
-> > >  		  xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
-> > >  		  struct xfs_owner_info *oinfo);
-> > >  
-> > > +typedef int (*xfs_rmapbt_query_range_fn)(
-> > > +	struct xfs_btree_cur	*cur,
-> > > +	struct xfs_rmap_irec	*rec,
-> > > +	void			*priv);
-> > > +
-> > > +int xfs_rmapbt_query_range(struct xfs_btree_cur *cur,
-> > > +		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
-> > > +		xfs_rmapbt_query_range_fn fn, void *priv);
-> > > +
-> > >  #endif	/* __XFS_RMAP_BTREE_H__ */
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+
+Ping on this.
+
+My first attempt was removing $MKFS_OPTIONS from $MKFS_XFS_PROG command
+line, but that broke xfs/186, this is the second attempt to fix this
+issue.
+
+Thanks,
+Eryu
+
+> ---
+>  common/rc | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/common/rc b/common/rc
+> index 883bd7b..ad81461 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -473,11 +473,20 @@ _scratch_mkfs_xfs_opts()
+>  
+>  _scratch_mkfs_xfs_supported()
+>  {
+> -	mkfs_opts=$*
+> +	local mkfs_opts=$*
+>  
+>  	_scratch_options mkfs
+>  
+>  	$MKFS_XFS_PROG -N $MKFS_OPTIONS $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
+> +	local mkfs_status=$?
+> +
+> +	# if $mkfs_opts conflits with $MKFS_OPTIONS,
+> +	# try again without $MKFS_OPTIONS
+> +	if [ $mkfs_status -ne 0 -a -n "$MKFS_OPTIONS" ]; then
+> +		$MKFS_XFS_PROG -N $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
+> +		mkfs_status=$?
+> +	fi
+> +	return $mkfs_status
+>  }
+>  
+>  _scratch_mkfs_xfs()
+> -- 
+> 2.7.4
+> 
 
 _______________________________________________
 xfs mailing list
