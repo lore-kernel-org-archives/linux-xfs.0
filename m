@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 00C667CB4
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:28:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C892C8F8037
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:28:28 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 771867CA6
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:42:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36A258F8035
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:42:28 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LyxRB6NgsyphqKCW (version=TLSv1.2
+	cuda.sgi.com with ESMTP id zAk3oViFoLzZdi0b (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:28:27 -0700 (PDT)
-Date: Wed, 13 Jul 2016 14:28:25 -0400
+	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 11:42:27 -0700 (PDT)
+Date: Wed, 13 Jul 2016 14:42:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 040/119] xfs: create helpers for mapping, unmapping, and
-	converting file fork extents
-Message-ID: <20160713182825.GC34396@bfoster.bfoster>
+Subject: Re: [PATCH 039/119] xfs: add rmap btree insert and delete helpers
+Message-ID: <20160713184224.GE34396@bfoster.bfoster>
 References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612652855.12839.8509289990733155675.stgit@birch.djwong.org>
+	<146612652222.12839.8353722216601177344.stgit@birch.djwong.org>
+	<20160713182813.GB34396@bfoster.bfoster>
+	<20160713183704.GC12567@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146612652855.12839.8509289990733155675.stgit@birch.djwong.org>
+In-Reply-To: <20160713183704.GC12567@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,91 +33,102 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Jun 16, 2016 at 06:22:08PM -0700, Darrick J. Wong wrote:
-> Create two helper functions to assist with mapping, unmapping, and
-> converting flag status of extents in a file's data/attr forks.  For
-> non-shared files we can use the _alloc, _free, and _convert functions;
-> when reflink comes these functions will be augmented to deal with
-> shared extents.
+On Wed, Jul 13, 2016 at 11:37:04AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 13, 2016 at 02:28:13PM -0400, Brian Foster wrote:
+> > On Thu, Jun 16, 2016 at 06:22:02PM -0700, Darrick J. Wong wrote:
+> > > Add a couple of helper functions to encapsulate rmap btree insert and
+> > > delete operations.  Add tracepoints to the update function.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > > Signed-off-by: Dave Chinner <david@fromorbit.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_rmap.c       |   78 +++++++++++++++++++++++++++++++++++++++-
+> > >  fs/xfs/libxfs/xfs_rmap_btree.h |    3 ++
+> > >  2 files changed, 80 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > > index 53ba14e..f92eaa1 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > > @@ -92,13 +92,89 @@ xfs_rmap_update(
+> > ...
+> > > +STATIC int
+> > > +xfs_rmapbt_delete(
+> > 
+> > This throws an unused warning that persists to the end of the rmap
+> > patches..?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_rmap.c |   42 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
+> Oh, yeah, we don't need it until "xfs: use interval query for rmap alloc
+> operations on shared files".  Will move.
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index f92eaa1..76fc5c2 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -1123,11 +1123,53 @@ done:
->  	return error;
->  }
->  
-> +/*
-> + * Convert an unwritten extent to a real extent or vice versa.
-> + */
-> +STATIC int
-> +xfs_rmap_convert(
-> +	struct xfs_btree_cur	*cur,
-> +	xfs_agblock_t		bno,
-> +	xfs_extlen_t		len,
-> +	bool			unwritten,
-> +	struct xfs_owner_info	*oinfo)
-> +{
-> +	return __xfs_rmap_convert(cur, bno, len, unwritten, oinfo);
-> +}
-> +
 
-Hmm, these all look like 1-1 mappings and they're static as well. Is the
-additional interface for reflink? If so, I think it might be better to
-punt this down to where it is really used (reflink).
+Ok, with that snipped out:
 
-Brian
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  #undef	NEW
->  #undef	LEFT
->  #undef	RIGHT
->  #undef	PREV
->  
-> +/*
-> + * Find an extent in the rmap btree and unmap it.
-> + */
-> +STATIC int
-> +xfs_rmap_unmap(
-> +	struct xfs_btree_cur	*cur,
-> +	xfs_agblock_t		bno,
-> +	xfs_extlen_t		len,
-> +	bool			unwritten,
-> +	struct xfs_owner_info	*oinfo)
-> +{
-> +	return __xfs_rmap_free(cur, bno, len, unwritten, oinfo);
-> +}
-> +
-> +/*
-> + * Find an extent in the rmap btree and map it.
-> + */
-> +STATIC int
-> +xfs_rmap_map(
-> +	struct xfs_btree_cur	*cur,
-> +	xfs_agblock_t		bno,
-> +	xfs_extlen_t		len,
-> +	bool			unwritten,
-> +	struct xfs_owner_info	*oinfo)
-> +{
-> +	return __xfs_rmap_alloc(cur, bno, len, unwritten, oinfo);
-> +}
-> +
->  struct xfs_rmapbt_query_range_info {
->  	xfs_rmapbt_query_range_fn	fn;
->  	void				*priv;
+> --D
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > Brian
+> > 
+> > > +	struct xfs_btree_cur	*rcur,
+> > > +	xfs_agblock_t		agbno,
+> > > +	xfs_extlen_t		len,
+> > > +	uint64_t		owner,
+> > > +	uint64_t		offset,
+> > > +	unsigned int		flags)
+> > > +{
+> > > +	int			i;
+> > > +	int			error;
+> > > +
+> > > +	trace_xfs_rmapbt_delete(rcur->bc_mp, rcur->bc_private.a.agno, agbno,
+> > > +			len, owner, offset, flags);
+> > > +
+> > > +	error = xfs_rmap_lookup_eq(rcur, agbno, len, owner, offset, flags, &i);
+> > > +	if (error)
+> > > +		goto done;
+> > > +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
+> > > +
+> > > +	error = xfs_btree_delete(rcur, &i);
+> > > +	if (error)
+> > > +		goto done;
+> > > +	XFS_WANT_CORRUPTED_GOTO(rcur->bc_mp, i == 1, done);
+> > > +done:
+> > > +	if (error)
+> > > +		trace_xfs_rmapbt_delete_error(rcur->bc_mp,
+> > > +				rcur->bc_private.a.agno, error, _RET_IP_);
+> > > +	return error;
+> > >  }
+> > >  
+> > >  static int
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > index 9d92da5..6674340 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > > @@ -64,6 +64,9 @@ int xfs_rmap_lookup_le(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+> > >  int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+> > >  		xfs_extlen_t len, uint64_t owner, uint64_t offset,
+> > >  		unsigned int flags, int *stat);
+> > > +int xfs_rmapbt_insert(struct xfs_btree_cur *rcur, xfs_agblock_t agbno,
+> > > +		xfs_extlen_t len, uint64_t owner, uint64_t offset,
+> > > +		unsigned int flags);
+> > >  int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
+> > >  		int *stat);
+> > >  
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
