@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E2B9F7CA4
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 15:44:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A43A8304048
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:44:08 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RrnPAoIHyBQQ5Tyh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:44:05 -0700 (PDT)
-Date: Wed, 13 Jul 2016 13:43:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 038/119] xfs: convert unwritten status of reverse mappings
-Message-ID: <20160713204358.GE12567@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612651582.12839.562287367335619574.stgit@birch.djwong.org>
-	<20160713182754.GA34396@bfoster.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C6E2A7CA4
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 15:21:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 890818F804B
+	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 13:21:11 -0700 (PDT)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id C0ISEipv2IQizfjQ for <xfs@oss.sgi.com>;
+	Wed, 13 Jul 2016 13:21:05 -0700 (PDT)
+Date: Wed, 13 Jul 2016 16:21:04 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH v2] xfs: abstract block export operations from nfsd layouts
+Message-ID: <20160713202104.GA10734@fieldses.org>
+References: <6c1549ee874431c8293cad72c5f7382095277822.1467985684.git.bcodding@redhat.com>
+	<20160710094540.GA19392@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160713182754.GA34396@bfoster.bfoster>
+In-Reply-To: <20160710094540.GA19392@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,185 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Benjamin Coddington <bcodding@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org
 
-On Wed, Jul 13, 2016 at 02:27:55PM -0400, Brian Foster wrote:
-> On Thu, Jun 16, 2016 at 06:21:55PM -0700, Darrick J. Wong wrote:
-> > Provide a function to convert an unwritten extent to a real one and
-> > vice versa.
+On Sun, Jul 10, 2016 at 11:45:40AM +0200, Christoph Hellwig wrote:
+> On Fri, Jul 08, 2016 at 09:53:20AM -0400, Benjamin Coddington wrote:
+> > Instead of creeping pnfs layout configuration into filesystems, move the
+> > definition of block-based export operations under a more abstract
+> > configuration.
 > > 
-> > v2: Move unwritten bit to rm_offset.
+> > Changes from v1:
+> > 	- dropped the first patch in the first posting
+> > 	- renamed the config to EXPORTFS_BLOCK_OPS from BLOCK_EXPORT_OPS
+> > 	- add an explicit default to no for EXPORTFS_BLOCK_OPS
+> > 	- add some help and menu text
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Signed-off-by: Benjamin Coddington <bcodding@redhat.com>
 > > ---
-> 
-> Just a few nits below. Those aside and with Darrick's bc_rec.b ->
-> bc_rec.r fix:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  fs/xfs/libxfs/xfs_rmap.c |  442 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_trace.h       |    6 +
-> >  2 files changed, 448 insertions(+)
+> >  fs/Kconfig          | 7 +++++++
+> >  fs/nfsd/Kconfig     | 2 ++
+> >  fs/xfs/Makefile     | 3 +--
+> >  fs/xfs/xfs_export.c | 2 +-
+> >  fs/xfs/xfs_pnfs.h   | 4 ++--
+> >  5 files changed, 13 insertions(+), 5 deletions(-)
 > > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > index 1043c63..53ba14e 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > @@ -610,6 +610,448 @@ out_error:
-> >  	return error;
-> >  }
+> > diff --git a/fs/Kconfig b/fs/Kconfig
+> > index 6725f59c18e6..ac6d3b36600c 100644
+> > --- a/fs/Kconfig
+> > +++ b/fs/Kconfig
+> > @@ -66,6 +66,13 @@ config FS_POSIX_ACL
+> >  config EXPORTFS
+> >  	tristate
 > >  
-> > +#define RMAP_LEFT_CONTIG	(1 << 0)
-> > +#define RMAP_RIGHT_CONTIG	(1 << 1)
-> > +#define RMAP_LEFT_FILLING	(1 << 2)
-> > +#define RMAP_RIGHT_FILLING	(1 << 3)
-> > +#define RMAP_LEFT_VALID		(1 << 6)
-> > +#define RMAP_RIGHT_VALID	(1 << 7)
-> > +
-> > +#define LEFT		r[0]
-> > +#define RIGHT		r[1]
-> > +#define PREV		r[2]
-> > +#define NEW		r[3]
-> > +
-> > +/*
-> > + * Convert an unwritten extent to a real extent or vice versa.
-> > + * Does not handle overlapping extents.
-> > + */
-> > +STATIC int
-> > +__xfs_rmap_convert(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agblock_t		bno,
-> > +	xfs_extlen_t		len,
-> > +	bool			unwritten,
-> > +	struct xfs_owner_info	*oinfo)
-> > +{
-> ...
-> > +
-> > +	/*
-> > +	 * For the initial lookup, look for and exact match or the left-adjacent
+> > +config EXPORTFS_BLOCK_OPS
+> > +	bool "Enable filesystem export operations for block IO"
+> > +	default n
 > 
-> Typo:					    an
+> default n is the default, no need to add it.
 > 
-> > +	 * record for our insertion point. This will also give us the record for
-> > +	 * start block contiguity tests.
-> > +	 */
-> > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, oldext, &i);
-> > +	if (error)
-> > +		goto done;
-> > +	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> > +
-> ...
-> > +
-> > +	/*
-> > +	 * Switch out based on the FILLING and CONTIG state bits.
-> > +	 */
-> > +	switch (state & (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
-> > +			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) {
-> ...
-> > +	case RMAP_LEFT_FILLING | RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG:
-> > +		/*
-> > +		 * Setting all of a previous oldext extent to newext.
-> > +		 * The right neighbor is contiguous, the left is not.
-> > +		 */
-> > +		error = xfs_btree_increment(cur, 0, &i);
-> > +		if (error)
-> > +			goto done;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> > +		trace_xfs_rmapbt_delete(mp, cur->bc_private.a.agno,
-> > +				RIGHT.rm_startblock, RIGHT.rm_blockcount,
-> > +				RIGHT.rm_owner, RIGHT.rm_offset,
-> > +				RIGHT.rm_flags);
-> > +		error = xfs_btree_delete(cur, &i);
-> > +		if (error)
-> > +			goto done;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> > +		error = xfs_btree_decrement(cur, 0, &i);
-> > +		if (error)
-> > +			goto done;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> > +		NEW.rm_startblock = bno;
-> > +		NEW.rm_owner = owner;
-> > +		NEW.rm_offset = offset;
+> Otherwise looks fine:
 > 
-> 		NEW = PREV ?
-> 
-> > +		NEW.rm_blockcount = len + RIGHT.rm_blockcount;
-> > +		NEW.rm_flags = newext;
-> > +		error = xfs_rmap_update(cur, &NEW);
-> > +		if (error)
-> > +			goto done;
-> > +		break;
-> > +
-> ...
-> >  struct xfs_rmapbt_query_range_info {
-> >  	xfs_rmapbt_query_range_fn	fn;
-> >  	void				*priv;
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 3ebceb0..6466adc 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2497,6 +2497,10 @@ DEFINE_RMAP_EVENT(xfs_rmap_free_extent_error);
-> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent);
-> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_done);
-> >  DEFINE_RMAP_EVENT(xfs_rmap_alloc_extent_error);
-> > +DEFINE_RMAP_EVENT(xfs_rmap_convert);
-> > +DEFINE_RMAP_EVENT(xfs_rmap_convert_done);
-> > +DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_error);
-> > +DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_state);
-> >  
-> >  DECLARE_EVENT_CLASS(xfs_rmapbt_class,
-> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-> > @@ -2551,6 +2555,8 @@ DEFINE_AG_ERROR_EVENT(xfs_rmapbt_delete_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_update_error);
-> >  DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
-> >  DEFINE_RMAPBT_EVENT(xfs_rmap_map_gtrec);
-> > +DEFINE_RMAPBT_EVENT(xfs_rmap_convert_gtrec);
-> > +DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
-> 
-> xfs_rmap_convert_ltrec ?
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Originally there was a xfs_rmap_convert_ltrec and a xfs_map_convert_ltrec.
-Then I had to create a real "find left extent" helper function for the
-reflink versions of map/convert, and that became
-xfs_rmap_find_left_neighbor*, with its own tracepoint.
+Thanks.  Applied, with that one "default n" line dropped.
 
-It seemed silly to have different tracepoints for "here's what I found when
-I went looking for a left-adjacent extent", so the non-reflink versions of
-map/convert simply started (ab)using the xfs_rmap_find_left_neighbor_result
-tracepoint, even though the non-shared versions open-code btree cursor
-manipulation without doing a lookup.
+An ACK from Dave might also help reassure Linus I'm not stepping on
+anybody's toes.
 
-I could refactor the whole mess to have functions to find the left and right
-neighbors in shared and not-shared mode, but I find it easier to keep track
-of the cursor manipulation if they all stay in one function.
-
-Oh.  Or I could just change the xfs_rmap_*_gtrec tracepoints into
-xfs_rmap_find_right_neighbor_result.
-
-Yeah, I'll do that since we already have a trace point at the top of the
-function so we already know what we're doing.
-
---D
-
-> 
-> Brian
-> 
-> >  
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+--b.
 
 _______________________________________________
 xfs mailing list
