@@ -1,27 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD4657CAF
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 18:56:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B05988F8035
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 16:56:07 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id J3FFwyzD4kFOBZDe (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 16:56:05 -0700 (PDT)
-Date: Wed, 13 Jul 2016 16:55:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 040/119] xfs: create helpers for mapping, unmapping, and
-	converting file fork extents
-Message-ID: <20160713235556.GJ13625@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612652855.12839.8509289990733155675.stgit@birch.djwong.org>
-	<20160713182825.GC34396@bfoster.bfoster>
-	<20160713184750.GD12567@birch.djwong.org>
-	<20160713235408.GQ1922@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CCD307CAF
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 07:27:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4628BAC002
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 05:27:40 -0700 (PDT)
+Received: from mcgraw.st-andrews.ac.uk (mcgraw.st-andrews.ac.uk
+	[138.251.8.95]) by cuda.sgi.com with ESMTP id JfZO0qHUgyzfzvoA
+	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 05:27:36 -0700 (PDT)
+Received: from wallace.st-andrews.ac.uk (wallace.st-andrews.ac.uk
+	[138.251.9.23])
+	by mcgraw.st-andrews.ac.uk (8.14.9/8.14.9/Debian-4~bpo0+uos) with ESMTP
+	id u6ECRULC032528
+	(version=TLSv1/SSLv3 cipher=ADH-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 12:27:32 GMT
+Received: from [138.251.201.65] (becks.mcs.st-and.ac.uk [138.251.201.65])
+	(authenticated bits=0)
+	by wallace.st-andrews.ac.uk (8.14.9/8.14.9/Debian-4~bpo0+uos) with
+	ESMTP id u6ECRMMa020425
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 12:27:23 GMT
+From: Steve Brooks <sjb14@st-andrews.ac.uk>
+Subject: Advice needed with file system corruption
+Message-ID: <5787852A.7030900@st-andrews.ac.uk>
+Date: Thu, 14 Jul 2016 13:27:22 +0100
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160713235408.GQ1922@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +34,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jul 14, 2016 at 09:54:08AM +1000, Dave Chinner wrote:
-> On Wed, Jul 13, 2016 at 11:47:50AM -0700, Darrick J. Wong wrote:
-> > On Wed, Jul 13, 2016 at 02:28:25PM -0400, Brian Foster wrote:
-> > > On Thu, Jun 16, 2016 at 06:22:08PM -0700, Darrick J. Wong wrote:
-> > > > Create two helper functions to assist with mapping, unmapping, and
-> > > > converting flag status of extents in a file's data/attr forks.  For
-> > > > non-shared files we can use the _alloc, _free, and _convert functions;
-> > > > when reflink comes these functions will be augmented to deal with
-> > > > shared extents.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_rmap.c |   42 ++++++++++++++++++++++++++++++++++++++++++
-> > > >  1 file changed, 42 insertions(+)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > > > index f92eaa1..76fc5c2 100644
-> > > > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > > > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > > > @@ -1123,11 +1123,53 @@ done:
-> > > >  	return error;
-> > > >  }
-> > > >  
-> > > > +/*
-> > > > + * Convert an unwritten extent to a real extent or vice versa.
-> > > > + */
-> > > > +STATIC int
-> > > > +xfs_rmap_convert(
-> > > > +	struct xfs_btree_cur	*cur,
-> > > > +	xfs_agblock_t		bno,
-> > > > +	xfs_extlen_t		len,
-> > > > +	bool			unwritten,
-> > > > +	struct xfs_owner_info	*oinfo)
-> > > > +{
-> > > > +	return __xfs_rmap_convert(cur, bno, len, unwritten, oinfo);
-> > > > +}
-> > > > +
-> > > 
-> > > Hmm, these all look like 1-1 mappings and they're static as well. Is the
-> > > additional interface for reflink? If so, I think it might be better to
-> > > punt this down to where it is really used (reflink).
-> > 
-> > Originally they were, but since the only caller of these functions is
-> > _rmap_finish_one, this whole patch can drop out.
-> > 
-> > Later on in reflink, map/unmap/convert for reflinked files get totally
-> > separate "shared" variants, along with corresponding RUI type codes.
-> > 
-> > Speaking of which, the shared and non-shared alloc/free/convert
-> > functions are at a high level the same.  Each function has 8-10 places
-> > where they differ (mostly in which btree functions they call) and I
-> > wondered -- should I refactor them into a single megafunction that
-> > takes a bunch of function pointers?
-> 
-> Use an ops structure containing function pointers. But that can be
-> doen once the code is merged - it doesn't need to be done right
-> away.
-> 
-> > It's a little unwieldly to have
-> > so much to pass in, but on the other hand we wouldn't have to maintain
-> > two versions of basically the same code.
-> 
-> An ops structure fixes that problem.
+Hi All,
 
-I actually did mean an ops structure; passing in function pointers as
-args is wayyyy fugly... but I'd considered that making a bunch of small
-functions + a struct might not be much better. :)
+We have a RAID system with file system issues as follows,
 
---D
+50 TB in RAID 6 hosted on an Adaptec 71605 controller using WD4000FYYZ 
+drives.
 
-> 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Centos 6.7  2.6.32-642.el6.x86_64   :   xfsprogs-3.1.1-16.el6
+
+While rebuilding a replaced disk, with the file system online and in 
+use, the system logs showed multiple entries of;
+
+XFS (sde): Corruption detected. Unmount and run xfs_repair.
+
+[See also at the end of post for a section of XFS related errors in the log]
+
+I unmounted the filesystem and waited for the controller to finish 
+rebuilding the array. I then moved the most important data to another 
+RAID array on a different server. The data is generated from HPC 
+simulations and is not backed up but can be regenerated in needed.
+
+The default el6 "xfs_repair" is in "xfsprogs-3.1.1-16.el6". I notice 
+that the "elrepo_testing" repository has a much later version of 
+"xfsprogs" namely
+
+  xfsprogs.x86_64 4.3.0-1.el6.elrepo
+
+As far as I understand the user based tools are backwards compatible so 
+would it be better to use the "4.3" release of "xfsprogs"instead of the 
+default "3.1.1" included in the installation of el6?
+
+I ran an "xfs_repair -nv /dev/sde" for both "3.1.1" and "4.3" and both 
+completed successfully showing the repairs that would have taken place. 
+I can post these if requested.
+
+The "3.1.1"  version of "xfs_repair -n" ran in 1 minute, 32 seconds
+
+The "4.3"     version of "xfs_repair -n" ran in 50 seconds
+
+
+So my questions are
+
+[1] Which version of "xfs_repair" should I use to make the repair?
+
+[2] Is there anything I should have done differently?
+
+
+Many thanks for any advice given it is much appreciated.
+
+Thanks,  Steve
+
+
+
+Many blocks (about 20) of code similar to this were repeated in the logs.
+
+Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00  ................
+Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error 
+xfs_da_do_buf(2) at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 
+0xffffffffa0e6e81a
+Jul  8 18:40:17 sraid1v kernel:
+Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: 
+P           -- ------------    2.6.32-642.el6.x86_64 #1
+Jul  8 18:40:17 sraid1v kernel: Call Trace:
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b68f>] ? 
+xfs_error_report+0x3f/0x50 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ? 
+xfs_da_read_buf+0x2a/0x30 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b6fe>] ? 
+xfs_corruption_error+0x5e/0x90 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e6fc>] ? 
+xfs_da_do_buf+0x6cc/0x770 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ? 
+xfs_da_read_buf+0x2a/0x30 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff810154e3>] ? 
+native_sched_clock+0x13/0x80
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ? 
+xfs_da_read_buf+0x2a/0x30 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ? 
+xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ? 
+xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74e05>] ? 
+xfs_dir2_leaf_lookup+0x35/0xf0 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71306>] ? 
+xfs_dir2_isleaf+0x26/0x60 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71ce4>] ? 
+xfs_dir_lookup+0x174/0x190 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9ea47>] ? 
+xfs_lookup+0x87/0x110 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0eabd74>] ? 
+xfs_vn_lookup+0x54/0xa0 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811a9ca5>] ? do_lookup+0x1a5/0x230
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811aa823>] ? 
+__link_path_walk+0x763/0x1060
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab3da>] ? path_walk+0x6a/0xe0
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab5eb>] ? 
+filename_lookup+0x6b/0xc0
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff8123ac46>] ? 
+security_file_alloc+0x16/0x20
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811acac4>] ? 
+do_filp_open+0x104/0xd20
+Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9a4fc>] ? 
+_xfs_trans_commit+0x25c/0x310 [xfs]
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff812a749a>] ? 
+strncpy_from_user+0x4a/0x90
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ba252>] ? alloc_fd+0x92/0x160
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196bd7>] ? 
+do_sys_open+0x67/0x130
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196ce0>] ? sys_open+0x20/0x30
+Jul  8 18:40:17 sraid1v kernel: [<ffffffff8100b0d2>] ? 
+system_call_fastpath+0x16/0x1b
+Jul  8 18:40:17 sraid1v kernel: XFS (sde): Corruption detected. Unmount 
+and run xfs_repair
+Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00  ................
+Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error 
+xfs_da_do_buf(2) at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 
+0xffffffffa0e6e81a
+Jul  8 18:40:17 sraid1v kernel:
+Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: 
+P           -- ------------    2.6.32-642.el6.x86_64 #1
+
+
+
+
+
+
 
 _______________________________________________
 xfs mailing list
