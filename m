@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A680D7CA1
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 14:11:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1EFD5AC002
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 12:11:45 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id GWtUBexaZulah1Br for <xfs@oss.sgi.com>;
-	Tue, 12 Jul 2016 12:11:43 -0700 (PDT)
-Date: Tue, 12 Jul 2016 15:11:42 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH v23 17/22] richacl: Automatic Inheritance
-Message-ID: <20160712191142.GE449@fieldses.org>
-References: <1467294433-3222-1-git-send-email-agruenba@redhat.com>
-	<1467294433-3222-18-git-send-email-agruenba@redhat.com>
-	<1468324560.7798.14.camel@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A8A047CAE
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 08:05:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 681BE304043
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 06:05:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cEGjqqWSq1poEC2K (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Jul 2016 06:05:51 -0700 (PDT)
+Date: Thu, 14 Jul 2016 15:05:46 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Advice needed with file system corruption
+Message-ID: <20160714130546.GB16096@redhat.com>
+References: <5787852A.7030900@st-andrews.ac.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1468324560.7798.14.camel@redhat.com>
+In-Reply-To: <5787852A.7030900@st-andrews.ac.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,147 +25,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Steve Brooks <sjb14@st-andrews.ac.uk>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBKdWwgMTIsIDIwMTYgYXQgMDc6NTY6MDBBTSAtMDQwMCwgSmVmZiBMYXl0b24gd3Jv
-dGU6Cj4gT24gVGh1LCAyMDE2LTA2LTMwIGF0IDE1OjQ3ICswMjAwLCBBbmRyZWFzIEdydWVuYmFj
-aGVyIHdyb3RlOgo+ID4gQXV0b21hdGljIEluaGVyaXRhbmNlIChBSSkgYWxsb3dzIGNoYW5nZXMg
-dG8gdGhlIGFjbCBvZiBhIGRpcmVjdG9yeSB0bwo+ID4gcHJvcGFnYXRlIGRvd24gdG8gY2hpbGRy
-ZW4uCj4gPiAKPiA+IFRoaXMgaXMgbW9zdGx5IGltcGxlbWVudGVkIGluIHVzZXIgc3BhY2U6IHdo
-ZW4gYSBwcm9jZXNzIGNoYW5nZXMgdGhlCj4gPiBwZXJtaXNzaW9ucyBvZiBhIGRpcmVjdG9yeSBh
-bmQgQXV0b21hdGljIEluaGVyaXRhbmNlIGlzIGVuYWJsZWQgZm9yIHRoYXQKPiA+IGRpcmVjdG9y
-eSwgdGhlIHByb2Nlc3MgbXVzdCBwcm9wYWdhdGUgdGhvc2UgY2hhbmdlcyB0byBhbGwgY2hpbGRy
-ZW4sCj4gPiByZWN1cnNpdmVseS4KPiA+IAo+ID4gVGhlIGtlcm5lbCBlbmFibGVzIHRoaXMgYnkg
-a2VlcGluZyB0cmFjayBvZiB3aGljaCBwZXJtaXNzaW9ucyBoYXZlIGJlZW4KPiA+IGluaGVyaXRl
-ZCBhdCBjcmVhdGUgdGltZS7CoMKgSW4gYWRkaXRpb24sIGl0IG1ha2VzIHN1cmUgdGhhdCBwZXJt
-aXNzaW9uCj4gPiBwcm9wYWdhdGlvbiBpcyB0dXJuZWQgb2ZmIHdoZW4gdGhlIHBlcm1pc3Npb25z
-IGFyZSBzZXQgZXhwbGljaXRseSAoZm9yCj4gPiBleGFtcGxlLCB1cG9uIGNyZWF0ZSBvciBjaG1v
-ZCkuCj4gPiAKPiA+IEF1dG9tYXRpYyBJbmhlcml0YW5jZSB3b3JrcyBhcyBmb2xsb3dzOgo+ID4g
-Cj4gPiDCoC0gV2hlbiB0aGUgUklDSEFDTF9BVVRPX0lOSEVSSVQgZmxhZyBpbiB0aGUgYWNsIG9m
-IGEgZmlsZSBvciBkaXJlY3RvcnkKPiA+IMKgwqDCoGlzIG5vdCBzZXQsIHRoZSBmaWxlIG9yIGRp
-cmVjdG9yeSBpcyBub3QgYWZmZWN0ZWQgYnkgQUkuCj4gPiAKPiA+IMKgLSBXaGVuIHRoZSBSSUNI
-QUNMX0FVVE9fSU5IRVJJVCBmbGFnIGluIHRoZSBhY2wgb2YgYSBkaXJlY3RvcnkgaXMgc2V0Cj4g
-PiDCoMKgwqBhbmQgYSBmaWxlIG9yIHN1YmRpcmVjdG9yeSBpcyBjcmVhdGVkIGluIHRoYXQgZGly
-ZWN0b3J5LCB0aGUKPiA+IMKgwqDCoGluaGVyaXRlZCBhY2wgd2lsbCBoYXZlIHRoZSBSSUNIQUNM
-X0FVVE9fSU5IRVJJVCBmbGFnIHNldCwgYW5kIGFsbAo+ID4gwqDCoMKgaW5oZXJpdGVkIGFjZXMg
-d2lsbCBoYXZlIHRoZSBSSUNIQUNFX0lOSEVSSVRFRF9BQ0UgZmxhZyBzZXQuwqDCoFRoaXMKPiA+
-IMKgwqDCoGFsbG93cyB1c2VyIHNwYWNlIHRvIGRpc3Rpbmd1aXNoIGJldHdlZW4gYWNlcyB3aGlj
-aCBoYXZlIGJlZW4KPiA+IMKgwqDCoGluaGVyaXRlZCBhbmQgYWNlcyB3aGljaCBoYXZlIGJlZW4g
-ZXhwbGljaXRseSBhZGRlZC4KPiA+IAo+ID4gwqAtIFdoZW4gdGhlIFJJQ0hBQ0xfUFJPVEVDVEVE
-IGFjbCBmbGFnIGluIHRoZSBhY2wgb2YgYSBmaWxlIG9yIGRpcmVjdG9yeQo+ID4gwqDCoMKgaXMg
-c2V0LCBBSSB3aWxsIG5vdCBtb2RpZnkgdGhlIGFjbC7CoMKgVGhpcyBkb2VzIG5vdCBhZmZlY3Qg
-cHJvcGFnYXRpb24KPiA+IMKgwqDCoG9mIHBlcm1pc3Npb25zIGZyb20gdGhlIGZpbGUgdG8gaXRz
-IGNoaWxkcmVuIChpZiB0aGUgZmlsZSBpcyBhCj4gPiDCoMKgwqBkaXJlY3RvcnkpLgo+ID4gCj4g
-PiBMaW51eCBkb2VzIG5vdCBoYXZlIGEgd2F5IG9mIGNyZWF0aW5nIGZpbGVzIG9yIGRpcmVjdG9y
-aWVzIHdpdGhvdXQgc2V0dGluZyB0aGUKPiA+IGZpbGUgcGVybWlzc2lvbiBiaXRzLCBzbyBhbGwg
-ZmlsZXMgY3JlYXRlZCBpbnNpZGUgYSBkaXJlY3Rvcnkgd2l0aAo+ID4gUklDSEFDTF9BVVRPX0lO
-SEVSSVQgc2V0IHdpbGwgaGF2ZSB0aGUgUklDSEFDTF9QUk9URUNURUQgZmxhZyBzZXQuwqDCoFRo
-aXMKPiA+IGVmZmVjdGl2ZWx5IGRpc2FibGVzIEF1dG9tYXRpYyBJbmhlcml0YW5jZS4KPiA+IAo+
-ID4gUHJvdG9jb2xzIHdoaWNoIHN1cHBvcnQgY3JlYXRpbmcgZmlsZXMgd2l0aG91dCBzcGVjaWZ5
-aW5nIHBlcm1pc3Npb25zIGNhbgo+ID4gZXhwbGljaXRseSBjbGVhciB0aGUgUklDSEFDTF9QUk9U
-RUNURUQgZmxhZyBhZnRlciBjcmVhdGluZyBhIGZpbGUgYW5kIHJlc2V0IHRoZQo+ID4gZmlsZSBt
-YXNrcyB0byAidW5kbyIgYXBwbHlpbmcgdGhlIGNyZWF0ZSBtb2RlOyBzZWUgcmljaGFjbF9jb21w
-dXRlX21heF9tYXNrcygpLgo+ID4gVGhleSBzaG91bGQgc2V0IHRoZSBSSUNIQUNMX0RFRkFVTFRF
-RCBmbGFnLsKgwqAoQSBtZWNoYW5pc20gdGhhdCB3b3VsZCBhbGxvdyB0bwo+ID4gaW5kaWNhdGUg
-dG8gdGhlIGtlcm5lbCB0byBpZ25vcmUgdGhlIGNyZWF0ZSBtb2RlIGluIHRoZSBmaXJzdCBwbGFj
-ZSB3aGVuIHRoZXJlCj4gPiBhcmUgaW5oZXJpdGVkIHBlcm1pc3Npb25zIHdvdWxkIGJlIG5pY2Ug
-dG8gaGF2ZS4pCj4gPiAKPiA+IFNpZ25lZC1vZmYtYnk6IEFuZHJlYXMgR3J1ZW5iYWNoZXIgPGFn
-cnVlbmJhQHJlZGhhdC5jb20+Cj4gPiAtLS0KPiA+IMKgZnMvcmljaGFjbC5jwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHwgMjAgKysrKysrKysrKysrKysrKysrKy0KPiA+IMKgaW5j
-bHVkZS9saW51eC9yaWNoYWNsLmjCoMKgwqDCoMKgwqB8IDEyICsrKysrKysrKysrKwo+ID4gwqBp
-bmNsdWRlL3VhcGkvbGludXgvcmljaGFjbC5oIHwgMTEgKysrKysrKysrKy0KPiA+IMKgMyBmaWxl
-cyBjaGFuZ2VkLCA0MSBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+ID4gCj4gPiBkaWZm
-IC0tZ2l0IGEvZnMvcmljaGFjbC5jIGIvZnMvcmljaGFjbC5jCj4gPiBpbmRleCAyOWVhZjg5Li40
-MGU0YWY5IDEwMDY0NAo+ID4gLS0tIGEvZnMvcmljaGFjbC5jCj4gPiArKysgYi9mcy9yaWNoYWNs
-LmMKPiA+IEBAIC01NzMsNyArNTczLDggQEAgX19yaWNoYWNsX2NobW9kKHN0cnVjdCByaWNoYWNs
-ICphY2wsIHVtb2RlX3QgbW9kZSkKPiA+IMKgCcKgwqDCoMKgYWNsLT5hX2dyb3VwX21hc2sgPT0g
-Z3JvdXBfbWFzayAmJgo+ID4gwqAJwqDCoMKgwqBhY2wtPmFfb3RoZXJfbWFzayA9PSBvdGhlcl9t
-YXNrICYmCj4gPiDCoAnCoMKgwqDCoChhY2wtPmFfZmxhZ3MgJiBSSUNIQUNMX01BU0tFRCkgJiYK
-PiA+IC0JwqDCoMKgwqAoYWNsLT5hX2ZsYWdzICYgUklDSEFDTF9XUklURV9USFJPVUdIKSkKPiA+
-ICsJwqDCoMKgwqAoYWNsLT5hX2ZsYWdzICYgUklDSEFDTF9XUklURV9USFJPVUdIKSAmJgo+ID4g
-KwnCoMKgwqDCoCghcmljaGFjbF9pc19hdXRvX2luaGVyaXQoYWNsKSB8fCByaWNoYWNsX2lzX3By
-b3RlY3RlZChhY2wpKSkKPiA+IMKgCQlyZXR1cm4gYWNsOwo+ID4gwqAKPiA+IMKgCWNsb25lID0g
-cmljaGFjbF9jbG9uZShhY2wsIEdGUF9LRVJORUwpOwo+ID4gQEAgLTU4NSw2ICs1ODYsOCBAQCBf
-X3JpY2hhY2xfY2htb2Qoc3RydWN0IHJpY2hhY2wgKmFjbCwgdW1vZGVfdCBtb2RlKQo+ID4gwqAJ
-Y2xvbmUtPmFfb3duZXJfbWFzayA9IG93bmVyX21hc2s7Cj4gPiDCoAljbG9uZS0+YV9ncm91cF9t
-YXNrID0gZ3JvdXBfbWFzazsKPiA+IMKgCWNsb25lLT5hX290aGVyX21hc2sgPSBvdGhlcl9tYXNr
-Owo+ID4gKwlpZiAocmljaGFjbF9pc19hdXRvX2luaGVyaXQoY2xvbmUpKQo+ID4gKwkJY2xvbmUt
-PmFfZmxhZ3MgfD0gUklDSEFDTF9QUk9URUNURUQ7Cj4gPiDCoAo+ID4gwqAJcmV0dXJuIGNsb25l
-Owo+ID4gwqB9Cj4gPiBAQCAtODAwLDYgKzgwMywxNCBAQCByaWNoYWNsX2luaGVyaXQoY29uc3Qg
-c3RydWN0IHJpY2hhY2wgKmRpcl9hY2wsIGludCBpc2RpcikKPiA+IMKgCQkJYWNlKys7Cj4gPiDC
-oAkJfQo+ID4gwqAJfQo+ID4gKwlpZiAocmljaGFjbF9pc19hdXRvX2luaGVyaXQoZGlyX2FjbCkp
-IHsKPiA+ICsJCWFjbC0+YV9mbGFncyA9IFJJQ0hBQ0xfQVVUT19JTkhFUklUOwo+ID4gKwkJcmlj
-aGFjbF9mb3JfZWFjaF9lbnRyeShhY2UsIGFjbCkKPiA+ICsJCQlhY2UtPmVfZmxhZ3MgfD0gUklD
-SEFDRV9JTkhFUklURURfQUNFOwo+ID4gKwl9IGVsc2Ugewo+ID4gKwkJcmljaGFjbF9mb3JfZWFj
-aF9lbnRyeShhY2UsIGFjbCkKPiA+ICsJCQlhY2UtPmVfZmxhZ3MgJj0gflJJQ0hBQ0VfSU5IRVJJ
-VEVEX0FDRTsKPiA+ICsJfQo+ID4gwqAKPiA+IMKgCXJldHVybiBhY2w7Cj4gPiDCoH0KPiA+IEBA
-IC04MjgsNiArODM5LDEzIEBAIHJpY2hhY2xfaW5oZXJpdF9pbm9kZShjb25zdCBzdHJ1Y3Qgcmlj
-aGFjbCAqZGlyX2FjbCwgdW1vZGVfdCAqbW9kZV9wKQo+ID4gwqAJCQlyaWNoYWNsX3B1dChhY2wp
-Owo+ID4gwqAJCQlhY2wgPSBOVUxMOwo+ID4gwqAJCX0gZWxzZSB7Cj4gPiArCQkJLyoKPiA+ICsJ
-CQnCoCogV2UgbmVlZCB0byBzZXQgUklDSEFDTF9QUk9URUNURUQgYmVjYXVzZSB3ZSBhcmUKPiA+
-ICsJCQnCoCogZG9pbmcgYW4gaW1wbGljaXQgY2htb2QKPiA+ICsJCQnCoCovCj4gPiArCQkJaWYg
-KHJpY2hhY2xfaXNfYXV0b19pbmhlcml0KGFjbCkpCj4gPiArCQkJCWFjbC0+YV9mbGFncyB8PSBS
-SUNIQUNMX1BST1RFQ1RFRDsKPiA+ICsKPiA+IMKgCQkJcmljaGFjbF9jb21wdXRlX21heF9tYXNr
-cyhhY2wpOwo+ID4gwqAJCQkvKgo+ID4gwqAJCQnCoCogRW5zdXJlIHRoYXQgdGhlIGFjbCB3aWxs
-IG5vdCBncmFudCBhbnkgcGVybWlzc2lvbnMKPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4
-L3JpY2hhY2wuaCBiL2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gPiBpbmRleCA3YWNhMWEzLi5h
-NDQyMzcyIDEwMDY0NAo+ID4gLS0tIGEvaW5jbHVkZS9saW51eC9yaWNoYWNsLmgKPiA+ICsrKyBi
-L2luY2x1ZGUvbGludXgvcmljaGFjbC5oCj4gPiBAQCAtODEsNiArODEsMTggQEAgZXh0ZXJuIHZv
-aWQgc2V0X2NhY2hlZF9yaWNoYWNsKHN0cnVjdCBpbm9kZSAqLCBzdHJ1Y3QgcmljaGFjbCAqKTsK
-PiA+IMKgZXh0ZXJuIHZvaWQgZm9yZ2V0X2NhY2hlZF9yaWNoYWNsKHN0cnVjdCBpbm9kZSAqKTsK
-PiA+IMKgZXh0ZXJuIHN0cnVjdCByaWNoYWNsICpnZXRfcmljaGFjbChzdHJ1Y3QgaW5vZGUgKik7
-Cj4gPiDCoAo+ID4gK3N0YXRpYyBpbmxpbmUgaW50Cj4gPiArcmljaGFjbF9pc19hdXRvX2luaGVy
-aXQoY29uc3Qgc3RydWN0IHJpY2hhY2wgKmFjbCkKPiA+ICt7Cj4gPiArCXJldHVybiBhY2wtPmFf
-ZmxhZ3MgJiBSSUNIQUNMX0FVVE9fSU5IRVJJVDsKPiA+ICt9Cj4gPiArCj4gPiArc3RhdGljIGlu
-bGluZSBpbnQKPiA+ICtyaWNoYWNsX2lzX3Byb3RlY3RlZChjb25zdCBzdHJ1Y3QgcmljaGFjbCAq
-YWNsKQo+ID4gK3sKPiA+ICsJcmV0dXJuIGFjbC0+YV9mbGFncyAmIFJJQ0hBQ0xfUFJPVEVDVEVE
-Owo+ID4gK30KPiA+ICsKPiA+IMKgLyoqCj4gPiDCoCAqIHJpY2hhY2VfaXNfb3duZXLCoMKgLcKg
-wqBjaGVjayBpZiBAYWNlIGlzIGFuIE9XTkVSQCBlbnRyeQo+ID4gwqAgKi8KPiA+IGRpZmYgLS1n
-aXQgYS9pbmNsdWRlL3VhcGkvbGludXgvcmljaGFjbC5oIGIvaW5jbHVkZS91YXBpL2xpbnV4L3Jp
-Y2hhY2wuaAo+ID4gaW5kZXggMWVkNDhhYy4uODg0OWE1MyAxMDA2NDQKPiA+IC0tLSBhL2luY2x1
-ZGUvdWFwaS9saW51eC9yaWNoYWNsLmgKPiA+ICsrKyBiL2luY2x1ZGUvdWFwaS9saW51eC9yaWNo
-YWNsLmgKPiA+IEBAIC0xOCw2ICsxOCw5IEBACj4gPiDCoCNkZWZpbmUgX19VQVBJX1JJQ0hBQ0xf
-SAo+ID4gwqAKPiA+IMKgLyogYV9mbGFncyB2YWx1ZXMgKi8KPiA+ICsjZGVmaW5lIFJJQ0hBQ0xf
-QVVUT19JTkhFUklUCQkJMHgwMQo+ID4gKyNkZWZpbmUgUklDSEFDTF9QUk9URUNURUQJCQkweDAy
-Cj4gPiArI2RlZmluZSBSSUNIQUNMX0RFRkFVTFRFRAkJCTB4MDQKPiA+IMKgI2RlZmluZSBSSUNI
-QUNMX1dSSVRFX1RIUk9VR0gJCQkweDQwCj4gPiDCoCNkZWZpbmUgUklDSEFDTF9NQVNLRUQJCQkJ
-MHg4MAo+ID4gwqAKPiA+IEBAIC0zMSw2ICszNCw3IEBACj4gPiDCoCNkZWZpbmUgUklDSEFDRV9O
-T19QUk9QQUdBVEVfSU5IRVJJVF9BQ0UJMHgwMDA0Cj4gPiDCoCNkZWZpbmUgUklDSEFDRV9JTkhF
-UklUX09OTFlfQUNFCQkweDAwMDgKPiA+IMKgI2RlZmluZSBSSUNIQUNFX0lERU5USUZJRVJfR1JP
-VVAJCTB4MDA0MAo+ID4gKyNkZWZpbmUgUklDSEFDRV9JTkhFUklURURfQUNFCQkJMHgwMDgwCj4g
-PiDCoCNkZWZpbmUgUklDSEFDRV9TUEVDSUFMX1dITwkJCTB4NDAwMAo+ID4gwqAKPiA+IMKgLyog
-ZV9tYXNrIGJpdGZsYWdzICovCj4gPiBAQCAtNjAsNiArNjQsOSBAQAo+ID4gwqAjZGVmaW5lIFJJ
-Q0hBQ0VfRVZFUllPTkVfU1BFQ0lBTF9JRAkJMgo+ID4gwqAKPiA+IMKgI2RlZmluZSBSSUNIQUNM
-X1ZBTElEX0ZMQUdTICgJCQkJCVwKPiA+ICsJUklDSEFDTF9BVVRPX0lOSEVSSVQgfAkJCQkJXAo+
-ID4gKwlSSUNIQUNMX1BST1RFQ1RFRCB8CQkJCQlcCj4gPiArCVJJQ0hBQ0xfREVGQVVMVEVEIHwJ
-CQkJCVwKPiA+IMKgCVJJQ0hBQ0xfV1JJVEVfVEhST1VHSCB8CQkJCQlcCj4gPiDCoAlSSUNIQUNM
-X01BU0tFRCApCj4gPiDCoAo+ID4gQEAgLTY5LDEzICs3NiwxNSBAQAo+ID4gwqAJUklDSEFDRV9O
-T19QUk9QQUdBVEVfSU5IRVJJVF9BQ0UgfAkJCVwKPiA+IMKgCVJJQ0hBQ0VfSU5IRVJJVF9PTkxZ
-X0FDRSB8CQkJCVwKPiA+IMKgCVJJQ0hBQ0VfSURFTlRJRklFUl9HUk9VUCB8CQkJCVwKPiA+ICsJ
-UklDSEFDRV9JTkhFUklURURfQUNFIHwJCQkJCVwKPiA+IMKgCVJJQ0hBQ0VfU1BFQ0lBTF9XSE8g
-KQo+ID4gwqAKPiA+IMKgI2RlZmluZSBSSUNIQUNFX0lOSEVSSVRBTkNFX0ZMQUdTICgJCQkJXAo+
-ID4gwqAJUklDSEFDRV9GSUxFX0lOSEVSSVRfQUNFIHwJCQkJXAo+ID4gwqAJUklDSEFDRV9ESVJF
-Q1RPUllfSU5IRVJJVF9BQ0UgfAkJCQlcCj4gPiDCoAlSSUNIQUNFX05PX1BST1BBR0FURV9JTkhF
-UklUX0FDRSB8CQkJXAo+ID4gLQlSSUNIQUNFX0lOSEVSSVRfT05MWV9BQ0UgKQo+ID4gKwlSSUNI
-QUNFX0lOSEVSSVRfT05MWV9BQ0UgfAkJCQlcCj4gPiArCVJJQ0hBQ0VfSU5IRVJJVEVEX0FDRSAp
-Cj4gPiDCoAo+ID4gwqAvKiBWYWxpZCBSSUNIQUNFXyogZmxhZ3MgZm9yIGRpcmVjdG9yaWVzIGFu
-ZCBub24tZGlyZWN0b3JpZXMgKi8KPiA+IMKgI2RlZmluZSBSSUNIQUNFX1ZBTElEX01BU0sgKAkJ
-CQkJCj4gPiBcCj4gCj4gQmFyZi4gQUkgc2VlbXMgbGlrZSBhIHRyYWlud3JlY2sgd2FpdGluZyB0
-byBoYXBwZW4uIFdoYXQgYXJlIHRoZQo+IGNoYW5jZXMgdGhhdCB1c2VybGFuZCBpcyBnb2luZyB0
-byBnZXQgdGhpcyByaWdodD8KClRoaXMgaXMganVzdCB0YWtlbiBmcm9tIFdpbmRvd3MsIHNvIHBy
-ZXN1bWFibHkgU2FtYmEgc2hvdWxkIGRvIHRoZSByaWdodAp0aGluZyAod2l0aCBvbmUgd29ya2Fy
-b3VuZCByZXF1aXJlZC0tc2VlIHRoZSBkaXNjdXNzaW9uIG9mIFBST1RFQ1RFRCBpbgp0aGUgY2hh
-bmdlbG9nKS4KCj4gU3RpbGwsIEkgZG8gYXBwbGF1ZCB0aGUgZmFjdCB0aGF0IHlvdSdyZSBqdXN0
-IGRvaW5nIHRoZSBiYXJlIG1pbmltdW0gaW4KPiBrZXJuZWwgdG8gc3VwcG9ydCB1c2VybGFuZCBh
-cHBzIHRoYXQgd2FudCB0aGlzLiBUaGFua3MgZm9yIG5vdCB0cnlpbmcKPiB0byBwdXNoIHRoZSBw
-cm9wYWdhdGlvbiBvZiB0aGUgY2hhbmdlZCBBQ0VzIGludG8gdGhlIGtlcm5lbC4KCkFncmVlZC4g
-IEJ1dCwgYWdhaW4sIHRoaXMgaXMganVzdCB3aGF0IFdpbmRvd3MgZG9lcy4gIChJIHdvbmRlciB3
-aGV0aGVyCnRoZXJlJ3MgYW4gT1MgdGhhdCdzIGFjdHVhbGx5IHRyaWVkIGRvIGFueSBzb3J0IG9m
-IGF0b21pYyBwcm9wYWdhdGlvbi4pCgotLWIuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi steve.
+
+On Thu, Jul 14, 2016 at 01:27:22PM +0100, Steve Brooks wrote:
+> 
+> The "3.1.1"  version of "xfs_repair -n" ran in 1 minute, 32 seconds
+> 
+> The "4.3"     version of "xfs_repair -n" ran in 50 seconds
+> 
+
+Yes, the later versions are compatible with old disk-format filesystems,
+and they have improvements in memory usage, speed, etc too
+
+> 
+> So my questions are
+> 
+> [1] Which version of "xfs_repair" should I use to make the repair?
+> 
+> [2] Is there anything I should have done differently?
+>
+
+No, just use the latest stable one, and the defaults, unless you have a good
+reason to not use default options, which by your e-mail I believe you don't have
+one.
+
+The logs you send below, looks from a corrupted btree, but xfs_repair should be
+able to fix that for you.
+
+Cheers.
+
+
+> 
+> Many thanks for any advice given it is much appreciated.
+> 
+> Thanks,  Steve
+> 
+> 
+> 
+> Many blocks (about 20) of code similar to this were repeated in the logs.
+> 
+> Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 00 00
+> 00 00 00 00 00 00 00  ................
+> Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error xfs_da_do_buf(2)
+> at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 0xffffffffa0e6e81a
+> Jul  8 18:40:17 sraid1v kernel:
+> Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: P           --
+> ------------    2.6.32-642.el6.x86_64 #1
+> Jul  8 18:40:17 sraid1v kernel: Call Trace:
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b68f>] ?
+> xfs_error_report+0x3f/0x50 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> xfs_da_read_buf+0x2a/0x30 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b6fe>] ?
+> xfs_corruption_error+0x5e/0x90 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e6fc>] ?
+> xfs_da_do_buf+0x6cc/0x770 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> xfs_da_read_buf+0x2a/0x30 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff810154e3>] ?
+> native_sched_clock+0x13/0x80
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> xfs_da_read_buf+0x2a/0x30 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ?
+> xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ?
+> xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74e05>] ?
+> xfs_dir2_leaf_lookup+0x35/0xf0 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71306>] ?
+> xfs_dir2_isleaf+0x26/0x60 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71ce4>] ?
+> xfs_dir_lookup+0x174/0x190 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9ea47>] ? xfs_lookup+0x87/0x110
+> [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0eabd74>] ?
+> xfs_vn_lookup+0x54/0xa0 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811a9ca5>] ? do_lookup+0x1a5/0x230
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811aa823>] ?
+> __link_path_walk+0x763/0x1060
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab3da>] ? path_walk+0x6a/0xe0
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab5eb>] ?
+> filename_lookup+0x6b/0xc0
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff8123ac46>] ?
+> security_file_alloc+0x16/0x20
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811acac4>] ?
+> do_filp_open+0x104/0xd20
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9a4fc>] ?
+> _xfs_trans_commit+0x25c/0x310 [xfs]
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff812a749a>] ?
+> strncpy_from_user+0x4a/0x90
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ba252>] ? alloc_fd+0x92/0x160
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196bd7>] ?
+> do_sys_open+0x67/0x130
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196ce0>] ? sys_open+0x20/0x30
+> Jul  8 18:40:17 sraid1v kernel: [<ffffffff8100b0d2>] ?
+> system_call_fastpath+0x16/0x1b
+> Jul  8 18:40:17 sraid1v kernel: XFS (sde): Corruption detected. Unmount and
+> run xfs_repair
+> Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 00 00
+> 00 00 00 00 00 00 00  ................
+> Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error xfs_da_do_buf(2)
+> at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 0xffffffffa0e6e81a
+> Jul  8 18:40:17 sraid1v kernel:
+> Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: P           --
+> ------------    2.6.32-642.el6.x86_64 #1
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
