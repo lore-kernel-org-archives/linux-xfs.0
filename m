@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 04D307CA1
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 06:32:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6119AAC002
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 04:32:30 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zc7ja8iQdiPMQz99 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jul 2016 04:32:28 -0700 (PDT)
-Date: Wed, 13 Jul 2016 07:32:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add readahead bufs to lru early to prevent
-	post-unmount panic
-Message-ID: <20160713113226.GA15845@bfoster.bfoster>
-References: <20160630224457.GT12670@dastard>
-	<20160701223011.GA28130@bfoster.bfoster>
-	<20160705164552.GA6317@bfoster.bfoster>
-	<20160711052057.GE1922@dastard>
-	<20160711135251.GA32896@bfoster.bfoster>
-	<20160711152921.GB32896@bfoster.bfoster>
-	<20160711224451.GF1922@dastard>
-	<20160712120315.GA4311@bfoster.bfoster>
-	<20160712172259.GA22757@bfoster.bfoster>
-	<20160712235752.GL1922@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 1F8347CA3
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 18:40:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9AE37AC002
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 16:40:35 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	fgmjUS0gX8lIncGj for <xfs@oss.sgi.com>;
+	Thu, 14 Jul 2016 16:40:33 -0700 (PDT)
+Date: Fri, 15 Jul 2016 09:40:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: mkfs.xfs -d su=XXX,sw=YYY and future volume resize
+Message-ID: <20160714234011.GU1922@dastard>
+References: <CACNifpVsOMKQyshHk8B7WrmsbGAN_fOz6qpHLBTc_N=K1xY0Dw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160712235752.GL1922@dastard>
+In-Reply-To: <CACNifpVsOMKQyshHk8B7WrmsbGAN_fOz6qpHLBTc_N=K1xY0Dw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,307 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Marcin Sura <mailing-lists@sura.pl>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 13, 2016 at 09:57:52AM +1000, Dave Chinner wrote:
-> On Tue, Jul 12, 2016 at 01:22:59PM -0400, Brian Foster wrote:
-> > On Tue, Jul 12, 2016 at 08:03:15AM -0400, Brian Foster wrote:
-> > > On Tue, Jul 12, 2016 at 08:44:51AM +1000, Dave Chinner wrote:
-> > > > On Mon, Jul 11, 2016 at 11:29:22AM -0400, Brian Foster wrote:
-> > > > > On Mon, Jul 11, 2016 at 09:52:52AM -0400, Brian Foster wrote:
-> > > > > ...
-> > > > > > So what is your preference out of the possible approaches here? AFAICS,
-> > > > > > we have the following options:
-> > > > > > 
-> > > > > > 1.) The original "add readahead to LRU early" approach.
-> > > > > > 	Pros: simple one-liner
-> > > > > > 	Cons: bit of a hack, only covers readahead scenario
-> > > > > > 2.) Defer I/O count decrement to buffer release (this patch).
-> > > > > > 	Pros: should cover all cases (reads/writes)
-> > > > > > 	Cons: more complex (requires per-buffer accounting, etc.)
-> > > > > > 3.) Raw (buffer or bio?) I/O count (no defer to buffer release)
-> > > > > > 	Pros: eliminates some complexity from #2
-> > > > > > 	Cons: still more complex than #1, racy in that decrement does
-> > > > > > 	not serialize against LRU addition (requires drain_workqueue(),
-> > > > > > 	which still doesn't cover error conditions)
-> > > > > > 
-> > > > > > As noted above, option #3 also allows for either a buffer based count or
-> > > > > > bio based count, the latter of which might simplify things a bit further
-> > > > > > (TBD). Thoughts?
-> > > > 
-> > > > Pretty good summary :P
-> > > > 
-> > > > > FWIW, the following is a slightly cleaned up version of my initial
-> > > > > approach (option #3 above). Note that the flag is used to help deal with
-> > > > > varying ioend behavior. E.g., xfs_buf_ioend() is called once for some
-> > > > > buffers, multiple times for others with an iodone callback, that
-> > > > > behavior changes in some cases when an error is set, etc. (I'll add
-> > > > > comments before an official post.)
-> > > > 
-> > > > The approach looks good - I think there's a couple of things we can
-> > > > do to clean it up and make it robust. Comments inline.
-> > > > 
-> > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > > index 4665ff6..45d3ddd 100644
-> > > > > --- a/fs/xfs/xfs_buf.c
-> > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > @@ -1018,7 +1018,10 @@ xfs_buf_ioend(
-> > > > >  
-> > > > >  	trace_xfs_buf_iodone(bp, _RET_IP_);
-> > > > >  
-> > > > > -	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-> > > > > +	if (bp->b_flags & XBF_IN_FLIGHT)
-> > > > > +		percpu_counter_dec(&bp->b_target->bt_io_count);
-> > > > > +
-> > > > > +	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD | XBF_IN_FLIGHT);
-> > > > >  
-> > > > >  	/*
-> > > > >  	 * Pull in IO completion errors now. We are guaranteed to be running
-> > > > 
-> > > > I think the XBF_IN_FLIGHT can be moved to the final xfs_buf_rele()
-> > > > processing if:
-> > > > 
-> > > > > @@ -1341,6 +1344,11 @@ xfs_buf_submit(
-> > > > >  	 * xfs_buf_ioend too early.
-> > > > >  	 */
-> > > > >  	atomic_set(&bp->b_io_remaining, 1);
-> > > > > +	if (bp->b_flags & XBF_ASYNC) {
-> > > > > +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > > > > +		bp->b_flags |= XBF_IN_FLIGHT;
-> > > > > +	}
-> > > > 
-> > > > You change this to:
-> > > > 
-> > > > 	if (!(bp->b_flags & XBF_IN_FLIGHT)) {
-> > > > 		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > > > 		bp->b_flags |= XBF_IN_FLIGHT;
-> > > > 	}
-> > > > 
-> > > 
-> > > Ok, so use the flag to cap the I/O count and defer the decrement to
-> > > release. I think that should work and addresses the raciness issue. I'll
-> > > give it a try.
-> > > 
-> > 
-> > This appears to be doable, but it reintroduces some ugliness from the
-> > previous approach.
+On Thu, Jul 14, 2016 at 10:19:02PM +0200, Marcin Sura wrote:
+> Hi,
 > 
-> Ah, so it does. Bugger.
+> When I create filesystem I can specify su and sw paramteres which match
+> underlying storage device.
+> So for example, If I have raid 6 volume made of 6 + 2 disks with stripe
+> size of 256k I create xfs with:
 > 
-> > For example, we have to start filtering out uncached
-> > buffers again (if we defer the decrement to release, we must handle
-> > never-released buffers one way or another).
+> mkfs.xfs -d su=256k,sw=6 <disk>
 > 
-> So the problem is limited to the superblock buffer and the iclog
-> buffers, right? How about making that special case explicit via a
-> flag set on the buffer? e.g. XBF_NO_IOCOUNT. THat way the exceptions
-> are clearly spelt out, rather than avoiding all uncached buffers?
-> 
+> But what if I will extend original volume by 2 disks. sw will 8. Will be
+> there a performance panelty compared to filesystem created from scratch
+> with correct sw parameter?
 
-I think so. I considered a similar approach earlier, but I didn't want
-to spend time tracking down the associated users until the broader
-approach was nailed down. More specifically, I think we could set
-b_lru_ref to 0 on those buffers and use that to bypass the accounting.
-That makes it clear that these buffers are not destined for the LRU and
-alternative synchronization is required (which already exists in the
-form of lock cycles).
+That depends on your workload more than anything. If the workload
+benefits from correct stripe alignment of your data and IO, then it
+will definitely perform worse if you change the stripe width so that
+allocation is no longer able to align correctly to the physical
+geometry of the storage.
 
-The rest of the feedback makes sense, so I'll incorporate that and give
-the above a try... thanks.
-
-Brian
-
-> > Also, given the feedback on
-> > the previous patch with regard to filtering out non-new buffers from the
-> > I/O count, I've dropped that and replaced it with updates to
-> > xfs_buf_rele() to decrement when the buffer is returned to the LRU (we
-> > either have to filter out buffers already on the LRU at submit time or
-> > make sure that they are decremented when released back to the LRU).
-> > 
-> > Code follows...
-> > 
-> > Brian
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 4665ff6..b7afbac 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -80,6 +80,25 @@ xfs_buf_vmap_len(
-> >  }
-> >  
-> >  /*
-> > + * Clear the in-flight state on a buffer about to be released to the LRU or
-> > + * freed and unaccount from the buftarg. The buftarg I/O count maintains a count
-> > + * of held buffers that have undergone at least one I/O in the current hold
-> > + * cycle (e.g., not a total I/O count). This provides protection against unmount
-> > + * for buffer I/O completion (see xfs_wait_buftarg()) processing.
-> > + */
-> > +static inline void
-> > +xfs_buf_rele_in_flight(
-> > +	struct xfs_buf	*bp)
-> 
-> Not sure about the name: xfs_buf_ioacct_dec()?
-> 
-> > +{
-> > +	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-> > +		return;
-> > +
-> > +	ASSERT(bp->b_flags & XBF_ASYNC);
-> > +	bp->b_flags &= ~_XBF_IN_FLIGHT;
-> > +	percpu_counter_dec(&bp->b_target->bt_io_count);
-> > +}
-> > +
-> > +/*
-> >   * When we mark a buffer stale, we remove the buffer from the LRU and clear the
-> >   * b_lru_ref count so that the buffer is freed immediately when the buffer
-> >   * reference count falls to zero. If the buffer is already on the LRU, we need
-> > @@ -866,30 +885,37 @@ xfs_buf_hold(
-> >  }
-> >  
-> >  /*
-> > - *	Releases a hold on the specified buffer.  If the
-> > - *	the hold count is 1, calls xfs_buf_free.
-> > + * Release a hold on the specified buffer. If the hold count is 1, the buffer is
-> > + * placed on LRU or freed (depending on b_lru_ref).
-> >   */
-> >  void
-> >  xfs_buf_rele(
-> >  	xfs_buf_t		*bp)
-> >  {
-> >  	struct xfs_perag	*pag = bp->b_pag;
-> > +	bool			release;
-> > +	bool			freebuf = false;
-> >  
-> >  	trace_xfs_buf_rele(bp, _RET_IP_);
-> >  
-> >  	if (!pag) {
-> >  		ASSERT(list_empty(&bp->b_lru));
-> >  		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
-> > -		if (atomic_dec_and_test(&bp->b_hold))
-> > +		if (atomic_dec_and_test(&bp->b_hold)) {
-> > +			xfs_buf_rele_in_flight(bp);
-> >  			xfs_buf_free(bp);
-> > +		}
-> >  		return;
-> >  	}
-> >  
-> >  	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
-> >  
-> >  	ASSERT(atomic_read(&bp->b_hold) > 0);
-> > -	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
-> > -		spin_lock(&bp->b_lock);
-> > +
-> > +	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-> > +	spin_lock(&bp->b_lock);
-> > +	if (release) {
-> > +		xfs_buf_rele_in_flight(bp);
-> >  		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-> >  			/*
-> >  			 * If the buffer is added to the LRU take a new
-> > @@ -900,7 +926,6 @@ xfs_buf_rele(
-> >  				bp->b_state &= ~XFS_BSTATE_DISPOSE;
-> >  				atomic_inc(&bp->b_hold);
-> >  			}
-> > -			spin_unlock(&bp->b_lock);
-> >  			spin_unlock(&pag->pag_buf_lock);
-> >  		} else {
-> >  			/*
-> > @@ -914,15 +939,24 @@ xfs_buf_rele(
-> >  			} else {
-> >  				ASSERT(list_empty(&bp->b_lru));
-> >  			}
-> > -			spin_unlock(&bp->b_lock);
-> >  
-> >  			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-> >  			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
-> >  			spin_unlock(&pag->pag_buf_lock);
-> >  			xfs_perag_put(pag);
-> > -			xfs_buf_free(bp);
-> > +			freebuf = true;
-> >  		}
-> > +	} else if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru)) {
-> > +		/*
-> > +		 * The buffer is already on the LRU and it holds the only
-> > +		 * reference. Drop the in flight state.
-> > +		 */
-> > +		xfs_buf_rele_in_flight(bp);
-> >  	}
-> 
-> This b_hold check is racy - bp->b_lock is not enough to stabilise
-> the b_hold count. Because we don't hold the buffer semaphore any
-> more, another buffer reference holder can successfully run the above
-> atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock). New references
-> can be taken in xfs_buf_find() so the count could go up, but I
-> think that's fine given the eventual case we care about here is
-> draining references on unmount.
-> 
-> I think this is still ok for draining references, too, because of
-> the flag check inside xfs_buf_rele_in_flight(). If we race on a
-> transition a value of 1, then we end running the branch in each
-> caller. If we race on transition to zero, then the caller that is
-> releasing the buffer will execute xfs_buf_rele_in_flight() and all
-> will be well.
-> 
-> Needs comments, and maybe restructing the code to handle the
-> xfs_buf_rele_in_flight() call up front so it's clear that io
-> accounting is clearly a separate case from the rest of release
-> handling. e.g.
-> 
-> 	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-> 	spin_lock(&bp->b_lock);
-> 	if (!release) {
-> 		if (!(atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-> 			xfs_buf_ioacct_dec(bp);
-> 		goto out_unlock;
-> 	}
-> 	xfs_buf_ioacct_dec(bp);
-> 
-> 	/* rest of release code, one level of indentation removed */
-> 
-> out_unlock:
-> 	spin_unlock(&bp->b_lock);
-> 
-> 	if (freebuf)
-> 		xfs_buf_free(bp);
-> 
-> 
-> 
-> > @@ -1341,6 +1375,18 @@ xfs_buf_submit(
-> >  	 * xfs_buf_ioend too early.
-> >  	 */
-> >  	atomic_set(&bp->b_io_remaining, 1);
-> > +
-> > +	/*
-> > +	 * Bump the I/O in flight count on the buftarg if we haven't yet done
-> > +	 * so for this buffer. Skip uncached buffers because many of those
-> > +	 * (e.g., superblock, log buffers) are never released.
-> > +	 */
-> > +	if ((bp->b_bn != XFS_BUF_DADDR_NULL) &&
-> > +	    !(bp->b_flags & _XBF_IN_FLIGHT)) {
-> > +		bp->b_flags |= _XBF_IN_FLIGHT;
-> > +		percpu_counter_inc(&bp->b_target->bt_io_count);
-> > +	}
-> 
-> xfs_buf_ioacct_inc()
-> {
-> 	if (bp->b_flags & (XBF_NO_IOACCT | _XBF_IN_FLIGHT))
-> 		return;
-> 	percpu_counter_inc(&bp->b_target->bt_io_count);
-> 	bp->b_flags |= _XBF_IN_FLIGHT;
-> }
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
