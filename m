@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED9E27CA1
-	for <xfs@oss.sgi.com>; Wed, 13 Jul 2016 00:28:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 792C8AC003
-	for <xfs@oss.sgi.com>; Tue, 12 Jul 2016 22:28:46 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id kTZqvUj1wty8ubQP (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 111357CB9
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 09:18:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8E9FDAC004
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 07:17:57 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uNAIn60ZrWVldqbO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 12 Jul 2016 22:28:44 -0700 (PDT)
-Date: Tue, 12 Jul 2016 22:28:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 00/20] xfstests: minor fixes for the reflink/dedupe
-	tests
-Message-ID: <20160713052837.GE13625@birch.djwong.org>
-References: <146612796204.25024.18254357523133394284.stgit@birch.djwong.org>
-	<20160705043130.GF23649@eguan.usersys.redhat.com>
+	<xfs@oss.sgi.com>; Thu, 14 Jul 2016 07:17:55 -0700 (PDT)
+Date: Thu, 14 Jul 2016 16:17:51 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Advice needed with file system corruption
+Message-ID: <20160714141751.GC16096@redhat.com>
+References: <5787852A.7030900@st-andrews.ac.uk>
+	<20160714130546.GB16096@redhat.com>
+	<57879A45.6020307@st-andrews.ac.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160705043130.GF23649@eguan.usersys.redhat.com>
+In-Reply-To: <57879A45.6020307@st-andrews.ac.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,75 +31,163 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Steve Brooks <sjb14@st-andrews.ac.uk>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 05, 2016 at 12:31:30PM +0800, Eryu Guan wrote:
-> Hi Darrick,
+On Thu, Jul 14, 2016 at 02:57:25PM +0100, Steve Brooks wrote:
+> Hi Carlos,
 > 
-> On Thu, Jun 16, 2016 at 06:46:02PM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > This is the sixth revision of a patchset that adds to xfstests
-> > support for testing reverse-mappings of physical blocks to file and
-> > metadata (rmap); support for testing multiple file logical blocks to
-> > the same physical block (reflink); and implements the beginnings of
-> > online metadata scrubbing.
-> > 
-> > The first eight patches are in Eryu Guan's pull request on 2016-06-15.
-> > Those patches haven't changed, but they're not yet in the upstream
-> > repo.
-> > 
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-> > There are also updates for xfs-docs[4].  The kernel patches should
-> > apply to dchinner's for-next; xfsprogs patches to for-next; and
-> > xfstest to master.  The kernel git tree already has for-next included.
-> > 
-> > The patches have been xfstested with x64, i386, and armv7l--arm64,
-> > ppc64, and ppc64le no longer boot in qemu.  All three architectures
-> > pass all 'clone' group tests except xfs/128 (which is the swapext
-> > test), and AFAICT don't cause any new failures for the 'auto' group.
-> > 
-> > This is an extraordinary way to eat your data.  Enjoy! 
-> > Comments and questions are, as always, welcome.
-> 
-> I tested your xfstests patches with your kernel(HEAD f0b34b6 xfs: add
-> btree scrub tracepoints) and xfsprogs(HEAD 34bd754 xfs_scrub: create
-> online filesystem scrub program), with x86_64 host & 4k block size XFS.
-> 
-> A './check -g auto' run looked fine overall. Besides the comments I
-> replied to some patches, other common minor issues are:
-> - space indention in _cleanup not tab
-> - bare 'umount $SCRATCH_MNT' not _scratch_unmount
-> - whitespace issues in _test|scratch_inject_error
-> 
-> (I can fix all these minor issues at commit time, if you don't have
-> other major updates to these patches).
-> 
-> And the review of changes to xfs/122 needs help from other XFS
-> developers :) (09/20 and 10/20)
-> 
-> And besides the first 8 patches, 15/20 has been in upstream as well.
-> 
-> Thanks,
-> Eryu
-> 
-> P.S.
-> The failed tests I saw when testing with reflink-enabled kernel &
-> xfsprogs:
-> 
-> Failures: generic/054 generic/055 generic/108 generic/204 generic/356 generic/357 xfs/004 xfs/096 xfs/122 xfs/293
-> 
-> generic/108 generic/204 and xfs/004 are new failures compared to stock
-> kernel and xfsprogs (kernel 4.7-rc5, xfsprogs 4.7-rc1).
-> 
-> Just FYI.
+> Many thanks again, for your good advice. I ran the version 4.3 of
+> "xfs_repair" as suggested below and it did it's job very quickly in 50
+> seconds exactly as reported in the "No modify mode". Is the time reported at
+> the end of the "No modify mode" always a good approximation of running in
+> "modify mode" ?
 
-Thanks for doing this.  I'm seeing some of the same failures you are,
-and will fix them up in the next patch bundle.
+Good to know. But I'm not quite sure if the no modify mode could be used as a
+good approximation of a real run. I would say to not take it as true giving that
+xfs_repair can't predict the amount of time it will need to write all
+modifications it needs to do on the filesystem's metadata, and it will certainly
+can take much more time, depending on how corrupted the filesystem is.
 
---D
+> 
+> Anyway all is good now and it looks like any missing files are now in the
+> "lost+found" directory.
+> 
+> Steve
+> 
+> On 14/07/16 14:05, Carlos Maiolino wrote:
+> > Hi steve.
+> > 
+> > On Thu, Jul 14, 2016 at 01:27:22PM +0100, Steve Brooks wrote:
+> > > The "3.1.1"  version of "xfs_repair -n" ran in 1 minute, 32 seconds
+> > > 
+> > > The "4.3"     version of "xfs_repair -n" ran in 50 seconds
+> > > 
+> > Yes, the later versions are compatible with old disk-format filesystems,
+> > and they have improvements in memory usage, speed, etc too
+> > 
+> > > So my questions are
+> > > 
+> > > [1] Which version of "xfs_repair" should I use to make the repair?
+> > > 
+> > > [2] Is there anything I should have done differently?
+> > > 
+> > No, just use the latest stable one, and the defaults, unless you have a good
+> > reason to not use default options, which by your e-mail I believe you don't have
+> > one.
+> > 
+> > The logs you send below, looks from a corrupted btree, but xfs_repair should be
+> > able to fix that for you.
+> > 
+> > Cheers.
+> > 
+> > 
+> > > Many thanks for any advice given it is much appreciated.
+> > > 
+> > > Thanks,  Steve
+> > > 
+> > > 
+> > > 
+> > > Many blocks (about 20) of code similar to this were repeated in the logs.
+> > > 
+> > > Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 00 00
+> > > 00 00 00 00 00 00 00  ................
+> > > Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error xfs_da_do_buf(2)
+> > > at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 0xffffffffa0e6e81a
+> > > Jul  8 18:40:17 sraid1v kernel:
+> > > Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: P           --
+> > > ------------    2.6.32-642.el6.x86_64 #1
+> > > Jul  8 18:40:17 sraid1v kernel: Call Trace:
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b68f>] ?
+> > > xfs_error_report+0x3f/0x50 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> > > xfs_da_read_buf+0x2a/0x30 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e7b6fe>] ?
+> > > xfs_corruption_error+0x5e/0x90 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e6fc>] ?
+> > > xfs_da_do_buf+0x6cc/0x770 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> > > xfs_da_read_buf+0x2a/0x30 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff810154e3>] ?
+> > > native_sched_clock+0x13/0x80
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e6e81a>] ?
+> > > xfs_da_read_buf+0x2a/0x30 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ?
+> > > xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74a21>] ?
+> > > xfs_dir2_leaf_lookup_int+0x61/0x2c0 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e74e05>] ?
+> > > xfs_dir2_leaf_lookup+0x35/0xf0 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71306>] ?
+> > > xfs_dir2_isleaf+0x26/0x60 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e71ce4>] ?
+> > > xfs_dir_lookup+0x174/0x190 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9ea47>] ? xfs_lookup+0x87/0x110
+> > > [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0eabd74>] ?
+> > > xfs_vn_lookup+0x54/0xa0 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811a9ca5>] ? do_lookup+0x1a5/0x230
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811aa823>] ?
+> > > __link_path_walk+0x763/0x1060
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab3da>] ? path_walk+0x6a/0xe0
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ab5eb>] ?
+> > > filename_lookup+0x6b/0xc0
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff8123ac46>] ?
+> > > security_file_alloc+0x16/0x20
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811acac4>] ?
+> > > do_filp_open+0x104/0xd20
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffffa0e9a4fc>] ?
+> > > _xfs_trans_commit+0x25c/0x310 [xfs]
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff812a749a>] ?
+> > > strncpy_from_user+0x4a/0x90
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff811ba252>] ? alloc_fd+0x92/0x160
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196bd7>] ?
+> > > do_sys_open+0x67/0x130
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff81196ce0>] ? sys_open+0x20/0x30
+> > > Jul  8 18:40:17 sraid1v kernel: [<ffffffff8100b0d2>] ?
+> > > system_call_fastpath+0x16/0x1b
+> > > Jul  8 18:40:17 sraid1v kernel: XFS (sde): Corruption detected. Unmount and
+> > > run xfs_repair
+> > > Jul  8 18:40:17 sraid1v kernel: ffff880dca95b000: 00 00 00 00 00 00 00 00 00
+> > > 00 00 00 00 00 00 00  ................
+> > > Jul  8 18:40:17 sraid1v kernel: XFS (sde): Internal error xfs_da_do_buf(2)
+> > > at line 2136 of file fs/xfs/xfs_da_btree.c. Caller 0xffffffffa0e6e81a
+> > > Jul  8 18:40:17 sraid1v kernel:
+> > > Jul  8 18:40:17 sraid1v kernel: Pid: 8844, comm: idl Tainted: P           --
+> > > ------------    2.6.32-642.el6.x86_64 #1
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> -- 
+> Dr Stephen Brooks
+> 
+> Solar MHD Theory Group
+> Tel    ::  01334 463735
+> Fax    ::  01334 463748
+> ---------------------------------------
+> Mathematical Institute
+> North Haugh
+> University of St. Andrews
+> St Andrews, Fife KY16 9SS
+> SCOTLAND
+> ---------------------------------------
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
