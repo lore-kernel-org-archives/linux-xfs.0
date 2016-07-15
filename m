@@ -1,17 +1,25 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 94E537CBA
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 20:40:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 58E96304043
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 18:40:09 -0700 (PDT)
-Received: from mxs.mail.ru (host-174-250.kabel.netvisit.nl [91.239.174.250])
-	by cuda.sgi.com with ESMTP id 76G7csg8sD29CedR for
-	<xfs@oss.sgi.com>; Fri, 15 Jul 2016 18:40:04 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2CB137CA3
+	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 02:32:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BEB4AC001
+	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 00:32:24 -0700 (PDT)
+Received: from skillslearning.com.sg (mail.skillslearning.com.sg
+	[45.119.201.7]) by cuda.sgi.com with ESMTP id EYWTkVDJtHPdH0HA
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Jul 2016 00:32:18 -0700 (PDT)
+Received: from [101.127.227.208] (port=51284 helo=USER-PC)
+	by cpanel711-mail.newmediaexpress.com with esmtpa (Exim 4.87)
+	(envelope-from <resilience@skillslearning.com.sg>)
+	id 1bNxbb-004E4M-L1
+	for xfs@oss.sgi.com; Fri, 15 Jul 2016 15:32:15 +0800
+From: "Unmotivated to Work?" <resilience@skillslearning.com.sg>
+Subject: How to Beat the Work-is-a-Drag Blues and Reduce Stress
+Date: Fri, 15 Jul 2016 15:31:42 +0800
 MIME-Version: 1.0
-Date: Sat, 16 Jul 2016 04:40:06 +0300
-Message-ID: <995005493.20160716044006@LHXDGJU>
-Subject: =?utf-8?B?0KTQuNC90LDQvdGB0L7QstGL0LUg0L/RgNC+0LLQtdGA0LrQuA==?=
-From: "=?utf-8?B?RmluYW5jaWFsIGludmVzdGlnYXRpb25z?=" <omanzhulo@inbox.ru>
+Message-Id: <20160715073223.F154F1296080@cuda.sgi.com>
+Reply-To: No Reply <resilience@skillslearning.com.sg>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,415 +28,669 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2310106706571652513=="
+Content-Type: multipart/mixed; boundary="===============1639711664519925502=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============2310106706571652513==
-Content-Type: multipart/alternative; boundary=----------4CCABEFC7500C899
+--===============1639711664519925502==
+Content-Type: text/html;
+	charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 
-------------4CCABEFC7500C899
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><BASE HREF=3D"http://aventis.edu.sg/public-seminars/"></BASE></=
+HEAD>
+<BODY>
+<TABLE cellSpacing=3D0 cellPadding=3D0 width=3D700 align=3Dcenter border=3D=
+0>
+  <TBODY>
+  <TR>
+    <TD>
+      <TABLE cellSpacing=3D0 cellPadding=3D0 border=3D0>
+        <TBODY>
+        <TR>
+          <TD width=3D250>
+            <TABLE cellSpacing=3D0 cellPadding=3D0 width=3D250 border=3D0>
+              <TBODY>
+              <TR>
+                <TD width=3D10>&nbsp;</TD>
+                <TD width=3D218><IMG border=3D0=20
+                  src=3D"http://aventis.edu.sg/images/logo-learninggroup.jp=
+g"=20
+                  width=3D206 height=3D76></TD>
+                <TD width=3D22>&nbsp;</TD></TR></TBODY></TABLE></TD>
+          <TD style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sans=
+-serif"=20
+          width=3D450 align=3Dright><STRONG style=3D"FONT-SIZE: 20px">16 Au=
+g 2016=20
+            (Tue)</STRONG><BR>Having trouble viewing?<BR><A=20
+            href=3D"http://aventis.edu.sg/public-seminars/enhance-emotional=
+-resilience-at-work.html"=20
+            target=3D_blank>Click Here</A></TD></TR></TBODY></TABLE></TD></=
+TR>
+  <TR>
+    <TD style=3D"BORDER-BOTTOM: #ccc 3px solid">&nbsp;</TD></TR>
+  <TR>
+    <TD>&nbsp;</TD></TR>
+  <TR>
+    <TD style=3D"FONT-SIZE: 24px; FONT-FAMILY: Arial, Helvetica, sans-serif=
+"=20
+    align=3Dcenter>
+      <P align=3Dcenter><STRONG style=3D"FONT-SIZE: 26px; COLOR: #2103a1">E=
+nhance=20
+      Emotional Resilience at Work</STRONG><BR><STRONG=20
+      style=3D"FONT-SIZE: 16px">Powerful Tools to Thrive and Overcome Workp=
+lace=20
+      Challenges</STRONG></P></TD></TR>
+  <TR>
+    <TD>&nbsp;</TD></TR>
+  <TR>
+    <TD>
+      <TABLE cellSpacing=3D0 cellPadding=3D0 border=3D0>
+        <TBODY>
+        <TR>
+          <TD vAlign=3Dtop width=3D250>
+            <TABLE cellSpacing=3D0 cellPadding=3D0 width=3D250 border=3D0>
+              <TBODY>
+              <TR>
+                <TD width=3D10>&nbsp;</TD>
+                <TD width=3D218>
+                  <TABLE cellSpacing=3D0 cellPadding=3D0 border=3D0>
+                    <TBODY>
+                    <TR>
+                      <TD>
+                        <TABLE style=3D"BACKGROUND-COLOR: #e0edf8" cellSpac=
+ing=3D0=20
+                        cellPadding=3D0 width=3D218 border=3D0>
+                          <TBODY>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-FAMILY: Arial, Helvetica, sans-se=
+rif"=20
+                            align=3Dcenter><STRONG style=3D"COLOR: #1e3a85"=
+>Course=20
+                              Information</STRONG></TD></TR>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, H=
+elvetica, sans-serif">&nbsp;</TD></TR>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-FAMILY: Arial, Helvetica, sans-se=
+rif">
+                              <TABLE style=3D"BACKGROUND-COLOR: #e0edf8"=20
+                              cellSpacing=3D0 cellPadding=3D0 width=3D218 b=
+order=3D0>
+                                <TBODY>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                width=3D10>&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                vAlign=3Dtop width=3D36><STRONG>Date</STRON=
+G></TD>
+                                <TD=20
+                                style=3D"FONT-FAMILY: Arial, Helvetica, san=
+s-serif"=20
+                                width=3D10 align=3Dcenter>&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                width=3D164>16 Aug 2016 (Tue)</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                vAlign=3Dtop>&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-FAMILY: Arial, Helvetica, san=
+s-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                vAlign=3Dtop><STRONG>Venue</STRONG></TD>
+                                <TD=20
+                                style=3D"FONT-FAMILY: Arial, Helvetica, san=
+s-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">100=20
+                                Orchard Road, Hotel Concorde</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"><STRONG>Time</STRONG></TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">9am=20
+                                to 5pm</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD></TR>
+                                <TR>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif"=20
+                                vAlign=3Dtop><STRONG>Fees</STRONG></TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">&nbsp;</TD>
+                                <TD=20
+                                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Aria=
+l, Helvetica, sans-serif">
+                                <P>$588 | <BR>$352.80 After PIC Grant of=20
+                                40%<BR>Inclusive of 2 coffee breaks, light=
+=20
+                                refreshments and buffet=20
+                                lunch</P></TD></TR></TBODY></TABLE></TD></T=
+R>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, H=
+elvetica, sans-serif">&nbsp;</TD></TR></TBODY></TABLE></TD></TR>
+                    <TR>
+                      <TD>&nbsp;</TD></TR>
+                    <TR>
+                      <TD width=3D50>
+                        <TABLE style=3D"BACKGROUND-COLOR: #003399" cellSpac=
+ing=3D0=20
+                        cellPadding=3D0 width=3D192 align=3Dcenter border=
+=3D0>
+                          <TBODY>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, H=
+elvetica, sans-serif; PADDING-BOTTOM: 5px; PADDING-TOP: 5px; PADDING-LEFT: =
+5px; PADDING-RIGHT: 5px"=20
+                            height=3D30>
+                              <DIV align=3Dcenter><A=20
+                              style=3D"TEXT-DECORATION: none; COLOR: #fffff=
+f; TEXT-ALIGN: center"=20
+                              href=3D"http://www.aventis.edu.sg/av/API/cour=
+se_info.php?q=3Da009000002O5o43"=20
+                              target=3D_blank><STRONG>Register=20
+                              Now</STRONG></A></DIV></TD></TR></TBODY></TAB=
+LE></TD></TR>
+                    <TR>
+                      <TD>&nbsp;</TD></TR>
+                    <TR>
+                      <TD>
+                        <TABLE style=3D"BACKGROUND-COLOR: #003399" cellSpac=
+ing=3D0=20
+                        cellPadding=3D0 width=3D192 align=3Dcenter border=
+=3D0>
+                          <TBODY>
+                          <TR>
+                            <TD=20
+                            style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, H=
+elvetica, sans-serif; PADDING-BOTTOM: 5px; PADDING-TOP: 5px; PADDING-LEFT: =
+5px; PADDING-RIGHT: 5px"=20
+                            height=3D30><A=20
+                              style=3D"TEXT-DECORATION: none; COLOR: #fffff=
+f"=20
+                              href=3D"http://www.aventis.edu.sg/public-semi=
+nars/forms/guru-registration-form.pdf"=20
+                              target=3D_blank><STRONG>Download Registration=
+=20
+                              Form</STRONG></A></TD></TR></TBODY></TABLE></=
+TD></TR>
+                    <TR>
+                      <TD>&nbsp;</TD></TR>
+                    <TR>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      align=3Dcenter>Contact Ms Grace Zheng 6720 3333 or em=
+ail:=20
+                        <A=20
+                        href=3D"mailto:grace@aventisglobal.edu.sg"><STRONG>=
+grace@aventisglobal.edu.sg</STRONG></A></TD></TR>
+                    <TR>
+                      <TD>&nbsp;</TD></TR>
+                    <TR>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"><STRONG=20
+                        style=3D"FONT-SIZE: 16px; COLOR: #003399">Unsubscri=
+be</STRONG><BR><BR>To=20
+                        unsubscribe, please click <A=20
+                        href=3D"http://www.aventis.edu.sg/unsubscribe.php"=
+=20
+                        target=3D_blank>here</A></TD></TR>
+                    <TR>
+                      <TD>&nbsp;</TD></TR></TBODY></TABLE></TD>
+                <TD width=3D22>&nbsp;</TD></TR></TBODY></TABLE></TD>
+          <TD vAlign=3Dtop width=3D450>
+            <TABLE cellSpacing=3D0 cellPadding=3D0 width=3D450 border=3D0>
+              <TBODY>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 16px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif; BORDER-BOTTOM: #2103a1 1px solid"=20
+                width=3D1800 colSpan=3D2>
+                  <DIV align=3Djustify><STRONG style=3D"COLOR: #003399">Emo=
+tional=20
+                  Resilience: The Armour You Need at Work</STRONG></DIV></T=
+D></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>
+                  <DIV align=3Djustify>
+                  <P>Work isn=92t always a bed of roses. There will be chal=
+lenging=20
+                  times when you think that things are beyond your control.=
+=20
+                  Emotional resilience is one=92s ability to cope and adapt=
+ these=20
+                  stressful situations and difficulties. In the modern busi=
+ness=20
+                  world where organizations go through rapid changes, emoti=
+onal=20
+                  resilience is a huge asset for individuals. </P>
+                  <P>Neuro Linguistic Programming (NLP) is a powerful coach=
+ing=20
+                  tool that can improve relationships and resilience. The=20
+                  benefits of using NLP methods to improve emotional resili=
+ence=20
+                  is immense. In this 1 day insightful workshop, participan=
+ts=20
+                  will learn to harness and develop that emotional resilien=
+ce to=20
+                  =91bounce back=92 and =91roll with the punches=92 in the =
+ever changing=20
+                  business world using NLP methods. </P></DIV></TD></TR>
+              <TR>
+                <TD colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 16px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif; BORDER-BOTTOM: #2103a1 1px solid"=20
+                colSpan=3D2><STRONG style=3D"COLOR: #003399">Let NLP Expert=
+, Mr=20
+                  Adrian Toh, help You Enhance Your Emotional Resilience us=
+ing=20
+                  NLP Methods</STRONG></TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>
+                  <DIV align=3Djustify>
+                  <P>Adrian Toh (Senior Consultant) has been helping indivi=
+duals=20
+                  move to a more empowering space in their lives through=20
+                  counselling and coaching for the past six years. He is th=
+e=20
+                  holder of several certificates like Master Practitioner N=
+LP,=20
+                  Master Time Line Therapy=C2=AE Practitioner, 6 Seconds EQ=
+=20
+                  Practitioner as well as Coach in Self Esteem Elevation fo=
+r=20
+                  Children. These certifications have invariably helped him=
+ to=20
+                  become an effective trainer and counsellor, allowing him =
+to=20
+                  identify issues and challenges faced and subsequently hel=
+p=20
+                  them move towards their goals. Furthermore, his training =
+as a=20
+                  certified Master Hypnotherapist allows him to resolves de=
+ep=20
+                  rooted incidents from the past that were the chains that =
+had=20
+                  held them from achieving their goals.</P>
+                  <P>Adrian=92s prior experience was working in the militar=
+y where=20
+                  he was heavily involved in aiding in-service personnel wi=
+th=20
+                  their challenges. Some of his past experiences in the Arm=
+y=20
+                  were: Battalion Commander of a Maintenance Battalion, lea=
+ding=20
+                  a total of 400 soldiers, Head of a HR department which=20
+                  oversees the career development of around 2500 regulars. =
+He=20
+                  was an active Para-counsellor as well as a member of the =
+SAF=20
+                  Para-counsellor Advisory Committee, touching the lives of=
+=20
+                  those in need.<BR>Adrian=92s Purpose of being =93a positi=
+ve force=20
+                  in the world=94 has been the beacon to guide him to conti=
+nually=20
+                  seek new skills and technologies that allow him to quicke=
+n the=20
+                  change process.</P>
+                  <P>Certifications with which Adrian has been accredited=20
+                  include:</P>
+                  <UL>
+                    <LI>Certified 6 Seconds EQ Facilitator.=20
+                    <LI>Certified Coach in Self-Esteem Elevation for Childr=
+en=20
+                    with Center for Personal Reinvention.=20
+                    <LI>Certified Master NLP Coach with American Board of N=
+LP.=20
+                    <LI>Certified Master NLP Practitioner with American Boa=
+rd of=20
+                    NLP.=20
+                    <LI>Certified Master Practitioner of Time Line Therapy=
+=C2=AE by=20
+                    Time Line Therapy Association.=20
+                    <LI>Certified Master Hypnotherapist by American Board o=
+f=20
+                    Hypnotherapy.=20
+                    <LI>Certified Hypnotherapist by National Guild of=20
+                    Hypnotists.=20
+                    <LI>Certified 5 Path and 7th Path Hypnosis Instructor b=
+y=20
+                    Banyang Hypnosis Center.=20
+                    <LI>Certified to administer DISC. </LI></UL></DIV></TD>=
+</TR>
+              <TR>
+                <TD colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 16px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif; BORDER-BOTTOM: #2103a1 1px solid"=20
+                colSpan=3D2 ?><STRONG style=3D"COLOR: #003399">Key Takeaway=
+s: Keep=20
+                  Calm and Carry On</STRONG></TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>
+                  <P>This high impact 1 day workshop begins your journey of=
+ self=20
+                  discovery to be a strong and emotionally intelligent=20
+                  individual. In this workshop, you will learn:</P>
+                  <UL>
+                    <LI>Reframe=92 challenges and failures as opportunities=
+=20
+                    <LI>Examine the areas for development in resilience of =
+the=20
+                    individual or organization for desired outcome=20
+                    <LI>Greater agility in stressful situations=20
+                    <LI>Absorb learning offered by setbacks quickly=20
+                    <LI>Enhance personal and social competence to better ha=
+ndle=20
+                    emotions amid the stress and strenuous demande of the=20
+                    workplace=20
+                    <LI>Enhance emotional resilience using a range of teste=
+d and=20
+                    proven cognitive strategies=20
+                    <LI>Identify important emotional anchors for stabilizin=
+g=20
+                    negative emotions and increasing positive emotions to k=
+eep=20
+                    on track=20
+                    <LI>Controlling unwanted thoughts and emotional reactio=
+ns=20
+                    using NLP techniques=20
+                    <LI>Understand the Science of Stress, Pressure and=20
+                    Performance=20
+                    <LI>Create an optimal state for performing in challengi=
+ng=20
+                    situations using simple techniques to improve your thin=
+king=20
+                    and decision making process.=20
+                    <LI>Manage your response to relationships and conflicts=
+=20
+                    <LI>Using emotional conditioning such as positive and=20
+                    negative trigger to find a solution to overcome the cur=
+rent=20
+                    challenges and be more productive. </LI></UL></TD></TR>
+              <TR>
+                <TD colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif; BORDER-BOTTOM: #2103a1 1px solid"=20
+                colSpan=3D2 ?><STRONG=20
+                  style=3D"FONT-SIZE: 16px; COLOR: #003399">TESTIMONIALS</S=
+TRONG></TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>
+                  <P>Adrian is a great coach. In one of our coaching sessio=
+ns, I=20
+                  told Adrian I wanted to have the energy and motivation to=
+=20
+                  drive the company forward. Adrian asked me a series of de=
+ep=20
+                  questions and helped me discover the inner obstacles I ha=
+d -=20
+                  allowing me to realize what I need to achieve my outcome.=
+</P>
+                  <P>Now I feel more energy and focus at work. Adrian is a=
+=20
+                  magician!=C2&nbsp; <BR><STRONG><EM>Thomas Handojo; Senior=
+ Vice=20
+                  President =E2=80=93 Business Development, PCI=20
+                  Limited</EM></STRONG><STRONG></STRONG></P>
+                  <P>Adrian kept his workshop fun and with the good discuss=
+ion,=20
+                  excellent trainers and deep engagement - this was definit=
+ely=20
+                  one of the best courses we've ever=20
+                  attended<BR><STRONG><EM>Boeing Singapore</EM></STRONG></P>
+                  <P><BR>I learnt more in 4 hours from Adrian than all the =
+other=20
+                  workshops I've attended before! <BR><STRONG><EM>Carol Hoo=
+n,=20
+                  Symrise, HR Manager</EM></STRONG><STRONG></STRONG></P></T=
+D></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif; BORDER-BOTTOM: #2103a1 1px solid"=20
+                colSpan=3D2 ?><STRONG=20
+                  style=3D"FONT-SIZE: 16px; COLOR: #003399">REGISTER TODAY =
+=E2=80=93=20
+                  Don=E2=80=99t Miss this Great Opportunity</STRONG></TD></=
+TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>Please contact Grace @ 6720 3333 |&nbsp;<A=20
+                  href=3D"mailto:grace@aventisglobal.edu.sg">grace@aventisg=
+lobal.edu.sg</A>&nbsp;for=20
+                  more information.</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2 align=3Dcenter>
+                  <TABLE=20
+                  style=3D"BORDER-TOP: #c9c9c9 1px solid; BORDER-RIGHT: #c9=
+c9c9 1px solid; BORDER-BOTTOM: #c9c9c9 1px solid; BORDER-LEFT: #c9c9c9 1px =
+solid; BACKGROUND-COLOR: #ffffff"=20
+                  cellSpacing=3D2 cellPadding=3D3 width=3D380 border=3D0>
+                    <TBODY>
+                    <TR style=3D"BACKGROUND-COLOR: #ebebeb">
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      width=3D66>Date</TD>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      width=3D311>16 Aug 2016 (Tue)</TD></TR>
+                    <TR style=3D"BACKGROUND-COLOR: #ebebeb">
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      width=3D66>Venue</TD>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      width=3D311>Hotel Concorde, Orchard Road</TD></TR>
+                    <TR style=3D"BACKGROUND-COLOR: #ebebeb">
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif">Time</TD>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif">9.00am=20
+                        to 5.00pm</TD></TR>
+                    <TR style=3D"BACKGROUND-COLOR: #ebebeb">
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      vAlign=3Dtop>Fee</TD>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif">$588=20
+                        | $352.80 after PIC grant of 40% (inclusive of 1 bu=
+ffet=20
+                        lunch and 2 light refreshments)</TD></TR>
+                    <TR style=3D"BACKGROUND-COLOR: #ebebeb">
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif"=20
+                      vAlign=3Dtop>Enquiries</TD>
+                      <TD=20
+                      style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helveti=
+ca, sans-serif">
+                        <P>Please contact Ms Grace Zheng(65) 6720 3333 or e=
+mail:=20
+                        <A=20
+                        href=3D"mailto:grace@aventisglobal.edu.sg"><STRONG>=
+grace@aventisglobal.edu.sg</STRONG></A></P></TD></TR></TBODY></TABLE></TD><=
+/TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 12px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2><SPAN=20
+                  style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, =
+sans-serif"><STRONG>Over=20
+                  100 Upcoming Courses</STRONG><BR><BR>Engage, motivate and=
+=20
+                  inspire your team today! Check out our latest course=20
+                  listing</A> or contact us @ 6720 3333 for A FREE Quotatio=
+n for=20
+                  Customized In-house training</SPAN></TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 12px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 12px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2><SPAN=20
+                  style=3D"FONT-SIZE: 14px; FONT-FAMILY: Arial, Helvetica, =
+sans-serif"><STRONG>Save=20
+                  60% or up to 400% Tax Rebate via Productivity and Innovat=
+ion=20
+                  Credit (PIC) </STRONG><BR>For more information, contact u=
+s or=20
+                  visit=20
+                http://www.iras.gov.sg/irashome/picredit.aspx</A></SPAN></T=
+D></TR>
+              <TR>
+                <TD=20
+                style=3D"FONT-SIZE: 13px; FONT-FAMILY: Arial, Helvetica, sa=
+ns-serif"=20
+                colSpan=3D2>&nbsp;</TD></TR></TBODY></TABLE></TD></TR></TBO=
+DY></TABLE></TD></TR></TBODY></TABLE></TD></TR></TABLE></BODY></HTML>
 
-KjI1IC0gMjYg0LjRjtC70Y8g0LMuINCc0L7RgdC60LLQsCAqDQoNCg0K0KTQmNCd0JDQndCh0J7Q
-ktCr0JUg0J/QoNCe0JLQldCg0JrQmCDQmCDQoNCQ0KHQodCb0JXQlNCe0JLQkNCd0JjQryDQkiDQ
-lNCe0JPQntCS0J7QoNCd0J7QmSDQoNCQ0JHQntCi0JUuDQrQnNCV0KLQntCU0JjQmtCYINCYINCf
-0KDQntCm0JXQlNCj0KDQqyDQn9Cg0J7QktCV0JTQldCd0JjQrw0KDQoNCirQn9GA0L7QvNC+0LrQ
-vtC0OiogKjQ2NioNCg0K0KfQsNGB0Ysg0L7QsdGD0YfQtdC90LjRjyDRgSAqMTA6MDAqINC00L4g
-KjE3OjMwKg0KDQoq0JzQtdGB0YLQviDQv9GA0L7QstC10LTQtdC90LjRjzoqINC8LiDQkdCw0YPQ
-vNCw0L3RgdC60LDRjywg0YPQuy4g0JHQsNGD0LzQsNC90YHQutCw0Y8sINC0LjYsINGB0YLRgC4y
-LCDQkS7Qpi4gItCS0LjQutGC0L7RgNC40Y8NCtCf0LvQsNC30LAiLg0KDQoNCirQktGB0Y8g0LjQ
-vdGC0LXRgNC10YHRg9GO0YnQsNGPINCS0LDRgSDQuNC90YTQvtGA0LzQsNGG0LjRjyDQuCDRgNC1
-0LPQuNGB0YLRgNCw0YbQuNGPINC90LAg0YPRh9Cw0YHRgtC40LUg0LIg0LfQsNC90Y/RgtC40Lgg
-0L/Qvg0K0YLQtdC70LXRhNC+0L3RgzoqDQogOCAg0LrQvtC0INCz0L7RgNC+0LTQsCDQnNC+0YHQ
-utCy0YsgICg0IDkgNSkgINGC0LXQuzogIDcgMiA1ICAtICAwIDQgIC0gIDQgOA0KKNC80L3QvtCz
-0L7QutCw0L3QsNC70YzQvdGL0LkpDQoNCg0KKtCS0Ysg0LzQvtC20LXRgtC1INGD0YfQsNGB0YLQ
-stC+0LLQsNGC0Ywg0LIg0L7QsdGD0YfQtdC90LjQuCDQutCw0Log0L7RgiDQutC+0LzQv9Cw0L3Q
-uNC4LCDRgtCw0Log0Lgg0LrQsNC6INGH0LDRgdGC0L3QvtC1DQrQu9C40YbQvi4qKNC/0L7QttCw
-0LvRg9C50YHRgtCwDQrQvdC1INC+0YLQstC10YfQsNC50YLQtSDQvdCwINC+0LHRgNCw0YLQvdGL
-0Lkg0LDQtNGA0LXRgSDRjdC7LtC/0L7Rh9GC0YspDQoNCirQn9GA0LXQtNC90LDQt9C90LDRh9C1
-0L3QviDQtNC70Y86Kg0K0LfQsNC80LXRgdGC0LjRgtC10LvQtdC5INGA0YPQutC+0LLQvtC00LjR
-gtC10LvQtdC5INC/0YDQtdC00L/RgNC40Y/RgtC40Lkg0L/QviDQsdC10LfQvtC/0LDRgdC90L7R
-gdGC0LgsDQrQtNC40YDQtdC60YLQvtGA0L7QsiDQv9C+INCx0LXQt9C+0L/QsNGB0L3QvtGB0YLQ
-uCwg0L3QsNGH0LDQu9GM0L3QuNC60L7QsiDQv9C+0LTRgNCw0LfQtNC10LvQtdC90LjQuSDQsdC1
-0LfQvtC/0LDRgdC90L7RgdGC0LgNCtC/0YDQtdC00L/RgNC40Y/RgtC40Y8sINGB0L7RgtGA0YPQ
-tNC90LjQutC+0LINCtC/0L7QtNGA0LDQt9C00LXQu9C10L3QuNC5INCy0L3Rg9GC0YDQtdC90L3Q
-tdCz0L4g0LrQvtC90YLRgNC+0LvRjyDQuCDQstC90YPRgtGA0LXQvdC90LXQs9C+INCw0YPQtNC4
-0YLQsCwg0YHQv9C10YbQuNCw0LvQuNGB0YLQvtCyINC/0L4NCtGN0LrQvtC90L7QvNC40YfQtdGB
-0LrQvtC5DQrQsdC10LfQvtC/0LDRgdC90L7RgdGC0LgsINGB0L/QtdGG0LjQsNC70LjRgdGC0L7Q
-siDQv9C+INC60L7QvNC/0LvQsNC10L3RgSDQutC+0L3RgtGA0L7Qu9GOLCDQutC+0YDQv9C+0YDQ
-sNGC0LjQstC90YvRhSDRjtGA0LjRgdGC0L7QsiwNCtGB0L/QtdGG0LjQsNC70LjRgdGC0L7QsiwN
-CtGD0YfQsNGB0YLQstGD0Y7RidC40YUg0LIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7R
-gtC1Lg0KDQrQndCwINC00LDQvdC90L7QvCDQvtCx0YPRh9C10L3QuNC1INCx0YPQtNGD0YIg0YDQ
-sNGB0YHQvNC+0YLRgNC10L3RiyDQvNC10YLQvtC00LjQutC4INC/0YDQvtCy0LXQtNC10L3QuNGP
-INGE0LjQvdCw0L3RgdC+0LLRi9GFDQrQv9GA0L7QstC10YDQvtC6INC4DQrRgNCw0YHRgdC70LXQ
-tNC+0LLQsNC90LjQuSDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQvtGC0LUsINC/0L7Q
-t9Cy0L7Qu9GP0Y7RidC40LUg0L/RgNC10LTQvtGC0LLRgNCw0YLQuNGC0Ywg0LjQu9C4DQrQutC+
-0LzQv9C10L3RgdC40YDQvtCy0LDRgtGMINGA0LjRgdC6INC4DQrRg9GJ0LXRgNCxLCDRgdCy0Y/Q
-t9Cw0L3QvdGL0Lkg0YEg0L/RgNC+0YLQuNCy0L7Qv9GA0LDQstC90YvQvNC4INC00LXQudGB0YLQ
-stC40Y/QvNC4INGB0L7RgtGA0YPQtNC90LjQutC+0LIg0L/RgNC10LTQv9GA0LjRj9GC0LjRjy4N
-Cg0KDQoNCg0KICAgICAgKtCe0L/QuNGB0LDQvdC40LUg0L/RgNC+0LPRgNCw0LzQvNGLOioNCg0K
-KjEuKiAgINCk0LjQvdCw0L3RgdC+0LLRi9C1INC/0YDQvtCy0LXRgNC60LggKNGA0LDRgdGB0LvQ
-tdC00L7QstCw0L3QuNGPKSDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQvtGC0LUg0L/R
-gNC10LTQv9GA0LjRj9GC0LjRjy4NCtCn0YLQviDRgtCw0LrQvtC1IEZvcmVuc2ljDQogICAgICBh
-Y2NvdW50aW5nICjRhNC+0YDQtdC90LfQuNC6KS4g0J/Qu9Cw0L3QvtCy0YvQtSDQuCDQstC90LXQ
-v9C70LDQvdC+0LLRi9C1INC/0YDQvtCy0LXRgNC60LguINCe0YLQu9C40YfQuNC1DQrQv9GA0L7Q
-stC10YDQvtC6INC+0YINCiAgICAgINGA0LDRgdGB0LvQtdC00L7QstCw0L3QuNC5Ow0KKjIuKiAg
-INCQ0YPQtNC40YIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtGLINC90LAg0L/RgNC1
-0LTQv9GA0LjRj9GC0LjQuC4g0JTQtdC70LXQs9C40YDQvtCy0LDQvdC40LUg0L/QvtC70L3QvtC8
-0L7Rh9C40Lkg0LINCtC00L7Qs9C+0LLQvtGA0L3QvtC5INGA0LDQsdC+0YLQtS4NCiAgICAgINCg
-0LDRgdC/0YDQtdC00LXQu9C10L3QuNC1INC60L7QvNC/0LXRgtC10L3RhtC40Lgg0Lgg0LfQvtC9
-INC+0YLQstC10YLRgdGC0LLQtdC90L3QvtGB0YLQuCDQvNC10LbQtNGDINC/0L7QtNGA0LDQt9C0
-0LXQu9C10L3QuNGP0LzQuA0K0L/RgNC10LTQv9GA0LjRj9GC0LjRjyDQsg0KICAgICAg0LTQvtCz
-0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1LiDQktC90YPRgtGA0LXQvdC90LXQtSDRgdC+0LPQ
-u9Cw0YHQvtCy0LDQvdC40LUg0L/RgNC+0LXQutGC0LAg0LTQvtCz0L7QstC+0YDQsDsNCiozLiog
-ICDQntGG0LXQvdC60LAg0Y3RhNGE0LXQutGC0LjQstC90L7RgdGC0Lgg0LvQvtC60LDQu9GM0L3R
-i9GFINC90L7RgNC80LDRgtC40LLQvdGL0YUg0LTQvtC60YPQvNC10L3RgtC+0LIuINCY0L3RgdGC
-0YDRg9C60YbQuNGPINC/0L4NCtC00L7Qs9C+0LLQvtGA0L3QvtC5DQogICAgICDRgNCw0LHQvtGC
-0LUuINCg0LXQs9C70LDQvNC10L3RgtCw0YbQuNGPINC/0YDQvtGG0LXRgdGB0L7QsiDQuCDQv9GA
-0L7RhtC10LTRg9GAINC30LDQutC70Y7Rh9C10L3QuNGPINC00L7Qs9C+0LLQvtGA0L7QsjsNCio0
-LiogICDQnNC10YLQvtC00LjQutC4INC4INC/0YDQvtGG0LXQtNGD0YDRiyDQtNC+0LrRg9C80LXQ
-vdGC0LDRgNC90L7QuSDQv9GA0L7QstC10YDQutC4INC00L7Qs9C+0LLQvtGA0L3QvtC5INGA0LDQ
-sdC+0YLRiy4NCtCf0YDQuNC30L3QsNC60Lgg0L7Qv9Cw0YHQvdC+0YHRgtC4DQogICAgICDQuNGB
-0YXQvtC00Y8g0LjQtyDQvtGA0LPQsNC90LjQt9Cw0YbQuNC4INGA0LDQsdC+0YLRiywg0LAg0YLQ
-sNC60LbQtSDQsNC90LDQu9C40LfQsCDQv9GA0LXQtNGB0YLQsNCy0LvQtdC90L3Ri9GFDQrQtNC+
-0LrRg9C80LXQvdGC0L7QsjsNCio1LiogICDQkNGD0LTQuNGCINC60LDRgNGC0Ysg0Y3QutC+0L3Q
-vtC80LjRh9C10YHQutC40YUg0YDQuNGB0LrQvtCyINCyINC00L7Qs9C+0LLQvtGA0L3QvtC5INGA
-0LDQsdC+0YLQtS4g0J/RgNC40LzQtdC90LXQvdC40LUNCtC80LXRgtC+0LTQvtCyINC60L7QvdC6
-0YPRgNC10L3RgtC90L7QuQ0KICAgICAg0YDQsNC30LLQtdC00LrQuCDQsiDQtNC+0LPQvtCy0L7R
-gNC90L7QuSDRgNCw0LHQvtGC0LUuINCQ0L3QsNC70LjQtyDQvdCw0LTQtdC20L3QvtGB0YLQuCDQ
-utC+0L3RgtGA0LDQs9C10L3RgtC+0LIg0LgNCtCx0LXQt9C+0L/QsNGB0L3QvtGB0YLQuCDQutC+
-0LzQvNC10YDRh9C10YHQutC40YUNCiAgICAgINC/0YDQtdC00LvQvtC20LXQvdC40Lk7DQoqNi4q
-ICAg0JLQtdGA0LjRhNC40LrQsNGG0LjRjyDRgdGC0L7RgNC+0L0g0LTQvtCz0L7QstC+0YDQsCDQ
-uCDQv9C+0LvQvdC+0LzQvtGH0LjQuSDQu9C40YYsINC/0L7QtNC/0LjRgdGL0LLQsNGO0YnQuNGF
-INC00L7Qs9C+0LLQvtGALg0K0J/RgNC+0LLQtdGA0LrQsA0KICAgICAg0LLRi9C00LDQvdC90YvR
-hSDQtNC+0LLQtdGA0LXQvdC90L7RgdGC0LXQuS4g0J/RgNC+0LLQtdGA0LrQsCDQstC+0LfQvNC+
-0LbQvdC+0YHRgtC4INCy0YvQv9C+0LvQvdC10L3QuNGPINC00L7Qs9C+0LLQvtGA0L3Ri9GFDQrQ
-vtCx0Y/Qt9Cw0YLQtdC70YzRgdGC0LIuDQogICAgICDQkNC90LDQu9C40Lcg0L7QsdC10YHQv9C1
-0YfQuNGC0LXQu9GM0L3Ri9GFINC80LXRgDsNCio3LiogICDQnNC10YLQvtC00Ysg0LLRi9GP0LLQ
-u9C10L3QuNGPINGB0L7QvNC90LjRgtC10LvRjNC90YvRhSDQutC+0L3RgtGA0LDQs9C10L3RgtC+
-0LIsINC90LXRgdGC0LDQvdC00LDRgNGC0L3Ri9GFINC4DQrRjdC60L7QvdC+0LzQuNGH0LXRgdC6
-0LgNCiAgICAgINC90LXQvtCx0L7RgdC90L7QstCw0L3QvdGL0YUg0YXQvtC30Y/QudGB0YLQstC1
-0L3QvdGL0YUg0Lgg0YTQuNC90LDQvdGB0L7QstGL0YUg0L7Qv9C10YDQsNGG0LjQuS4g0JLRi9GH
-0LjRgdC70LXQvdC40LUNCtC/0YDQuNC30L3QsNC60L7QsiDQvtCx0LzQsNC90LAg0LgNCiAgICAg
-INC80L7RiNC10L3QvdC40YfQtdGB0YLQstCwINCyINC00L7Qs9C+0LLQvtGA0L3Ri9GFINC+0YLQ
-vdC+0YjQtdC90LjRj9GFOw0KKjguKiAgINCa0L7QvdGC0YDQvtC70Ywg0LfQsCDRgdC+0LHQu9GO
-0LTQtdC90LjQtdC8INGC0YDQtdCx0L7QstCw0L3QuNC5INGA0L7RgdGB0LjQudGB0LrQvtCz0L4g
-0LDQvdGC0LjQutC+0YDRgNGD0L/RhtC40L7QvdC90L7Qs9C+DQrQt9Cw0LrQvtC90L7QtNCw0YLQ
-tdC70YzRgdGC0LLQsCDQsg0KICAgICAg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1
-LiDQndCw0LvQuNGH0LjQtSDQsNC90YLQuNC60L7RgNGA0YPQv9GG0LjQvtC90L3QvtC5INC+0LPQ
-vtCy0L7RgNC60Lgg0LIg0LTQvtCz0L7QstC+0YDQsNGFLg0K0J/QvtC90Y/RgtC40LUgwqvQutC+
-0L3RhNC70LjQutGC0LANCiAgICAgINC40L3RgtC10YDQtdGB0L7QssK7INC/0YDQuNC80LXQvdC4
-0YLQtdC70YzQvdC+INC6INC00L7Qs9C+0LLQvtGA0L3QvtC5INGA0LDQsdC+0YLQtS4g0JzQtdGC
-0L7QtNC40LrQsCDRgNCw0YHRgdC70LXQtNC+0LLQsNC90LjRjw0K0LrQvtC90YTQu9C40LrRgtCw
-DQogICAgICDQuNC90YLQtdGA0LXRgdC+0LI7DQoqOS4qICAg0J/QvtC90Y/RgtC40LUg0LrQvtC8
-0L/Qu9Cw0LXQvdGBLdGA0LjRgdC60L7QsiDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQ
-vtGC0LUuINCi0YDQtdCx0L7QstCw0L3QuNGPIFVLIEJyaWJlcnkNCkFjdCAo0JLQtdC70LjQutC+
-0LHRgNC40YLQsNC90LjRjw0KICAgICAgMjAxMCDQsy4pLCBGb3JlaWduIENvcnJ1cHQgUHJhY3Rp
-Y2VzIEFjdCAo0KHQqNCQIDE5Nzcg0LPQvtC0KSDQuCDQt9Cw0LrQvtC90LANCtCh0LDRgNCx0LXQ
-udC9Y9CwLdCe0LrRgdC70LggKFNPWCDQodCo0JANCiAgICAgIDIwMDIg0LPQvtC0KSDQuiDQsdC1
-0LfQvtC/0LDRgdC90L7RgdGC0Lgg0LIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1
-Ow0KKjEwLiog0JzQtdGC0L7QtNGLINCy0YvRh9C40YHQu9C10L3QuNGPINC/0YDQuNC30L3QsNC6
-0L7QsiDQsNGE0YTQuNC70LjRgNC+0LLQsNC90L3QvtGB0YLQuCDRgNCw0LHQvtGC0L3QuNC60L7Q
-siDQv9GA0LXQtNC/0YDQuNGP0YLQuNGPINGBDQrQvtGA0LPQsNC90LjQt9Cw0YbQuNGP0LzQuCDQ
-uA0KICAgICAg0YTQuNC30LjRh9C10YHQutC40LzQuCDQu9C40YbQsNC80LgsINGP0LLQu9GP0Y7R
-idC40LzQuNGB0Y8g0YHRgtC+0YDQvtC90L7QuSDQtNC+0LPQvtCy0L7RgNCwOw0KKjExLiog0JDQ
-vdCw0LvQuNC3INC90LDQu9C+0LPQvtCy0YvRhSDRgNC40YHQutC+0LIg0LIg0LTQvtCz0L7QstC+
-0YDQsNGFLiDQotGA0LXQsdC+0LLQsNC90LjRjyDQvdCw0LvQvtCz0L7QstC+0Lkg0L/Qvg0K0L/R
-gNC+0Y/QstC70LXQvdC40Y4g0LTQvtC70LbQvdC+0LkNCiAgICAgINC+0YHQvNC+0YLRgNC40YLQ
-tdC70YzQvdC+0YHRgtC4INC4INGN0LrQvtC90L7QvNC40YfQtdGB0LrQvtC5INGG0LXQu9C10YHQ
-vtC+0LHRgNCw0LfQvdC+0YHRgtC4INGB0LTQtdC70LrQuC4g0JLRi9GH0LjRgdC70LXQvdC40LUN
-CtGE0LjRgNC8LdC+0LTQvdC+0LTQvdC10LLQvtC6INCyDQogICAgICDQtNC+0LPQvtCy0L7RgNC9
-0L7QuSDRgNCw0LHQvtGC0LU7DQoqMTIuKiDQktGL0Y/QstC70LXQvdC40LUg0LfQu9C+0YPQv9C+
-0YLRgNC10LHQu9C10L3QuNC5INC/0YDQuCDQvtGB0YPRidC10YHRgtCy0LvQtdC90LjQuCDRgtC+
-0YDQs9C+0LIg0Lgg0LrQvtC90LrRg9GA0YHQvtCyLg0K0J/RgNC+0LLQtdGA0LrQsCDRgNCw0LHQ
-vtGC0YsNCiAgICAgINC60L7QvdC60YPRgNGB0L3Ri9GFINC60L7QvNC40YHRgdC40Lkg0Lgg0LfQ
-sNC60L7QvdC90L7RgdGC0Lgg0LLRi9C90LXRgdC10L3QuNGPINGA0LXRiNC10L3QuNC5LiDQntGB
-0L3QvtCy0L3Ri9C1DQrQvdCw0YDRg9GI0LXQvdC40Y8g0YLRgNC10LHQvtCy0LDQvdC40LkNCiAg
-ICAgINC30LDQutC+0L3QvtCyIOKEliAyMjMt0KTQlyDQuCDihJYgNDQt0KTQlzsNCioxMy4qINCQ
-0L3QsNC70LjQtyDRgdC40YHRgtC10LzRiyDQt9Cw0LrRg9C/0L7QuiDQuCDRgNC10LDQu9GM0L3Q
-vtGB0YLQuCDRhtC10L0uINCS0L3QtdC/0LvQsNC90L7QstGL0LUg0L/RgNC+0LLQtdGA0LrQuA0K
-KNGA0LXQstC40LfQuNC4KSDRgtC+0LLQsNGA0L3Qvi0NCiAgICAgINC80LDRgtC10YDQuNCw0LvR
-jNC90YvRhSDRhtC10L3QvdC+0YHRgtC10Lkg0Lgg0LjQvNGD0YnQtdGB0YLQstCwINC/0YDQtdC0
-0L/RgNC40Y/RgtC40Y87DQoqMTQuKiDQn9GA0L7QstC10YDQutCwINGB0L7QsdC70Y7QtNC10L3Q
-uNGPINC60L7QvdGE0LjQtNC10L3RhtC40LDQu9GM0L3QvtGB0YLQuCDQsiDQtNC+0LPQvtCy0L7R
-gNC90L7QuSDRgNCw0LHQvtGC0LUuINCX0LDRidC40YLQsA0K0L7RhdGA0LDQvdGP0LXQvNC+0Lkg
-0LfQsNC60L7QvdC+0LwNCiAgICAgINGC0LDQudC90YsuINCS0YvQv9C+0LvQvdC10L3QuNC1INGC
-0YDQtdCx0L7QstCw0L3QuNC5INGA0LXQttC40LzQsCDQutC+0LzQvNC10YDRh9C10YHQutC+0Lkg
-0YLQsNC50L3RiyDQvdCwDQrQv9GA0LXQtNC/0YDQuNGP0YLQuNC4Lg0KICAgICAg0J/RgNC+0YLQ
-uNCy0L7QtNC10LnRgdGC0LLQuNC1INGA0LDQt9Cz0LvQsNGI0LXQvdC40Y4g0LjQvdGB0LDQudC0
-0LXRgNGB0LrQvtC5INC40L3RhNC+0YDQvNCw0YbQuNC4INCyINC00L7Qs9C+0LLQvtGA0L3QvtC5
-DQrRgNCw0LHQvtGC0LU7DQoqMTUuKiDQlNC+0LrRg9C80LXQvdGC0LDRgNC90YvQuSDQsNC90LDQ
-u9C40Lcg0LPRgNCw0LbQtNCw0L3RgdC60L4t0L/RgNCw0LLQvtCy0YvRhSDQvtGC0L3QvtGI0LXQ
-vdC40Lkg0L/RgNC10LTQv9GA0LjRj9GC0LjRjyDRgQ0K0L/QvtC30LjRhtC40Lgg0LLRi9GH0LjR
-gdC70LXQvdC40Y8NCiAgICAgINC/0YDQuNC30L3QsNC60L7QsiDQutC+0YDQv9C+0YDQsNGC0LjQ
-stC90L7Qs9C+INC80L7RiNC10L3QvdC40YfQtdGB0YLQstCwLiDQkNC90LDQu9C40Lcg0YTQuNC9
-0LDQvdGB0L7QstGL0YUg0LTQvtC60YPQvNC10L3RgtC+0LINCtC90LAg0L/RgNC10LTQvNC10YIN
-CiAgICAgINC00L7RgdGC0L7QstC10YDQvdC+0YHRgtC4INC40L3RhNC+0YDQvNCw0YbQuNC4LiDQ
-n9GA0LjQt9C90LDQutC4INC/0L7QtNC00LXQu9C60Lgg0LTQvtC60YPQvNC10L3RgtCwOw0KKjE2
-Liog0J/RgNC+0LLQtdGA0LrQuCDRgdC+0YLRgNGD0LTQvdC40LrQvtCyLCDQt9Cw0L3QuNC80LDR
-jtGJ0LjRhSDQtNC+0LvQttC90L7RgdGC0Lgg0YEg0LrQvtGA0YDRg9C/0YbQuNC+0L3QvdGL0LzQ
-uA0KKNC80L7RiNC10L3QvdC40YfQtdGB0LrQuNC80LgpINGA0LjRgdC60LDQvNC4Lg0KICAgICAg
-0JDQvdCw0LvQuNC3INC/0L7Qu9C90L7QvNC+0YfQuNC5INC4INGA0LXQt9GD0LvRjNGC0LDRgtC+
-0LIg0YDQsNCx0L7RgtGLINGB0L7RgtGA0YPQtNC90LjQutCwINC90LAg0L/RgNC10LTQv9GA0LjR
-j9GC0LjQuC4NCtCR0LXRgdC10LTRiyDQuCDQuNC90YLQtdGA0LLRjNGOLg0KICAgICAg0J7RgdC9
-0L7QstGLINC+0L/QtdGA0LDRgtC40LLQvdC+0Lkg0L/RgdC40YXQvtC70L7Qs9C40Lg7DQoqMTcu
-KiDQktGL0YfQuNGB0LvQtdC90LjQtSDQuCDRgNCw0YHRgdC70LXQtNC+0LLQsNC90LjQtSDRhNCw
-0LrRgtC+0LIg0L/QvtC70YPRh9C10L3QuNGPIMKr0L7RgtC60LDRgtC+0LLCuyDRgNCw0LHQvtGC
-0L3QuNC60LDQvNC4DQrQv9GA0LXQtNC/0YDQuNGP0YLQuNGPLg0KICAgICAg0JTQvtC60YPQvNC1
-0L3RgtCw0YDQvdC+0LUg0L7RhNC+0YDQvNC70LXQvdC40LUg0LzQsNGC0LXRgNC40LDQu9C+0LI7
-DQoqMTguKiDQntGG0LXQvdC60LAg0Y3RhNGE0LXQutGC0LjQstC90L7RgdGC0Lgg0L/RgNC10YLQ
-tdC90LfQuNC+0L3QvdC+LdC40YHQutC+0LLQvtC5INGA0LDQsdC+0YLRiy4g0KDQsNGB0YHQu9C1
-0LTQvtCy0LDQvdC40LUNCtGB0LvRg9GH0LDQtdCyINC+0LHRgNCw0LfQvtCy0LDQvdC40Y8NCiAg
-ICAgICDQv9GA0L7RgdGA0L7Rh9C10L3QvdC+0Lkg0LTQtdCx0LjRgtC+0YDRgdC60L7QuSDQt9Cw
-0LTQvtC70LbQtdC90L3QvtGB0YLQuC4NCg0KKtCh0YLQvtC40LzQvtGB0YLRjCDRg9GH0LDRgdGC
-0LjRjzoqICoyMiA4MDAg0YDRg9CxLioNCtCSINGB0YLQvtC40LzQvtGB0YLRjCDQstGF0L7QtNC4
-0YIg0LzQtdGC0L7QtNC40YfQtdGB0LrQuNC5INC80LDRgtC10YDQuNCw0LssINC+0LHQtdC00Yss
-INC60L7RhNC1LdC/0LDRg9C30YssINGB0LXRgNGC0LjRhNC40LrQsNGCLg0K
-------------4CCABEFC7500C899
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: base64
 
-PGRpdiBkaXI9Imx0ciI+PGRpdiBhbGlnbj0iY2VudGVyIj48dGFibGUgd2lkdGg9Ijc0MSIgc3R5
-bGU9ImJvcmRlci13aWR0aDo1cHgiIGJnY29sb3I9IiNmOWZiZmIiIGJvcmRlcj0iMSIgY2VsbHNw
-YWNpbmc9IjAiPjx0Ym9keT48dHI+PHRkIHdpZHRoPSI0IiBiZ2NvbG9yPSIjYzZkOWQ5Ij48dGFi
-bGUgd2lkdGg9IjEwMCUiIHN0eWxlPSJib3JkZXItd2lkdGg6MHB4IiBib3JkZXI9IjEiPjx0Ym9k
-eT48dHI+PHRkIGJnY29sb3I9IiNlM2VjZWMiPsKgPC90ZD48dGQgYmdjb2xvcj0iI2UzZWNlYyI+
-wqA8L3RkPjwvdHI+PC90Ym9keT48L3RhYmxlPjwvdGQ+PHRkIGJnY29sb3I9IiNjNmQ5ZDkiPsKg
-PC90ZD48L3RyPjx0cj48dGQgd2lkdGg9IjQiIGJnY29sb3I9IiNjZGRlZGUiPsKgPC90ZD48dGQ+
-PHRhYmxlIHdpZHRoPSIxMDAlIiBib3JkZXI9IjMiPjx0Ym9keT48dHI+PHRkPjxwIGFsaWduPSJj
-ZW50ZXIiPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+PGI+PGZvbnQgY29sb3I9IiMwMDAw
-Y2MiPjxicj48c3BhbiBsYW5nPSJlbi11cyI+PGZvbnQgc2l6ZT0iNCI+MjwvZm9udD48L3NwYW4+
-PGZvbnQgc2l6ZT0iNCI+NTxzcGFuIGxhbmc9ImVuLXVzIj4gLSA8L3NwYW4+MjY8c3BhbiBsYW5n
-PSJlbi11cyI+IDwvc3Bhbj7QuNGO0LvRjzxicj4JCQkJCdCzLiDQnNC+0YHQutCy0LAgCQkJCQkg
-PC9mb250PiAJCQkJCTwvZm9udD48L2I+PGZvbnQgc2l6ZT0iNCI+PGI+PGJyPjwvYj4JCQkJCSA8
-YnI+PC9mb250PgkJCQkJIDxicj48L2ZvbnQ+CQkJCQkgPGZvbnQgY29sb3I9IiM5OTAwMDAiIGZh
-Y2U9IlRpbWVzIE5ldyBSb21hbiIgc2l6ZT0iNCI+CQkJCQnQpNCY0J3QkNCd0KHQntCS0KvQlSDQ
-n9Cg0J7QktCV0KDQmtCYINCYINCg0JDQodCh0JvQldCU0J7QktCQ0J3QmNCvINCSINCU0J7Qk9Ce
-0JLQntCg0J3QntCZINCg0JDQkdCe0KLQlS4gPGJyPtCc0JXQotCe0JTQmNCa0Jgg0Jgg0J/QoNCe
-0KbQldCU0KPQoNCrINCf0KDQntCS0JXQlNCV0J3QmNCvPC9mb250PjwvcD48cCBhbGlnbj0iY2Vu
-dGVyIj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPjxicj48Yj7Qn9GA0L7QvNC+0LrQvtC0
-OjwvYj4gPHU+PHNwYW4gbGFuZz0iZW4tdXMiPjQ8L3NwYW4+NjY8L3U+PGJyPjxicj7Qp9Cw0YHR
-iyDQvtCx0YPRh9C10L3QuNGPINGBIDxiPjEwOjAwPC9iPiDQtNC+IDxiPjE3OjMwPC9iPjxicj48
-YnI+PGI+0JzQtdGB0YLQviDQv9GA0L7QstC10LTQtdC90LjRjzo8L2I+INC8LiDQkdCw0YPQvNCw
-0L3RgdC60LDRjywg0YPQuy4g0JHQsNGD0LzQsNC90YHQutCw0Y8sINC0LjYsINGB0YLRgC4yLCAJ
-CQkJCSDQkS7Qpi4gPHNwYW4gbGFuZz0iZW4tdXMiPiZxdW90Ozwvc3Bhbj7QktC40LrRgtC+0YDQ
-uNGPINCf0LvQsNC30LA8c3BhbiBsYW5nPSJlbi11cyI+JnF1b3Q7PC9zcGFuPi48YnI+PGJyPjxi
-PtCS0YHRjyDQuNC90YLQtdGA0LXRgdGD0Y7RidCw0Y8g0JLQsNGBINC40L3RhNC+0YDQvNCw0YbQ
-uNGPINC4INGA0LXQs9C40YHRgtGA0LDRhtC40Y8g0L3QsCDRg9GH0LDRgdGC0LjQtSDQsiAJCQkJ
-CdC30LDQvdGP0YLQuNC4INC/0L4g0YLQtdC70LXRhNC+0L3Rgzo8YnI+PC9iPgkJCQkJIDxicj4J
-CQkJCcKgPGZvbnQgc2l6ZT0iNCI+ODwvZm9udD7CoCA8Zm9udCBzaXplPSIyIj7QutC+0LQg0LPQ
-vtGA0L7QtNCwINCc0L7RgdC60LLRizwvZm9udD7CoCAJCQkJCSA8Zm9udCBzaXplPSI0Ij4oNCA5
-IDUpPC9mb250PsKgCQkJIDxmb250IHNpemU9IjIiPtGC0LXQuzwvZm9udD48c3BhbiBsYW5nPSJl
-bi11cyI+PGZvbnQgc2l6ZT0iMiI+OjwvZm9udD48L3NwYW4+wqAgCQkJCQkgPGZvbnQgc2l6ZT0i
-NCI+NzwvZm9udD48Zm9udCBzaXplPSIyIj4gPC9mb250PgkJCQkJIDxmb250IHNpemU9IjQiPjI8
-L2ZvbnQ+PGZvbnQgc2l6ZT0iMiI+IDwvZm9udD4JCQkJCSA8Zm9udCBzaXplPSI0Ij41PC9mb250
-Pjxmb250IHNpemU9IjIiPsKgIC3CoCA8L2ZvbnQ+CQkJCQkgPGZvbnQgc2l6ZT0iNCI+MDwvZm9u
-dD48Zm9udCBzaXplPSIyIj4gPC9mb250PgkJCQkJIDxmb250IHNpemU9IjQiPjQ8L2ZvbnQ+PGZv
-bnQgc2l6ZT0iMiI+wqAgLcKgIDwvZm9udD4JCQkJCSA8Zm9udCBzaXplPSI0Ij40PC9mb250Pjxm
-b250IHNpemU9IjIiPiA8L2ZvbnQ+CQkJCQkgPGZvbnQgc2l6ZT0iNCI+ODwvZm9udD7CoCA8Zm9u
-dCBzaXplPSIyIj4o0LzQvdC+0LPQvtC60LDQvdCw0LvRjNC90YvQuSk8L2ZvbnQ+PC9mb250Pjwv
-cD48cCBhbGlnbj0iY2VudGVyIj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iIHNpemU9IjIi
-PjxiPtCS0Ysg0LzQvtC20LXRgtC1INGD0YfQsNGB0YLQstC+0LLQsNGC0Ywg0LIg0L7QsdGD0YfQ
-tdC90LjQuCDQutCw0Log0L7RgiDQutC+0LzQv9Cw0L3QuNC4LCDRgtCw0Log0Lgg0LrQsNC6IAkJ
-CQkJ0YfQsNGB0YLQvdC+0LUg0LvQuNGG0L4uPGJyPjwvYj4o0L/QvtC20LDQu9GD0LnRgdGC0LAg
-0L3QtSDQvtGC0LLQtdGH0LDQudGC0LUg0L3QsCDQvtCx0YDQsNGC0L3Ri9C5INCw0LTRgNC10YEg
-0Y3Quy7Qv9C+0YfRgtGLKTwvZm9udD48L3A+PHAgYWxpZ249ImxlZnQiPjxmb250IGZhY2U9IlRp
-bWVzIE5ldyBSb21hbiI+PGZvbnQgY29sb3I9IiMwMDAwZTYiPjxiPtCf0YDQtdC00L3QsNC30L3Q
-sNGH0LXQvdC+INC00LvRjzo8L2I+PC9mb250PiAJCQkJCTxicj7Qt9Cw0LzQtdGB0YLQuNGC0LXQ
-u9C10Lkg0YDRg9C60L7QstC+0LTQuNGC0LXQu9C10Lkg0L/RgNC10LTQv9GA0LjRj9GC0LjQuSDQ
-v9C+INCx0LXQt9C+0L/QsNGB0L3QvtGB0YLQuCwgPGJyPtC00LjRgNC10LrRgtC+0YDQvtCyINC/
-0L4g0LHQtdC30L7Qv9Cw0YHQvdC+0YHRgtC4LCDQvdCw0YfQsNC70YzQvdC40LrQvtCyINC/0L7Q
-tNGA0LDQt9C00LXQu9C10L3QuNC5IAkJCQkJ0LHQtdC30L7Qv9Cw0YHQvdC+0YHRgtC4INC/0YDQ
-tdC00L/RgNC40Y/RgtC40Y8sINGB0L7RgtGA0YPQtNC90LjQutC+0LIgPGJyPgkJCQkJ0L/QvtC0
-0YDQsNC30LTQtdC70LXQvdC40Lkg0LLQvdGD0YLRgNC10L3QvdC10LPQviDQutC+0L3RgtGA0L7Q
-u9GPINC4INCy0L3Rg9GC0YDQtdC90L3QtdCz0L4g0LDRg9C00LjRgtCwLCAJCQkJCSDRgdC/0LXR
-htC40LDQu9C40YHRgtC+0LIg0L/QviDRjdC60L7QvdC+0LzQuNGH0LXRgdC60L7QuSA8YnI+CQkJ
-CQnQsdC10LfQvtC/0LDRgdC90L7RgdGC0LgsINGB0L/QtdGG0LjQsNC70LjRgdGC0L7QsiDQv9C+
-INC60L7QvNC/0LvQsNC10L3RgSDQutC+0L3RgtGA0L7Qu9GOLCAJCQkJCSDQutC+0YDQv9C+0YDQ
-sNGC0LjQstC90YvRhSDRjtGA0LjRgdGC0L7Qsiwg0YHQv9C10YbQuNCw0LvQuNGB0YLQvtCyLCA8
-YnI+0YPRh9Cw0YHRgtCy0YPRjtGJ0LjRhSDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQ
-vtGC0LUuPGJyPjxicj7QndCwINC00LDQvdC90L7QvCDQvtCx0YPRh9C10L3QuNC1INCx0YPQtNGD
-0YIg0YDQsNGB0YHQvNC+0YLRgNC10L3RiyDQvNC10YLQvtC00LjQutC4INC/0YDQvtCy0LXQtNC1
-0L3QuNGPIAkJCQkJ0YTQuNC90LDQvdGB0L7QstGL0YUg0L/RgNC+0LLQtdGA0L7QuiDQuCA8YnI+
-CQkJCQnRgNCw0YHRgdC70LXQtNC+0LLQsNC90LjQuSDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDR
-gNCw0LHQvtGC0LUsINC/0L7Qt9Cy0L7Qu9GP0Y7RidC40LUg0L/RgNC10LTQvtGC0LLRgNCw0YLQ
-uNGC0YwgCQkJCQnQuNC70Lgg0LrQvtC80L/QtdC90YHQuNGA0L7QstCw0YLRjCDRgNC40YHQuiDQ
-uCA8YnI+CQkJCQnRg9GJ0LXRgNCxLCDRgdCy0Y/Qt9Cw0L3QvdGL0Lkg0YEg0L/RgNC+0YLQuNCy
-0L7Qv9GA0LDQstC90YvQvNC4INC00LXQudGB0YLQstC40Y/QvNC4INGB0L7RgtGA0YPQtNC90LjQ
-utC+0LIgCQkJCQnQv9GA0LXQtNC/0YDQuNGP0YLQuNGPLiA8YnI+IMKgPC9mb250PjwvcD48L3Rk
-PjwvdHI+PC90Ym9keT48L3RhYmxlPjxwPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+PGJy
-Pjxicj48Yj48Zm9udCBzaXplPSI0Ij48aT7CoMKgwqDCoMKgCQkJIDwvaT48L2ZvbnQ+PC9iPjxm
-b250IHNpemU9IjQiPgkJCSA8dT7QntC/0LjRgdCw0L3QuNC1INC/0YDQvtCz0YDQsNC80LzRizo8
-L3U+wqA8Yj48aT7CoMKgwqDCoAkJCSA8dT7CoAkJCSA8L3U+PC9pPjwvYj4JCQkgPC9mb250Pjwv
-Zm9udD48L3A+PHA+PGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRpbWVzIE5ldyBSb21h
-biI+MS48L2ZvbnQ+PC9iPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+wqDCoCAJCQkg0KTQ
-uNC90LDQvdGB0L7QstGL0LUg0L/RgNC+0LLQtdGA0LrQuCAo0YDQsNGB0YHQu9C10LTQvtCy0LDQ
-vdC40Y8pINCyINC00L7Qs9C+0LLQvtGA0L3QvtC5INGA0LDQsdC+0YLQtSDQv9GA0LXQtNC/0YDQ
-uNGP0YLQuNGPLiAJCQkg0KfRgtC+INGC0LDQutC+0LUgRm9yZW5zaWMgPGJyPiDCoMKgwqDCoMKg
-IGFjY291bnRpbmcgKNGE0L7RgNC10L3Qt9C40LopLiDQn9C70LDQvdC+0LLRi9C1INC4INCy0L3Q
-tdC/0LvQsNC90L7QstGL0LUgCQkJ0L/RgNC+0LLQtdGA0LrQuC4g0J7RgtC70LjRh9C40LUg0L/R
-gNC+0LLQtdGA0L7QuiDQvtGCIDxicj7CoMKgwqDCoMKgINGA0LDRgdGB0LvQtdC00L7QstCw0L3Q
-uNC5Ozxicj48L2ZvbnQ+CQkJIDxiPjxmb250IGNvbG9yPSIjYTY2MzI2IiBmYWNlPSJUaW1lcyBO
-ZXcgUm9tYW4iPjIuPC9mb250PjwvYj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPsKgwqAg
-CQkJINCQ0YPQtNC40YIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtGLINC90LAg0L/R
-gNC10LTQv9GA0LjRj9GC0LjQuC4g0JTQtdC70LXQs9C40YDQvtCy0LDQvdC40LUg0L/QvtC70L3Q
-vtC80L7Rh9C40Lkg0LIgCQkJ0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1LiA8YnI+
-IMKgwqDCoMKgwqAg0KDQsNGB0L/RgNC10LTQtdC70LXQvdC40LUg0LrQvtC80L/QtdGC0LXQvdGG
-0LjQuCDQuCDQt9C+0L0g0L7RgtCy0LXRgtGB0YLQstC10L3QvdC+0YHRgtC4IAkJCdC80LXQttC0
-0YMg0L/QvtC00YDQsNC30LTQtdC70LXQvdC40Y/QvNC4INC/0YDQtdC00L/RgNC40Y/RgtC40Y8g
-0LIgPGJyPsKgwqDCoMKgwqAg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1LiDQktC9
-0YPRgtGA0LXQvdC90LXQtSDRgdC+0LPQu9Cw0YHQvtCy0LDQvdC40LUgCQkJ0L/RgNC+0LXQutGC
-0LAg0LTQvtCz0L7QstC+0YDQsDs8YnI+PC9mb250PgkJCSA8Yj48Zm9udCBjb2xvcj0iI2E2NjMy
-NiIgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj4zLjwvZm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMg
-TmV3IFJvbWFuIj7CoMKgIAkJCSDQntGG0LXQvdC60LAg0Y3RhNGE0LXQutGC0LjQstC90L7RgdGC
-0Lgg0LvQvtC60LDQu9GM0L3Ri9GFINC90L7RgNC80LDRgtC40LLQvdGL0YUg0LTQvtC60YPQvNC1
-0L3RgtC+0LIuINCY0L3RgdGC0YDRg9C60YbQuNGPINC/0L4gCQkJ0LTQvtCz0L7QstC+0YDQvdC+
-0LkgPGJyPsKgwqDCoMKgwqAg0YDQsNCx0L7RgtC1LiDQoNC10LPQu9Cw0LzQtdC90YLQsNGG0LjR
-jyDQv9GA0L7RhtC10YHRgdC+0LIg0Lgg0L/RgNC+0YbQtdC00YPRgCAJCQnQt9Cw0LrQu9GO0YfQ
-tdC90LjRjyDQtNC+0LPQvtCy0L7RgNC+0LI7IDxicj48L2ZvbnQ+CQkJIDxiPjxmb250IGNvbG9y
-PSIjYTY2MzI2IiBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPjQuPC9mb250PjwvYj48Zm9udCBmYWNl
-PSJUaW1lcyBOZXcgUm9tYW4iPsKgwqAgCQkJINCc0LXRgtC+0LTQuNC60Lgg0Lgg0L/RgNC+0YbQ
-tdC00YPRgNGLINC00L7QutGD0LzQtdC90YLQsNGA0L3QvtC5INC/0YDQvtCy0LXRgNC60Lgg0LTQ
-vtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtGLLiAJCQkg0J/RgNC40LfQvdCw0LrQuCDQvtC/
-0LDRgdC90L7RgdGC0LggPGJyPsKgwqDCoMKgwqAg0LjRgdGF0L7QtNGPINC40Lcg0L7RgNCz0LDQ
-vdC40LfQsNGG0LjQuCDRgNCw0LHQvtGC0YssINCwINGC0LDQutC20LUg0LDQvdCw0LvQuNC30LAg
-CQkJ0L/RgNC10LTRgdGC0LDQstC70LXQvdC90YvRhSDQtNC+0LrRg9C80LXQvdGC0L7Qsjs8YnI+
-PC9mb250PgkJCSA8Yj48Zm9udCBjb2xvcj0iI2E2NjMyNiIgZmFjZT0iVGltZXMgTmV3IFJvbWFu
-Ij41LjwvZm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj7CoMKgIAkJCSDQkNGD
-0LTQuNGCINC60LDRgNGC0Ysg0Y3QutC+0L3QvtC80LjRh9C10YHQutC40YUg0YDQuNGB0LrQvtCy
-INCyINC00L7Qs9C+0LLQvtGA0L3QvtC5INGA0LDQsdC+0YLQtS4g0J/RgNC40LzQtdC90LXQvdC4
-0LUgCQkJ0LzQtdGC0L7QtNC+0LIg0LrQvtC90LrRg9GA0LXQvdGC0L3QvtC5IDxicj7CoMKgwqDC
-oMKgINGA0LDQt9Cy0LXQtNC60Lgg0LIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1
-LiDQkNC90LDQu9C40Lcg0L3QsNC00LXQttC90L7RgdGC0LggCQkJ0LrQvtC90YLRgNCw0LPQtdC9
-0YLQvtCyINC4INCx0LXQt9C+0L/QsNGB0L3QvtGB0YLQuCDQutC+0LzQvNC10YDRh9C10YHQutC4
-0YUgPGJyPsKgwqDCoMKgwqAg0L/RgNC10LTQu9C+0LbQtdC90LjQuTsgPGJyPjwvZm9udD4JCQkg
-PGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+Ni48L2ZvbnQ+
-PC9iPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+wqDCoCAJCQkg0JLQtdGA0LjRhNC40LrQ
-sNGG0LjRjyDRgdGC0L7RgNC+0L0g0LTQvtCz0L7QstC+0YDQsCDQuCDQv9C+0LvQvdC+0LzQvtGH
-0LjQuSDQu9C40YYsINC/0L7QtNC/0LjRgdGL0LLQsNGO0YnQuNGFINC00L7Qs9C+0LLQvtGALiAJ
-CQkg0J/RgNC+0LLQtdGA0LrQsCA8YnI+wqDCoMKgwqDCoCDQstGL0LTQsNC90L3Ri9GFINC00L7Q
-stC10YDQtdC90L3QvtGB0YLQtdC5LiDQn9GA0L7QstC10YDQutCwINCy0L7Qt9C80L7QttC90L7R
-gdGC0LggCQkJ0LLRi9C/0L7Qu9C90LXQvdC40Y8g0LTQvtCz0L7QstC+0YDQvdGL0YUg0L7QsdGP
-0LfQsNGC0LXQu9GM0YHRgtCyLiA8YnI+IMKgwqDCoMKgwqAg0JDQvdCw0LvQuNC3INC+0LHQtdGB
-0L/QtdGH0LjRgtC10LvRjNC90YvRhSDQvNC10YA7PGJyPjwvZm9udD4JCQkgPGI+PGZvbnQgY29s
-b3I9IiNhNjYzMjYiIGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+Ny48L2ZvbnQ+PC9iPjxmb250IGZh
-Y2U9IlRpbWVzIE5ldyBSb21hbiI+wqDCoCAJCQkg0JzQtdGC0L7QtNGLINCy0YvRj9Cy0LvQtdC9
-0LjRjyDRgdC+0LzQvdC40YLQtdC70YzQvdGL0YUg0LrQvtC90YLRgNCw0LPQtdC90YLQvtCyLCDQ
-vdC10YHRgtCw0L3QtNCw0YDRgtC90YvRhSDQuCAJCQnRjdC60L7QvdC+0LzQuNGH0LXRgdC60Lgg
-PGJyPsKgwqDCoMKgwqAg0L3QtdC+0LHQvtGB0L3QvtCy0LDQvdC90YvRhSDRhdC+0LfRj9C50YHR
-gtCy0LXQvdC90YvRhSDQuCDRhNC40L3QsNC90YHQvtCy0YvRhSAJCQnQvtC/0LXRgNCw0YbQuNC5
-LiDQktGL0YfQuNGB0LvQtdC90LjQtSDQv9GA0LjQt9C90LDQutC+0LIg0L7QsdC80LDQvdCwINC4
-IDxicj7CoMKgwqDCoMKgINC80L7RiNC10L3QvdC40YfQtdGB0YLQstCwINCyINC00L7Qs9C+0LLQ
-vtGA0L3Ri9GFINC+0YLQvdC+0YjQtdC90LjRj9GFOyA8YnI+PC9mb250PgkJCSA8Yj48Zm9udCBj
-b2xvcj0iI2E2NjMyNiIgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj44LjwvZm9udD48L2I+PGZvbnQg
-ZmFjZT0iVGltZXMgTmV3IFJvbWFuIj7CoMKgIAkJCSDQmtC+0L3RgtGA0L7Qu9GMINC30LAg0YHQ
-vtCx0LvRjtC00LXQvdC40LXQvCDRgtGA0LXQsdC+0LLQsNC90LjQuSDRgNC+0YHRgdC40LnRgdC6
-0L7Qs9C+INCw0L3RgtC40LrQvtGA0YDRg9C/0YbQuNC+0L3QvdC+0LPQviAJCQnQt9Cw0LrQvtC9
-0L7QtNCw0YLQtdC70YzRgdGC0LLQsCDQsiA8YnI+wqDCoMKgwqDCoCDQtNC+0LPQvtCy0L7RgNC9
-0L7QuSDRgNCw0LHQvtGC0LUuINCd0LDQu9C40YfQuNC1INCw0L3RgtC40LrQvtGA0YDRg9C/0YbQ
-uNC+0L3QvdC+0LkgCQkJ0L7Qs9C+0LLQvtGA0LrQuCDQsiDQtNC+0LPQvtCy0L7RgNCw0YUuINCf
-0L7QvdGP0YLQuNC1IMKr0LrQvtC90YTQu9C40LrRgtCwIDxicj7CoMKgwqDCoMKgINC40L3RgtC1
-0YDQtdGB0L7QssK7INC/0YDQuNC80LXQvdC40YLQtdC70YzQvdC+INC6INC00L7Qs9C+0LLQvtGA
-0L3QvtC5INGA0LDQsdC+0YLQtS4gCQkJINCc0LXRgtC+0LTQuNC60LAg0YDQsNGB0YHQu9C10LTQ
-vtCy0LDQvdC40Y8g0LrQvtC90YTQu9C40LrRgtCwIDxicj7CoMKgwqDCoMKgINC40L3RgtC10YDQ
-tdGB0L7QsjsgPGJyPjwvZm9udD4JCQkgPGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRp
-bWVzIE5ldyBSb21hbiI+OS48L2ZvbnQ+PC9iPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+
-CQkJIDxzcGFuIGxhbmc9ImVuLXVzIj7CoCA8L3NwYW4+0J/QvtC90Y/RgtC40LUg0LrQvtC80L/Q
-u9Cw0LXQvdGBLdGA0LjRgdC60L7QsiDQsiAJCQnQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQ
-vtGC0LUuINCi0YDQtdCx0L7QstCw0L3QuNGPIFVLIEJyaWJlcnkgQWN0ICjQktC10LvQuNC60L7Q
-sdGA0LjRgtCw0L3QuNGPIDxicj7CoMKgwqDCoMKgIDIwMTAg0LMuKSwgRm9yZWlnbiBDb3JydXB0
-IFByYWN0aWNlcyBBY3QgKNCh0KjQkCAxOTc3IAkJCSDQs9C+0LQpINC4INC30LDQutC+0L3QsCDQ
-odCw0YDQsdC10LnQvWPQsC3QntC60YHQu9C4IChTT1gg0KHQqNCQIDxicj7CoMKgwqDCoMKgIDIw
-MDIg0LPQvtC0KSDQuiDQsdC10LfQvtC/0LDRgdC90L7RgdGC0Lgg0LIg0LTQvtCz0L7QstC+0YDQ
-vdC+0Lkg0YDQsNCx0L7RgtC1Ozxicj48L2ZvbnQ+CQkJIDxiPjxmb250IGNvbG9yPSIjYTY2MzI2
-IiBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPjEwLjwvZm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMg
-TmV3IFJvbWFuIj4g0JzQtdGC0L7QtNGLIAkJCdCy0YvRh9C40YHQu9C10L3QuNGPINC/0YDQuNC3
-0L3QsNC60L7QsiDQsNGE0YTQuNC70LjRgNC+0LLQsNC90L3QvtGB0YLQuCDRgNCw0LHQvtGC0L3Q
-uNC60L7QsiDQv9GA0LXQtNC/0YDQuNGP0YLQuNGPINGBIAkJCdC+0YDQs9Cw0L3QuNC30LDRhtC4
-0Y/QvNC4INC4IDxicj7CoMKgwqDCoMKgINGE0LjQt9C40YfQtdGB0LrQuNC80Lgg0LvQuNGG0LDQ
-vNC4LCDRj9Cy0LvRj9GO0YnQuNC80LjRgdGPINGB0YLQvtGA0L7QvdC+0LkgCQkJ0LTQvtCz0L7Q
-stC+0YDQsDs8YnI+PC9mb250PgkJCSA8Yj48Zm9udCBjb2xvcj0iI2E2NjMyNiIgZmFjZT0iVGlt
-ZXMgTmV3IFJvbWFuIj4xMS48L2ZvbnQ+PC9iPjxmb250IGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+
-INCQ0L3QsNC70LjQtyAJCQnQvdCw0LvQvtCz0L7QstGL0YUg0YDQuNGB0LrQvtCyINCyINC00L7Q
-s9C+0LLQvtGA0LDRhS4g0KLRgNC10LHQvtCy0LDQvdC40Y8g0L3QsNC70L7Qs9C+0LLQvtC5INC/
-0L4g0L/RgNC+0Y/QstC70LXQvdC40Y4gCQkJ0LTQvtC70LbQvdC+0LkgPGJyPsKgwqDCoMKgwqAg
-0L7RgdC80L7RgtGA0LjRgtC10LvRjNC90L7RgdGC0Lgg0Lgg0Y3QutC+0L3QvtC80LjRh9C10YHQ
-utC+0Lkg0YbQtdC70LXRgdC+0L7QsdGA0LDQt9C90L7RgdGC0LggCQkJ0YHQtNC10LvQutC4LiDQ
-ktGL0YfQuNGB0LvQtdC90LjQtSDRhNC40YDQvC3QvtC00L3QvtC00L3QtdCy0L7QuiDQsiA8YnI+
-wqDCoMKgwqDCoCDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQvtGC0LU7IDxicj48L2ZvbnQ+
-CQkJIDxiPjxmb250IGNvbG9yPSIjYTY2MzI2IiBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPjEyLjwv
-Zm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj4g0JLRi9GP0LLQu9C10L3QuNC1
-IAkJCdC30LvQvtGD0L/QvtGC0YDQtdCx0LvQtdC90LjQuSDQv9GA0Lgg0L7RgdGD0YnQtdGB0YLQ
-stC70LXQvdC40Lgg0YLQvtGA0LPQvtCyINC4INC60L7QvdC60YPRgNGB0L7Qsi4g0J/RgNC+0LLQ
-tdGA0LrQsCAJCQnRgNCw0LHQvtGC0YsgPGJyPsKgwqDCoMKgwqAg0LrQvtC90LrRg9GA0YHQvdGL
-0YUg0LrQvtC80LjRgdGB0LjQuSDQuCDQt9Cw0LrQvtC90L3QvtGB0YLQuCDQstGL0L3QtdGB0LXQ
-vdC40Y8gCQkJ0YDQtdGI0LXQvdC40LkuINCe0YHQvdC+0LLQvdGL0LUg0L3QsNGA0YPRiNC10L3Q
-uNGPINGC0YDQtdCx0L7QstCw0L3QuNC5IDxicj7CoMKgwqDCoMKgINC30LDQutC+0L3QvtCyIOKE
-liAyMjMt0KTQlyDQuCDihJYgNDQt0KTQlzs8YnI+PC9mb250PgkJCSA8Yj48Zm9udCBjb2xvcj0i
-I2E2NjMyNiIgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj4xMy48L2ZvbnQ+PC9iPjxmb250IGZhY2U9
-IlRpbWVzIE5ldyBSb21hbiI+INCQ0L3QsNC70LjQtyAJCQnRgdC40YHRgtC10LzRiyDQt9Cw0LrR
-g9C/0L7QuiDQuCDRgNC10LDQu9GM0L3QvtGB0YLQuCDRhtC10L0uINCS0L3QtdC/0LvQsNC90L7Q
-stGL0LUg0L/RgNC+0LLQtdGA0LrQuCAo0YDQtdCy0LjQt9C40LgpIAkJCSDRgtC+0LLQsNGA0L3Q
-vi08YnI+wqDCoMKgwqDCoCDQvNCw0YLQtdGA0LjQsNC70YzQvdGL0YUg0YbQtdC90L3QvtGB0YLQ
-tdC5INC4INC40LzRg9GJ0LXRgdGC0LLQsCDQv9GA0LXQtNC/0YDQuNGP0YLQuNGPOzxicj48L2Zv
-bnQ+CQkJIDxiPjxmb250IGNvbG9yPSIjYTY2MzI2IiBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPjE0
-LjwvZm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj4g0J/RgNC+0LLQtdGA0LrQ
-sCAJCQnRgdC+0LHQu9GO0LTQtdC90LjRjyDQutC+0L3RhNC40LTQtdC90YbQuNCw0LvRjNC90L7R
-gdGC0Lgg0LIg0LTQvtCz0L7QstC+0YDQvdC+0Lkg0YDQsNCx0L7RgtC1LiDQl9Cw0YnQuNGC0LAg
-0L7RhdGA0LDQvdGP0LXQvNC+0LkgCQkJ0LfQsNC60L7QvdC+0LwgPGJyPsKgwqDCoMKgwqAg0YLQ
-sNC50L3Riy4g0JLRi9C/0L7Qu9C90LXQvdC40LUg0YLRgNC10LHQvtCy0LDQvdC40Lkg0YDQtdC2
-0LjQvNCwINC60L7QvNC80LXRgNGH0LXRgdC60L7QuSAJCQnRgtCw0LnQvdGLINC90LAg0L/RgNC1
-0LTQv9GA0LjRj9GC0LjQuC4gPGJyPiDCoMKgwqDCoMKgINCf0YDQvtGC0LjQstC+0LTQtdC50YHR
-gtCy0LjQtSDRgNCw0LfQs9C70LDRiNC10L3QuNGOINC40L3RgdCw0LnQtNC10YDRgdC60L7QuSAJ
-CQnQuNC90YTQvtGA0LzQsNGG0LjQuCDQsiDQtNC+0LPQvtCy0L7RgNC90L7QuSDRgNCw0LHQvtGC
-0LU7PGJyPjwvZm9udD4JCQkgPGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRpbWVzIE5l
-dyBSb21hbiI+MTUuPC9mb250PjwvYj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPiDQlNC+
-0LrRg9C80LXQvdGC0LDRgNC90YvQuSAJCQnQsNC90LDQu9C40Lcg0LPRgNCw0LbQtNCw0L3RgdC6
-0L4t0L/RgNCw0LLQvtCy0YvRhSDQvtGC0L3QvtGI0LXQvdC40Lkg0L/RgNC10LTQv9GA0LjRj9GC
-0LjRjyDRgSDQv9C+0LfQuNGG0LjQuCAJCQnQstGL0YfQuNGB0LvQtdC90LjRjyA8YnI+wqDCoMKg
-wqDCoCDQv9GA0LjQt9C90LDQutC+0LIg0LrQvtGA0L/QvtGA0LDRgtC40LLQvdC+0LPQviDQvNC+
-0YjQtdC90L3QuNGH0LXRgdGC0LLQsC4g0JDQvdCw0LvQuNC3IAkJCdGE0LjQvdCw0L3RgdC+0LLR
-i9GFINC00L7QutGD0LzQtdC90YLQvtCyINC90LAg0L/RgNC10LTQvNC10YIgPGJyPsKgwqDCoMKg
-wqAg0LTQvtGB0YLQvtCy0LXRgNC90L7RgdGC0Lgg0LjQvdGE0L7RgNC80LDRhtC40LguINCf0YDQ
-uNC30L3QsNC60Lgg0L/QvtC00LTQtdC70LrQuCAJCQnQtNC+0LrRg9C80LXQvdGC0LA7PGJyPjwv
-Zm9udD4JCQkgPGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRpbWVzIE5ldyBSb21hbiI+
-MTYuPC9mb250PjwvYj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4iPiDQn9GA0L7QstC10YDQ
-utC4IAkJCdGB0L7RgtGA0YPQtNC90LjQutC+0LIsINC30LDQvdC40LzQsNGO0YnQuNGFINC00L7Q
-u9C20L3QvtGB0YLQuCDRgSDQutC+0YDRgNGD0L/RhtC40L7QvdC90YvQvNC4ICjQvNC+0YjQtdC9
-0L3QuNGH0LXRgdC60LjQvNC4KSAJCQkg0YDQuNGB0LrQsNC80LguIDxicj4gwqDCoMKgwqDCoCDQ
-kNC90LDQu9C40Lcg0L/QvtC70L3QvtC80L7Rh9C40Lkg0Lgg0YDQtdC30YPQu9GM0YLQsNGC0L7Q
-siDRgNCw0LHQvtGC0Ysg0YHQvtGC0YDRg9C00L3QuNC60LAgCQkJ0L3QsCDQv9GA0LXQtNC/0YDQ
-uNGP0YLQuNC4LiDQkdC10YHQtdC00Ysg0Lgg0LjQvdGC0LXRgNCy0YzRji4gPGJyPiDCoMKgwqDC
-oMKgINCe0YHQvdC+0LLRiyDQvtC/0LXRgNCw0YLQuNCy0L3QvtC5INC/0YHQuNGF0L7Qu9C+0LPQ
-uNC4Ozxicj48L2ZvbnQ+CQkJIDxiPjxmb250IGNvbG9yPSIjYTY2MzI2IiBmYWNlPSJUaW1lcyBO
-ZXcgUm9tYW4iPjE3LjwvZm9udD48L2I+PGZvbnQgZmFjZT0iVGltZXMgTmV3IFJvbWFuIj4g0JLR
-i9GH0LjRgdC70LXQvdC40LUg0LggCQkJ0YDQsNGB0YHQu9C10LTQvtCy0LDQvdC40LUg0YTQsNC6
-0YLQvtCyINC/0L7Qu9GD0YfQtdC90LjRjyDCq9C+0YLQutCw0YLQvtCywrsg0YDQsNCx0L7RgtC9
-0LjQutCw0LzQuCDQv9GA0LXQtNC/0YDQuNGP0YLQuNGPLgkJCSA8YnI+IMKgwqDCoMKgwqAg0JTQ
-vtC60YPQvNC10L3RgtCw0YDQvdC+0LUg0L7RhNC+0YDQvNC70LXQvdC40LUg0LzQsNGC0LXRgNC4
-0LDQu9C+0LI7PGJyPjwvZm9udD4JCQkgPGI+PGZvbnQgY29sb3I9IiNhNjYzMjYiIGZhY2U9IlRp
-bWVzIE5ldyBSb21hbiI+MTguPC9mb250PjwvYj48Zm9udCBmYWNlPSJUaW1lcyBOZXcgUm9tYW4i
-PiDQntGG0LXQvdC60LAgCQkJ0Y3RhNGE0LXQutGC0LjQstC90L7RgdGC0Lgg0L/RgNC10YLQtdC9
-0LfQuNC+0L3QvdC+LdC40YHQutC+0LLQvtC5INGA0LDQsdC+0YLRiy4g0KDQsNGB0YHQu9C10LTQ
-vtCy0LDQvdC40LUg0YHQu9GD0YfQsNC10LIgCQkJ0L7QsdGA0LDQt9C+0LLQsNC90LjRjyA8YnI+
-wqDCoMKgwqDCoCA8c3BhbiBsYW5nPSJlbi11cyI+wqA8L3NwYW4+0L/RgNC+0YHRgNC+0YfQtdC9
-0L3QvtC5IAkJCdC00LXQsdC40YLQvtGA0YHQutC+0Lkg0LfQsNC00L7Qu9C20LXQvdC90L7RgdGC
-0LguPC9mb250PjwvcD48dGFibGUgd2lkdGg9IjEwMCUiIHN0eWxlPSJib3JkZXItd2lkdGg6MHB4
-IiBib3JkZXI9IjEiPjx0Ym9keT48dHI+PHRkPjxwIGFsaWduPSJjZW50ZXIiPjxmb250IGZhY2U9
-IlRpbWVzIE5ldyBSb21hbiI+PGZvbnQgY29sb3I9IiNhNjYzMjYiPjxiPtCh0YLQvtC40LzQvtGB
-0YLRjCDRg9GH0LDRgdGC0LjRjzo8L2I+PC9mb250PiA8Yj4yMiAJCQkJCTgwMCDRgNGD0LEuPC9i
-Pjxicj7QkiDRgdGC0L7QuNC80L7RgdGC0Ywg0LLRhdC+0LTQuNGCINC80LXRgtC+0LTQuNGH0LXR
-gdC60LjQuSDQvNCw0YLQtdGA0LjQsNC7LCDQvtCx0LXQtNGLLCDQutC+0YTQtS3Qv9Cw0YPQt9GL
-LCAJCQkJCSDRgdC10YDRgtC40YTQuNC60LDRgi48YnI+wqAgwqAgwqDCoDwvZm9udD48L3A+PC90
-ZD48L3RyPjwvdGJvZHk+PC90YWJsZT48L3RkPjwvdHI+PC90Ym9keT48L3RhYmxlPjwvZGl2Pjwv
-ZGl2Pg0K
-------------4CCABEFC7500C899--
-
-
---===============2310106706571652513==
+--===============1639711664519925502==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -439,4 +701,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2310106706571652513==--
+--===============1639711664519925502==--
