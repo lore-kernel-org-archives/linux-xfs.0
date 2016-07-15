@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D5E367CA1
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 18:01:44 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 25D217CA3
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 23:06:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9DB6D304039
-	for <xfs@oss.sgi.com>; Mon, 11 Jul 2016 16:01:41 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id HFTgoJcaUNoRIs9Y (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EC277304039
+	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 21:06:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id JzRXv9YteGg7lHSQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Jul 2016 16:01:38 -0700 (PDT)
-Date: Mon, 11 Jul 2016 16:01:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 036/119] xfs: add an extent to the rmap btree
-Message-ID: <20160711230130.GA13625@birch.djwong.org>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612650302.12839.2761171937406229512.stgit@birch.djwong.org>
-	<20160711184908.GC32896@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Thu, 14 Jul 2016 21:06:52 -0700 (PDT)
+Date: Fri, 15 Jul 2016 12:06:50 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] common/rc: avoid mkfs option conflicts in
+	_scratch_mkfs_xfs_supported
+Message-ID: <20160715040650.GI2432@eguan.usersys.redhat.com>
+References: <1467697153-23189-1-git-send-email-eguan@redhat.com>
+	<20160715000129.GT12670@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160711184908.GC32896@bfoster.bfoster>
+In-Reply-To: <20160715000129.GT12670@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,352 +31,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jul 11, 2016 at 02:49:09PM -0400, Brian Foster wrote:
-> On Thu, Jun 16, 2016 at 06:21:43PM -0700, Darrick J. Wong wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jul 15, 2016 at 10:01:29AM +1000, Dave Chinner wrote:
+> On Tue, Jul 05, 2016 at 01:39:13PM +0800, Eryu Guan wrote:
+> > In recent mkfs.xfs updates in xfsprogs, commit 9090e187bc3e ("mkfs:
+> > add respecification detection to generic parsing") added
+> > re-specification detection to "-m" option, it causes several tests
+> > _notrun if MKFS_OPTIONS has the same options as those being tested
+> > in _scratch_mkfs_xfs_supported(), because they're specified multiple
+> > times.
 > > 
-> > Now all the btree, free space and transaction infrastructure is in
-> > place, we can finally add the code to insert reverse mappings to the
-> > rmap btree. Freeing will be done in a separate patch, so just the
-> > addition operation can be focussed on here.
+> > 	MKFS_OPTIONS="-m crc=0" ./check xfs/001
+> > 	xfs/001 3s ... [not run] mkfs.xfs doesn't have crc feature
 > > 
-> > v2: Update alloc function to handle non-shared file data.  Isolate the
-> > part that makes changes from the part that initializes the rmap
-> > cursor; this will be useful for deferred updates.
+> > Fix it by creating XFS again without MKFS_OPTIONS in
+> > _scratch_mkfs_xfs_supported(), in case there's conflict between
+> > MKFS_OPTIONS and mkfs_opts, like what we do in _scratch_mkfs_xfs().
 > > 
-> > [darrick: handle owner offsets when adding rmaps]
-> > [dchinner: remove remaining debug printk statements]
-> > [darrick: move unwritten bit to rm_offset]
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_rmap.c       |  225 +++++++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/libxfs/xfs_rmap_btree.h |    1 
-> >  fs/xfs/xfs_trace.h             |    2 
-> >  3 files changed, 223 insertions(+), 5 deletions(-)
+> >  common/rc | 11 ++++++++++-
+> >  1 file changed, 10 insertions(+), 1 deletion(-)
 > > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > index 0e1721a..196e952 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > @@ -159,6 +159,218 @@ out_error:
-> >  	return error;
-> >  }
+> > diff --git a/common/rc b/common/rc
+> > index 883bd7b..ad81461 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -473,11 +473,20 @@ _scratch_mkfs_xfs_opts()
 > >  
-> > +/*
-> > + * A mergeable rmap should have the same owner, cannot be unwritten, and
-> 
-> Why can't it be unwritten? According to the code, it just looks like the
-> unwritten state must match between extents..?
-
-Correct.  The comment needs to be updated.
-
-/*
- * A mergeable rmap must have the same owner and the same values for
- * the unwritten, attr_fork, and bmbt flags.  The startblock and
- * offsets are checked separately.
- */
-
-> 
-> > + * must be a bmbt rmap if we're asking about a bmbt rmap.
-> > + */
-> > +static bool
-> > +xfs_rmap_is_mergeable(
-> > +	struct xfs_rmap_irec	*irec,
-> > +	uint64_t		owner,
-> > +	uint64_t		offset,
-> > +	xfs_extlen_t		len,
-> > +	unsigned int		flags)
-> > +{
-> 
-> Also, why are we passing and not using offset and len? Is this modified
-> later?
-
-Actually... offset and len are unnecessary.  len falls out in a later
-patch, so I will eliminate both when I clean this up.
-
-> One more comment nit below, otherwise looks good:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > +	if (irec->rm_owner == XFS_RMAP_OWN_NULL)
-> > +		return false;
-> > +	if (irec->rm_owner != owner)
-> > +		return false;
-> > +	if ((flags & XFS_RMAP_UNWRITTEN) ^
-> > +	    (irec->rm_flags & XFS_RMAP_UNWRITTEN))
-> > +		return false;
-> > +	if ((flags & XFS_RMAP_ATTR_FORK) ^
-> > +	    (irec->rm_flags & XFS_RMAP_ATTR_FORK))
-> > +		return false;
-> > +	if ((flags & XFS_RMAP_BMBT_BLOCK) ^
-> > +	    (irec->rm_flags & XFS_RMAP_BMBT_BLOCK))
-> > +		return false;
-> > +	return true;
-> > +}
-> > +
-> > +/*
-> > + * When we allocate a new block, the first thing we do is add a reference to
-> > + * the extent in the rmap btree. This takes the form of a [agbno, length,
-> > + * owner, offset] record.  Flags are encoded in the high bits of the offset
-> > + * field.
-> > + */
-> > +STATIC int
-> > +__xfs_rmap_alloc(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agblock_t		bno,
-> > +	xfs_extlen_t		len,
-> > +	bool			unwritten,
-> > +	struct xfs_owner_info	*oinfo)
-> > +{
-> > +	struct xfs_mount	*mp = cur->bc_mp;
-> > +	struct xfs_rmap_irec	ltrec;
-> > +	struct xfs_rmap_irec	gtrec;
-> > +	int			have_gt;
-> > +	int			have_lt;
-> > +	int			error = 0;
-> > +	int			i;
-> > +	uint64_t		owner;
-> > +	uint64_t		offset;
-> > +	unsigned int		flags = 0;
-> > +	bool			ignore_off;
-> > +
-> > +	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-> > +	ignore_off = XFS_RMAP_NON_INODE_OWNER(owner) ||
-> > +			(flags & XFS_RMAP_BMBT_BLOCK);
-> > +	if (unwritten)
-> > +		flags |= XFS_RMAP_UNWRITTEN;
-> > +	trace_xfs_rmap_alloc_extent(mp, cur->bc_private.a.agno, bno, len,
-> > +			unwritten, oinfo);
-> > +
-> > +	/*
-> > +	 * For the initial lookup, look for and exact match or the left-adjacent
-> 
-> 					    an
-
-Noted.  Thanks for catching these!
-
---D
-
-> 
-> Brian
-> 
-> > +	 * record for our insertion point. This will also give us the record for
-> > +	 * start block contiguity tests.
-> > +	 */
-> > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags,
-> > +			&have_lt);
-> > +	if (error)
-> > +		goto out_error;
-> > +	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> > +
-> > +	error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
-> > +	if (error)
-> > +		goto out_error;
-> > +	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> > +	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> > +			cur->bc_private.a.agno, ltrec.rm_startblock,
-> > +			ltrec.rm_blockcount, ltrec.rm_owner,
-> > +			ltrec.rm_offset, ltrec.rm_flags);
-> > +
-> > +	if (!xfs_rmap_is_mergeable(&ltrec, owner, offset, len, flags))
-> > +		have_lt = 0;
-> > +
-> > +	XFS_WANT_CORRUPTED_GOTO(mp,
-> > +		have_lt == 0 ||
-> > +		ltrec.rm_startblock + ltrec.rm_blockcount <= bno, out_error);
-> > +
-> > +	/*
-> > +	 * Increment the cursor to see if we have a right-adjacent record to our
-> > +	 * insertion point. This will give us the record for end block
-> > +	 * contiguity tests.
-> > +	 */
-> > +	error = xfs_btree_increment(cur, 0, &have_gt);
-> > +	if (error)
-> > +		goto out_error;
-> > +	if (have_gt) {
-> > +		error = xfs_rmap_get_rec(cur, &gtrec, &have_gt);
-> > +		if (error)
-> > +			goto out_error;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, have_gt == 1, out_error);
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, bno + len <= gtrec.rm_startblock,
-> > +					out_error);
-> > +		trace_xfs_rmap_map_gtrec(cur->bc_mp,
-> > +			cur->bc_private.a.agno, gtrec.rm_startblock,
-> > +			gtrec.rm_blockcount, gtrec.rm_owner,
-> > +			gtrec.rm_offset, gtrec.rm_flags);
-> > +		if (!xfs_rmap_is_mergeable(&gtrec, owner, offset, len, flags))
-> > +			have_gt = 0;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Note: cursor currently points one record to the right of ltrec, even
-> > +	 * if there is no record in the tree to the right.
-> > +	 */
-> > +	if (have_lt &&
-> > +	    ltrec.rm_startblock + ltrec.rm_blockcount == bno &&
-> > +	    (ignore_off || ltrec.rm_offset + ltrec.rm_blockcount == offset)) {
-> > +		/*
-> > +		 * left edge contiguous, merge into left record.
-> > +		 *
-> > +		 *       ltbno     ltlen
-> > +		 * orig:   |ooooooooo|
-> > +		 * adding:           |aaaaaaaaa|
-> > +		 * result: |rrrrrrrrrrrrrrrrrrr|
-> > +		 *                  bno       len
-> > +		 */
-> > +		ltrec.rm_blockcount += len;
-> > +		if (have_gt &&
-> > +		    bno + len == gtrec.rm_startblock &&
-> > +		    (ignore_off || offset + len == gtrec.rm_offset) &&
-> > +		    (unsigned long)ltrec.rm_blockcount + len +
-> > +				gtrec.rm_blockcount <= XFS_RMAP_LEN_MAX) {
-> > +			/*
-> > +			 * right edge also contiguous, delete right record
-> > +			 * and merge into left record.
-> > +			 *
-> > +			 *       ltbno     ltlen    gtbno     gtlen
-> > +			 * orig:   |ooooooooo|         |ooooooooo|
-> > +			 * adding:           |aaaaaaaaa|
-> > +			 * result: |rrrrrrrrrrrrrrrrrrrrrrrrrrrrr|
-> > +			 */
-> > +			ltrec.rm_blockcount += gtrec.rm_blockcount;
-> > +			trace_xfs_rmapbt_delete(mp, cur->bc_private.a.agno,
-> > +					gtrec.rm_startblock,
-> > +					gtrec.rm_blockcount,
-> > +					gtrec.rm_owner,
-> > +					gtrec.rm_offset,
-> > +					gtrec.rm_flags);
-> > +			error = xfs_btree_delete(cur, &i);
-> > +			if (error)
-> > +				goto out_error;
-> > +			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-> > +		}
-> > +
-> > +		/* point the cursor back to the left record and update */
-> > +		error = xfs_btree_decrement(cur, 0, &have_gt);
-> > +		if (error)
-> > +			goto out_error;
-> > +		error = xfs_rmap_update(cur, &ltrec);
-> > +		if (error)
-> > +			goto out_error;
-> > +	} else if (have_gt &&
-> > +		   bno + len == gtrec.rm_startblock &&
-> > +		   (ignore_off || offset + len == gtrec.rm_offset)) {
-> > +		/*
-> > +		 * right edge contiguous, merge into right record.
-> > +		 *
-> > +		 *                 gtbno     gtlen
-> > +		 * Orig:             |ooooooooo|
-> > +		 * adding: |aaaaaaaaa|
-> > +		 * Result: |rrrrrrrrrrrrrrrrrrr|
-> > +		 *        bno       len
-> > +		 */
-> > +		gtrec.rm_startblock = bno;
-> > +		gtrec.rm_blockcount += len;
-> > +		if (!ignore_off)
-> > +			gtrec.rm_offset = offset;
-> > +		error = xfs_rmap_update(cur, &gtrec);
-> > +		if (error)
-> > +			goto out_error;
-> > +	} else {
-> > +		/*
-> > +		 * no contiguous edge with identical owner, insert
-> > +		 * new record at current cursor position.
-> > +		 */
-> > +		cur->bc_rec.r.rm_startblock = bno;
-> > +		cur->bc_rec.r.rm_blockcount = len;
-> > +		cur->bc_rec.r.rm_owner = owner;
-> > +		cur->bc_rec.r.rm_offset = offset;
-> > +		cur->bc_rec.r.rm_flags = flags;
-> > +		trace_xfs_rmapbt_insert(mp, cur->bc_private.a.agno, bno, len,
-> > +			owner, offset, flags);
-> > +		error = xfs_btree_insert(cur, &i);
-> > +		if (error)
-> > +			goto out_error;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-> > +	}
-> > +
-> > +	trace_xfs_rmap_alloc_extent_done(mp, cur->bc_private.a.agno, bno, len,
-> > +			unwritten, oinfo);
-> > +out_error:
-> > +	if (error)
-> > +		trace_xfs_rmap_alloc_extent_error(mp, cur->bc_private.a.agno,
-> > +				bno, len, unwritten, oinfo);
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Add a reference to an extent in the rmap btree.
-> > + */
-> >  int
-> >  xfs_rmap_alloc(
-> >  	struct xfs_trans	*tp,
-> > @@ -169,19 +381,22 @@ xfs_rmap_alloc(
-> >  	struct xfs_owner_info	*oinfo)
+> >  _scratch_mkfs_xfs_supported()
 > >  {
-> >  	struct xfs_mount	*mp = tp->t_mountp;
-> > -	int			error = 0;
-> > +	struct xfs_btree_cur	*cur;
-> > +	int			error;
+> > -	mkfs_opts=$*
+> > +	local mkfs_opts=$*
 > >  
-> >  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> >  		return 0;
+> >  	_scratch_options mkfs
 > >  
-> > -	trace_xfs_rmap_alloc_extent(mp, agno, bno, len, false, oinfo);
-> > -	if (1)
-> > +	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
-> > +	error = __xfs_rmap_alloc(cur, bno, len, false, oinfo);
-> > +	if (error)
-> >  		goto out_error;
-> > -	trace_xfs_rmap_alloc_extent_done(mp, agno, bno, len, false, oinfo);
+> >  	$MKFS_XFS_PROG -N $MKFS_OPTIONS $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
+> > +	local mkfs_status=$?
 > > +
-> > +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> >  	return 0;
-> >  
-> >  out_error:
-> > -	trace_xfs_rmap_alloc_extent_error(mp, agno, bno, len, false, oinfo);
-> > +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> >  	return error;
+> > +	# if $mkfs_opts conflits with $MKFS_OPTIONS,
+> > +	# try again without $MKFS_OPTIONS
+> > +	if [ $mkfs_status -ne 0 -a -n "$MKFS_OPTIONS" ]; then
+> > +		$MKFS_XFS_PROG -N $SCRATCH_OPTIONS $mkfs_opts $SCRATCH_DEV
+> > +		mkfs_status=$?
+> > +	fi
+> > +	return $mkfs_status
 > >  }
-> >  
-> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > index e926c6e..9d92da5 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-> > @@ -67,6 +67,7 @@ int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-> >  int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
-> >  		int *stat);
-> >  
-> > +/* functions for updating the rmapbt for bmbt blocks and AG btree blocks */
-> >  int xfs_rmap_alloc(struct xfs_trans *tp, struct xfs_buf *agbp,
-> >  		   xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
-> >  		   struct xfs_owner_info *oinfo);
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 6daafaf..3ebceb0 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2549,6 +2549,8 @@ DEFINE_RMAPBT_EVENT(xfs_rmapbt_delete);
-> >  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_insert_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_delete_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_rmapbt_update_error);
-> > +DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
-> > +DEFINE_RMAPBT_EVENT(xfs_rmap_map_gtrec);
-> >  
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
+> This should match what _scratch_mkfs_xfs does. i.e:
+> 
+>         # a mkfs failure may be caused by conflicts between
+>         # $MKFS_OPTIONS and $extra_mkfs_options
+>         if [ $mkfs_status -ne 0 -a ! -z "$extra_mkfs_options" ]; then
+>                 (
+>                 echo -n "** mkfs failed with extra mkfs options "
+>                 echo "added to \"$MKFS_OPTIONS\" by test $seq **"
+>                 echo -n "** attempting to mkfs using only test $seq "
+>                 echo "options: $extra_mkfs_options **"
+>                 ) >> $seqres.full
+> 
+>                 # running mkfs again. overwrite previous mkfs output files
+>                 _scratch_mkfs_xfs_opts $extra_mkfs_options \
+>                         2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
+>                 local mkfs_status=$?
+>         fi
+> 
+> i.e. it checks if $extra_mkfs_options is not empty, rather than
+> $MKFS_OPTIONS
+
+Thanks for the review!
+
+I thought about it too, but I realized that _scratch_mkfs_supported() is
+supposed to have "$extra_mkfs_options" (always non-empty), because what
+it tests is to check whether mkfs.xfs works well with these
+"$extra_mkfs_options".
+
+But making sure $mkfs_opts is not empty before using it makes more
+sense, and it matches _scratch_mkfs_xfs(). I'll send v2 patch.
+
+Thanks,
+Eryu
 
 _______________________________________________
 xfs mailing list
