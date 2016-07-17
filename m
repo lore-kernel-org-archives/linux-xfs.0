@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A68AE7CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 00:10:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 782B88F8035
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 22:10:26 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	vU8Z6PnOmYmgI4DC for <xfs@oss.sgi.com>;
-	Tue, 19 Jul 2016 22:10:19 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1bPjlx-000152-7z
-	for xfs@oss.sgi.com; Wed, 20 Jul 2016 15:10:17 +1000
-Date: Wed, 20 Jul 2016 15:10:17 +1000
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3EE517CA0
+	for <xfs@oss.sgi.com>; Sat, 16 Jul 2016 19:00:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 13014304043
+	for <xfs@oss.sgi.com>; Sat, 16 Jul 2016 17:00:11 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	H9h3IFk1zzoNqNMo for <xfs@oss.sgi.com>;
+	Sat, 16 Jul 2016 17:00:06 -0700 (PDT)
+Date: Sun, 17 Jul 2016 10:00:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to dc4113d2
-Message-ID: <20160720051017.GJ16044@dastard>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Message-ID: <20160717000003.GW1922@dastard>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,155 +25,169 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5866914470293292456=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Calvin Owens <calvinowens@fb.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 
+On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+> Hello all,
+> 
+> I've found a nasty source of slab corruption. Based on seeing similar symptoms
+> on boxes at Facebook, I suspect it's been around since at least 3.10.
+> 
+> It only reproduces under memory pressure so far as I can tell: the issue seems
+> to be that XFS reclaims pages from buffers that are still in use by
+> scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+> with XFS.
+> 
+> [67203.776421] ==================================================================
+> [67203.792521] BUG: KASAN: use-after-free in xfs_destroy_ioend+0x3bf/0x4c0 at addr ffff8804cf466288
+> [67203.812036] Read of size 8 by task python2.7/22913
+> [67203.822713] =============================================================================
+> [67203.840917] BUG buffer_head (Not tainted): kasan: bad access detected
+> [67203.855253] -----------------------------------------------------------------------------
+> [67203.855253]
+> [67203.876727] Disabling lock debugging due to kernel taint
+> [67203.888575] INFO: Allocated in 0xffff8804cf465d40 age=18437180719206552994 cpu=2191548261 pid=-1
+> [67203.908139] 	alloc_buffer_head+0x22/0xd0
+> [67203.916903] 	___slab_alloc+0x4e0/0x520
+> [67203.925286] 	__slab_alloc+0x43/0x70
+> [67203.933087] 	kmem_cache_alloc+0x228/0x2c0
+> [67203.942042] 	alloc_buffer_head+0x22/0xd0
+> [67203.950782] 	alloc_page_buffers+0xa9/0x1f0
+> [67203.959936] 	create_empty_buffers+0x30/0x420
+> [67203.969495] 	create_page_buffers+0x120/0x1b0
+> [67203.979029] 	__block_write_begin+0x16b/0x1010
+> [67203.988756] 	xfs_vm_write_begin+0x55/0x1b0
+> [67203.997884] 	generic_perform_write+0x288/0x510
+> [67204.007771] 	xfs_file_buffered_aio_write+0x316/0x780
+> [67204.018811] 	xfs_file_write_iter+0x26f/0x6c0
+> [67204.028313] 	__vfs_write+0x2a0/0x620
+> [67204.036276] 	vfs_write+0x159/0x4c0
+> [67204.043855] 	SyS_write+0xd2/0x1b0
+> [67204.051245] INFO: Freed in 0x103fc80ec age=18446651500051355200 cpu=2165122683 pid=-1
+> [67204.068634] 	free_buffer_head+0x41/0x90
+> [67204.077175] 	__slab_free+0x1ed/0x340
+> [67204.085138] 	kmem_cache_free+0x270/0x300
+> [67204.093867] 	free_buffer_head+0x41/0x90
+> [67204.102422] 	try_to_free_buffers+0x171/0x240
+> [67204.111925] 	xfs_vm_releasepage+0xcb/0x3b0
+> [67204.121101] 	try_to_release_page+0x106/0x190
+> [67204.130602] 	shrink_page_list+0x118e/0x1a10
+> [67204.139910] 	shrink_inactive_list+0x42c/0xdf0
+> [67204.149600] 	shrink_zone_memcg+0xa09/0xfa0
+> [67204.158715] 	shrink_zone+0x2c3/0xbc0
+> [67204.166679] 	do_try_to_free_pages+0x42a/0x12f0
+> [67204.176562] 	try_to_free_pages+0x1a3/0x5d0
+> [67204.185709] 	__alloc_pages_nodemask+0xbeb/0x20d0
+> [67204.195979] 	alloc_pages_vma+0x11b/0x5e0
+> [67204.204709] 	handle_mm_fault+0x2c27/0x47d0
+> [67204.213823] INFO: Slab 0xffffea00133d1900 objects=37 used=14 fp=0xffff8804cf464530 flags=0x2000000000004080
+> [67204.235439] INFO: Object 0xffff8804cf466260 @offset=8800 fp=0xbbbbbbbbbbbbbbbb
 
---===============5866914470293292456==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
-Content-Disposition: inline
+Hmmm - can only get there with a clean page, so this should be fine.
 
+> [67204.455817] CPU: 1 PID: 22913 Comm: python2.7 Tainted: G    B           4.7.0-rc7-calvinowens-1468357363-00001-gcaa3dc6 #1
+> [67204.480313] Hardware name: Wiwynn   HoneyBadger/PantherPlus, BIOS HBM6.71 02/03/2016
+> [67204.497509]  ffff88075e99f480 ffff88075ec87a30 ffffffff81e8b8e4 ffff8804cf464000
+> [67204.514224]  ffff8804cf466260 ffff88075ec87a60 ffffffff8153a995 ffff88075e99f480
+> [67204.530924]  ffffea00133d1900 ffff8804cf466260 dffffc0000000000 ffff88075ec87a88
+> [67204.547624] Call Trace:
+> [67204.553086]  <IRQ>  [<ffffffff81e8b8e4>] dump_stack+0x68/0x94
+> [67204.565946]  [<ffffffff8153a995>] print_trailer+0x115/0x1a0
+> [67204.578334]  [<ffffffff81541174>] object_err+0x34/0x40
+> [67204.589762]  [<ffffffff815436e7>] kasan_report_error+0x217/0x530
+> [67204.616847]  [<ffffffff81543b33>] __asan_report_load8_noabort+0x43/0x50
+> [67204.645085]  [<ffffffff819d651f>] xfs_destroy_ioend+0x3bf/0x4c0
+> [67204.658243]  [<ffffffff819d69d4>] xfs_end_bio+0x154/0x220
+> [67204.685362]  [<ffffffff81de0c58>] bio_endio+0x158/0x1b0
+> [67204.696983]  [<ffffffff81dff61b>] blk_update_request+0x18b/0xb80
+> [67204.710334]  [<ffffffff821baf57>] scsi_end_request+0x97/0x5a0
+> [67204.723108]  [<ffffffff821c5558>] scsi_io_completion+0x438/0x1690
+> [67204.807293]  [<ffffffff821a8d95>] scsi_finish_command+0x375/0x4e0
+> [67204.820838]  [<ffffffff821c3940>] scsi_softirq_done+0x280/0x340
+> [67204.848884]  [<ffffffff81e1e13f>] blk_done_softirq+0x1ff/0x360
+> [67204.875074]  [<ffffffff82a08cad>] __do_softirq+0x22d/0x8d7
+> [67204.887270]  [<ffffffff8113d42c>] irq_exit+0x15c/0x190
+> [67204.898697]  [<ffffffff82a085e3>] smp_apic_timer_interrupt+0x83/0xa0
+> [67204.912815]  [<ffffffff82a06b29>] apic_timer_interrupt+0x89/0x90
+> [67205.029113] ==================================================================
 
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+But this indicates that the page is under writeback at this point,
+so that tends to indicate that the above freeing was incorrect.
 
-Hi folks,
+Hmmm - it's clear we've got direct reclaim involved here, and the
+suspicion of a dirty page that has had it's bufferheads cleared.
+Are there any other warnings in the log from XFS prior to kasan
+throwing the error?
 
-The for-next branch of the xfs kernel repository at
+> Is there anything else I can send that might be helpful?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+full console/dmesg output from a crashed machine, plus:
 
-has just been updated. Christoph, I pulled all of your DAX vs DIO
-patchset except for the last patch that changed the locking. I'm
-still undecided on that and my focus is on other things (like rmap)
-right now, so I've left it out for the moment.
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-Speaking of rmap, that's the last piece I want to get into this
-cycle. There are a couple of ther fixes that would be nice to have,
-but rmap is the main one right now....
+> --
+> /*
+>  * Run as "./repro outfile 1000", where "outfile" sits on an XFS filesystem.
+>  */
+> 
+> #include <stdlib.h>
+> #include <stdio.h>
+> #include <fcntl.h>
+> #include <signal.h>
+> #include <unistd.h>
+> #include <sys/stat.h>
+> #include <sys/types.h>
+> #include <sys/mman.h>
+> 
+> #define CHUNK (32768)
+> 
+> static const char crap[CHUNK];
+> 
+> int main(int argc, char **argv)
+> {
+> 	int r, fd, i;
+> 	size_t allocsize, count;
+> 	void *p;
+> 
+> 	if (argc != 3) {
+> 		printf("Usage: %s filename count\n", argv[0]);
+> 		return 1;
+> 	}
+> 
+> 	fd = open(argv[1], O_RDWR|O_CREAT, 0644);
+> 	if (fd == -1) {
+> 		perror("Can't open");
+> 		return 1;
+> 	}
+> 
+> 	if (!fork()) {
+> 		count = atol(argv[2]);
+> 
+> 		while (1) {
+> 			for (i = 0; i < count; i++)
+> 				if (write(fd, crap, CHUNK) != CHUNK)
+> 					perror("Eh?");
+> 
+> 			fsync(fd);
+> 			ftruncate(fd, 0);
+> 		}
 
--Dave.
+Hmmmm. Truncate is used, but only after fsync. If the truncate
+is removed, does the problem go away?
 
-The new head of the for-next branch is commit:
+Cheers,
 
-dc4113d2 Merge branch 'xfs-4.8-dir2-sf-fixes' into for-next
-
-New Commits:
-
-Brian Foster (2):
-      [c891c30] xfs: exclude never-released buffers from buftarg I/O accoun=
-ting
-      [9c7504a] xfs: track and serialize in-flight async buffers against un=
-mount
-
-Christoph Hellwig (10):
-      [8f3e205] xfs: don't pass ioflags around in the ioctl path
-      [3176c3e] xfs: kill ioflags
-      [cf81071] xfs: remove s_maxbytes enforcement in xfs_file_read_iter
-      [bbc5a74] xfs: split xfs_file_read_iter into buffered and direct I/O =
-helpers
-      [f1285ff] xfs: stop using generic_file_read_iter for direct I/O
-      [fa8d972] xfs: direct calls in the direct I/O path
-      [16d4d43] xfs: split direct I/O and DAX path
-      [8353a64] xfs: kill xfs_dir2_sf_off_t
-      [266b696] xfs: kill xfs_dir2_inou_t
-      [aa2dd0a] xfs: remove __arch_pack
-
-Dan Carpenter (1):
-      [fbc21f3] xfs: don't allow negative error tags
-
-Dave Chinner (4):
-      [f637161] Merge branch 'xfs-4.8-misc-fixes-3' into for-next
-      [bbfeb61] Merge branch 'xfs-4.8-buf-fixes' into for-next
-      [b47ec80] Merge branch 'xfs-4.8-split-dax-dio' into for-next
-      [dc4113d2] Merge branch 'xfs-4.8-dir2-sf-fixes' into for-next
-
-Eric Sandeen (3):
-      [e97f6c5] xfs: fix xfs_error_get_cfg for negative errnos
-      [0b4db5d] xfs: remove extraneous buffer flag changes
-      [5539d36] xfs: don't reset b_retries to 0 on every failure
-
-Hou Tao (1):
-      [ad70328] xfs: remove the magic numbers in xfs_btree_block-related le=
-n macros
-
-Jann Horn (1):
-      [7f1b624] xfs: fix type confusion in xfs_ioc_swapext
-
-Kaho Ng (1):
-      [fbfb24b] xfs: indentation fix in xfs_btree_get_iroot()
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_btree.c     |   8 +-
- fs/xfs/libxfs/xfs_da_format.c |  31 +++---
- fs/xfs/libxfs/xfs_da_format.h |  43 +++------
- fs/xfs/libxfs/xfs_dir2_sf.c   |  38 +++-----
- fs/xfs/libxfs/xfs_format.h    |  66 ++++++++-----
- fs/xfs/xfs_aops.c             |  24 +----
- fs/xfs/xfs_aops.h             |   3 +
- fs/xfs/xfs_buf.c              | 170 ++++++++++++++++++++++++---------
- fs/xfs/xfs_buf.h              |   7 +-
- fs/xfs/xfs_buf_item.c         |  12 +--
- fs/xfs/xfs_error.c            |   2 +-
- fs/xfs/xfs_error.h            |   2 +-
- fs/xfs/xfs_file.c             | 232 ++++++++++++++++++++++++++++++++++----=
--------
- fs/xfs/xfs_inode.h            |  10 --
- fs/xfs/xfs_ioctl.c            |  33 ++++---
- fs/xfs/xfs_ioctl.h            |   3 -
- fs/xfs/xfs_ioctl32.c          |   6 +-
- fs/xfs/xfs_linux.h            |   7 --
- fs/xfs/xfs_log.c              |   5 +-
- fs/xfs/xfs_mount.c            |  10 +-
- fs/xfs/xfs_ondisk.h           |   6 +-
- fs/xfs/xfs_sysfs.c            |   3 +
- fs/xfs/xfs_trace.h            |  21 ++--
- 23 files changed, 451 insertions(+), 291 deletions(-)
---=20
+Dave.
+-- 
 Dave Chinner
 david@fromorbit.com
-
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJXjwe4AAoJEK3oKUf0dfodqTkP/3k/QggiAWH3LftPpgLEhzHh
-rJqJbXAbuFsAlZuFJTpQMQVFpeySePOHCddoT+wmLntQdPvJ70In2a3yw09CC3H7
-XUlrz0OlSuB8YkyD/SAkjhQvI+HB791Lkv5/PdTfCoUHPhkvZKaa+KT18MMHGSxN
-vNd89WceP5SzQcMh1BkR/6IYtQ01nGWnWApzemKxFWRyWowia8YXFCjQ57f4kjfR
-Vp81Y6BlqkJvzKew2EhOk/kx+tEWM5+FtUIZYVkZXP9nhDUh11tDOIwIvr2b9y1z
-ct7aQM4b0880b8ERT/qE3N/dLDuSKFIbBPRQRSQ0cXopoKJGnEkjMzQl+kiHjZD7
-OlkuoGvAz9jjdOq2A0QZPLHBOHLg7R4jjlS2k2Df89uRzMTQ9UMLQ4hng3HxEPWE
-M1GA0wNnO9MMc8qYv9Y0ktX63CYDFFeZWdVOOf4L7E1+YBn0uOFwGWJKwwNnZz4q
-f00kV9LWH1kViCXwBxRPaZPvqcfxEegrNqAX/6R1ydGktipv0vgMtQNgm38zp3ei
-/63W5PXrtRzYLo4Wtob3l138zUAyvIZc7HuRyD9kQayD2acELhg7eh/LMS5tRRJE
-zk+DLyybxH9HK7BxiN6stnWZDHQW5pAeuKVe6ToxAOkd4p+M7SC7YoL0AfpvQUd5
-BHo8/NpTc1TcuKQqd4sS
-=mNl3
------END PGP SIGNATURE-----
-
---DocE+STaALJfprDB--
-
-
---===============5866914470293292456==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5866914470293292456==--
