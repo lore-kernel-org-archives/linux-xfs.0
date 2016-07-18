@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8EDBC7CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 04:04:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EB2FCAC002
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 02:04:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ygUj4pQMeXBuPLtI (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 02:04:10 -0700 (PDT)
-Date: Wed, 20 Jul 2016 11:04:06 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: Document error handling behavior
-Message-ID: <20160720090406.GA3094@redhat.com>
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
-	<94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
-	<c1db85e5-5537-0105-4fa5-4b6512333d96@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95D7D7CA0
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 00:37:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 68F438F8033
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 22:37:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	jXDoHNuadbZRVvND for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2016 22:37:49 -0700 (PDT)
+Date: Mon, 18 Jul 2016 15:37:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: remove __arch_pack
+Message-ID: <20160718053746.GA16044@dastard>
+References: <1466754767-10657-1-git-send-email-hch@lst.de>
+	<1466754767-10657-4-git-send-email-hch@lst.de>
+	<478743f8-774f-d363-2e3e-40cd0963d8a1@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <c1db85e5-5537-0105-4fa5-4b6512333d96@sandeen.net>
+In-Reply-To: <478743f8-774f-d363-2e3e-40cd0963d8a1@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,54 +34,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jul 19, 2016 at 11:18:01PM -0700, Eric Sandeen wrote:
-> 
-> 
-> On 7/19/16 2:15 PM, Eric Sandeen wrote:
-> > On 7/19/16 3:04 AM, Carlos Maiolino wrote:
-> >> This is the first try to document the implementation of error handlers into
-> >> sysfs.
-> >>
-> >> Reviews and comments are appreciated, please also notice I'm not english-native,
-> >> so, spelling corrections are also appreciated :)
+On Fri, Jun 24, 2016 at 09:55:37AM -0500, Eric Sandeen wrote:
+> On 6/24/16 2:52 AM, Christoph Hellwig wrote:
+> > Instead we always declare struct xfs_dir2_sf_hdr as packed.  That's
+> > the expected layout, and while most major architectures do the packing
+> > by default the new structure size and offset checker showed that not
+> > only the ARM old ABI got this wrong, but various minor embedded
+> > architectures did as well.
 > > 
-> > Thanks for doing this! 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/libxfs/xfs_da_format.h | 2 +-
+> >  fs/xfs/xfs_linux.h            | 7 -------
+> >  2 files changed, 1 insertion(+), 8 deletions(-)
 > > 
-> > There seems to be a specific sysfs documentation format, see for example
-> > Documentation/ABI/testing/sysfs-fs-ext4 
-> > 
-> > It might be better to follow that format, and refer to it after a brief
-> > explanation of the functionality in the xfs.txt file?
+> > diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> > index f877bb1..685f23b 100644
+> > --- a/fs/xfs/libxfs/xfs_da_format.h
+> > +++ b/fs/xfs/libxfs/xfs_da_format.h
+> > @@ -229,7 +229,7 @@ typedef struct xfs_dir2_sf_hdr {
+> >  	__uint8_t		count;		/* count of entries */
+> >  	__uint8_t		i8count;	/* count of 8-byte inode #s */
+> >  	__uint8_t		parent[8];	/* parent dir inode number */
+> > -} __arch_pack xfs_dir2_sf_hdr_t;
+> > +} __packed xfs_dir2_sf_hdr_t;
 > 
-> Or not; Dave doesn't like this location, so perhaps best not to take
-> my suggestion.  ;)
-
-Oh, I can see now why he doesn't like that, I've never seen such directory until
-you mentioned it, why should it be so hidden, and why should we split filesystem
-information into different locations.
-
-IMHO, if someone want to take a look into filesystem documentation, the person
-goes directly to Documentation/filesystems, I honestly think splitting
-information into two different directories are wrong, and, even though you point
-to there in some other place, it is still bad, sounds like a RPG book... Start
-here...now go to page X...now go to page Y...now go to page Z.
-
-I can re-format the documentation to the same format from sysfs-fs-ext4, but I
-believe keeping it under Documentation/filesystems is still the best to do. To
-be honest, I actually think we should create an XFS directory under it and put
-everything xfs related there.
-
-Cheers
+> The reason I did this in the first place was a vague notion that unconditional
+> packing was harmful.
 > 
-> -Eric
+> http://digitalvampire.org/blog/index.php/2006/07/31/why-you-shouldnt-use-__attribute__packed/
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> "However, it's actively harmful to add the attribute to a structure that's
+> already going to be laid out with no padding."
+> ...
+> "gcc gets scared about unaligned accesses and generates six times as much code
+> (96 bytes vs. 16 bytes)! sparc64 goes similarly crazy, bloating from 12 bytes
+> to 52 bytes"
+> 
+> I don't know if that's (still) correct or not, but that was the reason
+> for the selective __pack application way back when.  Might be worth
+> investigating?
 
+Christoph? The first two ptches are fine, but more info is needed
+for this one...
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
