@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2A15A7CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 23:10:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AB1717CA0
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 06:18:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F1338304032
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 21:09:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id q5Lu9R9sVc1sZGAC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 21:09:57 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id C03863E2CC
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 04:09:56 +0000 (UTC)
-Date: Fri, 22 Jul 2016 12:09:55 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs: Document error handling behavior
-Message-ID: <20160722040955.GB16413@zlang.usersys.redhat.com>
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D7538F8035
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:18:56 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	C3Cz0uECnqCDlM5I for <xfs@oss.sgi.com>;
+	Mon, 18 Jul 2016 04:18:53 -0700 (PDT)
+Date: Mon, 18 Jul 2016 21:18:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: iomap infrastructure and multipage writes V5
+Message-ID: <20160718111851.GD16044@dastard>
+References: <1464792297-13185-1-git-send-email-hch@lst.de>
+	<20160628002649.GI12670@dastard> <20160630172239.GA23082@lst.de>
+	<20160718111400.GC16044@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <20160718111400.GC16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,127 +31,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Jul 19, 2016 at 12:04:17PM +0200, Carlos Maiolino wrote:
-> This is the first try to document the implementation of error handlers into
-> sysfs.
+On Mon, Jul 18, 2016 at 09:14:00PM +1000, Dave Chinner wrote:
+> On Thu, Jun 30, 2016 at 07:22:39PM +0200, Christoph Hellwig wrote:
+> > On Tue, Jun 28, 2016 at 10:26:49AM +1000, Dave Chinner wrote:
+> > > Christoph, it look slike there's an ENOSPC+ENOMEM behavioural regression here.
+> > > generic/224 on my 1p/1GB RAM VM using a 1k lock size filesystem has
+> > > significantly different behaviour once ENOSPC is hit withi this patchset.
+> > > 
+> > > It ends up with an endless stream of errors like this:
+> > 
+> > I've spent some time trying to reproduce this.  I'm actually getting
+> > the OOM killer almost reproducible for for-next without the iomap
+> > patches as well when just using 1GB of mem.  1400 MB is the minimum
+> > I can reproducibly finish the test with either code base.
+> > 
+> > But with the 1400 MB setup I see a few interesting things.  Even
+> > with the baseline, no-iomap case I see a few errors in the log:
+> > 
+> > [   70.407465] Filesystem "vdc": reserve blocks depleted! Consider increasing
+> > reserve pool
+> > size.
+> > [   70.195645] XFS (vdc): page discard on page ffff88005682a988, inode 0xd3, offset 761856.
+> > [   70.408079] Buffer I/O error on dev vdc, logical block 1048513, lost async
+> > page write
+> > [   70.408598] Buffer I/O error on dev vdc, logical block 1048514, lost async
+> > page write
+> >  27s
+> > 
+> > With iomap I also see the spew of page discard errors your see, but while
+> > I see a lot of them, the rest still finishes after a reasonable time,
+> > just a few seconds more than the pre-iomap baseline.  I also see the
+> > reserve block depleted message in this case.
+> > 
+> > Digging into the reserve block depleted message - it seems we have
+> > too many parallel iomap_allocate transactions going on.  I suspect
+> > this might be because the writeback code will not finish a writeback
+> > context if we have multiple blocks inside a page, which can
+> > happen easily for this 1k ENOSPC setup.  I've not had time to fully
+> > check if this is what really happens, but I did a quick hack (see below)
+> > to only allocate 1k at a time in iomap_begin, and with that generic/224
+> > finishes without the warning spew.  Of course this isn't a real fix,
+> > and I need to fully understand what's going on in writeback due to
+> > different allocation / dirtying patterns from the iomap change.
 > 
-> Reviews and comments are appreciated, please also notice I'm not english-native,
-> so, spelling corrections are also appreciated :)
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  Documentation/filesystems/xfs.txt | 78 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 78 insertions(+)
-> 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 8146e9f..1df868a 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -348,3 +348,81 @@ Removed Sysctls
->    ----				-------
->    fs.xfs.xfsbufd_centisec	v4.0
->    fs.xfs.age_buffer_centisecs	v4.0
-> +
-> +Error handling
-> +==============
-> +
-> +XFS can act differently according with the type of error found
-> +during its operation. The implementation introduces the following
-> +concepts to the error handler:
-> +
-> + -failure speed:
-> +	Defines how fast XFS should shutdown in case of a specific
-> +	error is found during the filesystem  operation. It can
-> +	shutdown immediately, after a defined number of tries, or
-> +	simply try forever, which was the old behavior and is now
-> +	set as default behavior, except during unmount time, where
-> +	in case of a error is found while unmounting, the filesystem
-> +	will shutdown.
-> +
-> + -error classes:
-> +	Specifies the subsystem/location where the error handlers
-> +	configure the behavior for, such as metadata or memory allocation.
-> +
-> + -error handlers:
-> +	Defines the behavior for a specific error.
-> +
-> +The filesystem behavior during an error can be set via sysfs files, where, the
-> +errors are organized with the following structure:
-> +
-> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
-> +
-> +Each directory contains:
-> +
-> + /sys/fs/xfs/<dev>/error/
-> +
-> +	fail_at_unmount		(Min:  0  Default:  1  Max: 1)
-> +		Defines the global error behavior during unmount time. If set to
-> +		"1", XFS will shutdown in case of any error is found, otherwise,
-> +		if set to "0", the filesystem will indefinitely retry to cleanly
-> +		unmount the filesystem.
+> Any progress here, Christoph? The current test run has been running
+> generic/224 on the 1GB mem test Vm for almost 6 hours now, and it's
+> still discarding pages. This doesn't always happen - sometimes it
+> takes the normal amount of time to run, but every so often it falls
+> into this "discard every page" loop and it takes hours to
+> complete...
 
-Hi Carlos,
+.... and I've now got a 16p/16GB RAM VM stuck in this loop in
+generic/224, so it's not limited to low memory machines....
 
-Could you explain more about the relationship of fail_at_unmount and
-max_retries(/retry_timeout_seconds). For example, if I set fail_at_unmount=0,
-and set EIO/max_retries=1, what's expected?
+Cheers,
 
-I'd like to write test case about this error handling, according to
-your document.
-
-Thanks,
-Zorro
-
-> +
-> +	<class> subdirectories
-> +		Contains specific error handlers configuration
-> +		(Ex: /sys/fs/xfs/<dev>/error/metadata).
-> +
-> + /sys/fs/xfs/<dev>/error/<class>/
-> +
-> +	The contents of this directory are <class> specific, since each <class>
-> +	might need to handle different types of errors. All <error> directory
-> +	though, contains the "default" directory, which is a global configuration
-> +	for errors not available for independent configuration.
-> +
-> + /sys/fs/xfs/<dev>/error/<class>/<error>
-> +
-> +	Contains the failure speed configuration files for each specific error,
-> +	including the "default" behavior, which contains the same configuration
-> +	options as the specific errors.
-> +
-> +	The available configurations for each error type are:
-> +
-> +	max_retries			(Min: -1  Default: -1  Max: INTMAX)
-> +		Define how many tries the filesystem is allowed to retry its
-> +		operations during the specific error, before shutdown the
-> +		filesystem. Setting this file to "-1", will set XFS to retry
-> +		forever in the specific error, setting it to "0", will make
-> +		XFS to fail immediately after the specific error is found,
-> +		while setting it to a "N" value, where N is greater than 0,
-> +		will make XFS retry "N" times before shutdown.
-> +
-> +	retry_timeout_seconds		(Min:  0  Default:  0  Max: INTMAX)
-> +		Define the amount of time (in seconds) that the filesystem is
-> +		allowed to retry its operations when the specific error is
-> +		found. "0" means no wait time.
-> +
-> +
-> +	"max_retries" takes precedence over "retry_timeout_seconds", where,
-> +	"retry_timeout_seconds" will only be tested if the "max_retries" limit
-> +	were not reached yet or is set to retry forever ("-1"). If "max_retries"
-> +	limit is reached, the filesystem will shutdown, wether or not
-> +	"retry_timeout_seconds" has been reached.
-> -- 
-> 2.7.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
