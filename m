@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 890857CA0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 21:06:01 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5B0E17CA1
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 06:47:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 594758F8037
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 19:05:58 -0700 (PDT)
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com
-	[67.231.153.30]) by cuda.sgi.com with ESMTP id ta26hk7WJdg0VkoU
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2016 19:05:55 -0700 (PDT)
-From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
-References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
-	<20160717000003.GW1922@dastard> <20160718060215.GB16044@dastard>
-Message-ID: <24d2f83f-5281-ab3c-9e91-985a4b8e2f8b@fb.com>
-Date: Mon, 18 Jul 2016 19:05:44 -0700
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F19A8F8033
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:47:26 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iPYPsOX5IgNBEtXr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:47:26 -0700 (PDT)
+Date: Mon, 18 Jul 2016 19:47:23 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
+Message-ID: <20160718114723.GG27776@eguan.usersys.redhat.com>
+References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
+	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
+	<20160716093358.GL2432@eguan.usersys.redhat.com>
+	<20160717233003.GX1922@dastard>
+	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160718060215.GB16044@dastard>
+Content-Disposition: inline
+In-Reply-To: <CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,49 +29,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-On 07/17/2016 11:02 PM, Dave Chinner wrote:
-> On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
->> On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
->>> Hello all,
->>>
->>> I've found a nasty source of slab corruption. Based on seeing similar symptoms
->>> on boxes at Facebook, I suspect it's been around since at least 3.10.
->>>
->>> It only reproduces under memory pressure so far as I can tell: the issue seems
->>> to be that XFS reclaims pages from buffers that are still in use by
->>> scsi/block. I'm not sure which side the bug lies on, but I've only observed it
->>> with XFS.
-> [....]
->> But this indicates that the page is under writeback at this point,
->> so that tends to indicate that the above freeing was incorrect.
->>
->> Hmmm - it's clear we've got direct reclaim involved here, and the
->> suspicion of a dirty page that has had it's bufferheads cleared.
->> Are there any other warnings in the log from XFS prior to kasan
->> throwing the error?
->
-> Can you try the patch below?
+On Mon, Jul 18, 2016 at 01:29:47PM +0200, Jan Tulak wrote:
+> On Mon, Jul 18, 2016 at 1:30 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Sat, Jul 16, 2016 at 05:33:58PM +0800, Eryu Guan wrote:
+> >> On Thu, Jul 14, 2016 at 02:43:34PM +0200, Jan Tulak wrote:
+> >> > +do_mkfs_fail -l lazy-count=1garbage $SCRATCH_DEV
+> >> > +do_mkfs_fail -l lazy-count=2 $SCRATCH_DEV
+> >> > +do_mkfs_fail -l lazy-count=0 -m crc=1 $SCRATCH_DEV
+> >> > +do_mkfs_fail -l version=1 -m crc=1 $SCRATCH_DEV
+> >>
+> >> This test fails in my DAX testing, where SCRATCH_DEV is ramdisk. The
+> >> mkfs itself should fail, but it passed. Log version 2 was used
+> >> automatically, instead of prompting "V2 logs always enabled for CRC
+> >> enabled filesytems"
+> >>
+> >> [root@dhcp-66-86-11 xfstests]# mkfs -t xfs -f -l version=1 -m crc=1 /dev/ram0
+> >> meta-data=/dev/ram0              isize=512    agcount=1, agsize=4096 blks
+> >>          =                       sectsz=4096  attr=2, projid32bit=1
+> >>          =                       crc=1        finobt=1, sparse=0
+> >> data     =                       bsize=4096   blocks=4096, imaxpct=25
+> >>          =                       sunit=0      swidth=0 blks
+> >> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> >> log      =internal log           bsize=4096   blocks=1605, version=2
+> >>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> >> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> >>
+> >> Is it a mkfs.xfs bug or the test case should handle the special case?
+> >
+> > Looks like it might be a side effect of using a 4k sector size. v1
+> > logs only supported 512 byte sectors, so it's entirely possible that
+> > the sector size is silently overriding the log version
+> > specification. Probably should be fixed in mkfs.
+> >
+> >
+> 
+> I tried to duplicate this, but in my config it didn't failed - how did
+> you create the ramdisk?
 
-Thanks for getting this out so quickly :)
+I think you need to test on a 4k sector size disk. I use scsi_debug to
+simulate physical 4k sector disk to reproduce this:
 
-So far so good: I booted Linus' tree as of this morning and reproduced the ASAN
-splat. After applying your patch I haven't triggered it.
+[root@dhcp-66-86-11 xfsprogs-dev]# modprobe -r scsi_debug
+[root@dhcp-66-86-11 xfsprogs-dev]# modprobe scsi_debug dev_size_mb=128 physblk_exp=3
+[root@dhcp-66-86-11 xfsprogs-dev]# blockdev --getbsz --getpbsz --getss /dev/sdc
+4096
+4096
+512
+[root@dhcp-66-86-11 xfsprogs-dev]# mkfs -t xfs -l version=1 -m crc=1 /dev/sdc
+meta-data=/dev/sdc               isize=512    agcount=4, agsize=8192 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=32768, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=1605, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-I'm a bit wary since it was hard to trigger reliably in the first place... so I
-lined up a few dozen boxes to run the test case overnight. I'll confirm in the
-morning (-0700) they look good.
+If you remove the "physblk_exp=3" at modprobe time, mkfs failed as
+expected.
 
 Thanks,
-Calvin
+Eryu
 
-> -Dave.
+> 
+> # modprobe brd rd_nr=1 rd_size=$((200*1024))
+> # blockdev --getbsz /dev/ram0
+> 4096
+> # blockdev --getpbsz /dev/ram0
+> 512
+> # blockdev --getss /dev/ram0
+> 512
+> 
+> # mkfs -t xfs -f -l version=1 -m crc=1 /dev/ram0
+> V2 logs always enabled for CRC enabled filesytems
+> Usage: mkfs.xfs
+> [snip]
+> 
+> Thanks, Jan
+> 
+> PS: cc-ing XFS list - if it is mkfs bug, it is better there than in fstests.
+> 
+> -- 
+> Jan Tulak
+> jtulak@redhat.com / jan@tulak.me
 
 _______________________________________________
 xfs mailing list
