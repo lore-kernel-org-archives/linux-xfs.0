@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D07F27CEC
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 14:32:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 078EE7CA0
+	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 01:02:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5A5BFAC001
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 12:32:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 70rEWbvCLsGFOO0x (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jul 2016 12:32:19 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 0ACB95277F
-	for <xfs@oss.sgi.com>; Fri,  8 Jul 2016 19:32:19 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u68JWHk8012288
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 8 Jul 2016 15:32:18 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: fix xfs_error_get_cfg for negative errnos
-Message-ID: <9810c6bf-9fd7-bf41-13ab-a96bec861457@redhat.com>
-Date: Fri, 8 Jul 2016 14:32:17 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8A30304032
+	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 23:02:20 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	3B7aUhoVvLaNNqGD for <xfs@oss.sgi.com>;
+	Sun, 17 Jul 2016 23:02:17 -0700 (PDT)
+Date: Mon, 18 Jul 2016 16:02:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Message-ID: <20160718060215.GB16044@dastard>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
+	<20160717000003.GW1922@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160717000003.GW1922@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,41 +30,161 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Calvin Owens <calvinowens@fb.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 
-xfs_error_get_cfg() is called with bp->b_error as an arg,
-which is negative, so the switch statement won't ever find
-any matches.
+On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
+> On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+> > Hello all,
+> > 
+> > I've found a nasty source of slab corruption. Based on seeing similar symptoms
+> > on boxes at Facebook, I suspect it's been around since at least 3.10.
+> > 
+> > It only reproduces under memory pressure so far as I can tell: the issue seems
+> > to be that XFS reclaims pages from buffers that are still in use by
+> > scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+> > with XFS.
+[....]
+> But this indicates that the page is under writeback at this point,
+> so that tends to indicate that the above freeing was incorrect.
+> 
+> Hmmm - it's clear we've got direct reclaim involved here, and the
+> suspicion of a dirty page that has had it's bufferheads cleared.
+> Are there any other warnings in the log from XFS prior to kasan
+> throwing the error?
 
-This results in only the default error handler having
-any effect, as EIO/ENOSPC/ENODEV get ignored due to the
-wrong sign.
+Can you try the patch below?
 
-It seems simplest to always flip the error sign to positive,
-so that we can handle either negative errors in bp->b_error,
-or possibly a positive errno via something like
-xfs_error_get_cfg(EIO) - this future-proofs the function.
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+xfs: bufferhead chains are invalid after end_page_writeback
+
+From: Dave Chinner <dchinner@redhat.com>
+
+In xfs_finish_page_writeback(), we have a loop that looks like this:
+
+        do {
+                if (off < bvec->bv_offset)
+                        goto next_bh;
+                if (off > end)
+                        break;
+                bh->b_end_io(bh, !error);
+next_bh:
+                off += bh->b_size;
+        } while ((bh = bh->b_this_page) != head);
+
+The b_end_io function is end_buffer_async_write(), which will call
+end_page_writeback() once all the buffers have marked as no longer
+under IO.  This issue here is that the only thing currently
+protecting both the bufferhead chain and the page from being
+reclaimed is the PageWriteback state held on the page.
+
+While we attempt to limit the loop to just the buffers covered by
+the IO, we still read from the buffer size and follow the next
+pointer in the bufferhead chain. There is no guarantee that either
+of these are valid after the PageWriteback flag has been cleared.
+Hence, loops like this are completely unsafe, and result in
+use-after-free issues. One such problem was caught by Calvin Owens
+with KASAN:
+
+.....
+ INFO: Freed in 0x103fc80ec age=18446651500051355200 cpu=2165122683 pid=-1
+  free_buffer_head+0x41/0x90
+  __slab_free+0x1ed/0x340
+  kmem_cache_free+0x270/0x300
+  free_buffer_head+0x41/0x90
+  try_to_free_buffers+0x171/0x240
+  xfs_vm_releasepage+0xcb/0x3b0
+  try_to_release_page+0x106/0x190
+  shrink_page_list+0x118e/0x1a10
+  shrink_inactive_list+0x42c/0xdf0
+  shrink_zone_memcg+0xa09/0xfa0
+  shrink_zone+0x2c3/0xbc0
+.....
+ Call Trace:
+  <IRQ>  [<ffffffff81e8b8e4>] dump_stack+0x68/0x94
+  [<ffffffff8153a995>] print_trailer+0x115/0x1a0
+  [<ffffffff81541174>] object_err+0x34/0x40
+  [<ffffffff815436e7>] kasan_report_error+0x217/0x530
+  [<ffffffff81543b33>] __asan_report_load8_noabort+0x43/0x50
+  [<ffffffff819d651f>] xfs_destroy_ioend+0x3bf/0x4c0
+  [<ffffffff819d69d4>] xfs_end_bio+0x154/0x220
+  [<ffffffff81de0c58>] bio_endio+0x158/0x1b0
+  [<ffffffff81dff61b>] blk_update_request+0x18b/0xb80
+  [<ffffffff821baf57>] scsi_end_request+0x97/0x5a0
+  [<ffffffff821c5558>] scsi_io_completion+0x438/0x1690
+  [<ffffffff821a8d95>] scsi_finish_command+0x375/0x4e0
+  [<ffffffff821c3940>] scsi_softirq_done+0x280/0x340
+
+
+Where the access is occuring during IO completion after the buffer
+had been freed from direct memory reclaim.
+
+Prevent use-after-free accidents in this end_io processing loop by
+pre-calculating the loop conditionals before calling bh->b_end_io().
+The loop is already limited to just the bufferheads covered by the
+IO in progress, so the offset checks are sufficient to prevent
+accessing buffers in the chain after end_page_writeback() has been
+called by the the bh->b_end_io() callout.
+
+Yet another example of why Bufferheads Must Die.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ fs/xfs/xfs_aops.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-I'm still chasing down some odd behaviors in the error handling
-patches but this seems worth sending now :)
-
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 4c2c550..79cfd3f 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -634,6 +634,9 @@ xfs_error_get_cfg(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80714eb..0cfb944 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -87,6 +87,12 @@ xfs_find_bdev_for_inode(
+  * We're now finished for good with this page.  Update the page state via the
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
++ *
++ * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
++ * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
++ * the page at all, as we may be racing with memory reclaim and it can free both
++ * the bufferhead chain and the page as it will see the page as clean and
++ * unused.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -95,8 +101,9 @@ xfs_finish_page_writeback(
+ 	int			error)
  {
- 	struct xfs_error_cfg	*cfg;
+ 	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh;
++	struct buffer_head	*head, *bh, *next;
+ 	unsigned int		off = 0;
++	unsigned int		bsize;
  
-+	if (error < 0)
-+		error = -error;
-+
- 	switch (error) {
- 	case EIO:
- 		cfg = &mp->m_error_cfg[error_class][XFS_ERR_EIO];
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & ((1 << inode->i_blkbits) - 1)) == 0);
+@@ -105,15 +112,17 @@ xfs_finish_page_writeback(
+ 
+ 	bh = head = page_buffers(bvec->bv_page);
+ 
++	bsize = bh->b_size;
+ 	do {
++		next = bh->b_this_page;
+ 		if (off < bvec->bv_offset)
+ 			goto next_bh;
+ 		if (off > end)
+ 			break;
+ 		bh->b_end_io(bh, !error);
+ next_bh:
+-		off += bh->b_size;
+-	} while ((bh = bh->b_this_page) != head);
++		off += bsize;
++	} while ((bh = next) != head);
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
