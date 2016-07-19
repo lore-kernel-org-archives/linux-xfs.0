@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3207E7CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 04:17:33 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7DEDA7CA1
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:44:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8E21304043
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 02:17:29 -0700 (PDT)
-Received: from mail-wm0-f43.google.com (mail-wm0-f43.google.com
-	[74.125.82.43]) by cuda.sgi.com with ESMTP id sAxStN7w3DfHYwj7
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50B93304039
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:44:02 -0700 (PDT)
+Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
+	[74.125.82.47]) by cuda.sgi.com with ESMTP id uzd3Rjivvo9Vxx45
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Jul 2016 02:17:27 -0700 (PDT)
-Received: by mail-wm0-f43.google.com with SMTP id f65so132222443wmi.0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 02:17:27 -0700 (PDT)
+	Tue, 19 Jul 2016 01:43:58 -0700 (PDT)
+Received: by mail-wm0-f47.google.com with SMTP id f65so131293491wmi.0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:43:58 -0700 (PDT)
+Message-ID: <EBFD548A4E314321937A5966D9B00808@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+References: <143E2E5E912B4C348E8C62AA987F0506@alyakaslap>
+	<578D399C.1010006@applied-asynchrony.com>
+In-Reply-To: <578D399C.1010006@applied-asynchrony.com>
+Subject: Re: xfs_vm_releasepage() causing BUG at free_buffer_head()
+Date: Tue, 19 Jul 2016 11:43:52 +0300
 MIME-Version: 1.0
-From: Kuo Hugo <tonytkdk@gmail.com>
-Date: Tue, 19 Jul 2016 17:17:25 +0800
-Message-ID: <CA++_uht+DQCXQ=oF0RWkje1dPxFTA9RNKH3rpGkL5gJBgFkDiQ@mail.gmail.com>
-Subject: xfs_do_force_shutdown
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,131 +28,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3732211883174705406=="
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>
 
---===============3732211883174705406==
-Content-Type: multipart/alternative; boundary=001a114241c2a284f20537f98d8f
-
---001a114241c2a284f20537f98d8f
-Content-Type: text/plain; charset=UTF-8
-
-Hi Folks,
-
-I got a question regarding to xfs_do_force_shutdown. The smartctl doesn't
-show any clue about disk bad. The device works properly again after
-remount. The xfs_repair complete to repair the device very quick and
-these's not too much suspecious.
-
-
-* Is this a xfs level issue about dirty logs ?
-* Is this HBA problem ?
-
-
-```
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330404] blk_update_request:
-I/O error, dev sdy, sector 3909224960
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330650] XFS (sdy): metadata
-I/O error: block 0xe9020a00 ("xlog_iodone") error 5 numblks 64
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330939] XFS (sdy):
-xfs_do_force_shutdown(0x2) called from line 1179 of file
-/build/linux-lts-vivid-whAhIw/linux-lts-vivid-3.19.0/fs/xfs/xfs_log.c.
-Return address = 0xffffffffc06a1d96
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330973] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330999] XFS (sdy): Log I/O
-Error Detected.  Shutting down filesystem
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331206] XFS (sdy): Please
-umount the filesystem and rectify the problem(s)
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331443] Buffer I/O error on
-dev sdy, logical block 18, lost async page write
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.337098] Buffer I/O error on
-dev sdy, logical block 30523594, lost async page write
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.348492] Buffer I/O error on
-dev sdy, logical block 19, lost async page write
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.359941] Buffer I/O error on
-dev sdy, logical block 30523599, lost async page write
-Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.380649] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:52:59 HBGTCOBSON02 kernel: [9291069.111432] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:53:29 HBGTCOBSON02 kernel: [9291099.215252] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517951] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517981] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.518006] XFS (sdy):
-xfs_log_force: error -5 returned.
-Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.158898] XFS (sdy): Mounting
-V4 Filesystem
-Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.279516] XFS (sdy): Starting
-recovery (logdev: internal)
-Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.725549] XFS (sdy): Ending
-recovery (logdev: internal)
-```
-
-thanks // Hugo
-
---001a114241c2a284f20537f98d8f
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div>Hi Folks,=C2=A0</div><div><br></div><div>I got a ques=
-tion regarding to xfs_do_force_shutdown. The smartctl doesn&#39;t show any =
-clue about disk bad. The device works properly again after remount. The xfs=
-_repair complete to repair the device very quick and these&#39;s not too mu=
-ch suspecious.=C2=A0</div><div><br></div><div><br></div><div>* Is this a xf=
-s level issue about dirty logs ?=C2=A0</div><div>* Is this HBA problem ?</d=
-iv><div><br></div><div><br></div><div>```<br></div><div><div>Jul 17 22:52:3=
-1 HBGTCOBSON02 kernel: [9291040.330404] blk_update_request: I/O error, dev =
-sdy, sector 3909224960</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291=
-040.330650] XFS (sdy): metadata I/O error: block 0xe9020a00 (&quot;xlog_iod=
-one&quot;) error 5 numblks 64</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel=
-: [9291040.330939] XFS (sdy): xfs_do_force_shutdown(0x2) called from line 1=
-179 of file /build/linux-lts-vivid-whAhIw/linux-lts-vivid-3.19.0/fs/xfs/xfs=
-_log.c.=C2=A0 Return address =3D 0xffffffffc06a1d96</div><div>Jul 17 22:52:=
-31 HBGTCOBSON02 kernel: [9291040.330973] XFS (sdy): xfs_log_force: error -5=
- returned.</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330999] =
-XFS (sdy): Log I/O Error Detected.=C2=A0 Shutting down filesystem</div><div=
->Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331206] XFS (sdy): Please um=
-ount the filesystem and rectify the problem(s)</div><div>Jul 17 22:52:31 HB=
-GTCOBSON02 kernel: [9291040.331443] Buffer I/O error on dev sdy, logical bl=
-ock 18, lost async page write</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel=
-: [9291040.337098] Buffer I/O error on dev sdy, logical block 30523594, los=
-t async page write</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.=
-348492] Buffer I/O error on dev sdy, logical block 19, lost async page writ=
-e</div><div>Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.359941] Buffer I/=
-O error on dev sdy, logical block 30523599, lost async page write</div><div=
->Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.380649] XFS (sdy): xfs_log_f=
-orce: error -5 returned.</div><div>Jul 17 22:52:59 HBGTCOBSON02 kernel: [92=
-91069.111432] XFS (sdy): xfs_log_force: error -5 returned.</div><div>Jul 17=
- 22:53:29 HBGTCOBSON02 kernel: [9291099.215252] XFS (sdy): xfs_log_force: e=
-rror -5 returned.</div><div>Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.5=
-17951] XFS (sdy): xfs_log_force: error -5 returned.</div><div>Jul 17 22:53:=
-33 HBGTCOBSON02 kernel: [9291102.517981] XFS (sdy): xfs_log_force: error -5=
- returned.</div><div>Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.518006] =
-XFS (sdy): xfs_log_force: error -5 returned.</div><div>Jul 18 08:35:55 HBGT=
-COBSON02 kernel: [9326072.158898] XFS (sdy): Mounting V4 Filesystem</div><d=
-iv>Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.279516] XFS (sdy): Startin=
-g recovery (logdev: internal)</div><div>Jul 18 08:35:55 HBGTCOBSON02 kernel=
-: [9326072.725549] XFS (sdy): Ending recovery (logdev: internal)</div></div=
-><div>```</div><div><br></div><div>thanks // Hugo</div></div>
-
---001a114241c2a284f20537f98d8f--
-
-
---===============3732211883174705406==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3732211883174705406==--
+SGVsbG8gSG9sZ2VyLAoKVGhhbmsgeW91IGZvciB5b3VyIHJlc3BvbnNlLiBJIHNlZSB0aGF0IHhm
+c19maW5pc2hfcGFnZV93cml0ZWJhY2soKSBoYXMgYmVlbiAKYWRkZWQgdmVyeSByZWNlbnRseSBh
+bmQgaXMgY2FsbGVkIGZyb20geGZzX2Rlc3Ryb3lfaW9lbmQoKS4gSW4gbXkga2VybmVsIAooMy4x
+OC4xOSksIHRoZSB4ZnNfZGVzdHJveV9pb2VuZCgpIGlzIFsxXS4gSSB0aGluayBpdCBkb2Vzbid0
+IHN1ZmZlciBmcm9tIAp0aGUgcHJvYmxlbSBvZiB4ZnNfZmluaXNoX3BhZ2Vfd3JpdGViYWNrKCku
+IExvb2tpbmcgYXQgb3RoZXIgdXNhZ2Ugb2YgCiJiX3RoaXNfcGFnZSIgaW4gbXkga2VybmVsLCB0
+aGV5IGFsbCBzZWVtIHZhbGlkLCBhbmQgc2ltaWxhciB0byB3aGF0IExpbnVzJ3MgCnRyZWUgaGFz
+LgoKTG9va2luZyBhdCBiX3ByaXZhdGUgdXNhZ2UgdG8gbGluayBidWZmZXIgaGVhZHMsIHRoZSBv
+bmx5IHN1c3BpY2lvdXMgY29kZSBpcyAKaW4geGZzX3N1Ym1pdF9pb2VuZCgpOgoKICAgICAgICBm
+b3IgKGJoID0gaW9lbmQtPmlvX2J1ZmZlcl9oZWFkOyBiaDsgYmggPSBiaC0+Yl9wcml2YXRlKSB7
+CgogICAgICAgICAgICBpZiAoIWJpbykgewpyZXRyeToKICAgICAgICAgICAgICAgIGJpbyA9IHhm
+c19hbGxvY19pb2VuZF9iaW8oYmgpOwogICAgICAgICAgICB9IGVsc2UgaWYgKGJoLT5iX2Jsb2Nr
+bnIgIT0gbGFzdGJsb2NrICsgMSkgewogICAgICAgICAgICAgICAgeGZzX3N1Ym1pdF9pb2VuZF9i
+aW8od2JjLCBpb2VuZCwgYmlvKTsKICAgICAgICAgICAgICAgIGdvdG8gcmV0cnk7CiAgICAgICAg
+ICAgIH0KCiAgICAgICAgICAgIGlmICh4ZnNfYmlvX2FkZF9idWZmZXIoYmlvLCBiaCkgIT0gYmgt
+PmJfc2l6ZSkgewogICAgICAgICAgICAgICAgeGZzX3N1Ym1pdF9pb2VuZF9iaW8od2JjLCBpb2Vu
+ZCwgYmlvKTsKICAgICAgICAgICAgICAgIGdvdG8gcmV0cnk7CiAgICAgICAgICAgIH0KCiAgICAg
+ICAgICAgIGxhc3RibG9jayA9IGJoLT5iX2Jsb2NrbnI7CiAgICAgICAgfQoKQ2FuIGl0IGhhcHBl
+biB0aGF0IHdoZW4gdGhlIGZvciBsb29wIGRvZXMgImJoID0gYmgtPmJfcHJpdmF0ZSIsIHRoZSBi
+aCBoYXMgCmFscmVhZHkgYmVlbiBjb21wbGV0ZWQgYW5kIGZyZWVkPwpXaXRoIHRoaXMgaW4gbWlu
+ZCwgdGhlICJnb3RvIHJldHJ5IiBhbHNvIHNlZW0gc3VzcGljaW91cyBmb3IgdGhlIHNhbWUgCnJl
+YXNvbi4KCldoYXQgZG8geW91IHRoaW5rPwoKVGhhbmtzLApBbGV4LgoKWzFdClNUQVRJQyB2b2lk
+Cnhmc19kZXN0cm95X2lvZW5kKAogICAgeGZzX2lvZW5kX3QgICAgICAgICppb2VuZCkKewogICAg
+c3RydWN0IGJ1ZmZlcl9oZWFkICAgICpiaCwgKm5leHQ7CgogICAgZm9yIChiaCA9IGlvZW5kLT5p
+b19idWZmZXJfaGVhZDsgYmg7IGJoID0gbmV4dCkgewogICAgICAgIG5leHQgPSBiaC0+Yl9wcml2
+YXRlOwogICAgICAgIGJoLT5iX2VuZF9pbyhiaCwgIWlvZW5kLT5pb19lcnJvcik7CiAgICB9Cgog
+ICAgbWVtcG9vbF9mcmVlKGlvZW5kLCB4ZnNfaW9lbmRfcG9vbCk7Cn0KCgotLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLSAKRnJvbTogSG9sZ2VyIEhvZmZzdMOkdHRlClNlbnQ6IE1vbmRheSwgSnVs
+eSAxOCwgMjAxNiAxMToxOCBQTQpUbzogQWxleCBMeWFrYXMgOyB4ZnNAb3NzLnNnaS5jb20KU3Vi
+amVjdDogUmU6IHhmc192bV9yZWxlYXNlcGFnZSgpIGNhdXNpbmcgQlVHIGF0IGZyZWVfYnVmZmVy
+X2hlYWQoKQoKT24gMDcvMTgvMTYgMjA6MDAsIEFsZXggTHlha2FzIHdyb3RlOgo+IEdyZWV0aW5n
+cyBYRlMgY29tbXVuaXR5LAo+Cj4gV2UgaGF2ZSBoaXQgdGhlIGZvbGxvd2luZyBCVUcgWzFdLgo+
+Cj4gVGhpcyBpcyBpbiBmcmVlX2J1ZmZlcl9oZWFkKCk6Cj4gQlVHX09OKCFsaXN0X2VtcHR5KCZi
+aC0+Yl9hc3NvY19idWZmZXJzKSk7Cj4KPiBUaGlzIGlzIGhhcHBlbmluZyBpbiBhIGxvbmctdGVy
+bSBtYWlubGluZSBrZXJuZWwgMy4xOC4xOS4KPgo+IFNvbWUgZ29vZ2xpbmcgcmV2ZWFsZWQgYSBw
+b3NzaWJseS1yZWxhdGVkIGRpc2N1c3Npb24gYXQ6Cj4gaHR0cDovL2NvbW1lbnRzLmdtYW5lLm9y
+Zy9nbWFuZS5saW51eC5maWxlLXN5c3RlbXMvMTA1MDkzCj4gaHR0cHM6Ly9sa21sLm9yZy9sa21s
+LzIwMTYvNS8zMC8xMDA3Cj4gZXhjZXB0IHRoYXQgaW4gb3VyIGNhc2UgSSBkb24ndCBzZWUgdGhl
+ICJXQVJOX09OX09OQ0UoZGVsYWxsb2MpIiAKPiB0cmlnZ2VyZWQuCgpTaW5jZSB5b3UgbWFrZSBp
+dCBwYXN0IHRoZSBXQVJOX09OcyB0aGF0IG1ha2VzIGl0IGxvb2sgbGlrZSB0aGlzCnZlcnkgcmVj
+ZW50IHJlcG9ydCBmcm9tIEZyaWRheToKCmh0dHA6Ly9vc3Muc2dpLmNvbS9waXBlcm1haWwveGZz
+LzIwMTYtSnVseS8wNTAxOTkuaHRtbAoKRGF2ZSBwb3N0ZWQgYSBwYXRjaCBpbiB0aGF0IHRocmVh
+ZCB3aGljaCBzZWVtcyBvdCB3b3JrIGZpbmUgYW5kIHNvCmZhciBoYXNuJ3Qgc2V0IGFueXRoaW5n
+IG9uIGZpcmUsIGF0IGxlYXN0IGZvciBtZSBvbiA0LjQueC4KCmNoZWVycywKSG9sZ2VyCgpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
+aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
+ZnMK
