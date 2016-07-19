@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C543B7CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 01:18:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8AC07304043
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 23:18:05 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id AO2PWaymTzzSw71l for <xfs@oss.sgi.com>;
-	Tue, 19 Jul 2016 23:18:03 -0700 (PDT)
-Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
-	bits)) (No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 8FDC84A4
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 01:18:02 -0500 (CDT)
-Subject: Re: [PATCH] xfs: Document error handling behavior
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
-	<94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c1db85e5-5537-0105-4fa5-4b6512333d96@sandeen.net>
-Date: Tue, 19 Jul 2016 23:18:01 -0700
+	by oss.sgi.com (Postfix) with ESMTP id 9FFCE7CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 05:10:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 64796304032
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:10:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7GksDM4czQE4uprA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:10:47 -0700 (PDT)
+Date: Tue, 19 Jul 2016 12:10:41 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: xfs_do_force_shutdown
+Message-ID: <20160719101041.GA2430@redhat.com>
+References: <CA++_uht+DQCXQ=oF0RWkje1dPxFTA9RNKH3rpGkL5gJBgFkDiQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <CA++_uht+DQCXQ=oF0RWkje1dPxFTA9RNKH3rpGkL5gJBgFkDiQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +29,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Kuo Hugo <tonytkdk@gmail.com>
+Cc: xfs@oss.sgi.com
+
+On Tue, Jul 19, 2016 at 05:17:25PM +0800, Kuo Hugo wrote:
+>    Hi Folks,
+>    I got a question regarding to xfs_do_force_shutdown. The smartctl
+>    doesn't show any clue about disk bad. The device works properly again
+>    after remount. The xfs_repair complete to repair the device very quick
+>    and these's not too much suspecious.
+>    * Is this a xfs level issue about dirty logs ?
+>    * Is this HBA problem ?
+>    ```
+
+It's certainly an I/O error, but why it happened needs further investigation. I
+can't say what happened without looking on the remaining logs to see if is there
+something else there. There are probably more errors from the block layer than
+the one you pasted here, please, attach the complete log of the system where it
+happened, dmesg and /var/log/messages files.
+
+Also, the device might be working properly again, because you haven't tried to
+read/write sector 3909224960, which is the sector that looks to have triggered
+the errors you specified.
+
+Also, what's the kernel version you are using? the amount of
+"xfs_log_force: error -5 returned" messages, says it's a quite old kernel.
 
 
+Cheers.
 
-On 7/19/16 2:15 PM, Eric Sandeen wrote:
-> On 7/19/16 3:04 AM, Carlos Maiolino wrote:
->> This is the first try to document the implementation of error handlers into
->> sysfs.
->>
->> Reviews and comments are appreciated, please also notice I'm not english-native,
->> so, spelling corrections are also appreciated :)
-> 
-> Thanks for doing this! 
-> 
-> There seems to be a specific sysfs documentation format, see for example
-> Documentation/ABI/testing/sysfs-fs-ext4 
-> 
-> It might be better to follow that format, and refer to it after a brief
-> explanation of the functionality in the xfs.txt file?
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330404]
+>    blk_update_request: I/O error, dev sdy, sector 3909224960
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330650] XFS (sdy):
+>    metadata I/O error: block 0xe9020a00 ("xlog_iodone") error 5 numblks 64
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330939] XFS (sdy):
+>    xfs_do_force_shutdown(0x2) called from line 1179 of file
+>    /build/linux-lts-vivid-whAhIw/linux-lts-vivid-3.19.0/fs/xfs/xfs_log.c.
+>    Return address = 0xffffffffc06a1d96
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330973] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330999] XFS (sdy): Log
+>    I/O Error Detected.  Shutting down filesystem
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331206] XFS (sdy): Please
+>    umount the filesystem and rectify the problem(s)
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331443] Buffer I/O error
+>    on dev sdy, logical block 18, lost async page write
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.337098] Buffer I/O error
+>    on dev sdy, logical block 30523594, lost async page write
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.348492] Buffer I/O error
+>    on dev sdy, logical block 19, lost async page write
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.359941] Buffer I/O error
+>    on dev sdy, logical block 30523599, lost async page write
+>    Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.380649] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:52:59 HBGTCOBSON02 kernel: [9291069.111432] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:53:29 HBGTCOBSON02 kernel: [9291099.215252] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517951] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517981] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.518006] XFS (sdy):
+>    xfs_log_force: error -5 returned.
+>    Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.158898] XFS (sdy):
+>    Mounting V4 Filesystem
+>    Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.279516] XFS (sdy):
+>    Starting recovery (logdev: internal)
+>    Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.725549] XFS (sdy): Ending
+>    recovery (logdev: internal)
+>    ```
+>    thanks // Hugo
 
-Or not; Dave doesn't like this location, so perhaps best not to take
-my suggestion.  ;)
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
--Eric
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
