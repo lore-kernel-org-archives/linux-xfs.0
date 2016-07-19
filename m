@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ADE107CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 09:00:46 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 42D227CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:52:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7000D8F8037
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 07:00:43 -0700 (PDT)
-Received: from mail-it0-f54.google.com (mail-it0-f54.google.com
-	[209.85.214.54]) by cuda.sgi.com with ESMTP id VAn0f1EgnnO3RHCW
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Jul 2016 07:00:41 -0700 (PDT)
-Received: by mail-it0-f54.google.com with SMTP id j124so50921319ith.1
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 07:00:41 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 06346304032
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:52:13 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id ynbmZYOqrRsH1UaL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:52:09 -0700 (PDT)
+Date: Tue, 19 Jul 2016 10:52:08 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/3] xfs: remove __arch_pack
+Message-ID: <20160719085208.GA21785@lst.de>
+References: <1466754767-10657-1-git-send-email-hch@lst.de>
+	<1466754767-10657-4-git-send-email-hch@lst.de>
+	<478743f8-774f-d363-2e3e-40cd0963d8a1@sandeen.net>
+	<20160718053746.GA16044@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160720090406.GA3094@redhat.com>
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
-	<94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
-	<c1db85e5-5537-0105-4fa5-4b6512333d96@sandeen.net>
-	<20160720090406.GA3094@redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 20 Jul 2016 16:00:21 +0200
-Message-ID: <CACj3i70DEaLbQuJC1mj3XizLAQOoNsoogB9t_1FA9oqBKgVmOA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Document error handling behavior
+Content-Disposition: inline
+In-Reply-To: <20160718053746.GA16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,26 +32,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Jul 20, 2016 at 11:04 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
->
-> IMHO, if someone want to take a look into filesystem documentation, the person
-> goes directly to Documentation/filesystems, I honestly think splitting
-> information into two different directories are wrong, and, even though you point
-> to there in some other place, it is still bad, sounds like a RPG book... Start
-> here...now go to page X...now go to page Y...now go to page Z.
->
 
-I'm sorry for this offtopic, but I would almost bet that I saw a game
-made in man pages. Yet Google can't find anything, so maybe it is a
-kind of deja vu, or a common experience... :(
+On Mon, Jul 18, 2016 at 03:37:46PM +1000, Dave Chinner wrote:
+> > The reason I did this in the first place was a vague notion that unconditional
+> > packing was harmful.
+> > 
+> > http://digitalvampire.org/blog/index.php/2006/07/31/why-you-shouldnt-use-__attribute__packed/
+> > 
+> > "However, it's actively harmful to add the attribute to a structure that's
+> > already going to be laid out with no padding."
+> > ...
+> > "gcc gets scared about unaligned accesses and generates six times as much code
+> > (96 bytes vs. 16 bytes)! sparc64 goes similarly crazy, bloating from 12 bytes
+> > to 52 bytes"
+> > 
+> > I don't know if that's (still) correct or not, but that was the reason
+> > for the selective __pack application way back when.  Might be worth
+> > investigating?
+> 
+> Christoph? The first two ptches are fine, but more info is needed
+> for this one...
 
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+I don't have a sparc64 compiler to test unfortunately.  But I can confirm
+that on x86-64 xfs.o is bit to bit identical with or without the patch.
 
 _______________________________________________
 xfs mailing list
