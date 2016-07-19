@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 582D27CBA
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 13:35:42 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6A5CC7CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 12:10:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B8290AC004
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 11:35:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rqb7G5FXBvg4d5UK (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F3358F8040
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 10:10:20 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id MJIln8AHF4K87uxk (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Jul 2016 11:35:36 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 45D3D7EA90
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 18:35:36 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-121.bos.redhat.com [10.18.41.121])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u6FIZZcd029251
-	for <xfs@oss.sgi.com>; Fri, 15 Jul 2016 14:35:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/2] xfs: track and serialize in-flight async buffers
-	against unmount
-Date: Fri, 15 Jul 2016 14:35:34 -0400
-Message-Id: <1468607734-3174-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1468607734-3174-1-git-send-email-bfoster@redhat.com>
-References: <1468607734-3174-1-git-send-email-bfoster@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 10:10:13 -0700 (PDT)
+Date: Tue, 19 Jul 2016 10:10:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 042/119] xfs: log rmap intent items
+Message-ID: <20160719171007.GF12567@birch.djwong.org>
+References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
+	<146612654128.12839.11872963796909332527.stgit@birch.djwong.org>
+	<20160715183346.GB55338@bfoster.bfoster>
+	<20160716073408.GD21529@birch.djwong.org>
+	<20160718125459.GA27380@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160718125459.GA27380@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,319 +29,470 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-Newly allocated XFS metadata buffers are added to the LRU once the hold
-count is released, which typically occurs after I/O completion. There is
-no other mechanism at current that tracks the existence or I/O state of
-a new buffer. Further, readahead I/O tends to be submitted
-asynchronously by nature, which means the I/O can remain in flight and
-actually complete long after the calling context is gone. This means
-that file descriptors or any other holds on the filesystem can be
-released, allowing the filesystem to be unmounted while I/O is still in
-flight. When I/O completion occurs, core data structures may have been
-freed, causing completion to run into invalid memory accesses and likely
-to panic.
+On Mon, Jul 18, 2016 at 08:55:02AM -0400, Brian Foster wrote:
+> On Sat, Jul 16, 2016 at 12:34:09AM -0700, Darrick J. Wong wrote:
+> > On Fri, Jul 15, 2016 at 02:33:46PM -0400, Brian Foster wrote:
+> > > On Thu, Jun 16, 2016 at 06:22:21PM -0700, Darrick J. Wong wrote:
+> > > > Provide a mechanism for higher levels to create RUI/RUD items, submit
+> > > > them to the log, and a stub function to deal with recovered RUI items.
+> > > > These parts will be connected to the rmapbt in a later patch.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > 
+> > > The commit log makes no mention of log recovery.. perhaps this should be
+> > > split in two?
+> > > 
+> > > >  fs/xfs/Makefile          |    1 
+> > > >  fs/xfs/xfs_log_recover.c |  344 +++++++++++++++++++++++++++++++++++++++++++++-
+> > > >  fs/xfs/xfs_trans.h       |   17 ++
+> > > >  fs/xfs/xfs_trans_rmap.c  |  235 +++++++++++++++++++++++++++++++
+> > > >  4 files changed, 589 insertions(+), 8 deletions(-)
+> > > >  create mode 100644 fs/xfs/xfs_trans_rmap.c
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > > > index 8ae0a10..1980110 100644
+> > > > --- a/fs/xfs/Makefile
+> > > > +++ b/fs/xfs/Makefile
+> > > > @@ -110,6 +110,7 @@ xfs-y				+= xfs_log.o \
+> > > >  				   xfs_trans_buf.o \
+> > > >  				   xfs_trans_extfree.o \
+> > > >  				   xfs_trans_inode.o \
+> > > > +				   xfs_trans_rmap.o \
+> > > >  
+> > > >  # optional features
+> > > >  xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+> > > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > > index b33187b..c9fe0c4 100644
+> > > > --- a/fs/xfs/xfs_log_recover.c
+> > > > +++ b/fs/xfs/xfs_log_recover.c
+> ...
+> > > > @@ -4265,17 +4383,23 @@ xlog_recover_process_efis(
+> > > >  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> > > >  	while (lip != NULL) {
+> > > >  		/*
+> > > > -		 * We're done when we see something other than an EFI.
+> > > > -		 * There should be no EFIs left in the AIL now.
+> > > > +		 * We're done when we see something other than an intent.
+> > > > +		 * There should be no intents left in the AIL now.
+> > > >  		 */
+> > > > -		if (lip->li_type != XFS_LI_EFI) {
+> > > > +		if (!xlog_item_is_intent(lip)) {
+> > > >  #ifdef DEBUG
+> > > >  			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
+> > > > -				ASSERT(lip->li_type != XFS_LI_EFI);
+> > > > +				ASSERT(!xlog_item_is_intent(lip));
+> > > >  #endif
+> > > >  			break;
+> > > >  		}
+> > > >  
+> > > > +		/* Skip anything that isn't an EFI */
+> > > > +		if (lip->li_type != XFS_LI_EFI) {
+> > > > +			lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> > > > +			continue;
+> > > > +		}
+> > > > +
+> > > 
+> > > Hmm, so previously this function used the existence of any non-EFI item
+> > > as an end of traversal marker, since the freeing operations add more
+> > > items to the AIL. It's not immediately clear to me whether this is just
+> > > an efficiency thing or a potential problem, but I wonder if we should
+> > > grab the last item and use that or its lsn as an end of list marker.
+> > 
+> > FWIW I designed all this under the impression that it was safe to stop looking
+> > for intent items once we found something that wasn't an intent item because all
+> > the new items generated during log recovery came after, and therefore there was
+> > no problem.
+> > 
+> 
+> Ok. To be clear, are you saying that any new intents should follow
+> non-intent items? If so, that sounds... reasonable (perhaps a little
+> landmind-ish :P).
 
-This problem is reproduced on XFS via directory readahead. A filesystem
-is mounted, a directory is opened/closed and the filesystem immediately
-unmounted. The open/close cycle triggers a directory readahead that if
-delayed long enough, runs buffer I/O completion after the unmount has
-completed.
+I've refactored the redo item processing into a single function
+xlog_recover_process_intents, and will put in an assert to check that each redo
+item's LSN is not larger than whatever LSN(curr_cycle, curr_block) is at the
+start of intent processing.  That'll hopefully catch any case where we
+accidentally stray into new intent items.
 
-To address this problem, add a mechanism to track all in-flight,
-asynchronous buffers using per-cpu counters in the buftarg. The buffer
-is accounted on the first I/O submission after the current reference is
-acquired and unaccounted once the buffer is returned to the LRU or
-freed. Update xfs_wait_buftarg() to wait on all in-flight I/O before
-walking the LRU list. Once in-flight I/O has completed and the workqueue
-has drained, all new buffers should have been released onto the LRU.
+Looks like everything still passes with the review refactoring, so I'll start
+integrating the last of those changes into the patchset proper.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 165 +++++++++++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_buf.h |   6 +-
- 2 files changed, 129 insertions(+), 42 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 12f7bec..da0a3f5 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -80,6 +80,47 @@ xfs_buf_vmap_len(
- }
- 
- /*
-+ * Bump the I/O in flight count on the buftarg if we haven't yet done so for
-+ * this buffer. The count is incremented once per buffer (per hold cycle)
-+ * because the corresponding decrement is deferred to buffer release. Buffers
-+ * can undergo I/O multiple times in a hold-release cycle and per buffer I/O
-+ * tracking adds unnecessary overhead. This is used for sychronization purposes
-+ * with unmount (see xfs_wait_buftarg()), so all we really need is a count of
-+ * in-flight buffers.
-+ *
-+ * Buffers that are never released (e.g., superblock, iclog buffers) must set
-+ * the XBF_NO_IOACCT flag before I/O submission. Otherwise, the buftarg count
-+ * never reaches zero and unmount hangs indefinitely.
-+ */
-+static inline void
-+xfs_buf_ioacct_inc(
-+	struct xfs_buf	*bp)
-+{
-+	if (bp->b_flags & (XBF_NO_IOACCT|_XBF_IN_FLIGHT))
-+		return;
-+
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	bp->b_flags |= _XBF_IN_FLIGHT;
-+	percpu_counter_inc(&bp->b_target->bt_io_count);
-+}
-+
-+/*
-+ * Clear the in-flight state on a buffer about to be released to the LRU or
-+ * freed and unaccount from the buftarg.
-+ */
-+static inline void
-+xfs_buf_ioacct_dec(
-+	struct xfs_buf	*bp)
-+{
-+	if (!(bp->b_flags & _XBF_IN_FLIGHT))
-+		return;
-+
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	bp->b_flags &= ~_XBF_IN_FLIGHT;
-+	percpu_counter_dec(&bp->b_target->bt_io_count);
-+}
-+
-+/*
-  * When we mark a buffer stale, we remove the buffer from the LRU and clear the
-  * b_lru_ref count so that the buffer is freed immediately when the buffer
-  * reference count falls to zero. If the buffer is already on the LRU, we need
-@@ -102,6 +143,14 @@ xfs_buf_stale(
- 	 */
- 	bp->b_flags &= ~_XBF_DELWRI_Q;
- 
-+	/*
-+	 * Once the buffer is marked stale and unlocked, a subsequent lookup
-+	 * could reset b_flags. There is no guarantee that the buffer is
-+	 * unaccounted (released to LRU) before that occurs. Drop in-flight
-+	 * status now to preserve accounting consistency.
-+	 */
-+	xfs_buf_ioacct_dec(bp);
-+
- 	spin_lock(&bp->b_lock);
- 	atomic_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
-@@ -867,63 +916,85 @@ xfs_buf_hold(
- }
- 
- /*
-- *	Releases a hold on the specified buffer.  If the
-- *	the hold count is 1, calls xfs_buf_free.
-+ * Release a hold on the specified buffer. If the hold count is 1, the buffer is
-+ * placed on LRU or freed (depending on b_lru_ref).
-  */
- void
- xfs_buf_rele(
- 	xfs_buf_t		*bp)
- {
- 	struct xfs_perag	*pag = bp->b_pag;
-+	bool			release;
-+	bool			freebuf = false;
- 
- 	trace_xfs_buf_rele(bp, _RET_IP_);
- 
- 	if (!pag) {
- 		ASSERT(list_empty(&bp->b_lru));
- 		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
--		if (atomic_dec_and_test(&bp->b_hold))
-+		if (atomic_dec_and_test(&bp->b_hold)) {
-+			xfs_buf_ioacct_dec(bp);
- 			xfs_buf_free(bp);
-+		}
- 		return;
- 	}
- 
- 	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
--	if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
--		spin_lock(&bp->b_lock);
--		if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
--			/*
--			 * If the buffer is added to the LRU take a new
--			 * reference to the buffer for the LRU and clear the
--			 * (now stale) dispose list state flag
--			 */
--			if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
--				bp->b_state &= ~XFS_BSTATE_DISPOSE;
--				atomic_inc(&bp->b_hold);
--			}
--			spin_unlock(&bp->b_lock);
--			spin_unlock(&pag->pag_buf_lock);
--		} else {
--			/*
--			 * most of the time buffers will already be removed from
--			 * the LRU, so optimise that case by checking for the
--			 * XFS_BSTATE_DISPOSE flag indicating the last list the
--			 * buffer was on was the disposal list
--			 */
--			if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
--				list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
--			} else {
--				ASSERT(list_empty(&bp->b_lru));
--			}
--			spin_unlock(&bp->b_lock);
- 
--			ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--			rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
--			spin_unlock(&pag->pag_buf_lock);
--			xfs_perag_put(pag);
--			xfs_buf_free(bp);
-+	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	spin_lock(&bp->b_lock);
-+	if (!release) {
-+		/*
-+		 * Drop the in-flight state if the buffer is already on the LRU
-+		 * and it holds the only reference. This is racy because we
-+		 * haven't acquired the pag lock, but the use of _XBF_IN_FLIGHT
-+		 * ensures the decrement occurs only once per-buf.
-+		 */
-+		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-+			xfs_buf_ioacct_dec(bp);
-+		goto out_unlock;
-+	}
-+
-+	/* the last reference has been dropped ... */
-+	xfs_buf_ioacct_dec(bp);
-+	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+		/*
-+		 * If the buffer is added to the LRU take a new reference to the
-+		 * buffer for the LRU and clear the (now stale) dispose list
-+		 * state flag
-+		 */
-+		if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
-+			bp->b_state &= ~XFS_BSTATE_DISPOSE;
-+			atomic_inc(&bp->b_hold);
- 		}
-+		spin_unlock(&pag->pag_buf_lock);
-+	} else {
-+		/*
-+		 * most of the time buffers will already be removed from the
-+		 * LRU, so optimise that case by checking for the
-+		 * XFS_BSTATE_DISPOSE flag indicating the last list the buffer
-+		 * was on was the disposal list
-+		 */
-+		if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
-+			list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
-+		} else {
-+			ASSERT(list_empty(&bp->b_lru));
-+		}
-+
-+		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-+		rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
-+		spin_unlock(&pag->pag_buf_lock);
-+		xfs_perag_put(pag);
-+		freebuf = true;
- 	}
-+
-+out_unlock:
-+	spin_unlock(&bp->b_lock);
-+
-+	if (freebuf)
-+		xfs_buf_free(bp);
- }
- 
- 
-@@ -1342,6 +1413,7 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
-+	xfs_buf_ioacct_inc(bp);
- 	_xfs_buf_ioapply(bp);
- 
- 	/*
-@@ -1527,13 +1599,19 @@ xfs_wait_buftarg(
- 	int loop = 0;
- 
- 	/*
--	 * We need to flush the buffer workqueue to ensure that all IO
--	 * completion processing is 100% done. Just waiting on buffer locks is
--	 * not sufficient for async IO as the reference count held over IO is
--	 * not released until after the buffer lock is dropped. Hence we need to
--	 * ensure here that all reference counts have been dropped before we
--	 * start walking the LRU list.
-+	 * First wait on the buftarg I/O count for all in-flight buffers to be
-+	 * released. This is critical as new buffers do not make the LRU until
-+	 * they are released.
-+	 *
-+	 * Next, flush the buffer workqueue to ensure all completion processing
-+	 * has finished. Just waiting on buffer locks is not sufficient for
-+	 * async IO as the reference count held over IO is not released until
-+	 * after the buffer lock is dropped. Hence we need to ensure here that
-+	 * all reference counts have been dropped before we start walking the
-+	 * LRU list.
- 	 */
-+	while (percpu_counter_sum(&btp->bt_io_count))
-+		delay(100);
- 	drain_workqueue(btp->bt_mount->m_buf_workqueue);
- 
- 	/* loop until there is nothing left on the lru list. */
-@@ -1630,6 +1708,8 @@ xfs_free_buftarg(
- 	struct xfs_buftarg	*btp)
- {
- 	unregister_shrinker(&btp->bt_shrinker);
-+	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
-+	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
- 
- 	if (mp->m_flags & XFS_MOUNT_BARRIER)
-@@ -1694,6 +1774,9 @@ xfs_alloc_buftarg(
- 	if (list_lru_init(&btp->bt_lru))
- 		goto error;
- 
-+	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
-+		goto error;
-+
- 	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
- 	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
- 	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index e2108da..1c2e52b 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -63,6 +63,7 @@ typedef enum {
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
- #define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
-+#define _XBF_IN_FLIGHT	 (1 << 25) /* I/O in flight, for accounting purposes */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -82,7 +83,8 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
--	{ _XBF_COMPOUND,	"COMPOUND" }
-+	{ _XBF_COMPOUND,	"COMPOUND" }, \
-+	{ _XBF_IN_FLIGHT,	"IN_FLIGHT" }
- 
- 
- /*
-@@ -116,6 +118,8 @@ typedef struct xfs_buftarg {
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
- 	struct list_lru		bt_lru;
-+
-+	struct percpu_counter	bt_io_count;
- } xfs_buftarg_t;
- 
- struct xfs_buf;
--- 
-2.5.5
+> > > At the very least we need to update the comment at the top of the
+> > > function wrt to the current behavior.
+> > 
+> > Oops, missed that, yeah.
+> > 
+> > > >  		/*
+> > > >  		 * Skip EFIs that we've already processed.
+> > > >  		 */
+> ...
+> > > > @@ -5144,11 +5458,19 @@ xlog_recover_finish(
+> > > >  	 */
+> > > >  	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
+> > > >  		int	error;
+> > > > +
+> > > > +		error = xlog_recover_process_ruis(log);
+> > > > +		if (error) {
+> > > > +			xfs_alert(log->l_mp, "Failed to recover RUIs");
+> > > > +			return error;
+> > > > +		}
+> > > > +
+> > > >  		error = xlog_recover_process_efis(log);
+> > > >  		if (error) {
+> > > >  			xfs_alert(log->l_mp, "Failed to recover EFIs");
+> > > >  			return error;
+> > > >  		}
+> > > > +
+> > > 
+> > > Is the order important here in any way (e.g., RUIs before EFIs)? If so,
+> > > it might be a good idea to call it out.
+> > 
+> > AFAIK the intent items within a particular type have to be replayed in
+> > order, but between types, there isn't a problem with the current code.
+> > 
+> > That said, I'd also been wondering if it made more sense to iterate the
+> > list of items /once/ and actually replay items in order.  Less iteration
+> > and the order of replayed items matches the log order much more closely.
+> > 
+> 
+> That sounds like a nice idea to me. There might actually be some room
+> for consolidation between the RUI/EFI recovered bits and whatnot, but
+> only if it makes things more clean and simple.
+> 
+> Brian
+> 
+> > > >  		/*
+> > > >  		 * Sync the log to get all the EFIs out of the AIL.
+> > > >  		 * This isn't absolutely necessary, but it helps in
+> > > > @@ -5176,9 +5498,15 @@ xlog_recover_cancel(
+> > > >  	struct xlog	*log)
+> > > >  {
+> > > >  	int		error = 0;
+> > > > +	int		err2;
+> > > >  
+> > > > -	if (log->l_flags & XLOG_RECOVERY_NEEDED)
+> > > > -		error = xlog_recover_cancel_efis(log);
+> > > > +	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
+> > > > +		error = xlog_recover_cancel_ruis(log);
+> > > > +
+> > > > +		err2 = xlog_recover_cancel_efis(log);
+> > > > +		if (err2 && !error)
+> > > > +			error = err2;
+> > > > +	}
+> > > >  
+> > > >  	return error;
+> > > >  }
+> > > > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > > > index f8d363f..c48be63 100644
+> > > > --- a/fs/xfs/xfs_trans.h
+> > > > +++ b/fs/xfs/xfs_trans.h
+> > > > @@ -235,4 +235,21 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
+> > > >  extern kmem_zone_t	*xfs_trans_zone;
+> > > >  extern kmem_zone_t	*xfs_log_item_desc_zone;
+> > > >  
+> > > > +enum xfs_rmap_intent_type;
+> > > > +
+> > > > +struct xfs_rui_log_item *xfs_trans_get_rui(struct xfs_trans *tp, uint nextents);
+> > > > +void xfs_trans_log_start_rmap_update(struct xfs_trans *tp,
+> > > > +		struct xfs_rui_log_item *ruip, enum xfs_rmap_intent_type type,
+> > > > +		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+> > > > +		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+> > > > +		xfs_exntst_t state);
+> > > > +
+> > > > +struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
+> > > > +		struct xfs_rui_log_item *ruip, uint nextents);
+> > > > +int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
+> > > > +		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
+> > > > +		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+> > > > +		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+> > > > +		xfs_exntst_t state);
+> > > > +
+> > > >  #endif	/* __XFS_TRANS_H__ */
+> > > > diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+> > > > new file mode 100644
+> > > > index 0000000..b55a725
+> > > > --- /dev/null
+> > > > +++ b/fs/xfs/xfs_trans_rmap.c
+> > > > @@ -0,0 +1,235 @@
+> > > > +/*
+> > > > + * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> > > > + *
+> > > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > + *
+> > > > + * This program is free software; you can redistribute it and/or
+> > > > + * modify it under the terms of the GNU General Public License
+> > > > + * as published by the Free Software Foundation; either version 2
+> > > > + * of the License, or (at your option) any later version.
+> > > > + *
+> > > > + * This program is distributed in the hope that it would be useful,
+> > > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > > + * GNU General Public License for more details.
+> > > > + *
+> > > > + * You should have received a copy of the GNU General Public License
+> > > > + * along with this program; if not, write the Free Software Foundation,
+> > > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > > > + */
+> > > > +#include "xfs.h"
+> > > > +#include "xfs_fs.h"
+> > > > +#include "xfs_shared.h"
+> > > > +#include "xfs_format.h"
+> > > > +#include "xfs_log_format.h"
+> > > > +#include "xfs_trans_resv.h"
+> > > > +#include "xfs_mount.h"
+> > > > +#include "xfs_defer.h"
+> > > > +#include "xfs_trans.h"
+> > > > +#include "xfs_trans_priv.h"
+> > > > +#include "xfs_rmap_item.h"
+> > > > +#include "xfs_alloc.h"
+> > > > +#include "xfs_rmap_btree.h"
+> > > > +
+> > > > +/*
+> > > > + * This routine is called to allocate an "rmap update intent"
+> > > > + * log item that will hold nextents worth of extents.  The
+> > > > + * caller must use all nextents extents, because we are not
+> > > > + * flexible about this at all.
+> > > > + */
+> > > > +struct xfs_rui_log_item *
+> > > > +xfs_trans_get_rui(
+> > > > +	struct xfs_trans		*tp,
+> > > > +	uint				nextents)
+> > > > +{
+> > > > +	struct xfs_rui_log_item		*ruip;
+> > > > +
+> > > > +	ASSERT(tp != NULL);
+> > > > +	ASSERT(nextents > 0);
+> > > > +
+> > > > +	ruip = xfs_rui_init(tp->t_mountp, nextents);
+> > > > +	ASSERT(ruip != NULL);
+> > > > +
+> > > > +	/*
+> > > > +	 * Get a log_item_desc to point at the new item.
+> > > > +	 */
+> > > > +	xfs_trans_add_item(tp, &ruip->rui_item);
+> > > > +	return ruip;
+> > > > +}
+> > > > +
+> > > > +/*
+> > > > + * This routine is called to indicate that the described
+> > > > + * extent is to be logged as needing to be freed.  It should
+> > > > + * be called once for each extent to be freed.
+> > > > + */
+> > > 
+> > > Stale comment.
+> > 
+> > <nod>
+> > 
+> > > > +void
+> > > > +xfs_trans_log_start_rmap_update(
+> > > > +	struct xfs_trans		*tp,
+> > > > +	struct xfs_rui_log_item		*ruip,
+> > > > +	enum xfs_rmap_intent_type	type,
+> > > > +	__uint64_t			owner,
+> > > > +	int				whichfork,
+> > > > +	xfs_fileoff_t			startoff,
+> > > > +	xfs_fsblock_t			startblock,
+> > > > +	xfs_filblks_t			blockcount,
+> > > > +	xfs_exntst_t			state)
+> > > > +{
+> > > > +	uint				next_extent;
+> > > > +	struct xfs_map_extent		*rmap;
+> > > > +
+> > > > +	tp->t_flags |= XFS_TRANS_DIRTY;
+> > > > +	ruip->rui_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+> > > > +
+> > > > +	/*
+> > > > +	 * atomic_inc_return gives us the value after the increment;
+> > > > +	 * we want to use it as an array index so we need to subtract 1 from
+> > > > +	 * it.
+> > > > +	 */
+> > > > +	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
+> > > > +	ASSERT(next_extent < ruip->rui_format.rui_nextents);
+> > > > +	rmap = &(ruip->rui_format.rui_extents[next_extent]);
+> > > > +	rmap->me_owner = owner;
+> > > > +	rmap->me_startblock = startblock;
+> > > > +	rmap->me_startoff = startoff;
+> > > > +	rmap->me_len = blockcount;
+> > > > +	rmap->me_flags = 0;
+> > > > +	if (state == XFS_EXT_UNWRITTEN)
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
+> > > > +	if (whichfork == XFS_ATTR_FORK)
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
+> > > > +	switch (type) {
+> > > > +	case XFS_RMAP_MAP:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+> > > > +		break;
+> > > > +	case XFS_RMAP_MAP_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_UNMAP:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
+> > > > +		break;
+> > > > +	case XFS_RMAP_UNMAP_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_CONVERT:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
+> > > > +		break;
+> > > > +	case XFS_RMAP_CONVERT_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_ALLOC:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
+> > > > +		break;
+> > > > +	case XFS_RMAP_FREE:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
+> > > > +		break;
+> > > > +	default:
+> > > > +		ASSERT(0);
+> > > > +	}
+> > > 
+> > > Between here and the finish function, it looks like we could use a
+> > > helper to convert the state and whatnot to extent flags.
+> > 
+> > Ok.
+> > 
+> > > > +}
+> > > > +
+> > > > +
+> > > > +/*
+> > > > + * This routine is called to allocate an "extent free done"
+> > > > + * log item that will hold nextents worth of extents.  The
+> > > > + * caller must use all nextents extents, because we are not
+> > > > + * flexible about this at all.
+> > > > + */
+> > > 
+> > > Comment needs updating.
+> > 
+> > Ok.
+> > 
+> > > Brian
+> > > 
+> > > > +struct xfs_rud_log_item *
+> > > > +xfs_trans_get_rud(
+> > > > +	struct xfs_trans		*tp,
+> > > > +	struct xfs_rui_log_item		*ruip,
+> > > > +	uint				nextents)
+> > > > +{
+> > > > +	struct xfs_rud_log_item		*rudp;
+> > > > +
+> > > > +	ASSERT(tp != NULL);
+> > > > +	ASSERT(nextents > 0);
+> > > > +
+> > > > +	rudp = xfs_rud_init(tp->t_mountp, ruip, nextents);
+> > > > +	ASSERT(rudp != NULL);
+> > > > +
+> > > > +	/*
+> > > > +	 * Get a log_item_desc to point at the new item.
+> > > > +	 */
+> > > > +	xfs_trans_add_item(tp, &rudp->rud_item);
+> > > > +	return rudp;
+> > > > +}
+> > > > +
+> > > > +/*
+> > > > + * Finish an rmap update and log it to the RUD. Note that the transaction is
+> > > > + * marked dirty regardless of whether the rmap update succeeds or fails to
+> > > > + * support the RUI/RUD lifecycle rules.
+> > > > + */
+> > > > +int
+> > > > +xfs_trans_log_finish_rmap_update(
+> > > > +	struct xfs_trans		*tp,
+> > > > +	struct xfs_rud_log_item		*rudp,
+> > > > +	enum xfs_rmap_intent_type	type,
+> > > > +	__uint64_t			owner,
+> > > > +	int				whichfork,
+> > > > +	xfs_fileoff_t			startoff,
+> > > > +	xfs_fsblock_t			startblock,
+> > > > +	xfs_filblks_t			blockcount,
+> > > > +	xfs_exntst_t			state)
+> > > > +{
+> > > > +	uint				next_extent;
+> > > > +	struct xfs_map_extent		*rmap;
+> > > > +	int				error;
+> > > > +
+> > > > +	/* XXX: actually finish the rmap update here */
+> > > > +	error = -EFSCORRUPTED;
+> > > > +
+> > > > +	/*
+> > > > +	 * Mark the transaction dirty, even on error. This ensures the
+> > > > +	 * transaction is aborted, which:
+> > > > +	 *
+> > > > +	 * 1.) releases the RUI and frees the RUD
+> > > > +	 * 2.) shuts down the filesystem
+> > > > +	 */
+> > > > +	tp->t_flags |= XFS_TRANS_DIRTY;
+> > > > +	rudp->rud_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+> > > > +
+> > > > +	next_extent = rudp->rud_next_extent;
+> > > > +	ASSERT(next_extent < rudp->rud_format.rud_nextents);
+> > > > +	rmap = &(rudp->rud_format.rud_extents[next_extent]);
+> > > > +	rmap->me_owner = owner;
+> > > > +	rmap->me_startblock = startblock;
+> > > > +	rmap->me_startoff = startoff;
+> > > > +	rmap->me_len = blockcount;
+> > > > +	rmap->me_flags = 0;
+> > > > +	if (state == XFS_EXT_UNWRITTEN)
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
+> > > > +	if (whichfork == XFS_ATTR_FORK)
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
+> > > > +	switch (type) {
+> > > > +	case XFS_RMAP_MAP:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+> > > > +		break;
+> > > > +	case XFS_RMAP_MAP_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_UNMAP:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
+> > > > +		break;
+> > > > +	case XFS_RMAP_UNMAP_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_CONVERT:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
+> > > > +		break;
+> > > > +	case XFS_RMAP_CONVERT_SHARED:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
+> > > > +		break;
+> > > > +	case XFS_RMAP_ALLOC:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
+> > > > +		break;
+> > > > +	case XFS_RMAP_FREE:
+> > > > +		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
+> > > > +		break;
+> > > > +	default:
+> > > > +		ASSERT(0);
+> > > > +	}
+> > > > +	rudp->rud_next_extent++;
+> > > > +
+> > > > +	return error;
+> > > > +}
+> > > > 
+> > > > _______________________________________________
+> > > > xfs mailing list
+> > > > xfs@oss.sgi.com
+> > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
