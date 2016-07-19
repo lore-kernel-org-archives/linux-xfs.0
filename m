@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DFC6F7CA0
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 20:21:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 586B1AC003
-	for <xfs@oss.sgi.com>; Sun, 17 Jul 2016 18:21:32 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	n2CinRfOLOeEOzxk for <xfs@oss.sgi.com>;
-	Sun, 17 Jul 2016 18:21:25 -0700 (PDT)
-Date: Mon, 18 Jul 2016 11:21:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 044/119] xfs: propagate bmap updates to rmapbt
-Message-ID: <20160718012122.GA1922@dastard>
-References: <146612627129.12839.3827886950949809165.stgit@birch.djwong.org>
-	<146612655409.12839.4069768871045909071.stgit@birch.djwong.org>
-	<20160715183356.GD55338@bfoster.bfoster>
-	<20160716072621.GC21529@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E70387CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:21:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F4198F8037
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 13:21:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Vwy2DeQUZrYwnrWt for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 13:21:19 -0700 (PDT)
+Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
+	bits)) (No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 027D34A4
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:21:18 -0500 (CDT)
+Subject: Re: xfs_do_force_shutdown
+References: <CA++_uht+DQCXQ=oF0RWkje1dPxFTA9RNKH3rpGkL5gJBgFkDiQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d74812e6-6b34-d548-944e-547f89413093@sandeen.net>
+Date: Tue, 19 Jul 2016 13:21:17 -0700
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160716072621.GC21529@birch.djwong.org>
+In-Reply-To: <CA++_uht+DQCXQ=oF0RWkje1dPxFTA9RNKH3rpGkL5gJBgFkDiQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,100 +32,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Jul 16, 2016 at 12:26:21AM -0700, Darrick J. Wong wrote:
-> On Fri, Jul 15, 2016 at 02:33:56PM -0400, Brian Foster wrote:
-> > On Thu, Jun 16, 2016 at 06:22:34PM -0700, Darrick J. Wong wrote:
-> > > When we map, unmap, or convert an extent in a file's data or attr
-> > > fork, schedule a respective update in the rmapbt.  Previous versions
-> > > of this patch required a 1:1 correspondence between bmap and rmap,
-> > > but this is no longer true.
-> > > 
-> > > v2: Remove the 1:1 correspondence requirement now that we have the
-> > > ability to make interval queries against the rmapbt.  Update the
-> > > commit message to reflect the broad restructuring of this patch.
-> > > Fix the bmap shift code to adjust the rmaps correctly.
-> > > 
-> > > v3: Use the deferred operations code to handle redo operations
-> > > atomically and deadlock free.  Plumb in all five rmap actions
-> > > (map, unmap, convert extent, alloc, free); we'll use the first
-> > > three now for file data, and reflink will want the last two.
-> > > Add an error injection site to test log recovery.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-.....
-> > > + * superblock and the AGF because we'll always grab them in the same
-> > > + * order.
-> > > + */
-> > > +int
-> > > +xfs_rmap_finish_one(
-> > > +	struct xfs_trans		*tp,
-> > > +	enum xfs_rmap_intent_type	type,
-> > > +	__uint64_t			owner,
-> > > +	int				whichfork,
-> > > +	xfs_fileoff_t			startoff,
-> > > +	xfs_fsblock_t			startblock,
-> > > +	xfs_filblks_t			blockcount,
-> > > +	xfs_exntst_t			state,
-> > > +	struct xfs_btree_cur		**pcur)
-> > > +{
-> > > +	struct xfs_mount		*mp = tp->t_mountp;
-> > > +	struct xfs_btree_cur		*rcur;
-> > > +	struct xfs_buf			*agbp = NULL;
-> > > +	int				error = 0;
-> > > +	xfs_agnumber_t			agno;
-> > > +	struct xfs_owner_info		oinfo;
-> > > +	xfs_agblock_t			bno;
-> > > +	bool				unwritten;
-> > > +
-> > > +	agno = XFS_FSB_TO_AGNO(mp, startblock);
-> > > +	ASSERT(agno != NULLAGNUMBER);
-> > > +	bno = XFS_FSB_TO_AGBNO(mp, startblock);
-> > > +
-> > > +	trace_xfs_rmap_deferred(mp, agno, type, bno, owner, whichfork,
-> > > +			startoff, blockcount, state);
-> > > +
-> > > +	if (XFS_TEST_ERROR(false, mp,
-> > > +			XFS_ERRTAG_RMAP_FINISH_ONE,
-> > > +			XFS_RANDOM_RMAP_FINISH_ONE))
-> > > +		return -EIO;
-> > > +
-> > > +	/*
-> > > +	 * If we haven't gotten a cursor or the cursor AG doesn't match
-> > > +	 * the startblock, get one now.
-> > > +	 */
-> > > +	rcur = *pcur;
-> > > +	if (rcur != NULL && rcur->bc_private.a.agno != agno) {
-> > > +		xfs_rmap_finish_one_cleanup(tp, rcur, 0);
-> > > +		rcur = NULL;
-> > > +		*pcur = NULL;
-> > > +	}
-> > > +	if (rcur == NULL) {
-> > > +		error = xfs_free_extent_fix_freelist(tp, agno, &agbp);
-> > 
-> > Comment? Why is this here? (Maybe we should rename that function while
-> > we're at it..)
+
+
+On 7/19/16 2:17 AM, Kuo Hugo wrote:
+> Hi Folks, 
 > 
-> /*
->  * Ensure the freelist is of a sufficient length to provide for any btree
->  * splits that could happen when we make changes to the rmapbt.
->  */
+> I got a question regarding to xfs_do_force_shutdown. The smartctl
+> doesn't show any clue about disk bad. The device works properly again
+> after remount. The xfs_repair complete to repair the device very
+> quick and these's not too much suspecious.
 > 
-> (I don't know why the function has that name; Dave supplied it.)
+> 
+> * Is this a xfs level issue about dirty logs ? 
+> * Is this HBA problem ?
+> 
+> 
+> ```
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330404] blk_update_request: I/O error, dev sdy, sector 3909224960
 
-I named it that way because it was common code factored out of
-xfs_free_extent() for use by multiple callers on the extent freeing
-side of things. Feel free to name it differently if you can think of
-something more appropriate.
+The root cause here is that IO error from the block device.
+Everything else is XFS reacting to that error; it does not
+indicate an xfs bug.
 
-Cheers,
+-Eric
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330650] XFS (sdy): metadata I/O error: block 0xe9020a00 ("xlog_iodone") error 5 numblks 64
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330939] XFS (sdy): xfs_do_force_shutdown(0x2) called from line 1179 of file /build/linux-lts-vivid-whAhIw/linux-lts-vivid-3.19.0/fs/xfs/xfs_log.c.  Return address = 0xffffffffc06a1d96
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330973] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.330999] XFS (sdy): Log I/O Error Detected.  Shutting down filesystem
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331206] XFS (sdy): Please umount the filesystem and rectify the problem(s)
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.331443] Buffer I/O error on dev sdy, logical block 18, lost async page write
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.337098] Buffer I/O error on dev sdy, logical block 30523594, lost async page write
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.348492] Buffer I/O error on dev sdy, logical block 19, lost async page write
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.359941] Buffer I/O error on dev sdy, logical block 30523599, lost async page write
+> Jul 17 22:52:31 HBGTCOBSON02 kernel: [9291040.380649] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:52:59 HBGTCOBSON02 kernel: [9291069.111432] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:53:29 HBGTCOBSON02 kernel: [9291099.215252] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517951] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.517981] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 17 22:53:33 HBGTCOBSON02 kernel: [9291102.518006] XFS (sdy): xfs_log_force: error -5 returned.
+> Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.158898] XFS (sdy): Mounting V4 Filesystem
+> Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.279516] XFS (sdy): Starting recovery (logdev: internal)
+> Jul 18 08:35:55 HBGTCOBSON02 kernel: [9326072.725549] XFS (sdy): Ending recovery (logdev: internal)
+> ```
+> 
+> thanks // Hugo
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
