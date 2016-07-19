@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0BACE7CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 14:03:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B93BA304032
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 12:03:44 -0700 (PDT)
-Received: from pavilion.ashurst.eu.org (pavilion.ashurst.eu.org
-	[85.119.82.45]) by cuda.sgi.com with ESMTP id CyyacwttOjLiAGtI
-	(version=TLSv1.2 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 12:03:39 -0700 (PDT)
-Received: from 109.21.187.81.in-addr.arpa ([81.187.21.109] helo=[172.25.11.32])
-	by pavilion.ashurst.eu.org with esmtpsa
-	(TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128) (Exim 4.80)
-	(envelope-from <andyjpb@ashurst.eu.org>) id 1bPaIr-0003Mk-3n
-	for xfs@oss.sgi.com; Tue, 19 Jul 2016 20:03:37 +0100
-References: <578E78B0.2010602@ashurst.eu.org>
-From: Andy Bennett <andyjpb@ashurst.eu.org>
-Message-ID: <578E7988.6020102@ashurst.eu.org>
-Date: Tue, 19 Jul 2016 20:03:36 +0100
-MIME-Version: 1.0
-In-Reply-To: <578E78B0.2010602@ashurst.eu.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1C2777CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:49:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E30A68F8054
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 13:49:12 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Q15JymFHJPqTHMX2 for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 13:49:08 -0700 (PDT)
+Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
+	bits)) (No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 4EC034A4
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:49:08 -0500 (CDT)
 Subject: Re: xfsdump quota failures
+References: <578E78B0.2010602@ashurst.eu.org> <578E7988.6020102@ashurst.eu.org>
+	<6eb6490f-0eb8-e488-8d71-ce86e5113f73@sandeen.net>
+	<578E9185.9080901@ashurst.eu.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c525945f-6156-331d-2553-e69b77909efb@sandeen.net>
+Date: Tue, 19 Jul 2016 13:49:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <578E9185.9080901@ashurst.eu.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,88 +36,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello again,
 
-My Google-fu failed me before I posted but, of course, succeeded
-immediately after I hit send:
+On 7/19/16 1:45 PM, Andy Bennett wrote:
+> Hi,
+> 
+>>> My Google-fu failed me before I posted but, of course, succeeded
+>>> immediately after I hit send:
+>>>
+>>> http://xfs.9218.n7.nabble.com/xfsdump-3-0-6-ERROR-xfs-quota-failed-with-exit-status-1-td30691.html
+>>>
+>>> Does that mean that this error can be safely ignored in xfs_dump 3.0.6?
+>>
+>> I believe so.  Can you confirm that quotas were correctly
+>> restored?
+> 
+> Thanks!
+> 
+> How would I confirm that? I'm only taking a dump at this time and if I
+> pipe the dump file into `xfsrestore -i` it doesn't say anything about
+> quota or seem to have any commands to inspect them.
 
-http://xfs.9218.n7.nabble.com/xfsdump-3-0-6-ERROR-xfs-quota-failed-with-exit-status-1-td30691.html
+Sorry, got ahead of myself.  ;)  Forgot you were still at the dump
+stage.
 
-Does that mean that this error can be safely ignored in xfs_dump 3.0.6?
+I guess you'd need to restore the dump to an xfs filesystem somewhere
+and check whether the quotas are present as expected.
 
-
-
-> I'm running XFS for a few filesystems under a i686 Debian Linux VPS.
-> 
-> Last night I upgraded from Debian Squeeze to Debian Wheezy. Before I
-> started the upgrade I took a backup using xfs_dump with my usual script
-> and everything went fine.
-> 
-> Tonight I am trying to upgrade from Debian Wheezy to Debian Jessie so I
-> am taking another backup before I start.
-> 
-> In the logs tonight I see the following errors for file systems that
-> have quotas enabled:
-> 
-> -----
-> /usr/sbin/xfsdump: saving user quota information for: /home
-> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
-> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
-> /usr/sbin/xfsdump: saving group quota information for: /home
-> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
-> /usr/sbin/xfsdump: ERROR: failed to save group quota information, continuing
-> -----
-> 
-> -----
-> /usr/sbin/xfsdump: saving user quota information for: /var
-> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
-> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
-> /usr/sbin/xfsdump: saving project quota information for: /var
-> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
-> /usr/sbin/xfsdump: ERROR: failed to save project quota information,
-> continuing
-> -----
-> 
-> One of the file systems has user and group quotas enabled and the other
-> has user and project quotas enabled.
-> 
-> The root file system is XFS but does not have quotas enabled and it
-> dumps without error.
-> 
-> When I run xfs_quota as root by hand it gives me an interactive prompt
-> and xfs_quota commands such as `df` and `print` seem to do what I would
-> expect without errors.
-> 
-> 
-> Both last night's dump and tonight's are level 0 dumps.
-> 
-> Last night's dump used Debian Squeeze's xfsdump 3.0.4 with xfsprogs 3.1.4.
-> Tonight's dump uses Debian Wheezy's xfsdump 3.0.6 with xfsprogs 3.1.7.
-> 
-> 
-> Can anyone give me any guidance about what's going on and how to fix it?
-> 
-> 
-> Thanks for your help.
-> 
-> 
-> 
-> 
-> Regards,
-> @ndy
-> 
-
-
-
-
-
-Regards,
-@ndy
-
--- 
-andyjpb@ashurst.eu.org
-http://www.ashurst.eu.org/
-0290 DA75 E982 7D99 A51F  E46A 387A 7695 7EBA 75FF
+-Eric
 
 _______________________________________________
 xfs mailing list
