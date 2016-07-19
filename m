@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B6777CA0
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 14:19:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E0BA1AC001
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 12:19:08 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id W3Ltq22yxnfB01fR (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 12:19:02 -0700 (PDT)
-Date: Sun, 31 Jul 2016 21:19:00 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: iomap infrastructure and multipage writes V5
-Message-ID: <20160731191900.GA29301@lst.de>
-References: <1464792297-13185-1-git-send-email-hch@lst.de>
-	<20160628002649.GI12670@dastard> <20160630172239.GA23082@lst.de>
-	<20160718111400.GC16044@dastard> <20160718111851.GD16044@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7A4A37CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:24:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4CAA88F8050
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 13:24:37 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id JAhmgoYErDXFZb7e for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 13:24:34 -0700 (PDT)
+Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
+	bits)) (No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 4D3474A4
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 15:24:34 -0500 (CDT)
+Subject: Re: xfsdump quota failures
+References: <578E78B0.2010602@ashurst.eu.org> <578E7988.6020102@ashurst.eu.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6eb6490f-0eb8-e488-8d71-ce86e5113f73@sandeen.net>
+Date: Tue, 19 Jul 2016 13:24:33 -0700
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160718111851.GD16044@dastard>
+In-Reply-To: <578E7988.6020102@ashurst.eu.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +32,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Another quiet weekend trying to debug this, and only minor progress.
+On 7/19/16 12:03 PM, Andy Bennett wrote:
+> Hello again,
+> 
+> My Google-fu failed me before I posted but, of course, succeeded
+> immediately after I hit send:
+> 
+> http://xfs.9218.n7.nabble.com/xfsdump-3-0-6-ERROR-xfs-quota-failed-with-exit-status-1-td30691.html
+> 
+> Does that mean that this error can be safely ignored in xfs_dump 3.0.6?
 
-The biggest different in traces of the old vs new code is that we manage
-to allocate much bigger delalloc reservations at a time in xfs_bmapi_delay
--> xfs_bmapi_reserve_delalloc.  The old code always went for a single FSB,
-which also meant allocating an indlen of 7 FSBs.  With the iomap code
-we always allocate at least 4FSB (aka a page), and sometimes 8 or 12.
-All of these still need 7 FSBs for the worst case indirect blocks.  So
-what happens here is that in an ENOSPC case we manage to allocate more
-actual delalloc blocks before hitting ENOSPC - notwithstanding that the
-old case would immediately release them a little later in
-xfs_bmap_add_extent_hole_delay after merging the delalloc extents.
+I believe so.  Can you confirm that quotas were correctly
+restored?
 
-On the writeback side I don't see to many changes either.  We'll
-eventually run out of blocks when allocating the transaction in
-xfs_iomap_write_allocate because the reserved pool is too small.  The
-only real difference to before is that under the ENOSPC / out of memory
-case we have allocated between 4 to 12 times more blocks, so we have
-to clean up 4 to 12 times as much while write_cache_pages continues
-iterating over these dirty delalloc blocks.   For me this happens
-~6 times as much as before, but I still don't manage to hit an
-endless loop.
-
-Now after spending this much time I've started wondering why we even
-reserve blocks in xfs_iomap_write_allocate - after all we've reserved
-space for the actual data blocks and the indlen worst case in
-xfs_bmapi_reserve_delalloc.  And in fact a little hack to drop that
-reservation seems to solve both the root cause (depleted reserved pool)
-and the cleanup mess.  I just haven't spend enought time to convince
-myself that it's actually safe, and in fact looking at the allocator
-makes me thing it only works by accident currently despite generally
-postive test results.
-
-Here is the quick patch if anyone wants to chime in:
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 620fc91..67c317f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -717,7 +717,7 @@ xfs_iomap_write_allocate(
+-Eric
  
- 		nimaps = 0;
- 		while (nimaps == 0) {
--			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
-+			nres = 0; // XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
- 
- 			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, nres,
- 					0, XFS_TRANS_RESERVE, &tp);
+> 
+> 
+>> I'm running XFS for a few filesystems under a i686 Debian Linux VPS.
+>>
+>> Last night I upgraded from Debian Squeeze to Debian Wheezy. Before I
+>> started the upgrade I took a backup using xfs_dump with my usual script
+>> and everything went fine.
+>>
+>> Tonight I am trying to upgrade from Debian Wheezy to Debian Jessie so I
+>> am taking another backup before I start.
+>>
+>> In the logs tonight I see the following errors for file systems that
+>> have quotas enabled:
+>>
+>> -----
+>> /usr/sbin/xfsdump: saving user quota information for: /home
+>> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+>> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
+>> /usr/sbin/xfsdump: saving group quota information for: /home
+>> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+>> /usr/sbin/xfsdump: ERROR: failed to save group quota information, continuing
+>> -----
+>>
+>> -----
+>> /usr/sbin/xfsdump: saving user quota information for: /var
+>> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+>> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
+>> /usr/sbin/xfsdump: saving project quota information for: /var
+>> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+>> /usr/sbin/xfsdump: ERROR: failed to save project quota information,
+>> continuing
+>> -----
+>>
+>> One of the file systems has user and group quotas enabled and the other
+>> has user and project quotas enabled.
+>>
+>> The root file system is XFS but does not have quotas enabled and it
+>> dumps without error.
+>>
+>> When I run xfs_quota as root by hand it gives me an interactive prompt
+>> and xfs_quota commands such as `df` and `print` seem to do what I would
+>> expect without errors.
+>>
+>>
+>> Both last night's dump and tonight's are level 0 dumps.
+>>
+>> Last night's dump used Debian Squeeze's xfsdump 3.0.4 with xfsprogs 3.1.4.
+>> Tonight's dump uses Debian Wheezy's xfsdump 3.0.6 with xfsprogs 3.1.7.
+>>
+>>
+>> Can anyone give me any guidance about what's going on and how to fix it?
+>>
+>>
+>> Thanks for your help.
+>>
+>>
+>>
+>>
+>> Regards,
+>> @ndy
+>>
+> 
+> 
+> 
+> 
+> 
+> Regards,
+> @ndy
+> 
 
 _______________________________________________
 xfs mailing list
