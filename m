@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 42D227CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:52:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 06346304032
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:52:13 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id ynbmZYOqrRsH1UaL (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9E9BB7CB5
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 02:42:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 213F5AC002
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 00:42:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dk6BGjI6G78dT23P (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:52:09 -0700 (PDT)
-Date: Tue, 19 Jul 2016 10:52:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/3] xfs: remove __arch_pack
-Message-ID: <20160719085208.GA21785@lst.de>
-References: <1466754767-10657-1-git-send-email-hch@lst.de>
-	<1466754767-10657-4-git-send-email-hch@lst.de>
-	<478743f8-774f-d363-2e3e-40cd0963d8a1@sandeen.net>
-	<20160718053746.GA16044@dastard>
+	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 00:42:35 -0700 (PDT)
+Date: Tue, 19 Jul 2016 09:42:29 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 3/1] xfs: don't reset b_retries to 0 on every failure
+Message-ID: <20160719074229.GA8134@redhat.com>
+References: <9810c6bf-9fd7-bf41-13ab-a96bec861457@redhat.com>
+	<19d91779-cfb2-182d-e298-b4d5d1575182@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160718053746.GA16044@dastard>
+In-Reply-To: <19d91779-cfb2-182d-e298-b4d5d1575182@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +30,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-
-On Mon, Jul 18, 2016 at 03:37:46PM +1000, Dave Chinner wrote:
-> > The reason I did this in the first place was a vague notion that unconditional
-> > packing was harmful.
-> > 
-> > http://digitalvampire.org/blog/index.php/2006/07/31/why-you-shouldnt-use-__attribute__packed/
-> > 
-> > "However, it's actively harmful to add the attribute to a structure that's
-> > already going to be laid out with no padding."
-> > ...
-> > "gcc gets scared about unaligned accesses and generates six times as much code
-> > (96 bytes vs. 16 bytes)! sparc64 goes similarly crazy, bloating from 12 bytes
-> > to 52 bytes"
-> > 
-> > I don't know if that's (still) correct or not, but that was the reason
-> > for the selective __pack application way back when.  Might be worth
-> > investigating?
+On Fri, Jul 08, 2016 at 11:33:23PM -0500, Eric Sandeen wrote:
+> With the code as it stands today, b_retries never increments
+> because it gets reset to 0 in the error callback.
 > 
-> Christoph? The first two ptches are fine, but more info is needed
-> for this one...
+> Remove that, and fix a similar problem where the first retry
+> time was constantly being overwritten, which defeated the
+> timeout tunable as well.
+> 
+> We now only set first retry time if a non-zero timeout is
+> set, to match the behavior of only incrementing retries if
+> a retry value is set.
+> 
+> This way max retries & timeouts consistently take effect after
+> a tunable is set, rather than acting retroactively on a buffer
+> which has failed at some point in the past and has accumulated
+> state from those prior failures.
+> 
+> Thanks to dchinner for talking through this with me.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-I don't have a sparc64 compiler to test unfortunately.  But I can confirm
-that on x86-64 xfs.o is bit to bit identical with or without the patch.
+This patch looks good, thanks Eric :)
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 6a2f429..3b19e52 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1073,6 +1073,8 @@ xfs_buf_iodone_callback_error(
+>  	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+>  	ASSERT(bp->b_iodone != NULL);
+>  
+> +	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+> +
+>  	/*
+>  	 * If the write was asynchronous then no one will be looking for the
+>  	 * error.  If this is the first failure of this type, clear the error
+> @@ -1084,8 +1086,8 @@ xfs_buf_iodone_callback_error(
+>  	     bp->b_last_error != bp->b_error) {
+>  		bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+>  		bp->b_last_error = bp->b_error;
+> -		bp->b_retries = 0;
+> -		bp->b_first_retry_time = jiffies;
+> +		if (cfg->retry_timeout && !bp->b_first_retry_time)
+> +			bp->b_first_retry_time = jiffies;
+>  
+>  		xfs_buf_ioerror(bp, 0);
+>  		xfs_buf_submit(bp);
+> @@ -1096,7 +1098,6 @@ xfs_buf_iodone_callback_error(
+>  	 * Repeated failure on an async write. Take action according to the
+>  	 * error configuration we have been set up to use.
+>  	 */
+> -	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+>  
+>  	if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+>  	    ++bp->b_retries > cfg->max_retries)
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
