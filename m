@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 825F57CA0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 06:24:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 474F88F8033
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 04:24:55 -0700 (PDT)
-Received: from mail02.iobjects.de (mail02.iobjects.de [188.40.134.68]) by
-	cuda.sgi.com with ESMTP id OYUUMTfk5HlDj3RF (version=TLSv1.2
-	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 19 Jul 2016 04:24:52 -0700 (PDT)
-Subject: Re: xfs_vm_releasepage() causing BUG at free_buffer_head()
-References: <143E2E5E912B4C348E8C62AA987F0506@alyakaslap>
-	<578D399C.1010006@applied-asynchrony.com>
-	<EBFD548A4E314321937A5966D9B00808@alyakaslap>
-From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Message-ID: <578E0E02.9010509@applied-asynchrony.com>
-Date: Tue, 19 Jul 2016 13:24:50 +0200
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0BACE7CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 14:03:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B93BA304032
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 12:03:44 -0700 (PDT)
+Received: from pavilion.ashurst.eu.org (pavilion.ashurst.eu.org
+	[85.119.82.45]) by cuda.sgi.com with ESMTP id CyyacwttOjLiAGtI
+	(version=TLSv1.2 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 12:03:39 -0700 (PDT)
+Received: from 109.21.187.81.in-addr.arpa ([81.187.21.109] helo=[172.25.11.32])
+	by pavilion.ashurst.eu.org with esmtpsa
+	(TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128) (Exim 4.80)
+	(envelope-from <andyjpb@ashurst.eu.org>) id 1bPaIr-0003Mk-3n
+	for xfs@oss.sgi.com; Tue, 19 Jul 2016 20:03:37 +0100
+References: <578E78B0.2010602@ashurst.eu.org>
+From: Andy Bennett <andyjpb@ashurst.eu.org>
+Message-ID: <578E7988.6020102@ashurst.eu.org>
+Date: Tue, 19 Jul 2016 20:03:36 +0100
 MIME-Version: 1.0
-In-Reply-To: <EBFD548A4E314321937A5966D9B00808@alyakaslap>
+In-Reply-To: <578E78B0.2010602@ashurst.eu.org>
+Subject: Re: xfsdump quota failures
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,70 +33,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi,
+Hello again,
 
-first off I didn't mean to imply that this is exactly the same problem,
-merely a related symptom due to buffer shrinking crashing your party.
+My Google-fu failed me before I posted but, of course, succeeded
+immediately after I hit send:
 
-On 07/19/16 10:43, Alex Lyakas wrote:
-> Thank you for your response. I see that xfs_finish_page_writeback()
-> has been added very recently and is called from xfs_destroy_ioend().
-> In my kernel (3.18.19), the xfs_destroy_ioend() is [1]. I think it
-> doesn't suffer from the problem of xfs_finish_page_writeback().
-> Looking at other usage of "b_this_page" in my kernel, they all seem
-> valid, and similar to what Linus's tree has.
+http://xfs.9218.n7.nabble.com/xfsdump-3-0-6-ERROR-xfs-quota-failed-with-exit-status-1-td30691.html
 
-Unwinding this a bit, all I superficially understand is that
+Does that mean that this error can be safely ignored in xfs_dump 3.0.6?
 
-  e10de3723c "don't chain ioends during writepage submission"
 
-made the window for bh corruption smaller, and then both
 
-  bb18782aa4 "build bios directly in xfs_add_to_ioend" and
-  37992c18bb "don't release bios on completion immediately"
-
-changed that to track page state instead, presumably because
-the bh traversing was indeed racy. That was still incomplete, as
-Calvin found.
-
-So I don't see why your current version of xfs_submit_ioend() wouldn't
-suffer from the same problem(s). You just walked into the bh BUG later,
-instead of a use-after-free as it can happen now.
-
-> Looking at b_private usage to link buffer heads, the only suspicious
-> code is in xfs_submit_ioend():
+> I'm running XFS for a few filesystems under a i686 Debian Linux VPS.
 > 
->        for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
+> Last night I upgraded from Debian Squeeze to Debian Wheezy. Before I
+> started the upgrade I took a backup using xfs_dump with my usual script
+> and everything went fine.
 > 
->            if (!bio) {
-> retry:
->                bio = xfs_alloc_ioend_bio(bh);
->            } else if (bh->b_blocknr != lastblock + 1) {
->                xfs_submit_ioend_bio(wbc, ioend, bio);
->                goto retry;
->            }
+> Tonight I am trying to upgrade from Debian Wheezy to Debian Jessie so I
+> am taking another backup before I start.
 > 
->            if (xfs_bio_add_buffer(bio, bh) != bh->b_size) {
->                xfs_submit_ioend_bio(wbc, ioend, bio);
->                goto retry;
->            }
+> In the logs tonight I see the following errors for file systems that
+> have quotas enabled:
 > 
->            lastblock = bh->b_blocknr;
->        }
->
-> Can it happen that when the for loop does "bh = bh->b_private", the
-> bh has already been completed and freed? With this in mind, the "goto
-> retry" also seem suspicious for the same reason.
+> -----
+> /usr/sbin/xfsdump: saving user quota information for: /home
+> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
+> /usr/sbin/xfsdump: saving group quota information for: /home
+> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+> /usr/sbin/xfsdump: ERROR: failed to save group quota information, continuing
+> -----
 > 
-> What do you think?
+> -----
+> /usr/sbin/xfsdump: saving user quota information for: /var
+> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+> /usr/sbin/xfsdump: ERROR: failed to save user quota information, continuing
+> /usr/sbin/xfsdump: saving project quota information for: /var
+> /usr/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+> /usr/sbin/xfsdump: ERROR: failed to save project quota information,
+> continuing
+> -----
+> 
+> One of the file systems has user and group quotas enabled and the other
+> has user and project quotas enabled.
+> 
+> The root file system is XFS but does not have quotas enabled and it
+> dumps without error.
+> 
+> When I run xfs_quota as root by hand it gives me an interactive prompt
+> and xfs_quota commands such as `df` and `print` seem to do what I would
+> expect without errors.
+> 
+> 
+> Both last night's dump and tonight's are level 0 dumps.
+> 
+> Last night's dump used Debian Squeeze's xfsdump 3.0.4 with xfsprogs 3.1.4.
+> Tonight's dump uses Debian Wheezy's xfsdump 3.0.6 with xfsprogs 3.1.7.
+> 
+> 
+> Can anyone give me any guidance about what's going on and how to fix it?
+> 
+> 
+> Thanks for your help.
+> 
+> 
+> 
+> 
+> Regards,
+> @ndy
+> 
 
-I think all this is dark and full of terrors. As for what you could
-do - other than backport half of mainline XFS - I guess only Dave can
-make a realistic suggestion.
 
--h
+
+
+
+Regards,
+@ndy
+
+-- 
+andyjpb@ashurst.eu.org
+http://www.ashurst.eu.org/
+0290 DA75 E982 7D99 A51F  E46A 387A 7695 7EBA 75FF
 
 _______________________________________________
 xfs mailing list
