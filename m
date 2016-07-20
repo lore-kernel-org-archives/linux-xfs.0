@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DA1FF7CA0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 07:33:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CEC377CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 01:20:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 53001AC003
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 05:33:51 -0700 (PDT)
-Received: from mail-io0-f170.google.com (mail-io0-f170.google.com
-	[209.85.223.170]) by cuda.sgi.com with ESMTP id
-	1HOKNvYHgYFM7YJW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Jul 2016 05:33:49 -0700 (PDT)
-Received: by mail-io0-f170.google.com with SMTP id b62so157832290iod.3
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 05:33:49 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51400AC002
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 23:20:56 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	pBWVzAZOpMVrR6g8 for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 23:20:53 -0700 (PDT)
+Date: Wed, 20 Jul 2016 16:20:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_io: implement 'copy_range' command
+Message-ID: <20160720062051.GK16044@dastard>
+References: <20160701194520.28088-1-Anna.Schumaker@Netapp.com>
 MIME-Version: 1.0
-In-Reply-To: <CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
-References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
-	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
-	<20160716093358.GL2432@eguan.usersys.redhat.com>
-	<20160717233003.GX1922@dastard>
-	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
-	<20160718114723.GG27776@eguan.usersys.redhat.com>
-	<CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 18 Jul 2016 14:33:29 +0200
-Message-ID: <CACj3i73hdbW4iAWufvxc_aJn1dj+UGzuud7Cj-qMiwe7aLeNxQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
+Content-Disposition: inline
+In-Reply-To: <20160701194520.28088-1-Anna.Schumaker@Netapp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,103 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Anna Schumaker <Anna.Schumaker@netapp.com>
+Cc: xfs@oss.sgi.com
 
-T24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgMTo1NCBQTSwgSmFuIFR1bGFrIDxqdHVsYWtAcmVkaGF0
-LmNvbT4gd3JvdGU6Cj4gT24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgMTo0NyBQTSwgRXJ5dSBHdWFu
-IDxlZ3VhbkByZWRoYXQuY29tPiB3cm90ZToKPj4gT24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgMDE6
-Mjk6NDdQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3RlOgo+Pj4gT24gTW9uLCBKdWwgMTgsIDIwMTYg
-YXQgMTozMCBBTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToKPj4+
-ID4gT24gU2F0LCBKdWwgMTYsIDIwMTYgYXQgMDU6MzM6NThQTSArMDgwMCwgRXJ5dSBHdWFuIHdy
-b3RlOgo+Pj4gPj4gT24gVGh1LCBKdWwgMTQsIDIwMTYgYXQgMDI6NDM6MzRQTSArMDIwMCwgSmFu
-IFR1bGFrIHdyb3RlOgo+Pj4gPj4gPiArZG9fbWtmc19mYWlsIC1sIGxhenktY291bnQ9MWdhcmJh
-Z2UgJFNDUkFUQ0hfREVWCj4+PiA+PiA+ICtkb19ta2ZzX2ZhaWwgLWwgbGF6eS1jb3VudD0yICRT
-Q1JBVENIX0RFVgo+Pj4gPj4gPiArZG9fbWtmc19mYWlsIC1sIGxhenktY291bnQ9MCAtbSBjcmM9
-MSAkU0NSQVRDSF9ERVYKPj4+ID4+ID4gK2RvX21rZnNfZmFpbCAtbCB2ZXJzaW9uPTEgLW0gY3Jj
-PTEgJFNDUkFUQ0hfREVWCj4+PiA+Pgo+Pj4gPj4gVGhpcyB0ZXN0IGZhaWxzIGluIG15IERBWCB0
-ZXN0aW5nLCB3aGVyZSBTQ1JBVENIX0RFViBpcyByYW1kaXNrLiBUaGUKPj4+ID4+IG1rZnMgaXRz
-ZWxmIHNob3VsZCBmYWlsLCBidXQgaXQgcGFzc2VkLiBMb2cgdmVyc2lvbiAyIHdhcyB1c2VkCj4+
-PiA+PiBhdXRvbWF0aWNhbGx5LCBpbnN0ZWFkIG9mIHByb21wdGluZyAiVjIgbG9ncyBhbHdheXMg
-ZW5hYmxlZCBmb3IgQ1JDCj4+PiA+PiBlbmFibGVkIGZpbGVzeXRlbXMiCj4+PiA+Pgo+Pj4gPj4g
-W3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnN0ZXN0c10jIG1rZnMgLXQgeGZzIC1mIC1sIHZlcnNpb249
-MSAtbSBjcmM9MSAvZGV2L3JhbTAKPj4+ID4+IG1ldGEtZGF0YT0vZGV2L3JhbTAgICAgICAgICAg
-ICAgIGlzaXplPTUxMiAgICBhZ2NvdW50PTEsIGFnc2l6ZT00MDk2IGJsa3MKPj4+ID4+ICAgICAg
-ICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej00MDk2ICBhdHRyPTIsIHByb2ppZDMy
-Yml0PTEKPj4+ID4+ICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIGNyYz0xICAgICAg
-ICBmaW5vYnQ9MSwgc3BhcnNlPTAKPj4+ID4+IGRhdGEgICAgID0gICAgICAgICAgICAgICAgICAg
-ICAgIGJzaXplPTQwOTYgICBibG9ja3M9NDA5NiwgaW1heHBjdD0yNQo+Pj4gPj4gICAgICAgICAg
-PSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MKPj4+ID4+
-IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0w
-IGZ0eXBlPTEKPj4+ID4+IGxvZyAgICAgID1pbnRlcm5hbCBsb2cgICAgICAgICAgIGJzaXplPTQw
-OTYgICBibG9ja3M9MTYwNSwgdmVyc2lvbj0yCj4+PiA+PiAgICAgICAgICA9ICAgICAgICAgICAg
-ICAgICAgICAgICBzZWN0c3o9NDA5NiAgc3VuaXQ9MSBibGtzLCBsYXp5LWNvdW50PTEKPj4+ID4+
-IHJlYWx0aW1lID1ub25lICAgICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwg
-cnRleHRlbnRzPTAKPj4+ID4+Cj4+PiA+PiBJcyBpdCBhIG1rZnMueGZzIGJ1ZyBvciB0aGUgdGVz
-dCBjYXNlIHNob3VsZCBoYW5kbGUgdGhlIHNwZWNpYWwgY2FzZT8KPj4+ID4KPj4+ID4gTG9va3Mg
-bGlrZSBpdCBtaWdodCBiZSBhIHNpZGUgZWZmZWN0IG9mIHVzaW5nIGEgNGsgc2VjdG9yIHNpemUu
-IHYxCj4+PiA+IGxvZ3Mgb25seSBzdXBwb3J0ZWQgNTEyIGJ5dGUgc2VjdG9ycywgc28gaXQncyBl
-bnRpcmVseSBwb3NzaWJsZSB0aGF0Cj4+PiA+IHRoZSBzZWN0b3Igc2l6ZSBpcyBzaWxlbnRseSBv
-dmVycmlkaW5nIHRoZSBsb2cgdmVyc2lvbgo+Pj4gPiBzcGVjaWZpY2F0aW9uLiBQcm9iYWJseSBz
-aG91bGQgYmUgZml4ZWQgaW4gbWtmcy4KPj4+ID4KPj4+ID4KPj4+Cj4+PiBJIHRyaWVkIHRvIGR1
-cGxpY2F0ZSB0aGlzLCBidXQgaW4gbXkgY29uZmlnIGl0IGRpZG4ndCBmYWlsZWQgLSBob3cgZGlk
-Cj4+PiB5b3UgY3JlYXRlIHRoZSByYW1kaXNrPwo+Pgo+PiBJIHRoaW5rIHlvdSBuZWVkIHRvIHRl
-c3Qgb24gYSA0ayBzZWN0b3Igc2l6ZSBkaXNrLiBJIHVzZSBzY3NpX2RlYnVnIHRvCj4+IHNpbXVs
-YXRlIHBoeXNpY2FsIDRrIHNlY3RvciBkaXNrIHRvIHJlcHJvZHVjZSB0aGlzOgo+Pgo+PiBbcm9v
-dEBkaGNwLTY2LTg2LTExIHhmc3Byb2dzLWRldl0jIG1vZHByb2JlIC1yIHNjc2lfZGVidWcKPj4g
-W3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9iZSBzY3NpX2RlYnVnIGRl
-dl9zaXplX21iPTEyOCBwaHlzYmxrX2V4cD0zCj4+IFtyb290QGRoY3AtNjYtODYtMTEgeGZzcHJv
-Z3MtZGV2XSMgYmxvY2tkZXYgLS1nZXRic3ogLS1nZXRwYnN6IC0tZ2V0c3MgL2Rldi9zZGMKPj4g
-NDA5Ngo+PiA0MDk2Cj4+IDUxMgo+PiBbcm9vdEBkaGNwLTY2LTg2LTExIHhmc3Byb2dzLWRldl0j
-IG1rZnMgLXQgeGZzIC1sIHZlcnNpb249MSAtbSBjcmM9MSAvZGV2L3NkYwo+PiBtZXRhLWRhdGE9
-L2Rldi9zZGMgICAgICAgICAgICAgICBpc2l6ZT01MTIgICAgYWdjb3VudD00LCBhZ3NpemU9ODE5
-MiBibGtzCj4+ICAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej00MDk2ICBh
-dHRyPTIsIHByb2ppZDMyYml0PTEKPj4gICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAg
-Y3JjPTEgICAgICAgIGZpbm9idD0xLCBzcGFyc2U9MAo+PiBkYXRhICAgICA9ICAgICAgICAgICAg
-ICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTMyNzY4LCBpbWF4cGN0PTI1Cj4+ICAgICAg
-ICAgID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCj4+
-IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0w
-IGZ0eXBlPTEKPj4gbG9nICAgICAgPWludGVybmFsIGxvZyAgICAgICAgICAgYnNpemU9NDA5NiAg
-IGJsb2Nrcz0xNjA1LCB2ZXJzaW9uPTIKPj4gICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAg
-ICAgc2VjdHN6PTQwOTYgIHN1bml0PTEgYmxrcywgbGF6eS1jb3VudD0xCj4+IHJlYWx0aW1lID1u
-b25lICAgICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTAK
-Pj4KPj4gSWYgeW91IHJlbW92ZSB0aGUgInBoeXNibGtfZXhwPTMiIGF0IG1vZHByb2JlIHRpbWUs
-IG1rZnMgZmFpbGVkIGFzCj4+IGV4cGVjdGVkLgo+Pgo+Cj4gQWgsIHRoYW5rcy4gOi0pIE5vdyBJ
-IGNhbiByZXByb2R1Y2UgaXQgYW5kIHNlZSB3aGF0IGhhcHBlbnMuCgpBbmQgdGhlIGN1bHByaXQg
-aXMgaW4gbWtmcywgc29tZSBmb3J0eSBsaW5lcyBiZWZvcmUgdGhlIGNyYyAmIGxvZyB2ZXJzaW9u
-IGNoZWNrOgoKMjAyNiDih6UgICAgICAgfSBlbHNlIGlmIChsc2VjdG9yc2l6ZSA+IFhGU19NSU5f
-U0VDVE9SU0laRSAmJiAhbHN1ICYmICFsc3VuaXQpIHsKMjAyNyDih6UgICAgICAg4oelICAgICAg
-IGxzdSA9IGJsb2Nrc2l6ZTsKMjAyOCDih6UgICAgICAg4oelICAgICAgIHNiX2ZlYXQubG9nX3Zl
-cnNpb24gPSAyOwoyMDI5IOKHpSAgICAgICB9CgpUaGUgcG9zc2libGUgc29sdXRpb25zIEkgY2Fu
-IHRoaW5rIG9mIGFyZToKCjEpIE1ha2UgYSBtb3JlIGNvbXBsaWNhdGVkIGNoZWNrLgpUaGlzIHdv
-dWxkIGNoYW5nZSBqdXN0IGEgbGluZSBvciB0d28sIGJ1dCBtb3N0IGxpa2VseSwgd2Ugd291bGQg
-dGVzdAp0aGUgc2FtZSB0aGluZyBtdWx0aXBsZSB0aW1lcyBhbmQgYWRkZWQgdW5uZWNlc3Nhcnkg
-Y29tcGxleGl0eS4KCjIpIE1vdmUgdGhlIGNyYyBjaGVja3MgaW50byBhbiBlYXJsaWVyIHBsYWNl
-LgpUaGUgb25seSB2YWx1ZSB0aGF0IGNhbiBiZSBjaGFuZ2VkIGluIGNyYyBjaGVja3MgZnJvbSBk
-ZWZhdWx0IGlzCmZpbm9idCwgYW5kIGZpbm9idCBpcyBub3QgcmVhZCBub3IgbW9kaWZpZWQgYmV0
-d2VlbiBhcmd1bWVudCBwYXJzaW5nCmFuZCB0aGUgY3JjIGNoZWNrLiBUaGlzIGxvb2tzIGxpa2Ug
-YSBzaW1wbGUgYW5kIHNhZmUgdGhpbmcsIGJ1dCBpdAp3aWxsIG1vdmUgc29tZSB+NjAgbGluZXMu
-IEkgdGVzdGVkIG1vdmluZyB0aGUgY3JjIHRlc3RpbmcgYmxvY2sgcmlnaHQKYmVoaW5kIHRoaXM6
-CjE5Njgg4oelICAgICAgIG1lbXNldCgmZnQsIDAsIHNpemVvZihmdCkpOwoxOTY5IOKHpSAgICAg
-ICBnZXRfdG9wb2xvZ3koJnhpLCAmZnQsIGZvcmNlX292ZXJ3cml0ZSk7CkFuZCBpdCB3b3Jrcy4g
-SSBkaWRuJ3QgcnVuIGZ1bGwgdGVzdCBzdWl0ZSB5ZXQsIHRob3VnaC4KCjMpIENoYW5nZSB0aGUg
-c2lsZW50IGF1dG91cGRhdGluZyBvZiBsb2cgdmVyc2lvbi4gVGhlIGRlZmF1bHQgaXMgMiBhbmQK
-aWYgdXNlciBleHBsaWNpdGx5IHN0YXRlcyB2MSwgdGhlbiB3ZSBzaG91bGQgZWl0aGVyIHdhcm4g
-b3IgZmFpbAplbnRpcmVseSBpZiBpdCBpcyBub3QgcG9zc2libGUgdG8gbWFrZSBzdWNoIGZzLgoK
-NCkgRG8gbm90aGluZyB3aXRoIG1rZnMgYW5kIGluc3RlYWQsIHVwZGF0ZSB0aGUgdGVzdCB0byBj
-aGVjayB0aGUKc2VjdG9yIHNpemUgYW5kIGV4cGVjdCBwYXNzL2ZhaWwuLi4KCkJ1dCB0aGlzIGlz
-c3VlIGJvaWxzIGRvd24gdG8gdGhlIHF1ZXN0aW9uICJ3aGF0IGlzIHRoZSBjb3JyZWN0IG9yZGVy
-Cm9mIGRvaW5nIHRoaW5ncyI/IFNob3VsZCB3ZSB0cnkgdG8gYXV0b3NvbHZlIHdoYXQgd2UgY2Fu
-IGF0IGZpcnN0LCBhbmQKY2hlY2sgZm9yIHJlbWFpbmluZyBpc3N1ZXMgYWZ0ZXIgdGhhdD8gT3Ig
-c2hvdWxkIHdlIGNoZWNrIGZvciBpc3N1ZXMKd2l0aCB0aGUgaW5wdXQgQVNBUCwgZXZlbiBpZiBp
-dCBjYW4gYmUgc29sdmVkIGJ5IHVwZGF0aW5nIHRoZSBpbnB1dCB0bwptYXRjaCB0aGUgcGh5c2lj
-YWwgZGV2aWNlPyBSaWdodCBub3csIGl0IGxvb2tzIGxpa2UgInNvbWVvbmUgd3JvdGUgaXQKdGhh
-dCB3YXkgYSBsb25nIHRpbWUgYWdvIiBtaXggb2YgYm90aC4KCllvdXIgaWRlYXMsIGd1eXM/CgpU
-aGFua3MsCkphbgoKLS0gCkphbiBUdWxhawpqdHVsYWtAcmVkaGF0LmNvbSAvIGphbkB0dWxhay5t
-ZQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On Fri, Jul 01, 2016 at 03:45:20PM -0400, Anna Schumaker wrote:
+> Implements a new xfs_io command, named 'copy_range', which is supposed
+> to be used to copy a range of data from one file to another.
+> 
+> Signed-off-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
+
+Hi Anna, I've just pulled this in, and I noticed that it's missing a
+man page update. Can you send a patch for man/man8/xfs_io.8 that
+documents the copy_range command?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
