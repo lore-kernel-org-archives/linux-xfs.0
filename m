@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F05067CA2
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 15:19:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B6DFE8F8040
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 13:19:05 -0700 (PDT)
-Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
-	[209.85.218.49]) by cuda.sgi.com with ESMTP id VzTmzdcWne19eTjg
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Jul 2016 13:19:03 -0700 (PDT)
-Received: by mail-oi0-f49.google.com with SMTP id j185so127848808oih.0
-	for <xfs@oss.sgi.com>; Thu, 14 Jul 2016 13:19:03 -0700 (PDT)
-MIME-Version: 1.0
-From: Marcin Sura <mailing-lists@sura.pl>
-Date: Thu, 14 Jul 2016 22:19:02 +0200
-Message-ID: <CACNifpVsOMKQyshHk8B7WrmsbGAN_fOz6qpHLBTc_N=K1xY0Dw@mail.gmail.com>
-Subject: mkfs.xfs -d su=XXX,sw=YYY and future volume resize
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 15F527CA0
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 19:21:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CED8B304043
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 17:21:41 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	r5QuEtNCrpG1u5sG for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 17:21:38 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1bPfGa-0000Z6-Do
+	for xfs@oss.sgi.com; Wed, 20 Jul 2016 10:21:36 +1000
+Received: from dave by disappointment with local (Exim 4.87)
+	(envelope-from <dave@disappointment.disaster>) id 1bPfGN-0000xk-E5
+	for xfs@oss.sgi.com; Wed, 20 Jul 2016 10:21:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: bufferhead chains are invalid after end_page_writeback
+Date: Wed, 20 Jul 2016 10:21:23 +1000
+Message-Id: <1468974083-3660-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,58 +28,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5860527644940199074=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============5860527644940199074==
-Content-Type: multipart/alternative; boundary=94eb2c03aee483d1ac05379e3620
+From: Dave Chinner <dchinner@redhat.com>
 
---94eb2c03aee483d1ac05379e3620
-Content-Type: text/plain; charset=UTF-8
+In xfs_finish_page_writeback(), we have a loop that looks like this:
 
-Hi,
+        do {
+                if (off < bvec->bv_offset)
+                        goto next_bh;
+                if (off > end)
+                        break;
+                bh->b_end_io(bh, !error);
+next_bh:
+                off += bh->b_size;
+        } while ((bh = bh->b_this_page) != head);
 
-When I create filesystem I can specify su and sw paramteres which match
-underlying storage device.
-So for example, If I have raid 6 volume made of 6 + 2 disks with stripe
-size of 256k I create xfs with:
+The b_end_io function is end_buffer_async_write(), which will call
+end_page_writeback() once all the buffers have marked as no longer
+under IO.  This issue here is that the only thing currently
+protecting both the bufferhead chain and the page from being
+reclaimed is the PageWriteback state held on the page.
 
-mkfs.xfs -d su=256k,sw=6 <disk>
+While we attempt to limit the loop to just the buffers covered by
+the IO, we still read from the buffer size and follow the next
+pointer in the bufferhead chain. There is no guarantee that either
+of these are valid after the PageWriteback flag has been cleared.
+Hence, loops like this are completely unsafe, and result in
+use-after-free issues. One such problem was caught by Calvin Owens
+with KASAN:
 
-But what if I will extend original volume by 2 disks. sw will 8. Will be
-there a performance panelty compared to filesystem created from scratch
-with correct sw parameter?
+.....
+ INFO: Freed in 0x103fc80ec age=18446651500051355200 cpu=2165122683 pid=-1
+  free_buffer_head+0x41/0x90
+  __slab_free+0x1ed/0x340
+  kmem_cache_free+0x270/0x300
+  free_buffer_head+0x41/0x90
+  try_to_free_buffers+0x171/0x240
+  xfs_vm_releasepage+0xcb/0x3b0
+  try_to_release_page+0x106/0x190
+  shrink_page_list+0x118e/0x1a10
+  shrink_inactive_list+0x42c/0xdf0
+  shrink_zone_memcg+0xa09/0xfa0
+  shrink_zone+0x2c3/0xbc0
+.....
+ Call Trace:
+  <IRQ>  [<ffffffff81e8b8e4>] dump_stack+0x68/0x94
+  [<ffffffff8153a995>] print_trailer+0x115/0x1a0
+  [<ffffffff81541174>] object_err+0x34/0x40
+  [<ffffffff815436e7>] kasan_report_error+0x217/0x530
+  [<ffffffff81543b33>] __asan_report_load8_noabort+0x43/0x50
+  [<ffffffff819d651f>] xfs_destroy_ioend+0x3bf/0x4c0
+  [<ffffffff819d69d4>] xfs_end_bio+0x154/0x220
+  [<ffffffff81de0c58>] bio_endio+0x158/0x1b0
+  [<ffffffff81dff61b>] blk_update_request+0x18b/0xb80
+  [<ffffffff821baf57>] scsi_end_request+0x97/0x5a0
+  [<ffffffff821c5558>] scsi_io_completion+0x438/0x1690
+  [<ffffffff821a8d95>] scsi_finish_command+0x375/0x4e0
+  [<ffffffff821c3940>] scsi_softirq_done+0x280/0x340
 
-BR
-Marcin
 
---94eb2c03aee483d1ac05379e3620
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Where the access is occuring during IO completion after the buffer
+had been freed from direct memory reclaim.
 
-<div dir=3D"ltr">Hi,<div><br></div><div>When I create filesystem I can spec=
-ify su and sw paramteres which match underlying storage device.</div><div>S=
-o for example, If I have raid 6 volume made of 6 + 2 disks with stripe size=
- of 256k I create xfs with:</div><div><br></div><div>mkfs.xfs -d su=3D256k,=
-sw=3D6 &lt;disk&gt;</div><div><br></div><div>But what if I will extend orig=
-inal volume by 2 disks. sw will 8. Will be there a performance panelty comp=
-ared to filesystem created from scratch with correct sw parameter?</div><di=
-v><br></div><div>BR</div><div>Marcin</div></div>
+Prevent use-after-free accidents in this end_io processing loop by
+pre-calculating the loop conditionals before calling bh->b_end_io().
+The loop is already limited to just the bufferheads covered by the
+IO in progress, so the offset checks are sufficient to prevent
+accessing buffers in the chain after end_page_writeback() has been
+called by the the bh->b_end_io() callout.
 
---94eb2c03aee483d1ac05379e3620--
+Yet another example of why Bufferheads Must Die.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reported-and-Tested-by: Calvin Owens <calvinowens@fb.com>
+---
+ fs/xfs/xfs_aops.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
---===============5860527644940199074==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80714eb..0cfb944 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -87,6 +87,12 @@ xfs_find_bdev_for_inode(
+  * We're now finished for good with this page.  Update the page state via the
+  * associated buffer_heads, paying attention to the start and end offsets that
+  * we need to process on the page.
++ *
++ * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
++ * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
++ * the page at all, as we may be racing with memory reclaim and it can free both
++ * the bufferhead chain and the page as it will see the page as clean and
++ * unused.
+  */
+ static void
+ xfs_finish_page_writeback(
+@@ -95,8 +101,9 @@ xfs_finish_page_writeback(
+ 	int			error)
+ {
+ 	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
+-	struct buffer_head	*head, *bh;
++	struct buffer_head	*head, *bh, *next;
+ 	unsigned int		off = 0;
++	unsigned int		bsize;
+ 
+ 	ASSERT(bvec->bv_offset < PAGE_SIZE);
+ 	ASSERT((bvec->bv_offset & ((1 << inode->i_blkbits) - 1)) == 0);
+@@ -105,15 +112,17 @@ xfs_finish_page_writeback(
+ 
+ 	bh = head = page_buffers(bvec->bv_page);
+ 
++	bsize = bh->b_size;
+ 	do {
++		next = bh->b_this_page;
+ 		if (off < bvec->bv_offset)
+ 			goto next_bh;
+ 		if (off > end)
+ 			break;
+ 		bh->b_end_io(bh, !error);
+ next_bh:
+-		off += bh->b_size;
+-	} while ((bh = bh->b_this_page) != head);
++		off += bsize;
++	} while ((bh = next) != head);
+ }
+ 
+ /*
+-- 
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5860527644940199074==--
