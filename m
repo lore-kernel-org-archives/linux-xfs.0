@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 797557CA0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 06:54:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4ADA98F8033
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:54:27 -0700 (PDT)
-Received: from mail-it0-f45.google.com (mail-it0-f45.google.com
-	[209.85.214.45]) by cuda.sgi.com with ESMTP id naEtRNB6bi8nZQws
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2016 04:54:25 -0700 (PDT)
-Received: by mail-it0-f45.google.com with SMTP id u186so66196239ita.0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:54:25 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D2B487CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 17:22:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B5CA8F8039
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 15:22:19 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	QldUIRLOvw7hIMv6 for <xfs@oss.sgi.com>;
+	Wed, 20 Jul 2016 15:22:13 -0700 (PDT)
+Date: Thu, 21 Jul 2016 08:22:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: skip dirty pages in ->releasepage()
+Message-ID: <20160720222211.GL16044@dastard>
+References: <1469031290-18087-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20160718114723.GG27776@eguan.usersys.redhat.com>
-References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
-	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
-	<20160716093358.GL2432@eguan.usersys.redhat.com>
-	<20160717233003.GX1922@dastard>
-	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
-	<20160718114723.GG27776@eguan.usersys.redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 18 Jul 2016 13:54:05 +0200
-Message-ID: <CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
-Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
+Content-Disposition: inline
+In-Reply-To: <1469031290-18087-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,79 +29,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 18, 2016 at 1:47 PM, Eryu Guan <eguan@redhat.com> wrote:
-> On Mon, Jul 18, 2016 at 01:29:47PM +0200, Jan Tulak wrote:
->> On Mon, Jul 18, 2016 at 1:30 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Sat, Jul 16, 2016 at 05:33:58PM +0800, Eryu Guan wrote:
->> >> On Thu, Jul 14, 2016 at 02:43:34PM +0200, Jan Tulak wrote:
->> >> > +do_mkfs_fail -l lazy-count=1garbage $SCRATCH_DEV
->> >> > +do_mkfs_fail -l lazy-count=2 $SCRATCH_DEV
->> >> > +do_mkfs_fail -l lazy-count=0 -m crc=1 $SCRATCH_DEV
->> >> > +do_mkfs_fail -l version=1 -m crc=1 $SCRATCH_DEV
->> >>
->> >> This test fails in my DAX testing, where SCRATCH_DEV is ramdisk. The
->> >> mkfs itself should fail, but it passed. Log version 2 was used
->> >> automatically, instead of prompting "V2 logs always enabled for CRC
->> >> enabled filesytems"
->> >>
->> >> [root@dhcp-66-86-11 xfstests]# mkfs -t xfs -f -l version=1 -m crc=1 /dev/ram0
->> >> meta-data=/dev/ram0              isize=512    agcount=1, agsize=4096 blks
->> >>          =                       sectsz=4096  attr=2, projid32bit=1
->> >>          =                       crc=1        finobt=1, sparse=0
->> >> data     =                       bsize=4096   blocks=4096, imaxpct=25
->> >>          =                       sunit=0      swidth=0 blks
->> >> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
->> >> log      =internal log           bsize=4096   blocks=1605, version=2
->> >>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
->> >> realtime =none                   extsz=4096   blocks=0, rtextents=0
->> >>
->> >> Is it a mkfs.xfs bug or the test case should handle the special case?
->> >
->> > Looks like it might be a side effect of using a 4k sector size. v1
->> > logs only supported 512 byte sectors, so it's entirely possible that
->> > the sector size is silently overriding the log version
->> > specification. Probably should be fixed in mkfs.
->> >
->> >
->>
->> I tried to duplicate this, but in my config it didn't failed - how did
->> you create the ramdisk?
->
-> I think you need to test on a 4k sector size disk. I use scsi_debug to
-> simulate physical 4k sector disk to reproduce this:
->
-> [root@dhcp-66-86-11 xfsprogs-dev]# modprobe -r scsi_debug
-> [root@dhcp-66-86-11 xfsprogs-dev]# modprobe scsi_debug dev_size_mb=128 physblk_exp=3
-> [root@dhcp-66-86-11 xfsprogs-dev]# blockdev --getbsz --getpbsz --getss /dev/sdc
-> 4096
-> 4096
-> 512
-> [root@dhcp-66-86-11 xfsprogs-dev]# mkfs -t xfs -l version=1 -m crc=1 /dev/sdc
-> meta-data=/dev/sdc               isize=512    agcount=4, agsize=8192 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=0
-> data     =                       bsize=4096   blocks=32768, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal log           bsize=4096   blocks=1605, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
->
-> If you remove the "physblk_exp=3" at modprobe time, mkfs failed as
-> expected.
->
+On Wed, Jul 20, 2016 at 12:14:50PM -0400, Brian Foster wrote:
+> XFS has had scattered reports of delalloc blocks present at
+> ->releasepage() time. This results in a warning with a stack trace
+> similar to the following:
+> 
+>  ...
+>  Call Trace:
+>   [<ffffffffa23c5b8f>] dump_stack+0x63/0x84
+>   [<ffffffffa20837a7>] warn_slowpath_common+0x97/0xe0
+>   [<ffffffffa208380a>] warn_slowpath_null+0x1a/0x20
+>   [<ffffffffa2326caf>] xfs_vm_releasepage+0x10f/0x140
+>   [<ffffffffa218c680>] ? page_mkclean_one+0xd0/0xd0
+>   [<ffffffffa218d3a0>] ? anon_vma_prepare+0x150/0x150
+>   [<ffffffffa21521c2>] try_to_release_page+0x32/0x50
+>   [<ffffffffa2166b2e>] shrink_active_list+0x3ce/0x3e0
+>   [<ffffffffa21671c7>] shrink_lruvec+0x687/0x7d0
+>   [<ffffffffa21673ec>] shrink_zone+0xdc/0x2c0
+>   [<ffffffffa2168539>] kswapd+0x4f9/0x970
+>   [<ffffffffa2168040>] ? mem_cgroup_shrink_node_zone+0x1a0/0x1a0
+>   [<ffffffffa20a0d99>] kthread+0xc9/0xe0
+>   [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+>   [<ffffffffa26b404f>] ret_from_fork+0x3f/0x70
+>   [<ffffffffa20a0cd0>] ? kthread_stop+0x100/0x100
+> 
+> This occurs because it is possible for shrink_active_list() to send
+> pages marked dirty to ->releasepage() when certain buffer_head threshold
+> conditions are met. shrink_active_list() doesn't check the page dirty
+> state apparently to handle an old ext3 corner case where in some cases
+> clean pages would not have the dirty bit cleared, thus it is up to the
+> filesystem to determine how to handle the page.
+> 
+> XFS currently handles the delalloc case properly, but this behavior
+> makes the warning spurious. Update the XFS ->releasepage() handler to
+> explicitly skip dirty pages. Retain the existing delalloc/unwritten
+> checks so we continue to warn if such buffers exist on clean pages when
+> they shouldn't.
+> 
+> Diagnosed-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> This is in response to the discussion here[1] that seemingly resulted in
+> no resolution in the mm. As a result, it's left to the fs to deal with
+> this particular situation.
+> 
+> After discussing this with Dave on IRC, the initial plan was to include
+> a WARN_ON_ONCE(PageDirty()) check. I've dropped the warning because as
+> it turns out, block_invalidatepage() sends invalidated-but-dirty pages
+> through ->releasepage(). In other words,  a simple 'xfs_io -fc "pwrite 0
+> 4k" $file; unlink $file' invokes the warning. In fact, it turned into a
+> consistent boot time warning on both systems I ran it against so far.
+> 
+> So this patch changes behavior in that particular case where a page is
+> dirty but invalidated. If we want to try and preserve existing behavior,
+> I do have another (so far untested) variant that does something like
+> this:
+> 
+> 	if (PageDirty(page) && (delalloc || unwritten))
+> 		return 0;
+> 	else if (WARN_ON_ONCE(delalloc))
+> 		return 0;
+> 	else if (WARN_ON_ONCE(unwritten))
+> 		return 0;
+> 	...
+> 
+> ... to avoid the spurious warnings yet continue to try to free buffers
+> on dirty pages. I lean more towards this patch as it is less logic and
+> more consistent with other filesystems. Thoughts?
 
-Ah, thanks. :-) Now I can reproduce it and see what happens.
+I think the simpler code in the patch you posted makes more sense.
+There's no need to be fancy if the simple code does the job. I'll
+queue it up for testing.
 
-Thanks.
-Jan
+Cheers,
 
+Dave.
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
