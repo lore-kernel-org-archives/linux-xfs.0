@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7DEDA7CA1
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 03:44:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 50B93304039
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:44:02 -0700 (PDT)
-Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
-	[74.125.82.47]) by cuda.sgi.com with ESMTP id uzd3Rjivvo9Vxx45
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Jul 2016 01:43:58 -0700 (PDT)
-Received: by mail-wm0-f47.google.com with SMTP id f65so131293491wmi.0
-	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 01:43:58 -0700 (PDT)
-Message-ID: <EBFD548A4E314321937A5966D9B00808@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <143E2E5E912B4C348E8C62AA987F0506@alyakaslap>
-	<578D399C.1010006@applied-asynchrony.com>
-In-Reply-To: <578D399C.1010006@applied-asynchrony.com>
-Subject: Re: xfs_vm_releasepage() causing BUG at free_buffer_head()
-Date: Tue, 19 Jul 2016 11:43:52 +0300
+	by oss.sgi.com (Postfix) with ESMTP id C543B7CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 01:18:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8AC07304043
+	for <xfs@oss.sgi.com>; Tue, 19 Jul 2016 23:18:05 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id AO2PWaymTzzSw71l for <xfs@oss.sgi.com>;
+	Tue, 19 Jul 2016 23:18:03 -0700 (PDT)
+Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
+	bits)) (No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 8FDC84A4
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 01:18:02 -0500 (CDT)
+Subject: Re: [PATCH] xfs: Document error handling behavior
+References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
+	<94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c1db85e5-5537-0105-4fa5-4b6512333d96@sandeen.net>
+Date: Tue, 19 Jul 2016 23:18:01 -0700
 MIME-Version: 1.0
+In-Reply-To: <94b928aa-70f7-dbf4-66a8-a5f6ca2a4944@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +29,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>
+To: xfs@oss.sgi.com
 
-SGVsbG8gSG9sZ2VyLAoKVGhhbmsgeW91IGZvciB5b3VyIHJlc3BvbnNlLiBJIHNlZSB0aGF0IHhm
-c19maW5pc2hfcGFnZV93cml0ZWJhY2soKSBoYXMgYmVlbiAKYWRkZWQgdmVyeSByZWNlbnRseSBh
-bmQgaXMgY2FsbGVkIGZyb20geGZzX2Rlc3Ryb3lfaW9lbmQoKS4gSW4gbXkga2VybmVsIAooMy4x
-OC4xOSksIHRoZSB4ZnNfZGVzdHJveV9pb2VuZCgpIGlzIFsxXS4gSSB0aGluayBpdCBkb2Vzbid0
-IHN1ZmZlciBmcm9tIAp0aGUgcHJvYmxlbSBvZiB4ZnNfZmluaXNoX3BhZ2Vfd3JpdGViYWNrKCku
-IExvb2tpbmcgYXQgb3RoZXIgdXNhZ2Ugb2YgCiJiX3RoaXNfcGFnZSIgaW4gbXkga2VybmVsLCB0
-aGV5IGFsbCBzZWVtIHZhbGlkLCBhbmQgc2ltaWxhciB0byB3aGF0IExpbnVzJ3MgCnRyZWUgaGFz
-LgoKTG9va2luZyBhdCBiX3ByaXZhdGUgdXNhZ2UgdG8gbGluayBidWZmZXIgaGVhZHMsIHRoZSBv
-bmx5IHN1c3BpY2lvdXMgY29kZSBpcyAKaW4geGZzX3N1Ym1pdF9pb2VuZCgpOgoKICAgICAgICBm
-b3IgKGJoID0gaW9lbmQtPmlvX2J1ZmZlcl9oZWFkOyBiaDsgYmggPSBiaC0+Yl9wcml2YXRlKSB7
-CgogICAgICAgICAgICBpZiAoIWJpbykgewpyZXRyeToKICAgICAgICAgICAgICAgIGJpbyA9IHhm
-c19hbGxvY19pb2VuZF9iaW8oYmgpOwogICAgICAgICAgICB9IGVsc2UgaWYgKGJoLT5iX2Jsb2Nr
-bnIgIT0gbGFzdGJsb2NrICsgMSkgewogICAgICAgICAgICAgICAgeGZzX3N1Ym1pdF9pb2VuZF9i
-aW8od2JjLCBpb2VuZCwgYmlvKTsKICAgICAgICAgICAgICAgIGdvdG8gcmV0cnk7CiAgICAgICAg
-ICAgIH0KCiAgICAgICAgICAgIGlmICh4ZnNfYmlvX2FkZF9idWZmZXIoYmlvLCBiaCkgIT0gYmgt
-PmJfc2l6ZSkgewogICAgICAgICAgICAgICAgeGZzX3N1Ym1pdF9pb2VuZF9iaW8od2JjLCBpb2Vu
-ZCwgYmlvKTsKICAgICAgICAgICAgICAgIGdvdG8gcmV0cnk7CiAgICAgICAgICAgIH0KCiAgICAg
-ICAgICAgIGxhc3RibG9jayA9IGJoLT5iX2Jsb2NrbnI7CiAgICAgICAgfQoKQ2FuIGl0IGhhcHBl
-biB0aGF0IHdoZW4gdGhlIGZvciBsb29wIGRvZXMgImJoID0gYmgtPmJfcHJpdmF0ZSIsIHRoZSBi
-aCBoYXMgCmFscmVhZHkgYmVlbiBjb21wbGV0ZWQgYW5kIGZyZWVkPwpXaXRoIHRoaXMgaW4gbWlu
-ZCwgdGhlICJnb3RvIHJldHJ5IiBhbHNvIHNlZW0gc3VzcGljaW91cyBmb3IgdGhlIHNhbWUgCnJl
-YXNvbi4KCldoYXQgZG8geW91IHRoaW5rPwoKVGhhbmtzLApBbGV4LgoKWzFdClNUQVRJQyB2b2lk
-Cnhmc19kZXN0cm95X2lvZW5kKAogICAgeGZzX2lvZW5kX3QgICAgICAgICppb2VuZCkKewogICAg
-c3RydWN0IGJ1ZmZlcl9oZWFkICAgICpiaCwgKm5leHQ7CgogICAgZm9yIChiaCA9IGlvZW5kLT5p
-b19idWZmZXJfaGVhZDsgYmg7IGJoID0gbmV4dCkgewogICAgICAgIG5leHQgPSBiaC0+Yl9wcml2
-YXRlOwogICAgICAgIGJoLT5iX2VuZF9pbyhiaCwgIWlvZW5kLT5pb19lcnJvcik7CiAgICB9Cgog
-ICAgbWVtcG9vbF9mcmVlKGlvZW5kLCB4ZnNfaW9lbmRfcG9vbCk7Cn0KCgotLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLSAKRnJvbTogSG9sZ2VyIEhvZmZzdMOkdHRlClNlbnQ6IE1vbmRheSwgSnVs
-eSAxOCwgMjAxNiAxMToxOCBQTQpUbzogQWxleCBMeWFrYXMgOyB4ZnNAb3NzLnNnaS5jb20KU3Vi
-amVjdDogUmU6IHhmc192bV9yZWxlYXNlcGFnZSgpIGNhdXNpbmcgQlVHIGF0IGZyZWVfYnVmZmVy
-X2hlYWQoKQoKT24gMDcvMTgvMTYgMjA6MDAsIEFsZXggTHlha2FzIHdyb3RlOgo+IEdyZWV0aW5n
-cyBYRlMgY29tbXVuaXR5LAo+Cj4gV2UgaGF2ZSBoaXQgdGhlIGZvbGxvd2luZyBCVUcgWzFdLgo+
-Cj4gVGhpcyBpcyBpbiBmcmVlX2J1ZmZlcl9oZWFkKCk6Cj4gQlVHX09OKCFsaXN0X2VtcHR5KCZi
-aC0+Yl9hc3NvY19idWZmZXJzKSk7Cj4KPiBUaGlzIGlzIGhhcHBlbmluZyBpbiBhIGxvbmctdGVy
-bSBtYWlubGluZSBrZXJuZWwgMy4xOC4xOS4KPgo+IFNvbWUgZ29vZ2xpbmcgcmV2ZWFsZWQgYSBw
-b3NzaWJseS1yZWxhdGVkIGRpc2N1c3Npb24gYXQ6Cj4gaHR0cDovL2NvbW1lbnRzLmdtYW5lLm9y
-Zy9nbWFuZS5saW51eC5maWxlLXN5c3RlbXMvMTA1MDkzCj4gaHR0cHM6Ly9sa21sLm9yZy9sa21s
-LzIwMTYvNS8zMC8xMDA3Cj4gZXhjZXB0IHRoYXQgaW4gb3VyIGNhc2UgSSBkb24ndCBzZWUgdGhl
-ICJXQVJOX09OX09OQ0UoZGVsYWxsb2MpIiAKPiB0cmlnZ2VyZWQuCgpTaW5jZSB5b3UgbWFrZSBp
-dCBwYXN0IHRoZSBXQVJOX09OcyB0aGF0IG1ha2VzIGl0IGxvb2sgbGlrZSB0aGlzCnZlcnkgcmVj
-ZW50IHJlcG9ydCBmcm9tIEZyaWRheToKCmh0dHA6Ly9vc3Muc2dpLmNvbS9waXBlcm1haWwveGZz
-LzIwMTYtSnVseS8wNTAxOTkuaHRtbAoKRGF2ZSBwb3N0ZWQgYSBwYXRjaCBpbiB0aGF0IHRocmVh
-ZCB3aGljaCBzZWVtcyBvdCB3b3JrIGZpbmUgYW5kIHNvCmZhciBoYXNuJ3Qgc2V0IGFueXRoaW5n
-IG9uIGZpcmUsIGF0IGxlYXN0IGZvciBtZSBvbiA0LjQueC4KCmNoZWVycywKSG9sZ2VyCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+
+
+On 7/19/16 2:15 PM, Eric Sandeen wrote:
+> On 7/19/16 3:04 AM, Carlos Maiolino wrote:
+>> This is the first try to document the implementation of error handlers into
+>> sysfs.
+>>
+>> Reviews and comments are appreciated, please also notice I'm not english-native,
+>> so, spelling corrections are also appreciated :)
+> 
+> Thanks for doing this! 
+> 
+> There seems to be a specific sysfs documentation format, see for example
+> Documentation/ABI/testing/sysfs-fs-ext4 
+> 
+> It might be better to follow that format, and refer to it after a brief
+> explanation of the functionality in the xfs.txt file?
+
+Or not; Dave doesn't like this location, so perhaps best not to take
+my suggestion.  ;)
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
