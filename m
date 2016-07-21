@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 445C97D44
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 00:00:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 182708F8035
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:04 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id CEFBE7CD7
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:47:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8775A8F8033
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:40 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id ToDerg7pGLZ1aQNH (version=TLSv1.2
+	cuda.sgi.com with ESMTP id SxK6frBSLQPVphj1 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:01 -0700 (PDT)
-Subject: [PATCH 35/47] xfs: remove an extent from the rmap btree
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:37 -0700 (PDT)
+Subject: [PATCH 12/17] reflink: test cross-mountpoint reflink and dedupe
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 21:59:56 -0700
-Message-ID: <146907719616.25461.1555032416379272404.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+Date: Thu, 21 Jul 2016 16:47:32 -0700
+Message-ID: <146914485237.11762.2526971565060691741.stgit@birch.djwong.org>
+In-Reply-To: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,279 +28,254 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Test sharing blocks via reflink and dedupe between two different
+mountpoints of the same filesystem.  This shouldn't work, since
+we don't allow cross-mountpoint functions.
 
-Now that we have records in the rmap btree, we need to remove them
-when extents are freed. This needs to find the relevant record in
-the btree and remove/trim/split it accordingly.
-
-v2: Update the free function to deal with non-shared file data, and
-isolate the part that does the rmap update from the part that deals
-with cursors.  This will be useful for deferred ops.
-
-[darrick.wong@oracle.com: make rmap routines handle the enlarged keyspace]
-[dchinner: remove remaining unused debug printks]
-[darrick: fix a bug when growfs in an AG with an rmap ending at EOFS]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c |  220 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 215 insertions(+), 5 deletions(-)
+ tests/generic/927     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/927.out |    9 +++++
+ tests/generic/928     |   86 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/928.out |   10 ++++++
+ tests/generic/group   |    2 +
+ 5 files changed, 195 insertions(+)
+ create mode 100755 tests/generic/927
+ create mode 100644 tests/generic/927.out
+ create mode 100755 tests/generic/928
+ create mode 100644 tests/generic/928.out
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 1c0e2a8..1e48a0b 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -133,6 +133,212 @@ xfs_rmap_get_rec(
- 	return xfs_rmap_btrec_to_irec(rec, irec);
- }
- 
-+/*
-+ * Find the extent in the rmap btree and remove it.
-+ *
-+ * The record we find should always be an exact match for the extent that we're
-+ * looking for, since we insert them into the btree without modification.
-+ *
-+ * Special Case #1: when growing the filesystem, we "free" an extent when
-+ * growing the last AG. This extent is new space and so it is not tracked as
-+ * used space in the btree. The growfs code will pass in an owner of
-+ * XFS_RMAP_OWN_NULL to indicate that it expected that there is no owner of this
-+ * extent. We verify that - the extent lookup result in a record that does not
-+ * overlap.
-+ *
-+ * Special Case #2: EFIs do not record the owner of the extent, so when
-+ * recovering EFIs from the log we pass in XFS_RMAP_OWN_UNKNOWN to tell the rmap
-+ * btree to ignore the owner (i.e. wildcard match) so we don't trigger
-+ * corruption checks during log recovery.
-+ */
-+STATIC int
-+xfs_rmap_unmap(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			unwritten,
-+	struct xfs_owner_info	*oinfo)
+diff --git a/tests/generic/927 b/tests/generic/927
+new file mode 100755
+index 0000000..c7d82b7
+--- /dev/null
++++ b/tests/generic/927
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 927
++#
++# Check that cross-mountpoint reflink doesn't work.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
 +{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_rmap_irec	ltrec;
-+	uint64_t		ltoff;
-+	int			error = 0;
-+	int			i;
-+	uint64_t		owner;
-+	uint64_t		offset;
-+	unsigned int		flags;
-+	bool			ignore_off;
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-+	ignore_off = XFS_RMAP_NON_INODE_OWNER(owner) ||
-+			(flags & XFS_RMAP_BMBT_BLOCK);
-+	if (unwritten)
-+		flags |= XFS_RMAP_UNWRITTEN;
-+	trace_xfs_rmap_unmap(mp, cur->bc_private.a.agno, bno, len,
-+			unwritten, oinfo);
-+
-+	/*
-+	 * We should always have a left record because there's a static record
-+	 * for the AG headers at rm_startblock == 0 created by mkfs/growfs that
-+	 * will not ever be removed from the tree.
-+	 */
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &i);
-+	if (error)
-+		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+
-+	error = xfs_rmap_get_rec(cur, &ltrec, &i);
-+	if (error)
-+		goto out_error;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-+			cur->bc_private.a.agno, ltrec.rm_startblock,
-+			ltrec.rm_blockcount, ltrec.rm_owner,
-+			ltrec.rm_offset, ltrec.rm_flags);
-+	ltoff = ltrec.rm_offset;
-+
-+	/*
-+	 * For growfs, the incoming extent must be beyond the left record we
-+	 * just found as it is new space and won't be used by anyone. This is
-+	 * just a corruption check as we don't actually do anything with this
-+	 * extent.  Note that we need to use >= instead of > because it might
-+	 * be the case that the "left" extent goes all the way to EOFS.
-+	 */
-+	if (owner == XFS_RMAP_OWN_NULL) {
-+		XFS_WANT_CORRUPTED_GOTO(mp, bno >= ltrec.rm_startblock +
-+						ltrec.rm_blockcount, out_error);
-+		goto out_done;
-+	}
-+
-+	/* Make sure the unwritten flag matches. */
-+	XFS_WANT_CORRUPTED_GOTO(mp, (flags & XFS_RMAP_UNWRITTEN) ==
-+			(ltrec.rm_flags & XFS_RMAP_UNWRITTEN), out_error);
-+
-+	/* Make sure the extent we found covers the entire freeing range. */
-+	XFS_WANT_CORRUPTED_GOTO(mp, ltrec.rm_startblock <= bno &&
-+		ltrec.rm_startblock + ltrec.rm_blockcount >=
-+		bno + len, out_error);
-+
-+	/* Make sure the owner matches what we expect to find in the tree. */
-+	XFS_WANT_CORRUPTED_GOTO(mp, owner == ltrec.rm_owner ||
-+				    XFS_RMAP_NON_INODE_OWNER(owner), out_error);
-+
-+	/* Check the offset, if necessary. */
-+	if (!XFS_RMAP_NON_INODE_OWNER(owner)) {
-+		if (flags & XFS_RMAP_BMBT_BLOCK) {
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					ltrec.rm_flags & XFS_RMAP_BMBT_BLOCK,
-+					out_error);
-+		} else {
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					ltrec.rm_offset <= offset, out_error);
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+					ltoff + ltrec.rm_blockcount >= offset + len,
-+					out_error);
-+		}
-+	}
-+
-+	if (ltrec.rm_startblock == bno && ltrec.rm_blockcount == len) {
-+		/* exact match, simply remove the record from rmap tree */
-+		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
-+				ltrec.rm_startblock, ltrec.rm_blockcount,
-+				ltrec.rm_owner, ltrec.rm_offset,
-+				ltrec.rm_flags);
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto out_error;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_error);
-+	} else if (ltrec.rm_startblock == bno) {
-+		/*
-+		 * overlap left hand side of extent: move the start, trim the
-+		 * length and update the current record.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing: |fffffffff|
-+		 * Result:            |rrrrrrrrrr|
-+		 *         bno       len
-+		 */
-+		ltrec.rm_startblock += len;
-+		ltrec.rm_blockcount -= len;
-+		if (!ignore_off)
-+			ltrec.rm_offset += len;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+	} else if (ltrec.rm_startblock + ltrec.rm_blockcount == bno + len) {
-+		/*
-+		 * overlap right hand side of extent: trim the length and update
-+		 * the current record.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing:            |fffffffff|
-+		 * Result:  |rrrrrrrrrr|
-+		 *                    bno       len
-+		 */
-+		ltrec.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+	} else {
-+
-+		/*
-+		 * overlap middle of extent: trim the length of the existing
-+		 * record to the length of the new left-extent size, increment
-+		 * the insertion position so we can insert a new record
-+		 * containing the remaining right-extent space.
-+		 *
-+		 *       ltbno                ltlen
-+		 * Orig:    |oooooooooooooooooooo|
-+		 * Freeing:       |fffffffff|
-+		 * Result:  |rrrrr|         |rrrr|
-+		 *               bno       len
-+		 */
-+		xfs_extlen_t	orig_len = ltrec.rm_blockcount;
-+
-+		ltrec.rm_blockcount = bno - ltrec.rm_startblock;
-+		error = xfs_rmap_update(cur, &ltrec);
-+		if (error)
-+			goto out_error;
-+
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto out_error;
-+
-+		cur->bc_rec.r.rm_startblock = bno + len;
-+		cur->bc_rec.r.rm_blockcount = orig_len - len -
-+						     ltrec.rm_blockcount;
-+		cur->bc_rec.r.rm_owner = ltrec.rm_owner;
-+		if (ignore_off)
-+			cur->bc_rec.r.rm_offset = 0;
-+		else
-+			cur->bc_rec.r.rm_offset = offset + len;
-+		cur->bc_rec.r.rm_flags = flags;
-+		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno,
-+				cur->bc_rec.r.rm_startblock,
-+				cur->bc_rec.r.rm_blockcount,
-+				cur->bc_rec.r.rm_owner,
-+				cur->bc_rec.r.rm_offset,
-+				cur->bc_rec.r.rm_flags);
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto out_error;
-+	}
-+
-+out_done:
-+	trace_xfs_rmap_unmap_done(mp, cur->bc_private.a.agno, bno, len,
-+			unwritten, oinfo);
-+out_error:
-+	if (error)
-+		trace_xfs_rmap_unmap_error(mp, cur->bc_private.a.agno,
-+				error, _RET_IP_);
-+	return error;
++	cd /
++	rm -rf $tmp.*
++	wait
 +}
 +
-+/*
-+ * Remove a reference to an extent in the rmap btree.
-+ */
- int
- xfs_rmap_free(
- 	struct xfs_trans	*tp,
-@@ -143,19 +349,23 @@ xfs_rmap_free(
- 	struct xfs_owner_info	*oinfo)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
--	int			error = 0;
-+	struct xfs_btree_cur	*cur;
-+	int			error;
- 
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return 0;
- 
--	trace_xfs_rmap_unmap(mp, agno, bno, len, false, oinfo);
--	if (1)
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+	error = xfs_rmap_unmap(cur, bno, len, false, oinfo);
-+	if (error)
- 		goto out_error;
--	trace_xfs_rmap_unmap_done(mp, agno, bno, len, false, oinfo);
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
 +
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	return 0;
- 
- out_error:
--	trace_xfs_rmap_unmap_error(mp, agno, error, _RET_IP_);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
- 	return error;
- }
- 
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++otherdir=/tmp/m.$seq
++othertestdir=$otherdir/test-$seq
++rm -rf $otherdir
++mkdir $otherdir
++
++blocks=1
++blksz=65536
++sz=$((blksz * blocks))
++
++echo "Mount otherdir"
++SCRATCH_MNT=$otherdir _scratch_mount
++
++echo "Create file"
++_pwrite_byte 0x61 0 $sz $testdir/file >> $seqres.full
++
++filter_md5() {
++	_filter_scratch | sed -e "s,$otherdir,OTHER_DIR,g"
++}
++
++echo "Reflink one file to another"
++_cp_reflink $testdir/file $othertestdir/otherfiles 2>&1 | filter_md5
++
++echo "Check output"
++md5sum $testdir/file | _filter_scratch
++test -e $othertestdir/otherfile && echo "otherfile should not exist"
++
++echo "Unmount otherdir"
++SCRATCH_MNT=$otherdir _scratch_unmount
++rm -rf $otherdir
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/927.out b/tests/generic/927.out
+new file mode 100644
+index 0000000..3ef3057
+--- /dev/null
++++ b/tests/generic/927.out
+@@ -0,0 +1,9 @@
++QA output created by 927
++Format and mount
++Mount otherdir
++Create file
++Reflink one file to another
++cp: failed to clone 'OTHER_DIR/test-927/otherfiles' from 'SCRATCH_MNT/test-927/file': Invalid cross-device link
++Check output
++2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-927/file
++Unmount otherdir
+diff --git a/tests/generic/928 b/tests/generic/928
+new file mode 100755
+index 0000000..86268e7
+--- /dev/null
++++ b/tests/generic/928
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FS QA Test No. 928
++#
++# Check that cross-mountpoint dedupe doesn't work.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++	wait
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_dedupe
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++otherdir=/tmp/m.$seq
++othertestdir=$otherdir/test-$seq
++rm -rf $otherdir
++mkdir $otherdir
++
++blocks=1
++blksz=65536
++sz=$((blocks * blksz))
++
++echo "Mount otherdir"
++SCRATCH_MNT=$otherdir _scratch_mount
++
++echo "Create file"
++_pwrite_byte 0x61 0 $sz $testdir/file >> $seqres.full
++_pwrite_byte 0x61 0 $sz $testdir/otherfile >> $seqres.full
++
++echo "Dedupe one file to another"
++_dedupe_range $testdir/file 0 $othertestdir/otherfile 0 $sz >> $seqres.full
++
++filter_md5() {
++	_filter_scratch | sed -e "s,$otherdir,OTHER_DIR,g"
++}
++echo "Check output"
++md5sum $testdir/file $othertestdir/otherfile | filter_md5
++
++echo "Unmount otherdir"
++SCRATCH_MNT=$otherdir _scratch_unmount
++rm -rf $otherdir
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/928.out b/tests/generic/928.out
+new file mode 100644
+index 0000000..ef35c5b
+--- /dev/null
++++ b/tests/generic/928.out
+@@ -0,0 +1,10 @@
++QA output created by 928
++Format and mount
++Mount otherdir
++Create file
++Dedupe one file to another
++dedupe: Invalid cross-device link
++Check output
++2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-928/file
++2d61aa54b58c2e94403fb092c3dbc027  OTHER_DIR/test-928/otherfile
++Unmount otherdir
+diff --git a/tests/generic/group b/tests/generic/group
+index 97ecb65..18b9775 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -373,3 +373,5 @@
+ 368 auto quick richacl
+ 369 auto quick richacl
+ 370 auto quick richacl
++927 auto quick clone
++928 auto quick clone dedupe
 
 _______________________________________________
 xfs mailing list
