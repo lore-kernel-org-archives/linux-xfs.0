@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 641417D46
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 00:00:11 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 946D77CB5
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:47:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 33893304043
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:11 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 67671304039
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:48 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id YVVfDhn1h4BqA6gK (version=TLSv1.2
+	cuda.sgi.com with ESMTP id jvyFgK7V5dfTGcwA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:08 -0700 (PDT)
-Subject: [PATCH 36/47] xfs: convert unwritten status of reverse mappings
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:44 -0700 (PDT)
+Subject: [PATCH 13/17] xfs: test swapext with reflink
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 22:00:02 -0700
-Message-ID: <146907720267.25461.12865808398854547794.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+Date: Thu, 21 Jul 2016 16:47:38 -0700
+Message-ID: <146914485888.11762.1688573359701830686.stgit@birch.djwong.org>
+In-Reply-To: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,499 +28,410 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Provide a function to convert an unwritten extent to a real one and
-vice versa.
-
-v2: Move unwritten bit to rm_offset.
-
-v3: Fix a bug where we touched the wrong btree_irec field due to a
-stupid cut-and-paste error.
+Add a few tests to stress the new swapext code for reflink and rmap.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c |  441 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h       |    5 +
- 2 files changed, 446 insertions(+)
+ tests/xfs/873     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/873.out |    6 +++
+ tests/xfs/874     |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/874.out |   10 +++++
+ tests/xfs/875     |  100 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/875.out |   12 ++++++
+ tests/xfs/group   |    3 +
+ 7 files changed, 337 insertions(+)
+ create mode 100755 tests/xfs/873
+ create mode 100644 tests/xfs/873.out
+ create mode 100755 tests/xfs/874
+ create mode 100644 tests/xfs/874.out
+ create mode 100755 tests/xfs/875
+ create mode 100644 tests/xfs/875.out
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 1e48a0b..7439272 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -610,6 +610,447 @@ out_error:
- 	return error;
- }
- 
-+#define RMAP_LEFT_CONTIG	(1 << 0)
-+#define RMAP_RIGHT_CONTIG	(1 << 1)
-+#define RMAP_LEFT_FILLING	(1 << 2)
-+#define RMAP_RIGHT_FILLING	(1 << 3)
-+#define RMAP_LEFT_VALID		(1 << 6)
-+#define RMAP_RIGHT_VALID	(1 << 7)
+diff --git a/tests/xfs/873 b/tests/xfs/873
+new file mode 100755
+index 0000000..a980148
+--- /dev/null
++++ b/tests/xfs/873
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. 873
++#
++# See how well xfs_fsr handles "defragging" a file with a hojillion extents.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
 +
-+#define LEFT		r[0]
-+#define RIGHT		r[1]
-+#define PREV		r[2]
-+#define NEW		r[3]
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
 +
-+/*
-+ * Convert an unwritten extent to a real extent or vice versa.
-+ * Does not handle overlapping extents.
-+ */
-+STATIC int
-+xfs_rmap_convert(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			unwritten,
-+	struct xfs_owner_info	*oinfo)
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_rmap_irec	r[4];	/* neighbor extent entries */
-+					/* left is 0, right is 1, prev is 2 */
-+					/* new is 3 */
-+	uint64_t		owner;
-+	uint64_t		offset;
-+	uint64_t		new_endoff;
-+	unsigned int		oldext;
-+	unsigned int		newext;
-+	unsigned int		flags = 0;
-+	int			i;
-+	int			state = 0;
-+	int			error;
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-+	ASSERT(!(XFS_RMAP_NON_INODE_OWNER(owner) ||
-+			(flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))));
-+	oldext = unwritten ? XFS_RMAP_UNWRITTEN : 0;
-+	new_endoff = offset + len;
-+	trace_xfs_rmap_convert(mp, cur->bc_private.a.agno, bno, len,
-+			unwritten, oinfo);
-+
-+	/*
-+	 * For the initial lookup, look for an exact match or the left-adjacent
-+	 * record for our insertion point. This will also give us the record for
-+	 * start block contiguity tests.
-+	 */
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, oldext, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+
-+	error = xfs_rmap_get_rec(cur, &PREV, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-+			cur->bc_private.a.agno, PREV.rm_startblock,
-+			PREV.rm_blockcount, PREV.rm_owner,
-+			PREV.rm_offset, PREV.rm_flags);
-+
-+	ASSERT(PREV.rm_offset <= offset);
-+	ASSERT(PREV.rm_offset + PREV.rm_blockcount >= new_endoff);
-+	ASSERT((PREV.rm_flags & XFS_RMAP_UNWRITTEN) == oldext);
-+	newext = ~oldext & XFS_RMAP_UNWRITTEN;
-+
-+	/*
-+	 * Set flags determining what part of the previous oldext allocation
-+	 * extent is being replaced by a newext allocation.
-+	 */
-+	if (PREV.rm_offset == offset)
-+		state |= RMAP_LEFT_FILLING;
-+	if (PREV.rm_offset + PREV.rm_blockcount == new_endoff)
-+		state |= RMAP_RIGHT_FILLING;
-+
-+	/*
-+	 * Decrement the cursor to see if we have a left-adjacent record to our
-+	 * insertion point. This will give us the record for end block
-+	 * contiguity tests.
-+	 */
-+	error = xfs_btree_decrement(cur, 0, &i);
-+	if (error)
-+		goto done;
-+	if (i) {
-+		state |= RMAP_LEFT_VALID;
-+		error = xfs_rmap_get_rec(cur, &LEFT, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		XFS_WANT_CORRUPTED_GOTO(mp,
-+				LEFT.rm_startblock + LEFT.rm_blockcount <= bno,
-+				done);
-+		trace_xfs_rmap_find_left_neighbor_result(cur->bc_mp,
-+				cur->bc_private.a.agno, LEFT.rm_startblock,
-+				LEFT.rm_blockcount, LEFT.rm_owner,
-+				LEFT.rm_offset, LEFT.rm_flags);
-+		if (LEFT.rm_startblock + LEFT.rm_blockcount == bno &&
-+		    LEFT.rm_offset + LEFT.rm_blockcount == offset &&
-+		    xfs_rmap_is_mergeable(&LEFT, owner, newext))
-+			state |= RMAP_LEFT_CONTIG;
-+	}
-+
-+	/*
-+	 * Increment the cursor to see if we have a right-adjacent record to our
-+	 * insertion point. This will give us the record for end block
-+	 * contiguity tests.
-+	 */
-+	error = xfs_btree_increment(cur, 0, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+	error = xfs_btree_increment(cur, 0, &i);
-+	if (error)
-+		goto done;
-+	if (i) {
-+		state |= RMAP_RIGHT_VALID;
-+		error = xfs_rmap_get_rec(cur, &RIGHT, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		XFS_WANT_CORRUPTED_GOTO(mp, bno + len <= RIGHT.rm_startblock,
-+					done);
-+		trace_xfs_rmap_find_right_neighbor_result(cur->bc_mp,
-+				cur->bc_private.a.agno, RIGHT.rm_startblock,
-+				RIGHT.rm_blockcount, RIGHT.rm_owner,
-+				RIGHT.rm_offset, RIGHT.rm_flags);
-+		if (bno + len == RIGHT.rm_startblock &&
-+		    offset + len == RIGHT.rm_offset &&
-+		    xfs_rmap_is_mergeable(&RIGHT, owner, newext))
-+			state |= RMAP_RIGHT_CONTIG;
-+	}
-+
-+	/* check that left + prev + right is not too long */
-+	if ((state & (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
-+			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) ==
-+	    (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
-+	     RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG) &&
-+	    (unsigned long)LEFT.rm_blockcount + len +
-+	     RIGHT.rm_blockcount > XFS_RMAP_LEN_MAX)
-+		state &= ~RMAP_RIGHT_CONTIG;
-+
-+	trace_xfs_rmap_convert_state(mp, cur->bc_private.a.agno, state,
-+			_RET_IP_);
-+
-+	/* reset the cursor back to PREV */
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, oldext, &i);
-+	if (error)
-+		goto done;
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+
-+	/*
-+	 * Switch out based on the FILLING and CONTIG state bits.
-+	 */
-+	switch (state & (RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
-+			 RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG)) {
-+	case RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG |
-+	     RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG:
-+		/*
-+		 * Setting all of a previous oldext extent to newext.
-+		 * The left and right neighbors are both contiguous with new.
-+		 */
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
-+				RIGHT.rm_startblock, RIGHT.rm_blockcount,
-+				RIGHT.rm_owner, RIGHT.rm_offset,
-+				RIGHT.rm_flags);
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
-+				PREV.rm_startblock, PREV.rm_blockcount,
-+				PREV.rm_owner, PREV.rm_offset,
-+				PREV.rm_flags);
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		NEW = LEFT;
-+		NEW.rm_blockcount += PREV.rm_blockcount + RIGHT.rm_blockcount;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_LEFT_FILLING | RMAP_RIGHT_FILLING | RMAP_LEFT_CONTIG:
-+		/*
-+		 * Setting all of a previous oldext extent to newext.
-+		 * The left neighbor is contiguous, the right is not.
-+		 */
-+		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
-+				PREV.rm_startblock, PREV.rm_blockcount,
-+				PREV.rm_owner, PREV.rm_offset,
-+				PREV.rm_flags);
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		NEW = LEFT;
-+		NEW.rm_blockcount += PREV.rm_blockcount;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_LEFT_FILLING | RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG:
-+		/*
-+		 * Setting all of a previous oldext extent to newext.
-+		 * The right neighbor is contiguous, the left is not.
-+		 */
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		trace_xfs_rmap_delete(mp, cur->bc_private.a.agno,
-+				RIGHT.rm_startblock, RIGHT.rm_blockcount,
-+				RIGHT.rm_owner, RIGHT.rm_offset,
-+				RIGHT.rm_flags);
-+		error = xfs_btree_delete(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		NEW = PREV;
-+		NEW.rm_blockcount = len + RIGHT.rm_blockcount;
-+		NEW.rm_flags = newext;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_LEFT_FILLING | RMAP_RIGHT_FILLING:
-+		/*
-+		 * Setting all of a previous oldext extent to newext.
-+		 * Neither the left nor right neighbors are contiguous with
-+		 * the new one.
-+		 */
-+		NEW = PREV;
-+		NEW.rm_flags = newext;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG:
-+		/*
-+		 * Setting the first part of a previous oldext extent to newext.
-+		 * The left neighbor is contiguous.
-+		 */
-+		NEW = PREV;
-+		NEW.rm_offset += len;
-+		NEW.rm_startblock += len;
-+		NEW.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		error = xfs_btree_decrement(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		NEW = LEFT;
-+		NEW.rm_blockcount += len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_LEFT_FILLING:
-+		/*
-+		 * Setting the first part of a previous oldext extent to newext.
-+		 * The left neighbor is not contiguous.
-+		 */
-+		NEW = PREV;
-+		NEW.rm_startblock += len;
-+		NEW.rm_offset += len;
-+		NEW.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		NEW.rm_startblock = bno;
-+		NEW.rm_owner = owner;
-+		NEW.rm_offset = offset;
-+		NEW.rm_blockcount = len;
-+		NEW.rm_flags = newext;
-+		cur->bc_rec.r = NEW;
-+		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno,
-+				len, owner, offset, newext);
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		break;
-+
-+	case RMAP_RIGHT_FILLING | RMAP_RIGHT_CONTIG:
-+		/*
-+		 * Setting the last part of a previous oldext extent to newext.
-+		 * The right neighbor is contiguous with the new allocation.
-+		 */
-+		NEW = PREV;
-+		NEW.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		error = xfs_btree_increment(cur, 0, &i);
-+		if (error)
-+			goto done;
-+		NEW = RIGHT;
-+		NEW.rm_offset = offset;
-+		NEW.rm_startblock = bno;
-+		NEW.rm_blockcount += len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		break;
-+
-+	case RMAP_RIGHT_FILLING:
-+		/*
-+		 * Setting the last part of a previous oldext extent to newext.
-+		 * The right neighbor is not contiguous.
-+		 */
-+		NEW = PREV;
-+		NEW.rm_blockcount -= len;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		error = xfs_rmap_lookup_eq(cur, bno, len, owner, offset,
-+				oldext, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-+		NEW.rm_startblock = bno;
-+		NEW.rm_owner = owner;
-+		NEW.rm_offset = offset;
-+		NEW.rm_blockcount = len;
-+		NEW.rm_flags = newext;
-+		cur->bc_rec.r = NEW;
-+		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno,
-+				len, owner, offset, newext);
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		break;
-+
-+	case 0:
-+		/*
-+		 * Setting the middle part of a previous oldext extent to
-+		 * newext.  Contiguity is impossible here.
-+		 * One extent becomes three extents.
-+		 */
-+		/* new right extent - oldext */
-+		NEW.rm_startblock = bno + len;
-+		NEW.rm_owner = owner;
-+		NEW.rm_offset = new_endoff;
-+		NEW.rm_blockcount = PREV.rm_offset + PREV.rm_blockcount -
-+				new_endoff;
-+		NEW.rm_flags = PREV.rm_flags;
-+		error = xfs_rmap_update(cur, &NEW);
-+		if (error)
-+			goto done;
-+		/* new left extent - oldext */
-+		NEW = PREV;
-+		NEW.rm_blockcount = offset - PREV.rm_offset;
-+		cur->bc_rec.r = NEW;
-+		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno,
-+				NEW.rm_startblock, NEW.rm_blockcount,
-+				NEW.rm_owner, NEW.rm_offset,
-+				NEW.rm_flags);
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		/*
-+		 * Reset the cursor to the position of the new extent
-+		 * we are about to insert as we can't trust it after
-+		 * the previous insert.
-+		 */
-+		error = xfs_rmap_lookup_eq(cur, bno, len, owner, offset,
-+				oldext, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-+		/* new middle extent - newext */
-+		cur->bc_rec.r.rm_flags &= ~XFS_RMAP_UNWRITTEN;
-+		cur->bc_rec.r.rm_flags |= newext;
-+		trace_xfs_rmap_insert(mp, cur->bc_private.a.agno, bno, len,
-+				owner, offset, newext);
-+		error = xfs_btree_insert(cur, &i);
-+		if (error)
-+			goto done;
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-+		break;
-+
-+	case RMAP_LEFT_FILLING | RMAP_LEFT_CONTIG | RMAP_RIGHT_CONTIG:
-+	case RMAP_RIGHT_FILLING | RMAP_LEFT_CONTIG | RMAP_RIGHT_CONTIG:
-+	case RMAP_LEFT_FILLING | RMAP_RIGHT_CONTIG:
-+	case RMAP_RIGHT_FILLING | RMAP_LEFT_CONTIG:
-+	case RMAP_LEFT_CONTIG | RMAP_RIGHT_CONTIG:
-+	case RMAP_LEFT_CONTIG:
-+	case RMAP_RIGHT_CONTIG:
-+		/*
-+		 * These cases are all impossible.
-+		 */
-+		ASSERT(0);
-+	}
-+
-+	trace_xfs_rmap_convert_done(mp, cur->bc_private.a.agno, bno, len,
-+			unwritten, oinfo);
-+done:
-+	if (error)
-+		trace_xfs_rmap_convert_error(cur->bc_mp,
-+				cur->bc_private.a.agno, error, _RET_IP_);
-+	return error;
++	cd /
++	rm -rf "$tmp".*
 +}
 +
-+#undef	NEW
-+#undef	LEFT
-+#undef	RIGHT
-+#undef	PREV
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
 +
- struct xfs_rmap_query_range_info {
- 	xfs_rmap_query_range_fn	fn;
- 	void				*priv;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e099eda..551b7e2 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2499,6 +2499,10 @@ DEFINE_AG_ERROR_EVENT(xfs_rmap_unmap_error);
- DEFINE_RMAP_EVENT(xfs_rmap_map);
- DEFINE_RMAP_EVENT(xfs_rmap_map_done);
- DEFINE_AG_ERROR_EVENT(xfs_rmap_map_error);
-+DEFINE_RMAP_EVENT(xfs_rmap_convert);
-+DEFINE_RMAP_EVENT(xfs_rmap_convert_done);
-+DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_error);
-+DEFINE_AG_ERROR_EVENT(xfs_rmap_convert_state);
- 
- DECLARE_EVENT_CLASS(xfs_rmapbt_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-@@ -2553,6 +2557,7 @@ DEFINE_AG_ERROR_EVENT(xfs_rmap_delete_error);
- DEFINE_AG_ERROR_EVENT(xfs_rmap_update_error);
- DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
- DEFINE_RMAPBT_EVENT(xfs_rmap_find_right_neighbor_result);
-+DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
- 
- #endif /* _TRACE_XFS_H */
- 
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++_require_test_program "punch-alternating"
++test -x $XFS_FSR_PROG || _notrun "xfs_fsr not found"
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++mkdir "$testdir"
++
++# Setup for 16000 blocks, but we'll accept stress testing down to
++# 2^10 blocks... that should be plenty for anyone.
++fnr=$((12 + LOAD_FACTOR))
++free_blocks=$(stat -f -c '%a' "$testdir")
++blksz=$(stat -f -c '%S' "$testdir")
++space_avail=$((free_blocks * blksz))
++calc_space() {
++	blocks_needed=$(( 2 ** (fnr + 1) ))
++	space_needed=$((blocks_needed * blksz * 5 / 4))
++}
++calc_space
++while test $space_needed -gt $space_avail; do
++	fnr=$((fnr - 1))
++	calc_space
++done
++test $fnr -lt 10 && _notrun "Insufficient space for stress test; would only create $blocks_needed extents."
++bytes=$((blocks_needed * blksz))
++
++echo "Create a many-block file"
++echo "creating $blocks_needed blocks..." >> "$seqres.full"
++_pwrite_byte 0x62 0 $blksz $testdir/file0 >> $seqres.full
++"$XFS_IO_PROG" -f -c "pwrite -S 0x61 -b 4194304 0 $bytes" "$testdir/file1" >> "$seqres.full"
++echo "punching..." >> "$seqres.full"
++"$here/src/punch-alternating" "$testdir/file1" >> "$seqres.full"
++seq 0 2 $((2 ** (fnr + 1) )) | while read lblk; do
++	_reflink_range $testdir/file0 0 $testdir/file1 $((lblk * blksz)) $blksz >> $seqres.full
++done
++echo "...done" >> "$seqres.full"
++_scratch_cycle_mount
++
++echo "Reflink the big file"
++echo "reflinking $((blocks_needed / 2)) blocks, $((bytes / 2)) bytes" >> "$seqres.full"
++_reflink_range "$testdir/file1" 0 "$testdir/file2" 0 $bytes >> "$seqres.full"
++
++echo "Defrag the big file"
++old_nextents=$(xfs_io -c 'stat -v' $testdir/file1 | grep 'nextents' | cut -d ' ' -f 3)
++$XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full
++new_nextents=$(xfs_io -c 'stat -v' $testdir/file1 | grep 'nextents' | cut -d ' ' -f 3)
++
++echo "Check extent count"
++$XFS_IO_PROG -c 'stat -v' $testdir/file1 >> $seqres.full
++$XFS_IO_PROG -c 'stat -v' $testdir/file2 >> $seqres.full
++echo "extents: $old_nextents -> $new_nextents" >> $seqres.full
++test $old_nextents -gt $new_nextents || echo "FAIL: $old_nextents -> $new_nextents"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/873.out b/tests/xfs/873.out
+new file mode 100644
+index 0000000..9dddf55
+--- /dev/null
++++ b/tests/xfs/873.out
+@@ -0,0 +1,6 @@
++QA output created by 873
++Format and mount
++Create a many-block file
++Reflink the big file
++Defrag the big file
++Check extent count
+diff --git a/tests/xfs/874 b/tests/xfs/874
+new file mode 100755
+index 0000000..fb31ea8
+--- /dev/null
++++ b/tests/xfs/874
+@@ -0,0 +1,99 @@
++#! /bin/bash
++# FS QA Test No. 874
++#
++# Ensure that xfs_fsr handles errors correctly while defragging files.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf "$tmp".*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++. ./common/quota
++. ./common/inject
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++test -x $XFS_FSR_PROG || _notrun "xfs_fsr not found"
++_require_xfs_io_error_injection "bmap_finish_one"
++_require_xfs_scratch_rmapbt
++
++_repquota() {
++	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
++}
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount >> "$seqres.full" 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++blksz=65536
++blks=3
++mkdir "$testdir"
++
++echo "Create a many-block file"
++_pwrite_byte 0x62 0 $((blksz * blks)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x63 0 $blksz $testdir/file2 >> $seqres.full
++_reflink_range $testdir/file2 0 $testdir/file1 $blksz $blksz >> $seqres.full
++_scratch_cycle_mount
++$XFS_IO_PROG -c 'bmap -v' $testdir/file1 >> $seqres.full
++
++echo "Inject error"
++_scratch_inject_error "bmap_finish_one"
++
++echo "Defrag the file"
++$XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full 2>&1
++
++echo "FS should be shut down, touch will fail"
++touch $SCRATCH_MNT/badfs 2>&1 | _filter_scratch
++
++echo "Remount to replay log" | tee /dev/ttyprintk
++_scratch_inject_logprint >> $seqres.full
++
++echo "Check extent count" | tee /dev/ttyprintk
++$XFS_IO_PROG -c 'stat -v' $testdir/file1 >> $seqres.full
++$XFS_IO_PROG -c 'stat -v' $testdir/file2 >> $seqres.full
++echo "extents: $old_nextents -> $new_nextents" >> $seqres.full
++
++echo "FS should be online, touch should succeed"
++touch $SCRATCH_MNT/goodfs
++$XFS_IO_PROG -c 'bmap -v' $testdir/file1 >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/874.out b/tests/xfs/874.out
+new file mode 100644
+index 0000000..dbc0f49
+--- /dev/null
++++ b/tests/xfs/874.out
+@@ -0,0 +1,10 @@
++QA output created by 874
++Format and mount
++Create a many-block file
++Inject error
++Defrag the file
++FS should be shut down, touch will fail
++touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
++Remount to replay log
++Check extent count
++FS should be online, touch should succeed
+diff --git a/tests/xfs/875 b/tests/xfs/875
+new file mode 100755
+index 0000000..17c28db
+--- /dev/null
++++ b/tests/xfs/875
+@@ -0,0 +1,100 @@
++#! /bin/bash
++# FS QA Test No. 875
++#
++# Ensure that xfs_fsr handles quota correctly while defragging files.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename "$0"`
++seqres="$RESULT_DIR/$seq"
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -rf "$tmp".*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/reflink
++. ./common/quota
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_cp_reflink
++test -x $XFS_FSR_PROG || _notrun "xfs_fsr not found"
++_require_quota
++_require_nobody
++
++_repquota() {
++	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
++}
++
++rm -f "$seqres.full"
++
++echo "Format and mount"
++_scratch_mkfs > "$seqres.full" 2>&1
++export MOUNT_OPTIONS="-o usrquota,grpquota $MOUNT_OPTIONS"
++_scratch_mount >> "$seqres.full" 2>&1
++quotacheck -u -g $SCRATCH_MNT 2> /dev/null
++quotaon $SCRATCH_MNT 2> /dev/null
++
++testdir="$SCRATCH_MNT/test-$seq"
++blksz=65536
++blks=3
++mkdir "$testdir"
++
++echo "Create a many-block file"
++touch $testdir/file1
++chown nobody $testdir/file1
++touch $testdir/file2
++chown nobody $testdir/file2
++_pwrite_byte 0x62 0 $((blksz * blks)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x63 0 $blksz $testdir/file2 >> $seqres.full
++_reflink_range $testdir/file2 0 $testdir/file1 $blksz $blksz >> $seqres.full
++_repquota
++_scratch_cycle_mount
++
++echo "Defrag the file"
++old_nextents=$(xfs_io -c 'stat -v' $testdir/file1 | grep 'nextents' | cut -d ' ' -f 3)
++$XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full
++new_nextents=$(xfs_io -c 'stat -v' $testdir/file1 | grep 'nextents' | cut -d ' ' -f 3)
++_repquota
++
++echo "Remount the FS to see if accounting changes"
++_scratch_cycle_mount
++_repquota
++
++echo "Check extent count"
++$XFS_IO_PROG -c 'stat -v' $testdir/file1 >> $seqres.full
++$XFS_IO_PROG -c 'stat -v' $testdir/file2 >> $seqres.full
++echo "extents: $old_nextents -> $new_nextents" >> $seqres.full
++test $old_nextents -gt $new_nextents || echo "FAIL: $old_nextents -> $new_nextents"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/875.out b/tests/xfs/875.out
+new file mode 100644
+index 0000000..57653e9
+--- /dev/null
++++ b/tests/xfs/875.out
+@@ -0,0 +1,12 @@
++QA output created by 875
++Format and mount
++Create a many-block file
++root      --       0       0       0              4     0     0       
++nobody    --     256       0       0              2     0     0       
++Defrag the file
++root      --       0       0       0              4     0     0       
++nobody    --     256       0       0              2     0     0       
++Remount the FS to see if accounting changes
++root      --       0       0       0              4     0     0       
++nobody    --     256       0       0              2     0     0       
++Check extent count
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 5ccf3d6..16f7947 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -306,3 +306,6 @@
+ 325 auto quick clone
+ 326 auto quick clone
+ 327 auto quick clone
++873 auto quick clone fsr
++874 auto quick clone fsr
++875 auto quick clone fsr quota
 
 _______________________________________________
 xfs mailing list
