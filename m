@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 993337CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:15:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AA9DE7CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:56:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B8317AC004
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:15:08 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	h0d4drDqbiUp6jZZ for <xfs@oss.sgi.com>;
-	Thu, 21 Jul 2016 16:15:06 -0700 (PDT)
-Date: Fri, 22 Jul 2016 09:15:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: bufferhead chains are invalid after
-	end_page_writeback
-Message-ID: <20160721231504.GP16044@dastard>
-References: <1468974083-3660-1-git-send-email-david@fromorbit.com>
-	<20160721143221.GA27521@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C428AC002
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 9XqXWVYnVvQA3kiB (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:13 -0700 (PDT)
+Subject: [PATCH 01/47] vfs: fix return type of ioctl_file_dedupe_range
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 20 Jul 2016 21:56:07 -0700
+Message-ID: <146907696757.25461.13451944377009612990.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160721143221.GA27521@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,27 +28,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Thu, Jul 21, 2016 at 07:32:21AM -0700, Christoph Hellwig wrote:
-> Looks fine,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> (should probably go into 4.7 still..)
+All the VFS functions in the dedupe ioctl path return int status, so
+the ioctl handler ought to as well.
 
-I'll tag it for -stable so it gets back there appropriately. The
-problem exists in kernels long before the changes we've made
-recently, however, but I don't think this fix will apply cleanly to
-older kernels...
+Found by Coverity, CID 1350952.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 116a333..db3d033 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -568,7 +568,7 @@ static int ioctl_fsthaw(struct file *filp)
+ 	return thaw_super(sb);
+ }
+ 
+-static long ioctl_file_dedupe_range(struct file *file, void __user *arg)
++static int ioctl_file_dedupe_range(struct file *file, void __user *arg)
+ {
+ 	struct file_dedupe_range __user *argp = arg;
+ 	struct file_dedupe_range *same = NULL;
 
 _______________________________________________
 xfs mailing list
