@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D8C127CA0
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 06:58:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AB18F8F8037
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 04:58:40 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	fSg2BrqIlAM1uH1z for <xfs@oss.sgi.com>;
-	Fri, 22 Jul 2016 04:58:37 -0700 (PDT)
-Date: Fri, 22 Jul 2016 21:58:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: next-20160722 build: 1 failures 5 warnings (next-20160722)
-Message-ID: <20160722115834.GR16044@dastard>
-References: <E1bQXSf-0008Uu-Ej@optimist> <20160722103829.GY6509@sirena.org.uk>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3369B7D88
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 00:01:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D113C304043
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:01:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id JwPQ8SHDzxhqNx2T (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:01:14 -0700 (PDT)
+Subject: [PATCH 46/47] xfs: enable the rmap btree functionality
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 20 Jul 2016 22:01:08 -0700
+Message-ID: <146907726852.25461.2094606664613325490.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160722103829.GY6509@sirena.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +28,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Brown <broonie@kernel.org>
-Cc: linaro-kernel@lists.linaro.org, kernel-build-reports@lists.linaro.org, xfs@oss.sgi.com, linux-next@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Jul 22, 2016 at 11:38:29AM +0100, Mark Brown wrote:
-> On Fri, Jul 22, 2016 at 11:13:41AM +0100, Build bot for Mark Brown wrote:
-> 
-> Today's -next fails to build an ARM allmodconfig due to:
-> 
-> > 	arm-allmodconfig
-> > ERROR: "dax_do_io" [fs/xfs/xfs.ko] undefined!
+From: Dave Chinner <dchinner@redhat.com>
 
-Already fixed.
+Add the feature flag to the supported matrix so that the kernel can
+mount and use rmap btree enabled filesystems
 
-https://git.kernel.org/cgit/linux/kernel/git/dgc/linux-xfs.git/commit/?h=for-next&id=f021bd071f06b545926b1031348873b05442139f
+v2: Move the EXPERIMENTAL message to fill_super so it only prints once.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick.wong@oracle.com: move the experimental tag]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ fs/xfs/xfs_super.c         |    4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index f6a0641..f814d42 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -457,7 +457,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+-		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b8d4473..fbfe6c7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1578,6 +1578,10 @@ xfs_fs_fill_super(
+ 		xfs_alert(mp,
+ 	"EXPERIMENTAL sparse inode feature enabled. Use at your own risk!");
+ 
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		xfs_alert(mp,
++	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
++
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
 
 _______________________________________________
 xfs mailing list
