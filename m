@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44A087CAF
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:47:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5E19F7D2D
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:59:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1933A8F8035
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:12 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id GsK7nuvklupUx5BM (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3092A304043
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:45 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id HBuJ45aFamrbDgfK (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:07 -0700 (PDT)
-Subject: [PATCH 07/17] xfs/128: cycle_mount the scratch device,
-	not the test device
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:43 -0700 (PDT)
+Subject: [PATCH 32/47] xfs: teach rmapbt to support interval queries
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 21 Jul 2016 16:47:01 -0700
-Message-ID: <146914482100.11762.3197784490090678443.stgit@birch.djwong.org>
-In-Reply-To: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+Date: Wed, 20 Jul 2016 21:59:37 -0700
+Message-ID: <146907717693.25461.18075011178601243719.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,68 +28,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-This test uses the scratch device, so cycle that, not the test dev.
-This is also a xfs_fsr test, so put it in the fsr group.
+Now that the generic btree code supports querying all records within a
+range of keys, use that functionality to allow us to ask for all the
+extents mapped to a range of physical blocks.
+
+v2: Move unwritten bit to rm_offset.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/128   |    7 ++++---
- tests/xfs/group |    2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_rmap.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    9 +++++++++
+ 2 files changed, 52 insertions(+)
 
 
-diff --git a/tests/xfs/128 b/tests/xfs/128
-index 8758d7e..2e756d5 100755
---- a/tests/xfs/128
-+++ b/tests/xfs/128
-@@ -66,7 +66,7 @@ _pwrite_byte 0x61 0 $((blks * blksz)) $testdir/file1 >> $seqres.full
- _cp_reflink $testdir/file1 $testdir/file2
- _cp_reflink $testdir/file2 $testdir/file3
- _cp_reflink $testdir/file3 $testdir/file4
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks1=$(stat -f $testdir -c '%f')
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index ce29d6b..6638bc7 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -183,3 +183,46 @@ out_error:
+ 	trace_xfs_rmap_map_error(mp, agno, error, _RET_IP_);
+ 	return error;
+ }
++
++struct xfs_rmap_query_range_info {
++	xfs_rmap_query_range_fn	fn;
++	void				*priv;
++};
++
++/* Format btree record and pass to our callback. */
++STATIC int
++xfs_rmap_query_range_helper(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec,
++	void			*priv)
++{
++	struct xfs_rmap_query_range_info	*query = priv;
++	struct xfs_rmap_irec			irec;
++	int					error;
++
++	error = xfs_rmap_btrec_to_irec(rec, &irec);
++	if (error)
++		return error;
++	return query->fn(cur, &irec, query->priv);
++}
++
++/* Find all rmaps between two keys. */
++int
++xfs_rmap_query_range(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*low_rec,
++	struct xfs_rmap_irec		*high_rec,
++	xfs_rmap_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_brec;
++	union xfs_btree_irec		high_brec;
++	struct xfs_rmap_query_range_info	query;
++
++	low_brec.r = *low_rec;
++	high_brec.r = *high_rec;
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_range(cur, &low_brec, &high_brec,
++			xfs_rmap_query_range_helper, &query);
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index aa39a2a..34c811a 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -151,4 +151,13 @@ int xfs_rmap_lookup_eq(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_get_rec(struct xfs_btree_cur *cur, struct xfs_rmap_irec *irec,
+ 		int *stat);
  
- md5sum $testdir/file1 | _filter_scratch
-@@ -82,7 +82,7 @@ c04=$(_md5_checksum $testdir/file4)
- echo "CoW the reflink copies"
- _pwrite_byte 0x62 $blksz $blksz $testdir/file2 >> $seqres.full
- _pwrite_byte 0x63 $(( blksz * (blks - 1) )) $blksz $testdir/file3 >> $seqres.full
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks2=$(stat -f $testdir -c '%f')
- 
- md5sum $testdir/file1 | _filter_scratch
-@@ -97,11 +97,12 @@ c14=$(_md5_checksum $testdir/file4)
- 
- echo "Defragment"
- lsattr -l $testdir/ | _filter_scratch | _filter_spaces
-+filefrag -v $testdir/file* >> $seqres.full
- $XFS_FSR_PROG -v -d $testdir/file1 >> $seqres.full
- $XFS_FSR_PROG -v -d $testdir/file2 >> $seqres.full # fsr probably breaks the link
- $XFS_FSR_PROG -v -d $testdir/file3 >> $seqres.full # fsr probably breaks the link
- $XFS_FSR_PROG -v -d $testdir/file4 >> $seqres.full # fsr probably ignores this file
--_test_cycle_mount
-+_scratch_cycle_mount
- free_blocks3=$(stat -f $testdir -c '%f')
- 
- md5sum $testdir/file1 | _filter_scratch
-diff --git a/tests/xfs/group b/tests/xfs/group
-index aa3b3ec..5ccf3d6 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -125,7 +125,7 @@
- 125 fuzzers
- 126 fuzzers
- 127 auto quick clone
--128 auto quick clone
-+128 auto quick clone fsr
- 129 auto quick clone
- 130 fuzzers clone
- 131 auto quick clone
++typedef int (*xfs_rmap_query_range_fn)(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rec,
++	void			*priv);
++
++int xfs_rmap_query_range(struct xfs_btree_cur *cur,
++		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
++		xfs_rmap_query_range_fn fn, void *priv);
++
+ #endif	/* __XFS_RMAP_H__ */
 
 _______________________________________________
 xfs mailing list
