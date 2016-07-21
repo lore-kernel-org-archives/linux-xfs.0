@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA8A27CAF
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 09:16:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F989AC001
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 07:16:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CkTKWk4jtAof3OYR (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B19737CF6
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:58:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 656478F8037
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:48 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 0rRjnPIjJpTDh87p (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 07:16:03 -0700 (PDT)
-Date: Thu, 21 Jul 2016 10:16:01 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: bufferhead chains are invalid after
-	end_page_writeback
-Message-ID: <20160721141600.GA15597@bfoster.bfoster>
-References: <1468974083-3660-1-git-send-email-david@fromorbit.com>
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:46 -0700 (PDT)
+Subject: [PATCH 23/47] xfs: rmap btree add more reserved blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 20 Jul 2016 21:58:36 -0700
+Message-ID: <146907711682.25461.14047787063598041363.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1468974083-3660-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,117 +28,148 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Wed, Jul 20, 2016 at 10:21:23AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> In xfs_finish_page_writeback(), we have a loop that looks like this:
-> 
->         do {
->                 if (off < bvec->bv_offset)
->                         goto next_bh;
->                 if (off > end)
->                         break;
->                 bh->b_end_io(bh, !error);
-> next_bh:
->                 off += bh->b_size;
->         } while ((bh = bh->b_this_page) != head);
-> 
-> The b_end_io function is end_buffer_async_write(), which will call
-> end_page_writeback() once all the buffers have marked as no longer
-> under IO.  This issue here is that the only thing currently
-> protecting both the bufferhead chain and the page from being
-> reclaimed is the PageWriteback state held on the page.
-> 
-> While we attempt to limit the loop to just the buffers covered by
-> the IO, we still read from the buffer size and follow the next
-> pointer in the bufferhead chain. There is no guarantee that either
-> of these are valid after the PageWriteback flag has been cleared.
-> Hence, loops like this are completely unsafe, and result in
-> use-after-free issues. One such problem was caught by Calvin Owens
-> with KASAN:
-> 
-...
-> 
-> 
-> Where the access is occuring during IO completion after the buffer
-> had been freed from direct memory reclaim.
-> 
-> Prevent use-after-free accidents in this end_io processing loop by
-> pre-calculating the loop conditionals before calling bh->b_end_io().
-> The loop is already limited to just the bufferheads covered by the
-> IO in progress, so the offset checks are sufficient to prevent
-> accessing buffers in the chain after end_page_writeback() has been
-> called by the the bh->b_end_io() callout.
-> 
-> Yet another example of why Bufferheads Must Die.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reported-and-Tested-by: Calvin Owens <calvinowens@fb.com>
-> ---
+From: Dave Chinner <dchinner@redhat.com>
 
+XFS reserves a small amount of space in each AG for the minimum
+number of free blocks needed for operation. Adding the rmap btree
+increases the number of reserved blocks, but it also increases the
+complexity of the calculation as the free inode btree is optional
+(like the rmbt).
+
+Rather than calculate the prealloc blocks every time we need to
+check it, add a function to calculate it at mount time and store it
+in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
+just to use the xfs-mount variable directly.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c  |   11 +++++++++++
+ fs/xfs/libxfs/xfs_alloc.h  |    2 ++
+ fs/xfs/libxfs/xfs_format.h |    9 +--------
+ fs/xfs/xfs_fsops.c         |    6 +++---
+ fs/xfs/xfs_mount.c         |    2 ++
+ fs/xfs/xfs_mount.h         |    1 +
+ 6 files changed, 20 insertions(+), 11 deletions(-)
 
->  fs/xfs/xfs_aops.c | 15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 80714eb..0cfb944 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -87,6 +87,12 @@ xfs_find_bdev_for_inode(
->   * We're now finished for good with this page.  Update the page state via the
->   * associated buffer_heads, paying attention to the start and end offsets that
->   * we need to process on the page.
-> + *
-> + * Landmine Warning: bh->b_end_io() will call end_page_writeback() on the last
-> + * buffer in the IO. Once it does this, it is unsafe to access the bufferhead or
-> + * the page at all, as we may be racing with memory reclaim and it can free both
-> + * the bufferhead chain and the page as it will see the page as clean and
-> + * unused.
->   */
->  static void
->  xfs_finish_page_writeback(
-> @@ -95,8 +101,9 @@ xfs_finish_page_writeback(
->  	int			error)
->  {
->  	unsigned int		end = bvec->bv_offset + bvec->bv_len - 1;
-> -	struct buffer_head	*head, *bh;
-> +	struct buffer_head	*head, *bh, *next;
->  	unsigned int		off = 0;
-> +	unsigned int		bsize;
->  
->  	ASSERT(bvec->bv_offset < PAGE_SIZE);
->  	ASSERT((bvec->bv_offset & ((1 << inode->i_blkbits) - 1)) == 0);
-> @@ -105,15 +112,17 @@ xfs_finish_page_writeback(
->  
->  	bh = head = page_buffers(bvec->bv_page);
->  
-> +	bsize = bh->b_size;
->  	do {
-> +		next = bh->b_this_page;
->  		if (off < bvec->bv_offset)
->  			goto next_bh;
->  		if (off > end)
->  			break;
->  		bh->b_end_io(bh, !error);
->  next_bh:
-> -		off += bh->b_size;
-> -	} while ((bh = bh->b_this_page) != head);
-> +		off += bsize;
-> +	} while ((bh = next) != head);
->  }
->  
->  /*
-> -- 
-> 2.8.0.rc3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index c02d8e8..43c7e53 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -50,6 +50,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+ 
++xfs_extlen_t
++xfs_prealloc_blocks(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+  */
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index cf268b2..20b54aa 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -232,4 +232,6 @@ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 		struct xfs_buf **agbp);
+ 
++xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 74f4d3d..3dbed01 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1319,18 +1319,11 @@ typedef __be32 xfs_inobt_ptr_t;
+  */
+ #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
+ 
+-/*
+- * The first data block of an AG depends on whether the filesystem was formatted
+- * with the finobt feature. If so, account for the finobt reserved root btree
+- * block.
+- */
+-#define XFS_PREALLOC_BLOCKS(mp) \
++#define	XFS_RMAP_BLOCK(mp) \
+ 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
+ 	 XFS_FIBT_BLOCK(mp) + 1 : \
+ 	 XFS_IBT_BLOCK(mp) + 1)
+ 
+-
+-
+ /*
+  * BMAP Btree format definitions
+  *
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 4c191d2..0a3b822 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -243,7 +243,7 @@ xfs_growfs_data_private(
+ 		agf->agf_flfirst = cpu_to_be32(1);
+ 		agf->agf_fllast = 0;
+ 		agf->agf_flcount = 0;
+-		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
++		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+ 		agf->agf_freeblks = cpu_to_be32(tmpsize);
+ 		agf->agf_longest = cpu_to_be32(tmpsize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+@@ -340,7 +340,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 
+@@ -369,7 +369,7 @@ xfs_growfs_data_private(
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
++		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+ 		arec->ar_blockcount = cpu_to_be32(
+ 			agsize - be32_to_cpu(arec->ar_startblock));
+ 		nfree += be32_to_cpu(arec->ar_blockcount);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 5f3ba88..24ae96b 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -231,6 +231,8 @@ xfs_initialize_perag(
+ 
+ 	if (maxagi)
+ 		*maxagi = index;
++
++	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
+ 
+ out_unwind:
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index c1b798c..0537b1f 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -119,6 +119,7 @@ typedef struct xfs_mount {
+ 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+ 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+ 	uint			m_in_maxlevels;	/* max inobt btree levels. */
++	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
+ 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+ 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+ 	struct mutex		m_growlock;	/* growfs mutex */
 
 _______________________________________________
 xfs mailing list
