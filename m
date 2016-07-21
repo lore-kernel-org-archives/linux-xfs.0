@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 64E147CAF
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:56:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1AD2D304048
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:21 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A61037CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:56:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BE5C304048
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:27 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ry2chXjU3Lo0IA6N (version=TLSv1.2
+	cuda.sgi.com with ESMTP id EyeUyuiwLMNmkSFV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:19 -0700 (PDT)
-Subject: [PATCH 02/47] vfs: support FS_XFLAG_REFLINK and FS_XFLAG_COWEXTSIZE
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:25 -0700 (PDT)
+Subject: [PATCH 03/47] xfs: fix attr shortform structure alignment on cris
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 21:56:14 -0700
-Message-ID: <146907697404.25461.4210564656872865210.stgit@birch.djwong.org>
+Date: Wed, 20 Jul 2016 21:56:20 -0700
+Message-ID: <146907698036.25461.13007151908183013504.stgit@birch.djwong.org>
 In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,39 +31,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-Introduce XFLAGs for the new XFS reflink inode flag and the CoW extent
-size hint, and actually plumb the CoW extent size hint into the fsxattr
-structure.
+Apparently cris doesn't require structure stride to align with the
+largest type in the struct, so list[0] isn't at offset 4 like it is
+everywhere else.  Fix this... insofar as existing XFSes on cris are
+screwed.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/uapi/linux/fs.h |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_da_format.h |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 3b00f7c..fb371a5 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -157,7 +157,8 @@ struct fsxattr {
- 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
- 	__u32		fsx_nextents;	/* nextents field value (get)	*/
- 	__u32		fsx_projid;	/* project identifier (get/set) */
--	unsigned char	fsx_pad[12];
-+	__u32		fsx_cowextsize;	/* CoW extsize field value (get/set)*/
-+	unsigned char	fsx_pad[8];
- };
- 
- /*
-@@ -178,6 +179,8 @@ struct fsxattr {
- #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
- #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
- #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
-+#define FS_XFLAG_REFLINK	0x00010000	/* file is reflinked */
-+#define FS_XFLAG_COWEXTSIZE	0x00020000	/* CoW extent size allocator hint */
- #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
- 
- /* the read-only stuff doesn't really belong here, but any other place is
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 685f23b..9a492a9 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -629,6 +629,7 @@ typedef struct xfs_attr_shortform {
+ 	struct xfs_attr_sf_hdr {	/* constant-structure header block */
+ 		__be16	totsize;	/* total bytes in shortform list */
+ 		__u8	count;	/* count of active entries */
++		__u8	padding;
+ 	} hdr;
+ 	struct xfs_attr_sf_entry {
+ 		__uint8_t namelen;	/* actual length of name (no NULL) */
 
 _______________________________________________
 xfs mailing list
