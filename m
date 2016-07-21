@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 857F97CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 17:41:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 583FF30404E
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 15:41:21 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0Ch6FqtH1oeW9wHK for <xfs@oss.sgi.com>;
-	Thu, 21 Jul 2016 15:41:18 -0700 (PDT)
-Date: Fri, 22 Jul 2016 08:40:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
-Message-ID: <20160721224057.GD12670@dastard>
-References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
-	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
-	<20160716093358.GL2432@eguan.usersys.redhat.com>
-	<20160717233003.GX1922@dastard>
-	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
-	<20160718114723.GG27776@eguan.usersys.redhat.com>
-	<CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
-	<CACj3i73hdbW4iAWufvxc_aJn1dj+UGzuud7Cj-qMiwe7aLeNxQ@mail.gmail.com>
-	<20160720235433.GA12670@dastard>
-	<CACj3i72UFhXeM-H8ubnso3CRH851Jp1nP-R-pP6AXZrABOeQMQ@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 274FB7CBB
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:58:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DED558F8035
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:57 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id gWIrc5KtJHkfWRo7 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:55 -0700 (PDT)
+Subject: [PATCH 25/47] xfs: introduce rmap extent operation stubs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 20 Jul 2016 21:58:50 -0700
+Message-ID: <146907713019.25461.56905367142239308.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACj3i72UFhXeM-H8ubnso3CRH851Jp1nP-R-pP6AXZrABOeQMQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,83 +24,309 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-T24gVGh1LCBKdWwgMjEsIDIwMTYgYXQgMDQ6MjQ6NTJQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
-Ogo+IE9uIFRodSwgSnVsIDIxLCAyMDE2IGF0IDE6NTQgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
-ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gPj4gPj4gSSB0aGluayB5b3UgbmVlZCB0byB0ZXN0IG9u
-IGEgNGsgc2VjdG9yIHNpemUgZGlzay4gSSB1c2Ugc2NzaV9kZWJ1ZyB0bwo+ID4+ID4+IHNpbXVs
-YXRlIHBoeXNpY2FsIDRrIHNlY3RvciBkaXNrIHRvIHJlcHJvZHVjZSB0aGlzOgo+ID4+ID4+Cj4g
-Pj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9iZSAtciBzY3Np
-X2RlYnVnCj4gPj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9i
-ZSBzY3NpX2RlYnVnIGRldl9zaXplX21iPTEyOCBwaHlzYmxrX2V4cD0zCj4gPj4gPj4gW3Jvb3RA
-ZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBibG9ja2RldiAtLWdldGJzeiAtLWdldHBic3og
-LS1nZXRzcyAvZGV2L3NkYwo+ID4+ID4+IDQwOTYKPiA+PiA+PiA0MDk2Cj4gPj4gPj4gNTEyCj4g
-Pj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBta2ZzIC10IHhmcyAtbCB2
-ZXJzaW9uPTEgLW0gY3JjPTEgL2Rldi9zZGMKPiA+Cj4gPiBTbyB0aGlzIGlzIGFuIGludmFsaWQg
-ZmlsZXN5c3RlbSBjb25maWd1cmF0aW9uLiBJdCBzaG91bGQgYmUKPiA+IGRldGVjdGVkIGFzIHN1
-Y2ggZHVyaW5nIGNvbW1hbmQgbGluZSBwYXJzaW5nIGFuZCByZWplY3RlZCBiZWZvcmUgd2UKPiA+
-IGdldCBhbnl3aGVyZSBuZWFyIGNoZWNraW5nIHRvcG9sb2d5IGNvbnN0cmFpbnRzLiBJbiBta2Zz
-Cj4gPiB0ZXJtcywgaXQncyBhIGNvbmZsaWN0aW5nIG9wdGlvbiBzZXQuCj4gPgo+ID4+IEFuZCB0
-aGUgY3VscHJpdCBpcyBpbiBta2ZzLCBzb21lIGZvcnR5IGxpbmVzIGJlZm9yZSB0aGUgY3JjICYg
-bG9nIHZlcnNpb24gY2hlY2s6Cj4gPj4KPiA+PiAyMDI2IOKHpSAgICAgICB9IGVsc2UgaWYgKGxz
-ZWN0b3JzaXplID4gWEZTX01JTl9TRUNUT1JTSVpFICYmICFsc3UgJiYgIWxzdW5pdCkgewo+ID4+
-IDIwMjcg4oelICAgICAgIOKHpSAgICAgICBsc3UgPSBibG9ja3NpemU7Cj4gPj4gMjAyOCDih6Ug
-ICAgICAg4oelICAgICAgIHNiX2ZlYXQubG9nX3ZlcnNpb24gPSAyOwo+ID4+IDIwMjkg4oelICAg
-ICAgIH0KPiA+Pgo+ID4+IFRoZSBwb3NzaWJsZSBzb2x1dGlvbnMgSSBjYW4gdGhpbmsgb2YgYXJl
-Ogo+ID4KPiA+IE5vbmUgb2Ygd2hpY2ggcmVhbGx5IGFwcGVhbCBiZWNhdXNlLCBJTU8sIHRoZXkg
-YXJlIHRyeWluZyB0byBzb2x2ZQo+ID4gdGhlIHdyb25nIHByb2JsZW0uCj4gPgo+ID4gVGhlIHdo
-b2xlIHBvaW50IG9mIG1vdmluZyB0byB0YWJsZSBiYXNlZCBjb21tYW5kIGxpbmUgb3B0aW9uIHBh
-cnNpbmcKPiA+IGlzIHRoYXQgd2UgY2FuIGVuY29kZSB0aGVzZSBzb3J0cyBvZiBjb25mbGljdHMg
-aW50byB0aGUgb3B0aW9uCj4gPiB0YWJsZS4gVGhlIGNvbmZsaWN0IHJlc29sdXRpb24gaW4gdGhl
-IG9wdGlvbiB0YWJsZSBpcyBjdXJyZW50bHkgbm90Cj4gPiBjb21wbGV0ZSAtIGl0IGNhbiBvbmx5
-IGVuY29kZSBhbmQgZGV0ZWN0IGNvbmZsaWN0cyB3aXRoaW4gYQo+ID4gc3Vib3B0aW9uIHR5cGUs
-IGJ1dCBub3QgYWNyb3NzIHN1Ym9wdGlvbiB0eXBlcyAoZS5nLiB3aXRoaW4gLWQKPiA+IHN1Ym9w
-dGlvbnMsIGJ1dCBub3QgYmV0d2VlbiAtZCBhbmQgLWwgc3Vib3B0aW9ucykuCj4gPgo+ID4gVGhp
-cyBpcyBzaW1wbHkgYmVjYXVzZSBJIG5ldmVyIGdvdCBhcyBmYXIgYXMgaW1wbGVtZW50aW5nIHRo
-aXMgbGV2ZWwKPiA+IG9mIGNvbmZsaWN0IGVuY29kaW5nL3Jlc29sdXRpb24uIEluIGVzc2VuY2Us
-IHRoZSBjb25mbGljdCBhcnJheQo+ID4gbmVlZHMgdG8gZGVmaW5lIHRoZSBzdWIgb3B0aW9uIHR5
-cGUsIHRoZSBzdWJvcHRpb24gdGhhdCBpcwo+ID4gaW4gY29uZmxpY3QgYW5kIHRoZSB2YWx1ZSB0
-aGF0IGl0IGNvbmZsaWN0cyBhZ2FpbnN0LiBIZW5jZSB0aGUKPiA+IGNvbmZsaWN0cyB0YWJsZSBj
-YW4gdGhlbiBlbmNvZGUgc3VjaCB0aGluZ3MgYXMgInZlcnNpb24gMSBsb2dzIGFyZQo+ID4gaW52
-YWxpZCBmb3IgQ1JDIGVuYWJsZWQgZmlsZXN5c3RlbXMiIGFuZCB2aWNlIHZlcnNhLgo+ID4KPiAK
-PiBPaywgaW4gbG9uZyB0ZXJtLCB0aGUgY29ycmVjdCB3YXkgaXMgdG8gZXh0ZW5kIHRoZSBjb25m
-bGljdHMgdGFibGUuCgpOb3QgbG9uZyB0ZXJtLiBJdCdzIGZhaXJseSBzaW1wbGUgdG8gZG8uCgox
-LiBDb252ZXJ0IGFsbCB0aGUgaW5kaXZpZHVhbCBzdWJvcHQgcGFyYW1ldGVyIHRhYmxlcyB0byBh
-biBhcnJheSBvZiB0YWJsZXMKICAgd2l0aCBhIGRlZmluZWQgaW5kZXggZm9yIGVhY2ggc2V0IG9m
-IHN1Ym9wdHMsCjIuIGFkZCBhIHZhbHVlIGZpZWxkIHRvIHRoZSBwYXJhbWV0ZXIsIGFuZCBzdG9y
-ZSB0aGUgQ0xJIHZhbHVlIGluCiAgIGl0IHdoZW4gaXQgaXMgc2V0CjMuIG1ha2UgdGhlIGNvbmZs
-aWN0cyBhcnJheSBpbiBlYWNoIHN1Ym9wdHMgYSBzdHJ1Y3R1cmUgbGlrZToKCnN0cnVjdCBjb25m
-bGljdHMgewogICAgICAgIGludCAgICAgc3Vib3B0OwogICAgICAgIGludCAgICAgaW5kZXg7CiAg
-ICAgICAgaW50ICAgICBpbnZhbGlkX3ZhbHVlOwp9OwoKYW5kIGNvbnZlcnQgYWxsIHRoZSBleGlz
-dGluZyBjb25mbGljdHMgdG8gdGhpcyBmb3JtYXQKCjQuIERlZmluZSBjcm9zcy1zdWJvcHQgY29u
-ZmxpY3RzIGxpa2UgdGhpczoKCiAgICAgICAuc3Vib3B0X3BhcmFtcyA9IHsKICAgICAgICAgICAg
-ICAgIHsgLmluZGV4ID0gTV9DUkMsCi0gICAgICAgICAgICAgICAgIC5jb25mbGljdHMgPSB7IExB
-U1RfQ09ORkxJQ1QgfSwKKwkJICAuY29uZmxpY3RzID0geyB7IExPRywgTF9WRVJTSU9OLCAxIH0s
-CisJCQkJIHsgTEFTVF9DT05GTElDVCwgMCwgMCB9LCB9LAogICAgICAgICAgICAgICAgICAubWlu
-dmFsID0gMCwKICAgICAgICAgICAgICAgICAgLm1heHZhbCA9IDEsCiAgICAgICAgICAgICAgICAg
-IC5kZWZhdWx0dmFsID0gMSwKICAgICAgICAgICAgICAgIH0sCgpBbmQgdGhlIExfVkVSU0lPTiBz
-dWJvcHQgcGFyYW1ldGVyIHdpbGwgaGF2ZSBhIGNvbmZsaWN0IGxpa2UKCisJCSAgLmNvbmZsaWN0
-cyA9IHsgeyBNRVRBLCBNX0NSQywgMSB9LAorCQkJCSB7IExBU1RfQ09ORkxJQ1QsIDAsIDAgfSwg
-fSwKCjUuIHVwZGF0ZSB0aGUgY29uZmxpY3QgbG9va3VwIHRvIGRvIGNyb3NzIG9wdGlvbiBsb29r
-dXBzIHZpYQpjaGVja2luZyB0aGUgcmVsZXZhbnQgb3B0aW9uIGNvbmZsaWN0IHRhYmxlLiBlLmcg
-YnkgY2hlY2tpbmcgdGhlCmNvbmZsaWN0W2ldLnZhbHVlIGFnYWluc3Qgc3Vib3B0W0xPR10uc3Vi
-b3B0X3BhcmFtc1tMX1ZFUlNJT05dLnZhbHVlLi4uCgo+IEJ1dCB3aGF0IGluIHRoZSBtZWFudGlt
-ZT8gQXJlIHdlIGdvaW5nIHRvIGxldCBpdCBiZSBub3cgdW50aWwgaXQgaXMKPiBmaXhlZCBieSB0
-aGUgZW5oYW5jZWQgdGFibGU/CgpJTU86IGZpeCBpdCBvbmNlLCBmaXggaXQgcHJvcGVybHkuCgo+
-IEFuZCByZWdhcmRpbmcgbXkgcXVlc3Rpb24gYXQgdGhlIGVuZCBvZiB0aGUgbWFpbCwgSSBpbnRl
-cnByZXQgeW91cgo+IGFuc3dlciBhcyAiaWYgdGhlIGFyZ3VtZW50cyBhcmUgd3JvbmcsIGZhaWwg
-QVNBUCBhbmQgZG9uJ3QgdHJ5IHRvIGZpeAo+IGl0LiIKClRoZSBmaXJzdCBzdGVwIGluIGFueSBw
-cm9ncmFtIHNob3VsIGRiZSB0byB2YWxpZGF0ZSB1c2VyIHN1cHBsaWVkCmlucHV0cy4gT25jZSB0
-aGV5IGFyZSB2YWxpZGF0ZWQgYW5kIGtub3duIGdvb2QsIHlvdSBkb24ndCBoYXZlIHRvCmFkZCBy
-YW5kb20gY29kZSB0byBoYW5kbGUgaW52YWxpZCBjb21iaW5hdGlvbnMgLSB5b3UgY2FuIGp1c3Qg
-YXNzdW1lCnRoZSBpbnB1dHMgYXJlIHZhbGlkIHRvIGJlZ2luIHdpdGggYW5kIHRob3NlIGNvcm5l
-ciBjYXNlcyBkb24ndCBuZWVkCnRvIGJlIGhhbmRsZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2
-ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+Add the stubs into the extent allocation and freeing paths that the
+rmap btree implementation will hook into. While doing this, add the
+trace points that will be used to track rmap btree extent
+manipulations.
+
+[darrick.wong@oracle.com: Extend the stubs to take full owner info.]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/Makefile           |    1 +
+ fs/xfs/libxfs/xfs_alloc.c |   19 +++++++++-
+ fs/xfs/libxfs/xfs_rmap.c  |   89 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h  |   11 ++++++
+ fs/xfs/xfs_trace.h        |   77 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 195 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_rmap.c
+
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 01857b0..0498291 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -52,6 +52,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_inode_fork.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_rlimit.o \
++				   xfs_rmap.o \
+ 				   xfs_sb.o \
+ 				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o \
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 6335b8b..dba7ce4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -27,6 +27,7 @@
+ #include "xfs_defer.h"
+ #include "xfs_inode.h"
+ #include "xfs_btree.h"
++#include "xfs_rmap.h"
+ #include "xfs_alloc_btree.h"
+ #include "xfs_alloc.h"
+ #include "xfs_extent_busy.h"
+@@ -36,7 +37,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
+-#include "xfs_rmap.h"
+ 
+ struct workqueue_struct *xfs_alloc_wq;
+ 
+@@ -649,6 +649,14 @@ xfs_alloc_ag_vextent(
+ 	ASSERT(!args->wasfromfl || !args->isfl);
+ 	ASSERT(args->agbno % args->alignment == 0);
+ 
++	/* if not file data, insert new block into the reverse map btree */
++	if (args->oinfo.oi_owner != XFS_RMAP_OWN_UNKNOWN) {
++		error = xfs_rmap_alloc(args->tp, args->agbp, args->agno,
++				       args->agbno, args->len, &args->oinfo);
++		if (error)
++			return error;
++	}
++
+ 	if (!args->wasfromfl) {
+ 		error = xfs_alloc_update_counters(args->tp, args->pag,
+ 						  args->agbp,
+@@ -1615,12 +1623,19 @@ xfs_free_ag_extent(
+ 	xfs_extlen_t	nlen;		/* new length of freespace */
+ 	xfs_perag_t	*pag;		/* per allocation group data */
+ 
++	bno_cur = cnt_cur = NULL;
+ 	mp = tp->t_mountp;
++
++	if (oinfo->oi_owner != XFS_RMAP_OWN_UNKNOWN) {
++		error = xfs_rmap_free(tp, agbp, agno, bno, len, oinfo);
++		if (error)
++			goto error0;
++	}
++
+ 	/*
+ 	 * Allocate and initialize a cursor for the by-block btree.
+ 	 */
+ 	bno_cur = xfs_allocbt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_BNO);
+-	cnt_cur = NULL;
+ 	/*
+ 	 * Look for a neighboring block on the left (lower block numbers)
+ 	 * that is contiguous with this space.
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+new file mode 100644
+index 0000000..b522bfc
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -0,0 +1,89 @@
++/*
++ * Copyright (c) 2014 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_btree.h"
++#include "xfs_trans.h"
++#include "xfs_alloc.h"
++#include "xfs_rmap.h"
++#include "xfs_trans_space.h"
++#include "xfs_trace.h"
++#include "xfs_error.h"
++#include "xfs_extent_busy.h"
++
++int
++xfs_rmap_free(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	int			error = 0;
++
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return 0;
++
++	trace_xfs_rmap_unmap(mp, agno, bno, len, false, oinfo);
++	if (1)
++		goto out_error;
++	trace_xfs_rmap_unmap_done(mp, agno, bno, len, false, oinfo);
++	return 0;
++
++out_error:
++	trace_xfs_rmap_unmap_error(mp, agno, error, _RET_IP_);
++	return error;
++}
++
++int
++xfs_rmap_alloc(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	int			error = 0;
++
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return 0;
++
++	trace_xfs_rmap_map(mp, agno, bno, len, false, oinfo);
++	if (1)
++		goto out_error;
++	trace_xfs_rmap_map_done(mp, agno, bno, len, false, oinfo);
++	return 0;
++
++out_error:
++	trace_xfs_rmap_map_error(mp, agno, error, _RET_IP_);
++	return error;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index b30e7ad..dbf0301 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -64,4 +64,15 @@ xfs_rmap_skip_owner_update(
+ 	oi->oi_owner = XFS_RMAP_OWN_UNKNOWN;
+ }
+ 
++/* Reverse mapping functions. */
++
++struct xfs_buf;
++
++int xfs_rmap_alloc(struct xfs_trans *tp, struct xfs_buf *agbp,
++		   xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
++		   struct xfs_owner_info *oinfo);
++int xfs_rmap_free(struct xfs_trans *tp, struct xfs_buf *agbp,
++		  xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
++		  struct xfs_owner_info *oinfo);
++
+ #endif	/* __XFS_RMAP_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 939caf5..79e3812 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2423,6 +2423,83 @@ DEFINE_MAP_EXTENT_DEFERRED_EVENT(xfs_defer_map_extent);
+ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
+ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_deferred);
+ 
++/* rmap tracepoints */
++DECLARE_EVENT_CLASS(xfs_rmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len, bool unwritten,
++		 struct xfs_owner_info *oinfo),
++	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned long, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = oinfo->oi_owner;
++		__entry->offset = oinfo->oi_offset;
++		__entry->flags = oinfo->oi_flags;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%lx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++#define DEFINE_RMAP_EVENT(name) \
++DEFINE_EVENT(xfs_rmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, bool unwritten, \
++		 struct xfs_owner_info *oinfo), \
++	TP_ARGS(mp, agno, agbno, len, unwritten, oinfo))
++
++/* simple AG-based error/%ip tracepoint class */
++DECLARE_EVENT_CLASS(xfs_ag_error_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, agno, error, caller_ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(int, error)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->error = error;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("dev %d:%d agno %u error %d caller %ps",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->error,
++		  (char *)__entry->caller_ip)
++);
++
++#define DEFINE_AG_ERROR_EVENT(name) \
++DEFINE_EVENT(xfs_ag_error_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int error, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agno, error, caller_ip))
++
++DEFINE_RMAP_EVENT(xfs_rmap_unmap);
++DEFINE_RMAP_EVENT(xfs_rmap_unmap_done);
++DEFINE_AG_ERROR_EVENT(xfs_rmap_unmap_error);
++DEFINE_RMAP_EVENT(xfs_rmap_map);
++DEFINE_RMAP_EVENT(xfs_rmap_map_done);
++DEFINE_AG_ERROR_EVENT(xfs_rmap_map_error);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
