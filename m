@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D57EF7CA3
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:59:51 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F40D27CCF
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:47:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A24B304043
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:51 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C7F538F8033
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:25 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id f1etl9wtLm124Sso (version=TLSv1.2
+	cuda.sgi.com with ESMTP id TO56tB7CO0cCErZq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:50 -0700 (PDT)
-Subject: [PATCH 33/47] xfs: add tracepoints for the rmap functions
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:47:24 -0700 (PDT)
+Subject: [PATCH 10/17] xfs/179: use scratch device helpers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 21:59:43 -0700
-Message-ID: <146907718334.25461.12980211617938579982.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+Date: Thu, 21 Jul 2016 16:47:19 -0700
+Message-ID: <146914483981.11762.15707981777571396710.stgit@birch.djwong.org>
+In-Reply-To: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,87 +28,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+
+Use the helper functions for scratch devices.  This fixes a problem
+where xfs/179 fails when there's a realtime device.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trace.h |   51 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 49 insertions(+), 2 deletions(-)
+ tests/xfs/179 |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e69912a..7498c77 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2417,8 +2417,6 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
+diff --git a/tests/xfs/179 b/tests/xfs/179
+index e0b0af8..18459cb 100755
+--- a/tests/xfs/179
++++ b/tests/xfs/179
+@@ -65,7 +65,7 @@ _pwrite_byte 0x61 0 $blksz $testdir/file1 >> $seqres.full
+ _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
  
--DEFINE_MAP_EXTENT_DEFERRED_EVENT(xfs_defer_map_extent);
--
- #define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
- DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
- DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_deferred);
-@@ -2502,8 +2500,57 @@ DEFINE_RMAP_EVENT(xfs_rmap_map);
- DEFINE_RMAP_EVENT(xfs_rmap_map_done);
- DEFINE_AG_ERROR_EVENT(xfs_rmap_map_error);
+ echo "Change reference count"
+-umount $SCRATCH_MNT
++_scratch_unmount
+ echo "set refcount to -4" >> $seqres.full
+ $XFS_DB_PROG -x -c 'agf 0' -c 'addr refcntroot' -c 'write recs[1].refcount 4294967292' $SCRATCH_DEV >> $seqres.full
+ echo "check refcount after setting to -4" >> $seqres.full
+@@ -80,7 +80,7 @@ _cp_reflink $testdir/file1 $testdir/file6 >> $seqres.full
+ _cp_reflink $testdir/file1 $testdir/file7 >> $seqres.full
  
-+DECLARE_EVENT_CLASS(xfs_rmapbt_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len,
-+		 uint64_t owner, uint64_t offset, unsigned int flags),
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+		__field(uint64_t, owner)
-+		__field(uint64_t, offset)
-+		__field(unsigned int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+);
-+#define DEFINE_RMAPBT_EVENT(name) \
-+DEFINE_EVENT(xfs_rmapbt_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len, \
-+		 uint64_t owner, uint64_t offset, unsigned int flags), \
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
-+
-+#define DEFINE_RMAP_DEFERRED_EVENT DEFINE_MAP_EXTENT_DEFERRED_EVENT
-+DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
-+DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
-+
- DEFINE_BUSY_EVENT(xfs_rmapbt_alloc_block);
- DEFINE_BUSY_EVENT(xfs_rmapbt_free_block);
-+DEFINE_RMAPBT_EVENT(xfs_rmap_update);
-+DEFINE_RMAPBT_EVENT(xfs_rmap_insert);
-+DEFINE_RMAPBT_EVENT(xfs_rmap_delete);
-+DEFINE_AG_ERROR_EVENT(xfs_rmap_insert_error);
-+DEFINE_AG_ERROR_EVENT(xfs_rmap_delete_error);
-+DEFINE_AG_ERROR_EVENT(xfs_rmap_update_error);
+ echo "Check scratch fs"
+-umount $SCRATCH_MNT
++_scratch_unmount
+ echo "check refcount after reflinking 5 more times" >> $seqres.full
+ $XFS_DB_PROG -c 'agf 0' -c 'addr refcntroot' -c 'p recs[1]' $SCRATCH_DEV >> $seqres.full
+ _scratch_mount >> $seqres.full
+@@ -91,7 +91,7 @@ _pwrite_byte 0x62 0 $blksz $testdir/file5 >> $seqres.full
+ _pwrite_byte 0x62 0 $blksz $testdir/file7 >> $seqres.full
  
- #endif /* _TRACE_XFS_H */
+ echo "Check scratch fs"
+-umount $SCRATCH_MNT
++_scratch_unmount
+ echo "check refcount after cowing 3 files" >> $seqres.full
+ $XFS_DB_PROG -c 'agf 0' -c 'addr refcntroot' -c 'p recs[1]' $SCRATCH_DEV >> $seqres.full
+ _scratch_mount >> $seqres.full
+@@ -100,10 +100,10 @@ echo "Remove reflinked files"
+ rm -rf $testdir/file*
  
+ echo "Check scratch fs"
+-umount $SCRATCH_MNT
++_scratch_unmount
+ echo "check refcount after removing all files" >> $seqres.full
+ $XFS_DB_PROG -c 'agf 0' -c 'addr refcntroot' -c 'p recs[1]' $SCRATCH_DEV >> $seqres.full
+-$XFS_REPAIR_PROG -o force_geometry -n $SCRATCH_DEV >> $seqres.full 2>&1
++_scratch_xfs_repair -o force_geometry -n >> $seqres.full 2>&1
+ res=$?
+ if [ $res -eq 0 ]; then
+ 	# If repair succeeds then format the device so that the post-test
 
 _______________________________________________
 xfs mailing list
