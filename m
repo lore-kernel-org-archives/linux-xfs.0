@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A61037CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:56:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BE5C304048
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:27 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id EyeUyuiwLMNmkSFV (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AD4127CA4
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:56:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 804308F8035
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:40 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id kfPoUYb5GR8uUxhM (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:25 -0700 (PDT)
-Subject: [PATCH 03/47] xfs: fix attr shortform structure alignment on cris
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:56:38 -0700 (PDT)
+Subject: [PATCH 04/47] xfs: fix locking of the rt bitmap/summary inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 21:56:20 -0700
-Message-ID: <146907698036.25461.13007151908183013504.stgit@birch.djwong.org>
+Date: Wed, 20 Jul 2016 21:56:26 -0700
+Message-ID: <146907698690.25461.7316591529865921141.stgit@birch.djwong.org>
 In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,29 +31,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-Apparently cris doesn't require structure stride to align with the
-largest type in the struct, so list[0] isn't at offset 4 like it is
-everywhere else.  Fix this... insofar as existing XFSes on cris are
-screwed.
+When we're deleting realtime extents, we need to lock the summary
+inode in case we need to update the summary info to prevent an assert
+on the rsumip inode lock on a debug kernel.  While we're at it, fix
+the locking annotations so that we avoid triggering lockdep warnings.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h |    1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/libxfs/xfs_bmap.c |    4 +++-
+ fs/xfs/xfs_bmap_util.c   |    4 ++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 685f23b..9a492a9 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -629,6 +629,7 @@ typedef struct xfs_attr_shortform {
- 	struct xfs_attr_sf_hdr {	/* constant-structure header block */
- 		__be16	totsize;	/* total bytes in shortform list */
- 		__u8	count;	/* count of active entries */
-+		__u8	padding;
- 	} hdr;
- 	struct xfs_attr_sf_entry {
- 		__uint8_t namelen;	/* actual length of name (no NULL) */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2f2c85c..c5981f4 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5179,8 +5179,10 @@ xfs_bunmapi(
+ 		/*
+ 		 * Synchronize by locking the bitmap inode.
+ 		 */
+-		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
++		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
+ 		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
++		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
++		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
+ 	}
+ 
+ 	extno = 0;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index cd4a850..998c3e6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -214,9 +214,9 @@ xfs_bmap_rtalloc(
+ 	/*
+ 	 * Lock out modifications to both the RT bitmap and summary inodes
+ 	 */
+-	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
++	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
+ 	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
+-	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
++	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
+ 	xfs_trans_ijoin(ap->tp, mp->m_rsumip, XFS_ILOCK_EXCL);
+ 
+ 	/*
 
 _______________________________________________
 xfs mailing list
