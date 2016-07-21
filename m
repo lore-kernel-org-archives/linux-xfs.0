@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 243C87CA0
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 17:43:25 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 20B1C7CA0
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 20:36:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EBAFD8F8035
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 15:43:24 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E1F7D8F804B
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 18:36:03 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	WiuesrTnQULxhTZy for <xfs@oss.sgi.com>;
-	Wed, 20 Jul 2016 15:43:19 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1bQ0Ca-0002wb-AX
-	for xfs@oss.sgi.com; Thu, 21 Jul 2016 08:42:52 +1000
-Date: Thu, 21 Jul 2016 08:42:52 +1000
+	r2dT6wgcz4yySNl1 for <xfs@oss.sgi.com>;
+	Wed, 20 Jul 2016 18:36:01 -0700 (PDT)
+Date: Thu, 21 Jul 2016 11:35:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: master branch updated to v4.7.0-rc2
-Message-ID: <20160720224252.GN16044@dastard>
+Subject: Re: linux-next: manual merge of the xfs tree with Linus' tree
+Message-ID: <20160721013558.GO16044@dastard>
+References: <20160721110756.7a905ee8@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160721110756.7a905ee8@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +29,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Jann Horn <jann@thejh.net>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Folks,
+On Thu, Jul 21, 2016 at 11:07:56AM +1000, Stephen Rothwell wrote:
+> Hi all,
+> 
+> Today's linux-next merge of the xfs tree got a conflict in:
+> 
+>   fs/xfs/xfs_ioctl.c
+> 
+> between commit:
+> 
+>   3e0a39654645 ("xfs: fix type confusion in xfs_ioc_swapext")
+> 
+> from Linus' tree and commit:
+> 
+>   7f1b62457b58 ("xfs: fix type confusion in xfs_ioc_swapext")
+> 
+> from the xfs tree.
+> 
+> These are not quite the same patch :-(
 
-The xfsprogs repository at:
+Yeah, I added comments to explain the code, because it's not obvious
+why the check was added, and I couldn't find any other examples of
+such checks in fs/. So, in five years time when I look at that code
+again, the comment will remind me why it's a bad idea to remove what
+appears to be an unnecesary check...
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> I fixed it up (I used the version in the xfs tree) and can carry the
+> fix as necessary. This is now fixed as far as linux-next is concerned,
+> but any non trivial conflicts should be mentioned to your upstream
+> maintainer when your tree is submitted for merging.
 
-has just been updated and tagged as the 4.7.0-rc2 release. Only
-minor changes in this update - I've added the copy_range command to
-xfs_io even though this is an -rc2 as it's pretty much a standalone
-change, not widely suppported by existing kernels and so is very low
-risk to anything else. A 4.7 release should be just around the
-corner, now....
+Yup, I planned to let Linus know. Patches in private emails that
+aren't tagged [PATCH] in the subject line don't get the immediate
+attention of my mail filters, so I didn't see it immediately.
 
--Dave.
+Cheers,
 
-The new head of the master branch is commit:
-
-0054f91 xfsprogs: Release v4.7-rc2
-
-New Commits:
-
-Anna Schumaker (1):
-      [628e112] xfs_io: implement 'copy_range' command
-
-Dave Chinner (1):
-      [0054f91] xfsprogs: Release v4.7-rc2
-
-Zorro Lang (1):
-      [70a4820] xfs_repair: low memory shouldn't indicate corruption on exit
-
-
-Code Diffstat:
-
- VERSION               |   2 +-
- configure.ac          |   3 +-
- doc/CHANGES           |   5 ++
- include/builddefs.in  |   1 +
- io/Makefile           |   5 ++
- io/copy_file_range.c  | 148 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c             |   1 +
- io/io.h               |   6 +++
- m4/package_libcdev.m4 |  17 ++++++
- repair/xfs_repair.c   |   6 +--
- 10 files changed, 189 insertions(+), 5 deletions(-)
- create mode 100644 io/copy_file_range.c
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
