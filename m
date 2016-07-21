@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B19737CF6
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:58:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 656478F8037
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:48 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 0rRjnPIjJpTDh87p (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:58:46 -0700 (PDT)
-Subject: [PATCH 23/47] xfs: rmap btree add more reserved blocks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 21:58:36 -0700
-Message-ID: <146907711682.25461.14047787063598041363.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 857F97CA0
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 17:41:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 583FF30404E
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 15:41:21 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	0Ch6FqtH1oeW9wHK for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2016 15:41:18 -0700 (PDT)
+Date: Fri, 22 Jul 2016 08:40:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
+Message-ID: <20160721224057.GD12670@dastard>
+References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
+	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
+	<20160716093358.GL2432@eguan.usersys.redhat.com>
+	<20160717233003.GX1922@dastard>
+	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
+	<20160718114723.GG27776@eguan.usersys.redhat.com>
+	<CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
+	<CACj3i73hdbW4iAWufvxc_aJn1dj+UGzuud7Cj-qMiwe7aLeNxQ@mail.gmail.com>
+	<20160720235433.GA12670@dastard>
+	<CACj3i72UFhXeM-H8ubnso3CRH851Jp1nP-R-pP6AXZrABOeQMQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CACj3i72UFhXeM-H8ubnso3CRH851Jp1nP-R-pP6AXZrABOeQMQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,154 +34,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-XFS reserves a small amount of space in each AG for the minimum
-number of free blocks needed for operation. Adding the rmap btree
-increases the number of reserved blocks, but it also increases the
-complexity of the calculation as the free inode btree is optional
-(like the rmbt).
-
-Rather than calculate the prealloc blocks every time we need to
-check it, add a function to calculate it at mount time and store it
-in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
-just to use the xfs-mount variable directly.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c  |   11 +++++++++++
- fs/xfs/libxfs/xfs_alloc.h  |    2 ++
- fs/xfs/libxfs/xfs_format.h |    9 +--------
- fs/xfs/xfs_fsops.c         |    6 +++---
- fs/xfs/xfs_mount.c         |    2 ++
- fs/xfs/xfs_mount.h         |    1 +
- 6 files changed, 20 insertions(+), 11 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index c02d8e8..43c7e53 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -50,6 +50,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
- 
-+xfs_extlen_t
-+xfs_prealloc_blocks(
-+	struct xfs_mount	*mp)
-+{
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return XFS_RMAP_BLOCK(mp) + 1;
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return XFS_FIBT_BLOCK(mp) + 1;
-+	return XFS_IBT_BLOCK(mp) + 1;
-+}
-+
- /*
-  * Lookup the record equal to [bno, len] in the btree given by cur.
-  */
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index cf268b2..20b54aa 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,4 +232,6 @@ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
- int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
- 		struct xfs_buf **agbp);
- 
-+xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
-+
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 74f4d3d..3dbed01 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1319,18 +1319,11 @@ typedef __be32 xfs_inobt_ptr_t;
-  */
- #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
- 
--/*
-- * The first data block of an AG depends on whether the filesystem was formatted
-- * with the finobt feature. If so, account for the finobt reserved root btree
-- * block.
-- */
--#define XFS_PREALLOC_BLOCKS(mp) \
-+#define	XFS_RMAP_BLOCK(mp) \
- 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
- 	 XFS_FIBT_BLOCK(mp) + 1 : \
- 	 XFS_IBT_BLOCK(mp) + 1)
- 
--
--
- /*
-  * BMAP Btree format definitions
-  *
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 4c191d2..0a3b822 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -243,7 +243,7 @@ xfs_growfs_data_private(
- 		agf->agf_flfirst = cpu_to_be32(1);
- 		agf->agf_fllast = 0;
- 		agf->agf_flcount = 0;
--		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
-+		tmpsize = agsize - mp->m_ag_prealloc_blocks;
- 		agf->agf_freeblks = cpu_to_be32(tmpsize);
- 		agf->agf_longest = cpu_to_be32(tmpsize);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
-@@ -340,7 +340,7 @@ xfs_growfs_data_private(
- 						agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
--		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
-+		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
- 		arec->ar_blockcount = cpu_to_be32(
- 			agsize - be32_to_cpu(arec->ar_startblock));
- 
-@@ -369,7 +369,7 @@ xfs_growfs_data_private(
- 						agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
--		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
-+		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
- 		arec->ar_blockcount = cpu_to_be32(
- 			agsize - be32_to_cpu(arec->ar_startblock));
- 		nfree += be32_to_cpu(arec->ar_blockcount);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 5f3ba88..24ae96b 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -231,6 +231,8 @@ xfs_initialize_perag(
- 
- 	if (maxagi)
- 		*maxagi = index;
-+
-+	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
- 	return 0;
- 
- out_unwind:
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index c1b798c..0537b1f 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -119,6 +119,7 @@ typedef struct xfs_mount {
- 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
- 	uint			m_in_maxlevels;	/* max inobt btree levels. */
-+	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
- 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
- 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
- 	struct mutex		m_growlock;	/* growfs mutex */
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKdWwgMjEsIDIwMTYgYXQgMDQ6MjQ6NTJQTSArMDIwMCwgSmFuIFR1bGFrIHdyb3Rl
+Ogo+IE9uIFRodSwgSnVsIDIxLCAyMDE2IGF0IDE6NTQgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4gPj4gPj4gSSB0aGluayB5b3UgbmVlZCB0byB0ZXN0IG9u
+IGEgNGsgc2VjdG9yIHNpemUgZGlzay4gSSB1c2Ugc2NzaV9kZWJ1ZyB0bwo+ID4+ID4+IHNpbXVs
+YXRlIHBoeXNpY2FsIDRrIHNlY3RvciBkaXNrIHRvIHJlcHJvZHVjZSB0aGlzOgo+ID4+ID4+Cj4g
+Pj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9iZSAtciBzY3Np
+X2RlYnVnCj4gPj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9i
+ZSBzY3NpX2RlYnVnIGRldl9zaXplX21iPTEyOCBwaHlzYmxrX2V4cD0zCj4gPj4gPj4gW3Jvb3RA
+ZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBibG9ja2RldiAtLWdldGJzeiAtLWdldHBic3og
+LS1nZXRzcyAvZGV2L3NkYwo+ID4+ID4+IDQwOTYKPiA+PiA+PiA0MDk2Cj4gPj4gPj4gNTEyCj4g
+Pj4gPj4gW3Jvb3RAZGhjcC02Ni04Ni0xMSB4ZnNwcm9ncy1kZXZdIyBta2ZzIC10IHhmcyAtbCB2
+ZXJzaW9uPTEgLW0gY3JjPTEgL2Rldi9zZGMKPiA+Cj4gPiBTbyB0aGlzIGlzIGFuIGludmFsaWQg
+ZmlsZXN5c3RlbSBjb25maWd1cmF0aW9uLiBJdCBzaG91bGQgYmUKPiA+IGRldGVjdGVkIGFzIHN1
+Y2ggZHVyaW5nIGNvbW1hbmQgbGluZSBwYXJzaW5nIGFuZCByZWplY3RlZCBiZWZvcmUgd2UKPiA+
+IGdldCBhbnl3aGVyZSBuZWFyIGNoZWNraW5nIHRvcG9sb2d5IGNvbnN0cmFpbnRzLiBJbiBta2Zz
+Cj4gPiB0ZXJtcywgaXQncyBhIGNvbmZsaWN0aW5nIG9wdGlvbiBzZXQuCj4gPgo+ID4+IEFuZCB0
+aGUgY3VscHJpdCBpcyBpbiBta2ZzLCBzb21lIGZvcnR5IGxpbmVzIGJlZm9yZSB0aGUgY3JjICYg
+bG9nIHZlcnNpb24gY2hlY2s6Cj4gPj4KPiA+PiAyMDI2IOKHpSAgICAgICB9IGVsc2UgaWYgKGxz
+ZWN0b3JzaXplID4gWEZTX01JTl9TRUNUT1JTSVpFICYmICFsc3UgJiYgIWxzdW5pdCkgewo+ID4+
+IDIwMjcg4oelICAgICAgIOKHpSAgICAgICBsc3UgPSBibG9ja3NpemU7Cj4gPj4gMjAyOCDih6Ug
+ICAgICAg4oelICAgICAgIHNiX2ZlYXQubG9nX3ZlcnNpb24gPSAyOwo+ID4+IDIwMjkg4oelICAg
+ICAgIH0KPiA+Pgo+ID4+IFRoZSBwb3NzaWJsZSBzb2x1dGlvbnMgSSBjYW4gdGhpbmsgb2YgYXJl
+Ogo+ID4KPiA+IE5vbmUgb2Ygd2hpY2ggcmVhbGx5IGFwcGVhbCBiZWNhdXNlLCBJTU8sIHRoZXkg
+YXJlIHRyeWluZyB0byBzb2x2ZQo+ID4gdGhlIHdyb25nIHByb2JsZW0uCj4gPgo+ID4gVGhlIHdo
+b2xlIHBvaW50IG9mIG1vdmluZyB0byB0YWJsZSBiYXNlZCBjb21tYW5kIGxpbmUgb3B0aW9uIHBh
+cnNpbmcKPiA+IGlzIHRoYXQgd2UgY2FuIGVuY29kZSB0aGVzZSBzb3J0cyBvZiBjb25mbGljdHMg
+aW50byB0aGUgb3B0aW9uCj4gPiB0YWJsZS4gVGhlIGNvbmZsaWN0IHJlc29sdXRpb24gaW4gdGhl
+IG9wdGlvbiB0YWJsZSBpcyBjdXJyZW50bHkgbm90Cj4gPiBjb21wbGV0ZSAtIGl0IGNhbiBvbmx5
+IGVuY29kZSBhbmQgZGV0ZWN0IGNvbmZsaWN0cyB3aXRoaW4gYQo+ID4gc3Vib3B0aW9uIHR5cGUs
+IGJ1dCBub3QgYWNyb3NzIHN1Ym9wdGlvbiB0eXBlcyAoZS5nLiB3aXRoaW4gLWQKPiA+IHN1Ym9w
+dGlvbnMsIGJ1dCBub3QgYmV0d2VlbiAtZCBhbmQgLWwgc3Vib3B0aW9ucykuCj4gPgo+ID4gVGhp
+cyBpcyBzaW1wbHkgYmVjYXVzZSBJIG5ldmVyIGdvdCBhcyBmYXIgYXMgaW1wbGVtZW50aW5nIHRo
+aXMgbGV2ZWwKPiA+IG9mIGNvbmZsaWN0IGVuY29kaW5nL3Jlc29sdXRpb24uIEluIGVzc2VuY2Us
+IHRoZSBjb25mbGljdCBhcnJheQo+ID4gbmVlZHMgdG8gZGVmaW5lIHRoZSBzdWIgb3B0aW9uIHR5
+cGUsIHRoZSBzdWJvcHRpb24gdGhhdCBpcwo+ID4gaW4gY29uZmxpY3QgYW5kIHRoZSB2YWx1ZSB0
+aGF0IGl0IGNvbmZsaWN0cyBhZ2FpbnN0LiBIZW5jZSB0aGUKPiA+IGNvbmZsaWN0cyB0YWJsZSBj
+YW4gdGhlbiBlbmNvZGUgc3VjaCB0aGluZ3MgYXMgInZlcnNpb24gMSBsb2dzIGFyZQo+ID4gaW52
+YWxpZCBmb3IgQ1JDIGVuYWJsZWQgZmlsZXN5c3RlbXMiIGFuZCB2aWNlIHZlcnNhLgo+ID4KPiAK
+PiBPaywgaW4gbG9uZyB0ZXJtLCB0aGUgY29ycmVjdCB3YXkgaXMgdG8gZXh0ZW5kIHRoZSBjb25m
+bGljdHMgdGFibGUuCgpOb3QgbG9uZyB0ZXJtLiBJdCdzIGZhaXJseSBzaW1wbGUgdG8gZG8uCgox
+LiBDb252ZXJ0IGFsbCB0aGUgaW5kaXZpZHVhbCBzdWJvcHQgcGFyYW1ldGVyIHRhYmxlcyB0byBh
+biBhcnJheSBvZiB0YWJsZXMKICAgd2l0aCBhIGRlZmluZWQgaW5kZXggZm9yIGVhY2ggc2V0IG9m
+IHN1Ym9wdHMsCjIuIGFkZCBhIHZhbHVlIGZpZWxkIHRvIHRoZSBwYXJhbWV0ZXIsIGFuZCBzdG9y
+ZSB0aGUgQ0xJIHZhbHVlIGluCiAgIGl0IHdoZW4gaXQgaXMgc2V0CjMuIG1ha2UgdGhlIGNvbmZs
+aWN0cyBhcnJheSBpbiBlYWNoIHN1Ym9wdHMgYSBzdHJ1Y3R1cmUgbGlrZToKCnN0cnVjdCBjb25m
+bGljdHMgewogICAgICAgIGludCAgICAgc3Vib3B0OwogICAgICAgIGludCAgICAgaW5kZXg7CiAg
+ICAgICAgaW50ICAgICBpbnZhbGlkX3ZhbHVlOwp9OwoKYW5kIGNvbnZlcnQgYWxsIHRoZSBleGlz
+dGluZyBjb25mbGljdHMgdG8gdGhpcyBmb3JtYXQKCjQuIERlZmluZSBjcm9zcy1zdWJvcHQgY29u
+ZmxpY3RzIGxpa2UgdGhpczoKCiAgICAgICAuc3Vib3B0X3BhcmFtcyA9IHsKICAgICAgICAgICAg
+ICAgIHsgLmluZGV4ID0gTV9DUkMsCi0gICAgICAgICAgICAgICAgIC5jb25mbGljdHMgPSB7IExB
+U1RfQ09ORkxJQ1QgfSwKKwkJICAuY29uZmxpY3RzID0geyB7IExPRywgTF9WRVJTSU9OLCAxIH0s
+CisJCQkJIHsgTEFTVF9DT05GTElDVCwgMCwgMCB9LCB9LAogICAgICAgICAgICAgICAgICAubWlu
+dmFsID0gMCwKICAgICAgICAgICAgICAgICAgLm1heHZhbCA9IDEsCiAgICAgICAgICAgICAgICAg
+IC5kZWZhdWx0dmFsID0gMSwKICAgICAgICAgICAgICAgIH0sCgpBbmQgdGhlIExfVkVSU0lPTiBz
+dWJvcHQgcGFyYW1ldGVyIHdpbGwgaGF2ZSBhIGNvbmZsaWN0IGxpa2UKCisJCSAgLmNvbmZsaWN0
+cyA9IHsgeyBNRVRBLCBNX0NSQywgMSB9LAorCQkJCSB7IExBU1RfQ09ORkxJQ1QsIDAsIDAgfSwg
+fSwKCjUuIHVwZGF0ZSB0aGUgY29uZmxpY3QgbG9va3VwIHRvIGRvIGNyb3NzIG9wdGlvbiBsb29r
+dXBzIHZpYQpjaGVja2luZyB0aGUgcmVsZXZhbnQgb3B0aW9uIGNvbmZsaWN0IHRhYmxlLiBlLmcg
+YnkgY2hlY2tpbmcgdGhlCmNvbmZsaWN0W2ldLnZhbHVlIGFnYWluc3Qgc3Vib3B0W0xPR10uc3Vi
+b3B0X3BhcmFtc1tMX1ZFUlNJT05dLnZhbHVlLi4uCgo+IEJ1dCB3aGF0IGluIHRoZSBtZWFudGlt
+ZT8gQXJlIHdlIGdvaW5nIHRvIGxldCBpdCBiZSBub3cgdW50aWwgaXQgaXMKPiBmaXhlZCBieSB0
+aGUgZW5oYW5jZWQgdGFibGU/CgpJTU86IGZpeCBpdCBvbmNlLCBmaXggaXQgcHJvcGVybHkuCgo+
+IEFuZCByZWdhcmRpbmcgbXkgcXVlc3Rpb24gYXQgdGhlIGVuZCBvZiB0aGUgbWFpbCwgSSBpbnRl
+cnByZXQgeW91cgo+IGFuc3dlciBhcyAiaWYgdGhlIGFyZ3VtZW50cyBhcmUgd3JvbmcsIGZhaWwg
+QVNBUCBhbmQgZG9uJ3QgdHJ5IHRvIGZpeAo+IGl0LiIKClRoZSBmaXJzdCBzdGVwIGluIGFueSBw
+cm9ncmFtIHNob3VsIGRiZSB0byB2YWxpZGF0ZSB1c2VyIHN1cHBsaWVkCmlucHV0cy4gT25jZSB0
+aGV5IGFyZSB2YWxpZGF0ZWQgYW5kIGtub3duIGdvb2QsIHlvdSBkb24ndCBoYXZlIHRvCmFkZCBy
+YW5kb20gY29kZSB0byBoYW5kbGUgaW52YWxpZCBjb21iaW5hdGlvbnMgLSB5b3UgY2FuIGp1c3Qg
+YXNzdW1lCnRoZSBpbnB1dHMgYXJlIHZhbGlkIHRvIGJlZ2luIHdpdGggYW5kIHRob3NlIGNvcm5l
+ciBjYXNlcyBkb24ndCBuZWVkCnRvIGJlIGhhbmRsZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2
+ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
+dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
