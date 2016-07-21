@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 574617CA0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 13:55:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A1623AC004
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 11:55:07 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Osj6Ee6I3pQcVZ29 for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2016 11:55:03 -0700 (PDT)
-Received: from Liberator.local (204-195-32-108.wavecable.com [204.195.32.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128
-	bits)) (No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 86BE6142E
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 13:55:02 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Metadata corruption detected at xfs_agf block
-References: <20160718112544.GF27776@eguan.usersys.redhat.com>
-Message-ID: <f7fba852-d5a5-1775-f41e-f74c411daa4f@sandeen.net>
-Date: Mon, 18 Jul 2016 11:55:01 -0700
-MIME-Version: 1.0
-In-Reply-To: <20160718112544.GF27776@eguan.usersys.redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 10A057CA0
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 07:08:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C62AF8F804B
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 05:08:43 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.75]) by
+	cuda.sgi.com with ESMTP id WS6nPWkWh5BFWSt8 (version=TLSv1.2
+	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 05:08:41 -0700 (PDT)
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] xfs: remove dax code from object file when disabled
+Date: Thu, 21 Jul 2016 14:07:50 +0200
+Message-Id: <20160721120824.2797655-1-arnd@arndb.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,113 +21,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>, Matthew Wilcox <willy@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On 7/18/16 4:25 AM, Eryu Guan wrote:
-> Hi,
-> 
-> I hit metadata corruption reported by xfs_repair after running fsstress
-> on the test XFS.
-> 
-> # xfs_repair -n /dev/mapper/testvg-testlv
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> Metadata corruption detected at xfs_agf block 0x59fa001/0x200
-> flfirst 118 in agf 3 too large (max = 118)
-          ^^^                           ^^^
+We check IS_DAX(inode) before calling either xfs_file_dax_read or
+xfs_file_dax_write, and this will lead the call being optimized out at
+compile time when CONFIG_FS_DAX is disabled.
 
-FWIW, this confusing output was fixed by:
+However, the two functions are marked STATIC, so they become global
+symbols when CONFIG_XFS_DEBUG is set, leaving us with two unused global
+functions that call into an undefined function and a broken "allmodconfig"
+build:
 
-6aa32b4 xfs_repair: fix agf limit error messages
+fs/built-in.o: In function `xfs_file_dax_read':
+fs/xfs/xfs_file.c:348: undefined reference to `dax_do_io'
+fs/built-in.o: In function `xfs_file_dax_write':
+fs/xfs/xfs_file.c:758: undefined reference to `dax_do_io'
 
-so today it would say:
+Marking the two functions 'static noinline' instead of 'STATIC' will let
+the compiler drop the symbols when there are no callers but avoid the
+implicit inlining.
 
-flfirst 118 in agf 3 too large (max = 117)
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 16d4d43595b4 ("xfs: split direct I/O and DAX path")
+---
+ fs/xfs/xfs_file.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> agf 118 freelist blocks bad, skipping freelist scan
-> sb_fdblocks 15716842, counted 15716838
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 0
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> 
-> Kernel is 4.7-rc7, xfsprogs is v4.3.0 (v4.5.0/v4.7-rc1 reported no
-> corruption, I think that's because of commit 96f859d ("libxfs: pack the
-> agfl header structure so XFS_AGFL_SIZE is correct"))
-
-hm this does seem related.
-
-> This is similar to this thread:
-> 
-> new fs, xfs_admin new label, metadata corruption detected
-> http://oss.sgi.com/archives/xfs/2016-03/msg00297.html
-
-That one did have a growfs step, which you don't have, right?
-
-> which ended up a new patch in growfs code, commit ad747e3b2996 ("xfs:
-> Don't wrap growfs AGFL indexes"), so I think I'd better report this
-> similar issue anyway, though I'm not sure if it's really a bug.
-
-Ok, interesting, I thought growfs was the only path to this.
-
-/*
- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
- * slots in the beginning of the block for a proper header with the
- * location information and CRC.
- */
-#define XFS_AGFL_SIZE(mp) \
-        (((mp)->m_sb.sb_sectsize - \
-         (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-                sizeof(struct xfs_agfl) : 0)) / \
-          sizeof(xfs_agblock_t))
-
-so the packed version of struct xfs_agfl is smaller (36 vs 40), and so
-yields a larger XFS_AGFL_SIZE (119 vs 118 in this case) and thus a
-larger possible index (118 vs 117)
-
-The (older) repair code you ran thinks 117 is the max index, but the
-(newer) kernel created 118.  So this is newer kernel + older userspace,
-that all makes sense so far.
-
-xfs_alloc_put_freelist():
-
-        be32_add_cpu(&agf->agf_flfirst, 1);
-        xfs_trans_brelse(tp, agflbp);
-        if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp)) // 119
-                agf->agf_flfirst = 0;
-
-so I guess this is the non-growfs case that can hit this as well, and
-we can end up with agf_flfirts == 118 when the repair code thinks
-117 is the max permissible.  It's just less likely than the growfs
-case.  Now, how to fix this one for all combinations...  :(
-
--Eric 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8ffacb8bba19..ed95e5bb04e6 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -327,7 +327,7 @@ xfs_file_dio_aio_read(
+ 	return ret;
+ }
  
+-STATIC ssize_t
++static noinline ssize_t
+ xfs_file_dax_read(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*to)
+@@ -706,7 +706,7 @@ out:
+ 	return ret;
+ }
+ 
+-STATIC ssize_t
++static noinline ssize_t
+ xfs_file_dax_write(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*from)
+-- 
+2.9.0
 
 _______________________________________________
 xfs mailing list
