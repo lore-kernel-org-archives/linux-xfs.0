@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEC6C7CA0
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 18:46:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B1FB5304039
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:46:47 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id AF3D27D17
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 23:59:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 757FE304048
+	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:25 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id t2P7s2jED8o1WIyv (version=TLSv1.2
+	cuda.sgi.com with ESMTP id yCnj54MQufOCbdm8 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Jul 2016 16:46:46 -0700 (PDT)
-Subject: [PATCH 04/17] xfs/122: list the new log redo items
+	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 21:59:22 -0700 (PDT)
+Subject: [PATCH 29/47] xfs: rmap btree requires more reserved free space
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 21 Jul 2016 16:46:42 -0700
-Message-ID: <146914480214.11762.17421079802696784668.stgit@birch.djwong.org>
-In-Reply-To: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+Date: Wed, 20 Jul 2016 21:59:16 -0700
+Message-ID: <146907715655.25461.18137879839745228380.stgit@birch.djwong.org>
+In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,48 +28,319 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-List the new log redo items.  These should have stable sizes.
+From: Dave Chinner <dchinner@redhat.com>
 
+The rmap btree is allocated from the AGFL, which means we have to
+ensure ENOSPC is reported to userspace before we run out of free
+space in each AG. The last allocation in an AG can cause a full
+height rmap btree split, and that means we have to reserve at least
+this many blocks *in each AG* to be placed on the AGFL at ENOSPC.
+Update the various space calculation functions to handle this.
+
+Also, because the macros are now executing conditional code and are called quite
+frequently, convert them to functions that initialise varaibles in the struct
+xfs_mount, use the new variables everywhere and document the calculations
+better.
+
+v2: If rmapbt is disabled, it is incorrect to require 1 extra AGFL block
+for the rmapbt (due to the + 1); the entire clause needs to be gated
+on the feature flag.
+
+v3: Use m_rmap_maxlevels to determine min_free.
+
+v4: Decrease the reservations to what we actually need.  The AG reservation
+code should take care of the rest.
+
+[darrick.wong@oracle.com: don't reserve blocks if !rmap]
+[dchinner@redhat.com: update m_ag_max_usable after growfs]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- tests/xfs/122.out |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ fs/xfs/libxfs/xfs_alloc.c |   69 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |   41 +++------------------------
+ fs/xfs/libxfs/xfs_bmap.c  |    2 +
+ fs/xfs/libxfs/xfs_sb.c    |    2 +
+ fs/xfs/xfs_discard.c      |    2 +
+ fs/xfs/xfs_fsops.c        |    5 ++-
+ fs/xfs/xfs_log_recover.c  |    1 +
+ fs/xfs/xfs_mount.c        |    2 +
+ fs/xfs/xfs_mount.h        |    2 +
+ fs/xfs/xfs_super.c        |    2 +
+ 10 files changed, 86 insertions(+), 42 deletions(-)
 
 
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index ebc4421..c4ed725 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -60,7 +60,11 @@ sizeof(struct xfs_attr3_leaf_hdr) = 80
- sizeof(struct xfs_attr3_leafblock) = 88
- sizeof(struct xfs_attr3_rmt_hdr) = 56
- sizeof(struct xfs_btree_block) = 72
-+sizeof(struct xfs_bud_log_format) = 48
-+sizeof(struct xfs_bui_log_format) = 48
- sizeof(struct xfs_clone_args) = 32
-+sizeof(struct xfs_cud_log_format) = 32
-+sizeof(struct xfs_cui_log_format) = 32
- sizeof(struct xfs_da3_blkinfo) = 56
- sizeof(struct xfs_da3_intnode) = 64
- sizeof(struct xfs_da3_node_hdr) = 64
-@@ -76,10 +80,14 @@ sizeof(struct xfs_extent_data_info) = 32
- sizeof(struct xfs_fs_eofblocks) = 128
- sizeof(struct xfs_icreate_log) = 28
- sizeof(struct xfs_log_dinode) = 176
-+sizeof(struct xfs_map_extent) = 32
-+sizeof(struct xfs_phys_extent) = 16
- sizeof(struct xfs_refcount_key) = 4
- sizeof(struct xfs_refcount_rec) = 12
- sizeof(struct xfs_rmap_key) = 20
- sizeof(struct xfs_rmap_rec) = 24
-+sizeof(struct xfs_rud_log_format) = 48
-+sizeof(struct xfs_rui_log_format) = 48
- sizeof(xfs_agf_t) = 224
- sizeof(xfs_agfl_t) = 36
- sizeof(xfs_agi_t) = 336
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index dba7ce4..73ab1ea 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -63,6 +63,70 @@ xfs_prealloc_blocks(
+ }
+ 
+ /*
++ * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
++ * AGF buffer (PV 947395), we place constraints on the relationship among
++ * actual allocations for data blocks, freelist blocks, and potential file data
++ * bmap btree blocks. However, these restrictions may result in no actual space
++ * allocated for a delayed extent, for example, a data block in a certain AG is
++ * allocated but there is no additional block for the additional bmap btree
++ * block due to a split of the bmap btree of the file. The result of this may
++ * lead to an infinite loop when the file gets flushed to disk and all delayed
++ * extents need to be actually allocated. To get around this, we explicitly set
++ * aside a few blocks which will not be reserved in delayed allocation.
++ *
++ * When rmap is disabled, we need to reserve 4 fsbs _per AG_ for the freelist
++ * and 4 more to handle a potential split of the file's bmap btree.
++ *
++ * When rmap is enabled, we must also be able to handle two rmap btree inserts
++ * to record both the file data extent and a new bmbt block.  The bmbt block
++ * might not be in the same AG as the file data extent.  In the worst case
++ * the bmap btree splits multiple levels and all the new blocks come from
++ * different AGs, so set aside enough to handle rmap btree splits in all AGs.
++ */
++unsigned int
++xfs_alloc_set_aside(
++	struct xfs_mount	*mp)
++{
++	unsigned int		blocks;
++
++	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		blocks += mp->m_sb.sb_agcount * mp->m_rmap_maxlevels;
++	return blocks;
++}
++
++/*
++ * When deciding how much space to allocate out of an AG, we limit the
++ * allocation maximum size to the size the AG. However, we cannot use all the
++ * blocks in the AG - some are permanently used by metadata. These
++ * blocks are generally:
++ *	- the AG superblock, AGF, AGI and AGFL
++ *	- the AGF (bno and cnt) and AGI btree root blocks, and optionally
++ *	  the AGI free inode and rmap btree root blocks.
++ *	- blocks on the AGFL according to xfs_alloc_set_aside() limits
++ *	- the rmapbt root block
++ *
++ * The AG headers are sector sized, so the amount of space they take up is
++ * dependent on filesystem geometry. The others are all single blocks.
++ */
++unsigned int
++xfs_alloc_ag_max_usable(
++	struct xfs_mount	*mp)
++{
++	unsigned int		blocks;
++
++	blocks = XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)); /* ag headers */
++	blocks += XFS_ALLOC_AGFL_RESERVE;
++	blocks += 3;			/* AGF, AGI btree root blocks */
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		blocks++;		/* finobt root block */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		blocks++; 		/* rmap root block */
++
++	return mp->m_sb.sb_agblocks - blocks;
++}
++
++/*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+  */
+ STATIC int				/* error */
+@@ -1904,6 +1968,11 @@ xfs_alloc_min_freelist(
+ 	/* space needed by-size freespace btree */
+ 	min_free += min_t(unsigned int, pag->pagf_levels[XFS_BTNUM_CNTi] + 1,
+ 				       mp->m_ag_maxlevels);
++	/* space needed reverse mapping used space btree */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		min_free += min_t(unsigned int,
++				  pag->pagf_levels[XFS_BTNUM_RMAPi] + 1,
++				  mp->m_rmap_maxlevels);
+ 
+ 	return min_free;
+ }
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 8805342..360f9e4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -56,42 +56,6 @@ typedef unsigned int xfs_alloctype_t;
+ #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+ 
+ /*
+- * In order to avoid ENOSPC-related deadlock caused by
+- * out-of-order locking of AGF buffer (PV 947395), we place
+- * constraints on the relationship among actual allocations for
+- * data blocks, freelist blocks, and potential file data bmap
+- * btree blocks. However, these restrictions may result in no
+- * actual space allocated for a delayed extent, for example, a data
+- * block in a certain AG is allocated but there is no additional
+- * block for the additional bmap btree block due to a split of the
+- * bmap btree of the file. The result of this may lead to an
+- * infinite loop in xfssyncd when the file gets flushed to disk and
+- * all delayed extents need to be actually allocated. To get around
+- * this, we explicitly set aside a few blocks which will not be
+- * reserved in delayed allocation. Considering the minimum number of
+- * needed freelist blocks is 4 fsbs _per AG_, a potential split of file's bmap
+- * btree requires 1 fsb, so we set the number of set-aside blocks
+- * to 4 + 4*agcount.
+- */
+-#define XFS_ALLOC_SET_ASIDE(mp)  (4 + ((mp)->m_sb.sb_agcount * 4))
+-
+-/*
+- * When deciding how much space to allocate out of an AG, we limit the
+- * allocation maximum size to the size the AG. However, we cannot use all the
+- * blocks in the AG - some are permanently used by metadata. These
+- * blocks are generally:
+- *	- the AG superblock, AGF, AGI and AGFL
+- *	- the AGF (bno and cnt) and AGI btree root blocks
+- *	- 4 blocks on the AGFL according to XFS_ALLOC_SET_ASIDE() limits
+- *
+- * The AG headers are sector sized, so the amount of space they take up is
+- * dependent on filesystem geometry. The others are all single blocks.
+- */
+-#define XFS_ALLOC_AG_MAX_USABLE(mp)	\
+-	((mp)->m_sb.sb_agblocks - XFS_BB_TO_FSB(mp, XFS_FSS_TO_BB(mp, 4)) - 7)
+-
+-
+-/*
+  * Argument structure for xfs_alloc routines.
+  * This is turned into a structure to avoid having 20 arguments passed
+  * down several levels of the stack.
+@@ -133,6 +97,11 @@ typedef struct xfs_alloc_arg {
+ #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
+ #define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
+ 
++/* freespace limit calculations */
++#define XFS_ALLOC_AGFL_RESERVE	4
++unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
++unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
++
+ xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
+ 		struct xfs_perag *pag, xfs_extlen_t need);
+ unsigned int xfs_alloc_min_freelist(struct xfs_mount *mp,
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 919069f..c4b8921 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3674,7 +3674,7 @@ xfs_bmap_btalloc(
+ 	xfs_rmap_skip_owner_update(&args.oinfo);
+ 
+ 	/* Trim the allocation back to the maximum an AG can fit. */
+-	args.maxlen = MIN(ap->length, XFS_ALLOC_AG_MAX_USABLE(mp));
++	args.maxlen = MIN(ap->length, mp->m_ag_max_usable);
+ 	args.firstblock = *ap->firstblock;
+ 	blen = 0;
+ 	if (nullfb) {
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index fb33e70..0e3d4f5 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -745,6 +745,8 @@ xfs_sb_mount_common(
+ 		mp->m_ialloc_min_blks = sbp->sb_spino_align;
+ 	else
+ 		mp->m_ialloc_min_blks = mp->m_ialloc_blks;
++	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
++	mp->m_ag_max_usable = xfs_alloc_ag_max_usable(mp);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 272c3f8..4ff499a 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -179,7 +179,7 @@ xfs_ioc_trim(
+ 	 * matter as trimming blocks is an advisory interface.
+ 	 */
+ 	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
+-	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)) ||
++	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
+ 	    range.len < mp->m_sb.sb_blocksize)
+ 		return -EINVAL;
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 27e6e8c..83304d5 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -584,6 +584,7 @@ xfs_growfs_data_private(
+ 	} else
+ 		mp->m_maxicount = 0;
+ 	xfs_set_low_space_thresholds(mp);
++	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
+ 	/* update secondary superblocks. */
+ 	for (agno = 1; agno < nagcount; agno++) {
+@@ -721,7 +722,7 @@ xfs_fs_counts(
+ 	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
+ 	cnt->freeino = percpu_counter_read_positive(&mp->m_ifree);
+ 	cnt->freedata = percpu_counter_read_positive(&mp->m_fdblocks) -
+-							XFS_ALLOC_SET_ASIDE(mp);
++						mp->m_alloc_set_aside;
+ 
+ 	spin_lock(&mp->m_sb_lock);
+ 	cnt->freertx = mp->m_sb.sb_frextents;
+@@ -809,7 +810,7 @@ xfs_reserve_blocks(
+ 	error = -ENOSPC;
+ 	do {
+ 		free = percpu_counter_sum(&mp->m_fdblocks) -
+-							XFS_ALLOC_SET_ASIDE(mp);
++						mp->m_alloc_set_aside;
+ 		if (!free)
+ 			break;
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index af608aa..f64d4d0 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5008,6 +5008,7 @@ xlog_do_recover(
+ 		xfs_warn(mp, "Failed post-recovery per-ag init: %d", error);
+ 		return error;
+ 	}
++	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
+ 	xlog_recover_check_summary(log);
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 0041866..faeead6 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1221,7 +1221,7 @@ xfs_mod_fdblocks(
+ 		batch = XFS_FDBLOCKS_BATCH;
+ 
+ 	__percpu_counter_add(&mp->m_fdblocks, delta, batch);
+-	if (__percpu_counter_compare(&mp->m_fdblocks, XFS_ALLOC_SET_ASIDE(mp),
++	if (__percpu_counter_compare(&mp->m_fdblocks, mp->m_alloc_set_aside,
+ 				     XFS_FDBLOCKS_BATCH) >= 0) {
+ 		/* we had space! */
+ 		return 0;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 0ed0f29..b36676c 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -123,6 +123,8 @@ typedef struct xfs_mount {
+ 	uint			m_in_maxlevels;	/* max inobt btree levels. */
+ 	uint			m_rmap_maxlevels; /* max rmap btree levels */
+ 	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
++	uint			m_alloc_set_aside; /* space we can't use */
++	uint			m_ag_max_usable; /* max space per AG */
+ 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+ 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+ 	struct mutex		m_growlock;	/* growfs mutex */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 688e650..0f51e1d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1075,7 +1075,7 @@ xfs_fs_statfs(
+ 	statp->f_blocks = sbp->sb_dblocks - lsize;
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+-	statp->f_bfree = fdblocks - XFS_ALLOC_SET_ASIDE(mp);
++	statp->f_bfree = fdblocks - mp->m_alloc_set_aside;
+ 	statp->f_bavail = statp->f_bfree;
+ 
+ 	fakeinos = statp->f_bfree << sbp->sb_inopblog;
 
 _______________________________________________
 xfs mailing list
