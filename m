@@ -1,18 +1,24 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A49E67CA1
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 17:49:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 798087CA0
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 12:15:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 07989AC001
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 15:49:52 -0700 (PDT)
-Received: from fashion-business.com ([14.218.89.45]) by cuda.sgi.com with SMTP
-	id 8uThik9IJBdCt1RH for <xfs@oss.sgi.com>;
-	Fri, 22 Jul 2016 15:49:48 -0700 (PDT)
-From: "angelbervogue@sina.com" <angelbervogue@sina.com>
-Subject: Re: Vogue bag with the new design style
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DE219AC001
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 10:15:21 -0700 (PDT)
+Received: from cpanel714-mail.newmediaexpress.com
+	(cpanel714-mail.newmediaexpress.com [203.174.83.180]) by
+	cuda.sgi.com with ESMTP id lQ6hR3mBJKE5POz8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jul 2016 10:15:15 -0700 (PDT)
+Received: from [182.55.215.239] (port=56183 helo=SAMUELTEO-PC)
+	by cpanel714-mail.newmediaexpress.com with esmtpa (Exim 4.87)
+	(envelope-from <finance@newevents.sg>) id 1bQe2a-0047fZ-2j
+	for xfs@oss.sgi.com; Sat, 23 Jul 2016 01:15:12 +0800
+From: "Teach Yourself Finance" <finance@newevents.sg>
+Subject: Make Simple Sense to Complex Financial Data in Just 2 Days 
+Date: Sat, 23 Jul 2016 01:15:01 +0800
 MIME-Version: 1.0
-Date: Fri, 22 Jul 2016 22:41:13 +0800
-Message-Id: <20160722224952.9E4E364005C@cuda.sgi.com>
-Reply-To: angelbervogue@sina.com
+Message-Id: <20160722171520.E502364004F@cuda.sgi.com>
+Reply-To: "Prof Malick Sy \(Director IBC consulting\)" <finance@newevents.sg>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,93 +27,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4544965074980668926=="
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============4544965074980668926==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+Finance for Non-Finance Professionals | 25 - 26 Aug 2016 (Singapore) =
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
-Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCA4LjAwLjc2MDEuMTkxMDQiPjwvSEVBRD4NCjxCT0RZPg0KPFAgc3R5bGU9Ik1B
-UkdJTi1CT1RUT006IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
-SUxZOiBBcmlhbDsgQkFDS0dST1VORDogcmdiKDI0NiwyNDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0
-OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
-rovkvZM7IG1zby1zaGFkaW5nOiByZ2IoMjQ2LDI0NiwyNDYpIj5EZWFyJm5ic3A7UHVyY2hhc2lu
-ZyZuYnNwO01hbmFnZXIsPC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU4tQk9UVE9NOiAwcHQi
-IGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJpYWw7IEJBQ0tH
-Uk9VTkQ6IHJnYigyNDYsMjQ2LDI0Nik7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAm
-IzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tc2hhZGlu
-ZzogcmdiKDI0NiwyNDYsMjQ2KSI+R29vZCANCmRheSE8L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1B
-UkdJTi1CT1RUT006IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
-SUxZOiBBcmlhbDsgQkFDS0dST1VORDogcmdiKDI0NiwyNDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0
-OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
-rovkvZM7IG1zby1zaGFkaW5nOiByZ2IoMjQ2LDI0NiwyNDYpIj5UaGlzIA0KaXMgQW5nZWxvIGZy
-byBBbmdlbGJlciBWb2d1ZSBDby4sIEx0ZC4gaW4gQ2hpbmEuPC9TUEFOPjwvUD4NCjxQIHN0eWxl
-PSJNQVJHSU4tQk9UVE9NOiAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05U
-LUZBTUlMWTogQXJpYWw7IEJBQ0tHUk9VTkQ6IHJnYigyNDYsMjQ2LDI0Nik7IEZPTlQtU0laRTog
-MTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWls
-eTog5a6L5L2TOyBtc28tc2hhZGluZzogcmdiKDI0NiwyNDYsMjQ2KSI+V2UgDQphcmUgcHJvZmVz
-c2lvbmFsIGJhZ3Mgc3VwcGxpZXIsIHRoZSBtYWlubHkgcHJvZHVjdHMgaW5jbHVkZSB0aGUgbGFk
-aWVzIGhhbmRiYWdzLCANCm1lbiBicmllZmNhc2UsIHRvdGVzIGJhZ3MgYW5kIHdhbGxldHMgZXRj
-LiB3ZSBleHBvcnQgYWxtb3N0IDUwMDBwY3MgbW9udGhseSBhbGwgDQpvdmVyIHRoZSB3b3JsZC48
-L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTi1CT1RUT006IDBwdCIgY2xhc3M9TXNvTm9ybWFs
-PjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsgQkFDS0dST1VORDogcmdiKDI0Niwy
-NDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
-by1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1zaGFkaW5nOiByZ2IoMjQ2LDI0Niwy
-NDYpIj5NZWFudGltZSwgDQp3ZSBoYXZlIHJlc2VhcmNoZWQgJmFtcDsgZGVzaWduZWQgc29tZSBu
-ZXcgbW9kZWwgZXZlcnkgeWVhci48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTi1CT1RUT006
-IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBBcmlhbDsg
-QkFDS0dST1VORDogcmdiKDI0NiwyNDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2Vy
-dW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1z
-aGFkaW5nOiByZ2IoMjQ2LDI0NiwyNDYpIj5DYXRhbG9nIA0KY291bGQgYmUgc2VudCBpZiB5b3Ug
-YXJlIGludGVyZXN0ZWQgaW4gd2l0aCB1cy48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTi1C
-T1RUT006IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBB
-cmlhbDsgQkFDS0dST1VORDogcmdiKDI0NiwyNDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0OyBtc28t
-c3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7
-IG1zby1zaGFkaW5nOiByZ2IoMjQ2LDI0NiwyNDYpIj5UaGFua3MgDQpmb3IgeW91ciB2YWx1YWJs
-ZSB0aW1lLjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOLUJPVFRPTTogMHB0IiBjbGFzcz1N
-c29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiBy
-Z2IoMjQ2LDI0NiwyNDYpOyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
-IzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLXNoYWRpbmc6IHJnYigy
-NDYsMjQ2LDI0NikiPkIuIA0KUmVnYXJkcyE8L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTi1C
-T1RUT006IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiBB
-cmlhbDsgQkFDS0dST1VORDogcmdiKDI0NiwyNDYsMjQ2KTsgRk9OVC1TSVpFOiAxMnB0OyBtc28t
-c3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7
-IG1zby1zaGFkaW5nOiByZ2IoMjQ2LDI0NiwyNDYpIj5BbmdlbG8gDQpIdWFuZzwvU1BBTj48L1A+
-DQo8UCBzdHlsZT0iTUFSR0lOLUJPVFRPTTogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpz
-dHlsZT0iRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2IoMjQ2LDI0NiwyNDYpOyBG
-T05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3Qt
-Zm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLXNoYWRpbmc6IHJnYigyNDYsMjQ2LDI0NikiPlNreXBl
-OiANCmRhdmllMTgxODE4PC9TUEFOPjwvUD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogQXJp
-YWw7IEJBQ0tHUk9VTkQ6IHJnYigyNDYsMjQ2LDI0Nik7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNw
-YWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBt
-c28tc2hhZGluZzogcmdiKDI0NiwyNDYsMjQ2KSI+DQo8UCANCnN0eWxlPSJQQURESU5HLUJPVFRP
-TTogMHB0OyBMSU5FLUhFSUdIVDogMTcuNDVwdDsgVEVYVC1JTkRFTlQ6IDBwdDsgTUFSR0lOOiAw
-cHQ7IFBBRERJTkctTEVGVDogMHB0OyBQQURESU5HLVJJR0hUOiAwcHQ7IEJBQ0tHUk9VTkQ6IHJn
-YigyNTUsMjU1LDI1NSk7IFBBRERJTkctVE9QOiAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1v
-cnBoYW4iIA0KY2xhc3M9cD48U1BBTiANCnN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgRk9O
-VC1TVFlMRTogbm9ybWFsOyBGT05ULUZBTUlMWTogVmVyZGFuYTsgQkFDS0dST1VORDogcmdiKDI1
-NSwyNTUsMjU1KTsgTEVUVEVSLVNQQUNJTkc6IDBwdDsgQ09MT1I6IHJnYig1MSw1MSw1MSk7IEZP
-TlQtU0laRTogMTBwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3ll
-cyYjMzk7OyBtc28tc2hhZGluZzogcmdiKDI1NSwyNTUsMjU1KTsgbXNvLWZvbnQta2VybmluZzog
-MC4wMDAwcHQiPjwvU1BBTj4mbmJzcDs8L1A+PC9TUEFOPjwvQk9EWT48L0hUTUw+DQoNCg==
+Make simple sense to complex financial information in just 2 Days =
 
 
---===============4544965074980668926==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Speak the same language as your finance and accounting colleagues  =
+
+Are you are required to make business decision but are overwhelmed by numbe=
+rs? =
+
+Can you confidently interpret financial reports and make sound decisions? =
+
+Are you doing project budgeting and need to justify ROI in dollars and cent=
+s?  =
+
+Now you can acquire essential finance skills in just 2 Days with Internatio=
+nally Renowned Faculty, Dr Malick Sy (PhD, Finance)
+
+Make smarter decisions that deliver higher profitability =
+
+Quick, Compact, and Easy-to-Understand =
+
+Master the key principles of corporate finance =
+
+Simple yet effective techniques to understand finance =
+
+Overcome the fear of numbers to make informed business decisions =
+
+Demystify financial jargons into simple layman language =
+
+   =
+
+Why You Shuld Attend? =
+
+
+Financial skills are fundamental to any managerial position. Learn how to t=
+hink like a finance person, and you=E2=80=99ll expand your career opportuni=
+ties. From accruals to write-offs to receivables and payables, this worksho=
+p shows non-financial managers the concepts, tools, and techniques that can=
+ help make each decision pay off=E2=80=94on the job and on the bottom line.
+ =
+
+Program Highlights: =
+
+
+Financial Statements Analysis Get a firm grasp of numbers & key Ratios =
+
+Business Analysis Gain confidence in assessing financial performance and he=
+alth =
+
+Cash Flow Management - Forecasting and Cash Flow Management =
+
+Budgeting: Take the guesswork out of budgeting and reduce margin of errors =
+
+Investment Analysis Think Finance & ROI in your projects =
+
+Business Growth - take initiatives that meet your short- and long-term goal=
+s =
+
+Expand your professional expertise=E2=80=94and your career opportunities =
+
+ =
+
+Participant Profile =
+
+
+Successful business leaders and professionals understand the importance of =
+good financial knowledge to their success. Whether you are responsible for =
+human resources, business development, accounting, corporate law, marketing=
+, engineering, forecasting or international business, this is your chance t=
+o be gain a good grip of financial principles & terminologies, income state=
+ment analysis, ratio analysis, forecasting & budgeting.
+  =
+
+Expert Facilitator: Dr Malick Sy  =
+
+ =
+
+Dr Malick Sy has more than 25 years of experience in financial consulting a=
+nd advisory to many financial institutions in Europe, Asia and Australia. H=
+e is a professor in Financial Management at Royal Melbourne Institute of Te=
+chnology (RMIT) University-Australia, a visiting Professor at the City Univ=
+ersity of New York (USA) and adjunct professor of Arcadia University, Penns=
+ylvania (USA). He is currently the Managing Director and Principal Consulta=
+nt of a financial consulting firm with offices in South East Asia. He has b=
+een a Director with the Kuala Lumpur Stock Exchange and has been member of =
+the Singapore Exchange Corporate Advisory Committee in Derivatives (SGX-DT)
+
+His corporate clients include DBS Bank (Singapore), Singapore Exchange (SGX=
+), Credit Suisse (Singapore), Singapore Institue of Management (SIM-Singapo=
+re), Bursa Malaysia, Association of Insurance and Asset Management Companie=
+s (Malaysia). He has set up the risk management department for many compani=
+es in Asia. Dr Sy has extensive consultancy relationships with financial in=
+stitutions including DBS, UOB, Maybank, Credit Lyonnais, Arab Malaysia Bank=
+, etc.). He has also recently won the Chicago Board of Trade (CBOT-USA) awa=
+rd
+  =
+
+Enrolment is limited. To register, please kindly DOWNLOAD REGISTRATION FORM=
+ and email/fax to Ms Ame Goh at ame@aventisglobal.edu.sg | +65 6720 2222
+ =
+
+Date 25 - 26 Aug 2016 (Thu & Fri) =
+
+Venue 100 Orchard Road, Concorde Hotel Singapore =
+
+Time 9am to 5pm =
+
+Fee Only: $ 870 After PIC Grant of 40%  Inclusive of 2 coffee breaks, light=
+ refreshments and buffet lunch =
+
+Enquiries Ms Vivian Limh at (65) 6720 3333 or email: vivian@aventisglobal.e=
+du.sg
+
+REGISTER ONLINE HERE >> http://bit.ly/29O3Byw
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4544965074980668926==--
