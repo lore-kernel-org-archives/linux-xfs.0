@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 524DD7D78
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 00:00:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A78B0AC001
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:55 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id I5lWsd733jnrZeSx (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:00:54 -0700 (PDT)
-Subject: [PATCH 43/47] xfs: add rmap btree block detection to log recovery
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 22:00:49 -0700
-Message-ID: <146907724904.25461.15394088478122879124.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 471BE7CA2
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 19:49:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F3681304032
+	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 17:49:24 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	UBSOHRVoihpJjSDY for <xfs@oss.sgi.com>;
+	Thu, 21 Jul 2016 17:49:22 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1bQOeW-0005gA-G7
+	for xfs@oss.sgi.com; Fri, 22 Jul 2016 10:49:20 +1000
+Received: from dave by disappointment with local (Exim 4.87)
+	(envelope-from <dave@disappointment.disaster>) id 1bQOeI-0004my-E8
+	for xfs@oss.sgi.com; Fri, 22 Jul 2016 10:49:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: remove EXPERIMENTAL tag from sparse inode feature
+Date: Fri, 22 Jul 2016 10:49:06 +1000
+Message-Id: <1469148546-18369-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +28,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-So such blocks can be correctly identified and have their operations
-structures attached to validate recovery has not resulted in a
-correct block.
+Been around for long enough now, hasn't caused any regression test
+failures in the past 3 months, so it's time to make it a fully
+supported feature.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/xfs_super.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 365aef6..e51fd2b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2231,6 +2231,7 @@ xlog_recover_get_buf_lsn(
- 	case XFS_ABTC_CRC_MAGIC:
- 	case XFS_ABTB_MAGIC:
- 	case XFS_ABTC_MAGIC:
-+	case XFS_RMAP_CRC_MAGIC:
- 	case XFS_IBT_CRC_MAGIC:
- 	case XFS_IBT_MAGIC: {
- 		struct xfs_btree_block *btb = blk;
-@@ -2399,6 +2400,9 @@ xlog_recover_validate_buf_type(
- 		case XFS_BMAP_MAGIC:
- 			bp->b_ops = &xfs_bmbt_buf_ops;
- 			break;
-+		case XFS_RMAP_CRC_MAGIC:
-+			bp->b_ops = &xfs_rmapbt_buf_ops;
-+			break;
- 		default:
- 			xfs_warn(mp, "Bad btree block magic!");
- 			ASSERT(0);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 258b594..0303f10 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1573,10 +1573,6 @@ xfs_fs_fill_super(
+ 		}
+ 	}
+ 
+-	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+-		xfs_alert(mp,
+-	"EXPERIMENTAL sparse inode feature enabled. Use at your own risk!");
+-
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
+-- 
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
