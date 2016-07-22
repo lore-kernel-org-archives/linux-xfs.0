@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2A4D97D7F
-	for <xfs@oss.sgi.com>; Thu, 21 Jul 2016 00:01:07 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B848E7CA0
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 05:38:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 87C6AAC005
-	for <xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:01:03 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 6kt2cyApDTzJDwpz (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 20 Jul 2016 22:01:01 -0700 (PDT)
-Subject: [PATCH 44/47] xfs: disable XFS_IOC_SWAPEXT when rmap btree is enabled
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 20 Jul 2016 22:00:55 -0700
-Message-ID: <146907725541.25461.9578731474944859774.stgit@birch.djwong.org>
-In-Reply-To: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 89227304051
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 03:38:48 -0700 (PDT)
+Received: from mezzanine.sirena.org.uk (mezzanine.sirena.org.uk
+	[106.187.55.193]) by cuda.sgi.com with ESMTP id
+	YVdadxZy1mgFHf8D (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jul 2016 03:38:45 -0700 (PDT)
+Date: Fri, 22 Jul 2016 11:38:29 +0100
+From: Mark Brown <broonie@kernel.org>
+Message-ID: <20160722103829.GY6509@sirena.org.uk>
+References: <E1bQXSf-0008Uu-Ej@optimist>
 MIME-Version: 1.0
+In-Reply-To: <E1bQXSf-0008Uu-Ej@optimist>
+Subject: Re: next-20160722 build: 1 failures 5 warnings (next-20160722)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,49 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2874677902126593138=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
-
-Swapping extents between two inodes requires the owner to be updated
-in the rmap tree for all the extents that are swapped. This code
-does not yet exist, so switch off the XFS_IOC_SWAPEXT ioctl until
-support has been implemented. This will need to be done before the
-rmap btree code can have the experimental tag removed.
-
-This functionality will be provided in a (much) later patch, using
-some of the reflink deferred block remapping functionality to
-accomlish extent swapping with rmap updates.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick.wong@oracle.com: update commit log]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c |    4 ++++
- 1 file changed, 4 insertions(+)
+To: Matthew Wilcox <matthew.r.wilcox@intel.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>
+Cc: xfs@oss.sgi.com, linaro-kernel@lists.linaro.org, linux-next@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kernel-build-reports@lists.linaro.org
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index a819d7b..4ece4f2 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1535,6 +1535,10 @@ xfs_swap_extents(
- 	__uint64_t	tmp;
- 	int		lock_flags;
- 
-+	/* XXX: we can't do this with rmap, will fix later */
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
- 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
- 	if (!tempifp) {
- 		error = -ENOMEM;
+--===============2874677902126593138==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="pEAjBjStGYT6H+Py"
+Content-Disposition: inline
+
+
+--pEAjBjStGYT6H+Py
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Fri, Jul 22, 2016 at 11:13:41AM +0100, Build bot for Mark Brown wrote:
+
+Today's -next fails to build an ARM allmodconfig due to:
+
+> 	arm-allmodconfig
+> ERROR: "dax_do_io" [fs/xfs/xfs.ko] undefined!
+
+due to 16d4d43595b47 (xfs: split direct I/O and DAX path) which added an
+unconditional reference to dax_do_io().  DAX is explicitly disabled on
+32 bit ARM due to problems with virtual aliasing caches (it's not clear
+to me that it shouldn't also be disabled for arm64 for the same reason).
+
+--pEAjBjStGYT6H+Py
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJXkfekAAoJECTWi3JdVIfQGPQH/i+nFfpAASn0YIlZ+0FcuS3o
+xTGm+YTGKFNWFPlb2SIKSpjno8qvP7VJ7b/RUNYLTJqbw2+URrYEUPOf0I0OTY9/
+JOpiadKohd12LxzM1xDOp7RTz8k2fCtrSaAWy5HgRWtdEdtedoFILLs8E1YjQW+T
+UyYegdMkf04PrcoGZjt0q1iu+7ZvT2y2KOBc+BlWy5Xf2TMeevxNZXTzzY1FCgvS
+/XMFjbe4Kr/NjTuh7anZwjX0uF7upVwLJ9XRd8/u1bNM8/I1DyNP2WqAP+DITYDd
+l4KYOMrngXuAxWTRclgNZ5fU8BsX02SBDvGOMF58klZHPwVYmooXAvFKXIeuO7E=
+=Jr/k
+-----END PGP SIGNATURE-----
+
+--pEAjBjStGYT6H+Py--
+
+
+--===============2874677902126593138==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2874677902126593138==--
