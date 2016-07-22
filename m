@@ -1,22 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9A4F47CA0
-	for <xfs@oss.sgi.com>; Sat, 23 Jul 2016 17:50:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 464308F8035
-	for <xfs@oss.sgi.com>; Sat, 23 Jul 2016 15:50:03 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lLfWMDwP8R5H4vvo for <xfs@oss.sgi.com>;
-	Sat, 23 Jul 2016 15:49:59 -0700 (PDT)
-Date: Sun, 24 Jul 2016 08:49:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Metadata corruption detected at xfs_attr3_leaf_write_verify
-Message-ID: <20160723224957.GS16044@dastard>
-References: <D3B7B1BB.74FB%jonathan.stockley@emc.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 965AD7CA1
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 08:08:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6801330405F
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 06:08:45 -0700 (PDT)
+Received: from mail-io0-f174.google.com (mail-io0-f174.google.com
+	[209.85.223.174]) by cuda.sgi.com with ESMTP id
+	07rsbOjbzjcVyt19 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 Jul 2016 06:08:43 -0700 (PDT)
+Received: by mail-io0-f174.google.com with SMTP id q83so104723076iod.1
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 06:08:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <D3B7B1BB.74FB%jonathan.stockley@emc.com>
+In-Reply-To: <20160721224057.GD12670@dastard>
+References: <1468500214-6237-1-git-send-email-jtulak@redhat.com>
+	<1468500214-6237-7-git-send-email-jtulak@redhat.com>
+	<20160716093358.GL2432@eguan.usersys.redhat.com>
+	<20160717233003.GX1922@dastard>
+	<CACj3i73TdnUcDT0J2QEBKQhoMsyYFVz6hBb_=bC99rL2ZbkCYQ@mail.gmail.com>
+	<20160718114723.GG27776@eguan.usersys.redhat.com>
+	<CACj3i71VOC8i_11hFn_fphsMfGqduHB6on5UawUHm6mtAaVRhQ@mail.gmail.com>
+	<CACj3i73hdbW4iAWufvxc_aJn1dj+UGzuud7Cj-qMiwe7aLeNxQ@mail.gmail.com>
+	<20160720235433.GA12670@dastard>
+	<CACj3i72UFhXeM-H8ubnso3CRH851Jp1nP-R-pP6AXZrABOeQMQ@mail.gmail.com>
+	<20160721224057.GD12670@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 22 Jul 2016 15:08:23 +0200
+Message-ID: <CACj3i734fxMAJb+7SsDVieWREmfZgzZSJZagnewYZPgcyuXMmg@mail.gmail.com>
+Subject: Re: [PATCH 6/6] xfstests: Add mkfs input validation tests
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,77 +37,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Stockley, Jonathan" <jonathan.stockley@emc.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jul 22, 2016 at 06:19:25PM +0000, Stockley, Jonathan wrote:
-> Hi,
-> I just ran into this error while testing an OpenStack SWIFT deployment.
-> 
-> [130004.933449] XFS (loop1): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xe5/0x100 [xfs], block 0x468d0c8
-> [130004.936209] XFS (loop1): Unmount and run xfs_repair
-> [130004.937477] XFS (loop1): First 64 bytes of corrupted metadata buffer:
-> [130004.939113] ffff880111ddd000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-> [130004.941242] ffff880111ddd010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-
-That's a empty attribute leaf block. It probably should be stale
-and hence never written to disk. The verifier caught it before it
-could be written, so probably just saved you from on-disk
-data/filesystem corruption.
-
-> [130004.943327] ffff880111ddd020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [130004.945393] ffff880111ddd030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [130004.947565] XFS (loop1): xfs_do_force_shutdown(0x8) called from line 1249 of file /build/linux-lts-vivid-vt3Z1H/linux-lts-vivid-3.19.0/fs/xfs/xfs_buf.c.  Return address = 0xffffffffc0752c92
-> [130004.951692] XFS (loop1): Corruption of in-memory data detected.  Shutting down filesystem
-
-Loops devices are an interesting choice for a production workload
-like this. Why?
-
-> Environment information:
-> Ubuntu Server 14.04 LTS
-> $ uname -a
-> Linux 3e2116e0-b4e8-4666-be70-5ddf9c9d9d2b 3.19.0-49-generic #55~14.04.1hf1533043v20160201b1-Ubuntu SMP Mon Feb 1 20:41:00 UT x86_64 x86_64 x86_64 GNU/Linux
-
-A vendor kernel of some kind - have you reported the problem to
-Ubuntu, to see if they've already backported a fix?
-
-> I am able to reproduce the problem as follows:
-> 
->   *   created a VM based SWIFT cluster
-
-Not something I can do to reproduce here.
-
-....
-
-> In my two test runs the XFS failure occurred around 9 hours after the test was started.
-> 
-> It looks like I can reproduce the problem, albeit over an extended period of time.
-> What can I do to gather more info? Any debug options I can enable that might help?
-
-First of all, add all the stuff missing from here:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Your could also probably run a XFs build that contains all the debug
-warnings (CONFIG_XFS_WARN=y) and see if that triggers something.
-You could laso try a more recent kernel (e.g. 4.6) and see if that
-has the same problem.
-
-If it still occurs, then you are probably going to need to narrow
-this down to a much, simpler and more targeted reporducer for
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKdWwgMjIsIDIwMTYgYXQgMTI6NDAgQU0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJv
+bW9yYml0LmNvbT4gd3JvdGU6Cj4gT24gVGh1LCBKdWwgMjEsIDIwMTYgYXQgMDQ6MjQ6NTJQTSAr
+MDIwMCwgSmFuIFR1bGFrIHdyb3RlOgo+PiBPbiBUaHUsIEp1bCAyMSwgMjAxNiBhdCAxOjU0IEFN
+LCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+IHdyb3RlOgo+PiA+PiA+PiBJIHRo
+aW5rIHlvdSBuZWVkIHRvIHRlc3Qgb24gYSA0ayBzZWN0b3Igc2l6ZSBkaXNrLiBJIHVzZSBzY3Np
+X2RlYnVnIHRvCj4+ID4+ID4+IHNpbXVsYXRlIHBoeXNpY2FsIDRrIHNlY3RvciBkaXNrIHRvIHJl
+cHJvZHVjZSB0aGlzOgo+PiA+PiA+Pgo+PiA+PiA+PiBbcm9vdEBkaGNwLTY2LTg2LTExIHhmc3By
+b2dzLWRldl0jIG1vZHByb2JlIC1yIHNjc2lfZGVidWcKPj4gPj4gPj4gW3Jvb3RAZGhjcC02Ni04
+Ni0xMSB4ZnNwcm9ncy1kZXZdIyBtb2Rwcm9iZSBzY3NpX2RlYnVnIGRldl9zaXplX21iPTEyOCBw
+aHlzYmxrX2V4cD0zCj4+ID4+ID4+IFtyb290QGRoY3AtNjYtODYtMTEgeGZzcHJvZ3MtZGV2XSMg
+YmxvY2tkZXYgLS1nZXRic3ogLS1nZXRwYnN6IC0tZ2V0c3MgL2Rldi9zZGMKPj4gPj4gPj4gNDA5
+Ngo+PiA+PiA+PiA0MDk2Cj4+ID4+ID4+IDUxMgo+PiA+PiA+PiBbcm9vdEBkaGNwLTY2LTg2LTEx
+IHhmc3Byb2dzLWRldl0jIG1rZnMgLXQgeGZzIC1sIHZlcnNpb249MSAtbSBjcmM9MSAvZGV2L3Nk
+Ywo+PiA+Cj4+ID4gU28gdGhpcyBpcyBhbiBpbnZhbGlkIGZpbGVzeXN0ZW0gY29uZmlndXJhdGlv
+bi4gSXQgc2hvdWxkIGJlCj4+ID4gZGV0ZWN0ZWQgYXMgc3VjaCBkdXJpbmcgY29tbWFuZCBsaW5l
+IHBhcnNpbmcgYW5kIHJlamVjdGVkIGJlZm9yZSB3ZQo+PiA+IGdldCBhbnl3aGVyZSBuZWFyIGNo
+ZWNraW5nIHRvcG9sb2d5IGNvbnN0cmFpbnRzLiBJbiBta2ZzCj4+ID4gdGVybXMsIGl0J3MgYSBj
+b25mbGljdGluZyBvcHRpb24gc2V0Lgo+PiA+Cj4+ID4+IEFuZCB0aGUgY3VscHJpdCBpcyBpbiBt
+a2ZzLCBzb21lIGZvcnR5IGxpbmVzIGJlZm9yZSB0aGUgY3JjICYgbG9nIHZlcnNpb24gY2hlY2s6
+Cj4+ID4+Cj4+ID4+IDIwMjYg4oelICAgICAgIH0gZWxzZSBpZiAobHNlY3RvcnNpemUgPiBYRlNf
+TUlOX1NFQ1RPUlNJWkUgJiYgIWxzdSAmJiAhbHN1bml0KSB7Cj4+ID4+IDIwMjcg4oelICAgICAg
+IOKHpSAgICAgICBsc3UgPSBibG9ja3NpemU7Cj4+ID4+IDIwMjgg4oelICAgICAgIOKHpSAgICAg
+ICBzYl9mZWF0LmxvZ192ZXJzaW9uID0gMjsKPj4gPj4gMjAyOSDih6UgICAgICAgfQo+PiA+Pgo+
+PiA+PiBUaGUgcG9zc2libGUgc29sdXRpb25zIEkgY2FuIHRoaW5rIG9mIGFyZToKPj4gPgo+PiA+
+IE5vbmUgb2Ygd2hpY2ggcmVhbGx5IGFwcGVhbCBiZWNhdXNlLCBJTU8sIHRoZXkgYXJlIHRyeWlu
+ZyB0byBzb2x2ZQo+PiA+IHRoZSB3cm9uZyBwcm9ibGVtLgo+PiA+Cj4+ID4gVGhlIHdob2xlIHBv
+aW50IG9mIG1vdmluZyB0byB0YWJsZSBiYXNlZCBjb21tYW5kIGxpbmUgb3B0aW9uIHBhcnNpbmcK
+Pj4gPiBpcyB0aGF0IHdlIGNhbiBlbmNvZGUgdGhlc2Ugc29ydHMgb2YgY29uZmxpY3RzIGludG8g
+dGhlIG9wdGlvbgo+PiA+IHRhYmxlLiBUaGUgY29uZmxpY3QgcmVzb2x1dGlvbiBpbiB0aGUgb3B0
+aW9uIHRhYmxlIGlzIGN1cnJlbnRseSBub3QKPj4gPiBjb21wbGV0ZSAtIGl0IGNhbiBvbmx5IGVu
+Y29kZSBhbmQgZGV0ZWN0IGNvbmZsaWN0cyB3aXRoaW4gYQo+PiA+IHN1Ym9wdGlvbiB0eXBlLCBi
+dXQgbm90IGFjcm9zcyBzdWJvcHRpb24gdHlwZXMgKGUuZy4gd2l0aGluIC1kCj4+ID4gc3Vib3B0
+aW9ucywgYnV0IG5vdCBiZXR3ZWVuIC1kIGFuZCAtbCBzdWJvcHRpb25zKS4KPj4gPgo+PiA+IFRo
+aXMgaXMgc2ltcGx5IGJlY2F1c2UgSSBuZXZlciBnb3QgYXMgZmFyIGFzIGltcGxlbWVudGluZyB0
+aGlzIGxldmVsCj4+ID4gb2YgY29uZmxpY3QgZW5jb2RpbmcvcmVzb2x1dGlvbi4gSW4gZXNzZW5j
+ZSwgdGhlIGNvbmZsaWN0IGFycmF5Cj4+ID4gbmVlZHMgdG8gZGVmaW5lIHRoZSBzdWIgb3B0aW9u
+IHR5cGUsIHRoZSBzdWJvcHRpb24gdGhhdCBpcwo+PiA+IGluIGNvbmZsaWN0IGFuZCB0aGUgdmFs
+dWUgdGhhdCBpdCBjb25mbGljdHMgYWdhaW5zdC4gSGVuY2UgdGhlCj4+ID4gY29uZmxpY3RzIHRh
+YmxlIGNhbiB0aGVuIGVuY29kZSBzdWNoIHRoaW5ncyBhcyAidmVyc2lvbiAxIGxvZ3MgYXJlCj4+
+ID4gaW52YWxpZCBmb3IgQ1JDIGVuYWJsZWQgZmlsZXN5c3RlbXMiIGFuZCB2aWNlIHZlcnNhLgo+
+PiA+Cj4+Cj4+IE9rLCBpbiBsb25nIHRlcm0sIHRoZSBjb3JyZWN0IHdheSBpcyB0byBleHRlbmQg
+dGhlIGNvbmZsaWN0cyB0YWJsZS4KPgo+IE5vdCBsb25nIHRlcm0uIEl0J3MgZmFpcmx5IHNpbXBs
+ZSB0byBkby4KPgo+IDEuIENvbnZlcnQgYWxsIHRoZSBpbmRpdmlkdWFsIHN1Ym9wdCBwYXJhbWV0
+ZXIgdGFibGVzIHRvIGFuIGFycmF5IG9mIHRhYmxlcwo+ICAgIHdpdGggYSBkZWZpbmVkIGluZGV4
+IGZvciBlYWNoIHNldCBvZiBzdWJvcHRzLAo+IDIuIGFkZCBhIHZhbHVlIGZpZWxkIHRvIHRoZSBw
+YXJhbWV0ZXIsIGFuZCBzdG9yZSB0aGUgQ0xJIHZhbHVlIGluCj4gICAgaXQgd2hlbiBpdCBpcyBz
+ZXQKPiAzLiBtYWtlIHRoZSBjb25mbGljdHMgYXJyYXkgaW4gZWFjaCBzdWJvcHRzIGEgc3RydWN0
+dXJlIGxpa2U6Cj4KPiBzdHJ1Y3QgY29uZmxpY3RzIHsKPiAgICAgICAgIGludCAgICAgc3Vib3B0
+Owo+ICAgICAgICAgaW50ICAgICBpbmRleDsKPiAgICAgICAgIGludCAgICAgaW52YWxpZF92YWx1
+ZTsKPiB9Owo+Cj4gYW5kIGNvbnZlcnQgYWxsIHRoZSBleGlzdGluZyBjb25mbGljdHMgdG8gdGhp
+cyBmb3JtYXQKPgo+IDQuIERlZmluZSBjcm9zcy1zdWJvcHQgY29uZmxpY3RzIGxpa2UgdGhpczoK
+Pgo+ICAgICAgICAuc3Vib3B0X3BhcmFtcyA9IHsKPiAgICAgICAgICAgICAgICAgeyAuaW5kZXgg
+PSBNX0NSQywKPiAtICAgICAgICAgICAgICAgICAuY29uZmxpY3RzID0geyBMQVNUX0NPTkZMSUNU
+IH0sCj4gKyAgICAgICAgICAgICAgICAgLmNvbmZsaWN0cyA9IHsgeyBMT0csIExfVkVSU0lPTiwg
+MSB9LAo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHsgTEFTVF9DT05GTElDVCwg
+MCwgMCB9LCB9LAo+ICAgICAgICAgICAgICAgICAgIC5taW52YWwgPSAwLAo+ICAgICAgICAgICAg
+ICAgICAgIC5tYXh2YWwgPSAxLAo+ICAgICAgICAgICAgICAgICAgIC5kZWZhdWx0dmFsID0gMSwK
+PiAgICAgICAgICAgICAgICAgfSwKPgo+IEFuZCB0aGUgTF9WRVJTSU9OIHN1Ym9wdCBwYXJhbWV0
+ZXIgd2lsbCBoYXZlIGEgY29uZmxpY3QgbGlrZQo+Cj4gKyAgICAgICAgICAgICAgICAgLmNvbmZs
+aWN0cyA9IHsgeyBNRVRBLCBNX0NSQywgMSB9LAo+ICsgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIHsgTEFTVF9DT05GTElDVCwgMCwgMCB9LCB9LAo+Cj4gNS4gdXBkYXRlIHRoZSBjb25m
+bGljdCBsb29rdXAgdG8gZG8gY3Jvc3Mgb3B0aW9uIGxvb2t1cHMgdmlhCj4gY2hlY2tpbmcgdGhl
+IHJlbGV2YW50IG9wdGlvbiBjb25mbGljdCB0YWJsZS4gZS5nIGJ5IGNoZWNraW5nIHRoZQo+IGNv
+bmZsaWN0W2ldLnZhbHVlIGFnYWluc3Qgc3Vib3B0W0xPR10uc3Vib3B0X3BhcmFtc1tMX1ZFUlNJ
+T05dLnZhbHVlLi4uCj4KPj4gQnV0IHdoYXQgaW4gdGhlIG1lYW50aW1lPyBBcmUgd2UgZ29pbmcg
+dG8gbGV0IGl0IGJlIG5vdyB1bnRpbCBpdCBpcwo+PiBmaXhlZCBieSB0aGUgZW5oYW5jZWQgdGFi
+bGU/Cj4KPiBJTU86IGZpeCBpdCBvbmNlLCBmaXggaXQgcHJvcGVybHkuCj4KPj4gQW5kIHJlZ2Fy
+ZGluZyBteSBxdWVzdGlvbiBhdCB0aGUgZW5kIG9mIHRoZSBtYWlsLCBJIGludGVycHJldCB5b3Vy
+Cj4+IGFuc3dlciBhcyAiaWYgdGhlIGFyZ3VtZW50cyBhcmUgd3JvbmcsIGZhaWwgQVNBUCBhbmQg
+ZG9uJ3QgdHJ5IHRvIGZpeAo+PiBpdC4iCj4KPiBUaGUgZmlyc3Qgc3RlcCBpbiBhbnkgcHJvZ3Jh
+bSBzaG91bCBkYmUgdG8gdmFsaWRhdGUgdXNlciBzdXBwbGllZAo+IGlucHV0cy4gT25jZSB0aGV5
+IGFyZSB2YWxpZGF0ZWQgYW5kIGtub3duIGdvb2QsIHlvdSBkb24ndCBoYXZlIHRvCj4gYWRkIHJh
+bmRvbSBjb2RlIHRvIGhhbmRsZSBpbnZhbGlkIGNvbWJpbmF0aW9ucyAtIHlvdSBjYW4ganVzdCBh
+c3N1bWUKPiB0aGUgaW5wdXRzIGFyZSB2YWxpZCB0byBiZWdpbiB3aXRoIGFuZCB0aG9zZSBjb3Ju
+ZXIgY2FzZXMgZG9uJ3QgbmVlZAo+IHRvIGJlIGhhbmRsZWQuCj4KCk9LLCB0aGFua3MgZm9yIHNo
+b3dpbmcgdGhlIHdheSwgSSB3aWxsIHdvcmsgb24gdGhlIGNoYW5nZXMuCgpJbiBhbnkgY2FzZSwg
+dG8gcmV0dXJuIHRvIHRoZSBiZWdpbm5pbmcsIHRoZSBuZXcgdGVzdCBhZGRlZCBieSB0aGlzCnBh
+dGNoIGlzIGFsbCByaWdodC4KClRoYW5rcywKSmFuCgotLSAKSmFuIFR1bGFrCmp0dWxha0ByZWRo
+YXQuY29tIC8gamFuQHR1bGFrLm1lCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
