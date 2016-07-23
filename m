@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4AA397CA0
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 05:24:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8F2D8F8037
-	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 03:24:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6XlNQHpwrE04O1Jv (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 715D87CA0
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 23:28:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C15DFAC005
+	for <xfs@oss.sgi.com>; Fri, 22 Jul 2016 21:28:37 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5AkzZAKcmPT2hehQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 22 Jul 2016 03:24:13 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v3] xfs/106: rewrite this case for run it as auto test again
-Date: Fri, 22 Jul 2016 18:24:06 +0800
-Message-Id: <1469183046-23483-1-git-send-email-zlang@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 22 Jul 2016 21:28:30 -0700 (PDT)
+Date: Fri, 22 Jul 2016 21:28:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 47/47] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+Message-ID: <20160723042812.GA4684@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<146907727500.25461.15944158970310442107.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <146907727500.25461.15944158970310442107.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,1342 +26,875 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Zorro Lang <zlang@redhat.com>, eguan@redhat.com, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-xfs/106 try to do some basic xfs_quota functionality test. I think
-basic function test is important, especially there're only few
-cases about xfs_quota now. But due to it's too old, there're 3
-problems cause no one run it again:
-   1. Some quota commands can't be used, but this case try to use it.
-      e.g. "warn" command.
-   2. Some quota commands can be used now, but this case doesn't test
-      them, because they can't work previously. e.g. "disable, enable,
-      off and remove" commands
-   3. Some expected output in 106.out file become incorrect now.
+Introduce a new ioctl that uses the reverse mapping btree to return
+information about the physical layout of the filesystem.
 
-I rewrite this case for above 3 reasons. This case nearly test all
-xfs_quota commands and options now, except:
-   1. some "-v" options
-   2. all "-a" options. I can't control the golden file if print all
-      filesystem's quota info in it.
-   3. default quota. I think it can be tested in another cases.
-   4. project command options. I will write another case to test it.
-   5. report command -l option. It's a new option, will cause failure
-      if someone test on a release with xfsprogs-3.1.
-   6. quot command -c option. It maybe output different histogram in
-      different system or machine.
-   7. warn command. This feature is not currently implemented.
-   8. print, df, free, help, quit and path commands.
+v2: shorten the device field to u32 since that's all we need for
+dev_t.  Support reporting reverse mapping information for all the
+devices that XFS supports (data, log).
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+v3: don't call the function that reports the journalling log rmap if
+we don't have an external device, since the regular rmapbt will take
+care of that.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/libxfs/xfs_fs.h |   65 ++++++
+ fs/xfs/xfs_fsops.c     |  528 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsops.h     |    6 +
+ fs/xfs/xfs_ioctl.c     |   76 +++++++
+ fs/xfs/xfs_ioctl32.c   |    1 
+ fs/xfs/xfs_trace.h     |   76 +++++++
+ 6 files changed, 752 insertions(+)
 
-Hi,
-
-This V3 patch do below change:
-  1. use tab to instead of 4 space
-  2. do scratch_mkfs before project quota test
-
-Thanks,
-Zorro
-
- tests/xfs/106     | 361 +++++++++++++++----------
- tests/xfs/106.out | 790 +++++++++++++++++++++++++++++++-----------------------
- tests/xfs/group   |   2 +-
- 3 files changed, 675 insertions(+), 478 deletions(-)
-
-diff --git a/tests/xfs/106 b/tests/xfs/106
-index 74658a6..d491410 100755
---- a/tests/xfs/106
-+++ b/tests/xfs/106
-@@ -31,208 +31,291 @@ echo "QA output created by $seq"
- here=`pwd`
- tmp=/tmp/$$
- status=1	# failure is the default!
--trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+trap "_cleanup; exit \$status" 0 1 2 3 15
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 7945505..b08f23d 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -91,6 +91,70 @@ struct getbmapx {
+ #define BMV_OF_LAST		0x4	/* segment is the last in the file */
+ 
+ /*
++ *	Structure for XFS_IOC_GETFSMAP.
++ *
++ *	Similar to XFS_IOC_GETBMAPX, the first two elements in the array are
++ *	used to constrain the output.  The first element in the array should
++ *	represent the lowest disk address that the user wants to learn about.
++ *	The second element in the array should represent the highest disk
++ *	address to query.  Subsequent array elements will be filled out by the
++ *	command.
++ *
++ *	The fmv_iflags field is only used in the first structure.  The
++ *	fmv_oflags field is filled in for each returned structure after the
++ *	second structure.  The fmv_unused1 fields in the first two array
++ *	elements must be zero.
++ *
++ *	The fmv_count, fmv_entries, and fmv_iflags fields in the second array
++ *	element must be zero.
++ *
++ *	fmv_block, fmv_offset, and fmv_length are expressed in units of 512
++ *	byte sectors.
++ */
++#ifndef HAVE_GETFSMAP
++struct getfsmap {
++	__u32		fmv_device;	/* device id */
++	__u32		fmv_unused1;	/* future use, must be zero */
++	__u64		fmv_block;	/* starting block */
++	__u64		fmv_owner;	/* owner id */
++	__u64		fmv_offset;	/* file offset of segment */
++	__u64		fmv_length;	/* length of segment, blocks */
++	__u32		fmv_oflags;	/* mapping flags */
++	__u32		fmv_iflags;	/* control flags (1st structure) */
++	__u32		fmv_count;	/* # of entries in array incl. input */
++	__u32		fmv_entries;	/* # of entries filled in (output). */
++	__u64		fmv_unused2;	/* future use, must be zero */
++};
++#endif
 +
-+_cleanup()
++/*	fmv_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
++/* no flags defined yet */
++#define FMV_HIF_VALID		0
++
++/*	fmv_oflags values - returned in the header segment only. */
++#define FMV_HOF_DEV_T		0x1	/* fmv_device values will be dev_t */
++
++/*	fmv_flags values - returned for each non-header segment */
++#define FMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
++#define FMV_OF_ATTR_FORK	0x2	/* segment = attribute fork */
++#define FMV_OF_EXTENT_MAP	0x4	/* segment = extent map */
++#define FMV_OF_SHARED		0x8	/* segment = shared with another file */
++#define FMV_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
++#define FMV_OF_LAST		0x20	/* segment is the last in the FS */
++
++/*	fmv_owner special values */
++#define FMV_OWN_FREE		(-1ULL)	/* free space */
++#define FMV_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
++#define FMV_OWN_FS		(-3ULL)	/* static fs metadata */
++#define FMV_OWN_LOG		(-4ULL)	/* journalling log */
++#define FMV_OWN_AG		(-5ULL)	/* per-AG metadata */
++#define FMV_OWN_INOBT		(-6ULL)	/* inode btree blocks */
++#define FMV_OWN_INODES		(-7ULL)	/* inodes */
++#define FMV_OWN_REFC		(-8ULL) /* refcount tree */
++#define FMV_OWN_COW		(-9ULL) /* cow staging */
++#define FMV_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
++
++/*
+  * Structure for XFS_IOC_FSSETDM.
+  * For use by backup and restore programs to set the XFS on-disk inode
+  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
+@@ -498,6 +562,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
++#define XFS_IOC_GETFSMAP	_IOWR('X', 59, struct getfsmap)
+ 
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 0f96847..39a4231 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -43,6 +43,7 @@
+ #include "xfs_log.h"
+ #include "xfs_filestream.h"
+ #include "xfs_rmap.h"
++#include "xfs_bit.h"
+ 
+ /*
+  * File system operations
+@@ -947,3 +948,530 @@ xfs_do_force_shutdown(
+ 	"Please umount the filesystem and rectify the problem(s)");
+ 	}
+ }
++
++/* getfsmap query state */
++struct xfs_getfsmap_info {
++	struct getfsmap		*fmv;		/* vector header */
++	xfs_fsmap_format_t	formatter;	/* formatting fn */
++	void			*format_arg;	/* format buffer */
++	bool			last;		/* last extent? */
++	xfs_daddr_t		next_daddr;	/* next daddr we expect */
++	u32			dev;		/* device id */
++
++	xfs_agnumber_t		agno;		/* AG number, if applicable */
++	struct xfs_buf		*agbp;		/* AGF, for refcount queries */
++	struct xfs_rmap_irec	low;		/* low rmap key */
++	struct xfs_rmap_irec	high;		/* high rmap key */
++};
++
++/* Associate a device with a getfsmap handler. */
++struct xfs_getfsmap_dev {
++	u32			dev;
++	int			(*fn)(struct xfs_mount *mp,
++				      struct getfsmap *keys,
++				      struct xfs_getfsmap_info *info);
++};
++
++/* Compare two getfsmap device handlers. */
++static int
++xfs_getfsmap_dev_compare(
++	const void			*p1,
++	const void			*p2)
 +{
-+	cd /
-+	rm -f $tmp.*
-+}
- 
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
- . ./common/quota
- 
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
++	const struct xfs_getfsmap_dev	*d1 = p1;
++	const struct xfs_getfsmap_dev	*d2 = p2;
 +
-+# real QA test starts here
- _supported_fs xfs
--_supported_os Linux #IRIX
-+_supported_os Linux
- _require_scratch
- _require_xfs_quota
-+_require_user
-+_require_group
- 
--# real QA test starts here
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
--cat $tmp.mkfs >$seqres.full
--. $tmp.mkfs
-+_scratch_mkfs_xfs >>$seqres.full 2>&1
- 
--# setup a default run
--if [ -z "$MOUNT_OPTIONS" ]; then
--	export MOUNT_OPTIONS="-o pquota,sync"
--else
--	export MOUNT_OPTIONS="$MOUNT_OPTIONS -o sync"
--fi
-+uqid=`id -u fsgqa`
-+gqid=`id -g fsgqa`
-+pqid=10
-+cat >$tmp.projects <<EOF
-+$pqid:$SCRATCH_MNT
-+EOF
- 
--_qmount
--_require_prjquota $SCRATCH_DEV
-+cat >$tmp.projid <<EOF
-+root:0
-+fsgqa:$pqid
-+EOF
-+
-+create_files()
-+{
-+	local bs=$1
-+	local inum=$2
- 
--# initial populate
--target=$SCRATCH_MNT/target
--$FSSTRESS_PROG -z -s 57069 -m 8 -n 1000 -p 4 \
---f allocsp=1 \
---f chown=3 \
---f creat=4 \
---f dwrite=4 \
---f fallocate=1 \
---f fdatasync=1 \
---f fiemap=1 \
---f freesp=1 \
---f fsync=1 \
---f link=1 \
---f mkdir=2 \
---f mknod=2 \
---f punch=1 \
---f rename=2 \
---f resvsp=1 \
---f rmdir=1 \
---f setxattr=1 \
---f symlink=2 \
---f sync=1 \
---f truncate=2 \
---f unlink=1 \
---f unresvsp=1 \
---f write=4 \
---d $target
--
--$FSSTRESS_PROG -z -s 57069 -m 8 -n 1000 -p 4 \
---f chown=500 \
---f setxattr=500 \
---d $target
--
--# also use space, to be able to go over/under limits easily
--uid=255
--gid=254
--prid=253
--rm -f $SCRATCH_MNT/resv
--$XFS_IO_PROG -fc "resvsp 0 200m" -c "chproj $prid" $SCRATCH_MNT/resv
--chown $uid $SCRATCH_MNT/resv
--chgrp $gid $SCRATCH_MNT/resv
-+	echo "Using type=$type id=$id" >> $seqres.full
- 
--_qmount
-+	for ((i=0; i<$((inum-1)); i++)); do
-+		_file_as_id $SCRATCH_MNT/inode$i $id $type 1024 0
-+	done
-+
-+	_file_as_id $SCRATCH_MNT/block $id $type $bs 1
-+}
-+
-+clean_files()
-+{
-+	rm -rf $SCRATCH_MNT/* 2>/dev/null
-+	rm -rf $tmp.quot 2>/dev/null
-+	rm -rf $tmp.quota 2>/dev/null
++	return d1->dev - d2->dev;
 +}
 +
-+filter_quot()
++/* Compare a record against our starting point */
++static bool
++xfs_getfsmap_rec_before_low_key(
++	struct xfs_getfsmap_info	*info,
++	struct xfs_rmap_irec		*rec)
 +{
-+	_filter_quota | grep -v "root \|\#0 " \
-+		| sed -e '/#[0-9]*/s/#[0-9]*/#ID/g'
++	uint64_t			x, y;
++
++	if (rec->rm_startblock < info->low.rm_startblock)
++		return true;
++	if (rec->rm_startblock > info->low.rm_startblock)
++		return false;
++
++	if (rec->rm_owner < info->low.rm_owner)
++		return true;
++	if (rec->rm_owner > info->low.rm_owner)
++		return false;
++
++	x = xfs_rmap_irec_offset_pack(rec);
++	y = xfs_rmap_irec_offset_pack(&info->low);
++	if (x < y)
++		return true;
++	return false;
 +}
 +
-+filter_report()
++/*
++ * Format a reverse mapping for getfsmap, having translated rm_startblock
++ * into the appropriate daddr units.
++ */
++STATIC int
++xfs_getfsmap_helper(
++	struct xfs_mount		*mp,
++	struct xfs_getfsmap_info	*info,
++	struct xfs_rmap_irec		*rec,
++	xfs_daddr_t			rec_daddr)
 +{
-+	_filter_quota | grep -v "^root \|^\#0 " \
-+		| sed -e '/^#[0-9]*/s/^#[0-9]*/#ID/g'
++	struct getfsmap			fmv;
++	xfs_daddr_t			key_end;
++	int				error;
++
++	/*
++	 * Filter out records that start before our startpoint, if the
++	 * caller requested that.
++	 */
++	if (info->fmv->fmv_length &&
++	    xfs_getfsmap_rec_before_low_key(info, rec)) {
++		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
++		if (info->next_daddr < rec_daddr)
++			info->next_daddr = rec_daddr;
++		return XFS_BTREE_QUERY_RANGE_CONTINUE;
++	}
++
++	/*
++	 * If the caller passed in a length with the low record and
++	 * the record represents a file data extent, we incremented
++	 * the offset in the low key by the length in the hopes of
++	 * finding reverse mappings for the physical blocks we just
++	 * saw.  We did /not/ increment next_daddr by the length
++	 * because the range query would not be able to find shared
++	 * extents within the same physical block range.
++	 *
++	 * However, the extent we've been fed could have a startblock
++	 * past the passed-in low record.  If this is the case,
++	 * advance next_daddr to the end of the passed-in low record
++	 * so we don't report the extent prior to this extent as
++	 * free.
++	 */
++	key_end = info->fmv->fmv_block + info->fmv->fmv_length;
++	if (info->next_daddr < key_end && rec_daddr >= key_end)
++		info->next_daddr = key_end;
++
++	/* Are we just counting mappings? */
++	if (info->fmv->fmv_count == 2) {
++		if (rec_daddr > info->next_daddr)
++			info->fmv->fmv_entries++;
++
++		if (info->last)
++			return XFS_BTREE_QUERY_RANGE_CONTINUE;
++
++		info->fmv->fmv_entries++;
++
++		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
++		if (info->next_daddr < rec_daddr)
++			info->next_daddr = rec_daddr;
++		return XFS_BTREE_QUERY_RANGE_CONTINUE;
++	}
++
++	/*
++	 * If the record starts past the last physical block we saw,
++	 * then we've found some free space.  Report that too.
++	 */
++	if (rec_daddr > info->next_daddr) {
++		if (info->fmv->fmv_entries >= info->fmv->fmv_count - 2)
++			return XFS_BTREE_QUERY_RANGE_ABORT;
++
++		trace_xfs_fsmap_mapping(mp, info->agno,
++				XFS_DADDR_TO_FSB(mp, info->next_daddr),
++				XFS_DADDR_TO_FSB(mp, rec_daddr -
++						info->next_daddr),
++				FMV_OWN_FREE, 0);
++
++		fmv.fmv_device = info->dev;
++		fmv.fmv_block = info->next_daddr;
++		fmv.fmv_owner = FMV_OWN_FREE;
++		fmv.fmv_offset = 0;
++		fmv.fmv_length = rec_daddr - info->next_daddr;
++		fmv.fmv_oflags = FMV_OF_SPECIAL_OWNER;
++		fmv.fmv_count = 0;
++		fmv.fmv_entries = 0;
++		fmv.fmv_unused1 = 0;
++		fmv.fmv_unused2 = 0;
++		error = info->formatter(&fmv, info->format_arg);
++		if (error)
++			return error;
++		info->fmv->fmv_entries++;
++	}
++
++	if (info->last)
++		goto out;
++
++	/* Fill out the extent we found */
++	if (info->fmv->fmv_entries >= info->fmv->fmv_count - 2)
++		return XFS_BTREE_QUERY_RANGE_ABORT;
++
++	trace_xfs_fsmap_mapping(mp, info->agno,
++			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
++			rec->rm_offset);
++
++	fmv.fmv_device = info->dev;
++	fmv.fmv_block = rec_daddr;
++	fmv.fmv_owner = rec->rm_owner;
++	fmv.fmv_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
++	fmv.fmv_length = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
++	fmv.fmv_oflags = 0;
++	fmv.fmv_count = 0;
++	fmv.fmv_entries = 0;
++	fmv.fmv_unused1 = 0;
++	fmv.fmv_unused2 = 0;
++	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
++		fmv.fmv_oflags |= FMV_OF_SPECIAL_OWNER;
++	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
++		fmv.fmv_oflags |= FMV_OF_PREALLOC;
++	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
++		fmv.fmv_oflags |= FMV_OF_ATTR_FORK;
++	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		fmv.fmv_oflags |= FMV_OF_EXTENT_MAP;
++	error = info->formatter(&fmv, info->format_arg);
++	if (error)
++		return error;
++	info->fmv->fmv_entries++;
++
++out:
++	rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
++	if (info->next_daddr < rec_daddr)
++		info->next_daddr = rec_daddr;
++	return XFS_BTREE_QUERY_RANGE_CONTINUE;
 +}
 +
-+filter_quota()
++/* Transform a rmapbt irec into a fsmap */
++STATIC int
++xfs_getfsmap_datadev_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
 +{
-+	_filter_quota | sed -e "/Disk quotas for/s/([0-9]*)/(ID)/g" \
-+			    -e "/Disk quotas for/s/#[0-9]*/#ID/g"
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_getfsmap_info	*info = priv;
++	xfs_fsblock_t			fsb;
++	xfs_daddr_t			rec_daddr;
++
++	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno,
++			rec->rm_startblock);
++	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
++
++	return xfs_getfsmap_helper(mp, info, rec, rec_daddr);
 +}
++
++/* Transform a absolute-startblock rmap (rtdev, logdev) into a fsmap */
++STATIC int
++xfs_getfsmap_rtdev_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_getfsmap_info	*info = priv;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_FSB_TO_BB(mp, rec->rm_startblock);
++
++	return xfs_getfsmap_helper(mp, info, rec, rec_daddr);
++}
++
++/* Set rmap flags based on the getfsmap flags */
++static void
++xfs_getfsmap_set_irec_flags(
++	struct xfs_rmap_irec	*irec,
++	struct getfsmap		*fmv)
++{
++	irec->rm_flags = 0;
++	if (fmv->fmv_oflags & FMV_OF_ATTR_FORK)
++		irec->rm_flags |= XFS_RMAP_ATTR_FORK;
++	if (fmv->fmv_oflags & FMV_OF_EXTENT_MAP)
++		irec->rm_flags |= XFS_RMAP_BMBT_BLOCK;
++	if (fmv->fmv_oflags & FMV_OF_PREALLOC)
++		irec->rm_flags |= XFS_RMAP_UNWRITTEN;
++}
++
++/* Execute a getfsmap query against the log device. */
++STATIC int
++xfs_getfsmap_logdev(
++	struct xfs_mount		*mp,
++	struct getfsmap			*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_btree_cur		cur;
++	struct getfsmap			*lowkey = keys;
++	struct xfs_rmap_irec		rmap;
++
++	/* Set up search keys */
++	info->low.rm_startblock = XFS_BB_TO_FSBT(mp, lowkey->fmv_block);
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, lowkey->fmv_offset);
++	info->low.rm_owner = lowkey->fmv_owner;
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, lowkey);
++
++	info->high.rm_startblock = -1U;
++	info->high.rm_owner = ULLONG_MAX;
++	info->high.rm_offset = ULLONG_MAX;
++	info->high.rm_blockcount = 0;
++	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
++
++	trace_xfs_fsmap_low_key(mp, info->agno,
++			info->low.rm_startblock,
++			info->low.rm_blockcount,
++			info->low.rm_owner,
++			info->low.rm_offset);
++
++	trace_xfs_fsmap_high_key(mp, info->agno,
++			info->high.rm_startblock,
++			info->high.rm_blockcount,
++			info->high.rm_owner,
++			info->high.rm_offset);
++
++
++	if (lowkey->fmv_block > 0)
++		return 0;
++
++	rmap.rm_startblock = 0;
++	rmap.rm_blockcount = mp->m_sb.sb_logblocks;
++	rmap.rm_owner = XFS_RMAP_OWN_LOG;
++	rmap.rm_offset = 0;
++	rmap.rm_flags = 0;
++
++	cur.bc_mp = mp;
++	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
++}
++
++/* Execute a getfsmap query against the regular data device. */
++STATIC int
++xfs_getfsmap_datadev(
++	struct xfs_mount		*mp,
++	struct getfsmap			*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_btree_cur		*bt_cur = NULL;
++	struct getfsmap			*lowkey;
++	struct getfsmap			*highkey;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_agnumber_t			start_ag;
++	xfs_agnumber_t			end_ag;
++	xfs_daddr_t			eofs;
++	int				error = 0;
++
++	lowkey = keys;
++	highkey = keys + 1;
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++	if (lowkey->fmv_block >= eofs)
++		return 0;
++	if (highkey->fmv_block >= eofs)
++		highkey->fmv_block = eofs - 1;
++	start_fsb = XFS_DADDR_TO_FSB(mp, lowkey->fmv_block);
++	end_fsb = XFS_DADDR_TO_FSB(mp, highkey->fmv_block);
++
++	/* Set up search keys */
++	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, lowkey->fmv_offset);
++	info->low.rm_owner = lowkey->fmv_owner;
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, lowkey);
++
++	info->high.rm_startblock = -1U;
++	info->high.rm_owner = ULLONG_MAX;
++	info->high.rm_offset = ULLONG_MAX;
++	info->high.rm_blockcount = 0;
++	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
++
++	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
++	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
++
++	/* Query each AG */
++	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
++		if (info->agno == end_ag) {
++			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
++					end_fsb);
++			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
++					highkey->fmv_offset);
++			info->high.rm_owner = highkey->fmv_owner;
++			xfs_getfsmap_set_irec_flags(&info->high, highkey);
++		}
++
++		if (bt_cur) {
++			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++			xfs_trans_brelse(NULL, info->agbp);
++			bt_cur = NULL;
++			info->agbp = NULL;
++		}
++
++		error = xfs_alloc_read_agf(mp, NULL, info->agno, 0,
++				&info->agbp);
++		if (error)
++			goto err;
++
++		trace_xfs_fsmap_low_key(mp, info->agno,
++				info->low.rm_startblock,
++				info->low.rm_blockcount,
++				info->low.rm_owner,
++				info->low.rm_offset);
++
++		trace_xfs_fsmap_high_key(mp, info->agno,
++				info->high.rm_startblock,
++				info->high.rm_blockcount,
++				info->high.rm_owner,
++				info->high.rm_offset);
++
++		bt_cur = xfs_rmapbt_init_cursor(mp, NULL, info->agbp,
++				info->agno);
++		error = xfs_rmap_query_range(bt_cur, &info->low, &info->high,
++				xfs_getfsmap_datadev_helper, info);
++		if (error)
++			goto err;
++
++		if (info->agno == start_ag) {
++			info->low.rm_startblock = 0;
++			info->low.rm_owner = 0;
++			info->low.rm_offset = 0;
++			info->low.rm_flags = 0;
++		}
++	}
++
++	/* Report any free space at the end of the AG */
++	info->last = true;
++	error = xfs_getfsmap_datadev_helper(bt_cur, &info->high, info);
++	if (error)
++		goto err;
++
++err:
++	if (bt_cur)
++		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
++							 XFS_BTREE_NOERROR);
++	if (info->agbp) {
++		xfs_trans_brelse(NULL, info->agbp);
++		info->agbp = NULL;
++	}
++
++	return error;
++}
++
++/* Do we recognize the device? */
++STATIC bool
++xfs_getfsmap_is_valid_device(
++	struct xfs_mount	*mp,
++	struct getfsmap		*fmv)
++{
++	if (fmv->fmv_device == 0 || fmv->fmv_device == UINT_MAX ||
++	    fmv->fmv_device == new_encode_dev(mp->m_ddev_targp->bt_dev))
++		return true;
++	if (mp->m_logdev_targp &&
++	    fmv->fmv_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
++		return true;
++	return false;
++}
++
++#define XFS_GETFSMAP_DEVS	3
++/*
++ * Get filesystem's extents as described in fmv, and format for
++ * output.  Calls formatter to fill the user's buffer until all
++ * extents are mapped, until the passed-in fmv->fmv_count slots have
++ * been filled, or until the formatter short-circuits the loop, if it
++ * is tracking filled-in extents on its own.
++ */
++int
++xfs_getfsmap(
++	struct xfs_mount		*mp,
++	struct getfsmap			*fmv_low,
++	xfs_fsmap_format_t		formatter,
++	void				*arg)
++{
++	struct getfsmap			*fmv_high;
++	struct getfsmap			keys[2];
++	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
++	struct xfs_getfsmap_info	info;
++	int				i;
++	int				error = 0;
++
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++	if (fmv_low->fmv_count < 2)
++		return -EINVAL;
++	if (fmv_low->fmv_iflags & (~FMV_HIF_VALID))
++		return -EINVAL;
++	fmv_high = fmv_low + 1;
++	if (!xfs_getfsmap_is_valid_device(mp, fmv_low) ||
++	    !xfs_getfsmap_is_valid_device(mp, fmv_high) ||
++	    fmv_high->fmv_iflags || fmv_high->fmv_count ||
++	    fmv_high->fmv_length || fmv_high->fmv_entries ||
++	    fmv_high->fmv_unused1 || fmv_low->fmv_unused1 ||
++	    fmv_high->fmv_unused2 || fmv_low->fmv_unused2)
++		return -EINVAL;
++
++	fmv_low->fmv_entries = 0;
++
++	/* Set up our device handlers. */
++	memset(handlers, 0, sizeof(handlers));
++	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
++	handlers[0].fn = xfs_getfsmap_datadev;
++	if (mp->m_logdev_targp != mp->m_ddev_targp) {
++		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
++		handlers[1].fn = xfs_getfsmap_logdev;
++	}
++
++	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
++			xfs_getfsmap_dev_compare);
++
++	/*
++	 * Since we allow the user to copy the last fmv item from a previous
++	 * call into the low key slot, we have to advance the low key by
++	 * whatever the reported length is.  If the offset field doesn't apply,
++	 * move up the start block to the next extent and start over with the
++	 * lowest owner/offset possible; otherwise it's file data, so move up
++	 * the offset only.
++	 */
++	keys[0] = *fmv_low;
++	if (keys[0].fmv_oflags & (FMV_OF_SPECIAL_OWNER | FMV_OF_EXTENT_MAP)) {
++		keys[0].fmv_block += fmv_low->fmv_length;
++		keys[0].fmv_owner = 0;
++		keys[0].fmv_offset = 0;
++	} else
++		keys[0].fmv_offset += fmv_low->fmv_length;
++	memset(keys + 1, 0xFF, sizeof(struct getfsmap));
++
++	info.fmv = fmv_low;
++	info.formatter = formatter;
++	info.format_arg = arg;
++
++	/* For each device we support... */
++	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
++		/* Is this device within the range the user asked for? */
++		if (!handlers[i].fn)
++			continue;
++		if (fmv_low->fmv_device > handlers[i].dev)
++			continue;
++		if (fmv_high->fmv_device < handlers[i].dev)
++			break;
++
++		/*
++		 * If this device number matches the high key, we have
++		 * to pass the high key to the handler to limit the
++		 * query results.  If the device number exceeds the
++		 * low key, zero out the low key so that we get
++		 * everything from the beginning.
++		 */
++		if (handlers[i].dev == fmv_high->fmv_device)
++			keys[1] = *fmv_high;
++		if (handlers[i].dev > fmv_low->fmv_device)
++			memset(keys, 0, sizeof(struct getfsmap));
++
++		info.next_daddr = keys[0].fmv_block;
++		info.dev = handlers[i].dev;
++		info.last = false;
++		info.agno = NULLAGNUMBER;
++		error = handlers[i].fn(mp, keys, &info);
++		if (error)
++			break;
++
++	}
++
++	fmv_low->fmv_oflags = FMV_HOF_DEV_T;
++	return error;
++}
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index f32713f..53ab2d7 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -26,4 +26,10 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
  
--filter_xfs_quota()
-+filter_state()
- {
--	perl -ne "
--s,$SCRATCH_MNT,[SCR_MNT],;
--s,$SCRATCH_DEV,[SCR_DEV],;
--s/Inode: \#\d+ \(0 blocks, 0 extents\)/Inode: #[INO] (0 blocks, 0 extents)/;
--s/Inode: \#\d+ \(\d+ blocks, \d+ extents\)/Inode: #[INO] (X blocks, Y extents)/;
--	print;"
-+	_filter_quota | sed -e "s/Inode: #[0-9]* (0 blocks, 0 extents)/Inode: #[INO] (0 blocks, 0 extents)/g" \
-+			    -e "s/Inode: #[0-9]* ([0-9]* blocks, [0-9]* extents)/Inode: #[INO] (X blocks, Y extents)/g" \
-+			    -e "/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/s/ [0-9][0-9]:[0-9][0-9]:[0-9][0-9]//g"
++/* fsmap to userspace formatter - copy to user & advance pointer */
++typedef int (*xfs_fsmap_format_t)(struct getfsmap *, void *);
++
++int	xfs_getfsmap(struct xfs_mount *mp, struct getfsmap *fmv,
++		xfs_fsmap_format_t formatter, void *arg);
++
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9a7c878..ecdd77b 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -41,6 +41,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_pnfs.h"
+ #include "xfs_acl.h"
++#include "xfs_btree.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/dcache.h>
+@@ -1532,6 +1533,76 @@ xfs_ioc_getbmapx(
+ 	return 0;
  }
  
- test_quot()
- {
--	echo "checking quot command (type=$type)"  # not deterministic on blks
--	xfs_quota -x -c "quot -n -$type" $SCRATCH_MNT >>$seqres.full 2>&1
-+	local opt="$*"
++struct getfsmap_info {
++	struct xfs_mount	*mp;
++	struct getfsmap __user	*data;
++	__s64			last_flags;
++};
 +
-+	echo "checking quot command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "quot -$type $opt -bi" $SCRATCH_MNT | filter_quot
- }
- 
- test_report()
- {
-+	local opt="$*"
++STATIC int
++xfs_getfsmap_format(struct getfsmap *fmv, void *priv)
++{
++	struct getfsmap_info	*info = priv;
 +
- 	echo "checking report command (type=$type)"
--	xfs_quota -x -c "report -h -$type -U 256" $SCRATCH_MNT
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "report -$type $opt -bi" \
-+			$SCRATCH_MNT | filter_report
- }
- 
--test_limit1()
-+test_quota()
- {
--	echo "checking limit command, pass 1 (type=$type)"
--	xfs_quota -x -c "limit -$type bsoft=100m bhard=100m ihard=2 $id" \
--		$SCRATCH_MNT
--	xfs_quota -x -c "limit -$type isoft=1 rtbsoft=100m rtbhard=110m $id"\
--		$SCRATCH_MNT
--	sleep 2		# let the timer day transition happen
--	xfs_quota -x -c "quota -$type -b -hnv $id" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -i -hnv $id" $SCRATCH_MNT
--	#xfs_quota -x -c "quota -$type -r -hnv $id" $SCRATCH_MNT
--}
-+	local opt="$*"
- 
--test_limit2()
--{
--	# push limits up high, so that timers are cleared, etc. (for later)
--	echo "checking limit command, pass2 (type=$type)"
--	xfs_quota -x -c "limit -$type bsoft=300m bhard=400m ihard=8800 $id" \
--		$SCRATCH_MNT
--	xfs_quota -x -c "limit -$type isoft=8000 rtbsoft=310m rtbhard=410m $id"\
--		$SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -b -hnv $id" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -i -hnv $id" $SCRATCH_MNT
--	#xfs_quota -x -c "quota -$type -r -hnv $id" $SCRATCH_MNT
-+	echo "checking quota command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "quota -$type $opt -bi $id" \
-+			$SCRATCH_MNT | filter_quota
- }
- 
--test_warn()
-+test_limit()
- {
--	echo "checking warn command (type=$type)"
--	xfs_quota -x -c "warn -$type -b 4 $id" $SCRATCH_MNT
--	xfs_quota -x -c "warn -$type -i 3 $id" $SCRATCH_MNT
--	#xfs_quota -x -c "warn -$type -r 2 $id" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -b -hnv $id" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -i -hnv $id" $SCRATCH_MNT
--	#xfs_quota -x -c "quota -$type -r -hnv $id" $SCRATCH_MNT
-+	local bs=$1
-+	local bh=$2
-+	local is=$3
-+	local ih=$4
++	trace_xfs_getfsmap_mapping(info->mp, fmv->fmv_block,
++			fmv->fmv_length, fmv->fmv_owner,
++			fmv->fmv_offset, fmv->fmv_oflags);
 +
-+	echo "checking limit command (type=$type, bsoft=$bs, bhard=$bh, isoft=$is, ihard=$ih)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "limit -$type bsoft=$bs bhard=$bh fsgqa" \
-+			-c "limit -$type isoft=$is ihard=$ih fsgqa" \
-+			$SCRATCH_MNT
++	info->last_flags = fmv->fmv_oflags;
++	if (copy_to_user(info->data, fmv, sizeof(struct getfsmap)))
++		return -EFAULT;
 +
-+	# let the timer day transition happen
-+	sleep 2
- }
- 
- test_timer()
- {
- 	echo "checking timer command (type=$type)"
--	xfs_quota -x -c "timer -$type -b 3days" $SCRATCH_MNT
--	xfs_quota -x -c "timer -$type -i 2days" $SCRATCH_MNT
--	#xfs_quota -x -c "timer -$type -r 1day" $SCRATCH_MNT
-+	# set 3days+1h for time won't become 2days soon
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "timer -$type -bi 73h" \
-+			$SCRATCH_MNT | _filter_scratch
++	info->data++;
++	return 0;
 +}
 +
-+test_disable()
++STATIC int
++xfs_ioc_getfsmap(
++	struct xfs_inode	*ip,
++	void			__user *arg)
 +{
-+	echo "checking disable command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "disable -$type -v" \
-+			$SCRATCH_MNT | filter_state
++	struct getfsmap_info	info;
++	struct getfsmap		fmx[2];
++	bool			aborted = false;
++	int			error;
++
++	if (copy_from_user(&fmx, arg, 2 * sizeof(struct getfsmap)))
++		return -EFAULT;
++
++	trace_xfs_getfsmap_low_key(ip->i_mount, fmx[0].fmv_block,
++			fmx[0].fmv_length, fmx[0].fmv_owner,
++			fmx[0].fmv_offset, fmx[0].fmv_oflags);
++
++	trace_xfs_getfsmap_high_key(ip->i_mount, fmx[1].fmv_block,
++			fmx[1].fmv_length, fmx[1].fmv_owner,
++			fmx[1].fmv_offset, fmx[1].fmv_oflags);
++
++	info.mp = ip->i_mount;
++	info.data = (__force struct getfsmap *)arg + 2;
++	error = xfs_getfsmap(ip->i_mount, fmx, xfs_getfsmap_format, &info);
++	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
++		error = 0;
++		aborted = true;
++	}
++	if (error)
++		return error;
++
++	/* If we didn't abort, set the "last" flag in the last fmx */
++	if (!aborted && fmx[0].fmv_entries) {
++		info.data--;
++		info.last_flags |= FMV_OF_LAST;
++		if (copy_to_user(&info.data->fmv_oflags, &info.last_flags,
++				sizeof(info.last_flags)))
++			return -EFAULT;
++	}
++
++	/* copy back header */
++	if (copy_to_user(arg, fmx, 2 * sizeof(struct getfsmap)))
++		return -EFAULT;
++
++	return 0;
 +}
 +
-+test_enable()
-+{
-+	echo "checking enable command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "enable -$type -v" $SCRATCH_MNT | filter_state
-+}
-+
-+test_off()
-+{
-+	echo "checking off command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "off -$type -v" $SCRATCH_MNT | _filter_scratch
-+}
-+
-+test_remove()
-+{
-+	echo "checking remove command (type=$type)"
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "remove -$type -v" \
-+			$SCRATCH_MNT | _filter_scratch
- }
+ int
+ xfs_ioc_swapext(
+ 	xfs_swapext_t	*sxp)
+@@ -1712,6 +1783,11 @@ xfs_file_ioctl(
+ 	case XFS_IOC_GETBMAPX:
+ 		return xfs_ioc_getbmapx(ip, arg);
  
- test_state()
- {
- 	echo "checking state command (type=$type)"
--	xfs_quota -x -c "state -$type" $SCRATCH_MNT
--	# not yet working properly?
--	#echo "checking disable command (type=$type)"
--	#xfs_quota -x -c "disable -$type -v" $SCRATCH_MNT
--	#echo "checking enable command (type=$type)"
--	#xfs_quota -x -c "enable -$type -v" $SCRATCH_MNT
--	#echo "checking off command (type=$type)"
--	#xfs_quota -x -c "off -$type -v" $SCRATCH_MNT
--	#echo "checking remove command (type=$type)"
--	#xfs_quota -x -c "remove -$type -v" $SCRATCH_MNT
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "state -$type" $SCRATCH_MNT | filter_state
- }
++	case XFS_IOC_GETFSMAP:
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++		return xfs_ioc_getfsmap(ip, arg);
++
+ 	case XFS_IOC_FD_TO_HANDLE:
+ 	case XFS_IOC_PATH_TO_HANDLE:
+ 	case XFS_IOC_PATH_TO_FSHANDLE: {
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 321f577..9491bc8 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -554,6 +554,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_GOINGDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
++	case XFS_IOC_GETFSMAP:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #ifndef BROKEN_X86_ALIGNMENT
+ 	/* These are handled fine if no alignment issues */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 551b7e2..8a42609 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2559,6 +2559,82 @@ DEFINE_RMAPBT_EVENT(xfs_rmap_lookup_le_range_result);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_right_neighbor_result);
+ DEFINE_RMAPBT_EVENT(xfs_rmap_find_left_neighbor_result);
  
--test_backup()
-+test_dump()
- {
- 	echo "checking dump command (type=$type)"
--	rm -f $tmp.backup
--	xfs_quota -x -c "dump -$type -f $tmp.backup -U 256" $SCRATCH_MNT
--	cat $tmp.backup
--
--	echo "changing limits (type=$type)"
--	xfs_quota -x -c "limit -$type isoft=1000 ihard=1100 $id" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -i -hnv $id" $SCRATCH_MNT
-+	rm -f $tmp.backup 2>>/dev/null
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "dump -$type -f $tmp.backup" \
-+			$SCRATCH_MNT | _filter_scratch
-+}
++/* fsmap traces */
++DECLARE_EVENT_CLASS(xfs_fsmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_fsblock_t bno,
++		 xfs_filblks_t len, __uint64_t owner, __uint64_t offset),
++	TP_ARGS(mp, agno, bno, len, owner, offset),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_fsblock_t, bno)
++		__field(xfs_filblks_t, len)
++		__field(__uint64_t, owner)
++		__field(__uint64_t, offset)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bno = bno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++	),
++	TP_printk("dev %d:%d agno %u bno %llu len %llu owner %lld offset 0x%llx\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset)
++)
++#define DEFINE_FSMAP_EVENT(name) \
++DEFINE_EVENT(xfs_fsmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_fsblock_t bno, xfs_filblks_t len, __uint64_t owner, \
++		 __uint64_t offset), \
++	TP_ARGS(mp, agno, bno, len, owner, offset))
++DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
++DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
++DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
++
++DECLARE_EVENT_CLASS(xfs_getfsmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_daddr_t block, xfs_daddr_t len,
++		 __uint64_t owner, __uint64_t offset, __uint64_t flags),
++	TP_ARGS(mp, block, len, owner, offset, flags),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_daddr_t, block)
++		__field(xfs_daddr_t, len)
++		__field(__uint64_t, owner)
++		__field(__uint64_t, offset)
++		__field(__uint64_t, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->block = block;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++		__entry->flags = flags;
++	),
++	TP_printk("dev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx\n",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->block,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++)
++#define DEFINE_GETFSMAP_EVENT(name) \
++DEFINE_EVENT(xfs_getfsmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_daddr_t block, xfs_daddr_t len, \
++		 __uint64_t owner, __uint64_t offset, __uint64_t flags), \
++	TP_ARGS(mp, block, len, owner, offset, flags))
++DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
++DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
++DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
++
+ #endif /* _TRACE_XFS_H */
  
-+test_restore()
-+{
- 	echo "checking restore command (type=$type)"
--	xfs_quota -x -c "restore -$type -f $tmp.backup" $SCRATCH_MNT
--	xfs_quota -x -c "quota -$type -i -hnv $id" $SCRATCH_MNT
--	rm -f $tmp.backup
-+	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+			-c "restore -$type -f $tmp.backup" \
-+			$SCRATCH_MNT | _filter_scratch
- }
- 
- test_xfs_quota()
- {
--	test_quot	; echo
--	test_report	; echo
--	test_timer	; echo
--	test_limit1	; echo
--	test_warn	; echo
--	test_limit2	; echo
--	test_backup	; echo
--	test_state	; echo
--	echo		; echo
-+	# init quota
-+	echo "init quota limit and timer, and dump it"
-+	echo "create_files 1024k 15"; create_files 1024k 15
-+	echo "quota remount"; _qmount
-+	echo ; test_quot
-+	echo ; test_timer
-+	echo ; test_limit 512k 2048k 10 20
-+	echo ; test_dump
-+
-+	# report options test
-+	echo "report options test"
-+	echo ; test_report
-+	echo "-N option"; test_report -N
-+	echo "-L -U options"; test_report -L $id -U $id
-+	echo "-t option"; test_report -t
-+	echo "-n option"; test_report -n
-+	echo "-h option"; test_report -h
-+
-+	# quot options test
-+	echo "quot options test"
-+	echo ; test_quot
-+	echo "-f option"; test_quot -f $tmp.quot
-+	cat $tmp.quot | filter_quot
-+	echo "-n option"; test_quot -n
-+
-+	# quota options test
-+	echo ; test_quota
-+	echo "-f option"; test_quota -f $tmp.quota
-+	cat $tmp.quota | filter_quota
-+	echo "-N option"; test_quota -N
-+	echo "-n option"; test_quota -n
-+	echo "-h option"; test_quota -h
-+
-+	# disable/enable test
-+	echo "disable quota"
-+	echo ; test_disable
-+	echo ; test_report -N
-+	echo "expect a remove error at here"; test_remove
-+	echo ; test_enable
-+	echo ; test_report -N
-+
-+	# off and remove test
-+	echo "off and remove test"
-+	echo ; test_limit 100m 100m 100 100
-+	echo ; test_quota -N
-+	echo ; test_off
-+	echo ; test_state
-+	echo ; test_remove
-+	echo ; test_report -N
-+	echo "quota remount"; _qmount
-+	echo ; test_report -N
-+
-+	# restore test
-+	echo "restore quota"
-+	echo ; test_restore
-+	echo ; test_report -N
-+	echo ; test_state
-+	echo "cleanup files"; clean_files
- }
- 
--# real QA test starts here
--export MOUNT_OPTIONS="-ouquota,sync"
-+echo "----------------------- uquota,sync ---------------------------"
-+_qmount_option "uquota,sync"
- _qmount
- type=u
--id=$uid
--test_xfs_quota | filter_xfs_quota
-+id=$uqid
-+test_xfs_quota
- 
--export MOUNT_OPTIONS="-ogquota,sync"
-+echo "----------------------- gquota,sync ---------------------------"
-+_qmount_option "gquota,sync"
- _qmount
- type=g
--id=$gid
--test_xfs_quota | filter_xfs_quota
-+id=$gqid
-+test_xfs_quota
- 
--export MOUNT_OPTIONS="-opquota,sync"
-+echo "----------------------- pquota,sync ---------------------------"
-+# Need to clean the group quota before test project quota, because
-+# V4 xfs doesn't support separate project inode. So mkfs at here.
-+_scratch_unmount
-+_scratch_mkfs_xfs >>$seqres.full 2>&1
-+_qmount_option "pquota,sync"
- _qmount
- type=p
--id=$prid
--test_xfs_quota | filter_xfs_quota
-+id=$pqid
-+_require_prjquota $SCRATCH_DEV
-+$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
-+		-c "project -s $id" \
-+		$SCRATCH_MNT > /dev/null
-+test_xfs_quota
- 
- _scratch_unmount
-+# success, all done
- status=0
- exit
-diff --git a/tests/xfs/106.out b/tests/xfs/106.out
-index 1096acb..e36375d 100644
---- a/tests/xfs/106.out
-+++ b/tests/xfs/106.out
-@@ -1,379 +1,493 @@
- QA output created by 106
--meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
--data     = bsize=XXX blocks=XXX, imaxpct=PCT
--         = sunit=XXX swidth=XXX, unwritten=X
--naming   =VERN bsize=XXX
--log      =LDEV bsize=XXX blocks=XXX
--realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+----------------------- uquota,sync ---------------------------
-+init quota limit and timer, and dump it
-+create_files 1024k 15
-+quota remount
-+
- checking quot command (type=u)
-+SCRATCH_DEV (SCRATCH_MNT) User:
-+ 1024 15 fsgqa 
-+
-+checking timer command (type=u)
-+
-+checking limit command (type=u, bsoft=512k, bhard=2048k, isoft=10, ihard=20)
-+
-+checking dump command (type=u)
-+report options test
- 
- checking report command (type=u)
--User quota on [SCR_MNT] ([SCR_DEV])
--                        Blocks              
--User ID      Used   Soft   Hard Warn/Grace   
------------ --------------------------------- 
--#0          84.4M      0      0  00 [------]
--#1           5.5M      0      0  00 [------]
--#2           1.2M      0      0  00 [------]
--#3           1.2M      0      0  00 [------]
--#4           2.3M      0      0  00 [------]
--#5          1004K      0      0  00 [------]
--#6           2.1M      0      0  00 [------]
--#7           1.0M      0      0  00 [------]
--#8              0      0      0  00 [------]
--#9              0      0      0  00 [------]
--#10             0      0      0  00 [------]
--#11             0      0      0  00 [------]
--#12            8K      0      0  00 [------]
--#13          228K      0      0  00 [------]
--#14             0      0      0  00 [------]
--#15          696K      0      0  00 [------]
--#16             0      0      0  00 [------]
--#17          300K      0      0  00 [------]
--#18             0      0      0  00 [------]
--#20           40K      0      0  00 [------]
--#22          256K      0      0  00 [------]
--#23          128K      0      0  00 [------]
--#24          1.9M      0      0  00 [------]
--#25             0      0      0  00 [------]
--#26          176K      0      0  00 [------]
--#27             0      0      0  00 [------]
--#28             0      0      0  00 [------]
--#29             0      0      0  00 [------]
--#31          616K      0      0  00 [------]
--#32             0      0      0  00 [------]
--#35          128K      0      0  00 [------]
--#37             0      0      0  00 [------]
--#38          100K      0      0  00 [------]
--#40             0      0      0  00 [------]
--#42          412K      0      0  00 [------]
--#44             0      0      0  00 [------]
--#48             0      0      0  00 [------]
--#50             0      0      0  00 [------]
--#53          288K      0      0  00 [------]
--#54             0      0      0  00 [------]
--#55             0      0      0  00 [------]
--#56          400K      0      0  00 [------]
--#58             0      0      0  00 [------]
--#61             0      0      0  00 [------]
--#63          528K      0      0  00 [------]
--#69             0      0      0  00 [------]
--#70          1.2M      0      0  00 [------]
--#72           32K      0      0  00 [------]
--#75          248K      0      0  00 [------]
--#76             0      0      0  00 [------]
--#77             0      0      0  00 [------]
--#78          632K      0      0  00 [------]
--#83          296K      0      0  00 [------]
--#89             0      0      0  00 [------]
--#91            4K      0      0  00 [------]
--#95             0      0      0  00 [------]
--#96             0      0      0  00 [------]
--#105            0      0      0  00 [------]
--#113            0      0      0  00 [------]
--#118            0      0      0  00 [------]
--#127            0      0      0  00 [------]
--#255         200M      0      0  00 [------]
-+User quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+User ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
-+-N option
-+checking report command (type=u)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking timer command (type=u)
-+-L -U options
-+checking report command (type=u)
-+User quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+User ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking limit command, pass 1 (type=u)
--Disk quotas for User #255 (255)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   100M   100M  00 [-none-] [SCR_MNT]
--Disk quotas for User #255 (255)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1      1      2  00  [1 day] [SCR_MNT]
--
--checking warn command (type=u)
--Disk quotas for User #255 (255)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   100M   100M  04 [-none-] [SCR_MNT]
--Disk quotas for User #255 (255)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1      1      2  03  [1 day] [SCR_MNT]
--
--checking limit command, pass2 (type=u)
--Disk quotas for User #255 (255)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   300M   400M  00 [------] [SCR_MNT]
--Disk quotas for User #255 (255)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1     8k   8.8k  03 [------] [SCR_MNT]
-+-t option
-+checking report command (type=u)
-+User quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+User ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-n option
-+checking report command (type=u)
-+User quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+User ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-h option
-+checking report command (type=u)
-+User quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+User ID Used Soft Hard Warn/Grace Used Soft Hard Warn/Grace 
-+---------- --------------------------------- --------------------------------- 
-+fsgqa 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days]
-+
-+quot options test
-+
-+checking quot command (type=u)
-+SCRATCH_DEV (SCRATCH_MNT) User:
-+ 1024 15 fsgqa 
-+-f option
-+checking quot command (type=u)
-+SCRATCH_DEV (SCRATCH_MNT) User:
-+ 1024 15 fsgqa 
-+-n option
-+checking quot command (type=u)
-+SCRATCH_DEV (SCRATCH_MNT) User:
-+ 1024 15 #ID 
-+
-+checking quota command (type=u)
-+Disk quotas for User fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-f option
-+checking quota command (type=u)
-+Disk quotas for User fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-N option
-+checking quota command (type=u)
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-n option
-+checking quota command (type=u)
-+Disk quotas for User #ID (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-h option
-+checking quota command (type=u)
-+Disk quotas for User fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+disable quota
-+
-+checking disable command (type=u)
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: OFF
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [3 days]
-+Inodes grace time: [3 days]
-+Realtime Blocks grace time: [7 days]
-+
-+checking report command (type=u)
-+fsgqa 1024 512 2048 00 [--------] 15 10 20 00 [--------]
-+
-+expect a remove error at here
-+checking remove command (type=u)
-+XFS_QUOTARM: Invalid argument
-+
-+checking enable command (type=u)
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [3 days]
-+Inodes grace time: [3 days]
-+Realtime Blocks grace time: [7 days]
-+
-+checking report command (type=u)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+off and remove test
-+
-+checking limit command (type=u, bsoft=100m, bhard=100m, isoft=100, ihard=100)
-+
-+checking quota command (type=u)
-+SCRATCH_DEV 1024 102400 102400 00 [--------] 15 100 100 00 [--------] SCRATCH_MNT
-+
-+checking off command (type=u)
-+User quota are not enabled on SCRATCH_DEV
-+
-+checking state command (type=u)
-+
-+checking remove command (type=u)
-+User quota are not enabled on SCRATCH_DEV
-+
-+checking report command (type=u)
-+
-+quota remount
-+
-+checking report command (type=u)
-+fsgqa 1024 0 0 00 [--------] 15 0 0 00 [--------]
-+
-+restore quota
- 
--checking dump command (type=u)
--fs = [SCR_DEV]
--255         614400  819200    8000    8800  634880  839680
--changing limits (type=u)
--Disk quotas for User #255 (255)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1   1000   1.1k  00 [------] [SCR_MNT]
- checking restore command (type=u)
--Disk quotas for User #255 (255)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1     8k   8.8k  00 [------] [SCR_MNT]
-+
-+checking report command (type=u)
-+fsgqa 1024 512 2048 00 [7 days] 15 10 20 00 [7 days]
-+
- 
- checking state command (type=u)
--User quota state on [SCR_MNT] ([SCR_DEV])
--  Accounting: ON
--  Enforcement: ON
--  Inode: #[INO] (X blocks, Y extents)
--Blocks grace time: [3 days]
--Inodes grace time: [2 days]
-+User quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [7 days]
-+Inodes grace time: [7 days]
- Realtime Blocks grace time: [7 days]
-+cleanup files
-+----------------------- gquota,sync ---------------------------
-+init quota limit and timer, and dump it
-+create_files 1024k 15
-+quota remount
-+
-+checking quot command (type=g)
-+SCRATCH_DEV (SCRATCH_MNT) Group:
-+ 1024 15 fsgqa 
-+
-+checking timer command (type=g)
- 
-+checking limit command (type=g, bsoft=512k, bhard=2048k, isoft=10, ihard=20)
- 
-+checking dump command (type=g)
-+report options test
-+
-+checking report command (type=g)
-+Group quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Group ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-N option
-+checking report command (type=g)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-L -U options
-+checking report command (type=g)
-+Group quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Group ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-t option
-+checking report command (type=g)
-+Group quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Group ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
-+-n option
-+checking report command (type=g)
-+Group quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Group ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+-h option
-+checking report command (type=g)
-+Group quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Group ID Used Soft Hard Warn/Grace Used Soft Hard Warn/Grace 
-+---------- --------------------------------- --------------------------------- 
-+fsgqa 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days]
-+
-+quot options test
-+
-+checking quot command (type=g)
-+SCRATCH_DEV (SCRATCH_MNT) Group:
-+ 1024 15 fsgqa 
-+-f option
- checking quot command (type=g)
-+SCRATCH_DEV (SCRATCH_MNT) Group:
-+ 1024 15 fsgqa 
-+-n option
-+checking quot command (type=g)
-+SCRATCH_DEV (SCRATCH_MNT) Group:
-+ 1024 15 #ID 
-+
-+checking quota command (type=g)
-+Disk quotas for Group fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-f option
-+checking quota command (type=g)
-+Disk quotas for Group fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-N option
-+checking quota command (type=g)
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-n option
-+checking quota command (type=g)
-+Disk quotas for Group #ID (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-h option
-+checking quota command (type=g)
-+Disk quotas for Group fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+disable quota
-+
-+checking disable command (type=g)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: OFF
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [3 days]
-+Inodes grace time: [3 days]
-+Realtime Blocks grace time: [7 days]
- 
- checking report command (type=g)
--Group quota on [SCR_MNT] ([SCR_DEV])
--                        Blocks              
--Group ID     Used   Soft   Hard Warn/Grace   
------------ --------------------------------- 
--#0          85.0M      0      0  00 [------]
--#1           6.1M      0      0  00 [------]
--#2           676K      0      0  00 [------]
--#3           1.9M      0      0  00 [------]
--#4           604K      0      0  00 [------]
--#5           224K      0      0  00 [------]
--#6           504K      0      0  00 [------]
--#7             4K      0      0  00 [------]
--#8           400K      0      0  00 [------]
--#9              0      0      0  00 [------]
--#10           56K      0      0  00 [------]
--#11          2.6M      0      0  00 [------]
--#12          892K      0      0  00 [------]
--#13             0      0      0  00 [------]
--#14             0      0      0  00 [------]
--#15             0      0      0  00 [------]
--#17             0      0      0  00 [------]
--#20             0      0      0  00 [------]
--#21          616K      0      0  00 [------]
--#22             0      0      0  00 [------]
--#23          472K      0      0  00 [------]
--#24             0      0      0  00 [------]
--#25           36K      0      0  00 [------]
--#26          1.1M      0      0  00 [------]
--#27          128K      0      0  00 [------]
--#28             0      0      0  00 [------]
--#30          248K      0      0  00 [------]
--#31          1.0M      0      0  00 [------]
--#33             0      0      0  00 [------]
--#34             0      0      0  00 [------]
--#35             0      0      0  00 [------]
--#36             0      0      0  00 [------]
--#37             0      0      0  00 [------]
--#38          240K      0      0  00 [------]
--#41          412K      0      0  00 [------]
--#43           32K      0      0  00 [------]
--#44             0      0      0  00 [------]
--#45             0      0      0  00 [------]
--#46             0      0      0  00 [------]
--#49             0      0      0  00 [------]
--#51          124K      0      0  00 [------]
--#53             0      0      0  00 [------]
--#55             0      0      0  00 [------]
--#56          176K      0      0  00 [------]
--#57          288K      0      0  00 [------]
--#58          528K      0      0  00 [------]
--#59             0      0      0  00 [------]
--#67            4K      0      0  00 [------]
--#69          624K      0      0  00 [------]
--#70             0      0      0  00 [------]
--#71             0      0      0  00 [------]
--#72          632K      0      0  00 [------]
--#73             0      0      0  00 [------]
--#75             0      0      0  00 [------]
--#79          100K      0      0  00 [------]
--#87          1.2M      0      0  00 [------]
--#88             0      0      0  00 [------]
--#91             0      0      0  00 [------]
--#94            4K      0      0  00 [------]
--#99          248K      0      0  00 [------]
--#101            0      0      0  00 [------]
--#108            0      0      0  00 [------]
--#112          64K      0      0  00 [------]
--#115         296K      0      0  00 [------]
--#121            0      0      0  00 [------]
--#127            0      0      0  00 [------]
--#254         200M      0      0  00 [------]
-+fsgqa 1024 512 2048 00 [--------] 15 10 20 00 [--------]
- 
-+expect a remove error at here
-+checking remove command (type=g)
-+XFS_QUOTARM: Invalid argument
- 
--checking timer command (type=g)
-+checking enable command (type=g)
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [3 days]
-+Inodes grace time: [3 days]
-+Realtime Blocks grace time: [7 days]
- 
--checking limit command, pass 1 (type=g)
--Disk quotas for Group #254 (254)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   100M   100M  00 [-none-] [SCR_MNT]
--Disk quotas for Group #254 (254)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1      1      2  00  [1 day] [SCR_MNT]
--
--checking warn command (type=g)
--Disk quotas for Group #254 (254)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   100M   100M  04 [-none-] [SCR_MNT]
--Disk quotas for Group #254 (254)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1      1      2  03  [1 day] [SCR_MNT]
--
--checking limit command, pass2 (type=g)
--Disk quotas for Group #254 (254)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]      200M   300M   400M  00 [------] [SCR_MNT]
--Disk quotas for Group #254 (254)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1     8k   8.8k  03 [------] [SCR_MNT]
-+checking report command (type=g)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+off and remove test
-+
-+checking limit command (type=g, bsoft=100m, bhard=100m, isoft=100, ihard=100)
-+
-+checking quota command (type=g)
-+SCRATCH_DEV 1024 102400 102400 00 [--------] 15 100 100 00 [--------] SCRATCH_MNT
-+
-+checking off command (type=g)
-+Group quota are not enabled on SCRATCH_DEV
-+
-+checking state command (type=g)
-+
-+checking remove command (type=g)
-+Group quota are not enabled on SCRATCH_DEV
-+
-+checking report command (type=g)
-+
-+quota remount
-+
-+checking report command (type=g)
-+fsgqa 1024 0 0 00 [--------] 15 0 0 00 [--------]
-+
-+restore quota
- 
--checking dump command (type=g)
--fs = [SCR_DEV]
--254         614400  819200    8000    8800  634880  839680
--changing limits (type=g)
--Disk quotas for Group #254 (254)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1   1000   1.1k  00 [------] [SCR_MNT]
- checking restore command (type=g)
--Disk quotas for Group #254 (254)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         1     8k   8.8k  00 [------] [SCR_MNT]
-+
-+checking report command (type=g)
-+fsgqa 1024 512 2048 00 [7 days] 15 10 20 00 [7 days]
-+
- 
- checking state command (type=g)
--Group quota state on [SCR_MNT] ([SCR_DEV])
--  Accounting: ON
--  Enforcement: ON
--  Inode: #[INO] (X blocks, Y extents)
--Blocks grace time: [3 days]
--Inodes grace time: [2 days]
-+Group quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [7 days]
-+Inodes grace time: [7 days]
- Realtime Blocks grace time: [7 days]
-+cleanup files
-+----------------------- pquota,sync ---------------------------
-+init quota limit and timer, and dump it
-+create_files 1024k 15
-+quota remount
- 
-+checking quot command (type=p)
-+SCRATCH_DEV (SCRATCH_MNT) Project:
-+ 1024 15 fsgqa 
- 
-+checking timer command (type=p)
- 
--checking quot command (type=p)
-+checking limit command (type=p, bsoft=512k, bhard=2048k, isoft=10, ihard=20)
-+
-+checking dump command (type=p)
-+report options test
- 
- checking report command (type=p)
--Project quota on [SCR_MNT] ([SCR_DEV])
--                        Blocks              
--Project ID   Used   Soft   Hard Warn/Grace   
------------ --------------------------------- 
--#0          85.0M      0      0  00 [------]
--#1           6.1M      0      0  00 [------]
--#2           676K      0      0  00 [------]
--#3           1.9M      0      0  00 [------]
--#4           604K      0      0  00 [------]
--#5           224K      0      0  00 [------]
--#6           504K      0      0  00 [------]
--#7             4K      0      0  00 [------]
--#8           400K      0      0  00 [------]
--#9              0      0      0  00 [------]
--#10           56K      0      0  00 [------]
--#11          2.6M      0      0  00 [------]
--#12          892K      0      0  00 [------]
--#13             0      0      0  00 [------]
--#14             0      0      0  00 [------]
--#15             0      0      0  00 [------]
--#17             0      0      0  00 [------]
--#20             0      0      0  00 [------]
--#21          616K      0      0  00 [------]
--#22             0      0      0  00 [------]
--#23          472K      0      0  00 [------]
--#24             0      0      0  00 [------]
--#25           36K      0      0  00 [------]
--#26          1.1M      0      0  00 [------]
--#27          128K      0      0  00 [------]
--#28             0      0      0  00 [------]
--#30          248K      0      0  00 [------]
--#31          1.0M      0      0  00 [------]
--#33             0      0      0  00 [------]
--#34             0      0      0  00 [------]
--#35             0      0      0  00 [------]
--#36             0      0      0  00 [------]
--#37             0      0      0  00 [------]
--#38          240K      0      0  00 [------]
--#41          412K      0      0  00 [------]
--#43           32K      0      0  00 [------]
--#44             0      0      0  00 [------]
--#45             0      0      0  00 [------]
--#46             0      0      0  00 [------]
--#49             0      0      0  00 [------]
--#51          124K      0      0  00 [------]
--#53             0      0      0  00 [------]
--#55             0      0      0  00 [------]
--#56          176K      0      0  00 [------]
--#57          288K      0      0  00 [------]
--#58          528K      0      0  00 [------]
--#59             0      0      0  00 [------]
--#67            4K      0      0  00 [------]
--#69          624K      0      0  00 [------]
--#70             0      0      0  00 [------]
--#71             0      0      0  00 [------]
--#72          632K      0      0  00 [------]
--#73             0      0      0  00 [------]
--#75             0      0      0  00 [------]
--#79          100K      0      0  00 [------]
--#87          1.2M      0      0  00 [------]
--#88             0      0      0  00 [------]
--#91             0      0      0  00 [------]
--#94            4K      0      0  00 [------]
--#99          248K      0      0  00 [------]
--#101            0      0      0  00 [------]
--#108            0      0      0  00 [------]
--#112          64K      0      0  00 [------]
--#115         296K      0      0  00 [------]
--#121            0      0      0  00 [------]
--#127            0      0      0  00 [------]
--#254         200M   300M   400M  00 [------]
-+Project quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Project ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
-+-N option
-+checking report command (type=p)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking timer command (type=p)
-+-L -U options
-+checking report command (type=p)
-+Project quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Project ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking limit command, pass 1 (type=p)
--Disk quotas for Project #253 (253)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0   100M   100M  00 [------] [SCR_MNT]
--Disk quotas for Project #253 (253)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0      1      2  00 [------] [SCR_MNT]
--
--checking warn command (type=p)
--Disk quotas for Project #253 (253)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0   100M   100M  00 [------] [SCR_MNT]
--Disk quotas for Project #253 (253)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0      1      2  00 [------] [SCR_MNT]
--
--checking limit command, pass2 (type=p)
--Disk quotas for Project #253 (253)
--Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0   300M   400M  00 [------] [SCR_MNT]
--Disk quotas for Project #253 (253)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0     8k   8.8k  00 [------] [SCR_MNT]
-+-t option
-+checking report command (type=p)
-+Project quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Project ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking dump command (type=p)
--fs = [SCR_DEV]
--253         614400  819200    8000    8800  634880  839680
--fs = [SCR_DEV]
--254         614400  819200    8000    8800  634880  839680
--changing limits (type=p)
--Disk quotas for Project #253 (253)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0   1000   1.1k  00 [------] [SCR_MNT]
--checking restore command (type=p)
--Disk quotas for Project #253 (253)
--Filesystem    Files  Quota  Limit Warn/Time    Mounted on
--[SCR_DEV]         0     8k   8.8k  00 [------] [SCR_MNT]
-+-n option
-+checking report command (type=p)
-+Project quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Project ID Used Soft Hard Warn/Grace Used Soft Hard Warn/ Grace 
-+---------- -------------------------------------------------- -------------------------------------------------- 
-+#ID 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
- 
--checking state command (type=p)
--Project quota state on [SCR_MNT] ([SCR_DEV])
--  Accounting: ON
--  Enforcement: ON
--  Inode: #[INO] (X blocks, Y extents)
-+-h option
-+checking report command (type=p)
-+Project quota on SCRATCH_MNT (SCRATCH_DEV)
-+ Blocks Inodes 
-+Project ID Used Soft Hard Warn/Grace Used Soft Hard Warn/Grace 
-+---------- --------------------------------- --------------------------------- 
-+fsgqa 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days]
-+
-+quot options test
-+
-+checking quot command (type=p)
-+SCRATCH_DEV (SCRATCH_MNT) Project:
-+ 1024 15 fsgqa 
-+-f option
-+checking quot command (type=p)
-+SCRATCH_DEV (SCRATCH_MNT) Project:
-+ 1024 15 fsgqa 
-+-n option
-+checking quot command (type=p)
-+SCRATCH_DEV (SCRATCH_MNT) Project:
-+ 1024 15 #ID 
-+
-+checking quota command (type=p)
-+Disk quotas for Project fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-f option
-+checking quota command (type=p)
-+Disk quotas for Project fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-N option
-+checking quota command (type=p)
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-n option
-+checking quota command (type=p)
-+Disk quotas for Project #ID (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1024 512 2048 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+-h option
-+checking quota command (type=p)
-+Disk quotas for Project fsgqa (ID)
-+Filesystem Blocks Quota Limit Warn/Time Files Quota Limit Warn/Time Mounted on
-+SCRATCH_DEV 1M 512K 2M 00 [3 days] 15 10 20 00 [3 days] SCRATCH_MNT
-+disable quota
-+
-+checking disable command (type=p)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: OFF
-+ Inode: #[INO] (X blocks, Y extents)
- Blocks grace time: [3 days]
--Inodes grace time: [2 days]
-+Inodes grace time: [3 days]
- Realtime Blocks grace time: [7 days]
- 
-+checking report command (type=p)
-+fsgqa 1024 512 2048 00 [--------] 15 10 20 00 [--------]
-+
-+expect a remove error at here
-+checking remove command (type=p)
-+XFS_QUOTARM: Invalid argument
-+
-+checking enable command (type=p)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [3 days]
-+Inodes grace time: [3 days]
-+Realtime Blocks grace time: [7 days]
-+
-+checking report command (type=p)
-+fsgqa 1024 512 2048 00 [3 days] 15 10 20 00 [3 days]
-+
-+off and remove test
-+
-+checking limit command (type=p, bsoft=100m, bhard=100m, isoft=100, ihard=100)
- 
-+checking quota command (type=p)
-+SCRATCH_DEV 1024 102400 102400 00 [--------] 15 100 100 00 [--------] SCRATCH_MNT
- 
-+checking off command (type=p)
-+Project quota are not enabled on SCRATCH_DEV
-+
-+checking state command (type=p)
-+
-+checking remove command (type=p)
-+Project quota are not enabled on SCRATCH_DEV
-+
-+checking report command (type=p)
-+
-+quota remount
-+
-+checking report command (type=p)
-+fsgqa 1024 0 0 00 [--------] 15 0 0 00 [--------]
-+
-+restore quota
-+
-+checking restore command (type=p)
-+
-+checking report command (type=p)
-+fsgqa 1024 512 2048 00 [7 days] 15 10 20 00 [7 days]
-+
-+
-+checking state command (type=p)
-+Project quota state on SCRATCH_MNT (SCRATCH_DEV)
-+ Accounting: ON
-+ Enforcement: ON
-+ Inode: #[INO] (X blocks, Y extents)
-+Blocks grace time: [7 days]
-+Inodes grace time: [7 days]
-+Realtime Blocks grace time: [7 days]
-+cleanup files
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 9f8ca0f..76cec6b 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -103,7 +103,7 @@
- 103 metadata dir ioctl auto quick
- 104 growfs ioctl prealloc auto stress
- 105 fuzzers
--106 quota
-+106 auto quick quota
- 107 quota
- 108 quota auto quick
- 109 metadata auto
--- 
-2.7.4
+ #undef TRACE_INCLUDE_PATH
 
 _______________________________________________
 xfs mailing list
