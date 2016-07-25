@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E03E87CA0
-	for <xfs@oss.sgi.com>; Sun, 24 Jul 2016 19:24:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A0FDC8F8035
-	for <xfs@oss.sgi.com>; Sun, 24 Jul 2016 17:24:10 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	zVwMjS8H8Fs9pCB6 for <xfs@oss.sgi.com>;
-	Sun, 24 Jul 2016 17:24:07 -0700 (PDT)
-Date: Mon, 25 Jul 2016 10:23:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: hardlinking and deleting milions of small files
-Message-ID: <20160725002334.GG12670@dastard>
-References: <201607241438.10035.arekm@maven.pl>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201607241438.10035.arekm@maven.pl>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BCF617CCD
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 09:10:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DCB7304051
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 07:10:09 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gx7gLvahcXBcxrik (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 25 Jul 2016 07:10:08 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v24 08/22] richacl: Permission check algorithm
+Date: Mon, 25 Jul 2016 16:09:05 +0200
+Message-Id: <1469455759-6141-9-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1469455759-6141-1-git-send-email-agruenba@redhat.com>
+References: <1469455759-6141-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +23,178 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-T24gU3VuLCBKdWwgMjQsIDIwMTYgYXQgMDI6Mzg6MTBQTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IAo+IEhlbGxvLgo+IAo+IEknbSB1c2luZyByc25hcHNob3QgdG8gYmFj
-a3VwIGJpZyBzZXJ2ZXJzIChsaWtlIDVUQiBmcywgMjUgMDAwIDAwMCBpbm9kZXMsIAo+IHNtYWxs
-IGZpbGVzIC0gbWFpbGJveGVzIGluIGZvcm0gb2YgbWFpbGRpcnMsIHNvIGVhY2ggbWFpbCBpcyBh
-IHNlcGFyYXRlIGZpbGUpLiAKPiBCYWNrdXAgc2VydmVyIC0ga2VybmVsIDQuNi4zLCBWNCB4ZnMg
-ZmlsZXN5c3RlbXMuCgpXaGF0IHN0b3JhZ2U/IFdoYXQgbW91bnQgb3B0aW9ucz8gV2hhdCBpcyB0
-aGUgeGZzX2luZm8gb3V0cHV0PwoKKC9tZSBwb2ludHMgYXQKaHR0cDovL3hmcy5vcmcvaW5kZXgu
-cGhwL1hGU19GQVEjUTpfV2hhdF9pbmZvcm1hdGlvbl9zaG91bGRfSV9pbmNsdWRlX3doZW5fcmVw
-b3J0aW5nX2FfcHJvYmxlbS4zRikKCj4gY3AgLWFsIGZvciB0aGF0IGFtb3VudCB0YWtlcyBhYm91
-dCAxLjUgZGF5Lgo+IHJtIC1yZiBvZiBoYXJkbGlua2VkIGNvcHkgdGFrZXMgYW5vdGhlciAxLjUg
-ZGF5CgpTbyB3aGF0J3MgdGhlIGJvdHRsZW5lY2s/IFJlYWRpbmcgdGhlIGRpcmVjdG9yeSBzdHJ1
-Y3R1cmUvaW5vZGVzCmludG8gbWVtb3J5IHRvIG1ha2UgdGhlIGNvcHk/IFdoYXQncyB0aGUgSU8g
-cGVyZm9ybWFuY2UgbG9vayBsaWtlPwpBcmUgdGhleSBDUFUgYm91bmQ/IFdoYXQgZWxzZSBpcyBn
-ZW5lcmF0aW5nIElPIGxvYWQgYXQgdGhlIHNhbWUKdGltZT8gSG93IGJpZyBhcmUgdGhlIGluZGl2
-aWR1YWwgZGlyZWN0b3JpZXM/IEhvdyBmdWxsIGlzIHRoZQpmaWxlc3lzdGVtPyAgSG93IG1hbnkg
-aGFyZGxpbmtzIGluIGEgImNvcHkiPwoKRldJVzwgeW91J3ZlIGdvdCAyNU0gaW5vZGVzIGluIHRo
-ZSBmaWxlc3lzdGVtIC0gaG93IG1hbnkgaGFyZGxpbmtzCmRvIHlvdSBoYXZlIGluIHRoZSBmaWxl
-c3lzdGVtPyAxMDBNPyAyMDBNPyAxQj8gaS5lLiB3aGF0J3MgdGhlIHNjYWxlCm9mIHRoZSBkaXJl
-Y3Rvcnkgc3RydWN0dXJlIHRoYXQgY29udGFpbnMgYWxsIHRoZSBoYXJkIGxpbmtzPwoKPiAoYW5k
-IHRvb25zIG9mIHJhbSBmb3IgdGhlc2Ugb3BlcmF0aW9uczsgY2F1c2luZyBPT00gdW50aWwgcmVj
-ZW50IGtlcm5lbHMgbWFkZSAKPiByZWNsYWltIGJldHRlciwgc28gbm8gbW9yZSBPT00pCgpXaGF0
-IG9vbSBwcm9ibGVtcz8gU2xhYnRvcCBvdXRwdXQgZHVyaW5nIGEgdGVzdD8KCj4gTm93IHRoZSB3
-ZWlyZCBwYXJ0IC0gc2ltaWxhciBvcGVyYXRpb25zIG9uIGV4dDQgZmluaXNoIGluIG1hdHRlciBv
-ZiBob3Vycy4KClNvIHlvdSBwcm9iYWJseSBuZWVkIHRvIGlkZW50aWZ5IHdoZXJlIHRoZSBkaWZm
-ZXJlbmNlIGluIGJlaGF2aW91cgppcyAtIHJlYWRpbmcgZnJvbSBkaXNrLCB3cml0aW5nIHRvIGRp
-c2ssIENQVSB1c2FnZSwgZGlyZWN0b3J5IGVudHJ5CmNyZWF0aW9uL3JlbW92YWwgc3BlZWQsIGV0
-Yy4KCj4gcHMuIERpZG4ndCBkbyBzY2llbnRpZmljIGNvbXBhcmlzb24gKEknbSBqdXN0IHZpZXdp
-bmcgYmFja3VwIGxvZ3Mgb2YgdHdvIAo+IHNpbWlsYXIgbWFpbCBzZXJ2ZXJzIChzaW1pbGFyIGhh
-cmR3YXJlLCBzaW1pbGFyIHN0b3JhZ2Ugc2l6ZSkgYmVpbmcgYmFja2VkIHVwIAo+IHRvIHNpbmds
-ZSBiYWNrdXAgc2VydmVyIG9udG8gdHdvIHBhcnRpdGlvbnMgLSBvbmUgd2l0aCB4ZnMgYW5kIG9u
-ZSB3aXRoIGV4dDQgCj4gb24gaXQpKQoKU28gdGhlIC9kZXN0aW5hdGlvbi8gZmlsZXMgaXMgZWl0
-aGVyIGV4dDQgb3IgWEZTLCBidXQgdGhlIHNvdXJjZQpmaWxlc3lzdGVtIGlzIHRoZSBzYW1lPyBT
-byBob3cgZG9lcyAiY3AgLWFsIiB3b3JrIHRvIGNyZWF0ZQpoYXJkbGlua3Mgd2hlbiBjb3B5aW5n
-IHRvIGEgZGlmZmVyZW50IGZpbGVzeXN0ZW0/IElmIHRoaXMgaXMgYSBjb3B5CnRvIGEgZGlmZmVy
-ZW50IGZpbGVzeXN0ZW0sIHRoZW4gaXQncyBhIHZlcnkgZGlmZmVyZW50IHByb2JsZW0gdG8KImNy
-ZWF0ZS9yZW1vdmluZyBoYXJkbGlua3MgYXJlIHNsb3ciLgoKQ2xlYXJseSBJIGhhdmVuJ3QgdW5k
-ZXJzdG9vZCB3aGF0IHlvdSBhcmUgdHJ5aW5nIHRvIGRlc2NyaWJlLCBzbyBjYW4KeW91IHBsZWFz
-ZSBkZXNjcmliZSB0aGUgcHJvYmxlbSBpbiBtb3JlIGRldGFpbCBhbmQgbm90IGFzc3VtZSBJIGtu
-b3cKYW55dGhpbmcgYWJvdXQgd2hlcmUgeW91IGFyZSBjb3B5aW5nIGZyb20vdG8sIHdoYXQgdGhl
-IGhhcmR3YXJlIG9yCmZpbGVzeXN0ZW0gbGF5b3V0IGlzLCBldGMuCgpJIGtub3cgSSBoYXZlbid0
-IGFuc3dlcmVkIHlvdXIgcXVlc3Rpb24gYW5kIGp1c3QgZmlyZWQgYmFjayBhIGJ1bmNoCm9mIHF1
-ZXN0aW9ucywgYnV0IEkgbmVlZCB0byBrbm93IHNwZWNpZmljcyB0byBiZSBhYmxlIHRvIGhhdmUg
-YW55CmNoYW5jZSBvZiB1bmRlcnN0YW5kaW5nIHRoZSBwcm9ibGVtIHlvdSBhcmUgaGF2aW5nLgoK
-Q2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+A richacl roughly grants a requested access if the NFSv4 acl in the
+richacl grants the requested permissions according to the NFSv4
+permission check algorithm and the file mask that applies to the process
+includes the requested permissions.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@fieldses.org>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 128 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   1 +
+ 2 files changed, 129 insertions(+)
+
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 2072cf4..b7e96d0 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -175,3 +175,131 @@ richacl_want_to_mask(unsigned int want)
+ 		mask |= RICHACE_WRITE_DATA;
+ 	return mask;
+ }
++
++/**
++ * richacl_permission  -  richacl permission check algorithm
++ * @inode:	inode to check
++ * @acl:	rich acl of the inode
++ * @want:	requested access (MAY_* flags)
++ *
++ * Checks if the current process is granted @want flags in @acl.
++ */
++int
++richacl_permission(struct inode *inode, const struct richacl *acl,
++		   int want)
++{
++	const struct richace *ace;
++	unsigned int mask = richacl_want_to_mask(want);
++	unsigned int requested = mask, denied = 0;
++	int in_owning_group = in_group_p(inode->i_gid);
++	int in_owner_or_group_class = in_owning_group;
++
++	/*
++	 * A process is
++	 *   - in the owner file class if it owns the file,
++	 *   - in the group file class if it is in the file's owning group or
++	 *     it matches any of the user or group entries, and
++	 *   - in the other file class otherwise.
++	 * The file class is only relevant for determining which file mask to
++	 * apply, which only happens for masked acls.
++	 */
++	if (acl->a_flags & RICHACL_MASKED) {
++		if ((acl->a_flags & RICHACL_WRITE_THROUGH) &&
++		    uid_eq(current_fsuid(), inode->i_uid)) {
++			denied = requested & ~acl->a_owner_mask;
++			goto out;
++		}
++	} else {
++		/*
++		 * When the acl is not masked, there is no need to determine if
++		 * the process is in the group class and we can break out
++		 * earlier of the loop below.
++		 */
++		in_owner_or_group_class = 1;
++	}
++
++	/*
++	 * Check if the acl grants the requested access and determine which
++	 * file class the process is in.
++	 */
++	richacl_for_each_entry(ace, acl) {
++		unsigned int ace_mask = ace->e_mask;
++
++		if (richace_is_inherit_only(ace))
++			continue;
++		if (richace_is_owner(ace)) {
++			if (!uid_eq(current_fsuid(), inode->i_uid))
++				continue;
++			goto entry_matches_owner;
++		} else if (richace_is_group(ace)) {
++			if (!in_owning_group)
++				continue;
++		} else if (richace_is_unix_user(ace)) {
++			if (!uid_eq(current_fsuid(), ace->e_id.uid))
++				continue;
++			if (uid_eq(current_fsuid(), inode->i_uid))
++				goto entry_matches_owner;
++		} else if (richace_is_unix_group(ace)) {
++			if (!in_group_p(ace->e_id.gid))
++				continue;
++		} else
++			goto entry_matches_everyone;
++
++		/*
++		 * Apply the group file mask to entries other than owner@ and
++		 * everyone@ or user entries matching the owner.  This ensures
++		 * that we grant the same permissions as the acl computed by
++		 * richacl_apply_masks().
++		 *
++		 * Without this restriction, the following richacl would grant
++		 * rw access to processes which are both the owner and in the
++		 * owning group, but not to other users in the owning group,
++		 * which could not be represented without masks:
++		 *
++		 *  owner:rw::mask
++		 *  group@:rw::allow
++		 */
++		if ((acl->a_flags & RICHACL_MASKED) && richace_is_allow(ace))
++			ace_mask &= acl->a_group_mask;
++
++entry_matches_owner:
++		/* The process is in the owner or group file class. */
++		in_owner_or_group_class = 1;
++
++entry_matches_everyone:
++		/* Check which mask flags the ACE allows or denies. */
++		if (richace_is_deny(ace))
++			denied |= ace_mask & mask;
++		mask &= ~ace_mask;
++
++		/*
++		 * Keep going until we know which file class
++		 * the process is in.
++		 */
++		if (!mask && in_owner_or_group_class)
++			break;
++	}
++	denied |= mask;
++
++	if (acl->a_flags & RICHACL_MASKED) {
++		/*
++		 * The file class a process is in determines which file mask
++		 * applies.  Check if that file mask also grants the requested
++		 * access.
++		 */
++		if (uid_eq(current_fsuid(), inode->i_uid))
++			denied |= requested & ~acl->a_owner_mask;
++		else if (in_owner_or_group_class)
++			denied |= requested & ~acl->a_group_mask;
++		else {
++			if (acl->a_flags & RICHACL_WRITE_THROUGH)
++				denied = requested & ~acl->a_other_mask;
++			else
++				denied |= requested & ~acl->a_other_mask;
++		}
++	}
++
++out:
++	return denied ? -EACCES : 0;
++}
++EXPORT_SYMBOL_GPL(richacl_permission);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 70923f8..beeec35 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -177,5 +177,6 @@ extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+ extern void richace_copy(struct richace *, const struct richace *);
+ extern int richacl_masks_to_mode(const struct richacl *);
+ extern unsigned int richacl_mode_to_mask(umode_t);
++extern int richacl_permission(struct inode *, const struct richacl *, int);
+ 
+ #endif /* __RICHACL_H */
+-- 
+2.5.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
