@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E49117CA7
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 22:13:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A863D8F8035
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 20:13:29 -0700 (PDT)
-Received: from elaine.keithp.com (home.keithp.com [63.227.221.253]) by
-	cuda.sgi.com with ESMTP id eLl9FTund42B1NEA for
-	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 20:13:27 -0700 (PDT)
-From: Keith Packard <keithp@keithp.com>
-Subject: Re: Subtle races between DAX mmap fault and write path
-In-Reply-To: <20160801014645.GI16044@dastard>
-References: <20160727120745.GI6860@quack2.suse.cz>
-	<20160727211039.GA20278@linux.intel.com>
-	<20160727221949.GU16044@dastard>
-	<20160728081033.GC4094@quack2.suse.cz>
-	<20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard>
-	<CAPcyv4gLTkx4ne7pWuMSqfFpLoOBx=TowvcWXw9UGUxn=jd-Tg@mail.gmail.com>
-	<20160801014645.GI16044@dastard>
-Date: Sun, 31 Jul 2016 20:13:23 -0700
-Message-ID: <86k2g15gh8.fsf@hiro.keithp.com>
+	by oss.sgi.com (Postfix) with ESMTP id E7C7E7CA3
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 10:13:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B97D88F8049
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 08:13:31 -0700 (PDT)
+Received: from mail-it0-f48.google.com (mail-it0-f48.google.com
+	[209.85.214.48]) by cuda.sgi.com with ESMTP id ZLC41xpYt8Uap5BO
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Jul 2016 08:13:29 -0700 (PDT)
+Received: by mail-it0-f48.google.com with SMTP id f6so86634574ith.1
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 08:13:29 -0700 (PDT)
 MIME-Version: 1.0
+From: David Binderman <linuxdev.baldrick@gmail.com>
+Date: Mon, 25 Jul 2016 16:13:28 +0100
+Message-ID: <CAMzoamagYyR5x4UWfLb1HZ5zf4ZYQzEpTC8Q-89gd0pA4dTK5g@mail.gmail.com>
+Subject: xfs_icache.c:1298]: (style) Redundant condition
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,70 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6893870862725997970=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: david@fromorbit.com, xfs@oss.sgi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dcb314@hotmail.com
 
---===============6893870862725997970==
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Hello there,
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+linux-4.7/fs/xfs/xfs_icache.c:1298]: (style) Redundant condition:
+eofb. '!eofb || (eofb && eofb.eof_scan_owner!=0)' is equivalent to
+'!eofb || eofb.eof_scan_owner!=0'
 
-Dave Chinner <david@fromorbit.com> writes:
+Source code is
 
-> So we'd see that from the point of view of a torn single sector
-> write. Ok, so we better limit DAX to CRC enabled filesystems to
-> ensure these sorts of events are always caught by the filesystem.
+   ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
 
-Which is the same lack of guarantee that we already get on rotating
-media. Flash media seems to work harder to provide sector atomicity; I
-guess that's a feature?
+Maybe better code
 
-The alternative is to hide metadata behind a translation layer, and
-while that can be done for lame file systems, I'd like to see the raw
-hardware capabilities exposed and then make free software that
-constructs a reliable system on top of that.
+   ASSERT(!eofb || (eofb->eof_scan_owner != 0));
 
-=2D-=20
-=2Dkeith
+Regards
 
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUBV56+VNsiGmkAAAARAQhpyQ/9HRHbTruM/IlU4qAsCUYnMtOVj6TrHBFj
-hSLmYzGF0grZqzxiVMpwlS9SlfC0kj4nK8VPt0Zw7zXUji89CrzMBCf3mD/i0hyh
-lNOmKgaLOnV9Zm6MJH2PXsqEmJLHrcfyKF7OxucGmk4f0ofqlSh+TaGlXl82Yp0b
-3SHg5G0/zewGUWjS46LmPdhhQhyot1IDi4i/KLMUynd6mkTubLCl7rx1NG98meiz
-/+dcayUuZXZpTrnvZ081xPJhedCapcGbxPc5FtMJy0lsaQxTAUqhTO+5GM/CY+mI
-NuD4UUBhCjo9kR1P9e25Z1BUMnNubIC6zToY6OqYpuWY/9j99nO/XKiJ6szaa/Kf
-MvUkXEeCU4RapjBqxUHYOugmWjyrsW3NXdlh/NestCq/DROF3GnDn9rtL+9AGnKJ
-oCaHxgeeqqyZ09jZ+NewkgpwRu+WMsxx5eITVQ/hD5CvXU2mfUb6C2K7G7dS/X3R
-HzXZk6SXz0NwrmN8SPaExVIybg5su6FzxKyvgVaBKnjXYluhm39O4Z7aQIB4pVyA
-cE1AGvYJiiEF1M5UJbf7qT19MXiAA3fYQ9U4ba5m9W5kyuCJGEY8DOVGkNtsV30q
-7vqFCo5San6Xz8bzPmi8C/9Hucd2ZKRf+EpBm/mH3TBazryzi3fqCbUhTkTHdq1F
-KXOEb/PQztQ=
-=em4e
------END PGP SIGNATURE-----
---=-=-=--
-
-
---===============6893870862725997970==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+David Binderman
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6893870862725997970==--
