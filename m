@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B0627CA1
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 06:30:47 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 85FF17CA0
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 06:30:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FF4C8F8035
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 04:30:44 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 166E6AC004
+	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 04:30:45 -0700 (PDT)
 Received: from 406739.com (406739.com [104.168.102.210]) by cuda.sgi.com with
-	ESMTP id LZRqW52i7dOJAuO1 for <xfs@oss.sgi.com>;
-	Mon, 25 Jul 2016 04:30:39 -0700 (PDT)
+	ESMTP id e9wTwaFEnSYRmmtn for <xfs@oss.sgi.com>;
+	Mon, 25 Jul 2016 04:30:44 -0700 (PDT)
 Subject: USB Drives with your Logo Printed
-Message-ID: <41500b52d4d3d09e3200908c8bc7d181@theguardian.com>
-Date: Mon, 25 Jul 2016 13:25:36 +0200
+Message-ID: <ec203cf42df304fd34f72a36710307f5@theguardian.com>
+Date: Mon, 25 Jul 2016 13:25:43 +0200
 From: "Christina" <finerseny@zoho.com>
 MIME-Version: 1.0
 Reply-To: derinsped@aliyun.com
