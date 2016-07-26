@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 252687CA2
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 20:46:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C1A978F8037
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 18:46:50 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MFXQEI71DpCKpvCk for <xfs@oss.sgi.com>;
-	Sun, 31 Jul 2016 18:46:47 -0700 (PDT)
-Date: Mon, 1 Aug 2016 11:46:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Subtle races between DAX mmap fault and write path
-Message-ID: <20160801014645.GI16044@dastard>
-References: <20160727120745.GI6860@quack2.suse.cz>
-	<20160727211039.GA20278@linux.intel.com>
-	<20160727221949.GU16044@dastard>
-	<20160728081033.GC4094@quack2.suse.cz>
-	<20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard>
-	<CAPcyv4gLTkx4ne7pWuMSqfFpLoOBx=TowvcWXw9UGUxn=jd-Tg@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 60E1B7CA0
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2016 11:36:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D7CE0AC001
+	for <xfs@oss.sgi.com>; Tue, 26 Jul 2016 09:36:06 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ItySA9FKTIqCMNH4 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 26 Jul 2016 09:36:05 -0700 (PDT)
+Date: Tue, 26 Jul 2016 12:36:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/47] xfs: fix attr shortform structure alignment on cris
+Message-ID: <20160726163602.GA31917@bfoster.bfoster>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<146907698036.25461.13007151908183013504.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gLTkx4ne7pWuMSqfFpLoOBx=TowvcWXw9UGUxn=jd-Tg@mail.gmail.com>
+In-Reply-To: <146907698036.25461.13007151908183013504.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,81 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
 
-On Fri, Jul 29, 2016 at 05:53:07PM -0700, Dan Williams wrote:
-> On Fri, Jul 29, 2016 at 5:12 PM, Dave Chinner <david@fromorbit.com> wrote:
-....
-> > So what you are saying is that on and ADR machine, we have these
-> > domains w.r.t. power fail:
-> >
-> > cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
-> >
-> > |-------------volatile-------------------|-----persistent--------------|
-> >
-> > because anything that gets to the IMC is guaranteed to be flushed to
-> > stable media on power fail.
-> >
-> > But on a posted-write-buffer system, we have this:
-> >
-> > cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
-> >
-> > |-------------volatile-------------------------------------------|--persistent--|
-> >
-> > IOWs, only things already posted to the media via REQ_FLUSH are
-> > considered stable on persistent media.  What happens in this case
-> > when power fails during a media update? Incomplete writes?
+On Wed, Jul 20, 2016 at 09:56:20PM -0700, Darrick J. Wong wrote:
+> Apparently cris doesn't require structure stride to align with the
+> largest type in the struct, so list[0] isn't at offset 4 like it is
+> everywhere else.  Fix this... insofar as existing XFSes on cris are
+> screwed.
 > 
-> Yes, power failure during a media update will end up with incomplete
-> writes on an 8-byte boundary.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-So we'd see that from the point of view of a torn single sector
-write. Ok, so we better limit DAX to CRC enabled filesystems to
-ensure these sorts of events are always caught by the filesystem.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> >> > Or have we somehow ended up with the fucked up situation where
-> >> > dax_do_io() writes are (effectively) immediately persistent and
-> >> > untracked by internal infrastructure, whilst mmap() writes
-> >> > require internal dirty tracking and fsync() to flush caches via
-> >> > writeback?
-> >>
-> >> dax_do_io() writes are not immediately persistent.  They bypass the
-> >> cpu-cache and cpu-write-bufffer and are ready to be flushed to media
-> >> by REQ_FLUSH or power-fail on an ADR system.
-> >
-> > IOWs, on an ADR system  write is /effectively/ immediately persistent
-> > because if power fails ADR guarantees it will be flushed to stable
-> > media, while on a posted write system it is volatile and will be
-> > lost. Right?
+>  fs/xfs/libxfs/xfs_da_format.h |    1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Right.
-
-Thanks for the clarification.
-
-> > If we track the dirty blocks from write in the radix tree like we
-> > for mmap, then we can just use a normal memcpy() in dax_do_io(),
-> > getting rid of the slow cache bypass that is currently run. Radix
-> > tree updates are much less expensive than a slow memcpy of large
-> > amounts of data, ad fsync can then take care of persistence, just
-> > like we do for mmap.
 > 
-> If we go this route to increase the amount of dirty-data tracking in
-> the radix it raises the priority of one of the items on the backlog;
-> namely, determine the crossover point where wbinvd of the entire cache
-> is faster than a clflush / clwb loop.
-
-Actually, I'd look at it from the other persepctive - at what point
-does fine-grained dirty tracking run faster than the brute force
-flush? If the gains are only marginal, then we need to question
-whether fine grained tracking is worth the complexity at all...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 685f23b..9a492a9 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -629,6 +629,7 @@ typedef struct xfs_attr_shortform {
+>  	struct xfs_attr_sf_hdr {	/* constant-structure header block */
+>  		__be16	totsize;	/* total bytes in shortform list */
+>  		__u8	count;	/* count of active entries */
+> +		__u8	padding;
+>  	} hdr;
+>  	struct xfs_attr_sf_entry {
+>  		__uint8_t namelen;	/* actual length of name (no NULL) */
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
