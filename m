@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E1A407CA0
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 07:07:57 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id F35A77CA0
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 16:51:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 533D4AC002
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 05:07:54 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id YKIGK60YKioBLY3J (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Jul 2016 05:07:49 -0700 (PDT)
-Date: Wed, 27 Jul 2016 14:07:45 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Subtle races between DAX mmap fault and write path
-Message-ID: <20160727120745.GI6860@quack2.suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 53667AC002
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 14:51:37 -0700 (PDT)
+Received: from mail-lf0-f66.google.com (mail-lf0-f66.google.com
+	[209.85.215.66]) by cuda.sgi.com with ESMTP id NDV4DNM9h7m0D8Vx
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Jul 2016 14:51:34 -0700 (PDT)
+Received: by mail-lf0-f66.google.com with SMTP id f93so2721851lfi.0
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 14:51:34 -0700 (PDT)
+Date: Thu, 28 Jul 2016 00:51:30 +0300
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [PATCH 8/9] vfs: hoist the btrfs deduplication ioctl to the vfs
+Message-ID: <20160727215130.GA18996@node.shutemov.name>
+References: <20151219085505.12478.71157.stgit@birch.djwong.org>
+	<20151219085559.12478.33700.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20151219085559.12478.33700.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,80 +33,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, xfs@oss.sgi.com
 
-Hi,
+On Sat, Dec 19, 2015 at 12:55:59AM -0800, Darrick J. Wong wrote:
+> Hoist the btrfs EXTENT_SAME ioctl up to the VFS and make the name
+> more systematic (FIDEDUPERANGE).
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/compat_ioctl.c       |    1 
+>  fs/ioctl.c              |   38 ++++++++++++++++++
+>  fs/read_write.c         |  100 +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/fs.h      |    4 ++
+>  include/uapi/linux/fs.h |   30 ++++++++++++++
+>  5 files changed, 173 insertions(+)
+> 
+> 
+> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+> index 70d4b10..eab31e7 100644
+> --- a/fs/compat_ioctl.c
+> +++ b/fs/compat_ioctl.c
+> @@ -1582,6 +1582,7 @@ COMPAT_SYSCALL_DEFINE3(ioctl, unsigned int, fd, unsigned int, cmd,
+>  
+>  	case FICLONE:
+>  	case FICLONERANGE:
+> +	case FIDEDUPERANGE:
+>  		goto do_ioctl;
+>  
+>  	case FIBMAP:
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index 84c6e79..fcdd33b 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -568,6 +568,41 @@ static int ioctl_fsthaw(struct file *filp)
+>  	return thaw_super(sb);
+>  }
+>  
+> +static long ioctl_file_dedupe_range(struct file *file, void __user *arg)
+> +{
+> +	struct file_dedupe_range __user *argp = arg;
+> +	struct file_dedupe_range *same = NULL;
+> +	int ret;
+> +	unsigned long size;
+> +	u16 count;
+> +
+> +	if (get_user(count, &argp->dest_count)) {
+> +		ret = -EFAULT;
+> +		goto out;
+> +	}
+> +
+> +	size = offsetof(struct file_dedupe_range __user, info[count]);
 
-when testing my latest changes to DXA fault handling code I have hit the
-following interesting race between the fault and write path (I'll show
-function names for ext4 but xfs has the same issue AFAICT).
+Vlastimil triggered this during fuzzing:
 
-We have a file 'f' which has a hole at offset 0.
+http://paste.opensuse.org/view/raw/99203426
 
-Process 0				Process 1
+High order allocation without __GFP_NOWARN + fallback. That's not good.
 
-data = mmap('f');
-read data[0]
-  -> fault, we map a hole page
+Basically, we don't have any sanity check of 'dest_count' here. This u16
+comes directly from userspace. And we call memdup_user() based on it.
 
-					pwrite('f', buf, len, 0)
-					  -> ext4_file_write_iter
-					    inode_lock(inode);
-					    __generic_file_write_iter()
-					      generic_file_direct_write()
-						invalidate_inode_pages2_range()
-						  - drops hole page from
-						    the radix tree
-						ext4_direct_IO()
-						  dax_do_io()
-						    - allocates block for
-						      offset 0
-data[0] = 1
-  -> page_mkwrite fault
-    -> ext4_dax_fault()
-      down_read(&EXT4_I(inode)->i_mmap_sem);
-      __dax_fault()
-	grab_mapping_entry()
-	  - creates locked radix tree entry
-	- maps block into PTE
-	put_locked_mapping_entry()
+Here's a program which makes kernel allocate order-9 page:
 
-						invalidate_inode_pages2_range()
-						  - removes dax entry from
-						    the radix tree
+https://gist.github.com/kiryl/2b344b51da1fd2725be420a996b10d22
 
-So we have just lost information that block 0 is mapped and needs flushing
-caches.
+Should we put some reasonable upper limit for the 'dest_count'?
+What is typical 'dest_count'?
 
-Also the fact that the consistency of data as viewed by mmap and
-dax_do_io() relies on invalidate_inode_pages2_range() is somewhat
-unexpected to me and we should document it somewhere.
+> +
+> +	same = memdup_user(argp, size);
+> +	if (IS_ERR(same)) {
+> +		ret = PTR_ERR(same);
+> +		same = NULL;
+> +		goto out;
+> +	}
+> +
+> +	ret = vfs_dedupe_file_range(file, same);
+> +	if (ret)
+> +		goto out;
+> +
+> +	ret = copy_to_user(argp, same, size);
+> +	if (ret)
+> +		ret = -EFAULT;
+> +
+> +out:
+> +	kfree(same);
+> +	return ret;
+> +}
+> +
 
-The question is how to best fix this. I see three options:
-
-1) Lock out faults during writes via exclusive i_mmap_sem. That is rather
-harsh but should work - we call filemap_write_and_wait() in
-generic_file_direct_write() so we flush out all caches for the relevant
-area before dropping radix tree entries.
-
-2) Call filemap_write_and_wait() after we return from ->direct_IO before we
-call invalidate_inode_pages2_range() and hold i_mmap_sem exclusively only
-for those two calls. Lock hold time will be shorter than 1) but it will
-require additional flush and we'd probably have to stop using
-generic_file_direct_write() for DAX writes to allow for all this special
-hackery.
-
-3) Remodel dax_do_io() to work more like buffered IO and use radix tree
-entry locks to protect against similar races. That has likely better
-scalability than 1) but may be actually slower in the uncontended case (due
-to all the radix tree operations).
-
-Any opinions on this?
-
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+ Kirill A. Shutemov
 
 _______________________________________________
 xfs mailing list
