@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AA5FB7CA0
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2016 14:10:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DA6F37CA0
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 16:11:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 637D8304053
-	for <xfs@oss.sgi.com>; Tue, 26 Jul 2016 12:09:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id C1i1VFaqQLPZSVMa (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 26 Jul 2016 12:09:57 -0700 (PDT)
-Date: Tue, 26 Jul 2016 15:09:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 07/47] xfs: add function pointers for get/update keys to
-	the btree
-Message-ID: <20160726190954.GA10742@bfoster.bfoster>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907700604.25461.2181974283557088355.stgit@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6AADDAC004
+	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 14:11:15 -0700 (PDT)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id JyPCAbWMjWsC56qi for
+	<xfs@oss.sgi.com>; Wed, 27 Jul 2016 14:11:11 -0700 (PDT)
+Date: Wed, 27 Jul 2016 15:10:39 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: Subtle races between DAX mmap fault and write path
+Message-ID: <20160727211039.GA20278@linux.intel.com>
+References: <20160727120745.GI6860@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146907700604.25461.2181974283557088355.stgit@birch.djwong.org>
+In-Reply-To: <20160727120745.GI6860@quack2.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,195 +28,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Jul 20, 2016 at 09:56:46PM -0700, Darrick J. Wong wrote:
-> Add some function pointers to bc_ops to get the btree keys for
-> leaf and node blocks, and to update parent keys of a block.
-> Convert the _btree_updkey calls to use our new pointer, and
-> modify the tree shape changing code to call the appropriate
-> get_*_keys pointer instead of _btree_copy_keys because the
-> overlapping btree has to calculate high key values.
+On Wed, Jul 27, 2016 at 02:07:45PM +0200, Jan Kara wrote:
+> Hi,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc_btree.c  |    4 +
->  fs/xfs/libxfs/xfs_bmap_btree.c   |    4 +
->  fs/xfs/libxfs/xfs_btree.c        |  159 +++++++++++++++++++++++---------------
->  fs/xfs/libxfs/xfs_btree.h        |   19 +++++
->  fs/xfs/libxfs/xfs_ialloc_btree.c |    8 ++
->  5 files changed, 133 insertions(+), 61 deletions(-)
+> when testing my latest changes to DXA fault handling code I have hit the
+> following interesting race between the fault and write path (I'll show
+> function names for ext4 but xfs has the same issue AFAICT).
 > 
+> We have a file 'f' which has a hole at offset 0.
 > 
-...
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 8d8e362..70d1c60 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-...
-> @@ -2149,8 +2197,8 @@ xfs_btree_lshift(
->  		rkp = &key;
->  	}
->  
-> -	/* Update the parent key values of right. */
-> -	error = xfs_btree_updkey(cur, rkp, level + 1);
-> +	/* Update the parent keys of the right block. */
-> +	error = cur->bc_ops->update_keys(cur, level);
-
-Looks like there's some code to set up rkp just above that can probably
-die.
-
->  	if (error)
->  		goto error0;
->  
-> @@ -2321,7 +2369,8 @@ xfs_btree_rshift(
->  	if (error)
->  		goto error1;
->  
-> -	error = xfs_btree_updkey(tcur, rkp, level + 1);
-> +	/* Update the parent keys of the right block. */
-> +	error = cur->bc_ops->update_keys(tcur, level);
-
-Similar deal here, just a bit further up.
-
->  	if (error)
->  		goto error1;
->  
-> @@ -2422,6 +2471,10 @@ __xfs_btree_split(
->  
->  	XFS_BTREE_STATS_ADD(cur, moves, rrecs);
->  
-> +	lrecs -= rrecs;
-> +	xfs_btree_set_numrecs(left, lrecs);
-> +	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
-> +
->  	/*
->  	 * Copy btree block entries from the left block over to the
->  	 * new block, the right. Update the right block and log the
-> @@ -2447,14 +2500,15 @@ __xfs_btree_split(
->  		}
->  #endif
->  
-> +		/* Copy the keys & pointers to the new block. */
->  		xfs_btree_copy_keys(cur, rkp, lkp, rrecs);
->  		xfs_btree_copy_ptrs(cur, rpp, lpp, rrecs);
->  
->  		xfs_btree_log_keys(cur, rbp, 1, rrecs);
->  		xfs_btree_log_ptrs(cur, rbp, 1, rrecs);
->  
-> -		/* Grab the keys to the entries moved to the right block */
-> -		xfs_btree_copy_keys(cur, key, rkp, 1);
-> +		/* Stash the keys of the new block for later insertion. */
-> +		cur->bc_ops->get_node_keys(cur, right, key);
->  	} else {
->  		/* It's a leaf.  Move records.  */
->  		union xfs_btree_rec	*lrp;	/* left record pointer */
-> @@ -2463,14 +2517,14 @@ __xfs_btree_split(
->  		lrp = xfs_btree_rec_addr(cur, src_index, left);
->  		rrp = xfs_btree_rec_addr(cur, 1, right);
->  
-> +		/* Copy records to the new block. */
->  		xfs_btree_copy_recs(cur, rrp, lrp, rrecs);
->  		xfs_btree_log_recs(cur, rbp, 1, rrecs);
->  
-> -		cur->bc_ops->init_key_from_rec(key,
-> -			xfs_btree_rec_addr(cur, 1, right));
-> +		/* Stash the keys of the new block for later insertion. */
-> +		cur->bc_ops->get_leaf_keys(cur, right, key);
->  	}
->  
-> -
->  	/*
->  	 * Find the left block number by looking in the buffer.
->  	 * Adjust numrecs, sibling pointers.
-> @@ -2480,10 +2534,6 @@ __xfs_btree_split(
->  	xfs_btree_set_sibling(cur, right, &lptr, XFS_BB_LEFTSIB);
->  	xfs_btree_set_sibling(cur, left, &rptr, XFS_BB_RIGHTSIB);
->  
-> -	lrecs -= rrecs;
-> -	xfs_btree_set_numrecs(left, lrecs);
-> -	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
-> -
-
-The immediately previous comment needs an update if this gets moved.
-
->  	xfs_btree_log_block(cur, rbp, XFS_BB_ALL_BITS);
->  	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
->  
-...
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index b4f3035..bb40457 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -180,6 +180,19 @@ struct xfs_btree_ops {
->  				union xfs_btree_rec *r1,
->  				union xfs_btree_rec *r2);
->  #endif
-> +
-> +	/* derive the low & high keys from the records in a leaf block */
-> +	void	(*get_leaf_keys)(struct xfs_btree_cur *cur,
-> +				 struct xfs_btree_block *block,
-> +				 union xfs_btree_key *key);
-> +
-> +	/* derive the low & high keys from the keys in a node block */
-> +	void	(*get_node_keys)(struct xfs_btree_cur *cur,
-> +				 struct xfs_btree_block *block,
-> +				 union xfs_btree_key *key);
-> +
-> +	/* update the parent keys of given btree level */
-> +	int	(*update_keys)(struct xfs_btree_cur *cur, int level);
->  };
->  
->  /*
-> @@ -474,5 +487,11 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
->  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
->  uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
->  				 unsigned long len);
-> + 
-
-Whitespace damage here ^
-
-Brian
-
-> +void xfs_btree_get_leaf_keys(struct xfs_btree_cur *cur,
-> +		struct xfs_btree_block *block, union xfs_btree_key *key);
-> +void xfs_btree_get_node_keys(struct xfs_btree_cur *cur,
-> +		struct xfs_btree_block *block, union xfs_btree_key *key);
-> +int xfs_btree_update_keys(struct xfs_btree_cur *cur, int level);
->  
->  #endif	/* __XFS_BTREE_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index 88da2ad..a48f448 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -314,6 +314,10 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
->  	.keys_inorder		= xfs_inobt_keys_inorder,
->  	.recs_inorder		= xfs_inobt_recs_inorder,
->  #endif
-> +
-> +	.get_leaf_keys		= xfs_btree_get_leaf_keys,
-> +	.get_node_keys		= xfs_btree_get_node_keys,
-> +	.update_keys		= xfs_btree_update_keys,
->  };
->  
->  static const struct xfs_btree_ops xfs_finobt_ops = {
-> @@ -335,6 +339,10 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
->  	.keys_inorder		= xfs_inobt_keys_inorder,
->  	.recs_inorder		= xfs_inobt_recs_inorder,
->  #endif
-> +
-> +	.get_leaf_keys		= xfs_btree_get_leaf_keys,
-> +	.get_node_keys		= xfs_btree_get_node_keys,
-> +	.update_keys		= xfs_btree_update_keys,
->  };
->  
->  /*
+> Process 0				Process 1
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> data = mmap('f');
+> read data[0]
+>   -> fault, we map a hole page
+> 
+> 					pwrite('f', buf, len, 0)
+> 					  -> ext4_file_write_iter
+> 					    inode_lock(inode);
+> 					    __generic_file_write_iter()
+> 					      generic_file_direct_write()
+> 						invalidate_inode_pages2_range()
+> 						  - drops hole page from
+> 						    the radix tree
+> 						ext4_direct_IO()
+> 						  dax_do_io()
+> 						    - allocates block for
+> 						      offset 0
+> data[0] = 1
+>   -> page_mkwrite fault
+>     -> ext4_dax_fault()
+>       down_read(&EXT4_I(inode)->i_mmap_sem);
+>       __dax_fault()
+> 	grab_mapping_entry()
+> 	  - creates locked radix tree entry
+> 	- maps block into PTE
+> 	put_locked_mapping_entry()
+> 
+> 						invalidate_inode_pages2_range()
+> 						  - removes dax entry from
+> 						    the radix tree
+> 
+> So we have just lost information that block 0 is mapped and needs flushing
+> caches.
+> 
+> Also the fact that the consistency of data as viewed by mmap and
+> dax_do_io() relies on invalidate_inode_pages2_range() is somewhat
+> unexpected to me and we should document it somewhere.
+> 
+> The question is how to best fix this. I see three options:
+> 
+> 1) Lock out faults during writes via exclusive i_mmap_sem. That is rather
+> harsh but should work - we call filemap_write_and_wait() in
+> generic_file_direct_write() so we flush out all caches for the relevant
+> area before dropping radix tree entries.
+> 
+> 2) Call filemap_write_and_wait() after we return from ->direct_IO before we
+> call invalidate_inode_pages2_range() and hold i_mmap_sem exclusively only
+> for those two calls. Lock hold time will be shorter than 1) but it will
+> require additional flush and we'd probably have to stop using
+> generic_file_direct_write() for DAX writes to allow for all this special
+> hackery.
+> 
+> 3) Remodel dax_do_io() to work more like buffered IO and use radix tree
+> entry locks to protect against similar races. That has likely better
+> scalability than 1) but may be actually slower in the uncontended case (due
+> to all the radix tree operations).
+> 
+> Any opinions on this?
+
+Can we just skip the two calls to invalidate_inode_pages2_range() in
+generic_file_direct_write() for DAX I/O?
+
+These calls are there for the direct I/O path because for direct I/O there is
+a failure scenario where we have clean pages in the page cache which are stale
+compared to the newly written data on media.  If we read from these clean
+pages instead of reading from media, we get data corruption.
+
+This failure case doesn't exist for DAX - we don't care if there are radix
+tree entries for the data region that the ->direct_IO() call is about to
+write.
+
+Similarly, for DAX I don't think we actually need to do the
+filemap_write_and_wait_range() call in generic_file_direct_write() either.
+It's a similar scenario - for direct I/O we are trying to make sure that any
+dirty data in the page cache is written out to media before the ->direct_IO()
+call happens.  For DAX I don't think we care.  If a user does an mmap() write
+which creates a dirty radix tree entry, then does a write(), we should be able
+to happily overwrite the old data with the new without flushing, and just
+leave the dirty radix tree entry in place.
+
+I realize this adds even more special case DAX code to mm/filemap.c, but if we
+can avoid the race without adding any more locking (and by simplifying our
+logic), it seems like it's worth it to me.
+
+Does this break in some way I'm not seeing?
+
+- Ross
 
 _______________________________________________
 xfs mailing list
