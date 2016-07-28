@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B7ED87CA0
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 13:07:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 872B18F8035
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 11:07:38 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 5DRwReoZlDBskQXZ (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6DC777CA0
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 14:25:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F2267304053
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:25:54 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id DMC0bvkpMazG6PKx (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 11:07:36 -0700 (PDT)
-Date: Thu, 28 Jul 2016 11:07:20 -0700
+	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:25:52 -0700 (PDT)
+Date: Thu, 28 Jul 2016 12:25:43 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH 8/9] vfs: hoist the btrfs deduplication ioctl to the vfs
-Message-ID: <20160728180720.GA15753@birch.djwong.org>
+Message-ID: <20160728192543.GA15740@birch.djwong.org>
 References: <20151219085505.12478.71157.stgit@birch.djwong.org>
 	<20151219085559.12478.33700.stgit@birch.djwong.org>
 	<20160727215130.GA18996@node.shutemov.name>
@@ -83,9 +83,7 @@ On Thu, Jul 28, 2016 at 12:51:30AM +0300, Kirill A. Shutemov wrote:
 > > +	}
 > > +
 > > +	size = offsetof(struct file_dedupe_range __user, info[count]);
-
-(I still hate this interface.)
-
+> 
 > Vlastimil triggered this during fuzzing:
 > 
 > http://paste.opensuse.org/view/raw/99203426
@@ -98,23 +96,16 @@ On Thu, Jul 28, 2016 at 12:51:30AM +0300, Kirill A. Shutemov wrote:
 > Here's a program which makes kernel allocate order-9 page:
 > 
 > https://gist.github.com/kiryl/2b344b51da1fd2725be420a996b10d22
-> 
-> Should we put some reasonable upper limit for the 'dest_count'?
-> What is typical 'dest_count'?
 
-There are two userland programs I know of that call this ioctl.  The
-first is xfs_io, which always sets dest_count = 1.
-
-The other is duperemove, which seems capable of setting dest_count to
-however many fragments it finds, up to a max of 120.  Capping size to
-x86's 4k page size yields 127 entries.  On bigger machines with 64k
-pages, that increases to 2047.  I think that's enough for anybody.
-
-(Honestly, 127 dedupe candidates * max 16M extent length is already
-2GB of IO for a single call.)
+I forgot to say, please wrap this up as an xfstest so we can check for
+future regressions.  After the patch, the ioctl should return ENOMEM
+to signal that the caller asked for more dedupe_count than we want to
+allocate memory for.
 
 --D
 
+> Should we put some reasonable upper limit for the 'dest_count'?
+> What is typical 'dest_count'?
 > 
 > > +
 > > +	same = memdup_user(argp, size);
@@ -140,6 +131,10 @@ pages, that increases to 2047.  I think that's enough for anybody.
 > 
 > -- 
 >  Kirill A. Shutemov
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
