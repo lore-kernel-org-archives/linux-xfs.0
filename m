@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 824887CA0
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 03:10:47 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3903E7CA0
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 14:46:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DC5FDAC004
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 01:10:43 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 3PjH1nVIHrFCDjqP (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 01:10:38 -0700 (PDT)
-Date: Thu, 28 Jul 2016 10:10:33 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Subtle races between DAX mmap fault and write path
-Message-ID: <20160728081033.GC4094@quack2.suse.cz>
-References: <20160727120745.GI6860@quack2.suse.cz>
-	<20160727211039.GA20278@linux.intel.com>
-	<20160727221949.GU16044@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7083AAC007
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:46:30 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id NOafEN9xKZ4Ny6hz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:46:22 -0700 (PDT)
+Date: Thu, 28 Jul 2016 12:46:15 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 07/47] xfs: add function pointers for get/update keys to
+	the btree
+Message-ID: <20160728194615.GA15746@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<146907700604.25461.2181974283557088355.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160727221949.GU16044@dastard>
+In-Reply-To: <146907700604.25461.2181974283557088355.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,145 +31,452 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: david@fromorbit.com
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Thu 28-07-16 08:19:49, Dave Chinner wrote:
-> On Wed, Jul 27, 2016 at 03:10:39PM -0600, Ross Zwisler wrote:
-> > On Wed, Jul 27, 2016 at 02:07:45PM +0200, Jan Kara wrote:
-> > > Hi,
-> > > 
-> > > when testing my latest changes to DXA fault handling code I have hit the
-> > > following interesting race between the fault and write path (I'll show
-> > > function names for ext4 but xfs has the same issue AFAICT).
-> 
-> The XFS update I just pushed to Linus contains a rework of the XFS
-> DAX IO path. It no longer shares the XFS direct IO path, so it
-> doesn't contain any of the direct IO warts anymore.
+Add some function pointers to bc_ops to get the btree keys for
+leaf and node blocks, and to update parent keys of a block.
+Convert the _btree_updkey calls to use our new pointer, and
+modify the tree shape changing code to call the appropriate
+get_*_keys pointer instead of _btree_copy_keys because the
+overlapping btree has to calculate high key values.
 
-Ah, OK. I knew Christoph rewrote it but forgot to check your tree when
-looking into this bug.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc_btree.c  |    4 +
+ fs/xfs/libxfs/xfs_bmap_btree.c   |    4 +
+ fs/xfs/libxfs/xfs_btree.c        |  164 +++++++++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_btree.h        |   19 ++++
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    8 ++
+ 5 files changed, 135 insertions(+), 64 deletions(-)
 
-> > > We have a file 'f' which has a hole at offset 0.
-> > > 
-> > > Process 0				Process 1
-> > > 
-> > > data = mmap('f');
-> > > read data[0]
-> > >   -> fault, we map a hole page
-> > > 
-> > > 					pwrite('f', buf, len, 0)
-> > > 					  -> ext4_file_write_iter
-> > > 					    inode_lock(inode);
-> > > 					    __generic_file_write_iter()
-> > > 					      generic_file_direct_write()
-> > > 						invalidate_inode_pages2_range()
-> > > 						  - drops hole page from
-> > > 						    the radix tree
-> > > 						ext4_direct_IO()
-> > > 						  dax_do_io()
-> > > 						    - allocates block for
-> > > 						      offset 0
-> > > data[0] = 1
-> > >   -> page_mkwrite fault
-> > >     -> ext4_dax_fault()
-> > >       down_read(&EXT4_I(inode)->i_mmap_sem);
-> > >       __dax_fault()
-> > > 	grab_mapping_entry()
-> > > 	  - creates locked radix tree entry
-> > > 	- maps block into PTE
-> > > 	put_locked_mapping_entry()
-> > > 
-> > > 						invalidate_inode_pages2_range()
-> > > 						  - removes dax entry from
-> > > 						    the radix tree
-> 
-> In XFS, we don't call __generic_file_write_iter or
-> generic_file_direct_write(), and xfs_file_dax_write() does not have
-> this trailing call to invalidate_inode_pages2_range() anymore. It's
-> DAX - there's nothing to invalidate, right?
-> 
-> So I think Christoph just (accidentally) removed this race condition
-> from XFS....
-
-So with current XFS code what prevents the following:
-
-Process 0				Process 1
-
-data = mmap('f');
-					pwrite('f', buf, len, 0)
-					  -> xfs_file_dax_write
-					    xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
-					    invalidate_inode_pages2()
-					      - drops hole page from the
-					        radix tree
-					    xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
-read data[0]
-  -> fault
-    -> xfs_filemap_fault
-      xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-      dax_fault()
-	- installs hole in the radix tree and PTE
-
-					    dax_do_io()
-					      - allocates block for offset 0
-
-And now Process 0 doesn't see the data Process 1 has written until fault on
-that address is triggered again for some reason.
-
-Heck, looking at the code in xfs_file_dax_write() you call
-invalidate_inode_pages2() which clears the *whole* radix tree. So you have
-just lost the dirtiness information for the whole file and thus fsync(2)
-will not flush any data written via mmap.
-
-> > > So we have just lost information that block 0 is mapped and needs flushing
-> > > caches.
-> > > 
-> > > Also the fact that the consistency of data as viewed by mmap and
-> > > dax_do_io() relies on invalidate_inode_pages2_range() is somewhat
-> > > unexpected to me and we should document it somewhere.
-> 
-> I don't think it does - what, in DAX, is incoherent? If anything,
-> it's the data in the direct IO buffer, not the view the mmap will
-> see. i.e. the post-write invalidate is to ensure that applications
-> that have mmapped the file see the data written by direct IO. That's
-> not necessary with DAX.
-
-The coherency issues are very similar to direct IO because of hole pages.
-Generally we need to maintain coherency between what is pointed to from page
-tables and what is really backing file data (as viewed by inode's extent
-tree). So whenever block allocation / deallocation happens for the file, we
-may need to update page tables which map this offset as well. For
-deallocation (truncate, punch hole, ...) we take care of this under
-protection of MMAPLOCK so things are fine. For allocation we currently
-don't use this serialization mechanism.
-
-> > > The question is how to best fix this. I see three options:
-> > > 
-> > > 1) Lock out faults during writes via exclusive i_mmap_sem. That is rather
-> > > harsh but should work - we call filemap_write_and_wait() in
-> > > generic_file_direct_write() so we flush out all caches for the relevant
-> > > area before dropping radix tree entries.
-> 
-> We don't call filemap_write_and_wait() in xfs_file_dax_write()
-> anymore, either. It's DAX - we don't need to flush anything to read
-> the correct data, and there's nothing cached that becomes stale when
-> we overwrite the destination memory.
-
-So DAX doesn't need flushing to maintain consistent view of the data but it
-does need flushing to make sure fsync(2) results in data written via mmap
-to reach persistent storage. Look at the following example: Assume you
-write via mmap to offsets 0-1023 in the page and via write(2) to offsets
-1024-2048 in the page. Then after write(2) you still may have data in
-volatile caches for the page for offsets 0-1023. So your write(2) either
-has to keep the corresponding entry in the radix tree dirty (and currently
-XFS's call to invalidate_inode_pages2() in xfs_file_dax_write() doesn't do
-this) or you have to flush the page via filemap_write_and_wait().
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 5ba2dac..c60eeb8 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -403,6 +403,10 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.keys_inorder		= xfs_allocbt_keys_inorder,
+ 	.recs_inorder		= xfs_allocbt_recs_inorder,
+ #endif
++
++	.get_leaf_keys		= xfs_btree_get_leaf_keys,
++	.get_node_keys		= xfs_btree_get_node_keys,
++	.update_keys		= xfs_btree_update_keys,
+ };
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 714b387..4f1a98e 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -757,6 +757,10 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
+ 	.keys_inorder		= xfs_bmbt_keys_inorder,
+ 	.recs_inorder		= xfs_bmbt_recs_inorder,
+ #endif
++
++	.get_leaf_keys		= xfs_btree_get_leaf_keys,
++	.get_node_keys		= xfs_btree_get_node_keys,
++	.update_keys		= xfs_btree_update_keys,
+ };
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 8d8e362..405442d 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1879,24 +1879,73 @@ error0:
+ 	return error;
+ }
+ 
++/* Determine the low key of a leaf block (simple) */
++void
++xfs_btree_get_leaf_keys(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	union xfs_btree_key	*key)
++{
++	union xfs_btree_rec	*rec;
++
++	rec = xfs_btree_rec_addr(cur, 1, block);
++	cur->bc_ops->init_key_from_rec(key, rec);
++}
++
++/* Determine the low key of a node block (simple) */
++void
++xfs_btree_get_node_keys(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	union xfs_btree_key	*key)
++{
++	memcpy(key, xfs_btree_key_addr(cur, 1, block), cur->bc_ops->key_len);
++}
++
++/* Derive the keys for any btree block. */
++STATIC void
++xfs_btree_get_keys(
++	struct xfs_btree_cur	*cur,
++	struct xfs_btree_block	*block,
++	union xfs_btree_key	*key)
++{
++	if (be16_to_cpu(block->bb_level) == 0)
++		cur->bc_ops->get_leaf_keys(cur, block, key);
++	else
++		cur->bc_ops->get_node_keys(cur, block, key);
++}
++
+ /*
+- * Update keys at all levels from here to the root along the cursor's path.
++ * Decide if we need to update the parent keys of a btree block.  For
++ * a standard btree this is only necessary if we're updating the first
++ * record/key.
+  */
+-STATIC int
+-xfs_btree_updkey(
++static inline bool
++xfs_btree_needs_key_update(
++	struct xfs_btree_cur	*cur,
++	int			ptr)
++{
++	return ptr == 1;
++}
++
++/*
++ * Update the parent keys of the given level, progressing towards the root.
++ */
++int
++xfs_btree_update_keys(
+ 	struct xfs_btree_cur	*cur,
+-	union xfs_btree_key	*keyp,
+ 	int			level)
+ {
+ 	struct xfs_btree_block	*block;
+ 	struct xfs_buf		*bp;
+ 	union xfs_btree_key	*kp;
++	union xfs_btree_key	key;
+ 	int			ptr;
+ 
+ 	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+ 	XFS_BTREE_TRACE_ARGIK(cur, level, keyp);
+ 
+-	ASSERT(!(cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) || level >= 1);
++	ASSERT(level >= 0);
+ 
+ 	/*
+ 	 * Go up the tree from this level toward the root.
+@@ -1904,7 +1953,9 @@ xfs_btree_updkey(
+ 	 * Stop when we reach a level where the cursor isn't pointing
+ 	 * at the first entry in the block.
+ 	 */
+-	for (ptr = 1; ptr == 1 && level < cur->bc_nlevels; level++) {
++	block = xfs_btree_get_block(cur, level, &bp);
++	xfs_btree_get_keys(cur, block, &key);
++	for (level++, ptr = 1; ptr == 1 && level < cur->bc_nlevels; level++) {
+ #ifdef DEBUG
+ 		int		error;
+ #endif
+@@ -1918,7 +1969,7 @@ xfs_btree_updkey(
+ #endif
+ 		ptr = cur->bc_ptrs[level];
+ 		kp = xfs_btree_key_addr(cur, ptr, block);
+-		xfs_btree_copy_keys(cur, kp, keyp, 1);
++		xfs_btree_copy_keys(cur, kp, &key, 1);
+ 		xfs_btree_log_keys(cur, bp, ptr, ptr);
+ 	}
+ 
+@@ -1971,11 +2022,8 @@ xfs_btree_update(
+ 	}
+ 
+ 	/* Updating first rec in leaf. Pass new key value up to our parent. */
+-	if (ptr == 1) {
+-		union xfs_btree_key	key;
+-
+-		cur->bc_ops->init_key_from_rec(&key, rec);
+-		error = xfs_btree_updkey(cur, &key, 1);
++	if (xfs_btree_needs_key_update(cur, ptr)) {
++		error = cur->bc_ops->update_keys(cur, 0);
+ 		if (error)
+ 			goto error0;
+ 	}
+@@ -2146,11 +2194,10 @@ xfs_btree_lshift(
+ 		 */
+ 		cur->bc_ops->init_key_from_rec(&key,
+ 			xfs_btree_rec_addr(cur, 1, right));
+-		rkp = &key;
+ 	}
+ 
+-	/* Update the parent key values of right. */
+-	error = xfs_btree_updkey(cur, rkp, level + 1);
++	/* Update the parent keys of the right block. */
++	error = cur->bc_ops->update_keys(cur, level);
+ 	if (error)
+ 		goto error0;
+ 
+@@ -2292,7 +2339,6 @@ xfs_btree_rshift(
+ 		xfs_btree_log_recs(cur, rbp, 1, rrecs + 1);
+ 
+ 		cur->bc_ops->init_key_from_rec(&key, rrp);
+-		rkp = &key;
+ 
+ 		ASSERT(cur->bc_ops->recs_inorder(cur, rrp,
+ 			xfs_btree_rec_addr(cur, 2, right)));
+@@ -2321,7 +2367,8 @@ xfs_btree_rshift(
+ 	if (error)
+ 		goto error1;
+ 
+-	error = xfs_btree_updkey(tcur, rkp, level + 1);
++	/* Update the parent keys of the right block. */
++	error = cur->bc_ops->update_keys(tcur, level);
+ 	if (error)
+ 		goto error1;
+ 
+@@ -2422,6 +2469,11 @@ __xfs_btree_split(
+ 
+ 	XFS_BTREE_STATS_ADD(cur, moves, rrecs);
+ 
++	/* Adjust numrecs for the later get_*_keys() calls. */
++	lrecs -= rrecs;
++	xfs_btree_set_numrecs(left, lrecs);
++	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
++
+ 	/*
+ 	 * Copy btree block entries from the left block over to the
+ 	 * new block, the right. Update the right block and log the
+@@ -2447,14 +2499,15 @@ __xfs_btree_split(
+ 		}
+ #endif
+ 
++		/* Copy the keys & pointers to the new block. */
+ 		xfs_btree_copy_keys(cur, rkp, lkp, rrecs);
+ 		xfs_btree_copy_ptrs(cur, rpp, lpp, rrecs);
+ 
+ 		xfs_btree_log_keys(cur, rbp, 1, rrecs);
+ 		xfs_btree_log_ptrs(cur, rbp, 1, rrecs);
+ 
+-		/* Grab the keys to the entries moved to the right block */
+-		xfs_btree_copy_keys(cur, key, rkp, 1);
++		/* Stash the keys of the new block for later insertion. */
++		cur->bc_ops->get_node_keys(cur, right, key);
+ 	} else {
+ 		/* It's a leaf.  Move records.  */
+ 		union xfs_btree_rec	*lrp;	/* left record pointer */
+@@ -2463,27 +2516,23 @@ __xfs_btree_split(
+ 		lrp = xfs_btree_rec_addr(cur, src_index, left);
+ 		rrp = xfs_btree_rec_addr(cur, 1, right);
+ 
++		/* Copy records to the new block. */
+ 		xfs_btree_copy_recs(cur, rrp, lrp, rrecs);
+ 		xfs_btree_log_recs(cur, rbp, 1, rrecs);
+ 
+-		cur->bc_ops->init_key_from_rec(key,
+-			xfs_btree_rec_addr(cur, 1, right));
++		/* Stash the keys of the new block for later insertion. */
++		cur->bc_ops->get_leaf_keys(cur, right, key);
+ 	}
+ 
+-
+ 	/*
+ 	 * Find the left block number by looking in the buffer.
+-	 * Adjust numrecs, sibling pointers.
++	 * Adjust sibling pointers.
+ 	 */
+ 	xfs_btree_get_sibling(cur, left, &rrptr, XFS_BB_RIGHTSIB);
+ 	xfs_btree_set_sibling(cur, right, &rrptr, XFS_BB_RIGHTSIB);
+ 	xfs_btree_set_sibling(cur, right, &lptr, XFS_BB_LEFTSIB);
+ 	xfs_btree_set_sibling(cur, left, &rptr, XFS_BB_RIGHTSIB);
+ 
+-	lrecs -= rrecs;
+-	xfs_btree_set_numrecs(left, lrecs);
+-	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
+-
+ 	xfs_btree_log_block(cur, rbp, XFS_BB_ALL_BITS);
+ 	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
+ 
+@@ -2802,6 +2851,7 @@ xfs_btree_new_root(
+ 		bp = lbp;
+ 		nptr = 2;
+ 	}
++
+ 	/* Fill in the new block's btree header and log it. */
+ 	xfs_btree_init_block_cur(cur, nbp, cur->bc_nlevels, 2);
+ 	xfs_btree_log_block(cur, nbp, XFS_BB_ALL_BITS);
+@@ -2810,19 +2860,24 @@ xfs_btree_new_root(
+ 
+ 	/* Fill in the key data in the new root. */
+ 	if (xfs_btree_get_level(left) > 0) {
+-		xfs_btree_copy_keys(cur,
+-				xfs_btree_key_addr(cur, 1, new),
+-				xfs_btree_key_addr(cur, 1, left), 1);
+-		xfs_btree_copy_keys(cur,
+-				xfs_btree_key_addr(cur, 2, new),
+-				xfs_btree_key_addr(cur, 1, right), 1);
++		/*
++		 * Get the keys for the left block's keys and put them directly
++		 * in the parent block.  Do the same for the right block.
++		 */
++		cur->bc_ops->get_node_keys(cur, left,
++				xfs_btree_key_addr(cur, 1, new));
++		cur->bc_ops->get_node_keys(cur, right,
++				xfs_btree_key_addr(cur, 2, new));
+ 	} else {
+-		cur->bc_ops->init_key_from_rec(
+-				xfs_btree_key_addr(cur, 1, new),
+-				xfs_btree_rec_addr(cur, 1, left));
+-		cur->bc_ops->init_key_from_rec(
+-				xfs_btree_key_addr(cur, 2, new),
+-				xfs_btree_rec_addr(cur, 1, right));
++		/*
++		 * Get the keys for the left block's records and put them
++		 * directly in the parent block.  Do the same for the right
++		 * block.
++		 */
++		cur->bc_ops->get_leaf_keys(cur, left,
++			xfs_btree_key_addr(cur, 1, new));
++		cur->bc_ops->get_leaf_keys(cur, right,
++			xfs_btree_key_addr(cur, 2, new));
+ 	}
+ 	xfs_btree_log_keys(cur, nbp, 1, 2);
+ 
+@@ -2858,7 +2913,7 @@ xfs_btree_make_block_unfull(
+ 	int			*index,	/* new tree index */
+ 	union xfs_btree_ptr	*nptr,	/* new btree ptr */
+ 	struct xfs_btree_cur	**ncur,	/* new btree cursor */
+-	union xfs_btree_key	*key, /* key of new block */
++	union xfs_btree_key	*key,	/* key of new block */
+ 	int			*stat)
+ {
+ 	int			error = 0;
+@@ -3086,8 +3141,8 @@ xfs_btree_insrec(
+ 	xfs_btree_log_block(cur, bp, XFS_BB_NUMRECS);
+ 
+ 	/* If we inserted at the start of a block, update the parents' keys. */
+-	if (optr == 1) {
+-		error = xfs_btree_updkey(cur, key, level + 1);
++	if (xfs_btree_needs_key_update(cur, optr)) {
++		error = cur->bc_ops->update_keys(cur, level);
+ 		if (error)
+ 			goto error0;
+ 	}
+@@ -3107,7 +3162,7 @@ xfs_btree_insrec(
+ 	 */
+ 	*ptrp = nptr;
+ 	if (!xfs_btree_ptr_is_null(cur, &nptr)) {
+-		*key = nkey;
++		xfs_btree_copy_keys(cur, key, &nkey, 1);
+ 		*curp = ncur;
+ 	}
+ 
+@@ -3386,8 +3441,6 @@ xfs_btree_delrec(
+ 	struct xfs_buf		*bp;		/* buffer for block */
+ 	int			error;		/* error return value */
+ 	int			i;		/* loop counter */
+-	union xfs_btree_key	key;		/* storage for keyp */
+-	union xfs_btree_key	*keyp = &key;	/* passed to the next level */
+ 	union xfs_btree_ptr	lptr;		/* left sibling block ptr */
+ 	struct xfs_buf		*lbp;		/* left buffer pointer */
+ 	struct xfs_btree_block	*left;		/* left btree block */
+@@ -3458,13 +3511,6 @@ xfs_btree_delrec(
+ 			xfs_btree_log_keys(cur, bp, ptr, numrecs - 1);
+ 			xfs_btree_log_ptrs(cur, bp, ptr, numrecs - 1);
+ 		}
+-
+-		/*
+-		 * If it's the first record in the block, we'll need to pass a
+-		 * key up to the next level (updkey).
+-		 */
+-		if (ptr == 1)
+-			keyp = xfs_btree_key_addr(cur, 1, block);
+ 	} else {
+ 		/* It's a leaf. operate on records */
+ 		if (ptr < numrecs) {
+@@ -3473,16 +3519,6 @@ xfs_btree_delrec(
+ 				-1, numrecs - ptr);
+ 			xfs_btree_log_recs(cur, bp, ptr, numrecs - 1);
+ 		}
+-
+-		/*
+-		 * If it's the first record in the block, we'll need a key
+-		 * structure to pass up to the next level (updkey).
+-		 */
+-		if (ptr == 1) {
+-			cur->bc_ops->init_key_from_rec(&key,
+-					xfs_btree_rec_addr(cur, 1, block));
+-			keyp = &key;
+-		}
+ 	}
+ 
+ 	/*
+@@ -3549,8 +3585,8 @@ xfs_btree_delrec(
+ 	 * If we deleted the leftmost entry in the block, update the
+ 	 * key values above us in the tree.
+ 	 */
+-	if (ptr == 1) {
+-		error = xfs_btree_updkey(cur, keyp, level + 1);
++	if (xfs_btree_needs_key_update(cur, ptr)) {
++		error = cur->bc_ops->update_keys(cur, level);
+ 		if (error)
+ 			goto error0;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b4f3035..e097e60 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -180,6 +180,19 @@ struct xfs_btree_ops {
+ 				union xfs_btree_rec *r1,
+ 				union xfs_btree_rec *r2);
+ #endif
++
++	/* derive the low & high keys from the records in a leaf block */
++	void	(*get_leaf_keys)(struct xfs_btree_cur *cur,
++				 struct xfs_btree_block *block,
++				 union xfs_btree_key *key);
++
++	/* derive the low & high keys from the keys in a node block */
++	void	(*get_node_keys)(struct xfs_btree_cur *cur,
++				 struct xfs_btree_block *block,
++				 union xfs_btree_key *key);
++
++	/* update the parent keys of given btree level */
++	int	(*update_keys)(struct xfs_btree_cur *cur, int level);
+ };
+ 
+ /*
+@@ -475,4 +488,10 @@ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+ 
++void xfs_btree_get_leaf_keys(struct xfs_btree_cur *cur,
++		struct xfs_btree_block *block, union xfs_btree_key *key);
++void xfs_btree_get_node_keys(struct xfs_btree_cur *cur,
++		struct xfs_btree_block *block, union xfs_btree_key *key);
++int xfs_btree_update_keys(struct xfs_btree_cur *cur, int level);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 88da2ad..a48f448 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -314,6 +314,10 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
+ 	.keys_inorder		= xfs_inobt_keys_inorder,
+ 	.recs_inorder		= xfs_inobt_recs_inorder,
+ #endif
++
++	.get_leaf_keys		= xfs_btree_get_leaf_keys,
++	.get_node_keys		= xfs_btree_get_node_keys,
++	.update_keys		= xfs_btree_update_keys,
+ };
+ 
+ static const struct xfs_btree_ops xfs_finobt_ops = {
+@@ -335,6 +339,10 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.keys_inorder		= xfs_inobt_keys_inorder,
+ 	.recs_inorder		= xfs_inobt_recs_inorder,
+ #endif
++
++	.get_leaf_keys		= xfs_btree_get_leaf_keys,
++	.get_node_keys		= xfs_btree_get_node_keys,
++	.update_keys		= xfs_btree_update_keys,
+ };
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
