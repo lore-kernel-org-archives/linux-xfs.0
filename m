@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3CE547CA0
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 17:20:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F98E304053
-	for <xfs@oss.sgi.com>; Wed, 27 Jul 2016 15:20:09 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	188nf2IszBIJVvri for <xfs@oss.sgi.com>;
-	Wed, 27 Jul 2016 15:20:06 -0700 (PDT)
-Date: Thu, 28 Jul 2016 08:19:49 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2BC277CA0
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 03:48:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E28F68F8040
+	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 01:48:00 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id wN4ZRAwXA09Y3Ixo (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 01:47:57 -0700 (PDT)
+Date: Thu, 28 Jul 2016 10:47:54 +0200
+From: Jan Kara <jack@suse.cz>
 Subject: Re: Subtle races between DAX mmap fault and write path
-Message-ID: <20160727221949.GU16044@dastard>
+Message-ID: <20160728084754.GD4094@quack2.suse.cz>
 References: <20160727120745.GI6860@quack2.suse.cz>
 	<20160727211039.GA20278@linux.intel.com>
 MIME-Version: 1.0
@@ -30,20 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org
 
-On Wed, Jul 27, 2016 at 03:10:39PM -0600, Ross Zwisler wrote:
+On Wed 27-07-16 15:10:39, Ross Zwisler wrote:
 > On Wed, Jul 27, 2016 at 02:07:45PM +0200, Jan Kara wrote:
 > > Hi,
 > > 
 > > when testing my latest changes to DXA fault handling code I have hit the
 > > following interesting race between the fault and write path (I'll show
 > > function names for ext4 but xfs has the same issue AFAICT).
-
-The XFS update I just pushed to Linus contains a rework of the XFS
-DAX IO path. It no longer shares the XFS direct IO path, so it
-doesn't contain any of the direct IO warts anymore.
-
+> > 
 > > We have a file 'f' which has a hole at offset 0.
 > > 
 > > Process 0				Process 1
@@ -77,62 +74,47 @@ doesn't contain any of the direct IO warts anymore.
 > > 						invalidate_inode_pages2_range()
 > > 						  - removes dax entry from
 > > 						    the radix tree
-
-In XFS, we don't call __generic_file_write_iter or
-generic_file_direct_write(), and xfs_file_dax_write() does not have
-this trailing call to invalidate_inode_pages2_range() anymore. It's
-DAX - there's nothing to invalidate, right?
-
-So I think Christoph just (accidentally) removed this race condition
-from XFS....
-
+> > 
 > > So we have just lost information that block 0 is mapped and needs flushing
 > > caches.
 > > 
 > > Also the fact that the consistency of data as viewed by mmap and
 > > dax_do_io() relies on invalidate_inode_pages2_range() is somewhat
 > > unexpected to me and we should document it somewhere.
-
-I don't think it does - what, in DAX, is incoherent? If anything,
-it's the data in the direct IO buffer, not the view the mmap will
-see. i.e. the post-write invalidate is to ensure that applications
-that have mmapped the file see the data written by direct IO. That's
-not necessary with DAX.
-
+> > 
 > > The question is how to best fix this. I see three options:
 > > 
 > > 1) Lock out faults during writes via exclusive i_mmap_sem. That is rather
 > > harsh but should work - we call filemap_write_and_wait() in
 > > generic_file_direct_write() so we flush out all caches for the relevant
 > > area before dropping radix tree entries.
-
-We don't call filemap_write_and_wait() in xfs_file_dax_write()
-anymore, either. It's DAX - we don't need to flush anything to read
-the correct data, and there's nothing cached that becomes stale when
-we overwrite the destination memory.
-
-[snip]
-
+> > 
+> > 2) Call filemap_write_and_wait() after we return from ->direct_IO before we
+> > call invalidate_inode_pages2_range() and hold i_mmap_sem exclusively only
+> > for those two calls. Lock hold time will be shorter than 1) but it will
+> > require additional flush and we'd probably have to stop using
+> > generic_file_direct_write() for DAX writes to allow for all this special
+> > hackery.
+> > 
+> > 3) Remodel dax_do_io() to work more like buffered IO and use radix tree
+> > entry locks to protect against similar races. That has likely better
+> > scalability than 1) but may be actually slower in the uncontended case (due
+> > to all the radix tree operations).
+> > 
 > > Any opinions on this?
 > 
 > Can we just skip the two calls to invalidate_inode_pages2_range() in
 > generic_file_direct_write() for DAX I/O?
-
-The first invalidate is still there in XFS. The comment above it
-in the new XFS code says:
-
-	/*
-	 * Yes, even DAX files can have page cache attached to them:  A zeroed
-	 * page is inserted into the pagecache when we have to serve a write
-	 * fault on a hole.  It should never be dirtied and can simply be
-	 * dropped from the pagecache once we get real data for the page.
-	 */
-	if (mapping->nrpages) {
-		ret = invalidate_inode_pages2(mapping);
-		WARN_ON_ONCE(ret);
-	}
-
-
+> 
+> These calls are there for the direct I/O path because for direct I/O there is
+> a failure scenario where we have clean pages in the page cache which are stale
+> compared to the newly written data on media.  If we read from these clean
+> pages instead of reading from media, we get data corruption.
+> 
+> This failure case doesn't exist for DAX - we don't care if there are radix
+> tree entries for the data region that the ->direct_IO() call is about to
+> write.
+> 
 > Similarly, for DAX I don't think we actually need to do the
 > filemap_write_and_wait_range() call in generic_file_direct_write() either.
 > It's a similar scenario - for direct I/O we are trying to make sure that any
@@ -142,21 +124,27 @@ in the new XFS code says:
 > to happily overwrite the old data with the new without flushing, and just
 > leave the dirty radix tree entry in place.
 
-Yup, that's pretty much how XFS treats DAX now - it's not direct IO,
-but it's not buffered IO, either...
+See my email to Dave for details but to put it shortly, write(2) which
+allocates block has to make sure hole page for that offset is unmapped from
+page tables and freed so at least one invalidate_inode_pages2_range() call
+is necessary even for DAX. And because that call will currently remove also
+dirty radix tree entries, flushing is currently necessary as well. If we
+modified invalidate_inode_pages2_range() to keep dirty radix tree entries
+(which makes sense because invalidate_inode_pages2_range() does not discard
+dirty pages in the first place), flushing won't be necessary. That is true.
 
-I don't think there's a problem that needs to be fixed in the DAX
-code - the issue is all about the surrounding IO context. i.e
-whether do_dax_io() is automatically coherent with mmap or not
-because mmap directly exposes the CPU cache coherent memory
-do_dax_io() modifies.
+> I realize this adds even more special case DAX code to mm/filemap.c, but
+> if we can avoid the race without adding any more locking (and by
+> simplifying our logic), it seems like it's worth it to me.
 
-Cheers,
+Well, we could always decouple DAX write path from the direct IO write
+path. XFS already did this and if the generic DIO path won't be suitable for
+DAX on ext4, we can do the same for it.
 
-Dave.
+									Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
