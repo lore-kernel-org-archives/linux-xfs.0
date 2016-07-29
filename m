@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B35D27CA0
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 14:14:00 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EA1617CA0
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 09:03:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D0A7AC002
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:13:56 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id fObIQLef4QTbQoow (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35788AC005
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 07:03:37 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GEt6wMnh1EoYhNAk (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 12:13:54 -0700 (PDT)
-Date: Thu, 28 Jul 2016 12:13:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/47] xfs: add function pointers for get/update keys to
-	the btree
-Message-ID: <20160728191346.GD15753@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907700604.25461.2181974283557088355.stgit@birch.djwong.org>
-	<20160726190954.GA10742@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Fri, 29 Jul 2016 07:03:33 -0700 (PDT)
+Date: Fri, 29 Jul 2016 10:03:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: partition 100% full No space left on device. looks like xfs is
+	corrupted or a bug
+Message-ID: <20160729140330.GA27744@bfoster.bfoster>
+References: <4278AB9734C1445A8E48635B155149F8@dinulap>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160726190954.GA10742@bfoster.bfoster>
+In-Reply-To: <4278AB9734C1445A8E48635B155149F8@dinulap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,206 +30,209 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Lista Unx <lista.unx@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 26, 2016 at 03:09:54PM -0400, Brian Foster wrote:
-> On Wed, Jul 20, 2016 at 09:56:46PM -0700, Darrick J. Wong wrote:
-> > Add some function pointers to bc_ops to get the btree keys for
-> > leaf and node blocks, and to update parent keys of a block.
-> > Convert the _btree_updkey calls to use our new pointer, and
-> > modify the tree shape changing code to call the appropriate
-> > get_*_keys pointer instead of _btree_copy_keys because the
-> > overlapping btree has to calculate high key values.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc_btree.c  |    4 +
-> >  fs/xfs/libxfs/xfs_bmap_btree.c   |    4 +
-> >  fs/xfs/libxfs/xfs_btree.c        |  159 +++++++++++++++++++++++---------------
-> >  fs/xfs/libxfs/xfs_btree.h        |   19 +++++
-> >  fs/xfs/libxfs/xfs_ialloc_btree.c |    8 ++
-> >  5 files changed, 133 insertions(+), 61 deletions(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index 8d8e362..70d1c60 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> ...
-> > @@ -2149,8 +2197,8 @@ xfs_btree_lshift(
-> >  		rkp = &key;
-> >  	}
-> >  
-> > -	/* Update the parent key values of right. */
-> > -	error = xfs_btree_updkey(cur, rkp, level + 1);
-> > +	/* Update the parent keys of the right block. */
-> > +	error = cur->bc_ops->update_keys(cur, level);
+On Fri, Jul 29, 2016 at 12:01:42PM +0300, Lista Unx wrote:
+> Hello xfs experts,
 > 
-> Looks like there's some code to set up rkp just above that can probably
-> die.
+> I am crawling in the dark from few days and I have no idea how to fix the following problem. On a centos 7 system:
 > 
-> >  	if (error)
-> >  		goto error0;
-> >  
-> > @@ -2321,7 +2369,8 @@ xfs_btree_rshift(
-> >  	if (error)
-> >  		goto error1;
-> >  
-> > -	error = xfs_btree_updkey(tcur, rkp, level + 1);
-> > +	/* Update the parent keys of the right block. */
-> > +	error = cur->bc_ops->update_keys(tcur, level);
+> # uname -a
+> Linux 1a 3.10.0-327.el7.x86_64 #1 SMP Thu Nov 19 22:10:57 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
 > 
-> Similar deal here, just a bit further up.
-
-Yup, both rkp = &key instances can go.
-
-> >  	if (error)
-> >  		goto error1;
-> >  
-> > @@ -2422,6 +2471,10 @@ __xfs_btree_split(
-> >  
-> >  	XFS_BTREE_STATS_ADD(cur, moves, rrecs);
-> >  
-> > +	lrecs -= rrecs;
-> > +	xfs_btree_set_numrecs(left, lrecs);
-> > +	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
-> > +
-> >  	/*
-> >  	 * Copy btree block entries from the left block over to the
-> >  	 * new block, the right. Update the right block and log the
-> > @@ -2447,14 +2500,15 @@ __xfs_btree_split(
-> >  		}
-> >  #endif
-> >  
-> > +		/* Copy the keys & pointers to the new block. */
-> >  		xfs_btree_copy_keys(cur, rkp, lkp, rrecs);
-> >  		xfs_btree_copy_ptrs(cur, rpp, lpp, rrecs);
-> >  
-> >  		xfs_btree_log_keys(cur, rbp, 1, rrecs);
-> >  		xfs_btree_log_ptrs(cur, rbp, 1, rrecs);
-> >  
-> > -		/* Grab the keys to the entries moved to the right block */
-> > -		xfs_btree_copy_keys(cur, key, rkp, 1);
-> > +		/* Stash the keys of the new block for later insertion. */
-> > +		cur->bc_ops->get_node_keys(cur, right, key);
-> >  	} else {
-> >  		/* It's a leaf.  Move records.  */
-> >  		union xfs_btree_rec	*lrp;	/* left record pointer */
-> > @@ -2463,14 +2517,14 @@ __xfs_btree_split(
-> >  		lrp = xfs_btree_rec_addr(cur, src_index, left);
-> >  		rrp = xfs_btree_rec_addr(cur, 1, right);
-> >  
-> > +		/* Copy records to the new block. */
-> >  		xfs_btree_copy_recs(cur, rrp, lrp, rrecs);
-> >  		xfs_btree_log_recs(cur, rbp, 1, rrecs);
-> >  
-> > -		cur->bc_ops->init_key_from_rec(key,
-> > -			xfs_btree_rec_addr(cur, 1, right));
-> > +		/* Stash the keys of the new block for later insertion. */
-> > +		cur->bc_ops->get_leaf_keys(cur, right, key);
-> >  	}
-> >  
-> > -
-> >  	/*
-> >  	 * Find the left block number by looking in the buffer.
-> >  	 * Adjust numrecs, sibling pointers.
-> > @@ -2480,10 +2534,6 @@ __xfs_btree_split(
-> >  	xfs_btree_set_sibling(cur, right, &lptr, XFS_BB_LEFTSIB);
-> >  	xfs_btree_set_sibling(cur, left, &rptr, XFS_BB_RIGHTSIB);
-> >  
-> > -	lrecs -= rrecs;
-> > -	xfs_btree_set_numrecs(left, lrecs);
-> > -	xfs_btree_set_numrecs(right, xfs_btree_get_numrecs(right) + rrecs);
-> > -
+> df is reporting 100% full of / and du is reporting only 1.7G usage from 50GB available (less than 4%). I want to mention that / is xfs. See below:
 > 
-> The immediately previous comment needs an update if this gets moved.
 
-I'll update the comment and add a new one at the new site explaining why the
-numrecs update has to come first (the overlapped get_keys() functions need it).
+First and foremost, have you run 'xfs_repair -n' to see if the fs is
+healthy? If so, the next thing I would probably try is mount from a
+single user mode of some sort (or boot a livecd) and recheck from there
+to rule out any OS runtime weirdness going on (open but unlinked files,
+files hidden under mount points, etc.).
 
-> >  	xfs_btree_log_block(cur, rbp, XFS_BB_ALL_BITS);
-> >  	xfs_btree_log_block(cur, lbp, XFS_BB_NUMRECS | XFS_BB_RIGHTSIB);
-> >  
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > index b4f3035..bb40457 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > @@ -180,6 +180,19 @@ struct xfs_btree_ops {
-> >  				union xfs_btree_rec *r1,
-> >  				union xfs_btree_rec *r2);
-> >  #endif
-> > +
-> > +	/* derive the low & high keys from the records in a leaf block */
-> > +	void	(*get_leaf_keys)(struct xfs_btree_cur *cur,
-> > +				 struct xfs_btree_block *block,
-> > +				 union xfs_btree_key *key);
-> > +
-> > +	/* derive the low & high keys from the keys in a node block */
-> > +	void	(*get_node_keys)(struct xfs_btree_cur *cur,
-> > +				 struct xfs_btree_block *block,
-> > +				 union xfs_btree_key *key);
-> > +
-> > +	/* update the parent keys of given btree level */
-> > +	int	(*update_keys)(struct xfs_btree_cur *cur, int level);
-> >  };
-> >  
-> >  /*
-> > @@ -474,5 +487,11 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
-> >  bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
-> >  uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
-> >  				 unsigned long len);
-> > + 
+Brian
+
+> # df -a|grep ^/
+> /dev/mapper/centos-root  52403200 52400396      2804 100% /
+>                                      ^^^^^^^^^^   ^^^^^^^^^^
+> /dev/sda1                  503040   131876    371164  27% /boot
+> /dev/mapper/centos-home 210529792    35204 210494588   1% /home
 > 
-> Whitespace damage here ^
-
-Oops.  Will fix, thanks for the review!
-
---D
-
+> du is estimating just 1.7G usage of /
+> # du -sch /* --exclude=home --exclude=boot
+> 0       /bin
+> 0       /dev
+> 25M     /etc
+> 0       /lib
+> 0       /lib64
+> 744K    /luarocks-2.3.0
+> 0       /media
+> 0       /mnt
+> 125M    /openresty-1.9.7.4
+> 0       /opt
+> 420K    /root
+> 49M     /run
+> 0       /sbin
+> 0       /srv
+> 0       /sys
+> 0       /tmp
+> 1.3G    /usr
+> 227M    /var
+> 1.7G    total
+> [root@localhost ~]#
 > 
-> Brian
+> df is also reporting 80% of inode usage:
 > 
-> > +void xfs_btree_get_leaf_keys(struct xfs_btree_cur *cur,
-> > +		struct xfs_btree_block *block, union xfs_btree_key *key);
-> > +void xfs_btree_get_node_keys(struct xfs_btree_cur *cur,
-> > +		struct xfs_btree_block *block, union xfs_btree_key *key);
-> > +int xfs_btree_update_keys(struct xfs_btree_cur *cur, int level);
-> >  
-> >  #endif	/* __XFS_BTREE_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > index 88da2ad..a48f448 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > @@ -314,6 +314,10 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
-> >  	.keys_inorder		= xfs_inobt_keys_inorder,
-> >  	.recs_inorder		= xfs_inobt_recs_inorder,
-> >  #endif
-> > +
-> > +	.get_leaf_keys		= xfs_btree_get_leaf_keys,
-> > +	.get_node_keys		= xfs_btree_get_node_keys,
-> > +	.update_keys		= xfs_btree_update_keys,
-> >  };
-> >  
-> >  static const struct xfs_btree_ops xfs_finobt_ops = {
-> > @@ -335,6 +339,10 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
-> >  	.keys_inorder		= xfs_inobt_keys_inorder,
-> >  	.recs_inorder		= xfs_inobt_recs_inorder,
-> >  #endif
-> > +
-> > +	.get_leaf_keys		= xfs_btree_get_leaf_keys,
-> > +	.get_node_keys		= xfs_btree_get_node_keys,
-> > +	.update_keys		= xfs_btree_update_keys,
-> >  };
-> >  
-> >  /*
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> # df -i
+> Filesystem                 Inodes IUsed     IFree IUse% Mounted on
+> /dev/mapper/centos-root     78160 66218     11942   85% /
+>                                        ^^^^^^^^
+> devtmpfs                  8218272   519   8217753    1% /dev
+> tmpfs                     8221010     1   8221009    1% /dev/shm
+> tmpfs                     8221010   648   8220362    1% /run
+> tmpfs                     8221010    13   8220997    1% /sys/fs/cgroup
+> /dev/sda1                  509952   330    509622    1% /boot
+> /dev/mapper/centos-home 210632704    99 210632605    1% /home
+> tmpfs                     8221010     1   8221009    1% /run/user/0
+> #
+> 
+> / partition is created on top of a LVM having also 50GB size.
+> 
+> # lvdisplay /dev/centos/root
+>   --- Logical volume ---
+>   LV Path                /dev/centos/root
+>   LV Name                root
+>   VG Name                centos
+> 
+>   LV Status              available
+>   # open                 1
+>   LV Size                50.00 GiB
+>   Current LE             12800
+>   Segments               1
+>   Allocation             inherit
+>   Read ahead sectors     auto
+>   - currently set to     256
+>   Block device           253:0
+> 
+> I've already checked against rootkit without finding anything wrong!
+> 
+> I have another system, identical with this one which is healthy. The only difference I found between those systems is regarding max number of inodes available on / (which has the same size, 50GB on booth servers). On the second one (healthy), max number of inodes are ~52 milions and not only just ~85.000 as are reported on "seek" server.
+> 
+> # df -i|grep ^/
+> /dev/mapper/centos-root  52424704 66137  52358567    1% /
+>                                    ^^^^^^^^^^^^^
+> /dev/sda1                                  509952   330    509622    1% /boot
+> /dev/mapper/centos-home 210632704    26 210632678    1% /home
+> [root@localhost ~]#
+> 
+> Suspected also large number of files on /. Counted total number of files and or booth servers are the same: ~180K. So no difference here.
+> 
+> Look to find also files larger than 100M and on booth servers and found just 1 (104M size):
+> 
+> find / -type f -size +100000k -exec ls -lh {} \;
+> #
+> /usr/lib/locale/locale-archive
+> #
+> 
+> Looking to find files larger than 10M, I found just ~20 on booth servers.
+> 
+> # find / -type f -size +10000k -exec ls -lh {} \; |wc -l
+> 16
+> #
+> 
+> So for sure, there are NO files exhausting free space.
+> 
+> On booth servers, number of used inodes are identical: ~66K. Also xfs_info report is identical for booth. What is different is number of AVAILABLE inodes: 85K (on seek node) vs 52 milion (on healthy node)!!! How is possible that!!! Booth servers has the same size (50GB) for /!
+> 
+> #lsof -nP |grep -i delete|wc -l
+> 0
+> #find /proc/*/fd -ls | grep -i dele|wc -l
+> 0
+> 
+> so lsof and find does not report anything wrong (any file deleted and still open)!
+> 
+> reboot does not fix the problem, / remain 100% full
+> 
+> After reboot, on 25th July:
+> 
+> # df -ah|grep centos-root
+> /dev/mapper/centos-root   50G   50G  4.0M 100% /
+> #
+> 
+> Also max number of inodes = 67k:
+> # df -i
+> Filesystem                 Inodes IUsed     IFree IUse% Mounted on
+> /dev/mapper/centos-root     66960 66165       795   99% /
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> devtmpfs                  8218272   519   8217753    1% /dev
+> tmpfs                     8221010     1   8221009    1% /dev/shm
+> tmpfs                     8221010   630   8220380    1% /run
+> tmpfs                     8221010    13   8220997    1% /sys/fs/cgroup
+> /dev/sda1                  509952   330    509622    1% /boot
+> /dev/mapper/centos-home 210632704    28 210632676    1% /home
+> tmpfs                     8221010     1   8221009    1% /run/user/0
+> #
+> 
+> Lets try to run intentionally xfs_grow (which normally should not produce any change)
+> 
+> # xfs_growfs /dev/mapper/centos-root
+> meta-data=/dev/mapper/centos-root isize=256    agcount=16, agsize=819136 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=0        finobt=0
+> data     =                       bsize=4096   blocks=13106176, imaxpct=25
+>          =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal               bsize=4096   blocks=6400, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> data blocks changed from 13106176 to 13107200
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> #
+> 
+> Partition remain the same, 50GB size:
+> [root@nl-hvs-ov001a ~]# df -ah|grep centos-root
+> /dev/mapper/centos-root   50G   50G  4.0M 100% /
+> 
+> But number of inodes INCREASED with more tha 20%!!!
+> # df -i
+> Filesystem                 Inodes IUsed     IFree IUse% Mounted on
+> /dev/mapper/centos-root     83200 66165     17035   80% /
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> devtmpfs                  8218272   519   8217753    1% /dev
+> tmpfs                     8221010     1   8221009    1% /dev/shm
+> tmpfs                     8221010   630   8220380    1% /run
+> tmpfs                     8221010    13   8220997    1% /sys/fs/cgroup
+> /dev/sda1                  509952   330    509622    1% /boot
+> /dev/mapper/centos-home 210632704    28 210632676    1% /home
+> tmpfs                     8221010     1   8221009    1% /run/user/0
+> #
+> 
+> On 27July without changing anything there, max number inodes available for / decreased to ~67k (the same size like 2 days ago, before xfs_grow)!
+> 
+> # df -i
+> Filesystem                 Inodes IUsed     IFree IUse% Mounted on
+> /dev/mapper/centos-root     67024 66225       799   99% /
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> devtmpfs                  8218272   519   8217753    1% /dev
+> tmpfs                     8221010     1   8221009    1% /dev/shm
+> tmpfs                     8221010   632   8220378    1% /run
+> tmpfs                     8221010    13   8220997    1% /sys/fs/cgroup
+> /dev/mapper/centos-home 210632704    99 210632605    1% /home
+> /dev/sda1                  509952   330    509622    1% /boot
+> tmpfs                     8221010     1   8221009    1% /run/user/0
+> #
+> 
+> Please note that all that time, number of files remain unchanged ~180K, the same for inodes used, the number remain constant ~66K. Just max number of inodes available decreased which is an abnormal behavior.
+> 
+> How can be fixed? Looks like xfs is crrupted or like a bug.
+> 
+> Thanks in advance for help.
+> Alex
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
