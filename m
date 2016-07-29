@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 036C87CA3
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 09:10:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C948F304053
-	for <xfs@oss.sgi.com>; Mon, 25 Jul 2016 07:10:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ifBfTZYZJDo9E8mV (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Jul 2016 07:10:03 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v24 07/22] richacl: Permission mapping functions
-Date: Mon, 25 Jul 2016 16:09:04 +0200
-Message-Id: <1469455759-6141-8-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1469455759-6141-1-git-send-email-agruenba@redhat.com>
-References: <1469455759-6141-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AA47F7CA0
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 09:44:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 17E33AC006
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 07:44:28 -0700 (PDT)
+Received: from mail-oi0-f46.google.com (mail-oi0-f46.google.com
+	[209.85.218.46]) by cuda.sgi.com with ESMTP id HKiHHQux417BgJu8
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Jul 2016 07:44:26 -0700 (PDT)
+Received: by mail-oi0-f46.google.com with SMTP id l65so108907699oib.1
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 07:44:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160729022152.GZ16044@dastard>
+References: <20160727120745.GI6860@quack2.suse.cz>
+	<20160727211039.GA20278@linux.intel.com>
+	<20160727221949.GU16044@dastard> <20160728081033.GC4094@quack2.suse.cz>
+	<20160729022152.GZ16044@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 29 Jul 2016 07:44:25 -0700
+Message-ID: <CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
+Subject: Re: Subtle races between DAX mmap fault and write path
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,216 +30,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-We need to map from POSIX permissions to NFSv4 permissions when a
-chmod() is done, from NFSv4 permissions to POSIX permissions when an acl
-is set (which implicitly sets the file permission bits), and from the
-MAY_READ/MAY_WRITE/MAY_EXEC/MAY_APPEND flags to NFSv4 permissions when
-doing an access check in a richacl.
+On Thu, Jul 28, 2016 at 7:21 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jul 28, 2016 at 10:10:33AM +0200, Jan Kara wrote:
+>> On Thu 28-07-16 08:19:49, Dave Chinner wrote:
+[..]
+>> So DAX doesn't need flushing to maintain consistent view of the data but it
+>> does need flushing to make sure fsync(2) results in data written via mmap
+>> to reach persistent storage.
+>
+> I thought this all changed with the removal of the pcommit
+> instruction and wmb_pmem() going away.  Isn't it now a platform
+> requirement now that dirty cache lines over persistent memory ranges
+> are either guaranteed to be flushed to persistent storage on power
+> fail or when required by REQ_FLUSH?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
----
- fs/richacl.c                 | 112 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h      |   2 +
- include/uapi/linux/richacl.h |  44 +++++++++++++++++
- 3 files changed, 158 insertions(+)
+No, nothing automates cache flushing.  The path of a write is:
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index bcc6591..2072cf4 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -63,3 +63,115 @@ richace_copy(struct richace *to, const struct richace *from)
- {
- 	memcpy(to, from, sizeof(struct richace));
- }
-+
-+/*
-+ * richacl_mask_to_mode  -  compute the file permission bits from mask
-+ * @mask:	%RICHACE_* permission mask
-+ *
-+ * Compute the file permission bits corresponding to a particular set of
-+ * richacl permissions.
-+ *
-+ * See richacl_masks_to_mode().
-+ */
-+static int
-+richacl_mask_to_mode(unsigned int mask)
-+{
-+	int mode = 0;
-+
-+	if (mask & RICHACE_POSIX_MODE_READ)
-+		mode |= S_IROTH;
-+	if (mask & RICHACE_POSIX_MODE_WRITE)
-+		mode |= S_IWOTH;
-+	if (mask & RICHACE_POSIX_MODE_EXEC)
-+		mode |= S_IXOTH;
-+
-+	return mode;
-+}
-+
-+/**
-+ * richacl_masks_to_mode  -  compute file permission bits from file masks
-+ *
-+ * When setting a richacl, we set the file permission bits to indicate maximum
-+ * permissions: for example, we set the Write permission when a mask contains
-+ * RICHACE_APPEND_DATA even if it does not also contain RICHACE_WRITE_DATA.
-+ *
-+ * Permissions which are not in RICHACE_POSIX_MODE_READ,
-+ * RICHACE_POSIX_MODE_WRITE, or RICHACE_POSIX_MODE_EXEC cannot be represented
-+ * in the file permission bits.  Such permissions can still be effective, but
-+ * not for new files or after a chmod(); they must be explicitly enabled in the
-+ * richacl.
-+ */
-+int
-+richacl_masks_to_mode(const struct richacl *acl)
-+{
-+	return richacl_mask_to_mode(acl->a_owner_mask) << 6 |
-+	       richacl_mask_to_mode(acl->a_group_mask) << 3 |
-+	       richacl_mask_to_mode(acl->a_other_mask);
-+}
-+EXPORT_SYMBOL_GPL(richacl_masks_to_mode);
-+
-+/**
-+ * richacl_mode_to_mask  - compute a file mask from the lowest three mode bits
-+ * @mode:	mode to convert to richacl permissions
-+ *
-+ * When the file permission bits of a file are set with chmod(), this specifies
-+ * the maximum permissions that processes will get.  All permissions beyond
-+ * that will be removed from the file masks, and become ineffective.
-+ */
-+unsigned int
-+richacl_mode_to_mask(umode_t mode)
-+{
-+	unsigned int mask = 0;
-+
-+	if (mode & S_IROTH)
-+		mask |= RICHACE_POSIX_MODE_READ;
-+	if (mode & S_IWOTH)
-+		mask |= RICHACE_POSIX_MODE_WRITE;
-+	if (mode & S_IXOTH)
-+		mask |= RICHACE_POSIX_MODE_EXEC;
-+
-+	return mask;
-+}
-+
-+/**
-+ * richacl_want_to_mask  - convert the iop->permission want argument to a mask
-+ * @want:	@want argument of the permission inode operation
-+ *
-+ * When checking for append, create file, create dir, or delete child access,
-+ * MAY_WRITE is also set in @want.
-+ */
-+static unsigned int
-+richacl_want_to_mask(unsigned int want)
-+{
-+	unsigned int mask = 0;
-+
-+	if (want & MAY_READ)
-+		mask |= RICHACE_READ_DATA;
-+	if (want & MAY_DELETE_SELF)
-+		mask |= RICHACE_DELETE;
-+	if (want & MAY_TAKE_OWNERSHIP)
-+		mask |= RICHACE_WRITE_OWNER;
-+	if (want & MAY_CHMOD)
-+		mask |= RICHACE_WRITE_ACL;
-+	if (want & MAY_SET_TIMES)
-+		mask |= RICHACE_WRITE_ATTRIBUTES;
-+	if (want & MAY_EXEC)
-+		mask |= RICHACE_EXECUTE;
-+	/*
-+	 * differentiate MAY_WRITE from these request
-+	 */
-+	if (want & (MAY_APPEND |
-+		    MAY_CREATE_FILE | MAY_CREATE_DIR |
-+		    MAY_DELETE_CHILD)) {
-+		if (want & MAY_APPEND)
-+			mask |= RICHACE_APPEND_DATA;
-+		if (want & MAY_CREATE_FILE)
-+			mask |= RICHACE_ADD_FILE;
-+		if (want & MAY_CREATE_DIR)
-+			mask |= RICHACE_ADD_SUBDIRECTORY;
-+		if (want & MAY_DELETE_CHILD)
-+			mask |= RICHACE_DELETE_CHILD;
-+	} else if (want & MAY_WRITE)
-+		mask |= RICHACE_WRITE_DATA;
-+	return mask;
-+}
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index edb8480..70923f8 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -175,5 +175,7 @@ richace_is_same_identifier(const struct richace *a, const struct richace *b)
- extern struct richacl *richacl_alloc(int, gfp_t);
- extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
- extern void richace_copy(struct richace *, const struct richace *);
-+extern int richacl_masks_to_mode(const struct richacl *);
-+extern unsigned int richacl_mode_to_mask(umode_t);
- 
- #endif /* __RICHACL_H */
-diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
-index 08856f8..1ed48ac 100644
---- a/include/uapi/linux/richacl.h
-+++ b/include/uapi/linux/richacl.h
-@@ -96,4 +96,48 @@
- 	RICHACE_WRITE_OWNER |					\
- 	RICHACE_SYNCHRONIZE )
- 
-+/*
-+ * The POSIX permissions are supersets of the following richacl permissions:
-+ *
-+ *  - MAY_READ maps to READ_DATA or LIST_DIRECTORY, depending on the type
-+ *    of the file system object.
-+ *
-+ *  - MAY_WRITE maps to WRITE_DATA or RICHACE_APPEND_DATA for files, and to
-+ *    ADD_FILE, RICHACE_ADD_SUBDIRECTORY, or RICHACE_DELETE_CHILD for directories.
-+ *
-+ *  - MAY_EXECUTE maps to RICHACE_EXECUTE.
-+ *
-+ *  (Some of these richacl permissions have the same bit values.)
-+ */
-+#define RICHACE_POSIX_MODE_READ (			\
-+		RICHACE_READ_DATA |			\
-+		RICHACE_LIST_DIRECTORY)
-+#define RICHACE_POSIX_MODE_WRITE (			\
-+		RICHACE_WRITE_DATA |			\
-+		RICHACE_ADD_FILE |			\
-+		RICHACE_APPEND_DATA |			\
-+		RICHACE_ADD_SUBDIRECTORY |		\
-+		RICHACE_DELETE_CHILD)
-+#define RICHACE_POSIX_MODE_EXEC RICHACE_EXECUTE
-+#define RICHACE_POSIX_MODE_ALL (			\
-+		RICHACE_POSIX_MODE_READ |		\
-+		RICHACE_POSIX_MODE_WRITE |		\
-+		RICHACE_POSIX_MODE_EXEC)
-+
-+/*
-+ * These permissions are always allowed no matter what the acl says.
-+ */
-+#define RICHACE_POSIX_ALWAYS_ALLOWED (			\
-+		RICHACE_SYNCHRONIZE |			\
-+		RICHACE_READ_ATTRIBUTES |		\
-+		RICHACE_READ_ACL)
-+
-+/*
-+ * The owner is implicitly granted these permissions under POSIX.
-+ */
-+#define RICHACE_POSIX_OWNER_ALLOWED (			\
-+		RICHACE_WRITE_ATTRIBUTES |		\
-+		RICHACE_WRITE_OWNER |			\
-+		RICHACE_WRITE_ACL)
-+
- #endif /* __UAPI_RICHACL_H */
--- 
-2.5.5
+cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
+
+The ADR mechanism and the wpq-flush facility flush data thorough the
+imc (integrated memory controller) to media.  dax_do_io() gets writes
+to the imc, but we still need a posted-write-buffer flush mechanism to
+guarantee data makes it out to media.
+
+
+> https://lkml.org/lkml/2016/7/9/131
+>
+> And part of that is the wmb_pmem() calls are going away?
+>
+> https://lkml.org/lkml/2016/7/9/136
+> https://lkml.org/lkml/2016/7/9/140
+>
+> i.e. fsync on pmem only needs to take care of writing filesystem
+> metadata now, and the pmem driver handles the rest when it gets a
+> REQ_FLUSH bio from fsync?
+>
+> https://lkml.org/lkml/2016/7/9/134
+>
+> Or have we somehow ended up with the fucked up situation where
+> dax_do_io() writes are (effectively) immediately persistent and
+> untracked by internal infrastructure, whilst mmap() writes
+> require internal dirty tracking and fsync() to flush caches via
+> writeback?
+
+dax_do_io() writes are not immediately persistent.  They bypass the
+cpu-cache and cpu-write-bufffer and are ready to be flushed to media
+by REQ_FLUSH or power-fail on an ADR system.
 
 _______________________________________________
 xfs mailing list
