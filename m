@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 45B787CA0
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 13:58:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9137DAC009
-	for <xfs@oss.sgi.com>; Thu, 28 Jul 2016 11:58:29 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id uHizhFpydGzm3fAu (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 46F7C7CA1
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 08:37:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A29F304053
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 06:37:53 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id hhIND0YXmemxnHCH (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Jul 2016 11:58:27 -0700 (PDT)
-Date: Thu, 28 Jul 2016 11:58:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/47] xfs: fix locking of the rt bitmap/summary inodes
-Message-ID: <20160728185820.GC15753@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907698690.25461.7316591529865921141.stgit@birch.djwong.org>
-	<20160726163607.GB31917@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Sat, 30 Jul 2016 06:37:52 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id F364220CA5
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 15:37:50 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3s1mqy40B9z104t
+	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 15:37:50 +0200 (CEST)
+Date: Sat, 30 Jul 2016 15:37:37 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: [PATCH xfsprogs 2/2] linux.h: Define xfs_off_t as int64_t
+Message-ID: <20160730133737.GB5895@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160726163607.GB31917@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,83 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 26, 2016 at 12:36:07PM -0400, Brian Foster wrote:
-> On Wed, Jul 20, 2016 at 09:56:26PM -0700, Darrick J. Wong wrote:
-> > When we're deleting realtime extents, we need to lock the summary
-> > inode in case we need to update the summary info to prevent an assert
-> > on the rsumip inode lock on a debug kernel.  While we're at it, fix
-> > the locking annotations so that we avoid triggering lockdep warnings.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> I haven't tried the rt stuff in quite some time (and even then never
-> really played with it much). What's the assert that fails?
+int64_t is guaranteed to have the correct size and signedness and is
+always avaible because linux.h has a <inttypes.h> include.
 
-The first assert that I noticed is in xfs_rtfree_extent():
+Fixes compilation error "unkown type name 'off64_t'" on linux when the
+public header <xfs.h> is included without _LARGEFILE64_SOURCE or
+_GNU_SOURCE defined. This bug was introduced in commit
+cb898f157f8410a03cf5f3400baa1df9e5eecd33.
 
-ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
+---
+ include/linux.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I then noticed that we weren't locking the summary inode either, which
-triggers this assert in xfs_bmapi_read():
-
-ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
-
-which has this call stack:
-
-xfs_rtfree_extent -> xfs_rtmodify_summary -> xfs_rtmodify_summary_int ->
-xfs_rtbuf_get -> xfs_bmapi_read.
-
---D
-
-> 
-> Brian
-> 
-> >  fs/xfs/libxfs/xfs_bmap.c |    4 +++-
-> >  fs/xfs/xfs_bmap_util.c   |    4 ++--
-> >  2 files changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 2f2c85c..c5981f4 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -5179,8 +5179,10 @@ xfs_bunmapi(
-> >  		/*
-> >  		 * Synchronize by locking the bitmap inode.
-> >  		 */
-> > -		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-> > +		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
-> >  		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-> > +		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
-> > +		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
-> >  	}
-> >  
-> >  	extno = 0;
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index cd4a850..998c3e6 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -214,9 +214,9 @@ xfs_bmap_rtalloc(
-> >  	/*
-> >  	 * Lock out modifications to both the RT bitmap and summary inodes
-> >  	 */
-> > -	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-> > +	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL|XFS_ILOCK_RTBITMAP);
-> >  	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-> > -	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
-> > +	xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL|XFS_ILOCK_RTSUM);
-> >  	xfs_trans_ijoin(ap->tp, mp->m_rsumip, XFS_ILOCK_EXCL);
-> >  
-> >  	/*
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/include/linux.h b/include/linux.h
+index 5614719..7653cac 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -137,7 +137,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+ #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
+ #define EFSBADCRC	EBADMSG	/* Bad CRC detected */
+ 
+-typedef off64_t		xfs_off_t;
++typedef int64_t		xfs_off_t;
+ typedef __uint64_t	xfs_ino_t;
+ typedef __uint32_t	xfs_dev_t;
+ typedef __int64_t	xfs_daddr_t;
+-- 
+2.7.3
 
 _______________________________________________
 xfs mailing list
