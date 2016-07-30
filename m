@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 797A27CA0
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 05:48:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B9A48F8050
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 03:48:09 -0700 (PDT)
-Received: from smtp.movistar.es (smtp20.acens.net [86.109.99.144]) by
-	cuda.sgi.com with ESMTP id j0dAPPWVXKVtNFC0 for
-	<xfs@oss.sgi.com>; Fri, 29 Jul 2016 03:48:06 -0700 (PDT)
-Received: from minas-tirith.valinor (79.149.87.62) by smtp.movistar.es
-	(8.6.122.03) (authenticated as robin.listas2)
-	id 5784B02500FBDEBD for xfs@oss.sgi.com; Fri, 29 Jul 2016 10:48:05 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id 785C21814D8
-	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 12:48:04 +0200 (CEST)
-Date: Fri, 29 Jul 2016 12:48:04 +0200 (CEST)
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Subject: Re: partition 100% full No space left on device. looks like xfs is
-	corrupted or a bug
-In-Reply-To: <4278AB9734C1445A8E48635B155149F8@dinulap>
-Message-ID: <alpine.LSU.2.20.1607291240530.18210@zvanf-gvevgu.inyvabe>
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7802C7CA0
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 19:13:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE398AC005
+	for <xfs@oss.sgi.com>; Fri, 29 Jul 2016 17:13:36 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	h8oBNEpo1h7ODNfV for <xfs@oss.sgi.com>;
+	Fri, 29 Jul 2016 17:13:34 -0700 (PDT)
+Date: Sat, 30 Jul 2016 10:12:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Subtle races between DAX mmap fault and write path
+Message-ID: <20160730001249.GE16044@dastard>
+References: <20160727120745.GI6860@quack2.suse.cz>
+	<20160727211039.GA20278@linux.intel.com>
+	<20160727221949.GU16044@dastard>
+	<20160728081033.GC4094@quack2.suse.cz>
+	<20160729022152.GZ16044@dastard>
+	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	BOUNDARY="-1463758550-1875274906-1469789284=:18210"
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +30,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, Jul 29, 2016 at 07:44:25AM -0700, Dan Williams wrote:
+> On Thu, Jul 28, 2016 at 7:21 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Jul 28, 2016 at 10:10:33AM +0200, Jan Kara wrote:
+> >> On Thu 28-07-16 08:19:49, Dave Chinner wrote:
+> [..]
+> >> So DAX doesn't need flushing to maintain consistent view of the data but it
+> >> does need flushing to make sure fsync(2) results in data written via mmap
+> >> to reach persistent storage.
+> >
+> > I thought this all changed with the removal of the pcommit
+> > instruction and wmb_pmem() going away.  Isn't it now a platform
+> > requirement now that dirty cache lines over persistent memory ranges
+> > are either guaranteed to be flushed to persistent storage on power
+> > fail or when required by REQ_FLUSH?
+> 
+> No, nothing automates cache flushing.  The path of a write is:
+> 
+> cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
+> 
+> The ADR mechanism and the wpq-flush facility flush data thorough the
+> imc (integrated memory controller) to media.  dax_do_io() gets writes
+> to the imc, but we still need a posted-write-buffer flush mechanism to
+> guarantee data makes it out to media.
 
----1463758550-1875274906-1469789284=:18210
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+So what you are saying is that on and ADR machine, we have these
+domains w.r.t. power fail:
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
 
+|-------------volatile-------------------|-----persistent--------------|
 
+because anything that gets to the IMC is guaranteed to be flushed to
+stable media on power fail.
 
-El 2016-07-29 a las 12:01 +0300, Lista Unx escribió:
+But on a posted-write-buffer system, we have this:
 
->Hello xfs experts,
-> 
->I am crawling in the dark from few days and I have no idea how to fix the following problem. On a centos 7 system:
+cpu-cache -> cpu-write-buffer -> bus -> imc -> imc-write-buffer -> media
 
-I'm not an expert, far from it, but... may I suggest you add the output 
-of a plain "mount" command? To show the partitions. Or perhaps:
+|-------------volatile-------------------------------------------|--persistent--|
 
-lsblk --output NAME,TYPE,FSTYPE,SIZE,TYPE,MOUNTPOINT
+IOWs, only things already posted to the media via REQ_FLUSH are
+considered stable on persistent media.  What happens in this case
+when power fails during a media update? Incomplete writes?
 
+> > Or have we somehow ended up with the fucked up situation where
+> > dax_do_io() writes are (effectively) immediately persistent and
+> > untracked by internal infrastructure, whilst mmap() writes
+> > require internal dirty tracking and fsync() to flush caches via
+> > writeback?
+> 
+> dax_do_io() writes are not immediately persistent.  They bypass the
+> cpu-cache and cpu-write-bufffer and are ready to be flushed to media
+> by REQ_FLUSH or power-fail on an ADR system.
 
-- -- 
-Cheers
-        Carlos E. R.
+IOWs, on an ADR system  write is /effectively/ immediately persistent
+because if power fails ADR guarantees it will be flushed to stable
+media, while on a posted write system it is volatile and will be
+lost. Right?
 
-        (from 13.1 x86_64 "Bottle" (Minas Tirith))
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+If so, that's even worse than just having mmap/write behave
+differently - now writes will behave differently depending on the
+specific hardware installed. I think this makes it even more
+important for the DAX code to hide this behaviour from the
+fielsystems by treating everything as volatile.
 
-iF4EAREIAAYFAlebNGQACgkQja8UbcUWM1y9WgEAhICHy+Td+nf5SFkIXshTL0hi
-9KQinIbllstvICOAPhUBAIcP1gcc+LmfO6b4f4gsgUH6L3dwemQoeW6OYrdPvV/Q
-=NyhW
------END PGP SIGNATURE-----
----1463758550-1875274906-1469789284=:18210
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+If we track the dirty blocks from write in the radix tree like we
+for mmap, then we can just use a normal memcpy() in dax_do_io(),
+getting rid of the slow cache bypass that is currently run. Radix
+tree updates are much less expensive than a slow memcpy of large
+amounts of data, ad fsync can then take care of persistence, just
+like we do for mmap.
+
+We should just make the design assumption that all persistent memory
+is volatile, track where we dirty it in all paths, and use the
+fastest volatile memcpy primitives available to us in the IO path.
+We'll end up with a faster fastpath that if we use CPU cache bypass
+copies, dax_do_io() and mmap will be coherent and synchronised, and
+fsync() will have the same requirements and overhead regardless of
+the way the application modifies the pmem or the hardware platform
+used to implement the pmem.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----1463758550-1875274906-1469789284=:18210--
