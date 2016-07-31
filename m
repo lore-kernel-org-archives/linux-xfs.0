@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB1717CA0
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 06:18:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D7538F8035
-	for <xfs@oss.sgi.com>; Mon, 18 Jul 2016 04:18:56 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	C3Cz0uECnqCDlM5I for <xfs@oss.sgi.com>;
-	Mon, 18 Jul 2016 04:18:53 -0700 (PDT)
-Date: Mon, 18 Jul 2016 21:18:51 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6B6777CA0
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 14:19:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E0BA1AC001
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 12:19:08 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id W3Ltq22yxnfB01fR (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 12:19:02 -0700 (PDT)
+Date: Sun, 31 Jul 2016 21:19:00 +0200
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: iomap infrastructure and multipage writes V5
-Message-ID: <20160718111851.GD16044@dastard>
+Message-ID: <20160731191900.GA29301@lst.de>
 References: <1464792297-13185-1-git-send-email-hch@lst.de>
 	<20160628002649.GI12670@dastard> <20160630172239.GA23082@lst.de>
-	<20160718111400.GC16044@dastard>
+	<20160718111400.GC16044@dastard> <20160718111851.GD16044@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160718111400.GC16044@dastard>
+In-Reply-To: <20160718111851.GD16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +31,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Mon, Jul 18, 2016 at 09:14:00PM +1000, Dave Chinner wrote:
-> On Thu, Jun 30, 2016 at 07:22:39PM +0200, Christoph Hellwig wrote:
-> > On Tue, Jun 28, 2016 at 10:26:49AM +1000, Dave Chinner wrote:
-> > > Christoph, it look slike there's an ENOSPC+ENOMEM behavioural regression here.
-> > > generic/224 on my 1p/1GB RAM VM using a 1k lock size filesystem has
-> > > significantly different behaviour once ENOSPC is hit withi this patchset.
-> > > 
-> > > It ends up with an endless stream of errors like this:
-> > 
-> > I've spent some time trying to reproduce this.  I'm actually getting
-> > the OOM killer almost reproducible for for-next without the iomap
-> > patches as well when just using 1GB of mem.  1400 MB is the minimum
-> > I can reproducibly finish the test with either code base.
-> > 
-> > But with the 1400 MB setup I see a few interesting things.  Even
-> > with the baseline, no-iomap case I see a few errors in the log:
-> > 
-> > [   70.407465] Filesystem "vdc": reserve blocks depleted! Consider increasing
-> > reserve pool
-> > size.
-> > [   70.195645] XFS (vdc): page discard on page ffff88005682a988, inode 0xd3, offset 761856.
-> > [   70.408079] Buffer I/O error on dev vdc, logical block 1048513, lost async
-> > page write
-> > [   70.408598] Buffer I/O error on dev vdc, logical block 1048514, lost async
-> > page write
-> >  27s
-> > 
-> > With iomap I also see the spew of page discard errors your see, but while
-> > I see a lot of them, the rest still finishes after a reasonable time,
-> > just a few seconds more than the pre-iomap baseline.  I also see the
-> > reserve block depleted message in this case.
-> > 
-> > Digging into the reserve block depleted message - it seems we have
-> > too many parallel iomap_allocate transactions going on.  I suspect
-> > this might be because the writeback code will not finish a writeback
-> > context if we have multiple blocks inside a page, which can
-> > happen easily for this 1k ENOSPC setup.  I've not had time to fully
-> > check if this is what really happens, but I did a quick hack (see below)
-> > to only allocate 1k at a time in iomap_begin, and with that generic/224
-> > finishes without the warning spew.  Of course this isn't a real fix,
-> > and I need to fully understand what's going on in writeback due to
-> > different allocation / dirtying patterns from the iomap change.
-> 
-> Any progress here, Christoph? The current test run has been running
-> generic/224 on the 1GB mem test Vm for almost 6 hours now, and it's
-> still discarding pages. This doesn't always happen - sometimes it
-> takes the normal amount of time to run, but every so often it falls
-> into this "discard every page" loop and it takes hours to
-> complete...
+Another quiet weekend trying to debug this, and only minor progress.
 
-.... and I've now got a 16p/16GB RAM VM stuck in this loop in
-generic/224, so it's not limited to low memory machines....
+The biggest different in traces of the old vs new code is that we manage
+to allocate much bigger delalloc reservations at a time in xfs_bmapi_delay
+-> xfs_bmapi_reserve_delalloc.  The old code always went for a single FSB,
+which also meant allocating an indlen of 7 FSBs.  With the iomap code
+we always allocate at least 4FSB (aka a page), and sometimes 8 or 12.
+All of these still need 7 FSBs for the worst case indirect blocks.  So
+what happens here is that in an ENOSPC case we manage to allocate more
+actual delalloc blocks before hitting ENOSPC - notwithstanding that the
+old case would immediately release them a little later in
+xfs_bmap_add_extent_hole_delay after merging the delalloc extents.
 
-Cheers,
+On the writeback side I don't see to many changes either.  We'll
+eventually run out of blocks when allocating the transaction in
+xfs_iomap_write_allocate because the reserved pool is too small.  The
+only real difference to before is that under the ENOSPC / out of memory
+case we have allocated between 4 to 12 times more blocks, so we have
+to clean up 4 to 12 times as much while write_cache_pages continues
+iterating over these dirty delalloc blocks.   For me this happens
+~6 times as much as before, but I still don't manage to hit an
+endless loop.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Now after spending this much time I've started wondering why we even
+reserve blocks in xfs_iomap_write_allocate - after all we've reserved
+space for the actual data blocks and the indlen worst case in
+xfs_bmapi_reserve_delalloc.  And in fact a little hack to drop that
+reservation seems to solve both the root cause (depleted reserved pool)
+and the cleanup mess.  I just haven't spend enought time to convince
+myself that it's actually safe, and in fact looking at the allocator
+makes me thing it only works by accident currently despite generally
+postive test results.
+
+Here is the quick patch if anyone wants to chime in:
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 620fc91..67c317f 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -717,7 +717,7 @@ xfs_iomap_write_allocate(
+ 
+ 		nimaps = 0;
+ 		while (nimaps == 0) {
+-			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++			nres = 0; // XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+ 
+ 			error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, nres,
+ 					0, XFS_TRANS_RESERVE, &tp);
 
 _______________________________________________
 xfs mailing list
