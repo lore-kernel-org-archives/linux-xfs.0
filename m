@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DD5E37CA1
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 08:37:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ADA4230405F
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 06:37:44 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id CKqdYEfpz3DNKpR5 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 30 Jul 2016 06:37:41 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id D493320BB6
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 15:37:38 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s1mqk2YYdz104Q
-	for <xfs@oss.sgi.com>; Sat, 30 Jul 2016 15:37:38 +0200 (CEST)
-Date: Sat, 30 Jul 2016 15:37:25 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH xfsprogs 1/2] Remove workaround for getsubopt() on <glibc-2.2
-Message-ID: <20160730133725.GA5895@nyan>
+	by oss.sgi.com (Postfix) with ESMTP id 9B8647CB1
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 23:39:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DEE3304051
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 21:39:42 -0700 (PDT)
+Received: from mail-oi0-f51.google.com (mail-oi0-f51.google.com
+	[209.85.218.51]) by cuda.sgi.com with ESMTP id Pz6Q8mPZG7SsE33c
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 31 Jul 2016 21:39:40 -0700 (PDT)
+Received: by mail-oi0-f51.google.com with SMTP id w18so177883414oiw.3
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 21:39:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20160801040737.GJ16044@dastard>
+References: <20160727120745.GI6860@quack2.suse.cz>
+	<20160727211039.GA20278@linux.intel.com>
+	<20160727221949.GU16044@dastard> <20160728081033.GC4094@quack2.suse.cz>
+	<20160729022152.GZ16044@dastard>
+	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
+	<20160730001249.GE16044@dastard>
+	<CAPcyv4gLTkx4ne7pWuMSqfFpLoOBx=TowvcWXw9UGUxn=jd-Tg@mail.gmail.com>
+	<20160801014645.GI16044@dastard> <86k2g15gh8.fsf@hiro.keithp.com>
+	<20160801040737.GJ16044@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 31 Jul 2016 21:39:38 -0700
+Message-ID: <CAPcyv4jN5OvbPMA07w0vjBCBrGH-j2YsCjfvB3b6S6JJ_zUA=Q@mail.gmail.com>
+Subject: Re: Subtle races between DAX mmap fault and write path
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,198 +39,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Keith Packard <keithp@keithp.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-The workaround addressed only a const-correctness warning.
-It was wrongly applied also to alternative c libraries on linux.
+On Sun, Jul 31, 2016 at 9:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Jul 31, 2016 at 08:13:23PM -0700, Keith Packard wrote:
+>> Dave Chinner <david@fromorbit.com> writes:
+>>
+>> > So we'd see that from the point of view of a torn single sector
+>> > write. Ok, so we better limit DAX to CRC enabled filesystems to
+>> > ensure these sorts of events are always caught by the filesystem.
+>>
+>> Which is the same lack of guarantee that we already get on rotating
+>> media. Flash media seems to work harder to provide sector atomicity; I
+>> guess that's a feature?
+>
+> No, that's not the case. Existing sector based storage guarantees
+> atomic sector writes - rotating or solid state. I haven't seen one a
+> corruption caused by a torn sector write in 15 years.  BTT layer was
+> written for pmem to provide this guarantee, but you can't use DAX
+> through that layer.
+>
+> In XFS, the only place we really care about torn sector writes in
+> the journal - we have CRCs there to detect such problems and CRC
+> enabled filesystems will prevent recovery of checkpoints containing
+> torn writes. Non-CRC enable filesystems just warn and continue on
+> their merry way (compatibility reasons - older kernels don't emit
+> CRCs in log writes), so we really do need to restrict DAX to CRC
+> enabled filesystems.
+>
+>> The alternative is to hide metadata behind a translation layer, and
+>> while that can be done for lame file systems,
+>
+> No. These "lame" filesystems just need to use their existing
+> metadata buffering layer to hide this and the journalling subsystem
+> should protects against torn metadata writes.
+>
+>> I'd like to see the raw
+>> hardware capabilities exposed and then make free software that
+>> constructs a reliable system on top of that.
+>
+> Not as easy as it sounds.  A couple of weeks ago I tried converting
+> the XFS journal to use DAX to avoid the IO layer and resultant
+> memcpy(), and I found out that there's a major problem with using
+> DAX for metadata access on existing filesystems: pmem is not
+> physically contiguous. I found that out the hard way - the ramdisk
+> is DAX capable, but each 4k page ithat is allocated to it has a
+> different memory address.
+>
+> Filesystems are designed around the fact that the block address
+> space they are working with is contiguous - that sector N and sector
+> N+1 can be accessed in the same IO. This is not true for
+> direct access of pmem - while the sectors might be logically
+> contiguous, the physical memory that is directly accessed is not.
+> i.e. when we cross a page boundary, the next page could be on a
+> different node, on a different device (e.g.  RAID0), etc.
+> Traditional remapping devices (i.e. DM, md, etc) hide the physical
+> discontiguities from the filesystem - the present a contiguous LBA
+> and remap/split/combine under the covers where the filesystem is not
+> aware of it at all.
+>
+> The reason this is important is that if the filesystem has metadata
+> constructs larger than a single page it can't use DAX to access them
+> as a single object because they may lay across a physical
+> discontiguity in the memory map.  Filesystems aren't usually exposed
+> to this - sectors of a block device are indexed by "Logical Block
+> Address" for good reason - the LBA address space is supposed to hide
+> the physical layout of the storage from the layer above the block
+> device.
+>
+> OTOH, DAX directly exposes the physical layout to the filesytem.
+> And because it's DAX-based pmem and not cached struct pages, we
+> can't run vm_map_ram() to virtually map the range we need to see as
+> a contiguous range, as we do in XFS for large objects such as directory
+> blocks and log buffers. For other large objects such as inode
+> clusters, we can directly map each page as the objects within the
+> clusters are page aligned and never overlap page boundaries, but
+> that only works for inode and dquot buffers. Hence DAX as it stands
+> makes it extremely difficult to "retrofit" DAX into all aspects of
+> existing fileystems because exposing physical discontiguities breaks
+> code that assumes they don't exist.
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- include/darwin.h      |  1 -
- include/freebsd.h     |  2 --
- include/gnukfreebsd.h |  2 --
- include/irix.h        |  2 --
- include/linux.h       |  6 ------
- mkfs/xfs_mkfs.c       | 24 ++++++++----------------
- repair/xfs_repair.c   |  4 ++--
- 7 files changed, 10 insertions(+), 31 deletions(-)
-
-diff --git a/include/darwin.h b/include/darwin.h
-index a52030d..45e0c03 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -160,7 +160,6 @@ typedef int64_t		xfs_daddr_t;
- 
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
- #define EFSBADCRC	991	/* Bad CRC detected */
--#define constpp		char * const *
- 
- #define HAVE_FID	1
- 
-diff --git a/include/freebsd.h b/include/freebsd.h
-index f7e0c75..6e77427 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -43,8 +43,6 @@
- #define fdatasync	fsync
- #define memalign(a,sz)	valloc(sz)
- 
--#define constpp	char * const *
--
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
- #define EFSBADCRC	991	/* Bad CRC detected */
- 
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-index 64167b2..d55acfb 100644
---- a/include/gnukfreebsd.h
-+++ b/include/gnukfreebsd.h
-@@ -33,8 +33,6 @@
- #include <paths.h>
- #include <mntent.h>
- 
--#define constpp	char * const *
--
- #define EFSCORRUPTED	990	/* Filesystem is corrupted */
- #define EFSBADCRC	991	/* Bad CRC detected */
- 
-diff --git a/include/irix.h b/include/irix.h
-index c2191ee..b92e01b 100644
---- a/include/irix.h
-+++ b/include/irix.h
-@@ -184,8 +184,6 @@ typedef struct xfs_efd_log_format_32 {
- #define inline		__inline
- #endif
- 
--#define constpp		char * const *
--
- /*ARGSUSED*/
- static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
- {
-diff --git a/include/linux.h b/include/linux.h
-index 0c616f4..5614719 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -133,12 +133,6 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- 	return 0;
- }
- 
--#if (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ <= 1))
--# define constpp	const char * const *
--#else
--# define constpp	char * const *
--#endif
--
- #define ENOATTR		ENODATA	/* Attribute not found */
- #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG	/* Bad CRC detected */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8007dd0..8b02983 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1521,8 +1521,7 @@ main(
- 				char	**subopts = (char **)bopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case B_LOG:
- 					blocklog = getnum(value, &bopts, B_LOG);
- 					blocksize = 1 << blocklog;
-@@ -1545,8 +1544,7 @@ main(
- 				char	**subopts = (char **)dopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case D_AGCOUNT:
- 					agcount = getnum(value, &dopts,
- 							 D_AGCOUNT);
-@@ -1625,8 +1623,7 @@ main(
- 				char	**subopts = (char **)iopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case I_ALIGN:
- 					sb_feat.inode_align = getnum(value,
- 								&iopts, I_ALIGN);
-@@ -1675,8 +1672,7 @@ main(
- 				char	**subopts = (char **)lopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case L_AGNUM:
- 					logagno = getnum(value, &lopts, L_AGNUM);
- 					laflag = 1;
-@@ -1747,8 +1743,7 @@ main(
- 				char	**subopts = (char **)mopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case M_CRC:
- 					sb_feat.crcs_enabled =
- 						getnum(value, &mopts, M_CRC);
-@@ -1776,8 +1771,7 @@ main(
- 				char	**subopts = (char **)nopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case N_LOG:
- 					dirblocklog = getnum(value, &nopts,
- 							     N_LOG);
-@@ -1832,8 +1826,7 @@ main(
- 				char	**subopts = (char **)ropts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case R_EXTSIZE:
- 					rtextsize = getstr(value, &ropts,
- 							   R_EXTSIZE);
-@@ -1865,8 +1858,7 @@ main(
- 				char	**subopts = (char **)sopts.subopts;
- 				char	*value;
- 
--				switch (getsubopt(&p, (constpp)subopts,
--						  &value)) {
-+				switch (getsubopt(&p, subopts, &value)) {
- 				case S_LOG:
- 				case S_SECTLOG:
- 					if (lssflag)
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index bbf0edc..50a1ac9 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -225,7 +225,7 @@ process_args(int argc, char **argv)
- 			while (*p != '\0')  {
- 				char *val;
- 
--				switch (getsubopt(&p, (constpp)o_opts, &val))  {
-+				switch (getsubopt(&p, o_opts, &val))  {
- 				case ASSUME_XFS:
- 					if (val)
- 						noval('o', o_opts, ASSUME_XFS);
-@@ -276,7 +276,7 @@ process_args(int argc, char **argv)
- 			while (*p) {
- 				char *val;
- 
--				switch (getsubopt(&p, (constpp)c_opts, &val)) {
-+				switch (getsubopt(&p, c_opts, &val)) {
- 				case CONVERT_LAZY_COUNT:
- 					lazy_count = (int)strtol(val, NULL, 0);
- 					convert_lazy_count = 1;
--- 
-2.7.3
+On this specific point about page remapping, the administrator can
+configure struct pages for pmem and you can detect whether they are
+present in the filesystem with pfn_t_has_page().  I.e. you could
+require pages be present for XFS, if that helps...
 
 _______________________________________________
 xfs mailing list
