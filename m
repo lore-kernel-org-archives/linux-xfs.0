@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 03D0F7CFD
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 02:39:15 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 744617CEC
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 03:00:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8BFF8F8035
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 00:39:11 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	lIYtBu5WCsvw0asr for <xfs@oss.sgi.com>;
-	Mon, 01 Aug 2016 00:39:09 -0700 (PDT)
-Date: Mon, 1 Aug 2016 17:39:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Subtle races between DAX mmap fault and write path
-Message-ID: <20160801073906.GK16044@dastard>
-References: <20160727221949.GU16044@dastard>
-	<20160728081033.GC4094@quack2.suse.cz>
-	<20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard>
-	<CAPcyv4gLTkx4ne7pWuMSqfFpLoOBx=TowvcWXw9UGUxn=jd-Tg@mail.gmail.com>
-	<20160801014645.GI16044@dastard> <86k2g15gh8.fsf@hiro.keithp.com>
-	<20160801040737.GJ16044@dastard>
-	<CAPcyv4jN5OvbPMA07w0vjBCBrGH-j2YsCjfvB3b6S6JJ_zUA=Q@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42401304051
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 01:00:46 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id o8JMmHOyuT69r5Lx (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 01:00:44 -0700 (PDT)
+Date: Mon, 1 Aug 2016 01:00:37 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 09/47] xfs: introduce interval queries on btrees
+Message-ID: <20160801080037.GA30547@infradead.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<146907701913.25461.16492865819245768513.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4jN5OvbPMA07w0vjBCBrGH-j2YsCjfvB3b6S6JJ_zUA=Q@mail.gmail.com>
+In-Reply-To: <146907701913.25461.16492865819245768513.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,51 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Keith Packard <keithp@keithp.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, XFS Developers <xfs@oss.sgi.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Sun, Jul 31, 2016 at 09:39:38PM -0700, Dan Williams wrote:
-> On Sun, Jul 31, 2016 at 9:07 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > OTOH, DAX directly exposes the physical layout to the filesytem.
-> > And because it's DAX-based pmem and not cached struct pages, we
-> > can't run vm_map_ram() to virtually map the range we need to see as
-> > a contiguous range, as we do in XFS for large objects such as directory
-> > blocks and log buffers. For other large objects such as inode
-> > clusters, we can directly map each page as the objects within the
-> > clusters are page aligned and never overlap page boundaries, but
-> > that only works for inode and dquot buffers. Hence DAX as it stands
-> > makes it extremely difficult to "retrofit" DAX into all aspects of
-> > existing fileystems because exposing physical discontiguities breaks
-> > code that assumes they don't exist.
+On Wed, Jul 20, 2016 at 09:56:59PM -0700, Darrick J. Wong wrote:
+> Create a function to enable querying of btree records mapping to a
+> range of keys.  This will be used in subsequent patches to allow
+> querying the reverse mapping btree to find the extents mapped to a
+> range of physical blocks, though the generic code can be used for
+> any range query.
 > 
-> On this specific point about page remapping, the administrator can
-> configure struct pages for pmem and you can detect whether they are
-> present in the filesystem with pfn_t_has_page().  I.e. you could
-> require pages be present for XFS, if that helps...
+> v2: add some shortcuts so that we can jump out of processing once
+> we know there won't be any more records to find.
+> 
+> v3: document the range query algorithm, refactor the pop-up code,
+> fix the diff_two_keys usage.
+> 
+> v4: The overlapped query range function should use the btree get_block
+> helper because the root block could be an inode, in which case
+> bc_bufs[nlevels-1] will be NULL.  Refactor the key calculations
+> so that we can return -EINVAL if low > high.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's kinda silly to require struct pages for the entire pmem device
-if they are only needed for accessing a (comparitively) small amount
-of metadata.
+Looks fine,
 
-Besides, now that I look at it more deeply, we can't use virtually
-mapped pmem for the log buffers.  We can't allocate memory at the
-point in time where we work out what LBA in the log we need to map
-to physical pmem for the current log write.  Hence calls to
-vm_map_ram() can't be used, and so that rules out using mapped page
-based pmem for log buffers.
-
-I'll probably have to rewrite the xlog_write() engine completely to
-be able to handle discontiguous pages in the iclog buffers before we
-can consider mapping them via DAX now, and I'm really not sure it's
-worth the effort. I'd much prefer to spend time designing a native
-pmem filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
