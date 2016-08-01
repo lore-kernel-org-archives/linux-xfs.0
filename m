@@ -1,18 +1,18 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9E3257CB5
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 00:20:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F30F8F8039
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 22:20:42 -0700 (PDT)
-Received: from seminar-singapore.com (seminar-singapore.com [153.92.230.9]) by
-	cuda.sgi.com with ESMTP id J752xiu2BOY72wyV for
-	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 22:20:36 -0700 (PDT)
-Subject: =?UTF-8?Q?Boost_Up_Your_Productivity_with_Timesaving_Tips_and_Tricks_in_Microsoft_2013?=
-From: =?UTF-8?Q?Aventis=20Learning=20Group?= <learning@seminar-singapore.com>
+	by oss.sgi.com (Postfix) with ESMTP id B10B17CBA
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 00:21:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 402998F8035
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 22:21:10 -0700 (PDT)
+Received: from kitchen-helper.com ([115.214.61.209]) by cuda.sgi.com with SMTP
+	id g6Nb75EsPEIh0K7x for <xfs@oss.sgi.com>;
+	Sun, 31 Jul 2016 22:21:07 -0700 (PDT)
+From: "yyotsales01@163.com" <yyotsales01@163.com>
+Subject: sink racks
 MIME-Version: 1.0
-Message-Id: <201608010704.pqbd6282lpe4zj@seminar-singapore.com>
-Date: Mon, 01 Aug 2016 07:04:26 +0200
-Reply-To: fta@aventisglobal.edu.sg
+Date: Mon, 1 Aug 2016 12:52:59 +0800
+Message-Id: <20160801052110.5E230D80072@cuda.sgi.com>
+Reply-To: yyotsales01@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,786 +21,360 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0880043445388743103=="
+Content-Type: multipart/mixed; boundary="===============2044130609576191061=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0880043445388743103==
-Content-Type: multipart/alternative; boundary="-------?=_34446-9758955111934"
+--===============2044130609576191061==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
+aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
+U0hUTUwgOC4wMC42MDAxLjIzNTg4Ij48L0hFQUQ+DQo8Qk9EWT4NCjxQIHN0eWxlPSJNQVJHSU46
+IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1Rp
+bWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2Vybmlu
+ZzogMS4wMDAwcHQiPkhpPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1Rp
+bWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2Vybmlu
+ZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBw
+dCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVz
+IE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
+IzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzog
+MS4wMDAwcHQiPlRoaXMgDQppczwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMz
+OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYj
+Mzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtl
+cm5pbmc6IDEuMDAwMHB0Ij4mbmJzcDtRdWVlbmllPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsg
+bXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPiZuYnNwO2Zyb20gDQo8L1NQQU4+PFNQQU4gDQpz
+dHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTog
+MTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFt
+aWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5ZdXlhbyANCk91dGFpIEVs
+ZWN0cmljYWwgY28uPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVz
+IE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
+IzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzog
+MS4wMDAwcHQiPi5XZSANCmFyZSBhIHByb2Zlc3Npb25hbCBtYW51ZmFjdHVyZXIgYW5kIGRlc2ln
+bmVyIGluIDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcg
+Um9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5
+OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4w
+MDAwcHQiPiZuYnNwO21ha2luZyANCjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog
+JiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1
+bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZv
+bnQta2VybmluZzogMS4wMDAwcHQiPmtpdGNoZW53YXJlIA0KPC9TUEFOPjxTUEFOIA0Kc3R5bGU9
+IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVw
+dDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog
+5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+cHJvZDwvU1BBTj48U1BBTiANCnN0
+eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAx
+MC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1p
+bHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPnVjdHMscGxhc3RpYyANCmdp
+ZnRzLGFuZCBob3VzZWhvbGQgcHJvZHVjdHMuPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
+SUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgbXNvLXNw
+YWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBt
+c28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5
+bGU9Ik1BUkdJTjogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1J
+TFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNl
+cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28t
+Zm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+QWxsIA0Kb3VyIDwvU1BBTj48U1BBTiANCnN0eWxlPSJG
+T05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBt
+c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovk
+vZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5wcm9kdWN0czwvU1BBTj48U1BBTiANCnN0
+eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAx
+MnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5
+OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij4mbmJzcDtoYXZlIA0KYmVlbiBJ
+U08gOTAwMSwgYW5kIGdldCBhIGhpZ2ggcmVwdXRhdGlvbiBhbmQgaG90IG1hcmtldCBpbiA8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBt
+c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0OyBt
+c28tYmlkaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWFzY2lp
+LWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1m
+YW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTsiPkU8L1NQQU4+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsg
+bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L
+5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+dXJvcGUgDQphbmQgPC9TUEFOPjxTUEFO
+IA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNl
+cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWJpZGkt
+Zm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1hc2NpaS1mb250LWZh
+bWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAm
+IzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7Ij5OPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
+SUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFj
+ZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNv
+LWZvbnQta2VybmluZzogMS4wMDAwcHQiPm9ydGggDQo8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9O
+VC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVz
+JiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0OyBtc28tYmlkaS1mb250LWZhbWlseTog
+JiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1Rp
+bWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3
+IFJvbWFuJiMzOTsiPkE8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGlt
+ZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3ll
+cyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5n
+OiAxLjAwMDBwdCI+bWVyaWNhPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovk
+vZM7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9u
+dC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWJpZGktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3
+IFJvbWFuJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4m
+IzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7Ij4m
+bmJzcDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJv
+bWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBt
+c28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBw
+dCI+YW5kIA0Kb3RoZXIgY291bnRyaWVzLiA8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1J
+TFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNl
+cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28t
+Zm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9
+Ik1BUkdJTjogMHB0OyBtc28tcGFyYS1tYXJnaW4tbGVmdDogMC4wMDAwZ2QiIGNsYXNzPU1zb05v
+cm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJl
+YXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5Qcm9k
+dWN0cyANCm1haW5seSBpbmNsdWRlIDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog
+JiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46
+ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250
+LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFS
+R0lOOiAwcHQ7IG1zby1wYXJhLW1hcmdpbi1sZWZ0OiAwLjAwMDBnZCIgY2xhc3M9TXNvTm9ybWFs
+PjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgbXNv
+LXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNv
+LWJpZGktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1hc2NpaS1m
+b250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFt
+aWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7Ij4mbmJzcDsmbmJzcDs8L1NQQU4+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0la
+RTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZh
+bWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+MSkgDQo8L1NQQU4+PFNQ
+QU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQt
+U0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZv
+bnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5taWNyb3dhdmUg
+DQpub29kbGUgYm93bDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2Vybmlu
+ZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBw
+dDsgbXNvLXBhcmEtbWFyZ2luLWxlZnQ6IDAuMDAwMGdkIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2Vy
+dW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0OyBtc28tYmlkaS1m
+b250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFt
+aWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYj
+Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTsiPiZuYnNwOyZuYnNwOzwvU1BBTj48U1BBTiANCnN0eWxl
+PSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
+rovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij4yKSANCjwvU1BBTj48U1BBTiANCnN0
+eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAx
+MC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1p
+bHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPm1pY3Jvd2F2ZSANCnNvdXAg
+bXVnPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21h
+biYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBt
+c28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBw
+dCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMHB0OyBtc28tcGFy
+YS1tYXJnaW4tbGVmdDogMC4wMDAwZ2QiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJG
+T05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1zby1iaWRpLWZvbnQtZmFtaWx5
+OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7
+VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBO
+ZXcgUm9tYW4mIzM5OyI+Jm5ic3A7Jm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
+SUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFj
+ZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNv
+LWZvbnQta2VybmluZzogMS4wMDAwcHQiPjMpIA0KPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgbXNv
+LXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2T
+OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+bWljcm93YXZlIA0KcmljZSBjb29rZXI8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7
+IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJl
+YXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpw
+PjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwcHQ7IG1zby1wYXJhLW1hcmdp
+bi1sZWZ0OiAwLjAwMDBnZCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
+SUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7
+OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLWJpZGktZm9udC1mYW1pbHk6ICYjMzk7
+VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBO
+ZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21h
+biYjMzk7Ij4mbmJzcDsmbmJzcDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYj
+Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAm
+IzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1r
+ZXJuaW5nOiAxLjAwMDBwdCI+NCkgDQpkcmFpbiBiYXNrZXQ8L1NQQU4+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
+rovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+
+DQo8UCBzdHlsZT0iTUFSR0lOOiAwcHQ7IG1zby1wYXJhLW1hcmdpbi1sZWZ0OiAwLjAwMDBnZCIg
+Y2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQt
+U0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5n
+OiAxLjAwMDBwdDsgbXNvLWJpZGktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
+OTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
+LWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7Ij4mbmJzcDsmbmJz
+cDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFu
+JiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28t
+ZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+
+NSkgDQpzY29vcCB0cm9vcCBtZWxvbiBiYWxsZXIgYW5kIGZydWl0IHNjb29wIHNldDwvU1BBTj48
+U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9O
+VC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3Qt
+Zm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxvOnA+PC9v
+OnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBwdDsgbXNvLXBhcmEtbWFyZ2luLWxl
+ZnQ6IDAuMDAwMGdkIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
+by1mb250LWtlcm5pbmc6IDEuMDAwMHB0OyBtc28tYmlkaS1mb250LWZhbWlseTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBS
+b21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
+OTsiPiZuYnNwOyZuYnNwOzwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5p
+bmc6IDEuMDAwMHB0Ij42KSANCjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMz
+OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjog
+JiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQt
+a2VybmluZzogMS4wMDAwcHQiPnNpbmsgDQpyYWNrczwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05U
+LUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1z
+by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9
+kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQ
+IHN0eWxlPSJNQVJHSU46IDBwdDsgbXNvLXBhcmEtbWFyZ2luLWxlZnQ6IDAuMDAwMGdkIiBjbGFz
+cz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpF
+OiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDEu
+MDAwMHB0OyBtc28tYmlkaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5Ozsg
+bXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFu
+c2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTsiPiZuYnNwOyZuYnNwOzwv
+U1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJl
+YXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij43KSAN
+CjwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4m
+IzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQi
+PmRlbHV4ZSANCmZhdCBzZXBhcmF0b3I8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2Vy
+dW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1m
+b250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0i
+TUFSR0lOOiAwcHQ7IG1zby1wYXJhLW1hcmdpbi1sZWZ0OiAwLjAwMDBnZCIgY2xhc3M9TXNvTm9y
+bWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsg
+bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsg
+bXNvLWJpZGktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1hc2Np
+aS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQt
+ZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7Ij4mbmJzcDsmbmJzcDs8L1NQQU4+PFNQ
+QU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQt
+U0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+OCkgDQo8L1NQQU4+
+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZP
+TlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0
+LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij4zLWluIA0K
+cGVlbGVyPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBS
+b21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7
+OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAw
+MDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMHB0OyBtc28t
+cGFyYS1tYXJnaW4tbGVmdDogMC4wMDAwZ2QiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxl
+PSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMz
+OTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1zby1iaWRpLWZvbnQtZmFt
+aWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYj
+Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OyI+Jm5ic3A7Jm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQt
+RkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsg
+bXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjkpIA0KPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsg
+bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L
+5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+c21hbGwvYmlnIA0KY3JhZnQgc3RvcmFn
+ZSBib3g8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJv
+bWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7
+IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAw
+MHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwcHQiIGNsYXNz
+PU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9t
+YW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
+by1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0
+Ij4uPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21h
+biYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQi
+PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBwdCIgY2xhc3M9TXNv
+Tm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYj
+Mzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPlBs
+PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYj
+Mzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPmVh
+c2U8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFu
+JiMzOTs7IEZPTlQtU0laRTogMTJwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28t
+ZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+
+Jm5ic3A7ZmVlbCANCmZyZWUgdG8gY29udGFjdCB3aXRoIG1lIGlmIHlvdSB3b3VsZCBsaWtlIHRv
+IGtub3cgbW9yZSAhIDwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVz
+JiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6
+IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwcHQi
+IGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBO
+ZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMz
+OTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEu
+MDAwMHB0Ij5CLndpc2hlczwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5p
+bmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAw
+cHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVz
+JiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6
+IDEuMDAwMHB0Ij48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lO
+OiAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5p
+bmc6IDEuMDAwMHB0Ij5RdWVlbmllPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAm
+IzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IG1zby1zcGFjZXJ1bjog
+JiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQt
+a2VybmluZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJH
+SU46IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5
+O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgbXNvLXNwYWNlcnVuOiAm
+IzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1r
+ZXJuaW5nOiAxLjAwMDBwdCI+WXV5YW8gDQpPdXRhaSBFbGVjdHJpY2FsIGNvLjwvU1BBTj48U1BB
+TiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1T
+SVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9u
+dC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPkNPLiwgDQpMVEQ8
+L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
+OTs7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1m
+YXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48
+bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwcHQiIGNsYXNzPU1zb05v
+cm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPkFk
+ZHJlc3M6PC9TUEFOPjxCPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5l
+dyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgRk9OVC1XRUlHSFQ6IGJvbGQ7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsg
+bXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPk5PLjwvU1BBTj48L0I+PEI+PFNQQU4gDQpzdHls
+ZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAu
+NXB0OyBGT05ULVdFSUdIVDogYm9sZDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28t
+ZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+
+NjA8L1NQQU4+PC9CPjxCPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5l
+dyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVwdDsgRk9OVC1XRUlHSFQ6IGJvbGQ7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsg
+bXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPiZuYnNwOzwvU1BBTj48L0I+PEI+PFNQQU4gDQpz
+dHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTog
+MTAuNXB0OyBGT05ULVdFSUdIVDogYm9sZDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBt
+c28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBw
+dCI+SmluZmVuZzwvU1BBTj48L0I+PEI+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7
+VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0OyBGT05ULVdFSUdIVDogYm9s
+ZDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog
+5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+Jm5ic3A7Um9hZCxZdXlhbyxaaGVq
+aWFuZyxDTiANCjMxNTQwMDwvU1BBTj48L0I+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYj
+Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46
+ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250
+LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFS
+R0lOOiAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMz
+OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMC41cHQ7IG1zby1zcGFjZXJ1bjog
+JiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQt
+a2VybmluZzogMS4wMDAwcHQiPlRlbDo8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2Vy
+dW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1m
+b250LWtlcm5pbmc6IDEuMDAwMHB0Ij4wNTc0LTYyNjQyOTg5PC9TUEFOPjxTUEFOIA0Kc3R5bGU9
+IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEwLjVw
+dDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog
+5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9Q
+Pg0KPFAgc3R5bGU9Ik1BUkdJTjogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTAuNXB0
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
+rovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5FbWFpbDogDQo8L1NQQU4+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0la
+RTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQt
+ZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48QSANCmhyZWY9Im1h
+aWx0bzoyNDM1MTI1MDE3QHFxLmNvbSI+MjQzNTEyNTAxN0BxcS5jb208L0E+PC9TUEFOPjxTUEFO
+IA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJ
+WkU6IDEwLjVwdDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdCI+PG86cD48L286cD48
+L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0la
+RTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQt
+ZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij5za3lwZTo8L1NQQU4+
+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZP
+TlQtU0laRTogMTAuNXB0OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0
+LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwv
+bzpwPjwvU1BBTj48L1A+PCEtLUVuZEZyYWdtZW50LS0+PC9CT0RZPjwvSFRNTD4NCg0K
 
 
----------?=_34446-9758955111934
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-MS Excel 2013 Basics for Business Analysis and Reporting  =C2=A0   [ View i=
-n browser ]( http://r.seminar-singapore.com/2s7fnl5jktpe4zf.html )   =C2=
-=A0         Microsoft Excel 2013 Basics for Business Analysis and Reporting=
-             Boost Up Your Productivity with Timesaving Tips =C2=A0in Micro=
-soft =C2=A02013=0A14 - 15 Sep 2016 (Wed & Thu)| Concorde Hotel, Singapore  =
-       =C2=A0=0A=0AYour Challenge: How to replace manual tracking of busine=
-ss data to automated reports=0A=C2=A0=0ADo you want to learn how to:=0A=
-=C2=A0=0AEasily identify data trends using graphs or charts? Quickly store,=
- sort, and analyze large amounts of data/information? Perform mathematical =
-operations with ease?=0A=C2=A0=0AReplacing manual tracking of business data=
- to automated templates will make it easy for you to monitor financial perf=
-ormance, such as business profit or loss, calculate payments on large purch=
-ases, plan a budget, or stay organized with checklists.=0A=C2=A0=0AOur Solu=
-tion: MS Excel 2013 tips and tricks=0A=C2=A0=0AMicrosoft Excel is one of th=
-e most powerful tools in Microsoft Office Suite of Microsoft Office applica=
-tion. This application is used intensively to keep track of important data =
-that drives the business.=0A=C2=A0=0AYou can use Microsoft Excel to manage =
-all your business data such as maintain customer lists, create employee sch=
-eduling, prepare Financial Statements, find business templates, calculate t=
-he costs of your business using formulas, and prepare impressive business r=
-eports.=C2=A0=0A=C2=A0=0A=C2=A0=0AKey Takeaways=0A=C2=A0=0AThis workshop wi=
-ll prepare you to start using Excel on your own. Throughout the course, you=
- will learn interesting and useful tips and tricks to allow you work more e=
-fficiently with Excel.=0A=C2=A0=0AReady-made templates online for free Lear=
-n to create your own customized templates. Prepare Income Statements, Cash =
-Flows and Balance Sheet. Formatting reports using conditional formatting ru=
-les and styles. Calculating the costs of doing business with financial form=
-ulas. Create interactive charts with data stored in an Excel Table. Summari=
-ze data with interactive PivotTable and PivotChart.=0A=C2=A0=0A=0ANote: Par=
-ticipants are required to bring a laptop with Microsoft Excel 2013.     =
-=C2=A0     =C2=A0=0A=0ATestimonials=0A=C2=A0=0A=E2=80=9CWell done Valene! R=
-eally enjoy this class. You have been very patient and helpful" - Manager, =
-Prudential Assurance=0A=0A=E2=80=9CExcellent! I will definitely recommend t=
-his workshop" - Manager, National Police=0A=C2=A0     =C2=A0     =C2=A0    =
-    Microsoft Business Expert=C2=A0  =C2=A0=0AValene Ang is a Microsoft Cer=
-tified Trainer and Master Instructor of Microsoft Office Specialist (MOS). =
-She brings with her 20 years' experience in corporate training and consulta=
-ncy. Valene has a broad experience in customizing Microsoft Office training=
- programs, developing customized course outline and course material, assist=
-ing corporate clients in business data analysis and providing dynamic repor=
-t solutions.    =C2=A0     =C2=A0=0AEVENT DETAILS=0A=C2=A0=0ADate: 14 & 15 =
-September=0ATime: 9.00am to 5.00pm=0AVenue: 100 Orchard Road Concorde Hotel=
- , #04-100=0AInvestment Fee: Only S$870 After PIC Grant of 40%=0A=C2=A0=0AC=
-ontact Us:=C2=A0Ms Vivian Lee|=C2=A06720 3333 |=C2=A0vivian@aventisglobal.e=
-du.sg    =C2=A0     =C2=A0      [ > REGISTER HERE <=C2=A0 ]( http://r.semin=
-ar-singapore.com/b4tqmcm6b19pe4zd.html )      =C2=A0     =C2=A0=0A=0AThis e=
-mail was sent to xfs@oss.sgi.com=0AYou received this email because you are =
-registered with FT Academy=0A=C2=A0=0A[ Unsubscribe here ]( http://r.semina=
-r-singapore.com/2s7fnl5jktpe4zg.html )   =C2=A0=0A=0ASent by=0A[  ]( http:/=
-/r.seminar-singapore.com/b4tqmcm6btppe4zd.html )   =C2=A0     =C2=A0=0A=0A=
-=C2=A9 2016 Financial Training Academy   =C2=A0
-
-
----------?=_34446-9758955111934
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
-w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns=3D"http://www.w3.=
-org/1999/xhtml" xmlns:v=3D"urn:schemas-microsoft-com:vml"><head><meta http-=
-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge" /><meta name=3D"viewport" c=
-ontent=3D"width=3Ddevice-width, initial-scale=3D1" /><meta http-equiv=3D"Co=
-ntent-Type" content=3D"text/html; charset=3Dutf-8" /><meta name=3D"apple-mo=
-bile-web-app-capable" content=3D"yes" /><meta name=3D"apple-mobile-web-app-=
-status-bar-style" content=3D"black" /><meta name=3D"format-detection" conte=
-nt=3D"telephone=3Dno" /><title>Boost Up Your Productivity with Timesaving T=
-ips and Tricks in Microsoft 2013</title><style type=3D"text/css">=0A       =
- /* Resets */=0A        .ReadMsgBody { width: 100%; background-color: #ebeb=
-eb;}=0A        .ExternalClass {width: 100%; background-color: #ebebeb;}=0A =
-       .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClas=
-s font, .ExternalClass td, .ExternalClass div {line-height:100%;}=0A       =
- body {-webkit-text-size-adjust:none; -ms-text-size-adjust:none;}=0A       =
- body {margin:0; padding:0;}=0A        .yshortcuts a {border-bottom: none !=
-important;}=0A        .rnb-del-min-width{ min-width: 0 !important; }=0A=0A =
-       /* Image width by default for 3 columns */=0A        img[class=3D"rn=
-b-col-3-img"] {=0A        max-width:170px;=0A        }=0A=0A        /* Imag=
-e width by default for 2 columns */=0A        img[class=3D"rnb-col-2-img"] =
-{=0A        max-width:264px;=0A        }=0A=0A        /* Image width by def=
-ault for 2 columns aside small size */=0A        img[class=3D"rnb-col-2-img=
--side-xs"] {=0A        max-width:180px;=0A        }=0A=0A        /* Image w=
-idth by default for 2 columns aside big size */=0A        img[class=3D"rnb-=
-col-2-img-side-xl"] {=0A        max-width:350px;=0A        }=0A=0A        /=
-* Image width by default for 1 column */=0A        img[class=3D"rnb-col-1-i=
-mg"] {=0A        max-width:550px;=0A        }=0A=0A        /* Image width b=
-y default for header */=0A        img[class=3D"rnb-header-img"] {=0A       =
- max-width:590px;=0A        }=0A=0A        /* Ckeditor line-height spacing =
-*/=0A        .rnb-force-col p, ul, ol{margin:0px!important;}=0A        .rnb=
--del-min-width p, ul, ol{margin:0px!important;}=0A=0A        @media screen =
-and (max-width: 360px){=0A        /* yahoo app fix width "tmpl-2 tmpl-10 tm=
-pl-13" in android devices */=0A        .rnb-yahoo-width{ width:360px!import=
-ant;}=0A        }=0A=0A        @media screen and (max-width: 480px) {=0A   =
-     td[class=3D"rnb-container-padding"] {=0A        padding-left: 10px !im=
-portant;=0A        padding-right: 10px !important;=0A        }=0A=0A       =
- /* force container nav to (horizontal) blocks */=0A        td[class=3D"rnb=
--force-nav"] {=0A        display: block;=0A        }=0A        }=0A=0A     =
-   @media only screen and (max-width : 600px) {=0A=0A        /* center the =
-address &amp; social icons */=0A        .rnb-text-center {text-align:center=
- !important;}=0A=0A        /* force container columns to (horizontal) block=
-s */=0A        td[class~=3D"rnb-force-col"] {=0A        display: block;=0A =
-       padding-right: 0 !important;=0A        padding-left: 0 !important;=
-=0A        }=0A=0A        table[class~=3D"rnb-container"] {=0A         widt=
-h: 100% !important;=0A        }=0A=0A        table[class=3D"rnb-btn-col-con=
-tent"] {=0A        width: 100% !important;=0A        }=0A        table[clas=
-s=3D"rnb-col-3"] {=0A        /* unset table align=3D"left/right" */=0A     =
-   float: none !important;=0A        width: 100% !important;=0A=0A        /=
-* change left/right padding and margins to top/bottom ones */=0A        mar=
-gin-bottom: 10px;=0A        padding-bottom: 10px;=0A        /*border-bottom=
-: 1px solid #eee;*/=0A        }=0A=0A        table[class=3D"rnb-last-col-3"=
-] {=0A        /* unset table align=3D"left/right" */=0A        float: none =
-!important;=0A        width: 100% !important;=0A        }=0A=0A        tabl=
-e[class=3D"rnb-col-2"] {=0A        /* unset table align=3D"left/right" */=
-=0A        float: none !important;=0A        width: 100% !important;=0A=0A =
-       /* change left/right padding and margins to top/bottom ones */=0A   =
-     margin-bottom: 10px;=0A        padding-bottom: 10px;=0A        /*borde=
-r-bottom: 1px solid #eee;*/=0A        }=0A=0A        table[class=3D"rnb-col=
--2-noborder-onright"] {=0A        /* unset table align=3D"left/right" */=0A=
-        float: none !important;=0A        width: 100% !important;=0A=0A    =
-    /* change left/right padding and margins to top/bottom ones */=0A      =
-  margin-bottom: 10px;=0A        padding-bottom: 10px;=0A        }=0A=0A   =
-     table[class=3D"rnb-col-2-noborder-onleft"] {=0A        /* unset table =
-align=3D"left/right" */=0A        float: none !important;=0A        width: =
-100% !important;=0A=0A        /* change left/right padding and margins to t=
-op/bottom ones */=0A        margin-top: 10px;=0A        padding-top: 10px;=
-=0A        }=0A=0A        table[class=3D"rnb-last-col-2"] {=0A        /* un=
-set table align=3D"left/right" */=0A        float: none !important;=0A     =
-   width: 100% !important;=0A        }=0A=0A        table[class=3D"rnb-col-=
-1"] {=0A        /* unset table align=3D"left/right" */=0A        float: non=
-e !important;=0A        width: 100% !important;=0A        }=0A=0A        im=
-g[class=3D"rnb-col-3-img"] {=0A        /**max-width:none !important;**/=0A =
-       width:100% !important;=0A        }=0A=0A        img[class=3D"rnb-col=
--2-img"] {=0A        /**max-width:none !important;**/=0A        width:100% =
-!important;=0A        }=0A=0A        img[class=3D"rnb-col-2-img-side-xs"] {=
-=0A        /**max-width:none !important;**/=0A        width:100% !important=
-;=0A        }=0A=0A        img[class=3D"rnb-col-2-img-side-xl"] {=0A       =
- /**max-width:none !important;**/=0A        width:100% !important;=0A      =
-  }=0A=0A        img[class=3D"rnb-col-1-img"] {=0A        /**max-width:none=
- !important;**/=0A        width:100% !important;=0A        }=0A=0A        i=
-mg[class=3D"rnb-header-img"] {=0A        /**max-width:none !important;**/=
-=0A        width:100% !important;=0A        margin:0 auto;=0A        }=0A=
-=0A        img[class=3D"rnb-logo-img"] {=0A        /**max-width:none !impor=
-tant;**/=0A        width:100% !important;=0A        }=0A=0A        td[class=
-=3D"rnb-mbl-float-none"] {=0A        float:inherit !important;=0A        }=
-=0A=0A        .img-block-center{text-align:center!important;}=0A=0A        =
-.logo-img-center=0A        {=0A            float:inherit!important;=0A     =
-   }=0A=0A    }</style><!--[if gte mso 11]><style type=3D"text/css">table{b=
-order-spacing: 0; }table td {border-collapse: separate;}</style><![endif]--=
-><!--[if mso 15]><style type=3D"text/css">.mso-single-img-block {padding:0p=
-x 10px 0px 10px !important;}.msib-left-img {padding:0px 10px 0px 0px !impor=
-tant;}.mso-single-img-block2 {padding:0px 10px 0px 10px !important;}.msib-r=
-ight-img {padding:0px 0px 0px 5px !important;}.mso-double-img-block {paddin=
-g:0px 0px 0px 10px !important;}.mdib-first-left-img {padding:0px 0px 0px 0p=
-x !important;}.mso-three-img-block {padding:0px 0px 0px 10px !important;}.m=
-tib-first-left-img {padding:0px 0px 0px 0px !important;}.mtib-second-left-i=
-mg {padding:0px 0px 0px 0px !important;}.mso-img-content-block {padding:0px=
- 13px 0px 13px !important;}.mso-button-block {padding:0px 10px 0px 10px !im=
-portant;}</style><![endif]--><!--[if !mso]><!--><style type=3D"text/css">ta=
-ble{border-spacing: 0;} table td {border-collapse: collapse;}</style> <!--<=
-![endif]--></head><body>=0A=0A<table border=3D"0" width=3D"100%" cellpaddin=
-g=3D"0" cellspacing=3D"0" class=3D"main-template" bgcolor=3D"#d6d6d6" style=
-=3D"background-color:#d6d6d6;">=0A=0A=09=0A=09<tbody><tr style=3D"display:n=
-one !important; font-size:1px; mso-hide: all;"><td>MS Excel 2013 Basics for=
- Business Analysis and Reporting</td><td></td></tr>=0A=0A=09<tr>=0A=0A=09=
-=09=0A=09=09<td align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=
-=3D"background-color:#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=
-=0A=09=09=09=0A=09=09=09<table class=3D"rnb-del-min-width" width=3D"100%" c=
-ellpadding=3D"0" border=3D"0" cellspacing=3D"0" bgcolor=3D"#d6d6d6" style=
-=3D"min-width:590px; background-color:#d6d6d6" name=3D"Layout_0" id=3D"Layo=
-ut_0">=0A=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=0A=09=09=09=09=09<td cla=
-ss=3D"rnb-del-min-width" valign=3D"top" align=3D"center" style=3D"min-width=
-: 590px; background-color: rgb(85, 85, 85);">=0A=09=09=09=09=09=09<table ce=
-llpadding=3D"0" border=3D"0" align=3D"center" cellspacing=3D"0" class=3D"rn=
-b-yahoo-width">=0A=09=09=09=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=09=09=
-=09<td height=3D"10" style=3D"font-size:1px; line-height:1px;">&nbsp;</td>=
-=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=
-=09=09=09=0A=09=09=09=09=09=09=09=09<td align=3D"center" height=3D"20" styl=
-e=3D"font-size: 13px; color: rgb(255, 255, 255); font-weight: normal; text-=
-align: center; font-family: Arial, Helvetica, sans-serif;">=0A=09=09=09=09=
-=09=09=09=09=09<span style=3D"color: rgb(255, 255, 255); text-decoration: n=
-one;">=0A=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09<a =
-target=3D"_blank" href=3D"http://r.seminar-singapore.com/2s7fnl5jktpe4zf.ht=
-ml" style=3D"text-decoration: none; color: rgb(255, 255, 255);">View in bro=
-wser</a>=0A=09=09=09=09=09=09=09=09=09</span>=0A=09=09=09=09=09=09=09=09</t=
-d>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=
-=09=09=09=09<td height=3D"10" style=3D"font-size:1px; line-height:1px;">&nb=
-sp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09</tbody></table>=
-=0A=09=09=09=09=09</td>=0A=09=09=09=09</tr>=0A=09=09=09</tbody></table>=0A=
-=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=09=09=
-=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=
-=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=
-=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=
-=0A=09=09=09=0A=09=09=09=0A=0A            =0A            =0A            =0A=
-=0A=0A            =0A            =0A            =0A=0A=09=09</td>=0A=09</tr=
-><tr>=0A=0A=09=09=0A=09=09<td align=3D"center" valign=3D"top" bgcolor=3D"#d=
-6d6d6" style=3D"background-color:#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=
-=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=
-=0A=09=09=09=0A=0A            =0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=
-=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=
-=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=
-=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A      =
-      =0A            <table width=3D"100%" cellpadding=3D"0" border=3D"0" c=
-ellspacing=3D"0" bgcolor=3D"#d6d6d6" style=3D"background-color:#d6d6d6;" na=
-me=3D"Layout_5" id=3D"Layout_5">=0A                =0A                <tbod=
-y><tr>=0A                    =0A                    <td align=3D"center" va=
-lign=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color: #d6d6d6;">=0A  =
-                      =0A=0A                        <table border=3D"0" wid=
-th=3D"590" cellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-container" bgco=
-lor=3D"#ad072d" style=3D"height: 0px; border-radius: 0px; border-collapse: =
-separate; padding-left: 20px; padding-right: 20px; background-color: rgb(17=
-3, 7, 45);">=0A                            <tbody><tr>=0A                  =
-              =0A                                <td class=3D"rnb-container=
--padding" bgcolor=3D"#ad072d" style=3D"background-color: #ad072d; font-size=
-: px;font-family: ; color: ;">=0A=0A                                    <ta=
-ble border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-columns-c=
-ontainer" align=3D"center" style=3D"margin:auto;">=0A                      =
-                  <tbody><tr>=0A=0A                                        =
-    =0A                                            <td class=3D"rnb-force-c=
-ol" align=3D"center">=0A=0A                                                =
-=0A                                                <table border=3D"0" cell=
-spacing=3D"0" cellpadding=3D"0" align=3D"center" class=3D"rnb-col-1">=0A=0A=
-                                                    <tbody><tr>=0A         =
-                                               <td height=3D"10"></td>=0A  =
-                                                  </tr>=0A=0A              =
-                                      =0A                                  =
-                  <tr>=0A                                                  =
-      =0A                                                        <td style=
-=3D"font-size:18px;font-family:Arial,Helvetica,sans-serif; color:#999; font=
--weight:normal; text-align:center;">=0A=0A                                 =
-                           =0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09<span style=3D"color:#999; font-weight:normal;"><span style=3D"font-s=
-ize:26px"><span style=3D"color:#F0FFF0"><strong>Microsoft Excel 2013 Basics=
- for Business Analysis and Reporting</strong></span></span></span>=0A      =
-                                                  </td>=0A                 =
-                                   </tr>=0A                                =
-                    <tr>=0A                                                =
-        <td height=3D"10"></td>=0A                                         =
-           </tr>=0A                                                    =0A=
-=0A                                                </tbody></table>=0A     =
-                                           =0A=0A                          =
-                  </td>=0A                                            =0A=
-=0A=0A=0A                                        </tr>=0A                  =
-                  </tbody></table>=0A=0A                                </t=
-d>=0A                            </tr>=0A=0A                        </tbody=
-></table>=0A=0A                    </td>=0A                </tr>=0A=0A     =
-       </tbody></table>=0A            =0A=0A=0A            =0A            =
-=0A            =0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=09=09<td ali=
-gn=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color:=
-#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=
-=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=
-=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=
-=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=
-=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=
-=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A            <table width=
-=3D"100%" cellpadding=3D"0" border=3D"0" cellspacing=3D"0" bgcolor=3D"#d6d6=
-d6" style=3D"background-color:#d6d6d6;" name=3D"Layout_7" id=3D"Layout_7">=
-=0A                =0A                <tbody><tr>=0A                    =0A=
-                    <td align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6"=
- style=3D"background-color: #d6d6d6;">=0A                        =0A=0A    =
-                    <table border=3D"0" width=3D"590" cellpadding=3D"0" cel=
-lspacing=3D"0" class=3D"rnb-container" bgcolor=3D"#d4d4d4" style=3D"height:=
- 0px; border-radius: 0px; border-collapse: separate; padding-left: 20px; pa=
-dding-right: 20px; background-color: rgb(212, 212, 212);">=0A              =
-              <tbody><tr>=0A                                =0A            =
-                    <td class=3D"rnb-container-padding" bgcolor=3D"#d4d4d4"=
- style=3D"background-color: #d4d4d4; font-size: px;font-family: ; color: ;"=
->=0A=0A                                    <table border=3D"0" cellpadding=
-=3D"0" cellspacing=3D"0" class=3D"rnb-columns-container" align=3D"center" s=
-tyle=3D"margin:auto;">=0A                                        <tbody><tr=
->=0A=0A                                            =0A                     =
-                       <td class=3D"rnb-force-col" align=3D"center">=0A=0A =
-                                               =0A                         =
-                       <table border=3D"0" cellspacing=3D"0" cellpadding=3D=
-"0" align=3D"center" class=3D"rnb-col-1">=0A=0A                            =
-                        <tbody><tr>=0A                                     =
-                   <td height=3D"10"></td>=0A                              =
-                      </tr>=0A=0A                                          =
-          =0A                                                    <tr>=0A   =
-                                                     =0A                   =
-                                     <td style=3D"font-size:18px;font-famil=
-y:Arial,Helvetica,sans-serif; color:#999; font-weight:normal; text-align:ce=
-nter;">=0A=0A                                                            =
-=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09<span style=3D"color:=
-#999; font-weight:normal;"><span style=3D"color:#000000"><span style=3D"fon=
-t-size:14px"><strong><span style=3D"font-size:16px">Boost Up Your Productiv=
-ity with Timesaving Tips &nbsp;in Microsoft &nbsp;2013</span></strong><br>=
-=0A14 - 15 Sep 2016 (Wed &amp; Thu)| Concorde Hotel, Singapore</span></span=
-></span>=0A                                                        </td>=0A=
-                                                    </tr>=0A               =
-                                     <tr>=0A                               =
-                         <td height=3D"10"></td>=0A                        =
-                            </tr>=0A                                       =
-             =0A=0A                                                </tbody>=
-</table>=0A                                                =0A=0A          =
-                                  </td>=0A                                 =
-           =0A=0A=0A=0A                                        </tr>=0A    =
-                                </tbody></table>=0A=0A                     =
-           </td>=0A                            </tr>=0A=0A                 =
-       </tbody></table>=0A=0A                    </td>=0A                </=
-tr>=0A=0A            </tbody></table>=0A            =0A=0A=0A            =
-=0A            =0A            =0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=
-=0A=09=09<td align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"b=
-ackground-color:#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=
-=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=
-            =0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=
-=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=
-=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=
-=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A         =
-   =0A            =0A=0A=0A            =0A            <table class=3D"rnb-d=
-el-min-width" width=3D"100%" cellpadding=3D"0" border=3D"0" cellspacing=3D"=
-0" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-color:#d6d6d6;"=
- name=3D"Layout_6">=0A                <tbody><tr>=0A                    =0A=
-                    <td class=3D"rnb-del-min-width" align=3D"center" valign=
-=3D"top" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-color: #d=
-6d6d6;">=0A                        =0A                        <table width=
-=3D"590" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-cont=
-ainer" bgcolor=3D"#ffffff" style=3D"border-radius: 0px; border-collapse: se=
-parate; padding-left: 20px; padding-right: 20px; background-color: rgb(255,=
- 255, 255);">=0A=0A                            <tbody><tr>=0A              =
-                  <td height=3D"20" style=3D"font-size:1px; line-height:1px=
-;">&nbsp;</td>=0A                            </tr>=0A                      =
-      <tr>=0A                                =0A                           =
-     <td valign=3D"top" class=3D"rnb-container-padding" bgcolor=3D"#ffffff"=
- style=3D"background-color: #ffffff;" align=3D"left">=0A=0A                =
-                    <table width=3D"100%" border=3D"0" cellpadding=3D"0" ce=
-llspacing=3D"0" class=3D"rnb-columns-container">=0A                        =
-                <tbody><tr>=0A                                            =
-=0A                                            =0A                         =
-                   =0A                                            <td class=
-=3D"rnb-force-col" valign=3D"top" style=3D"padding-right: 0px;">=0A=0A     =
-                                           =0A                             =
-                   =0A                                                =0A  =
-                                              =0A                          =
-                      <table border=3D"0" valign=3D"top" cellspacing=3D"0" =
-cellpadding=3D"0" width=3D"100%" align=3D"left" class=3D"rnb-col-1">=0A=0A =
-                                                   =0A                     =
-                               <tbody><tr>=0A                              =
-                          =0A                                              =
-          <td style=3D"font-size:13px; font-family:Arial,Helvetica,sans-ser=
-if, sans-serif; color:#555;"><div>=0A<div style=3D"text-align: justify;"><s=
-pan style=3D"font-size:18px;"><span style=3D"color:#FF8C00;"><strong>Your C=
-hallenge: How to replace manual tracking of business data to automated repo=
-rts</strong></span></span></div>=0A=0A<div style=3D"text-align: justify;"><=
-span style=3D"font-size:18px;">&nbsp;</span></div>=0A=0A<div style=3D"text-=
-align: justify;"><span style=3D"color:#000000;"><span style=3D"font-size:16=
-px;">Do you want to learn how to:</span></span></div>=0A=0A<div style=3D"te=
-xt-align: justify;"><span style=3D"color:#000000;"><span style=3D"font-size=
-:16px;">&nbsp;</span></span></div>=0A=0A<ul>=0A=09<li style=3D"text-align: =
-justify;"><span style=3D"color:#000000;"><span style=3D"font-size:16px;">Ea=
-sily identify data trends using graphs or charts?</span></span></li>=0A=09<=
-li style=3D"text-align: justify;"><span style=3D"color:#000000;"><span styl=
-e=3D"font-size:16px;">Quickly store, sort, and analyze large amounts of dat=
-a/information?</span></span></li>=0A=09<li style=3D"text-align: justify;"><=
-span style=3D"color:#000000;"><span style=3D"font-size:16px;">Perform mathe=
-matical operations with ease?</span></span></li>=0A</ul>=0A=0A<div style=3D=
-"text-align: justify;"><span style=3D"color:#000000;"><span style=3D"font-s=
-ize:16px;">&nbsp;</span></span></div>=0A=0A<div style=3D"text-align: justif=
-y;"><span style=3D"color:#000000;"><span style=3D"font-size:16px;">Replacin=
-g manual tracking of business data to automated templates will make it easy=
- for you to monitor financial performance, such as business profit or loss,=
- calculate payments on large purchases, plan a budget, or stay organized wi=
-th checklists.</span></span></div>=0A=0A<div style=3D"text-align: justify;"=
-><span style=3D"font-size:18px;">&nbsp;</span></div>=0A=0A<div style=3D"tex=
-t-align: justify;"><span style=3D"font-size:18px;"><span style=3D"color:#FF=
-8C00;"><strong>Our Solution: MS Excel 2013 tips and tricks</strong></span><=
-/span></div>=0A=0A<div style=3D"text-align: justify;"><span style=3D"font-s=
-ize:18px;">&nbsp;</span></div>=0A=0A<div style=3D"text-align: justify;"><sp=
-an style=3D"color:#000000;"><span style=3D"font-size:16px;">Microsoft Excel=
- is one of the most powerful tools in Microsoft Office Suite of Microsoft O=
-ffice application. This application is used intensively to keep track of im=
-portant data that drives the business. </span></span></div>=0A=0A<div style=
-=3D"text-align: justify;"><span style=3D"color:#000000;">&nbsp;</span></div=
->=0A=0A<div style=3D"text-align: justify;"><span style=3D"color:#000000;"><=
-span style=3D"font-size:16px;">You can use Microsoft Excel to manage all yo=
-ur business data such as maintain customer lists, create employee schedulin=
-g, prepare Financial Statements, find business templates, calculate the cos=
-ts of your business using formulas, and prepare impressive business reports=
-.&nbsp;</span></span></div>=0A=0A<div style=3D"text-align: justify;"><span =
-style=3D"font-size:18px;">&nbsp;</span></div>=0A=0A<div style=3D"text-align=
-: justify;"><span style=3D"font-size:18px;">&nbsp;</span></div>=0A=0A<div s=
-tyle=3D"text-align: justify;"><span style=3D"font-size:18px;"><span style=
-=3D"color:#FF8C00;"><strong>Key Takeaways</strong></span></span></div>=0A=
-=0A<div style=3D"text-align: justify;">&nbsp;</div>=0A=0A<div style=3D"text=
--align: justify;"><span style=3D"color:#000000;"><span style=3D"font-size:1=
-6px;">This workshop will prepare you to start using Excel on your own. Thro=
-ughout the course, you will learn interesting and useful tips and tricks to=
- allow you work more efficiently with Excel.</span></span></div>=0A=0A<div =
-style=3D"text-align: justify;"><span style=3D"color:#000000;">&nbsp;</span>=
-</div>=0A=0A<ul>=0A=09<li style=3D"text-align: justify;"><span style=3D"col=
-or:#000000;"><span style=3D"font-size:16px;">Ready-made templates online fo=
-r free</span></span></li>=0A=09<li style=3D"text-align: justify;"><span sty=
-le=3D"color:#000000;"><span style=3D"font-size:16px;">Learn to create your =
-own customized templates.</span></span></li>=0A=09<li style=3D"text-align: =
-justify;"><span style=3D"color:#000000;"><span style=3D"font-size:16px;">Pr=
-epare Income Statements, Cash Flows and Balance Sheet.</span></span></li>=
-=0A=09<li style=3D"text-align: justify;"><span style=3D"color:#000000;"><sp=
-an style=3D"font-size:16px;">Formatting reports using conditional formattin=
-g rules and styles.</span></span></li>=0A=09<li style=3D"text-align: justif=
-y;"><span style=3D"color:#000000;"><span style=3D"font-size:16px;">Calculat=
-ing the costs of doing business with financial formulas.</span></span></li>=
-=0A=09<li style=3D"text-align: justify;"><span style=3D"color:#000000;"><sp=
-an style=3D"font-size:16px;">Create interactive charts with data stored in =
-an Excel Table.</span></span></li>=0A=09<li style=3D"text-align: justify;">=
-<span style=3D"color:#000000;"><span style=3D"font-size:16px;">Summarize da=
-ta with interactive PivotTable and PivotChart.</span></span></li>=0A</ul>=
-=0A=0A<div style=3D"text-align: justify;"><span style=3D"color:#000000;"><s=
-pan style=3D"font-size:16px;">&nbsp;</span></span></div>=0A=0A<div style=3D=
-"text-align: justify;"><br>=0A<span style=3D"font-size:14px;"><strong>Note:=
- Participants are required to bring a laptop with Microsoft Excel 2013.</st=
-rong></span></div>=0A</div>=0A</td>=0A                                     =
-               </tr>=0A                                                    =
-=0A=0A                                                </tbody></table>=0A=
-=0A                                                =0A                     =
-                       </td>=0A                                        </tr=
->=0A                                    </tbody></table>=0A=0A             =
-                   </td>=0A                            </tr>=0A            =
-                <tr>=0A                                <td height=3D"20" st=
-yle=3D"font-size:1px; line-height:1px;border-bottom:0px;">&nbsp;</td>=0A   =
-                         </tr>=0A                        </tbody></table>=
-=0A=0A                    </td>=0A                </tr>=0A            </tbo=
-dy></table>=0A            =0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=
-=09=09<td align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"back=
-ground-color:#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=
-=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A   =
-         =0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=
-=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=
-=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=
-=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A            =
-=0A            =0A=0A=0A            =0A            <table class=3D"rnb-del-=
-min-width" width=3D"100%" cellpadding=3D"0" border=3D"0" cellspacing=3D"0" =
-bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-color:#d6d6d6;" na=
-me=3D"Layout_14">=0A                <tbody><tr>=0A                    =0A  =
-                  <td class=3D"rnb-del-min-width" align=3D"center" valign=
-=3D"top" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-color: #d=
-6d6d6;">=0A                        =0A                        <table width=
-=3D"590" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-cont=
-ainer" bgcolor=3D"#ffffff" style=3D"border-radius: 0px; border-collapse: se=
-parate; padding-left: 20px; padding-right: 20px; background-color: rgb(255,=
- 255, 255);">=0A=0A                            <tbody><tr>=0A              =
-                  <td height=3D"20" style=3D"font-size:1px; line-height:1px=
-;">&nbsp;</td>=0A                            </tr>=0A                      =
-      <tr>=0A                                =0A                           =
-     <td valign=3D"top" class=3D"rnb-container-padding" bgcolor=3D"#ffffff"=
- style=3D"background-color: #ffffff;" align=3D"left">=0A=0A                =
-                    <table width=3D"100%" border=3D"0" cellpadding=3D"0" ce=
-llspacing=3D"0" class=3D"rnb-columns-container">=0A                        =
-                <tbody><tr>=0A                                            =
-=0A                                            =0A                         =
-                   =0A                                            <td class=
-=3D"rnb-force-col" valign=3D"top" style=3D"padding-right: 0px;">=0A=0A     =
-                                           =0A                             =
-                   =0A                                                =0A  =
-                                              =0A                          =
-                      <table border=3D"0" valign=3D"top" cellspacing=3D"0" =
-cellpadding=3D"0" width=3D"100%" align=3D"left" class=3D"rnb-col-1">=0A=0A =
-                                                   =0A                     =
-                               <tbody><tr>=0A                              =
-                          =0A                                              =
-          <td style=3D"font-size:13px; font-family:Arial,Helvetica,sans-ser=
-if, sans-serif; color:#555;"><div>=0A<div><strong><span style=3D"color:#FF8=
-C00;"><span style=3D"font-size:18px;">Testimonials</span></span></strong></=
-div>=0A=0A<div>&nbsp;</div>=0A=0A<div><span style=3D"color:#000000;"><span =
-style=3D"font-size:16px;">=E2=80=9CWell done Valene! Really enjoy this clas=
-s. You have been very patient and helpful" - <strong>Manager, Prudential As=
-surance</strong><br>=0A<br>=0A=E2=80=9CExcellent! I will definitely recomme=
-nd this workshop" - <strong>Manager, National Police</strong></span></span>=
-</div>=0A=0A<div><span style=3D"font-size:16px;">&nbsp;</span></div>=0A</di=
-v>=0A</td>=0A                                                    </tr>=0A  =
-                                                  =0A=0A                   =
-                             </tbody></table>=0A=0A                        =
-                        =0A                                            </td=
->=0A                                        </tr>=0A                       =
-             </tbody></table>=0A=0A                                </td>=0A=
-                            </tr>=0A                            <tr>=0A    =
-                            <td height=3D"20" style=3D"font-size:1px; line-=
-height:1px;border-bottom:0px;">&nbsp;</td>=0A                            </=
-tr>=0A                        </tbody></table>=0A=0A                    </t=
-d>=0A                </tr>=0A            </tbody></table>=0A            =0A=
-=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=09=09<td align=3D"center" vali=
-gn=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color:#d6d6d6;">=0A=0A=
-=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=
-=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=09=09=09=0A=09=09=
-=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09<table=
- class=3D"rnb-del-min-width" width=3D"100%" cellpadding=3D"0" border=3D"0" =
-cellspacing=3D"0" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-=
-color:#d6d6d6;" name=3D"Layout_8" id=3D"Layout_8">=0A=09=09=09=09<tbody><tr=
->=0A=09=09=09=09=09=0A=09=09=09=09=09<td class=3D"rnb-del-min-width" align=
-=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; ba=
-ckground-color: #d6d6d6;">=0A=09=09=09=09=09=09=0A=09=09=09=09=09=09<table =
-width=3D"590" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"mso=
--single-img-block rnb-container" ng-class=3D"(item.css.image.align=3D=3D'tr=
-ue') ?'mso-single-img-block rnb-container':'mso-single-img-block2 rnb-conta=
-iner'" bgcolor=3D"#ffffff" style=3D"border-radius: 0px; border-collapse: se=
-parate; padding-left: 20px; padding-right: 20px; background-color: rgb(255,=
- 255, 255);">=0A=09=09=09=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=09=09=09=
-<td height=3D"20" style=3D"font-size:1px; line-height:1px;">&nbsp;</td>=0A=
-=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=09=
-=09=09=0A=09=09=09=09=09=09=09=09<td valign=3D"top" class=3D"rnb-container-=
-padding" bgcolor=3D"#ffffff" style=3D"background-color: #ffffff;" align=3D"=
-left">=0A=0A=09=09=09=09=09=09=09=09=09<table width=3D"100%" border=3D"0" c=
-ellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-columns-container">=0A=09=
-=09=09=09=09=09=09=09=09=09<tbody><tr>=0A=0A=09=09=09=09=09=09=09=09=09=09=
-=09=0A=09=09=09=09=09=09=09=09=09=09=09<td class=3D"msib-left-img rnb-force=
--col" style=3D"padding-right:20px;" valign=3D"top">=0A=0A=09=09=09=09=09=09=
-=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09<table border=3D"0=
-" valign=3D"top" cellspacing=3D"0" cellpadding=3D"0" width=3D"180" align=3D=
-"left" class=3D"rnb-col-2-noborder-onright">=0A=0A=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=
-=09=09=09=09=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09<td width=3D"100%" class=3D"img-block-center" valign=3D"top" align=3D=
-"left">=0A                                                            =0A  =
-                                                          =0A              =
-                                              =0A                          =
-                                  <img alt=3D"" border=3D"0" hspace=3D"0" v=
-space=3D"0" width=3D"164" style=3D"vertical-align:top; width:164px;max-widt=
-h:164px !important;" class=3D"rnb-col-2-img-side-xs" src=3D"http://r.semina=
-r-singapore.com/2l3yb19pe4ze.png">=0A=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09</td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=0A=0A=09=09=09=09=09=09=09=09=09=09=09=09</tbod=
-y></table>=0A=09=09=09=09=09=09=09=09=09=09=09=09=0A=0A=09=09=09=09=09=09=
-=09=09=09=09=09</td>=0A=09=09=09=09=09=09=09=09=09=09=09=0A=0A=09=09=09=09=
-=09=09=09=09=09=09=09<td class=3D"rnb-force-col" valign=3D"top">=0A=0A=09=
-=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09<ta=
-ble border=3D"0" valign=3D"top" cellspacing=3D"0" cellpadding=3D"0" width=
-=3D"350" align=3D"left" class=3D"rnb-last-col-2">=0A=0A=09=09=09=09=09=09=
-=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=09<tbody><tr>=
-=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09<td style=3D"font-size:18px; font-family:Arial,Helvetica,san=
-s-serif; color:#999; font-weight:bold; text-align:left;">=0A=09=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=0A                                                            =0A=09=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=09<span style=3D"color:#999; font-weig=
-ht:bold;"><span style=3D"font-size:16px"><span style=3D"color:#FFA500">Micr=
-osoft Business Expert&nbsp;</span></span></span>=0A=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=09</td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09</tr>=0A=
-=09=09=09=09=09=09=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09<td height=3D"10" style=3D"font-size:1px; line-height:1px;">=
-&nbsp;</td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=0A=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=
-=09=09=09=09=09=09=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09<td class=3D"rn=
-b-mbl-float-none" style=3D"font-size:13px; font-family:Arial,Helvetica,sans=
--serif;color:#555;float:right;width:350px;"><div style=3D"text-align: justi=
-fy;"><span style=3D"color:#000000;"><span style=3D"font-size:16px;"><strong=
->Valene Ang</strong> is a Microsoft Certified Trainer and Master Instructor=
- of Microsoft Office Specialist (MOS). She brings with her 20 years' experi=
-ence in corporate training and consultancy. Valene has a broad experience i=
-n customizing Microsoft Office training programs, developing customized cou=
-rse outline and course material, assisting corporate clients in business da=
-ta analysis and providing dynamic report solutions.</span></span></div>=0A<=
-/td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09=
-=09=09=09=09=09=09=0A=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=
-=09=09=09=09=09=09=09=09=09=09=0A                                          =
-          =0A                                                    =0A=0A=09=
-=09=09=09=09=09=09=09=09=09=09=09</tbody></table>=0A=09=09=09=09=09=09=09=
-=09=09=09=09=09=0A=0A=09=09=09=09=09=09=09=09=09=09=09</td>=0A=0A=09=09=09=
-=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=
-=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09=09=09</tbody></table>=0A=0A=
-=09=09=09=09=09=09=09=09</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=
-=09=09=09<tr>=0A=09=09=09=09=09=09=09=09<td height=3D"20" style=3D"font-siz=
-e:1px; line-height:1px;">&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=
-=09=09=09=09</tbody></table>=0A=0A=09=09=09=09=09</td>=0A=09=09=09=09</tr>=
-=0A=09=09=09</tbody></table>=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=
-=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=
-=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A      =
-      =0A            =0A=0A=0A            =0A            =0A            =0A=
-=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=09=09<td align=3D"center" vali=
-gn=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color:#d6d6d6;">=0A=0A=
-=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=
-=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=09=09=09=0A=09=09=
-=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=
-=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=
-=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=
-=0A=09=09=09=0A=0A            =0A            =0A            =0A=0A=0A      =
-      =0A            <table class=3D"rnb-del-min-width" width=3D"100%" cell=
-padding=3D"0" border=3D"0" cellspacing=3D"0" bgcolor=3D"#d6d6d6" style=3D"m=
-in-width:590px; background-color:#d6d6d6;" name=3D"Layout_11">=0A          =
-      <tbody><tr>=0A                    =0A                    <td class=3D=
-"rnb-del-min-width" align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" sty=
-le=3D"min-width:590px; background-color: #d6d6d6;">=0A                     =
-   =0A                        <table width=3D"590" border=3D"0" cellpadding=
-=3D"0" cellspacing=3D"0" class=3D"rnb-container" bgcolor=3D"#ffffff" style=
-=3D"border-radius: 0px; border-collapse: separate; padding-left: 20px; padd=
-ing-right: 20px; background-color: rgb(255, 255, 255);">=0A=0A             =
-               <tbody><tr>=0A                                <td height=3D"=
-20" style=3D"font-size:1px; line-height:1px;">&nbsp;</td>=0A               =
-             </tr>=0A                            <tr>=0A                   =
-             =0A                                <td valign=3D"top" class=3D=
-"rnb-container-padding" bgcolor=3D"#ffffff" style=3D"background-color: #fff=
-fff;" align=3D"left">=0A=0A                                    <table width=
-=3D"100%" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"rnb-col=
-umns-container">=0A                                        <tbody><tr>=0A  =
-                                          =0A                              =
-              =0A                                            =0A           =
-                                 <td class=3D"rnb-force-col" valign=3D"top"=
- style=3D"padding-right: 0px;">=0A=0A                                      =
-          =0A                                                =0A           =
-                                     =0A                                   =
-             =0A                                                <table bord=
-er=3D"0" valign=3D"top" cellspacing=3D"0" cellpadding=3D"0" width=3D"100%" =
-align=3D"left" class=3D"rnb-col-1">=0A=0A                                  =
-                  =0A                                                    <t=
-body><tr>=0A                                                        =0A    =
-                                                    <td style=3D"font-size:=
-13px; font-family:Arial,Helvetica,sans-serif, sans-serif; color:#555;"><div=
-><span style=3D"color:#FF8C00;"><span style=3D"font-size:18px;"><strong>EVE=
-NT DETAILS </strong></span></span></div>=0A=0A<div>&nbsp;</div>=0A=0A<div><=
-span style=3D"font-size:16px;"><span style=3D"color:#000000;">Date: 14 &amp=
-; 15 September</span></span></div>=0A=0A<div><span style=3D"font-size:16px;=
-"><span style=3D"color:#000000;">Time: 9.00am to 5.00pm</span></span></div>=
-=0A=0A<div><span style=3D"font-size:16px;"><span style=3D"color:#000000;">V=
-enue: 100 Orchard Road Concorde Hotel , #04-100</span></span></div>=0A=0A<d=
-iv><span style=3D"font-size:16px;"><span style=3D"color:#000000;">Investmen=
-t Fee: Only S$870 After PIC Grant of 40%</span></span></div>=0A=0A<div><spa=
-n style=3D"font-size:16px;"><span style=3D"color:#000000;">&nbsp;</span></s=
-pan></div>=0A=0A<div><span style=3D"font-size:16px;"><span style=3D"color:#=
-000000;">Contact Us:&nbsp;Ms Vivian Lee|&nbsp;6720 3333 |&nbsp;vivian@avent=
-isglobal.edu.sg</span></span></div>=0A</td>=0A                             =
-                       </tr>=0A                                            =
-        =0A=0A                                                </tbody></tab=
-le>=0A=0A                                                =0A               =
-                             </td>=0A                                      =
-  </tr>=0A                                    </tbody></table>=0A=0A       =
-                         </td>=0A                            </tr>=0A      =
-                      <tr>=0A                                <td height=3D"=
-20" style=3D"font-size:1px; line-height:1px;border-bottom:0px;">&nbsp;</td>=
-=0A                            </tr>=0A                        </tbody></ta=
-ble>=0A=0A                    </td>=0A                </tr>=0A            <=
-/tbody></table>=0A            =0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=
-=0A=09=09<td align=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"b=
-ackground-color:#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=
-=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=
-            =0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=
-=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09<table cl=
-ass=3D"rnb-del-min-width" width=3D"100%" cellpadding=3D"0" border=3D"0" cel=
-lspacing=3D"0" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-col=
-or:#d6d6d6;" name=3D"Layout_15" id=3D"Layout_15">=0A=09=09=09=09<tbody><tr>=
-=0A=09=09=09=09=09=0A=09=09=09=09=09<td class=3D"rnb-del-min-width" align=
-=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; ba=
-ckground-color: #d6d6d6;">=0A=09=09=09=09=09=09=0A=09=09=09=09=09=09<table =
-width=3D"590" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"mso=
--button-block rnb-container rnb-yahoo-width" bgcolor=3D"#362a2a" style=3D"b=
-order-radius: 0px; padding-left: 20px; padding-right: 20px; border-collapse=
-: separate; background-color: rgb(54, 42, 42);">=0A=09=09=09=09=09=09=09<tb=
-ody><tr>=0A=09=09=09=09=09=09=09=09<td height=3D"20" style=3D"font-size:1px=
-; line-height:1px;">&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=
-=09=09=09<tr>=0A=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09<td vali=
-gn=3D"top" class=3D"rnb-container-padding" bgcolor=3D"#362a2a" style=3D"bac=
-kground-color: #362a2a;" align=3D"left">=0A=0A=09=09=09=09=09=09=09=09=09<t=
-able width=3D"100%" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=
-=3D"rnb-columns-container">=0A=09=09=09=09=09=09=09=09=09=09<tbody><tr>=0A=
-=09=09=09=09=09=09=09=09=09=09=09<td class=3D"rnb-force-col" valign=3D"top"=
->=0A=0A=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09<table border=3D"0" valign=3D"top" cellspacing=3D"0" cellpadding=
-=3D"0" width=3D"550" align=3D"center" class=3D"rnb-col-1">=0A=0A=09=09=09=
-=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=09<tb=
-ody><tr>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09<td valign=3D"top">=0A=
-=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=09<table cellpadding=3D"0" border=3D"0" align=3D"center" ce=
-llspacing=3D"0" class=3D"rnb-btn-col-content" style=3D"margin:auto;">=0A=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09<td width=3D"auto" valign=3D"middle" bgcolor=3D"#ff8414" ali=
-gn=3D"center" height=3D"50" style=3D"font-size:18px; font-family:Arial,Helv=
-etica,sans-serif; color:#ffffff; font-weight:normal; padding-left:14px; pad=
-ding-right:14px; background-color:#ff8414; border-radius:4px;">=0A=09=09=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=09<span style=3D"color:#ffffff; font-weight:nor=
-mal;">=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09<a style=3D"text-d=
-ecoration:none; color:#ffffff; font-weight:normal;" target=3D"_blank" href=
-=3D"http://r.seminar-singapore.com/b4tqmcm6b19pe4zd.html"><strong>&gt; REGI=
-STER HERE &lt;&nbsp;</strong></a>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09=09=09=09=09</span>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=
-=09=09</td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09=09</tr>=0A=09=
-=09=09=09=09=09=09=09=09=09=09=09=09=09=09</tbody></table>=0A=09=09=09=09=
-=09=09=09=09=09=09=09=09=09=09</td>=0A=09=09=09=09=09=09=09=09=09=09=09=09=
-=09</tr>=0A=09=09=09=09=09=09=09=09=09=09=09=09=09=0A=0A=09=09=09=09=09=09=
-=09=09=09=09=09=09</tbody></table>=0A=09=09=09=09=09=09=09=09=09=09=09=09=
-=0A=0A=09=09=09=09=09=09=09=09=09=09=09</td>=0A=09=09=09=09=09=09=09=09=09=
-=09</tr>=0A=09=09=09=09=09=09=09=09=09</tbody></table>=0A=0A=09=09=09=09=09=
-=09=09=09</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=
-=09=09=09=09=09=09=09=09<td height=3D"20" style=3D"font-size:1px; line-heig=
-ht:1px;">&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09</tbo=
-dy></table>=0A=0A=09=09=09=09=09</td>=0A=09=09=09=09</tr>=0A=09=09=09</tbod=
-y></table>=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=
-=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A   =
-         =0A            =0A            =0A=0A=0A            =0A            =
-=0A            =0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=09=09<td ali=
-gn=3D"center" valign=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color:=
-#d6d6d6;">=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=
-=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=
-=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=
-=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=
-=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09<table class=3D"rnb-d=
-el-min-width" width=3D"100%" cellpadding=3D"0" border=3D"0" cellspacing=3D"=
-0" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; background-color:#d6d6d6;"=
- name=3D"Layout_3" id=3D"Layout_3">=0A=09=09=09=09<tbody><tr>=0A=09=09=09=
-=09=09=0A=09=09=09=09=09<td class=3D"rnb-del-min-width" align=3D"center" va=
-lign=3D"top" bgcolor=3D"#555" style=3D"min-width:590px; background-color: #=
-555;">=0A=09=09=09=09=09=09<table width=3D"590" class=3D"rnb-container" cel=
-lpadding=3D"0" border=3D"0" align=3D"center" cellspacing=3D"0" style=3D"pad=
-ding-right:20px; padding-left:20px;">=0A=09=09=09=09=09=09=09<tbody><tr>=0A=
-=09=09=09=09=09=09=09=09<td height=3D"10" style=3D"font-size:1px; line-heig=
-ht:1px;">&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<t=
-r>=0A=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09<td>=0A=09=09=09=09=
-=09=09=09=09=09<div style=3D"font-size:13px; color:#919191; font-weight:nor=
-mal; text-align:center; font-family:Arial,Helvetica,sans-serif;"><div>This =
-email was sent to xfs@oss.sgi.com=0A<div>You received this email because yo=
-u are registered with FT Academy</div>=0A=0A<div>&nbsp;</div>=0A</div>=0A</=
-div>=0A=09=09=09=09=09=09=09=09=09<div style=3D"font-size:13px; font-weight=
-:normal; text-align:center; font-family:Arial,Helvetica,sans-serif;">=0A=09=
-=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09=09<a style=3D"tex=
-t-decoration:none; color:#ccc;" target=3D"_blank" href=3D"http://r.seminar-=
-singapore.com/2s7fnl5jktpe4zg.html">Unsubscribe here</a>=0A=09=09=09=09=09=
-=09=09=09=09</div>=0A                                </td>=0A=09=09=09=09=
-=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=09=09=09<td he=
-ight=3D"10" style=3D"font-size:1px; line-height:1px;">&nbsp;</td>=0A=09=09=
-=09=09=09=09=09</tr>=0A                            <tr>=0A=09=09=09=09=09=
-=09=09=09<td>=0A=09=09=09=09=09=09=09=09=09=0A                             =
-       <div style=3D"text-align:center;">=0A                               =
-         <div style=3D"font-family:Arial, Helvetica, sans-serif;color:#aaaa=
-aa;opacity:0.8">Sent by</div>=0A                                        <a =
-href=3D"http://r.seminar-singapore.com/b4tqmcm6btppe4zd.html" target=3D"_bl=
-ank"><img border=3D"0" hspace=3D"0" vspace=3D"0" alt=3D"SendinBlue" style=
-=3D"margin:auto;" src=3D"http://r.seminar-singapore.com/2l3ybtppe4ze.png"><=
-/a>=0A                                    </div>=0A=09=09=09=09=09=09=09=09=
-</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=
-=09=09=09=09=09<td height=3D"10" style=3D"font-size:1px; line-height:1px;">=
-&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09</tbody></tabl=
-e>=0A=09=09=09=09=09</td>=0A=09=09=09=09</tr>=0A=09=09=09</tbody></table>=
-=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A   =
-         =0A            =0A=0A=0A            =0A            =0A            =
-=0A=0A=09=09</td>=0A=09</tr><tr>=0A=0A=09=09=0A=09=09<td align=3D"center" v=
-align=3D"top" bgcolor=3D"#d6d6d6" style=3D"background-color:#d6d6d6;">=0A=
-=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=
-=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A            =0A=09=09=09=0A=09=
-=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=
-=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=
-=0A=09=09=09=0A=0A=09=09=09=0A=09=09=09=0A=09=09=09=0A=0A=09=09=09=0A=09=09=
-=09<table class=3D"rnb-del-min-width" width=3D"100%" cellpadding=3D"0" bord=
-er=3D"0" cellspacing=3D"0" bgcolor=3D"#d6d6d6" style=3D"min-width:590px; ba=
-ckground-color:#d6d6d6;" name=3D"Layout_4" id=3D"Layout_4">=0A=09=09=09=09<=
-tbody><tr>=0A=09=09=09=09=09=0A=09=09=09=09=09<td class=3D"rnb-del-min-widt=
-h" align=3D"center" valign=3D"top" bgcolor=3D"#333" style=3D"min-width:590p=
-x; background-color: #333;">=0A=09=09=09=09=09=09<table width=3D"590" class=
-=3D"rnb-container rnb-yahoo-width" cellpadding=3D"0" border=3D"0" align=3D"=
-center" cellspacing=3D"0" style=3D"padding-right:20px; padding-left:20px;">=
-=0A=09=09=09=09=09=09=09<tbody><tr>=0A=09=09=09=09=09=09=09=09<td height=3D=
-"20" style=3D"font-size:1px; line-height:1px;">&nbsp;</td>=0A=09=09=09=09=
-=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=09=09=09=09=09=09=0A=09=
-=09=09=09=09=09=09=09<td style=3D"font-size:13px; color:#919191; font-weigh=
-t:normal; text-align:center; font-family:Arial,Helvetica,sans-serif;">=0A=
-=09=09=09=09=09=09=09=09=09=0A=09=09=09=09=09=09=09=09=09<div><div>=C2=
-=A9 2016 Financial Training Academy</div>=0A</div>=0A=09=09=09=09=09=09=09=
-=09</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09=09<tr>=0A=09=09=
-=09=09=09=09=09=09<td height=3D"20" style=3D"font-size:1px; line-height:1px=
-;">&nbsp;</td>=0A=09=09=09=09=09=09=09</tr>=0A=09=09=09=09=09=09</tbody></t=
-able>=0A=09=09=09=09=09</td>=0A=09=09=09=09</tr>=0A=09=09=09</tbody></table=
->=0A=09=09=09=0A=0A            =0A            =0A            =0A=0A=0A     =
-       =0A            =0A            =0A=0A=09=09</td>=0A=09</tr>=0A</tbody=
-></table>=0A=0A<div><img width=3D"1" height=3D"1" src=3D"http://r.seminar-s=
-ingapore.com/2s7fnl5jktpe4zh.jpg" /></div></body></html>
-
-
----------?=_34446-9758955111934--
-
-
---===============0880043445388743103==
+--===============2044130609576191061==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -811,4 +385,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0880043445388743103==--
+--===============2044130609576191061==--
