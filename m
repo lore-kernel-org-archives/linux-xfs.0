@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 744617CEC
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 03:00:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42401304051
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 01:00:46 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1EC877CFD
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 03:02:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A1FD7AC002
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 01:02:30 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id o8JMmHOyuT69r5Lx (version=TLSv1.2
+	ESMTP id qb8LzLZHVbngJ7xQ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 01:00:44 -0700 (PDT)
-Date: Mon, 1 Aug 2016 01:00:37 -0700
+	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 01:02:29 -0700 (PDT)
+Date: Mon, 1 Aug 2016 01:02:23 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/47] xfs: introduce interval queries on btrees
-Message-ID: <20160801080037.GA30547@infradead.org>
+Subject: Re: [PATCH 11/47] xfs: move deferred operations into a separate file
+Message-ID: <20160801080223.GB30547@infradead.org>
 References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907701913.25461.16492865819245768513.stgit@birch.djwong.org>
+	<146907703710.25461.16650495404061662831.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146907701913.25461.16492865819245768513.stgit@birch.djwong.org>
+In-Reply-To: <146907703710.25461.16650495404061662831.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +33,13 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Wed, Jul 20, 2016 at 09:56:59PM -0700, Darrick J. Wong wrote:
-> Create a function to enable querying of btree records mapping to a
-> range of keys.  This will be used in subsequent patches to allow
-> querying the reverse mapping btree to find the extents mapped to a
-> range of physical blocks, though the generic code can be used for
-> any range query.
-> 
-> v2: add some shortcuts so that we can jump out of processing once
-> we know there won't be any more records to find.
-> 
-> v3: document the range query algorithm, refactor the pop-up code,
-> fix the diff_two_keys usage.
-> 
-> v4: The overlapped query range function should use the btree get_block
-> helper because the root block could be an inode, in which case
-> bc_bufs[nlevels-1] will be NULL.  Refactor the key calculations
-> so that we can return -EINVAL if low > high.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I looked over this again and I really don't see the use case of merging
+it.  Yes, the freed extent, rmap and reflink code is fairly similar, but
+there is all kinds of subtile differences that we need to paper over using
+methods and flags.  I think we're better off not trying to share this
+code and have a separate, but easily understandable implementation
+for each btree.  At least for the traditional traditional freed extent
+case the new code also is a lot less optimal than the previous version.
 
 _______________________________________________
 xfs mailing list
