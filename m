@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F0977D1C
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 12:08:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 35C3C7D1F
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 12:14:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 32F58304039
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 10:08:52 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id a7fKUfYGCgLlI5pw (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EB722304048
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 10:14:26 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 7hPKnSIPyam6JYou (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 10:08:50 -0700 (PDT)
-Date: Mon, 1 Aug 2016 10:08:15 -0700
+	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 10:14:25 -0700 (PDT)
+Date: Mon, 1 Aug 2016 10:13:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/17] xfs: run xfs_repair at the end of each test
-Message-ID: <20160801170814.GA8590@birch.djwong.org>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-	<146914481474.11762.2741429828012981240.stgit@birch.djwong.org>
-	<20160801062719.GH596@infradead.org>
+Subject: [PATCH] vfs: fix return type of ioctl_file_dedupe_range
+Message-ID: <20160801171339.GB8590@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160801062719.GH596@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,25 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-btrfs@vger.kernel.org, eguan@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Jul 31, 2016 at 11:27:19PM -0700, Christoph Hellwig wrote:
-> On Thu, Jul 21, 2016 at 04:46:54PM -0700, Darrick J. Wong wrote:
-> > Run xfs_repair twice at the end of each test -- once to rebuild
-> > the btree indices, and again with -n to check the rebuild work.
-> 
-> This looks fine to me in general, but shouldn't we have specific
-> tests that test the rebuilding in a normal auto run?
+All the VFS functions in the dedupe ioctl path return int status, so
+the ioctl handler ought to as well.
 
-We do have specific tests that examine the outputs of rebuilding the
-indices (all the fuzzer group tests do this too); this patch enables a
-test runner to expand that coverage to all tests.  Running a
-rebuilding xfs_repair for all the tests shook out some bugs in the
-xfs_repair rmap handling code that only triggered under some of the
-non-rmap non-reflink stressor tests.
+Found by Coverity, CID 1350952.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 116a333..db3d033 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -568,7 +568,7 @@ static int ioctl_fsthaw(struct file *filp)
+ 	return thaw_super(sb);
+ }
+ 
+-static long ioctl_file_dedupe_range(struct file *file, void __user *arg)
++static int ioctl_file_dedupe_range(struct file *file, void __user *arg)
+ {
+ 	struct file_dedupe_range __user *argp = arg;
+ 	struct file_dedupe_range *same = NULL;
 
 _______________________________________________
 xfs mailing list
