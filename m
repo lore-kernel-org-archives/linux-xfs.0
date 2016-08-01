@@ -1,25 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 38A3C7D13
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 07:00:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 914B8AC002
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 05:00:13 -0700 (PDT)
-Received: from mail-wm0-f54.google.com (mail-wm0-f54.google.com
-	[74.125.82.54]) by cuda.sgi.com with ESMTP id 4OHT5Z0ESmlQMrxb
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Aug 2016 05:00:11 -0700 (PDT)
-Received: by mail-wm0-f54.google.com with SMTP id i5so240748464wmg.0
-	for <xfs@oss.sgi.com>; Mon, 01 Aug 2016 05:00:11 -0700 (PDT)
-Message-ID: <57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-From: "Lista Unx" <lista.unx@gmail.com>
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
-	<20160729233524.GD16044@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 504EB7D15
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 07:23:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 14ACB304048
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 05:23:45 -0700 (PDT)
+Received: from smtp.movistar.es (smtp21.acens.net [86.109.99.145]) by
+	cuda.sgi.com with ESMTP id zxoDf7n3fR7soA57 for
+	<xfs@oss.sgi.com>; Mon, 01 Aug 2016 05:23:43 -0700 (PDT)
+Received: from minas-tirith.valinor (95.126.209.47) by smtp.movistar.es
+	(8.6.122.03) (authenticated as robin.listas2)
+	id 574060E703944F45 for xfs@oss.sgi.com; Mon, 1 Aug 2016 12:23:42 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by minas-tirith.valinor (Postfix) with ESMTP id 554071814D5
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 14:23:41 +0200 (CEST)
+Date: Mon, 1 Aug 2016 14:23:41 +0200 (CEST)
+From: "Carlos E. R." <robin.listas@telefonica.net>
 Subject: Re: partition 100% full No space left on device. looks like xfs
 	iscorrupted or a bug
-Date: Mon, 1 Aug 2016 15:00:08 +0300
+In-Reply-To: <57CF7681619F42CCB4C0CF589E9686E5@dinulap>
+Message-ID: <alpine.LSU.2.20.1608011410500.18210@zvanf-gvevgu.inyvabe>
+References: <4278AB9734C1445A8E48635B155149F8@dinulap>
+	<20160729233524.GD16044@dastard>
+	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
 MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	BOUNDARY="-1463758550-1059158630-1470053550=:18210"
+Content-ID: <alpine.LSU.2.20.1608011420580.18210@zvanf-gvevgu.inyvabe>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,93 +35,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+---1463758550-1059158630-1470053550=:18210
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8BIT
+Content-ID: <alpine.LSU.2.20.1608011412381.18210@zvanf-gvevgu.inyvabe>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Content-ID: <alpine.LSU.2.20.1608011420580.18210@zvanf-gvevgu.inyvabe>
 
 
------ Original Message ----- 
-From: "Dave Chinner" <david@fromorbit.com>
-To: "Lista Unx" <lista.unx@gmail.com>
-Cc: <xfs@oss.sgi.com>
-Sent: Saturday, July 30, 2016 2:35 AM
-Subject: Re: partition 100% full No space left on device. looks like xfs 
-iscorrupted or a bug
+El 2016-08-01 a las 15:00 +0300, Lista Unx escribió:
+> El 2016-07-30 a las 09:35 +1000, Dave Chinner escribió:
 
-
-> Ok, so you followed my advice on why you couldn't post to the list,
-
-Yes, I've created a new gmail account especially to be able to post to this 
-mailing list which is filtering very seriously legit messages comming from 
-legit usres, just because they are comming from yahoo accounts (servers) ... 
-but is allowing ANYONE else to post here WITHOUT having valid subscription 
-and also WITHOUT any minimal intention to post here something which has or 
-is related to XFS. Just in last days, I was informed about new microwave 
-acquisition, plastic delivery, or any other craps arriving here from a 
-"trusted and very legit" source, like gmail. That's sound like really a very 
-good job!
-
-> but you ignored my answer as to the cause of the changing numbers of
-> inodes. I'll repeat it here for the benefit of everyone, so they
-> don't waste time chasing ghosts.
-
-No, not at all, is not my style. Just mentioned twice to you, that we are 
-not talking about number of inode usage. we are talking about max number of 
-inodes which differ with at least 10 times less, for partitions with THE 
-SAME SIZE AND USAGE!
-
-> That is, inodes are dynamically allocated so the number of supported
-> inodes is directly proportional to the amount of free space left in
-> the filesystem. You have filesystems with different amounts
-
-NO! Booth systems are almost identical (minor differencies) and this has 
-been stated very clear on my first post. That's not necessary to comment 
-each line in my post, just to point us in the right direction.
-
-> That's probably because there are open but unlinked files present in
-> the filesystem, and du will not find them. e.g. large O_TMPFILE
-> files, or files that applications are using as scratch space. You
-> may even have zombie processes hanging about holding unlinked files
-> open.
-
-Has been mentioned on my first post, reboot does not solve problem, there 
-are no (large, small or any kind of files) exahusting inodes!
-
+>> That is, inodes are dynamically allocated so the number of supported
+>> inodes is directly proportional to the amount of free space left in
+>> the filesystem. You have filesystems with different amounts
 >
-> lsof might find those files, it might not. There might also be
-> orphan inodes on the unlinked lists, and without an unclean shutdown
-> log recovery won't process them.
+> NO! Booth systems are almost identical (minor differencies) and this has been 
+> stated very clear on my first post. That's not necessary to comment each line 
+> in my post, just to point us in the right direction.
 
-Yes, also mentioned on my first post, lsof does not show anomalies ...
+They are identical, except that one has free space and the other does 
+not.
 
-> So it may simply be best to run
-> sync, then press the reset button to do a hard restart which
-> will trigger log recovery on restart.
+Number of inodes is dynamic and associated to free space. No free space, 
+thus, almost no inodes available. One thing follows from the other.
 
-The same, mentioned on my first post, reboot (which will clean zombies) does 
-not resolve issue.
+>> That's probably because there are open but unlinked files present in
+>> the filesystem, and du will not find them. e.g. large O_TMPFILE
+>> files, or files that applications are using as scratch space. You
+>> may even have zombie processes hanging about holding unlinked files
+>> open.
 
-> If the problem still persists,
-> then xfs_repair is really the only option to find out where the
-> space has gone and recover it.
+> Has been mentioned on my first post, reboot does not solve problem, 
+> there are no (large, small or any kind of files)
+> exahusting inodes!
 
-Yes, that was also my conclusion BEFORE to post here. I did not have (yet) 
-possibility to put / partition offline (or to not be mounted in order to run 
-xfs_repair) and that's I asked here, considering that someone in the past 
-encountered a simillar problem or in case not, there are few other things to 
-be done, in order to consider that the last step to follow is to put server 
-down for deep investigation.
+Dave refers to a unix/linux "feature". Files can be deleted, but if 
+they are in use at the time, the contents are not deleted. Disk shows an 
+ammount of free space that does not match the total - used space.
 
-I am still waiting approval to put server down for deep investigations 
-(xfs_repaid & friends).
+However, a reboot clears this situation, and you did say in the original 
+post you had rebooted the system.
 
-Have a nice day,
-Alex 
+- -- 
+Cheers
+        Carlos E. R.
+
+        (from 13.1 x86_64 "Bottle" (Minas Tirith))
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlefP00ACgkQja8UbcUWM1xEEQD+P6UaCgpP4L/ZES7wmVBBgLib
+Rx78tVXJJKE5+FCQAY8BAI+6boqtqicVZA3PeOYM8PCa9IrRKyHffx3l5ty0LKpI
+=h9xF
+-----END PGP SIGNATURE-----
+---1463758550-1059158630-1470053550=:18210
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+---1463758550-1059158630-1470053550=:18210--
