@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D117D7CE3
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 01:32:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 941608F8033
-	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 23:32:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C4B7E7CE0
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 01:33:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 966298F8033
+	for <xfs@oss.sgi.com>; Sun, 31 Jul 2016 23:33:31 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id yqNMN5dYEnZrvKdw (version=TLSv1.2
+	ESMTP id mmAuwqCxfYHYfdnB (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 23:32:09 -0700 (PDT)
-Date: Sun, 31 Jul 2016 23:32:08 -0700
+	<xfs@oss.sgi.com>; Sun, 31 Jul 2016 23:33:30 -0700 (PDT)
+Date: Sun, 31 Jul 2016 23:33:22 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_icache.c:1298]: (style) Redundant condition
-Message-ID: <20160801063208.GB15590@infradead.org>
-References: <CAMzoamagYyR5x4UWfLb1HZ5zf4ZYQzEpTC8Q-89gd0pA4dTK5g@mail.gmail.com>
+Subject: Re: [PATCH 01/47] vfs: fix return type of ioctl_file_dedupe_range
+Message-ID: <20160801063322.GC15590@infradead.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<146907696757.25461.13451944377009612990.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAMzoamagYyR5x4UWfLb1HZ5zf4ZYQzEpTC8Q-89gd0pA4dTK5g@mail.gmail.com>
+In-Reply-To: <146907696757.25461.13451944377009612990.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Binderman <linuxdev.baldrick@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dcb314@hotmail.com, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-On Mon, Jul 25, 2016 at 04:13:28PM +0100, David Binderman wrote:
-> Hello there,
+On Wed, Jul 20, 2016 at 09:56:07PM -0700, Darrick J. Wong wrote:
+> All the VFS functions in the dedupe ioctl path return int status, so
+> the ioctl handler ought to as well.
 > 
-> linux-4.7/fs/xfs/xfs_icache.c:1298]: (style) Redundant condition:
-> eofb. '!eofb || (eofb && eofb.eof_scan_owner!=0)' is equivalent to
-> '!eofb || eofb.eof_scan_owner!=0'
+> Found by Coverity, CID 1350952.
 > 
-> Source code is
-> 
->    ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
-> 
-> Maybe better code
-> 
->    ASSERT(!eofb || (eofb->eof_scan_owner != 0));
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, that would be better.  But it's probably not worth changing
-existing code just for that.
+Nothing to do with rmap, or XFS for that matter.  Please send it
+directly to Al.  Otherwise:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
