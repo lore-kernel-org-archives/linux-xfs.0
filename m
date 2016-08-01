@@ -1,17 +1,17 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 647147D39
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 23:57:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 37CAE304032
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 21:57:35 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 24CED7D33
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 19:40:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D2ED630405F
+	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 17:40:08 -0700 (PDT)
 Received: from hoistring.com (no-data [60.27.28.103]) by cuda.sgi.com with
-	SMTP id BawQzaEotUi2PVA7 for <xfs@oss.sgi.com>;
-	Mon, 01 Aug 2016 21:57:32 -0700 (PDT)
+	SMTP id EsU9ICjceJ2t3ZHq for <xfs@oss.sgi.com>;
+	Mon, 01 Aug 2016 17:40:03 -0700 (PDT)
 From: "rigging1@yeah.net " <rigging1@yeah.net>
-Subject: 2016-08-02 12:37:16hoist ring factory
+Subject: 2016-08-01 16:42:30hoist ring factory
 MIME-Version: 1.0
-Date: Tue, 2 Aug 2016 12:37:16 +0800
-Message-Id: <20160802045735.C846A64005C@cuda.sgi.com>
+Date: Mon, 1 Aug 2016 16:42:30 +0800
+Message-Id: <20160802004008.8A257D80072@cuda.sgi.com>
 Reply-To: rigging1@yeah.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,12 +21,12 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4252430131454468658=="
+Content-Type: multipart/mixed; boundary="===============2251718930007670514=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============4252430131454468658==
+--===============2251718930007670514==
 Content-Type: text/html; charset="UTF-8"
 Content-Transfer-Encoding: base64
 Content-Disposition: inline
@@ -49,7 +49,7 @@ ZWxvcG1lbnQgWm9uZSANCixUaWFuamluLCBDaGluYTxCUj5aaXAgQ29kZTogMzAwMzAwPEJSPjwv
 UD48L0JPRFk+PC9IVE1MPg0KDQo=
 
 
---===============4252430131454468658==
+--===============2251718930007670514==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -60,4 +60,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4252430131454468658==--
+--===============2251718930007670514==--
