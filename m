@@ -1,16 +1,15 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 73F957CAF
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 08:29:52 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 047FF7CB1
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 08:14:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 44DDE8F8033
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 06:29:52 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C8F7B304032
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 06:14:39 -0700 (PDT)
 Received: from 589187.com (589187.com [104.168.102.54]) by cuda.sgi.com with
-	ESMTP id PK86jL6wbgaRVcWN for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2016 06:29:49 -0700 (PDT)
-Subject: Mobile App Development Solutions for startups,
-	individuals & entrepreneurs
-Message-ID: <6d14379d1fe35687f925d1c91fceac15@tedbrownmusic.com>
-Date: Tue, 02 Aug 2016 14:13:13 +0200
+	ESMTP id uH2DnJLqX3SjAXGG for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 06:14:37 -0700 (PDT)
+Subject: Mobile App Development Solutions- iOS, Android, Ionic & React Native
+Message-ID: <51af430d3cf7f16b116fd3a8d8000b88@tedbrownmusic.com>
+Date: Tue, 02 Aug 2016 14:20:30 +0200
 From: "Alex Rubens" <mixmand@zoho.com>
 MIME-Version: 1.0
 Reply-To: yuiyangs@sina.com
