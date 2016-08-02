@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F4F77CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 18:29:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 421FC304032
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 16:29:55 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id bPTsWgnTa4HdBWCy (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 16:29:52 -0700 (PDT)
-Date: Wed, 3 Aug 2016 16:29:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Spam on this list
-Message-ID: <20160803232943.GI8593@birch.djwong.org>
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
-	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-	<alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
-	<4382687.Pe7d1tBhVA@merkaba>
-	<9b25f9f9-8a55-8744-9f18-c1045fae0f79@telefonica.net>
-	<20160803231529.GX16044@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D6C1E7CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 18:15:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BF72304032
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 16:15:05 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	BRttCv8KmuivUVga for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 16:15:02 -0700 (PDT)
+Date: Wed, 3 Aug 2016 09:15:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs/006: add EIO error handling test
+Message-ID: <20160802231501.GO12670@dastard>
+References: <1469976234-15121-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160803231529.GX16044@dastard>
+In-Reply-To: <1469976234-15121-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,68 +29,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Carlos E. R." <robin.listas@telefonica.net>, XFS mail list <xfs@oss.sgi.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: sandeen@redhat.com, eguan@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Aug 04, 2016 at 09:15:29AM +1000, Dave Chinner wrote:
-> On Wed, Aug 03, 2016 at 03:34:58PM +0200, Carlos E. R. wrote:
-> > On 2016-08-03 15:21, Martin Steigerwald wrote:
-> > 
-> > > Lista, Carlos, I recommend: If you are concerned about spam on the list 
-> > > contact the listmasters of it. They are the ones that can address it globally 
-> > > for the list.
-> > 
-> > Oh, I did, long ago. Still waiting.
+On Sun, Jul 31, 2016 at 10:43:54PM +0800, Zorro Lang wrote:
+> Except fail_at_unmount, all EIO error handling can stop umount hanging
+> on IO error too. This case only tested fail_at_unmount before, so add
+> EIO/max_retries and EIO/retry_timeout_seconds test.
 > 
-> Yes, that is the fundamental issue - spam filtering is essentially
-> controlled by SGI's internal infrastructure, which we have little
-> option on.
+> Now this case test three situation when unmount hit EIO:
+> 1) fail_at_unmount=1 && \
+>    EIO/max_retries=-1 && \
+>    EIO/retry_timeout_seconds=0
 > 
-> What it comes down to is whether we continue to use this list
-> (xfs@oss.sgi.com) or whether we move to linux-xfs@vger.kernel.org
-> so we get much more robust and up-to-date spam filtering. The issue
-> with doing this is forcing everyone to resubscribe, and then
-> capturing everything that is still sent to xfs@oss.sgi.com.
+> 2) fail_at_unmount=0 && \
+>    EIO/max_retries=1 && \
+>    EIO/retry_timeout_seconds=0
 > 
-> That said, I'm seriously tempted right now just to say "we're moving
-> to vger" and asking everyone to resubscribe to that list, and then
-> making xfs@oss.sgi.com respond with "list moved to vger, please
-> repost there". i.e. not even put a forwarding gateway in place.
+> 3) fail_at_unmount=0 && \
+>    EIO/max_retries=-1 && \
+>    EIO/retry_timeout_seconds=1
 > 
-> If we do that, then I'll also shut down all the XFS git trees on
-> oss.sgi.com - I'll add commits to the them to say "go to
-> kernel.org". I'll need to work something out for the tarball
-> releases, but kernel.org does have functionality for that, too, so
-> that may just be a small change of process on my end (i.e. use kup).
-> Once that is done, we'll be running completely on community provided
-> infrastructure....
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 > 
-> Thoughts?
+> Hi,
+> 
+> There're three patches from Eric fix XFS error handling bugs:
+>   5539d36 xfs: don't reset b_retries to 0 on every failure
+>   0b4db5d xfs: remove extraneous buffer flag changes
+>   e97f6c5 xfs: fix xfs_error_get_cfg for negative errnos
+> 
+> Without these patches, configurable error handling cannot be properly
+> set, and once set is not honored.
+> 
+> For test part of this bug, add EIO error handling test into xfs/006.
+> The kernel with above 3 patches shouldn't hang on xfs/006.
+> 
+> I haven't got an idea about how to test ENOSPC and default error
+> handling. So use EIO test to prove above patches can work well
+> on EIO handling at least.
 
-YAY!
+Can you put this into a new test? We don't tend to extend tests to
+add new cases, we add new tests instead. Factor the common parts of
+the tests into generic functions in common/ somewhere and call them
+from each test.
 
-By the way, could we update the docs on
-http://xfs.org/index.php/XFS_Papers_and_Documentation ?
+This way adding new test cases doesn't cause tests that previously
+passed to fail and hence signal false regressions.
 
-The filesystem structure guide is a little out of date.
+Cheers,
 
-(The user guide probably is too, but as I've only been sending patches
-for the disk format guide I'm keeping my mouth shut about the others.)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
