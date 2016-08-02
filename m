@@ -1,18 +1,19 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EC3297CA2
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 02:36:25 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 197647CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 17:59:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BFB868F8035
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 00:36:25 -0700 (PDT)
-Received: from compressor.com ([58.23.232.13]) by cuda.sgi.com with SMTP id
-	1gcRlECZIeJsr9T4 for <xfs@oss.sgi.com>;
-	Wed, 03 Aug 2016 00:36:14 -0700 (PDT)
-From: "18850525834@163.com" <18850525834@163.com>
-Subject: Re: Industrial air compressor supplier from China
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F299AC003
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 15:59:41 -0700 (PDT)
+Received: from if06-mail-fb07-mia.mta.terra.com
+	(if06-mail-fb07-mia.mta.terra.com [208.84.243.201]) by
+	cuda.sgi.com with ESMTP id O2wG5dAGFQwmrTCa for
+	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 15:59:38 -0700 (PDT)
+From: Cyril Brulebois <smpessoa@terra.com.br>
+Subject: =?utf-8?B?cGVyZmVjdCB3b3Jkcw==?=
+Date: Wed, 3 Aug 2016 01:59:24 +0300
+Message-ID: <00002682e82f$5b20b92d$f5b21933$@free.fr>
 MIME-Version: 1.0
-Date: Wed, 3 Aug 2016 15:37:07 +0800
-Message-Id: <20160803073625.7AD8164005E@cuda.sgi.com>
-Reply-To: 18850525834@163.com
+Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,98 +22,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5207895218880300377=="
+Content-Type: multipart/mixed; boundary="===============4604907304372094111=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Miles Fidelman <mfidelman@meetinghouse.net>, 793495 <793495@bugs.debian.org>, xfs <xfs@oss.sgi.com>, 751731 <751731@bugs.debian.org>
 
---===============5207895218880300377==
-Content-Type: text/html; charset="UTF-8"
+This is a multipart message in MIME format.
+
+--===============4604907304372094111==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_0001_301B2FA8.3A63124D"
+Content-Language: en-us
+
+This is a multipart message in MIME format.
+
+------=_NextPart_000_0001_301B2FA8.3A63124D
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Content-Disposition: inline
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
-b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
-aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
-U0hUTUwgMTAuMDAuOTIwMC4xNzYwOSI+PC9IRUFEPg0KPEJPRFk+DQo8UCBjbGFzcz1Nc29Ob3Jt
-YWwgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAxMHB0Ij48U1BBTiBsYW5nPUVOLVVTIA0Kc3R5bGU9
-IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6ICYjMzk7QXJpYWwmIzM5OywmIzM5O3NhbnMt
-c2VyaWYmIzM5OyI+SGVsbG8sPEJSPjxCUj4mbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsm
-bmJzcDsmbmJzcDsgDQpHbGFkIHRvIGhlYXIgdGhhdCB5b3UmIzM5O3JlIG9uIHRoZSBtYXJrZXQg
-Zm9yIGNvbXByZXNzb3IgDQppdGVtcy48QlI+PEJSPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOyZuYnNwOyBUaGlzIGlzIFZpY2t5LCBmcm9tIA0KWGlhbWVuIEhpZ2hRIENvbXBy
-ZXNzb3IgQ28uIEx0ZC4gV2Ugc3BlY2lhbGl6ZWQgaW4gcHJvZHVjaW5nJm5ic3A7Y29tcHJlc3Nv
-cnMgDQpvdmVyIDEwIHllYXJzLCZuYnNwOyBub3cgd2UgYXJlIGxvb2tpbmcgZm9yIGNvbXByZXNz
-b3IgcGFydG5lciBpbiB5b3VyIGNvdW50cnkhIA0KT3VyIHNjcmV3IGFpciBjb21wcmVzc29yIHdp
-dGggUm90b3Jjb21wIEFpci1lbmQmbmJzcDssIFNjaG5laWRlciBDb250cm9sbGVyIGFuZCANCm90
-aGVyJm5ic3A7ZmFtb3VzIGJyYW5kIGNvbXBvbmVudHMuPC9TUEFOPjwvUD48U1BBTiBsYW5nPUVO
-LVVTIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6ICYjMzk7QXJpYWwmIzM5
-OywmIzM5O3NhbnMtc2VyaWYmIzM5OyI+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFD
-S0dST1VORDogd2hpdGU7IExBWU9VVC1HUklELU1PREU6IGJvdGg7IFRFWFQtQUxJR046IGp1c3Rp
-Znk7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IFRFWFQtSlVTVElGWTogaW50ZXItaWRlb2dyYXBoOyBM
-SU5FLUhFSUdIVDogMTUuNzVwdDsgVEVYVC1JTkRFTlQ6IDIycHQ7IG1zby1sYXlvdXQtZ3JpZC1h
-bGlnbjogYXV0bzsgbXNvLWNoYXItaW5kZW50LWNvdW50OiAyLjAiPjxTUEFOIA0KbGFuZz1FTi1V
-UyANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtBcmlhbCYjMzk7LCYjMzk7c2Fucy1zZXJpZiYj
-Mzk7OyBDT0xPUjogYmxhY2s7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby10
-aGVtZWNvbG9yOiB0ZXh0MSI+MS5IYXZlIA0KeW91IGV2ZXIgbWVldCBhIGN1c3RvbWVyIHdobyBj
-YW7igJl0Jm5ic3A7IGFjY2VwdCB0aGUgcHJpY2Ugb2YgeW91ciBkaXN0cmlidXRpbmcgDQpicmFu
-ZD88bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFD
-S0dST1VORDogd2hpdGU7IExBWU9VVC1HUklELU1PREU6IGJvdGg7IFRFWFQtQUxJR046IGp1c3Rp
-Znk7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IFRFWFQtSlVTVElGWTogaW50ZXItaWRlb2dyYXBoOyBM
-SU5FLUhFSUdIVDogMTUuNzVwdDsgVEVYVC1JTkRFTlQ6IDIycHQ7IG1zby1sYXlvdXQtZ3JpZC1h
-bGlnbjogYXV0bzsgbXNvLWNoYXItaW5kZW50LWNvdW50OiAyLjAiPjxTUEFOIA0KbGFuZz1FTi1V
-UyANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtBcmlhbCYjMzk7LCYjMzk7c2Fucy1zZXJpZiYj
-Mzk7OyBDT0xPUjogYmxhY2s7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby10
-aGVtZWNvbG9yOiB0ZXh0MSI+Mi5Xb3VsZCANCnlvdSBiZSBpbnRlcmVzdGVkIGluIGhhdmluZyBh
-bm90aGVyIGNvbXByZXNzb3IgYnJhbmQgd2hpY2ggaXMmbmJzcDt0cnVseSANCnJlbGlhYmxlIGFu
-ZCBsb3cgY29zdCB0byZuYnNwOyBhcyBhbiAyPC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgDQpzdHls
-ZT0iRk9OVC1GQU1JTFk6ICYjMzk7QXJpYWwmIzM5OywmIzM5O3NhbnMtc2VyaWYmIzM5OzsgbXNv
-LWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kyI+bmQgb3B0aW9uIA0KZm9yIHlvdXIgY3VzdG9t
-ZXI/PFNQQU4gDQpzdHlsZT0iQ09MT1I6IGJsYWNrOyBtc28tdGhlbWVjb2xvcjogdGV4dDEiPjxv
-OnA+PC9vOnA+PC9TUEFOPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0i
-QkFDS0dST1VORDogd2hpdGU7IExBWU9VVC1HUklELU1PREU6IGJvdGg7IFRFWFQtQUxJR046IGp1
-c3RpZnk7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IFRFWFQtSlVTVElGWTogaW50ZXItaWRlb2dyYXBo
-OyBMSU5FLUhFSUdIVDogMTUuNzVwdDsgVEVYVC1JTkRFTlQ6IDIycHQ7IG1zby1sYXlvdXQtZ3Jp
-ZC1hbGlnbjogYXV0bzsgbXNvLWNoYXItaW5kZW50LWNvdW50OiAyLjAiPjxTUEFOIA0KbGFuZz1F
-Ti1VUyANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtBcmlhbCYjMzk7LCYjMzk7c2Fucy1zZXJp
-ZiYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TIj4zLldvdWxkIA0KeW91IGxp
-a2UgdG8gaGF2ZSB5b3VyIG93biBicmFuZCBvZiBjb21wcmVzc29yPyBXZSBhcmUgZnVsbCBvZiBw
-cm9mZXNzaW9uYWwgDQpleHBlcmllbmNlIGluIE9FTS48L1NQQU4+PEJSPjxCUj4mbmJzcDsmbmJz
-cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsgDQpIb3BpbmcgdG8gaGVhciB5b3VyIGlu
-dGVyZXN0aW5nISBDYW4geW91IHBsZWFzZSBnaXZlIG1lIHlvdXIga2luZCANCnJlcGx5PzxvOnA+
-PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwY20g
-MGNtIDEwcHQiPjxTUEFOIGxhbmc9RU4tVVMgDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05U
-LUZBTUlMWTogJiMzOTtBcmlhbCYjMzk7LCYjMzk7c2Fucy1zZXJpZiYjMzk7Ij4mbmJzcDsmbmJz
-cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsgDQo8L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9y
-bWFsIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMTBwdCI+PFNQQU4gbGFuZz1FTi1VUyANCnN0eWxl
-PSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiAmIzM5O0FyaWFsJiMzOTssJiMzOTtzYW5z
-LXNlcmlmJiMzOTsiPjwvU1BBTj4mbmJzcDs8L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgc3R5bGU9
-Ik1BUkdJTjogMGNtIDBjbSAxMHB0Ij48U1BBTiBsYW5nPUVOLVVTIA0Kc3R5bGU9IkZPTlQtU0la
-RTogMTJwdDsgRk9OVC1GQU1JTFk6ICYjMzk7QXJpYWwmIzM5OywmIzM5O3NhbnMtc2VyaWYmIzM5
-OyI+QmVzdCANClJlZ2FyZHMsPG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9y
-bWFsIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMTBwdCI+PFNQQU4gbGFuZz1FTi1VUyANCnN0eWxl
-PSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiAmIzM5O0FyaWFsJiMzOTssJiMzOTtzYW5z
-LXNlcmlmJiMzOTsiPjxvOnA+Jm5ic3A7PC9vOnA+PC9TUEFOPjwvUD48U1BBTiANCmxhbmc9RU4t
-VVMgc3R5bGU9IkZPTlQtRkFNSUxZOiAmIzM5O0FyaWFsJiMzOTssJiMzOTtzYW5zLXNlcmlmJiMz
-OTsiPjxvOnA+DQo8RElWIA0Kc3R5bGU9Ik1BUkdJTi1CT1RUT006IDBweDsgV0hJVEUtU1BBQ0U6
-IG5vcm1hbDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IFdPUkQtU1BBQ0lORzogMHB4OyBDT0xPUjog
-cmdiKDAsMCwwKTsgRk9OVDogMTRweCDlrovkvZM7IE1BUkdJTi1UT1A6IDBweDsgTEVUVEVSLVNQ
-QUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1J
-TkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48Rk9OVCANCnN0eWxl
-PSJGT05ULUZBTUlMWTogQXJpYWwiIGNvbG9yPSMzMzMzNjY+Vmlja3k8L0ZPTlQ+PC9ESVY+DQo8
-RElWIA0Kc3R5bGU9Ik1BUkdJTi1CT1RUT006IDBweDsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgVEVY
-VC1UUkFOU0ZPUk06IG5vbmU7IFdPUkQtU1BBQ0lORzogMHB4OyBDT0xPUjogcmdiKDAsMCwwKTsg
-Rk9OVDogMTRweCDlrovkvZM7IE1BUkdJTi1UT1A6IDBweDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1h
-bDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsg
-LXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij5Db21wYW55IA0KU2t5cGU6PFNQQU4gY2xh
-c3M9QXBwbGUtY29udmVydGVkLXNwYWNlPiZuYnNwOzwvU1BBTj48QSANCnN0eWxlPSJURVhULURF
-Q09SQVRJT046IG5vbmUgIWltcG9ydGFudCIgaHJlZj0ibWFpbHRvOlZpbmNlbnRAaHFjb21wLmNv
-bSIgDQp0YXJnZXQ9X2JsYW5rPlZpbmNlbnRAaHFjb21wLmNvbTwvQT48L0RJVj48L286cD48L1NQ
-QU4+DQo8UD48L1A+PC9CT0RZPjwvSFRNTD4NCg0K
+SGkgZnJpZW5kISANCkkgd2FzIHJlYWRpbmcgIGFuIGFydGljbGUgYW5kIHN1ZGRlbmx5IGNhbWUg
+YWNjcm9zcyB0aG9zZSB3b3JkcywgdGhleSBhcmUganVzdCBwZXJmZWN0LCB5b3UgIGNhbiBmaW5k
+IHRoZSBhcnRpY2xlIGhlcmUgIDxodHRwOi8vaW52aXRlLnRoZWd1eWdlYXIuY29tL2U0emJoZ3U+
+DQpDaGVlcnMsIEN5cmlsIEJydWxlYm9pcw0K
+
+------=_NextPart_000_0001_301B2FA8.3A63124D
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas=
+-microsoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:off=
+ice:word" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"=
+ xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META HTTP-EQUIV=3D"C=
+ontent-Type" CONTENT=3D"text/html; charset=3Dus-ascii"><meta name=3DGe=
+nerator content=3D"Microsoft Word 15 (filtered medium)"><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-fareast-language:EN-US;}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri",sans-serif;
+	color:windowtext;}
+=2EMsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri",sans-serif;
+	mso-fareast-language:EN-US;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:2.0cm 42.5pt 2.0cm 3.0cm;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DFR link=3D"#0563=
+C1" vlink=3D"#954F72"><div class=3DWordSection1><p class=3DMsoNormal><=
+span lang=3DEN-US>Hi friend! <o:p></o:p></span></p><p class=3DMsoNorma=
+l><span lang=3DEN-US>I was reading  an article and suddenly came accro=
+ss those words, they are just perfect, you  can find the article here =
+ <a href=3D"http://invite.theguygear.com/e4zbhgu">http://invite.theguy=
+gear.com/e4zbhgu</a><o:p></o:p></span></p><p class=3DMsoNormal><span l=
+ang=3DEN-US>Cheers, Cyril Brulebois<o:p></o:p></span></p></div><p clas=
+s=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p><p class=3D=
+MsoNormal><span lang=3DEN-US><img src=3D"https://s.yimg.com/os/mit/ape=
+/w/d8f6e02/dark/mostly_cloudy_day_night.png" /></span></p></body></htm=
+l>
+
+------=_NextPart_000_0001_301B2FA8.3A63124D--
 
 
---===============5207895218880300377==
+--===============4604907304372094111==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -123,4 +122,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5207895218880300377==--
+--===============4604907304372094111==--
