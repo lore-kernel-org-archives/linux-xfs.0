@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 42D517CA0
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 07:24:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 14B60304032
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 05:24:20 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D1967CA0
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 07:25:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86106AC003
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 05:25:19 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id gyEF2zKlsI9rTXFK (version=TLSv1.2
+	ESMTP id De8WBbjHuxgUI7Uo (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 05:24:18 -0700 (PDT)
-Date: Tue, 2 Aug 2016 05:24:14 -0700
+	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 05:25:18 -0700 (PDT)
+Date: Tue, 2 Aug 2016 05:25:17 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] vfs: fix return type of ioctl_file_dedupe_range
-Message-ID: <20160802122414.GB31492@infradead.org>
-References: <20160801171339.GB8590@birch.djwong.org>
+Subject: Re: [PATCH] xfs: in _attrlist_by_handle, copy the cursor back to
+	userspace
+Message-ID: <20160802122517.GD31492@infradead.org>
+References: <20160802035651.GB8593@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160801171339.GB8590@birch.djwong.org>
+In-Reply-To: <20160802035651.GB8593@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +31,14 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 01, 2016 at 10:13:39AM -0700, Darrick J. Wong wrote:
-> All the VFS functions in the dedupe ioctl path return int status, so
-> the ioctl handler ought to as well.
-> 
-> Found by Coverity, CID 1350952.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Aug 01, 2016 at 08:56:51PM -0700, Darrick J. Wong wrote:
+> When we're iterating inode xattrs by handle, we have to copy the
+> cursor back to userspace so that a subsequent invocation actually
+> retrieves subsequent contents.
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Testcase?
 
 _______________________________________________
 xfs mailing list
