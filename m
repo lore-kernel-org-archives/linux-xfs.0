@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A12F87D0A
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 05:13:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5869B304048
-	for <xfs@oss.sgi.com>; Mon,  1 Aug 2016 03:13:52 -0700 (PDT)
-Received: from mail-wm0-f46.google.com (mail-wm0-f46.google.com
-	[74.125.82.46]) by cuda.sgi.com with ESMTP id CV2SEFSCxyD0QXS8
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Aug 2016 03:13:49 -0700 (PDT)
-Received: by mail-wm0-f46.google.com with SMTP id i5so236692823wmg.0
-	for <xfs@oss.sgi.com>; Mon, 01 Aug 2016 03:13:49 -0700 (PDT)
-Message-ID: <579F20D9.80107@plexistor.com>
-Date: Mon, 01 Aug 2016 13:13:45 +0300
-From: Boaz Harrosh <boaz@plexistor.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4CF947CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 10:41:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AF366AC003
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 08:41:08 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 8WmMVSBLJaiEFiDj (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 08:41:06 -0700 (PDT)
+Date: Tue, 2 Aug 2016 08:40:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: in _attrlist_by_handle, copy the cursor back to
+	userspace
+Message-ID: <20160802154035.GI8590@birch.djwong.org>
+References: <20160802035651.GB8593@birch.djwong.org>
+	<20160802122517.GD31492@infradead.org>
 MIME-Version: 1.0
-Subject: Re: Subtle races between DAX mmap fault and write path
-References: <20160727120745.GI6860@quack2.suse.cz>
-	<20160727211039.GA20278@linux.intel.com>
-	<20160727221949.GU16044@dastard>
-	<20160728081033.GC4094@quack2.suse.cz>
-	<20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard>
-In-Reply-To: <20160730001249.GE16044@dastard>
+Content-Disposition: inline
+In-Reply-To: <20160802122517.GD31492@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,66 +31,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Jan Kara <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 07/30/2016 03:12 AM, Dave Chinner wrote:
-<>
+On Tue, Aug 02, 2016 at 05:25:17AM -0700, Christoph Hellwig wrote:
+> On Mon, Aug 01, 2016 at 08:56:51PM -0700, Darrick J. Wong wrote:
+> > When we're iterating inode xattrs by handle, we have to copy the
+> > cursor back to userspace so that a subsequent invocation actually
+> > retrieves subsequent contents.
 > 
-> If we track the dirty blocks from write in the radix tree like we
-> for mmap, then we can just use a normal memcpy() in dax_do_io(),
-> getting rid of the slow cache bypass that is currently run. Radix
-> tree updates are much less expensive than a slow memcpy of large
-> amounts of data, ad fsync can then take care of persistence, just
-> like we do for mmap.
-> 
+> Testcase?
 
-No! 
+Found it while continuing development of xfs_scrub.  I'll send along the
+xfstest patch when I've finished polishing it.  (It was harder than usual since
+xfs_io doesn't /use/ the attr-by-handle interface... nothing does.)
 
-mov_nt instructions, That "slow cache bypass that is currently run" above
-is actually faster then cached writes by 20%, and if you add the dirty
-tracking and cl_flush instructions it becomes x2 slower in the most
-optimal case and 3 times slower in the DAX case.
-
-The network guys have noticed the mov_nt instructions superior performance
-for years before we pushed DAX into the tree. look for users of copy_from_iter_nocache
-and the comments when they where introduced, those where used before DAX, and
-nothing at all to do with persistence.
-
-So what you are suggesting is fine only 3 times slower in the current
-implementation.
-
-> We should just make the design assumption that all persistent memory
-> is volatile, track where we dirty it in all paths, and use the
-> fastest volatile memcpy primitives available to us in the IO path.
-
-The "fastest volatile memcpy primitives available" is what we do
-today with the mov_nt instructions.
-
-> We'll end up with a faster fastpath that if we use CPU cache bypass
-> copies, dax_do_io() and mmap will be coherent and synchronised, and
-> fsync() will have the same requirements and overhead regardless of
-> the way the application modifies the pmem or the hardware platform
-> used to implement the pmem.
-> 
-
-I measured, there is tests running in our labs every night, your
-suggestion on an ADR system is 3 times slower to reach persistence.
-
-Is why I was pushing for MMAP_PMEM_AWARE, because a smart mmap application
-from user-mode uses mov_nt anyway because it wants that 20% gain regardless
-of what the Kernel will do. Then it calls fsync() and the Kernel will burn
-x2 more CPU, just for the sake of burning CPU, because the data is already
-persistent at the get go.
-
-> Cheers,
-> Dave.
-
-As you, I do not care for DAX very much, but please lets keep the physical
-facts strait
-
-Cheers indeed
-Boaz
+--D
 
 _______________________________________________
 xfs mailing list
