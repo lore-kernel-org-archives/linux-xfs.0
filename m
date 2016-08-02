@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A83737CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 12:11:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5DCDA8F8035
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 10:11:29 -0700 (PDT)
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
-	cuda.sgi.com with ESMTP id FiQRA4Gr73naVDtv for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 10:11:28 -0700 (PDT)
-Date: Wed, 3 Aug 2016 11:11:27 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
-Message-ID: <20160803171127.GA15876@linux.intel.com>
-References: <20160803003354.GP16044@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 8C28F7CB1
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 12:34:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5EE458F8037
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 10:34:44 -0700 (PDT)
+Received: from mail-wm0-f47.google.com (mail-wm0-f47.google.com
+	[74.125.82.47]) by cuda.sgi.com with ESMTP id 8gfIXOriptECpeTX
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 10:34:42 -0700 (PDT)
+Received: by mail-wm0-f47.google.com with SMTP id o80so300991565wme.1
+	for <xfs@oss.sgi.com>; Tue, 02 Aug 2016 10:34:42 -0700 (PDT)
+Message-ID: <ABE0A526E635446AA644BBE8B0E83D69@dinulap>
+From: "Lista Unx" <lista.unx@gmail.com>
+References: <4278AB9734C1445A8E48635B155149F8@dinulap><20160729233524.GD16044@dastard><57CF7681619F42CCB4C0CF589E9686E5@dinulap>
+	<alpine.LSU.2.20.1608011410500.18210@zvanf-gvevgu.inyvabe>
+Subject: Re: partition 100% full No space left on device. looks like
+	xfsiscorrupted or a bug
+Date: Tue, 2 Aug 2016 20:34:41 +0300
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160803003354.GP16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,66 +28,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com
+To: "Carlos E. R." <robin.listas@telefonica.net>, XFS mailing list <xfs@oss.sgi.com>
 
-On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
-> Hi folks,
-> 
-> Just hit a reproducable hang in generic/361. Essentially this on
-> a 8GB pmem device:
-> 
-> mkfs.xfs -f /dev/pmem1
-> mount -o dax /dev/pmem1 /mnt/scratch
-> xfs_io -f -c "truncate 1g" test.img
-> losetup -f --show /mnt/scratch/test.img
-> mkfs.xfs -f /dev/loop0
-> 
-> And the mkfs.xfs command hangs with a discard that never completes:
-> 
-> [  243.413918] INFO: task mkfs.xfs:5708 blocked for more than 120 seconds.
-> [  243.415678]       Not tainted 4.7.0-dgc+ #862
-> [  243.416772] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  243.418769] mkfs.xfs        D ffff880835143c18 13848  5708   5441 0x00000000
-> [  243.420620]  ffff880835143c18 ffff880835143c20 ffff88083a244780 ffff8808358ba3c0
-> [  243.422636]  ffff88023aa20000 ffff880835144000 7fffffffffffffff 7fffffffffffffff
-> [  243.424586]  ffff8808358ba3c0 00000000024000c0 ffff880835143c30 ffffffff81e5e38c
-> [  243.426466] Call Trace:
-> [  243.427050]  [<ffffffff81e5e38c>] schedule+0x3c/0x90
-> [  243.428224]  [<ffffffff81e62be5>] schedule_timeout+0x265/0x330
-> [  243.429563]  [<ffffffff8109f125>] ? kvm_clock_read+0x25/0x40
-> [  243.430896]  [<ffffffff8109f149>] ? kvm_clock_get_cycles+0x9/0x10
-> [  243.432360]  [<ffffffff81125edc>] ? ktime_get+0x3c/0xb0
-> [  243.433556]  [<ffffffff81e5db54>] io_schedule_timeout+0xa4/0x110
-> [  243.434932]  [<ffffffff81e5eed6>] wait_for_completion_io+0xd6/0x110
-> [  243.436297]  [<ffffffff810decd0>] ? wake_up_q+0x70/0x70
-> [  243.437436]  [<ffffffff817d6f06>] submit_bio_wait+0x56/0x70
-> [  243.438671]  [<ffffffff817e851a>] blkdev_issue_discard+0x6a/0xb0
-> [  243.439980]  [<ffffffff810dab69>] ? __might_sleep+0x49/0x80
-> [  243.441182]  [<ffffffff817eea87>] blk_ioctl_discard+0x97/0xb0
-> [  243.442370]  [<ffffffff817ef7bb>] blkdev_ioctl+0x7eb/0x9a0
-> [  243.443485]  [<ffffffff81236a1d>] block_ioctl+0x3d/0x50
-> [  243.444552]  [<ffffffff812100df>] do_vfs_ioctl+0x8f/0x670
-> [  243.445630]  [<ffffffff81002434>] ? exit_to_usermode_loop+0x94/0xb0
-> [  243.446902]  [<ffffffff81210739>] SyS_ioctl+0x79/0x90
-> [  243.447927]  [<ffffffff81002bc5>] ? syscall_return_slowpath+0xf5/0x190
-> [  243.449236]  [<ffffffff81e63d32>] entry_SYSCALL_64_fastpath+0x1a/0xa4
-> 
-> This only reproduces when the underlying filesystem is mounted with
-> -o dax, so there is a bad interaction with loop devices and DAX
-> occurring somewhere. generic/361 is a recent test (committed june 14)
-> so this probably hasn't actually been tested until now.
-> 
-> I haven't got time to look at this right now, hence the report.
 
-Cool, thanks for the report.  I've reproduced this with linux/master, and the
-test passes with v4.7.
+----- Original Message ----- 
+From: "Carlos E. R." <robin.listas@telefonica.net>
+To: "XFS mailing list" <xfs@oss.sgi.com>
+Sent: Monday, August 01, 2016 3:23 PM
+Subject: Re: partition 100% full No space left on device. looks like 
+xfsiscorrupted or a bug
 
-Running a bisect...
+
+> Dave refers to a unix/linux "feature". Files can be deleted, but if
+> they are in use at the time, the contents are not deleted. Disk shows an
+> ammount of free space that does not match the total - used space.
+>
+
+It haS been checked! See below a snip from my first post.
+
+#lsof -nP |grep -i delete|wc -l
+0
+#find /proc/*/fd -ls | grep -i dele|wc -l
+0
+
+> However, a reboot clears this situation, and you did say in the original
+> post you had rebooted the system.
+
+Yes, tried also reboot which does not solve the problem.
+
+Its obvious that till not run xfs_repair, we can't conclude more. This will 
+happen next days ... 
 
 _______________________________________________
 xfs mailing list
