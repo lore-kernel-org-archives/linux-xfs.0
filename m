@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9BC767CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:33:19 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C6E737CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 14:20:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E2536AC003
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:33:18 -0700 (PDT)
-Received: from mail-qk0-f195.google.com (mail-qk0-f195.google.com
-	[209.85.220.195]) by cuda.sgi.com with ESMTP id
-	bJDVrTLhrpCXBt7m (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 15:33:16 -0700 (PDT)
-Received: by mail-qk0-f195.google.com with SMTP id x185so1720842qkc.3
-	for <xfs@oss.sgi.com>; Wed, 03 Aug 2016 15:33:16 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2EEECAC004
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 12:20:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id fWhtONQXJyxlG0UB for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 12:20:21 -0700 (PDT)
+Subject: Re: Old bugs in xfsprogs?
+References: <7e185931-8830-5f31-7abb-5419bb255991@suse.com>
+	<626eedea-2b9a-4ca3-cd3d-1e528f45526f@sandeen.net>
+	<74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <df36996c-65c5-1cf7-5700-5676b6ee48e0@sandeen.net>
+Date: Tue, 2 Aug 2016 14:20:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <1465155145-10812-38-git-send-email-mchristi@redhat.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
-From: Ross Zwisler <zwisler@gmail.com>
-Date: Wed, 3 Aug 2016 16:33:15 -0600
-Message-ID: <CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
+In-Reply-To: <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,93 +25,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3949999399624062518=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, axboe@fb.com
-Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, LKML <linux-kernel@vger.kernel.org>, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
+To: Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
 
-On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
-> From: Mike Christie <mchristi@redhat.com>
->
-> The req operation REQ_OP is separated from the rq_flag_bits
-> definition. This converts the block layer drivers to
-> use req_op to get the op from the request struct.
->
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--===============3949999399624062518==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu
+Content-Type: multipart/mixed; boundary="0AcBdpWt23SSM1A25G9jUKuVtaDv10304"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
+Message-ID: <df36996c-65c5-1cf7-5700-5676b6ee48e0@sandeen.net>
+Subject: Re: Old bugs in xfsprogs?
+References: <7e185931-8830-5f31-7abb-5419bb255991@suse.com>
+ <626eedea-2b9a-4ca3-cd3d-1e528f45526f@sandeen.net>
+ <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
+In-Reply-To: <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
+
+--0AcBdpWt23SSM1A25G9jUKuVtaDv10304
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+
+On 8/2/16 1:51 PM, Jeff Mahoney wrote:
+> On 8/2/16 11:00 AM, Eric Sandeen wrote:
+
+=2E..
+
+>> I could imagine that maybe for each candidate super we find, we should=
+
+>> look at its geometry, and spot-check the other locations that it indic=
+ates
+>> should contain a superblock.  If we get enough semi-valid but conflict=
+ing
+>> "sets," maybe we should bail out and ask.  It's quite a corner case, t=
+ho.
+>=20
+> I'm not sure a geometry check would've helped here.  The superblock
+> geometry still would've covered the whole, unpartitioned device.  Since=
+
+> we're already linking with blkid, maybe a check to see if there's a
+> partition table on the device and bail if it sees one, unless forced?
+> The part that I'm still trying to explain is how it managed to get a
+> good magic from the log and then got the wrong uuid.
+
+Hm, yeah, maybe right off the bat, if the primary super looks bad do
+a blkid check, and a (sigh) "are you sure?" just like we do for mkfs.
+
+>> Any chance you have full xfs_repair output?
+>=20
+> Sure, below.  I heard back from the reporter and confirmed that my
+> hypothesis of mkfs -> fdisk -> mkfs was what happened.  He's on SLE12
+> SP1, so that means xfsprogs 3.2.1.
+>=20
+> -Jeff
+>=20
 > ---
->  drivers/block/loop.c              |  6 +++---
->  drivers/block/mtip32xx/mtip32xx.c |  2 +-
->  drivers/block/nbd.c               |  2 +-
->  drivers/block/rbd.c               |  4 ++--
->  drivers/block/xen-blkfront.c      |  8 +++++---
->  drivers/ide/ide-floppy.c          |  2 +-
->  drivers/md/dm.c                   |  2 +-
->  drivers/mmc/card/block.c          |  7 +++----
->  drivers/mmc/card/queue.c          |  6 ++----
+>=20
+> labadmin:/ssd # xfs_repair postgre.raw -L
+> Phase 1 - find and verify superblock...
+>         - reporting progress in intervals of 15 minutes
+> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
+> calculated value 128
+> resetting superblock root inode pointer to 128
+> sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
+> with calculated value 129
+> resetting superblock realtime bitmap ino pointer to 129
+> sb realtime summary inode 18446744073709551615 (NULLFSINO) inconsistent=
 
-Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
-and bisected to this commit:
+> with calculated value 130
+> resetting superblock realtime summary ino pointer to 130
 
-commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
-Author: Mike Christie <mchristi@redhat.com>
-Date:   Sun Jun 5 14:32:17 2016 -0500
-drivers: use req op accessor
+huh.  Ok, so I guess the primary in block zero was mostly-ok, and all
+of the backup supers were still more or less intact, and it didn't have
+to go searching...
 
-Here are the steps to reproduce the deadlock with a BRD ramdisk:
+-Eric
 
-mkfs.xfs -f /dev/ram0
-mount -o dax /dev/ram0 /mnt/scratch
-xfs_io -f -c "truncate 1g" /mnt/scratch/test.img
-losetup -f --show /mnt/scratch/test.img
-mkfs.xfs -f /dev/loop0
 
-At this point the mkfs.xfs deadlocks.  Here is the stack trace
-gathered via "echo w > /proc/sysrq-trigger" and passed through
-kasan_symbolize.py:
+--0AcBdpWt23SSM1A25G9jUKuVtaDv10304--
 
-brd: module loaded
-XFS (ram0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-XFS (ram0): Mounting V5 Filesystem
-XFS (ram0): Ending clean mount
-sysrq: SysRq : Show Blocked State
-  task                        PC stack   pid father
-mkfs.xfs        D ffff88060ae47b38     0  1482   1287 0x00000000
- ffff88060ae47b38 00000000000079e8 ffff880610fd8d98 ffff880036011a40
- ffff8800aa6dcec0 ffff88060ae48000 ffff880610fd8d80 7fffffffffffffff
- ffff8800aa6dcec0 00000000024000c0 ffff88060ae47b50 ffffffff81aca775
-Call Trace:
- [<ffffffff81aca775>] schedule+0x35/0x80 kernel/sched/core.c:3360
- [<ffffffff81acf431>] schedule_timeout+0x271/0x460 kernel/time/timer.c:1493
- [<ffffffff81ac9c34>] io_schedule_timeout+0xa4/0x110 kernel/sched/core.c:4969
- [<     inline     >] do_wait_for_common kernel/sched/completion.c:75
- [<     inline     >] __wait_for_common kernel/sched/completion.c:93
- [<     inline     >] wait_for_common_io kernel/sched/completion.c:107
- [<ffffffff81acb33f>] wait_for_completion_io+0xdf/0x120
-kernel/sched/completion.c:155
- [<ffffffff81573206>] submit_bio_wait+0x66/0x90 block/bio.c:870
- [<ffffffff81588016>] blkdev_issue_discard+0x86/0xc0 block/blk-lib.c:115
- [<ffffffff8158ea23>] blk_ioctl_discard+0xa3/0xd0 block/ioctl.c:221
- [<ffffffff8158f5da>] blkdev_ioctl+0x60a/0x9e0 block/ioctl.c:510
- [<ffffffff812bddb3>] block_ioctl+0x43/0x50 fs/block_dev.c:1714
- [<     inline     >] vfs_ioctl fs/ioctl.c:43
- [<ffffffff8128ec72>] do_vfs_ioctl+0xa2/0x6a0 fs/ioctl.c:674
- [<     inline     >] SYSC_ioctl fs/ioctl.c:689
- [<ffffffff8128f2e9>] SyS_ioctl+0x79/0x90 fs/ioctl.c:680
- [<ffffffff81ad0abc>] entry_SYSCALL_64_fastpath+0x1f/0xbd
-arch/x86/entry/entry_64.S:207
+--70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-The line numbers are for the commit above, not for linux/master.  This
-occurs 100% as of this commit, and 0% with the previous commit.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
+Comment: GPGTools - http://gpgtools.org
 
-This doesn't occur if you don't use DAX, but based on the content of
-the commit I'm guessing that difference is due to variations in the
-way the two paths use discard.
+iQIcBAEBAgAGBQJXoPJ0AAoJECCuFpLhPd7gMMwP/0j3lITM12XKrfXHdOAzGiIz
+HjvNAwjvTtC1kx5mq8SnWFk/FPrhP8pDBzkF14aC3lyu4GB+Pp3SX+d7uGxpzQTK
+jdplNO2sB8iaNdPolvgMSXQ5UdU3cs6hnxIwlXqRnA6N6/3gyF3ZL2qihYG4NyK7
+cNMfcBQYLu21CDtNMExAxlBLIpiND0ckyBOimfdYiiHaLetqzIGYDGBof/KVTC+r
+sEPSrLVXUMEU0XjIbJnfdIgB9wHmnNOqodjaJ6HYAT1FfLcwnngzYWRjW8JSE8wF
+lN6tdLUBVkq+r+WJUegdK6ZAFVBuAPJF6c4Dj4Kl4qwce/ftcz1K5DFDLcm12Prm
+bMKqrE6MDLOx3+12y0EI/hGkvKNtZjU5xmNL4eagz6WtjrzFYSggztDPJBTRMx9B
+7nFofQGryW3aZ9fc9nQ79VGmP5zmue/DSeNk6ugFRSQhkhc/gdQuw1egubU309Fb
+c/QlNa8puWLRbB2MYH8WuwNJuVebbzuaF7Ug2vRYiwK/JwI90gON39mjI2rux6Lb
+trmayDjgjgh3sF9lSjLIgLQ/aUSSoQ+Sv2B/ksCjxOA7Zkd/pv1b/oOYBwth974u
+QoOJ/13huyQGayfEjITBmyrwdEndDHxQotH/yG/QwnmqeOqL7BJi5zQojykUJdaU
+0ipfbFCZhskeoBddy4/C
+=QDdA
+-----END PGP SIGNATURE-----
 
-- Ross
+--70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu--
+
+
+--===============3949999399624062518==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3949999399624062518==--
