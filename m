@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 32B447CA4
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 02:55:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A6735AC001
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 00:55:36 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id heLCxxL3rMacmuuq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 00:55:35 -0700 (PDT)
-Date: Wed, 3 Aug 2016 15:55:32 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] generic/095: update warning whitelist
-Message-ID: <20160803075531.GI27776@eguan.usersys.redhat.com>
-References: <1470042176-31447-1-git-send-email-hch@lst.de>
-	<20160802232305.GQ12670@dastard>
-	<20160803073918.GE16413@zlang.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160803073918.GE16413@zlang.usersys.redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 635A47CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 18:41:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27EF18F8033
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 16:41:13 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	IiFWAWn1tWPHui2j for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 16:41:12 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: don't invalidate whole file on DAX read/write
+Date: Wed,  3 Aug 2016 09:40:26 +1000
+Message-Id: <1470181226-20935-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +21,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: jack@suse.cz
 
-On Wed, Aug 03, 2016 at 03:39:18PM +0800, Zorro Lang wrote:
-> On Wed, Aug 03, 2016 at 09:23:05AM +1000, Dave Chinner wrote:
-> > On Mon, Aug 01, 2016 at 11:02:56AM +0200, Christoph Hellwig wrote:
-> > > The recent direct I/O path refactor changed the function name in the
-> > > racing read case.  Update the test case to handle the new name in
-> > > addition to the old one.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  tests/generic/095 | 6 ++++--
-> > >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/tests/generic/095 b/tests/generic/095
-> > > index c656ef1..4754992 100755
-> > > --- a/tests/generic/095
-> > > +++ b/tests/generic/095
-> > > @@ -125,9 +125,11 @@ $FIO_PROG $fio_config >>$seqres.full 2>&1
-> > >  filter_xfs_dmesg()
-> > >  {
-> > >  	local warn1="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_write.*"
-> > > -	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
-> > > +	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
-> > > +	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
-> > >  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
-> > > -	    -e "s#$warn2#Intentional warnings in xfs_file_read_iter#"
-> > > +	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
-> > > +	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#"
-> 
-> Hi,
-> 
-> 1) xfs_file_dio_aio_read() was splited from xfs_file_read_iter() by
-> below commit:
-> 
->   bbc5a74 xfs: split xfs_file_read_iter into buffered and direct I/O helpers
-> 
-> 2) xfs_file_read_iter() came from xfs_file_aio_read() as below commit:
-> 
->   b4f5d2c xfs: switch to ->read_iter()
-> 
-> Some Linux distro (e.g: RHEL-7) still use the old kernel with old function
-> xfs_file_aio_read(), generic/095 always fails on it. So how about filter
-> xfs_file_aio_read too?
+From: Dave Chinner <dchinner@redhat.com>
 
-I think you can just send another (follow-up) patch for review.
+When we do DAX IO, we try to invalidate the entire page cache held
+on the file. This is incorrect as it will trash the entire mapping
+tree that now tracks dirty state in exceptional entries in the radix
+tree slots.
 
-Eryu
+What we are trying to do is remove cached pages (e.g from reads
+into holes) that sit in the radix tree over the range we are about
+to write to. Hence we should just limit the invalidation to the
+range we are about to overwrite.
+
+Reported-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index ed95e5b..e612a02 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -741,9 +741,20 @@ xfs_file_dax_write(
+ 	 * page is inserted into the pagecache when we have to serve a write
+ 	 * fault on a hole.  It should never be dirtied and can simply be
+ 	 * dropped from the pagecache once we get real data for the page.
++	 *
++	 * XXX: This is racy against mmap, and there's nothing we can do about
++	 * it. dax_do_io() should really do this invalidation internally as
++	 * it will know if we've allocated over a holei for this specific IO and
++	 * if so it needs to update the mapping tree and invalidate existing
++	 * PTEs over the newly allocated range. Remove this invalidation when
++	 * dax_do_io() is fixed up.
+ 	 */
+ 	if (mapping->nrpages) {
+-		ret = invalidate_inode_pages2(mapping);
++		loff_t end = iocb->ki_pos + iov_iter_count(from) - 1;
++
++		ret = invalidate_inode_pages2_range(mapping,
++						    iocb->ki_pos >> PAGE_SHIFT,
++						    end >> PAGE_SHIFT);
+ 		WARN_ON_ONCE(ret);
+ 	}
+ 
+-- 
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
