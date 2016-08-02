@@ -1,36 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DC7297CA2
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 07:59:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F1DAAC002
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 05:59:15 -0700 (PDT)
-Received: from smtp.movistar.es (smtp08.acens.net [86.109.99.132]) by
-	cuda.sgi.com with ESMTP id cFAqboweTMCQSVsa for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 05:59:13 -0700 (PDT)
-Received: from Telcontar.valinor (81.36.154.234) by smtp.movistar.es
-	(8.6.122.03) (authenticated as robin.listas2)
-	id 579B6AD4003A89FB for xfs@oss.sgi.com; Wed, 3 Aug 2016 12:59:12 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id EF83B120AE1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id dIwTNlf__ptu for <xfs@oss.sgi.com>;
-	Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id C97DF120AE0
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
-Date: Wed, 3 Aug 2016 14:59:11 +0200 (CEST)
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Subject: Spam on this list  [Was: Re: partition 100% full No space left on
-	device. looks like xfs iscorrupted or a bug]
-In-Reply-To: <57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-Message-ID: <alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
-	<20160729233524.GD16044@dastard>
-	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 632F97CBA
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 07:00:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1897F8F8035
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 05:00:55 -0700 (PDT)
+Received: from mail-pa0-f66.google.com (mail-pa0-f66.google.com
+	[209.85.220.66]) by cuda.sgi.com with ESMTP id 9rg5GfMUjAY7fEvm
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 05:00:52 -0700 (PDT)
+Received: by mail-pa0-f66.google.com with SMTP id q2so11865405pap.0
+	for <xfs@oss.sgi.com>; Tue, 02 Aug 2016 05:00:52 -0700 (PDT)
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: [PATCH v2 RESEND] fs: return EPERM on immutable inode
+Date: Tue,  2 Aug 2016 19:58:28 +0800
+Message-Id: <1470139108-13115-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,54 +24,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: open list <linux-kernel@vger.kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Eryu Guan <guaneryu@gmail.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Bob Peterson <rpeterso@redhat.com>, Steven Whitehouse <swhiteho@redhat.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+In most cases, EPERM is returned on immutable inode, and there're only a
+few places returning EACCES. I noticed this when running LTP on
+overlayfs, setxattr03 failed due to unexpected EACCES on immutable
+inode.
 
+So converting all EACCES to EPERM on immutable inode.
 
+Acked-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+---
+v2:
+- update commit log to mention that it's found by running LTP
 
-On Monday, 2016-08-01 at 15:00 +0300, Lista Unx wrote:
+ fs/gfs2/inode.c    | 2 +-
+ fs/namei.c         | 2 +-
+ fs/utimes.c        | 3 ++-
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 4 files changed, 5 insertions(+), 4 deletions(-)
 
-> Yes, I've created a new gmail account especially to be able to post to this 
-> mailing list which is filtering very seriously legit messages comming from 
-> legit usres, just because they are comming from yahoo accounts (servers) ... 
-> but is allowing ANYONE else to post here WITHOUT having valid subscription and 
-> also WITHOUT any minimal intention to post here something which has or is 
-> related to XFS. Just in last days, I was informed about new microwave 
-> acquisition, plastic delivery, or any other craps arriving here from a 
-> "trusted and very legit" source, like gmail. That's sound like really a very 
-> good job!
-
-:-)
-
-Yes, Spam is bad in this list, and has increased recently. You will 
-find, however, that gmail does a good job of filtering them out: you 
-only have to mark as spam those that it does not detect, and conversely, 
-clear out the false positives. It learns soon.
-
-I also have problems with my ISP and Spam on this list.
-
-
-You will find that the people on this list are very knowledgeable and 
-will try to help you on your problem with XFS. Spam is not a thing on 
-their power, though X'-)
-
-- -- 
-Cheers,
-        Carlos E. R.
-        (from 13.1 x86_64 "Bottle" at Telcontar)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAleh6p8ACgkQtTMYHG2NR9VwbACfQ48V7GoSWDjxkscKMZZBGbeW
-qf8An0XDo7JRY1wOjQlVAqyE3Of/t6DG
-=n207
------END PGP SIGNATURE-----
+diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+index e0621ca..e4da0ec 100644
+--- a/fs/gfs2/inode.c
++++ b/fs/gfs2/inode.c
+@@ -1800,7 +1800,7 @@ int gfs2_permission(struct inode *inode, int mask)
+ 	}
+ 
+ 	if ((mask & MAY_WRITE) && IS_IMMUTABLE(inode))
+-		error = -EACCES;
++		error = -EPERM;
+ 	else
+ 		error = generic_permission(inode, mask);
+ 	if (gfs2_holder_initialized(&i_gh))
+diff --git a/fs/namei.c b/fs/namei.c
+index c386a32..adb0414 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -410,7 +410,7 @@ int __inode_permission(struct inode *inode, int mask)
+ 		 * Nobody gets write access to an immutable file.
+ 		 */
+ 		if (IS_IMMUTABLE(inode))
+-			return -EACCES;
++			return -EPERM;
+ 
+ 		/*
+ 		 * Updating mtime will likely cause i_uid and i_gid to be
+diff --git a/fs/utimes.c b/fs/utimes.c
+index 85c40f4..794f5f5 100644
+--- a/fs/utimes.c
++++ b/fs/utimes.c
+@@ -92,10 +92,11 @@ static int utimes_common(struct path *path, struct timespec *times)
+ 		 * then we need to check permissions, because
+ 		 * inode_change_ok() won't do it.
+ 		 */
+-		error = -EACCES;
++		error = -EPERM;
+                 if (IS_IMMUTABLE(inode))
+ 			goto mnt_drop_write_and_out;
+ 
++		error = -EACCES;
+ 		if (!inode_owner_or_capable(inode)) {
+ 			error = inode_permission(inode, MAY_WRITE);
+ 			if (error)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9a7c878..3d6820f 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -232,7 +232,7 @@ xfs_open_by_handle(
+ 	}
+ 
+ 	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+-		error = -EACCES;
++		error = -EPERM;
+ 		goto out_dput;
+ 	}
+ 
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
