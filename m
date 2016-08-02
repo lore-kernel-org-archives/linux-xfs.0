@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D02917CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:37:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9DBE07CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 16:41:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 365F0AC003
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:37:16 -0700 (PDT)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	mmvrEc3k4INytdLW for <xfs@oss.sgi.com>;
-	Wed, 03 Aug 2016 15:37:14 -0700 (PDT)
-Date: Wed, 3 Aug 2016 16:37:13 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
-Message-ID: <20160803223713.GA22364@linux.intel.com>
-References: <20160803003354.GP16044@dastard>
-	<20160803171127.GA15876@linux.intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0EBB1AC001
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 14:41:07 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	o3o2AABdwmqvzi7y for <xfs@oss.sgi.com>;
+	Tue, 02 Aug 2016 14:41:04 -0700 (PDT)
+Date: Wed, 3 Aug 2016 07:41:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: in _attrlist_by_handle, copy the cursor back to
+	userspace
+Message-ID: <20160802214101.GM16044@dastard>
+References: <20160802035651.GB8593@birch.djwong.org>
+	<20160802122517.GD31492@infradead.org>
+	<20160802154035.GI8590@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160803171127.GA15876@linux.intel.com>
+In-Reply-To: <20160802154035.GI8590@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,67 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Aug 03, 2016 at 11:11:27AM -0600, Ross Zwisler wrote:
-> On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
-> > Hi folks,
+On Tue, Aug 02, 2016 at 08:40:35AM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 02, 2016 at 05:25:17AM -0700, Christoph Hellwig wrote:
+> > On Mon, Aug 01, 2016 at 08:56:51PM -0700, Darrick J. Wong wrote:
+> > > When we're iterating inode xattrs by handle, we have to copy the
+> > > cursor back to userspace so that a subsequent invocation actually
+> > > retrieves subsequent contents.
 > > 
-> > Just hit a reproducable hang in generic/361. Essentially this on
-> > a 8GB pmem device:
-> > 
-> > mkfs.xfs -f /dev/pmem1
-> > mount -o dax /dev/pmem1 /mnt/scratch
-> > xfs_io -f -c "truncate 1g" test.img
-> > losetup -f --show /mnt/scratch/test.img
-> > mkfs.xfs -f /dev/loop0
-> > 
-> > And the mkfs.xfs command hangs with a discard that never completes:
-> > 
-> > [  243.413918] INFO: task mkfs.xfs:5708 blocked for more than 120 seconds.
-> > [  243.415678]       Not tainted 4.7.0-dgc+ #862
-> > [  243.416772] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > [  243.418769] mkfs.xfs        D ffff880835143c18 13848  5708   5441 0x00000000
-> > [  243.420620]  ffff880835143c18 ffff880835143c20 ffff88083a244780 ffff8808358ba3c0
-> > [  243.422636]  ffff88023aa20000 ffff880835144000 7fffffffffffffff 7fffffffffffffff
-> > [  243.424586]  ffff8808358ba3c0 00000000024000c0 ffff880835143c30 ffffffff81e5e38c
-> > [  243.426466] Call Trace:
-> > [  243.427050]  [<ffffffff81e5e38c>] schedule+0x3c/0x90
-> > [  243.428224]  [<ffffffff81e62be5>] schedule_timeout+0x265/0x330
-> > [  243.429563]  [<ffffffff8109f125>] ? kvm_clock_read+0x25/0x40
-> > [  243.430896]  [<ffffffff8109f149>] ? kvm_clock_get_cycles+0x9/0x10
-> > [  243.432360]  [<ffffffff81125edc>] ? ktime_get+0x3c/0xb0
-> > [  243.433556]  [<ffffffff81e5db54>] io_schedule_timeout+0xa4/0x110
-> > [  243.434932]  [<ffffffff81e5eed6>] wait_for_completion_io+0xd6/0x110
-> > [  243.436297]  [<ffffffff810decd0>] ? wake_up_q+0x70/0x70
-> > [  243.437436]  [<ffffffff817d6f06>] submit_bio_wait+0x56/0x70
-> > [  243.438671]  [<ffffffff817e851a>] blkdev_issue_discard+0x6a/0xb0
-> > [  243.439980]  [<ffffffff810dab69>] ? __might_sleep+0x49/0x80
-> > [  243.441182]  [<ffffffff817eea87>] blk_ioctl_discard+0x97/0xb0
-> > [  243.442370]  [<ffffffff817ef7bb>] blkdev_ioctl+0x7eb/0x9a0
-> > [  243.443485]  [<ffffffff81236a1d>] block_ioctl+0x3d/0x50
-> > [  243.444552]  [<ffffffff812100df>] do_vfs_ioctl+0x8f/0x670
-> > [  243.445630]  [<ffffffff81002434>] ? exit_to_usermode_loop+0x94/0xb0
-> > [  243.446902]  [<ffffffff81210739>] SyS_ioctl+0x79/0x90
-> > [  243.447927]  [<ffffffff81002bc5>] ? syscall_return_slowpath+0xf5/0x190
-> > [  243.449236]  [<ffffffff81e63d32>] entry_SYSCALL_64_fastpath+0x1a/0xa4
-> > 
-> > This only reproduces when the underlying filesystem is mounted with
-> > -o dax, so there is a bad interaction with loop devices and DAX
-> > occurring somewhere. generic/361 is a recent test (committed june 14)
-> > so this probably hasn't actually been tested until now.
-> > 
-> > I haven't got time to look at this right now, hence the report.
+> > Testcase?
 > 
-> Cool, thanks for the report.  I've reproduced this with linux/master, and the
-> test passes with v4.7.
-> 
-> Running a bisect...
+> Found it while continuing development of xfs_scrub.  I'll send along the
+> xfstest patch when I've finished polishing it.  (It was harder than usual since
+> xfs_io doesn't /use/ the attr-by-handle interface... nothing does.)
 
-This bisected to a commit to the block layer code.  I've sent a bug report to
-the author of the commit.
+It was (and probably still is) used by SGI's HSM. I thought there
+was some coverage of the interface in the dmapi part of the xfstests
+suite, but perhaps it's only tested by SGI's internal hsm test
+suite...
 
-- Ross
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
