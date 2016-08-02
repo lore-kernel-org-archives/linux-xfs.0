@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AA4E97CA1
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 17:47:33 -0500 (CDT)
-Received: from xmail.sgi.com (pv-excas2-dc21.corp.sgi.com [137.38.106.9])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 117D5AC001
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 15:47:33 -0700 (PDT)
-Message-ID: <57A12305.7020506@sgi.com>
-Date: Tue, 2 Aug 2016 17:47:33 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id D6A1F7CA4
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 14:11:06 -0500 (CDT)
+From: Troy McCorkell <tdm@sgi.com>
+Subject: RE: partition 100% full No space left on device. looks like
+	xfsiscorrupted or a bug
+Date: Tue, 2 Aug 2016 19:11:01 +0000
+Message-ID: <DF733A1EC32F124D86BC1188068FECB101A72DB79E@P-EXMB4-DC21.corp.sgi.com>
+References: <4278AB9734C1445A8E48635B155149F8@dinulap><20160729233524.GD16044@dastard><57CF7681619F42CCB4C0CF589E9686E5@dinulap>
+	<CAJCQCtRV+QzY_jULEYu0ry-iSHwr8LGRkWGMpAH+JuNmnZS6pw@mail.gmail.com>,
+	<5B47A77EB08F49A9B0843A6215A24C64@dinulap>
+In-Reply-To: <5B47A77EB08F49A9B0843A6215A24C64@dinulap>
+Content-Language: en-US
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: in _attrlist_by_handle, copy the cursor back to
-	userspace
-References: <20160802035651.GB8593@birch.djwong.org>
-	<20160802122517.GD31492@infradead.org>
-	<20160802154035.GI8590@birch.djwong.org>
-	<20160802214101.GM16044@dastard>
-In-Reply-To: <20160802214101.GM16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,43 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Lista Unx <lista.unx@gmail.com>, Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 08/02/16 16:41, Dave Chinner wrote:
-> On Tue, Aug 02, 2016 at 08:40:35AM -0700, Darrick J. Wong wrote:
->> On Tue, Aug 02, 2016 at 05:25:17AM -0700, Christoph Hellwig wrote:
->>> On Mon, Aug 01, 2016 at 08:56:51PM -0700, Darrick J. Wong wrote:
->>>> When we're iterating inode xattrs by handle, we have to copy the
->>>> cursor back to userspace so that a subsequent invocation actually
->>>> retrieves subsequent contents.
->>> Testcase?
->> Found it while continuing development of xfs_scrub.  I'll send along the
->> xfstest patch when I've finished polishing it.  (It was harder than usual since
->> xfs_io doesn't /use/ the attr-by-handle interface... nothing does.)
-> It was (and probably still is) used by SGI's HSM. I thought there
-> was some coverage of the interface in the dmapi part of the xfstests
-> suite, but perhaps it's only tested by SGI's internal hsm test
-> suite...
+>On Mon, Aug 1, 2016 at 7:51 AM, Lista Unx <lista.unx@gmail.com> wrote:
 >
-> Cheers,
+>> On Mon, Aug 1, 2016 at 6:00 AM, Lista Unx <lista.unx@gmail.com> wrote:
+>>
+>>> Yes, I've created a new gmail account especially to be able to post to
+>>> this
+>>> mailing list which is filtering very seriously legit messages comming
+>>> from
+>>> legit users, just because they are comming from yahoo accounts (servers)
+>>> ...
+>>
+>> It's a Yahoo policy. It's completely reasonable for lists to reject
+>> yahoo.com emails, but ideally it'd reject them at signup time.
+>>
+>> https://help.yahoo.com/kb/SLN24050.html
+>> https://help.yahoo.com/kb/mail/SLN24016.html?impressions=true
+>> http://www.pcworld.com/article/2141120/yahoo-email-antispoofing-policy-breaks-mailing-lists.html
+>>
+>>
 >
-> Dave.
+>Ok, I understand. In this case:
+>1. Is a good idea to not allow those using yahoo accounts to subscribe to
+>this list (with a clear message regarding why you are doing it)
+>and
+>2. Reject all messages comming from users which does not have valid
+>membership on this list (for sure, you will reduce spam)
 
-You may be thinking of the DMAPI specific extended attribute interface 
-and that is tested in xfstests. That function cannot cursor.
+The policy for the xfs@oss.sgi.com mailing list is it is open and unmoderated to allow any user
+of XFS to communicate with the XFS community.    Yes, the policy does result in spam on the mailing list.
 
-This change would be appropriate to xfsdump (dumping extended attributes 
-via jdm_attr_list()) than our HSM.
+If you have problems with the mailing list please CC me on the email.
 
-I don't see a SGI test for attr_list_by_handle() nor jdm_attr_list(). 
-There is mention in the xfstests source file src/open_unlink.c but that 
-does not cursor.
+Thanks,
+Troy McCorkell
+SGI
 
---Mark Tinguely.
 
 
 _______________________________________________
