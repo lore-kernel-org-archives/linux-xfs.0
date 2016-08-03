@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C54067CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 13:47:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9741A304039
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 11:47:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Shfqvs9EJQuMe06u (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 149567CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 16:46:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BEC688F8033
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 14:46:29 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id vpO9m212jPhtGQ9u (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 11:47:37 -0700 (PDT)
-Date: Tue, 2 Aug 2016 14:47:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 18/47] xfs: refactor redo intent item processing
-Message-ID: <20160802184734.GA58152@bfoster.bfoster>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907708421.25461.405239727630066080.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 14:46:24 -0700 (PDT)
+Date: Wed, 3 Aug 2016 14:46:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: store rmapbt block count in the AGF
+Message-ID: <20160803214613.GF8593@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146907708421.25461.405239727630066080.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,189 +27,119 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 20, 2016 at 09:58:04PM -0700, Darrick J. Wong wrote:
-> Refactor the EFI intent item recovery (and cancellation) functions
-> into a general function that scans the AIL and an intent item type
-> specific handler.  Move the function that recovers a single EFI item
-> into the extent free item code.  We'll want the generalized function
-> when we start wiring up more redo item types.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_extfree_item.c |   65 ++++++++++++++++
->  fs/xfs/xfs_extfree_item.h |    3 +
->  fs/xfs/xfs_log_recover.c  |  182 +++++++++++++++++++++------------------------
->  3 files changed, 151 insertions(+), 99 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 080b54b..af608aa 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -24,7 +24,6 @@
->  #include "xfs_bit.h"
->  #include "xfs_sb.h"
->  #include "xfs_mount.h"
-> -#include "xfs_defer.h"
->  #include "xfs_da_format.h"
->  #include "xfs_da_btree.h"
->  #include "xfs_inode.h"
-> @@ -4165,126 +4164,112 @@ xlog_recover_process_data(
-...
->  STATIC int
-> -xlog_recover_process_efis(
-> +xlog_recover_process_intents(
->  	struct xlog		*log)
->  {
->  	struct xfs_log_item	*lip;
-> -	struct xfs_efi_log_item	*efip;
->  	int			error = 0;
->  	struct xfs_ail_cursor	cur;
->  	struct xfs_ail		*ailp;
-> +	xfs_lsn_t		last_lsn;
->  
->  	ailp = log->l_ailp;
->  	spin_lock(&ailp->xa_lock);
->  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> +	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
->  	while (lip != NULL) {
->  		/*
-> -		 * We're done when we see something other than an EFI.
-> -		 * There should be no EFIs left in the AIL now.
-> +		 * We're done when we see something other than an intent.
-> +		 * There should be no intents left in the AIL now.
->  		 */
-> -		if (lip->li_type != XFS_LI_EFI) {
-> +		if (!xlog_item_is_intent(lip)) {
->  #ifdef DEBUG
->  			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
-> -				ASSERT(lip->li_type != XFS_LI_EFI);
-> +				ASSERT(!xlog_item_is_intent(lip));
->  #endif
->  			break;
->  		}
->  
->  		/*
-> -		 * Skip EFIs that we've already processed.
-> +		 * We should never see a redo item with a LSN higher than
-> +		 * the last transaction we found in the log at the start
-> +		 * of recovery.
->  		 */
-> -		efip = container_of(lip, struct xfs_efi_log_item, efi_item);
-> -		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags)) {
-> -			lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> -			continue;
-> -		}
-> +		ASSERT(XFS_LSN_CMP(last_lsn, lip->li_lsn) >= 0);
->  
-> -		spin_unlock(&ailp->xa_lock);
-> -		error = xlog_recover_process_efi(log->l_mp, efip);
-> -		spin_lock(&ailp->xa_lock);
-> +		switch (lip->li_type) {
-> +		case XFS_LI_EFI:
-> +			error = xlog_recover_process_efi(log->l_mp, ailp, lip);
-> +			break;
-> +		}
+Track the number of blocks used for the rmapbt in the AGF.  When we
+get to the AG reservation code we need this counter to quickly
+make our reservation during mount.
 
-I think I'd prefer to see the locking remain here rather than get buried
-in the helper functions. That said, this allows us to check the
-recovered bit without a lock cycle. Meh, either way:
+v2: Actually include growfs support.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c      |    1 +
+ fs/xfs/libxfs/xfs_format.h     |   11 ++++++++---
+ fs/xfs/libxfs/xfs_rmap_btree.c |    6 ++++++
+ fs/xfs/xfs_fsops.c             |    1 +
+ 4 files changed, 16 insertions(+), 3 deletions(-)
 
->  		if (error)
->  			goto out;
->  		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> @@ -4296,15 +4281,14 @@ out:
->  }
->  
->  /*
-> - * A cancel occurs when the mount has failed and we're bailing out. Release all
-> - * pending EFIs so they don't pin the AIL.
-> + * A cancel occurs when the mount has failed and we're bailing out.
-> + * Release all pending log intent items so they don't pin the AIL.
->   */
->  STATIC int
-> -xlog_recover_cancel_efis(
-> +xlog_recover_cancel_intents(
->  	struct xlog		*log)
->  {
->  	struct xfs_log_item	*lip;
-> -	struct xfs_efi_log_item	*efip;
->  	int			error = 0;
->  	struct xfs_ail_cursor	cur;
->  	struct xfs_ail		*ailp;
-> @@ -4314,22 +4298,22 @@ xlog_recover_cancel_efis(
->  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
->  	while (lip != NULL) {
->  		/*
-> -		 * We're done when we see something other than an EFI.
-> -		 * There should be no EFIs left in the AIL now.
-> +		 * We're done when we see something other than an intent.
-> +		 * There should be no intents left in the AIL now.
->  		 */
-> -		if (lip->li_type != XFS_LI_EFI) {
-> +		if (!xlog_item_is_intent(lip)) {
->  #ifdef DEBUG
->  			for (; lip; lip = xfs_trans_ail_cursor_next(ailp, &cur))
-> -				ASSERT(lip->li_type != XFS_LI_EFI);
-> +				ASSERT(!xlog_item_is_intent(lip));
->  #endif
->  			break;
->  		}
->  
-> -		efip = container_of(lip, struct xfs_efi_log_item, efi_item);
-> -
-> -		spin_unlock(&ailp->xa_lock);
-> -		xfs_efi_release(efip);
-> -		spin_lock(&ailp->xa_lock);
-> +		switch (lip->li_type) {
-> +		case XFS_LI_EFI:
-> +			xlog_recover_cancel_efi(log->l_mp, ailp, lip);
-> +			break;
-> +		}
->  
->  		lip = xfs_trans_ail_cursor_next(ailp, &cur);
->  	}
-> @@ -5140,16 +5124,16 @@ xlog_recover_finish(
->  	 */
->  	if (log->l_flags & XLOG_RECOVERY_NEEDED) {
->  		int	error;
-> -		error = xlog_recover_process_efis(log);
-> +		error = xlog_recover_process_intents(log);
->  		if (error) {
-> -			xfs_alert(log->l_mp, "Failed to recover EFIs");
-> +			xfs_alert(log->l_mp, "Failed to recover intents");
->  			return error;
->  		}
->  		/*
-> -		 * Sync the log to get all the EFIs out of the AIL.
-> +		 * Sync the log to get all the intents out of the AIL.
->  		 * This isn't absolutely necessary, but it helps in
->  		 * case the unlink transactions would have problems
-> -		 * pushing the EFIs out of the way.
-> +		 * pushing the intents out of the way.
->  		 */
->  		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
->  
-> @@ -5174,7 +5158,7 @@ xlog_recover_cancel(
->  	int		error = 0;
->  
->  	if (log->l_flags & XLOG_RECOVERY_NEEDED)
-> -		error = xlog_recover_cancel_efis(log);
-> +		error = xlog_recover_cancel_intents(log);
->  
->  	return error;
->  }
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 776ae2f..af1a72e 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2264,6 +2264,7 @@ xfs_alloc_log_agf(
+ 		offsetof(xfs_agf_t, agf_longest),
+ 		offsetof(xfs_agf_t, agf_btreeblks),
+ 		offsetof(xfs_agf_t, agf_uuid),
++		offsetof(xfs_agf_t, agf_rmap_blocks),
+ 		sizeof(xfs_agf_t)
+ 	};
+ 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index f814d42..e6a8bea 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -640,12 +640,15 @@ typedef struct xfs_agf {
+ 	__be32		agf_btreeblks;	/* # of blocks held in AGF btrees */
+ 	uuid_t		agf_uuid;	/* uuid of filesystem */
+ 
++	__be32		agf_rmap_blocks;	/* rmapbt blocks used */
++	__be32		agf_padding;		/* padding */
++
+ 	/*
+ 	 * reserve some contiguous space for future logged fields before we add
+ 	 * the unlogged fields. This makes the range logging via flags and
+ 	 * structure offsets much simpler.
+ 	 */
+-	__be64		agf_spare64[16];
++	__be64		agf_spare64[15];
+ 
+ 	/* unlogged fields, written during buffer writeback. */
+ 	__be64		agf_lsn;	/* last write sequence */
+@@ -670,7 +673,8 @@ typedef struct xfs_agf {
+ #define	XFS_AGF_LONGEST		0x00000400
+ #define	XFS_AGF_BTREEBLKS	0x00000800
+ #define	XFS_AGF_UUID		0x00001000
+-#define	XFS_AGF_NUM_BITS	13
++#define	XFS_AGF_RMAP_BLOCKS	0x00002000
++#define	XFS_AGF_NUM_BITS	14
+ #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
+ 
+ #define XFS_AGF_FLAGS \
+@@ -686,7 +690,8 @@ typedef struct xfs_agf {
+ 	{ XFS_AGF_FREEBLKS,	"FREEBLKS" }, \
+ 	{ XFS_AGF_LONGEST,	"LONGEST" }, \
+ 	{ XFS_AGF_BTREEBLKS,	"BTREEBLKS" }, \
+-	{ XFS_AGF_UUID,		"UUID" }
++	{ XFS_AGF_UUID,		"UUID" }, \
++	{ XFS_AGF_RMAP_BLOCKS,	"RMAP_BLOCKS" }
+ 
+ /* disk block (xfs_daddr_t) in the AG */
+ #define XFS_AGF_DADDR(mp)	((xfs_daddr_t)(1 << (mp)->m_sectbb_log))
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index bc1faeb..17b8eeb 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -98,6 +98,8 @@ xfs_rmapbt_alloc_block(
+ 	union xfs_btree_ptr	*new,
+ 	int			*stat)
+ {
++	struct xfs_buf		*agbp = cur->bc_private.a.agbp;
++	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+ 	int			error;
+ 	xfs_agblock_t		bno;
+ 
+@@ -124,6 +126,8 @@ xfs_rmapbt_alloc_block(
+ 
+ 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
+ 	new->s = cpu_to_be32(bno);
++	be32_add_cpu(&agf->agf_rmap_blocks, 1);
++	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+ 
+ 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ 	*stat = 1;
+@@ -143,6 +147,8 @@ xfs_rmapbt_free_block(
+ 	bno = xfs_daddr_to_agbno(cur->bc_mp, XFS_BUF_ADDR(bp));
+ 	trace_xfs_rmapbt_free_block(cur->bc_mp, cur->bc_private.a.agno,
+ 			bno, 1);
++	be32_add_cpu(&agf->agf_rmap_blocks, -1);
++	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+ 	error = xfs_alloc_put_freelist(cur->bc_tp, agbp, NULL, bno, 1);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 0f96847..0b7f986 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -248,6 +248,7 @@ xfs_growfs_data_private(
+ 			agf->agf_roots[XFS_BTNUM_RMAPi] =
+ 						cpu_to_be32(XFS_RMAP_BLOCK(mp));
+ 			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
++			agf->agf_rmap_blocks = cpu_to_be32(1);
+ 		}
+ 
+ 		agf->agf_flfirst = cpu_to_be32(1);
 
 _______________________________________________
 xfs mailing list
