@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B614C7CAE
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 06:28:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 69C7D8F8033
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 04:28:19 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id kYDKvDrhuVikAdPQ (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 04:28:17 -0700 (PDT)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/5] fuse: Propagate dentry down to inode_change_ok()
-Date: Wed,  3 Aug 2016 13:28:07 +0200
-Message-Id: <1470223689-17783-4-git-send-email-jack@suse.cz>
-In-Reply-To: <1470223689-17783-1-git-send-email-jack@suse.cz>
-References: <1470223689-17783-1-git-send-email-jack@suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id DC83A7CA3
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 11:12:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AE8778F8039
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 09:12:56 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gDj8hpQwOsWRScgI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 09:12:55 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id F21228E251
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 16:12:54 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-64.bos.redhat.com [10.18.41.64])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u73GCsCS021812
+	for <xfs@oss.sgi.com>; Wed, 3 Aug 2016 12:12:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: don't assert fail on non-async buffers on ioacct
+	decrement
+Date: Wed,  3 Aug 2016 12:12:53 -0400
+Message-Id: <1470240773-12850-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +37,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, xfs@oss.sgi.com, "Yan, Zheng" <zyan@redhat.com>, linux-fsdevel@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-To avoid clearing of capabilities or security related extended
-attributes too early, inode_change_ok() will need to take dentry instead
-of inode. Propagate it down to fuse_do_setattr().
+The buffer I/O accounting mechanism tracks async buffers under I/O.  As
+an optimization, the buffer I/O count is incremented only once on the
+first async I/O for a given hold cycle of a buffer and decremented once
+the buffer is released to the LRU (or freed).
 
-Acked-by: Miklos Szeredi <mszeredi@redhat.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
+xfs_buf_ioacct_dec() has an ASSERT() check for an XBF_ASYNC buffer, but
+we have one or two corner cases where a buffer can be submitted for I/O
+multiple times via different methods in a single hold cycle. If an async
+I/O occurs first, the I/O count is incremented. If a sync I/O occurs
+before the hold count drops, XBF_ASYNC is cleared by the time the I/O
+count is decremented.
+
+Remove the async assert check from xfs_buf_ioacct_dec() as this is a
+perfectly valid scenario. For the purposes of I/O accounting, we really
+only care about the buffer async state at I/O submission time.
+
+Discovered-and-analyzed-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/fuse/dir.c    | 7 ++++---
- fs/fuse/file.c   | 2 +-
- fs/fuse/fuse_i.h | 2 +-
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_buf.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/fuse/dir.c b/fs/fuse/dir.c
-index 5f1627725791..f29ce9cb30e6 100644
---- a/fs/fuse/dir.c
-+++ b/fs/fuse/dir.c
-@@ -1591,9 +1591,10 @@ int fuse_flush_times(struct inode *inode, struct fuse_file *ff)
-  * vmtruncate() doesn't allow for this case, so do the rlimit checking
-  * and the actual truncation by hand.
-  */
--int fuse_do_setattr(struct inode *inode, struct iattr *attr,
-+int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 		    struct file *file)
- {
-+	struct inode *inode = d_inode(dentry);
- 	struct fuse_conn *fc = get_fuse_conn(inode);
- 	struct fuse_inode *fi = get_fuse_inode(inode);
- 	FUSE_ARGS(args);
-@@ -1707,9 +1708,9 @@ static int fuse_setattr(struct dentry *entry, struct iattr *attr)
- 		return -EACCES;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 32fc540..b13ff61 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -115,7 +115,6 @@ xfs_buf_ioacct_dec(
+ 	if (!(bp->b_flags & _XBF_IN_FLIGHT))
+ 		return;
  
- 	if (attr->ia_valid & ATTR_FILE)
--		return fuse_do_setattr(inode, attr, attr->ia_file);
-+		return fuse_do_setattr(entry, attr, attr->ia_file);
- 	else
--		return fuse_do_setattr(inode, attr, NULL);
-+		return fuse_do_setattr(entry, attr, NULL);
+-	ASSERT(bp->b_flags & XBF_ASYNC);
+ 	bp->b_flags &= ~_XBF_IN_FLIGHT;
+ 	percpu_counter_dec(&bp->b_target->bt_io_count);
  }
- 
- static int fuse_getattr(struct vfsmount *mnt, struct dentry *entry,
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index f394aff59c36..4b9201b7c80b 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -2841,7 +2841,7 @@ static void fuse_do_truncate(struct file *file)
- 	attr.ia_file = file;
- 	attr.ia_valid |= ATTR_FILE;
- 
--	fuse_do_setattr(inode, &attr, file);
-+	fuse_do_setattr(file_dentry(file), &attr, file);
- }
- 
- static inline loff_t fuse_round_up(loff_t off)
-diff --git a/fs/fuse/fuse_i.h b/fs/fuse/fuse_i.h
-index 5db5d24f91a5..c6a3bef34fd3 100644
---- a/fs/fuse/fuse_i.h
-+++ b/fs/fuse/fuse_i.h
-@@ -958,7 +958,7 @@ bool fuse_write_update_size(struct inode *inode, loff_t pos);
- int fuse_flush_times(struct inode *inode, struct fuse_file *ff);
- int fuse_write_inode(struct inode *inode, struct writeback_control *wbc);
- 
--int fuse_do_setattr(struct inode *inode, struct iattr *attr,
-+int fuse_do_setattr(struct dentry *dentry, struct iattr *attr,
- 		    struct file *file);
- 
- void fuse_set_initialized(struct fuse_conn *fc);
 -- 
-2.6.6
+2.5.5
 
 _______________________________________________
 xfs mailing list
