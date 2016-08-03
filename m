@@ -1,31 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 85E8A7CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 19:51:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 58C448F8037
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:51:52 -0700 (PDT)
-Received: from smtp.movistar.es (smtp22.acens.net [86.109.99.146]) by
-	cuda.sgi.com with ESMTP id UGXxCiGZpzC4i7e9 for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 17:51:49 -0700 (PDT)
-Received: from minas-tirith.valinor (88.17.65.53) by smtp.movistar.es
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DC7297CA2
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 07:59:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F1DAAC002
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 05:59:15 -0700 (PDT)
+Received: from smtp.movistar.es (smtp08.acens.net [86.109.99.132]) by
+	cuda.sgi.com with ESMTP id cFAqboweTMCQSVsa for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 05:59:13 -0700 (PDT)
+Received: from Telcontar.valinor (81.36.154.234) by smtp.movistar.es
 	(8.6.122.03) (authenticated as robin.listas2)
-	id 5784FE46013C6F8C for xfs@oss.sgi.com; Thu, 4 Aug 2016 00:51:47 +0000
-Received: from minas-tirith.valinor (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id 01799181225
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 02:51:47 +0200 (CEST)
-Subject: Re: Spam on this list
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
-	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-	<alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
-	<4382687.Pe7d1tBhVA@merkaba>
-	<9b25f9f9-8a55-8744-9f18-c1045fae0f79@telefonica.net>
-	<20160803231529.GX16044@dastard>
+	id 579B6AD4003A89FB for xfs@oss.sgi.com; Wed, 3 Aug 2016 12:59:12 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id EF83B120AE1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id dIwTNlf__ptu for <xfs@oss.sgi.com>;
+	Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id C97DF120AE0
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 14:59:11 +0200 (CEST)
+Date: Wed, 3 Aug 2016 14:59:11 +0200 (CEST)
 From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <d8b5902f-f11e-f47d-385b-8293309ecc3e@telefonica.net>
-Date: Thu, 4 Aug 2016 02:51:47 +0200
+Subject: Spam on this list  [Was: Re: partition 100% full No space left on
+	device. looks like xfs iscorrupted or a bug]
+In-Reply-To: <57CF7681619F42CCB4C0CF589E9686E5@dinulap>
+Message-ID: <alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
+References: <4278AB9734C1445A8E48635B155149F8@dinulap>
+	<20160729233524.GD16044@dastard>
+	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
 MIME-Version: 1.0
-In-Reply-To: <20160803231529.GX16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,46 +39,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: XFS mailing list <xfs@oss.sgi.com>
 
 -----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+Hash: SHA1
 
-On 2016-08-04 01:15, Dave Chinner wrote:
-> On Wed, Aug 03, 2016 at 03:34:58PM +0200, Carlos E. R. wrote:
->> On 2016-08-03 15:21, Martin Steigerwald wrote:
 
-...
 
-> Thoughts?
+On Monday, 2016-08-01 at 15:00 +0300, Lista Unx wrote:
 
-I have no objection to either staying or moving :-)
+> Yes, I've created a new gmail account especially to be able to post to this 
+> mailing list which is filtering very seriously legit messages comming from 
+> legit usres, just because they are comming from yahoo accounts (servers) ... 
+> but is allowing ANYONE else to post here WITHOUT having valid subscription and 
+> also WITHOUT any minimal intention to post here something which has or is 
+> related to XFS. Just in last days, I was informed about new microwave 
+> acquisition, plastic delivery, or any other craps arriving here from a 
+> "trusted and very legit" source, like gmail. That's sound like really a very 
+> good job!
 
-That is, I can live with the spam, and I can live with the move. You
-do not need to care for people like me, we are just "users" ;-)
+:-)
 
-It is mostly the contributors you have to mind most.
+Yes, Spam is bad in this list, and has increased recently. You will 
+find, however, that gmail does a good job of filtering them out: you 
+only have to mark as spam those that it does not detect, and conversely, 
+clear out the false positives. It learns soon.
 
-I suppose that as log as you leave an autoresponder it will be Ok.
+I also have problems with my ISP and Spam on this list.
 
-So go ahead when you wish :-)
+
+You will find that the people on this list are very knowledgeable and 
+will try to help you on your problem with XFS. Spam is not a thing on 
+their power, though X'-)
 
 - -- 
-Cheers / Saludos,
-
-		Carlos E. R.
-
-  (from 13.1 x86_64 "Bottle" (Minas Tirith))
+Cheers,
+        Carlos E. R.
+        (from 13.1 x86_64 "Bottle" at Telcontar)
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iF4EAREIAAYFAleikaMACgkQja8UbcUWM1x4AgD/b5NpxNS0O1LFuYAlBpdvMG7R
-Ikr5YoxtNqLT9EcT8YQA/1O9P1p977AEOSlHxbxP3YMB4uEsea8p2PCaGINCUrKr
-=OIsJ
+iEYEARECAAYFAleh6p8ACgkQtTMYHG2NR9VwbACfQ48V7GoSWDjxkscKMZZBGbeW
+qf8An0XDo7JRY1wOjQlVAqyE3Of/t6DG
+=n207
 -----END PGP SIGNATURE-----
 
 _______________________________________________
