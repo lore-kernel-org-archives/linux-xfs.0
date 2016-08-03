@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5B7577CA4
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 01:17:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A83737CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 12:11:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02FCB304032
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 23:16:56 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	orlvYXDYnaZEoALv for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2016 23:16:50 -0700 (PDT)
-Date: Wed, 3 Aug 2016 16:14:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [current tot] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file:
-	fs/xfs/xfs_buf.c, line: 118
-Message-ID: <20160803061430.GS16044@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5DCDA8F8035
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 10:11:29 -0700 (PDT)
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20]) by
+	cuda.sgi.com with ESMTP id FiQRA4Gr73naVDtv for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 10:11:28 -0700 (PDT)
+Date: Wed, 3 Aug 2016 11:11:27 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
+Message-ID: <20160803171127.GA15876@linux.intel.com>
+References: <20160803003354.GP16044@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20160803003354.GP16044@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,73 +28,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs@oss.sgi.com
 
-Hi Brian,
+On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
+> Hi folks,
+> 
+> Just hit a reproducable hang in generic/361. Essentially this on
+> a 8GB pmem device:
+> 
+> mkfs.xfs -f /dev/pmem1
+> mount -o dax /dev/pmem1 /mnt/scratch
+> xfs_io -f -c "truncate 1g" test.img
+> losetup -f --show /mnt/scratch/test.img
+> mkfs.xfs -f /dev/loop0
+> 
+> And the mkfs.xfs command hangs with a discard that never completes:
+> 
+> [  243.413918] INFO: task mkfs.xfs:5708 blocked for more than 120 seconds.
+> [  243.415678]       Not tainted 4.7.0-dgc+ #862
+> [  243.416772] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  243.418769] mkfs.xfs        D ffff880835143c18 13848  5708   5441 0x00000000
+> [  243.420620]  ffff880835143c18 ffff880835143c20 ffff88083a244780 ffff8808358ba3c0
+> [  243.422636]  ffff88023aa20000 ffff880835144000 7fffffffffffffff 7fffffffffffffff
+> [  243.424586]  ffff8808358ba3c0 00000000024000c0 ffff880835143c30 ffffffff81e5e38c
+> [  243.426466] Call Trace:
+> [  243.427050]  [<ffffffff81e5e38c>] schedule+0x3c/0x90
+> [  243.428224]  [<ffffffff81e62be5>] schedule_timeout+0x265/0x330
+> [  243.429563]  [<ffffffff8109f125>] ? kvm_clock_read+0x25/0x40
+> [  243.430896]  [<ffffffff8109f149>] ? kvm_clock_get_cycles+0x9/0x10
+> [  243.432360]  [<ffffffff81125edc>] ? ktime_get+0x3c/0xb0
+> [  243.433556]  [<ffffffff81e5db54>] io_schedule_timeout+0xa4/0x110
+> [  243.434932]  [<ffffffff81e5eed6>] wait_for_completion_io+0xd6/0x110
+> [  243.436297]  [<ffffffff810decd0>] ? wake_up_q+0x70/0x70
+> [  243.437436]  [<ffffffff817d6f06>] submit_bio_wait+0x56/0x70
+> [  243.438671]  [<ffffffff817e851a>] blkdev_issue_discard+0x6a/0xb0
+> [  243.439980]  [<ffffffff810dab69>] ? __might_sleep+0x49/0x80
+> [  243.441182]  [<ffffffff817eea87>] blk_ioctl_discard+0x97/0xb0
+> [  243.442370]  [<ffffffff817ef7bb>] blkdev_ioctl+0x7eb/0x9a0
+> [  243.443485]  [<ffffffff81236a1d>] block_ioctl+0x3d/0x50
+> [  243.444552]  [<ffffffff812100df>] do_vfs_ioctl+0x8f/0x670
+> [  243.445630]  [<ffffffff81002434>] ? exit_to_usermode_loop+0x94/0xb0
+> [  243.446902]  [<ffffffff81210739>] SyS_ioctl+0x79/0x90
+> [  243.447927]  [<ffffffff81002bc5>] ? syscall_return_slowpath+0xf5/0x190
+> [  243.449236]  [<ffffffff81e63d32>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+> 
+> This only reproduces when the underlying filesystem is mounted with
+> -o dax, so there is a bad interaction with loop devices and DAX
+> occurring somewhere. generic/361 is a recent test (committed june 14)
+> so this probably hasn't actually been tested until now.
+> 
+> I haven't got time to look at this right now, hence the report.
 
-It seems I can hit this fairly often on a single CPU, 1GB ram VM
-in generic/306:
+Cool, thanks for the report.  I've reproduced this with linux/master, and the
+test passes with v4.7.
 
-[12279.804308] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file: fs/xfs/xfs_buf.c, line: 118
-[12279.806499] ------------[ cut here ]------------
-[12279.807560] kernel BUG at fs/xfs/xfs_message.c:113!
-[12279.808717] invalid opcode: 0000 [#1] PREEMPT SMP
-[12279.809790] Modules linked in:
-[12279.810526] CPU: 0 PID: 8181 Comm: xfs_quota Tainted: G        W       4.7.0-dgc+ #864
-[12279.812362] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Debian-1.8.2-1 04/01/2014
-[12279.814372] task: ffff880028ae0000 task.stack: ffff88000ec98000
-[12279.815707] RIP: 0010:[<ffffffff81529452>]  [<ffffffff81529452>] assfail+0x22/0x30
-[12279.817477] RSP: 0018:ffff88000ec9bc28  EFLAGS: 00010282
-[12279.818689] RAX: 00000000ffffffea RBX: ffff880008b51930 RCX: 0000000000000021
-[12279.820318] RDX: ffff88000ec9bb50 RSI: 000000000000000a RDI: ffffffff823b0e6c
-[12279.822036] RBP: ffff88000ec9bc28 R08: 0000000000000000 R09: 0000000000000000
-[12279.823643] R10: 000000000000000a R11: f000000000000000 R12: ffff880008b518c0
-[12279.825277] R13: ffff88003d51c6e0 R14: ffff88003d51c600 R15: 0000000000000000
-[12279.826892] FS:  00007f67553c8700(0000) GS:ffff88003fc00000(0000) knlGS:0000000000000000
-[12279.828734] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[12279.830013] CR2: 00007f6207369008 CR3: 000000001445f000 CR4: 00000000000006f0
-[12279.831621] Stack:
-[12279.832074]  ffff88000ec9bc60 ffffffff8150f498 ffff880039c37920 ffff880034681200
-[12279.833823]  ffff88003d439000 ffff880039c37a98 ffff880039c37ad8 ffff88000ec9bca8
-[12279.835528]  ffffffff8154d705 ffff880008b518c0 ffff880008b518c0 0000000000000000
-[12279.837257] Call Trace:
-[12279.837834]  [<ffffffff8150f498>] xfs_buf_rele+0x2b8/0x3b0
-[12279.839078]  [<ffffffff8154d705>] xfs_qm_dqpurge+0x1d5/0x220
-[12279.840367]  [<ffffffff8154d530>] ? xfs_qm_shrink_count+0x20/0x20
-[12279.841765]  [<ffffffff8154dd40>] xfs_qm_dquot_walk+0x100/0x170
-[12279.843122]  [<ffffffff8154de02>] xfs_qm_dqpurge_all+0x52/0x70
-[12279.844458]  [<ffffffff8154cdd9>] xfs_qm_scall_quotaoff+0x129/0x3f0
-[12279.845887]  [<ffffffff815514dd>] xfs_quota_disable+0x3d/0x50
-[12279.847197]  [<ffffffff8126c602>] SyS_quotactl+0x3c2/0x870
-[12279.848435]  [<ffffffff8120352f>] ? SYSC_newstat+0x2f/0x40
-[12279.849703]  [<ffffffff81e63672>] entry_SYSCALL_64_fastpath+0x1a/0xa4
-[12279.851157] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 a8 03 40 82 48 89 e5 48 89 fa 31 c0 31 ff e8 4e fa ff ff <0f> 0b 66 90 66
-[12279.856516] RIP  [<ffffffff81529452>] assfail+0x22/0x30
-[12279.857739]  RSP <ffff88000ec9bc28>
-[12279.859248] ---[ end trace 496ea0918ba4a5b4 ]---
-
-
-I've seen it once also from inode reclaim, and AFAICT, the reason is the
-same both times: they call xfs_bwrite(). It looks to me like we get
-an XBF_INFLIGHT buffer, the reclaim code then tries to flush another
-object on the buffer, takes a reference to it and so prevents the
-XBF_INFLIGHT IO accounting from being decremented when the IO
-completes and releases. It then flushes the object to the buffer and
-calls xfs_bwrite() which clears XBF_ASYNC and it writes the buffer
-again. Once this completes, it calls xfs_buf_rele(), which drops the
-last reference and we try to release the XBF_INFLIGHT accounting.
-That then assert fails because XBF_ASYNC is not set.
-
-It looks to me like we should just remove the assert - I forgot
-about this particular corner case. Can you have a quick look and
-check whether my analysis above is correct or whether I've missed
-something else here?
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Running a bisect...
 
 _______________________________________________
 xfs mailing list
