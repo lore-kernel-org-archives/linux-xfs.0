@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3903C7CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 16:38:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A4430AC001
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 14:38:26 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id H0YJy4JqDWd8tdYt (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 14:38:25 -0700 (PDT)
-Date: Tue, 2 Aug 2016 17:38:22 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 20/47] xfs: increase XFS_BTREE_MAXLEVELS to fit the rmapbt
-Message-ID: <20160802213822.GB8100@bfoster.bfoster>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907709719.25461.3104352212846077948.stgit@birch.djwong.org>
-	<20160802184845.GC58152@bfoster.bfoster>
-	<20160802200635.GJ8590@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id D02917CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:37:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 365F0AC003
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:37:16 -0700 (PDT)
+Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
+	mmvrEc3k4INytdLW for <xfs@oss.sgi.com>;
+	Wed, 03 Aug 2016 15:37:14 -0700 (PDT)
+Date: Wed, 3 Aug 2016 16:37:13 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
+Message-ID: <20160803223713.GA22364@linux.intel.com>
+References: <20160803003354.GP16044@dastard>
+	<20160803171127.GA15876@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160802200635.GJ8590@birch.djwong.org>
+In-Reply-To: <20160803171127.GA15876@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,88 +29,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org
 
-On Tue, Aug 02, 2016 at 01:06:35PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 02, 2016 at 02:48:46PM -0400, Brian Foster wrote:
-> > On Wed, Jul 20, 2016 at 09:58:17PM -0700, Darrick J. Wong wrote:
-> > > By my calculations, a 1,073,741,824 block AG with a 1k block size
-> > > can attain a maximum height of 9.  Assuming a record size of 24
-> > > bytes, a key/ptr size of 44 bytes, and half-full btree nodes,
-> > > we'd need 53,687,092 blocks for the records and ~6 million blocks
-> > > for the keys.  That requires a btree of height 9.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
+On Wed, Aug 03, 2016 at 11:11:27AM -0600, Ross Zwisler wrote:
+> On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
+> > Hi folks,
 > > 
-> > I believe you.. :) but could you add a bit more detail to the commit log
-> > just to describe the calculations (e.g., how many records per leaf
-> > block, keys per node block) so 1.) I don't have to try and figure it out
-> > ;) (and probably get it wrong) and 2.) so we have a reference in the git
-> > repo going forward?
-> 
-> Block size = 1024b
-> sblock CRC header = 56b
-> == 1024-56 = 968 bytes for tree data
-> 
-> rmapbt record = 24b
-> == 40 records per leaf block
-> 
-> rmapbt ptr/key = 44b
-> == 22 ptr/keys per block
-> 
-> Worst case, each block is half full, so 20 records and 11 ptrs per block.
-> 
-> 1073741824 rmap records / 20 records per block
-> == 53687092 leaf blocks
-> 
-> 53687092 leaves / 11 ptrs per block
-> == 4880645 level 1 blocks
-> == 443695 level 2 blocks
-> == 40336 level 3 blocks
-> == 3667 level 4 blocks
-> == 334 level 5 blocks
-> == 31 level 6 blocks
-> == 3 level 7 blocks
-> == 1 level 8 block
-> 
-
-Thanks! Seems Ok to me.. with that in the commit log:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> Yay latency....
-> 
-> (Hey, at least this isn't ext4 which has no lower bound on block fill...)
-> 
-> --D
-> 
+> > Just hit a reproducable hang in generic/361. Essentially this on
+> > a 8GB pmem device:
 > > 
-> > Brian
+> > mkfs.xfs -f /dev/pmem1
+> > mount -o dax /dev/pmem1 /mnt/scratch
+> > xfs_io -f -c "truncate 1g" test.img
+> > losetup -f --show /mnt/scratch/test.img
+> > mkfs.xfs -f /dev/loop0
 > > 
-> > >  fs/xfs/libxfs/xfs_btree.h |    2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > > index b8bbb21..629ef4f 100644
-> > > --- a/fs/xfs/libxfs/xfs_btree.h
-> > > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > > @@ -133,7 +133,7 @@ do {    \
-> > >  	}       \
-> > >  } while (0)
-> > >  
-> > > -#define	XFS_BTREE_MAXLEVELS	8	/* max of all btrees */
-> > > +#define	XFS_BTREE_MAXLEVELS	9	/* max of all btrees */
-> > >  
-> > >  struct xfs_btree_ops {
-> > >  	/* size of the key and record structures */
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > And the mkfs.xfs command hangs with a discard that never completes:
+> > 
+> > [  243.413918] INFO: task mkfs.xfs:5708 blocked for more than 120 seconds.
+> > [  243.415678]       Not tainted 4.7.0-dgc+ #862
+> > [  243.416772] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > [  243.418769] mkfs.xfs        D ffff880835143c18 13848  5708   5441 0x00000000
+> > [  243.420620]  ffff880835143c18 ffff880835143c20 ffff88083a244780 ffff8808358ba3c0
+> > [  243.422636]  ffff88023aa20000 ffff880835144000 7fffffffffffffff 7fffffffffffffff
+> > [  243.424586]  ffff8808358ba3c0 00000000024000c0 ffff880835143c30 ffffffff81e5e38c
+> > [  243.426466] Call Trace:
+> > [  243.427050]  [<ffffffff81e5e38c>] schedule+0x3c/0x90
+> > [  243.428224]  [<ffffffff81e62be5>] schedule_timeout+0x265/0x330
+> > [  243.429563]  [<ffffffff8109f125>] ? kvm_clock_read+0x25/0x40
+> > [  243.430896]  [<ffffffff8109f149>] ? kvm_clock_get_cycles+0x9/0x10
+> > [  243.432360]  [<ffffffff81125edc>] ? ktime_get+0x3c/0xb0
+> > [  243.433556]  [<ffffffff81e5db54>] io_schedule_timeout+0xa4/0x110
+> > [  243.434932]  [<ffffffff81e5eed6>] wait_for_completion_io+0xd6/0x110
+> > [  243.436297]  [<ffffffff810decd0>] ? wake_up_q+0x70/0x70
+> > [  243.437436]  [<ffffffff817d6f06>] submit_bio_wait+0x56/0x70
+> > [  243.438671]  [<ffffffff817e851a>] blkdev_issue_discard+0x6a/0xb0
+> > [  243.439980]  [<ffffffff810dab69>] ? __might_sleep+0x49/0x80
+> > [  243.441182]  [<ffffffff817eea87>] blk_ioctl_discard+0x97/0xb0
+> > [  243.442370]  [<ffffffff817ef7bb>] blkdev_ioctl+0x7eb/0x9a0
+> > [  243.443485]  [<ffffffff81236a1d>] block_ioctl+0x3d/0x50
+> > [  243.444552]  [<ffffffff812100df>] do_vfs_ioctl+0x8f/0x670
+> > [  243.445630]  [<ffffffff81002434>] ? exit_to_usermode_loop+0x94/0xb0
+> > [  243.446902]  [<ffffffff81210739>] SyS_ioctl+0x79/0x90
+> > [  243.447927]  [<ffffffff81002bc5>] ? syscall_return_slowpath+0xf5/0x190
+> > [  243.449236]  [<ffffffff81e63d32>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+> > 
+> > This only reproduces when the underlying filesystem is mounted with
+> > -o dax, so there is a bad interaction with loop devices and DAX
+> > occurring somewhere. generic/361 is a recent test (committed june 14)
+> > so this probably hasn't actually been tested until now.
+> > 
+> > I haven't got time to look at this right now, hence the report.
+> 
+> Cool, thanks for the report.  I've reproduced this with linux/master, and the
+> test passes with v4.7.
+> 
+> Running a bisect...
+
+This bisected to a commit to the block layer code.  I've sent a bug report to
+the author of the commit.
+
+- Ross
 
 _______________________________________________
 xfs mailing list
