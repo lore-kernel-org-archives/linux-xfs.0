@@ -1,23 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A39CA7CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 13:48:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 29717AC001
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 11:48:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id e2istbrTdiyzoXny (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 11:48:48 -0700 (PDT)
-Date: Tue, 2 Aug 2016 14:48:46 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 20/47] xfs: increase XFS_BTREE_MAXLEVELS to fit the rmapbt
-Message-ID: <20160802184845.GC58152@bfoster.bfoster>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907709719.25461.3104352212846077948.stgit@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 6C27D7CA2
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 08:35:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C2D14AC002
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 06:35:02 -0700 (PDT)
+Received: from smtp.movistar.es (smtp22.acens.net [86.109.99.146]) by
+	cuda.sgi.com with ESMTP id iApltG6FcAih8RH2 for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 06:34:59 -0700 (PDT)
+Received: from Telcontar.valinor (81.36.154.234) by smtp.movistar.es
+	(8.6.122.03) (authenticated as robin.listas2)
+	id 5784FE4601359FEF for xfs@oss.sgi.com; Wed, 3 Aug 2016 13:34:57 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 58EF0120AE1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:34:58 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 7vvsR_TJILYi for <xfs@oss.sgi.com>;
+	Wed,  3 Aug 2016 15:34:58 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 3EE5D120AE0
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:34:58 +0200 (CEST)
+Subject: Re: Spam on this list [Was: Re: partition 100% full No space left on
+	device. looks like xfs iscorrupted or a bug]
+References: <4278AB9734C1445A8E48635B155149F8@dinulap>
+	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
+	<alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
+	<4382687.Pe7d1tBhVA@merkaba>
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Message-ID: <9b25f9f9-8a55-8744-9f18-c1045fae0f79@telefonica.net>
+Date: Wed, 3 Aug 2016 15:34:58 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146907709719.25461.3104352212846077948.stgit@birch.djwong.org>
+In-Reply-To: <4382687.Pe7d1tBhVA@merkaba>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +40,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9137244486787962985=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: XFS mail list <xfs@oss.sgi.com>
 
-On Wed, Jul 20, 2016 at 09:58:17PM -0700, Darrick J. Wong wrote:
-> By my calculations, a 1,073,741,824 block AG with a 1k block size
-> can attain a maximum height of 9.  Assuming a record size of 24
-> bytes, a key/ptr size of 44 bytes, and half-full btree nodes,
-> we'd need 53,687,092 blocks for the records and ~6 million blocks
-> for the keys.  That requires a btree of height 9.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--===============9137244486787962985==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="t6A56OvM2XWCL75K7SIuiEqVVfA7OUglR"
 
-I believe you.. :) but could you add a bit more detail to the commit log
-just to describe the calculations (e.g., how many records per leaf
-block, keys per node block) so 1.) I don't have to try and figure it out
-;) (and probably get it wrong) and 2.) so we have a reference in the git
-repo going forward?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--t6A56OvM2XWCL75K7SIuiEqVVfA7OUglR
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Brian
+On 2016-08-03 15:21, Martin Steigerwald wrote:
 
->  fs/xfs/libxfs/xfs_btree.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index b8bbb21..629ef4f 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -133,7 +133,7 @@ do {    \
->  	}       \
->  } while (0)
->  
-> -#define	XFS_BTREE_MAXLEVELS	8	/* max of all btrees */
-> +#define	XFS_BTREE_MAXLEVELS	9	/* max of all btrees */
->  
->  struct xfs_btree_ops {
->  	/* size of the key and record structures */
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Lista, Carlos, I recommend: If you are concerned about spam on the list=
+=20
+> contact the listmasters of it. They are the ones that can address it gl=
+obally=20
+> for the list.
+
+Oh, I did, long ago. Still waiting.
+
+> Or=E2=80=A6 improve your spamfilters. I did not see any of the spam mai=
+ls you=20
+> mentioned, Lista, as my mailserver rejected them on the SMTP level.
+
+So does mine. Now and then it rejects spam, and the list automatically
+stops my subscription as a consequence.
+
+--=20
+Cheers / Saludos,
+
+		Carlos E. R.
+		(from 13.1 x86_64 "Bottle" at Telcontar)
+
+
+--t6A56OvM2XWCL75K7SIuiEqVVfA7OUglR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAleh8wIACgkQtTMYHG2NR9UTggCeOFGzd6J7n+eeRmQxYCyX2f8H
+APkAn0HKti1d4hRHZRYsuV+Cxqqk+kBN
+=fr0Y
+-----END PGP SIGNATURE-----
+
+--t6A56OvM2XWCL75K7SIuiEqVVfA7OUglR--
+
+
+--===============9137244486787962985==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9137244486787962985==--
