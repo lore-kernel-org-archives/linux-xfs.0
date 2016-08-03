@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BE1497CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 17:43:37 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9BB707CA2
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 23:47:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4106AAC002
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 15:43:34 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Cbv1VxvSM04wcTpF (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 532C58F8033
+	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 21:47:28 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OlbR9J2b8ePTID4j (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 15:43:31 -0700 (PDT)
-Date: Tue, 2 Aug 2016 15:43:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 19/47] xfs: add tracepoints and error injection for
-	deferred extent freeing
-Message-ID: <20160802224325.GN8590@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907709074.25461.17602977707506082040.stgit@birch.djwong.org>
-	<20160802184800.GB58152@bfoster.bfoster>
-	<20160802202425.GK8590@birch.djwong.org>
-	<20160802213816.GA8100@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Tue, 02 Aug 2016 21:47:26 -0700 (PDT)
+Date: Wed, 3 Aug 2016 12:47:22 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: test attr_list_by_handle cursor iteration
+Message-ID: <20160803044722.GD27776@eguan.usersys.redhat.com>
+References: <20160802235251.GB8586@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160802213816.GA8100@bfoster.bfoster>
+In-Reply-To: <20160802235251.GB8586@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,166 +29,372 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Aug 02, 2016 at 05:38:17PM -0400, Brian Foster wrote:
-> On Tue, Aug 02, 2016 at 01:24:25PM -0700, Darrick J. Wong wrote:
-> > On Tue, Aug 02, 2016 at 02:48:00PM -0400, Brian Foster wrote:
-> > > On Wed, Jul 20, 2016 at 09:58:10PM -0700, Darrick J. Wong wrote:
-> > > > Add a couple of tracepoints for the deferred extent free operation and
-> > > > a site for injecting errors while finishing the operation.  This makes
-> > > > it easier to debug deferred ops and test log redo.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_alloc.c |    7 +++++++
-> > > >  fs/xfs/libxfs/xfs_bmap.c  |    2 ++
-> > > >  fs/xfs/xfs_error.h        |    4 +++-
-> > > >  fs/xfs/xfs_trace.h        |    5 ++++-
-> > > >  4 files changed, 16 insertions(+), 2 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > > index 5993f87..22ac3f1 100644
-> > > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > > @@ -2702,6 +2702,13 @@ xfs_free_extent(
-> > > >  
-> > > >  	ASSERT(len != 0);
-> > > >  
-> > > > +	trace_xfs_bmap_free_deferred(mp, agno, 0, agbno, len);
-> > > > +
-> > > 
-> > > Hmm, but the bmap code isn't the only caller here. I was thinking that
-> > > maybe we'd be better served by pushing these down into xfs_defer_add()
-> > > and friends, but I guess we don't necessarily have the extent
-> > > information at that layer.
-> > 
-> > Correct, we don't.
-> > 
-> > > How about we just rename these tracepoints to match the function names
-> > > so they don't confuse me in the future? :)
-> > 
-> > I broke with the function name convention so that the entry and exit
-> > tracepoints to deferred items would all have names that easily matched
-> > wildcards to make my life easier:
-> > 
-> > # trace-cmd record -e 'xfs_*_defer' -e 'xfs_*_deferred' -F ...
-> > 
+On Tue, Aug 02, 2016 at 04:52:51PM -0700, Darrick J. Wong wrote:
+> Apparently the XFS attr_list_by_handle ioctl has never actually copied
+> the cursor contents back to user space, which means that iteration has
+> never worked.  Add a test case for this and see the patch
+> "xfs: in _attrlist_by_handle, copy the cursor back to userspace".
 > 
-> The xfs_bmap_free_defer tp seems reasonable, but xfs_bmap_free_deferred
-> doesn't really make sense when called via other places where nothing has
-> been deferred.
-> 
-> I'm not totally sure I follow what the goal is with this tracepoint wrt
-> to naming that the trace_xfs_defer_*() tracepoints don't already achieve
-> (combined with standard infrastructure tracepoints), but if the name is
-> important, we should at least put it somewhere where it's only triggered
-> via a deferred operation (e.g., xfs_extent_free_finish_item()).
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  src/Makefile                          |    3 -
+>  src/attr-list-by-handle-cursor-test.c |  186 +++++++++++++++++++++++++++++++++
 
-Crap, you're right, the tp is in the wrong place.  xfs_trans_free_extent() it
-is.  Might as well rename them to xfs_extent_free_defer* while I'm at it.
+New test program needs an entry in .gitignore
 
---D
+>  tests/xfs/700                         |   64 +++++++++++
+>  tests/xfs/700.out                     |    5 +
+>  tests/xfs/group                       |    1 
+>  5 files changed, 258 insertions(+), 1 deletion(-)
+>  create mode 100644 src/attr-list-by-handle-cursor-test.c
+>  create mode 100755 tests/xfs/700
+>  create mode 100644 tests/xfs/700.out
+> 
+> diff --git a/src/Makefile b/src/Makefile
+> index 1bf318b..ae06d50 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -20,7 +20,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+>  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+>  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+>  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
+> -	renameat2 t_getcwd e4compact test-nextquota punch-alternating
+> +	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+> +	attr-list-by-handle-cursor-test
+>  
+>  SUBDIRS =
+>  
+> diff --git a/src/attr-list-by-handle-cursor-test.c b/src/attr-list-by-handle-cursor-test.c
+> new file mode 100644
+> index 0000000..5aef79c
+> --- /dev/null
+> +++ b/src/attr-list-by-handle-cursor-test.c
+> @@ -0,0 +1,186 @@
+> +/*
+> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <attr/attributes.h>
+> +#include <unistd.h>
+> +#include <fcntl.h>
+> +#include <string.h>
+> +#include <stdio.h>
+> +#include <asm/types.h>
+> +#include <xfs/xfs.h>
+> +#include <xfs/handle.h>
+> +
+> +#define ATTRBUFSZ		1024
+> +#define BSTATBUF_SZ		1024
+> +
+> +/* Read all the extended attributes of a file handle. */
+> +void
+> +read_handle_xattrs(
+> +	struct xfs_handle	*handle,
+> +	bool			root_space)
 
-> 
-> > > > +	if (XFS_TEST_ERROR(false, mp,
-> > > > +			XFS_ERRTAG_FREE_EXTENT,
-> > > > +			XFS_RANDOM_FREE_EXTENT))
-> > > > +		return -EIO;
-> > > > +
-> > > >  	error = xfs_free_extent_fix_freelist(tp, agno, &agbp);
-> > > >  	if (error)
-> > > >  		return error;
-> > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > index 540a6b7..8e14ff4 100644
-> > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > @@ -596,6 +596,8 @@ xfs_bmap_add_free(
-> > > >  	new = kmem_zone_alloc(xfs_bmap_free_item_zone, KM_SLEEP);
-> > > >  	new->xefi_startblock = bno;
-> > > >  	new->xefi_blockcount = (xfs_extlen_t)len;
-> > > > +	trace_xfs_bmap_free_defer(mp, XFS_FSB_TO_AGNO(mp, bno), 0,
-> > > > +			XFS_FSB_TO_AGBNO(mp, bno), len);
-> > > >  	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_FREE, &new->xefi_list);
-> > > >  }
-> > > >  
-> > > > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-> > > > index 2e4f67f..da6f951 100644
-> > > > --- a/fs/xfs/xfs_error.h
-> > > > +++ b/fs/xfs/xfs_error.h
-> > > > @@ -90,7 +90,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
-> > > >  #define XFS_ERRTAG_STRATCMPL_IOERR			19
-> > > >  #define XFS_ERRTAG_DIOWRITE_IOERR			20
-> > > >  #define XFS_ERRTAG_BMAPIFORMAT				21
-> > > > -#define XFS_ERRTAG_MAX					22
-> > > > +#define XFS_ERRTAG_FREE_EXTENT				22
-> > > > +#define XFS_ERRTAG_MAX					23
-> > > >  
-> > > >  /*
-> > > >   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> > > > @@ -117,6 +118,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
-> > > >  #define XFS_RANDOM_STRATCMPL_IOERR			(XFS_RANDOM_DEFAULT/10)
-> > > >  #define XFS_RANDOM_DIOWRITE_IOERR			(XFS_RANDOM_DEFAULT/10)
-> > > >  #define	XFS_RANDOM_BMAPIFORMAT				XFS_RANDOM_DEFAULT
-> > > > +#define XFS_RANDOM_FREE_EXTENT				1
-> > > >  
-> > > 
-> > > Why not XFS_RANDOM_DEFAULT?
-> > 
-> > I don't want the injected redo errors going off at random -- I want to set
-> > one and have it go off the very next time we hit it.  This way I can write
-> > the xfstests like so:
-> > 
-> > mkfs/mount
-> > write to a file; sync
-> > set a logic bomb for the next time we free an extent
-> > truncate the file
-> > <watch bomb go off>
-> > unmount
-> > check that xfs_repair grumbles about the dirty log
-> > mount
-> > check the file
-> > 
-> > Were the free-extent bomb set to go off at XFS_RANDOM_DEFAULT intervals, it'd
-> > only have a 1/100 chance of triggering, which makes it harder to test.
-> > 
-> 
-> Ok.
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > >  #ifdef DEBUG
-> > > >  extern int xfs_error_test_active;
-> > > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > > > index a45b030..939caf5 100644
-> > > > --- a/fs/xfs/xfs_trace.h
-> > > > +++ b/fs/xfs/xfs_trace.h
-> > > > @@ -2417,9 +2417,12 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
-> > > >  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
-> > > >  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
-> > > >  
-> > > > -DEFINE_PHYS_EXTENT_DEFERRED_EVENT(xfs_defer_phys_extent);
-> > > >  DEFINE_MAP_EXTENT_DEFERRED_EVENT(xfs_defer_map_extent);
-> > > >  
-> > > > +#define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
-> > > > +DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
-> > > > +DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_deferred);
-> > > > +
-> > > >  #endif /* _TRACE_XFS_H */
-> > > >  
-> > > >  #undef TRACE_INCLUDE_PATH
-> > > > 
-> > > > _______________________________________________
-> > > > xfs mailing list
-> > > > xfs@oss.sgi.com
-> > > > http://oss.sgi.com/mailman/listinfo/xfs
+On RHEL6, stdbool.h is needed for bool. Or simply change it to int?
+
+    [CC]    attr-list-by-handle-cursor-test
+attr-list-by-handle-cursor-test.c:38: error: expected declaration specifiers or '...' before 'bool'
+attr-list-by-handle-cursor-test.c: In function 'read_handle_xattrs':
+attr-list-by-handle-cursor-test.c:49: error: 'root_space' undeclared (first use in this function)
+attr-list-by-handle-cursor-test.c:49: error: (Each undeclared identifier is reported only once
+attr-list-by-handle-cursor-test.c:49: error: for each function it appears in.)
+attr-list-by-handle-cursor-test.c: In function 'find_inode':
+attr-list-by-handle-cursor-test.c:135: error: 'false' undeclared (first use in this function)
+attr-list-by-handle-cursor-test.c:135: error: too many arguments to function 'read_handle_xattrs'
+attr-list-by-handle-cursor-test.c:136: error: 'true' undeclared (first use in this function)
+attr-list-by-handle-cursor-test.c:136: error: too many arguments to function 'read_handle_xattrs'
+gmake[2]: *** [attr-list-by-handle-cursor-test] Error 1
+gmake[1]: *** [src] Error 2
+make: *** [default] Error 2
+
+> +{
+> +	struct attrlist_cursor	cur;
+> +	char			attrbuf[ATTRBUFSZ];
+> +	char			*firstname = NULL;
+> +	struct attrlist		*attrlist = (struct attrlist *)attrbuf;
+> +	struct attrlist_ent	*ent;
+> +	int			i;
+> +	int			flags = 0;
+> +	int			error;
+> +
+> +	if (root_space)
+> +		flags |= ATTR_ROOT;
+> +
+> +	memset(&cur, 0, sizeof(cur));
+> +	while ((error = attr_list_by_handle(handle, sizeof(*handle),
+> +					    attrbuf, ATTRBUFSZ, flags,
+> +					    &cur)) == 0) {
+> +		for (i = 0; i < attrlist->al_count; i++) {
+
+I applied the patch "xfs: in _attrlist_by_handle, copy the cursor back
+to userspace" on top of 4.7-rc7 kernel and did some tests, in some cases
+test failed because nothing was printed by the test program, e.g.
+
+# diff -u tests/xfs/700.out /root/workspace/xfstests/results//xfs_4k_crc/xfs/700.out.bad
+--- tests/xfs/700.out   2016-08-03 11:32:02.502000000 +0800
++++ /root/workspace/xfstests/results//xfs_4k_crc/xfs/700.out.bad        2016-08-03 11:34:57.018000000 +0800
+@@ -2,4 +2,3 @@
+ Format and mount
+ Stuff file with xattrs
+ Run test program
+-Test passes.
+
+Debug code shows that this is because attrlist->al_count is 0 in such
+cases, so it doesn't go into the for loop.
+
+Failed test configs are:
+
+2k block size XFS with CRC enabled
+1k block size XFS with CRC enabled
+512 block size XFS
+
+> +			ent = ATTR_ENTRY(attrlist, i);
+> +
+> +			if (i != 0)
+> +				continue;
+> +
+> +			if (firstname == NULL) {
+> +				firstname = malloc(ent->a_valuelen);
+> +				memcpy(firstname, ent->a_name, ent->a_valuelen);
+> +			} else {
+> +				if (memcmp(firstname, ent->a_name,
+> +					   ent->a_valuelen) == 0)
+> +					fprintf(stderr,
+> +						"Saw duplicate xattr \"%s\", buggy XFS?\n",
+> +						ent->a_name);
+> +				else
+> +					fprintf(stderr,
+> +						"Test passes.\n");
+> +				goto out;
+> +			}
+> +		}
+> +
+> +		if (!attrlist->al_more)
+> +			break;
+> +	}
+> +
+> +out:
+> +	if (firstname)
+> +		free(firstname);
+> +	if (error)
+> +		perror("attr_list_by_handle");
+> +	return;
+> +}
+> +
+> +/* Iterate a range of inodes. */
+> +void
+> +find_inode(
+> +	struct xfs_handle	*fshandle,
+> +	int			fd,
+> +	ino_t			ino)
+> +{
+> +	struct xfs_fsop_bulkreq	bulkreq;
+> +	struct xfs_bstat	*bstatbuf;
+> +	struct xfs_bstat	*p;
+> +	struct xfs_bstat	*endp;
+> +	struct xfs_handle	handle;
+> +	__u64			first_ino = ino & ~63;
+> +	__s32			buflenout = 0;
+> +	int			error;
+> +
+> +	bstatbuf = malloc(BSTATBUF_SZ * sizeof(struct xfs_bstat));
+> +	if (!bstatbuf) {
+> +		perror("bulkstat malloc");
+> +		return;
+> +	}
+> +
+> +	bulkreq.lastip = (__u64 *)&first_ino;
+> +	bulkreq.icount  = BSTATBUF_SZ;
+> +	bulkreq.ubuffer = (void *)bstatbuf;
+> +	bulkreq.ocount  = &buflenout;
+> +
+> +	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
+> +	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+> +			sizeof(handle.ha_fid.fid_len);
+> +	handle.ha_fid.fid_pad = 0;
+> +	while ((error = xfsctl("", fd, XFS_IOC_FSBULKSTAT, &bulkreq)) == 0) {
+> +		if (buflenout == 0)
+> +			break;
+> +		for (p = bstatbuf, endp = bstatbuf + buflenout; p < endp; p++) {
+> +			if (p->bs_ino > ino) {
+> +				fprintf(stderr,
+> +					"Expected ino %llu, got %llu.\n",
+> +					(unsigned long long)ino, p->bs_ino);
+> +				goto out;
+> +			}
+> +
+> +			handle.ha_fid.fid_gen = p->bs_gen;
+> +			handle.ha_fid.fid_ino = p->bs_ino;
+> +
+> +			read_handle_xattrs(&handle, false);
+> +			read_handle_xattrs(&handle, true);
+> +			goto out;
+> +		}
+> +	}
+> +
+> +	if (error)
+> +		perror("bulkstat");
+> +out:
+> +	free(bstatbuf);
+> +	return;
+> +}
+> +
+> +int main(
+> +	int			argc,
+> +	char			*argv[])
+> +{
+> +	struct xfs_handle	*fshandle;
+> +	size_t			fshandle_len;
+> +	struct stat		sb;
+> +	int			fd;
+> +	int			error;
+> +
+> +	if (argc != 2) {
+> +		fprintf(stderr, "Usage: %s filename\n", argv[0]);
+> +		return 1;
+> +	}
+> +
+> +	error = path_to_fshandle(argv[1], (void **)&fshandle, &fshandle_len);
+> +	if (error) {
+> +		perror("getting fshandle");
+> +		return 2;
+> +	}
+> +
+> +	fd = open(argv[1], O_RDONLY);
+> +	if (fd < 0) {
+> +		perror("opening file");
+> +		return 2;
+> +	}
+> +
+> +	error = fstat(fd, &sb);
+> +	if (error) {
+> +		perror("fstat file");
+> +		return 2;
+> +	}
+> +
+> +	find_inode(fshandle, fd, sb.st_ino);
+> +
+> +	close(fd);
+> +	free_handle(fshandle, fshandle_len);
+> +	return 0;
+> +}
+> diff --git a/tests/xfs/700 b/tests/xfs/700
+> new file mode 100755
+> index 0000000..4a5680d
+> --- /dev/null
+> +++ b/tests/xfs/700
+> @@ -0,0 +1,64 @@
+> +#! /bin/bash
+> +# FS QA Test No. 700
+> +#
+> +# Check that attr_list_by_handle copies the cursor back to userspace.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename "$0"`
+> +seqres="$RESULT_DIR/$seq"
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -rf "$tmp".* $TEST_DIR/fsmap $TEST_DIR/testout
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +. ./common/populate
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_require_scratch
+> +_require_test_program "attr-list-by-handle-cursor-test"
+> +
+> +rm -f "$seqres.full"
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +
+> +echo "Stuff file with xattrs"
+> +mkdir $SCRATCH_MNT/foo
+> +__populate_create_attr $SCRATCH_MNT/foo 100
+> +
+> +echo "Run test program"
+> +./src/attr-list-by-handle-cursor-test $SCRATCH_MNT/foo
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/700.out b/tests/xfs/700.out
+> new file mode 100644
+> index 0000000..493a68a
+> --- /dev/null
+> +++ b/tests/xfs/700.out
+> @@ -0,0 +1,5 @@
+> +QA output created by 700
+> +Format and mount
+> +Stuff file with xattrs
+> +Run test program
+> +Test passes.
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index ff0efa5..ae12e74 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -307,3 +307,4 @@
+>  325 auto quick clone
+>  326 auto quick clone
+>  327 auto quick clone
+> +700 auto quick
+
+Also add ioctl group?
+
+Thanks,
+Eryu
 
 _______________________________________________
 xfs mailing list
