@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D30E57CA4
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 04:15:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 96CBD8F8035
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 02:15:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id f9VaXmHdIaxe1N4z (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 02:15:47 -0700 (PDT)
-Date: Wed, 3 Aug 2016 17:15:42 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 06/17] xfs: run xfs_repair at the end of each test
-Message-ID: <20160803091542.GM27776@eguan.usersys.redhat.com>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-	<146914481474.11762.2741429828012981240.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 589AE7CA3
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 11:25:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 28DD5304032
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 09:25:06 -0700 (PDT)
+Received: from mail-qt0-f193.google.com (mail-qt0-f193.google.com
+	[209.85.216.193]) by cuda.sgi.com with ESMTP id
+	KWYF2jyihPrxBuZv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 09:25:04 -0700 (PDT)
+Received: by mail-qt0-f193.google.com with SMTP id q11so11235509qtb.2
+	for <xfs@oss.sgi.com>; Wed, 03 Aug 2016 09:25:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <146914481474.11762.2741429828012981240.stgit@birch.djwong.org>
+In-Reply-To: <1465155145-10812-43-git-send-email-mchristi@redhat.com>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-43-git-send-email-mchristi@redhat.com>
+From: Ross Zwisler <zwisler@gmail.com>
+Date: Wed, 3 Aug 2016 10:25:02 -0600
+Message-ID: <CAOxpaSVzkR+9anramDg7nHxjb5hp0q_oKGRdEpiU07jWM=tzdQ@mail.gmail.com>
+Subject: Re: [PATCH 42/45] block, fs, drivers: remove REQ_OP compat defs and
+	related code
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,103 +33,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: mchristi@redhat.com, axboe@fb.com, Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, konrad.wilk@oracle.com, LKML <linux-kernel@vger.kernel.org>, philipp.reisner@linbit.com, linux-f2fs-devel@lists.sourceforge.net, linux-raid@vger.kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, osd-dev@open-osd.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, drbd-dev@lists.linbit.com
 
-On Thu, Jul 21, 2016 at 04:46:54PM -0700, Darrick J. Wong wrote:
-> Run xfs_repair twice at the end of each test -- once to rebuild
-> the btree indices, and again with -n to check the rebuild work.
+On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
+> From: Mike Christie <mchristi@redhat.com>
+>
+> This patch drops the compat definition of req_op where it matches
+> the rq_flag_bits definitions, and drops the related old and compat
+> code that allowed users to set either the op or flags for the operation.
+>
+> We also then store the operation in the bi_rw/cmd_flags field similar
+> to how we used to store the bio ioprio where it sat in the upper bits
+> of the field.
+>
+> Signed-off-by: Mike Christie <mchristi@redhat.com>
 
-Seems like it's two more xfs_repair, three in total :)
+I was doing some xfstests testing yesterday using linux/master, and
+hit a kernel BUG that bisected to this change.  The failing test is
+generic/008 + ext2, without DAX.  This BUG reproduces with this test
+100% as of this change, and 0% with the previous commit.
 
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  README    |    4 ++++
->  common/rc |   30 ++++++++++++++++++++++++++++++
->  2 files changed, 34 insertions(+)
-> 
-> 
-> diff --git a/README b/README
-> index 2647e12..4509cc1 100644
-> --- a/README
-> +++ b/README
-> @@ -80,6 +80,10 @@ Preparing system for tests (IRIX and Linux):
->                 added to the end of fsstresss and fsx invocations, respectively,
->                 in case you wish to exclude certain operational modes from these
->                 tests.
-> +             - set TEST_XFS_REPAIR_REBUILD=1 to have _check_xfs_filesystem
-> +               run xfs_repair -n to check the filesystem; xfs_repair to rebuild
-> +               metadata indexes; and xfs_repair -n (a third time) to check the
-> +               results of the rebuilding.
->  
->          - or add a case to the switch in common/config assigning
->            these variables based on the hostname of your test
-> diff --git a/common/rc b/common/rc
-> index 7c79bf8..3b45578 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2428,6 +2428,36 @@ _check_xfs_filesystem()
->          ok=0
->      fi
->  
-> +    if [ -n "$TEST_XFS_REPAIR_REBUILD" ]; then
-> +        $XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
-> +        if [ $? -ne 0 ]
-> +        then
-> +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent (r) (see $seqres.full)"
-> +
-> +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent" >>$seqres.full
-> +            echo "*** xfs_repair -n output ***"	>>$seqres.full
-> +            cat $tmp.repair | _fix_malloc		>>$seqres.full
-> +            echo "*** end xfs_repair output"	>>$seqres.full
-> +
-> +            ok=0
-> +        fi
-> +        rm -f $tmp.fs_check $tmp.logprint $tmp.repair
-> +
-> +        $XFS_REPAIR_PROG $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
-> +        if [ $? -ne 0 ]
-> +        then
-> +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent (r) (see $seqres.full)"
-> +
-> +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent" >>$seqres.full
-> +            echo "*** xfs_repair -n output ***"	>>$seqres.full
-> +            cat $tmp.repair | _fix_malloc		>>$seqres.full
-> +            echo "*** end xfs_repair output"	>>$seqres.full
-> +
-> +            ok=0
-> +        fi
-> +        rm -f $tmp.fs_check $tmp.logprint $tmp.repair
-> +    fi
-> +
+Here's the kernel commit that I bisected to:
 
-I think we can move this hunk after the original xfs_repair and swap the
-xfs_repair order, i.e.
+commit 4e1b2d52a80d79296a5d899d73249748dea71a53
+Author: Mike Christie <mchristi@redhat.com>
+Date:   Sun Jun 5 14:32:22 2016 -0500
 
-xfs_repair -n # this is the original repair check
-if <check_rebuild>; then
-	xfs_repair # do rebuild without -n
-	xfs_repair -n # check rebuild result
-fi
+block, fs, drivers: remove REQ_OP compat defs and related code
 
-This seems more clear to me and we can mark which repair is failing more
-easily (right now the three xfs_repairs are all marked as "(r)", it's
-hard to say which one is failing), e.g.
+Here are the steps to reproduce the BUG using a pair of 1 GiB BRD ramdisks:
 
-xfs_repair -n # marked as "(r)", means "repair"
-if <check_rebuild>; then
-	xfs_repair # mark as "(rb)", means "rebuild"?
-	xfs_repair -n # mark as "(rr)", means "repair rebuild"?
-fi
+SCRATCH_DEV=/dev/ram0
+TEST_DEV=/dev/ram1
+mkfs.ext2 -F $SCRATCH_DEV
+mkfs.ext2 -F $TEST_DEV
+cd ~/xfstests
+./check generic/008
+
+Here is the BUG output for that commit, passed through
+kasan_symbolize.py.  The line numbers are for the commit listed above,
+not for linux/master:
+
+ run fstests generic/008 at 2016-08-03 09:54:56
+page:ffffea0017af04c0 count:3 mapcount:0 mapping:ffff8805eb059200 index:0x0
+flags: 0x3fff8000002828(uptodate|lru|private|writeback)
+page dumped because: VM_BUG_ON_PAGE(!PageLocked(page))
+page->mem_cgroup:ffff8806098e0800
+------------[ cut here ]------------
+kernel BUG at mm/filemap.c:833!
+invalid opcode: 0000 [#1] SMP
+Modules linked in: brd dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
+CPU: 0 PID: 2522 Comm: xfs_io Not tainted 4.7.0-rc2-00042-g4e1b2d52 #18
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+rel-1.9.1-0-gb3ef39f-prebuilt.qemu-project.org 04/01/2014
+task: ffff8805ebae4ec0 ti: ffff8805eba3c000 task.ti: ffff8805eba3c000
+RIP: 0010:[<ffffffff811de115>] [<ffffffff811de115>] unlock_page+0xa5/0xb0
+RSP: 0018:ffff8805eba3fa60 EFLAGS: 00010282
+RAX: 0000000000000021 RBX: 0000000000000000 RCX: 0000000000000006
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff8806109ce200
+RBP: ffff8805eba3fa60 R08: 0000000000000001 R09: 0000000000000001
+R10: ffff8805ebae4ec0 R11: 0000000000000001 R12: ffffea0017af04c0
+R13: 0000000000028000 R14: ffffffffa00202c0 R15: ffff88060eff1200
+FS: 00007f87a31cf700(0000) GS:ffff880610800000(0000) knlGS:0000000000000000
+CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f87a31e6000 CR3: 000000060da31000 CR4: 00000000001406f0
+Stack:
+ffff8805eba3fa98 ffffffff812bd782 ffff8805eba3fdb0 0000000000001000
+ffffea0017af04c0 0000000000000000 0000000000000088 ffff8805eba3fbe0
+ffffffff812c3ff1 ffff8805eba3fd00 0000000000028000 0000000c00000000
+Call Trace:
+[<ffffffff812bd782>] bdev_write_page+0xb2/0xe0 fs/block_dev.c:462
+[<ffffffff812c3ff1>] __mpage_writepage+0x5c1/0x750 fs/mpage.c:604
+[<ffffffff811eedbd>] write_cache_pages+0x20d/0x5f0 mm/page-writeback.c:2261
+[<ffffffff812c3955>] mpage_writepages+0x75/0xe0 fs/mpage.c:703
+[<ffffffff8137951b>] ext2_writepages+0x3b/0x40 fs/ext2/inode.c:887
+[<ffffffff811f27a1>] do_writepages+0x21/0x30 mm/page-writeback.c:2361
+[<ffffffff811e1396>] __filemap_fdatawrite_range+0xc6/0x100 mm/filemap.c:300
+[<ffffffff811e1514>] filemap_write_and_wait_range+0x44/0x90 mm/filemap.c:490
+[<ffffffff812a7707>] __generic_file_fsync+0x27/0x90 fs/libfs.c:937
+[<ffffffff812a7789>] generic_file_fsync+0x19/0x40 fs/libfs.c:974
+[<ffffffff81377e9e>] ext2_fsync+0x2e/0x70 fs/ext2/file.c:149
+[<ffffffff812b549b>] vfs_fsync_range+0x4b/0xb0 fs/sync.c:195
+[< inline >] vfs_fsync fs/sync.c:209
+[<ffffffff812b555d>] do_fsync+0x3d/0x70 fs/sync.c:219
+[< inline >] SYSC_fsync fs/sync.c:227
+[<ffffffff812b5810>] SyS_fsync+0x10/0x20 fs/sync.c:225
+[<ffffffff81acd33c>] entry_SYSCALL_64_fastpath+0x1f/0xbd
+arch/x86/entry/entry_64.S:207
+Code: 00 00 48 d3 ea 89 d2 48 8d 0c 92 48 8d 14 4a 48 8d 3c d0 31 d2
+e8 bc fc f1 ff 5d c3 48 c7 c6 20 1d ec 81 4c 89 c7 e8 bb 8d 03 00 <0f>
+0b 66 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 b9 08 00 00
+RIP [<ffffffff811de115>] unlock_page+0xa5/0xb0 mm/filemap.c:833
+RSP <ffff8805eba3fa60>
+---[ end trace d419bf59bba263fb ]---
+
+I'm happy to provide any additional info you need, or to test fixes.
 
 Thanks,
-Eryu
-
->      $XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
->      if [ $? -ne 0 ]
->      then
-> 
+- Ross
 
 _______________________________________________
 xfs mailing list
