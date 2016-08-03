@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2BD377CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 18:23:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93031AC002
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 16:23:10 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	geQhoOOjAhFmrAEf for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2016 16:23:07 -0700 (PDT)
-Date: Wed, 3 Aug 2016 09:23:05 +1000
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48FA17CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 18:17:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 00EEE8F8033
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 16:17:30 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	0aHSqbGHsXGhE7q3 for <xfs@oss.sgi.com>;
+	Wed, 03 Aug 2016 16:17:28 -0700 (PDT)
+Date: Thu, 4 Aug 2016 09:16:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] generic/095: update warning whitelist
-Message-ID: <20160802232305.GQ12670@dastard>
-References: <1470042176-31447-1-git-send-email-hch@lst.de>
+Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
+Message-ID: <20160803231655.GY16044@dastard>
+References: <20160803003354.GP16044@dastard>
+	<20160803171127.GA15876@linux.intel.com>
+	<20160803223713.GA22364@linux.intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1470042176-31447-1-git-send-email-hch@lst.de>
+In-Reply-To: <20160803223713.GA22364@linux.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +31,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org
 
-On Mon, Aug 01, 2016 at 11:02:56AM +0200, Christoph Hellwig wrote:
-> The recent direct I/O path refactor changed the function name in the
-> racing read case.  Update the test case to handle the new name in
-> addition to the old one.
+On Wed, Aug 03, 2016 at 04:37:13PM -0600, Ross Zwisler wrote:
+> On Wed, Aug 03, 2016 at 11:11:27AM -0600, Ross Zwisler wrote:
+> > On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
+> > > Hi folks,
+> > > 
+> > > Just hit a reproducable hang in generic/361. Essentially this on
+> > > a 8GB pmem device:
+> > > 
+> > > mkfs.xfs -f /dev/pmem1
+> > > mount -o dax /dev/pmem1 /mnt/scratch
+> > > xfs_io -f -c "truncate 1g" test.img
+> > > losetup -f --show /mnt/scratch/test.img
+> > > mkfs.xfs -f /dev/loop0
+> > > 
+> > > And the mkfs.xfs command hangs with a discard that never completes:
+....
+> > > This only reproduces when the underlying filesystem is mounted with
+> > > -o dax, so there is a bad interaction with loop devices and DAX
+> > > occurring somewhere. generic/361 is a recent test (committed june 14)
+> > > so this probably hasn't actually been tested until now.
+> > > 
+> > > I haven't got time to look at this right now, hence the report.
+> > 
+> > Cool, thanks for the report.  I've reproduced this with linux/master, and the
+> > test passes with v4.7.
+> > 
+> > Running a bisect...
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  tests/generic/095 | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/generic/095 b/tests/generic/095
-> index c656ef1..4754992 100755
-> --- a/tests/generic/095
-> +++ b/tests/generic/095
-> @@ -125,9 +125,11 @@ $FIO_PROG $fio_config >>$seqres.full 2>&1
->  filter_xfs_dmesg()
->  {
->  	local warn1="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_write.*"
-> -	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
-> +	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
-> +	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
->  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
-> -	    -e "s#$warn2#Intentional warnings in xfs_file_read_iter#"
-> +	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
-> +	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#"
->  }
+> This bisected to a commit to the block layer code.  I've sent a bug report to
+> the author of the commit.
 
-Looks fine.
+And the commit id is ...?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
