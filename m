@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C6E737CA4
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 14:20:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2EEECAC004
-	for <xfs@oss.sgi.com>; Tue,  2 Aug 2016 12:20:23 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id fWhtONQXJyxlG0UB for <xfs@oss.sgi.com>;
-	Tue, 02 Aug 2016 12:20:21 -0700 (PDT)
-Subject: Re: Old bugs in xfsprogs?
-References: <7e185931-8830-5f31-7abb-5419bb255991@suse.com>
-	<626eedea-2b9a-4ca3-cd3d-1e528f45526f@sandeen.net>
-	<74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <df36996c-65c5-1cf7-5700-5676b6ee48e0@sandeen.net>
-Date: Tue, 2 Aug 2016 14:20:13 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1A8367CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:08:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B61A7304053
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 15:08:09 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id FaEsSFEEM9ft5AHL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 15:08:07 -0700 (PDT)
+Date: Wed, 3 Aug 2016 15:08:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/17] xfs: run xfs_repair at the end of each test
+Message-ID: <20160803220800.GR8590@birch.djwong.org>
+References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
+	<146914481474.11762.2741429828012981240.stgit@birch.djwong.org>
+	<20160803091542.GM27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
+Content-Disposition: inline
+In-Reply-To: <20160803091542.GM27776@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,127 +27,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3949999399624062518=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---===============3949999399624062518==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu"
+On Wed, Aug 03, 2016 at 05:15:42PM +0800, Eryu Guan wrote:
+> On Thu, Jul 21, 2016 at 04:46:54PM -0700, Darrick J. Wong wrote:
+> > Run xfs_repair twice at the end of each test -- once to rebuild
+> > the btree indices, and again with -n to check the rebuild work.
+> 
+> Seems like it's two more xfs_repair, three in total :)
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu
-Content-Type: multipart/mixed; boundary="0AcBdpWt23SSM1A25G9jUKuVtaDv10304"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
-Message-ID: <df36996c-65c5-1cf7-5700-5676b6ee48e0@sandeen.net>
-Subject: Re: Old bugs in xfsprogs?
-References: <7e185931-8830-5f31-7abb-5419bb255991@suse.com>
- <626eedea-2b9a-4ca3-cd3d-1e528f45526f@sandeen.net>
- <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
-In-Reply-To: <74fde7f6-54a2-078f-6064-d9e32564f9a7@suse.com>
+Ok, how about this new commit message?
 
---0AcBdpWt23SSM1A25G9jUKuVtaDv10304
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+"xfs: optionally test xfs_repair index rebuilding at the end of each test
 
-On 8/2/16 1:51 PM, Jeff Mahoney wrote:
-> On 8/2/16 11:00 AM, Eric Sandeen wrote:
+"Run xfs_repair twice more at the end of each test -- once to rebuild
+the btree indices, and again with -n to check the rebuild work.  This
+is in addition to the regular dry-run spot check."
 
-=2E..
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  README    |    4 ++++
+> >  common/rc |   30 ++++++++++++++++++++++++++++++
+> >  2 files changed, 34 insertions(+)
+> > 
+> > 
+> > diff --git a/README b/README
+> > index 2647e12..4509cc1 100644
+> > --- a/README
+> > +++ b/README
+> > @@ -80,6 +80,10 @@ Preparing system for tests (IRIX and Linux):
+> >                 added to the end of fsstresss and fsx invocations, respectively,
+> >                 in case you wish to exclude certain operational modes from these
+> >                 tests.
+> > +             - set TEST_XFS_REPAIR_REBUILD=1 to have _check_xfs_filesystem
+> > +               run xfs_repair -n to check the filesystem; xfs_repair to rebuild
+> > +               metadata indexes; and xfs_repair -n (a third time) to check the
+> > +               results of the rebuilding.
+> >  
+> >          - or add a case to the switch in common/config assigning
+> >            these variables based on the hostname of your test
+> > diff --git a/common/rc b/common/rc
+> > index 7c79bf8..3b45578 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -2428,6 +2428,36 @@ _check_xfs_filesystem()
+> >          ok=0
+> >      fi
+> >  
+> > +    if [ -n "$TEST_XFS_REPAIR_REBUILD" ]; then
+> > +        $XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
+> > +        if [ $? -ne 0 ]
+> > +        then
+> > +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent (r) (see $seqres.full)"
+> > +
+> > +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent" >>$seqres.full
+> > +            echo "*** xfs_repair -n output ***"	>>$seqres.full
+> > +            cat $tmp.repair | _fix_malloc		>>$seqres.full
+> > +            echo "*** end xfs_repair output"	>>$seqres.full
+> > +
+> > +            ok=0
+> > +        fi
+> > +        rm -f $tmp.fs_check $tmp.logprint $tmp.repair
+> > +
+> > +        $XFS_REPAIR_PROG $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
+> > +        if [ $? -ne 0 ]
+> > +        then
+> > +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent (r) (see $seqres.full)"
+> > +
+> > +            echo "_check_xfs_filesystem: filesystem on $device is inconsistent" >>$seqres.full
+> > +            echo "*** xfs_repair -n output ***"	>>$seqres.full
+> > +            cat $tmp.repair | _fix_malloc		>>$seqres.full
+> > +            echo "*** end xfs_repair output"	>>$seqres.full
+> > +
+> > +            ok=0
+> > +        fi
+> > +        rm -f $tmp.fs_check $tmp.logprint $tmp.repair
+> > +    fi
+> > +
+> 
+> I think we can move this hunk after the original xfs_repair and swap the
+> xfs_repair order, i.e.
+> 
+> xfs_repair -n # this is the original repair check
+> if <check_rebuild>; then
+> 	xfs_repair # do rebuild without -n
+> 	xfs_repair -n # check rebuild result
+> fi
 
->> I could imagine that maybe for each candidate super we find, we should=
+Ok.
 
->> look at its geometry, and spot-check the other locations that it indic=
-ates
->> should contain a superblock.  If we get enough semi-valid but conflict=
-ing
->> "sets," maybe we should bail out and ask.  It's quite a corner case, t=
-ho.
->=20
-> I'm not sure a geometry check would've helped here.  The superblock
-> geometry still would've covered the whole, unpartitioned device.  Since=
+> This seems more clear to me and we can mark which repair is failing more
+> easily (right now the three xfs_repairs are all marked as "(r)", it's
+> hard to say which one is failing), e.g.
+> 
+> xfs_repair -n # marked as "(r)", means "repair"
+> if <check_rebuild>; then
+> 	xfs_repair # mark as "(rb)", means "rebuild"?
+> 	xfs_repair -n # mark as "(rr)", means "repair rebuild"?
 
-> we're already linking with blkid, maybe a check to see if there's a
-> partition table on the device and bail if it sees one, unless forced?
-> The part that I'm still trying to explain is how it managed to get a
-> good magic from the log and then got the wrong uuid.
+We might as well use a full word to state which repair run failed.
 
-Hm, yeah, maybe right off the bat, if the primary super looks bad do
-a blkid check, and a (sigh) "are you sure?" just like we do for mkfs.
+"filesystem on /dev/sdX is inconsistent (rebuild)"
+"filesystem on /dev/sdX is inconsistent (rebuild-reverify)"
 
->> Any chance you have full xfs_repair output?
->=20
-> Sure, below.  I heard back from the reporter and confirmed that my
-> hypothesis of mkfs -> fdisk -> mkfs was what happened.  He's on SLE12
-> SP1, so that means xfsprogs 3.2.1.
->=20
-> -Jeff
->=20
-> ---
->=20
-> labadmin:/ssd # xfs_repair postgre.raw -L
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
-> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
-> calculated value 128
-> resetting superblock root inode pointer to 128
-> sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
-> with calculated value 129
-> resetting superblock realtime bitmap ino pointer to 129
-> sb realtime summary inode 18446744073709551615 (NULLFSINO) inconsistent=
+--D
 
-> with calculated value 130
-> resetting superblock realtime summary ino pointer to 130
-
-huh.  Ok, so I guess the primary in block zero was mostly-ok, and all
-of the backup supers were still more or less intact, and it didn't have
-to go searching...
-
--Eric
-
-
---0AcBdpWt23SSM1A25G9jUKuVtaDv10304--
-
---70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBAgAGBQJXoPJ0AAoJECCuFpLhPd7gMMwP/0j3lITM12XKrfXHdOAzGiIz
-HjvNAwjvTtC1kx5mq8SnWFk/FPrhP8pDBzkF14aC3lyu4GB+Pp3SX+d7uGxpzQTK
-jdplNO2sB8iaNdPolvgMSXQ5UdU3cs6hnxIwlXqRnA6N6/3gyF3ZL2qihYG4NyK7
-cNMfcBQYLu21CDtNMExAxlBLIpiND0ckyBOimfdYiiHaLetqzIGYDGBof/KVTC+r
-sEPSrLVXUMEU0XjIbJnfdIgB9wHmnNOqodjaJ6HYAT1FfLcwnngzYWRjW8JSE8wF
-lN6tdLUBVkq+r+WJUegdK6ZAFVBuAPJF6c4Dj4Kl4qwce/ftcz1K5DFDLcm12Prm
-bMKqrE6MDLOx3+12y0EI/hGkvKNtZjU5xmNL4eagz6WtjrzFYSggztDPJBTRMx9B
-7nFofQGryW3aZ9fc9nQ79VGmP5zmue/DSeNk6ugFRSQhkhc/gdQuw1egubU309Fb
-c/QlNa8puWLRbB2MYH8WuwNJuVebbzuaF7Ug2vRYiwK/JwI90gON39mjI2rux6Lb
-trmayDjgjgh3sF9lSjLIgLQ/aUSSoQ+Sv2B/ksCjxOA7Zkd/pv1b/oOYBwth974u
-QoOJ/13huyQGayfEjITBmyrwdEndDHxQotH/yG/QwnmqeOqL7BJi5zQojykUJdaU
-0ipfbFCZhskeoBddy4/C
-=QDdA
------END PGP SIGNATURE-----
-
---70jVWDRsHHbjA2XOqvmCwImDRNuA924Vu--
-
-
---===============3949999399624062518==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> fi
+> 
+> Thanks,
+> Eryu
+> 
+> >      $XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
+> >      if [ $? -ne 0 ]
+> >      then
+> > 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3949999399624062518==--
