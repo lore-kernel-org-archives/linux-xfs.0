@@ -1,26 +1,18 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6D86C7CB2
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 08:09:51 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DDC847CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 19:59:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 40001304039
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 06:09:48 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id ssGQOSa4IFefCfRB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 05 Aug 2016 06:09:45 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 76F4C20852
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 15:09:43 +0200 (CEST)
-Date: Fri, 5 Aug 2016 15:09:05 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH xfsprogs 2/2] linux.h: Define xfs_off_t as int64_t
-Message-ID: <20160805130905.GA321@nyan>
-References: <20160730133737.GB5895@nyan> <20160801062449.GB596@infradead.org>
-	<20160801065410.GA341@nyan> <20160804004747.GZ16044@dastard>
-	<20160805080241.GA749@nyan> <20160805115239.GH16044@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A08728F8037
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 17:59:29 -0700 (PDT)
+Received: from fabric.com ([115.239.81.38]) by cuda.sgi.com with SMTP id
+	dK24bHH6lkI64Ql7 for <xfs@oss.sgi.com>;
+	Thu, 04 Aug 2016 17:59:23 -0700 (PDT)
+From: "13758346203@163.com" <13758346203@163.com>
+Subject: =?UTF-8?B?UkXvvJpGYWJyaWNz?=
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160805115239.GH16044@dastard>
+Date: Thu, 4 Aug 2016 18:56:12 +0800
+Message-Id: <20160805005929.691581940062@cuda.sgi.com>
+Reply-To: 13758346203@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,62 +21,205 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8070800954383579991=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Fri, Aug 05, 2016 at 10:02:41AM +0200, Felix Janda wrote:
-> > Dave Chinner wrote:
-> > > On Mon, Aug 01, 2016 at 08:54:10AM +0200, Felix Janda wrote:
-> > > > Christoph Hellwig wrote:
-> > > > > On Sat, Jul 30, 2016 at 03:37:37PM +0200, Felix Janda wrote:
-> > > > > > int64_t is guaranteed to have the correct size and signedness and is
-> > > > > > always avaible because linux.h has a <inttypes.h> include.
-> > > > > > 
-> > > > > > Fixes compilation error "unkown type name 'off64_t'" on linux when the
-> > > > > > public header <xfs.h> is included without _LARGEFILE64_SOURCE or
-> > > > > > _GNU_SOURCE defined. This bug was introduced in commit
-> > > > > > cb898f157f8410a03cf5f3400baa1df9e5eecd33.
-> > > > > 
-> > > > > I would much prefer to just define _LARGEFILE64_SOURCE in linux.h..
-> > > > 
-> > > > Thanks for the suggestion, but that does not work if the system header
-> > > > defining (or not) off64_t is included before the xfs headers.
-> > > 
-> > > Which, to me, is a build bug in whatever code is including the xfs
-> > > headers.  Isn't it the responsibility of the build environment to
-> > > ensure the dependencies of the libraries being used are correctly
-> > > met?
-> > 
-> > Every program using the xfs header is supposed to know that (only on
-> > linux) since commit cb898f157f8410a03cf5f3400baa1df9e5eecd33 it is
-> > necessary to define _LARGEFILE64_SOURCE or _GNU_SOURCE?
-> 
-> Which, I'd say, most already do, because anything trying to use XFS
-> ioctls needs to be 64 bit offset clean, even on 32 bit systems.  I
-> don't see any problem with requiring it when including a header
-> that exposes ioctl interfaces with 64 bit file size/offset fields
-> in them....
+--===============8070800954383579991==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
-The easiest way to be 64bit clean is to use _FILEOFFSET_BITS=64. Then
-off_t is 64bit on all architectures and it is impossible to use 32bit
-interfaces. However the type off64_t will still not be defined...
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
+aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
+U0hUTUwgOS4wMC44MTEyLjE2NDUwIj48L0hFQUQ+DQo8Qk9EWT4NCjxQIHN0eWxlPSJURVhULUFM
+SUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiBjbGFzcz1Nc29Ob3JtYWw+
+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05U
+LVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1m
+b250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFt
+aWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBw
+dCI+SGkmbmJzcDtzaXImbmJzcDtvciZuYnNwO21hZGFtLDwvU1BBTj48U1BBTiANCnN0eWxlPSJG
+T05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7
+IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5
+O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMg
+TmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPjwvbzpwPjwv
+U1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgbXNvLXBhZ2luYXRpb246IHdp
+ZG93LW9ycGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDl
+rovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVu
+OiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
+bWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+Jm5ic3A7PC9vOnA+PC9TUEFOPjwv
+UD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3Jw
+aGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsg
+Rk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28t
+Zm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+VGhpcyZuYnNwO2lzJm5ic3A7QWxpZWVuJm5ic3A7ZnJv
+bSZuYnNwO0hhaW5pbmcmbmJzcDtIZW5nZGlhbiZuYnNwO1RleHRpbGUmbmJzcDtDby4sJm5ic3A7
+THRkLiZuYnNwO1dlJm5ic3A7c3BlY2lhbGl6ZWQmbmJzcDtpbiZuYnNwO3Byb2R1Y2luZyZuYnNw
+O2ZhYnJpY3MmbmJzcDtmb3ImbmJzcDtzcG9ydHN3ZWFyLCZuYnNwO2xpbmdlcmllLCZuYnNwO3Vu
+ZGVyd2VhciwmbmJzcDtzd2ltc3VpdCwmbmJzcDtob21lJm5ic3A7dGV4dGlsZSZuYnNwO2FuZCZu
+YnNwO2Zhc2hpb25hYmxlJm5ic3A7ZHJlc3MuPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
+SUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNw
+YWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMg
+TmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9t
+YW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwv
+UD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3Jw
+aGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsg
+Rk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7
+eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28t
+Zm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAg
+c3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNs
+YXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcg
+Um9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3Bh
+Y2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFy
+ZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tYmlkaS1mb250LWZhbWlseTog5a6L5L2TIj5J
+ZiZuYnNwO3lvdSZuYnNwO2xpa2UmbmJzcDt0byZuYnNwO2tub3cmbmJzcDttb3JlJm5ic3A7YWJv
+dXQmbmJzcDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1T
+SVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMz
+OTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
+LWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1r
+ZXJuaW5nOiAwLjAwMDBwdCI+dXM8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYj
+Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5v
+cm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAw
+MDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWJpZGktZm9udC1mYW1p
+bHk6IOWui+S9kyI+LCZuYnNwOzwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L
+5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjog
+JiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21h
+biYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7
+IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5wbGVhc2UmbmJzcDtkbyZuYnNwO25vdCZuYnNw
+O2hlc2l0YXRlJm5ic3A7dG8mbmJzcDtjb250YWN0Jm5ic3A7dXMsJm5ic3A7SSZuYnNwO3dpbGwm
+bmJzcDtzZW5kJm5ic3A7eW91Jm5ic3A7dGhlJm5ic3A7cGljdHVyZXMmbmJzcDtvZiZuYnNwO291
+ciZuYnNwO3Byb2R1Y2luZyZuYnNwO2RlcGFydG1lbnQsJm5ic3A7ZHlpbmcmbmJzcDttYWNoaW5l
+LCZuYnNwO3NhbXBsZSZuYnNwO3Jvb20mbmJzcDthbmQmbmJzcDtvdXImbmJzcDtvZmZpY2UmbmJz
+cDtpZiZuYnNwO3lvdSZuYnNwO2xpa2UuPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZ
+OiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNl
+cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3
+IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4m
+IzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4N
+CjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFu
+IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9O
+VC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVz
+JiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5Ozsg
+bXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9u
+dC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAgc3R5
+bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNz
+PU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6
+IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5Ozsg
+bXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFu
+c2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5p
+bmc6IDAuMDAwMHB0Ij5CZXN0Jm5ic3A7cmVnYXJkcyw8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9O
+VC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBt
+c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5l
+dyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQ
+QU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRv
+dy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L
+5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjog
+JiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21h
+biYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7
+IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5BbGllZW48L1NQQU4+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFs
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMz
+OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVz
+IE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48
+L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3
+aWRvdy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog
+5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1
+bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBS
+b21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
+OTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48
+L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9y
+cGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7
+IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5
+O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
+OTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
+LWZvbnQta2VybmluZzogMC4wMDAwcHQiPkhhaW5pbmcmbmJzcDtIZW5nZGlhbiZuYnNwO1RleHRp
+bGUmbmJzcDtDby4sJm5ic3A7THRkPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDl
+rovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVu
+OiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
+bWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
+OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQ
+IHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiBj
+bGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1T
+SVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMz
+OTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
+LWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1r
+ZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9
+IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNzPU1z
+b05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEy
+cHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2kt
+Zm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6
+IDAuMDAwMHB0Ij5UaGUmbmJzcDtXZXN0Jm5ic3A7QnVpbGRpbmcmbmJzcDtOby4xMTgsJm5ic3A7
+Q2hhbmdoZSZuYnNwO1JkLCZuYnNwOyZuYnNwO0NoYW5nPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IEZP
+TlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQt
+a2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1i
+aWRpLWZvbnQtZmFtaWx5OiDlrovkvZMiPuKAmTwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZB
+TUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVz
+IE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
+bWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5hbiZuYnNwO1Rvd24sJm5ic3A7
+SGFpbmluZyZuYnNwO0NpdHksJm5ic3A7WmhlamlhbmcsJm5ic3A7UHJvdmluY2UsJm5ic3A7Q2hp
+bmE8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAx
+MnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
+by1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNp
+LWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5n
+OiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046
+IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BB
+TiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJ
+R0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQt
+ZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6
+ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48
+bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsg
+bXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5
+bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5v
+cm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6
+ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPlRlbDowMDg2
+Jm5ic3A7NTczJm5ic3A7ODc0NzM3OTc8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
+IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2Vy
+dW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcg
+Um9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYj
+Mzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0K
+PFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4i
+IGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05U
+LVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
+IzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBt
+c28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250
+LWtlcm5pbmc6IDAuMDAwMHB0Ij5GYXg6MDA4NiZuYnNwOzU3Mzg3NDczNzg5PC9TUEFOPjxTUEFO
+IA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlH
+SFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1m
+YW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTog
+JiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxv
+OnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFn
+aW5hdGlvbjogd2lkb3ctb3JwaGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9O
+VC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBt
+c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtU
+aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5l
+dyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+TW9iaWxlOjAwODYmbmJz
+cDsxMzc1ODM0NjIwMzwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBG
+T05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7
+OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1m
+b250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+PCEtLUVuZEZyYWdt
+ZW50LS0+PC9CT0RZPjwvSFRNTD4NCg0K
 
-(On the other hand, when just using _LARGEFILE64_SOURCE it is still
-easy to mix 32 and 64bit interfaces.)
 
-Please refer to the "Using LFS Section" of:
-
-http://users.suse.com/~aj/linux_lfs.html
-
-Cheers,
-Felix
+--===============8070800954383579991==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8070800954383579991==--
