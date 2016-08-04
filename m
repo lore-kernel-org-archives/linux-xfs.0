@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C45047CDC
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D6BC8F8035
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:50 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id UzXzfK1KjuTLBJ5W (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:48 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 224D520A78
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:47 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s6XQV4hsFz1043
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:46 +0200 (CEST)
-Message-Id: <54046df0c8591a0c5678dee87a8c8aba02ea1d88.1470555003.git.felix.janda@posteo.de>
-In-Reply-To: <cover.1470555003.git.felix.janda@posteo.de>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sat, 6 Aug 2016 12:45:52 +0200
-Subject: [PATCH xfsprogs 08/14] replace pread64 by equivalent pread
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 86E207CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 21:19:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B1D1304032
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 19:18:59 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id UJ3eewtmwxH9Rhkf (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 19:18:56 -0700 (PDT)
+Date: Wed, 3 Aug 2016 19:18:52 -0700
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160804021852.GK5316@wotan.suse.de>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+	<20160804005843.GJ8593@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160804005843.GJ8593@birch.djwong.org>
+Reply-To: Mark Fasheh <mfasheh@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,123 +29,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- include/darwin.h  |  1 -
- include/freebsd.h |  1 -
- io/pread.c        | 10 +++++-----
- libxfs/rdwr.c     |  2 +-
- repair/prefetch.c |  2 +-
- 5 files changed, 7 insertions(+), 9 deletions(-)
+On Wed, Aug 03, 2016 at 05:58:43PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 03, 2016 at 01:55:20PM -0700, Darrick J. Wong wrote:
+> > On Wed, Aug 03, 2016 at 12:45:36PM -0700, Mark Fasheh wrote:
+> > > Where can I the patches to enable dedupe_range on xfs? I tested your
+> > > previous devel branch based on Linux v4.7-rc3 with duperemove
+> > > (https://github.com/markfasheh/duperemove) and it worked extremely well -
+> > > even handling some cases that btrfs still has issues with. I actually
+> > > committed the code to enable xfs support in duperemove so anyone can test on
+> > > xfs with the dedupe_range patches.
+> > > 
+> > > I'd gladly test your latest patches by doing my usual 'large' duperemove
+> > > tests once I can get ahold of the dedupe_range work :)
+> > 
+> > Your best bets are probably the -experimental trees:
+> > https://github.com/djwong/linux/commits/djwong-experimental
+> > https://github.com/djwong/xfsprogs/commits/djwong-experimental
+> > 
+> > I haven't updated them in a while because I've been busy trying
+> > to get reverse-mapping (the start of those patchbombs) into 4.8.
+> > 
+> > Just as a warning, don't put anything critical on those XFS filesystems
+> > because there's going to be a disk format update between now and the
+> > next time I post the patches because Dave and I decided to cache the
+> > block counts for the new btrees in order to speed up mounting.  I don't
+> > anticipate having time to clean up my dev tree and push to github until
+> > a week or two after the merge window closes.
+> 
+> That said, all the craziness from the last two weeks (xfs_scrub sprint
+> and the rmapbt review fixes) are now in the -wtf tree, which /should/
+> behave.  I've dumped everything there in completely not cleaned up
+> format, but this does have the AGF btree block counter stuff I talked
+> about above.
+> 
+> https://github.com/djwong/linux/commits/djwong-wtf
+> https://github.com/djwong/xfsprogs/commits/djwong-wtf
 
-diff --git a/include/darwin.h b/include/darwin.h
-index 850d733..f4dbd9f 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -141,7 +141,6 @@ typedef u_int64_t	xfs_ino_t;
- typedef u_int32_t	xfs_dev_t;
- typedef int64_t		xfs_daddr_t;
- 
--#define pread64		pread
- #define pwrite64	pwrite
- #define fdatasync	fsync
- #define memalign(a,sz)	valloc(sz)
-diff --git a/include/freebsd.h b/include/freebsd.h
-index 784e287..041dafe 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -35,7 +35,6 @@
- 
- /* FreeBSD file API is 64-bit aware */
- #define pwrite64	pwrite
--#define pread64		pread
- #define fdatasync	fsync
- #define memalign(a,sz)	valloc(sz)
- 
-diff --git a/io/pread.c b/io/pread.c
-index cafead0..3395503 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -214,7 +214,7 @@ do_pread(
- 	ssize_t		buffer_size)
- {
- 	if (!vectors)
--		return pread64(fd, buffer, min(count, buffer_size), offset);
-+		return pread(fd, buffer, min(count, buffer_size), offset);
- 
- 	return do_preadv(fd, offset, count, buffer_size);
- }
-@@ -254,7 +254,7 @@ read_random(
- 		if (bytes == 0)
- 			break;
- 		if (bytes < 0) {
--			perror("pread64");
-+			perror("pread");
- 			return -1;
- 		}
- 		ops++;
-@@ -296,7 +296,7 @@ read_backward(
- 		if (bytes == 0)
- 			return ops;
- 		if (bytes < 0) {
--			perror("pread64");
-+			perror("pread");
- 			return -1;
- 		}
- 		ops++;
-@@ -314,7 +314,7 @@ read_backward(
- 		if (bytes == 0)
- 			break;
- 		if (bytes < 0) {
--			perror("pread64");
-+			perror("pread");
- 			return -1;
- 		}
- 		ops++;
-@@ -345,7 +345,7 @@ read_forward(
- 		if (bytes == 0)
- 			break;
- 		if (bytes < 0) {
--			perror("pread64");
-+			perror("pread");
- 			return -1;
- 		}
- 		ops++;
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index cb74b3c..36c39d9 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -915,7 +915,7 @@ __read_buf(int fd, void *buf, int len, off64_t offset, int flags)
- {
- 	int	sts;
- 
--	sts = pread64(fd, buf, len, offset);
-+	sts = pread(fd, buf, len, offset);
- 	if (sts < 0) {
- 		int error = errno;
- 		fprintf(stderr, _("%s: read failed: %s\n"),
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index b4f20d9..175594c 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -565,7 +565,7 @@ pf_batch_read(
- 		/*
- 		 * now read the data and put into the xfs_but_t's
- 		 */
--		len = pread64(mp_fd, buf, (int)(last_off - first_off), first_off);
-+		len = pread(mp_fd, buf, (int)(last_off - first_off), first_off);
- 
- 		/*
- 		 * Check the last buffer on the list to see if we need to
--- 
-2.7.3
+Fantastic. Don't worry about corrupting data, I've been doing this long
+enough to know to use this only on scratch partitions for now  :) I'm in the
+middle of a couple other tests but once I'm done there I'll grab those
+branches and give them another spin. Typically I'm running through 800G-1TB
+on these (with varying duplicated data percentages).
+
+Silly question which I could just answer by looking at the patches - are you
+reporting FIEMAP_EXTENT_SHARED yet for extents with more than one owner? We
+use that flag (by comparing SHARED bytes before and after dedupe) to give
+people an estimate of how much space was saved. I presume figuring the
+shared state of an extent would be as easy as querying the rmap btree,
+correct?
+	--Mark
+
+--
+Mark Fasheh
 
 _______________________________________________
 xfs mailing list
