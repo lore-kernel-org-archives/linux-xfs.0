@@ -1,26 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D48147CDA
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 12:47:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A5C518F8037
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 10:47:45 -0700 (PDT)
-Received: from mail-pa0-f68.google.com (mail-pa0-f68.google.com
-	[209.85.220.68]) by cuda.sgi.com with ESMTP id ePQwOSTYyVbd08mo
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A12CE7CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 11:32:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 483CB304048
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 09:32:50 -0700 (PDT)
+Received: from mx0a-000cda01.pphosted.com (mx0a-00003501.pphosted.com
+	[67.231.144.15]) by cuda.sgi.com with ESMTP id wbCcxXCCisCRzlSx
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 07 Aug 2016 10:47:42 -0700 (PDT)
-Received: by mail-pa0-f68.google.com with SMTP id vy10so4048036pac.0
-	for <xfs@oss.sgi.com>; Sun, 07 Aug 2016 10:47:42 -0700 (PDT)
-Subject: Re: [PATCH 8/9] vfs: hoist the btrfs deduplication ioctl to the vfs
-References: <20151219085505.12478.71157.stgit@birch.djwong.org>
-	<20151219085559.12478.33700.stgit@birch.djwong.org>
-	<20160112060714.GA4980@zzz> <20160112091432.GB7832@birch.djwong.org>
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Message-ID: <594f4812-e146-6a6b-60d5-91ac56d46d66@gmail.com>
-Date: Mon, 8 Aug 2016 03:47:34 +1000
+	Thu, 04 Aug 2016 09:32:48 -0700 (PDT)
+Received: from pps.filterd (m0075550.ppops.net [127.0.0.1])
+	by mx0a-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id
+	u74GHPTu003400 for <xfs@oss.sgi.com>; Thu, 4 Aug 2016 12:32:48 -0400
+Received: from mail-ua0-f197.google.com (mail-ua0-f197.google.com
+	[209.85.217.197])
+	by mx0a-00003501.pphosted.com with ESMTP id 24m7axrtcf-9
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NOT) for <xfs@oss.sgi.com>; Thu, 04 Aug 2016 12:32:47 -0400
+Received: by mail-ua0-f197.google.com with SMTP id r91so343230939uar.2
+	for <xfs@oss.sgi.com>; Thu, 04 Aug 2016 09:32:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160112091432.GB7832@birch.djwong.org>
+In-Reply-To: <20160804154622.GB15656@infradead.org>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
+	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
+	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+	<20160804154622.GB15656@infradead.org>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Date: Thu, 4 Aug 2016 11:32:16 -0500
+Message-ID: <CAJVOszAqEw3UK6HV4bPvYfHeO6jvP0d-OtfXxRuve=5-Kmaokw@mail.gmail.com>
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,220 +40,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Biggers <ebiggers3@gmail.com>
-Cc: linux-api@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, ocfs2-devel@oss.oracle.com
 
-Hi Darrick,
-
-On 01/12/2016 08:14 PM, Darrick J. Wong wrote:
-> [adding btrfs to the cc since we're talking about a whole new dedupe interface]
-
-In the discussion below, many points of possible improvement were notedfor
-the man page.... Would you be willing to put together a patch please?
-
-Thanks,
-
-Michael
-
-  
-> On Tue, Jan 12, 2016 at 12:07:14AM -0600, Eric Biggers wrote:
->> Some feedback on the VFS portion of the FIDEDUPERANGE ioctl and its man page...
->> (note: I realize the patch is mostly just moving the code that already existed
->> in btrfs, but in the VFS it deserves a more thorough review):
->
-> Wheee. :)
->
-> Yes, let's discuss the concerns about the btrfs extent same ioctl.
->
-> I believe Christoph dislikes about the odd return mechanism (i.e. status and
-> bytes_deduped) and doubts that the vectorization is really necessary.  There's
-> not a lot of documentation to go on aside from "Do whatever the BTRFS ioctl
-> does".  I suspect that will leave my explanations lackng, since I neither
-> designed the btrfs interface nor know all that much about the decisions made to
-> arrive at what we have now.
->
-> (I agree with both of hch's complaints.)
->
-> Really, the best argument for keeping this ioctl is to avoid breaking
-> duperemove.  Even then, given that current duperemove checks for btrfs before
-> trying to use BTRFS_IOC_EXTENT_SAME, we could very well design a new dedupe
-> ioctl for the VFS, hook the new dedupers (XFS) into the new VFS ioctl
-> leaving the old btrfs ioctl intact, and train duperemove to try the new
-> ioctl and fall back on the btrfs one if the VFS ioctl isn't supported.
->
-> Frankly, I also wouldn't mind changing the VFS dedupe ioctl that to something
-> that resembles the clone_range interface:
->
-> int ioctl(int dest_fd, FIDEDUPERANGE, struct file_dedupe_range * arg);
->
-> struct file_dedupe_range {
->     __s64 src_fd;
->     __u64 src_offset;
->     __u64 length;
->     __u64 dest_offset;
->     __u64 flags;
-> };
->
-> "See if the byte range src_offset:length in src_fd matches all of
-> dest_offset:length in dest_fd; if so, share src_fd's physical storage with
-> dest_fd.  Both fds must be files; if they are the same file the ranges cannot
-> overlap; src_fd must be readable; dest_fd must be writable or append-only.
-> Offsets and lengths probably need to be block-aligned, but that is filesystem
-> dependent."
->
-> The error conditions would be superset of the ones we know about today.  I'd
-> return EOVERFLOW or something if length is longer than the FS wants to deal
-> with.
->
-> Now all the vectorization problems go away, and since it's a new VFS interface
-> we can define everything from the start.
->
-> Christoph, if this new interface solves your complaints I think I'd like to get
-> started on the code/docs soon.
->
->> At high level, I am confused about what is meant by the "source" and
->> "destination" files.  I understand that with more than two files, you
->> effectively have to choose one file to treat specially and dedupe with all
->> the other files (an NxN comparison isn't realistic).  But with just two
->> files, a deduplication operation should be completely symmetric, should it
->> not?  The end
->
-> Not sure what you mean by 'symmetric', but in any case the convention seems
-> to be that src_fd's storage is shared with dest_fd if there's a match.
->
->> result should be that the data is deduplicated, regardless of the order in
->> which I gave the file descriptors.  So why is there some non-symmetric
->> behavior?  There are several examples but one is that the VFS is checking
->> !S_ISREG() on the "source" file descriptor but not on the "destination" file
->> descriptor.
->
-> The dedupe_range function pointer should only be supplied for regular files.
->
->> Another is that different permissions are required on the source versus on
->> the destination.  If there are good reasons for the nonsymmetry then this
->> needs to be clearly explained in the man page; otherwise it may not be clear
->> what to use as the "source" and what to use as the "destination".
+On Thu, Aug 4, 2016 at 10:46 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Aug 03, 2016 at 07:30:29PM -0500, Shaun Tancheff wrote:
+>> I think the translation in loop.c is suspicious here:
 >>
->> It seems odd to be adding "copy" as a system call but then have "dedupe" and
->> "clone" as ioctls rather than system calls... it seems that they should all
->> be one or the other (at least, if we put aside the fact that the ioctls
->> already exist in btrfs).
->
-> We can't put the clone ioctl aside; coreutils has already started using it.
->
-> I'm not sure if clone_range or extent_same are all that popular, though.
-> AFAIK duperemove is the only program using extent_same, and I don't know
-> of anything using clone_range.
->
-> (Well, xfs_io does...)
->
->> The range checking in clone_verify_area() appears incomplete.  Someone could
->> provide len=UINT64_MAX and all the checks would still pass even though
->> 'pos+len' would overflow.
->
-> Yeah...
->
->> Should the ioctl be interruptible?  Right now it always goes through *all*
->> the 'struct file_dedupe_range_info's you passed in --- potentially up to
->> 65535 of them.
->
-> There probably ought to be explicit signal checks, or we could just get rid
-> of the vectorization entirely. :)
->
->> Why 'info->bytes_deduped += deduped' rather than 'info->bytes_deduped =
->> deduped'?  'bytes_deduped' is per file descriptor, not for the operation as a
->> whole.
->
-> Right, because bytes_deduped is a part of file_dedup_range_info, not
-> file_dedupe_range.
->
-> (Note the bytes_deduped = 0 earlier in the function.)
->
->> What permissions do you need on the destination file descriptors?  The man
->> page implies they must be open for writing and not appending.  The
->> implementation differs: it requires FMODE_WRITE only for non-admin users, and
->> it doesn't check for O_APPEND at all.
->
-> I think the result of an earlier discussion was that src_fd must be readable,
-> and dest_fd must be writable or appendable.
->
->> The man page also says you get EPERM if "dest_fd is immutable" and ETXTBSY if
->> "one of the files is a swap file", which I don't see actually happening in
->> the implementation; it seems those error codes perhaps exist at all for this
->> ioctl but rather be left to open(..., O_WRONLY).
->
-> Those could be hoisted to the VFS (from the XFS implementation), I think.
->
->> If the filesystem doesn't support deduplication, or I pass in a strange file
->> descriptor such as one for a named pipe, do I get EINVAL or EOPNOTSUPP?  The
->> man page isn't clear.
->
-> Should be EOPNOTSUPP if dest_fd isn't a regular file; EISDIR if either are
-> directories; and EINVAL for any other kind of non-file fd.  I suspect the
-> clone* manpages don't make this too clear either.
->
->> Under what circumstances will 'bytes_deduped' differ from the count that was
->> passed in?
->
-> btrfs/xfs will only compare the first 16MB.  Not documented anywhere. :(
->
->> If short counts are allowed, what will be the 'status' be in that case:
->> FILE_DEDUP_RANGE_DIFFERS, FILE_DEDUPE_RANGE_SAME, or something else?
->
-> One of those two.
->
->> Can data be deduped even if only a prefix of the data region matches?
->
-> No.
->
->> The man page doesn't mention FILE_DEDUPE_RANGE_SAME at all, instead calling it
->> 0; it only mentions FILE_DEDUPE_RANGE_DIFFERS.
->
-> Oops, good catch. :(
->
->> The man page isn't clear about whether the ioctl stops early if an error
->> occurs or always processes all the 'struct file_dedupe_range_info's you pass
->> in.  And if it were, hypothetically, to stop early, how is the user meant to
->> know on which file it stopped?
->
-> I don't know if this should be the official behavior, but it stopped at
-> whichever file_dedupe_range_info has both status and bytes_deduped set to zero.
->
->> The man page says "logical_offset" but in the struct it is called
->> "dest_offset".
->
-> Oops.
->
->> There are some variables named "same" which don't really make sense now that
->> the ioctl is called FIDEDUPERANGE instead of EXTENT_SAME.
->
-> Perhaps not.
->
-> I'll later take a look at how many of these issues apply to clone/clone_range.
->
-> --D
->
+>>     "if use DIO && not (a flush_flag or discard_flag)"
+>> should translate to:
+>>     "if use DIO && not ((a flush_flag) || op == discard)"
 >>
->> Eric
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-api" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-api" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> But in the patch I read:
+>>     "if use DIO && ((not a flush_flag) || op == discard)
+>>
+>> Which would have DIO && discards follow the AIO path?
 >
+> Indeed.  Sorry for missing out on your patch, I just sent a fix
+> in reply to Dave's other report earlier which is pretty similar to
+> yours.
 
+No worries. I prefer your switch to a an if conditional here.
 
 -- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+Shaun Tancheff
 
 _______________________________________________
 xfs mailing list
