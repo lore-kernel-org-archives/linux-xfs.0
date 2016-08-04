@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DEB517CE2
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 335E57CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 19:58:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 35BDEAC003
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:50 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id yx07wpOReHblVTgc (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBC82304032
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:58:53 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 2hsshb4cBMHkVglR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:48 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id E8C0A20A94
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:47 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s6XQW3f0CzysK
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:47 +0200 (CEST)
-Message-Id: <381255cfec13dc45dd4fe2232e94dc6ead92952b.1470555003.git.felix.janda@posteo.de>
-In-Reply-To: <cover.1470555003.git.felix.janda@posteo.de>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sat, 6 Aug 2016 13:03:16 +0200
-Subject: [PATCH xfsprogs 10/14] replace sendfile64 by equivalent sendfile
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 17:58:52 -0700 (PDT)
+Date: Wed, 3 Aug 2016 17:58:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160804005843.GJ8593@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160803205520.GQ8590@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +27,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- io/sendfile.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Wed, Aug 03, 2016 at 01:55:20PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 03, 2016 at 12:45:36PM -0700, Mark Fasheh wrote:
+> > Hi Darrick,
+> > 
+> > On Wed, Jul 20, 2016 at 09:55:55PM -0700, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > This is the seventh revision of a patchset that adds to XFS kernel
+> > > support for tracking reverse-mappings of physical blocks to file and
+> > > metadata (rmap).  Per reviewers' request with v6, I am splitting the
+> > > gigantic patchbombs into separate functional areas.  Given the
+> > > significant amount of design assumptions that change with block
+> > > sharing, rmap and reflink are provided together.  There shouldn't be
+> > > any incompatible on-disk format changes, pending a thorough review of
+> > > the patches within.
+> > 
+> > Where can I the patches to enable dedupe_range on xfs? I tested your
+> > previous devel branch based on Linux v4.7-rc3 with duperemove
+> > (https://github.com/markfasheh/duperemove) and it worked extremely well -
+> > even handling some cases that btrfs still has issues with. I actually
+> > committed the code to enable xfs support in duperemove so anyone can test on
+> > xfs with the dedupe_range patches.
+> > 
+> > I'd gladly test your latest patches by doing my usual 'large' duperemove
+> > tests once I can get ahold of the dedupe_range work :)
+> 
+> Your best bets are probably the -experimental trees:
+> https://github.com/djwong/linux/commits/djwong-experimental
+> https://github.com/djwong/xfsprogs/commits/djwong-experimental
+> 
+> I haven't updated them in a while because I've been busy trying
+> to get reverse-mapping (the start of those patchbombs) into 4.8.
+> 
+> Just as a warning, don't put anything critical on those XFS filesystems
+> because there's going to be a disk format update between now and the
+> next time I post the patches because Dave and I decided to cache the
+> block counts for the new btrees in order to speed up mounting.  I don't
+> anticipate having time to clean up my dev tree and push to github until
+> a week or two after the merge window closes.
 
-diff --git a/io/sendfile.c b/io/sendfile.c
-index c082acf..edd31c9 100644
---- a/io/sendfile.c
-+++ b/io/sendfile.c
-@@ -56,11 +56,11 @@ send_buffer(
- 
- 	*total = 0;
- 	while (count > 0) {
--		bytes = sendfile64(file->fd, fd, &off, bytes_remaining);
-+		bytes = sendfile(file->fd, fd, &off, bytes_remaining);
- 		if (bytes == 0)
- 			break;
- 		if (bytes < 0) {
--			perror("sendfile64");
-+			perror("sendfile");
- 			return -1;
- 		}
- 		ops++;
--- 
-2.7.3
+That said, all the craziness from the last two weeks (xfs_scrub sprint
+and the rmapbt review fixes) are now in the -wtf tree, which /should/
+behave.  I've dumped everything there in completely not cleaned up
+format, but this does have the AGF btree block counter stuff I talked
+about above.
+
+https://github.com/djwong/linux/commits/djwong-wtf
+https://github.com/djwong/xfsprogs/commits/djwong-wtf
+
+--D
+
+> 
+> --D
+> 
+> > 
+> > Thanks,
+> > 	--Mark
+> > 
+> > --
+> > Mark Fasheh
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
