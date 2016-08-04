@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DE607CE1
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0FA497CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 00:47:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42E7A304048
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:51 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id P7lOYlh7p99psCMZ (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AA87D304032
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 22:47:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id SXPt9uWtO9SaJNOL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:49 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 5522D20A85
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:48 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s6XQW6LB0z104K
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:47 +0200 (CEST)
-Message-Id: <f4fc0b97ae8cdb30f1e0b0d55521f136877b33f5.1470555003.git.felix.janda@posteo.de>
-In-Reply-To: <cover.1470555003.git.felix.janda@posteo.de>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sun, 7 Aug 2016 08:24:40 +0200
-Subject: [PATCH xfsprogs 11/14] replace statvfs64 by equivalent statvfs
+	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 22:47:12 -0700 (PDT)
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
+	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
+	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+From: Mike Christie <mchristi@redhat.com>
+Message-ID: <57A2D6D7.8040807@redhat.com>
+Date: Thu, 4 Aug 2016 00:47:03 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,100 +28,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-btrfs@vger.kernel.org
 
-For this it was necessary to change a workaround for missing
-f_brsize on Mac OS X.
+On 08/03/2016 07:30 PM, Shaun Tancheff wrote:
+> On Wed, Aug 3, 2016 at 6:47 PM, Mike Christie <mchristi@redhat.com> wrote:
+>> On 08/03/2016 05:33 PM, Ross Zwisler wrote:
+>>> On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
+>>>> From: Mike Christie <mchristi@redhat.com>
+>>>>
+>>>> The req operation REQ_OP is separated from the rq_flag_bits
+>>>> definition. This converts the block layer drivers to
+>>>> use req_op to get the op from the request struct.
+>>>>
+>>>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>>>> ---
+>>>>  drivers/block/loop.c              |  6 +++---
+>>>>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
+>>>>  drivers/block/nbd.c               |  2 +-
+>>>>  drivers/block/rbd.c               |  4 ++--
+>>>>  drivers/block/xen-blkfront.c      |  8 +++++---
+>>>>  drivers/ide/ide-floppy.c          |  2 +-
+>>>>  drivers/md/dm.c                   |  2 +-
+>>>>  drivers/mmc/card/block.c          |  7 +++----
+>>>>  drivers/mmc/card/queue.c          |  6 ++----
+>>>
+>>> Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
+>>> and bisected to this commit:
+>>>
+>>> commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
+>>> Author: Mike Christie <mchristi@redhat.com>
+>>> Date:   Sun Jun 5 14:32:17 2016 -0500
+>>> drivers: use req op accessor
+>>>
+>>> Here are the steps to reproduce the deadlock with a BRD ramdisk:
+>>>
+>>> mkfs.xfs -f /dev/ram0
+>>> mount -o dax /dev/ram0 /mnt/scratch
+>>
+>> When using ramdisks, we need the attached patch like in your other bug
+>> report. I think it will fix some hangs people are seeing.
+>>
+>> I do not think that it should cause the failure to run issue you saw
+>> when doing generic/008 and ext2.
+>>
+> 
+> I think the translation in loop.c is suspicious here:
+> 
+>     "if use DIO && not (a flush_flag or discard_flag)"
+> should translate to:
+>     "if use DIO && not ((a flush_flag) || op == discard)"
+> 
+> But in the patch I read:
+>     "if use DIO && ((not a flush_flag) || op == discard)
+> 
+> Which would have DIO && discards follow the AIO path?
+> 
+> So I would humbly suggest something like the following
+>     (on top of commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34):
+> [Please excuse the messed up patch format ... gmail eats tabs]
+> 
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+> index b9b737c..0754d83 100644
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -1659,8 +1659,9 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+>         if (lo->lo_state != Lo_bound)
+>                 return -EIO;
+> 
+> -       if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
+> -           req_op(cmd->rq) == REQ_OP_DISCARD))
+> +       if (lo->use_dio && !(
+> +           (cmd->rq->cmd_flags & REQ_FLUSH) ||
+> +            req_op(cmd->rq) == REQ_OP_DISCARD))
+>                 cmd->use_aio = true;
+>         else
+>                 cmd->use_aio = false;
+> 
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- fsr/xfs_fsr.c    | 16 ++++------------
- include/darwin.h |  4 ++--
- 2 files changed, 6 insertions(+), 14 deletions(-)
+You are right. The translation was bad and your code above is correct.
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 98390e7..f3cc07e 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -89,7 +89,7 @@ static void fsrallfs(char *mtab, int howlong, char *leftofffile);
- static void fsrall_cleanup(int timeout);
- static int  getnextents(int);
- int xfsrtextsize(int fd);
--int xfs_getrt(int fd, struct statvfs64 *sfbp);
-+int xfs_getrt(int fd, struct statvfs *sfbp);
- char * gettmpname(char *fname);
- char * getparent(char *fname);
- int fsrprintf(const char *fmt, ...);
-@@ -888,7 +888,7 @@ fsrfile_common(
- 	xfs_bstat_t	*statp)
- {
- 	int		error;
--	struct statvfs64 vfss;
-+	struct statvfs vfss;
- 	struct fsxattr	fsx;
- 	unsigned long	bsize;
- 
-@@ -940,16 +940,12 @@ fsrfile_common(
- 	 * Note that xfs_bstat.bs_blksize returns the filesystem blocksize,
- 	 * not the optimal I/O size as struct stat.
- 	 */
--	if (statvfs64(fsname ? fsname : fname, &vfss) < 0) {
-+	if (statvfs(fsname ? fsname : fname, &vfss) < 0) {
- 		fsrprintf(_("unable to get fs stat on %s: %s\n"),
- 			fname, strerror(errno));
- 		return -1;
- 	}
--#ifndef statvfs64
- 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
--#else
--	bsize = vfss.f_bsize;
--#endif
- 	if (statp->bs_blksize * statp->bs_blocks >
- 	    vfss.f_bfree * bsize - minimumfree) {
- 		fsrprintf(_("insufficient freespace for: %s: "
-@@ -1704,7 +1700,7 @@ xfs_getgeom(int fd, xfs_fsop_geom_v1_t * fsgeom)
-  * Get xfs realtime space information
-  */
- int
--xfs_getrt(int fd, struct statvfs64 *sfbp)
-+xfs_getrt(int fd, struct statvfs *sfbp)
- {
- 	unsigned long	bsize;
- 	unsigned long	factor;
-@@ -1717,11 +1713,7 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
- 		close(fd);
- 		return -1;
- 	}
--#ifndef statvfs64
- 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
--#else
--	bsize = sfbp->f_bsize;
--#endif
- 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
- 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
- 	return 0;
-diff --git a/include/darwin.h b/include/darwin.h
-index fb13915..bd1a112 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -216,8 +216,8 @@ static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
- #  include <sys/param.h>
- #include <sys/ucred.h>
- #include <errno.h>
--#define statvfs64	statfs
--#define		_PATH_MOUNTED   "/etc/mtab"
-+#define f_frsize	f_bsize
-+#define _PATH_MOUNTED	"/etc/mtab"
- 
- struct mntent
- {
--- 
-2.7.3
+I think we need my patch in the other mail though too, because for the
+rw_page user case if WB_SYNC_ALL is set, then the IO gets sent down as a
+read instead of a write.
 
 _______________________________________________
 xfs mailing list
