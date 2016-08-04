@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8327D7CE9
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DD9A8AC002
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:50 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id ATpA8pC5kn6reOJe (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:48 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 16D9320A8E
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:46 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s6XQT4TQjz104T
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:45 +0200 (CEST)
-Message-Id: <9a96c2eedc66f86669643fc59f9ea7d3a6b64321.1470555003.git.felix.janda@posteo.de>
-In-Reply-To: <cover.1470555003.git.felix.janda@posteo.de>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sat, 6 Aug 2016 12:45:49 +0200
-Subject: [PATCH xfsprogs 06/14] replace ftruncate64 by equivalent ftruncate
+	by oss.sgi.com (Postfix) with ESMTP id 58F227CA1
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 22:00:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D05A5AC002
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 20:00:15 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id FBqEv4iRvrGTa2fB for <xfs@oss.sgi.com>;
+	Wed, 03 Aug 2016 20:00:10 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 132849A
+	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 22:00:10 -0500 (CDT)
+Subject: Re: xfstests xfs fuzzers fail with DAX
+References: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a23e895c-7d3e-bed2-9bc9-66e306df485e@sandeen.net>
+Date: Wed, 3 Aug 2016 22:00:09 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,132 +28,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- copy/xfs_copy.c           | 2 +-
- fsr/xfs_fsr.c             | 2 +-
- include/darwin.h          | 1 -
- include/freebsd.h         | 1 -
- io/copy_file_range.c      | 4 ++--
- io/truncate.c             | 2 +-
- mdrestore/xfs_mdrestore.c | 2 +-
- mkfs/xfs_mkfs.c           | 2 +-
- 8 files changed, 7 insertions(+), 9 deletions(-)
+On 8/3/16 9:45 PM, Xiong Zhou wrote:
+> Hi,
+> 
+> A few xfs fuzzers in xfstests fail with dax mount option, pass without dax.
+> They are xfs/086 xfs/088 xfs/089 xfs/091.
+> 
+> xfstests to commit 4470ad4c7e  (Jul 26)
+> kernel   to commit dd95069545  (Jul 24)
+> 
+> + ./check xfs/091
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
+> MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> 
+> xfs/091	 104s
+> Ran: xfs/091
+> Passed all 1 tests
+> 
+> + echo 'MOUNT_OPTIONS="-o dax"'
+> + ./check xfs/091
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
+> MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> 
+> xfs/091 104s ...  - output mismatch (see /root/xfstests/results//xfs/091.out.bad)
+>     --- tests/xfs/091.out	2016-07-18 02:57:47.670000000 -0400
+>     +++ /root/xfstests/results//xfs/091.out.bad	2016-08-03 22:38:14.948000000 -0400
+>     @@ -6,6 +6,70 @@
+>      + corrupt image
+>      + mount image
+>      + modify files
+>     +pwrite64: Structure needs cleaning
+>     +pwrite64: Structure needs cleaning
+>     +pwrite64: Structure needs cleaning
+>     +pwrite64: Structure needs cleaning
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 55a9e2c..f038c2e 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -832,7 +832,7 @@ main(int argc, char **argv)
- 		if (write_last_block)  {
- 			/* ensure regular files are correctly sized */
- 
--			if (ftruncate64(target[i].fd, mp->m_sb.sb_dblocks *
-+			if (ftruncate(target[i].fd, mp->m_sb.sb_dblocks *
- 						source_blocksize))  {
- 				do_log(_("%s:  cannot grow data section.\n"),
- 					progname);
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 36e0705..d87d020 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -1451,7 +1451,7 @@ packfile(char *fname, char *tname, int fd,
- 			}
- 		}
- 	}
--	if (ftruncate64(tfd, statp->bs_size) < 0) {
-+	if (ftruncate(tfd, statp->bs_size) < 0) {
- 		fsrprintf(_("could not truncate tmpfile: %s : %s\n"),
- 				fname, strerror(errno));
- 		goto out;
-diff --git a/include/darwin.h b/include/darwin.h
-index 8708324..5c149a0 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -144,7 +144,6 @@ typedef int64_t		xfs_daddr_t;
- #define lseek64		lseek
- #define pread64		pread
- #define pwrite64	pwrite
--#define ftruncate64	ftruncate
- #define fdatasync	fsync
- #define memalign(a,sz)	valloc(sz)
- 
-diff --git a/include/freebsd.h b/include/freebsd.h
-index f7ab8fa..f5e7fa9 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -34,7 +34,6 @@
- #define __LITTLE_ENDIAN	LITTLE_ENDIAN
- 
- /* FreeBSD file API is 64-bit aware */
--#define ftruncate64	ftruncate
- #define lseek64		lseek
- #define pwrite64	pwrite
- #define pread64		pread
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index 7ba42b6..88203e9 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -72,9 +72,9 @@ copy_src_filesize(int fd)
- static int
- copy_dst_truncate(void)
- {
--	int ret = ftruncate64(file->fd, 0);
-+	int ret = ftruncate(file->fd, 0);
- 	if (ret < 0)
--		perror("ftruncate64");
-+		perror("ftruncate");
- 	return ret;
- }
- 
-diff --git a/io/truncate.c b/io/truncate.c
-index f2df168..20bada8 100644
---- a/io/truncate.c
-+++ b/io/truncate.c
-@@ -38,7 +38,7 @@ truncate_f(
- 		return 0;
- 	}
- 
--	if (ftruncate64(file->fd, offset) < 0) {
-+	if (ftruncate(file->fd, offset) < 0) {
- 		perror("ftruncate");
- 		return 0;
- 	}
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 26d61eb..1540dcd 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -124,7 +124,7 @@ perform_restore(
- 	if (is_target_file)  {
- 		/* ensure regular files are correctly sized */
- 
--		if (ftruncate64(dst_fd, sb.sb_dblocks * sb.sb_blocksize))
-+		if (ftruncate(dst_fd, sb.sb_dblocks * sb.sb_blocksize))
- 			fatal("cannot set filesystem image size: %s\n",
- 				strerror(errno));
- 	} else  {
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8b98a8a..5d5fcb7 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2815,7 +2815,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	 * code will succeed.
- 	 */
- 	if (xi.disfile && xi.dsize * xi.dbsize < dblocks * blocksize) {
--		if (ftruncate64(xi.dfd, dblocks * blocksize) < 0) {
-+		if (ftruncate(xi.dfd, dblocks * blocksize) < 0) {
- 			fprintf(stderr,
- 				_("%s: Growing the data section failed\n"),
- 				progname);
--- 
-2.7.3
+This means the filesystem has shut down, most likely, and more information about
+the error is in dmesg.
+
+Further, if the filesystem is corrupt, xfs_repair output would be interesting.
+
+Can you provide that information?
+
+This can probably be reproduced, but when reporting a bug it's always good to provide
+as many details as you can.
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
