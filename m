@@ -1,18 +1,19 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DDC847CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 19:59:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A08728F8037
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 17:59:29 -0700 (PDT)
-Received: from fabric.com ([115.239.81.38]) by cuda.sgi.com with SMTP id
-	dK24bHH6lkI64Ql7 for <xfs@oss.sgi.com>;
-	Thu, 04 Aug 2016 17:59:23 -0700 (PDT)
-From: "13758346203@163.com" <13758346203@163.com>
-Subject: =?UTF-8?B?UkXvvJpGYWJyaWNz?=
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5F9977CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 02:26:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E944304032
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 00:26:59 -0700 (PDT)
+Received: from smtpcm9-306.freemail.mail.aliyun.com
+	(smtpcm9-306.freemail.mail.aliyun.com [110.75.46.6]) by
+	cuda.sgi.com with ESMTP id 2PLM8awXv5WXEACT for
+	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 00:26:51 -0700 (PDT)
+Date: Thu, 04 Aug 2016 15:25:25 +0800
+From: "dhsiliconesealant" <dhsiliconesealant@aliyun.com>
+Message-ID: <40d394ec-38ec-4ec8-b558-59cf10b41148.dhsiliconesealant@aliyun.com>
+Subject: =?UTF-8?B?YWNldGljIHNpbGljb25lIHNlYWxhbnQ=?=
 MIME-Version: 1.0
-Date: Thu, 4 Aug 2016 18:56:12 +0800
-Message-Id: <20160805005929.691581940062@cuda.sgi.com>
-Reply-To: 13758346203@163.com
+Reply-To: dhsiliconesealant <dhsiliconesealant@aliyun.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,197 +22,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8070800954383579991=="
+Content-Type: multipart/mixed; boundary="===============4555234955015522537=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
---===============8070800954383579991==
+--===============4555234955015522537==
+Content-Type: multipart/alternative;
+  boundary="----=ALIBOUNDARY_18951_5a4ce940_57a2edea_6c9f"
+
+------=ALIBOUNDARY_18951_5a4ce940_57a2edea_6c9f
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+=C2=A0Dear=C2=A0 Sir/Madam,Thank you for opening our =0Aemail.Jason Lee from D=
+ehui Industry =0ACo,. LTD is servicing for you.We are silicone sealant =0Afact=
+or.y. =0AThe products details as =0Abelow:Commodity =0ADetails:=0A1-Product:GP=
+ silicone sealant=0A2-Brand/Code:Dehui=0A3-CAS =0ANo.:63148-52-7=0A4-Main Raw =
+Material:Silicone=0A5-Skin time: 4-8 =0Aminuets=0A6-Main Application:General P=
+urpose Glazing weather sealing=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ =0ARoofing and Gutters=C2=A0 Rainwater Tanks Electrical Sealing and Insulatio=
+n=C2=A0=C2=A0 =0AAutomotive=0A7-Colors:white,black,transparent or as requested=
+=0A8-Shelf =0Alife:12 months=0A9-Certificate: SGS,ISO,TUVCommercial =0ADetails=
+:=0A1-Product:silicone sealant=0A2-HS =0ACode:3506100010=0A3-Package:=0A300ml/=
+Cartridge,24 cartridges/carton box=C2=A0=C2=A0=C2=A0 =0A600ml/sausage, 20sausa=
+ges/carton box=0A4-Carton Box =0Asize:300x200x235mm=0A5-Load Quantity:=0A300ml=
+:1900 cartons/20ft without =0Apallets;1600 cartons with pallets =0A600ml:1500 =
+cartons/20ft without =0Apallets;1100 cartons with pallets =0ADrum :200L/drum,7=
+5 drums/20ft=0A6-MOQ: =0ANo=0A7-Delivery:5 days for trial order without printi=
+ng,15 days for printing =0Adesign=0A8-Service:OEM,Free logo design based on 10=
+0 cartons.=0A9-Loading =0APort:Qingdao=0A10-Payment:T/T,LC,Western UnionFor mo=
+re details,on Skype or =0Awhats app. do not hesitate to contact me,18 hours on=
+line everyday!=0ABest =0ARegardsJason =C2=A0Jason Lee/Account Manager=0ADehui =
+Industry Company Limited=0ACell/Whatsapp:+86 181 054 67890=C2=A0=C2=A0 Skype:w=
+oodman718=0AEmail:=C2=A0jason@dehuiindustry.com=C2=A0=C2=A0=C2=A0 Tel:=C2=A0+8=
+6 5466392306=0AWebsite:=C2=A0www.dehuiindustry.com=C2=A0
+------=ALIBOUNDARY_18951_5a4ce940_57a2edea_6c9f
 Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
-b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
-aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
-U0hUTUwgOS4wMC44MTEyLjE2NDUwIj48L0hFQUQ+DQo8Qk9EWT4NCjxQIHN0eWxlPSJURVhULUFM
-SUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiBjbGFzcz1Nc29Ob3JtYWw+
-PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05U
-LVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1m
-b250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFt
-aWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBw
-dCI+SGkmbmJzcDtzaXImbmJzcDtvciZuYnNwO21hZGFtLDwvU1BBTj48U1BBTiANCnN0eWxlPSJG
-T05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7
-IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5
-O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMg
-TmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPjwvbzpwPjwv
-U1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgbXNvLXBhZ2luYXRpb246IHdp
-ZG93LW9ycGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDl
-rovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVu
-OiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
-bWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
-OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+Jm5ic3A7PC9vOnA+PC9TUEFOPjwv
-UD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3Jw
-aGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsg
-Rk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7
-eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
-OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28t
-Zm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+VGhpcyZuYnNwO2lzJm5ic3A7QWxpZWVuJm5ic3A7ZnJv
-bSZuYnNwO0hhaW5pbmcmbmJzcDtIZW5nZGlhbiZuYnNwO1RleHRpbGUmbmJzcDtDby4sJm5ic3A7
-THRkLiZuYnNwO1dlJm5ic3A7c3BlY2lhbGl6ZWQmbmJzcDtpbiZuYnNwO3Byb2R1Y2luZyZuYnNw
-O2ZhYnJpY3MmbmJzcDtmb3ImbmJzcDtzcG9ydHN3ZWFyLCZuYnNwO2xpbmdlcmllLCZuYnNwO3Vu
-ZGVyd2VhciwmbmJzcDtzd2ltc3VpdCwmbmJzcDtob21lJm5ic3A7dGV4dGlsZSZuYnNwO2FuZCZu
-YnNwO2Zhc2hpb25hYmxlJm5ic3A7ZHJlc3MuPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFN
-SUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNw
-YWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMg
-TmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9t
-YW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwv
-UD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3Jw
-aGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsg
-Rk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7
-eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
-OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28t
-Zm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAg
-c3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNs
-YXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcg
-Um9tYW4mIzM5OzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3Bh
-Y2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tZmFy
-ZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tYmlkaS1mb250LWZhbWlseTog5a6L5L2TIj5J
-ZiZuYnNwO3lvdSZuYnNwO2xpa2UmbmJzcDt0byZuYnNwO2tub3cmbmJzcDttb3JlJm5ic3A7YWJv
-dXQmbmJzcDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1T
-SVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMz
-OTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
-LWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1r
-ZXJuaW5nOiAwLjAwMDBwdCI+dXM8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6ICYj
-Mzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5v
-cm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAw
-MDBwdDsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWJpZGktZm9udC1mYW1p
-bHk6IOWui+S9kyI+LCZuYnNwOzwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L
-5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjog
-JiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21h
-biYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7
-IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5wbGVhc2UmbmJzcDtkbyZuYnNwO25vdCZuYnNw
-O2hlc2l0YXRlJm5ic3A7dG8mbmJzcDtjb250YWN0Jm5ic3A7dXMsJm5ic3A7SSZuYnNwO3dpbGwm
-bmJzcDtzZW5kJm5ic3A7eW91Jm5ic3A7dGhlJm5ic3A7cGljdHVyZXMmbmJzcDtvZiZuYnNwO291
-ciZuYnNwO3Byb2R1Y2luZyZuYnNwO2RlcGFydG1lbnQsJm5ic3A7ZHlpbmcmbmJzcDttYWNoaW5l
-LCZuYnNwO3NhbXBsZSZuYnNwO3Jvb20mbmJzcDthbmQmbmJzcDtvdXImbmJzcDtvZmZpY2UmbmJz
-cDtpZiZuYnNwO3lvdSZuYnNwO2xpa2UuPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZ
-OiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNl
-cnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3
-IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4m
-IzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4N
-CjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFu
-IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9O
-VC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVz
-JiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5Ozsg
-bXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9u
-dC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAgc3R5
-bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNz
-PU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6
-IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5Ozsg
-bXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFu
-c2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5p
-bmc6IDAuMDAwMHB0Ij5CZXN0Jm5ic3A7cmVnYXJkcyw8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9O
-VC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBt
-c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtU
-aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5l
-dyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQ
-QU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRv
-dy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L
-5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjog
-JiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21h
-biYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7
-IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5BbGllZW48L1NQQU4+PFNQQU4gDQpzdHlsZT0i
-Rk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFs
-OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMz
-OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVz
-IE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48
-L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3
-aWRvdy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog
-5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1
-bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBS
-b21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
-OTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48
-L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9y
-cGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7
-IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5
-O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMz
-OTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
-LWZvbnQta2VybmluZzogMC4wMDAwcHQiPkhhaW5pbmcmbmJzcDtIZW5nZGlhbiZuYnNwO1RleHRp
-bGUmbmJzcDtDby4sJm5ic3A7THRkPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDl
-rovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVu
-OiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
-bWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5
-OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQ
-IHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiBj
-bGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1T
-SVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMz
-OTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNv
-LWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1r
-ZXJuaW5nOiAwLjAwMDBwdCI+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9
-IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNzPU1z
-b05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEy
-cHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
-LWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2kt
-Zm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6
-IDAuMDAwMHB0Ij5UaGUmbmJzcDtXZXN0Jm5ic3A7QnVpbGRpbmcmbmJzcDtOby4xMTgsJm5ic3A7
-Q2hhbmdoZSZuYnNwO1JkLCZuYnNwOyZuYnNwO0NoYW5nPC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZP
-TlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVNJWkU6IDEycHQ7IEZP
-TlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQt
-a2VybmluZzogMC4wMDAwcHQ7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1i
-aWRpLWZvbnQtZmFtaWx5OiDlrovkvZMiPuKAmTwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZB
-TUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1z
-cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVz
-IE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJv
-bWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5hbiZuYnNwO1Rvd24sJm5ic3A7
-SGFpbmluZyZuYnNwO0NpdHksJm5ic3A7WmhlamlhbmcsJm5ic3A7UHJvdmluY2UsJm5ic3A7Q2hp
-bmE8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAx
-MnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
-by1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNp
-LWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5n
-OiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046
-IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNzPU1zb05vcm1hbD48U1BB
-TiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJ
-R0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQt
-ZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBtc28taGFuc2ktZm9udC1mYW1pbHk6
-ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij48
-bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsg
-bXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIA0Kc3R5
-bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlHSFQ6IG5v
-cm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1mYW1pbHk6
-ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTogJiMzOTtU
-aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPlRlbDowMDg2
-Jm5ic3A7NTczJm5ic3A7ODc0NzM3OTc8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1GQU1JTFk6
-IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBtc28tc3BhY2Vy
-dW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtUaW1lcyBOZXcg
-Um9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYj
-Mzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+PG86cD48L286cD48L1NQQU4+PC9QPg0K
-PFAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4i
-IGNsYXNzPU1zb05vcm1hbD48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05U
-LVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
-IzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBt
-c28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1mb250
-LWtlcm5pbmc6IDAuMDAwMHB0Ij5GYXg6MDA4NiZuYnNwOzU3Mzg3NDczNzg5PC9TUEFOPjxTUEFO
-IA0Kc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZM7IEZPTlQtU0laRTogMTJwdDsgRk9OVC1XRUlH
-SFQ6IG5vcm1hbDsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tYXNjaWktZm9udC1m
-YW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1oYW5zaS1mb250LWZhbWlseTog
-JiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxv
-OnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBsZWZ0OyBtc28tcGFn
-aW5hdGlvbjogd2lkb3ctb3JwaGFuIiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gDQpzdHlsZT0iRk9O
-VC1GQU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMnB0OyBGT05ULVdFSUdIVDogbm9ybWFsOyBt
-c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1hc2NpaS1mb250LWZhbWlseTogJiMzOTtU
-aW1lcyBOZXcgUm9tYW4mIzM5OzsgbXNvLWhhbnNpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5l
-dyBSb21hbiYjMzk7OyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+TW9iaWxlOjAwODYmbmJz
-cDsxMzc1ODM0NjIwMzwvU1BBTj48U1BBTiANCnN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBG
-T05ULVNJWkU6IDEycHQ7IEZPTlQtV0VJR0hUOiBub3JtYWw7IG1zby1zcGFjZXJ1bjogJiMzOTt5
-ZXMmIzM5OzsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7
-OyBtc28taGFuc2ktZm9udC1mYW1pbHk6ICYjMzk7VGltZXMgTmV3IFJvbWFuJiMzOTs7IG1zby1m
-b250LWtlcm5pbmc6IDAuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48L1A+PCEtLUVuZEZyYWdt
-ZW50LS0+PC9CT0RZPjwvSFRNTD4NCg0K
+<div class=3D"__aliyun_email_body_block"><div  style=3D"clear:both;"><span  st=
+yle=3D"color:#000000;font-family:Tahoma,Arial,STHeiti,SimSun;font-size:14.0px;=
+">&nbsp;</span><p ><span  style=3D"color:#0000ff;">Dear&nbsp; Sir/Madam,</span=
+></p><p ><span  style=3D"color:#0000ff;">Thank you for opening our =0Aemail.</=
+span></p><p ><span  style=3D"color:#0000ff;">Jason Lee from Dehui Industry =0A=
+Co,. LTD is servicing for you.</span></p><p ><span  style=3D"color:#0000ff;">W=
+e are silicone sealant =0Afactor.y. </span></p><p ><br ><span  style=3D"color:=
+#0000ff;">The products details as =0Abelow:</span></p><p ><span  style=3D"colo=
+r:#0000ff;">Commodity =0ADetails:<br >1-Product:GP silicone sealant<br >2-Bran=
+d/Code:Dehui<br >3-CAS =0ANo.:63148-52-7<br >4-Main Raw Material:Silicone<br >=
+5-Skin time: 4-8 =0Aminuets<br >6-Main Application:General Purpose Glazing wea=
+ther sealing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =0ARoofing and Gu=
+tters&nbsp; Rainwater Tanks Electrical Sealing and Insulation&nbsp;&nbsp; =0AA=
+utomotive<br >7-Colors:white,black,transparent or as requested<br >8-Shelf =0A=
+life:12 months<br >9-Certificate: SGS,ISO,TUV</span></p><p ><span  style=3D"co=
+lor:#0000ff;">Commercial =0ADetails:<br >1-Product:silicone sealant<br >2-HS =0A=
+Code:3506100010<br >3-Package:<br >300ml/Cartridge,24 cartridges/carton box&nb=
+sp;&nbsp;&nbsp; =0A600ml/sausage, 20sausages/carton box<br >4-Carton Box =0Asi=
+ze:300x200x235mm<br >5-Load Quantity:<br >300ml:1900 cartons/20ft without =0Ap=
+allets;1600 cartons with pallets <br >600ml:1500 cartons/20ft without =0Apalle=
+ts;1100 cartons with pallets <br >Drum :200L/drum,75 drums/20ft<br >6-MOQ: =0A=
+No<br >7-Delivery:5 days for trial order without printing,15 days for printing=
+ =0Adesign<br >8-Service:OEM,Free logo design based on 100 cartons.<br >9-Load=
+ing =0APort:Qingdao<br >10-Payment:T/T,LC,Western Union</span></p><p ><span  s=
+tyle=3D"color:#0000ff;">For more details,on Skype or =0Awhats app. do not hesi=
+tate to contact me,18 hours online everyday!<br >Best =0ARegards</span></p><p =
+><span  style=3D"color:#0000ff;">Jason </span></p><span  style=3D"color:#00000=
+0;font-family:Tahoma,Arial,STHeiti,SimSun;font-size:14.0px;"></span></div><div=
+  style=3D"clear:both;"><span  style=3D"color:#000000;font-family:Tahoma,Arial=
+,STHeiti,SimSun;font-size:14.0px;">&nbsp;</span></div><div  style=3D"clear:bot=
+h;"><div  style=3D"font:14.0px 21.0px Arial,Verdana,sans-serif;color:#000000;t=
+ext-transform:none;text-indent:.0px;widows:1;font-size-adjust:none;font-stretc=
+h:normal;"><span  style=3D"color:#0000ff;font-family:Arial;font-size:16.0px;fo=
+nt-weight:normal;"><span  style=3D"color:#ff6600;font-family:Calibri;font-size=
+:16.0px;"><img  height=3D"198" src=3D"http://www.petfilmchina.com/logo.jpg" wi=
+dth=3D"213" style=3D"width:99.0px;height:93.0px;"></span></span></div><div  st=
+yle=3D"font:14.0px 21.0px Arial,Verdana,sans-serif;color:#000000;text-transfor=
+m:none;text-indent:.0px;widows:1;font-size-adjust:none;font-stretch:normal;"><=
+span  style=3D"color:#0000ff;font-family:Arial;font-size:16.0px;font-weight:no=
+rmal;"><span  style=3D"color:#ff6600;font-family:Calibri;font-size:16.0px;"><s=
+pan  style=3D"font-size:4.0px;">Jason Lee/<span  style=3D"color:#0000f0;">Acco=
+unt Manager</span><br >Dehui Industry Company Limited<br >Cell/Whatsapp<span  =
+style=3D"color:#0000f0;">:+86 181 054 67890</span>&nbsp;&nbsp; Skype:<span  st=
+yle=3D"color:#0000f0;">woodman718</span><br >Email:<span  style=3D"color:#0000=
+f0;">&nbsp;</span></span><a  href=3D"mailto:jason@dehuiindustry.com" target=3D=
+"_blank"><span  style=3D"color:#0000f0;font-size:4.0px;">jason@dehuiindustry.c=
+om</span></a><span  style=3D"font-size:4.0px;"><span  style=3D"color:#0000f0;"=
+>&nbsp;</span>&nbsp;&nbsp; Tel:&nbsp;<span  style=3D"color:#0000f0;">+86 54663=
+92306</span><br >Website:&nbsp;</span><a  href=3D"http://www.dehuiindustry.com=
+/" target=3D"_blank"><span  style=3D"color:#0000f0;font-size:4.0px;">www.dehui=
+industry.com</span></a></span></span></div></div><div  style=3D"clear:both;"><=
+span  style=3D"color:#000000;font-family:Tahoma,Arial,STHeiti,SimSun;font-size=
+:14.0px;">&nbsp;</span></div></div>
+------=ALIBOUNDARY_18951_5a4ce940_57a2edea_6c9f--
 
 
---===============8070800954383579991==
+--===============4555234955015522537==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -222,4 +128,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8070800954383579991==--
+--===============4555234955015522537==--
