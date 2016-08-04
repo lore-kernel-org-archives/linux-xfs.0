@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AAFE97CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 10:48:08 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BCBCA7CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 10:49:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E7D68F8035
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 08:48:08 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id eP8IAOt2jcfKD0II (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 08:48:06 -0700 (PDT)
-Date: Thu, 4 Aug 2016 08:48:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
-Message-ID: <20160804154805.GA24025@infradead.org>
-References: <20160803003354.GP16044@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 30D60AC005
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 08:49:04 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id QQAxrWCH1fvayvk3 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 08:49:02 -0700 (PDT)
+Date: Thu, 4 Aug 2016 08:48:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160804154845.GV8590@birch.djwong.org>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+	<20160804005843.GJ8593@birch.djwong.org>
+	<20160804021852.GK5316@wotan.suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160803003354.GP16044@dastard>
+In-Reply-To: <20160804021852.GK5316@wotan.suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,12 +33,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
 
-Just send a fix that you're Cc'ed on.  But now xfs/049 hangs, although
-only on pmem devices, loop on non-pmem seems to be fine.  4.7 was fine
-as well.
+On Wed, Aug 03, 2016 at 07:18:52PM -0700, Mark Fasheh wrote:
+> On Wed, Aug 03, 2016 at 05:58:43PM -0700, Darrick J. Wong wrote:
+> > On Wed, Aug 03, 2016 at 01:55:20PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 03, 2016 at 12:45:36PM -0700, Mark Fasheh wrote:
+> > > > Where can I the patches to enable dedupe_range on xfs? I tested your
+> > > > previous devel branch based on Linux v4.7-rc3 with duperemove
+> > > > (https://github.com/markfasheh/duperemove) and it worked extremely well -
+> > > > even handling some cases that btrfs still has issues with. I actually
+> > > > committed the code to enable xfs support in duperemove so anyone can test on
+> > > > xfs with the dedupe_range patches.
+> > > > 
+> > > > I'd gladly test your latest patches by doing my usual 'large' duperemove
+> > > > tests once I can get ahold of the dedupe_range work :)
+> > > 
+> > > Your best bets are probably the -experimental trees:
+> > > https://github.com/djwong/linux/commits/djwong-experimental
+> > > https://github.com/djwong/xfsprogs/commits/djwong-experimental
+> > > 
+> > > I haven't updated them in a while because I've been busy trying
+> > > to get reverse-mapping (the start of those patchbombs) into 4.8.
+> > > 
+> > > Just as a warning, don't put anything critical on those XFS filesystems
+> > > because there's going to be a disk format update between now and the
+> > > next time I post the patches because Dave and I decided to cache the
+> > > block counts for the new btrees in order to speed up mounting.  I don't
+> > > anticipate having time to clean up my dev tree and push to github until
+> > > a week or two after the merge window closes.
+> > 
+> > That said, all the craziness from the last two weeks (xfs_scrub sprint
+> > and the rmapbt review fixes) are now in the -wtf tree, which /should/
+> > behave.  I've dumped everything there in completely not cleaned up
+> > format, but this does have the AGF btree block counter stuff I talked
+> > about above.
+> > 
+> > https://github.com/djwong/linux/commits/djwong-wtf
+> > https://github.com/djwong/xfsprogs/commits/djwong-wtf
+> 
+> Fantastic. Don't worry about corrupting data, I've been doing this long
+> enough to know to use this only on scratch partitions for now  :) I'm in the
+> middle of a couple other tests but once I'm done there I'll grab those
+> branches and give them another spin. Typically I'm running through 800G-1TB
+> on these (with varying duplicated data percentages).
+> 
+> Silly question which I could just answer by looking at the patches - are you
+> reporting FIEMAP_EXTENT_SHARED yet for extents with more than one owner? We
+> use that flag (by comparing SHARED bytes before and after dedupe) to give
+> people an estimate of how much space was saved. I presume figuring the
+> shared state of an extent would be as easy as querying the rmap btree,
+> correct?
+
+Yes, it should report FIEMAP_EXTENT_SHARED.  In the past it would
+report exactly which parts of an extent were shared.  If a file mapped
+blocks 30-40 and block 35 was shared, it would report 30-34, 35
+(shared), and 36-40.  However, btrfs only reports a single extent
+"30-40 (shared)" so I stopped doing that.
+
+Incidentally, GETFSMAP is in that code pile too, in case duperemove
+wanted to know exactly what's mapped to a block.  I'd be wary of it
+for now though, since it hasn't been through any kind of review and
+could change in the future.
+
+--D
+
+> 	--Mark
+> 
+> --
+> Mark Fasheh
 
 _______________________________________________
 xfs mailing list
