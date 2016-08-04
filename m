@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 307D27CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 11:00:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 436837CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 11:13:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA0C3304075
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 09:00:14 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id jPRV8lhD6fEExrmG (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 09:00:13 -0700 (PDT)
-Date: Thu, 4 Aug 2016 09:00:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/47] xfs: move deferred operations into a separate file
-Message-ID: <20160804160007.GA7649@infradead.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<146907703710.25461.16650495404061662831.stgit@birch.djwong.org>
-	<20160801080223.GB30547@infradead.org>
-	<20160802223950.GN16044@dastard>
-	<20160803091627.GA5289@infradead.org>
-	<20160803225756.GW16044@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A8D17AC002
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 09:13:23 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id quelWDtknEapAs5H (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 09:13:22 -0700 (PDT)
+Date: Thu, 4 Aug 2016 11:13:18 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfs_metadump: don't warn about unobfuscated log with -o
+Message-ID: <20160804161318.GA739@redhat.com>
+References: <541974d2-5877-a7ef-af3c-7d1a47e227c0@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160803225756.GW16044@dastard>
+In-Reply-To: <541974d2-5877-a7ef-af3c-7d1a47e227c0@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,17 +29,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Aug 04, 2016 at 08:57:56AM +1000, Dave Chinner wrote:
-> So, please explain in more detail what the problem is and what the
-> proposed solution is so I (and probably Darrick, too) have some
-> understanding of the issue you see with this code.
-
-We were doing 1 (actually 2 with the busy extent tracking) allocations
-for each free extent, and now we're up to three.  We need to get this
-down to 1 and not increase it for no benefit.
+On Thu, Aug 04, 2016 at 10:51:12AM -0500, Eric Sandeen wrote:
+> It makes no sense to warn about un-obfuscated logs
+> when we asked xfs_metadump to not obfuscate metadata:
+> 
+> # xfs_metadump -o /dev/loop2 bad.metadump
+> xfs_metadump: Filesystem log is dirty; image will contain unobfuscated metadata in log.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index d7ff6e5..01a51c4 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -2575,12 +2575,14 @@ copy_log(void)
+>  		break;
+>  	case 1:
+>  		/* keep the dirty log */
+> -		print_warning(
+> +		if (obfuscate)
+> +			print_warning(
+>  _("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
+>  		break;
+>  	case -1:
+>  		/* log detection error */
+> -		print_warning(
+> +		if (obfuscate)
+> +			print_warning(
+>  _("Could not discern log; image will contain unobfuscated metadata in log."));
+>  		break;
+>  	}
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
