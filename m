@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5786D7CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 13:54:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B82F8F8040
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 11:54:27 -0700 (PDT)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id 5SRt6yVqQWLOX6Nz for
-	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 11:54:26 -0700 (PDT)
-Date: Thu, 4 Aug 2016 12:54:25 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
-Message-ID: <20160804185425.GC3128@linux.intel.com>
-References: <20160803003354.GP16044@dastard>
-	<20160804154805.GA24025@infradead.org>
-	<20160804184658.GB3128@linux.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7A57C7CA0
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 18:50:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E6448F8035
+	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 16:50:20 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	fV3AftfkqIswwHdp for <xfs@oss.sgi.com>;
+	Thu, 04 Aug 2016 16:50:17 -0700 (PDT)
+Date: Fri, 5 Aug 2016 09:50:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160804235015.GC16044@dastard>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+	<20160804005843.GJ8593@birch.djwong.org>
+	<20160804021852.GK5316@wotan.suse.de>
+	<20160804154845.GV8590@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160804184658.GB3128@linux.intel.com>
+In-Reply-To: <20160804154845.GV8590@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +34,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Mark Fasheh <mfasheh@suse.de>, linux-fsdevel@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, vishal.l.verma@intel.com
 
-On Thu, Aug 04, 2016 at 12:46:58PM -0600, Ross Zwisler wrote:
-> On Thu, Aug 04, 2016 at 08:48:05AM -0700, Christoph Hellwig wrote:
-> > Just send a fix that you're Cc'ed on.  But now xfs/049 hangs, although
-> > only on pmem devices, loop on non-pmem seems to be fine.  4.7 was fine
-> > as well.
+On Thu, Aug 04, 2016 at 08:48:45AM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 03, 2016 at 07:18:52PM -0700, Mark Fasheh wrote:
+> > On Wed, Aug 03, 2016 at 05:58:43PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 03, 2016 at 01:55:20PM -0700, Darrick J. Wong wrote:
+> > > > On Wed, Aug 03, 2016 at 12:45:36PM -0700, Mark Fasheh wrote:
+> > > > > Where can I the patches to enable dedupe_range on xfs? I tested your
+> > > > > previous devel branch based on Linux v4.7-rc3 with duperemove
+> > > > > (https://github.com/markfasheh/duperemove) and it worked extremely well -
+> > > > > even handling some cases that btrfs still has issues with. I actually
+> > > > > committed the code to enable xfs support in duperemove so anyone can test on
+> > > > > xfs with the dedupe_range patches.
+> > > > > 
+> > > > > I'd gladly test your latest patches by doing my usual 'large' duperemove
+> > > > > tests once I can get ahold of the dedupe_range work :)
+> > > > 
+> > > > Your best bets are probably the -experimental trees:
+> > > > https://github.com/djwong/linux/commits/djwong-experimental
+> > > > https://github.com/djwong/xfsprogs/commits/djwong-experimental
+> > > > 
+> > > > I haven't updated them in a while because I've been busy trying
+> > > > to get reverse-mapping (the start of those patchbombs) into 4.8.
+> > > > 
+> > > > Just as a warning, don't put anything critical on those XFS filesystems
+> > > > because there's going to be a disk format update between now and the
+> > > > next time I post the patches because Dave and I decided to cache the
+> > > > block counts for the new btrees in order to speed up mounting.  I don't
+> > > > anticipate having time to clean up my dev tree and push to github until
+> > > > a week or two after the merge window closes.
+> > > 
+> > > That said, all the craziness from the last two weeks (xfs_scrub sprint
+> > > and the rmapbt review fixes) are now in the -wtf tree, which /should/
+> > > behave.  I've dumped everything there in completely not cleaned up
+> > > format, but this does have the AGF btree block counter stuff I talked
+> > > about above.
+> > > 
+> > > https://github.com/djwong/linux/commits/djwong-wtf
+> > > https://github.com/djwong/xfsprogs/commits/djwong-wtf
+> > 
+> > Fantastic. Don't worry about corrupting data, I've been doing this long
+> > enough to know to use this only on scratch partitions for now  :) I'm in the
+> > middle of a couple other tests but once I'm done there I'll grab those
+> > branches and give them another spin. Typically I'm running through 800G-1TB
+> > on these (with varying duplicated data percentages).
+> > 
+> > Silly question which I could just answer by looking at the patches - are you
+> > reporting FIEMAP_EXTENT_SHARED yet for extents with more than one owner? We
+> > use that flag (by comparing SHARED bytes before and after dedupe) to give
+> > people an estimate of how much space was saved. I presume figuring the
+> > shared state of an extent would be as easy as querying the rmap btree,
+> > correct?
 > 
-> I don't think Mike's fix solves this issue.  I'm still able to reproduce the
-> hang with linux/master + the patch he sent out.
-> 
-> Did you retest and get a different result?
+> Yes, it should report FIEMAP_EXTENT_SHARED.  In the past it would
+> report exactly which parts of an extent were shared.  If a file mapped
+> blocks 30-40 and block 35 was shared, it would report 30-34, 35
+> (shared), and 36-40.  However, btrfs only reports a single extent
+> "30-40 (shared)" so I stopped doing that.
 
-Never mind, didn't see that you had sent out patches as well.
+I'd much prefer that fiemap gives exact information about shared
+extents. FIEMAP is a diagnostic tool and as such we need it to
+accurately reflect the exact extent map of the inode being queried
+so we aren't mislead about the layout of the file during trouble
+shooting.
+
+Hence I think what btrfs does is sub-optimal and we shouldn't copy
+it. Let's do the right thing with XFS and if people complain it is
+different to btrfs then someone can go make btrfs report an accurate
+extent map, too.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
