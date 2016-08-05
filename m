@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8D0AF7CA0
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:32:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F656304039
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 05:31:59 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kaa4ILWGjKzU1tyz for <xfs@oss.sgi.com>;
-	Fri, 26 Aug 2016 05:31:56 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id E68FF474B81
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:31:55 -0500 (CDT)
-Subject: Re: [PATCH] xfs_quota: fix missing break after foreign_allowed option
-References: <1472200206-15728-1-git-send-email-zlang@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d46ed354-6d72-bafc-08b4-82e43961166d@sandeen.net>
-Date: Fri, 26 Aug 2016 07:31:55 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 904A47CB9
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 15:22:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 621B58F8040
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 13:22:08 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id Z3vrAAnXoXbTpKST (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 05 Aug 2016 13:22:06 -0700 (PDT)
+Date: Fri, 5 Aug 2016 13:22:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: remove OWN_AG rmap when allocating a block from the AGFL
+Message-ID: <20160805202202.GJ25565@birch.djwong.org>
+References: <20160805202104.GB8590@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1472200206-15728-1-git-send-email-zlang@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20160805202104.GB8590@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +29,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On 8/26/16 3:30 AM, Zorro Lang wrote:
-> New quota "-f" has been brought in by:
-> 
->   29647c8 xfs_quota: add capabilities for use on non-XFS filesystems
-> 
-> But Coverity Scan find a missing break in quota/init.c: init()
-> function.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+[resend, cc list this time]
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I ftrace'd the rmap code while trying to repro the g/299 assert you
+saw.  Eventually I got it to reproduce and it looks like a block would
+go onto the AGFL and we'd add an OWN_AG rmap for the block.  ~20s
+later the block mysteriously ends up being mapped in a second time as
+some inode's BMBT block without the OWN_AG rmap being removed.  So I
+looked around for anything that grabbed a block off the AGFL and
+noticed that the regular allocation function can do that if we get
+really tight on space.  I also noticed that it doesn't remove the
+OWN_AG rmap, nor does it credit the per-AG reservation for the block
+it used.  So here's a test patch that updates the rmap.  (The per-AG
+stuff is in the reflink patchset so we don't need it here.)
 
-> ---
->  quota/init.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/quota/init.c b/quota/init.c
-> index 44be322..2c18c8b 100644
-> --- a/quota/init.c
-> +++ b/quota/init.c
-> @@ -153,6 +153,7 @@ init(
->  			break;
->  		case 'f':
->  			foreign_allowed = true;
-> +			break;
->  		case 't':
->  			mtab_file = optarg;
->  			break;
-> 
+---
+When we're really tight on space, xfs_alloc_ag_vextent_small() can
+allocate a block from the AGFL and give it to the caller.  Since the
+caller is never the AGFL-fixing method, we must remove the OWN_AG
+reverse mapping because it will clash with whatever rmap the caller
+wants to set up.  This bug was discovered by running generic/299
+repeatedly.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index af1a72e..3dd8f1d 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1582,6 +1582,7 @@ xfs_alloc_ag_vextent_small(
+ 	xfs_extlen_t	*flenp,	/* result length */
+ 	int		*stat)	/* status: 0-freelist, 1-normal/none */
+ {
++	struct xfs_owner_info	oinfo;
+ 	int		error;
+ 	xfs_agblock_t	fbno;
+ 	xfs_extlen_t	flen;
+@@ -1624,6 +1625,18 @@ xfs_alloc_ag_vextent_small(
+ 				error0);
+ 			args->wasfromfl = 1;
+ 			trace_xfs_alloc_small_freelist(args);
++
++			/*
++			 * If we're feeding an AGFL block to something that
++			 * doesn't live in the free space, we need to clear
++			 * out the OWN_AG rmap.
++			 */
++			xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++			error = xfs_rmap_free(args->tp, args->agbp, args->agno,
++					fbno, 1, &oinfo);
++			if (error)
++				goto error0;
++
+ 			*stat = 0;
+ 			return 0;
+ 		}
 
 _______________________________________________
 xfs mailing list
