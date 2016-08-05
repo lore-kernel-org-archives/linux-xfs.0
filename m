@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0569D7CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 08:40:08 -0500 (CDT)
-From: Troy McCorkell <tdm@sgi.com>
-Subject: RE: Spam on this list
-Date: Thu, 4 Aug 2016 13:40:06 +0000
-Message-ID: <DF733A1EC32F124D86BC1188068FECB101A72DD0CA@P-EXMB4-DC21.corp.sgi.com>
-References: <4278AB9734C1445A8E48635B155149F8@dinulap>
-	<57CF7681619F42CCB4C0CF589E9686E5@dinulap>
-	<alpine.LSU.2.20.1608031453290.5594@Grypbagne.inyvabe>
-	<4382687.Pe7d1tBhVA@merkaba>
-	<9b25f9f9-8a55-8744-9f18-c1045fae0f79@telefonica.net>,
-	<20160803231529.GX16044@dastard>
-In-Reply-To: <20160803231529.GX16044@dastard>
-Content-Language: en-US
+	by oss.sgi.com (Postfix) with ESMTP id 76CFD7CA0
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 05:50:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DDFB0AC005
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 03:49:56 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	E8yPeLgtgxFbjzbH for <xfs@oss.sgi.com>;
+	Fri, 05 Aug 2016 03:49:53 -0700 (PDT)
+Date: Fri, 5 Aug 2016 20:49:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160805104950.GF16044@dastard>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+	<20160804005843.GJ8593@birch.djwong.org>
+	<20160804021852.GK5316@wotan.suse.de>
+	<20160804154845.GV8590@birch.djwong.org>
+	<20160804235015.GC16044@dastard>
+	<1470380474.2311.71.camel@gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1470380474.2311.71.camel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,62 +32,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, "Carlos E. R." <robin.listas@telefonica.net>
-Cc: XFS mail list <xfs@oss.sgi.com>
+To: Artem Bityutskiy <dedekind1@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mark Fasheh <mfasheh@suse.de>, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Aug 03,2016 at 6:15PM Dave Chinner wrote:
->On Wed, Aug 03, 2016 at 03:34:58PM +0200, Carlos E. R. wrote:
->> On 2016-08-03 15:21, Martin Steigerwald wrote:
->>
->> > Lista, Carlos, I recommend: If you are concerned about spam on the list
->> > contact the listmasters of it. They are the ones that can address it globally
->> > for the list.
->>
->> Oh, I did, long ago. Still waiting.
->
->Yes, that is the fundamental issue - spam filtering is essentially
->controlled by SGI's internal infrastructure, which we have little
->option on.
->
->What it comes down to is whether we continue to use this list
->(xfs@oss.sgi.com) or whether we move to linux-xfs@vger.kernel.org
->so we get much more robust and up-to-date spam filtering. The issue
->with doing this is forcing everyone to resubscribe, and then
->capturing everything that is still sent to xfs@oss.sgi.com.
->
->That said, I'm seriously tempted right now just to say "we're moving
->to vger" and asking everyone to resubscribe to that list, and then
->making xfs@oss.sgi.com respond with "list moved to vger, please
->repost there". i.e. not even put a forwarding gateway in place.
->
->If we do that, then I'll also shut down all the XFS git trees on
->oss.sgi.com - I'll add commits to the them to say "go to
->kernel.org". I'll need to work something out for the tarball
->releases, but kernel.org does have functionality for that, too, so
->that may just be a small change of process on my end (i.e. use kup).
->Once that is done, we'll be running completely on community provided
->infrastructure....
->
->Thoughts?
->
->Cheers,
->
->Dave.
->--
->Dave Chinner
->david@fromorbit.com
+On Fri, Aug 05, 2016 at 10:01:14AM +0300, Artem Bityutskiy wrote:
+> On Fri, 2016-08-05 at 09:50 +1000, Dave Chinner wrote:
+> > I'd much prefer that fiemap gives exact information about shared
+> > extents. FIEMAP is a diagnostic tool and as such we need it to
+> > accurately reflect the exact extent map of the inode being queried
+> > so we aren't mislead about the layout of the file during trouble
+> > shooting.
+> =
 
-Dave,
+> Hi Dave, you are right, and here is a side note: =A0we were using FIEMAP
+> for optimizing image deployment in production, so it is a diagnostic
+> tool and more.
 
-It's probably the best option to move the mailing list to vger.
-Let me know what we can do to facilitate the move.
+Yay, data corruption ahoy!
 
-Thanks,
-Troy
+Hasn't /anyone/ listened to the repeated statements from fs
+developers that FIEMAP is not a safe method of optimising data
+copying?
+
+-Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
