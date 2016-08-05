@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6520F7CA0
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 02:01:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8FC317CA0
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 02:21:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 272618F8037
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 00:01:30 -0700 (PDT)
-Received: from mga04.intel.com ([192.55.52.120]) by cuda.sgi.com with ESMTP id
-	3KLeXBNweXGFBFnL for <xfs@oss.sgi.com>;
-	Fri, 05 Aug 2016 00:01:30 -0700 (PDT)
-Message-ID: <1470380474.2311.71.camel@gmail.com>
-Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
-From: Artem Bityutskiy <dedekind1@gmail.com>
-Date: Fri, 05 Aug 2016 10:01:14 +0300
-In-Reply-To: <20160804235015.GC16044@dastard>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<20160803194536.GJ5316@wotan.suse.de>
-	<20160803205520.GQ8590@birch.djwong.org>
-	<20160804005843.GJ8593@birch.djwong.org>
-	<20160804021852.GK5316@wotan.suse.de>
-	<20160804154845.GV8590@birch.djwong.org>
-	<20160804235015.GC16044@dastard>
-Mime-Version: 1.0
-Reply-To: dedekind1@gmail.com
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 60AF58F8040
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 00:21:57 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id uQrqg32EDmetY19x (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 05 Aug 2016 00:21:55 -0700 (PDT)
+Date: Fri, 5 Aug 2016 00:21:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] generic: test accurate shared extent reporting
+Message-ID: <20160805072147.GG25565@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +23,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Mark Fasheh <mfasheh@suse.de>, linux-fsdevel@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, vishal.l.verma@intel.com
+To: david@fromorbit.com, eguan@redhat.com
+Cc: mfasheh@suse.de, dedekind1@gmail.com, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-T24gRnJpLCAyMDE2LTA4LTA1IGF0IDA5OjUwICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-SSdkIG11Y2ggcHJlZmVyIHRoYXQgZmllbWFwIGdpdmVzIGV4YWN0IGluZm9ybWF0aW9uIGFib3V0
-IHNoYXJlZAo+IGV4dGVudHMuIEZJRU1BUCBpcyBhIGRpYWdub3N0aWMgdG9vbCBhbmQgYXMgc3Vj
-aCB3ZSBuZWVkIGl0IHRvCj4gYWNjdXJhdGVseSByZWZsZWN0IHRoZSBleGFjdCBleHRlbnQgbWFw
-IG9mIHRoZSBpbm9kZSBiZWluZyBxdWVyaWVkCj4gc28gd2UgYXJlbid0IG1pc2xlYWQgYWJvdXQg
-dGhlIGxheW91dCBvZiB0aGUgZmlsZSBkdXJpbmcgdHJvdWJsZQo+IHNob290aW5nLgoKSGkgRGF2
-ZSwgeW91IGFyZSByaWdodCwgYW5kIGhlcmUgaXMgYSBzaWRlIG5vdGU6IMKgd2Ugd2VyZSB1c2lu
-ZyBGSUVNQVAKZm9yIG9wdGltaXppbmcgaW1hZ2UgZGVwbG95bWVudCBpbiBwcm9kdWN0aW9uLCBz
-byBpdCBpcyBhIGRpYWdub3N0aWMKdG9vbCBhbmQgbW9yZS4KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Ensure that we can create a file with a single extent, reflink two
+blocks out of the middle of that extent, and the resulting fiemap
+reports two shared extents, instead of lazily reporting the entire
+huge extent as shared.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/929     |   89 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/929.out |   17 +++++++++
+ tests/generic/group   |    1 +
+ 3 files changed, 107 insertions(+)
+ create mode 100755 tests/generic/929
+ create mode 100644 tests/generic/929.out
+
+diff --git a/tests/generic/929 b/tests/generic/929
+new file mode 100755
+index 0000000..9793be0
+--- /dev/null
++++ b/tests/generic/929
+@@ -0,0 +1,89 @@
++#! /bin/bash
++# FS QA Test No. 929
++#
++# Check that bmap/fiemap accurately report shared extents.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++	wait
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_require_scratch_reflink
++_require_fiemap
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++
++blocks=5
++blksz=65536
++sz=$((blocks * blksz))
++
++echo "Create the original files"
++$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
++_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
++_scratch_cycle_mount
++
++echo "file1 extents and holes"
++_count_extents $testdir/file1
++_count_holes $testdir/file1
++
++_reflink_range $testdir/file1 $blksz $testdir/file2 $((blksz * 3)) $blksz >> $seqres.full
++_reflink_range $testdir/file1 $((blksz * 3)) $testdir/file2 $blksz $blksz >> $seqres.full
++_scratch_cycle_mount
++
++echo "Compare files"
++md5sum $testdir/file1 | _filter_scratch
++md5sum $testdir/file2 | _filter_scratch
++
++echo "file1 extents and holes"
++_count_extents $testdir/file1
++_count_holes $testdir/file1
++echo "file2 extents and holes"
++_count_extents $testdir/file2
++_count_holes $testdir/file2
++echo "file1 shared extents"
++$XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep '0x.*[2367aAbBfF]...$' -c
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/929.out b/tests/generic/929.out
+new file mode 100644
+index 0000000..e290f4c
+--- /dev/null
++++ b/tests/generic/929.out
+@@ -0,0 +1,17 @@
++QA output created by 929
++Format and mount
++Create the original files
++file1 extents and holes
++1
++0
++Compare files
++17af09af790a9b4c79cddf72f6b642cb  SCRATCH_MNT/test-929/file1
++79418df9c55ab7f58781cb7b9e7d5d91  SCRATCH_MNT/test-929/file2
++file1 extents and holes
++5
++0
++file2 extents and holes
++2
++2
++file1 shared extents
++2
+diff --git a/tests/generic/group b/tests/generic/group
+index 18b9775..732f6f6 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -375,3 +375,4 @@
+ 370 auto quick richacl
+ 927 auto quick clone
+ 928 auto quick clone dedupe
++929 auto quick clone
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
