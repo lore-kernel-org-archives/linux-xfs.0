@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 528FD7CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 21:45:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2315D8F8033
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 19:45:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EOcj9cQWNZbz6zE7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 19:45:17 -0700 (PDT)
-Date: Thu, 4 Aug 2016 10:45:14 +0800
-From: Xiong Zhou <xzhou@redhat.com>
-Subject: xfstests xfs fuzzers fail with DAX
-Message-ID: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8AFB77CBC
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 17:26:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5D3B28F804B
+	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 15:26:32 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	DoB3KUJA9gmnn920 for <xfs@oss.sgi.com>;
+	Fri, 05 Aug 2016 15:26:29 -0700 (PDT)
+Date: Sat, 6 Aug 2016 08:26:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
+Message-ID: <20160805222626.GK16044@dastard>
+References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
+	<20160803194536.GJ5316@wotan.suse.de>
+	<20160803205520.GQ8590@birch.djwong.org>
+	<20160804005843.GJ8593@birch.djwong.org>
+	<20160804021852.GK5316@wotan.suse.de>
+	<20160804154845.GV8590@birch.djwong.org>
+	<20160804235015.GC16044@dastard>
+	<1470380474.2311.71.camel@gmail.com>
+	<20160805104950.GF16044@dastard>
+	<1470398236.2311.89.camel@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1470398236.2311.89.camel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,72 +34,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-nvdimm@ml01.01.org, xfs@oss.sgi.com
-Cc: jmoyer@redhat.com, linux-kernel@vger.kernel.org
+To: Artem Bityutskiy <dedekind1@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mark Fasheh <mfasheh@suse.de>, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-Hi,
+On Fri, Aug 05, 2016 at 02:57:16PM +0300, Artem Bityutskiy wrote:
+> On Fri, 2016-08-05 at 20:49 +1000, Dave Chinner wrote:
+> > On Fri, Aug 05, 2016 at 10:01:14AM +0300, Artem Bityutskiy wrote:
+> > > =
 
-A few xfs fuzzers in xfstests fail with dax mount option, pass without dax.
-They are xfs/086 xfs/088 xfs/089 xfs/091.
+> > > On Fri, 2016-08-05 at 09:50 +1000, Dave Chinner wrote:
+> > > > =
 
-xfstests to commit 4470ad4c7e  (Jul 26)
-kernel   to commit dd95069545  (Jul 24)
+> > > > I'd much prefer that fiemap gives exact information about shared
+> > > > extents. FIEMAP is a diagnostic tool and as such we need it to
+> > > > accurately reflect the exact extent map of the inode being
+> > > > queried
+> > > > so we aren't mislead about the layout of the file during trouble
+> > > > shooting.
+> > > =
 
-+ ./check xfs/091
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
-MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> > > Hi Dave, you are right, and here is a side note: =A0we were using
+> > > FIEMAP
+> > > for optimizing image deployment in production, so it is a
+> > > diagnostic
+> > > tool and more.
+> > =
 
-xfs/091	 104s
-Ran: xfs/091
-Passed all 1 tests
+> > Yay, data corruption ahoy!
+> > =
 
-+ echo 'MOUNT_OPTIONS="-o dax"'
-+ ./check xfs/091
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
-MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> > Hasn't /anyone/ listened to the repeated statements from fs
+> > developers that FIEMAP is not a safe method of optimising data
+> > copying?
+> =
 
-xfs/091 104s ...  - output mismatch (see /root/xfstests/results//xfs/091.out.bad)
-    --- tests/xfs/091.out	2016-07-18 02:57:47.670000000 -0400
-    +++ /root/xfstests/results//xfs/091.out.bad	2016-08-03 22:38:14.948000000 -0400
-    @@ -6,6 +6,70 @@
-     + corrupt image
-     + mount image
-     + modify files
-    +pwrite64: Structure needs cleaning
-    +pwrite64: Structure needs cleaning
-    +pwrite64: Structure needs cleaning
-    +pwrite64: Structure needs cleaning
-    ...
-    (Run 'diff -u tests/xfs/091.out /root/xfstests/results//xfs/091.out.bad'  to see the entire diff)
-Ran: xfs/091
-Failures: xfs/091
-Failed 1 of 1 tests
+> Yes, which is kind of sad from the user's perspective.
 
-# diff -u xfstests/tests/xfs/091.out /root/xfstests/results//xfs/091.out.bad
---- xfstests/tests/xfs/091.out	2016-07-18 02:57:47.670000000 -0400
-+++ /root/xfstests/results//xfs/091.out.bad	2016-08-03 22:38:14.948000000 -0400
-@@ -6,6 +6,70 @@
- + corrupt image
- + mount image
- + modify files
-+pwrite64: Structure needs cleaning
-<snip 62 more same lines>
-+pwrite64: Structure needs cleaning
- + repair fs
- + mount image
- + chattr -R -i
+No, it's not. FIEMAP was not ever intended as a user facing tool.
 
+What is sad is that the application developers are not listening to
+what they are told. It's got to be almost 5 years ago we thought we
+put this to bed after a raft of "cp causing data corruption" bugs
+were reported by users and that was caused by new "FIEMAP optimised
+date copies".
 
-Thanks,
-Xiong
+We implemented SEEK_DATA/SEEK_HOLE - which is coherent with page
+caceh state - to allow application developers to optimise their
+sparse data copies without having to scan data. Use that instead,
+please.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
