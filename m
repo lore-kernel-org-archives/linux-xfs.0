@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BCBCA7CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 10:49:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4FD697CC7
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 18:18:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 30D60AC005
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 08:49:04 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id QQAxrWCH1fvayvk3 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 04 Aug 2016 08:49:02 -0700 (PDT)
-Date: Thu, 4 Aug 2016 08:48:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v7 00/47] xfs: add reverse mapping support
-Message-ID: <20160804154845.GV8590@birch.djwong.org>
-References: <146907695530.25461.3225785294902719773.stgit@birch.djwong.org>
-	<20160803194536.GJ5316@wotan.suse.de>
-	<20160803205520.GQ8590@birch.djwong.org>
-	<20160804005843.GJ8593@birch.djwong.org>
-	<20160804021852.GK5316@wotan.suse.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ACD5CAC001
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 16:18:09 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	gL1pJkO6CEFarswd for <xfs@oss.sgi.com>;
+	Sat, 06 Aug 2016 16:18:06 -0700 (PDT)
+Date: Sun, 7 Aug 2016 09:18:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH xfsprogs 2/2] linux.h: Define xfs_off_t as int64_t
+Message-ID: <20160806231802.GN16044@dastard>
+References: <20160730133737.GB5895@nyan> <20160801062449.GB596@infradead.org>
+	<20160801065410.GA341@nyan> <20160804004747.GZ16044@dastard>
+	<20160805080241.GA749@nyan> <20160805115239.GH16044@dastard>
+	<20160805130905.GA321@nyan> <20160805224439.GM16044@dastard>
+	<20160806083852.GA26156@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160804021852.GK5316@wotan.suse.de>
+In-Reply-To: <20160806083852.GA26156@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,76 +33,110 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Fasheh <mfasheh@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, vishal.l.verma@intel.com, bfoster@redhat.com, xfs@oss.sgi.com
+To: Felix Janda <felix.janda@posteo.de>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Aug 03, 2016 at 07:18:52PM -0700, Mark Fasheh wrote:
-> On Wed, Aug 03, 2016 at 05:58:43PM -0700, Darrick J. Wong wrote:
-> > On Wed, Aug 03, 2016 at 01:55:20PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Aug 03, 2016 at 12:45:36PM -0700, Mark Fasheh wrote:
-> > > > Where can I the patches to enable dedupe_range on xfs? I tested your
-> > > > previous devel branch based on Linux v4.7-rc3 with duperemove
-> > > > (https://github.com/markfasheh/duperemove) and it worked extremely well -
-> > > > even handling some cases that btrfs still has issues with. I actually
-> > > > committed the code to enable xfs support in duperemove so anyone can test on
-> > > > xfs with the dedupe_range patches.
+On Sat, Aug 06, 2016 at 10:38:52AM +0200, Felix Janda wrote:
+> Dave Chinner wrote:
+> > On Fri, Aug 05, 2016 at 03:09:05PM +0200, Felix Janda wrote:
+> > > Dave Chinner wrote:
+> > > > On Fri, Aug 05, 2016 at 10:02:41AM +0200, Felix Janda wrote:
+> > > > > Dave Chinner wrote:
+> > > > > > On Mon, Aug 01, 2016 at 08:54:10AM +0200, Felix Janda wrote:
+> > > > > > > Christoph Hellwig wrote:
+> > > > > > > > On Sat, Jul 30, 2016 at 03:37:37PM +0200, Felix Janda wrote:
+> > > > > > > > > int64_t is guaranteed to have the correct size and signedness and is
+> > > > > > > > > always avaible because linux.h has a <inttypes.h> include.
+> > > > > > > > > 
+> > > > > > > > > Fixes compilation error "unkown type name 'off64_t'" on linux when the
+> > > > > > > > > public header <xfs.h> is included without _LARGEFILE64_SOURCE or
+> > > > > > > > > _GNU_SOURCE defined. This bug was introduced in commit
+> > > > > > > > > cb898f157f8410a03cf5f3400baa1df9e5eecd33.
+> > > > > > > > 
+> > > > > > > > I would much prefer to just define _LARGEFILE64_SOURCE in linux.h..
+> > > > > > > 
+> > > > > > > Thanks for the suggestion, but that does not work if the system header
+> > > > > > > defining (or not) off64_t is included before the xfs headers.
+> > > > > > 
+> > > > > > Which, to me, is a build bug in whatever code is including the xfs
+> > > > > > headers.  Isn't it the responsibility of the build environment to
+> > > > > > ensure the dependencies of the libraries being used are correctly
+> > > > > > met?
+> > > > > 
+> > > > > Every program using the xfs header is supposed to know that (only on
+> > > > > linux) since commit cb898f157f8410a03cf5f3400baa1df9e5eecd33 it is
+> > > > > necessary to define _LARGEFILE64_SOURCE or _GNU_SOURCE?
 > > > > 
-> > > > I'd gladly test your latest patches by doing my usual 'large' duperemove
-> > > > tests once I can get ahold of the dedupe_range work :)
+> > > > Which, I'd say, most already do, because anything trying to use XFS
+> > > > ioctls needs to be 64 bit offset clean, even on 32 bit systems.  I
+> > > > don't see any problem with requiring it when including a header
+> > > > that exposes ioctl interfaces with 64 bit file size/offset fields
+> > > > in them....
 > > > 
-> > > Your best bets are probably the -experimental trees:
-> > > https://github.com/djwong/linux/commits/djwong-experimental
-> > > https://github.com/djwong/xfsprogs/commits/djwong-experimental
+> > > The easiest way to be 64bit clean is to use _FILEOFFSET_BITS=64. Then
+> > > off_t is 64bit on all architectures and it is impossible to use 32bit
+> > > interfaces. However the type off64_t will still not be defined...
 > > > 
-> > > I haven't updated them in a while because I've been busy trying
-> > > to get reverse-mapping (the start of those patchbombs) into 4.8.
-> > > 
-> > > Just as a warning, don't put anything critical on those XFS filesystems
-> > > because there's going to be a disk format update between now and the
-> > > next time I post the patches because Dave and I decided to cache the
-> > > block counts for the new btrees in order to speed up mounting.  I don't
-> > > anticipate having time to clean up my dev tree and push to github until
-> > > a week or two after the merge window closes.
+> > > (On the other hand, when just using _LARGEFILE64_SOURCE it is still
+> > > easy to mix 32 and 64bit interfaces.)
 > > 
-> > That said, all the craziness from the last two weeks (xfs_scrub sprint
-> > and the rmapbt review fixes) are now in the -wtf tree, which /should/
-> > behave.  I've dumped everything there in completely not cleaned up
-> > format, but this does have the AGF btree block counter stuff I talked
-> > about above.
+> > Which, with library code, we are likely to see applications using.
 > > 
-> > https://github.com/djwong/linux/commits/djwong-wtf
-> > https://github.com/djwong/xfsprogs/commits/djwong-wtf
+> > If you want to clean this up, then remove the dependence on
+> > _LARGEFILE64_SOURCE in the entire xfsprogs code base (e.g. it uses
+> > lseek64 everywhere which requires off64_t to be defined) and instead
+> > make it dependent on _FILEOFFSET_BITS=64. Then you can get rid of
+> > all the uses of off64_t completely, and we can break the build if
+> > _FILEOFFSET_BITS != 64 on inclusion of xfs.h.
 > 
-> Fantastic. Don't worry about corrupting data, I've been doing this long
-> enough to know to use this only on scratch partitions for now  :) I'm in the
-> middle of a couple other tests but once I'm done there I'll grab those
-> branches and give them another spin. Typically I'm running through 800G-1TB
-> on these (with varying duplicated data percentages).
+> Yes, I'd like to clean this up.
 > 
-> Silly question which I could just answer by looking at the patches - are you
-> reporting FIEMAP_EXTENT_SHARED yet for extents with more than one owner? We
-> use that flag (by comparing SHARED bytes before and after dedupe) to give
-> people an estimate of how much space was saved. I presume figuring the
-> shared state of an extent would be as easy as querying the rmap btree,
-> correct?
-
-Yes, it should report FIEMAP_EXTENT_SHARED.  In the past it would
-report exactly which parts of an extent were shared.  If a file mapped
-blocks 30-40 and block 35 was shared, it would report 30-34, 35
-(shared), and 36-40.  However, btrfs only reports a single extent
-"30-40 (shared)" so I stopped doing that.
-
-Incidentally, GETFSMAP is in that code pile too, in case duperemove
-wanted to know exactly what's mapped to a block.  I'd be wary of it
-for now though, since it hasn't been through any kind of review and
-could change in the future.
-
---D
-
-> 	--Mark
+> But first note that you can have both _FILE_OFFSET_BITS=64 and
+> _LARGEFILE64_SOURCE. Then everything (off64_t, lseek64, ...) is
+> defined and everything (off_t, lseek, ...) is 64bit.
 > 
-> --
-> Mark Fasheh
+> So to clean up I would first get _FILE_OFFSET_BITS=64 defined and then
+> start "removing 64" from functions/types in any order. *Before
+> modifying the public headers* the sizeof(off_t)=8 check needs to
+> be put into xfs.h.
+> 
+> Also note that there are 3 different (but equivalent) off_t types
+> currently used in the code base: off64_t, loff_t and xfs_off_t.
+> Should these be converted to xfs_off_t or off_t?
+
+Not that simple. loff_t has to remain for the copy_file_range()
+syscall in xfs_io. That syscall requires _GNU_SOURCE  and loff_t to
+be defined from the system headers, so it can't really go away.
+
+xfs_off_t is an internal XFS file offset definition, used by the
+code in libxfs/ and shared with the kernel code, so it can't go
+away, either.
+
+So, essentially, the only code that should change is all
+the code that uses off64_t - that can use off_t as that's what
+all the systems that use those variables require...
+
+> Still, doing these type conversions is going to be pretty invasive
+> and is not unlikely to conflict with outstanding patches. Is now
+> a good time for this? (How about the __uint -> uint, __int -> int
+> conversion?)
+
+off64_t -> off_t affects very little of the new code we have
+outstanding. It mostly affects xfs_io, so there's little to worry
+about in terms of merge conflicts here.
+
+The __*int conversions are a different matter. They affect the
+entire code base - they are widespread through the libxfs code so we
+need to do a kernel code conversion first. Then we can propagate
+that back into the libxfs code in xfsprogs, and then the rest of
+xfsprogs can be done.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
