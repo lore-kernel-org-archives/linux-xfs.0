@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B305B7CB4
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 10:18:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 57B1B8F804B
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 08:18:20 -0700 (PDT)
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com
-	(mail-sn1nam02on0133.outbound.protection.outlook.com
-	[104.47.36.133]) by cuda.sgi.com with ESMTP id QIGEkGBaVl3AgyN8
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 05 Aug 2016 08:18:17 -0700 (PDT)
-From: "Kani, Toshimitsu" <toshi.kani@hpe.com>
-Subject: Re: Subtle races between DAX mmap fault and write path
-Date: Fri, 5 Aug 2016 15:18:14 +0000
-Message-ID: <1470410249.8908.170.camel@hpe.com>
-References: <20160727120745.GI6860@quack2.suse.cz>
-	<20160727211039.GA20278@linux.intel.com>
-	<20160727221949.GU16044@dastard>
-	<20160728081033.GC4094@quack2.suse.cz> <20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard> <579F20D9.80107@plexistor.com>
-	<20160802002144.GL16044@dastard> <1470335997.8908.128.camel@hpe.com>
-	<20160805112739.GG16044@dastard>
-In-Reply-To: <20160805112739.GG16044@dastard>
-Content-Language: en-US
-Content-ID: <EB300FE929CA60428CEEC314263A120B@NAMPRD84.PROD.OUTLOOK.COM>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E03B7CDA
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6F6A6304048
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:48 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id fh9xzU0hbFqHHCqw (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:45 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id A15FC20A85
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:44 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3s6XQS1RVZz104W
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:44 +0200 (CEST)
+Message-Id: <672b1929c1d96977bf5755fbbc541d530f31198b.1470555003.git.felix.janda@posteo.de>
+In-Reply-To: <cover.1470555003.git.felix.janda@posteo.de>
+References: <cover.1470555003.git.felix.janda@posteo.de>
+From: Felix Janda <felix.janda@posteo.de>
+Date: Sat, 6 Aug 2016 12:45:43 +0200
+Subject: [PATCH xfsprogs 03/14] replace fstat64 by equivalent fstat
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,66 +29,247 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "david@fromorbit.com" <david@fromorbit.com>
-Cc: "boaz@plexistor.com" <boaz@plexistor.com>, "jack@suse.cz" <jack@suse.cz>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-T24gRnJpLCAyMDE2LTA4LTA1IGF0IDIxOjI3ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-IFsgY3V0IHRvIGp1c3QgdGhlIGltcG9ydGFudCBwb2ludHMgXQ0KPiBPbiBUaHUsIEF1ZyAwNCwg
-MjAxNiBhdCAwNjo0MDo0MlBNICswMDAwLCBLYW5pLCBUb3NoaW1pdHN1IHdyb3RlOg0KPiA+IA0K
-PiA+IE9uIFR1ZSwgMjAxNi0wOC0wMiBhdCAxMDoyMSArMTAwMCwgRGF2ZSBDaGlubmVyIHdyb3Rl
-Og0KPiA+ID4gDQo+ID4gPiBJZiBJIGRyb3AgdGhlIGZzeW5jIGZyb20gdGhlDQo+ID4gPiBidWZm
-ZXJlZCBJTyBwYXRoLCBiYW5kd2lkdGggcmVtYWlucyB0aGUgc2FtZSBidXQgcnVudGltZSBkcm9w
-cyB0bw0KPiA+ID4gMC41NS0wLjU3cywgc28gYWdhaW4gdGhlIGJ1ZmZlcmVkIElPIHdyaXRlIHBh
-dGggaXMgZmFzdGVyIHRoYW4gREFYDQo+ID4gPiB3aGlsZSBkb2luZyBtb3JlIHdvcmsuDQo+ID4N
-Cj4gPiBJIGRvIG5vdCB0aGluayB0aGUgdGVzdCByZXN1bHRzIGFyZSByZWxldmFudCBvbiB0aGlz
-IHBvaW50IGJlY2F1c2UgYm90aA0KPiA+IGJ1ZmZlcmVkIGFuZCBkYXggd3JpdGUoKSBwYXRocyB1
-c2UgdW5jYWNoZWQgY29weSB0byBhdm9pZCBjbGZsdXNoLiDCoFRoZQ0KPiA+IGJ1ZmZlcmVkIHBh
-dGggdXNlcyBjYWNoZWQgY29weSB0byB0aGUgcGFnZSBjYWNoZSBhbmQgdGhlbiB1c2UgdW5jYWNo
-ZWQNCj4gPiBjb3B5IHRvIFBNRU0gdmlhIHdyaXRlYmFjay4gwqBUaGVyZWZvcmUsIHRoZSBidWZm
-ZXJlZCBJTyBwYXRoIGFsc28gYmVuZWZpdHMNCj4gPiBmcm9tIHVzaW5nIHVuY2FjaGVkIGNvcHkg
-dG8gYXZvaWQgY2xmbHVzaC4NCj4NCj4gRXhjZXB0IHRoYXQgSSB0ZXN0ZWQgd2l0aG91dCB0aGUg
-d3JpdGViYWNrIHBhdGggZm9yIGJ1ZmZlcmVkIElPLCBzbw0KPiB0aGVyZSB3YXMgYSBkaXJlY3Qg
-Y29tcGFyaXNvbiBmb3Igc2luZ2xlIGNhY2hlZCBjb3B5IHZzIHNpbmdsZQ0KPiB1bmNhY2hlZCBj
-b3B5Lg0KDQpJIGFncmVlIHRoYXQgdGhlIHJlc3VsdCBzaG93ZWQgYSB0ZW50YXRpdmUgY29tcGFy
-aXNvbiBmb3IgY2FjaGVkIGNvcHkgdnMNCnVuY2FjaGVkIGNvcHkuIMKgTXkgcG9pbnQsIGhvd2V2
-ZXIsIGlzIHRoYXQgd3JpdGVzIHRvIFBNRU0gbmVlZCB0byBwZXJzaXN0DQp1bmxpa2UgdGhlIHBh
-Z2UgY2FjaGUuIMKgU28gZm9yIFBNRU0sIHRoZSBjb21wYXJpc29uIHNob3VsZCBiZSAoY2FjaGVk
-IGNvcHkgKw0KY2xmbHVzaCkgdnMgdW5jYWNoZWQgY29weS4NCg0KPiBUaGUgdW5kZW5pYWwgZmFj
-dCBpcyB0aGF0IGEgd3JpdGUoKSB3aXRoIGEgc2luZ2xlIGNhY2hlZCBjb3B5IHdpdGgNCj4gYWxs
-IHRoZSBvdmVyaGVhZCBvZiBkaXJ0eSBwYWdlIHRyYWNraW5nIGlzIC9mYXN0ZXIvIHRoYW4gYSBt
-dWNoDQo+IHNob3J0ZXIsIHNpbXBsZXIgSU8gcGF0aCB0aGF0IHVzZXMgYW4gdW5jYWNoZWQgY29w
-eS4gVGhhdCdzIHdoYXQgdGhlDQo+IG51bWJlcnMgc2F5Li4uLg0KDQpUaGlzIGNvc3QgZXZhbHVh
-dGlvbiBuZWVkcyB0byBpbmNsdWRlIHRoZSBjb3N0IG9mIGNsZmx1c2ggZm9yIGNhY2hlZCBjb3B5
-Lg0KwqBBbHNvLCBwYWdlIGNhY2hlIGFsbG9jYXRpb24gdGVuZHMgdG8gYmUgZmFzdGVyIHRoYW4g
-ZGlzayBibG9jayBhbGxvY2F0aW9uLg0KDQo+ID4gDQo+ID4gQ2FjaGVkIGNvcHkgKHJlcSBtb3Zx
-KSBpcyBzbGlnaHRseSBmYXN0ZXIgdGhhbiB1bmNhY2hlZCBjb3B5LA0KPg0KPiBOb3QgYWNjb3Jk
-aW5nIHRvIEJvYXogLSBoZSBjbGFpbXMgdGhhdCB1bmNhY2hlZCBpcyAyMCUgZmFzdGVyIHRoYW4N
-Cj4gY2FjaGVkLiBIb3cgYWJvdXQgeW91IHR3byBnZXQgdG9nZXRoZXIsIGRvIHNvbWUgYmVuY2ht
-YXJraW5nIGFuZCBnZXQNCj4geW91ciBzdG9yeSBzdHJhaWdodCwgZWg/DQoNCkkgdmFndWVseSBy
-ZW1lbWJlciBzZWVpbmcgc3VjaCByZXN1bHRzLCBidXQgSSBtYXkgYmUgd3JvbmcgYWJvdXQgdGhh
-dC4gwqBIZXJlDQphcmUgcGVyZm9ybWFuY2UgdGVzdCByZXN1bHRzIFJvYmVydCBFbGxpb3R0IGNv
-bmR1Y3RlZCBiZWZvcmUuDQpodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNS80LzIvNDUzDQoNClRv
-IHF1b3RlIHRoZSByZXN1bHRzIHJlbGV2YW50IHRvIHRoaXMgdG9waWM6DQoNCi0gQ2FjaGVkIGNv
-cHkJCQkyLjUgTQ0KLSBVbmNhY2hlZCBjb3B5IHcvwqBNT1ZOVEkJMi42IE0JDQotIFVuY2FjaGVk
-IGNvcHkgdy/CoE1PVk5URFEJMy41IE0NCg0KTm90ZSB0aGF0IHdlIHVzZSBNT1ZOVEkgdG9kYXks
-IG5vdCBNT1ZOVERRLiDCoFdlIGluc3RydW1lbnRlZCBhIE1PVk5URFEgY29weQ0KZnVuY3Rpb24g
-Zm9yIHRoaXMgdGVzdC4gwqBXZSBjYW4gZnVydGhlciBpbXByb3ZlIHRoZSBjb3B5IHBlcmZvcm1h
-bmNlIGJ5IHVzaW5nDQpNT1ZOVERRLg0KDQo+ID4gYW5kIHNob3VsZCBiZSB1c2VkIGZvciB3cml0
-aW5nIHRvIHRoZSBwYWdlIGNhY2hlLiDCoEZvciB3cml0aW5nIHRvIFBNRU0sDQo+ID4gaG93ZXZl
-ciwgYWRkaXRpb25hbCBjbGZsdXNoIGNhbiBiZSBleHBlbnNpdmUsIGFuZCBhbGxvY2F0aW5nIGNh
-Y2hlbGluZXMNCj4gPiBmb3IgUE1FTSBsZWFkcyB0byBldmljdCBhcHBsaWNhdGlvbidzIGNhY2hl
-bGluZXMuDQo+DQo+IEkga2VlcCBoZWFyaW5nIHBlb3BsZSB0ZWxsIG1lIHdoeSBjYWNoZWQgY29w
-aWVzIGFyZSBzbG93ZXIsIGJ1dA0KPiBuby1vbmUgaXMgcHJvdmlkaW5nIG51bWJlcnMgdG8gYmFj
-ayB1cCB0aGVpciBzdGF0ZW1lbnRzLiBUaGUgb25seQ0KPiBudW1iZXJzIHdlIGhhdmUgYXJlIHRo
-ZSBvbmVzIEkndmUgcHVibGlzaGVkIHNob3dpbmcgY2FjaGVkIGNvcGllcyB3Lw0KPiBmdWxsIGRp
-cnR5IHRyYWNraW5nIGlzIGZhc3RlciB0aGFuIHVuY2FjaGVkIGNvcHkgdy9vIGRpcnR5IHRyYWNr
-aW5nLg0KPiANCj4gU2hvdyBtZSB0aGUgbnVtYmVycyB0aGF0IGJhY2sgdXAgeW91ciBzdGF0ZW1l
-bnRzLCB0aGVuIEknbGwgbGlzdGVuDQo+IHRvIHlvdS4NCg0KUGxlYXNlIHNlZSBhYm92ZS4gwqBD
-YWNoZWQgY29weSByZXF1aXJlcyBjbGZsdXNoIG9uIHRvcCBvZiB0aGF0Lg0KDQpUaGFua3MsDQot
-VG9zaGkNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
+---
+ copy/xfs_copy.c      |  2 +-
+ fsr/xfs_fsr.c        |  4 ++--
+ include/darwin.h     |  1 -
+ include/freebsd.h    |  1 -
+ io/copy_file_range.c |  4 ++--
+ io/open.c            | 12 ++++++------
+ io/sendfile.c        |  4 ++--
+ libxfs/darwin.c      |  2 +-
+ libxfs/init.c        |  2 +-
+ libxfs/irix.c        |  2 +-
+ libxfs/linux.c       |  4 ++--
+ mkfs/proto.c         |  2 +-
+ repair/xfs_repair.c  |  2 +-
+ 13 files changed, 20 insertions(+), 22 deletions(-)
+
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 3c8998c..6dcc51a 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -641,7 +641,7 @@ main(int argc, char **argv)
+ 		die_perror();
+ 	}
+ 
+-	if (fstat64(source_fd, &statbuf) < 0)  {
++	if (fstat(source_fd, &statbuf) < 0)  {
+ 		do_log(_("%s:  couldn't stat source \"%s\"\n"),
+ 			progname, source_name);
+ 		die_perror();
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index d75990a..2eaf1e7 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -514,7 +514,7 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 		if ( (fd = open(leftofffile, O_RDONLY)) == -1 ) {
+ 			fsrprintf(_("%s: open failed\n"), leftofffile);
+ 		}
+-		else if ( fstat64(fd, &sb2) == 0) {
++		else if ( fstat(fd, &sb2) == 0) {
+ 			/*
+ 			 * Verify that lstat & fstat point to the
+ 			 * same regular file (no links/no quick spoofs)
+@@ -1054,7 +1054,7 @@ fsr_setup_attr_fork(
+ 
+ 	/* attr2 w/ fork offsets */
+ 
+-	if (fstat64(tfd, &tstatbuf) < 0) {
++	if (fstat(tfd, &tstatbuf) < 0) {
+ 		fsrprintf(_("unable to stat temp file: %s\n"),
+ 					strerror(errno));
+ 		return -1;
+diff --git a/include/darwin.h b/include/darwin.h
+index 45e0c03..1666294 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -142,7 +142,6 @@ typedef u_int32_t	xfs_dev_t;
+ typedef int64_t		xfs_daddr_t;
+ 
+ #define stat64		stat
+-#define fstat64		fstat
+ #define lseek64		lseek
+ #define pread64		pread
+ #define pwrite64	pwrite
+diff --git a/include/freebsd.h b/include/freebsd.h
+index 6e77427..d6e75f4 100644
+--- a/include/freebsd.h
++++ b/include/freebsd.h
+@@ -34,7 +34,6 @@
+ #define __LITTLE_ENDIAN	LITTLE_ENDIAN
+ 
+ /* FreeBSD file API is 64-bit aware */
+-#define fstat64		fstat
+ #define ftruncate64	ftruncate
+ #define lseek64		lseek
+ #define stat64		stat
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index eddc634..a354fab 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -62,8 +62,8 @@ copy_src_filesize(int fd)
+ {
+ 	struct stat64 st;
+ 
+-	if (fstat64(fd, &st) < 0) {
+-		perror("fstat64");
++	if (fstat(fd, &st) < 0) {
++		perror("fstat");
+ 		return -1;
+ 	};
+ 	return st.st_size;
+diff --git a/io/open.c b/io/open.c
+index 2303527..766ac48 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -54,8 +54,8 @@ filesize(void)
+ {
+ 	struct stat64	st;
+ 
+-	if (fstat64(file->fd, &st) < 0) {
+-		perror("fstat64");
++	if (fstat(file->fd, &st) < 0) {
++		perror("fstat");
+ 		return -1;
+ 	}
+ 	return st.st_size;
+@@ -102,8 +102,8 @@ stat_f(
+ 		file->flags & IO_APPEND ? _(",append-only") : "",
+ 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+ 		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
+-	if (fstat64(file->fd, &st) < 0) {
+-		perror("fstat64");
++	if (fstat(file->fd, &st) < 0) {
++		perror("fstat");
+ 	} else {
+ 		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
+ 		printf(_("stat.type = %s\n"), filetype(st.st_mode));
+@@ -576,8 +576,8 @@ set_extsize(const char *path, int fd, long extsz)
+ 	struct fsxattr	fsx;
+ 	struct stat64	stat;
+ 
+-	if (fstat64(fd, &stat) < 0) {
+-		perror("fstat64");
++	if (fstat(fd, &stat) < 0) {
++		perror("fstat");
+ 		return 0;
+ 	}
+ 	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+diff --git a/io/sendfile.c b/io/sendfile.c
+index 21ab444..0dc6154 100644
+--- a/io/sendfile.c
++++ b/io/sendfile.c
+@@ -135,8 +135,8 @@ sendfile_f(
+ 	} else {
+ 		struct stat64	stat;
+ 
+-		if (fstat64(fd, &stat) < 0) {
+-			perror("fstat64");
++		if (fstat(fd, &stat) < 0) {
++			perror("fstat");
+ 			goto done;
+ 		}
+ 		count = stat.st_size;
+diff --git a/libxfs/darwin.c b/libxfs/darwin.c
+index 017e190..3923473 100644
+--- a/libxfs/darwin.c
++++ b/libxfs/darwin.c
+@@ -71,7 +71,7 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+ 	__uint64_t	size;
+ 	struct stat64	st;
+ 
+-	if (fstat64(fd, &st) < 0) {
++	if (fstat(fd, &st) < 0) {
+ 		fprintf(stderr,
+ 			_("%s: cannot stat the device file \"%s\": %s\n"),
+ 			progname, path, strerror(errno));
+diff --git a/libxfs/init.c b/libxfs/init.c
+index e04b6e0..919a510 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -124,7 +124,7 @@ retry:
+ 		exit(1);
+ 	}
+ 
+-	if (fstat64(fd, &statb) < 0) {
++	if (fstat(fd, &statb) < 0) {
+ 		fprintf(stderr, _("%s: cannot stat %s: %s\n"),
+ 			progname, path, strerror(errno));
+ 		exit(1);
+diff --git a/libxfs/irix.c b/libxfs/irix.c
+index 65aaa7e..532ea34 100644
+--- a/libxfs/irix.c
++++ b/libxfs/irix.c
+@@ -53,7 +53,7 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+ {
+ 	struct stat64		st;
+ 
+-	if (fstat64(fd, &st) < 0) {
++	if (fstat(fd, &st) < 0) {
+ 		fprintf(stderr,
+ 			_("%s: cannot stat the device file \"%s\": %s\n"),
+ 			progname, path, strerror(errno));
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index c9f2baf..175156d 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -129,7 +129,7 @@ platform_flush_device(int fd, dev_t device)
+ 	if (major(device) == RAMDISK_MAJOR)
+ 		return;
+ 
+-	if (fstat64(fd, &st) < 0)
++	if (fstat(fd, &st) < 0)
+ 		return;
+ 
+ 	if (S_ISREG(st.st_mode))
+@@ -145,7 +145,7 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+ 	__uint64_t	size;
+ 	int		error;
+ 
+-	if (fstat64(fd, &st) < 0) {
++	if (fstat(fd, &st) < 0) {
+ 		fprintf(stderr, _("%s: "
+ 			"cannot stat the device file \"%s\": %s\n"),
+ 			progname, path, strerror(errno));
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 5f7f0b4..a008801 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -784,7 +784,7 @@ filesize(
+ {
+ 	struct stat64	stb;
+ 
+-	if (fstat64(fd, &stb) < 0)
++	if (fstat(fd, &stb) < 0)
+ 		return -1;
+ 	return (long)stb.st_size;
+ }
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 50a1ac9..4986cc5 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -670,7 +670,7 @@ main(int argc, char **argv)
+ 		int		fd = libxfs_device_to_fd(x.ddev);
+ 		struct stat64	statbuf;
+ 
+-		if (fstat64(fd, &statbuf) < 0)
++		if (fstat(fd, &statbuf) < 0)
+ 			do_warn(_("%s: couldn't stat \"%s\"\n"),
+ 				progname, fs_name);
+ 		else if (S_ISREG(statbuf.st_mode))
+-- 
+2.7.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
