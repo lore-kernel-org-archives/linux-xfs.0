@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 21EEF7CA2
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 19:34:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E7827304032
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 17:34:41 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id FPaB3qoYbDMICWE4 (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8DF8D7CD0
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 03:40:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12BB2AC004
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 01:40:28 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id Y5P4a29B5shVyksy (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 03 Aug 2016 17:34:40 -0700 (PDT)
-Date: Wed, 3 Aug 2016 17:34:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3 09/17] common/dmerror: fix mount option issues
-Message-ID: <20160804003435.GE25565@birch.djwong.org>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-	<146914483353.11762.14647880235199676753.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Sat, 06 Aug 2016 01:40:27 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id D72E92083B
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 10:40:25 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3s5xvY2yvvzysW
+	for <xfs@oss.sgi.com>; Sat,  6 Aug 2016 10:40:25 +0200 (CEST)
+Date: Sat, 6 Aug 2016 10:39:49 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: [PATCH xfsprogs] kill off u_int*_t types
+Message-ID: <20160806083949.GA28832@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <146914483353.11762.14647880235199676753.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,43 +33,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, eguan@redhat.com
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Calling _mount doesn't work when we want to add mount options
-such as realtime devices.  Since it's just a normal scratch device
-mount except for the source device, just call _scratch_mount with
-SCRATCH_DEV set to the dmerror device.
+They were only used in two places and can be replaced by uint*_t.
 
-v2: Use the standard _scratch_options for mounting.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
 ---
- common/dmerror |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ db/check.c          | 2 +-
+ include/darwin.h    | 8 ++------
+ libxfs/xfs_format.h | 2 +-
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/common/dmerror b/common/dmerror
-index 5ad9994..d46c5d0 100644
---- a/common/dmerror
-+++ b/common/dmerror
-@@ -41,14 +41,11 @@ _dmerror_init()
- 	DMERROR_TABLE="0 $blk_dev_size error $dm_backing_dev 0"
- }
+diff --git a/db/check.c b/db/check.c
+index 25146e5..f507148 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3336,7 +3336,7 @@ process_quota(
+ 	int		cb;
+ 	xfs_dqblk_t	*dqb;
+ 	xfs_dqid_t	dqid;
+-	u_int8_t	exp_flags = 0;
++	uint8_t		exp_flags = 0;
+ 	uint		i;
+ 	uint		perblock;
+ 	xfs_fileoff_t	qbno;
+diff --git a/include/darwin.h b/include/darwin.h
+index 45e0c03..b5076ce 100644
+--- a/include/darwin.h
++++ b/include/darwin.h
+@@ -130,15 +130,11 @@ typedef signed long long int	__s64;
+ #define __int32_t	int32_t
+ #define __int32_t	int32_t
+ #define __int64_t	int64_t
+-#define __uint8_t	u_int8_t
+-#define __uint16_t	u_int16_t
+-#define __uint32_t	u_int32_t
+-#define __uint64_t	u_int64_t
+ #define off64_t		off_t
  
--_dmerror_mount_options()
--{
--	echo `_common_dev_mount_options $*` $DMERROR_DEV $SCRATCH_MNT
--}
--
- _dmerror_mount()
- {
--	_mount -t $FSTYP `_dmerror_mount_options $*`
-+	_scratch_options mount
-+	$MOUNT_PROG -t $FSTYP `_common_dev_mount_options $*` $SCRATCH_OPTIONS \
-+		$DMERROR_DEV $SCRATCH_MNT
- }
+ typedef off_t		xfs_off_t;
+-typedef u_int64_t	xfs_ino_t;
+-typedef u_int32_t	xfs_dev_t;
++typedef uint64_t	xfs_ino_t;
++typedef uint32_t	xfs_dev_t;
+ typedef int64_t		xfs_daddr_t;
  
- _dmerror_unmount()
+ #define stat64		stat
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index f89b6e0..eb50a76 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1109,7 +1109,7 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+  * Dquot and dquot block format definitions
+  */
+ #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+-#define XFS_DQUOT_VERSION	(u_int8_t)0x01	/* latest version number */
++#define XFS_DQUOT_VERSION	(uint8_t)0x01	/* latest version number */
+ 
+ /*
+  * This is the main portion of the on-disk representation of quota
+-- 
+2.7.3
 
 _______________________________________________
 xfs mailing list
