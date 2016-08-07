@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 48FA17CA1
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 18:17:34 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B264B7CB6
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 18:11:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 00EEE8F8033
-	for <xfs@oss.sgi.com>; Wed,  3 Aug 2016 16:17:30 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	0aHSqbGHsXGhE7q3 for <xfs@oss.sgi.com>;
-	Wed, 03 Aug 2016 16:17:28 -0700 (PDT)
-Date: Thu, 4 Aug 2016 09:16:55 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68BBB30405F
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 16:11:29 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	rVLl0G81VM1VzS5B for <xfs@oss.sgi.com>;
+	Sun, 07 Aug 2016 16:11:22 -0700 (PDT)
+Date: Mon, 8 Aug 2016 09:11:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [4.8 hang] xfstests generic/361 hangs on dax enabled filesystems
-Message-ID: <20160803231655.GY16044@dastard>
-References: <20160803003354.GP16044@dastard>
-	<20160803171127.GA15876@linux.intel.com>
-	<20160803223713.GA22364@linux.intel.com>
+Subject: Re: xfstests xfs fuzzers fail with DAX
+Message-ID: <20160807231107.GB19025@dastard>
+References: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
+	<a23e895c-7d3e-bed2-9bc9-66e306df485e@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160803223713.GA22364@linux.intel.com>
+In-Reply-To: <a23e895c-7d3e-bed2-9bc9-66e306df485e@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +30,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 03, 2016 at 04:37:13PM -0600, Ross Zwisler wrote:
-> On Wed, Aug 03, 2016 at 11:11:27AM -0600, Ross Zwisler wrote:
-> > On Wed, Aug 03, 2016 at 10:33:54AM +1000, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > Just hit a reproducable hang in generic/361. Essentially this on
-> > > a 8GB pmem device:
-> > > 
-> > > mkfs.xfs -f /dev/pmem1
-> > > mount -o dax /dev/pmem1 /mnt/scratch
-> > > xfs_io -f -c "truncate 1g" test.img
-> > > losetup -f --show /mnt/scratch/test.img
-> > > mkfs.xfs -f /dev/loop0
-> > > 
-> > > And the mkfs.xfs command hangs with a discard that never completes:
-....
-> > > This only reproduces when the underlying filesystem is mounted with
-> > > -o dax, so there is a bad interaction with loop devices and DAX
-> > > occurring somewhere. generic/361 is a recent test (committed june 14)
-> > > so this probably hasn't actually been tested until now.
-> > > 
-> > > I haven't got time to look at this right now, hence the report.
+On Wed, Aug 03, 2016 at 10:00:09PM -0500, Eric Sandeen wrote:
+> On 8/3/16 9:45 PM, Xiong Zhou wrote:
+> > Hi,
 > > 
-> > Cool, thanks for the report.  I've reproduced this with linux/master, and the
-> > test passes with v4.7.
+> > A few xfs fuzzers in xfstests fail with dax mount option, pass without dax.
+> > They are xfs/086 xfs/088 xfs/089 xfs/091.
 > > 
-> > Running a bisect...
+> > xfstests to commit 4470ad4c7e  (Jul 26)
+> > kernel   to commit dd95069545  (Jul 24)
+> > 
+> > + ./check xfs/091
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
+> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> > 
+> > xfs/091	 104s
+> > Ran: xfs/091
+> > Passed all 1 tests
+> > 
+> > + echo 'MOUNT_OPTIONS="-o dax"'
+> > + ./check xfs/091
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
+> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
+> > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
+> > 
+> > xfs/091 104s ...  - output mismatch (see /root/xfstests/results//xfs/091.out.bad)
+> >     --- tests/xfs/091.out	2016-07-18 02:57:47.670000000 -0400
+> >     +++ /root/xfstests/results//xfs/091.out.bad	2016-08-03 22:38:14.948000000 -0400
+> >     @@ -6,6 +6,70 @@
+> >      + corrupt image
+> >      + mount image
+> >      + modify files
+> >     +pwrite64: Structure needs cleaning
+> >     +pwrite64: Structure needs cleaning
+> >     +pwrite64: Structure needs cleaning
+> >     +pwrite64: Structure needs cleaning
 > 
-> This bisected to a commit to the block layer code.  I've sent a bug report to
-> the author of the commit.
+> This means the filesystem has shut down, most likely, and more information about
+> the error is in dmesg.
+>
+> Further, if the filesystem is corrupt, xfs_repair output would be interesting.
+> 
+> Can you provide that information?
+> 
+> This can probably be reproduced, but when reporting a bug it's always good to provide
+> as many details as you can.
 
-And the commit id is ...?
+What it indicates to me is that DAX detects inode/freespace  metadata
+related corruption sooner than non-DAX paths because we don't do
+delayed allocation on DAX. i.e. we are doing direct allocation in
+the syscall path and errors that would have been detected in the
+writeback path and triggered until sync/unmount are now triggering
+in the pwrite() syscall path.
+
+Hence I think this is probably expected behaviour, and not a bug or
+regression. We probably should just filter the pwrite errors out...
 
 Cheers,
 
