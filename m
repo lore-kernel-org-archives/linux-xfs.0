@@ -1,37 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A12CE7CA0
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 11:32:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 483CB304048
-	for <xfs@oss.sgi.com>; Thu,  4 Aug 2016 09:32:50 -0700 (PDT)
-Received: from mx0a-000cda01.pphosted.com (mx0a-00003501.pphosted.com
-	[67.231.144.15]) by cuda.sgi.com with ESMTP id wbCcxXCCisCRzlSx
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 04 Aug 2016 09:32:48 -0700 (PDT)
-Received: from pps.filterd (m0075550.ppops.net [127.0.0.1])
-	by mx0a-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id
-	u74GHPTu003400 for <xfs@oss.sgi.com>; Thu, 4 Aug 2016 12:32:48 -0400
-Received: from mail-ua0-f197.google.com (mail-ua0-f197.google.com
-	[209.85.217.197])
-	by mx0a-00003501.pphosted.com with ESMTP id 24m7axrtcf-9
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NOT) for <xfs@oss.sgi.com>; Thu, 04 Aug 2016 12:32:47 -0400
-Received: by mail-ua0-f197.google.com with SMTP id r91so343230939uar.2
-	for <xfs@oss.sgi.com>; Thu, 04 Aug 2016 09:32:47 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E11BC7CD8
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 12:39:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0ECC7AC002
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 10:39:26 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id rySjV58e7kcCqq2C (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 10:39:14 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id BAA0720A8E
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 19:39:12 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3s6npl2mDQzyZw
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 19:39:11 +0200 (CEST)
+Date: Sun, 7 Aug 2016 19:38:35 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: [PATCH] xfs: kill __uint*_t and __int*_t
+Message-ID: <20160807173835.GA20839@nyan>
 MIME-Version: 1.0
-In-Reply-To: <20160804154622.GB15656@infradead.org>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
-	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
-	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
-	<20160804154622.GB15656@infradead.org>
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Date: Thu, 4 Aug 2016 11:32:16 -0500
-Message-ID: <CAJVOszAqEw3UK6HV4bPvYfHeO6jvP0d-OtfXxRuve=5-Kmaokw@mail.gmail.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,30 +33,3346 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, ocfs2-devel@oss.oracle.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 4, 2016 at 10:46 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Aug 03, 2016 at 07:30:29PM -0500, Shaun Tancheff wrote:
->> I think the translation in loop.c is suspicious here:
->>
->>     "if use DIO && not (a flush_flag or discard_flag)"
->> should translate to:
->>     "if use DIO && not ((a flush_flag) || op == discard)"
->>
->> But in the patch I read:
->>     "if use DIO && ((not a flush_flag) || op == discard)
->>
->> Which would have DIO && discards follow the AIO path?
->
-> Indeed.  Sorry for missing out on your patch, I just sent a fix
-> in reply to Dave's other report earlier which is pretty similar to
-> yours.
+Replace them by the more widely used uint*_t and int*_t.
 
-No worries. I prefer your switch to a an if conditional here.
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
+---
+This patch is essentially a global
+'sed -i "s/__\(u*\)int\([0-9]*\)_t/\1int\2_t/"'. The only other changes
+are whitespace changes and removing the now unecessary type definitions.
 
+Running 'sed "s/^.//"' on the patch might be useful for checking that
+I didn't mess up the indentation.
+---
+ fs/xfs/libxfs/xfs_alloc_btree.c  |  10 +-
+ fs/xfs/libxfs/xfs_attr_remote.c  |   8 +-
+ fs/xfs/libxfs/xfs_attr_sf.h      |  10 +-
+ fs/xfs/libxfs/xfs_bit.h          |  24 +--
+ fs/xfs/libxfs/xfs_bmap_btree.c   |   8 +-
+ fs/xfs/libxfs/xfs_btree.c        |  18 +-
+ fs/xfs/libxfs/xfs_btree.h        |  16 +-
+ fs/xfs/libxfs/xfs_cksum.h        |  14 +-
+ fs/xfs/libxfs/xfs_da_btree.c     |   2 +-
+ fs/xfs/libxfs/xfs_da_btree.h     |   8 +-
+ fs/xfs/libxfs/xfs_da_format.c    |  28 ++--
+ fs/xfs/libxfs/xfs_da_format.h    |  64 +++----
+ fs/xfs/libxfs/xfs_dir2.h         |   8 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c    |  12 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h    |   2 +-
+ fs/xfs/libxfs/xfs_format.h       | 112 ++++++-------
+ fs/xfs/libxfs/xfs_fs.h           |  12 +-
+ fs/xfs/libxfs/xfs_ialloc.c       |   6 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |   4 +-
+ fs/xfs/libxfs/xfs_inode_buf.c    |   2 +-
+ fs/xfs/libxfs/xfs_inode_buf.h    |  26 +--
+ fs/xfs/libxfs/xfs_log_format.h   | 216 ++++++++++++------------
+ fs/xfs/libxfs/xfs_log_recover.h  |   2 +-
+ fs/xfs/libxfs/xfs_quota_defs.h   |   4 +-
+ fs/xfs/libxfs/xfs_rmap.c         |   8 +-
+ fs/xfs/libxfs/xfs_rmap.h         |   8 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c   |  30 ++--
+ fs/xfs/libxfs/xfs_rtbitmap.c     |   2 +-
+ fs/xfs/libxfs/xfs_sb.c           |   4 +-
+ fs/xfs/libxfs/xfs_types.h        |  46 ++---
+ fs/xfs/xfs_aops.c                |   4 +-
+ fs/xfs/xfs_attr_list.c           |   2 +-
+ fs/xfs/xfs_bmap_util.c           |  20 +--
+ fs/xfs/xfs_buf.c                 |   2 +-
+ fs/xfs/xfs_dir2_readdir.c        |   8 +-
+ fs/xfs/xfs_discard.c             |   4 +-
+ fs/xfs/xfs_dquot.c               |   2 +-
+ fs/xfs/xfs_fsops.c               |  16 +-
+ fs/xfs/xfs_fsops.h               |   4 +-
+ fs/xfs/xfs_inode.c               |   6 +-
+ fs/xfs/xfs_inode.h               |   4 +-
+ fs/xfs/xfs_ioctl.c               |  20 +--
+ fs/xfs/xfs_ioctl.h               |  10 +-
+ fs/xfs/xfs_ioctl32.h             |   6 +-
+ fs/xfs/xfs_linux.h               |  21 +--
+ fs/xfs/xfs_log.c                 |  20 +--
+ fs/xfs/xfs_log.h                 |   2 +-
+ fs/xfs/xfs_log_priv.h            |   2 +-
+ fs/xfs/xfs_log_recover.c         |  24 +--
+ fs/xfs/xfs_mount.c               |  16 +-
+ fs/xfs/xfs_mount.h               |  32 ++--
+ fs/xfs/xfs_qm_bhv.c              |   2 +-
+ fs/xfs/xfs_rtalloc.c             |   8 +-
+ fs/xfs/xfs_stats.c               |   8 +-
+ fs/xfs/xfs_stats.h               | 354 +++++++++++++++++++--------------------
+ fs/xfs/xfs_super.c               |  26 +--
+ fs/xfs/xfs_trace.h               |  10 +-
+ fs/xfs/xfs_trans.h               |   2 +-
+ fs/xfs/xfs_trans_rmap.c          |   2 +-
+ 59 files changed, 671 insertions(+), 680 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 5ba2dac..4051c7b 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -235,25 +235,25 @@ xfs_allocbt_init_ptr_from_cur(
+ 	ptr->s = agf->agf_roots[cur->bc_btnum];
+ }
+ 
+-STATIC __int64_t
++STATIC int64_t
+ xfs_allocbt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+ 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+ 	xfs_alloc_key_t		*kp = &key->alloc;
+-	__int64_t		diff;
++	int64_t			diff;
+ 
+ 	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
++		return (int64_t)be32_to_cpu(kp->ar_startblock) -
+ 				rec->ar_startblock;
+ 	}
+ 
+-	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
++	diff = (int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+ 	if (diff)
+ 		return diff;
+ 
+-	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
++	return (int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
+ static bool
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index d52f525..da72b16 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -253,7 +253,7 @@ xfs_attr_rmtval_copyout(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	__uint8_t	**dst)
++	uint8_t		**dst)
+ {
+ 	char		*src = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -301,7 +301,7 @@ xfs_attr_rmtval_copyin(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	__uint8_t	**src)
++	uint8_t		**src)
+ {
+ 	char		*dst = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -355,7 +355,7 @@ xfs_attr_rmtval_get(
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	struct xfs_buf		*bp;
+ 	xfs_dablk_t		lblkno = args->rmtblkno;
+-	__uint8_t		*dst = args->value;
++	uint8_t			*dst = args->value;
+ 	int			valuelen;
+ 	int			nmap;
+ 	int			error;
+@@ -421,7 +421,7 @@ xfs_attr_rmtval_set(
+ 	struct xfs_bmbt_irec	map;
+ 	xfs_dablk_t		lblkno;
+ 	xfs_fileoff_t		lfileoff = 0;
+-	__uint8_t		*src = args->value;
++	uint8_t			*src = args->value;
+ 	int			blkcnt;
+ 	int			valuelen;
+ 	int			nmap;
+diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
+index 90928bb..afd684a 100644
+--- a/fs/xfs/libxfs/xfs_attr_sf.h
++++ b/fs/xfs/libxfs/xfs_attr_sf.h
+@@ -31,10 +31,10 @@ typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
+  * We generate this then sort it, attr_list() must return things in hash-order.
+  */
+ typedef struct xfs_attr_sf_sort {
+-	__uint8_t	entno;		/* entry number in original list */
+-	__uint8_t	namelen;	/* length of name value (no null) */
+-	__uint8_t	valuelen;	/* length of value */
+-	__uint8_t	flags;		/* flags bits (see xfs_attr_leaf.h) */
++	uint8_t		entno;		/* entry number in original list */
++	uint8_t		namelen;	/* length of name value (no null) */
++	uint8_t		valuelen;	/* length of value */
++	uint8_t		flags;		/* flags bits (see xfs_attr_leaf.h) */
+ 	xfs_dahash_t	hash;		/* this entry's hash value */
+ 	unsigned char	*name;		/* name value, pointer into buffer */
+ } xfs_attr_sf_sort_t;
+@@ -42,7 +42,7 @@ typedef struct xfs_attr_sf_sort {
+ #define XFS_ATTR_SF_ENTSIZE_BYNAME(nlen,vlen)	/* space name/value uses */ \
+ 	(((int)sizeof(xfs_attr_sf_entry_t)-1 + (nlen)+(vlen)))
+ #define XFS_ATTR_SF_ENTSIZE_MAX			/* max space for name&value */ \
+-	((1 << (NBBY*(int)sizeof(__uint8_t))) - 1)
++	((1 << (NBBY*(int)sizeof(uint8_t))) - 1)
+ #define XFS_ATTR_SF_ENTSIZE(sfep)		/* space an entry uses */ \
+ 	((int)sizeof(xfs_attr_sf_entry_t)-1 + (sfep)->namelen+(sfep)->valuelen)
+ #define XFS_ATTR_SF_NEXTENTRY(sfep)		/* next entry in struct */ \
+diff --git a/fs/xfs/libxfs/xfs_bit.h b/fs/xfs/libxfs/xfs_bit.h
+index e1649c0..61c6b20 100644
+--- a/fs/xfs/libxfs/xfs_bit.h
++++ b/fs/xfs/libxfs/xfs_bit.h
+@@ -25,47 +25,47 @@
+ /*
+  * masks with n high/low bits set, 64-bit values
+  */
+-static inline __uint64_t xfs_mask64hi(int n)
++static inline uint64_t xfs_mask64hi(int n)
+ {
+-	return (__uint64_t)-1 << (64 - (n));
++	return (uint64_t)-1 << (64 - (n));
+ }
+-static inline __uint32_t xfs_mask32lo(int n)
++static inline uint32_t xfs_mask32lo(int n)
+ {
+-	return ((__uint32_t)1 << (n)) - 1;
++	return ((uint32_t)1 << (n)) - 1;
+ }
+-static inline __uint64_t xfs_mask64lo(int n)
++static inline uint64_t xfs_mask64lo(int n)
+ {
+-	return ((__uint64_t)1 << (n)) - 1;
++	return ((uint64_t)1 << (n)) - 1;
+ }
+ 
+ /* Get high bit set out of 32-bit argument, -1 if none set */
+-static inline int xfs_highbit32(__uint32_t v)
++static inline int xfs_highbit32(uint32_t v)
+ {
+ 	return fls(v) - 1;
+ }
+ 
+ /* Get high bit set out of 64-bit argument, -1 if none set */
+-static inline int xfs_highbit64(__uint64_t v)
++static inline int xfs_highbit64(uint64_t v)
+ {
+ 	return fls64(v) - 1;
+ }
+ 
+ /* Get low bit set out of 32-bit argument, -1 if none set */
+-static inline int xfs_lowbit32(__uint32_t v)
++static inline int xfs_lowbit32(uint32_t v)
+ {
+ 	return ffs(v) - 1;
+ }
+ 
+ /* Get low bit set out of 64-bit argument, -1 if none set */
+-static inline int xfs_lowbit64(__uint64_t v)
++static inline int xfs_lowbit64(uint64_t v)
+ {
+-	__uint32_t	w = (__uint32_t)v;
++	uint32_t	w = (uint32_t)v;
+ 	int		n = 0;
+ 
+ 	if (w) {	/* lower bits */
+ 		n = ffs(w);
+ 	} else {	/* upper bits */
+-		w = (__uint32_t)(v >> 32);
++		w = (uint32_t)(v >> 32);
+ 		if (w) {
+ 			n = ffs(w);
+ 			if (n)
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index cd85274..2d1806e 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -100,8 +100,8 @@ xfs_bmdr_to_bmbt(
+  */
+ STATIC void
+ __xfs_bmbt_get_all(
+-		__uint64_t l0,
+-		__uint64_t l1,
++		uint64_t l0,
++		uint64_t l1,
+ 		xfs_bmbt_irec_t *s)
+ {
+ 	int	ext_flag;
+@@ -621,12 +621,12 @@ xfs_bmbt_init_ptr_from_cur(
+ 	ptr->l = 0;
+ }
+ 
+-STATIC __int64_t
++STATIC int64_t
+ xfs_bmbt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+-	return (__int64_t)be64_to_cpu(key->bmbt.br_startoff) -
++	return (int64_t)be64_to_cpu(key->bmbt.br_startoff) -
+ 				      cur->bc_rec.b.br_startoff;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index b5c213a..129289c 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -43,7 +43,7 @@ kmem_zone_t	*xfs_btree_cur_zone;
+ /*
+  * Btree magic numbers.
+  */
+-static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
++static const uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
+ 	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
+ 	  XFS_FIBT_MAGIC },
+ 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
+@@ -761,14 +761,14 @@ xfs_btree_lastrec(
+  */
+ void
+ xfs_btree_offsets(
+-	__int64_t	fields,		/* bitmask of fields */
++	int64_t		fields,		/* bitmask of fields */
+ 	const short	*offsets,	/* table of field offsets */
+ 	int		nbits,		/* number of bits to inspect */
+ 	int		*first,		/* output: first byte offset */
+ 	int		*last)		/* output: last byte offset */
+ {
+ 	int		i;		/* current bit number */
+-	__int64_t	imask;		/* mask for current bit number */
++	int64_t		imask;		/* mask for current bit number */
+ 
+ 	ASSERT(fields != 0);
+ 	/*
+@@ -1802,7 +1802,7 @@ xfs_btree_lookup(
+ 	int			*stat)	/* success/failure */
+ {
+ 	struct xfs_btree_block	*block;	/* current btree block */
+-	__int64_t		diff;	/* difference for the current key */
++	int64_t			diff;	/* difference for the current key */
+ 	int			error;	/* error return value */
+ 	int			keyno;	/* current key number */
+ 	int			level;	/* level in the btree */
+@@ -4387,7 +4387,7 @@ xfs_btree_visit_blocks(
+  * recovery completion writes the changes to disk.
+  */
+ struct xfs_btree_block_change_owner_info {
+-	__uint64_t		new_owner;
++	uint64_t		new_owner;
+ 	struct list_head	*buffer_list;
+ };
+ 
+@@ -4433,7 +4433,7 @@ xfs_btree_block_change_owner(
+ int
+ xfs_btree_change_owner(
+ 	struct xfs_btree_cur	*cur,
+-	__uint64_t		new_owner,
++	uint64_t		new_owner,
+ 	struct list_head	*buffer_list)
+ {
+ 	struct xfs_btree_block_change_owner_info	bbcoi;
+@@ -4537,7 +4537,7 @@ xfs_btree_simple_query_range(
+ {
+ 	union xfs_btree_rec		*recp;
+ 	union xfs_btree_key		rec_key;
+-	__int64_t			diff;
++	int64_t				diff;
+ 	int				stat;
+ 	bool				firstrec = true;
+ 	int				error;
+@@ -4626,8 +4626,8 @@ xfs_btree_overlapped_query_range(
+ 	union xfs_btree_key		*hkp;
+ 	union xfs_btree_rec		*recp;
+ 	struct xfs_btree_block		*block;
+-	__int64_t			ldiff;
+-	__int64_t			hdiff;
++	int64_t				ldiff;
++	int64_t				hdiff;
+ 	int				level;
+ 	struct xfs_buf			*bp;
+ 	int				i;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 04d0865..c0c0827 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -190,14 +190,14 @@ struct xfs_btree_ops {
+ 					  union xfs_btree_rec *rec);
+ 
+ 	/* difference between key value and cursor value */
+-	__int64_t (*key_diff)(struct xfs_btree_cur *cur,
++	int64_t (*key_diff)(struct xfs_btree_cur *cur,
+ 			      union xfs_btree_key *key);
+ 
+ 	/*
+ 	 * Difference between key2 and key1 -- positive if key1 > key2,
+ 	 * negative if key1 < key2, and zero if equal.
+ 	 */
+-	__int64_t (*diff_two_keys)(struct xfs_btree_cur *cur,
++	int64_t (*diff_two_keys)(struct xfs_btree_cur *cur,
+ 				   union xfs_btree_key *key1,
+ 				   union xfs_btree_key *key2);
+ 
+@@ -244,11 +244,11 @@ typedef struct xfs_btree_cur
+ 	union xfs_btree_irec	bc_rec;	/* current insert/search record value */
+ 	struct xfs_buf	*bc_bufs[XFS_BTREE_MAXLEVELS];	/* buf ptr per level */
+ 	int		bc_ptrs[XFS_BTREE_MAXLEVELS];	/* key/record # */
+-	__uint8_t	bc_ra[XFS_BTREE_MAXLEVELS];	/* readahead bits */
++	uint8_t		bc_ra[XFS_BTREE_MAXLEVELS];	/* readahead bits */
+ #define	XFS_BTCUR_LEFTRA	1	/* left sibling has been read-ahead */
+ #define	XFS_BTCUR_RIGHTRA	2	/* right sibling has been read-ahead */
+-	__uint8_t	bc_nlevels;	/* number of levels in the tree */
+-	__uint8_t	bc_blocklog;	/* log2(blocksize) of btree blocks */
++	uint8_t		bc_nlevels;	/* number of levels in the tree */
++	uint8_t		bc_blocklog;	/* log2(blocksize) of btree blocks */
+ 	xfs_btnum_t	bc_btnum;	/* identifies which btree type */
+ 	union {
+ 		struct {			/* needed for BNO, CNT, INO */
+@@ -359,7 +359,7 @@ xfs_btree_islastblock(
+  */
+ void
+ xfs_btree_offsets(
+-	__int64_t		fields,	/* bitmask of fields */
++	int64_t			fields,	/* bitmask of fields */
+ 	const short		*offsets,/* table of field offsets */
+ 	int			nbits,	/* number of bits to inspect */
+ 	int			*first,	/* output: first byte offset */
+@@ -437,7 +437,7 @@ int xfs_btree_new_iroot(struct xfs_btree_cur *, int *, int *);
+ int xfs_btree_insert(struct xfs_btree_cur *, int *);
+ int xfs_btree_delete(struct xfs_btree_cur *, int *);
+ int xfs_btree_get_rec(struct xfs_btree_cur *, union xfs_btree_rec **, int *);
+-int xfs_btree_change_owner(struct xfs_btree_cur *cur, __uint64_t new_owner,
++int xfs_btree_change_owner(struct xfs_btree_cur *cur, uint64_t new_owner,
+ 			   struct list_head *buffer_list);
+ 
+ /*
+@@ -463,7 +463,7 @@ static inline int xfs_btree_get_numrecs(struct xfs_btree_block *block)
+ }
+ 
+ static inline void xfs_btree_set_numrecs(struct xfs_btree_block *block,
+-		__uint16_t numrecs)
++		uint16_t numrecs)
+ {
+ 	block->bb_numrecs = cpu_to_be16(numrecs);
+ }
+diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
+index fad1676..3c2bc92 100644
+--- a/fs/xfs/libxfs/xfs_cksum.h
++++ b/fs/xfs/libxfs/xfs_cksum.h
+@@ -1,18 +1,18 @@
+ #ifndef _XFS_CKSUM_H
+ #define _XFS_CKSUM_H 1
+ 
+-#define XFS_CRC_SEED	(~(__uint32_t)0)
++#define XFS_CRC_SEED	(~(uint32_t)0)
+ 
+ /*
+  * Calculate the intermediate checksum for a buffer that has the CRC field
+  * inside it.  The offset of the 32bit crc fields is passed as the
+  * cksum_offset parameter.
+  */
+-static inline __uint32_t
++static inline uint32_t
+ xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ {
+-	__uint32_t zero = 0;
+-	__uint32_t crc;
++	uint32_t zero = 0;
++	uint32_t crc;
+ 
+ 	/* Calculate CRC up to the checksum. */
+ 	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+@@ -33,7 +33,7 @@ xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+  * so that it is consistent on disk.
+  */
+ static inline __le32
+-xfs_end_cksum(__uint32_t crc)
++xfs_end_cksum(uint32_t crc)
+ {
+ 	return ~cpu_to_le32(crc);
+ }
+@@ -44,7 +44,7 @@ xfs_end_cksum(__uint32_t crc)
+ static inline void
+ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ {
+-	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++	uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
+ 
+ 	*(__le32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
+ }
+@@ -55,7 +55,7 @@ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ static inline int
+ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ {
+-	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++	uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
+ 
+ 	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
+ }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index f2dc1a9..d21666a 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -1952,7 +1952,7 @@ xfs_da3_path_shift(
+  * This is implemented with some source-level loop unrolling.
+  */
+ xfs_dahash_t
+-xfs_da_hashname(const __uint8_t *name, int namelen)
++xfs_da_hashname(const uint8_t *name, int namelen)
+ {
+ 	xfs_dahash_t hash;
+ 
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 98c75cb..c3eee77c 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -60,10 +60,10 @@ enum xfs_dacmp {
+  */
+ typedef struct xfs_da_args {
+ 	struct xfs_da_geometry *geo;	/* da block geometry */
+-	const __uint8_t	*name;		/* string (maybe not NULL terminated) */
++	const uint8_t	*name;		/* string (maybe not NULL terminated) */
+ 	int		namelen;	/* length of string (maybe no NULL) */
+-	__uint8_t	filetype;	/* filetype of inode for directories */
+-	__uint8_t	*value;		/* set of bytes (maybe contain NULLs) */
++	uint8_t		filetype;	/* filetype of inode for directories */
++	uint8_t		*value;		/* set of bytes (maybe contain NULLs) */
+ 	int		valuelen;	/* length of value */
+ 	int		flags;		/* argument flags (eg: ATTR_NOCREATE) */
+ 	xfs_dahash_t	hashval;	/* hash value of name */
+@@ -207,7 +207,7 @@ xfs_daddr_t	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
+ int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
+ 					  struct xfs_buf *dead_buf);
+ 
+-uint xfs_da_hashname(const __uint8_t *name_string, int name_length);
++uint xfs_da_hashname(const uint8_t *name_string, int name_length);
+ enum xfs_dacmp xfs_da_compname(struct xfs_da_args *args,
+ 				const unsigned char *name, int len);
+ 
+diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+index f1e8d4d..de4db17 100644
+--- a/fs/xfs/libxfs/xfs_da_format.c
++++ b/fs/xfs/libxfs/xfs_da_format.c
+@@ -49,7 +49,7 @@ xfs_dir3_sf_entsize(
+ 	struct xfs_dir2_sf_hdr	*hdr,
+ 	int			len)
+ {
+-	return xfs_dir2_sf_entsize(hdr, len) + sizeof(__uint8_t);
++	return xfs_dir2_sf_entsize(hdr, len) + sizeof(uint8_t);
+ }
+ 
+ static struct xfs_dir2_sf_entry *
+@@ -77,7 +77,7 @@ xfs_dir3_sf_nextentry(
+  * not necessary. For non-filetype enable directories, the type is always
+  * unknown and we never store the value.
+  */
+-static __uint8_t
++static uint8_t
+ xfs_dir2_sfe_get_ftype(
+ 	struct xfs_dir2_sf_entry *sfep)
+ {
+@@ -87,16 +87,16 @@ xfs_dir2_sfe_get_ftype(
+ static void
+ xfs_dir2_sfe_put_ftype(
+ 	struct xfs_dir2_sf_entry *sfep,
+-	__uint8_t		ftype)
++	uint8_t			ftype)
+ {
+ 	ASSERT(ftype < XFS_DIR3_FT_MAX);
+ }
+ 
+-static __uint8_t
++static uint8_t
+ xfs_dir3_sfe_get_ftype(
+ 	struct xfs_dir2_sf_entry *sfep)
+ {
+-	__uint8_t	ftype;
++	uint8_t		ftype;
+ 
+ 	ftype = sfep->name[sfep->namelen];
+ 	if (ftype >= XFS_DIR3_FT_MAX)
+@@ -107,7 +107,7 @@ xfs_dir3_sfe_get_ftype(
+ static void
+ xfs_dir3_sfe_put_ftype(
+ 	struct xfs_dir2_sf_entry *sfep,
+-	__uint8_t		ftype)
++	uint8_t			ftype)
+ {
+ 	ASSERT(ftype < XFS_DIR3_FT_MAX);
+ 
+@@ -124,7 +124,7 @@ xfs_dir3_sfe_put_ftype(
+ static xfs_ino_t
+ xfs_dir2_sf_get_ino(
+ 	struct xfs_dir2_sf_hdr	*hdr,
+-	__uint8_t		*from)
++	uint8_t			*from)
+ {
+ 	if (hdr->i8count)
+ 		return get_unaligned_be64(from) & 0x00ffffffffffffffULL;
+@@ -135,7 +135,7 @@ xfs_dir2_sf_get_ino(
+ static void
+ xfs_dir2_sf_put_ino(
+ 	struct xfs_dir2_sf_hdr	*hdr,
+-	__uint8_t		*to,
++	uint8_t			*to,
+ 	xfs_ino_t		ino)
+ {
+ 	ASSERT((ino & 0xff00000000000000ULL) == 0);
+@@ -225,7 +225,7 @@ xfs_dir3_sfe_put_ino(
+ 
+ #define XFS_DIR3_DATA_ENTSIZE(n)					\
+ 	round_up((offsetof(struct xfs_dir2_data_entry, name[0]) + (n) +	\
+-		 sizeof(xfs_dir2_data_off_t) + sizeof(__uint8_t)),	\
++		 sizeof(xfs_dir2_data_off_t) + sizeof(uint8_t)),	\
+ 		XFS_DIR2_DATA_ALIGN)
+ 
+ static int
+@@ -242,7 +242,7 @@ xfs_dir3_data_entsize(
+ 	return XFS_DIR3_DATA_ENTSIZE(n);
+ }
+ 
+-static __uint8_t
++static uint8_t
+ xfs_dir2_data_get_ftype(
+ 	struct xfs_dir2_data_entry *dep)
+ {
+@@ -252,16 +252,16 @@ xfs_dir2_data_get_ftype(
+ static void
+ xfs_dir2_data_put_ftype(
+ 	struct xfs_dir2_data_entry *dep,
+-	__uint8_t		ftype)
++	uint8_t			ftype)
+ {
+ 	ASSERT(ftype < XFS_DIR3_FT_MAX);
+ }
+ 
+-static __uint8_t
++static uint8_t
+ xfs_dir3_data_get_ftype(
+ 	struct xfs_dir2_data_entry *dep)
+ {
+-	__uint8_t	ftype = dep->name[dep->namelen];
++	uint8_t	ftype = dep->name[dep->namelen];
+ 
+ 	if (ftype >= XFS_DIR3_FT_MAX)
+ 		return XFS_DIR3_FT_UNKNOWN;
+@@ -271,7 +271,7 @@ xfs_dir3_data_get_ftype(
+ static void
+ xfs_dir3_data_put_ftype(
+ 	struct xfs_dir2_data_entry *dep,
+-	__uint8_t		type)
++	uint8_t			type)
+ {
+ 	ASSERT(type < XFS_DIR3_FT_MAX);
+ 	ASSERT(dep->namelen != 0);
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 9a492a9..38cba81 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -111,11 +111,11 @@ struct xfs_da3_intnode {
+  * appropriate.
+  */
+ struct xfs_da3_icnode_hdr {
+-	__uint32_t	forw;
+-	__uint32_t	back;
+-	__uint16_t	magic;
+-	__uint16_t	count;
+-	__uint16_t	level;
++	uint32_t	forw;
++	uint32_t	back;
++	uint16_t	magic;
++	uint16_t	count;
++	uint16_t	level;
+ };
+ 
+ /*
+@@ -187,14 +187,14 @@ struct xfs_da3_icnode_hdr {
+ /*
+  * Byte offset in data block and shortform entry.
+  */
+-typedef	__uint16_t	xfs_dir2_data_off_t;
++typedef	uint16_t	xfs_dir2_data_off_t;
+ #define	NULLDATAOFF	0xffffU
+ typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
+ 
+ /*
+  * Offset in data space of a data entry.
+  */
+-typedef	__uint32_t	xfs_dir2_dataptr_t;
++typedef	uint32_t	xfs_dir2_dataptr_t;
+ #define	XFS_DIR2_MAX_DATAPTR	((xfs_dir2_dataptr_t)0xffffffff)
+ #define	XFS_DIR2_NULL_DATAPTR	((xfs_dir2_dataptr_t)0)
+ 
+@@ -206,7 +206,7 @@ typedef	xfs_off_t	xfs_dir2_off_t;
+ /*
+  * Directory block number (logical dirblk in file)
+  */
+-typedef	__uint32_t	xfs_dir2_db_t;
++typedef	uint32_t	xfs_dir2_db_t;
+ 
+ #define XFS_INO32_SIZE	4
+ #define XFS_INO64_SIZE	8
+@@ -226,9 +226,9 @@ typedef	__uint32_t	xfs_dir2_db_t;
+  * over them.
+  */
+ typedef struct xfs_dir2_sf_hdr {
+-	__uint8_t		count;		/* count of entries */
+-	__uint8_t		i8count;	/* count of 8-byte inode #s */
+-	__uint8_t		parent[8];	/* parent dir inode number */
++	uint8_t			count;		/* count of entries */
++	uint8_t			i8count;	/* count of 8-byte inode #s */
++	uint8_t			parent[8];	/* parent dir inode number */
+ } __packed xfs_dir2_sf_hdr_t;
+ 
+ typedef struct xfs_dir2_sf_entry {
+@@ -447,11 +447,11 @@ struct xfs_dir3_leaf_hdr {
+ };
+ 
+ struct xfs_dir3_icleaf_hdr {
+-	__uint32_t		forw;
+-	__uint32_t		back;
+-	__uint16_t		magic;
+-	__uint16_t		count;
+-	__uint16_t		stale;
++	uint32_t		forw;
++	uint32_t		back;
++	uint16_t		magic;
++	uint16_t		count;
++	uint16_t		stale;
+ };
+ 
+ /*
+@@ -538,10 +538,10 @@ struct xfs_dir3_free {
+  * xfs_dir3_free_hdr_from_disk/xfs_dir3_free_hdr_to_disk.
+  */
+ struct xfs_dir3_icfree_hdr {
+-	__uint32_t	magic;
+-	__uint32_t	firstdb;
+-	__uint32_t	nvalid;
+-	__uint32_t	nused;
++	uint32_t	magic;
++	uint32_t	firstdb;
++	uint32_t	nvalid;
++	uint32_t	nused;
+ 
+ };
+ 
+@@ -632,10 +632,10 @@ typedef struct xfs_attr_shortform {
+ 		__u8	padding;
+ 	} hdr;
+ 	struct xfs_attr_sf_entry {
+-		__uint8_t namelen;	/* actual length of name (no NULL) */
+-		__uint8_t valuelen;	/* actual length of value (no NULL) */
+-		__uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
+-		__uint8_t nameval[1];	/* name & value bytes concatenated */
++		uint8_t namelen;	/* actual length of name (no NULL) */
++		uint8_t valuelen;	/* actual length of value (no NULL) */
++		uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
++		uint8_t nameval[1];	/* name & value bytes concatenated */
+ 	} list[1];			/* variable sized array */
+ } xfs_attr_shortform_t;
+ 
+@@ -725,22 +725,22 @@ struct xfs_attr3_leafblock {
+  * incore, neutral version of the attribute leaf header
+  */
+ struct xfs_attr3_icleaf_hdr {
+-	__uint32_t	forw;
+-	__uint32_t	back;
+-	__uint16_t	magic;
+-	__uint16_t	count;
+-	__uint16_t	usedbytes;
++	uint32_t	forw;
++	uint32_t	back;
++	uint16_t	magic;
++	uint16_t	count;
++	uint16_t	usedbytes;
+ 	/*
+ 	 * firstused is 32-bit here instead of 16-bit like the on-disk variant
+ 	 * to support maximum fsb size of 64k without overflow issues throughout
+ 	 * the attr code. Instead, the overflow condition is handled on
+ 	 * conversion to/from disk.
+ 	 */
+-	__uint32_t	firstused;
++	uint32_t	firstused;
+ 	__u8		holes;
+ 	struct {
+-		__uint16_t	base;
+-		__uint16_t	size;
++		uint16_t	base;
++		uint16_t	size;
+ 	} freemap[XFS_ATTR_LEAF_MAPSIZE];
+ };
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index becc926..c66634f 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -45,9 +45,9 @@ struct xfs_dir_ops {
+ 	struct xfs_dir2_sf_entry *
+ 		(*sf_nextentry)(struct xfs_dir2_sf_hdr *hdr,
+ 				struct xfs_dir2_sf_entry *sfep);
+-	__uint8_t (*sf_get_ftype)(struct xfs_dir2_sf_entry *sfep);
++	uint8_t (*sf_get_ftype)(struct xfs_dir2_sf_entry *sfep);
+ 	void	(*sf_put_ftype)(struct xfs_dir2_sf_entry *sfep,
+-				__uint8_t ftype);
++				uint8_t ftype);
+ 	xfs_ino_t (*sf_get_ino)(struct xfs_dir2_sf_hdr *hdr,
+ 				struct xfs_dir2_sf_entry *sfep);
+ 	void	(*sf_put_ino)(struct xfs_dir2_sf_hdr *hdr,
+@@ -58,9 +58,9 @@ struct xfs_dir_ops {
+ 				     xfs_ino_t ino);
+ 
+ 	int	(*data_entsize)(int len);
+-	__uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
++	uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
+ 	void	(*data_put_ftype)(struct xfs_dir2_data_entry *dep,
+-				__uint8_t ftype);
++				uint8_t ftype);
+ 	__be16 * (*data_entry_tag_p)(struct xfs_dir2_data_entry *dep);
+ 	struct xfs_dir2_data_free *
+ 		(*data_bestfree_p)(struct xfs_dir2_data_hdr *hdr);
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index b887fb2..68bf3e8 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -145,7 +145,7 @@ xfs_dir3_leaf_check_int(
+ static bool
+ xfs_dir3_leaf_verify(
+ 	struct xfs_buf		*bp,
+-	__uint16_t		magic)
++	uint16_t		magic)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+@@ -154,7 +154,7 @@ xfs_dir3_leaf_verify(
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_dir3_leaf_hdr *leaf3 = bp->b_addr;
+-		__uint16_t		magic3;
++		uint16_t		magic3;
+ 
+ 		magic3 = (magic == XFS_DIR2_LEAF1_MAGIC) ? XFS_DIR3_LEAF1_MAGIC
+ 							 : XFS_DIR3_LEAFN_MAGIC;
+@@ -178,7 +178,7 @@ xfs_dir3_leaf_verify(
+ static void
+ __read_verify(
+ 	struct xfs_buf  *bp,
+-	__uint16_t	magic)
++	uint16_t	magic)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+@@ -195,7 +195,7 @@ __read_verify(
+ static void
+ __write_verify(
+ 	struct xfs_buf  *bp,
+-	__uint16_t	magic)
++	uint16_t	magic)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+@@ -299,7 +299,7 @@ xfs_dir3_leaf_init(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp,
+ 	xfs_ino_t		owner,
+-	__uint16_t		type)
++	uint16_t		type)
+ {
+ 	struct xfs_dir2_leaf	*leaf = bp->b_addr;
+ 
+@@ -343,7 +343,7 @@ xfs_dir3_leaf_get_buf(
+ 	xfs_da_args_t		*args,
+ 	xfs_dir2_db_t		bno,
+ 	struct xfs_buf		**bpp,
+-	__uint16_t		magic)
++	uint16_t		magic)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_trans	*tp = args->trans;
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index ef9f6ea..673fc8b 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -70,7 +70,7 @@ extern void xfs_dir3_leaf_compact_x1(struct xfs_dir3_icleaf_hdr *leafhdr,
+ 		struct xfs_dir2_leaf_entry *ents, int *indexp,
+ 		int *lowstalep, int *highstalep, int *lowlogp, int *highlogp);
+ extern int xfs_dir3_leaf_get_buf(struct xfs_da_args *args, xfs_dir2_db_t bno,
+-		struct xfs_buf **bpp, __uint16_t magic);
++		struct xfs_buf **bpp, uint16_t magic);
+ extern void xfs_dir3_leaf_log_ents(struct xfs_da_args *args,
+ 		struct xfs_buf *bp, int first, int last);
+ extern void xfs_dir3_leaf_log_header(struct xfs_da_args *args,
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index f814d42..3d51015 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -103,8 +103,8 @@ struct xfs_ifork;
+  * Must be padded to 64 bit alignment.
+  */
+ typedef struct xfs_sb {
+-	__uint32_t	sb_magicnum;	/* magic number == XFS_SB_MAGIC */
+-	__uint32_t	sb_blocksize;	/* logical block size, bytes */
++	uint32_t	sb_magicnum;	/* magic number == XFS_SB_MAGIC */
++	uint32_t	sb_blocksize;	/* logical block size, bytes */
+ 	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
+ 	xfs_rtblock_t	sb_rextents;	/* number of realtime extents */
+@@ -118,45 +118,45 @@ typedef struct xfs_sb {
+ 	xfs_agnumber_t	sb_agcount;	/* number of allocation groups */
+ 	xfs_extlen_t	sb_rbmblocks;	/* number of rt bitmap blocks */
+ 	xfs_extlen_t	sb_logblocks;	/* number of log blocks */
+-	__uint16_t	sb_versionnum;	/* header version == XFS_SB_VERSION */
+-	__uint16_t	sb_sectsize;	/* volume sector size, bytes */
+-	__uint16_t	sb_inodesize;	/* inode size, bytes */
+-	__uint16_t	sb_inopblock;	/* inodes per block */
++	uint16_t	sb_versionnum;	/* header version == XFS_SB_VERSION */
++	uint16_t	sb_sectsize;	/* volume sector size, bytes */
++	uint16_t	sb_inodesize;	/* inode size, bytes */
++	uint16_t	sb_inopblock;	/* inodes per block */
+ 	char		sb_fname[12];	/* file system name */
+-	__uint8_t	sb_blocklog;	/* log2 of sb_blocksize */
+-	__uint8_t	sb_sectlog;	/* log2 of sb_sectsize */
+-	__uint8_t	sb_inodelog;	/* log2 of sb_inodesize */
+-	__uint8_t	sb_inopblog;	/* log2 of sb_inopblock */
+-	__uint8_t	sb_agblklog;	/* log2 of sb_agblocks (rounded up) */
+-	__uint8_t	sb_rextslog;	/* log2 of sb_rextents */
+-	__uint8_t	sb_inprogress;	/* mkfs is in progress, don't mount */
+-	__uint8_t	sb_imax_pct;	/* max % of fs for inode space */
++	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
++	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
++	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
++	uint8_t		sb_inopblog;	/* log2 of sb_inopblock */
++	uint8_t		sb_agblklog;	/* log2 of sb_agblocks (rounded up) */
++	uint8_t		sb_rextslog;	/* log2 of sb_rextents */
++	uint8_t		sb_inprogress;	/* mkfs is in progress, don't mount */
++	uint8_t		sb_imax_pct;	/* max % of fs for inode space */
+ 					/* statistics */
+ 	/*
+ 	 * These fields must remain contiguous.  If you really
+ 	 * want to change their layout, make sure you fix the
+ 	 * code in xfs_trans_apply_sb_deltas().
+ 	 */
+-	__uint64_t	sb_icount;	/* allocated inodes */
+-	__uint64_t	sb_ifree;	/* free inodes */
+-	__uint64_t	sb_fdblocks;	/* free data blocks */
+-	__uint64_t	sb_frextents;	/* free realtime extents */
++	uint64_t	sb_icount;	/* allocated inodes */
++	uint64_t	sb_ifree;	/* free inodes */
++	uint64_t	sb_fdblocks;	/* free data blocks */
++	uint64_t	sb_frextents;	/* free realtime extents */
+ 	/*
+ 	 * End contiguous fields.
+ 	 */
+ 	xfs_ino_t	sb_uquotino;	/* user quota inode */
+ 	xfs_ino_t	sb_gquotino;	/* group quota inode */
+-	__uint16_t	sb_qflags;	/* quota flags */
+-	__uint8_t	sb_flags;	/* misc. flags */
+-	__uint8_t	sb_shared_vn;	/* shared version number */
++	uint16_t	sb_qflags;	/* quota flags */
++	uint8_t		sb_flags;	/* misc. flags */
++	uint8_t		sb_shared_vn;	/* shared version number */
+ 	xfs_extlen_t	sb_inoalignmt;	/* inode chunk alignment, fsblocks */
+-	__uint32_t	sb_unit;	/* stripe or raid unit */
+-	__uint32_t	sb_width;	/* stripe or raid width */
+-	__uint8_t	sb_dirblklog;	/* log2 of dir block size (fsbs) */
+-	__uint8_t	sb_logsectlog;	/* log2 of the log sector size */
+-	__uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
+-	__uint32_t	sb_logsunit;	/* stripe unit size for the log */
+-	__uint32_t	sb_features2;	/* additional feature bits */
++	uint32_t	sb_unit;	/* stripe or raid unit */
++	uint32_t	sb_width;	/* stripe or raid width */
++	uint8_t		sb_dirblklog;	/* log2 of dir block size (fsbs) */
++	uint8_t		sb_logsectlog;	/* log2 of the log sector size */
++	uint16_t	sb_logsectsize;	/* sector size for the log, bytes */
++	uint32_t	sb_logsunit;	/* stripe unit size for the log */
++	uint32_t	sb_features2;	/* additional feature bits */
+ 
+ 	/*
+ 	 * bad features2 field as a result of failing to pad the sb structure to
+@@ -167,17 +167,17 @@ typedef struct xfs_sb {
+ 	 * the value in sb_features2 when formatting the incore superblock to
+ 	 * the disk buffer.
+ 	 */
+-	__uint32_t	sb_bad_features2;
++	uint32_t	sb_bad_features2;
+ 
+ 	/* version 5 superblock fields start here */
+ 
+ 	/* feature masks */
+-	__uint32_t	sb_features_compat;
+-	__uint32_t	sb_features_ro_compat;
+-	__uint32_t	sb_features_incompat;
+-	__uint32_t	sb_features_log_incompat;
++	uint32_t	sb_features_compat;
++	uint32_t	sb_features_ro_compat;
++	uint32_t	sb_features_incompat;
++	uint32_t	sb_features_log_incompat;
+ 
+-	__uint32_t	sb_crc;		/* superblock crc */
++	uint32_t	sb_crc;		/* superblock crc */
+ 	xfs_extlen_t	sb_spino_align;	/* sparse inode chunk alignment */
+ 
+ 	xfs_ino_t	sb_pquotino;	/* project quota inode */
+@@ -449,7 +449,7 @@ static inline void xfs_sb_version_addprojid32bit(struct xfs_sb *sbp)
+ static inline bool
+ xfs_sb_has_compat_feature(
+ 	struct xfs_sb	*sbp,
+-	__uint32_t	feature)
++	uint32_t	feature)
+ {
+ 	return (sbp->sb_features_compat & feature) != 0;
+ }
+@@ -463,7 +463,7 @@ xfs_sb_has_compat_feature(
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+ 	struct xfs_sb	*sbp,
+-	__uint32_t	feature)
++	uint32_t	feature)
+ {
+ 	return (sbp->sb_features_ro_compat & feature) != 0;
+ }
+@@ -480,7 +480,7 @@ xfs_sb_has_ro_compat_feature(
+ static inline bool
+ xfs_sb_has_incompat_feature(
+ 	struct xfs_sb	*sbp,
+-	__uint32_t	feature)
++	uint32_t	feature)
+ {
+ 	return (sbp->sb_features_incompat & feature) != 0;
+ }
+@@ -490,7 +490,7 @@ xfs_sb_has_incompat_feature(
+ static inline bool
+ xfs_sb_has_incompat_log_feature(
+ 	struct xfs_sb	*sbp,
+-	__uint32_t	feature)
++	uint32_t	feature)
+ {
+ 	return (sbp->sb_features_log_incompat & feature) != 0;
+ }
+@@ -586,8 +586,8 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+  */
+ #define XFS_FSB_TO_B(mp,fsbno)	((xfs_fsize_t)(fsbno) << (mp)->m_sb.sb_blocklog)
+ #define XFS_B_TO_FSB(mp,b)	\
+-	((((__uint64_t)(b)) + (mp)->m_blockmask) >> (mp)->m_sb.sb_blocklog)
+-#define XFS_B_TO_FSBT(mp,b)	(((__uint64_t)(b)) >> (mp)->m_sb.sb_blocklog)
++	((((uint64_t)(b)) + (mp)->m_blockmask) >> (mp)->m_sb.sb_blocklog)
++#define XFS_B_TO_FSBT(mp,b)	(((uint64_t)(b)) >> (mp)->m_sb.sb_blocklog)
+ #define XFS_B_FSB_OFFSET(mp,b)	((b) & (mp)->m_blockmask)
+ 
+ /*
+@@ -1045,7 +1045,7 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+  * next agno_log bits - ag number
+  * high agno_log-agblklog-inopblog bits - 0
+  */
+-#define	XFS_INO_MASK(k)			(__uint32_t)((1ULL << (k)) - 1)
++#define	XFS_INO_MASK(k)			(uint32_t)((1ULL << (k)) - 1)
+ #define	XFS_INO_OFFSET_BITS(mp)		(mp)->m_sb.sb_inopblog
+ #define	XFS_INO_AGBNO_BITS(mp)		(mp)->m_sb.sb_agblklog
+ #define	XFS_INO_AGINO_BITS(mp)		(mp)->m_agino_log
+@@ -1242,16 +1242,16 @@ typedef __be32 xfs_alloc_ptr_t;
+ #define	XFS_FIBT_MAGIC		0x46494254	/* 'FIBT' */
+ #define	XFS_FIBT_CRC_MAGIC	0x46494233	/* 'FIB3' */
+ 
+-typedef	__uint64_t	xfs_inofree_t;
++typedef	uint64_t	xfs_inofree_t;
+ #define	XFS_INODES_PER_CHUNK		(NBBY * sizeof(xfs_inofree_t))
+ #define	XFS_INODES_PER_CHUNK_LOG	(XFS_NBBYLOG + 3)
+ #define	XFS_INOBT_ALL_FREE		((xfs_inofree_t)-1)
+ #define	XFS_INOBT_MASK(i)		((xfs_inofree_t)1 << (i))
+ 
+ #define XFS_INOBT_HOLEMASK_FULL		0	/* holemask for full chunk */
+-#define XFS_INOBT_HOLEMASK_BITS		(NBBY * sizeof(__uint16_t))
++#define XFS_INOBT_HOLEMASK_BITS		(NBBY * sizeof(uint16_t))
+ #define XFS_INODES_PER_HOLEMASK_BIT	\
+-	(XFS_INODES_PER_CHUNK / (NBBY * sizeof(__uint16_t)))
++	(XFS_INODES_PER_CHUNK / (NBBY * sizeof(uint16_t)))
+ 
+ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
+ {
+@@ -1285,9 +1285,9 @@ typedef struct xfs_inobt_rec {
+ 
+ typedef struct xfs_inobt_rec_incore {
+ 	xfs_agino_t	ir_startino;	/* starting inode number */
+-	__uint16_t	ir_holemask;	/* hole mask for sparse chunks */
+-	__uint8_t	ir_count;	/* total inode count */
+-	__uint8_t	ir_freecount;	/* count of free inodes (set bits) */
++	uint16_t	ir_holemask;	/* hole mask for sparse chunks */
++	uint8_t		ir_count;	/* total inode count */
++	uint8_t		ir_freecount;	/* count of free inodes (set bits) */
+ 	xfs_inofree_t	ir_free;	/* free inode mask */
+ } xfs_inobt_rec_incore_t;
+ 
+@@ -1368,15 +1368,15 @@ struct xfs_rmap_rec {
+  *  rm_offset:54-60 aren't used and should be zero
+  *  rm_offset:0-53 is the block offset within the inode
+  */
+-#define XFS_RMAP_OFF_ATTR_FORK	((__uint64_t)1ULL << 63)
+-#define XFS_RMAP_OFF_BMBT_BLOCK	((__uint64_t)1ULL << 62)
+-#define XFS_RMAP_OFF_UNWRITTEN	((__uint64_t)1ULL << 61)
++#define XFS_RMAP_OFF_ATTR_FORK	((uint64_t)1ULL << 63)
++#define XFS_RMAP_OFF_BMBT_BLOCK	((uint64_t)1ULL << 62)
++#define XFS_RMAP_OFF_UNWRITTEN	((uint64_t)1ULL << 61)
+ 
+-#define XFS_RMAP_LEN_MAX	((__uint32_t)~0U)
++#define XFS_RMAP_LEN_MAX	((uint32_t)~0U)
+ #define XFS_RMAP_OFF_FLAGS	(XFS_RMAP_OFF_ATTR_FORK | \
+ 				 XFS_RMAP_OFF_BMBT_BLOCK | \
+ 				 XFS_RMAP_OFF_UNWRITTEN)
+-#define XFS_RMAP_OFF_MASK	((__uint64_t)0x3FFFFFFFFFFFFFULL)
++#define XFS_RMAP_OFF_MASK	((uint64_t)0x3FFFFFFFFFFFFFULL)
+ 
+ #define XFS_RMAP_OFF(off)		((off) & XFS_RMAP_OFF_MASK)
+ 
+@@ -1402,8 +1402,8 @@ struct xfs_rmap_rec {
+ struct xfs_rmap_irec {
+ 	xfs_agblock_t	rm_startblock;	/* extent start block */
+ 	xfs_extlen_t	rm_blockcount;	/* extent length */
+-	__uint64_t	rm_owner;	/* extent owner */
+-	__uint64_t	rm_offset;	/* offset within the owner */
++	uint64_t	rm_owner;	/* extent owner */
++	uint64_t	rm_offset;	/* offset within the owner */
+ 	unsigned int	rm_flags;	/* state flags */
+ };
+ 
+@@ -1459,11 +1459,11 @@ typedef struct xfs_bmbt_rec {
+ 	__be64			l0, l1;
+ } xfs_bmbt_rec_t;
+ 
+-typedef __uint64_t	xfs_bmbt_rec_base_t;	/* use this for casts */
++typedef uint64_t	xfs_bmbt_rec_base_t;	/* use this for casts */
+ typedef xfs_bmbt_rec_t xfs_bmdr_rec_t;
+ 
+ typedef struct xfs_bmbt_rec_host {
+-	__uint64_t		l0, l1;
++	uint64_t		l0, l1;
+ } xfs_bmbt_rec_host_t;
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 7945505..c6fdce2 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -286,10 +286,10 @@ typedef struct xfs_bstat {
+  * and using two 16bit values to hold new 32bit projid was choosen
+  * to retain compatibility with "old" filesystems).
+  */
+-static inline __uint32_t
++static inline uint32_t
+ bstat_get_projid(struct xfs_bstat *bs)
+ {
+-	return (__uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
++	return (uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
+ }
+ 
+ /*
+@@ -439,10 +439,10 @@ typedef struct xfs_handle {
+  */
+ typedef struct xfs_swapext
+ {
+-	__int64_t	sx_version;	/* version */
++	int64_t		sx_version;	/* version */
+ #define XFS_SX_VERSION		0
+-	__int64_t	sx_fdtarget;	/* fd of target file */
+-	__int64_t	sx_fdtmp;	/* fd of tmp file */
++	int64_t		sx_fdtarget;	/* fd of target file */
++	int64_t		sx_fdtmp;	/* fd of tmp file */
+ 	xfs_off_t	sx_offset;	/* offset into file */
+ 	xfs_off_t	sx_length;	/* leng from offset */
+ 	char		sx_pad[16];	/* pad space, unused */
+@@ -529,7 +529,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+-#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 51b4e0d..ff97f76 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -141,9 +141,9 @@ xfs_inobt_get_rec(
+ STATIC int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
+-	__uint16_t		holemask,
+-	__uint8_t		count,
+-	__int32_t		freecount,
++	uint16_t		holemask,
++	uint8_t			count,
++	int32_t			freecount,
+ 	xfs_inofree_t		free,
+ 	int			*stat)
+ {
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 31ca220..3cb3342 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -196,12 +196,12 @@ xfs_finobt_init_ptr_from_cur(
+ 	ptr->s = agi->agi_free_root;
+ }
+ 
+-STATIC __int64_t
++STATIC int64_t
+ xfs_inobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+-	return (__int64_t)be32_to_cpu(key->inobt.ir_startino) -
++	return (int64_t)be32_to_cpu(key->inobt.ir_startino) -
+ 			  cur->bc_rec.i.ir_startino;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4b9769e..33e3856 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -397,7 +397,7 @@ xfs_dinode_calc_crc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_dinode	*dip)
+ {
+-	__uint32_t		crc;
++	uint32_t		crc;
+ 
+ 	if (dip->di_version < 3)
+ 		return;
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 7c4dd32..9fe9ee9 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -28,25 +28,25 @@ struct xfs_dinode;
+  * format specific structures at the appropriate time.
+  */
+ struct xfs_icdinode {
+-	__int8_t	di_version;	/* inode version */
+-	__int8_t	di_format;	/* format of di_c data */
+-	__uint16_t	di_flushiter;	/* incremented on flush */
+-	__uint32_t	di_uid;		/* owner's user id */
+-	__uint32_t	di_gid;		/* owner's group id */
+-	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+-	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
++	int8_t		di_version;	/* inode version */
++	int8_t		di_format;	/* format of di_c data */
++	uint16_t	di_flushiter;	/* incremented on flush */
++	uint32_t	di_uid;		/* owner's user id */
++	uint32_t	di_gid;		/* owner's group id */
++	uint16_t	di_projid_lo;	/* lower part of owner's project id */
++	uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+ 	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
+ 	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
+-	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+-	__int8_t	di_aformat;	/* format of attr fork's data */
+-	__uint32_t	di_dmevmask;	/* DMIG event mask */
+-	__uint16_t	di_dmstate;	/* DMIG state info */
+-	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
++	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
++	int8_t		di_aformat;	/* format of attr fork's data */
++	uint32_t	di_dmevmask;	/* DMIG event mask */
++	uint16_t	di_dmstate;	/* DMIG state info */
++	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+ 
+-	__uint64_t	di_flags2;	/* more random flags */
++	uint64_t	di_flags2;	/* more random flags */
+ 
+ 	xfs_ictimestamp_t di_crtime;	/* time created */
+ };
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index a6eed43..ca273f6 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -31,7 +31,7 @@ struct xfs_trans_res;
+  * through all the log items definitions and everything they encode into the
+  * log.
+  */
+-typedef __uint32_t xlog_tid_t;
++typedef uint32_t xlog_tid_t;
+ 
+ #define XLOG_MIN_ICLOGS		2
+ #define XLOG_MAX_ICLOGS		8
+@@ -207,7 +207,7 @@ typedef struct xfs_log_iovec {
+ typedef struct xfs_trans_header {
+ 	uint		th_magic;		/* magic number */
+ 	uint		th_type;		/* transaction type */
+-	__int32_t	th_tid;			/* transaction id (unused) */
++	int32_t		th_tid;			/* transaction id (unused) */
+ 	uint		th_num_items;		/* num items logged by trans */
+ } xfs_trans_header_t;
+ 
+@@ -253,52 +253,52 @@ typedef struct xfs_trans_header {
+  * must be added on to the end.
+  */
+ typedef struct xfs_inode_log_format {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint64_t		ilf_ino;	/* inode number */
++	uint16_t		ilf_type;	/* inode log item type */
++	uint16_t		ilf_size;	/* size of this item */
++	uint32_t		ilf_fields;	/* flags for fields logged */
++	uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	uint16_t		ilf_dsize;	/* size of data/ext/root */
++	uint64_t		ilf_ino;	/* inode number */
+ 	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+ 		uuid_t		ilfu_uuid;	/* mount point value */
+ 	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
++	int64_t			ilf_blkno;	/* blkno of inode buffer */
++	int32_t			ilf_len;	/* len of inode buffer */
++	int32_t			ilf_boffset;	/* off of inode in buffer */
+ } xfs_inode_log_format_t;
+ 
+ typedef struct xfs_inode_log_format_32 {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint64_t		ilf_ino;	/* inode number */
++	uint16_t		ilf_type;	/* inode log item type */
++	uint16_t		ilf_size;	/* size of this item */
++	uint32_t		ilf_fields;	/* flags for fields logged */
++	uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	uint16_t		ilf_dsize;	/* size of data/ext/root */
++	uint64_t		ilf_ino;	/* inode number */
+ 	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+ 		uuid_t		ilfu_uuid;	/* mount point value */
+ 	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
++	int64_t			ilf_blkno;	/* blkno of inode buffer */
++	int32_t			ilf_len;	/* len of inode buffer */
++	int32_t			ilf_boffset;	/* off of inode in buffer */
+ } __attribute__((packed)) xfs_inode_log_format_32_t;
+ 
+ typedef struct xfs_inode_log_format_64 {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint32_t		ilf_pad;	/* pad for 64 bit boundary */
+-	__uint64_t		ilf_ino;	/* inode number */
++	uint16_t		ilf_type;	/* inode log item type */
++	uint16_t		ilf_size;	/* size of this item */
++	uint32_t		ilf_fields;	/* flags for fields logged */
++	uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	uint16_t		ilf_dsize;	/* size of data/ext/root */
++	uint32_t		ilf_pad;	/* pad for 64 bit boundary */
++	uint64_t		ilf_ino;	/* inode number */
+ 	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+ 		uuid_t		ilfu_uuid;	/* mount point value */
+ 	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
++	int64_t			ilf_blkno;	/* blkno of inode buffer */
++	int32_t			ilf_len;	/* len of inode buffer */
++	int32_t			ilf_boffset;	/* off of inode in buffer */
+ } xfs_inode_log_format_64_t;
+ 
+ 
+@@ -367,8 +367,8 @@ static inline int xfs_ilog_fdata(int w)
+  * information.
+  */
+ typedef struct xfs_ictimestamp {
+-	__int32_t	t_sec;		/* timestamp seconds */
+-	__int32_t	t_nsec;		/* timestamp nanoseconds */
++	int32_t		t_sec;		/* timestamp seconds */
++	int32_t		t_nsec;		/* timestamp nanoseconds */
+ } xfs_ictimestamp_t;
+ 
+ /*
+@@ -376,18 +376,18 @@ typedef struct xfs_ictimestamp {
+  * kept identical to struct xfs_dinode except for the endianness annotations.
+  */
+ struct xfs_log_dinode {
+-	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+-	__uint16_t	di_mode;	/* mode and type of file */
+-	__int8_t	di_version;	/* inode version */
+-	__int8_t	di_format;	/* format of di_c data */
+-	__uint8_t	di_pad3[2];	/* unused in v2/3 inodes */
+-	__uint32_t	di_uid;		/* owner's user id */
+-	__uint32_t	di_gid;		/* owner's group id */
+-	__uint32_t	di_nlink;	/* number of links to file */
+-	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+-	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+-	__uint8_t	di_pad[6];	/* unused, zeroed space */
+-	__uint16_t	di_flushiter;	/* incremented on flush */
++	uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
++	uint16_t	di_mode;	/* mode and type of file */
++	int8_t		di_version;	/* inode version */
++	int8_t		di_format;	/* format of di_c data */
++	uint8_t		di_pad3[2];	/* unused in v2/3 inodes */
++	uint32_t	di_uid;		/* owner's user id */
++	uint32_t	di_gid;		/* owner's group id */
++	uint32_t	di_nlink;	/* number of links to file */
++	uint16_t	di_projid_lo;	/* lower part of owner's project id */
++	uint16_t	di_projid_hi;	/* higher part of owner's project id */
++	uint8_t		di_pad[6];	/* unused, zeroed space */
++	uint16_t	di_flushiter;	/* incremented on flush */
+ 	xfs_ictimestamp_t di_atime;	/* time last accessed */
+ 	xfs_ictimestamp_t di_mtime;	/* time last modified */
+ 	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+@@ -396,22 +396,22 @@ struct xfs_log_dinode {
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+ 	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
+ 	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
+-	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+-	__int8_t	di_aformat;	/* format of attr fork's data */
+-	__uint32_t	di_dmevmask;	/* DMIG event mask */
+-	__uint16_t	di_dmstate;	/* DMIG state info */
+-	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+-	__uint32_t	di_gen;		/* generation number */
++	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
++	int8_t		di_aformat;	/* format of attr fork's data */
++	uint32_t	di_dmevmask;	/* DMIG event mask */
++	uint16_t	di_dmstate;	/* DMIG state info */
++	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
++	uint32_t	di_gen;		/* generation number */
+ 
+ 	/* di_next_unlinked is the only non-core field in the old dinode */
+ 	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
+ 
+ 	/* start of the extended dinode, writable fields */
+-	__uint32_t	di_crc;		/* CRC of the inode */
+-	__uint64_t	di_changecount;	/* number of attribute changes */
++	uint32_t	di_crc;		/* CRC of the inode */
++	uint64_t	di_changecount;	/* number of attribute changes */
+ 	xfs_lsn_t	di_lsn;		/* flush sequence */
+-	__uint64_t	di_flags2;	/* more random flags */
+-	__uint8_t	di_pad2[16];	/* more padding for future expansion */
++	uint64_t	di_flags2;	/* more random flags */
++	uint8_t		di_pad2[16];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+ 	xfs_ictimestamp_t di_crtime;	/* time created */
+@@ -470,7 +470,7 @@ typedef struct xfs_buf_log_format {
+ 	unsigned short	blf_size;	/* size of this item */
+ 	ushort		blf_flags;	/* misc state */
+ 	ushort		blf_len;	/* number of blocks in this buf */
+-	__int64_t	blf_blkno;	/* starting blkno of this buf */
++	int64_t		blf_blkno;	/* starting blkno of this buf */
+ 	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+ 	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+ } xfs_buf_log_format_t;
+@@ -520,7 +520,7 @@ xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
+ 	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
+ }
+ 
+-static inline __uint16_t
++static inline uint16_t
+ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+ {
+ 	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
+@@ -541,14 +541,14 @@ typedef struct xfs_extent {
+  * conversion routine.
+  */
+ typedef struct xfs_extent_32 {
+-	__uint64_t	ext_start;
+-	__uint32_t	ext_len;
++	uint64_t	ext_start;
++	uint32_t	ext_len;
+ } __attribute__((packed)) xfs_extent_32_t;
+ 
+ typedef struct xfs_extent_64 {
+-	__uint64_t	ext_start;
+-	__uint32_t	ext_len;
+-	__uint32_t	ext_pad;
++	uint64_t	ext_start;
++	uint32_t	ext_len;
++	uint32_t	ext_pad;
+ } xfs_extent_64_t;
+ 
+ /*
+@@ -557,26 +557,26 @@ typedef struct xfs_extent_64 {
+  * size is given by efi_nextents.
+  */
+ typedef struct xfs_efi_log_format {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
++	uint16_t		efi_type;	/* efi log item type */
++	uint16_t		efi_size;	/* size of this item */
++	uint32_t		efi_nextents;	/* # extents to free */
++	uint64_t		efi_id;		/* efi identifier */
+ 	xfs_extent_t		efi_extents[1];	/* array of extents to free */
+ } xfs_efi_log_format_t;
+ 
+ typedef struct xfs_efi_log_format_32 {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
++	uint16_t		efi_type;	/* efi log item type */
++	uint16_t		efi_size;	/* size of this item */
++	uint32_t		efi_nextents;	/* # extents to free */
++	uint64_t		efi_id;		/* efi identifier */
+ 	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
+ } __attribute__((packed)) xfs_efi_log_format_32_t;
+ 
+ typedef struct xfs_efi_log_format_64 {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
++	uint16_t		efi_type;	/* efi log item type */
++	uint16_t		efi_size;	/* size of this item */
++	uint32_t		efi_nextents;	/* # extents to free */
++	uint64_t		efi_id;		/* efi identifier */
+ 	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
+ } xfs_efi_log_format_64_t;
+ 
+@@ -586,26 +586,26 @@ typedef struct xfs_efi_log_format_64 {
+  * size is given by efd_nextents;
+  */
+ typedef struct xfs_efd_log_format {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	uint16_t		efd_type;	/* efd log item type */
++	uint16_t		efd_size;	/* size of this item */
++	uint32_t		efd_nextents;	/* # of extents freed */
++	uint64_t		efd_efi_id;	/* id of corresponding efi */
+ 	xfs_extent_t		efd_extents[1];	/* array of extents freed */
+ } xfs_efd_log_format_t;
+ 
+ typedef struct xfs_efd_log_format_32 {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	uint16_t		efd_type;	/* efd log item type */
++	uint16_t		efd_size;	/* size of this item */
++	uint32_t		efd_nextents;	/* # of extents freed */
++	uint64_t		efd_efi_id;	/* id of corresponding efi */
+ 	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
+ } __attribute__((packed)) xfs_efd_log_format_32_t;
+ 
+ typedef struct xfs_efd_log_format_64 {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	uint16_t		efd_type;	/* efd log item type */
++	uint16_t		efd_size;	/* size of this item */
++	uint32_t		efd_nextents;	/* # of extents freed */
++	uint64_t		efd_efi_id;	/* id of corresponding efi */
+ 	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
+ } xfs_efd_log_format_64_t;
+ 
+@@ -613,11 +613,11 @@ typedef struct xfs_efd_log_format_64 {
+  * RUI/RUD (reverse mapping) log format definitions
+  */
+ struct xfs_map_extent {
+-	__uint64_t		me_owner;
+-	__uint64_t		me_startblock;
+-	__uint64_t		me_startoff;
+-	__uint32_t		me_len;
+-	__uint32_t		me_flags;
++	uint64_t		me_owner;
++	uint64_t		me_startblock;
++	uint64_t		me_startoff;
++	uint32_t		me_len;
++	uint32_t		me_flags;
+ };
+ 
+ /* rmap me_flags: upper bits are flags, lower byte is type code */
+@@ -643,10 +643,10 @@ struct xfs_map_extent {
+  * size is given by rui_nextents.
+  */
+ struct xfs_rui_log_format {
+-	__uint16_t		rui_type;	/* rui log item type */
+-	__uint16_t		rui_size;	/* size of this item */
+-	__uint32_t		rui_nextents;	/* # extents to free */
+-	__uint64_t		rui_id;		/* rui identifier */
++	uint16_t		rui_type;	/* rui log item type */
++	uint16_t		rui_size;	/* size of this item */
++	uint32_t		rui_nextents;	/* # extents to free */
++	uint64_t		rui_id;		/* rui identifier */
+ 	struct xfs_map_extent	rui_extents[1];	/* array of extents to rmap */
+ };
+ 
+@@ -656,10 +656,10 @@ struct xfs_rui_log_format {
+  * size is given by rud_nextents;
+  */
+ struct xfs_rud_log_format {
+-	__uint16_t		rud_type;	/* rud log item type */
+-	__uint16_t		rud_size;	/* size of this item */
+-	__uint32_t		__pad;
+-	__uint64_t		rud_rui_id;	/* id of corresponding rui */
++	uint16_t		rud_type;	/* rud log item type */
++	uint16_t		rud_size;	/* size of this item */
++	uint32_t		__pad;
++	uint64_t		rud_rui_id;	/* id of corresponding rui */
+ };
+ 
+ /*
+@@ -669,12 +669,12 @@ struct xfs_rud_log_format {
+  * 32 bits : log_recovery code assumes that.
+  */
+ typedef struct xfs_dq_logformat {
+-	__uint16_t		qlf_type;      /* dquot log item type */
+-	__uint16_t		qlf_size;      /* size of this item */
++	uint16_t		qlf_type;      /* dquot log item type */
++	uint16_t		qlf_size;      /* size of this item */
+ 	xfs_dqid_t		qlf_id;	       /* usr/grp/proj id : 32 bits */
+-	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
+-	__int32_t		qlf_len;       /* len of dquot buffer */
+-	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
++	int64_t			qlf_blkno;     /* blkno of dquot buffer */
++	int32_t			qlf_len;       /* len of dquot buffer */
++	uint32_t		qlf_boffset;   /* off of dquot in buffer */
+ } xfs_dq_logformat_t;
+ 
+ /*
+@@ -733,8 +733,8 @@ typedef struct xfs_qoff_logformat {
+  * decoding can be done correctly.
+  */
+ struct xfs_icreate_log {
+-	__uint16_t	icl_type;	/* type of log format structure */
+-	__uint16_t	icl_size;	/* size of log format structure */
++	uint16_t	icl_type;	/* type of log format structure */
++	uint16_t	icl_size;	/* size of log format structure */
+ 	__be32		icl_ag;		/* ag being allocated in */
+ 	__be32		icl_agbno;	/* start block of inode range */
+ 	__be32		icl_count;	/* number of inodes to initialise */
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 8e385f9..1523780 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -26,7 +26,7 @@
+ #define XLOG_RHASH_SIZE	16
+ #define XLOG_RHASH_SHIFT 2
+ #define XLOG_RHASH(tid)	\
+-	((((__uint32_t)tid)>>XLOG_RHASH_SHIFT) & (XLOG_RHASH_SIZE-1))
++	((((uint32_t)tid)>>XLOG_RHASH_SHIFT) & (XLOG_RHASH_SIZE-1))
+ 
+ #define XLOG_MAX_REGIONS_IN_ITEM   (XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK / 2 + 1)
+ 
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index 8eed512..d69c772 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -27,8 +27,8 @@
+  * they may need 64-bit accounting. Hence, 64-bit quota-counters,
+  * and quota-limits. This is a waste in the common case, but hey ...
+  */
+-typedef __uint64_t	xfs_qcnt_t;
+-typedef __uint16_t	xfs_qwarncnt_t;
++typedef uint64_t	xfs_qcnt_t;
++typedef uint16_t	xfs_qwarncnt_t;
+ 
+ /*
+  * flags for q_flags field in the dquot.
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 73d0540..52b439f 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -1169,7 +1169,7 @@ int
+ xfs_rmap_finish_one(
+ 	struct xfs_trans		*tp,
+ 	enum xfs_rmap_intent_type	type,
+-	__uint64_t			owner,
++	uint64_t			owner,
+ 	int				whichfork,
+ 	xfs_fileoff_t			startoff,
+ 	xfs_fsblock_t			startblock,
+@@ -1277,7 +1277,7 @@ __xfs_rmap_add(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_defer_ops		*dfops,
+ 	enum xfs_rmap_intent_type	type,
+-	__uint64_t			owner,
++	uint64_t			owner,
+ 	int				whichfork,
+ 	struct xfs_bmbt_irec		*bmap)
+ {
+@@ -1358,7 +1358,7 @@ xfs_rmap_alloc_extent(
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		bno,
+ 	xfs_extlen_t		len,
+-	__uint64_t		owner)
++	uint64_t		owner)
+ {
+ 	struct xfs_bmbt_irec	bmap;
+ 
+@@ -1382,7 +1382,7 @@ xfs_rmap_free_extent(
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		bno,
+ 	xfs_extlen_t		len,
+-	__uint64_t		owner)
++	uint64_t		owner)
+ {
+ 	struct xfs_bmbt_irec	bmap;
+ 
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 71cf99a..74a420b 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -177,7 +177,7 @@ enum xfs_rmap_intent_type {
+ struct xfs_rmap_intent {
+ 	struct list_head			ri_list;
+ 	enum xfs_rmap_intent_type		ri_type;
+-	__uint64_t				ri_owner;
++	uint64_t				ri_owner;
+ 	int					ri_whichfork;
+ 	struct xfs_bmbt_irec			ri_bmap;
+ };
+@@ -194,15 +194,15 @@ int xfs_rmap_convert_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		struct xfs_bmbt_irec *imap);
+ int xfs_rmap_alloc_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+-		__uint64_t owner);
++		uint64_t owner);
+ int xfs_rmap_free_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		xfs_agnumber_t agno, xfs_agblock_t bno, xfs_extlen_t len,
+-		__uint64_t owner);
++		uint64_t owner);
+ 
+ void xfs_rmap_finish_one_cleanup(struct xfs_trans *tp,
+ 		struct xfs_btree_cur *rcur, int error);
+ int xfs_rmap_finish_one(struct xfs_trans *tp, enum xfs_rmap_intent_type type,
+-		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
++		uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+ 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+ 		xfs_exntst_t state, struct xfs_btree_cur **pcur);
+ 
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index bc1faeb..0c0ec9e 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -192,7 +192,7 @@ xfs_rmapbt_init_high_key_from_rec(
+ 	union xfs_btree_key	*key,
+ 	union xfs_btree_rec	*rec)
+ {
+-	__uint64_t		off;
++	uint64_t		off;
+ 	int			adj;
+ 
+ 	adj = be32_to_cpu(rec->rmap.rm_blockcount) - 1;
+@@ -234,7 +234,7 @@ xfs_rmapbt_init_ptr_from_cur(
+ 	ptr->s = agf->agf_roots[cur->bc_btnum];
+ }
+ 
+-STATIC __int64_t
++STATIC int64_t
+ xfs_rmapbt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+@@ -242,9 +242,9 @@ xfs_rmapbt_key_diff(
+ 	struct xfs_rmap_irec	*rec = &cur->bc_rec.r;
+ 	struct xfs_rmap_key	*kp = &key->rmap;
+ 	__u64			x, y;
+-	__int64_t		d;
++	int64_t			d;
+ 
+-	d = (__int64_t)be32_to_cpu(kp->rm_startblock) - rec->rm_startblock;
++	d = (int64_t)be32_to_cpu(kp->rm_startblock) - rec->rm_startblock;
+ 	if (d)
+ 		return d;
+ 
+@@ -264,7 +264,7 @@ xfs_rmapbt_key_diff(
+ 	return 0;
+ }
+ 
+-STATIC __int64_t
++STATIC int64_t
+ xfs_rmapbt_diff_two_keys(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*k1,
+@@ -272,10 +272,10 @@ xfs_rmapbt_diff_two_keys(
+ {
+ 	struct xfs_rmap_key	*kp1 = &k1->rmap;
+ 	struct xfs_rmap_key	*kp2 = &k2->rmap;
+-	__int64_t		d;
++	int64_t			d;
+ 	__u64			x, y;
+ 
+-	d = (__int64_t)be32_to_cpu(kp1->rm_startblock) -
++	d = (int64_t)be32_to_cpu(kp1->rm_startblock) -
+ 		       be32_to_cpu(kp2->rm_startblock);
+ 	if (d)
+ 		return d;
+@@ -377,10 +377,10 @@ xfs_rmapbt_keys_inorder(
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	__uint32_t		x;
+-	__uint32_t		y;
+-	__uint64_t		a;
+-	__uint64_t		b;
++	uint32_t		x;
++	uint32_t		y;
++	uint64_t		a;
++	uint64_t		b;
+ 
+ 	x = be32_to_cpu(k1->rmap.rm_startblock);
+ 	y = be32_to_cpu(k2->rmap.rm_startblock);
+@@ -407,10 +407,10 @@ xfs_rmapbt_recs_inorder(
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	__uint32_t		x;
+-	__uint32_t		y;
+-	__uint64_t		a;
+-	__uint64_t		b;
++	uint32_t		x;
++	uint32_t		y;
++	uint64_t		a;
++	uint64_t		b;
+ 
+ 	x = be32_to_cpu(r1->rmap.rm_startblock);
+ 	y = be32_to_cpu(r2->rmap.rm_startblock);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index e2e1106..01395ef 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1011,7 +1011,7 @@ xfs_rtfree_extent(
+ 	    mp->m_sb.sb_rextents) {
+ 		if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
+ 			mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+-		*(__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
++		*(uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
+ 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
+ 	}
+ 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 0e3d4f5..9050664 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -437,7 +437,7 @@ xfs_sb_quota_to_disk(
+ 	struct xfs_dsb	*to,
+ 	struct xfs_sb	*from)
+ {
+-	__uint16_t	qflags = from->sb_qflags;
++	uint16_t	qflags = from->sb_qflags;
+ 
+ 	to->sb_uquotino = cpu_to_be64(from->sb_uquotino);
+ 	if (xfs_sb_version_has_pquotino(from)) {
+@@ -737,7 +737,7 @@ xfs_sb_mount_common(
+ 	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
+ 
+ 	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+-	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
++	mp->m_ialloc_inos = (int)MAX((uint16_t)XFS_INODES_PER_CHUNK,
+ 					sbp->sb_inopblock);
+ 	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
+ 
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 3d50364..ac1cb9d 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -18,34 +18,34 @@
+ #ifndef __XFS_TYPES_H__
+ #define	__XFS_TYPES_H__
+ 
+-typedef __uint32_t	prid_t;		/* project ID */
++typedef uint32_t	prid_t;		/* project ID */
+ 
+-typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+-typedef	__uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+-typedef	__uint32_t	xfs_extlen_t;	/* extent length in blocks */
+-typedef	__uint32_t	xfs_agnumber_t;	/* allocation group number */
+-typedef __int32_t	xfs_extnum_t;	/* # of extents in a file */
+-typedef __int16_t	xfs_aextnum_t;	/* # extents in an attribute fork */
+-typedef	__int64_t	xfs_fsize_t;	/* bytes in a file */
+-typedef __uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
++typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
++typedef	uint32_t	xfs_agino_t;	/* inode # within allocation grp */
++typedef	uint32_t	xfs_extlen_t;	/* extent length in blocks */
++typedef	uint32_t	xfs_agnumber_t;	/* allocation group number */
++typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
++typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
++typedef	int64_t		xfs_fsize_t;	/* bytes in a file */
++typedef uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
+ 
+-typedef	__int32_t	xfs_suminfo_t;	/* type of bitmap summary info */
+-typedef	__int32_t	xfs_rtword_t;	/* word type for bitmap manipulations */
++typedef	int32_t		xfs_suminfo_t;	/* type of bitmap summary info */
++typedef	int32_t		xfs_rtword_t;	/* word type for bitmap manipulations */
+ 
+-typedef	__int64_t	xfs_lsn_t;	/* log sequence number */
+-typedef	__int32_t	xfs_tid_t;	/* transaction identifier */
++typedef	int64_t		xfs_lsn_t;	/* log sequence number */
++typedef	int32_t		xfs_tid_t;	/* transaction identifier */
+ 
+-typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
+-typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
++typedef	uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
++typedef	uint32_t	xfs_dahash_t;	/* dir/attr hash value */
+ 
+-typedef	__uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
+-typedef __uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
+-typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
+-typedef __uint64_t	xfs_fileoff_t;	/* block number in a file */
+-typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
++typedef	uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
++typedef uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
++typedef uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
++typedef uint64_t	xfs_fileoff_t;	/* block number in a file */
++typedef uint64_t	xfs_filblks_t;	/* number of blocks in a file */
+ 
+-typedef	__int64_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
+-typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
++typedef	int64_t		xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
++typedef int64_t		xfs_sfiloff_t;	/* signed block number in a file */
+ 
+ /*
+  * Null values for the types.
+@@ -122,7 +122,7 @@ struct xfs_name {
+  * uid_t and gid_t are hard-coded to 32 bits in the inode.
+  * Hence, an 'id' in a dquot is 32 bits..
+  */
+-typedef __uint32_t	xfs_dqid_t;
++typedef uint32_t	xfs_dqid_t;
+ 
+ /*
+  * Constants for bit manipulations.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index ebfde55..faecade 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -742,7 +742,7 @@ xfs_writepage_map(
+ 	struct inode		*inode,
+ 	struct page		*page,
+ 	loff_t			offset,
+-	__uint64_t              end_offset)
++	uint64_t                end_offset)
+ {
+ 	LIST_HEAD(submit_list);
+ 	struct xfs_ioend	*ioend, *next;
+@@ -894,7 +894,7 @@ xfs_do_writepage(
+ 	struct xfs_writepage_ctx *wpc = data;
+ 	struct inode		*inode = page->mapping->host;
+ 	loff_t			offset;
+-	__uint64_t              end_offset;
++	uint64_t                end_offset;
+ 	pgoff_t                 end_index;
+ 
+ 	trace_xfs_writepage(inode, page, 0, 0);
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 25e76cd..cf15bdb 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -286,7 +286,7 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 	if (bp == NULL) {
+ 		cursor->blkno = 0;
+ 		for (;;) {
+-			__uint16_t magic;
++			uint16_t magic;
+ 
+ 			error = xfs_da3_node_read(NULL, dp,
+ 						      cursor->blkno, -1, &bp,
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 4ece4f2..3100f9b 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -392,10 +392,10 @@ xfs_getbmapx_fix_eof_hole(
+ 	struct getbmapx		*out,		/* output structure */
+ 	int			prealloced,	/* this is a file with
+ 						 * preallocated data space */
+-	__int64_t		end,		/* last block requested */
++	int64_t			end,		/* last block requested */
+ 	xfs_fsblock_t		startblock)
+ {
+-	__int64_t		fixlen;
++	int64_t			fixlen;
+ 	xfs_mount_t		*mp;		/* file system mount point */
+ 	xfs_ifork_t		*ifp;		/* inode fork pointer */
+ 	xfs_extnum_t		lastx;		/* last extent pointer */
+@@ -441,9 +441,9 @@ xfs_getbmap(
+ 	xfs_bmap_format_t	formatter,	/* format to user */
+ 	void			*arg)		/* formatter arg */
+ {
+-	__int64_t		bmvend;		/* last block requested */
++	int64_t			bmvend;		/* last block requested */
+ 	int			error = 0;	/* return value */
+-	__int64_t		fixlen;		/* length for -1 case */
++	int64_t			fixlen;		/* length for -1 case */
+ 	int			i;		/* extent number */
+ 	int			lock;		/* lock state */
+ 	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
+@@ -499,7 +499,7 @@ xfs_getbmap(
+ 	if (bmv->bmv_length == -1) {
+ 		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
+ 		bmv->bmv_length =
+-			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
++			max_t(int64_t, fixlen - bmv->bmv_offset, 0);
+ 	} else if (bmv->bmv_length == 0) {
+ 		bmv->bmv_entries = 0;
+ 		return 0;
+@@ -623,7 +623,7 @@ xfs_getbmap(
+ 				out[cur_ext].bmv_offset +
+ 				out[cur_ext].bmv_length;
+ 			bmv->bmv_length =
+-				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
++				max_t(int64_t, 0, bmvend - bmv->bmv_offset);
+ 
+ 			/*
+ 			 * In case we don't want to return the hole,
+@@ -1532,7 +1532,7 @@ xfs_swap_extents(
+ 	int		error = 0;
+ 	int		aforkblks = 0;
+ 	int		taforkblks = 0;
+-	__uint64_t	tmp;
++	uint64_t	tmp;
+ 	int		lock_flags;
+ 
+ 	/* XXX: we can't do this with rmap, will fix later */
+@@ -1684,15 +1684,15 @@ xfs_swap_extents(
+ 	/*
+ 	 * Fix the on-disk inode values
+ 	 */
+-	tmp = (__uint64_t)ip->i_d.di_nblocks;
++	tmp = (uint64_t)ip->i_d.di_nblocks;
+ 	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
+ 	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
+ 
+-	tmp = (__uint64_t) ip->i_d.di_nextents;
++	tmp = (uint64_t) ip->i_d.di_nextents;
+ 	ip->i_d.di_nextents = tip->i_d.di_nextents;
+ 	tip->i_d.di_nextents = tmp;
+ 
+-	tmp = (__uint64_t) ip->i_d.di_format;
++	tmp = (uint64_t) ip->i_d.di_format;
+ 	ip->i_d.di_format = tip->i_d.di_format;
+ 	tip->i_d.di_format = tmp;
+ 
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 32fc540..0f31017 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1151,7 +1151,7 @@ xfs_buf_ioerror_alert(
+ {
+ 	xfs_alert(bp->b_target->bt_mount,
+ "metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
+-		(__uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
++		(uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index f44f799..86bb04a 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -44,7 +44,7 @@ static unsigned char xfs_dir3_filetype_table[] = {
+ static unsigned char
+ xfs_dir3_get_dtype(
+ 	struct xfs_mount	*mp,
+-	__uint8_t		filetype)
++	uint8_t			filetype)
+ {
+ 	if (!xfs_sb_version_hasftype(&mp->m_sb))
+ 		return DT_UNKNOWN;
+@@ -127,7 +127,7 @@ xfs_dir2_sf_getdents(
+ 	 */
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+ 	for (i = 0; i < sfp->count; i++) {
+-		__uint8_t filetype;
++		uint8_t filetype;
+ 
+ 		off = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
+ 				xfs_dir2_sf_get_offset(sfep));
+@@ -204,7 +204,7 @@ xfs_dir2_block_getdents(
+ 	 * Each object is a real entry (dep) or an unused one (dup).
+ 	 */
+ 	while (ptr < endptr) {
+-		__uint8_t filetype;
++		uint8_t filetype;
+ 
+ 		dup = (xfs_dir2_data_unused_t *)ptr;
+ 		/*
+@@ -523,7 +523,7 @@ xfs_dir2_leaf_getdents(
+ 	 * Get more blocks and readahead as necessary.
+ 	 */
+ 	while (curoff < XFS_DIR2_LEAF_OFFSET) {
+-		__uint8_t filetype;
++		uint8_t filetype;
+ 
+ 		/*
+ 		 * If we have no buffer, or we're off the end of the
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 4ff499a..e890683 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -39,7 +39,7 @@ xfs_trim_extents(
+ 	xfs_daddr_t		start,
+ 	xfs_daddr_t		end,
+ 	xfs_daddr_t		minlen,
+-	__uint64_t		*blocks_trimmed)
++	uint64_t		*blocks_trimmed)
+ {
+ 	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
+ 	struct xfs_btree_cur	*cur;
+@@ -161,7 +161,7 @@ xfs_ioc_trim(
+ 	struct fstrim_range	range;
+ 	xfs_daddr_t		start, end, minlen;
+ 	xfs_agnumber_t		start_agno, end_agno, agno;
+-	__uint64_t		blocks_trimmed = 0;
++	uint64_t		blocks_trimmed = 0;
+ 	int			error, last_error = 0;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 7a30b8f..52d79db 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -276,7 +276,7 @@ xfs_qm_init_dquot_blk(
+ void
+ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
+ {
+-	__uint64_t space;
++	uint64_t space;
+ 
+ 	dqp->q_prealloc_hi_wmark = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+ 	dqp->q_prealloc_lo_wmark = be64_to_cpu(dqp->q_core.d_blk_softlimit);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 0f96847..ab9af95 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -580,7 +580,7 @@ xfs_growfs_data_private(
+ 	if (nagimax)
+ 		mp->m_maxagi = nagimax;
+ 	if (mp->m_sb.sb_imax_pct) {
+-		__uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
++		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
+ 		do_div(icount, 100);
+ 		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
+ 	} else
+@@ -750,17 +750,17 @@ xfs_fs_counts(
+ int
+ xfs_reserve_blocks(
+ 	xfs_mount_t             *mp,
+-	__uint64_t              *inval,
++	uint64_t                *inval,
+ 	xfs_fsop_resblks_t      *outval)
+ {
+-	__int64_t		lcounter, delta;
+-	__int64_t		fdblks_delta = 0;
+-	__uint64_t		request;
+-	__int64_t		free;
++	int64_t			lcounter, delta;
++	int64_t			fdblks_delta = 0;
++	uint64_t		request;
++	int64_t			free;
+ 	int			error = 0;
+ 
+ 	/* If inval is null, report current values and return */
+-	if (inval == (__uint64_t *)NULL) {
++	if (inval == (uint64_t *)NULL) {
+ 		if (!outval)
+ 			return -EINVAL;
+ 		outval->resblks = mp->m_resblks;
+@@ -861,7 +861,7 @@ out:
+ int
+ xfs_fs_goingdown(
+ 	xfs_mount_t	*mp,
+-	__uint32_t	inflags)
++	uint32_t	inflags)
+ {
+ 	switch (inflags) {
+ 	case XFS_FSOP_GOING_FLAGS_DEFAULT: {
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index f32713f..79d3e76 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -22,8 +22,8 @@ extern int xfs_fs_geometry(xfs_mount_t *mp, xfs_fsop_geom_t *geo, int nversion);
+ extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+ extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
+ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+-extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
++extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+-extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
++extern int xfs_fs_goingdown(xfs_mount_t *mp, uint32_t inflags);
+ 
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e08eaea..9c41dff 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -611,7 +611,7 @@ __xfs_iflock(
+ 
+ STATIC uint
+ _xfs_dic2xflags(
+-	__uint16_t		di_flags,
++	uint16_t		di_flags,
+ 	uint64_t		di_flags2,
+ 	bool			has_attr)
+ {
+@@ -834,8 +834,8 @@ xfs_ialloc(
+ 	if (ip->i_d.di_version == 3) {
+ 		inode->i_version = 1;
+ 		ip->i_d.di_flags2 = 0;
+-		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
+-		ip->i_d.di_crtime.t_nsec = (__int32_t)tv.tv_nsec;
++		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
++		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
+ 	}
+ 
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e1a411e..daea839 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -189,8 +189,8 @@ static inline void
+ xfs_set_projid(struct xfs_inode *ip,
+ 		prid_t projid)
+ {
+-	ip->i_d.di_projid_hi = (__uint16_t) (projid >> 16);
+-	ip->i_d.di_projid_lo = (__uint16_t) (projid & 0xffff);
++	ip->i_d.di_projid_hi = (uint16_t) (projid >> 16);
++	ip->i_d.di_projid_lo = (uint16_t) (projid & 0xffff);
+ }
+ 
+ static inline prid_t
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index cf46658..3a44de9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -440,8 +440,8 @@ xfs_attrmulti_attr_get(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+ 	unsigned char		__user *ubuf,
+-	__uint32_t		*len,
+-	__uint32_t		flags)
++	uint32_t		*len,
++	uint32_t		flags)
+ {
+ 	unsigned char		*kbuf;
+ 	int			error = -EFAULT;
+@@ -469,8 +469,8 @@ xfs_attrmulti_attr_set(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+ 	const unsigned char	__user *ubuf,
+-	__uint32_t		len,
+-	__uint32_t		flags)
++	uint32_t		len,
++	uint32_t		flags)
+ {
+ 	unsigned char		*kbuf;
+ 	int			error;
+@@ -495,7 +495,7 @@ int
+ xfs_attrmulti_attr_remove(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+-	__uint32_t		flags)
++	uint32_t		flags)
+ {
+ 	int			error;
+ 
+@@ -873,7 +873,7 @@ xfs_merge_ioc_xflags(
+ 
+ STATIC unsigned int
+ xfs_di2lxflags(
+-	__uint16_t	di_flags)
++	uint16_t	di_flags)
+ {
+ 	unsigned int	flags = 0;
+ 
+@@ -1225,7 +1225,7 @@ xfs_ioctl_setattr_check_projid(
+ 	struct fsxattr		*fa)
+ {
+ 	/* Disallow 32bit project ids if projid32bit feature is not enabled. */
+-	if (fa->fsx_projid > (__uint16_t)-1 &&
++	if (fa->fsx_projid > (uint16_t)-1 &&
+ 	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
+ 		return -EINVAL;
+ 
+@@ -1777,7 +1777,7 @@ xfs_file_ioctl(
+ 
+ 	case XFS_IOC_SET_RESBLKS: {
+ 		xfs_fsop_resblks_t inout;
+-		__uint64_t	   in;
++		uint64_t	   in;
+ 
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			return -EPERM;
+@@ -1863,12 +1863,12 @@ xfs_file_ioctl(
+ 	}
+ 
+ 	case XFS_IOC_GOINGDOWN: {
+-		__uint32_t in;
++		uint32_t in;
+ 
+ 		if (!capable(CAP_SYS_ADMIN))
+ 			return -EPERM;
+ 
+-		if (get_user(in, (__uint32_t __user *)arg))
++		if (get_user(in, (uint32_t __user *)arg))
+ 			return -EFAULT;
+ 
+ 		return xfs_fs_goingdown(mp, in);
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 8b52881..e86c3ea 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -48,22 +48,22 @@ xfs_attrmulti_attr_get(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+ 	unsigned char		__user *ubuf,
+-	__uint32_t		*len,
+-	__uint32_t		flags);
++	uint32_t		*len,
++	uint32_t		flags);
+ 
+ extern int
+ xfs_attrmulti_attr_set(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+ 	const unsigned char	__user *ubuf,
+-	__uint32_t		len,
+-	__uint32_t		flags);
++	uint32_t		len,
++	uint32_t		flags);
+ 
+ extern int
+ xfs_attrmulti_attr_remove(
+ 	struct inode		*inode,
+ 	unsigned char		*name,
+-	__uint32_t		flags);
++	uint32_t		flags);
+ 
+ extern struct dentry *
+ xfs_handle_to_dentry(
+diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
+index b1bb454..5492bcf 100644
+--- a/fs/xfs/xfs_ioctl32.h
++++ b/fs/xfs/xfs_ioctl32.h
+@@ -112,9 +112,9 @@ typedef struct compat_xfs_fsop_handlereq {
+ 
+ /* The bstat field in the swapext struct needs translation */
+ typedef struct compat_xfs_swapext {
+-	__int64_t		sx_version;	/* version */
+-	__int64_t		sx_fdtarget;	/* fd of target file */
+-	__int64_t		sx_fdtmp;	/* fd of tmp file */
++	int64_t			sx_version;	/* version */
++	int64_t			sx_fdtarget;	/* fd of target file */
++	int64_t			sx_fdtmp;	/* fd of tmp file */
+ 	xfs_off_t		sx_offset;	/* offset into file */
+ 	xfs_off_t		sx_length;	/* leng from offset */
+ 	char			sx_pad[16];	/* pad space, unused */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index b8d64d5..0392167 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -23,15 +23,6 @@
+ /*
+  * Kernel specific type declarations for XFS
+  */
+-typedef signed char		__int8_t;
+-typedef unsigned char		__uint8_t;
+-typedef signed short int	__int16_t;
+-typedef unsigned short int	__uint16_t;
+-typedef signed int		__int32_t;
+-typedef unsigned int		__uint32_t;
+-typedef signed long long int	__int64_t;
+-typedef unsigned long long int	__uint64_t;
+-
+ typedef __s64			xfs_off_t;	/* <file offset> type */
+ typedef unsigned long long	xfs_ino_t;	/* <inode> type */
+ typedef __s64			xfs_daddr_t;	/* <disk address> type */
+@@ -184,22 +175,22 @@ extern struct xstats xfsstats;
+  * are converting to the init_user_ns. The uid is later mapped to a particular
+  * user namespace value when crossing the kernel/user boundary.
+  */
+-static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
++static inline uint32_t xfs_kuid_to_uid(kuid_t uid)
+ {
+ 	return from_kuid(&init_user_ns, uid);
+ }
+ 
+-static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
++static inline kuid_t xfs_uid_to_kuid(uint32_t uid)
+ {
+ 	return make_kuid(&init_user_ns, uid);
+ }
+ 
+-static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
++static inline uint32_t xfs_kgid_to_gid(kgid_t gid)
+ {
+ 	return from_kgid(&init_user_ns, gid);
+ }
+ 
+-static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
++static inline kgid_t xfs_gid_to_kgid(uint32_t gid)
+ {
+ 	return make_kgid(&init_user_ns, gid);
+ }
+@@ -314,14 +305,14 @@ static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+ #define do_div(a, b)	xfs_do_div(&(a), (b), sizeof(a))
+ #define do_mod(a, b)	xfs_do_mod(&(a), (b), sizeof(a))
+ 
+-static inline __uint64_t roundup_64(__uint64_t x, __uint32_t y)
++static inline uint64_t roundup_64(uint64_t x, uint32_t y)
+ {
+ 	x += y - 1;
+ 	do_div(x, y);
+ 	return x * y;
+ }
+ 
+-static inline __uint64_t howmany_64(__uint64_t x, __uint32_t y)
++static inline uint64_t howmany_64(uint64_t x, uint32_t y)
+ {
+ 	x += y - 1;
+ 	do_div(x, y);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3b74fa0..26d6f5d2 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -434,7 +434,7 @@ xfs_log_reserve(
+ 	int		 	unit_bytes,
+ 	int		 	cnt,
+ 	struct xlog_ticket	**ticp,
+-	__uint8_t	 	client,
++	uint8_t		 	client,
+ 	bool			permanent)
+ {
+ 	struct xlog		*log = mp->m_log;
+@@ -825,9 +825,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 		if (!error) {
+ 			/* the data section must be 32 bit size aligned */
+ 			struct {
+-			    __uint16_t magic;
+-			    __uint16_t pad1;
+-			    __uint32_t pad2; /* may as well make it 64 bits */
++			    uint16_t magic;
++			    uint16_t pad1;
++			    uint32_t pad2; /* may as well make it 64 bits */
+ 			} magic = {
+ 				.magic = XLOG_UNMOUNT_TYPE,
+ 			};
+@@ -1665,7 +1665,7 @@ xlog_cksum(
+ 	char			*dp,
+ 	int			size)
+ {
+-	__uint32_t		crc;
++	uint32_t		crc;
+ 
+ 	/* first generate the crc for the record header ... */
+ 	crc = xfs_start_cksum((char *)rhead,
+@@ -1828,7 +1828,7 @@ xlog_sync(
+ 		 */
+ 		dptr = (char *)&iclog->ic_header + count;
+ 		for (i = 0; i < split; i += BBSIZE) {
+-			__uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
++			uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
+ 			if (++cycle == XLOG_HEADER_MAGIC_NUM)
+ 				cycle++;
+ 			*(__be32 *)dptr = cpu_to_be32(cycle);
+@@ -2370,8 +2370,8 @@ xlog_write(
+ 			}
+ 
+ 			reg = &vecp[index];
+-			ASSERT(reg->i_len % sizeof(__int32_t) == 0);
+-			ASSERT((unsigned long)ptr % sizeof(__int32_t) == 0);
++			ASSERT(reg->i_len % sizeof(int32_t) == 0);
++			ASSERT((unsigned long)ptr % sizeof(int32_t) == 0);
+ 
+ 			start_rec_copy = xlog_write_start_rec(ptr, ticket);
+ 			if (start_rec_copy) {
+@@ -3150,7 +3150,7 @@ xlog_state_switch_iclogs(
+ 	/* Round up to next log-sunit */
+ 	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+ 	    log->l_mp->m_sb.sb_logsunit > 1) {
+-		__uint32_t sunit_bb = BTOBB(log->l_mp->m_sb.sb_logsunit);
++		uint32_t sunit_bb = BTOBB(log->l_mp->m_sb.sb_logsunit);
+ 		log->l_curr_block = roundup(log->l_curr_block, sunit_bb);
+ 	}
+ 
+@@ -3786,7 +3786,7 @@ xlog_verify_iclog(
+ 	xlog_in_core_2_t	*xhdr;
+ 	void			*base_ptr, *ptr, *p;
+ 	ptrdiff_t		field_offset;
+-	__uint8_t		clientid;
++	uint8_t			clientid;
+ 	int			len, i, j, k, op_len;
+ 	int			idx;
+ 
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index b5e7107..0b2b811 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -160,7 +160,7 @@ int	  xfs_log_reserve(struct xfs_mount *mp,
+ 			  int		   length,
+ 			  int		   count,
+ 			  struct xlog_ticket **ticket,
+-			  __uint8_t	   clientid,
++			  uint8_t	   clientid,
+ 			  bool		   permanent);
+ int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
+ void      xfs_log_unmount(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 765f084..786c762 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -417,7 +417,7 @@ struct xlog {
+ };
+ 
+ #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
+-	((log)->l_buf_cancel_table + ((__uint64_t)blkno % XLOG_BC_TABLE_SIZE))
++	((log)->l_buf_cancel_table + ((uint64_t)blkno % XLOG_BC_TABLE_SIZE))
+ 
+ #define XLOG_FORCED_SHUTDOWN(log)	((log)->l_flags & XLOG_IO_ERROR)
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e8638fd..2fb9cca 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2214,9 +2214,9 @@ xlog_recover_get_buf_lsn(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf		*bp)
+ {
+-	__uint32_t		magic32;
+-	__uint16_t		magic16;
+-	__uint16_t		magicda;
++	uint32_t		magic32;
++	uint16_t		magic16;
++	uint16_t		magicda;
+ 	void			*blk = bp->b_addr;
+ 	uuid_t			*uuid;
+ 	xfs_lsn_t		lsn = -1;
+@@ -2363,9 +2363,9 @@ xlog_recover_validate_buf_type(
+ 	xfs_buf_log_format_t	*buf_f)
+ {
+ 	struct xfs_da_blkinfo	*info = bp->b_addr;
+-	__uint32_t		magic32;
+-	__uint16_t		magic16;
+-	__uint16_t		magicda;
++	uint32_t		magic32;
++	uint16_t		magic16;
++	uint16_t		magicda;
+ 
+ 	/*
+ 	 * We can only do post recovery validation on items on CRC enabled
+@@ -2810,7 +2810,7 @@ xlog_recover_buffer_pass2(
+ 	if (XFS_DINODE_MAGIC ==
+ 	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
+ 	    (BBTOB(bp->b_io_length) != MAX(log->l_mp->m_sb.sb_blocksize,
+-			(__uint32_t)log->l_mp->m_inode_cluster_size))) {
++			(uint32_t)log->l_mp->m_inode_cluster_size))) {
+ 		xfs_buf_stale(bp);
+ 		error = xfs_bwrite(bp);
+ 	} else {
+@@ -3381,7 +3381,7 @@ xlog_recover_efd_pass2(
+ 	xfs_efd_log_format_t	*efd_formatp;
+ 	xfs_efi_log_item_t	*efip = NULL;
+ 	xfs_log_item_t		*lip;
+-	__uint64_t		efi_id;
++	uint64_t		efi_id;
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_ail		*ailp = log->l_ailp;
+ 
+@@ -3477,7 +3477,7 @@ xlog_recover_rud_pass2(
+ 	struct xfs_rud_log_format	*rud_formatp;
+ 	struct xfs_rui_log_item		*ruip = NULL;
+ 	struct xfs_log_item		*lip;
+-	__uint64_t			rui_id;
++	uint64_t			rui_id;
+ 	struct xfs_ail_cursor		cur;
+ 	struct xfs_ail			*ailp = log->l_ailp;
+ 
+@@ -5334,9 +5334,9 @@ xlog_recover_check_summary(
+ 	xfs_buf_t	*agfbp;
+ 	xfs_buf_t	*agibp;
+ 	xfs_agnumber_t	agno;
+-	__uint64_t	freeblks;
+-	__uint64_t	itotal;
+-	__uint64_t	ifree;
++	uint64_t	freeblks;
++	uint64_t	itotal;
++	uint64_t	ifree;
+ 	int		error;
+ 
+ 	mp = log->l_mp;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index faeead6..1e186c2 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -166,7 +166,7 @@ xfs_free_perag(
+ int
+ xfs_sb_validate_fsb_count(
+ 	xfs_sb_t	*sbp,
+-	__uint64_t	nblocks)
++	uint64_t	nblocks)
+ {
+ 	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+ 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
+@@ -419,7 +419,7 @@ STATIC void
+ xfs_set_maxicount(xfs_mount_t *mp)
+ {
+ 	xfs_sb_t	*sbp = &(mp->m_sb);
+-	__uint64_t	icount;
++	uint64_t	icount;
+ 
+ 	if (sbp->sb_imax_pct) {
+ 		/*
+@@ -485,7 +485,7 @@ xfs_set_low_space_thresholds(
+ 	int i;
+ 
+ 	for (i = 0; i < XFS_LOWSP_MAX; i++) {
+-		__uint64_t space = mp->m_sb.sb_dblocks;
++		uint64_t space = mp->m_sb.sb_dblocks;
+ 
+ 		do_div(space, 100);
+ 		mp->m_low_space[i] = space * (i + 1);
+@@ -582,10 +582,10 @@ xfs_mount_reset_sbqflags(
+ 	return xfs_sync_sb(mp, false);
+ }
+ 
+-__uint64_t
++uint64_t
+ xfs_default_resblks(xfs_mount_t *mp)
+ {
+-	__uint64_t resblks;
++	uint64_t resblks;
+ 
+ 	/*
+ 	 * We default to 5% or 8192 fsbs of space reserved, whichever is
+@@ -596,7 +596,7 @@ xfs_default_resblks(xfs_mount_t *mp)
+ 	 */
+ 	resblks = mp->m_sb.sb_dblocks;
+ 	do_div(resblks, 20);
+-	resblks = min_t(__uint64_t, resblks, 8192);
++	resblks = min_t(uint64_t, resblks, 8192);
+ 	return resblks;
+ }
+ 
+@@ -616,7 +616,7 @@ xfs_mountfs(
+ {
+ 	struct xfs_sb		*sbp = &(mp->m_sb);
+ 	struct xfs_inode	*rip;
+-	__uint64_t		resblks;
++	uint64_t		resblks;
+ 	uint			quotamount = 0;
+ 	uint			quotaflags = 0;
+ 	int			error = 0;
+@@ -1001,7 +1001,7 @@ void
+ xfs_unmountfs(
+ 	struct xfs_mount	*mp)
+ {
+-	__uint64_t		resblks;
++	uint64_t		resblks;
+ 	int			error;
+ 
+ 	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index b36676c..33728f6 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -102,10 +102,10 @@ typedef struct xfs_mount {
+ 	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+ 	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+ 	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+-	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
+-	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
+-	__uint8_t		m_agno_log;	/* log #ag's */
+-	__uint8_t		m_agino_log;	/* #bits for agino in inum */
++	uint8_t			m_blkbit_log;	/* blocklog + NBBY */
++	uint8_t			m_blkbb_log;	/* blocklog - BBSHIFT */
++	uint8_t			m_agno_log;	/* log #ag's */
++	uint8_t			m_agino_log;	/* #bits for agino in inum */
+ 	uint			m_inode_cluster_size;/* min inode buf size */
+ 	uint			m_blockmask;	/* sb_blocksize-1 */
+ 	uint			m_blockwsize;	/* sb_blocksize in words */
+@@ -130,7 +130,7 @@ typedef struct xfs_mount {
+ 	struct mutex		m_growlock;	/* growfs mutex */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+-	__uint64_t		m_flags;	/* global mount flags */
++	uint64_t		m_flags;	/* global mount flags */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_ialloc_min_blks;/* min blocks in sparse inode
+@@ -138,14 +138,14 @@ typedef struct xfs_mount {
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+ 	uint			m_qflags;	/* quota status flags */
+ 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
+-	__uint64_t		m_maxicount;	/* maximum inode count */
+-	__uint64_t		m_resblks;	/* total reserved blocks */
+-	__uint64_t		m_resblks_avail;/* available reserved blocks */
+-	__uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
++	uint64_t		m_maxicount;	/* maximum inode count */
++	uint64_t		m_resblks;	/* total reserved blocks */
++	uint64_t		m_resblks_avail;/* available reserved blocks */
++	uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
+ 	int			m_dalign;	/* stripe unit */
+ 	int			m_swidth;	/* stripe width */
+ 	int			m_sinoalign;	/* stripe unit inode alignment */
+-	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
++	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
+ 	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+ 	const struct xfs_dir_ops *m_dir_inode_ops; /* vector of dir inode ops */
+ 	const struct xfs_dir_ops *m_nondir_inode_ops; /* !dir inode ops */
+@@ -181,7 +181,7 @@ typedef struct xfs_mount {
+ 	 * ever support shrinks it would have to be persisted in addition
+ 	 * to various other kinds of pain inflicted on the pNFS server.
+ 	 */
+-	__uint32_t		m_generation;
++	uint32_t		m_generation;
+ 
+ 	bool			m_fail_unmount;
+ #ifdef DEBUG
+@@ -337,12 +337,12 @@ typedef struct xfs_perag {
+ 	char		pagi_init;	/* this agi's entry is initialized */
+ 	char		pagf_metadata;	/* the agf is preferred to be metadata */
+ 	char		pagi_inodeok;	/* The agi is ok for inodes */
+-	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
++	uint8_t		pagf_levels[XFS_BTNUM_AGF];
+ 					/* # of levels in bno & cnt btree */
+-	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
++	uint32_t	pagf_flcount;	/* count of blocks in freelist */
+ 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+ 	xfs_extlen_t	pagf_longest;	/* longest free space */
+-	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
++	uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
+ 	xfs_agino_t	pagi_freecount;	/* number of free inodes */
+ 	xfs_agino_t	pagi_count;	/* number of allocated inodes */
+ 
+@@ -376,7 +376,7 @@ typedef struct xfs_perag {
+ 
+ extern void	xfs_uuid_table_free(void);
+ extern int	xfs_log_sbcount(xfs_mount_t *);
+-extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
++extern uint64_t xfs_default_resblks(xfs_mount_t *mp);
+ extern int	xfs_mountfs(xfs_mount_t *mp);
+ extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
+ 				     xfs_agnumber_t *maxagi);
+@@ -392,7 +392,7 @@ extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
+ extern int	xfs_readsb(xfs_mount_t *, int);
+ extern void	xfs_freesb(xfs_mount_t *);
+ extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
+-extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
++extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t);
+ 
+ extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+ 
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 3e52d5d..2be6d27 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -33,7 +33,7 @@ xfs_fill_statvfs_from_dquot(
+ 	struct kstatfs		*statp,
+ 	struct xfs_dquot	*dqp)
+ {
+-	__uint64_t		limit;
++	uint64_t		limit;
+ 
+ 	limit = dqp->q_core.d_blk_softlimit ?
+ 		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 802bcc3..4be8d8b 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -1264,13 +1264,13 @@ xfs_rtpick_extent(
+ {
+ 	xfs_rtblock_t	b;		/* result block */
+ 	int		log2;		/* log of sequence number */
+-	__uint64_t	resid;		/* residual after log removed */
+-	__uint64_t	seq;		/* sequence number of file creation */
+-	__uint64_t	*seqp;		/* pointer to seqno in inode */
++	uint64_t	resid;		/* residual after log removed */
++	uint64_t	seq;		/* sequence number of file creation */
++	uint64_t	*seqp;		/* pointer to seqno in inode */
+ 
+ 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+ 
+-	seqp = (__uint64_t *)&VFS_I(mp->m_rbmip)->i_atime;
++	seqp = (uint64_t *)&VFS_I(mp->m_rbmip)->i_atime;
+ 	if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM)) {
+ 		mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
+ 		*seqp = 0;
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index f04f547..44ca839 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -33,9 +33,9 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ {
+ 	int		i, j;
+ 	int		len = 0;
+-	__uint64_t	xs_xstrat_bytes = 0;
+-	__uint64_t	xs_write_bytes = 0;
+-	__uint64_t	xs_read_bytes = 0;
++	uint64_t	xs_xstrat_bytes = 0;
++	uint64_t	xs_write_bytes = 0;
++	uint64_t	xs_read_bytes = 0;
+ 
+ 	static const struct xstats_entry {
+ 		char	*desc;
+@@ -99,7 +99,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ void xfs_stats_clearall(struct xfsstats __percpu *stats)
+ {
+ 	int		c;
+-	__uint32_t	vn_active;
++	uint32_t	vn_active;
+ 
+ 	xfs_notice(NULL, "Clearing xfsstats");
+ 	for_each_possible_cpu(c) {
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index 657865f..2333db9 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -26,207 +26,207 @@
+  */
+ struct xfsstats {
+ # define XFSSTAT_END_EXTENT_ALLOC	4
+-	__uint32_t		xs_allocx;
+-	__uint32_t		xs_allocb;
+-	__uint32_t		xs_freex;
+-	__uint32_t		xs_freeb;
++	uint32_t		xs_allocx;
++	uint32_t		xs_allocb;
++	uint32_t		xs_freex;
++	uint32_t		xs_freeb;
+ # define XFSSTAT_END_ALLOC_BTREE	(XFSSTAT_END_EXTENT_ALLOC+4)
+-	__uint32_t		xs_abt_lookup;
+-	__uint32_t		xs_abt_compare;
+-	__uint32_t		xs_abt_insrec;
+-	__uint32_t		xs_abt_delrec;
++	uint32_t		xs_abt_lookup;
++	uint32_t		xs_abt_compare;
++	uint32_t		xs_abt_insrec;
++	uint32_t		xs_abt_delrec;
+ # define XFSSTAT_END_BLOCK_MAPPING	(XFSSTAT_END_ALLOC_BTREE+7)
+-	__uint32_t		xs_blk_mapr;
+-	__uint32_t		xs_blk_mapw;
+-	__uint32_t		xs_blk_unmap;
+-	__uint32_t		xs_add_exlist;
+-	__uint32_t		xs_del_exlist;
+-	__uint32_t		xs_look_exlist;
+-	__uint32_t		xs_cmp_exlist;
++	uint32_t		xs_blk_mapr;
++	uint32_t		xs_blk_mapw;
++	uint32_t		xs_blk_unmap;
++	uint32_t		xs_add_exlist;
++	uint32_t		xs_del_exlist;
++	uint32_t		xs_look_exlist;
++	uint32_t		xs_cmp_exlist;
+ # define XFSSTAT_END_BLOCK_MAP_BTREE	(XFSSTAT_END_BLOCK_MAPPING+4)
+-	__uint32_t		xs_bmbt_lookup;
+-	__uint32_t		xs_bmbt_compare;
+-	__uint32_t		xs_bmbt_insrec;
+-	__uint32_t		xs_bmbt_delrec;
++	uint32_t		xs_bmbt_lookup;
++	uint32_t		xs_bmbt_compare;
++	uint32_t		xs_bmbt_insrec;
++	uint32_t		xs_bmbt_delrec;
+ # define XFSSTAT_END_DIRECTORY_OPS	(XFSSTAT_END_BLOCK_MAP_BTREE+4)
+-	__uint32_t		xs_dir_lookup;
+-	__uint32_t		xs_dir_create;
+-	__uint32_t		xs_dir_remove;
+-	__uint32_t		xs_dir_getdents;
++	uint32_t		xs_dir_lookup;
++	uint32_t		xs_dir_create;
++	uint32_t		xs_dir_remove;
++	uint32_t		xs_dir_getdents;
+ # define XFSSTAT_END_TRANSACTIONS	(XFSSTAT_END_DIRECTORY_OPS+3)
+-	__uint32_t		xs_trans_sync;
+-	__uint32_t		xs_trans_async;
+-	__uint32_t		xs_trans_empty;
++	uint32_t		xs_trans_sync;
++	uint32_t		xs_trans_async;
++	uint32_t		xs_trans_empty;
+ # define XFSSTAT_END_INODE_OPS		(XFSSTAT_END_TRANSACTIONS+7)
+-	__uint32_t		xs_ig_attempts;
+-	__uint32_t		xs_ig_found;
+-	__uint32_t		xs_ig_frecycle;
+-	__uint32_t		xs_ig_missed;
+-	__uint32_t		xs_ig_dup;
+-	__uint32_t		xs_ig_reclaims;
+-	__uint32_t		xs_ig_attrchg;
++	uint32_t		xs_ig_attempts;
++	uint32_t		xs_ig_found;
++	uint32_t		xs_ig_frecycle;
++	uint32_t		xs_ig_missed;
++	uint32_t		xs_ig_dup;
++	uint32_t		xs_ig_reclaims;
++	uint32_t		xs_ig_attrchg;
+ # define XFSSTAT_END_LOG_OPS		(XFSSTAT_END_INODE_OPS+5)
+-	__uint32_t		xs_log_writes;
+-	__uint32_t		xs_log_blocks;
+-	__uint32_t		xs_log_noiclogs;
+-	__uint32_t		xs_log_force;
+-	__uint32_t		xs_log_force_sleep;
++	uint32_t		xs_log_writes;
++	uint32_t		xs_log_blocks;
++	uint32_t		xs_log_noiclogs;
++	uint32_t		xs_log_force;
++	uint32_t		xs_log_force_sleep;
+ # define XFSSTAT_END_TAIL_PUSHING	(XFSSTAT_END_LOG_OPS+10)
+-	__uint32_t		xs_try_logspace;
+-	__uint32_t		xs_sleep_logspace;
+-	__uint32_t		xs_push_ail;
+-	__uint32_t		xs_push_ail_success;
+-	__uint32_t		xs_push_ail_pushbuf;
+-	__uint32_t		xs_push_ail_pinned;
+-	__uint32_t		xs_push_ail_locked;
+-	__uint32_t		xs_push_ail_flushing;
+-	__uint32_t		xs_push_ail_restarts;
+-	__uint32_t		xs_push_ail_flush;
++	uint32_t		xs_try_logspace;
++	uint32_t		xs_sleep_logspace;
++	uint32_t		xs_push_ail;
++	uint32_t		xs_push_ail_success;
++	uint32_t		xs_push_ail_pushbuf;
++	uint32_t		xs_push_ail_pinned;
++	uint32_t		xs_push_ail_locked;
++	uint32_t		xs_push_ail_flushing;
++	uint32_t		xs_push_ail_restarts;
++	uint32_t		xs_push_ail_flush;
+ # define XFSSTAT_END_WRITE_CONVERT	(XFSSTAT_END_TAIL_PUSHING+2)
+-	__uint32_t		xs_xstrat_quick;
+-	__uint32_t		xs_xstrat_split;
++	uint32_t		xs_xstrat_quick;
++	uint32_t		xs_xstrat_split;
+ # define XFSSTAT_END_READ_WRITE_OPS	(XFSSTAT_END_WRITE_CONVERT+2)
+-	__uint32_t		xs_write_calls;
+-	__uint32_t		xs_read_calls;
++	uint32_t		xs_write_calls;
++	uint32_t		xs_read_calls;
+ # define XFSSTAT_END_ATTRIBUTE_OPS	(XFSSTAT_END_READ_WRITE_OPS+4)
+-	__uint32_t		xs_attr_get;
+-	__uint32_t		xs_attr_set;
+-	__uint32_t		xs_attr_remove;
+-	__uint32_t		xs_attr_list;
++	uint32_t		xs_attr_get;
++	uint32_t		xs_attr_set;
++	uint32_t		xs_attr_remove;
++	uint32_t		xs_attr_list;
+ # define XFSSTAT_END_INODE_CLUSTER	(XFSSTAT_END_ATTRIBUTE_OPS+3)
+-	__uint32_t		xs_iflush_count;
+-	__uint32_t		xs_icluster_flushcnt;
+-	__uint32_t		xs_icluster_flushinode;
++	uint32_t		xs_iflush_count;
++	uint32_t		xs_icluster_flushcnt;
++	uint32_t		xs_icluster_flushinode;
+ # define XFSSTAT_END_VNODE_OPS		(XFSSTAT_END_INODE_CLUSTER+8)
+-	__uint32_t		vn_active;	/* # vnodes not on free lists */
+-	__uint32_t		vn_alloc;	/* # times vn_alloc called */
+-	__uint32_t		vn_get;		/* # times vn_get called */
+-	__uint32_t		vn_hold;	/* # times vn_hold called */
+-	__uint32_t		vn_rele;	/* # times vn_rele called */
+-	__uint32_t		vn_reclaim;	/* # times vn_reclaim called */
+-	__uint32_t		vn_remove;	/* # times vn_remove called */
+-	__uint32_t		vn_free;	/* # times vn_free called */
++	uint32_t		vn_active;	/* # vnodes not on free lists */
++	uint32_t		vn_alloc;	/* # times vn_alloc called */
++	uint32_t		vn_get;		/* # times vn_get called */
++	uint32_t		vn_hold;	/* # times vn_hold called */
++	uint32_t		vn_rele;	/* # times vn_rele called */
++	uint32_t		vn_reclaim;	/* # times vn_reclaim called */
++	uint32_t		vn_remove;	/* # times vn_remove called */
++	uint32_t		vn_free;	/* # times vn_free called */
+ #define XFSSTAT_END_BUF			(XFSSTAT_END_VNODE_OPS+9)
+-	__uint32_t		xb_get;
+-	__uint32_t		xb_create;
+-	__uint32_t		xb_get_locked;
+-	__uint32_t		xb_get_locked_waited;
+-	__uint32_t		xb_busy_locked;
+-	__uint32_t		xb_miss_locked;
+-	__uint32_t		xb_page_retries;
+-	__uint32_t		xb_page_found;
+-	__uint32_t		xb_get_read;
++	uint32_t		xb_get;
++	uint32_t		xb_create;
++	uint32_t		xb_get_locked;
++	uint32_t		xb_get_locked_waited;
++	uint32_t		xb_busy_locked;
++	uint32_t		xb_miss_locked;
++	uint32_t		xb_page_retries;
++	uint32_t		xb_page_found;
++	uint32_t		xb_get_read;
+ /* Version 2 btree counters */
+ #define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+15)
+-	__uint32_t		xs_abtb_2_lookup;
+-	__uint32_t		xs_abtb_2_compare;
+-	__uint32_t		xs_abtb_2_insrec;
+-	__uint32_t		xs_abtb_2_delrec;
+-	__uint32_t		xs_abtb_2_newroot;
+-	__uint32_t		xs_abtb_2_killroot;
+-	__uint32_t		xs_abtb_2_increment;
+-	__uint32_t		xs_abtb_2_decrement;
+-	__uint32_t		xs_abtb_2_lshift;
+-	__uint32_t		xs_abtb_2_rshift;
+-	__uint32_t		xs_abtb_2_split;
+-	__uint32_t		xs_abtb_2_join;
+-	__uint32_t		xs_abtb_2_alloc;
+-	__uint32_t		xs_abtb_2_free;
+-	__uint32_t		xs_abtb_2_moves;
++	uint32_t		xs_abtb_2_lookup;
++	uint32_t		xs_abtb_2_compare;
++	uint32_t		xs_abtb_2_insrec;
++	uint32_t		xs_abtb_2_delrec;
++	uint32_t		xs_abtb_2_newroot;
++	uint32_t		xs_abtb_2_killroot;
++	uint32_t		xs_abtb_2_increment;
++	uint32_t		xs_abtb_2_decrement;
++	uint32_t		xs_abtb_2_lshift;
++	uint32_t		xs_abtb_2_rshift;
++	uint32_t		xs_abtb_2_split;
++	uint32_t		xs_abtb_2_join;
++	uint32_t		xs_abtb_2_alloc;
++	uint32_t		xs_abtb_2_free;
++	uint32_t		xs_abtb_2_moves;
+ #define XFSSTAT_END_ABTC_V2		(XFSSTAT_END_ABTB_V2+15)
+-	__uint32_t		xs_abtc_2_lookup;
+-	__uint32_t		xs_abtc_2_compare;
+-	__uint32_t		xs_abtc_2_insrec;
+-	__uint32_t		xs_abtc_2_delrec;
+-	__uint32_t		xs_abtc_2_newroot;
+-	__uint32_t		xs_abtc_2_killroot;
+-	__uint32_t		xs_abtc_2_increment;
+-	__uint32_t		xs_abtc_2_decrement;
+-	__uint32_t		xs_abtc_2_lshift;
+-	__uint32_t		xs_abtc_2_rshift;
+-	__uint32_t		xs_abtc_2_split;
+-	__uint32_t		xs_abtc_2_join;
+-	__uint32_t		xs_abtc_2_alloc;
+-	__uint32_t		xs_abtc_2_free;
+-	__uint32_t		xs_abtc_2_moves;
++	uint32_t		xs_abtc_2_lookup;
++	uint32_t		xs_abtc_2_compare;
++	uint32_t		xs_abtc_2_insrec;
++	uint32_t		xs_abtc_2_delrec;
++	uint32_t		xs_abtc_2_newroot;
++	uint32_t		xs_abtc_2_killroot;
++	uint32_t		xs_abtc_2_increment;
++	uint32_t		xs_abtc_2_decrement;
++	uint32_t		xs_abtc_2_lshift;
++	uint32_t		xs_abtc_2_rshift;
++	uint32_t		xs_abtc_2_split;
++	uint32_t		xs_abtc_2_join;
++	uint32_t		xs_abtc_2_alloc;
++	uint32_t		xs_abtc_2_free;
++	uint32_t		xs_abtc_2_moves;
+ #define XFSSTAT_END_BMBT_V2		(XFSSTAT_END_ABTC_V2+15)
+-	__uint32_t		xs_bmbt_2_lookup;
+-	__uint32_t		xs_bmbt_2_compare;
+-	__uint32_t		xs_bmbt_2_insrec;
+-	__uint32_t		xs_bmbt_2_delrec;
+-	__uint32_t		xs_bmbt_2_newroot;
+-	__uint32_t		xs_bmbt_2_killroot;
+-	__uint32_t		xs_bmbt_2_increment;
+-	__uint32_t		xs_bmbt_2_decrement;
+-	__uint32_t		xs_bmbt_2_lshift;
+-	__uint32_t		xs_bmbt_2_rshift;
+-	__uint32_t		xs_bmbt_2_split;
+-	__uint32_t		xs_bmbt_2_join;
+-	__uint32_t		xs_bmbt_2_alloc;
+-	__uint32_t		xs_bmbt_2_free;
+-	__uint32_t		xs_bmbt_2_moves;
++	uint32_t		xs_bmbt_2_lookup;
++	uint32_t		xs_bmbt_2_compare;
++	uint32_t		xs_bmbt_2_insrec;
++	uint32_t		xs_bmbt_2_delrec;
++	uint32_t		xs_bmbt_2_newroot;
++	uint32_t		xs_bmbt_2_killroot;
++	uint32_t		xs_bmbt_2_increment;
++	uint32_t		xs_bmbt_2_decrement;
++	uint32_t		xs_bmbt_2_lshift;
++	uint32_t		xs_bmbt_2_rshift;
++	uint32_t		xs_bmbt_2_split;
++	uint32_t		xs_bmbt_2_join;
++	uint32_t		xs_bmbt_2_alloc;
++	uint32_t		xs_bmbt_2_free;
++	uint32_t		xs_bmbt_2_moves;
+ #define XFSSTAT_END_IBT_V2		(XFSSTAT_END_BMBT_V2+15)
+-	__uint32_t		xs_ibt_2_lookup;
+-	__uint32_t		xs_ibt_2_compare;
+-	__uint32_t		xs_ibt_2_insrec;
+-	__uint32_t		xs_ibt_2_delrec;
+-	__uint32_t		xs_ibt_2_newroot;
+-	__uint32_t		xs_ibt_2_killroot;
+-	__uint32_t		xs_ibt_2_increment;
+-	__uint32_t		xs_ibt_2_decrement;
+-	__uint32_t		xs_ibt_2_lshift;
+-	__uint32_t		xs_ibt_2_rshift;
+-	__uint32_t		xs_ibt_2_split;
+-	__uint32_t		xs_ibt_2_join;
+-	__uint32_t		xs_ibt_2_alloc;
+-	__uint32_t		xs_ibt_2_free;
+-	__uint32_t		xs_ibt_2_moves;
++	uint32_t		xs_ibt_2_lookup;
++	uint32_t		xs_ibt_2_compare;
++	uint32_t		xs_ibt_2_insrec;
++	uint32_t		xs_ibt_2_delrec;
++	uint32_t		xs_ibt_2_newroot;
++	uint32_t		xs_ibt_2_killroot;
++	uint32_t		xs_ibt_2_increment;
++	uint32_t		xs_ibt_2_decrement;
++	uint32_t		xs_ibt_2_lshift;
++	uint32_t		xs_ibt_2_rshift;
++	uint32_t		xs_ibt_2_split;
++	uint32_t		xs_ibt_2_join;
++	uint32_t		xs_ibt_2_alloc;
++	uint32_t		xs_ibt_2_free;
++	uint32_t		xs_ibt_2_moves;
+ #define XFSSTAT_END_FIBT_V2		(XFSSTAT_END_IBT_V2+15)
+-	__uint32_t		xs_fibt_2_lookup;
+-	__uint32_t		xs_fibt_2_compare;
+-	__uint32_t		xs_fibt_2_insrec;
+-	__uint32_t		xs_fibt_2_delrec;
+-	__uint32_t		xs_fibt_2_newroot;
+-	__uint32_t		xs_fibt_2_killroot;
+-	__uint32_t		xs_fibt_2_increment;
+-	__uint32_t		xs_fibt_2_decrement;
+-	__uint32_t		xs_fibt_2_lshift;
+-	__uint32_t		xs_fibt_2_rshift;
+-	__uint32_t		xs_fibt_2_split;
+-	__uint32_t		xs_fibt_2_join;
+-	__uint32_t		xs_fibt_2_alloc;
+-	__uint32_t		xs_fibt_2_free;
+-	__uint32_t		xs_fibt_2_moves;
++	uint32_t		xs_fibt_2_lookup;
++	uint32_t		xs_fibt_2_compare;
++	uint32_t		xs_fibt_2_insrec;
++	uint32_t		xs_fibt_2_delrec;
++	uint32_t		xs_fibt_2_newroot;
++	uint32_t		xs_fibt_2_killroot;
++	uint32_t		xs_fibt_2_increment;
++	uint32_t		xs_fibt_2_decrement;
++	uint32_t		xs_fibt_2_lshift;
++	uint32_t		xs_fibt_2_rshift;
++	uint32_t		xs_fibt_2_split;
++	uint32_t		xs_fibt_2_join;
++	uint32_t		xs_fibt_2_alloc;
++	uint32_t		xs_fibt_2_free;
++	uint32_t		xs_fibt_2_moves;
+ #define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+15)
+-	__uint32_t		xs_rmap_2_lookup;
+-	__uint32_t		xs_rmap_2_compare;
+-	__uint32_t		xs_rmap_2_insrec;
+-	__uint32_t		xs_rmap_2_delrec;
+-	__uint32_t		xs_rmap_2_newroot;
+-	__uint32_t		xs_rmap_2_killroot;
+-	__uint32_t		xs_rmap_2_increment;
+-	__uint32_t		xs_rmap_2_decrement;
+-	__uint32_t		xs_rmap_2_lshift;
+-	__uint32_t		xs_rmap_2_rshift;
+-	__uint32_t		xs_rmap_2_split;
+-	__uint32_t		xs_rmap_2_join;
+-	__uint32_t		xs_rmap_2_alloc;
+-	__uint32_t		xs_rmap_2_free;
+-	__uint32_t		xs_rmap_2_moves;
++	uint32_t		xs_rmap_2_lookup;
++	uint32_t		xs_rmap_2_compare;
++	uint32_t		xs_rmap_2_insrec;
++	uint32_t		xs_rmap_2_delrec;
++	uint32_t		xs_rmap_2_newroot;
++	uint32_t		xs_rmap_2_killroot;
++	uint32_t		xs_rmap_2_increment;
++	uint32_t		xs_rmap_2_decrement;
++	uint32_t		xs_rmap_2_lshift;
++	uint32_t		xs_rmap_2_rshift;
++	uint32_t		xs_rmap_2_split;
++	uint32_t		xs_rmap_2_join;
++	uint32_t		xs_rmap_2_alloc;
++	uint32_t		xs_rmap_2_free;
++	uint32_t		xs_rmap_2_moves;
+ #define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
+-	__uint32_t		xs_qm_dqreclaims;
+-	__uint32_t		xs_qm_dqreclaim_misses;
+-	__uint32_t		xs_qm_dquot_dups;
+-	__uint32_t		xs_qm_dqcachemisses;
+-	__uint32_t		xs_qm_dqcachehits;
+-	__uint32_t		xs_qm_dqwants;
++	uint32_t		xs_qm_dqreclaims;
++	uint32_t		xs_qm_dqreclaim_misses;
++	uint32_t		xs_qm_dquot_dups;
++	uint32_t		xs_qm_dqcachemisses;
++	uint32_t		xs_qm_dqcachehits;
++	uint32_t		xs_qm_dqwants;
+ #define XFSSTAT_END_QM			(XFSSTAT_END_XQMSTAT+2)
+-	__uint32_t		xs_qm_dquot;
+-	__uint32_t		xs_qm_dquot_unused;
++	uint32_t		xs_qm_dquot;
++	uint32_t		xs_qm_dquot_unused;
+ /* Extra precision counters */
+-	__uint64_t		xs_xstrat_bytes;
+-	__uint64_t		xs_write_bytes;
+-	__uint64_t		xs_read_bytes;
++	uint64_t		xs_xstrat_bytes;
++	uint64_t		xs_write_bytes;
++	uint64_t		xs_read_bytes;
+ };
+ 
+ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 24ef83e..28ad7e0 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -189,7 +189,7 @@ xfs_parseargs(
+ 	int			dsunit = 0;
+ 	int			dswidth = 0;
+ 	int			iosize = 0;
+-	__uint8_t		iosizelog = 0;
++	uint8_t			iosizelog = 0;
+ 
+ 	/*
+ 	 * set up the mount name first so all the errors will refer to the
+@@ -547,7 +547,7 @@ xfs_showargs(
+ 
+ 	return 0;
+ }
+-static __uint64_t
++static uint64_t
+ xfs_max_file_offset(
+ 	unsigned int		blockshift)
+ {
+@@ -578,7 +578,7 @@ xfs_max_file_offset(
+ # endif
+ #endif
+ 
+-	return (((__uint64_t)pagefactor) << bitshift) - 1;
++	return (((uint64_t)pagefactor) << bitshift) - 1;
+ }
+ 
+ /*
+@@ -613,7 +613,7 @@ xfs_set_inode_alloc(
+ 	 * the max inode percentage.  Used only for inode32.
+ 	 */
+ 	if (mp->m_maxicount) {
+-		__uint64_t	icount;
++		uint64_t	icount;
+ 
+ 		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
+ 		do_div(icount, 100);
+@@ -1052,12 +1052,12 @@ xfs_fs_statfs(
+ 	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
+ 	xfs_sb_t		*sbp = &mp->m_sb;
+ 	struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+-	__uint64_t		fakeinos, id;
+-	__uint64_t		icount;
+-	__uint64_t		ifree;
+-	__uint64_t		fdblocks;
++	uint64_t		fakeinos, id;
++	uint64_t		icount;
++	uint64_t		ifree;
++	uint64_t		fdblocks;
+ 	xfs_extlen_t		lsize;
+-	__int64_t		ffree;
++	int64_t			ffree;
+ 
+ 	statp->f_type = XFS_SB_MAGIC;
+ 	statp->f_namelen = MAXNAMELEN - 1;
+@@ -1080,7 +1080,7 @@ xfs_fs_statfs(
+ 	statp->f_bavail = statp->f_bfree;
+ 
+ 	fakeinos = statp->f_bfree << sbp->sb_inopblog;
+-	statp->f_files = MIN(icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
++	statp->f_files = MIN(icount + fakeinos, (uint64_t)XFS_MAXINUMBER);
+ 	if (mp->m_maxicount)
+ 		statp->f_files = min_t(typeof(statp->f_files),
+ 					statp->f_files,
+@@ -1093,7 +1093,7 @@ xfs_fs_statfs(
+ 
+ 	/* make sure statp->f_ffree does not underflow */
+ 	ffree = statp->f_files - (icount - ifree);
+-	statp->f_ffree = max_t(__int64_t, ffree, 0);
++	statp->f_ffree = max_t(int64_t, ffree, 0);
+ 
+ 
+ 	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+@@ -1106,7 +1106,7 @@ xfs_fs_statfs(
+ STATIC void
+ xfs_save_resvblks(struct xfs_mount *mp)
+ {
+-	__uint64_t resblks = 0;
++	uint64_t resblks = 0;
+ 
+ 	mp->m_resblks_save = mp->m_resblks;
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+@@ -1115,7 +1115,7 @@ xfs_save_resvblks(struct xfs_mount *mp)
+ STATIC void
+ xfs_restore_resvblks(struct xfs_mount *mp)
+ {
+-	__uint64_t resblks;
++	uint64_t resblks;
+ 
+ 	if (mp->m_resblks_save) {
+ 		resblks = mp->m_resblks_save;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 551b7e2..ae44dd5 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -246,7 +246,7 @@ TRACE_EVENT(xfs_iext_insert,
+ 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
+ 		  (long)__entry->idx,
+ 		  __entry->startoff,
+-		  (__int64_t)__entry->startblock,
++		  (int64_t)__entry->startblock,
+ 		  __entry->blockcount,
+ 		  __entry->state,
+ 		  (char *)__entry->caller_ip)
+@@ -290,7 +290,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
+ 		  (long)__entry->idx,
+ 		  __entry->startoff,
+-		  (__int64_t)__entry->startblock,
++		  (int64_t)__entry->startblock,
+ 		  __entry->blockcount,
+ 		  __entry->state,
+ 		  (char *)__entry->caller_ip)
+@@ -1282,7 +1282,7 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
+ 		  __entry->count,
+ 		  __print_symbolic(__entry->type, XFS_IO_TYPES),
+ 		  __entry->startoff,
+-		  (__int64_t)__entry->startblock,
++		  (int64_t)__entry->startblock,
+ 		  __entry->blockcount)
+ )
+ 
+@@ -2035,7 +2035,7 @@ DECLARE_EVENT_CLASS(xfs_log_recover_buf_item_class,
+ 	TP_ARGS(log, buf_f),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(__int64_t, blkno)
++		__field(int64_t, blkno)
+ 		__field(unsigned short, len)
+ 		__field(unsigned short, flags)
+ 		__field(unsigned short, size)
+@@ -2083,7 +2083,7 @@ DECLARE_EVENT_CLASS(xfs_log_recover_ino_item_class,
+ 		__field(int, fields)
+ 		__field(unsigned short, asize)
+ 		__field(unsigned short, dsize)
+-		__field(__int64_t, blkno)
++		__field(int64_t, blkno)
+ 		__field(int, len)
+ 		__field(int, boffset)
+ 	),
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index e2bf86a..3ed95c7 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -244,7 +244,7 @@ struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
+ 		struct xfs_rui_log_item *ruip);
+ int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
+ 		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
+-		__uint64_t owner, int whichfork, xfs_fileoff_t startoff,
++		uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+ 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+ 		xfs_exntst_t state, struct xfs_btree_cur **pcur);
+ 
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+index 5a50ef8..7d6d087 100644
+--- a/fs/xfs/xfs_trans_rmap.c
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -87,7 +87,7 @@ xfs_trans_log_finish_rmap_update(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_rud_log_item		*rudp,
+ 	enum xfs_rmap_intent_type	type,
+-	__uint64_t			owner,
++	uint64_t			owner,
+ 	int				whichfork,
+ 	xfs_fileoff_t			startoff,
+ 	xfs_fsblock_t			startblock,
 -- 
-Shaun Tancheff
+2.7.3
 
 _______________________________________________
 xfs mailing list
