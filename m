@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D9397D01
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:31:26 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B47ED7CEC
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C669B8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:25 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id dtNjsNlY7y0OIKS9 (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1777FAC007
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:47 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id iu7nGCslB61gwFrV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:23 -0700 (PDT)
-Subject: [PATCH 5/6] iomap: don't set FIEMAP_EXTENT_MERGED for extent based
-	filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:31:13 -0700
-Message-ID: <147216787356.525.16980820316846690768.stgit@birch.djwong.org>
-In-Reply-To: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
-References: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:44 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id 4B0742045A
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:43 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3s6XQQ5zcBzysK
+	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:42 +0200 (CEST)
+Message-Id: <cover.1470552214.git.felix.janda@posteo.de>
+From: Felix Janda <felix.janda@posteo.de>
+Date: Sun, 7 Aug 2016 08:43:34 +0200
+Subject: [PATCH xfsprogs 00/14] Convert from off64_t to off_t
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,75 +27,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, viro@ZenIV.linux.org.uk, darrick.wong@oracle.com
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@lst.de>
+The off64_t type and structs/functions dependent on it were envisaged
+as a stepping stone for the LFS (large file support) transition [1].
+On most systems today, transparent LFS is enabled, i.e. off_t is 64bit
+and all interfaces are 64bit clean -- on many of these systems the type
+off64_t is even not defined. For a long time, we have used
+-D_FILE_OFFSET_BITS=64 on linux, which is the only supported system
+without transparent LFS by default.
 
-Filesystems like XFS that use extents should not set the
-FIEMAP_EXTENT_MERGED flag in the fiemap extent structures.  To allow
-for both behaviors for the upcoming gfs2 usage split the iomap
-type field into type and flags, and only set FIEMAP_EXTENT_MERGED if
-the IOMAP_F_MERGED flag is set.  The flags field will also come in
-handy for future features such as shared extents on reflink-enabled
-file systems.
+This patch series does several related things:
+- Enable transparent LFS support via an autoconf macro instead of using
+  -D_FILE_OFFSET_BITS=64
+- Replace all types/function involving off64_t by their equivalent
+  involving off_t
+- Ensure that the xfs headers can only be used when transparent LFS is
+  enabled.
 
-Reported-by: Andreas Gruenbacher <agruenba@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            |    5 ++++-
- include/linux/iomap.h |    8 +++++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+[1]: http://users.suse.com/~aj/linux_lfs.html
 
+Felix Janda (14):
+  configure: use AC_SYS_LARGEFILE
+  remove unecessary definitions of _FILE_OFFSET_BITS
+  replace fstat64 by equivalent fstat
+  replace lstat64 by equivalent lstat
+  replace stat64 by equivalent stat
+  replace ftruncate64 by equivalent ftruncate
+  replace lseek64 by equivalent lseek
+  replace pread64 by equivalent pread
+  replace pwrite64 by equivalent pwrite
+  replace sendfile64 by equivalent sendfile
+  replace statvfs64 by equivalent statvfs
+  replace off64_t by off_t outside of public headers
+  xfs.h: require transparent LFS
+  platform: remove use of off64_t
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 7b295d5..e9b3f99 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -510,9 +510,12 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- 		break;
- 	}
- 
-+	if (iomap->flags & IOMAP_F_MERGED)
-+		flags |= FIEMAP_EXTENT_MERGED;
-+
- 	return fiemap_fill_next_extent(fi, iomap->offset,
- 			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
--			iomap->length, flags | FIEMAP_EXTENT_MERGED);
-+			iomap->length, flags);
- 
- }
- 
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index b2e30e5..3a56212 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -19,6 +19,11 @@ struct vm_fault;
- #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
- 
- /*
-+ * Flags for iomap mappings:
-+ */
-+#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
-+
-+/*
-  * Magic value for blkno:
-  */
- #define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
-@@ -27,7 +32,8 @@ struct iomap {
- 	sector_t		blkno;	/* 1st sector of mapping, 512b units */
- 	loff_t			offset;	/* file offset of mapping, bytes */
- 	u64			length;	/* length of mapping, bytes */
--	int			type;	/* type of mapping */
-+	u16			type;	/* type of mapping */
-+	u16			flags;	/* flags for mapping */
- 	struct block_device	*bdev;	/* block device for I/O */
- };
- 
+ configure.ac              |  2 ++
+ copy/xfs_copy.c           | 24 +++++++++---------
+ fsr/xfs_fsr.c             | 64 +++++++++++++++++++++--------------------------
+ include/builddefs.in      |  2 +-
+ include/darwin.h          | 12 ++-------
+ include/freebsd.h         |  7 ------
+ include/irix.h            |  2 +-
+ include/linux.h           |  2 +-
+ include/xfs.h             |  2 ++
+ io/bmap.c                 | 10 ++++----
+ io/copy_file_range.c      | 12 ++++-----
+ io/fadvise.c              |  2 +-
+ io/io.h                   | 10 ++++----
+ io/madvise.c              |  2 +-
+ io/mincore.c              |  2 +-
+ io/mmap.c                 | 12 ++++-----
+ io/open.c                 | 20 +++++++--------
+ io/pread.c                | 38 ++++++++++++++--------------
+ io/pwrite.c               | 28 ++++++++++-----------
+ io/reflink.c              |  4 +--
+ io/seek.c                 | 12 ++++-----
+ io/sendfile.c             | 16 ++++++------
+ io/sync_file_range.c      |  2 +-
+ io/truncate.c             |  4 +--
+ libxcmd/paths.c           |  4 +--
+ libxfs/darwin.c           |  8 +++---
+ libxfs/freebsd.c          |  8 +++---
+ libxfs/init.c             | 12 ++++-----
+ libxfs/init.h             |  6 ++---
+ libxfs/irix.c             |  8 +++---
+ libxfs/linux.c            | 20 +++++++--------
+ libxfs/rdwr.c             | 18 ++++++-------
+ logprint/log_misc.c       |  4 +--
+ logprint/logprint.c       |  2 +-
+ m4/package_libcdev.m4     |  9 -------
+ mdrestore/xfs_mdrestore.c | 14 +++++------
+ mkfs/proto.c              |  4 +--
+ mkfs/xfs_mkfs.c           |  8 +++---
+ po/de.po                  | 28 ++++++++++-----------
+ po/pl.po                  | 32 ++++++++++++------------
+ repair/prefetch.c         |  4 +--
+ repair/sb.c               |  6 ++---
+ repair/xfs_repair.c       |  4 +--
+ rtcp/xfs_rtcp.c           | 18 ++++++-------
+ 44 files changed, 240 insertions(+), 268 deletions(-)
+
+-- 
+2.7.3
 
 _______________________________________________
 xfs mailing list
