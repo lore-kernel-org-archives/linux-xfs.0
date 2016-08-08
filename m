@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20A7B7CA0
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 14:32:56 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 85CEC7CD5
+	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 05:57:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7D2C7AC002
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 12:32:52 -0700 (PDT)
-Received: from NAM03-DM3-obe.outbound.protection.outlook.com
-	(mail-dm3nam03on0123.outbound.protection.outlook.com
-	[104.47.41.123]) by cuda.sgi.com with ESMTP id FGGToZFUEx05Ya6l
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 08 Aug 2016 12:32:50 -0700 (PDT)
-From: "Kani, Toshimitsu" <toshi.kani@hpe.com>
-Subject: RE: Subtle races between DAX mmap fault and write path
-Date: Mon, 8 Aug 2016 19:32:47 +0000
-Message-ID: <CS1PR84MB0005ADA0CDED56A9E5FF64A5821B0@CS1PR84MB0005.NAMPRD84.PROD.OUTLOOK.COM>
-References: <20160729022152.GZ16044@dastard>
-	<CAPcyv4gOcDGzikJHYGxNXtYqQKkPUgkG+z4ASxogQUnp1zmD2g@mail.gmail.com>
-	<20160730001249.GE16044@dastard> <579F20D9.80107@plexistor.com>
-	<20160802002144.GL16044@dastard> <1470335997.8908.128.camel@hpe.com>
-	<20160805112739.GG16044@dastard>
-	<CS1PR84MB0119314ACA9B4823C0FE33318E180@CS1PR84MB0119.NAMPRD84.PROD.OUTLOOK.COM>
-	<20160808092655.GA29128@quack2.suse.cz>
-	<CS1PR84MB0119ACB424699154BDA197B28E1B0@CS1PR84MB0119.NAMPRD84.PROD.OUTLOOK.COM>
-	<20160808182827.GI29128@quack2.suse.cz>
-In-Reply-To: <20160808182827.GI29128@quack2.suse.cz>
-Content-Language: en-US
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 49B06304053
+	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 03:57:18 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id ZOC5vlnGbnXK3nCW (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 08 Aug 2016 03:57:16 -0700 (PDT)
+Date: Mon, 8 Aug 2016 06:57:15 -0400 (EDT)
+From: Carlos Eduardo Maiolino <cmaiolin@redhat.com>
+Message-ID: <907731470.210439.1470653835697.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20160722085804.GA2990@redhat.com>
+References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
+	<20160722040955.GB16413@zlang.usersys.redhat.com>
+	<20160722085804.GA2990@redhat.com>
+Subject: Re: [PATCH] xfs: Document error handling behavior
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -38,43 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>, "Boylston, Brian" <brian.boylston@hpe.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-> > Jan Kara wrote on 2016-08-08:
-> > > On Fri 05-08-16 19:58:33, Boylston, Brian wrote:
-> >
-> > I used NVML 1.1 for the measurements.  In this version and with the
-> > hardware that I used, the pmem_persist() flow is:
-> >
-> >   pmem_persist()
-> >     pmem_flush()
-> >       Func_flush() == flush_clflush
-> >         CLFLUSH
-> >     pmem_drain()
-> >       Func_predrain_fence() == predrain_fence_empty
-> >         no-op
-> >
-> > So, I don't think that pmem_persist() does anything to cause the filesystem
-> > to flush metadata as it doesn't make any system calls?
-> 
-> Ah, you are right. I somehow misread what is in NVML sources. I agree with
-> Christoph that _persist suffix is then misleading for the reasons he stated
-> but that's irrelevant to the test you did.
-> 
-> So it indeed seems that in your test movnt + sfence is an order of
-> magnitude faster than cached memcpy + cflush + sfence. I'm surprised I have
-> to say.
+Hi folks,
 
-movnt is posted to WC buffer, which is asynchronously evicted to memory
-when each line is filled.
+is there any update about this? I didn't see any comments if I need to change
+something on this patch to get the documentation applied, or perhaps I missed some e-mail?
 
-clflush, on the other hand, must be serialized.  So, it has to synchronously evict
-line-by-line.  clflushopt, when supported by new CPUs, should be a lot faster as
-it can execute simultaneously and does not have to wait line-by-line.  It'd be still
-slower than uncached copy, though. 
 
--Toshi 
+
+Cheers
+
+----- Original Message ----- 
+From: "Carlos Maiolino" <cmaiolino@redhat.com> 
+To: "Zorro Lang" <zlang@redhat.com> 
+Cc: xfs@oss.sgi.com 
+Sent: Friday, July 22, 2016 10:58:04 AM 
+Subject: Re: [PATCH] xfs: Document error handling behavior 
+
+On Fri, Jul 22, 2016 at 12:09:55PM +0800, Zorro Lang wrote: 
+> On Tue, Jul 19, 2016 at 12:04:17PM +0200, Carlos Maiolino wrote: 
+> > This is the first try to document the implementation of error handlers into 
+> > sysfs. 
+> > 
+> > Reviews and comments are appreciated, please also notice I'm not english-native, 
+> > so, spelling corrections are also appreciated :) 
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com> 
+> > --- 
+
+-- 
+
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
