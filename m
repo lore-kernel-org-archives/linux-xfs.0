@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B0DA27CB0
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 03:28:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 340B7AC002
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 01:28:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C66837CA7
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 03:29:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47DE6AC003
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 01:29:20 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id XSM179W4BpaBMhSy (version=TLSv1.2
+	ESMTP id 3BF5qWGf6hCiyjcl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 01:28:30 -0700 (PDT)
-Date: Tue, 9 Aug 2016 01:28:28 -0700
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 01:29:14 -0700 (PDT)
+Date: Tue, 9 Aug 2016 01:29:12 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] fs: Give dentry to inode_change_ok() instead of inode
-Message-ID: <20160809082828.GB11657@infradead.org>
+Subject: Re: [PATCH 5/5] fs: Avoid premature clearing of capabilities
+Message-ID: <20160809082912.GC11657@infradead.org>
 References: <1470223689-17783-1-git-send-email-jack@suse.cz>
-	<1470223689-17783-5-git-send-email-jack@suse.cz>
+	<1470223689-17783-6-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1470223689-17783-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1470223689-17783-6-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,16 +34,19 @@ To: Jan Kara <jack@suse.cz>
 Cc: Miklos Szeredi <miklos@szeredi.hu>, xfs@oss.sgi.com, "Yan,
 	Zheng" <zyan@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org
 
-On Wed, Aug 03, 2016 at 01:28:08PM +0200, Jan Kara wrote:
-> inode_change_ok() will be resposible for clearing capabilities and IMA
-> extended attributes and as such will need dentry. Give it as an argument
-> to inode_change_ok() instead of an inode. Also rename inode_change_ok()
-> to setattr_prepare() to better relect that it does also some
-> modifications in addition to checks.
+On Wed, Aug 03, 2016 at 01:28:09PM +0200, Jan Kara wrote:
+> Currently, notify_change() clears capabilities or IMA attributes by
+> calling security_inode_killpriv() before calling into ->setattr. Thus it
+> happens before any other permission checks in inode_change_ok() and user
+> is thus allowed to trigger clearing of capabilities or IMA attributes
+> for any file he can look up e.g. by calling chown for that file. This is
+> unexpected and can lead to user DoSing a system.
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> Fix the problem by calling security_inode_killpriv() at the end of
+> inode_change_ok() instead of from notify_change(). At that moment we are
+> sure user has permissions to do the requested change.
 
-Looks fine:
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
