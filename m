@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 85CEC7CD5
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 05:57:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49B06304053
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 03:57:18 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id ZOC5vlnGbnXK3nCW (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Aug 2016 03:57:16 -0700 (PDT)
-Date: Mon, 8 Aug 2016 06:57:15 -0400 (EDT)
-From: Carlos Eduardo Maiolino <cmaiolin@redhat.com>
-Message-ID: <907731470.210439.1470653835697.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20160722085804.GA2990@redhat.com>
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
-	<20160722040955.GB16413@zlang.usersys.redhat.com>
-	<20160722085804.GA2990@redhat.com>
-Subject: Re: [PATCH] xfs: Document error handling behavior
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 14E347CA3
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 02:40:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D9B788F8035
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 00:40:12 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id WSOQA0YT3ZQwiWFM (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 00:40:11 -0700 (PDT)
+Date: Tue, 9 Aug 2016 00:40:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH xfsprogs 11/14] replace statvfs64 by equivalent statvfs
+Message-ID: <20160809074010.GM25647@infradead.org>
+References: <cover.1470555003.git.felix.janda@posteo.de>
+	<f4fc0b97ae8cdb30f1e0b0d55521f136877b33f5.1470555003.git.felix.janda@posteo.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <f4fc0b97ae8cdb30f1e0b0d55521f136877b33f5.1470555003.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +30,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
 
-Hi folks,
+On Sun, Aug 07, 2016 at 08:24:40AM +0200, Felix Janda wrote:
+> For this it was necessary to change a workaround for missing
+> f_brsize on Mac OS X.
 
-is there any update about this? I didn't see any comments if I need to change
-something on this patch to get the documentation applied, or perhaps I missed some e-mail?
-
-
-
-Cheers
-
------ Original Message ----- 
-From: "Carlos Maiolino" <cmaiolino@redhat.com> 
-To: "Zorro Lang" <zlang@redhat.com> 
-Cc: xfs@oss.sgi.com 
-Sent: Friday, July 22, 2016 10:58:04 AM 
-Subject: Re: [PATCH] xfs: Document error handling behavior 
-
-On Fri, Jul 22, 2016 at 12:09:55PM +0800, Zorro Lang wrote: 
-> On Tue, Jul 19, 2016 at 12:04:17PM +0200, Carlos Maiolino wrote: 
-> > This is the first try to document the implementation of error handlers into 
-> > sysfs. 
-> > 
-> > Reviews and comments are appreciated, please also notice I'm not english-native, 
-> > so, spelling corrections are also appreciated :) 
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com> 
-> > --- 
-
--- 
-
--- 
---Carlos
+If we can get rid of that it'd be fine, but can you explain a bit
+more why we can get rid of it?
 
 _______________________________________________
 xfs mailing list
