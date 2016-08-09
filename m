@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5C7DD7CA2
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 13:07:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1EF96304048
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 11:06:57 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id E2hz358YVFpzbLbD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 11:06:54 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 58D1420464
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 20:06:53 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s82Km6c5Jzydk
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 20:06:52 +0200 (CEST)
-Date: Tue, 9 Aug 2016 20:06:05 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH xfsprogs] fadvise.c: replace posix_fadvise64 by equivalent
-	posix_fadvise
-Message-ID: <20160809180605.GA7664@nyan>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 68BA57CB1
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 02:38:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D653FAC003
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 00:38:24 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id cu4bdjsW54z3CI7l (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 00:38:23 -0700 (PDT)
+Date: Tue, 9 Aug 2016 00:38:22 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH xfsprogs 07/14] replace lseek64 by equivalent lseek
+Message-ID: <20160809073822.GI25647@infradead.org>
+References: <cover.1470555003.git.felix.janda@posteo.de>
+	<63ec40703b14df0c99b2d479dc1739c3a2fb3064.1470555003.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <63ec40703b14df0c99b2d479dc1739c3a2fb3064.1470555003.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,32 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Felix Janda <felix.janda@posteo.de>
+Cc: xfs@oss.sgi.com
 
-also fixes a compile failure on FreeBSD
+Looks fine,
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
-overlooked this one...
----
- io/fadvise.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/io/fadvise.c b/io/fadvise.c
-index d59d1ff..46174f3 100644
---- a/io/fadvise.c
-+++ b/io/fadvise.c
-@@ -103,7 +103,7 @@ fadvise_f(
- 		return command_usage(&fadvise_cmd);
- 	}
- 
--	if (posix_fadvise64(file->fd, offset, length, advise) < 0) {
-+	if (posix_fadvise(file->fd, offset, length, advise) < 0) {
- 		perror("fadvise");
- 		return 0;
- 	}
--- 
-2.7.3
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
