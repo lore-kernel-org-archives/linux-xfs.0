@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C66837CA7
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 03:29:20 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EE2467CA6
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 03:33:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 47DE6AC003
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 01:29:20 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B172F8F8037
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 01:33:35 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 3BF5qWGf6hCiyjcl (version=TLSv1.2
+	ESMTP id 4Xsu8lWjG0UrsQHJ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 01:29:14 -0700 (PDT)
-Date: Tue, 9 Aug 2016 01:29:12 -0700
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 01:33:33 -0700 (PDT)
+Date: Tue, 9 Aug 2016 01:33:32 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/5] fs: Avoid premature clearing of capabilities
-Message-ID: <20160809082912.GC11657@infradead.org>
-References: <1470223689-17783-1-git-send-email-jack@suse.cz>
-	<1470223689-17783-6-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH] xfs: kill __uint*_t and __int*_t
+Message-ID: <20160809083332.GA1489@infradead.org>
+References: <20160807173835.GA20839@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1470223689-17783-6-git-send-email-jack@suse.cz>
+In-Reply-To: <20160807173835.GA20839@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, xfs@oss.sgi.com, "Yan,
-	Zheng" <zyan@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org
+To: Felix Janda <felix.janda@posteo.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 03, 2016 at 01:28:09PM +0200, Jan Kara wrote:
-> Currently, notify_change() clears capabilities or IMA attributes by
-> calling security_inode_killpriv() before calling into ->setattr. Thus it
-> happens before any other permission checks in inode_change_ok() and user
-> is thus allowed to trigger clearing of capabilities or IMA attributes
-> for any file he can look up e.g. by calling chown for that file. This is
-> unexpected and can lead to user DoSing a system.
+On Sun, Aug 07, 2016 at 07:38:35PM +0200, Felix Janda wrote:
+> Replace them by the more widely used uint*_t and int*_t.
 > 
-> Fix the problem by calling security_inode_killpriv() at the end of
-> inode_change_ok() instead of from notify_change(). At that moment we are
-> sure user has permissions to do the requested change.
+> Signed-off-by: Felix Janda <felix.janda@posteo.de>
+> ---
+> This patch is essentially a global
+> 'sed -i "s/__\(u*\)int\([0-9]*\)_t/\1int\2_t/"'. The only other changes
+> are whitespace changes and removing the now unecessary type definitions.
+> 
+> Running 'sed "s/^.//"' on the patch might be useful for checking that
+> I didn't mess up the indentation.
 
-Looks fine,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+If everyone is fine using (u)int*_t over s*/u* this looks good.  I'd
+have a slight preference for s*/u* as in the rest of the kernel, but
+either way getting rid of our crazy __ types is a good thing.
 
 _______________________________________________
 xfs mailing list
