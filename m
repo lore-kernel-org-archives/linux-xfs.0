@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E2FF17CB2
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 02:37:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8146304053
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 00:37:48 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E2597CBB
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 02:38:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B3D34AC003
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 00:38:41 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id mzGjonlctk4DbpWe (version=TLSv1.2
+	ESMTP id QSDBfI9AtuYlJ1oi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 00:37:46 -0700 (PDT)
-Date: Tue, 9 Aug 2016 00:37:45 -0700
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 00:38:40 -0700 (PDT)
+Date: Tue, 9 Aug 2016 00:38:40 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH xfsprogs 05/14] replace stat64 by equivalent stat
-Message-ID: <20160809073745.GG25647@infradead.org>
+Subject: Re: [PATCH xfsprogs 08/14] replace pread64 by equivalent pread
+Message-ID: <20160809073840.GJ25647@infradead.org>
 References: <cover.1470555003.git.felix.janda@posteo.de>
-	<bee6ac493d2b83099fb367f425e808c73e5888fa.1470555003.git.felix.janda@posteo.de>
+	<54046df0c8591a0c5678dee87a8c8aba02ea1d88.1470555003.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <bee6ac493d2b83099fb367f425e808c73e5888fa.1470555003.git.felix.janda@posteo.de>
+In-Reply-To: <54046df0c8591a0c5678dee87a8c8aba02ea1d88.1470555003.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
