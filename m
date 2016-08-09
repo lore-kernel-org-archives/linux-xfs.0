@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DA5FB7CA2
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 12:48:58 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 855A57CA6
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 03:28:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9E0298F8052
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:48:58 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4624D304039
+	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 01:28:00 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id gIN0yq9Q5kgBJ6of (version=TLSv1.2
+	ESMTP id gLaikkWDCg9sjo2s (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:48:57 -0700 (PDT)
-Date: Thu, 11 Aug 2016 10:48:55 -0700
+	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 01:27:58 -0700 (PDT)
+Date: Tue, 9 Aug 2016 01:27:56 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: test attr_list_by_handle cursor iteration
-Message-ID: <20160811174855.GD31540@infradead.org>
-References: <20160802235251.GB8586@birch.djwong.org>
-	<20160803225150.GC25565@birch.djwong.org>
-	<20160804042448.GR27776@eguan.usersys.redhat.com>
+Subject: Re: [PATCH 1/5] xfs: Propagate dentry down to inode_change_ok()
+Message-ID: <20160809082756.GA11657@infradead.org>
+References: <1470223689-17783-1-git-send-email-jack@suse.cz>
+	<1470223689-17783-2-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160804042448.GR27776@eguan.usersys.redhat.com>
+In-Reply-To: <1470223689-17783-2-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,14 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, xfs@oss.sgi.com, "Yan,
+	Zheng" <zyan@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, Ilya Dryomov <idryomov@gmail.com>, ceph-devel@vger.kernel.org
 
-On Thu, Aug 04, 2016 at 12:24:48PM +0800, Eryu Guan wrote:
-> I have to replace false/true with 0/1 to build it on RHEL6. I can fix it
-> at commit time if there's no other major updates.
+> +static int
+> +xfs_vn_change_ok(
+> +	struct dentry	*dentry,
+> +	struct iattr	*iattr)
 
-Simply including <stdbool.h> would fix that on RHEL6, wouldn't it?
+Please don't use the _vn prefix for something that's not an
+actual inode operation (and we should do a mess rename to 
+_iop one day as well.)
+
+> +int
+> +xfs_vn_setattr_nonsize(
+> +	struct dentry		*dentry,
+> +	struct iattr		*iattr)
+
+Same here.
 
 _______________________________________________
 xfs mailing list
