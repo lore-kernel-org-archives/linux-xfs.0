@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2C4F27CA1
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 13:45:22 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 052057CA6
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 12:11:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ED5848F804B
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:45:21 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id BVlDwWYuIGRCEpAF (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BC138304043
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AjKxIAqLuXHneOBd (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:45:19 -0700 (PDT)
-Date: Fri, 26 Aug 2016 11:44:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 72/71] xfs: track log done items directly in the deferred
-	pending work item
-Message-ID: <20160826184449.GG20705@birch.djwong.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:10 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 9216246203
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 17:11:09 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-69.bos.redhat.com [10.18.41.69])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7BHB9a7008725
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 13:11:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/5] fix log recovery for v5 superblocks
+Date: Thu, 11 Aug 2016 13:11:02 -0400
+Message-Id: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,137 +31,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph reports slab corruption when a deferred refcount update
-aborts during _defer_finish().  The cause of this was broken log item
-state tracking in xfs_defer_pending -- upon an abort,
-_defer_trans_abort() will call abort_intent on all intent items,
-including the ones that have already had a done item attached.
+Hi all,
 
-This is incorrect because each intent item has 2 refcount: the first
-is released when the intent item is committed to the log; and the
-second is released when the _done_ item is committed to the log, or
-by the intent creator if there is no done item.  In other words, once
-we log the done item, responsibility for releasing the intent item's
-second refcount is transferred to the done item and /must not/ be
-performed by anything else.
+This series addresses a problem with log recovery on v5 superblocks
+where log recovery doesn't update the metadata LSN of buffers it writes
+out. The v5 superblock metadata LSN recovery ordering logic helps
+prevent transient corruption states and works fine in most cases. Since
+recovery doesn't update the metadata LSN of buffers it writes out,
+however, it introduces the possibility of ordering problems if the
+recovery happens to repeat from the beginning (e.g., system crash after
+recovery I/O has completed but before the log tail is pushed forward).
 
-The dfp_committed flag should have been tracking whether or not we had
-a done item so that _defer_trans_abort could decide if it needs to
-abort the intent item, but due to a thinko this was not the case.  Rip
-it out and track the done item directly so that we do the right thing
-w.r.t. intent item freeing.
+This tends to manifest as reports of directory corruption during log
+recovery and commonly reproduces in situations where a system is
+restarted frequently (e.g., constant/frequent reboot tests). It can be
+reproduced fairly easily on demand by running fsstress in a simple
+(non-log forcing) shutdown loop, e.g.:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reported-by: Christoph Hellwig <hch@infradead.org>
----
- fs/xfs/libxfs/xfs_defer.c |   18 +++++-------------
- fs/xfs/libxfs/xfs_defer.h |    2 +-
- fs/xfs/xfs_trace.h        |    2 +-
- 3 files changed, 7 insertions(+), 15 deletions(-)
+	while [ true ]; do 
+		fsstress -d <dir> -p 4 &
+		sleep $((RANDOM % 5))
+		xfs_io -xc shutdown <dir>
+		umount <dir>
+		mount <dev> <dir> || break
+	done
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index faba739..613c5cf 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -234,7 +234,7 @@ xfs_defer_trans_abort(
- 	/* Abort intent items. */
- 	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
- 		trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
--		if (dfp->dfp_committed)
-+		if (!dfp->dfp_done)
- 			dfp->dfp_type->abort_intent(dfp->dfp_intent);
- 	}
- 
-@@ -330,7 +330,6 @@ xfs_defer_finish(
- 	struct xfs_defer_pending	*dfp;
- 	struct list_head		*li;
- 	struct list_head		*n;
--	void				*done_item = NULL;
- 	void				*state;
- 	int				error = 0;
- 	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
-@@ -349,19 +348,11 @@ xfs_defer_finish(
- 		if (error)
- 			goto out;
- 
--		/* Mark all pending intents as committed. */
--		list_for_each_entry_reverse(dfp, &dop->dop_pending, dfp_list) {
--			if (dfp->dfp_committed)
--				break;
--			trace_xfs_defer_pending_commit((*tp)->t_mountp, dfp);
--			dfp->dfp_committed = true;
--		}
--
- 		/* Log an intent-done item for the first pending item. */
- 		dfp = list_first_entry(&dop->dop_pending,
- 				struct xfs_defer_pending, dfp_list);
- 		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
--		done_item = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
-+		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
- 				dfp->dfp_count);
- 		cleanup_fn = dfp->dfp_type->finish_cleanup;
- 
-@@ -371,7 +362,7 @@ xfs_defer_finish(
- 			list_del(li);
- 			dfp->dfp_count--;
- 			error = dfp->dfp_type->finish_item(*tp, dop, li,
--					done_item, &state);
-+					dfp->dfp_done, &state);
- 			if (error == -EAGAIN) {
- 				/*
- 				 * Caller wants a fresh transaction;
-@@ -403,6 +394,7 @@ xfs_defer_finish(
- 			 */
- 			dfp->dfp_intent = dfp->dfp_type->create_intent(*tp,
- 					dfp->dfp_count);
-+			dfp->dfp_done = NULL;
- 			list_for_each(li, &dfp->dfp_work)
- 				dfp->dfp_type->log_item(*tp, dfp->dfp_intent,
- 						li);
-@@ -492,8 +484,8 @@ xfs_defer_add(
- 		dfp = kmem_alloc(sizeof(struct xfs_defer_pending),
- 				KM_SLEEP | KM_NOFS);
- 		dfp->dfp_type = defer_op_types[type];
--		dfp->dfp_committed = false;
- 		dfp->dfp_intent = NULL;
-+		dfp->dfp_done = NULL;
- 		dfp->dfp_count = 0;
- 		INIT_LIST_HEAD(&dfp->dfp_work);
- 		list_add_tail(&dfp->dfp_list, &dop->dop_intake);
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index aa57eaa..f6e93ef 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -30,8 +30,8 @@ struct xfs_defer_op_type;
- struct xfs_defer_pending {
- 	const struct xfs_defer_op_type	*dfp_type;	/* function pointers */
- 	struct list_head		dfp_list;	/* pending items */
--	bool				dfp_committed;	/* committed trans? */
- 	void				*dfp_intent;	/* log intent item */
-+	void				*dfp_done;	/* log done item */
- 	struct list_head		dfp_work;	/* work items */
- 	unsigned int			dfp_count;	/* # extent items */
- };
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8d916dd..7e56843 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2302,7 +2302,7 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_class,
- 		__entry->dev = mp ? mp->m_super->s_dev : 0;
- 		__entry->type = dfp->dfp_type->type;
- 		__entry->intent = dfp->dfp_intent;
--		__entry->committed = dfp->dfp_committed;
-+		__entry->committed = dfp->dfp_done != NULL;
- 		__entry->nr = dfp->dfp_count;
- 	),
- 	TP_printk("dev %d:%d optype %d intent %p committed %d nr %d\n",
+The problem is that the log attempts to replay a buffer update that is
+no longer valid due to subsequent, already replayed updates. This
+results in a corruption error when, in fact, the filesystem is perfectly
+fine. The problem is addressed by updating the metadata LSN of buffers
+submitted for I/O by log recovery. This bit is implemented in patch 4.
+
+Updating metadata LSNs in this manner uncovered another issue in which
+log recovery would incorrectly skip modifications from independent
+transactions if they happen to share an LSN with a previous transaction
+that modified the same buffer (which had already updated the LSN). This
+particular problem is addressed in patch 2, which modifies log recovery
+to submit buffers on current LSN boundaries rather than transaction
+boundaries. The remaining patches fix up some minor issues, refactor a
+bit and add some tracepoints.
+
+This has survived a single xfstests run so far but still requires more
+regression testing. It has also survived several thousand iterations of
+a shutdown test similar to the above that normally reproduces problems
+within tens of iterations (xfstests test tbd).
+
+Brian
+
+Brian Foster (5):
+  xfs: rework log recovery to submit buffers on LSN boundaries
+  xfs: pass current lsn to log recovery buffer validation
+  xfs: don't warn on buffers not being recovered due to LSN
+  xfs: update metadata LSN in buffers during log recovery
+  xfs: log recovery tracepoints to track current lsn and buffer
+    submission
+
+ fs/xfs/xfs_log_priv.h    |   3 +-
+ fs/xfs/xfs_log_recover.c | 188 +++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_trace.h       |  31 +++++++-
+ 3 files changed, 163 insertions(+), 59 deletions(-)
+
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
