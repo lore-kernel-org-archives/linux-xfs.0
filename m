@@ -1,19 +1,21 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C87A57CA0
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 01:30:59 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 022E37CA3
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 02:29:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BF8C304043
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 23:30:56 -0700 (PDT)
-Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130]) by
-	cuda.sgi.com with ESMTP id wYK6LuzCAUmk2DD5 (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 23:30:52 -0700 (PDT)
-From: "=?utf-8?B?5YiY6YC45Y2O?=" <jentai-sales01@oak-bond.com>
-Subject: JENTAI---Professional Manufactory in Hot melt glue sticks and Hot
-	melt colloidal particles
-Mime-Version: 1.0
-Date: Fri, 12 Aug 2016 14:30:47 +0800
-Message-ID: <tencent_53CD0AE443A130C92D10F4E9@qq.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C609F8F8035
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 00:29:31 -0700 (PDT)
+Received: from SNT004-OMC1S18.hotmail.com (snt004-omc1s18.hotmail.com
+	[65.55.90.29]) by cuda.sgi.com with ESMTP id eqeHCbYQjhDYiBN4
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 11 Aug 2016 00:29:28 -0700 (PDT)
+From: pallavi sain <pallavi.webdesign1@outlook.com>
+Subject: 1st to 10th position in Google rankings 
+Date: Thu, 11 Aug 2016 07:29:22 +0000
+Message-ID: <PN1PR01MB012799175BE5BC7010F20B8CCE1E0@PN1PR01MB0127.INDPRD01.PROD.OUTLOOK.COM>
+Content-Language: en-US
+MIME-Version: 1.0
+Reply-To: "marketingcompany411@gmail.com" <marketingcompany411@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,175 +24,407 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6515972000452926022=="
+Content-Type: multipart/mixed; boundary="===============5516639202841608885=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?gb18030?B?eGZz?= <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
-
---===============6515972000452926022==
+--===============5516639202841608885==
+Content-Language: en-US
 Content-Type: multipart/alternative;
-	boundary="----=_NextPart_57AD6D17_09B23340_65CF4C96"
-Content-Transfer-Encoding: 8Bit
+	boundary="_000_PN1PR01MB012799175BE5BC7010F20B8CCE1E0PN1PR01MB0127INDP_"
 
-This is a multi-part message in MIME format.
+--_000_PN1PR01MB012799175BE5BC7010F20B8CCE1E0PN1PR01MB0127INDP_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-------=_NextPart_57AD6D17_09B23340_65CF4C96
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Hello & Good Day!
+I am Marketing Manager for an international marketing company based in Indi=
+a.
+Make your website visible on Search Engines!!
+Improve your business website ranking!!
+What this would cost!!
+Want more clients?
+If you want your website to appear on first page of Google then please let =
+me know.
+We can provide you 1st to 10th position in Google rankings at very affordab=
+le prices.
+Email us back to get a full proposal.
 
-RGVhciBTaXIgLyBNYWRhbQ0KDQogVGhpcyBpcyBTaGFuZ2hhaSBKRU5UQUkgTmFubyBUZWNo
-bm9sb2d5IENvLixMdGQuDQogT3VyIGNvbXBhbnkgaXMgcHJvZmVzc2lvbmFsIG1hbnVmYWN0
-dXJlIGluIEhvdCBtZWx0IGdsdWUgc3RpY2tzIGFuZCBIb3QgbWVsdCBjb2xsb2lkYWwgcGFy
-dGljbGVzIG92ZXIgMjAgeWVhcnMuDQogSGVyZSBpcyBvdXIgY29tcGFueSB3ZWJzaXRlIGFk
-ZHJlc3M6ICAgaHR0cDovL2VuLm9hay1ib25kLmNvbS8NCiANCiBUaGUgcHJpY2Ugd2UgY2Fu
-IG9mZmVyIHRvIHlvdSBhcyBmb2xsb3dpbmc6DQoNCiBIb3QgbWVsdCBnbHVlIHN0aWNrcyA6
-ICAgICAgICAgICAgICBVU0QxLjk0L2tnDQoNCkhvdCBtZWx0IGNvbGxvaWRhbCBwYXJ0aWNs
-ZXMgOiAgICBVU0QgMS41Mi9rZw0KDQoNCg0KDQpXZSBjYW4gb2ZmZXIgeW91IGZyZWUgc2Ft
-cGxlcyB0byBsZXQgeW91IHRlc3QuDQoNCiBJZiB5b3UgaGF2ZSBhbnkgaW50ZXJlc3RlZCwg
-cGxlYXNlIGNvbnRhY3Qgd2l0aCB1cy4NCg0KV2Ugd2lsbCBnaXZlIHlvdSBtb3JlIGluZm9y
-bWF0aW9uLg0KDQoNCg0KIA0KSG9wZSB0byBoZWFyIGZyb20geW91IHNvb24uDQoNCi0tLS0t
-LS0tLS0tLS0tLS0tLQ0KDQpTaG5hZ2FoaSBKRU5UQUkgTmFubyBUZWNobm9sb2d5IENvLiwg
-THRkTm8uMTM5IFhpbmppYW4gYnJhbmNoIHJvYWQsIFNoaXBhaSBpbmR1c3RyaWFsIGFyZWEs
-IEt1bnNoYW4gY2l0eSwgSmlhbmdzdSBQcm92aW5jZQ0KDQpFeHBvcnQgU2FsZXMNCuWKiemA
-uOiPryBJdmFuIExpdQ0KRS1tYWlsOiBqZW50YWktc2FsZXMwMUBvYWstYm9uZC5jb20NCldl
-Y2hhdDogaXZhbmxpdTAyMjI=
 
-------=_NextPart_57AD6D17_09B23340_65CF4C96
-Content-Type: text/html;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+  Best Regards
+Marketing Manager
 
-PGRpdj48cCBjbGFzcz0iTXNvTm9ybWFsIiBzdHlsZT0iYmFja2dyb3VuZC1pbWFnZTogaW5p
-dGlhbDsgYmFja2dyb3VuZC1hdHRhY2htZW50OiBpbml0aWFsOyBiYWNrZ3JvdW5kLXNpemU6
-IGluaXRpYWw7IGJhY2tncm91bmQtb3JpZ2luOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWNsaXA6
-IGluaXRpYWw7IGJhY2tncm91bmQtcG9zaXRpb246IGluaXRpYWw7IGJhY2tncm91bmQtcmVw
-ZWF0OiBpbml0aWFsOyI+PHNwYW4gbGFuZz0iRU4tVVMiPjxzcGFuIHN0eWxlPSJmb250LWZh
-bWlseTogVmVyZGFuYSwgc2Fucy1zZXJpZjsgbGluZS1oZWlnaHQ6IDE1Ljc1cHQ7IGZvbnQt
-c2l6ZTogOXB0OyI+RGVhciBTaXIgLyBNYWRhbTwvc3Bhbj48L3NwYW4+PC9wPjxwIGNsYXNz
-PSJNc29Ob3JtYWwiIHN0eWxlPSJiYWNrZ3JvdW5kLWltYWdlOiBpbml0aWFsOyBiYWNrZ3Jv
-dW5kLWF0dGFjaG1lbnQ6IGluaXRpYWw7IGJhY2tncm91bmQtc2l6ZTogaW5pdGlhbDsgYmFj
-a2dyb3VuZC1vcmlnaW46IGluaXRpYWw7IGJhY2tncm91bmQtY2xpcDogaW5pdGlhbDsgYmFj
-a2dyb3VuZC1wb3NpdGlvbjogaW5pdGlhbDsgYmFja2dyb3VuZC1yZXBlYXQ6IGluaXRpYWw7
-Ij48c3BhbiBsYW5nPSJFTi1VUyI+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiBWZXJkYW5h
-LCBzYW5zLXNlcmlmOyBsaW5lLWhlaWdodDogMTUuNzVwdDsgZm9udC1zaXplOiA5cHQ7Ij4N
-ClRoaXMgaXMgPC9zcGFuPjwvc3Bhbj48YiBzdHlsZT0ibGluZS1oZWlnaHQ6IDE1Ljc1cHQ7
-Ij48c3BhbiBsYW5nPSJFTi1VUyIgc3R5bGU9IiBmb250LXNpemU6OS4wcHQgOyA7IDsgOztj
-b2xvcjpyZWQgIj5TaGFuZ2hhaSBKRU5UQUkgTmFubyBUZWNobm9sb2d5IENvLixMdGQuPC9z
-cGFuPjwvYj48c3BhbiBsYW5nPSJFTi1VUyIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNS43NXB0
-OyBmb250LXNpemU6IDlwdDsgZm9udC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7Ij48
-YnI+DQpPdXIgY29tcGFueSBpcyBwcm9mZXNzaW9uYWwgbWFudWZhY3R1cmUgaW4gPC9zcGFu
-PjxiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVwdDsiPjxzcGFuIGxhbmc9IkVOLVVTIiBz
-dHlsZT0iIGZvbnQtc2l6ZTo5LjBwdCA7IDsgOyA7O2NvbG9yOnJlZCAiPkhvdCBtZWx0DQpn
-bHVlIHN0aWNrczwvc3Bhbj48L2I+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJsaW5lLWhl
-aWdodDogMTUuNzVwdDsgZm9udC1zaXplOiA5cHQ7IGNvbG9yOiByZWQ7Ij4mbmJzcDs8L3Nw
-YW4+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVwdDsgZm9u
-dC1zaXplOiA5cHQ7Ij5hbmQ8c3BhbiBzdHlsZT0iY29sb3I6cmVkIj4mbmJzcDs8Yj5Ib3Qg
-bWVsdCBjb2xsb2lkYWwgcGFydGljbGVzPC9iPjwvc3Bhbj4mbmJzcDtvdmVyIDIwIHllYXJz
-Ljxicj4NCkhlcmUgaXMgb3VyIGNvbXBhbnkgd2Vic2l0ZSBhZGRyZXNzOiZuYnNwOyAmbmJz
-cDs8L3NwYW4+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVw
-dDsiPjxhIGhyZWY9Imh0dHA6Ly9lbi5vYWstYm9uZC5jb20vIiB0YXJnZXQ9Il9ibGFuayI+
-PHNwYW4gc3R5bGU9IiBmb250LXNpemU6OS4wcHQgOyA7IDsgOztjb2xvcjp3aW5kb3d0ZXh0
-ICI+aHR0cDovL2VuLm9hay1ib25kLmNvbS88L3NwYW4+PC9hPjwvc3Bhbj48c3BhbiBsYW5n
-PSJFTi1VUyIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNS43NXB0OyBmb250LXNpemU6IDlwdDsg
-Zm9udC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7Ij48YnI+DQo8YnI+DQpUaGUgcHJp
-Y2Ugd2UgY2FuIG9mZmVyIHRvIHlvdSBhcyBmb2xsb3dpbmc6PC9zcGFuPjwvcD48cCBjbGFz
-cz0iTXNvTm9ybWFsIiBzdHlsZT0iYmFja2dyb3VuZC1pbWFnZTogaW5pdGlhbDsgYmFja2dy
-b3VuZC1hdHRhY2htZW50OiBpbml0aWFsOyBiYWNrZ3JvdW5kLXNpemU6IGluaXRpYWw7IGJh
-Y2tncm91bmQtb3JpZ2luOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWNsaXA6IGluaXRpYWw7IGJh
-Y2tncm91bmQtcG9zaXRpb246IGluaXRpYWw7IGJhY2tncm91bmQtcmVwZWF0OiBpbml0aWFs
-OyI+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVwdDsgZm9u
-dC1zaXplOiA5cHQ7IGZvbnQtZmFtaWx5OiBWZXJkYW5hLCBzYW5zLXNlcmlmOyI+DQpIb3Qg
-bWVsdCBnbHVlIHN0aWNrcyA6ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsg
-PC9zcGFuPjxzcGFuIGxhbmc9IkVOLVVTIiBzdHlsZT0ibGluZS1oZWlnaHQ6IDE1Ljc1cHQ7
-IGZvbnQtc2l6ZTogOXB0OyBjb2xvcjogcmVkOyI+Jm5ic3A7ICZuYnNwOzxiPlVTRDEuOTwv
-Yj48L3NwYW4+PGIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNS43NXB0OyI+PHNwYW4gbGFuZz0i
-RU4tVVMiIHN0eWxlPSIgZm9udC1zaXplOjkuMHB0IDsgOyA7IDs7bXNvLWZhcmVhc3QtZm9u
-dC1mYW1pbHk6DQpQTWluZ0xpVTtjb2xvcjpyZWQgIj40PC9zcGFuPjwvYj48YiBzdHlsZT0i
-bGluZS1oZWlnaHQ6IDE1Ljc1cHQ7Ij48c3BhbiBsYW5nPSJFTi1VUyIgc3R5bGU9IiBmb250
-LXNpemU6OS4wcHQgOyA7IDsgOztjb2xvcjpyZWQgIj4va2c8L3NwYW4+PC9iPjxzcGFuIGxh
-bmc9IkVOLVVTIiBzdHlsZT0ibGluZS1oZWlnaHQ6IDE1Ljc1cHQ7IGZvbnQtZmFtaWx5OiBW
-ZXJkYW5hLCBzYW5zLXNlcmlmOyI+PG86cD48L286cD48L3NwYW4+PC9wPjxwIGNsYXNzPSJN
-c29Ob3JtYWwiIHN0eWxlPSJiYWNrZ3JvdW5kLWltYWdlOiBpbml0aWFsOyBiYWNrZ3JvdW5k
-LWF0dGFjaG1lbnQ6IGluaXRpYWw7IGJhY2tncm91bmQtc2l6ZTogaW5pdGlhbDsgYmFja2dy
-b3VuZC1vcmlnaW46IGluaXRpYWw7IGJhY2tncm91bmQtY2xpcDogaW5pdGlhbDsgYmFja2dy
-b3VuZC1wb3NpdGlvbjogaW5pdGlhbDsgYmFja2dyb3VuZC1yZXBlYXQ6IGluaXRpYWw7Ij48
-c3BhbiBzdHlsZT0iZm9udC1zaXplOiAxMnB4OyI+SG90IG1lbHQgY29sbG9pZGFsIHBhcnRp
-Y2xlczwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC1zaXplOiAxMnB4OyI+Jm5ic3A7PC9zcGFu
-PjxzcGFuIHN0eWxlPSJmb250LWZhbWlseTogVmVyZGFuYSwgc2Fucy1zZXJpZjsgZm9udC1z
-aXplOiAxMnB4OyBsaW5lLWhlaWdodDogMS41OyI+OiAmbmJzcDsgPGZvbnQgY29sb3I9IiNm
-ZjAwMDAiPjxiPiBVU0QgMS41Mi9rZzwvYj48L2ZvbnQ+PC9zcGFuPjwvcD48cCBjbGFzcz0i
-TXNvTm9ybWFsIiBzdHlsZT0iYmFja2dyb3VuZC1pbWFnZTogaW5pdGlhbDsgYmFja2dyb3Vu
-ZC1hdHRhY2htZW50OiBpbml0aWFsOyBiYWNrZ3JvdW5kLXNpemU6IGluaXRpYWw7IGJhY2tn
-cm91bmQtb3JpZ2luOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWNsaXA6IGluaXRpYWw7IGJhY2tn
-cm91bmQtcG9zaXRpb246IGluaXRpYWw7IGJhY2tncm91bmQtcmVwZWF0OiBpbml0aWFsOyI+
-PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiBWZXJkYW5hLCBzYW5zLXNlcmlmOyBmb250LXNp
-emU6IDlwdDsiPjxicj48L3NwYW4+PC9wPjxwIGNsYXNzPSJNc29Ob3JtYWwiIHN0eWxlPSJi
-YWNrZ3JvdW5kLWltYWdlOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWF0dGFjaG1lbnQ6IGluaXRp
-YWw7IGJhY2tncm91bmQtc2l6ZTogaW5pdGlhbDsgYmFja2dyb3VuZC1vcmlnaW46IGluaXRp
-YWw7IGJhY2tncm91bmQtY2xpcDogaW5pdGlhbDsgYmFja2dyb3VuZC1wb3NpdGlvbjogaW5p
-dGlhbDsgYmFja2dyb3VuZC1yZXBlYXQ6IGluaXRpYWw7Ij48c3BhbiBzdHlsZT0iZm9udC1m
-YW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7IGZvbnQtc2l6ZTogOXB0OyI+V2UgY2FuIG9m
-ZmVyIHlvdSBmcmVlIHNhbXBsZXMNCnRvIGxldCB5b3UgdGVzdC48L3NwYW4+PC9wPjxwIGNs
-YXNzPSJNc29Ob3JtYWwiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVwdDsgYmFja2dyb3Vu
-ZC1pbWFnZTogaW5pdGlhbDsgYmFja2dyb3VuZC1hdHRhY2htZW50OiBpbml0aWFsOyBiYWNr
-Z3JvdW5kLXNpemU6IGluaXRpYWw7IGJhY2tncm91bmQtb3JpZ2luOiBpbml0aWFsOyBiYWNr
-Z3JvdW5kLWNsaXA6IGluaXRpYWw7IGJhY2tncm91bmQtcG9zaXRpb246IGluaXRpYWw7IGJh
-Y2tncm91bmQtcmVwZWF0OiBpbml0aWFsOyI+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJm
-b250LXNpemU6IDlwdDsgZm9udC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7Ij4NCklm
-IHlvdSBoYXZlIGFueSBpbnRlcmVzdGVkLCBwbGVhc2UgY29udGFjdCB3aXRoIHVzLjwvc3Bh
-bj48L3A+PHAgY2xhc3M9Ik1zb05vcm1hbCIgc3R5bGU9ImxpbmUtaGVpZ2h0OiAxNS43NXB0
-OyBiYWNrZ3JvdW5kLWltYWdlOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWF0dGFjaG1lbnQ6IGlu
-aXRpYWw7IGJhY2tncm91bmQtc2l6ZTogaW5pdGlhbDsgYmFja2dyb3VuZC1vcmlnaW46IGlu
-aXRpYWw7IGJhY2tncm91bmQtY2xpcDogaW5pdGlhbDsgYmFja2dyb3VuZC1wb3NpdGlvbjog
-aW5pdGlhbDsgYmFja2dyb3VuZC1yZXBlYXQ6IGluaXRpYWw7Ij48c3BhbiBzdHlsZT0iZm9u
-dC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7IGZvbnQtc2l6ZTogOXB0OyBsaW5lLWhl
-aWdodDogMTUuNzVwdDsiPldlIHdpbGwgZ2l2ZSB5b3UNCm1vcmUgaW5mb3JtYXRpb24uPC9z
-cGFuPjwvcD48cCBjbGFzcz0iTXNvTm9ybWFsIiBzdHlsZT0ibGluZS1oZWlnaHQ6IDE1Ljc1
-cHQ7IGJhY2tncm91bmQtaW1hZ2U6IGluaXRpYWw7IGJhY2tncm91bmQtYXR0YWNobWVudDog
-aW5pdGlhbDsgYmFja2dyb3VuZC1zaXplOiBpbml0aWFsOyBiYWNrZ3JvdW5kLW9yaWdpbjog
-aW5pdGlhbDsgYmFja2dyb3VuZC1jbGlwOiBpbml0aWFsOyBiYWNrZ3JvdW5kLXBvc2l0aW9u
-OiBpbml0aWFsOyBiYWNrZ3JvdW5kLXJlcGVhdDogaW5pdGlhbDsiPjxzcGFuIHN0eWxlPSJm
-b250LWZhbWlseTogVmVyZGFuYSwgc2Fucy1zZXJpZjsgZm9udC1zaXplOiA5cHQ7IGxpbmUt
-aGVpZ2h0OiAxNS43NXB0OyI+PGJyPjwvc3Bhbj48L3A+DQoNCjxwIGNsYXNzPSJNc29Ob3Jt
-YWwiIHN0eWxlPSJsaW5lLWhlaWdodDogMTUuNzVwdDsgYmFja2dyb3VuZC1pbWFnZTogaW5p
-dGlhbDsgYmFja2dyb3VuZC1hdHRhY2htZW50OiBpbml0aWFsOyBiYWNrZ3JvdW5kLXNpemU6
-IGluaXRpYWw7IGJhY2tncm91bmQtb3JpZ2luOiBpbml0aWFsOyBiYWNrZ3JvdW5kLWNsaXA6
-IGluaXRpYWw7IGJhY2tncm91bmQtcG9zaXRpb246IGluaXRpYWw7IGJhY2tncm91bmQtcmVw
-ZWF0OiBpbml0aWFsOyI+PHNwYW4gbGFuZz0iRU4tVVMiIHN0eWxlPSJmb250LXNpemU6IDlw
-dDsgZm9udC1mYW1pbHk6IFZlcmRhbmEsIHNhbnMtc2VyaWY7Ij5Ib3BlIHRvIGhlYXIgZnJv
-bSB5b3Ugc29vPC9zcGFuPjxzcGFuIGxhbmc9IkVOLVVTIiBzdHlsZT0iZm9udC1zaXplOiA5
-cHQ7IGZvbnQtZmFtaWx5OiBWZXJkYW5hLCBzYW5zLXNlcmlmOyI+bi48L3NwYW4+PC9wPjwv
-ZGl2PjxkaXY+PHNpZ24gc2lnbmlkPSIwIj48ZGl2IHN0eWxlPSJjb2xvcjojOTA5MDkwO2Zv
-bnQtZmFtaWx5OkFyaWFsIE5hcnJvdztmb250LXNpemU6MTJweCI+LS0tLS0tLS0tLS0tLS0t
-LS0tPC9kaXY+PGRpdiBzdHlsZT0iZm9udC1zaXplOjE0cHg7Zm9udC1mYW1pbHk6VmVyZGFu
-YTtjb2xvcjojMDAwOyI+PHNwYW4gc3R5bGU9ImNvbG9yOiByZ2IoMCwgMCwgMjU1KTsiPjxp
-bWcgc3R5bGU9IndpZHRoOiAxNjFweDsgaGVpZ2h0OiA4MnB4OyIgc3JjPSJodHRwOi8vZXht
-YWlsLnFxLmNvbS9jZ2ktYmluL3ZpZXdmaWxlP3R5cGU9c2lnbmF0dXJlJmFtcDtwaWNpZD1a
-WDAxMTItM29mUmVYZ2FqcWt0dENoX3AlN0VCaFk2aiZhbXA7dWluPTI2MTk4MDE5NDUiPjxi
-cj48L3NwYW4+PGZvbnQgY29sb3I9IiMwMDAwODAiIHN0eWxlPSJsaW5lLWhlaWdodDogMjFw
-eDsiPlNobmFnYWhpIEpFTlRBSSBOYW5vIFRlY2hub2xvZ3kgQ28uLCBMdGQ8L2ZvbnQ+PGRp
-diBzdHlsZT0ibGluZS1oZWlnaHQ6IDIxcHg7Ij48Zm9udCBjb2xvcj0iIzAwMDA4MCI+Tm8u
-MTM5IFhpbmppYW4gYnJhbmNoIHJvYWQsIFNoaXBhaSBpbmR1c3RyaWFsIGFyZWEsIEt1bnNo
-YW4gY2l0eSwgSmlhbmdzdSBQcm92aW5jZTwvZm9udD48L2Rpdj48ZGl2IHN0eWxlPSJsaW5l
-LWhlaWdodDogMjFweDsiPjxzcGFuIHN0eWxlPSJjb2xvcjogcmdiKDAsIDAsIDI1NSk7Ij48
-YnI+PC9zcGFuPjxkaXY+PGZvbnQgY29sb3I9IiMwMDAwZmYiPkV4cG9ydCBTYWxlczwvZm9u
-dD48L2Rpdj48ZGl2PjxzcGFuIHN0eWxlPSJjb2xvcjogcmdiKDAsIDAsIDI1NSk7Ij7lionp
-gLjoj68gSXZhbiBMaXU8L3NwYW4+PC9kaXY+PGRpdj48c3BhbiBzdHlsZT0iY29sb3I6IHJn
-YigwLCAwLCAyNTUpOyI+RS1tYWlsOiBqZW50YWktc2FsZXMwMUBvYWstYm9uZC5jb208L3Nw
-YW4+PC9kaXY+PGRpdj48ZGl2PjxzcGFuIHN0eWxlPSJjb2xvcjogcmdiKDAsIDAsIDI1NSk7
-Ij5XZWNoYXQ6IGl2YW5saXUwMjIyPC9zcGFuPjwvZGl2PjxkaXY+PGJyPjwvZGl2PjwvZGl2
-PjwvZGl2Pg0KPC9kaXY+PC9zaWduPjwvZGl2PjxkaXY+Jm5ic3A7PC9kaXY+PGRpdj48dGlu
-Y2x1ZGV0YWlsPjwvdGluY2x1ZGV0YWlsPjwvZGl2PjwhLS08IVtlbmRpZl0tLT4=
 
-------=_NextPart_57AD6D17_09B23340_65CF4C96--
+Note: - If this is something you are interested, please respond to this ema=
+il. If this is not your interest, don't worry, we will not email you again.
 
 
 
+--_000_PN1PR01MB012799175BE5BC7010F20B8CCE1E0PN1PR01MB0127INDP_
+Content-Type: text/html; charset="us-ascii"
+Content-ID: <1B54B164C1F04C41A131D77E9D1952D6@INDPRD01.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: quoted-printable
 
---===============6515972000452926022==
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 12 (filtered medium)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Consolas;
+	panose-1:2 11 6 9 2 2 4 3 2 4;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:0in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoPlainText, li.MsoPlainText, div.MsoPlainText
+	{mso-style-priority:99;
+	mso-style-link:"Plain Text Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	font-size:10.5pt;
+	font-family:Consolas;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.5in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParag=
+raphCxSpFirst
+	{mso-style-priority:34;
+	mso-style-type:export-only;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListPar=
+agraphCxSpMiddle
+	{mso-style-priority:34;
+	mso-style-type:export-only;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagra=
+phCxSpLast
+	{mso-style-priority:34;
+	mso-style-type:export-only;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.5in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+span.PlainTextChar
+	{mso-style-name:"Plain Text Char";
+	mso-style-priority:99;
+	mso-style-link:"Plain Text";
+	font-family:Consolas;}
+span.apple-converted-space
+	{mso-style-name:apple-converted-space;}
+.MsoChpDefault
+	{mso-style-type:export-only;}
+.MsoPapDefault
+	{mso-style-type:export-only;
+	margin-bottom:10.0pt;
+	line-height:115%;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:539246989;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-4972526 67698699 67698691 67698693 67698689 6769869=
+1 67698693 67698689 67698691 67698693;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l1
+	{mso-list-id:739867674;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1433492850 67698689 67698691 67698693 67698689 6769=
+8691 67698693 67698689 67698691 67698693;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l2
+	{mso-list-id:884949123;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1148629272 67698697 67698691 67698693 67698689 67698=
+691 67698693 67698689 67698691 67698693;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F076;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l2:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l3
+	{mso-list-id:1607426271;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1315371536 67698699 67698691 67698693 67698689 67698=
+691 67698693 67698689 67698691 67698693;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l3:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l4
+	{mso-list-id:1633057215;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1418011928 67698697 67698691 67698693 67698689 6769=
+8691 67698693 67698689 67698691 67698693;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F076;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l5
+	{mso-list-id:1651249399;
+	mso-list-type:hybrid;
+	mso-list-template-ids:755109126 67698699 67698691 67698693 67698689 676986=
+91 67698693 67698689 67698691 67698693;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l5:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l6
+	{mso-list-id:1740707530;
+	mso-list-type:hybrid;
+	mso-list-template-ids:47586614 67698699 67698691 67698693 67698689 6769869=
+1 67698693 67698689 67698691 67698693;}
+@list l6:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l7
+	{mso-list-id:1763336247;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-763200918 67698699 67698691 67698693 67698689 67698=
+691 67698693 67698689 67698691 67698693;}
+@list l7:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+@list l7:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l8
+	{mso-list-id:1875465180;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1342300556 67698699 67698691 67698693 67698689 6769=
+8691 67698693 67698689 67698691 67698693;}
+@list l8:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0D8;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Wingdings;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext=3D"edit">
+  <o:idmap v:ext=3D"edit" data=3D"1" />
+ </o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US">
+<div class=3D"Section1">
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">H=
+ello &amp; Good Day!<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">I=
+ am Marketing Manager for an international marketing company based in India=
+.<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">M=
+ake your website visible on Search Engines!!<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">I=
+mprove your business website ranking!!<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">W=
+hat this would cost!!<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">W=
+ant more clients?<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">I=
+f you want your website to appear on first page of Google then please let m=
+e know.<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">W=
+e can provide you 1</span><sup><span style=3D"font-size:14.0pt;font-family:=
+&quot;Times New Roman&quot;,&quot;serif&quot;">st</span></sup><span style=
+=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;"> to 10<sup>t=
+h</sup> position in Google
+ rankings at very affordable prices.<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">E=
+mail us back to get a full proposal.<o:p></o:p></span></p>
+<p class=3D"MsoNormalCxSpMiddle" style=3D"margin-bottom:0in;margin-bottom:.=
+0001pt;
+line-height:normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">&=
+nbsp;<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">&=
+nbsp;&nbsp;Best Regards<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-family:&quot;Times New Roman&quot;,&quot;serif&quot;">M=
+arketing Manager&nbsp; <o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-size:10.0pt;font-family:&quot;Times New Roman&quot;,&qu=
+ot;serif&quot;">&nbsp;<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-size:10.0pt;font-family:&quot;Times New Roman&quot;,&qu=
+ot;serif&quot;"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-size:8.0pt;font-family:&quot;Times New Roman&quot;,&quo=
+t;serif&quot;">Note: - If this is something you are interested, please resp=
+ond to this email. If this is not your interest, don't worry, we will not e=
+mail you again.<o:p></o:p></span></p>
+<p class=3D"MsoNormal" style=3D"margin-bottom:0in;margin-bottom:.0001pt;lin=
+e-height:
+normal">
+<span style=3D"font-size:10.0pt;font-family:&quot;Times New Roman&quot;,&qu=
+ot;serif&quot;">&nbsp;<o:p></o:p></span></p>
+<p class=3D"MsoNormal"><span style=3D"font-size:10.0pt;line-height:115%;fon=
+t-family:
+&quot;Times New Roman&quot;,&quot;serif&quot;;color:#0070C0"><o:p>&nbsp;</o=
+:p></span></p>
+</div>
+</body>
+</html>
+
+--_000_PN1PR01MB012799175BE5BC7010F20B8CCE1E0PN1PR01MB0127INDP_--
+
+
+--===============5516639202841608885==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -201,4 +435,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6515972000452926022==--
+--===============5516639202841608885==--
