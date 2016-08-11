@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4C087CA0
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 17:36:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 56442AC001
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 15:36:17 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oDr3PZuphCjwzoYN for <xfs@oss.sgi.com>;
-	Tue, 09 Aug 2016 15:36:13 -0700 (PDT)
-Date: Wed, 10 Aug 2016 08:35:03 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 745847CA3
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 05:45:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 381B4304039
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 03:45:01 -0700 (PDT)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id huU7Jaj4MALKpf0h (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 03:44:58 -0700 (PDT)
+Date: Thu, 11 Aug 2016 12:44:59 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Question on migrating data between PVs in xfs
-Message-ID: <20160809223503.GJ19025@dastard>
-References: <20160809145046.GB5583@ic>
+Message-ID: <20160811124459.57f9a352@harpe.intellique.com>
+In-Reply-To: <20160810215149.GM19025@dastard>
+References: <20160809145046.GB5583@ic> <20160809223503.GJ19025@dastard>
+	<20160810092313.GA16193@ic> <20160810105639.GR16044@dastard>
+	<20160810183132.0b9ae8e4@harpe.intellique.com>
+	<20160810215149.GM19025@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160809145046.GB5583@ic>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,71 +27,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wei Lin <lin.wei15@imperial.ac.uk>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, Wei Lin <lin.wei15@imperial.ac.uk>
 
-On Tue, Aug 09, 2016 at 03:50:47PM +0100, Wei Lin wrote:
-> Hi there,
-> 
-> I am working on an xfs based project and want to modify the allocation
-> algorithm, which is quite involved. I am wondering if anyone could help
-> with this.
-> 
-> The high level goal is to create xfs agains multiple physical volumes,
-> allow user to specify the target PV for files, and migrate files
-> automatically.
-
-So, essentially tiered storage with automatic migration. Can you
-describe the storage layout and setup you are thinking of using and
-how that will map to a single XFS filesystem so we have a better
-idea of what you are thinking of?
-
-> I plan to implement the user interface with extended attributes, but am
-> now stuck with the allocation/migration part. Is there a way to make xfs
-> respect the attribute, i.e. only allocate blocks/extents from the target
-> PV specified by user?
-
-Define "PV".
-
-XFS separates allocation by allocation group - it has no concept of
-underlying physical device layout. If I understand what you , you have
-multiple "physical volumes" set up in a single block device (somehow
-- please describe!) and now you want to control how data is
-allocated to those underlying volumes, right?
-
-So what you're asking about is how to define and implement user
-controlled allocation policies, right? Sorta like this old
-prototype I was working on years ago?
-
-http://oss.sgi.com/archives/xfs/2009-02/msg00250.html
-
-And some more info from a later discussion:
-
-http://oss.sgi.com/archives/xfs/2013-01/msg00611.html
-
-And maybe in conjunction with this, which added groupings of AGs
-together to form independent regions of "physical separation" that
-the allocator could then be made aware of:
-
-http://oss.sgi.com/archives/xfs/2009-02/msg00253.html
-
-These were more aimed at defining failure domains for error and
-corruption isolation:
-
-http://xfs.org/index.php/Reliable_Detection_and_Repair_of_Metadata_Corruption#Failure_Domains
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCAxMSBBdWcgMjAxNiAwNzo1MTo0OSArMTAwMApEYXZlIENoaW5uZXIgPGRhdmlkQGZy
+b21vcmJpdC5jb20+IMOpY3JpdmFpdDoKCj4gT24gV2VkLCBBdWcgMTAsIDIwMTYgYXQgMDY6MzE6
+MzJQTSArMDIwMCwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+ID4gTGUgV2VkLCAxMCBBdWcgMjAx
+NiAyMDo1NjozOSArMTAwMAo+ID4gRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiDD
+qWNyaXZhaXQ6Cj4gPiAgIAo+ID4gPiBIYXZlIHlvdSBsb29rZCBhdCB1c2luZyBkbS1jYWNoZSBp
+bnN0ZWFkIG9mIG1vZGlmeWluZyB0aGUKPiA+ID4gZmlsZXN5c3RlbT8KPiA+ID4gICAKPiA+IAo+
+ID4gT3IgYmNhY2hlLCBmY2FjaGUsIG9yIEVuaGFuY2VJTy4gU28gZmFyIGZyb20gbXkgb3duIHRl
+c3RpbmcgYmNhY2hlCj4gPiBpcyBzaWduaWZpY2FudGx5IGZhc3RlciBhbmQgZG0tY2FjaGUgYnkg
+ZmFyIHRoZSBzbG93ZXN0IG9mIHRoZQo+ID4gYnVuY2gsIGJ1dCBiY2FjaGUgbmVlZHMgc29tZSBt
+b3JlIGxvdmluZyAoaGlzIG1haW4gZGV2ZWxvcGVyIGlzCj4gPiBidXN5IHdyaXRpbmcgc29tZSBu
+ZXcgdGllcmVkLCBjYWNoaW5nIGZpbGVzeXN0ZW0gaW5zdGVhZCkuICAKPiAKPiBZZWFoLCB0aGUg
+cHJvYmxlbSB3aXRoIGJjYWNoZSBpcyB0aGF0IGl0IGlzIGVmZmVjdGl2ZWx5IGFuIG9ycGhhbmVk
+Cj4gZHJpdmVyLiBJZiB0aGVyZSBhcmUgb2J2aW91cyBhbmQgcmVwcm9kdWNhYmxlIHBlcmZvcm1h
+bmNlCj4gZGlmZmVyZW50aWFscyBiZXR3ZWVuIGJjYWNoZSBhbmQgZG0tY2FjaGUsIHlvdSBzaG91
+bGQgYnJpbmcgdGhlbSB0bwo+IHRoZSBhdHRlbnRpb24gb2YgdGhlIGRtIGRldmVsb3BlcnMgdG8g
+c2VlIGlmIHRoZXkgY2FuIGZpeCB0aGVtLi4uCgpHb29kIGlkZWEuIFdlbGwgYmNhY2hlIG1heSBi
+ZSBvcnBoYW5lZCBvZiBpdHMgbWFpbiBkZXZlbG9wZXIsIGhvd2V2ZXIKb3RoZXJzIHN0aWxsIHN1
+Ym1pdCBxdWl0ZSBhIGxvdCBvZiBzdGFiaWxpdHkgcGF0Y2hlcyAoYW1vbmcgdGhlbQpDaHJpc3Rv
+cGggSGVsbHdpZyB3aGljaCBpcyBhbHNvIGFjdGl2ZSBoZXJlIElJUkMpLgoKLS0gCi0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAg
+ICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxv
+cmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4
+NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
