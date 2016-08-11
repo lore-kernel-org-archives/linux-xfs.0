@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B616F7CA3
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 07:43:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 87DF98F8035
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 05:43:11 -0700 (PDT)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id doROzdNyNX4otyuq (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 2561A7CAE
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 12:11:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E1E818F8050
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id p7KWbBIZeQmmICjP (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 05:43:07 -0700 (PDT)
-Received: from [IPv6:2003:81:6f37:f112:e0dd:34e9:2242:2c11]
-	(p200300061517B312E0DD34E922422C11.dip0.t-ipconnect.de
-	[IPv6:2003:6:1517:b312:e0dd:34e9:2242:2c11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested) (Authenticated sender: whissi)
-	by smtp.gentoo.org (Postfix) with ESMTPSA id A55E2340B19
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 12:43:05 +0000 (UTC)
-From: Thomas Deutschmann <whissi@gentoo.org>
-Subject: xfsprogs-4.7.0 are conflicting with glibc's MS_RDONLY definition
-Message-ID: <2608952f-e6c4-0f20-8f49-818d67896dd3@gentoo.org>
-Date: Thu, 11 Aug 2016 14:42:50 +0200
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:10 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 95E2B8553E
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 17:11:09 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-69.bos.redhat.com [10.18.41.69])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7BHB94A009725
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 13:11:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 2/5] xfs: pass current lsn to log recovery buffer validation
+Date: Thu, 11 Aug 2016 13:11:04 -0400
+Message-Id: <1470935467-52772-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +33,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+The current LSN must be available to the buffer validation function to
+provide the ability to update the metadata LSN of the buffer. Pass the
+current_lsn value down to xlog_recover_validate_buf_type() in
+preparation.
 
-Hi,
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-collectd [1] now longer builds against xfsprogs-4.7.0 due to a
-conflict with MS_RDONLY definition in sys/mount.h by glibc vs exposed
-kernels header by xfsprogs due to the include of linux/fs.h.
-
-Upstream bug: https://github.com/collectd/collectd/issues/1877
-
-Gentoo-Bug: https://bugs.gentoo.org/590998
-
-
-I am bringing this to your attention to ask if you want to do anything
-to fix this in xfsprogs or do you consider that as a bug in collectd.
-
-Thanks!
-
-
-[1] https://collectd.org/
-
-
-- -- 
-Regards,
-Thomas
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.1
-
-iQJ8BAEBCgBmBQJXrHK/XxSAAAAAAC4AKGlzc3Vlci1mcHJAbm90YXRpb25zLm9w
-ZW5wZ3AuZmlmdGhob3JzZW1hbi5uZXQzM0M1ODQ4MkM0MDIyOTJEMkUzQzVDMDY5
-NzA5RjkwQzNDOTZGRkM4AAoJEJcJ+Qw8lv/IDqoQALTIBw+n+P8ZAW1mksVrY15d
-PjYFnPl50ZYbm5KXedOdY9iaEzvTG12bAPGm7HGnmURdC/yRcs50JMua6fNWTYi0
-r6gwdxijynMmUv0omgp1LDl+d/d7od5DkFZrQ0fP0TUHrbW4D+8FFHETPTWigtk2
-YOi1VsGYuRuSflSCWDvUjVeJVjkozYYZO/9Moz7V1Cvaw3ghvGz74AqCdHZDVnKB
-iCDndcxmNNUBp+ouzrgwJVcQYGBjeAyNfByw4EN5i2doYA/flqP6epgG21y6+YFk
-h6/ZTCZV68BkXVu6N2VOjMY2GaQC2wPb8CkDxYFqV8dDszb+bI1XJ7vEEMzl3mRp
-3LbiK5fATOc6mSSzYyMmqZq2TyLVDnHxsO5agTLlVaOjAufCrADpUD/T7jGgDVnV
-K4TJ6P+oa0GoYvuCstglwFj2beqpldIQFwOJICNrV7IqpduuNgUG0d+lO19Yws3g
-uu/2RNd2s7MUqiodEtFfADSm6p5W/Wrdc7tR9O+O5UqlQAJWHz/G8ZjTytZ0eJ+X
-Gun2bsAsRAirXpqGltgEMFj81O6isKGyAnVLibQRMsAFPJdUrbATF1L8ZK9yrGN0
-TM0GC2kvgroNVetT/S1aNw2spTsC8eXe2v+guEa1syzeIXElMASdQSj5BcBDmOv3
-ccalRiV+rhJU8/Y+wTO/
-=K3bt
------END PGP SIGNATURE-----
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 97a0af9..283bb7e 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2360,7 +2360,8 @@ static void
+ xlog_recover_validate_buf_type(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf		*bp,
+-	xfs_buf_log_format_t	*buf_f)
++	xfs_buf_log_format_t	*buf_f,
++	xfs_lsn_t		current_lsn)
+ {
+ 	struct xfs_da_blkinfo	*info = bp->b_addr;
+ 	__uint32_t		magic32;
+@@ -2569,7 +2570,8 @@ xlog_recover_do_reg_buffer(
+ 	struct xfs_mount	*mp,
+ 	xlog_recover_item_t	*item,
+ 	struct xfs_buf		*bp,
+-	xfs_buf_log_format_t	*buf_f)
++	xfs_buf_log_format_t	*buf_f,
++	xfs_lsn_t		current_lsn)
+ {
+ 	int			i;
+ 	int			bit;
+@@ -2642,7 +2644,7 @@ xlog_recover_do_reg_buffer(
+ 	/* Shouldn't be any more regions */
+ 	ASSERT(i == item->ri_total);
+ 
+-	xlog_recover_validate_buf_type(mp, bp, buf_f);
++	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
+ }
+ 
+ /*
+@@ -2685,7 +2687,7 @@ xlog_recover_do_dquot_buffer(
+ 	if (log->l_quotaoffs_flag & type)
+ 		return false;
+ 
+-	xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
++	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
+ 	return true;
+ }
+ 
+@@ -2773,7 +2775,7 @@ xlog_recover_buffer_pass2(
+ 	 */
+ 	lsn = xlog_recover_get_buf_lsn(mp, bp);
+ 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
+-		xlog_recover_validate_buf_type(mp, bp, buf_f);
++		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
+ 		goto out_release;
+ 	}
+ 
+@@ -2789,7 +2791,7 @@ xlog_recover_buffer_pass2(
+ 		if (!dirty)
+ 			goto out_release;
+ 	} else {
+-		xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
++		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
+ 	}
+ 
+ 	/*
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
