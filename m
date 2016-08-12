@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 936D77CE1
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 36FBE8F8165
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:21 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 50D267CA0
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 07:13:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BBF1EAC001
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 05:13:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id coxdaMeRsdvhE1kL (version=TLSv1.2
+	cuda.sgi.com with ESMTP id WFZbSbTPEoAY9qCa (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:20 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 13/22] richacl: Update the file masks in chmod()
-Date: Tue, 16 Aug 2016 13:02:54 +0200
-Message-Id: <1471345383-15334-14-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 05:13:33 -0700 (PDT)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] tests/xfs: test log recovery metadata LSN ordering
+Date: Fri, 12 Aug 2016 08:13:30 -0400
+Message-Id: <1471004010-52985-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,124 +26,152 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: fstests@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-Doing a chmod() sets the file mode, which includes the file permission
-bits.  When a file has a richacl, the permissions that the richacl
-grants need to be limited to what the new file permission bits allow.
+XFS had a bug that lead to a possible out-of-order log recovery
+situation (e.g., replay a stale modification from the log over more
+recent metadata in destination buffer). This resulted in false
+corruption reports during log recovery and thus mount failure.
 
-This is done by setting the file masks in the richacl to what the file
-permission bits map to.  The richacl access check algorithm takes the
-file masks into account, which ensures that the richacl cannot grant too
-many permissions.
+This condition is caused by system crash or filesystem shutdown shortly
+after a successful log recovery. Add a test to run a combined workload,
+fs shutdown and log recovery loop known to reproduce the problem on
+affected kernels.
 
-It is possible to explicitly add permissions to the file masks which go
-beyond what the file permission bits can grant (like the
-RICHACE_WRITE_ACL permission).  The POSIX.1 standard calls this an
-alternate file access control mechanism.  A subsequent chmod() would
-ensure that those permissions are disabled again.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Acked-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/richacl.c            | 71 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |  1 +
- 2 files changed, 72 insertions(+)
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 731c468..a199245 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -541,3 +541,74 @@ restart:
- 	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
- }
- EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
+This test reproduces the problem described and addressed in the
+following patchset:
+
+  http://oss.sgi.com/pipermail/xfs/2016-August/050840.html
+
+It runs anywhere from 50-100s in the couple of environments I've tested
+on so far and reproduces the problem for me with 100% reliability. Note
+that the bug only affects crc=1 kernels.
+
+Brian
+
+ tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/999.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 90 insertions(+)
+ create mode 100755 tests/xfs/999
+ create mode 100644 tests/xfs/999.out
+
+diff --git a/tests/xfs/999 b/tests/xfs/999
+new file mode 100755
+index 0000000..f9dd7f7
+--- /dev/null
++++ b/tests/xfs/999
+@@ -0,0 +1,87 @@
++#! /bin/bash
++# FS QA Test No. 999
++#
++# Test XFS log recovery ordering on v5 superblock filesystems. XFS had a problem
++# where it would incorrectly replay older modifications from the log over more
++# recent versions of metadata due to failure to update metadata LSNs during log
++# recovery. This could result in false positive reports of corruption during log
++# recovery and permanent mount failure.
++#
++# To test this situation, run frequent shutdowns immediately after log recovery.
++# Ensure that log recovery does not recover stale modifications and cause
++# spurious corruption reports and/or mount failures.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+/**
-+ * __richacl_chmod  -  update the file masks to reflect the new mode
-+ * @acl:	access control list
-+ * @mode:	new file permission bits including the file type
-+ *
-+ * Return a copy of @acl where the file masks have been replaced by the file
-+ * masks corresponding to the file permission bits in @mode, or returns @acl
-+ * itself if the file masks are already up to date.  Takes over a reference
-+ * to @acl.
-+ */
-+static struct richacl *
-+__richacl_chmod(struct richacl *acl, umode_t mode)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
-+	unsigned int owner_mask, group_mask, other_mask;
-+	struct richacl *clone;
-+
-+	owner_mask = richacl_mode_to_mask(mode >> 6) & ~x;
-+	group_mask = richacl_mode_to_mask(mode >> 3) & ~x;
-+	other_mask = richacl_mode_to_mask(mode)      & ~x;
-+
-+	if (acl->a_owner_mask == owner_mask &&
-+	    acl->a_group_mask == group_mask &&
-+	    acl->a_other_mask == other_mask &&
-+	    (acl->a_flags & RICHACL_MASKED) &&
-+	    (acl->a_flags & RICHACL_WRITE_THROUGH))
-+		return acl;
-+
-+	clone = richacl_clone(acl, GFP_KERNEL);
-+	richacl_put(acl);
-+	if (!clone)
-+		return ERR_PTR(-ENOMEM);
-+
-+	clone->a_flags |= (RICHACL_WRITE_THROUGH | RICHACL_MASKED);
-+	clone->a_owner_mask = owner_mask;
-+	clone->a_group_mask = group_mask;
-+	clone->a_other_mask = other_mask;
-+
-+	return clone;
++	cd /
++	rm -f $tmp.*
++	killall -9 fsstress > /dev/null 2>&1
++	_scratch_unmount > /dev/null 2>&1
 +}
 +
-+/**
-+ * richacl_chmod  -  filesystem chmod helper
-+ * @inode:	inode whose file permission bits to change
-+ * @mode:	new file permission bits including the file type
-+ *
-+ * Helper for filesystems to use to perform a chmod on the richacl of an inode.
-+ */
-+int
-+richacl_chmod(struct inode *inode, umode_t mode)
-+{
-+	struct richacl *acl;
-+	int retval;
++# get standard environment, filters and checks
++. ./common/rc
 +
-+	if (S_ISLNK(mode))
-+		return -EOPNOTSUPP;
-+	if (!inode->i_op->set_richacl)
-+		return -EOPNOTSUPP;
-+	acl = get_richacl(inode);
-+	if (IS_ERR_OR_NULL(acl))
-+		return PTR_ERR(acl);
-+	acl = __richacl_chmod(acl, mode);
-+	if (IS_ERR(acl))
-+		return PTR_ERR(acl);
-+	retval = inode->i_op->set_richacl(inode, acl);
-+	richacl_put(acl);
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
 +
-+	return retval;
-+}
-+EXPORT_SYMBOL(richacl_chmod);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 207fe06..3cd5e53 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -189,5 +189,6 @@ extern int richacl_masks_to_mode(const struct richacl *);
- extern unsigned int richacl_mode_to_mask(umode_t);
- extern int richacl_permission(struct inode *, const struct richacl *, int);
- extern void richacl_compute_max_masks(struct richacl *);
-+extern int richacl_chmod(struct inode *, umode_t);
- 
- #endif /* __RICHACL_H */
++_require_scratch
++
++rm -f $seqres.full
++
++echo "Silence is golden."
++
++_scratch_mkfs_xfs >> $seqres.full 2>&1
++_scratch_mount || _fail "mount failed"
++
++for i in $(seq 1 50); do
++	($FSSTRESS_PROG -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
++		> /dev/null 2>&1
++
++	# purposely include 0 second sleeps to test shutdown immediately after
++	# recovery
++	sleep $((RANDOM % 3))
++	$XFS_IO_PROG -xc shutdown $SCRATCH_MNT
++
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? == 0 ]; do
++		killall -9 fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
++	done
++
++	# quit if mount fails so we don't shutdown the host fs
++	_scratch_cycle_mount || _fail "cycle mount failed"
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+new file mode 100644
+index 0000000..d254382
+--- /dev/null
++++ b/tests/xfs/999.out
+@@ -0,0 +1,2 @@
++QA output created by 999
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 6905a62..aad41b5 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -308,3 +308,4 @@
+ 325 auto quick clone
+ 326 auto quick clone
+ 327 auto quick clone
++999 auto log metadata
 -- 
-2.7.4
+2.5.5
 
 _______________________________________________
 xfs mailing list
