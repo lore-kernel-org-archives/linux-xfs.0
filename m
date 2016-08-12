@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DB6C47CE4
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BA7768F8165
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:26 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id G3JW4ex3su0CEfRA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:25 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 14/22] richacl: Check if an acl is equivalent to a file
-	mode
-Date: Tue, 16 Aug 2016 13:02:55 +0200
-Message-Id: <1471345383-15334-15-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2A2E67CA2
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 15:23:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D702430404E
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 13:23:57 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id SWS6aiK4xMYbcH8n (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 13:23:55 -0700 (PDT)
+Date: Fri, 12 Aug 2016 13:23:52 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH xfsprogs 01/14] configure: use AC_SYS_LARGEFILE
+Message-ID: <20160812202352.GA2085@infradead.org>
+References: <cover.1470555003.git.felix.janda@posteo.de>
+	<ea8cca9bf1dbeb13a788f85f73d6bafbcc374a89.1470555003.git.felix.janda@posteo.de>
+	<20160809073611.GC25647@infradead.org> <20160809174105.GA5907@nyan>
+	<20160812025753.GD10701@infradead.org> <20160812165440.GA367@nyan>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160812165440.GA367@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,153 +28,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Felix Janda <felix.janda@posteo.de>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-ACLs are considered equivalent to file modes if they only consist of
-owner@, group@, and everyone@ entries, the owner@ permissions do not
-depend on whether the owner is a member in the owning group, and no
-inheritance flags are set.  This test is used to avoid storing richacls
-if the acl can be computed from the file permission bits.
+On Fri, Aug 12, 2016 at 06:54:40PM +0200, Felix Janda wrote:
+> glibc: since version 2.2 (2000)
+> uClibc: since version 0.9.11 (2002)
+> dietlibc: since version 0.8 (2001)
+> klibc: AFAICS since beginning only transparent LFS
+> musl: since beginning only transparent LFS
+> bionic: In 2015 _FILE_OFFSET_BITS was implemented "mostly"...
+> newlib: (except on cygwin) does not seem to have support for transparent LFS
+> 
+> Note that LFS can be configured out of uClibc. However its headers
+> error out when it is configured out and an application sets
+> _FILE_OFFSET_BITS. (So in the case of xfsprogs it would have errored
+> out in this situation already earlier.)
+> 
+> 
+> So it seems that this patch series breaks newlib support...
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
----
- fs/richacl.c            | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   1 +
- 2 files changed, 105 insertions(+)
-
-diff --git a/fs/richacl.c b/fs/richacl.c
-index a199245..1022983 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -612,3 +612,107 @@ richacl_chmod(struct inode *inode, umode_t mode)
- 	return retval;
- }
- EXPORT_SYMBOL(richacl_chmod);
-+
-+/**
-+ * richacl_equiv_mode  -  compute the mode equivalent of @acl
-+ *
-+ * An acl is considered equivalent to a file mode if it only consists of
-+ * owner@, group@, and everyone@ entries and the owner@ permissions do not
-+ * depend on whether the owner is a member in the owning group.
-+ */
-+int
-+richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
-+{
-+	umode_t mode = *mode_p;
-+
-+	/*
-+	 * The RICHACE_DELETE_CHILD flag is meaningless for non-directories, so
-+	 * we ignore it.
-+	 */
-+	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
-+	struct {
-+		unsigned int allowed;
-+		unsigned int defined;  /* allowed or denied */
-+	} owner = {
-+		.defined = RICHACE_POSIX_ALWAYS_ALLOWED |
-+			   RICHACE_POSIX_OWNER_ALLOWED  | x,
-+	}, group = {
-+		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
-+	}, everyone = {
-+		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
-+	};
-+	const struct richace *ace;
-+
-+	if (acl->a_flags & ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED))
-+		return -1;
-+
-+	richacl_for_each_entry(ace, acl) {
-+		if (ace->e_flags & ~RICHACE_SPECIAL_WHO)
-+			return -1;
-+
-+		if (richace_is_owner(ace) || richace_is_everyone(ace)) {
-+			x = ace->e_mask & ~owner.defined;
-+			if (richace_is_allow(ace)) {
-+				unsigned int group_denied =
-+					group.defined & ~group.allowed;
-+
-+				if (x & group_denied)
-+					return -1;
-+				owner.allowed |= x;
-+			} else /* if (richace_is_deny(ace)) */ {
-+				if (x & group.allowed)
-+					return -1;
-+			}
-+			owner.defined |= x;
-+
-+			if (richace_is_everyone(ace)) {
-+				x = ace->e_mask;
-+				if (richace_is_allow(ace)) {
-+					group.allowed |=
-+						x & ~group.defined;
-+					everyone.allowed |=
-+						x & ~everyone.defined;
-+				}
-+				group.defined |= x;
-+				everyone.defined |= x;
-+			}
-+		} else if (richace_is_group(ace)) {
-+			x = ace->e_mask & ~group.defined;
-+			if (richace_is_allow(ace))
-+				group.allowed |= x;
-+			group.defined |= x;
-+		} else
-+			return -1;
-+	}
-+
-+	if (group.allowed & ~owner.defined)
-+		return -1;
-+
-+	if (acl->a_flags & RICHACL_MASKED) {
-+		if (acl->a_flags & RICHACL_WRITE_THROUGH) {
-+			owner.allowed = acl->a_owner_mask;
-+			everyone.allowed = acl->a_other_mask;
-+		} else {
-+			owner.allowed &= acl->a_owner_mask;
-+			everyone.allowed &= acl->a_other_mask;
-+		}
-+		group.allowed &= acl->a_group_mask;
-+	}
-+
-+	mode = (mode & ~S_IRWXUGO) |
-+	       (richacl_mask_to_mode(owner.allowed) << 6) |
-+	       (richacl_mask_to_mode(group.allowed) << 3) |
-+		richacl_mask_to_mode(everyone.allowed);
-+
-+	/* Mask flags we can ignore */
-+	x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
-+
-+	if (((richacl_mode_to_mask(mode >> 6) ^ owner.allowed)    & ~x) ||
-+	    ((richacl_mode_to_mask(mode >> 3) ^ group.allowed)    & ~x) ||
-+	    ((richacl_mode_to_mask(mode)      ^ everyone.allowed) & ~x))
-+		return -1;
-+
-+	*mode_p = mode;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(richacl_equiv_mode);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 3cd5e53..a865f37 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -190,5 +190,6 @@ extern unsigned int richacl_mode_to_mask(umode_t);
- extern int richacl_permission(struct inode *, const struct richacl *, int);
- extern void richacl_compute_max_masks(struct richacl *);
- extern int richacl_chmod(struct inode *, umode_t);
-+extern int richacl_equiv_mode(const struct richacl *, umode_t *);
- 
- #endif /* __RICHACL_H */
--- 
-2.7.4
+I think that's fine, newlib hasn't every really been a supported
+config.  The point I tried to make is that we should aim to error
+out during ./configure for this case.
 
 _______________________________________________
 xfs mailing list
