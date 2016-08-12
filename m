@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 96AF27CA2
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 18:30:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E547AC001
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 16:30:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5DB287CA0
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 18:07:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16ABF304048
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 16:07:03 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ScyCr2ECcGUX37JM (version=TLSv1.2
+	cuda.sgi.com with ESMTP id NKKDqlHE6pyyka0f (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 16:30:05 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 16:07:02 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 8005443A2C
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 23:30:04 +0000 (UTC)
+	by mx1.redhat.com (Postfix) with ESMTPS id 01CBBC04B334
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 23:07:02 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
-	ESMTP id u7CNU3YF019073
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with
+	ESMTP id u7CN71Eu023955
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 19:30:04 -0400
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 19:07:01 -0400
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH V4] xfs_db: add crc manipulation commands
-Message-ID: <8cb34b7c-5154-ebb4-7706-1375e94abd74@redhat.com>
-Date: Fri, 12 Aug 2016 18:30:03 -0500
+Subject: [PATCH] xfs_quota: wire up XFS_GETQSTATV
+Message-ID: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
+Date: Fri, 12 Aug 2016 18:07:00 -0500
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -39,240 +39,237 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-This adds a new "crc" command to xfs_db for CRC-enabled filesystems.
+The new XFS_GETQSTATV quotactl, available since kernel v3.12,
+was never implemented in xfs_quota, and the "state" command
+continues to use XFS_GETQSTAT, which cannot report both
+group & project quota on newer formats.
 
-If a structure has a CRC field, we can validate it, invalidate/corrupt
-it, or revalidate/rewrite it:
+The new call has room for all 3 quota types (user, group, and
+quota), vs just two, where previously project and quota
+overlapped.
 
-xfs_db> sb 0
-xfs_db> crc -v
-crc = 0x796c814f (correct)
-xfs_db> crc -i
-Metadata CRC error detected at block 0x0/0x200
-crc = 0x796c8150 (bad)
-xfs_db> crc -r
-crc = 0x796c814f (correct)
+So:
 
-(-i and -r require "expert" write-capable mode)
+First, try XFS_GETQSTATV.
+If it passes, we have all the information we need, and we print
+it. state_qfilestat() is modified to take the newer structure.
 
-This requires temporarily replacing the write verifier with
-a dummy which won't recalculate the CRC on the way to disk.
-
-It also required me to write a new flist function, which is
-totally foreign to me, so hopefully done right - but it seems
-to work here.
+If it fails, try XFS_GETQSTAT.  If that passes, we are on an
+older kernel with neither XFS_GETQSTATV nor the on-disk project
+quota inode.  We copy the available information into the newer
+statv structure, carefully determining wither group or project
+(or neither) is actually active, and print it with the same
+state_qfilestat routine.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
---- 
+---
 
-I found this very useful when working with a filesystem image
-which was consistent except for a corrupt CRC; the ability to
-rewrite the correct CRCs and run repair to validate the fs was
-very handy...
+I probably could have done some memcpy()'s in 
+state_stat_to_statv(), but opted for the explicit copy-out;
+the structures aren't identical, although the newer one 
+only differs by padding on the end.  If memcpy() is preferable
+I could send a V2...
 
-V2: Fix whitespace damage, clarify write_cur() changes
-a bit w/ code & comments.
 
-V3: Be a bit more verbose with command output
-
-V4: Rebase patch to current tree
-
-diff --git a/db/Makefile b/db/Makefile
-index 8260da3..ba4b1a8 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_db
+diff --git a/include/xqm.h b/include/xqm.h
+index c084b2d..78262c3 100644
+--- a/include/xqm.h
++++ b/include/xqm.h
+@@ -32,6 +32,7 @@
+ #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
+ #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
+ #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
++#define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
+ #define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage */
  
- HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
--	btblock.h bmroot.h check.h command.h convert.h debug.h \
-+	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
- 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
- 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
-diff --git a/db/command.c b/db/command.c
-index 3c17a1e..1848d64 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -49,6 +49,7 @@
- #include "write.h"
- #include "malloc.h"
- #include "dquot.h"
-+#include "crc.h"
+ /*
+@@ -149,4 +150,30 @@ typedef struct fs_quota_stat {
+ 	__u16		qs_iwarnlimit;	/* limit for num warnings */
+ } fs_quota_stat_t;
  
- cmdinfo_t	*cmdtab;
- int		ncmds;
-@@ -124,6 +125,7 @@ init_commands(void)
- 	bmap_init();
- 	check_init();
- 	convert_init();
-+	crc_init();
- 	debug_init();
- 	echo_init();
- 	frag_init();
-diff --git a/db/flist.c b/db/flist.c
-index 84065a2..2530baf 100644
---- a/db/flist.c
-+++ b/db/flist.c
-@@ -411,6 +411,40 @@ flist_split(
- 	return v;
++/*
++ * Some basic information about 'quota files' for Q_XGETQSTATV command
++ */
++struct fs_qfilestatv {
++	__u64		qfs_ino;	/* inode number */
++	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
++	__u32		qfs_nextents;	/* number of extents */
++	__u32		qfs_pad;	/* pad for 8-byte alignment */
++};
++
++struct fs_quota_statv {
++	__s8			qs_version;	/* version for future changes */
++	__u8			qs_pad1;	/* pad for 16bit alignment */
++	__u16			qs_flags;	/* FS_QUOTA_.* flags */
++	__u32			qs_incoredqs;	/* number of dquots incore */
++	struct fs_qfilestatv	qs_uquota;	/* user quota information */
++	struct fs_qfilestatv	qs_gquota;	/* group quota information */
++	struct fs_qfilestatv	qs_pquota;	/* project quota information */
++	__s32			qs_btimelimit;	/* limit for blks timer */
++	__s32			qs_itimelimit;	/* limit for inodes timer */
++	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
++	__u16			qs_bwarnlimit;	/* limit for num warnings */
++	__u16			qs_iwarnlimit;	/* limit for num warnings */
++	__u64			qs_pad2[8];	/* for future proofing */
++};
++
+ #endif	/* __XQM_H__ */
+diff --git a/quota/linux.c b/quota/linux.c
+index 74dba01..4f1f3c4 100644
+--- a/quota/linux.c
++++ b/quota/linux.c
+@@ -55,6 +55,8 @@ xcommand_to_qcommand(
+ 		return Q_XSETQLIM;
+ 	case XFS_GETQSTAT:
+ 		return Q_XGETQSTAT;
++	case XFS_GETQSTATV:
++		return Q_XGETQSTATV;
+ 	case XFS_QUOTARM:
+ 		return Q_XQUOTARM;
+ 	case XFS_QSYNC:
+diff --git a/quota/state.c b/quota/state.c
+index 8186762..5d63579 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -111,12 +111,12 @@ remove_help(void)
+ 
+ static void
+ state_qfilestat(
+-	FILE		*fp,
+-	fs_path_t	*mount,
+-	uint		type,
+-	fs_qfilestat_t	*qfs,
+-	int		accounting,
+-	int		enforcing)
++	FILE			*fp,
++	struct fs_path		*mount,
++	uint			type,
++	struct fs_qfilestatv	*qfs,
++	int			accounting,
++	int			enforcing)
+ {
+ 	fprintf(fp, _("%s quota state on %s (%s)\n"), type_to_string(type),
+ 		mount->fs_dir, mount->fs_name);
+@@ -142,39 +142,94 @@ state_timelimit(
+ 		time_to_string(timelimit, VERBOSE_FLAG | ABSOLUTE_FLAG));
  }
  
 +/*
-+ * Given a set of fields, scan for a field of the given type.
-+ * Return an flist leading to the first found field
-+ * of that type.
-+ * Return NULL if no field of the given type is found.
++ * fs_quota_stat holds a subset of fs_quota_statv; this copies
++ * the smaller into the larger, leaving any not-present fields
++ * empty.  This is so the same reporting function can be used
++ * for both XFS_GETQSTAT and XFS_GETQSTATV results.
 + */
-+flist_t *
-+flist_find_ftyp(
-+	const field_t *fields,
-+	fldt_t	type)
-+{
-+	flist_t	*fl;
-+	const field_t	*f;
-+	const ftattr_t  *fa;
-+
-+	for (f = fields; f->name; f++) {
-+		fl = flist_make(f->name);
-+		fl->fld = f;
-+		if (f->ftyp == type)
-+			return fl;
-+		fa = &ftattrtab[f->ftyp];
-+		if (fa->subfld) {
-+			flist_t *nfl;
-+			nfl = flist_find_ftyp(fa->subfld, type);
-+			if (nfl) {
-+				fl->child = nfl;
-+				return fl;
-+			}
-+		}
-+		flist_free(fl);
-+	}
-+	return NULL;
-+}
-+
  static void
- ftok_free(
- 	ftok_t	*ft)
-diff --git a/db/flist.h b/db/flist.h
-index 5c9fba0..3f4b312 100644
---- a/db/flist.h
-+++ b/db/flist.h
-@@ -37,3 +37,4 @@ extern int	flist_parse(const struct field *fields, flist_t *fl, void *obj,
- 			    int startoff);
- extern void	flist_print(flist_t *fl);
- extern flist_t	*flist_scan(char *name);
-+extern flist_t	*flist_find_ftyp(const field_t *fields, fldt_t  type);
-diff --git a/db/io.c b/db/io.c
-index 91cab12..56b4414 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -27,6 +27,7 @@
- #include "output.h"
- #include "init.h"
- #include "malloc.h"
-+#include "crc.h"
- 
- static int	pop_f(int argc, char **argv);
- static void     pop_help(void);
-@@ -473,12 +474,14 @@ xfs_verify_recalc_crc(
- void
- write_cur(void)
+-state_quotafile_mount(
+-	FILE		*fp,
+-	uint		type,
+-	fs_path_t	*mount,
+-	uint		flags)
++state_stat_to_statv(
++	struct fs_quota_stat	*s,
++	struct fs_quota_statv	*sv)
  {
-+	int skip_crc = (iocur_top->bp->b_ops->verify_write == xfs_dummy_verify);
+-	fs_quota_stat_t	s;
+-	char		*dev = mount->fs_name;
++	memset(sv, 0, sizeof(struct fs_quota_statv));
 +
- 	if (iocur_sp < 0) {
- 		dbprintf(_("nothing to write\n"));
- 		return;
++	/* shared information */
++	sv->qs_version = s->qs_version;
++	sv->qs_flags = s->qs_flags;
++	sv->qs_incoredqs = s->qs_incoredqs;
++	sv->qs_btimelimit = s->qs_btimelimit;
++	sv->qs_itimelimit = s->qs_itimelimit;
++	sv->qs_rtbtimelimit = s->qs_rtbtimelimit;
++	sv->qs_bwarnlimit = s->qs_bwarnlimit;
++	sv->qs_iwarnlimit = s->qs_iwarnlimit;
++
++	/* Always room for uquota */
++	sv->qs_uquota.qfs_ino = s->qs_uquota.qfs_ino;
++	sv->qs_uquota.qfs_nblks = s->qs_uquota.qfs_nblks;
++	sv->qs_uquota.qfs_nextents = s->qs_uquota.qfs_nextents;
++
++	/*
++	 * If we are here, XFS_GETQSTATV failed and XFS_GETQSTAT passed;
++	 * that is a very strong hint that we're on a kernel which predates
++	 * the on-disk pquota inode; both were added in v3.12.  So, we do
++	 * some tricksy determination here.
++	 * gs_gquota may hold either group quota inode info, or project
++	 * quota if that is used instead; which one it actually holds depends
++	 * on the quota flags.  (If neither is set, neither is used)
++	 */
++	if (s->qs_flags & XFS_QUOTA_GDQ_ACCT) {
++		/* gs_gquota holds group quota info */
++		sv->qs_gquota.qfs_ino = s->qs_gquota.qfs_ino;
++		sv->qs_gquota.qfs_nblks = s->qs_gquota.qfs_nblks;
++		sv->qs_gquota.qfs_nextents = s->qs_gquota.qfs_nextents;
++	} else if (s->qs_flags & XFS_QUOTA_PDQ_ACCT) {
++		/* gs_gquota actually holds project quota info */
++		sv->qs_pquota.qfs_ino = s->qs_gquota.qfs_ino;
++		sv->qs_pquota.qfs_nblks = s->qs_gquota.qfs_nblks;
++		sv->qs_pquota.qfs_nextents = s->qs_gquota.qfs_nextents;
++	}
++}
+ 
+-	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
+-		if (flags & VERBOSE_FLAG)
+-			fprintf(fp, _("%s quota are not enabled on %s\n"),
+-				type_to_string(type), dev);
+-		return;
++static void
++state_quotafile_mount(
++	FILE			*fp,
++	uint			type,
++	struct fs_path		*mount,
++	uint			flags)
++{
++	struct fs_quota_stat	s;
++	struct fs_quota_statv	sv;
++	char			*dev = mount->fs_name;
++
++	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
++		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
++			if (flags & VERBOSE_FLAG)
++				fprintf(fp,
++					_("%s quota are not enabled on %s\n"),
++					type_to_string(type), dev);
++			return;
++		}
++		state_stat_to_statv(&s, &sv);
  	}
  
--	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf) {
-+	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf && !skip_crc) {
- 		libxfs_dinode_calc_crc(mp, iocur_top->data);
- 		iocur_top->ino_crc_ok = 1;
- 	}
-@@ -489,6 +492,19 @@ write_cur(void)
- 		write_cur_bbs();
- 	else
- 		write_cur_buf();
-+
-+       /* If we didn't write the crc automatically, re-check validity */
-+       if (iocur_top->ino_buf && skip_crc) {
-+               xfs_dinode_t    *dip;
-+               xfs_ino_t       ino;
-+
-+               dip = iocur_top->data;
-+               ino = iocur_top->ino;
-+               iocur_top->ino_crc_ok = xfs_verify_cksum((char *)dip,
-+                                               mp->m_sb.sb_inodesize,
-+                                               XFS_DINODE_CRC_OFF);
-+       }
-+
+ 	if (type & XFS_USER_QUOTA)
+-		state_qfilestat(fp, mount, XFS_USER_QUOTA, &s.qs_uquota,
+-				s.qs_flags & XFS_QUOTA_UDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_UDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
++				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
+ 	if (type & XFS_GROUP_QUOTA)
+-		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &s.qs_gquota,
+-				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
++				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
+ 	if (type & XFS_PROJ_QUOTA)
+-		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
+-				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
++				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
+ 
+-	state_timelimit(fp, XFS_BLOCK_QUOTA, s.qs_btimelimit);
+-	state_timelimit(fp, XFS_INODE_QUOTA, s.qs_itimelimit);
+-	state_timelimit(fp, XFS_RTBLOCK_QUOTA, s.qs_rtbtimelimit);
++	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
++	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
++	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
  }
  
- void
-diff --git a/db/write.h b/db/write.h
-index 31e2665..664ddcc 100644
---- a/db/write.h
-+++ b/db/write.h
-@@ -20,5 +20,5 @@ struct field;
- 
- extern void	write_init(void);
- extern void	write_block(const field_t *fields, int argc, char **argv);
--extern void	write_string(const field_t *fields, int argc, char **argv);
- extern void	write_struct(const field_t *fields, int argc, char **argv);
-+extern void	write_string(const field_t *fields, int argc, char **argv);
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index ff8f862..894a94e 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -87,16 +87,14 @@ or
- .I filename
- read-only. This option is required if the filesystem is mounted.
- It is only necessary to omit this flag if a command that changes data
--.RB ( write ", " blocktrash )
-+.RB ( write ", " blocktrash ", " crc )
- is to be used.
- .TP
- .B \-x
- Specifies expert mode.
- This enables the
--.B write
--and
--.B blocktrash
--commands.
-+.RB ( write ", " blocktrash ", " crc
-+invalidate/revalidate) commands.
- .TP
- .B \-V
- Prints the version number and exits.
-@@ -422,6 +420,25 @@ conversions such as
- .I agb
- .BR fsblock .
- .TP
-+.B crc [\-i|\-r|\-v]
-+Invalidates, revalidates, or validates the CRC (checksum)
-+field of the current structure, if it has one.
-+This command is available only on CRC-enabled filesystems.
-+With no argument, validation is performed.
-+Each command will display the resulting CRC value and state.
-+.RS 1.0i
-+.TP 0.4i
-+.B \-i
-+Invalidate the structure's CRC value (incrementing it by one),
-+and write it to disk.
-+.TP
-+.B \-r
-+Recalculate the current structure's correct CRC value, and write it to disk.
-+.TP
-+.B \-v
-+Validate and display the current value and state of the structure's CRC.
-+.RE
-+.TP
- .BI "daddr [" d ]
- Set current address to the daddr (512 byte block) given by
- .IR d .
+ static void
+
 
 _______________________________________________
 xfs mailing list
