@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2FE2C7CBD
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 006A38F8165
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qKdkwZ9qth2q38Au (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 46A0F7CA1
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 11:55:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEA68AC003
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:55:42 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id 1StLj8WFtREndgMV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:10 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 11/22] vfs: Add get_richacl and set_richacl inode
-	operations
-Date: Tue, 16 Aug 2016 13:02:52 +0200
-Message-Id: <1471345383-15334-12-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:55:36 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id 211DC20850
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 18:55:34 +0200 (CEST)
+Date: Fri, 12 Aug 2016 18:54:40 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: Re: [PATCH xfsprogs 01/14] configure: use AC_SYS_LARGEFILE
+Message-ID: <20160812165440.GA367@nyan>
+References: <cover.1470555003.git.felix.janda@posteo.de>
+	<ea8cca9bf1dbeb13a788f85f73d6bafbcc374a89.1470555003.git.felix.janda@posteo.de>
+	<20160809073611.GC25647@infradead.org> <20160809174105.GA5907@nyan>
+	<20160812025753.GD10701@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160812025753.GD10701@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +31,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-These operations are similar to the get_acl and set_acl operations for
-POSIX ACLs.  The distinction between access and default ACLs doesn't exist
-for richacls.
+Christoph Hellwig wrote:
+> On Tue, Aug 09, 2016 at 07:41:05PM +0200, Felix Janda wrote:
+> > Thanks for reviewing the patch series!
+> > 
+> > > Does this also error out for libraries that don't support large
+> > > off_t at all?  I think that would be helpful to add if not there yet.
+> > 
+> > I do not quite understand. Do you refer to libraries using libxfs or
+> > the external libraries used by xfsprogs?
+> 
+> I meant C libraries, sorry.  E.g. uclibc used to not support LFS
+> many years ago, although they probably fixed it up by now.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Steve French <steve.french@primarydata.com>
----
- include/linux/fs.h | 2 ++
- 1 file changed, 2 insertions(+)
+Thaks for clarifying.
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 50114fb..fbb57f9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1732,6 +1732,7 @@ struct inode_operations {
- 	const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
- 	int (*permission) (struct inode *, int);
- 	struct posix_acl * (*get_acl)(struct inode *, int);
-+	struct richacl * (*get_richacl)(struct inode *);
- 
- 	int (*readlink) (struct dentry *, char __user *,int);
- 
-@@ -1762,6 +1763,7 @@ struct inode_operations {
- 			   umode_t create_mode, int *opened);
- 	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
- 	int (*set_acl)(struct inode *, struct posix_acl *, int);
-+	int (*set_richacl)(struct inode *, struct richacl *);
- } ____cacheline_aligned;
- 
- ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
--- 
-2.7.4
+If a libc does not support LFS, with this patch series the build will
+fail soon, because of the off_t size check in xfs.h.
+
+The support of transparent LFS in different c libraries on linux seems
+to be the following:
+
+glibc: since version 2.2 (2000)
+uClibc: since version 0.9.11 (2002)
+dietlibc: since version 0.8 (2001)
+klibc: AFAICS since beginning only transparent LFS
+musl: since beginning only transparent LFS
+bionic: In 2015 _FILE_OFFSET_BITS was implemented "mostly"...
+newlib: (except on cygwin) does not seem to have support for transparent LFS
+
+Note that LFS can be configured out of uClibc. However its headers
+error out when it is configured out and an application sets
+_FILE_OFFSET_BITS. (So in the case of xfsprogs it would have errored
+out in this situation already earlier.)
+
+
+So it seems that this patch series breaks newlib support...
+
+Felix
 
 _______________________________________________
 xfs mailing list
