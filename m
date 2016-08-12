@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 46A0F7CA1
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 11:55:46 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3DF027CA0
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 12:04:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AEA68AC003
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:55:42 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6BCAAC001
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:04:33 -0700 (PDT)
 Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id 1StLj8WFtREndgMV (version=TLSv1.2
+	cuda.sgi.com with ESMTP id kXsGWpD804TEdj1Z (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:55:36 -0700 (PDT)
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:04:31 -0700 (PDT)
 Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 211DC20850
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 18:55:34 +0200 (CEST)
-Date: Fri, 12 Aug 2016 18:54:40 +0200
+	by mout02.posteo.de (Postfix) with ESMTPS id 233132008F
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 19:04:30 +0200 (CEST)
+Date: Fri, 12 Aug 2016 19:03:36 +0200
 From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH xfsprogs 01/14] configure: use AC_SYS_LARGEFILE
-Message-ID: <20160812165440.GA367@nyan>
+Subject: Re: [PATCH xfsprogs 11/14] replace statvfs64 by equivalent statvfs
+Message-ID: <20160812170336.GB367@nyan>
 References: <cover.1470555003.git.felix.janda@posteo.de>
-	<ea8cca9bf1dbeb13a788f85f73d6bafbcc374a89.1470555003.git.felix.janda@posteo.de>
-	<20160809073611.GC25647@infradead.org> <20160809174105.GA5907@nyan>
-	<20160812025753.GD10701@infradead.org>
+	<f4fc0b97ae8cdb30f1e0b0d55521f136877b33f5.1470555003.git.felix.janda@posteo.de>
+	<20160809074010.GM25647@infradead.org> <20160809174158.GA4476@nyan>
+	<20160812025703.GC10701@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160812025753.GD10701@infradead.org>
+In-Reply-To: <20160812025703.GC10701@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,41 +39,19 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> On Tue, Aug 09, 2016 at 07:41:05PM +0200, Felix Janda wrote:
-> > Thanks for reviewing the patch series!
-> > 
-> > > Does this also error out for libraries that don't support large
-> > > off_t at all?  I think that would be helpful to add if not there yet.
-> > 
-> > I do not quite understand. Do you refer to libraries using libxfs or
-> > the external libraries used by xfsprogs?
+> On Tue, Aug 09, 2016 at 07:41:58PM +0200, Felix Janda wrote:
+> > This patch removes the usage of statvfs64 and thus one of the problems
+> > for Mac OS X. The other problem is solved by giving a suitable
+> > definition of f_brsize. Note that this might collide with other uses
+> > of f_brsize (if they exist). It might be cleaner to just check for Mac
+> > OS X in xfs_fsr.c.
 > 
-> I meant C libraries, sorry.  E.g. uclibc used to not support LFS
-> many years ago, although they probably fixed it up by now.
+> Yes, that's probably better.  Or simply not build fsr on MacOS given
+> that there is no kernel XFS support anyway..
 
-Thaks for clarifying.
-
-If a libc does not support LFS, with this patch series the build will
-fail soon, because of the off_t size check in xfs.h.
-
-The support of transparent LFS in different c libraries on linux seems
-to be the following:
-
-glibc: since version 2.2 (2000)
-uClibc: since version 0.9.11 (2002)
-dietlibc: since version 0.8 (2001)
-klibc: AFAICS since beginning only transparent LFS
-musl: since beginning only transparent LFS
-bionic: In 2015 _FILE_OFFSET_BITS was implemented "mostly"...
-newlib: (except on cygwin) does not seem to have support for transparent LFS
-
-Note that LFS can be configured out of uClibc. However its headers
-error out when it is configured out and an application sets
-_FILE_OFFSET_BITS. (So in the case of xfsprogs it would have errored
-out in this situation already earlier.)
-
-
-So it seems that this patch series breaks newlib support...
+That second option sounds interesting. If fsr was not built on Mac OS X,
+then commit 7141fc5b04905e (add *mntent abstraction) can basically be
+reverted, simplifying the platform headers a bit.
 
 Felix
 
