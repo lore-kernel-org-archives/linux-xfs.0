@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 560607CA1
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 21:57:56 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 23E467CA0
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 22:14:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 17229304043
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 19:57:56 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id rR3Rm6L4VAxmQfVj (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 19:57:54 -0700 (PDT)
-Date: Thu, 11 Aug 2016 19:57:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH xfsprogs 01/14] configure: use AC_SYS_LARGEFILE
-Message-ID: <20160812025753.GD10701@infradead.org>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-	<ea8cca9bf1dbeb13a788f85f73d6bafbcc374a89.1470555003.git.felix.janda@posteo.de>
-	<20160809073611.GC25647@infradead.org> <20160809174105.GA5907@nyan>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 24E11AC001
+	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 20:14:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mLbtU1GyeI7DhI2E (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 20:14:03 -0700 (PDT)
+Date: Fri, 12 Aug 2016 11:14:00 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2] xfs: test attr_list_by_handle cursor iteration
+Message-ID: <20160812031400.GR27776@eguan.usersys.redhat.com>
+References: <20160802235251.GB8586@birch.djwong.org>
+	<20160803225150.GC25565@birch.djwong.org>
+	<20160804042448.GR27776@eguan.usersys.redhat.com>
+	<20160811174855.GD31540@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160809174105.GA5907@nyan>
+In-Reply-To: <20160811174855.GD31540@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Felix Janda <felix.janda@posteo.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, Aug 09, 2016 at 07:41:05PM +0200, Felix Janda wrote:
-> Thanks for reviewing the patch series!
+On Thu, Aug 11, 2016 at 10:48:55AM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 04, 2016 at 12:24:48PM +0800, Eryu Guan wrote:
+> > I have to replace false/true with 0/1 to build it on RHEL6. I can fix it
+> > at commit time if there's no other major updates.
 > 
-> > Does this also error out for libraries that don't support large
-> > off_t at all?  I think that would be helpful to add if not there yet.
-> 
-> I do not quite understand. Do you refer to libraries using libxfs or
-> the external libraries used by xfsprogs?
+> Simply including <stdbool.h> would fix that on RHEL6, wouldn't it?
 
-I meant C libraries, sorry.  E.g. uclibc used to not support LFS
-many years ago, although they probably fixed it up by now.
+Yes, including <stdbool.h> fixes the build failure on RHEL6, another
+option is to replace all bool with int, as mentioned in my first review
+email. And Darric chose the "int" way in v2 but only updated the
+function definition and forgot to update the callers (still passing
+true/false, not 1/0).
+
+Thanks for the review!
+
+Eryu
 
 _______________________________________________
 xfs mailing list
