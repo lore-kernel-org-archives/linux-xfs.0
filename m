@@ -1,27 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DAFB57CA4
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 12:42:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B3C0304048
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 10:42:50 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id xIjIcvHJiXW8nsp6 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E007D7CA0
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:47:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B1BE88F804C
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 07:47:55 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FNhIKyE3J3knBOEt (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 10:42:48 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 71B6B2045A
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 19:42:46 +0200 (CEST)
-Date: Tue, 9 Aug 2016 19:41:58 +0200
-From: Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH xfsprogs 11/14] replace statvfs64 by equivalent statvfs
-Message-ID: <20160809174158.GA4476@nyan>
-References: <cover.1470555003.git.felix.janda@posteo.de>
-	<f4fc0b97ae8cdb30f1e0b0d55521f136877b33f5.1470555003.git.felix.janda@posteo.de>
-	<20160809074010.GM25647@infradead.org>
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 07:47:54 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 115A7C030701
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 14:47:54 +0000 (UTC)
+Received: from localhost (dhcp-13-153.nay.redhat.com [10.66.13.153])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7CElqeZ028031
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:47:53 -0400
+Date: Fri, 12 Aug 2016 22:47:52 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file:
+	fs/xfs/xfs_buf.c, line: 118 on 4.8-rc1 kernel
+Message-ID: <20160812144752.GW27776@eguan.usersys.redhat.com>
+References: <20160812140414.GV27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160809074010.GM25647@infradead.org>
+In-Reply-To: <20160812140414.GV27776@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,33 +40,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Sun, Aug 07, 2016 at 08:24:40AM +0200, Felix Janda wrote:
-> > For this it was necessary to change a workaround for missing
-> > f_brsize on Mac OS X.
+On Fri, Aug 12, 2016 at 10:04:14PM +0800, Eryu Guan wrote:
+> Hi,
 > 
-> If we can get rid of that it'd be fine, but can you explain a bit
-> more why we can get rid of it?
+> I hit oops while building kernel on XFS, 4.8-rc1 kernel, hit twice in
+> six kernel builds. I'm not sure if it's a regression since 4.7 kernel
+> yet, will do more testings.
 
-Since we are using transparent LFS, statvfs64 is the same as statvfs,
-if statvfs64 is defined at all. In commit b35b4eb8f91d13a326213f989e
-it was noticed that OS X is missing statvfs64, and a define was added
-to darwin.h. The same commit also fixes the absense of the f_brsize
-field in struct statfs on OS X by adding code conditional on the
-statvfs64 define. (Notice that this condition might have false
-positives. Indeed, on linux with musl libc, statvfs64 is also a
-define.)
+Just hit again on 4.8-rc1 kernel, I was doing
 
-This patch removes the usage of statvfs64 and thus one of the problems
-for Mac OS X. The other problem is solved by giving a suitable
-definition of f_brsize. Note that this might collide with other uses
-of f_brsize (if they exist). It might be cleaner to just check for Mac
-OS X in xfs_fsr.c.
+# clean partial builds from previous run and build again
+make clean
+make -j 8
 
-Felix
+Seems I have to do kernel build on 4.7 kernel to finish the bisect.
+
+Thanks,
+Eryu
+
+[ 2515.752039] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file: fs/xfs/xfs_buf.c, line: 118
+[ 2515.752649] ------------[ cut here ]------------
+[ 2515.752949] kernel BUG at fs/xfs/xfs_message.c:113!
+[ 2515.753010] invalid opcode: 0000 [#1] SMP
+[ 2515.753010] Modules linked in: btrfs xor raid6_pq ppdev i2c_piix4 parport_pc sg pcspkr i2c_core parport virtio_balloon acpi_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrp
+c ip_tables xfs libcrc32c sd_mod ata_generic pata_acpi virtio_scsi serio_raw ata_piix virtio_pci 8139too floppy libata virtio_ring virtio 8139cp mii
+[ 2515.753010] CPU: 1 PID: 57 Comm: kswapd0 Not tainted 4.8.0-rc1 #17
+[ 2515.753010] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[ 2515.753010] task: ffff880215cde680 task.stack: ffff880210a98000
+[ 2515.753010] RIP: 0010:[<ffffffffa01489a2>]  [<ffffffffa01489a2>] assfail+0x22/0x30 [xfs]
+[ 2515.753010] RSP: 0000:ffff880210a9ba00  EFLAGS: 00010246
+[ 2515.753010] RAX: 0000000000000000 RBX: ffff8801289fb9d8 RCX: 0000000000000000
+[ 2515.753010] RDX: ffff880210a9b908 RSI: 000000000000000a RDI: ffffffffa017ab95
+[ 2515.753010] RBP: ffff880210a9ba00 R08: 0000000000000000 R09: 0000000000000000
+[ 2515.753010] R10: 000000000000000a R11: f000000000000000 R12: ffff8801289fb980
+[ 2515.753010] R13: ffff88020f701c98 R14: ffff88020f701c00 R15: 0000000000000000
+[ 2515.753010] FS:  0000000000000000(0000) GS:ffff88021fc80000(0000) knlGS:0000000000000000
+[ 2515.753010] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2515.753010] CR2: 00002ab2aa17d000 CR3: 0000000208cd6000 CR4: 00000000000006e0
+[ 2515.753010] Stack:
+[ 2515.753010]  ffff880210a9ba38 ffffffffa012f332 ffff880103b4b000 ffff880103b4b124
+[ 2515.753010]  ffff8801289fb980 ffff88020f701c00 0000000000000000 ffff880210a9ba88
+[ 2515.753010]  ffffffffa013a05d 0000000008405ead ffff8801289fb980 000000009df3522a
+[ 2515.753010] Call Trace:
+[ 2515.753010]  [<ffffffffa012f332>] xfs_buf_rele+0x2f2/0x380 [xfs]
+[ 2515.753010]  [<ffffffffa013a05d>] xfs_reclaim_inode+0x38d/0x3a0 [xfs]
+[ 2515.753010]  [<ffffffffa013a293>] xfs_reclaim_inodes_ag+0x223/0x360 [xfs]
+[ 2515.753010]  [<ffffffff810b5638>] ? try_to_wake_up+0x58/0x390
+[ 2515.753010]  [<ffffffff810b5985>] ? wake_up_process+0x15/0x20
+[ 2515.753010]  [<ffffffffa013a4b3>] xfs_reclaim_inodes_nr+0x33/0x40 [xfs]
+[ 2515.753010]  [<ffffffffa014b709>] xfs_fs_free_cached_objects+0x19/0x20 [xfs]
+[ 2515.753010]  [<ffffffff81225f81>] super_cache_scan+0x181/0x190
+[ 2515.753010]  [<ffffffff811a8837>] shrink_slab+0x237/0x400
+[ 2515.753010]  [<ffffffff811ad4c3>] shrink_node+0x303/0x310
+[ 2515.753010]  [<ffffffff811ae2d2>] kswapd+0x302/0x6f0
+[ 2515.753010]  [<ffffffff811adfd0>] ? mem_cgroup_shrink_node+0x180/0x180
+[ 2515.753010]  [<ffffffff810aa198>] kthread+0xd8/0xf0
+[ 2515.753010]  [<ffffffff816d797f>] ret_from_fork+0x1f/0x40
+[ 2515.753010]  [<ffffffff810aa0c0>] ? kthread_park+0x60/0x60
+[ 2515.753010] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 30 69 18 a0 48 89 fa 31 c0 48 89 e5 31 ff e8 ae f8 ff ff <0f> 0b 66 90 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48
+[ 2515.753010] RIP  [<ffffffffa01489a2>] assfail+0x22/0x30 [xfs]
+[ 2515.753010]  RSP <ffff880210a9ba00>
+[ 2515.773793] ---[ end trace d8064b1e521d0bfb ]---
+[ 2515.774123] Kernel panic - not syncing: Fatal exception
+[ 2515.774534] Kernel Offset: disabled
+[ 2515.774774] ---[ end Kernel panic - not syncing: Fatal exception
 
 _______________________________________________
 xfs mailing list
