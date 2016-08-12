@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E2E457CD0
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 620BCAC068
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 68DE67CA0
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 09:04:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 39B76304043
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 07:04:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YKaJueXgms6hRBI0 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id OCdmzLG1RJZgF9o4 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:04 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 10/22] vfs: Cache base_acl objects in inodes
-Date: Tue, 16 Aug 2016 13:02:51 +0200
-Message-Id: <1471345383-15334-11-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 07:04:17 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 53B2E81110
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 14:04:16 +0000 (UTC)
+Received: from localhost (dhcp-13-153.nay.redhat.com [10.66.13.153])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7CE4F1x013442
+	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:04:15 -0400
+Date: Fri, 12 Aug 2016 22:04:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file:
+	fs/xfs/xfs_buf.c, line: 118 on 4.8-rc1 kernel
+Message-ID: <20160812140414.GV27776@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,588 +34,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Andreas Dilger <adilger@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-POSIX ACLs and richacls are both objects allocated by kmalloc() with a
-reference count which are freed by kfree_rcu().  An inode can either
-cache an access and a default POSIX ACL, or a richacl (richacls do not
-have default acls).  To allow an inode to cache either of the two kinds
-of acls, introduce a new base_acl type and convert i_acl and
-i_default_acl to that type. In most cases, the vfs then doesn't care which
-kind of acl an inode caches (if any).
+Hi,
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Andreas Dilger <adilger@dilger.ca>
----
- drivers/staging/lustre/lustre/llite/llite_lib.c |  2 +-
- fs/9p/acl.c                                     |  8 +--
- fs/f2fs/acl.c                                   |  4 +-
- fs/inode.c                                      | 32 +++++++++++-
- fs/jffs2/acl.c                                  |  6 ++-
- fs/namei.c                                      | 33 ++++++------
- fs/nfs/nfs3acl.c                                | 14 ++---
- fs/posix_acl.c                                  | 69 +++++++------------------
- fs/richacl.c                                    |  4 +-
- include/linux/fs.h                              | 39 ++++++++++++--
- include/linux/posix_acl.h                       | 19 ++++---
- include/linux/richacl.h                         |  9 ++--
- 12 files changed, 137 insertions(+), 102 deletions(-)
+I hit oops while building kernel on XFS, 4.8-rc1 kernel, hit twice in
+six kernel builds. I'm not sure if it's a regression since 4.7 kernel
+yet, will do more testings.
 
-diff --git a/drivers/staging/lustre/lustre/llite/llite_lib.c b/drivers/staging/lustre/lustre/llite/llite_lib.c
-index 546063e..a29bfb4 100644
---- a/drivers/staging/lustre/lustre/llite/llite_lib.c
-+++ b/drivers/staging/lustre/lustre/llite/llite_lib.c
-@@ -1031,7 +1031,7 @@ void ll_clear_inode(struct inode *inode)
- 
- #ifdef CONFIG_FS_POSIX_ACL
- 	if (lli->lli_posix_acl) {
--		LASSERT(atomic_read(&lli->lli_posix_acl->a_refcount) == 1);
-+		LASSERT(base_acl_refcount(&lli->lli_posix_acl->a_base) == 1);
- 		posix_acl_release(lli->lli_posix_acl);
- 		lli->lli_posix_acl = NULL;
- 	}
-diff --git a/fs/9p/acl.c b/fs/9p/acl.c
-index 5b6a174..2de24a8 100644
---- a/fs/9p/acl.c
-+++ b/fs/9p/acl.c
-@@ -87,14 +87,14 @@ int v9fs_get_acl(struct inode *inode, struct p9_fid *fid)
- 
- static struct posix_acl *v9fs_get_cached_acl(struct inode *inode, int type)
- {
--	struct posix_acl *acl;
-+	struct base_acl *base_acl;
- 	/*
- 	 * 9p Always cache the acl value when
- 	 * instantiating the inode (v9fs_inode_from_fid)
- 	 */
--	acl = get_cached_acl(inode, type);
--	BUG_ON(is_uncached_acl(acl));
--	return acl;
-+	base_acl = get_cached_acl(inode, type);
-+	BUG_ON(is_uncached_acl(base_acl));
-+	return posix_acl(base_acl);
- }
- 
- struct posix_acl *v9fs_iop_get_acl(struct inode *inode, int type)
-diff --git a/fs/f2fs/acl.c b/fs/f2fs/acl.c
-index 4dcc9e2..525a927 100644
---- a/fs/f2fs/acl.c
-+++ b/fs/f2fs/acl.c
-@@ -266,7 +266,7 @@ static struct posix_acl *f2fs_acl_clone(const struct posix_acl *acl,
- 				sizeof(struct posix_acl_entry);
- 		clone = kmemdup(acl, size, flags);
- 		if (clone)
--			atomic_set(&clone->a_refcount, 1);
-+			base_acl_init(&clone->a_base);
- 	}
- 	return clone;
- }
-@@ -278,7 +278,7 @@ static int f2fs_acl_create_masq(struct posix_acl *acl, umode_t *mode_p)
- 	umode_t mode = *mode_p;
- 	int not_equiv = 0;
- 
--	/* assert(atomic_read(acl->a_refcount) == 1); */
-+	/* assert(base_acl_refcount(&acl->a_base) == 1); */
- 
- 	FOREACH_ACL_ENTRY(pa, acl, pe) {
- 		switch(pa->e_tag) {
-diff --git a/fs/inode.c b/fs/inode.c
-index 7e3ef3a..cc081dd 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -240,14 +240,42 @@ void __destroy_inode(struct inode *inode)
- 
- #ifdef CONFIG_FS_POSIX_ACL
- 	if (inode->i_acl && !is_uncached_acl(inode->i_acl))
--		posix_acl_release(inode->i_acl);
-+		base_acl_put(inode->i_acl);
- 	if (inode->i_default_acl && !is_uncached_acl(inode->i_default_acl))
--		posix_acl_release(inode->i_default_acl);
-+		base_acl_put(inode->i_default_acl);
- #endif
- 	this_cpu_dec(nr_inodes);
- }
- EXPORT_SYMBOL(__destroy_inode);
- 
-+#ifdef CONFIG_FS_POSIX_ACL
-+struct base_acl *__get_cached_acl(struct base_acl **p)
-+{
-+	struct base_acl *base_acl;
-+
-+	for (;;) {
-+		rcu_read_lock();
-+		base_acl = rcu_dereference(*p);
-+		if (!base_acl || is_uncached_acl(base_acl) ||
-+		    atomic_inc_not_zero(&base_acl->ba_refcount))
-+			break;
-+		rcu_read_unlock();
-+		cpu_relax();
-+	}
-+	rcu_read_unlock();
-+	return base_acl;
-+}
-+
-+void __forget_cached_acl(struct base_acl **p)
-+{
-+	struct base_acl *old;
-+
-+	old = xchg(p, ACL_NOT_CACHED);
-+	if (!is_uncached_acl(old))
-+		base_acl_put(old);
-+}
-+#endif
-+
- static void i_callback(struct rcu_head *head)
- {
- 	struct inode *inode = container_of(head, struct inode, i_rcu);
-diff --git a/fs/jffs2/acl.c b/fs/jffs2/acl.c
-index bc2693d..6c11909 100644
---- a/fs/jffs2/acl.c
-+++ b/fs/jffs2/acl.c
-@@ -292,13 +292,15 @@ int jffs2_init_acl_post(struct inode *inode)
- 	int rc;
- 
- 	if (inode->i_default_acl) {
--		rc = __jffs2_set_acl(inode, JFFS2_XPREFIX_ACL_DEFAULT, inode->i_default_acl);
-+		rc = __jffs2_set_acl(inode, JFFS2_XPREFIX_ACL_DEFAULT,
-+				     posix_acl(inode->i_default_acl));
- 		if (rc)
- 			return rc;
- 	}
- 
- 	if (inode->i_acl) {
--		rc = __jffs2_set_acl(inode, JFFS2_XPREFIX_ACL_ACCESS, inode->i_acl);
-+		rc = __jffs2_set_acl(inode, JFFS2_XPREFIX_ACL_ACCESS,
-+				     posix_acl(inode->i_acl));
- 		if (rc)
- 			return rc;
- 	}
-diff --git a/fs/namei.c b/fs/namei.c
-index 4292c33..ae205ea 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -260,25 +260,28 @@ void putname(struct filename *name)
- static int check_acl(struct inode *inode, int mask)
- {
- #ifdef CONFIG_FS_POSIX_ACL
--	struct posix_acl *acl;
--
- 	if (mask & MAY_NOT_BLOCK) {
--		acl = get_cached_acl_rcu(inode, ACL_TYPE_ACCESS);
--	        if (!acl)
-+		struct base_acl *base_acl;
-+
-+		base_acl = rcu_dereference(inode->i_acl);
-+	        if (!base_acl)
- 	                return -EAGAIN;
- 		/* no ->get_acl() calls in RCU mode... */
--		if (is_uncached_acl(acl))
-+		if (is_uncached_acl(base_acl))
- 			return -ECHILD;
--	        return posix_acl_permission(inode, acl, mask & ~MAY_NOT_BLOCK);
--	}
--
--	acl = get_acl(inode, ACL_TYPE_ACCESS);
--	if (IS_ERR(acl))
--		return PTR_ERR(acl);
--	if (acl) {
--	        int error = posix_acl_permission(inode, acl, mask);
--	        posix_acl_release(acl);
--	        return error;
-+	        return posix_acl_permission(inode, posix_acl(base_acl),
-+					    mask & ~MAY_NOT_BLOCK);
-+	} else {
-+		struct posix_acl *acl;
-+
-+		acl = get_acl(inode, ACL_TYPE_ACCESS);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
-+		if (acl) {
-+			int error = posix_acl_permission(inode, acl, mask);
-+			posix_acl_release(acl);
-+			return error;
-+		}
- 	}
- #endif
- 
-diff --git a/fs/nfs/nfs3acl.c b/fs/nfs/nfs3acl.c
-index 720d92f5..2b70944 100644
---- a/fs/nfs/nfs3acl.c
-+++ b/fs/nfs/nfs3acl.c
-@@ -16,28 +16,28 @@
-  * caching get_acl results in a race-free way.  See fs/posix_acl.c:get_acl()
-  * for explanations.
-  */
--static void nfs3_prepare_get_acl(struct posix_acl **p)
-+static void nfs3_prepare_get_acl(struct base_acl **p)
- {
--	struct posix_acl *sentinel = uncached_acl_sentinel(current);
-+	struct base_acl *sentinel = uncached_acl_sentinel(current);
- 
- 	if (cmpxchg(p, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED) {
- 		/* Not the first reader or sentinel already in place. */
- 	}
- }
- 
--static void nfs3_complete_get_acl(struct posix_acl **p, struct posix_acl *acl)
-+static void nfs3_complete_get_acl(struct base_acl **p, struct posix_acl *acl)
- {
--	struct posix_acl *sentinel = uncached_acl_sentinel(current);
-+	struct base_acl *sentinel = uncached_acl_sentinel(current);
- 
- 	/* Only cache the ACL if our sentinel is still in place. */
- 	posix_acl_dup(acl);
--	if (cmpxchg(p, sentinel, acl) != sentinel)
-+	if (cmpxchg(p, sentinel, &acl->a_base) != sentinel)
- 		posix_acl_release(acl);
- }
- 
--static void nfs3_abort_get_acl(struct posix_acl **p)
-+static void nfs3_abort_get_acl(struct base_acl **p)
- {
--	struct posix_acl *sentinel = uncached_acl_sentinel(current);
-+	struct base_acl *sentinel = uncached_acl_sentinel(current);
- 
- 	/* Remove our sentinel upon failure. */
- 	cmpxchg(p, sentinel, ACL_NOT_CACHED);
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index 59d47ab0..f7e1a29 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -21,7 +21,7 @@
- #include <linux/export.h>
- #include <linux/user_namespace.h>
- 
--static struct posix_acl **acl_by_type(struct inode *inode, int type)
-+static inline struct base_acl **acl_by_type(struct inode *inode, int type)
- {
- 	switch (type) {
- 	case ACL_TYPE_ACCESS:
-@@ -33,51 +33,23 @@ static struct posix_acl **acl_by_type(struct inode *inode, int type)
- 	}
- }
- 
--struct posix_acl *get_cached_acl(struct inode *inode, int type)
-+struct base_acl *get_cached_acl(struct inode *inode, int type)
- {
--	struct posix_acl **p = acl_by_type(inode, type);
--	struct posix_acl *acl;
--
--	for (;;) {
--		rcu_read_lock();
--		acl = rcu_dereference(*p);
--		if (!acl || is_uncached_acl(acl) ||
--		    atomic_inc_not_zero(&acl->a_refcount))
--			break;
--		rcu_read_unlock();
--		cpu_relax();
--	}
--	rcu_read_unlock();
--	return acl;
-+	return __get_cached_acl(acl_by_type(inode, type));
- }
- EXPORT_SYMBOL(get_cached_acl);
- 
--struct posix_acl *get_cached_acl_rcu(struct inode *inode, int type)
--{
--	return rcu_dereference(*acl_by_type(inode, type));
--}
--EXPORT_SYMBOL(get_cached_acl_rcu);
--
- void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl)
- {
--	struct posix_acl **p = acl_by_type(inode, type);
--	struct posix_acl *old;
-+	struct base_acl **p = acl_by_type(inode, type);
-+	struct base_acl *old;
- 
--	old = xchg(p, posix_acl_dup(acl));
-+	old = xchg(p, &posix_acl_dup(acl)->a_base);
- 	if (!is_uncached_acl(old))
--		posix_acl_release(old);
-+		base_acl_put(old);
- }
- EXPORT_SYMBOL(set_cached_acl);
- 
--static void __forget_cached_acl(struct posix_acl **p)
--{
--	struct posix_acl *old;
--
--	old = xchg(p, ACL_NOT_CACHED);
--	if (!is_uncached_acl(old))
--		posix_acl_release(old);
--}
--
- void forget_cached_acl(struct inode *inode, int type)
- {
- 	__forget_cached_acl(acl_by_type(inode, type));
-@@ -93,25 +65,24 @@ EXPORT_SYMBOL(forget_all_cached_acls);
- 
- struct posix_acl *get_acl(struct inode *inode, int type)
- {
--	void *sentinel;
--	struct posix_acl **p;
-+	struct base_acl **p = acl_by_type(inode, type);
-+	struct base_acl *sentinel, *base_acl;
- 	struct posix_acl *acl;
- 
-+	if (!IS_POSIXACL(inode))
-+		return NULL;
-+
- 	/*
- 	 * The sentinel is used to detect when another operation like
- 	 * set_cached_acl() or forget_cached_acl() races with get_acl().
- 	 * It is guaranteed that is_uncached_acl(sentinel) is true.
- 	 */
- 
--	acl = get_cached_acl(inode, type);
--	if (!is_uncached_acl(acl))
--		return acl;
--
--	if (!IS_POSIXACL(inode))
--		return NULL;
-+	base_acl = __get_cached_acl(p);
-+	if (!is_uncached_acl(base_acl))
-+		return posix_acl(base_acl);
- 
- 	sentinel = uncached_acl_sentinel(current);
--	p = acl_by_type(inode, type);
- 
- 	/*
- 	 * If the ACL isn't being read yet, set our sentinel.  Otherwise, the
-@@ -151,7 +122,7 @@ struct posix_acl *get_acl(struct inode *inode, int type)
- 	 * Cache the result, but only if our sentinel is still in place.
- 	 */
- 	posix_acl_dup(acl);
--	if (unlikely(cmpxchg(p, sentinel, acl) != sentinel))
-+	if (unlikely(cmpxchg(p, sentinel, &acl->a_base) != sentinel))
- 		posix_acl_release(acl);
- 	return acl;
- }
-@@ -163,7 +134,7 @@ EXPORT_SYMBOL(get_acl);
- void
- posix_acl_init(struct posix_acl *acl, int count)
- {
--	atomic_set(&acl->a_refcount, 1);
-+	base_acl_init(&acl->a_base);
- 	acl->a_count = count;
- }
- EXPORT_SYMBOL(posix_acl_init);
-@@ -196,7 +167,7 @@ posix_acl_clone(const struct posix_acl *acl, gfp_t flags)
- 		           sizeof(struct posix_acl_entry);
- 		clone = kmemdup(acl, size, flags);
- 		if (clone)
--			atomic_set(&clone->a_refcount, 1);
-+			base_acl_init(&clone->a_base);
- 	}
- 	return clone;
- }
-@@ -418,7 +389,7 @@ static int posix_acl_create_masq(struct posix_acl *acl, umode_t *mode_p)
- 	umode_t mode = *mode_p;
- 	int not_equiv = 0;
- 
--	/* assert(atomic_read(acl->a_refcount) == 1); */
-+	/* assert(base_acl_refcount(&acl->a_base) == 1); */
- 
- 	FOREACH_ACL_ENTRY(pa, acl, pe) {
-                 switch(pa->e_tag) {
-@@ -473,7 +444,7 @@ static int __posix_acl_chmod_masq(struct posix_acl *acl, umode_t mode)
- 	struct posix_acl_entry *group_obj = NULL, *mask_obj = NULL;
- 	struct posix_acl_entry *pa, *pe;
- 
--	/* assert(atomic_read(acl->a_refcount) == 1); */
-+	/* assert(base_acl_refcount(&acl->a_base) == 1); */
- 
- 	FOREACH_ACL_ENTRY(pa, acl, pe) {
- 		switch(pa->e_tag) {
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 0443090..57a4048 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -31,7 +31,7 @@ richacl_alloc(int count, gfp_t gfp)
- 	struct richacl *acl = kzalloc(size, gfp);
- 
- 	if (acl) {
--		atomic_set(&acl->a_refcount, 1);
-+		base_acl_init(&acl->a_base);
- 		acl->a_count = count;
- 	}
- 	return acl;
-@@ -50,7 +50,7 @@ richacl_clone(const struct richacl *acl, gfp_t gfp)
- 
- 	if (dup) {
- 		memcpy(dup, acl, size);
--		atomic_set(&dup->a_refcount, 1);
-+		base_acl_init(&dup->a_base);
- 	}
- 	return dup;
- }
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index cb15cb2..50114fb 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -579,17 +579,21 @@ static inline void mapping_allow_writable(struct address_space *mapping)
- #define i_size_ordered_init(inode) do { } while (0)
- #endif
- 
-+struct base_acl {
-+	atomic_t ba_refcount;
-+	struct rcu_head ba_rcu;
-+};
- struct posix_acl;
- #define ACL_NOT_CACHED ((void *)(-1))
- 
--static inline struct posix_acl *
-+static inline struct base_acl *
- uncached_acl_sentinel(struct task_struct *task)
- {
- 	return (void *)task + 1;
- }
- 
- static inline bool
--is_uncached_acl(struct posix_acl *acl)
-+is_uncached_acl(struct base_acl *acl)
- {
- 	return (long)acl & 1;
- }
-@@ -610,9 +614,9 @@ struct inode {
- 	kgid_t			i_gid;
- 	unsigned int		i_flags;
- 
--#ifdef CONFIG_FS_POSIX_ACL
--	struct posix_acl	*i_acl;
--	struct posix_acl	*i_default_acl;
-+#if defined(CONFIG_FS_POSIX_ACL)
-+	struct base_acl		*i_acl;
-+	struct base_acl		*i_default_acl;
- #endif
- 
- 	const struct inode_operations	*i_op;
-@@ -3210,4 +3214,29 @@ static inline bool dir_relax_shared(struct inode *inode)
- extern bool path_noexec(const struct path *path);
- extern void inode_nohighmem(struct inode *inode);
- 
-+static inline void base_acl_get(struct base_acl *acl)
-+{
-+	if (acl)
-+		atomic_inc(&acl->ba_refcount);
-+}
-+
-+static inline void base_acl_put(struct base_acl *acl)
-+{
-+	if (acl && atomic_dec_and_test(&acl->ba_refcount))
-+		kfree_rcu(acl, ba_rcu);
-+}
-+
-+static inline void base_acl_init(struct base_acl *acl)
-+{
-+	atomic_set(&acl->ba_refcount, 1);
-+}
-+
-+static inline int base_acl_refcount(struct base_acl *acl)
-+{
-+	return atomic_read(&acl->ba_refcount);
-+}
-+
-+extern struct base_acl *__get_cached_acl(struct base_acl **);
-+extern void __forget_cached_acl(struct base_acl **);
-+
- #endif /* _LINUX_FS_H */
-diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
-index d5d3d74..eafb358 100644
---- a/include/linux/posix_acl.h
-+++ b/include/linux/posix_acl.h
-@@ -43,8 +43,7 @@ struct posix_acl_entry {
- };
- 
- struct posix_acl {
--	atomic_t		a_refcount;
--	struct rcu_head		a_rcu;
-+	struct base_acl		a_base;  /* must be first, see posix_acl_release() */
- 	unsigned int		a_count;
- 	struct posix_acl_entry	a_entries[0];
- };
-@@ -59,8 +58,7 @@ struct posix_acl {
- static inline struct posix_acl *
- posix_acl_dup(struct posix_acl *acl)
- {
--	if (acl)
--		atomic_inc(&acl->a_refcount);
-+	base_acl_get(&acl->a_base);
- 	return acl;
- }
- 
-@@ -70,10 +68,16 @@ posix_acl_dup(struct posix_acl *acl)
- static inline void
- posix_acl_release(struct posix_acl *acl)
- {
--	if (acl && atomic_dec_and_test(&acl->a_refcount))
--		kfree_rcu(acl, a_rcu);
-+	BUILD_BUG_ON(offsetof(struct posix_acl, a_base) != 0);
-+	base_acl_put(&acl->a_base);
- }
- 
-+static inline struct posix_acl *
-+posix_acl(struct base_acl *base_acl)
-+{
-+	BUILD_BUG_ON(offsetof(struct posix_acl, a_base) != 0);
-+	return container_of(base_acl, struct posix_acl, a_base);
-+}
- 
- /* posix_acl.c */
- 
-@@ -97,8 +101,7 @@ extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
- extern int simple_set_acl(struct inode *, struct posix_acl *, int);
- extern int simple_acl_create(struct inode *, struct inode *);
- 
--struct posix_acl *get_cached_acl(struct inode *inode, int type);
--struct posix_acl *get_cached_acl_rcu(struct inode *inode, int type);
-+struct base_acl *get_cached_acl(struct inode *inode, int type);
- void set_cached_acl(struct inode *inode, int type, struct posix_acl *acl);
- void forget_cached_acl(struct inode *inode, int type);
- void forget_all_cached_acls(struct inode *inode);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 700888b..d535206 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -31,7 +31,7 @@ struct richace {
- };
- 
- struct richacl {
--	atomic_t	a_refcount;
-+	struct base_acl	a_base;  /* must be first, see richacl_put() */
- 	unsigned int	a_owner_mask;
- 	unsigned int	a_group_mask;
- 	unsigned int	a_other_mask;
-@@ -56,8 +56,7 @@ struct richacl {
- static inline struct richacl *
- richacl_get(struct richacl *acl)
- {
--	if (acl)
--		atomic_inc(&acl->a_refcount);
-+	base_acl_get(&acl->a_base);
- 	return acl;
- }
- 
-@@ -67,8 +66,8 @@ richacl_get(struct richacl *acl)
- static inline void
- richacl_put(struct richacl *acl)
- {
--	if (acl && atomic_dec_and_test(&acl->a_refcount))
--		kfree(acl);
-+	BUILD_BUG_ON(offsetof(struct richacl, a_base) != 0);
-+	base_acl_put(&acl->a_base);
- }
- 
- /**
--- 
-2.7.4
+The host is a x86_64 kvm guest running RHEL7.2 with upstream 4.8-rc1
+kernel.  Detailed console log and XFS info and memory & cpu info please
+see the end of this mail.
+
+Actually I was bisecting an issue caused by generic/224, I saw the
+following message flooding dmesg.
+
+...
+[   92.394306] XFS (sda6): page discard on page ffffea000204c9c0, inode 0x2e4, offset 84959232.
+[   92.401061] XFS (sda6): page discard on page ffffea000204ca00, inode 0x2e4, offset 84963328.
+[   92.406592] XFS (sda6): page discard on page ffffea000204ca40, inode 0x2e4, offset 84967424.
+[   92.409813] XFS (sda6): page discard on page ffffea000204ca80, inode 0x2e4, offset 84971520.
+...
+
+I'll send another email once I get bisect result.
+
+Thanks,
+Eryu
+
+Host information:
+[root@dhcp-66-86-11 ~]# xfs_info /dev/sdb1
+meta-data=/dev/sdb1              isize=256    agcount=4, agsize=6553536 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0        finobt=0 spinodes=0
+data     =                       bsize=4096   blocks=26214144, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=12799, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@dhcp-66-86-11 ~]# df -h /dev/sdb1
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb1       100G   47G   54G  47% /root/workspace
+[root@dhcp-66-86-11 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           7982         111        7660           8         211        7594
+Swap:          8063           0        8063
+[root@dhcp-66-86-11 ~]# lscpu
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                4
+On-line CPU(s) list:   0-3
+Thread(s) per core:    1
+Core(s) per socket:    1
+Socket(s):             4
+NUMA node(s):          1
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 13
+Model name:            QEMU Virtual CPU version (cpu64-rhel6)
+Stepping:              3
+CPU MHz:               2892.421
+BogoMIPS:              5785.49
+Hypervisor vendor:     KVM
+Virtualization type:   full
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              4096K
+NUMA node0 CPU(s):     0-3
+
+Console log:
+[  505.226162] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file: fs/xfs/xfs_buf.c, line: 118
+[  505.226796] ------------[ cut here ]------------
+[  505.227010] kernel BUG at fs/xfs/xfs_message.c:113!
+[  505.227010] invalid opcode: 0000 [#1] SMP
+[  505.227010] Modules linked in: btrfs xor raid6_pq ppdev i2c_piix4 parport_pc sg parport i2c_core virtio_balloon pcspkr acpi_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sd_mod ata_generic pata_acpi virtio_scsi ata_piix libata serio_raw virtio_pci 8139too virtio_ring 8139cp virtio mii floppy
+[  505.227010] CPU: 3 PID: 57 Comm: kswapd0 Not tainted 4.8.0-rc1 #17
+[  505.227010] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[  505.234430] task: ffff880215cde680 task.stack: ffff880210ad0000
+[  505.234430] RIP: 0010:[<ffffffffa013c9a2>]  [<ffffffffa013c9a2>] assfail+0x22/0x30 [xfs]
+[  505.234430] RSP: 0018:ffff880210ad3a00  EFLAGS: 00010246
+[  505.234430] RAX: 0000000000000000 RBX: ffff88011ec02ad8 RCX: 0000000000000000
+[  505.234430] RDX: ffff880210ad3908 RSI: 000000000000000a RDI: ffffffffa016eb95
+[  505.234430] RBP: ffff880210ad3a00 R08: 0000000000000000 R09: 0000000000000000
+[  505.234430] R10: 000000000000000a R11: f000000000000000 R12: ffff88011ec02a80
+[  505.234430] R13: ffff8802107c1998 R14: ffff8802107c1900 R15: 0000000000000000
+[  505.234430] FS:  0000000000000000(0000) GS:ffff88021fd80000(0000) knlGS:0000000000000000
+[  505.234430] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  505.234430] CR2: 0000000001137000 CR3: 00000000447a7000 CR4: 00000000000006e0
+[  505.234430] Stack:
+[  505.234430]  ffff880210ad3a38 ffffffffa0123332 ffff880201026c00 ffff880201026d24
+[  505.234430]  ffff88011ec02a80 ffff8802107c1900 0000000000000000 ffff880210ad3a88
+[  505.234430]  ffffffffa012e05d 0000000008405eae ffff88011ec02a80 00000000ec38fc98
+[  505.234430] Call Trace:
+[  505.234430]  [<ffffffffa0123332>] xfs_buf_rele+0x2f2/0x380 [xfs]
+[  505.234430]  [<ffffffffa012e05d>] xfs_reclaim_inode+0x38d/0x3a0 [xfs]
+[  505.234430]  [<ffffffffa012e293>] xfs_reclaim_inodes_ag+0x223/0x360 [xfs]
+[  505.234430]  [<ffffffff810b5638>] ? try_to_wake_up+0x58/0x390
+[  505.234430]  [<ffffffff810b5985>] ? wake_up_process+0x15/0x20
+[  505.234430]  [<ffffffffa012e4b3>] xfs_reclaim_inodes_nr+0x33/0x40 [xfs]
+[  505.234430]  [<ffffffffa013f709>] xfs_fs_free_cached_objects+0x19/0x20 [xfs]
+[  505.234430]  [<ffffffff81225f81>] super_cache_scan+0x181/0x190
+[  505.234430]  [<ffffffff811a8837>] shrink_slab+0x237/0x400
+[  505.234430]  [<ffffffff811ad4c3>] shrink_node+0x303/0x310
+[  505.234430]  [<ffffffff811ae2d2>] kswapd+0x302/0x6f0
+[  505.234430]  [<ffffffff811adfd0>] ? mem_cgroup_shrink_node+0x180/0x180
+[  505.234430]  [<ffffffff810aa198>] kthread+0xd8/0xf0
+[  505.234430]  [<ffffffff816d797f>] ret_from_fork+0x1f/0x40
+[  505.234430]  [<ffffffff810aa0c0>] ? kthread_park+0x60/0x60
+[  505.234430] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 30 a9 17 a0 48 89 fa 31 c0 48 89 e5 31 ff e8 ae f8 ff ff <0f> 0b 66 90 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48
+[  505.234430] RIP  [<ffffffffa013c9a2>] assfail+0x22/0x30 [xfs]
+[  505.234430]  RSP <ffff880210ad3a00>
+[  505.251864] ---[ end trace d6c2d984ee03a700 ]---
+[  505.252246] Kernel panic - not syncing: Fatal exception
+[  505.252662] Kernel Offset: disabled
+[  505.252929] ---[ end Kernel panic - not syncing: Fatal exception
 
 _______________________________________________
 xfs mailing list
