@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3F3627CA0
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 01:51:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B013DAC002
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 23:50:59 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TnLU2nT6sKxHRzDS (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id E15447CCF
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:25:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 61CF0AC003
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:56 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id spiqLhphJfiDx28c (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 23:50:58 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 0F63467325
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 06:50:58 +0000 (UTC)
-Date: Sat, 13 Aug 2016 14:50:56 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file:
-	fs/xfs/xfs_buf.c, line: 118 on 4.8-rc1 kernel
-Message-ID: <20160813065056.GX27776@eguan.usersys.redhat.com>
-References: <20160812140414.GV27776@eguan.usersys.redhat.com>
-	<20160812144752.GW27776@eguan.usersys.redhat.com>
-	<20160812170714.GA64450@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160812170714.GA64450@bfoster.bfoster>
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:54 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id 4B88420449
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:53 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3sBTDc5nMnz104J
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:52 +0200 (CEST)
+Resent-Message-ID: <20160813172456.GI3858@nyan>
+Resent-To: xfs@oss.sgi.com
+Message-Id: <16eb2ae9106fd3c5cc921b6be45a96a593d7a308.1471107858.git.felix.janda@posteo.de>
+In-Reply-To: <cover.1471107858.git.felix.janda@posteo.de>
+References: <cover.1471107858.git.felix.janda@posteo.de>
+From: Felix Janda <felix.janda@posteo.de>
+Date: Sat, 13 Aug 2016 18:20:47 +0200
+Subject: [PATCHv2 xfsprogs 11/14] fsr: remove workaround for statvfs on Mac OS
+	X
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,51 +32,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 12, 2016 at 01:07:15PM -0400, Brian Foster wrote:
-> On Fri, Aug 12, 2016 at 10:47:52PM +0800, Eryu Guan wrote:
-> > On Fri, Aug 12, 2016 at 10:04:14PM +0800, Eryu Guan wrote:
-> > > Hi,
-> > > 
-> > > I hit oops while building kernel on XFS, 4.8-rc1 kernel, hit twice in
-> > > six kernel builds. I'm not sure if it's a regression since 4.7 kernel
-> > > yet, will do more testings.
-> > 
-> > Just hit again on 4.8-rc1 kernel, I was doing
-> > 
-> > # clean partial builds from previous run and build again
-> > make clean
-> > make -j 8
-> > 
-> > Seems I have to do kernel build on 4.7 kernel to finish the bisect.
-> > 
-> > Thanks,
-> > Eryu
-> > 
-> > [ 2515.752039] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file: fs/xfs/xfs_buf.c, line: 118
-> 
-> This is commit 9c7504aa7 ("xfs: track and serialize in-flight async
-> buffers against unmount"). The assert is actually incorrect, as Dave had
-> previously pointed out[1]. A patch was posted[2] to fix it, but hasn't
-> been merged yet.
-> 
-> Brian
-> 
-> [1] http://oss.sgi.com/pipermail/xfs/2016-August/050613.html
-> [2] http://oss.sgi.com/pipermail/xfs/2016-August/050634.html
+It can be removed since fsr is no longer built on Mac OS X.
 
-Thanks for the reminder, I had impression of this thread and patch, but
-didn't realize I was hitting the same problem. I don't have to do bisect
-then :)
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
+---
+ fsr/xfs_fsr.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-Thanks,
-Eryu
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 98390e7..9cffa1b 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -945,11 +945,7 @@ fsrfile_common(
+ 			fname, strerror(errno));
+ 		return -1;
+ 	}
+-#ifndef statvfs64
+ 	bsize = vfss.f_frsize ? vfss.f_frsize : vfss.f_bsize;
+-#else
+-	bsize = vfss.f_bsize;
+-#endif
+ 	if (statp->bs_blksize * statp->bs_blocks >
+ 	    vfss.f_bfree * bsize - minimumfree) {
+ 		fsrprintf(_("insufficient freespace for: %s: "
+@@ -1717,11 +1713,7 @@ xfs_getrt(int fd, struct statvfs64 *sfbp)
+ 		close(fd);
+ 		return -1;
+ 	}
+-#ifndef statvfs64
+ 	bsize = (sfbp->f_frsize ? sfbp->f_frsize : sfbp->f_bsize);
+-#else
+-	bsize = sfbp->f_bsize;
+-#endif
+ 	factor = fsgeom.blocksize / bsize;         /* currently this is == 1 */
+ 	sfbp->f_bfree = (cnt.freertx * fsgeom.rtextsize) * factor;
+ 	return 0;
+-- 
+2.7.3
 
 _______________________________________________
 xfs mailing list
