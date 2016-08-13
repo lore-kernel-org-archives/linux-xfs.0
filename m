@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33EBE7CD7
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:26:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ED34D8F8033
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:26:05 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 669C17CAF
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:26:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 38B45304048
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:26:34 -0700 (PDT)
 Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id OdIAUJyYMY4XMD85 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mTjhqz4UGalIFF8z (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:26:04 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:26:32 -0700 (PDT)
 Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 69C8F20068
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:26:03 +0200 (CEST)
+	by mout02.posteo.de (Postfix) with ESMTPS id 1D9C320449
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:26:30 +0200 (CEST)
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3sBTDp6cgrzydk
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:26:02 +0200 (CEST)
-Resent-Message-ID: <20160813172506.GL3858@nyan>
+	by submission (posteo.de) with ESMTPSA id 3sBTFK4SNBz104L
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:26:29 +0200 (CEST)
+Resent-Message-ID: <20160813172533.GM3858@nyan>
 Resent-To: xfs@oss.sgi.com
-Message-Id: <8c3a172343f01752db2510c3374a904591708728.1471107858.git.felix.janda@posteo.de>
+Message-Id: <ee6222efd5b5b46e61b25bc9bd4ea222d3d3b188.1471107858.git.felix.janda@posteo.de>
 In-Reply-To: <cover.1471107858.git.felix.janda@posteo.de>
 References: <cover.1471107858.git.felix.janda@posteo.de>
 From: Felix Janda <felix.janda@posteo.de>
-Date: Sun, 7 Aug 2016 07:52:09 +0200
-Subject: [PATCHv2 xfsprogs 14/14] platform: remove use of off64_t
+Date: Sat, 13 Aug 2016 18:50:28 +0200
+Subject: [PATCHv2 xfsprogs 02/14] configure: error out when LFS does not work
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,66 +38,48 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Since we force transparent LFS it can be replaced by off_t.
-
 Signed-off-by: Felix Janda <felix.janda@posteo.de>
 ---
- include/darwin.h  | 1 -
- include/freebsd.h | 1 -
- include/irix.h    | 2 +-
- include/linux.h   | 2 +-
- 4 files changed, 2 insertions(+), 4 deletions(-)
+ configure.ac          |  1 +
+ m4/package_libcdev.m4 | 16 ++++++++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/include/darwin.h b/include/darwin.h
-index 495b44b..418d90a 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -134,7 +134,6 @@ typedef signed long long int	__s64;
- #define __uint16_t	u_int16_t
- #define __uint32_t	u_int32_t
- #define __uint64_t	u_int64_t
--#define off64_t		off_t
+diff --git a/configure.ac b/configure.ac
+index 8fa96a5..ed75d62 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -108,6 +108,7 @@ AC_MULTILIB($enable_lib64)
+ AC_RT($enable_librt)
  
- typedef off_t		xfs_off_t;
- typedef u_int64_t	xfs_ino_t;
-diff --git a/include/freebsd.h b/include/freebsd.h
-index df924ef..93a9204 100644
---- a/include/freebsd.h
-+++ b/include/freebsd.h
-@@ -41,7 +41,6 @@
- #define EFSBADCRC	991	/* Bad CRC detected */
+ AC_SYS_LARGEFILE
++AC_NEED_LFS
  
- typedef off_t		xfs_off_t;
--typedef off_t		off64_t;
- typedef __uint64_t	xfs_ino_t;
- typedef __uint32_t	xfs_dev_t;
- typedef __int64_t	xfs_daddr_t;
-diff --git a/include/irix.h b/include/irix.h
-index b92e01b..a212505 100644
---- a/include/irix.h
-+++ b/include/irix.h
-@@ -43,7 +43,7 @@
- #define __int16_t	short
- #define __uint8_t	unsigned char
- #define __uint16_t	unsigned short
--typedef off64_t		xfs_off_t;
-+typedef off_t		xfs_off_t;
- typedef __int64_t	xfs_ino_t;
- typedef __int32_t	xfs_dev_t;
- typedef __int64_t	xfs_daddr_t;
-diff --git a/include/linux.h b/include/linux.h
-index 5614719..ed388ea 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -137,7 +137,7 @@ platform_discard_blocks(int fd, uint64_t start, uint64_t len)
- #define EFSCORRUPTED	EUCLEAN	/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG	/* Bad CRC detected */
- 
--typedef off64_t		xfs_off_t;
-+typedef off_t		xfs_off_t;
- typedef __uint64_t	xfs_ino_t;
- typedef __uint32_t	xfs_dev_t;
- typedef __int64_t	xfs_daddr_t;
+ AC_PACKAGE_NEED_UUID_H
+ AC_PACKAGE_NEED_UUIDCOMPARE
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 7a847e9..6c94475 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -265,3 +265,19 @@ AC_DEFUN([AC_HAVE_MREMAP],
+        )
+     AC_SUBST(have_mremap)
+   ])
++
++#
++# Check if transparent LFS is enabled
++#
++AC_DEFUN([AC_NEED_LFS],
++  [ AC_MSG_CHECKING([whether large file support works])
++    AC_TRY_COMPILE([
++#include <unistd.h>
++    ], [
++         int i[sizeof(off_t)-8];
++    ], AC_MSG_RESULT(yes),
++       [AC_MSG_RESULT(no)
++       echo
++       echo 'FATAL ERROR: C library does not support transparent LFS.'
++       exit 1])
++  ])
 -- 
 2.7.3
 
