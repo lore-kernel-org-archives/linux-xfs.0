@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 600777CA0
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 18:04:56 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E7A0C7CA0
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 18:43:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA89BAC001
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:04:52 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	6po1zAnMo5EZfgzG for <xfs@oss.sgi.com>;
-	Sat, 13 Aug 2016 16:04:49 -0700 (PDT)
-Date: Sun, 14 Aug 2016 09:04:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: generic/224 triggers infinite "page discard on page xxx" on 512
-	block size XFS with 4.8-rc1 kernel
-Message-ID: <20160813230426.GC16044@dastard>
-References: <20160813073839.GY27776@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160813073839.GY27776@eguan.usersys.redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E0ED30404E
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:08 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id jRZu3bVD0JSDCfGq (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:07 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/7] iomap: fiemap should honor the FIEMAP_FLAG_SYNC flag
+Date: Sat, 13 Aug 2016 16:42:57 -0700
+Message-Id: <1471131781-14107-4-git-send-email-hch@lst.de>
+In-Reply-To: <1471131781-14107-1-git-send-email-hch@lst.de>
+References: <1471131781-14107-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,47 +23,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-On Sat, Aug 13, 2016 at 03:38:39PM +0800, Eryu Guan wrote:
-> Hi all,
-> 
-> I've hit generic/224 flooding dmesg on 512 block size XFS, 4.8-rc1
-> kernel, with the following message:
-> 
-> ...
-> [   98.146091] XFS (sda6): page discard on page ffffea0002f7e780, inode 0xe3a87, offset 1085214720.
-> [   98.147431] XFS (sda6): page discard on page ffffea00023c3800, inode 0xe3a87, offset 1085218816.
-> [   98.148743] XFS (sda6): page discard on page ffffea0002247700, inode 0xe3a87, offset 1085222912.
-> [   98.150136] XFS (sda6): page discard on page ffffea0002f8d000, inode 0xe3a87, offset 1085227008.
-> [   98.151496] XFS (sda6): page discard on page ffffea0002c58840, inode 0xe3a87, offset 1085231104.
-> [   98.152794] XFS (sda6): page discard on page ffffea0002e65340, inode 0xe3a87, offset 1085235200.
-> ...
-> 
-> The inode number is always the same, only the page address and offset
-> are changing.
-> 
-> This is triggered by this dd command in generic/224:
-> 
-> dd if=/dev/zero of=$SCRATCH_MNT/testfile.$i bs=4k conv=notrunc
-> 
-> and it won't return until you kill it.
+From: Dave Chinner <dchinner@redhat.com>
 
-It's not infinite. It just does it for every page and 1000 processes
-all trying to write 256,000 pages is a lot.... We have a fix
-pending for it and I'm aiming to get it to Linus later this week.
+The flag is checked as supported, but then we do an unconditional
+sync of the file, regardless of whether the flag is set or not. Make
+the sync conditional on having the FIEMAP_FLAG_SYNC flag set.
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Dave.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 74712e2..56c19e6 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -467,9 +467,11 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = filemap_write_and_wait(inode->i_mapping);
+-	if (ret)
+-		return ret;
++	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
++		ret = filemap_write_and_wait(inode->i_mapping);
++		if (ret)
++			return ret;
++	}
+ 
+ 	while (len > 0) {
+ 		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
 _______________________________________________
 xfs mailing list
