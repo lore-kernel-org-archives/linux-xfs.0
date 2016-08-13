@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 991827CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 10:09:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 34A2930410D
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 08:09:15 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
-	cuda.sgi.com with ESMTP id grKGMe4nheBTOJTA (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6B7217CA2
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 18:43:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D695AAC002
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:08 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id bFL6CtogqO4WLUB5 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 08:09:09 -0700 (PDT)
-Subject: Bug#834416: Acknowledgement (xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl
-	failed: Invalid argument)
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.834416.B834416.14712736082372@bugs.debian.org>
-MIME-Version: 1.0
-Date: Mon, 15 Aug 2016 17:01:14 +0200
-From: Marcel Meckel <debian@thermoman.de>
-In-Reply-To: <handler.834416.B.147126595515716.ack@bugs.debian.org>
-References: <e86b1937b452240cbe2457f6fdee8e9a@thermoman.de>
-	<handler.834416.B.147126595515716.ack@bugs.debian.org>
-Message-ID: <40a2c05a782734f022a89ee0e83be0e6@thermoman.de>
-Reply-To: Marcel Meckel <debian@thermoman.de>, 834416@bugs.debian.org
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:06 -0700 (PDT)
+Received: from [107.17.164.165] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1bYia0-0006L5-VH
+	for xfs@oss.sgi.com; Sat, 13 Aug 2016 23:43:05 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/7] iomap: remove superflous mark_page_accessed from
+	iomap_write_actor
+Date: Sat, 13 Aug 2016 16:42:55 -0700
+Message-Id: <1471131781-14107-2-git-send-email-hch@lst.de>
+In-Reply-To: <1471131781-14107-1-git-send-email-hch@lst.de>
+References: <1471131781-14107-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +28,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 834416@bugs.debian.org
+To: xfs@oss.sgi.com
 
-Just had a chat in #xfs on freenode and it might be that a
-previous xfs_growfs under an older kernel didn't zero enough.
+This catches up with commit  2457ae ("mm: non-atomically mark page
+accessed during page cache allocation where possible"), which
+moved the initial access marking into the pagecache allocator.
 
-When I recall it correctly the XFS filesystem in question was
-resized in the past under then stable Debian Wheezy (might even
-have been resized under Debian Squeeze).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Chat for reference:
-
-< bfoster> strange, seems like it is running a verifier on the
-            secondary sb's
-< bfoster> e.g., commit 1375cb65e, but that fix seems to go way back
-< bfoster> did growfs run and fail prior to the run with these
-            reported errors?
-< thermoman> bfoster: never had problems before
-< thermoman> but the FS might have been created with an older
-              xfsprogs and it has been definately be resized before
-< bfoster> or hmm, perhaps its remnants from a previous growfs
-< bfoster> ok, I think that makes more sense, you went from 109 ags
-            to 160 some odd ags
-< bfoster> and grow/repair is complaining about ags below that
-            109 threshold
-< bfoster> which suggests the previous grows didn't zero enough,
-            or whatever that old problem was
-< bfoster> I think the kernel you're on now should "do the right thing"
-
-Might be related:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_I.27m_getting_.22Internal_error_xfs_sb_read_verify.22_errors_when_I_try_to_run_xfs_growfs_under_kernels_v3.10_through_v3.12
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 48141b8..f39c318 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -199,7 +199,6 @@ again:
+ 		pagefault_enable();
+ 
+ 		flush_dcache_page(page);
+-		mark_page_accessed(page);
+ 
+ 		status = iomap_write_end(inode, pos, bytes, copied, page);
+ 		if (unlikely(status < 0))
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
