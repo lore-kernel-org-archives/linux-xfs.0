@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 764B47CBC
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:25:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A57A304048
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:47 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A31BD7CB8
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:25:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19DD5AC003
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:50 -0700 (PDT)
 Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id mBvZexGpprrszPNx (version=TLSv1.2
+	cuda.sgi.com with ESMTP id K8hBJMtDsAUdBiqb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:45 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:48 -0700 (PDT)
 Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 2B36B2098D
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:44 +0200 (CEST)
+	by mout02.posteo.de (Postfix) with ESMTPS id 5B16620449
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:47 +0200 (CEST)
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3sBTDR4KKtz104W
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:43 +0200 (CEST)
-Resent-Message-ID: <20160813172446.GF3858@nyan>
+	by submission (posteo.de) with ESMTPSA id 3sBTDV6DKfz104d
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:46 +0200 (CEST)
+Resent-Message-ID: <20160813172450.GG3858@nyan>
 Resent-To: xfs@oss.sgi.com
-Message-Id: <4606f95e95d055534c17ed8a998351824298f627.1471107858.git.felix.janda@posteo.de>
+Message-Id: <94800ca4e791ebca9ad6503afba31ebdfad672f7.1471107858.git.felix.janda@posteo.de>
 In-Reply-To: <cover.1471107858.git.felix.janda@posteo.de>
 References: <cover.1471107858.git.felix.janda@posteo.de>
 From: Felix Janda <felix.janda@posteo.de>
-Date: Sat, 6 Aug 2016 13:03:16 +0200
-Subject: [PATCHv2 xfsprogs 08/14] replace sendfile64 by equivalent sendfile
+Date: Sat, 13 Aug 2016 18:03:16 +0200
+Subject: [PATCHv2 xfsprogs 09/14] fadvise.c: replace posix_fadvise64 by
+	equivalent posix_fadvise
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,29 +39,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+also fixes a compile failure on FreeBSD
+
 Signed-off-by: Felix Janda <felix.janda@posteo.de>
 ---
- io/sendfile.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ io/fadvise.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/io/sendfile.c b/io/sendfile.c
-index c082acf..edd31c9 100644
---- a/io/sendfile.c
-+++ b/io/sendfile.c
-@@ -56,11 +56,11 @@ send_buffer(
+diff --git a/io/fadvise.c b/io/fadvise.c
+index d59d1ff..46174f3 100644
+--- a/io/fadvise.c
++++ b/io/fadvise.c
+@@ -103,7 +103,7 @@ fadvise_f(
+ 		return command_usage(&fadvise_cmd);
+ 	}
  
- 	*total = 0;
- 	while (count > 0) {
--		bytes = sendfile64(file->fd, fd, &off, bytes_remaining);
-+		bytes = sendfile(file->fd, fd, &off, bytes_remaining);
- 		if (bytes == 0)
- 			break;
- 		if (bytes < 0) {
--			perror("sendfile64");
-+			perror("sendfile");
- 			return -1;
- 		}
- 		ops++;
+-	if (posix_fadvise64(file->fd, offset, length, advise) < 0) {
++	if (posix_fadvise(file->fd, offset, length, advise) < 0) {
+ 		perror("fadvise");
+ 		return 0;
+ 	}
 -- 
 2.7.3
 
