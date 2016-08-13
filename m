@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C2F27CD5
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6BDB97CA2
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 02:38:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F210230417A
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:36 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F59B304043
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 00:38:45 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XdkL95QutSHYMlNu (version=TLSv1.2
+	cuda.sgi.com with ESMTP id MTXRECtbqQCXadqe (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:35 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 16/22] richacl: Automatic Inheritance
-Date: Tue, 16 Aug 2016 13:02:57 +0200
-Message-Id: <1471345383-15334-17-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 00:38:41 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 84A734E335
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 07:38:40 +0000 (UTC)
+Received: from localhost (dhcp-13-153.nay.redhat.com [10.66.13.153])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7D7cd6E031311
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 03:38:40 -0400
+Date: Sat, 13 Aug 2016 15:38:39 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: generic/224 triggers infinite "page discard on page xxx" on 512
+	block size XFS with 4.8-rc1 kernel
+Message-ID: <20160813073839.GY27776@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,190 +34,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: xfs@oss.sgi.com
 
-Automatic Inheritance (AI) allows changes to the acl of a directory to
-propagate down to children.
+Hi all,
 
-This is mostly implemented in user space: when a process changes the
-permissions of a directory and Automatic Inheritance is enabled for that
-directory, the process must propagate those changes to all children,
-recursively.
+I've hit generic/224 flooding dmesg on 512 block size XFS, 4.8-rc1
+kernel, with the following message:
 
-The kernel enables this by keeping track of which permissions have been
-inherited at create time.  In addition, it makes sure that permission
-propagation is turned off when the permissions are set explicitly (for
-example, upon create or chmod).
+...
+[   98.146091] XFS (sda6): page discard on page ffffea0002f7e780, inode 0xe3a87, offset 1085214720.
+[   98.147431] XFS (sda6): page discard on page ffffea00023c3800, inode 0xe3a87, offset 1085218816.
+[   98.148743] XFS (sda6): page discard on page ffffea0002247700, inode 0xe3a87, offset 1085222912.
+[   98.150136] XFS (sda6): page discard on page ffffea0002f8d000, inode 0xe3a87, offset 1085227008.
+[   98.151496] XFS (sda6): page discard on page ffffea0002c58840, inode 0xe3a87, offset 1085231104.
+[   98.152794] XFS (sda6): page discard on page ffffea0002e65340, inode 0xe3a87, offset 1085235200.
+...
 
-Automatic Inheritance works as follows:
+The inode number is always the same, only the page address and offset
+are changing.
 
- - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
-   is not set, the file or directory is not affected by AI.
+This is triggered by this dd command in generic/224:
 
- - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
-   and a file or subdirectory is created in that directory, the
-   inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
-   inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
-   allows user space to distinguish between aces which have been
-   inherited and aces which have been explicitly added.
+dd if=/dev/zero of=$SCRATCH_MNT/testfile.$i bs=4k conv=notrunc
 
- - When the RICHACL_PROTECTED acl flag in the acl of a file or directory
-   is set, AI will not modify the acl.  This does not affect propagation
-   of permissions from the file to its children (if the file is a
-   directory).
+and it won't return until you kill it.
 
-Linux does not have a way of creating files or directories without setting the
-file permission bits, so all files created inside a directory with
-RICHACL_AUTO_INHERIT set will have the RICHACL_PROTECTED flag set.  This
-effectively disables Automatic Inheritance.
+With 4.7 kernel I can see similar messages in dmesg, but only a few
+lines are printed on different inodes, I don't see this infinite loop on
+same inode.
 
-Protocols which support creating files without specifying permissions can
-explicitly clear the RICHACL_PROTECTED flag after creating a file and reset the
-file masks to "undo" applying the create mode; see richacl_compute_max_masks().
-They should set the RICHACL_DEFAULTED flag.  (A mechanism that would allow to
-indicate to the kernel to ignore the create mode in the first place when there
-are inherited permissions would be nice to have.)
+And I bisected to this commit:
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
----
- fs/richacl.c                 | 20 +++++++++++++++++++-
- include/linux/richacl.h      | 12 ++++++++++++
- include/uapi/linux/richacl.h | 11 ++++++++++-
- 3 files changed, 41 insertions(+), 2 deletions(-)
+commit 68a9f5e7007c1afa2cf6830b690a90d0187c0684
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue Jun 21 09:53:44 2016 +1000
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 8051181..4edce8b 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -567,7 +567,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
- 	    acl->a_group_mask == group_mask &&
- 	    acl->a_other_mask == other_mask &&
- 	    (acl->a_flags & RICHACL_MASKED) &&
--	    (acl->a_flags & RICHACL_WRITE_THROUGH))
-+	    (acl->a_flags & RICHACL_WRITE_THROUGH) &&
-+	    (!richacl_is_auto_inherit(acl) || richacl_is_protected(acl)))
- 		return acl;
- 
- 	clone = richacl_clone(acl, GFP_KERNEL);
-@@ -579,6 +580,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
- 	clone->a_owner_mask = owner_mask;
- 	clone->a_group_mask = group_mask;
- 	clone->a_other_mask = other_mask;
-+	if (richacl_is_auto_inherit(clone))
-+		clone->a_flags |= RICHACL_PROTECTED;
- 
- 	return clone;
- }
-@@ -794,6 +797,14 @@ richacl_inherit(const struct richacl *dir_acl, int isdir)
- 			ace++;
- 		}
- 	}
-+	if (richacl_is_auto_inherit(dir_acl)) {
-+		acl->a_flags = RICHACL_AUTO_INHERIT;
-+		richacl_for_each_entry(ace, acl)
-+			ace->e_flags |= RICHACE_INHERITED_ACE;
-+	} else {
-+		richacl_for_each_entry(ace, acl)
-+			ace->e_flags &= ~RICHACE_INHERITED_ACE;
-+	}
- 
- 	return acl;
- }
-@@ -822,6 +833,13 @@ richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
- 			richacl_put(acl);
- 			acl = NULL;
- 		} else {
-+			/*
-+			 * We need to set RICHACL_PROTECTED because we are
-+			 * doing an implicit chmod
-+			 */
-+			if (richacl_is_auto_inherit(acl))
-+				acl->a_flags |= RICHACL_PROTECTED;
-+
- 			richacl_compute_max_masks(acl);
- 			/*
- 			 * Ensure that the acl will not grant any permissions
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 6354ef0..737513b 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -81,6 +81,18 @@ extern void set_cached_richacl(struct inode *, struct richacl *);
- extern void forget_cached_richacl(struct inode *);
- extern struct richacl *get_richacl(struct inode *);
- 
-+static inline int
-+richacl_is_auto_inherit(const struct richacl *acl)
-+{
-+	return acl->a_flags & RICHACL_AUTO_INHERIT;
-+}
-+
-+static inline int
-+richacl_is_protected(const struct richacl *acl)
-+{
-+	return acl->a_flags & RICHACL_PROTECTED;
-+}
-+
- /**
-  * richace_is_owner  -  check if @ace is an OWNER@ entry
-  */
-diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
-index 1ed48ac..8849a53 100644
---- a/include/uapi/linux/richacl.h
-+++ b/include/uapi/linux/richacl.h
-@@ -18,6 +18,9 @@
- #define __UAPI_RICHACL_H
- 
- /* a_flags values */
-+#define RICHACL_AUTO_INHERIT			0x01
-+#define RICHACL_PROTECTED			0x02
-+#define RICHACL_DEFAULTED			0x04
- #define RICHACL_WRITE_THROUGH			0x40
- #define RICHACL_MASKED				0x80
- 
-@@ -31,6 +34,7 @@
- #define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
- #define RICHACE_INHERIT_ONLY_ACE		0x0008
- #define RICHACE_IDENTIFIER_GROUP		0x0040
-+#define RICHACE_INHERITED_ACE			0x0080
- #define RICHACE_SPECIAL_WHO			0x4000
- 
- /* e_mask bitflags */
-@@ -60,6 +64,9 @@
- #define RICHACE_EVERYONE_SPECIAL_ID		2
- 
- #define RICHACL_VALID_FLAGS (					\
-+	RICHACL_AUTO_INHERIT |					\
-+	RICHACL_PROTECTED |					\
-+	RICHACL_DEFAULTED |					\
- 	RICHACL_WRITE_THROUGH |					\
- 	RICHACL_MASKED )
- 
-@@ -69,13 +76,15 @@
- 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
- 	RICHACE_INHERIT_ONLY_ACE |				\
- 	RICHACE_IDENTIFIER_GROUP |				\
-+	RICHACE_INHERITED_ACE |					\
- 	RICHACE_SPECIAL_WHO )
- 
- #define RICHACE_INHERITANCE_FLAGS (				\
- 	RICHACE_FILE_INHERIT_ACE |				\
- 	RICHACE_DIRECTORY_INHERIT_ACE |				\
- 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
--	RICHACE_INHERIT_ONLY_ACE )
-+	RICHACE_INHERIT_ONLY_ACE |				\
-+	RICHACE_INHERITED_ACE )
- 
- /* Valid RICHACE_* flags for directories and non-directories */
- #define RICHACE_VALID_MASK (					\
--- 
-2.7.4
+    xfs: implement iomap based buffered write path
+
+    Convert XFS to use the new iomap based multipage write path. This involves
+    implementing the ->iomap_begin and ->iomap_end methods, and switching the
+    buffered file write, page_mkwrite and xfs_iozero paths to the new iomap
+    helpers.
+
+    With this change __xfs_get_blocks will never be used for buffered writes,
+    and the code handling them can be removed.
+
+    Based on earlier code from Dave Chinner.
+
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Bob Peterson <rpeterso@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+I was testing on x86_64 kvm guest with 8G memory and 4vcpus. If more
+information is needed please let me know.
+
+Thanks,
+Eryu
 
 _______________________________________________
 xfs mailing list
