@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CD7B97CA3
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 13:38:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 925D18F8138
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:48 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xlQlXuYhdV0b4TWr (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D9767CCD
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:25:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D4BDAC002
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:52 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id 6Fe0zB9uEwnSAPrR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:47 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 075CB8535A
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 18:38:47 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-56-109.rdu2.redhat.com
-	[10.10.56.109])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7FIcjrn018199
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 14:38:46 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 2/3] xfs_quota: changes to accomodate hoisted ioctl defs
-Date: Mon, 15 Aug 2016 13:38:30 -0500
-Message-Id: <1471286311-2730-3-git-send-email-billodo@redhat.com>
-In-Reply-To: <1471286311-2730-1-git-send-email-billodo@redhat.com>
-References: <1471286311-2730-1-git-send-email-billodo@redhat.com>
+	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:51 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id 2B69A20449
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:50 +0200 (CEST)
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 3sBTDY4hcjz104J
+	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:49 +0200 (CEST)
+Resent-Message-ID: <20160813172453.GH3858@nyan>
+Resent-To: xfs@oss.sgi.com
+Message-Id: <7b393c92e885edd551cdd0c46b21807f653c8c1d.1471107858.git.felix.janda@posteo.de>
+In-Reply-To: <cover.1471107858.git.felix.janda@posteo.de>
+References: <cover.1471107858.git.felix.janda@posteo.de>
+From: Felix Janda <felix.janda@posteo.de>
+Date: Sat, 13 Aug 2016 18:17:41 +0200
+Subject: [PATCHv2 xfsprogs 10/14] Makefile: disable fsr for Mac OS X
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,86 +38,36 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The kernel commit to make the ioctl promotion (334e580a6f) moved
-the definitions for the XFS ioctl to uapi/linux/fs.h for the
-following reason:
+Since its kernel does not support XFS anyway this utility is not
+useful, and with its removal the portability framework can be
+simplified.
 
-    Hoist the ioctl definitions for the XFS_IOC_FS[SG]SETXATTR API
-    from fs/xfs/libxfs/xfs_fs.h to include/uapi/linux/fs.h so that
-    the ioctls can be used by all filesystems, not just XFS. This
-    enables (initially) ext4 to use the ioctl to set project IDs on
-    inodes.
-
-This means we now need to handle this change in userspace as the
-uapi/linux/fs.h file may not contain the definitions (i.e. new
-xfsprogs/ old linux uapi files) xfsprogs needs to build. Hence we
-need to massage the definition in xfs_fs.h to take the values from
-the system header if it exists, otherwise keep the old definitions
-for compatibility and platforms other than linux..
-
-This patch was originally submitted by Dave Chinner
-(http://oss.sgi.com/archives/xfs/2016-02/msg00108.html)
-
-Resubmitting with changes to accomodate upstream changes since
-initial submission.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Felix Janda <felix.janda@posteo.de>
 ---
- libxfs/xfs_fs.h | 37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
+ Makefile | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 085ea6f..6ecb7f2 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -35,10 +35,41 @@ struct dioattr {
- };
- #endif
+diff --git a/Makefile b/Makefile
+index 7bdc670..84dc62c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -45,9 +45,13 @@ HDR_SUBDIRS = include libxfs
  
-+/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
-+#ifndef FS_IOC_FSGETXATTR
-+struct fsxattr {
-+	__u32		fsx_xflags;	/* xflags field value (get/set) */
-+	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-+	__u32		fsx_projid;	/* project identifier (get/set) */
-+	unsigned char	fsx_pad[12];
-+};
+ DLIB_SUBDIRS = libxlog libxcmd libhandle
+ LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+-TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
++TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+ 		mdrestore repair rtcp m4 man doc debian
+ 
++ifneq ("$(PKG_PLATFORM)","darwin")
++TOOL_SUBDIRS += fsr
++endif
 +
-+/*
-+ * Flags for the fsx_xflags field
-+ */
-+#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
-+#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
-+#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
-+#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
-+#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
-+#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
-+#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
-+#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
-+#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
-+#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
-+#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
-+#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
-+#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
-+#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-+#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
-+
-+#define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-+#define FS_IOC_FSSETXATTR     _IOW ('X', 32, struct fsxattr)
-+
-+#endif
-+
- /*
-- * Flags for the bs_xflags/fsx_xflags field in XFS_IOC_FS[GS]ETXATTR[A]
-- * These are for backwards compatibility only. New code should
-- * use the kernel [4.5 onwards] defined FS_XFLAG_* definitions directly.
-+ * Flags for the bs_xflags/fsx_xflags field in FS_IOC_FS[GS]ETXATTR[A]
-  */
- #define	XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
- #define	XFS_XFLAG_PREALLOC	FS_XFLAG_PREALLOC
+ ifneq ("$(XGETTEXT)","")
+ TOOL_SUBDIRS += po
+ endif
 -- 
-2.7.4
+2.7.3
 
 _______________________________________________
 xfs mailing list
