@@ -1,23 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B0CE7CA1
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 08:04:04 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B2EC07CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 13:38:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B3140AC03F
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 06:04:00 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
-	cuda.sgi.com with ESMTP id 0gGnGmYNDLgTGcFN (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 06:03:55 -0700 (PDT)
-Subject: Bug#834416: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid
-	argument
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.834416.B.147126595515716@bugs.debian.org>
-MIME-Version: 1.0
-Date: Mon, 15 Aug 2016 14:59:11 +0200
-From: Marcel Meckel <debian@thermoman.de>
-Message-ID: <e86b1937b452240cbe2457f6fdee8e9a@thermoman.de>
-Reply-To: Marcel Meckel <debian@thermoman.de>, 834416@bugs.debian.org
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 686BD30411C
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zgFgBE40apyo6Myr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:46 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id 7BD0DC05680F
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 18:38:46 +0000 (UTC)
+Received: from localhost.localdomain.com (vpn-56-109.rdu2.redhat.com
+	[10.10.56.109])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7FIcjrm018199
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 14:38:46 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH 1/3] xfs_quota: add capabilities for use on ext4
+Date: Mon, 15 Aug 2016 13:38:29 -0500
+Message-Id: <1471286311-2730-2-git-send-email-billodo@redhat.com>
+In-Reply-To: <1471286311-2730-1-git-send-email-billodo@redhat.com>
+References: <1471286311-2730-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,852 +34,396 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bugs@debian.org
-
-Package: xfsprogs
-Version: 3.2.1
-Severity: important
-
-xfs_growfs did corrupt a filesystem on a up2date Debian Jessie system.
-
-Might be a kernel problem and not xfsprogs related.
-
-% pvresize /dev/vda2
-% xfs_growfs /dev/mapper/vg0-home
-meta-data=/dev/mapper/vg0-home isize=256    agcount=109, agsize=229376 
-blks
-          =                       sectsz=512   attr=2, projid32bit=0
-          =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=24878080, 
-imaxpct=25
-          =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal               bsize=4096   blocks=2560, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Invalid argument
-data blocks changed from 24878080 to 37985280
-
-% dmesg
-[  806.321683] XFS (dm-2): bad magic number
-[  806.321699] XFS (dm-2): metadata I/O error: block 0x9680000 
-("xfs_trans_read_buf_map") error 22 numblks 1
-[  806.322715] XFS (dm-2): error 22 reading secondary superblock for ag 
-86
-[  806.323088] XFS (dm-2): bad magic number
-[  806.323096] XFS (dm-2): metadata I/O error: block 0x9840000 
-("xfs_trans_read_buf_map") error 22 numblks 1
-[  806.324175] XFS (dm-2): error 22 reading secondary superblock for ag 
-87
-[  806.324697] XFS (dm-2): bad magic number
-[  806.324705] XFS (dm-2): metadata I/O error: block 0x9a00000 
-("xfs_trans_read_buf_map") error 22 numblks 1
-[  806.325727] XFS (dm-2): error 22 reading secondary superblock for ag 
-88
-[  806.326075] XFS (dm-2): bad magic number
-[  806.326082] XFS (dm-2): metadata I/O error: block 0x9bc0000 
-("xfs_trans_read_buf_map") error 22 numblks 1
-[  806.327061] XFS (dm-2): error 22 reading secondary superblock for ag 
-89
-[..]
-
-% umount /home
-% xfs_repair /dev/mapper/vg0-home
-xfs_repair /dev/mapper/vg0-home
-Phase 1 - find and verify superblock...
-         - reporting progress in intervals of 15 minutes
-Phase 2 - using internal log
-         - zero log...
-         - scan filesystem freespace and inode maps...
-zeroing unused portion of secondary superblock (AG #9)
-zeroing unused portion of secondary superblock (AG #64)
-zeroing unused portion of secondary superblock (AG #66)
-zeroing unused portion of secondary superblock (AG #61)
-zeroing unused portion of secondary superblock (AG #58)
-zeroing unused portion of secondary superblock (AG #62)
-zeroing unused portion of secondary superblock (AG #59)
-zeroing unused portion of secondary superblock (AG #63)
-bad magic number
-bad on-disk superblock 86 - bad magic number
-primary/secondary superblock 86 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 86
-bad magic number
-bad on-disk superblock 87 - bad magic number
-primary/secondary superblock 87 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 87
-zeroing unused portion of secondary superblock (AG #60)
-bad magic number
-bad magic number
-bad magic number
-bad on-disk superblock 90 - bad magic number
-primary/secondary superblock 90 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #90)
-non-null project quota inode field in superblock 90
-reset bad sb for ag 90
-bad on-disk superblock 88 - bad magic number
-primary/secondary superblock 88 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #88)
-non-null project quota inode field in superblock 88
-reset bad sb for ag 88
-bad on-disk superblock 89 - bad magic number
-primary/secondary superblock 89 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #89)
-non-null project quota inode field in superblock 89
-reset bad sb for ag 89
-bad magic number
-bad on-disk superblock 91 - bad magic number
-primary/secondary superblock 91 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 91
-bad magic number
-bad magic number
-bad on-disk superblock 93 - bad magic number
-primary/secondary superblock 93 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 93
-bad magic number
-bad on-disk superblock 95 - bad magic number
-primary/secondary superblock 95 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 95
-bad on-disk superblock 94 - bad magic number
-primary/secondary superblock 94 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 94
-bad magic number
-bad on-disk superblock 96 - bad magic number
-primary/secondary superblock 96 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 96
-bad magic number
-bad on-disk superblock 97 - bad magic number
-primary/secondary superblock 97 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 97
-bad magic number
-bad magic number
-bad on-disk superblock 99 - bad magic number
-primary/secondary superblock 99 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 99
-bad magic number
-bad magic number
-bad on-disk superblock 98 - bad magic number
-primary/secondary superblock 98 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 98
-bad magic number
-bad on-disk superblock 100 - bad magic number
-primary/secondary superblock 100 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 100
-bad on-disk superblock 103 - bad magic number
-primary/secondary superblock 103 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 103
-bad on-disk superblock 102 - bad magic number
-primary/secondary superblock 102 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #102)
-non-null project quota inode field in superblock 102
-reset bad sb for ag 102
-bad magic number
-bad magic number
-bad on-disk superblock 105 - bad magic number
-primary/secondary superblock 105 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 105
-bad on-disk superblock 106 - bad magic number
-primary/secondary superblock 106 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 106
-bad magic number
-bad on-disk superblock 108 - bad magic number
-primary/secondary superblock 108 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 108
-bad magic number
-bad magic number
-bad on-disk superblock 101 - bad magic number
-primary/secondary superblock 101 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #101)
-non-null project quota inode field in superblock 101
-reset bad sb for ag 101
-bad magic number
-bad magic number
-bad on-disk superblock 92 - bad magic number
-primary/secondary superblock 92 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-zeroing unused portion of secondary superblock (AG #92)
-non-null project quota inode field in superblock 92
-reset bad sb for ag 92
-zeroing unused portion of secondary superblock (AG #65)
-bad on-disk superblock 104 - bad magic number
-primary/secondary superblock 104 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 104
-bad on-disk superblock 107 - bad magic number
-primary/secondary superblock 107 conflict - AG superblock geometry info 
-conflicts with filesystem geometry
-reset bad sb for ag 107
-         - 13:51:46: scanning filesystem freespace - 166 of 166 
-allocation groups done
-         - found root inode chunk
-Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-         - 13:51:46: scanning agi unlinked lists - 166 of 166 allocation 
-groups done
-         - process known inodes and perform inode discovery...
-         - agno = 45
-         - agno = 165
-         - agno = 30
-         - agno = 150
-         - agno = 120
-         - agno = 15
-         - agno = 60
-         - agno = 105
-         - agno = 0
-         - agno = 90
-         - agno = 75
-         - agno = 135
-         - agno = 61
-         - agno = 91
-         - agno = 46
-         - agno = 92
-         - agno = 106
-         - agno = 16
-         - agno = 62
-         - agno = 31
-         - agno = 1
-         - agno = 136
-         - agno = 76
-         - agno = 121
-         - agno = 47
-         - agno = 63
-         - agno = 93
-         - agno = 107
-         - agno = 48
-         - agno = 17
-         - agno = 137
-         - agno = 151
-         - agno = 32
-         - agno = 77
-         - agno = 64
-         - agno = 2
-         - agno = 94
-         - agno = 95
-         - agno = 78
-         - agno = 122
-         - agno = 108
-         - agno = 18
-         - agno = 65
-         - agno = 33
-         - agno = 96
-         - agno = 152
-         - agno = 138
-         - agno = 123
-         - agno = 109
-         - agno = 79
-         - agno = 49
-         - agno = 19
-         - agno = 66
-         - agno = 139
-         - agno = 124
-         - agno = 80
-         - agno = 153
-         - agno = 110
-         - agno = 97
-         - agno = 67
-         - agno = 50
-         - agno = 20
-         - agno = 140
-         - agno = 34
-         - agno = 68
-         - agno = 125
-         - agno = 51
-         - agno = 154
-         - agno = 81
-         - agno = 111
-         - agno = 35
-         - agno = 98
-         - agno = 21
-         - agno = 126
-         - agno = 69
-         - agno = 3
-         - agno = 82
-         - agno = 52
-         - agno = 155
-         - agno = 141
-         - agno = 36
-         - agno = 156
-         - agno = 22
-         - agno = 112
-         - agno = 127
-         - agno = 70
-         - agno = 157
-         - agno = 53
-         - agno = 142
-         - agno = 99
-         - agno = 128
-         - agno = 71
-         - agno = 83
-         - agno = 158
-         - agno = 54
-         - agno = 37
-         - agno = 23
-         - agno = 72
-         - agno = 84
-         - agno = 55
-         - agno = 143
-         - agno = 100
-         - agno = 24
-         - agno = 113
-         - agno = 159
-         - agno = 85
-         - agno = 38
-         - agno = 129
-         - agno = 101
-         - agno = 73
-         - agno = 56
-         - agno = 144
-         - agno = 114
-         - agno = 130
-         - agno = 39
-         - agno = 160
-         - agno = 86
-         - agno = 57
-         - agno = 102
-         - agno = 115
-         - agno = 131
-         - agno = 87
-         - agno = 132
-         - agno = 88
-         - agno = 74
-         - agno = 116
-         - agno = 40
-         - agno = 58
-         - agno = 103
-         - agno = 145
-         - agno = 161
-         - agno = 41
-         - agno = 146
-         - agno = 162
-         - agno = 104
-         - agno = 117
-         - agno = 59
-         - agno = 147
-         - agno = 133
-         - agno = 118
-         - agno = 163
-         - agno = 42
-         - agno = 89
-         - agno = 134
-         - agno = 164
-         - agno = 43
-         - agno = 148
-         - agno = 119
-         - agno = 149
-         - agno = 44
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - 13:51:47: process known inodes and inode discovery - 6592 of 
-6592 inodes done
-         - process newly discovered inodes...
-         - 13:51:47: process newly discovered inodes - 166 of 166 
-allocation groups done
-Phase 4 - check for duplicate blocks...
-         - setting up duplicate extent list...
-         - 13:51:47: setting up duplicate extent list - 166 of 166 
-allocation groups done
-         - check for inodes claiming duplicate blocks...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 10
-         - agno = 9
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 11
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - agno = 32
-         - agno = 33
-         - agno = 34
-         - agno = 35
-         - agno = 36
-         - agno = 37
-         - agno = 38
-         - agno = 39
-         - agno = 40
-         - agno = 41
-         - agno = 43
-         - agno = 44
-         - agno = 45
-         - agno = 42
-         - agno = 47
-         - agno = 48
-         - agno = 49
-         - agno = 50
-         - agno = 51
-         - agno = 52
-         - agno = 53
-         - agno = 54
-         - agno = 55
-         - agno = 56
-         - agno = 57
-         - agno = 58
-         - agno = 59
-         - agno = 60
-         - agno = 61
-         - agno = 62
-         - agno = 63
-         - agno = 64
-         - agno = 65
-         - agno = 66
-         - agno = 67
-         - agno = 68
-         - agno = 69
-         - agno = 70
-         - agno = 71
-         - agno = 72
-         - agno = 73
-         - agno = 74
-         - agno = 75
-         - agno = 76
-         - agno = 77
-         - agno = 78
-         - agno = 79
-         - agno = 80
-         - agno = 81
-         - agno = 82
-         - agno = 83
-         - agno = 84
-         - agno = 85
-         - agno = 86
-         - agno = 87
-         - agno = 88
-         - agno = 89
-         - agno = 90
-         - agno = 91
-         - agno = 92
-         - agno = 93
-         - agno = 94
-         - agno = 95
-         - agno = 96
-         - agno = 97
-         - agno = 98
-         - agno = 99
-         - agno = 100
-         - agno = 101
-         - agno = 102
-         - agno = 103
-         - agno = 104
-         - agno = 105
-         - agno = 106
-         - agno = 107
-         - agno = 108
-         - agno = 109
-         - agno = 110
-         - agno = 111
-         - agno = 112
-         - agno = 113
-         - agno = 114
-         - agno = 115
-         - agno = 116
-         - agno = 117
-         - agno = 118
-         - agno = 119
-         - agno = 120
-         - agno = 121
-         - agno = 122
-         - agno = 123
-         - agno = 124
-         - agno = 125
-         - agno = 126
-         - agno = 127
-         - agno = 128
-         - agno = 129
-         - agno = 130
-         - agno = 131
-         - agno = 132
-         - agno = 133
-         - agno = 134
-         - agno = 135
-         - agno = 136
-         - agno = 137
-         - agno = 138
-         - agno = 139
-         - agno = 140
-         - agno = 141
-         - agno = 142
-         - agno = 143
-         - agno = 144
-         - agno = 145
-         - agno = 146
-         - agno = 147
-         - agno = 148
-         - agno = 149
-         - agno = 150
-         - agno = 151
-         - agno = 152
-         - agno = 153
-         - agno = 154
-         - agno = 155
-         - agno = 156
-         - agno = 157
-         - agno = 158
-         - agno = 159
-         - agno = 160
-         - agno = 161
-         - agno = 162
-         - agno = 163
-         - agno = 164
-         - agno = 165
-         - agno = 46
-         - 13:51:47: check for inodes claiming duplicate blocks - 6592 of 
-6592 inodes done
-Phase 5 - rebuild AG headers and trees...
-         - 13:51:47: rebuild AG headers and trees - 166 of 166 allocation 
-groups done
-         - reset superblock...
-Phase 6 - check inode connectivity...
-         - resetting contents of realtime bitmap and summary inodes
-         - traversing filesystem ...
-         - traversal finished ...
-         - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-done
-
-
-from /etc/lvm/archive/
-
-
-# Generated by LVM2 version 2.02.111(2) (2014-09-01): Mon Aug 15 
-13:41:33 2016
-
-contents = "Text Format Volume Group"
-version = 1
-
-description = "Created *before* executing 'pvresize /dev/vda2'"
-
-creation_host = "vm1"		# Linux vm1 3.16.0-4-amd64 #1 SMP Debian 
-3.16.7-ckt25-2+deb8u3 (2016-07-02) x86_64
-creation_time = 1471261293	# Mon Aug 15 13:41:33 2016
-
-vg0 {
-	id = "yeRSXo-fBdl-z8d6-3yMk-dike-v5mM-09xXJJ"
-	seqno = 84
-	format = "lvm2"			# informational
-	status = ["RESIZEABLE", "READ", "WRITE"]
-	flags = []
-	extent_size = 8192		# 4 Megabytes
-	max_lv = 0
-	max_pv = 0
-	metadata_copies = 0
-
-	physical_volumes {
-
-		pv0 {
-			id = "60303N-3FAj-4O2L-2exc-hVsP-P4M8-aSGzpo"
-			device = "/dev/vda2"	# Hint only
-
-			status = ["ALLOCATABLE"]
-			flags = []
-			dev_size = 209516544	# 99.9053 Gigabytes
-			pe_start = 2048
-			pe_count = 25575	# 99.9023 Gigabytes
-		}
-	}
-
-	logical_volumes {
-
-		root {
-			id = "3CKcsA-bIDm-0efT-3uvC-Tcbw-a7pZ-F4A9HL"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 768	# 3 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 0
-				]
-			}
-		}
-
-		var_log {
-			id = "G0mPki-Ebz1-cEmP-ggvV-L3Ci-7fHn-AnRcK1"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 512	# 2 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 768
-				]
-			}
-		}
-
-		home {
-			id = "fIdpcN-5hEp-7Zv1-zKxj-QqbX-fUTN-32tUkM"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 24295	# 94.9023 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 1280
-				]
-			}
-		}
-	}
-}
-
-
-
-# Generated by LVM2 version 2.02.111(2) (2014-09-01): Mon Aug 15 
-13:41:52 2016
-
-contents = "Text Format Volume Group"
-version = 1
-
-description = "Created *before* executing 'lvresize /dev/vg0/home -l 
-+100%FREE'"
-
-creation_host = "vm1"		# Linux vm1 3.16.0-4-amd64 #1 SMP Debian 
-3.16.7-ckt25-2+deb8u3 (2016-07-02) x86_64
-creation_time = 1471261312	# Mon Aug 15 13:41:52 2016
-
-vg0 {
-	id = "yeRSXo-fBdl-z8d6-3yMk-dike-v5mM-09xXJJ"
-	seqno = 85
-	format = "lvm2"			# informational
-	status = ["RESIZEABLE", "READ", "WRITE"]
-	flags = []
-	extent_size = 8192		# 4 Megabytes
-	max_lv = 0
-	max_pv = 0
-	metadata_copies = 0
-
-	physical_volumes {
-
-		pv0 {
-			id = "60303N-3FAj-4O2L-2exc-hVsP-P4M8-aSGzpo"
-			device = "/dev/vda2"	# Hint only
-
-			status = ["ALLOCATABLE"]
-			flags = []
-			dev_size = 314374144	# 149.905 Gigabytes
-			pe_start = 2048
-			pe_count = 38375	# 149.902 Gigabytes
-		}
-	}
-
-	logical_volumes {
-
-		root {
-			id = "3CKcsA-bIDm-0efT-3uvC-Tcbw-a7pZ-F4A9HL"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 768	# 3 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 0
-				]
-			}
-		}
-
-		var_log {
-			id = "G0mPki-Ebz1-cEmP-ggvV-L3Ci-7fHn-AnRcK1"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 512	# 2 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 768
-				]
-			}
-		}
-
-		home {
-			id = "fIdpcN-5hEp-7Zv1-zKxj-QqbX-fUTN-32tUkM"
-			status = ["READ", "WRITE", "VISIBLE"]
-			flags = []
-			segment_count = 1
-
-			segment1 {
-				start_extent = 0
-				extent_count = 24295	# 94.9023 Gigabytes
-
-				type = "striped"
-				stripe_count = 1	# linear
-
-				stripes = [
-					"pv0", 1280
-				]
-			}
-		}
-	}
-}
-
-
-
--- System Information:
-Debian Release: 8.5
-   APT prefers stable
-   APT policy: (500, 'stable')
-Architecture: amd64 (x86_64)
-
-Kernel: Linux 3.16.0-4-amd64 (SMP w/2 CPU cores)
-Locale: LANG=en_US.UTF-8, LC_CTYPE=en_US.UTF-8 (charmap=UTF-8) (ignored: 
-LC_ALL set to en_US.UTF-8)
-Shell: /bin/sh linked to /bin/bash
-Init: sysvinit (via /sbin/init)
-
-Versions of packages xfsprogs depends on:
-ii  libblkid1     2.25.2-6
-ii  libc6         2.19-18+deb8u4
-ii  libreadline5  5.2+dfsg-2
-ii  libuuid1      2.25.2-6
-
-xfsprogs recommends no packages.
-
-Versions of packages xfsprogs suggests:
-pn  acl      <none>
-pn  attr     <none>
-pn  quota    <none>
-pn  xfsdump  <none>
-
--- no debconf information
-
-
-
-Some more info
-
-
-
-The system in question is a virtual machine (KVM), the host being
-Debian Jessie, too.
-
-The VM had a 100G xfs filesystem mounted on /home with only appr. 450MB
-free disk space and was shut down to do the resizing of the underlying
-"physical disk" (/dev/vg_HOST/vm_1 on the Host).
-
-The VM was shut down and after that lvresize was used on the HOST
-to resize the VMs assigned block device.
-
-The VMs "disk" changed from 100G to 150G and the partitions changed from
-
-------snip------
-Disk /dev/vg_HOST/vm_1: 150 GiB, 161061273600 bytes, 314572800 sectors
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0x13cd7000
-
-Device              Boot  Start       End   Sectors  Size Id Type
-/dev/vg_HOST/vm_1p1 *      2048    196607    194560   95M 83 Linux
-/dev/vg_HOST/vm_1p2      196608 209715199 209518592 99.9G 8e Linux LVM
-------snip------
-
-to
-
-------snip------
-Device              Boot  Start       End   Sectors   Size Id Type
-/dev/vg_HOST/vm_1p1 *      2048    196607    194560    95M 83 Linux
-/dev/vg_HOST/vm_1p2      196608 314572799 314376192 149.9G 8e Linux LVM
-------snip------
-
-The VM was then started.
-
-Inside the VM the above mentioned commands were issued.
-
-Just for reference: the hosts logical volume is assigned to the VM
-in question in the following manner (using libvirt syntax):
-
-     <disk type='block' device='disk'>
-       <driver cache='none' io='native'/>
-       <source dev='/dev/vg_HOST/vm_1'/>
-       <target dev='vda' bus='virtio'/>
-     </disk>
+To: xfs@oss.sgi.com
+
+This allows xfs_quota to be used on ext4 for project quota testing
+in xfstests.
+
+This patch was originally submitted by Dave Chinner
+(http://oss.sgi.com/archives/xfs/2016-02/msg00131.html)
+
+Resubmitting with the following change:
+quota/init.c: correct logic error in loop contained in init_args_command()
+function (lines 85-91).
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ include/command.h |  3 ++-
+ include/path.h    |  1 +
+ io/init.h         |  2 +-
+ libxcmd/paths.c   |  7 +++----
+ quota/free.c      |  2 ++
+ quota/init.c      | 27 ++++++++++++++++++++++++++-
+ quota/init.h      |  1 +
+ quota/path.c      |  5 +++--
+ quota/project.c   |  1 +
+ quota/quot.c      |  1 +
+ quota/quota.c     |  2 ++
+ quota/report.c    | 11 +++++++++--
+ quota/state.c     |  4 +++-
+ quota/util.c      |  1 +
+ 14 files changed, 56 insertions(+), 12 deletions(-)
+
+diff --git a/include/command.h b/include/command.h
+index 7b9fc28..81d5a4d 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -20,7 +20,8 @@
+ 
+ #include <sys/time.h>
+ 
+-#define CMD_FLAG_GLOBAL	((int)0x80000000)	/* don't iterate "args" */
++#define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
++#define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+ 
+ typedef int (*cfunc_t)(int argc, char **argv);
+ typedef void (*helpfunc_t)(void);
+diff --git a/include/path.h b/include/path.h
+index 46a887e..39c1a95 100644
+--- a/include/path.h
++++ b/include/path.h
+@@ -29,6 +29,7 @@
+ 
+ #define FS_MOUNT_POINT	(1<<0)
+ #define FS_PROJECT_PATH	(1<<1)
++#define FS_FOREIGN	(1<<2)
+ 
+ typedef struct fs_path {
+ 	char		*fs_name;	/* Data device for filesystem 	*/
+diff --git a/io/init.h b/io/init.h
+index d773b1b..bb25242 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -18,7 +18,7 @@
+ 
+ #define CMD_NOFILE_OK	(1<<0)	/* command doesn't need an open file	*/
+ #define CMD_NOMAP_OK	(1<<1)	/* command doesn't need a mapped region	*/
+-#define CMD_FOREIGN_OK	(1<<2)	/* command not restricted to XFS files	*/
++#define CMD_FOREIGN_OK	CMD_FLAG_FOREIGN_OK
+ 
+ extern char	*progname;
+ extern int	exitcode;
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 71af25f..7c8c673 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -113,6 +113,9 @@ fs_table_insert(
+ 			goto out_nodev;
+ 	}
+ 
++	if (!platform_test_xfs_path(dir))
++		flags |= FS_FOREIGN;
++
+ 	/*
+ 	 * Make copies of the directory and data device path.
+ 	 * The log device and real-time device, if non-null,
+@@ -301,8 +304,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	while ((mnt = getmntent(mtp)) != NULL) {
+-		if (strcmp(mnt->mnt_type, "xfs") != 0)
+-			continue;
+ 		if (!realpath(mnt->mnt_dir, rmnt_dir))
+ 			continue;
+ 		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
+@@ -360,8 +361,6 @@ fs_table_initialise_mounts(
+ 			return errno;
+ 
+ 	for (i = 0; i < count; i++) {
+-		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
+-			continue;
+ 		if (!realpath(stats[i].f_mntfromname, rmntfromname))
+ 			continue;
+ 		if (!realpath(stats[i].f_mntonname, rmntonname))
+diff --git a/quota/free.c b/quota/free.c
+index e9e0319..b9be954 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <stdbool.h>
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
+@@ -371,6 +372,7 @@ free_init(void)
+ 	free_cmd.args = _("[-bir] [-hn] [-f file]");
+ 	free_cmd.oneline = _("show free and used counts for blocks and inodes");
+ 	free_cmd.help = free_help;
++	free_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&free_cmd);
+ }
+diff --git a/quota/init.c b/quota/init.c
+index 52f7941..c46ce0f 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -24,6 +24,7 @@
+ char	*progname;
+ int	exitcode;
+ int	expert;
++bool	foreign_allowed = false;
+ 
+ static char **projopts;	/* table of project names (cmdline) */
+ static int nprojopts;	/* number of entries in name table. */
+@@ -83,15 +84,36 @@ init_args_command(
+ 
+ 	do {
+ 		fs_path = &fs_table[index++];
++		if (fs_path->fs_flags & FS_PROJECT_PATH)
++			continue;
++		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
++			continue;
+ 	} while ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count);
+ 
+ 	if (fs_path->fs_flags & FS_PROJECT_PATH)
+ 		return 0;
++	if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
++		return 0;
+ 	if (index > fs_count)
+ 		return 0;
+ 	return index;
+ }
+ 
++static int
++init_check_command(
++	const cmdinfo_t	*ct)
++{
++	if (fs_path &&
++	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
++	     (fs_path->fs_flags & FS_FOREIGN)) {
++		fprintf(stderr,
++	_("foreign mount active, %s command is for XFS filesystems only\n"),
++			ct->name);
++		return 0;
++	}
++	return 1;
++}
++
+ static void
+ init(
+ 	int		argc,
+@@ -104,7 +126,7 @@ init(
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+ 
+-	while ((c = getopt(argc, argv, "c:d:D:P:p:t:xV")) != EOF) {
++	while ((c = getopt(argc, argv, "c:d:D:fP:p:t:xV")) != EOF) {
+ 		switch (c) {
+ 		case 'c':	/* commands */
+ 			add_user_command(optarg);
+@@ -112,6 +134,8 @@ init(
+ 		case 'd':
+ 			add_project_opt(optarg);
+ 			break;
++		case 'f':
++			foreign_allowed = true;
+ 		case 't':
+ 			mtab_file = optarg;
+ 			break;
+@@ -140,6 +164,7 @@ init(
+ 
+ 	init_commands();
+ 	add_args_command(init_args_command);
++	add_check_command(init_check_command);
+ 
+ 	/*
+ 	 * Ensure that global commands don't end up with an invalid path pointer
+diff --git a/quota/init.h b/quota/init.h
+index 71706cb..6879855 100644
+--- a/quota/init.h
++++ b/quota/init.h
+@@ -19,6 +19,7 @@
+ extern char	*progname;
+ extern int	exitcode;
+ extern int	expert;
++extern bool	foreign_allowed;
+ 
+ extern void	edit_init(void);
+ extern void	free_init(void);
+diff --git a/quota/path.c b/quota/path.c
+index bdb8c98..a623d25 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -42,6 +42,7 @@ printpath(
+ 	if (number) {
+ 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+ 	}
++	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+ 	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+ 	if (path->fs_flags & FS_PROJECT_PATH) {
+ 		prj = getprprid(path->fs_prid);
+@@ -127,7 +128,7 @@ path_init(void)
+ 	path_cmd.cfunc = path_f;
+ 	path_cmd.argmin = 0;
+ 	path_cmd.argmax = 1;
+-	path_cmd.flags = CMD_FLAG_GLOBAL;
++	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	path_cmd.oneline = _("set current path, or show the list of paths");
+ 
+ 	print_cmd.name = "print";
+@@ -135,7 +136,7 @@ path_init(void)
+ 	print_cmd.cfunc = print_f;
+ 	print_cmd.argmin = 0;
+ 	print_cmd.argmax = 0;
+-	print_cmd.flags = CMD_FLAG_GLOBAL;
++	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 	print_cmd.oneline = _("list known mount points and projects");
+ 
+ 	if (expert)
+diff --git a/quota/project.c b/quota/project.c
+index fb8b9e1..e4e7a01 100644
+--- a/quota/project.c
++++ b/quota/project.c
+@@ -355,6 +355,7 @@ project_init(void)
+ 	project_cmd.argmax = -1;
+ 	project_cmd.oneline = _("check, setup or clear project quota trees");
+ 	project_cmd.help = project_help;
++	project_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert)
+ 		add_command(&project_cmd);
+diff --git a/quota/quot.c b/quota/quot.c
+index 2e583e5..ccc154f 100644
+--- a/quota/quot.c
++++ b/quota/quot.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <stdbool.h>
+ #include "command.h"
+ #include <ctype.h>
+ #include <pwd.h>
+diff --git a/quota/quota.c b/quota/quota.c
+index e0da7c0..d09e239 100644
+--- a/quota/quota.c
++++ b/quota/quota.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <stdbool.h>
+ #include "command.h"
+ #include <ctype.h>
+ #include <pwd.h>
+@@ -469,6 +470,7 @@ quota_init(void)
+ 	quota_cmd.args = _("[-bir] [-g|-p|-u] [-hnNv] [-f file] [id|name]...");
+ 	quota_cmd.oneline = _("show usage and limits");
+ 	quota_cmd.help = quota_help;
++	quota_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	add_command(&quota_cmd);
+ }
+diff --git a/quota/report.c b/quota/report.c
+index 70220b4..604f50d 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -15,7 +15,7 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+-
++#include <stdbool.h>
+ #include "command.h"
+ #include <sys/types.h>
+ #include <pwd.h>
+@@ -618,6 +618,8 @@ report_any_type(
+ 	if (type & XFS_USER_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_USER_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -629,6 +631,8 @@ report_any_type(
+ 	if (type & XFS_GROUP_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_GROUP_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -640,6 +644,8 @@ report_any_type(
+ 	if (type & XFS_PROJ_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
++			if (!foreign_allowed && (mount->fs_flags & FS_FOREIGN))
++				continue;
+ 			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+ 						XFS_PROJ_QUOTA, 0, NULL) < 0
+ 					&& errno != ENOENT && errno != ENOSYS)
+@@ -754,16 +760,17 @@ report_init(void)
+ 	dump_cmd.args = _("[-g|-p|-u] [-f file]");
+ 	dump_cmd.oneline = _("dump quota information for backup utilities");
+ 	dump_cmd.help = dump_help;
++	dump_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	report_cmd.name = "report";
+ 	report_cmd.altname = "repquota";
+ 	report_cmd.cfunc = report_f;
+ 	report_cmd.argmin = 0;
+ 	report_cmd.argmax = -1;
+-	report_cmd.flags = CMD_FLAG_GLOBAL;
+ 	report_cmd.args = _("[-bir] [-gpu] [-ahnt] [-f file]");
+ 	report_cmd.oneline = _("report filesystem quota information");
+ 	report_cmd.help = report_help;
++	report_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
+ 
+ 	if (expert) {
+ 		add_command(&dump_cmd);
+diff --git a/quota/state.c b/quota/state.c
+index 8186762..d134580 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -15,7 +15,7 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+-
++#include <stdbool.h>
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
+@@ -527,6 +527,7 @@ state_init(void)
+ 	off_cmd.args = _("[-gpu] [-v]");
+ 	off_cmd.oneline = _("permanently switch quota off for a path");
+ 	off_cmd.help = off_help;
++	off_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	state_cmd.name = "state";
+ 	state_cmd.cfunc = state_f;
+@@ -535,6 +536,7 @@ state_init(void)
+ 	state_cmd.args = _("[-gpu] [-a] [-v] [-f file]");
+ 	state_cmd.oneline = _("get overall quota state information");
+ 	state_cmd.help = state_help;
++	state_cmd.flags = CMD_FLAG_FOREIGN_OK;
+ 
+ 	enable_cmd.name = "enable";
+ 	enable_cmd.cfunc = enable_f;
+diff --git a/quota/util.c b/quota/util.c
+index e3c5398..cafd45f 100644
+--- a/quota/util.c
++++ b/quota/util.c
+@@ -17,6 +17,7 @@
+  */
+ 
+ #include <sys/types.h>
++#include <stdbool.h>
+ #include <pwd.h>
+ #include <grp.h>
+ #include <utmp.h>
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
