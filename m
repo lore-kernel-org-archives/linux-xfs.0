@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3886A7CDC
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AD4DF7CA1
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 00:29:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E25A88F8173
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 62EFB8F8094
+	for <xfs@oss.sgi.com>; Sun, 14 Aug 2016 22:29:37 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Cgo3FHyBRH9BV3HI (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Lz4u6NUmmhSraQLY (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:56 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 20/22] vfs: Move check_posix_acl and check_richacl out of
-	fs/namei.c
-Date: Tue, 16 Aug 2016 13:03:01 +0200
-Message-Id: <1471345383-15334-21-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Sun, 14 Aug 2016 22:29:35 -0700 (PDT)
+Date: Mon, 15 Aug 2016 13:29:33 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] tests/xfs: test log recovery metadata LSN ordering
+Message-ID: <20160815052933.GE27776@eguan.usersys.redhat.com>
+References: <1471004010-52985-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1471004010-52985-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,238 +25,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-By moving those functions into fs/posix_acl.c and fs/richacl.c, the
-ifdefs can be moved into include/linux/posix_acl.h and
-include/linux/richacl.h.  This may be seen as a small improvement.
+On Fri, Aug 12, 2016 at 08:13:30AM -0400, Brian Foster wrote:
+> XFS had a bug that lead to a possible out-of-order log recovery
+> situation (e.g., replay a stale modification from the log over more
+> recent metadata in destination buffer). This resulted in false
+> corruption reports during log recovery and thus mount failure.
+> 
+> This condition is caused by system crash or filesystem shutdown shortly
+> after a successful log recovery. Add a test to run a combined workload,
+> fs shutdown and log recovery loop known to reproduce the problem on
+> affected kernels.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> This test reproduces the problem described and addressed in the
+> following patchset:
+> 
+>   http://oss.sgi.com/pipermail/xfs/2016-August/050840.html
+> 
+> It runs anywhere from 50-100s in the couple of environments I've tested
+> on so far and reproduces the problem for me with 100% reliability. Note
+> that the bug only affects crc=1 kernels.
 
-Suggested-by: Jeff Layton <jlayton@redhat.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/namei.c                | 72 ++++-------------------------------------------
- fs/posix_acl.c            | 28 ++++++++++++++++++
- fs/richacl.c              | 28 ++++++++++++++++++
- include/linux/posix_acl.h |  5 ++++
- include/linux/richacl.h   |  8 ++++++
- 5 files changed, 74 insertions(+), 67 deletions(-)
+Looks good overall, and tested with the above patchset applied and test
+passed without problems. Some minor issues inline
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 63feb3c..3830ef1 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -258,73 +258,6 @@ void putname(struct filename *name)
- 		__putname(name);
- }
- 
--static int check_richacl(struct inode *inode, int mask)
--{
--#ifdef CONFIG_FS_RICHACL
--	if (mask & MAY_NOT_BLOCK) {
--		struct base_acl *base_acl;
--
--		base_acl = rcu_dereference(inode->i_acl);
--		if (!base_acl)
--			goto no_acl;
--		/* no ->get_richacl() calls in RCU mode... */
--		if (is_uncached_acl(base_acl))
--			return -ECHILD;
--		return richacl_permission(inode, richacl(base_acl),
--					  mask & ~MAY_NOT_BLOCK);
--	} else {
--		struct richacl *acl;
--
--		acl = get_richacl(inode);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		if (acl) {
--			int error = richacl_permission(inode, acl, mask);
--			richacl_put(acl);
--			return error;
--		}
--	}
--no_acl:
--#endif
--	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
--		    MAY_CHMOD | MAY_SET_TIMES)) {
--		/* File permission bits cannot grant this. */
--		return -EACCES;
--	}
--	return -EAGAIN;
--}
--
--static int check_posix_acl(struct inode *inode, int mask)
--{
--#ifdef CONFIG_FS_POSIX_ACL
--	if (mask & MAY_NOT_BLOCK) {
--		struct base_acl *base_acl;
--
--		base_acl = rcu_dereference(inode->i_acl);
--	        if (!base_acl)
--	                return -EAGAIN;
--		/* no ->get_acl() calls in RCU mode... */
--		if (is_uncached_acl(base_acl))
--			return -ECHILD;
--	        return posix_acl_permission(inode, posix_acl(base_acl),
--					    mask & ~MAY_NOT_BLOCK);
--	} else {
--		struct posix_acl *acl;
--
--		acl = get_acl(inode, ACL_TYPE_ACCESS);
--		if (IS_ERR(acl))
--			return PTR_ERR(acl);
--		if (acl) {
--			int error = posix_acl_permission(inode, acl, mask);
--			posix_acl_release(acl);
--			return error;
--		}
--	}
--#endif
--
--	return -EAGAIN;
--}
--
- /*
-  * This does the basic permission checking
-  */
-@@ -344,6 +277,11 @@ static int acl_permission_check(struct inode *inode, int mask)
- 		int error = check_richacl(inode, mask);
- 		if (error != -EAGAIN)
- 			return error;
-+		if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
-+			    MAY_CHMOD | MAY_SET_TIMES)) {
-+			/* File permission bits cannot grant this. */
-+			return -EACCES;
-+		}
- 	}
- 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
- 		mode >>= 6;
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index f7e1a29..6415675 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -374,6 +374,34 @@ check_perm:
- 	return -EACCES;
- }
- 
-+int check_posix_acl(struct inode *inode, int mask)
-+{
-+	if (mask & MAY_NOT_BLOCK) {
-+		struct base_acl *base_acl;
-+
-+		base_acl = rcu_dereference(inode->i_acl);
-+	        if (!base_acl)
-+	                return -EAGAIN;
-+		/* no ->get_acl() calls in RCU mode... */
-+		if (is_uncached_acl(base_acl))
-+			return -ECHILD;
-+	        return posix_acl_permission(inode, posix_acl(base_acl),
-+					    mask & ~MAY_NOT_BLOCK);
-+	} else {
-+		struct posix_acl *acl;
-+
-+		acl = get_acl(inode, ACL_TYPE_ACCESS);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
-+		if (acl) {
-+			int error = posix_acl_permission(inode, acl, mask);
-+			posix_acl_release(acl);
-+			return error;
-+		}
-+	}
-+	return -EAGAIN;
-+}
-+
- /*
-  * Modify acl when creating a new inode. The caller must ensure the acl is
-  * only referenced once.
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 1945691..ece9d0b 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -385,6 +385,34 @@ out:
- }
- EXPORT_SYMBOL_GPL(richacl_permission);
- 
-+int check_richacl(struct inode *inode, int mask)
-+{
-+	if (mask & MAY_NOT_BLOCK) {
-+		struct base_acl *base_acl;
-+
-+		base_acl = rcu_dereference(inode->i_acl);
-+		if (!base_acl)
-+			return -EAGAIN;
-+		/* no ->get_richacl() calls in RCU mode... */
-+		if (is_uncached_acl(base_acl))
-+			return -ECHILD;
-+		return richacl_permission(inode, richacl(base_acl),
-+					  mask & ~MAY_NOT_BLOCK);
-+	} else {
-+		struct richacl *acl;
-+
-+		acl = get_richacl(inode);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
-+		if (acl) {
-+			int error = richacl_permission(inode, acl, mask);
-+			richacl_put(acl);
-+			return error;
-+		}
-+	}
-+	return -EAGAIN;
-+}
-+
- /*
-  * Note: functions like richacl_allowed_to_who(), richacl_group_class_allowed(),
-  * and richacl_compute_max_masks() iterate through the entire acl in reverse
-diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
-index eafb358..07225c1 100644
---- a/include/linux/posix_acl.h
-+++ b/include/linux/posix_acl.h
-@@ -94,6 +94,7 @@ extern struct posix_acl *get_posix_acl(struct inode *, int);
- extern int set_posix_acl(struct inode *, int, struct posix_acl *);
- 
- #ifdef CONFIG_FS_POSIX_ACL
-+extern int check_posix_acl(struct inode *, int);
- extern int posix_acl_chmod(struct inode *, umode_t);
- extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
- 		struct posix_acl **);
-@@ -112,6 +113,10 @@ static inline void cache_no_acl(struct inode *inode)
- 	inode->i_default_acl = NULL;
- }
- #else
-+static inline int check_posix_acl(struct inode *inode, int mask) {
-+	return -EAGAIN;
-+}
-+
- static inline int posix_acl_chmod(struct inode *inode, umode_t mode)
- {
- 	return 0;
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 7530920..368e918 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -207,4 +207,12 @@ extern struct richacl *richacl_inherit(const struct richacl *, int);
- extern struct richacl *richacl_create(umode_t *, struct inode *);
- extern int set_richacl(struct inode *, struct richacl *);
- 
-+#ifdef CONFIG_FS_RICHACL
-+extern int check_richacl(struct inode *, int);
-+#else
-+static inline int check_richacl(struct inode *inode, int mask) {
-+	return -EAGAIN;
-+}
-+#endif  /* CONFIG_FS_RICHACL */
-+
- #endif /* __RICHACL_H */
--- 
-2.7.4
+> 
+> Brian
+> 
+>  tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |  2 ++
+>  tests/xfs/group   |  1 +
+>  3 files changed, 90 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 0000000..f9dd7f7
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,87 @@
+> +#! /bin/bash
+> +# FS QA Test No. 999
+> +#
+> +# Test XFS log recovery ordering on v5 superblock filesystems. XFS had a problem
+> +# where it would incorrectly replay older modifications from the log over more
+> +# recent versions of metadata due to failure to update metadata LSNs during log
+> +# recovery. This could result in false positive reports of corruption during log
+> +# recovery and permanent mount failure.
+> +#
+> +# To test this situation, run frequent shutdowns immediately after log recovery.
+> +# Ensure that log recovery does not recover stale modifications and cause
+> +# spurious corruption reports and/or mount failures.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	killall -9 fsstress > /dev/null 2>&1
+
+We need a '_require_command "$KILLALL_PROGA" killall' and use
+$KILLALL_PROG in the test.
+
+> +	_scratch_unmount > /dev/null 2>&1
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+
+I'm wondering if this test can be made generic by adding a
+"_require_scratch_shutdown"? Like generic/042 to generic/051
+
+Thanks,
+Eryu
 
 _______________________________________________
 xfs mailing list
