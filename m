@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 54AF37CA3
-	for <xfs@oss.sgi.com>; Wed, 10 Aug 2016 11:31:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 263908F8049
-	for <xfs@oss.sgi.com>; Wed, 10 Aug 2016 09:31:31 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id oJNxEHz5tjA0w86w (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 8FEAE7CA3
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 13:38:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 47D598F8138
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:47 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id nMkt8cf4wNF21tfj (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 10 Aug 2016 09:31:29 -0700 (PDT)
-Date: Wed, 10 Aug 2016 18:31:32 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Question on migrating data between PVs in xfs
-Message-ID: <20160810183132.0b9ae8e4@harpe.intellique.com>
-In-Reply-To: <20160810105639.GR16044@dastard>
-References: <20160809145046.GB5583@ic> <20160809223503.GJ19025@dastard>
-	<20160810092313.GA16193@ic> <20160810105639.GR16044@dastard>
-MIME-Version: 1.0
+	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:46 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id D98AF81110
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 18:38:45 +0000 (UTC)
+Received: from localhost.localdomain.com (vpn-56-109.rdu2.redhat.com
+	[10.10.56.109])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7FIcjrl018199
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 14:38:45 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH 0/3] xfs_quota: allow operation on ext4 for project quotas
+Date: Mon, 15 Aug 2016 13:38:28 -0500
+Message-Id: <1471286311-2730-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,25 +32,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, Wei Lin <lin.wei15@imperial.ac.uk>
+To: xfs@oss.sgi.com
 
-TGUgV2VkLCAxMCBBdWcgMjAxNiAyMDo1NjozOSArMTAwMApEYXZlIENoaW5uZXIgPGRhdmlkQGZy
-b21vcmJpdC5jb20+IMOpY3JpdmFpdDoKCj4gSGF2ZSB5b3UgbG9va2QgYXQgdXNpbmcgZG0tY2Fj
-aGUgaW5zdGVhZCBvZiBtb2RpZnlpbmcgdGhlCj4gZmlsZXN5c3RlbT8KPiAKCk9yIGJjYWNoZSwg
-ZmNhY2hlLCBvciBFbmhhbmNlSU8uIFNvIGZhciBmcm9tIG15IG93biB0ZXN0aW5nIGJjYWNoZSBp
-cwpzaWduaWZpY2FudGx5IGZhc3RlciBhbmQgZG0tY2FjaGUgYnkgZmFyIHRoZSBzbG93ZXN0IG9m
-IHRoZSBidW5jaCwgYnV0CmJjYWNoZSBuZWVkcyBzb21lIG1vcmUgbG92aW5nIChoaXMgbWFpbiBk
-ZXZlbG9wZXIgaXMgYnVzeSB3cml0aW5nCnNvbWUgbmV3IHRpZXJlZCwgY2FjaGluZyBmaWxlc3lz
-dGVtIGluc3RlYWQpLgoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwg
-ICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUK
-ICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAg
-ICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+
+Hello -
+
+This is a resubmission of Dave Chinner's original 2-patch series
+to enable using xfs_quota for project quotas on foreign filesystems
+(e.g. ext4).
+
+Original series: http://oss.sgi.com/archives/xfs/2016-02/msg00107.html
+
+Updated series:
+Patch 1: initial capabilities to enable xfs_quota use on foreign filesystems.
+Patch 2: userspace changes to accomodate hoisted ioctl defs in kernel
+Patch 3: additional changes to accomodate xfs_quota use on foreign filesystems.
+
+Questions and comments are welcome.
+
+Thanks-
+Bill
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
