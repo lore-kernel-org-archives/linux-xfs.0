@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CBC1A7CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 06:46:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D92B3040FD
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 04:46:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hVkOqzjcNYhfyzzQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 04:46:52 -0700 (PDT)
-Date: Mon, 15 Aug 2016 07:46:49 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] tests/xfs: test log recovery metadata LSN ordering
-Message-ID: <20160815114649.GA14796@bfoster.bfoster>
-References: <1471004010-52985-1-git-send-email-bfoster@redhat.com>
-	<20160815052933.GE27776@eguan.usersys.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 991827CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 10:09:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34A2930410D
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 08:09:15 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [206.12.19.147]) by
+	cuda.sgi.com with ESMTP id grKGMe4nheBTOJTA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 08:09:09 -0700 (PDT)
+Subject: Bug#834416: Acknowledgement (xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl
+	failed: Invalid argument)
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.834416.B834416.14712736082372@bugs.debian.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160815052933.GE27776@eguan.usersys.redhat.com>
+Date: Mon, 15 Aug 2016 17:01:14 +0200
+From: Marcel Meckel <debian@thermoman.de>
+In-Reply-To: <handler.834416.B.147126595515716.ack@bugs.debian.org>
+References: <e86b1937b452240cbe2457f6fdee8e9a@thermoman.de>
+	<handler.834416.B.147126595515716.ack@bugs.debian.org>
+Message-ID: <40a2c05a782734f022a89ee0e83be0e6@thermoman.de>
+Reply-To: Marcel Meckel <debian@thermoman.de>, 834416@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,127 +29,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: 834416@bugs.debian.org
 
-On Mon, Aug 15, 2016 at 01:29:33PM +0800, Eryu Guan wrote:
-> On Fri, Aug 12, 2016 at 08:13:30AM -0400, Brian Foster wrote:
-> > XFS had a bug that lead to a possible out-of-order log recovery
-> > situation (e.g., replay a stale modification from the log over more
-> > recent metadata in destination buffer). This resulted in false
-> > corruption reports during log recovery and thus mount failure.
-> > 
-> > This condition is caused by system crash or filesystem shutdown shortly
-> > after a successful log recovery. Add a test to run a combined workload,
-> > fs shutdown and log recovery loop known to reproduce the problem on
-> > affected kernels.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > This test reproduces the problem described and addressed in the
-> > following patchset:
-> > 
-> >   http://oss.sgi.com/pipermail/xfs/2016-August/050840.html
-> > 
-> > It runs anywhere from 50-100s in the couple of environments I've tested
-> > on so far and reproduces the problem for me with 100% reliability. Note
-> > that the bug only affects crc=1 kernels.
-> 
-> Looks good overall, and tested with the above patchset applied and test
-> passed without problems. Some minor issues inline
-> 
-> > 
-> > Brian
-> > 
-> >  tests/xfs/999     | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/999.out |  2 ++
-> >  tests/xfs/group   |  1 +
-> >  3 files changed, 90 insertions(+)
-> >  create mode 100755 tests/xfs/999
-> >  create mode 100644 tests/xfs/999.out
-> > 
-> > diff --git a/tests/xfs/999 b/tests/xfs/999
-> > new file mode 100755
-> > index 0000000..f9dd7f7
-> > --- /dev/null
-> > +++ b/tests/xfs/999
-> > @@ -0,0 +1,87 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 999
-> > +#
-> > +# Test XFS log recovery ordering on v5 superblock filesystems. XFS had a problem
-> > +# where it would incorrectly replay older modifications from the log over more
-> > +# recent versions of metadata due to failure to update metadata LSNs during log
-> > +# recovery. This could result in false positive reports of corruption during log
-> > +# recovery and permanent mount failure.
-> > +#
-> > +# To test this situation, run frequent shutdowns immediately after log recovery.
-> > +# Ensure that log recovery does not recover stale modifications and cause
-> > +# spurious corruption reports and/or mount failures.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +	killall -9 fsstress > /dev/null 2>&1
-> 
-> We need a '_require_command "$KILLALL_PROGA" killall' and use
-> $KILLALL_PROG in the test.
-> 
+Just had a chat in #xfs on freenode and it might be that a
+previous xfs_growfs under an older kernel didn't zero enough.
 
-Ok.
+When I recall it correctly the XFS filesystem in question was
+resized in the past under then stable Debian Wheezy (might even
+have been resized under Debian Squeeze).
 
-> > +	_scratch_unmount > /dev/null 2>&1
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs xfs
-> 
-> I'm wondering if this test can be made generic by adding a
-> "_require_scratch_shutdown"? Like generic/042 to generic/051
-> 
+Chat for reference:
 
-Hmm, probably. I'll give it a try, thanks!
+< bfoster> strange, seems like it is running a verifier on the
+            secondary sb's
+< bfoster> e.g., commit 1375cb65e, but that fix seems to go way back
+< bfoster> did growfs run and fail prior to the run with these
+            reported errors?
+< thermoman> bfoster: never had problems before
+< thermoman> but the FS might have been created with an older
+              xfsprogs and it has been definately be resized before
+< bfoster> or hmm, perhaps its remnants from a previous growfs
+< bfoster> ok, I think that makes more sense, you went from 109 ags
+            to 160 some odd ags
+< bfoster> and grow/repair is complaining about ags below that
+            109 threshold
+< bfoster> which suggests the previous grows didn't zero enough,
+            or whatever that old problem was
+< bfoster> I think the kernel you're on now should "do the right thing"
 
-Brian
+Might be related:
 
-> Thanks,
-> Eryu
+http://xfs.org/index.php/XFS_FAQ#Q:_I.27m_getting_.22Internal_error_xfs_sb_read_verify.22_errors_when_I_try_to_run_xfs_growfs_under_kernels_v3.10_through_v3.12
 
 _______________________________________________
 xfs mailing list
