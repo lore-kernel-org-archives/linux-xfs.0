@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3D6AA7CE7
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 021638F8165
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:32 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0252A7CA1
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 07:29:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3421CAC03E
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 05:29:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6ECamGwC4DiQi7AU (version=TLSv1.2
+	cuda.sgi.com with ESMTP id lgCAAjGM1cXvcWKg (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:30 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 15/22] richacl: Create-time inheritance
-Date: Tue, 16 Aug 2016 13:02:56 +0200
-Message-Id: <1471345383-15334-16-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 05:29:39 -0700 (PDT)
+Date: Mon, 15 Aug 2016 20:29:37 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2] tests/generic: test xfs log recovery metadata LSN
+	ordering
+Message-ID: <20160815122937.GJ27776@eguan.usersys.redhat.com>
+References: <1471262744-19668-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1471262744-19668-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,202 +26,172 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-When a new file is created, it can inherit an acl from its parent
-directory; this is similar to how default acls work in POSIX ACLs.
+On Mon, Aug 15, 2016 at 08:05:44AM -0400, Brian Foster wrote:
+> XFS had a bug that lead to a possible out-of-order log recovery
+> situation (e.g., replay a stale modification from the log over more
+> recent metadata in destination buffer). This resulted in false
+> corruption reports during log recovery and thus mount failure.
+> 
+> This condition is caused by system crash or filesystem shutdown shortly
+> after a successful log recovery. Add a test to run a combined workload,
+> fs shutdown and log recovery loop known to reproduce the problem on
+> affected kernels.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> v2:
+> - Use $KILLALL_PROG for killall command.
+> - Convert to generic test.
+> v1: http://marc.info/?l=linux-xfs&m=147100402211629&w=2
+> 
+>  tests/generic/999     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/999.out |  2 ++
+>  tests/generic/group   |  1 +
+>  3 files changed, 91 insertions(+)
+>  create mode 100755 tests/generic/999
+>  create mode 100644 tests/generic/999.out
+> 
+> diff --git a/tests/generic/999 b/tests/generic/999
+> new file mode 100755
+> index 0000000..f3257e4
+> --- /dev/null
+> +++ b/tests/generic/999
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test No. 999
+> +#
+> +# Test XFS log recovery ordering on v5 superblock filesystems. XFS had a problem
+> +# where it would incorrectly replay older modifications from the log over more
+> +# recent versions of metadata due to failure to update metadata LSNs during log
+> +# recovery. This could result in false positive reports of corruption during log
+> +# recovery and permanent mount failure.
+> +#
+> +# To test this situation, run frequent shutdowns immediately after log recovery.
+> +# Ensure that log recovery does not recover stale modifications and cause
+> +# spurious corruption reports and/or mount failures.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> +	_scratch_unmount > /dev/null 2>&1
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
 
-As with POSIX ACLs, if a file inherits an acl from its parent directory,
-the intersection between the create mode and the permissions granted by
-the inherited acl determines the file masks and file permission bits,
-and the umask is ignored.
+"xfs" should be "generic"?
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
----
- fs/richacl.c            | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   2 +
- 2 files changed, 153 insertions(+)
+> +_supported_os Linux
+> +
+> +_require_scratch
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 1022983..8051181 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -716,3 +716,154 @@ richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(richacl_equiv_mode);
-+
-+static inline bool
-+ace_inherits_to_directory(const struct richace *ace)
-+{
-+	if (ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+		return true;
-+	if ((ace->e_flags & RICHACE_FILE_INHERIT_ACE) &&
-+	    !(ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE))
-+		return true;
-+	return false;
-+}
-+
-+/**
-+ * richacl_inherit  -  compute the inherited acl of a new file
-+ * @dir_acl:	acl of the containing directory
-+ * @isdir:	inherit by a directory or non-directory?
-+ *
-+ * A directory can have acl entries which files and/or directories created
-+ * inside the directory will inherit.  This function computes the acl for such
-+ * a new file.  If there is no inheritable acl, it will return %NULL.
-+ */
-+struct richacl *
-+richacl_inherit(const struct richacl *dir_acl, int isdir)
-+{
-+	const struct richace *dir_ace;
-+	struct richacl *acl = NULL;
-+	struct richace *ace;
-+	int count = 0;
-+
-+	if (isdir) {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			if (dir_ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			else if (dir_ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERIT_ONLY_ACE;
-+			else
-+				ace->e_flags |= RICHACE_INHERIT_ONLY_ACE;
-+			ace++;
-+		}
-+	} else {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			/*
-+			 * RICHACE_DELETE_CHILD is meaningless for
-+			 * non-directories, so clear it.
-+			 */
-+			ace->e_mask &= ~RICHACE_DELETE_CHILD;
-+			ace++;
-+		}
-+	}
-+
-+	return acl;
-+}
-+
-+/*
-+ * richacl_inherit_inode  -  compute inherited acl and file mode
-+ * @dir_acl:	acl of the containing directory
-+ * @mode_p:	mode of the new inode
-+ *
-+ * The file permission bits in @mode_p must be set to the create mode by the
-+ * caller.
-+ *
-+ * If there is an inheritable acl, the maximum permissions that the acl grants
-+ * are computed and the file masks of the new acl are set accordingly.
-+ */
-+static struct richacl *
-+richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
-+{
-+	struct richacl *acl;
-+	umode_t mode = *mode_p;
-+
-+	acl = richacl_inherit(dir_acl, S_ISDIR(mode));
-+	if (acl) {
-+		if (richacl_equiv_mode(acl, &mode) == 0) {
-+			*mode_p &= mode;
-+			richacl_put(acl);
-+			acl = NULL;
-+		} else {
-+			richacl_compute_max_masks(acl);
-+			/*
-+			 * Ensure that the acl will not grant any permissions
-+			 * beyond the create mode.
-+			 */
-+			acl->a_flags |= RICHACL_MASKED;
-+			acl->a_owner_mask &=
-+				richacl_mode_to_mask(mode >> 6);
-+			acl->a_group_mask &=
-+				richacl_mode_to_mask(mode >> 3);
-+			acl->a_other_mask &=
-+				richacl_mode_to_mask(mode);
-+		}
-+	} else
-+		*mode_p &= ~current_umask();
-+
-+	return acl;
-+}
-+
-+/**
-+ * richacl_create  -  filesystem create helper
-+ * @mode_p:	mode of the new inode
-+ * @dir:	containing directory
-+ *
-+ * Compute the inherited acl for a new inode.  If there is no acl to inherit,
-+ * apply the umask.  Use when creating a new inode on a richacl enabled file
-+ * system.
-+ */
-+struct richacl *richacl_create(umode_t *mode_p, struct inode *dir)
-+{
-+	struct richacl *dir_acl, *acl = NULL;
-+
-+	if (S_ISLNK(*mode_p))
-+		return NULL;
-+	dir_acl = get_richacl(dir);
-+	if (dir_acl) {
-+		if (IS_ERR(dir_acl))
-+			return dir_acl;
-+		acl = richacl_inherit_inode(dir_acl, mode_p);
-+		richacl_put(dir_acl);
-+	} else
-+		*mode_p &= ~current_umask();
-+	return acl;
-+}
-+EXPORT_SYMBOL_GPL(richacl_create);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index a865f37..6354ef0 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -191,5 +191,7 @@ extern int richacl_permission(struct inode *, const struct richacl *, int);
- extern void richacl_compute_max_masks(struct richacl *);
- extern int richacl_chmod(struct inode *, umode_t);
- extern int richacl_equiv_mode(const struct richacl *, umode_t *);
-+extern struct richacl *richacl_inherit(const struct richacl *, int);
-+extern struct richacl *richacl_create(umode_t *, struct inode *);
- 
- #endif /* __RICHACL_H */
--- 
-2.7.4
+Missed a "_require_scratch_shutdown"?
+
+> +_require_command "$KILLALL_PROG"
+> +
+> +rm -f $seqres.full
+> +
+> +echo "Silence is golden."
+> +
+> +_scratch_mkfs_xfs >> $seqres.full 2>&1
+
+If this is a generic test, _scratch_mkfs should be used here.
+
+> +_scratch_mount || _fail "mount failed"
+> +
+> +for i in $(seq 1 50); do
+> +	($FSSTRESS_PROG -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
+> +		> /dev/null 2>&1
+> +
+> +	# purposely include 0 second sleeps to test shutdown immediately after
+> +	# recovery
+> +	sleep $((RANDOM % 3))
+> +	$XFS_IO_PROG -xc shutdown $SCRATCH_MNT
+> +
+> +	ps -e | grep fsstress > /dev/null 2>&1
+> +	while [ $? == 0 ]; do
+
+Better to use "-eq" for integers.
+
+Thanks,
+Eryu
+
+> +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> +		wait > /dev/null 2>&1
+> +		ps -e | grep fsstress > /dev/null 2>&1
+> +	done
+> +
+> +	# quit if mount fails so we don't shutdown the host fs
+> +	_scratch_cycle_mount || _fail "cycle mount failed"
+> +done
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/999.out b/tests/generic/999.out
+> new file mode 100644
+> index 0000000..d254382
+> --- /dev/null
+> +++ b/tests/generic/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden.
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 4acae99..605a244 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -375,3 +375,4 @@
+>  370 auto quick richacl
+>  371 auto quick enospc prealloc
+>  372 auto quick clone
+> +999 auto log metadata
+> -- 
+> 2.5.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
