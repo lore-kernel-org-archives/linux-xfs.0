@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 94F527CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:43:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 66F8A8F80C0
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 09:43:13 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C97987CA4
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 25154AC066
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:29 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id evls1uBrJBrZxdmm (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 4dwXrKUpIm7hkwTS (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 09:43:12 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id A0FBAC04B317
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 16:43:11 +0000 (UTC)
-Subject: Re: [PATCH] xfs_quota: wire up XFS_GETQSTATV
-References: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
-	<20160815163859.GA7193@zlang.usersys.redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <cc9c36c1-79ad-60af-6938-66d9e0e73b2c@redhat.com>
-Date: Mon, 15 Aug 2016 11:43:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160815163859.GA7193@zlang.usersys.redhat.com>
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:27 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 03/22] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
+	permission flags
+Date: Tue, 16 Aug 2016 13:02:44 +0200
+Message-Id: <1471345383-15334-4-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,52 +24,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On 8/15/16 11:38 AM, Zorro Lang wrote:
-> From the result of strace, we can see:
->   quotactl(0x5808 /* Q_??? */|USRQUOTA, "/dev/mapper/testvg-scratchdev", 0, 0x7ffdbbda94c0) = -1 EINVAL (Invalid argument)
->   quotactl(Q_XGETQSTAT|USRQUOTA, "/dev/mapper/testvg-scratchdev", 0, {version=1, ...}) = 0
-> 
-> So the first call for XFS_GETQSTATV return EINVAL.
-> 
-> In linux kernel quota_getxstatev() function, the logic is:
->   /* If this kernel doesn't support user specified version, fail */
->   switch (fqs.qs_version) {
->   case FS_QSTATV_VERSION1:
->         break;
->   default:
->         return -EINVAL;
->   }
-> 
-> So we need to set qa_version to FS_QSTATV_VERSION1, before
-> we call XFS_GETQSTATV. And as we talked on IRC, it test passed if I set
-> 
->   sv.qs_version = 1;
-> 
-> at here.
-> 
-> So maybe a V2 patch is needed to fix this problem:)
+Normally, deleting a file requires MAY_WRITE access to the parent
+directory.  With richacls, a file may be deleted with MAY_DELETE_CHILD access
+to the parent directory or with MAY_DELETE_SELF access to the file.
 
-Yep, kernel commit said:
+To support that, pass the MAY_DELETE_CHILD mask flag to inode_permission()
+when checking for delete access inside a directory, and MAY_DELETE_SELF
+when checking for delete access to a file itself.
 
-| Callers of the new quotactl command have to set the version of the data
-| structure being passed, and kernel will fill as much data as requested.
-| If the kernel does not support the user-space provided version, EINVAL
-| will be returned. User-space can reduce the version number and call the same
-| quotactl again.
+The MAY_DELETE_SELF permission overrides the sticky directory check.
 
-but this isn't documented anywhere else, AFAICT; this call still isn't
-documented in the quotactl manpage.  o_O
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Steve French <steve.french@primarydata.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/namei.c         | 20 +++++++++++++-------
+ include/linux/fs.h |  2 ++
+ 2 files changed, 15 insertions(+), 7 deletions(-)
 
-I'll fix it up, thanks for catching it!
-
--Eric
+diff --git a/fs/namei.c b/fs/namei.c
+index 6cd7a10..4292c33 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -463,9 +463,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
+  * this, letting us set arbitrary permissions for filesystem access without
+  * changing the "normal" UIDs which are used for other things.
+  *
+- * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE, or
+- * MAY_CREATE_DIR are set.  That way, file systems that don't support these
+- * permissions will check for MAY_WRITE instead.
++ * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE,
++ * MAY_CREATE_DIR, or MAY_DELETE_CHILD are set.  That way, file systems that
++ * don't support these permissions will check for MAY_WRITE instead.
+  */
+ int inode_permission(struct inode *inode, int mask)
+ {
+@@ -2780,14 +2780,20 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
+ 	BUG_ON(victim->d_parent->d_inode != dir);
+ 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
+ 
+-	error = inode_permission(dir, mask);
++	error = inode_permission(dir, mask | MAY_WRITE | MAY_DELETE_CHILD);
++	if (!error && check_sticky(dir, inode))
++		error = -EPERM;
++	if (error && IS_RICHACL(inode) &&
++	    inode_permission(inode, MAY_DELETE_SELF) == 0 &&
++	    inode_permission(dir, mask) == 0)
++		error = 0;
+ 	if (error)
+ 		return error;
+ 	if (IS_APPEND(dir))
+ 		return -EPERM;
+ 
+-	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
+-	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
++	if (IS_APPEND(inode) || IS_IMMUTABLE(inode) ||
++	    IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
+ 		return -EPERM;
+ 	if (isdir) {
+ 		if (!d_is_dir(victim))
+@@ -2805,7 +2811,7 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
+ 
+ static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
+ {
+-	return may_delete_or_replace(dir, victim, isdir, MAY_WRITE | MAY_EXEC);
++	return may_delete_or_replace(dir, victim, isdir, MAY_EXEC);
+ }
+ 
+ static int may_replace(struct inode *dir, struct dentry *victim, bool isdir)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 99bbd6c..907869d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -86,6 +86,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ #define MAY_NOT_BLOCK		0x00000080
+ #define MAY_CREATE_FILE		0x00000100
+ #define MAY_CREATE_DIR		0x00000200
++#define MAY_DELETE_CHILD	0x00000400
++#define MAY_DELETE_SELF		0x00000800
+ 
+ /*
+  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
