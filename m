@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DB87E7CA3
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:30 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 968CD7CCD
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2699DAC061
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:24 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 69AF7304179
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id y0qj4Bin3DqEGlEU (version=TLSv1.2
+	cuda.sgi.com with ESMTP id pRU286OUHr2A6jrG (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:12 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:49 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 00/22] Richacls (Core and Ext4)
-Date: Tue, 16 Aug 2016 13:02:41 +0200
-Message-Id: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v25 07/22] richacl: Permission mapping functions
+Date: Tue, 16 Aug 2016 13:02:48 +0200
+Message-Id: <1471345383-15334-8-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,113 +31,206 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Here is another update of the richacl patches.  Changes since the last posting
-(https://lwn.net/Articles/695289/):
+We need to map from POSIX permissions to NFSv4 permissions when a
+chmod() is done, from NFSv4 permissions to POSIX permissions when an acl
+is set (which implicitly sets the file permission bits), and from the
+MAY_READ/MAY_WRITE/MAY_EXEC/MAY_APPEND flags to NFSv4 permissions when
+doing an access check in a richacl.
 
- * Rebase on top of the 4.8-rc2 kernel.
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c                 | 112 +++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h      |   2 +
+ include/uapi/linux/richacl.h |  44 +++++++++++++++++
+ 3 files changed, 158 insertions(+)
 
-
-As always, the complete patch queue is available here:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
-        richacl-2016-08-16
-
-
-The richacl user-space utilitites, man pages, and test suite are available
-here:
-
-  https://github.com/andreas-gruenbacher/richacl
-
-
-Changes to other user-space packages for richacl:
-
-  https://github.com/andreas-gruenbacher/coreutils
-  https://github.com/andreas-gruenbacher/e2fsprogs
-  https://github.com/andreas-gruenbacher/samba
-  https://github.com/andreas-gruenbacher/xfsprogs-dev
-  https://github.com/andreas-gruenbacher/nfs-utils
-
-
-Please see the richacl homepage for more information:
-
-  http://www.bestbits.at/richacl/
-
-
-Thanks,
-Andreas
-
-
-Andreas Gruenbacher (20):
-  vfs: Add IS_ACL() and IS_RICHACL() tests
-  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
-  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
-  vfs: Make the inode passed to inode_change_ok non-const
-  vfs: Add permission flags for setting file attributes
-  richacl: In-memory representation and helper functions
-  richacl: Permission mapping functions
-  richacl: Permission check algorithm
-  richacl: Compute maximum file masks from an acl
-  vfs: Cache base_acl objects in inodes
-  vfs: Add get_richacl and set_richacl inode operations
-  vfs: Cache richacl in struct inode
-  richacl: Update the file masks in chmod()
-  richacl: Check if an acl is equivalent to a file mode
-  richacl: Create-time inheritance
-  richacl: Automatic Inheritance
-  richacl: xattr mapping functions
-  richacl: Add richacl xattr handler
-  vfs: Add richacl permission checking
-  vfs: Move check_posix_acl and check_richacl out of fs/namei.c
-
-Aneesh Kumar K.V (2):
-  ext4: Add richacl support
-  ext4: Add richacl feature flag
-
- drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
- fs/9p/acl.c                                     |   8 +-
- fs/Kconfig                                      |   3 +
- fs/Makefile                                     |   1 +
- fs/attr.c                                       |  81 +-
- fs/ext4/Kconfig                                 |  11 +
- fs/ext4/Makefile                                |   1 +
- fs/ext4/ext4.h                                  |   6 +-
- fs/ext4/file.c                                  |   3 +
- fs/ext4/ialloc.c                                |  11 +-
- fs/ext4/inode.c                                 |   5 +-
- fs/ext4/namei.c                                 |   5 +
- fs/ext4/richacl.c                               | 134 ++++
- fs/ext4/richacl.h                               |  40 +
- fs/ext4/super.c                                 |  49 +-
- fs/ext4/xattr.c                                 |   7 +
- fs/f2fs/acl.c                                   |   4 +-
- fs/inode.c                                      |  43 +-
- fs/jffs2/acl.c                                  |   6 +-
- fs/namei.c                                      | 114 +--
- fs/nfs/nfs3acl.c                                |  14 +-
- fs/posix_acl.c                                  |  97 ++-
- fs/richacl.c                                    | 937 ++++++++++++++++++++++++
- fs/richacl_xattr.c                              | 222 ++++++
- include/linux/acl.h                             |  15 +
- include/linux/fs.h                              |  65 +-
- include/linux/posix_acl.h                       |  24 +-
- include/linux/richacl.h                         | 218 ++++++
- include/linux/richacl_xattr.h                   |  31 +
- include/uapi/linux/Kbuild                       |   2 +
- include/uapi/linux/fs.h                         |   3 +-
- include/uapi/linux/richacl.h                    | 152 ++++
- include/uapi/linux/richacl_xattr.h              |  44 ++
- include/uapi/linux/xattr.h                      |   2 +
- 34 files changed, 2197 insertions(+), 163 deletions(-)
- create mode 100644 fs/ext4/richacl.c
- create mode 100644 fs/ext4/richacl.h
- create mode 100644 fs/richacl.c
- create mode 100644 fs/richacl_xattr.c
- create mode 100644 include/linux/acl.h
- create mode 100644 include/linux/richacl.h
- create mode 100644 include/linux/richacl_xattr.h
- create mode 100644 include/uapi/linux/richacl.h
- create mode 100644 include/uapi/linux/richacl_xattr.h
-
+diff --git a/fs/richacl.c b/fs/richacl.c
+index bcc6591..2072cf4 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -63,3 +63,115 @@ richace_copy(struct richace *to, const struct richace *from)
+ {
+ 	memcpy(to, from, sizeof(struct richace));
+ }
++
++/*
++ * richacl_mask_to_mode  -  compute the file permission bits from mask
++ * @mask:	%RICHACE_* permission mask
++ *
++ * Compute the file permission bits corresponding to a particular set of
++ * richacl permissions.
++ *
++ * See richacl_masks_to_mode().
++ */
++static int
++richacl_mask_to_mode(unsigned int mask)
++{
++	int mode = 0;
++
++	if (mask & RICHACE_POSIX_MODE_READ)
++		mode |= S_IROTH;
++	if (mask & RICHACE_POSIX_MODE_WRITE)
++		mode |= S_IWOTH;
++	if (mask & RICHACE_POSIX_MODE_EXEC)
++		mode |= S_IXOTH;
++
++	return mode;
++}
++
++/**
++ * richacl_masks_to_mode  -  compute file permission bits from file masks
++ *
++ * When setting a richacl, we set the file permission bits to indicate maximum
++ * permissions: for example, we set the Write permission when a mask contains
++ * RICHACE_APPEND_DATA even if it does not also contain RICHACE_WRITE_DATA.
++ *
++ * Permissions which are not in RICHACE_POSIX_MODE_READ,
++ * RICHACE_POSIX_MODE_WRITE, or RICHACE_POSIX_MODE_EXEC cannot be represented
++ * in the file permission bits.  Such permissions can still be effective, but
++ * not for new files or after a chmod(); they must be explicitly enabled in the
++ * richacl.
++ */
++int
++richacl_masks_to_mode(const struct richacl *acl)
++{
++	return richacl_mask_to_mode(acl->a_owner_mask) << 6 |
++	       richacl_mask_to_mode(acl->a_group_mask) << 3 |
++	       richacl_mask_to_mode(acl->a_other_mask);
++}
++EXPORT_SYMBOL_GPL(richacl_masks_to_mode);
++
++/**
++ * richacl_mode_to_mask  - compute a file mask from the lowest three mode bits
++ * @mode:	mode to convert to richacl permissions
++ *
++ * When the file permission bits of a file are set with chmod(), this specifies
++ * the maximum permissions that processes will get.  All permissions beyond
++ * that will be removed from the file masks, and become ineffective.
++ */
++unsigned int
++richacl_mode_to_mask(umode_t mode)
++{
++	unsigned int mask = 0;
++
++	if (mode & S_IROTH)
++		mask |= RICHACE_POSIX_MODE_READ;
++	if (mode & S_IWOTH)
++		mask |= RICHACE_POSIX_MODE_WRITE;
++	if (mode & S_IXOTH)
++		mask |= RICHACE_POSIX_MODE_EXEC;
++
++	return mask;
++}
++
++/**
++ * richacl_want_to_mask  - convert the iop->permission want argument to a mask
++ * @want:	@want argument of the permission inode operation
++ *
++ * When checking for append, create file, create dir, or delete child access,
++ * MAY_WRITE is also set in @want.
++ */
++static unsigned int
++richacl_want_to_mask(unsigned int want)
++{
++	unsigned int mask = 0;
++
++	if (want & MAY_READ)
++		mask |= RICHACE_READ_DATA;
++	if (want & MAY_DELETE_SELF)
++		mask |= RICHACE_DELETE;
++	if (want & MAY_TAKE_OWNERSHIP)
++		mask |= RICHACE_WRITE_OWNER;
++	if (want & MAY_CHMOD)
++		mask |= RICHACE_WRITE_ACL;
++	if (want & MAY_SET_TIMES)
++		mask |= RICHACE_WRITE_ATTRIBUTES;
++	if (want & MAY_EXEC)
++		mask |= RICHACE_EXECUTE;
++	/*
++	 * differentiate MAY_WRITE from these request
++	 */
++	if (want & (MAY_APPEND |
++		    MAY_CREATE_FILE | MAY_CREATE_DIR |
++		    MAY_DELETE_CHILD)) {
++		if (want & MAY_APPEND)
++			mask |= RICHACE_APPEND_DATA;
++		if (want & MAY_CREATE_FILE)
++			mask |= RICHACE_ADD_FILE;
++		if (want & MAY_CREATE_DIR)
++			mask |= RICHACE_ADD_SUBDIRECTORY;
++		if (want & MAY_DELETE_CHILD)
++			mask |= RICHACE_DELETE_CHILD;
++	} else if (want & MAY_WRITE)
++		mask |= RICHACE_WRITE_DATA;
++	return mask;
++}
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index edb8480..70923f8 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -175,5 +175,7 @@ richace_is_same_identifier(const struct richace *a, const struct richace *b)
+ extern struct richacl *richacl_alloc(int, gfp_t);
+ extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+ extern void richace_copy(struct richace *, const struct richace *);
++extern int richacl_masks_to_mode(const struct richacl *);
++extern unsigned int richacl_mode_to_mask(umode_t);
+ 
+ #endif /* __RICHACL_H */
+diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+index 08856f8..1ed48ac 100644
+--- a/include/uapi/linux/richacl.h
++++ b/include/uapi/linux/richacl.h
+@@ -96,4 +96,48 @@
+ 	RICHACE_WRITE_OWNER |					\
+ 	RICHACE_SYNCHRONIZE )
+ 
++/*
++ * The POSIX permissions are supersets of the following richacl permissions:
++ *
++ *  - MAY_READ maps to READ_DATA or LIST_DIRECTORY, depending on the type
++ *    of the file system object.
++ *
++ *  - MAY_WRITE maps to WRITE_DATA or RICHACE_APPEND_DATA for files, and to
++ *    ADD_FILE, RICHACE_ADD_SUBDIRECTORY, or RICHACE_DELETE_CHILD for directories.
++ *
++ *  - MAY_EXECUTE maps to RICHACE_EXECUTE.
++ *
++ *  (Some of these richacl permissions have the same bit values.)
++ */
++#define RICHACE_POSIX_MODE_READ (			\
++		RICHACE_READ_DATA |			\
++		RICHACE_LIST_DIRECTORY)
++#define RICHACE_POSIX_MODE_WRITE (			\
++		RICHACE_WRITE_DATA |			\
++		RICHACE_ADD_FILE |			\
++		RICHACE_APPEND_DATA |			\
++		RICHACE_ADD_SUBDIRECTORY |		\
++		RICHACE_DELETE_CHILD)
++#define RICHACE_POSIX_MODE_EXEC RICHACE_EXECUTE
++#define RICHACE_POSIX_MODE_ALL (			\
++		RICHACE_POSIX_MODE_READ |		\
++		RICHACE_POSIX_MODE_WRITE |		\
++		RICHACE_POSIX_MODE_EXEC)
++
++/*
++ * These permissions are always allowed no matter what the acl says.
++ */
++#define RICHACE_POSIX_ALWAYS_ALLOWED (			\
++		RICHACE_SYNCHRONIZE |			\
++		RICHACE_READ_ATTRIBUTES |		\
++		RICHACE_READ_ACL)
++
++/*
++ * The owner is implicitly granted these permissions under POSIX.
++ */
++#define RICHACE_POSIX_OWNER_ALLOWED (			\
++		RICHACE_WRITE_ATTRIBUTES |		\
++		RICHACE_WRITE_OWNER |			\
++		RICHACE_WRITE_ACL)
++
+ #endif /* __UAPI_RICHACL_H */
 -- 
 2.7.4
 
