@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E7A0C7CA0
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 18:43:08 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 80B2E7CEC
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E0ED30404E
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:08 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id jRZu3bVD0JSDCfGq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 16:43:07 -0700 (PDT)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/7] iomap: fiemap should honor the FIEMAP_FLAG_SYNC flag
-Date: Sat, 13 Aug 2016 16:42:57 -0700
-Message-Id: <1471131781-14107-4-git-send-email-hch@lst.de>
-In-Reply-To: <1471131781-14107-1-git-send-email-hch@lst.de>
-References: <1471131781-14107-1-git-send-email-hch@lst.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 362818F8172
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id YeONH7vwO8GpT70a (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:40 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 17/22] richacl: xattr mapping functions
+Date: Tue, 16 Aug 2016 13:02:58 +0200
+Message-Id: <1471345383-15334-18-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +28,316 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Dave Chinner <dchinner@redhat.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Map between "system.richacl" xattrs and the in-kernel representation.
 
-The flag is checked as supported, but then we do an unconditional
-sync of the file, regardless of whether the flag is set or not. Make
-the sync conditional on having the FIEMAP_FLAG_SYNC flag set.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/iomap.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ fs/Makefile                        |   2 +-
+ fs/richacl_xattr.c                 | 161 +++++++++++++++++++++++++++++++++++++
+ include/linux/richacl_xattr.h      |  29 +++++++
+ include/uapi/linux/Kbuild          |   1 +
+ include/uapi/linux/richacl_xattr.h |  44 ++++++++++
+ include/uapi/linux/xattr.h         |   2 +
+ 6 files changed, 238 insertions(+), 1 deletion(-)
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 74712e2..56c19e6 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -467,9 +467,11 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- 	if (ret)
- 		return ret;
+diff --git a/fs/Makefile b/fs/Makefile
+index 0004fc5..163ec8c 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -50,7 +50,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
  
--	ret = filemap_write_and_wait(inode->i_mapping);
--	if (ret)
--		return ret;
-+	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
-+		ret = filemap_write_and_wait(inode->i_mapping);
-+		if (ret)
-+			return ret;
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+-obj-$(CONFIG_FS_RICHACL)	+= richacl.o
++obj-$(CONFIG_FS_RICHACL)	+= richacl.o richacl_xattr.o
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
+new file mode 100644
+index 0000000..dc1ad36
+--- /dev/null
++++ b/fs/richacl_xattr.c
+@@ -0,0 +1,161 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <linux/sched.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/richacl_xattr.h>
++
++/**
++ * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
++ */
++struct richacl *
++richacl_from_xattr(struct user_namespace *user_ns,
++		   const void *value, size_t size, int invalid_error)
++{
++	const struct richacl_xattr *xattr_acl = value;
++	const struct richace_xattr *xattr_ace = (void *)(xattr_acl + 1);
++	struct richacl *acl;
++	struct richace *ace;
++	int count;
++
++	if (size < sizeof(*xattr_acl) ||
++	    xattr_acl->a_version != RICHACL_XATTR_VERSION ||
++	    (xattr_acl->a_flags & ~RICHACL_VALID_FLAGS))
++		goto invalid;
++	size -= sizeof(*xattr_acl);
++	count = le16_to_cpu(xattr_acl->a_count);
++	if (count > RICHACL_XATTR_MAX_COUNT)
++		goto invalid;
++	if (size != count * sizeof(*xattr_ace))
++		goto invalid;
++
++	acl = richacl_alloc(count, GFP_NOFS);
++	if (!acl)
++		return ERR_PTR(-ENOMEM);
++
++	acl->a_flags = xattr_acl->a_flags;
++	acl->a_owner_mask = le32_to_cpu(xattr_acl->a_owner_mask);
++	if (acl->a_owner_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_group_mask = le32_to_cpu(xattr_acl->a_group_mask);
++	if (acl->a_group_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_other_mask = le32_to_cpu(xattr_acl->a_other_mask);
++	if (acl->a_other_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++
++	richacl_for_each_entry(ace, acl) {
++		ace->e_type  = le16_to_cpu(xattr_ace->e_type);
++		ace->e_flags = le16_to_cpu(xattr_ace->e_flags);
++		ace->e_mask  = le32_to_cpu(xattr_ace->e_mask);
++
++		if (ace->e_flags & ~RICHACE_VALID_FLAGS)
++			goto put_invalid;
++		if (ace->e_flags & RICHACE_SPECIAL_WHO) {
++			ace->e_id.special = le32_to_cpu(xattr_ace->e_id);
++			if (ace->e_id.special > RICHACE_EVERYONE_SPECIAL_ID)
++				goto put_invalid;
++		} else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP) {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.gid = make_kgid(user_ns, id);
++			if (!gid_valid(ace->e_id.gid))
++				goto put_invalid;
++		} else {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.uid = make_kuid(user_ns, id);
++			if (!uid_valid(ace->e_id.uid))
++				goto put_invalid;
++		}
++		if (ace->e_type > RICHACE_ACCESS_DENIED_ACE_TYPE ||
++		    (ace->e_mask & ~RICHACE_VALID_MASK))
++			goto put_invalid;
++
++		xattr_ace++;
 +	}
++
++	return acl;
++
++put_invalid:
++	richacl_put(acl);
++invalid:
++	return ERR_PTR(invalid_error);
++}
++EXPORT_SYMBOL_GPL(richacl_from_xattr);
++
++/**
++ * richacl_xattr_size  -  compute the size of the xattr representation of @acl
++ */
++size_t
++richacl_xattr_size(const struct richacl *acl)
++{
++	size_t size = sizeof(struct richacl_xattr);
++
++	size += sizeof(struct richace_xattr) * acl->a_count;
++	return size;
++}
++EXPORT_SYMBOL_GPL(richacl_xattr_size);
++
++/**
++ * richacl_to_xattr  -  convert @acl into its xattr representation
++ * @acl:	the richacl to convert
++ * @buffer:	buffer for the result
++ * @size:	size of @buffer
++ */
++int
++richacl_to_xattr(struct user_namespace *user_ns,
++		 const struct richacl *acl, void *buffer, size_t size)
++{
++	struct richacl_xattr *xattr_acl = buffer;
++	struct richace_xattr *xattr_ace;
++	const struct richace *ace;
++	size_t real_size;
++
++	real_size = richacl_xattr_size(acl);
++	if (!buffer)
++		return real_size;
++	if (real_size > size)
++		return -ERANGE;
++
++	xattr_acl->a_version = RICHACL_XATTR_VERSION;
++	xattr_acl->a_flags = acl->a_flags;
++	xattr_acl->a_count = cpu_to_le16(acl->a_count);
++
++	xattr_acl->a_owner_mask = cpu_to_le32(acl->a_owner_mask);
++	xattr_acl->a_group_mask = cpu_to_le32(acl->a_group_mask);
++	xattr_acl->a_other_mask = cpu_to_le32(acl->a_other_mask);
++
++	xattr_ace = (void *)(xattr_acl + 1);
++	richacl_for_each_entry(ace, acl) {
++		xattr_ace->e_type = cpu_to_le16(ace->e_type);
++		xattr_ace->e_flags = cpu_to_le16(ace->e_flags);
++		xattr_ace->e_mask = cpu_to_le32(ace->e_mask);
++		if (ace->e_flags & RICHACE_SPECIAL_WHO)
++			xattr_ace->e_id = cpu_to_le32(ace->e_id.special);
++		else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP)
++			xattr_ace->e_id =
++				cpu_to_le32(from_kgid(user_ns, ace->e_id.gid));
++		else
++			xattr_ace->e_id =
++				cpu_to_le32(from_kuid(user_ns, ace->e_id.uid));
++		xattr_ace++;
++	}
++	return real_size;
++}
++EXPORT_SYMBOL_GPL(richacl_to_xattr);
+diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..0efa14b
+--- /dev/null
++++ b/include/linux/richacl_xattr.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#ifndef __RICHACL_XATTR_H
++#define __RICHACL_XATTR_H
++
++#include <uapi/linux/richacl_xattr.h>
++#include <linux/richacl.h>
++
++extern struct richacl *richacl_from_xattr(struct user_namespace *, const void *,
++					  size_t, int);
++extern size_t richacl_xattr_size(const struct richacl *);
++extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
++			    void *, size_t);
++
++#endif /* __RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index c983a6c..5c88a3a 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -357,6 +357,7 @@ header-y += reiserfs_fs.h
+ header-y += reiserfs_xattr.h
+ header-y += resource.h
+ header-y += richacl.h
++header-y += richacl_xattr.h
+ header-y += rfkill.h
+ header-y += rio_cm_cdev.h
+ header-y += rio_mport_cdev.h
+diff --git a/include/uapi/linux/richacl_xattr.h b/include/uapi/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..20da204
+--- /dev/null
++++ b/include/uapi/linux/richacl_xattr.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This file is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This file is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ */
++
++#ifndef __UAPI_RICHACL_XATTR_H
++#define __UAPI_RICHACL_XATTR_H
++
++#include <linux/types.h>
++#include <linux/limits.h>
++
++struct richace_xattr {
++	__le16	e_type;
++	__le16	e_flags;
++	__le32	e_mask;
++	__le32	e_id;
++};
++
++struct richacl_xattr {
++	__u8	a_version;
++	__u8	a_flags;
++	__le16	a_count;
++	__le32	a_owner_mask;
++	__le32	a_group_mask;
++	__le32	a_other_mask;
++};
++
++#define RICHACL_XATTR_VERSION 0
++#define RICHACL_XATTR_MAX_COUNT \
++	((XATTR_SIZE_MAX - sizeof(struct richacl_xattr)) / \
++	 sizeof(struct richace_xattr))
++
++#endif  /* __UAPI_RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/xattr.h b/include/uapi/linux/xattr.h
+index 1590c49..1996903 100644
+--- a/include/uapi/linux/xattr.h
++++ b/include/uapi/linux/xattr.h
+@@ -73,5 +73,7 @@
+ #define XATTR_POSIX_ACL_DEFAULT  "posix_acl_default"
+ #define XATTR_NAME_POSIX_ACL_DEFAULT XATTR_SYSTEM_PREFIX XATTR_POSIX_ACL_DEFAULT
  
- 	while (len > 0) {
- 		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
++#define XATTR_RICHACL "richacl"
++#define XATTR_NAME_RICHACL XATTR_SYSTEM_PREFIX XATTR_RICHACL
+ 
+ #endif /* _UAPI_LINUX_XATTR_H */
 -- 
-2.1.4
+2.7.4
 
 _______________________________________________
 xfs mailing list
