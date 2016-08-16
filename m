@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 331D17CA2
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 09:47:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E920C304032
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 07:47:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OBB0v1lHG9cyzaYq (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 21 Aug 2016 07:47:43 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs/033: source mkfs output again if isize less than 512
-Date: Sun, 21 Aug 2016 22:47:39 +0800
-Message-Id: <1471790859-26077-1-git-send-email-zlang@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5B3507CA0
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 12:07:23 -0500 (CDT)
+Received: from xmail.sgi.com (pv-excas1-dc21.corp.sgi.com [137.38.106.7])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9EBDAC00C
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:07:19 -0700 (PDT)
+From: Troy McCorkell <tdm@sgi.com>
+Subject: RE: suspending bugzilla on oss.sgi.com
+Date: Tue, 16 Aug 2016 17:07:18 +0000
+Message-ID: <DF733A1EC32F124D86BC1188068FECB101A72E41C0@P-EXMB4-DC21.corp.sgi.com>
+References: <DF733A1EC32F124D86BC1188068FECB101A72E40B0@P-EXMB4-DC21.corp.sgi.com>
+In-Reply-To: <DF733A1EC32F124D86BC1188068FECB101A72E40B0@P-EXMB4-DC21.corp.sgi.com>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,120 +21,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5600558230518834206=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-When blocksize is 512b, xfs/033 will run mkfs.xfs again to make sure
-inode size is 512b. As below:
+--===============5600558230518834206==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_DF733A1EC32F124D86BC1188068FECB101A72E41C0PEXMB4DC21cor_"
 
-  # devzero blows away 512byte blocks, so make 512byte inodes (at least)
-  _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-  . $tmp.mkfs
-  [ $isize -lt 512 ] && \
-          _scratch_mkfs_xfs -isize=512 | _filter_mkfs >/dev/null 2>&1
+--_000_DF733A1EC32F124D86BC1188068FECB101A72E41C0PEXMB4DC21cor_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-But after "566ebd5 mkfs: default to CRC enabled filesystems", xfsprogs
-enable CRC as default. If MKFS_OPTIONS is "-b size=512 -m crc=0", the
-first "_scratch_mkfs_xfs" will make crc=0, but the second will change
-"crc" to "1", because it'll waive the "-b size=512 -m crc=0" options.
-
-xfs/033 need to check xfs's sb_features, for use different .out files.
-So we should import the mkfs output($tmp.mkfs file) again, if the
-scecond mkfs changes something.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
-
-Hi,
-
-I moved the mkfs_xfs output to /dev/null, because:
-  1. I think it's not necessary.
-  2. The case maybe do and output mkfs once or twice(not sure). So it'll be
-  hard to keep consistent golden image.
+The web server for oss.sgi.com is up and running.  oss.sgi.com/bugzilla has=
+ been disabled.
 
 Thanks,
-Zorro
+Troy McCorkell
 
- tests/xfs/033               | 8 +++++---
- tests/xfs/033.out.crc.linux | 6 ------
- tests/xfs/033.out.irix      | 6 ------
- tests/xfs/033.out.linux     | 6 ------
- 4 files changed, 5 insertions(+), 21 deletions(-)
+________________________________
+From: Troy McCorkell
+Sent: Tuesday, August 16, 2016 10:31 AM
+To: xfs@oss.sgi.com
+Cc: Troy McCorkell
+Subject: suspending bugzilla on oss.sgi.com
 
-diff --git a/tests/xfs/033 b/tests/xfs/033
-index 9342f0c..45caf08 100755
---- a/tests/xfs/033
-+++ b/tests/xfs/033
-@@ -78,10 +78,12 @@ _require_scratch
- _require_no_large_scratch_dev
- 
- # devzero blows away 512byte blocks, so make 512byte inodes (at least)
--_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-+_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
--[ $isize -lt 512 ] && \
--	_scratch_mkfs_xfs -isize=512 | _filter_mkfs >/dev/null 2>&1
-+if [ $isize -lt 512 ]; then
-+	_scratch_mkfs_xfs -isize=512 | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+	. $tmp.mkfs
-+fi
- 
- # link correct .out file
- FEATURES=$(_get_os_name)
-diff --git a/tests/xfs/033.out.crc.linux b/tests/xfs/033.out.crc.linux
-index a6e86b9..2ab4c43 100644
---- a/tests/xfs/033.out.crc.linux
-+++ b/tests/xfs/033.out.crc.linux
-@@ -1,10 +1,4 @@
- QA output created by 033
--meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
--data     = bsize=XXX blocks=XXX, imaxpct=PCT
--         = sunit=XXX swidth=XXX, unwritten=X
--naming   =VERN bsize=XXX
--log      =LDEV bsize=XXX blocks=XXX
--realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- Corrupting root inode - setting bits to 0
- Wrote X.XXKb (value 0x0)
- Phase 1 - find and verify superblock...
-diff --git a/tests/xfs/033.out.irix b/tests/xfs/033.out.irix
-index 1a2d9c3..5960117 100644
---- a/tests/xfs/033.out.irix
-+++ b/tests/xfs/033.out.irix
-@@ -1,10 +1,4 @@
- QA output created by 033
--meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
--data     = bsize=XXX blocks=XXX, imaxpct=PCT
--         = sunit=XXX swidth=XXX, unwritten=X
--naming   =VERN bsize=XXX
--log      =LDEV bsize=XXX blocks=XXX
--realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- Corrupting root inode - setting bits to 0
- Wrote X.XXKb (value 0x0)
- Phase 1 - find and verify superblock...
-diff --git a/tests/xfs/033.out.linux b/tests/xfs/033.out.linux
-index d79ce2a..68bc781 100644
---- a/tests/xfs/033.out.linux
-+++ b/tests/xfs/033.out.linux
-@@ -1,10 +1,4 @@
- QA output created by 033
--meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
--data     = bsize=XXX blocks=XXX, imaxpct=PCT
--         = sunit=XXX swidth=XXX, unwritten=X
--naming   =VERN bsize=XXX
--log      =LDEV bsize=XXX blocks=XXX
--realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- Corrupting root inode - setting bits to 0
- Wrote X.XXKb (value 0x0)
- Phase 1 - find and verify superblock...
--- 
-2.7.4
+bugzilla on oss.sgi.com has come under a spam attack.
+We will suspend bugzilla on oss.sgi.com while we determine the
+best method to block this spam attack.
+
+Thanks,
+Troy McCorkell
+
+--_000_DF733A1EC32F124D86BC1188068FECB101A72E41C0PEXMB4DC21cor_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html dir=3D"ltr">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style id=3D"owaParaStyle" type=3D"text/css">=0A=
+<!--=0A=
+p=0A=
+	{margin-top:0;=0A=
+	margin-bottom:0}=0A=
+-->=0A=
+P {margin-top:0;margin-bottom:0;}</style>
+</head>
+<body ocsi=3D"0" fpstyle=3D"1">
+<div style=3D"direction: ltr;font-family: Tahoma;color: #000000;font-size: =
+10pt;">The web server for oss.sgi.com is up and running.&nbsp; oss.sgi.com/=
+bugzilla has been disabled.<br>
+<br>
+Thanks,<br>
+Troy McCorkell<br>
+<br>
+<div style=3D"font-family: Times New Roman; color: #000000; font-size: 16px=
+">
+<hr tabindex=3D"-1">
+<div style=3D"direction: ltr;" id=3D"divRpF766880"><font color=3D"#000000" =
+face=3D"Tahoma" size=3D"2"><b>From:</b> Troy McCorkell<br>
+<b>Sent:</b> Tuesday, August 16, 2016 10:31 AM<br>
+<b>To:</b> xfs@oss.sgi.com<br>
+<b>Cc:</b> Troy McCorkell<br>
+<b>Subject:</b> suspending bugzilla on oss.sgi.com<br>
+</font><br>
+</div>
+<div></div>
+<div>
+<div style=3D"direction:ltr; font-family:Tahoma; color:#000000; font-size:1=
+0pt">bugzilla on oss.sgi.com has come under a spam attack.<br>
+We will suspend bugzilla on oss.sgi.com while we determine the<br>
+best method to block this spam attack.<br>
+<br>
+Thanks,<br>
+Troy McCorkell<br>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
+
+--_000_DF733A1EC32F124D86BC1188068FECB101A72E41C0PEXMB4DC21cor_--
+
+
+--===============5600558230518834206==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5600558230518834206==--
