@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E60817CA0
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 12:07:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D1DD304048
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:07:21 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DB6C47CE4
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BA7768F8165
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:26 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9vANMWNS9jo84jfJ (version=TLSv1.2
+	cuda.sgi.com with ESMTP id G3JW4ex3su0CEfRA (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 12 Aug 2016 10:07:17 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 1407285543
-	for <xfs@oss.sgi.com>; Fri, 12 Aug 2016 17:07:17 +0000 (UTC)
-Date: Fri, 12 Aug 2016 13:07:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file:
-	fs/xfs/xfs_buf.c, line: 118 on 4.8-rc1 kernel
-Message-ID: <20160812170714.GA64450@bfoster.bfoster>
-References: <20160812140414.GV27776@eguan.usersys.redhat.com>
-	<20160812144752.GW27776@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160812144752.GW27776@eguan.usersys.redhat.com>
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:25 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 14/22] richacl: Check if an acl is equivalent to a file
+	mode
+Date: Tue, 16 Aug 2016 13:02:55 +0200
+Message-Id: <1471345383-15334-15-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,94 +24,153 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Fri, Aug 12, 2016 at 10:47:52PM +0800, Eryu Guan wrote:
-> On Fri, Aug 12, 2016 at 10:04:14PM +0800, Eryu Guan wrote:
-> > Hi,
-> > 
-> > I hit oops while building kernel on XFS, 4.8-rc1 kernel, hit twice in
-> > six kernel builds. I'm not sure if it's a regression since 4.7 kernel
-> > yet, will do more testings.
-> 
-> Just hit again on 4.8-rc1 kernel, I was doing
-> 
-> # clean partial builds from previous run and build again
-> make clean
-> make -j 8
-> 
-> Seems I have to do kernel build on 4.7 kernel to finish the bisect.
-> 
-> Thanks,
-> Eryu
-> 
-> [ 2515.752039] XFS: Assertion failed: bp->b_flags & XBF_ASYNC, file: fs/xfs/xfs_buf.c, line: 118
+ACLs are considered equivalent to file modes if they only consist of
+owner@, group@, and everyone@ entries, the owner@ permissions do not
+depend on whether the owner is a member in the owning group, and no
+inheritance flags are set.  This test is used to avoid storing richacls
+if the acl can be computed from the file permission bits.
 
-This is commit 9c7504aa7 ("xfs: track and serialize in-flight async
-buffers against unmount"). The assert is actually incorrect, as Dave had
-previously pointed out[1]. A patch was posted[2] to fix it, but hasn't
-been merged yet.
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   1 +
+ 2 files changed, 105 insertions(+)
 
-Brian
-
-[1] http://oss.sgi.com/pipermail/xfs/2016-August/050613.html
-[2] http://oss.sgi.com/pipermail/xfs/2016-August/050634.html
-
-> [ 2515.752649] ------------[ cut here ]------------
-> [ 2515.752949] kernel BUG at fs/xfs/xfs_message.c:113!
-> [ 2515.753010] invalid opcode: 0000 [#1] SMP
-> [ 2515.753010] Modules linked in: btrfs xor raid6_pq ppdev i2c_piix4 parport_pc sg pcspkr i2c_core parport virtio_balloon acpi_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrp
-> c ip_tables xfs libcrc32c sd_mod ata_generic pata_acpi virtio_scsi serio_raw ata_piix virtio_pci 8139too floppy libata virtio_ring virtio 8139cp mii
-> [ 2515.753010] CPU: 1 PID: 57 Comm: kswapd0 Not tainted 4.8.0-rc1 #17
-> [ 2515.753010] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
-> [ 2515.753010] task: ffff880215cde680 task.stack: ffff880210a98000
-> [ 2515.753010] RIP: 0010:[<ffffffffa01489a2>]  [<ffffffffa01489a2>] assfail+0x22/0x30 [xfs]
-> [ 2515.753010] RSP: 0000:ffff880210a9ba00  EFLAGS: 00010246
-> [ 2515.753010] RAX: 0000000000000000 RBX: ffff8801289fb9d8 RCX: 0000000000000000
-> [ 2515.753010] RDX: ffff880210a9b908 RSI: 000000000000000a RDI: ffffffffa017ab95
-> [ 2515.753010] RBP: ffff880210a9ba00 R08: 0000000000000000 R09: 0000000000000000
-> [ 2515.753010] R10: 000000000000000a R11: f000000000000000 R12: ffff8801289fb980
-> [ 2515.753010] R13: ffff88020f701c98 R14: ffff88020f701c00 R15: 0000000000000000
-> [ 2515.753010] FS:  0000000000000000(0000) GS:ffff88021fc80000(0000) knlGS:0000000000000000
-> [ 2515.753010] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 2515.753010] CR2: 00002ab2aa17d000 CR3: 0000000208cd6000 CR4: 00000000000006e0
-> [ 2515.753010] Stack:
-> [ 2515.753010]  ffff880210a9ba38 ffffffffa012f332 ffff880103b4b000 ffff880103b4b124
-> [ 2515.753010]  ffff8801289fb980 ffff88020f701c00 0000000000000000 ffff880210a9ba88
-> [ 2515.753010]  ffffffffa013a05d 0000000008405ead ffff8801289fb980 000000009df3522a
-> [ 2515.753010] Call Trace:
-> [ 2515.753010]  [<ffffffffa012f332>] xfs_buf_rele+0x2f2/0x380 [xfs]
-> [ 2515.753010]  [<ffffffffa013a05d>] xfs_reclaim_inode+0x38d/0x3a0 [xfs]
-> [ 2515.753010]  [<ffffffffa013a293>] xfs_reclaim_inodes_ag+0x223/0x360 [xfs]
-> [ 2515.753010]  [<ffffffff810b5638>] ? try_to_wake_up+0x58/0x390
-> [ 2515.753010]  [<ffffffff810b5985>] ? wake_up_process+0x15/0x20
-> [ 2515.753010]  [<ffffffffa013a4b3>] xfs_reclaim_inodes_nr+0x33/0x40 [xfs]
-> [ 2515.753010]  [<ffffffffa014b709>] xfs_fs_free_cached_objects+0x19/0x20 [xfs]
-> [ 2515.753010]  [<ffffffff81225f81>] super_cache_scan+0x181/0x190
-> [ 2515.753010]  [<ffffffff811a8837>] shrink_slab+0x237/0x400
-> [ 2515.753010]  [<ffffffff811ad4c3>] shrink_node+0x303/0x310
-> [ 2515.753010]  [<ffffffff811ae2d2>] kswapd+0x302/0x6f0
-> [ 2515.753010]  [<ffffffff811adfd0>] ? mem_cgroup_shrink_node+0x180/0x180
-> [ 2515.753010]  [<ffffffff810aa198>] kthread+0xd8/0xf0
-> [ 2515.753010]  [<ffffffff816d797f>] ret_from_fork+0x1f/0x40
-> [ 2515.753010]  [<ffffffff810aa0c0>] ? kthread_park+0x60/0x60
-> [ 2515.753010] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 30 69 18 a0 48 89 fa 31 c0 48 89 e5 31 ff e8 ae f8 ff ff <0f> 0b 66 90 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48
-> [ 2515.753010] RIP  [<ffffffffa01489a2>] assfail+0x22/0x30 [xfs]
-> [ 2515.753010]  RSP <ffff880210a9ba00>
-> [ 2515.773793] ---[ end trace d8064b1e521d0bfb ]---
-> [ 2515.774123] Kernel panic - not syncing: Fatal exception
-> [ 2515.774534] Kernel Offset: disabled
-> [ 2515.774774] ---[ end Kernel panic - not syncing: Fatal exception
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/richacl.c b/fs/richacl.c
+index a199245..1022983 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -612,3 +612,107 @@ richacl_chmod(struct inode *inode, umode_t mode)
+ 	return retval;
+ }
+ EXPORT_SYMBOL(richacl_chmod);
++
++/**
++ * richacl_equiv_mode  -  compute the mode equivalent of @acl
++ *
++ * An acl is considered equivalent to a file mode if it only consists of
++ * owner@, group@, and everyone@ entries and the owner@ permissions do not
++ * depend on whether the owner is a member in the owning group.
++ */
++int
++richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
++{
++	umode_t mode = *mode_p;
++
++	/*
++	 * The RICHACE_DELETE_CHILD flag is meaningless for non-directories, so
++	 * we ignore it.
++	 */
++	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++	struct {
++		unsigned int allowed;
++		unsigned int defined;  /* allowed or denied */
++	} owner = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED |
++			   RICHACE_POSIX_OWNER_ALLOWED  | x,
++	}, group = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
++	}, everyone = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
++	};
++	const struct richace *ace;
++
++	if (acl->a_flags & ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED))
++		return -1;
++
++	richacl_for_each_entry(ace, acl) {
++		if (ace->e_flags & ~RICHACE_SPECIAL_WHO)
++			return -1;
++
++		if (richace_is_owner(ace) || richace_is_everyone(ace)) {
++			x = ace->e_mask & ~owner.defined;
++			if (richace_is_allow(ace)) {
++				unsigned int group_denied =
++					group.defined & ~group.allowed;
++
++				if (x & group_denied)
++					return -1;
++				owner.allowed |= x;
++			} else /* if (richace_is_deny(ace)) */ {
++				if (x & group.allowed)
++					return -1;
++			}
++			owner.defined |= x;
++
++			if (richace_is_everyone(ace)) {
++				x = ace->e_mask;
++				if (richace_is_allow(ace)) {
++					group.allowed |=
++						x & ~group.defined;
++					everyone.allowed |=
++						x & ~everyone.defined;
++				}
++				group.defined |= x;
++				everyone.defined |= x;
++			}
++		} else if (richace_is_group(ace)) {
++			x = ace->e_mask & ~group.defined;
++			if (richace_is_allow(ace))
++				group.allowed |= x;
++			group.defined |= x;
++		} else
++			return -1;
++	}
++
++	if (group.allowed & ~owner.defined)
++		return -1;
++
++	if (acl->a_flags & RICHACL_MASKED) {
++		if (acl->a_flags & RICHACL_WRITE_THROUGH) {
++			owner.allowed = acl->a_owner_mask;
++			everyone.allowed = acl->a_other_mask;
++		} else {
++			owner.allowed &= acl->a_owner_mask;
++			everyone.allowed &= acl->a_other_mask;
++		}
++		group.allowed &= acl->a_group_mask;
++	}
++
++	mode = (mode & ~S_IRWXUGO) |
++	       (richacl_mask_to_mode(owner.allowed) << 6) |
++	       (richacl_mask_to_mode(group.allowed) << 3) |
++		richacl_mask_to_mode(everyone.allowed);
++
++	/* Mask flags we can ignore */
++	x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++
++	if (((richacl_mode_to_mask(mode >> 6) ^ owner.allowed)    & ~x) ||
++	    ((richacl_mode_to_mask(mode >> 3) ^ group.allowed)    & ~x) ||
++	    ((richacl_mode_to_mask(mode)      ^ everyone.allowed) & ~x))
++		return -1;
++
++	*mode_p = mode;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(richacl_equiv_mode);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 3cd5e53..a865f37 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -190,5 +190,6 @@ extern unsigned int richacl_mode_to_mask(umode_t);
+ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
+ extern int richacl_chmod(struct inode *, umode_t);
++extern int richacl_equiv_mode(const struct richacl *, umode_t *);
+ 
+ #endif /* __RICHACL_H */
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
