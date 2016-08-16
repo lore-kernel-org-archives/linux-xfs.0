@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 139EC7CA4
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 13:38:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BDB7030411C
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:48 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 26DF27CD4
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 84ED2AC066
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:58 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FwX0oFCNpC5R7yNo (version=TLSv1.2
+	cuda.sgi.com with ESMTP id WaOwQqDz9iZLRClJ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 11:38:47 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 833AC3B72D
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 18:38:47 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-56-109.rdu2.redhat.com
-	[10.10.56.109])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7FIcjro018199
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 14:38:47 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 3/3] xfs_quota: additional changes to allow use on ext4
-Date: Mon, 15 Aug 2016 13:38:31 -0500
-Message-Id: <1471286311-2730-4-git-send-email-billodo@redhat.com>
-In-Reply-To: <1471286311-2730-1-git-send-email-billodo@redhat.com>
-References: <1471286311-2730-1-git-send-email-billodo@redhat.com>
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:54 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 08/22] richacl: Permission check algorithm
+Date: Tue, 16 Aug 2016 13:02:49 +0200
+Message-Id: <1471345383-15334-9-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,78 +28,169 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Further changes to allow xfs_quota to be used on foreign filesystem(s)
-(e.g. ext4) for project quota testing in xfstests.
+A richacl roughly grants a requested access if the NFSv4 acl in the
+richacl grants the requested permissions according to the NFSv4
+permission check algorithm and the file mask that applies to the process
+includes the requested permissions.
 
-Add CMD_FLAG_GENERIC to enable generic xfs_quota commands (help and
-quit) when xfs_quota is run on foreign filesystems.
-
-Use CMD_FLAG_FOREIGN_OK on commands suitable for foreign filesystems.
-
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@fieldses.org>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
- include/command.h | 1 +
- libxcmd/help.c    | 3 ++-
- libxcmd/quit.c    | 3 ++-
- quota/init.c      | 3 ++-
- 4 files changed, 7 insertions(+), 3 deletions(-)
+ fs/richacl.c            | 128 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   1 +
+ 2 files changed, 129 insertions(+)
 
-diff --git a/include/command.h b/include/command.h
-index 81d5a4d..1c2898a 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -22,6 +22,7 @@
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 2072cf4..b7e96d0 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -175,3 +175,131 @@ richacl_want_to_mask(unsigned int want)
+ 		mask |= RICHACE_WRITE_DATA;
+ 	return mask;
+ }
++
++/**
++ * richacl_permission  -  richacl permission check algorithm
++ * @inode:	inode to check
++ * @acl:	rich acl of the inode
++ * @want:	requested access (MAY_* flags)
++ *
++ * Checks if the current process is granted @want flags in @acl.
++ */
++int
++richacl_permission(struct inode *inode, const struct richacl *acl,
++		   int want)
++{
++	const struct richace *ace;
++	unsigned int mask = richacl_want_to_mask(want);
++	unsigned int requested = mask, denied = 0;
++	int in_owning_group = in_group_p(inode->i_gid);
++	int in_owner_or_group_class = in_owning_group;
++
++	/*
++	 * A process is
++	 *   - in the owner file class if it owns the file,
++	 *   - in the group file class if it is in the file's owning group or
++	 *     it matches any of the user or group entries, and
++	 *   - in the other file class otherwise.
++	 * The file class is only relevant for determining which file mask to
++	 * apply, which only happens for masked acls.
++	 */
++	if (acl->a_flags & RICHACL_MASKED) {
++		if ((acl->a_flags & RICHACL_WRITE_THROUGH) &&
++		    uid_eq(current_fsuid(), inode->i_uid)) {
++			denied = requested & ~acl->a_owner_mask;
++			goto out;
++		}
++	} else {
++		/*
++		 * When the acl is not masked, there is no need to determine if
++		 * the process is in the group class and we can break out
++		 * earlier of the loop below.
++		 */
++		in_owner_or_group_class = 1;
++	}
++
++	/*
++	 * Check if the acl grants the requested access and determine which
++	 * file class the process is in.
++	 */
++	richacl_for_each_entry(ace, acl) {
++		unsigned int ace_mask = ace->e_mask;
++
++		if (richace_is_inherit_only(ace))
++			continue;
++		if (richace_is_owner(ace)) {
++			if (!uid_eq(current_fsuid(), inode->i_uid))
++				continue;
++			goto entry_matches_owner;
++		} else if (richace_is_group(ace)) {
++			if (!in_owning_group)
++				continue;
++		} else if (richace_is_unix_user(ace)) {
++			if (!uid_eq(current_fsuid(), ace->e_id.uid))
++				continue;
++			if (uid_eq(current_fsuid(), inode->i_uid))
++				goto entry_matches_owner;
++		} else if (richace_is_unix_group(ace)) {
++			if (!in_group_p(ace->e_id.gid))
++				continue;
++		} else
++			goto entry_matches_everyone;
++
++		/*
++		 * Apply the group file mask to entries other than owner@ and
++		 * everyone@ or user entries matching the owner.  This ensures
++		 * that we grant the same permissions as the acl computed by
++		 * richacl_apply_masks().
++		 *
++		 * Without this restriction, the following richacl would grant
++		 * rw access to processes which are both the owner and in the
++		 * owning group, but not to other users in the owning group,
++		 * which could not be represented without masks:
++		 *
++		 *  owner:rw::mask
++		 *  group@:rw::allow
++		 */
++		if ((acl->a_flags & RICHACL_MASKED) && richace_is_allow(ace))
++			ace_mask &= acl->a_group_mask;
++
++entry_matches_owner:
++		/* The process is in the owner or group file class. */
++		in_owner_or_group_class = 1;
++
++entry_matches_everyone:
++		/* Check which mask flags the ACE allows or denies. */
++		if (richace_is_deny(ace))
++			denied |= ace_mask & mask;
++		mask &= ~ace_mask;
++
++		/*
++		 * Keep going until we know which file class
++		 * the process is in.
++		 */
++		if (!mask && in_owner_or_group_class)
++			break;
++	}
++	denied |= mask;
++
++	if (acl->a_flags & RICHACL_MASKED) {
++		/*
++		 * The file class a process is in determines which file mask
++		 * applies.  Check if that file mask also grants the requested
++		 * access.
++		 */
++		if (uid_eq(current_fsuid(), inode->i_uid))
++			denied |= requested & ~acl->a_owner_mask;
++		else if (in_owner_or_group_class)
++			denied |= requested & ~acl->a_group_mask;
++		else {
++			if (acl->a_flags & RICHACL_WRITE_THROUGH)
++				denied = requested & ~acl->a_other_mask;
++			else
++				denied |= requested & ~acl->a_other_mask;
++		}
++	}
++
++out:
++	return denied ? -EACCES : 0;
++}
++EXPORT_SYMBOL_GPL(richacl_permission);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 70923f8..beeec35 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -177,5 +177,6 @@ extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+ extern void richace_copy(struct richace *, const struct richace *);
+ extern int richacl_masks_to_mode(const struct richacl *);
+ extern unsigned int richacl_mode_to_mask(umode_t);
++extern int richacl_permission(struct inode *, const struct richacl *, int);
  
- #define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
- #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
-+#define CMD_FLAG_GENERIC	(1<<29) /* command is generic (help, quit) */
- 
- typedef int (*cfunc_t)(int argc, char **argv);
- typedef void (*helpfunc_t)(void);
-diff --git a/libxcmd/help.c b/libxcmd/help.c
-index fad0ab9..be26765 100644
---- a/libxcmd/help.c
-+++ b/libxcmd/help.c
-@@ -88,7 +88,8 @@ help_init(void)
- 	help_cmd.cfunc = help_f;
- 	help_cmd.argmin = 0;
- 	help_cmd.argmax = 1;
--	help_cmd.flags = CMD_FLAG_GLOBAL;
-+	help_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-+		CMD_FLAG_GENERIC;
- 	help_cmd.args = _("[command]");
- 	help_cmd.oneline = _("help for one or all commands");
- 
-diff --git a/libxcmd/quit.c b/libxcmd/quit.c
-index 0183b8f..2a27c89 100644
---- a/libxcmd/quit.c
-+++ b/libxcmd/quit.c
-@@ -38,7 +38,8 @@ quit_init(void)
- 	quit_cmd.cfunc = quit_f;
- 	quit_cmd.argmin = -1;
- 	quit_cmd.argmax = -1;
--	quit_cmd.flags = CMD_FLAG_GLOBAL;
-+	quit_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-+		CMD_FLAG_GENERIC;
- 	quit_cmd.oneline = _("exit the program");
- 
- 	add_command(&quit_cmd);
-diff --git a/quota/init.c b/quota/init.c
-index c46ce0f..3b2fd61 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -104,7 +104,8 @@ init_check_command(
- 	const cmdinfo_t	*ct)
- {
- 	if (fs_path &&
--	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
-+	    !((ct->flags & CMD_FLAG_FOREIGN_OK) && foreign_allowed) &&
-+	    !(ct->flags & CMD_FLAG_GENERIC) &&
- 	     (fs_path->fs_flags & FS_FOREIGN)) {
- 		fprintf(stderr,
- 	_("foreign mount active, %s command is for XFS filesystems only\n"),
+ #endif /* __RICHACL_H */
 -- 
 2.7.4
 
