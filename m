@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A29C7CA2
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 19:59:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F3EF28F8039
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 17:59:35 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	129P9EiFhBaxRA2i for <xfs@oss.sgi.com>;
-	Mon, 15 Aug 2016 17:59:33 -0700 (PDT)
-Date: Tue, 16 Aug 2016 10:59:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS on top of LVM span in AWS.  Stripe or are AG's good enough?
-Message-ID: <20160816005931.GD19025@dastard>
-References: <CY1PR04MB20100FE6C3039717BD27825AAC120@CY1PR04MB2010.namprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CY1PR04MB20100FE6C3039717BD27825AAC120@CY1PR04MB2010.namprd04.prod.outlook.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3D6AA7CE7
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 021638F8165
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:32 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6ECamGwC4DiQi7AU (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:30 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 15/22] richacl: Create-time inheritance
+Date: Tue, 16 Aug 2016 13:02:56 +0200
+Message-Id: <1471345383-15334-16-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,72 +23,202 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Gibson <jgibson@spscommerce.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Mon, Aug 15, 2016 at 11:36:14PM +0000, Jeff Gibson wrote:
-> So I'm creating an LVM volume with 8 AWS EBS disks that are
-> spanned (linear) per Redhat's documentation for Gluster
-> (https://access.redhat.com/documentation/en-US/Red_Hat_Storage/3.1/html/Deployment_Guide_for_Public_Cloud/ch02s03.html#Provisioning_Storage_for_Three-way_Replication_Volumes).
-> 
-> 2 questions-
-> 
-> 1.  Will XFS's Allocation Groups essentially stripe the data for
-> me
+When a new file is created, it can inherit an acl from its parent
+directory; this is similar to how default acls work in POSIX ACLs.
 
-No. XFS does not stripe data. It does, however, *distribute* data
-different AGs according to locality policy (e.g. inode32 vs
-inode64), so it uses all the AGs as the directory structure grows.
+As with POSIX ACLs, if a file inherits an acl from its parent directory,
+the intersection between the create mode and the permissions granted by
+the inherited acl determines the file masks and file permission bits,
+and the umask is ignored.
 
-> or should I stripe the underlying volumes with LVM?
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   2 +
+ 2 files changed, 153 insertions(+)
 
-No, you're using EBS. Forget anything you know about storage layout
-and geometry, because EBS has no guaranteed physical layout you can
-optimise for.
-
-> I'm not
-> worried as much about data integrity with a stripe/span since
-> Gluster is doing the redundancy work.
-> 
-> 2.  AWS volumes sometimes have inconsistent performance.  If I
-> understand things correctly, AG's run in parallel.
-
-Define "run". AGs can allocate/free blocks in parallel. If IO does
-not require allocation, then AGs play no part in the IO path.
-
-> In a
-> non-striped volume, if some of the AGs are temporarily slower to
-> respond than others due to one of the underlying volumes being
-> slow, will XFS prefer the quicker responding AGs
-
-No, it does not.
-
-> or is I/O always
-> evenly distributed?
-
-No, it is not.
-
-> If XFS prefers the more responsive AG's it
-> seems to me that it would be better NOT to stripe the underlying
-> disk since all AG's that are distributed in a stripe will
-> continuously hit all component volumes, including the slow volume
-> (unless if XFS compensates for this?)
-
-I think you have the wrong idea about what allocation groups do.
-They are for maintaining allocation concurrency and locality of
-related objects on disk - they have no influence on where IO is
-directed based on IO load or response time.
-
-Cheers,
-
-Dave.
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 1022983..8051181 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -716,3 +716,154 @@ richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(richacl_equiv_mode);
++
++static inline bool
++ace_inherits_to_directory(const struct richace *ace)
++{
++	if (ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
++		return true;
++	if ((ace->e_flags & RICHACE_FILE_INHERIT_ACE) &&
++	    !(ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE))
++		return true;
++	return false;
++}
++
++/**
++ * richacl_inherit  -  compute the inherited acl of a new file
++ * @dir_acl:	acl of the containing directory
++ * @isdir:	inherit by a directory or non-directory?
++ *
++ * A directory can have acl entries which files and/or directories created
++ * inside the directory will inherit.  This function computes the acl for such
++ * a new file.  If there is no inheritable acl, it will return %NULL.
++ */
++struct richacl *
++richacl_inherit(const struct richacl *dir_acl, int isdir)
++{
++	const struct richace *dir_ace;
++	struct richacl *acl = NULL;
++	struct richace *ace;
++	int count = 0;
++
++	if (isdir) {
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!ace_inherits_to_directory(dir_ace))
++				continue;
++			count++;
++		}
++		if (!count)
++			return NULL;
++		acl = richacl_alloc(count, GFP_KERNEL);
++		if (!acl)
++			return ERR_PTR(-ENOMEM);
++		ace = acl->a_entries;
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!ace_inherits_to_directory(dir_ace))
++				continue;
++			richace_copy(ace, dir_ace);
++			if (dir_ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE)
++				ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
++			else if (dir_ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
++				ace->e_flags &= ~RICHACE_INHERIT_ONLY_ACE;
++			else
++				ace->e_flags |= RICHACE_INHERIT_ONLY_ACE;
++			ace++;
++		}
++	} else {
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
++				continue;
++			count++;
++		}
++		if (!count)
++			return NULL;
++		acl = richacl_alloc(count, GFP_KERNEL);
++		if (!acl)
++			return ERR_PTR(-ENOMEM);
++		ace = acl->a_entries;
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
++				continue;
++			richace_copy(ace, dir_ace);
++			ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
++			/*
++			 * RICHACE_DELETE_CHILD is meaningless for
++			 * non-directories, so clear it.
++			 */
++			ace->e_mask &= ~RICHACE_DELETE_CHILD;
++			ace++;
++		}
++	}
++
++	return acl;
++}
++
++/*
++ * richacl_inherit_inode  -  compute inherited acl and file mode
++ * @dir_acl:	acl of the containing directory
++ * @mode_p:	mode of the new inode
++ *
++ * The file permission bits in @mode_p must be set to the create mode by the
++ * caller.
++ *
++ * If there is an inheritable acl, the maximum permissions that the acl grants
++ * are computed and the file masks of the new acl are set accordingly.
++ */
++static struct richacl *
++richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
++{
++	struct richacl *acl;
++	umode_t mode = *mode_p;
++
++	acl = richacl_inherit(dir_acl, S_ISDIR(mode));
++	if (acl) {
++		if (richacl_equiv_mode(acl, &mode) == 0) {
++			*mode_p &= mode;
++			richacl_put(acl);
++			acl = NULL;
++		} else {
++			richacl_compute_max_masks(acl);
++			/*
++			 * Ensure that the acl will not grant any permissions
++			 * beyond the create mode.
++			 */
++			acl->a_flags |= RICHACL_MASKED;
++			acl->a_owner_mask &=
++				richacl_mode_to_mask(mode >> 6);
++			acl->a_group_mask &=
++				richacl_mode_to_mask(mode >> 3);
++			acl->a_other_mask &=
++				richacl_mode_to_mask(mode);
++		}
++	} else
++		*mode_p &= ~current_umask();
++
++	return acl;
++}
++
++/**
++ * richacl_create  -  filesystem create helper
++ * @mode_p:	mode of the new inode
++ * @dir:	containing directory
++ *
++ * Compute the inherited acl for a new inode.  If there is no acl to inherit,
++ * apply the umask.  Use when creating a new inode on a richacl enabled file
++ * system.
++ */
++struct richacl *richacl_create(umode_t *mode_p, struct inode *dir)
++{
++	struct richacl *dir_acl, *acl = NULL;
++
++	if (S_ISLNK(*mode_p))
++		return NULL;
++	dir_acl = get_richacl(dir);
++	if (dir_acl) {
++		if (IS_ERR(dir_acl))
++			return dir_acl;
++		acl = richacl_inherit_inode(dir_acl, mode_p);
++		richacl_put(dir_acl);
++	} else
++		*mode_p &= ~current_umask();
++	return acl;
++}
++EXPORT_SYMBOL_GPL(richacl_create);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index a865f37..6354ef0 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -191,5 +191,7 @@ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
+ extern int richacl_chmod(struct inode *, umode_t);
+ extern int richacl_equiv_mode(const struct richacl *, umode_t *);
++extern struct richacl *richacl_inherit(const struct richacl *, int);
++extern struct richacl *richacl_create(umode_t *, struct inode *);
+ 
+ #endif /* __RICHACL_H */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
 
 _______________________________________________
 xfs mailing list
