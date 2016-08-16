@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A31BD7CB8
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 12:25:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 19DD5AC003
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:50 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id K8hBJMtDsAUdBiqb (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id DB87E7CA3
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2699DAC061
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id y0qj4Bin3DqEGlEU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 13 Aug 2016 10:25:48 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 5B16620449
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:47 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3sBTDV6DKfz104d
-	for <xfs@oss.sgi.com>; Sat, 13 Aug 2016 19:25:46 +0200 (CEST)
-Resent-Message-ID: <20160813172450.GG3858@nyan>
-Resent-To: xfs@oss.sgi.com
-Message-Id: <94800ca4e791ebca9ad6503afba31ebdfad672f7.1471107858.git.felix.janda@posteo.de>
-In-Reply-To: <cover.1471107858.git.felix.janda@posteo.de>
-References: <cover.1471107858.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sat, 13 Aug 2016 18:03:16 +0200
-Subject: [PATCHv2 xfsprogs 09/14] fadvise.c: replace posix_fadvise64 by
-	equivalent posix_fadvise
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:12 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 00/22] Richacls (Core and Ext4)
+Date: Tue, 16 Aug 2016 13:02:41 +0200
+Message-Id: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,30 +26,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-also fixes a compile failure on FreeBSD
+Here is another update of the richacl patches.  Changes since the last posting
+(https://lwn.net/Articles/695289/):
 
-Signed-off-by: Felix Janda <felix.janda@posteo.de>
----
- io/fadvise.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ * Rebase on top of the 4.8-rc2 kernel.
 
-diff --git a/io/fadvise.c b/io/fadvise.c
-index d59d1ff..46174f3 100644
---- a/io/fadvise.c
-+++ b/io/fadvise.c
-@@ -103,7 +103,7 @@ fadvise_f(
- 		return command_usage(&fadvise_cmd);
- 	}
- 
--	if (posix_fadvise64(file->fd, offset, length, advise) < 0) {
-+	if (posix_fadvise(file->fd, offset, length, advise) < 0) {
- 		perror("fadvise");
- 		return 0;
- 	}
+
+As always, the complete patch queue is available here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+        richacl-2016-08-16
+
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/samba
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+
+Andreas Gruenbacher (20):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Make the inode passed to inode_change_ok non-const
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Permission check algorithm
+  richacl: Compute maximum file masks from an acl
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+  vfs: Move check_posix_acl and check_richacl out of fs/namei.c
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/9p/acl.c                                     |   8 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   1 +
+ fs/attr.c                                       |  81 +-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |   5 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 134 ++++
+ fs/ext4/richacl.h                               |  40 +
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  43 +-
+ fs/jffs2/acl.c                                  |   6 +-
+ fs/namei.c                                      | 114 +--
+ fs/nfs/nfs3acl.c                                |  14 +-
+ fs/posix_acl.c                                  |  97 ++-
+ fs/richacl.c                                    | 937 ++++++++++++++++++++++++
+ fs/richacl_xattr.c                              | 222 ++++++
+ include/linux/acl.h                             |  15 +
+ include/linux/fs.h                              |  65 +-
+ include/linux/posix_acl.h                       |  24 +-
+ include/linux/richacl.h                         | 218 ++++++
+ include/linux/richacl_xattr.h                   |  31 +
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 ++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 34 files changed, 2197 insertions(+), 163 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/acl.h
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
 -- 
-2.7.3
+2.7.4
 
 _______________________________________________
 xfs mailing list
