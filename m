@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 982737CA1
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 09:16:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 69E30304101
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 07:16:56 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LO3QuKRt6RfrLOCs (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 07:16:55 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 6E16A81112
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 14:16:54 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-57-220.rdu2.redhat.com
-	[10.10.57.220])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7GEGp7i012243
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:16:53 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
-Date: Tue, 16 Aug 2016 09:16:38 -0500
-Message-Id: <1471356998-2876-4-git-send-email-billodo@redhat.com>
-In-Reply-To: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 46A737CA0
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 12:05:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 161AC30407F
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:05:30 -0700 (PDT)
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com
+	(mail-sn1nam02on0081.outbound.protection.outlook.com
+	[104.47.36.81]) by cuda.sgi.com with ESMTP id A2bXmgwzmxsr8dYw
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:05:24 -0700 (PDT)
+From: Jeff Gibson <jgibson@spscommerce.com>
+Subject: Re: XFS on top of LVM span in AWS.  Stripe or are AG's good enough?
+Date: Tue, 16 Aug 2016 17:05:11 +0000
+Message-ID: <CY1PR04MB20106F50E177A61934986A92AC130@CY1PR04MB2010.namprd04.prod.outlook.com>
+References: <CY1PR04MB20100FE6C3039717BD27825AAC120@CY1PR04MB2010.namprd04.prod.outlook.com>,
+	<20160816005931.GD19025@dastard>
+In-Reply-To: <20160816005931.GD19025@dastard>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,85 +27,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Further changes to allow xfs_quota to be used on foreign filesystem(s)
-(e.g. ext4) for project quota testing in xfstests.
+>On Mon, Aug 15, 2016 at 11:36:14PM +0000, Jeff Gibson wrote:
+>> So I'm creating an LVM volume with 8 AWS EBS disks that are
+>> spanned (linear) per Redhat's documentation for Gluster
+>> (https://access.redhat.com/documentation/en-US/Red_Hat_Storage/3.1/html/=
+Deployment_Guide_for_Public_Cloud/>ch02s03.html#Provisioning_Storage_for_Th=
+ree-way_Replication_Volumes).
+>> =
 
-Add CMD_FLAG_GENERIC to enable generic xfs_quota commands (help and
-quit) when xfs_quota is run on foreign filesystems.
+>> 2 questions-
+>> =
 
-Use CMD_FLAG_FOREIGN_OK on commands suitable for foreign filesystems.
+>> 1.=A0 Will XFS's Allocation Groups essentially stripe the data for
+>> me
+>
+>No. XFS does not stripe data. It does, however, *distribute* data
+>different AGs according to locality policy (e.g. inode32 vs
+>inode64), so it uses all the AGs as the directory structure grows.
+Poor wording on my part.  By "essentially stripe" I mean distribute data th=
+roughout all of the EBS subvolumes instead of just using one EBS subvolume =
+at a time until full.  I do plan on using inode64.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- include/command.h | 1 +
- libxcmd/help.c    | 3 ++-
- libxcmd/quit.c    | 3 ++-
- quota/init.c      | 3 ++-
- 4 files changed, 7 insertions(+), 3 deletions(-)
+>> or should I stripe the underlying volumes with LVM?
+>
+>No, you're using EBS. Forget anything you know about storage layout
+>and geometry, because EBS has no guaranteed physical layout you can
+>optimise for.
+Right.  However there could still be some gains from striping due to IOP li=
+mits for single volumes. - That is the combined IOPS for all the volumes st=
+riped together can be higher than they are for a single volume. =
 
-diff --git a/include/command.h b/include/command.h
-index 81d5a4d..1c2898a 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -22,6 +22,7 @@
- 
- #define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
- #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
-+#define CMD_FLAG_GENERIC	(1<<29) /* command is generic (help, quit) */
- 
- typedef int (*cfunc_t)(int argc, char **argv);
- typedef void (*helpfunc_t)(void);
-diff --git a/libxcmd/help.c b/libxcmd/help.c
-index fad0ab9..be26765 100644
---- a/libxcmd/help.c
-+++ b/libxcmd/help.c
-@@ -88,7 +88,8 @@ help_init(void)
- 	help_cmd.cfunc = help_f;
- 	help_cmd.argmin = 0;
- 	help_cmd.argmax = 1;
--	help_cmd.flags = CMD_FLAG_GLOBAL;
-+	help_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-+		CMD_FLAG_GENERIC;
- 	help_cmd.args = _("[command]");
- 	help_cmd.oneline = _("help for one or all commands");
- 
-diff --git a/libxcmd/quit.c b/libxcmd/quit.c
-index 0183b8f..2a27c89 100644
---- a/libxcmd/quit.c
-+++ b/libxcmd/quit.c
-@@ -38,7 +38,8 @@ quit_init(void)
- 	quit_cmd.cfunc = quit_f;
- 	quit_cmd.argmin = -1;
- 	quit_cmd.argmax = -1;
--	quit_cmd.flags = CMD_FLAG_GLOBAL;
-+	quit_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-+		CMD_FLAG_GENERIC;
- 	quit_cmd.oneline = _("exit the program");
- 
- 	add_command(&quit_cmd);
-diff --git a/quota/init.c b/quota/init.c
-index d5d80c2..85931bf 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -104,7 +104,8 @@ init_check_command(
- 	const cmdinfo_t	*ct)
- {
- 	if (fs_path &&
--	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
-+	    !((ct->flags & CMD_FLAG_FOREIGN_OK) && foreign_allowed) &&
-+	    !(ct->flags & CMD_FLAG_GENERIC) &&
- 	     (fs_path->fs_flags & FS_FOREIGN)) {
- 		fprintf(stderr,
- 	_("foreign mount active, %s command is for XFS filesystems only\n"),
--- 
-2.7.4
+
+>> I'm not
+>> worried as much about data integrity with a stripe/span since
+>> Gluster is doing the redundancy work.
+>> =
+
+>> 2.=A0 AWS volumes sometimes have inconsistent performance.=A0 If I
+>> understand things correctly, AG's run in parallel.
+>
+>Define "run". AGs can allocate/free blocks in parallel.
+By run I meant read/write data to/from the AGs.
+
+>If IO does
+>not require allocation, then AGs play no part in the IO path.
+Can you explain this a bit please?  From my understanding data is written a=
+nd read from space inside of AGs, so I don't see how it couldn't be part of=
+ the IO path.  Or do you simply mean reads just use inodes and don't care a=
+bout the AGs?
+
+>> In a
+>> non-striped volume, if some of the AGs are temporarily slower to
+>> respond than others due to one of the underlying volumes being
+>> slow, will XFS prefer the quicker responding AGs
+>
+>No, it does not.
+>
+>> or is I/O always
+>> evenly distributed?
+>
+>No, it is not.
+>
+>> If XFS prefers the more responsive AG's it
+>> seems to me that it would be better NOT to stripe the underlying
+>> disk since all AG's that are distributed in a stripe will
+>> continuously hit all component volumes, including the slow volume
+>> (unless if XFS compensates for this?)
+>
+>I think you have the wrong idea about what allocation groups do.
+I'm reading the XFS File System Structure doc on xfs.org.  It says, "XFS fi=
+lesystems are divided into a number of equally sized chunks called Allocati=
+on Groups. Each AG can almost be thought of as an individual filesystem." s=
+o that's where most of my assumptions are coming from.
+
+>They are for maintaining allocation concurrency and locality of
+>related objects on disk - they have no influence on where IO is
+>directed based on IO load or response time.
+I understand that XFS has locality as far as trying to write files to the s=
+ame AG as the parent directory.  Are there other cases?
+I get that it's probably not measuring the responsiveness of each AG. I gue=
+ss what I'm trying to ask is - will XFS *indirectly* compensate if one subv=
+olume is busier?  For example, if writes to a "slow" subvolume and resident=
+ AGs take longer to complete, will XFS tend to prefer to use other less-bus=
+y AGs more often (with the exception of locality) for writes?  What is the =
+basic algorithm for determining where new data is written?  In load-balance=
+r terms, does it round-robin, pick the least busy, etc?
+
+Thank you very much!
+JG
+    =
 
 _______________________________________________
 xfs mailing list
