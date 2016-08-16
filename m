@@ -1,18 +1,23 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E5ABC7CA0
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 23:38:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 97C0A8F8185
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 21:38:45 -0700 (PDT)
-Received: from gsmold.com ([14.217.203.246]) by cuda.sgi.com with SMTP id
-	0bH48nHjxChVIeHg for <xfs@oss.sgi.com>;
-	Tue, 16 Aug 2016 21:38:39 -0700 (PDT)
-From: "gsmold160801@163.com" <gsmold160801@163.com>
-Subject: PE WPC Profile Extrusion Mould
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 942DA7CA0
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:19:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 657C0304133
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 08:19:19 -0700 (PDT)
+Received: from jupiter.cleverdot.com (jupiter-mx3.cleverdot.com
+	[208.38.186.237]) by cuda.sgi.com with ESMTP id
+	qMmvhp4ELmm4fYk1 (version=TLSv1 cipher=DHE-RSA-AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Aug 2016 08:19:15 -0700 (PDT)
+Received: from [127.0.0.1] (port=21077 helo=jupiter.cleverdot.com)
+	by jupiter.cleverdot.com with smtp (Exim 4.87)
+	(envelope-from <info@forex-strategy.com>) id 1bZg94-0000wz-Vs
+	for xfs@oss.sgi.com; Tue, 16 Aug 2016 11:19:15 -0400
+Date: Tue, 16 Aug 2016 11:19:14 -0400
+From: FS Team <info@forex-strategy.com>
+Subject: A gratis super bonus gift for you!
+Message-ID: <6722d945108f8077d7931121bbcb8a83@forex-strategy.com>
 MIME-Version: 1.0
-Date: Wed, 17 Aug 2016 12:33:47 +0800
-Message-Id: <20160817043845.AA789D80079@cuda.sgi.com>
-Reply-To: gsmold160801@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,178 +26,310 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0080155676372745726=="
+Content-Type: multipart/mixed; boundary="===============1561296309592936593=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0080155676372745726==
+--===============1561296309592936593==
+Content-Transfer-Encoding: 8bit
 Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
-Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCAxMS4wMC4xMDU4Ni40OTQiPjwvSEVBRD4NCjxCT0RZPg0KPERJViANCnN0eWxl
-PSJXSElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06
-IG5vbmU7IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVS
-LVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVY
-VC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij5IZWxsbyANClBy
-b2plY3QgTWFuYWdlciwmbmJzcDs8L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BBQ0U6IG5v
-cm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xPUjogcmdi
-KDAsMCwyNTUpOyBGT05UOiAxMnB4LzE4cHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7
-IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13
-ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+PEJSPjwvRElWPg0KPERJViANCnN0eWxlPSJX
-SElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5v
-bmU7IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVSLVNQ
-QUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1J
-TkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48QlI+PC9ESVY+DQo8
-RElWIA0Kc3R5bGU9IldISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhU
-LVRSQU5TRk9STTogbm9uZTsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVDogMTJweC8xOHB4IEFy
-aWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1
-NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgi
-PkluIA0Kb3JkZXIgdG8gc2F2ZSB5b3VyIGV4dHJ1c2lvbiBtb2xkIGNvc3QsIHdvdWxkIHlvdSBs
-aWtlIHRvIG91dHNvdXJlIGl0IHRvIHVzIHdpdGggDQpkZXRhaWxzIGFzIGZvbGxvd2luZz8mbmJz
-cDs8L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5H
-OiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05UOiAx
-MnB4LzE4cHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6
-IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Ut
-d2lkdGg6IDBweCI+PEJSPjwvRElWPg0KPERJViANCnN0eWxlPSJXSElURS1TUEFDRTogbm9ybWFs
-OyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IENPTE9SOiByZ2IoMCww
-LDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFD
-S0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtp
-dC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij4xLCANClRoaXMga2luZCBvZiBtb2xkIGlzIHVzZWQg
-Zm9yIG1ha2luZyBQVkMgd29uZG93c3dpbGwgcHJvZmlsZXMuIEl0IGNvbnNpc3RzIG9mIA0KZGll
-IGhlYWQsIGNhbGlicmF0b3IgYW5kIHdhdGVydGFuay4mbmJzcDs8L0RJVj4NCjxESVYgDQpzdHls
-ZT0iV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JN
-OiBub25lOyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05UOiAxMnB4LzE4cHggQXJpYWw7IExFVFRF
-Ui1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRF
-WFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+TW91bGQgDQpt
-YXRlcmlhbDogUzEzNkgsIGhhcmRuZXNzOiAzMi0zNkhSQyB3aXRoIGZpbmUgcG9saXNoaW5nIHN1
-cmZhY2UuJm5ic3A7PC9ESVY+DQo8RElWIA0Kc3R5bGU9IldISVRFLVNQQUNFOiBub3JtYWw7IFdP
-UkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsgQ09MT1I6IHJnYigwLDAsMjU1
-KTsgRk9OVDogMTJweC8xOHB4IEFyaWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JP
-VU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRl
-eHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxCUj48L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BB
-Q0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xP
-UjogcmdiKDAsMCwyNTUpOyBGT05UOiAxMnB4LzE4cHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBu
-b3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAw
-cHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+MiwgDQpMZW5ndGggb2Ygd29uZG93
-IHN0aWxsIGJvYXJkIG1vdWxkOiAzMDBtbSwgMzUwbW0sIDQwMG1tLCA1MDBtbSwgNjAwbW0gYW5k
-IHNvIG9uLiANClRoZSB3aW5kb3cgc2lsbCBjYW4gYmUgUFZDIG9ubHkgb3IgUFZDIHdpdGggY29s
-b3IgZXh0cnVzaW9uLiZuYnNwOzwvRElWPg0KPERJViANCnN0eWxlPSJXSElURS1TUEFDRTogbm9y
-bWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IENPTE9SOiByZ2Io
-MCwwLDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsg
-QkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdl
-YmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48QlI+PC9ESVY+DQo8RElWIA0Kc3R5bGU9IldI
-SVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9u
-ZTsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVDogMTJweC8xOHB4IEFyaWFsOyBMRVRURVItU1BB
-Q0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlO
-REVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjMsJm5ic3A7PFNQQU4g
-DQpzdHlsZT0iV0lET1dTOiAxOyBMSU5FLUhFSUdIVDogMjFweDsgQkFDS0dST1VORC1DT0xPUjog
-d2luZG93Ij5EaWUgaGVhZDogDQombmJzcDtzaGFwaW5nIHRoZSBtb3ZpbmcgbWVsdCBwbGFzdGlj
-IHdpdGggaGlnaCZuYnNwOyANCnRlbXBlcmF0dXJlLiZuYnNwOzwvU1BBTj48L0RJVj4NCjxQIA0K
-c3R5bGU9IldPUkQtV1JBUDogYnJlYWstd29yZDsgQk9SREVSLVRPUDogMHB4OyBCT1JERVItUklH
-SFQ6IDBweDsgVkVSVElDQUwtQUxJR046IGJhc2VsaW5lOyBXSElURS1TUEFDRTogbm9ybWFsOyBX
-T1JELVNQQUNJTkc6IDBweDsgQk9SREVSLUJPVFRPTTogMHB4OyBURVhULVRSQU5TRk9STTogbm9u
-ZTsgQ09MT1I6IHJnYigwLDAsMjU1KTsgUEFERElORy1CT1RUT006IDBweDsgUEFERElORy1UT1A6
-IDBweDsgRk9OVDogMTJweC8xOHB4IEFyaWFsOyBQQURESU5HLUxFRlQ6IDBweDsgQk9SREVSLUxF
-RlQ6IDBweDsgV0lET1dTOiAxOyBNQVJHSU46IDBweDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsg
-UEFERElORy1SSUdIVDogMHB4OyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBU
-RVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHg7IGZvbnQtc3Ry
-ZXRjaDogaW5oZXJpdCI+PFNQQU4gDQpzdHlsZT0iQk9SREVSLVRPUDogMHB4OyBCT1JERVItUklH
-SFQ6IDBweDsgVkVSVElDQUwtQUxJR046IGJhc2VsaW5lOyBCT1JERVItQk9UVE9NOiAwcHg7IFBB
-RERJTkctQk9UVE9NOiAwcHg7IFBBRERJTkctVE9QOiAwcHg7IFBBRERJTkctTEVGVDogMHB4OyBC
-T1JERVItTEVGVDogMHB4OyBNQVJHSU46IDBweDsgTElORS1IRUlHSFQ6IDIxcHg7IFBBRERJTkct
-UklHSFQ6IDBweDsgZm9udC1zdHJldGNoOiBpbmhlcml0Ij5DYWxpYnJhdG9yOiANCiZuYnNwO2Nv
-b2xpbmcgdGhlIHBsYXN0aWMgZXh0cnVkZWQgcHJvZHVjdCBmcm9tIHRoZSBkaWUgaGVhZCB3aXRo
-IHdhdGVyIGNvb2xpbmcgDQphbmQgdmFjdXVtIGZvcm1pbmcuPC9TUEFOPjwvUD4NCjxQIA0Kc3R5
-bGU9IldPUkQtV1JBUDogYnJlYWstd29yZDsgQk9SREVSLVRPUDogMHB4OyBCT1JERVItUklHSFQ6
-IDBweDsgVkVSVElDQUwtQUxJR046IGJhc2VsaW5lOyBXSElURS1TUEFDRTogbm9ybWFsOyBXT1JE
-LVNQQUNJTkc6IDBweDsgQk9SREVSLUJPVFRPTTogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsg
-Q09MT1I6IHJnYigwLDAsMjU1KTsgUEFERElORy1CT1RUT006IDBweDsgUEFERElORy1UT1A6IDBw
-eDsgRk9OVDogMTJweC8xOHB4IEFyaWFsOyBQQURESU5HLUxFRlQ6IDBweDsgQk9SREVSLUxFRlQ6
-IDBweDsgV0lET1dTOiAxOyBNQVJHSU46IDBweDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgUEFE
-RElORy1SSUdIVDogMHB4OyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhU
-LUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHg7IGZvbnQtc3RyZXRj
-aDogaW5oZXJpdCI+PFNQQU4gDQpzdHlsZT0iQk9SREVSLVRPUDogMHB4OyBCT1JERVItUklHSFQ6
-IDBweDsgVkVSVElDQUwtQUxJR046IGJhc2VsaW5lOyBCT1JERVItQk9UVE9NOiAwcHg7IFBBRERJ
-TkctQk9UVE9NOiAwcHg7IFBBRERJTkctVE9QOiAwcHg7IFBBRERJTkctTEVGVDogMHB4OyBCT1JE
-RVItTEVGVDogMHB4OyBNQVJHSU46IDBweDsgTElORS1IRUlHSFQ6IDIxcHg7IFBBRERJTkctUklH
-SFQ6IDBweDsgZm9udC1zdHJldGNoOiBpbmhlcml0Ij5XYXRlciANCnRhbms6ICZuYnNwO2Nvb2xp
-bmcgdGhlIHBsYXN0aWMgZXh0cnVkZWQgcHJvZHVjdCBhZ2FpbiB3aXRoIHB1cmUgd2F0ZXIgYW5k
-IHRvIA0Kc2hhcGUgdGhlIGV4dHVkZWQgcHJvZHVjdCBwZXJmZWN0bHkgYWdhaW4gd2l0aCB0YW5r
-cGxhdGVzLjwvU1BBTj48L1A+DQo8RElWIA0Kc3R5bGU9IldISVRFLVNQQUNFOiBub3JtYWw7IFdP
-UkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsgQ09MT1I6IHJnYigwLDAsMjU1
-KTsgRk9OVDogMTJweC8xOHB4IEFyaWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JP
-VU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRl
-eHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxCUj48L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BB
-Q0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xP
-UjogcmdiKDAsMCwyNTUpOyBGT05UOiAxMnB4LzE4cHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBu
-b3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAw
-cHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+RW5jbG9zZWQgDQpwbGVhc2Uga2lu
-ZGx5IHNlZSBpdHMgcGhvdG9zLiBGb3IgYW55IGlucXVpcmllcywgcGxlYXNlIHNlbmQgYW5kIHNl
-ZSBob3cgd2UgY2FuIA0KYmVuZWZpdCBmb3IgeW91ITwvRElWPg0KPERJViANCnN0eWxlPSJXSElU
-RS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7
-IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVSLVNQQUNJ
-Tkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRF
-TlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48QlI+PC9ESVY+DQo8RElW
-IA0Kc3R5bGU9IldISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRS
-QU5TRk9STTogbm9uZTsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVDogMTJweC8xOHB4IEFyaWFs
-OyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwy
-NTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxC
-Uj48L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5H
-OiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05UOiAx
-MnB4LzE4cHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6
-IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Ut
-d2lkdGg6IDBweCI+PEJSPjwvRElWPg0KPERJViANCnN0eWxlPSJXSElURS1TUEFDRTogbm9ybWFs
-OyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IENPTE9SOiByZ2IoMCww
-LDI1NSk7IEZPTlQ6IDEycHgvMThweCBBcmlhbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFD
-S0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtp
-dC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij4NCjxIUiBzdHlsZT0iQk9YLVNJWklORzogYm9yZGVy
-LWJveDsgSEVJR0hUOiAxcHg7IFdJRFRIOiAyMTBweCIgYWxpZ249bGVmdCANCmNvbG9yPSNiNWM0
-ZGYgU0laRT0xPg0KDQo8RElWPg0KPERJViANCnN0eWxlPSJGT05ULVNJWkU6IDEwLjVwdDsgRk9O
-VC1GQU1JTFk6IOWui+S9kzsgUE9TSVRJT046IHN0YXRpYyAhaW1wb3J0YW50OyBDT0xPUjogcmdi
-KDAsMCwwKTsgTElORS1IRUlHSFQ6IDEuNSI+DQo8RElWIHN0eWxlPSJGT05ULVNJWkU6IDEwLjVw
-dDsgUE9TSVRJT046IHN0YXRpYyAhaW1wb3J0YW50OyBMSU5FLUhFSUdIVDogMS41Ij4NCjxESVYg
-c3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBQT1NJVElPTjogc3RhdGljICFpbXBvcnRhbnQ7IExJ
-TkUtSEVJR0hUOiAxLjUiPg0KPERJViBzdHlsZT0iRk9OVC1TSVpFOiAxMC41cHQ7IFBPU0lUSU9O
-OiBzdGF0aWMgIWltcG9ydGFudDsgTElORS1IRUlHSFQ6IDEuNSI+DQo8RElWIA0Kc3R5bGU9IkZP
-TlQtU0laRTogMTAuNXB0OyBNQVJHSU4tVE9QOiAxMHB4OyBQT1NJVElPTjogc3RhdGljICFpbXBv
-cnRhbnQ7IE1BUkdJTi1MRUZUOiAxMHB4OyBNQVJHSU4tUklHSFQ6IDEwcHgiPg0KPERJViBzdHls
-ZT0iUE9TSVRJT046IHN0YXRpYyAhaW1wb3J0YW50Ij48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAx
-MC41cHQiPjxGT05UIA0Kc3R5bGU9IkZPTlQtU0laRTogMTBwdDsgRk9OVC1GQU1JTFk6IFZlcmRh
-bmEiIGNvbG9yPSMwMDAwZmY+V2FybSBhbmQgDQp0ZW5kZXImbmJzcDtyZWdhcmRzLDwvRk9OVD48
-U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6IFZlcmRhbmEiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0la
-RTogMTBwdCI+DQo8RElWIHN0eWxlPSJGT05ULVNJWkU6IDEwcHQiPiZuYnNwOzwvRElWPg0KPERJ
-Vj48Rk9OVCBzdHlsZT0iRk9OVC1TSVpFOiAxMHB0IiBjb2xvcj0jMDAwMGZmPjwvRk9OVD4mbmJz
-cDs8L0RJVj4NCjxESVY+PEZPTlQgc3R5bGU9IkZPTlQtU0laRTogMTBwdCIgY29sb3I9IzAwMDBm
-Zj48L0ZPTlQ+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBDT0xPUjogcmdiKDAsMCwy
-NTUpOyBMSU5FLUhFSUdIVDogMS41OyBCQUNLR1JPVU5ELUNPTE9SOiB3aW5kb3ciPkFuaXRhIA0K
-WmhlbmcoSW50ZXJuYXRpb25hbCBTYWxlcyk8L1NQQU4+PC9ESVY+DQo8UCBjbGFzcz1Nc29Ob1Nw
-YWNpbmcgc3R5bGU9Ik1BUkdJTjogMHB4IDBjbSI+PFNQQU4gbGFuZz1FTi1VUz48Rk9OVCANCnN0
-eWxlPSJGT05ULVNJWkU6IDEwcHQiIGNvbG9yPSMwMDAwZmY+R1MgTWFjaGluaW5nIGZyb20gRG9u
-Z2d1YW4sIA0KQ2hpbmE8L0ZPTlQ+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vU3BhY2luZyBz
-dHlsZT0iTUFSR0lOOiAwcHggMGNtIj48Rk9OVCBjb2xvcj0jMDAwMGZmPjxCIA0Kc3R5bGU9Ik1B
-UkdJTi1CT1RUT006IDBweDsgTUFSR0lOLVRPUDogMHB4Ij48U1BBTiBsYW5nPUVOLVVTIA0Kc3R5
-bGU9IkZPTlQtU0laRTogMTBwdCI+TWFudWZhY3R1cmVyIG9mJm5ic3A7ZXh0cnVzaW9uIA0KbW91
-bGQ8L1NQQU4+PC9CPjwvRk9OVD48L1A+DQo8UCBjbGFzcz1Nc29Ob1NwYWNpbmcgc3R5bGU9Ik1B
-UkdJTjogMHB4IDBjbSI+PEZPTlQgY29sb3I9IzAwMDBmZj48U1BBTiANCmxhbmc9RU4tVVMgc3R5
-bGU9IkZPTlQtU0laRTogMTBwdCI+V2Vic2l0ZTogZ3MtbWFjaGluaW5nLmNvbTwvU1BBTj48U1BB
-TiANCmxhbmc9RU4tVVMgDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTog5a6L
-5L2TOyBDT0xPUjogc2lsdmVyIj48P3htbDpuYW1lc3BhY2UgcHJlZml4ID0gDQoibyIgLz48bzpw
-IA0Kc3R5bGU9IkZPTlQtU0laRTogMTBwdDsgTUFSR0lOLUJPVFRPTTogMHB4OyBGT05ULUZBTUlM
-WTogVmVyZGFuYTsgTUFSR0lOLVRPUDogMHB4Ij48L286cD48L1NQQU4+PC9GT05UPjwvUD4NCjxQ
-IGNsYXNzPU1zb05vU3BhY2luZyBzdHlsZT0iTUFSR0lOOiAwcHggMGNtIj48Rk9OVCBjb2xvcj0j
-MDAwMGZmPjxTUEFOIA0KbGFuZz1FTi1VUz48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxMHB0Ij5U
-ZWw6ICs4Ni03NjktODExMjQxNjcmbmJzcDsmbmJzcDsmbmJzcDsgDQpGYXg6IA0KKzg2LTc2OS04
-OTAzMjExOS0wODExPC9TUEFOPjwvU1BBTj48L0ZPTlQ+PC9QPjwvU1BBTj48L1NQQU4+PC9TUEFO
-PjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvQk9EWT48
-L0hUTUw+DQoNCg==
+<p><span style="family: verdana, geneva"><!-- Start of preheader container<br />
+--></span><br />
+<br />
+&nbsp;</p>
+<table cellspacing="0" cellpadding="0" border="0" bgcolor="#f8f8f8" align="center" style="width: 100%">
+    <tbody>
+        <tr>
+            <td valign="middle" height="60" align="center"><span style="font-family: verdana, geneva"><!--<br />
+Start of preheader --></span><br />
+            <br />
+            <br />
+            <br />
+            <table cellspacing="0" cellpadding="0" border="0" bgcolor="#f8f8f8" align="center" style="width: 100%">
+                <tbody>
+                    <tr>
+                        <td valign="top"><span style="font-family: verdana, geneva"><!--<br />
+Start of header --></span><span style="font-family: verdana, geneva"><!--<br />
+End<br />
+of header --></span><br />
+                        &nbsp;</td>
+                    </tr>
+                </tbody>
+            </table>
+            <span style="font-family: verdana, geneva"><!--<br />
+End<br />
+of header container--><!-- End of intro copy --><!-- Start of main<br />
+container<br />
+--></span><br />
+            <div align="center"><span style="font-family: verdana, geneva"><!-- End of header<br />
+container--><!--<br />
+End of main container --><!-- Start of footer container --></span><span style="font-family: verdana, geneva"><!-- End<br />
+of footer container --></span><br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <table cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" align="center" style="width: 600px">
+                <tbody>
+                    <tr>
+                        <!-- Start of Sidebar<br />
+--><!-- End of<br />
+Sidebar --><!--<br />
+Start of Main Column -->
+                        <td width="100%" valign="top"><br />
+                        <br />
+                        <br />
+                        <br />
+                        <table cellspacing="0" cellpadding="0" border="0" align="left" style="width: 600px">
+                            <tbody>
+                                <tr>
+                                    <td valign="top" style="padding: 0pt 20px 20px"><br />
+                                    <div align="left"><font size="3" face="tahoma"><br />
+                                    <br />
+                                    <br />
+                                    &nbsp;&nbsp;&nbsp; <br />
+                                    &nbsp;<center><strong><font size="4" face="tahoma"> &quot;<font size="4" face="tahoma" color="#990000">Instantly Download</font> This Pro Level Trading<br />
+                                    <br />
+                                    <br />
+                                    &nbsp; System <font size="4" face="tahoma" color="#990000">For Zero Cost</font> And You Could Put<br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <font size="4" face="tahoma" color="#990000">Hundreds Of Dollars</font> In Your Pocket <font size="4" face="tahoma" color="#990000">Today</font>&quot;</font></strong></center><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <br />
+                                    &nbsp; Today is your lucky day, and it's a special day because<br />
+                                    &nbsp; you can <strong>instantly download</strong> your copy of The <strong>Mechanical<br />
+                                    &nbsp; Cash Builder...</strong><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <br />
+                                    &nbsp; A <strong>professional grade</strong> trading system that takes full<br />
+                                    &nbsp; advantage of a <em><strong>secret</strong></em> hedge fund technique that is not<br />
+                                    &nbsp; only <strong>easy to use,</strong> it could put hundreds if not<br />
+                                    &nbsp; <strong>thousands of dollars in your pocket today.</strong><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <center><font size="3" face="tahoma"><a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016"><img border="0" alt="Click display images to see chart" src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_22_29june_2016.png" /></a><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <strong><a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016">Get instant access to your premium trading gift here!</a></strong>&nbsp; <br />
+                                    &nbsp; </font><br />
+                                    &nbsp; </center><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; And there is <strong>ZERO CATCH!</strong> That's right, no hoops to jump<br />
+                                    &nbsp; through, nothing!<br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; <br />
+                                    &nbsp; This is a gift to our community! Plain and simple!<br />
+                                    &nbsp; There is absolutely nothing for sale and you could put<br />
+                                    &nbsp; money in your pocket today.<br />
+                                    &nbsp; <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; This is <strong>completely different</strong> to anything you've seen<br />
+                                    &nbsp; before and is yours today for absolutely ZERO cost.<br />
+                                    &nbsp; This has been responsible for many trading beginners<br />
+                                    &nbsp; finally making <strong>the breakthrough you've been looking<br />
+                                    &nbsp; for!<br />
+                                    &nbsp; </strong><br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <br />
+                                    &nbsp; You will be supplied with everything you need - <strong>for<br />
+                                    &nbsp; zero cost</strong> - to start making hundreds of dollars today,<br />
+                                    &nbsp; including:<br />
+                                    &nbsp;
+                                    <ul>
+                                        <li style="list-style-image:none; list-style-type:none;"><font size="3" face="tahoma"><br />
+                                        &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> The Secret Report containing the full system rules,<br />
+                                        &nbsp; the secret code and the <strong>instant cash-making strategies.</strong><br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> The custom indicators that take advantage of this<br />
+                                        &nbsp; secret hedge fund technique, finely tuned to where the<br />
+                                        &nbsp; <strong>easy money</strong> is waiting.<br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> Plus a killer video that shows you how to use this<br />
+                                        &nbsp; information to <strong>line your pockets with a ton of easy<br />
+                                        &nbsp; money.</strong><br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> <strong>This system is a <em>wealth generating machine</em> that<br />
+                                        &nbsp; practically prints money for you... Day after day? Year<br />
+                                        &nbsp; after year,</strong></font></li>
+                                        <br />
+                                        &nbsp; </ul>
+                                        <br />
+                                        <br />
+                                        &nbsp; <center><font size="3" face="tahoma"><a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016"><img border="0" alt="Click display images to see chart" src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_18_29june_2016.png" /></a></font><br />
+                                        &nbsp; </center><br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <strong><a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016">Download your gratis system and watch the video here<br />
+                                        &nbsp; instantly!</a></strong>&nbsp; <br />
+                                        &nbsp; <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <strong>That familiar face above belongs to none other than<br />
+                                        &nbsp; veteran trading superstar Russ Horn, one of the most<br />
+                                        &nbsp; generous professionals out there!</strong><br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; He's one of the world's foremost authorities when it<br />
+                                        &nbsp; comes to making huge sums of cash trading Forex<br />
+                                        &nbsp; however, just in case you are new and you haven't heard<br />
+                                        &nbsp; of Russ, <strong>here is why this is your lucky day:</strong>&nbsp; <br />
+                                        &nbsp;
+                                        <ul>
+                                            <li style="list-style-image:none; list-style-type:none;"><font size="3" face="tahoma"><br />
+                                            &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> A professional trader for over 16 years trading at<br />
+                                            &nbsp; the highest levels, Russ enjoys giving back to our<br />
+                                            &nbsp; community and he has a long track record of sharing top<br />
+                                            &nbsp; secret trading strategies, asking for nothing in<br />
+                                            &nbsp; return.<br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            &nbsp; <br />
+                                            &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> He is responsible for teaching over 3,000 regular<br />
+                                            &nbsp; people how to generate thousands of dollars, trading<br />
+                                            &nbsp; from home.<br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            &nbsp; <br />
+                                            &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> Russ is one of the most trusted trading gurus out<br />
+                                            &nbsp; there, and the last time he gave away a system for<br />
+                                            &nbsp; nothing, thousands of people made profits with it.<br />
+                                            &nbsp; <br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            <br />
+                                            &nbsp; <img src="https://s3.amazonaws.com/93lk3n324kj45/images/email_img_19_29june_2016.png" alt="" /> His Facebook account shows he has over 44,000 fans,<br />
+                                            &nbsp; and I think you'd struggle to find anyone who would say<br />
+                                            &nbsp; a bad word about him.</font></li>
+                                        </ul>
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <strong>Before you can download your zero cost system (you<br />
+                                        &nbsp; could make hundreds of dollars today with this) there's<br />
+                                        &nbsp; only ONE THING you have to do?</strong><br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp;<center><strong><font size="3" face="tahoma"> <a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016">Click this link, watch the video and look for<br />
+                                        <br />
+                                        <br />
+                                        &nbsp; the instant download button!</a>&nbsp; </font></strong><br />
+                                        &nbsp;</center><br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; To your trading success,<br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; Adrian Jones<br />
+                                        <br />
+                                        <br />
+                                        &nbsp; &quot;Next Generation Trading&quot;<br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <strong>P.S.</strong> There really is <strong>zero cost</strong> and <strong>no catch.</strong> There's<br />
+                                        &nbsp; not even anything to buy! Russ simply wants to help<br />
+                                        &nbsp; even more people like you make the extra cash you need<br />
+                                        &nbsp; to <strong>become more financially secure</strong> and to experience the<br />
+                                        &nbsp; comfort that being able to <strong>generate instant cash</strong> could<br />
+                                        &nbsp; bring you.<br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <strong><a href="http://www.chartlessons.com/rmbac.php?utm_source=mb&amp;utm_medium=email&amp;utm_campaign=08162016">Download this full system, get the secret report and<br />
+                                        &nbsp; watch the video here?</a></strong>&nbsp; <br />
+                                        <br />
+                                        &nbsp; <br />
+                                        &nbsp; <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        =================================<br />
+                                        <br />
+                                        Information, charts or examples contained in this email is for illustration and educational purposes only. It should not be considered as advice or an endorsement to purchase or sell any security or financial instrument. We do not and cannot give any kind of financial advice. No employee or persons associated with us is registered or authorized to give financial advice. We do not trade on anyone's behalf, and we do not recommend or receive any payments from any broker. On certain occasions, we<br />
+                                        have a material link to the product or service mentioned in the email. This may be in the form of compensation or remuneration.<br />
+                                        <br />
+                                        =================================<br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        <br />
+                                        </font><br />
+                                        <br />
+                                        </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
 
---===============0080155676372745726==
+--===============1561296309592936593==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -203,4 +340,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0080155676372745726==--
+--===============1561296309592936593==--
