@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C385C7CA0
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 22:34:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A5338F8040
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 20:34:42 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id o1C3DTEVN7CPTb4f for <xfs@oss.sgi.com>;
-	Sun, 21 Aug 2016 20:34:39 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9A099474BA7
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 22:34:38 -0500 (CDT)
-Subject: Re: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-	<1471356998-2876-4-git-send-email-billodo@redhat.com>
-	<20160822020650.GR19025@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <86d459e4-6853-9f3c-3851-3e212f8c7adf@sandeen.net>
-Date: Sun, 21 Aug 2016 22:34:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160822020650.GR19025@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2C2F27CD5
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F210230417A
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XdkL95QutSHYMlNu (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:35 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 16/22] richacl: Automatic Inheritance
+Date: Tue, 16 Aug 2016 13:02:57 +0200
+Message-Id: <1471345383-15334-17-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,102 +23,190 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On 8/21/16 9:06 PM, Dave Chinner wrote:
-> On Tue, Aug 16, 2016 at 09:16:38AM -0500, Bill O'Donnell wrote:
->> Further changes to allow xfs_quota to be used on foreign filesystem(s)
->> (e.g. ext4) for project quota testing in xfstests.
->>
->> Add CMD_FLAG_GENERIC to enable generic xfs_quota commands (help and
->> quit) when xfs_quota is run on foreign filesystems.
->>
->> Use CMD_FLAG_FOREIGN_OK on commands suitable for foreign filesystems.
->>
->> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
->> ---
->>  include/command.h | 1 +
->>  libxcmd/help.c    | 3 ++-
->>  libxcmd/quit.c    | 3 ++-
->>  quota/init.c      | 3 ++-
->>  4 files changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/include/command.h b/include/command.h
->> index 81d5a4d..1c2898a 100644
->> --- a/include/command.h
->> +++ b/include/command.h
->> @@ -22,6 +22,7 @@
->>  
->>  #define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
->>  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
->> +#define CMD_FLAG_GENERIC	(1<<29) /* command is generic (help, quit) */
-> 
-> I don't think this belongs in include/command.h - it's an xfs_quota
-> specific behaviour so I'd put this in quota/init.h:
-> 
-> #define CMD_SKIP_CHECK	(1<<0)	/* command is always run */
-> 
->> diff --git a/quota/init.c b/quota/init.c
->> index d5d80c2..85931bf 100644
->> --- a/quota/init.c
->> +++ b/quota/init.c
->> @@ -104,7 +104,8 @@ init_check_command(
->>  	const cmdinfo_t	*ct)
->>  {
->>  	if (fs_path &&
->> -	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
->> +	    !((ct->flags & CMD_FLAG_FOREIGN_OK) && foreign_allowed) &&
->> +	    !(ct->flags & CMD_FLAG_GENERIC) &&
->>  	     (fs_path->fs_flags & FS_FOREIGN)) {
-> 
-> This is now sufficiently confusing that it needs to be reworked to
-> make the logic clear and easily commented. i.e. something like this:
-> 
-> static int
-> init_check_command(
-> 	const cmdinfo_t *ct)
-> {
-> 	if (!fspath)
-> 		return 1;
-> 
-> 	/* Always run commands that we are told to skip here */
-> 	if (ct->flags & CMD_SKIP_CHECK)
-> 		return 1;
-> 
-> 	/* if it's an XFS filesystem, always run the command */
-> 	if (!(fs_path->fs_flags & FS_FOREIGN))
-> 		return 1;
+Automatic Inheritance (AI) allows changes to the acl of a directory to
+propagate down to children.
 
-Sorry for the late review; thanks for getting on it, Dave - but,
-isn't "foreign ok" exactly == "skip check?"
+This is mostly implemented in user space: when a process changes the
+permissions of a directory and Automatic Inheritance is enabled for that
+directory, the process must propagate those changes to all children,
+recursively.
 
-The only check that gets skipped is the foreign check, so just
-setting FOREIGN_OK seems to accomplish the same thing without
-more flag complexity, no?
+The kernel enables this by keeping track of which permissions have been
+inherited at create time.  In addition, it makes sure that permission
+propagation is turned off when the permissions are set explicitly (for
+example, upon create or chmod).
 
-Thanks,
--Eric
+Automatic Inheritance works as follows:
 
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
+   is not set, the file or directory is not affected by AI.
 
-> 	/* If the user specified foreign filesysetms are ok, run it */
-> 	if (foreign_allowed &&
-> 	    (ct->flags & CMD_FLAG_FOREIGN_OK))
-> 		return 1;
-> 
-> 	/* foreign filesystem and it's no a valid command! */
-> 	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-> 			ct->name);
-> 	return 0;
-> }
-> 
-> Cheers,
-> 
-> Dave.
-> 
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
+   and a file or subdirectory is created in that directory, the
+   inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
+   inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
+   allows user space to distinguish between aces which have been
+   inherited and aces which have been explicitly added.
+
+ - When the RICHACL_PROTECTED acl flag in the acl of a file or directory
+   is set, AI will not modify the acl.  This does not affect propagation
+   of permissions from the file to its children (if the file is a
+   directory).
+
+Linux does not have a way of creating files or directories without setting the
+file permission bits, so all files created inside a directory with
+RICHACL_AUTO_INHERIT set will have the RICHACL_PROTECTED flag set.  This
+effectively disables Automatic Inheritance.
+
+Protocols which support creating files without specifying permissions can
+explicitly clear the RICHACL_PROTECTED flag after creating a file and reset the
+file masks to "undo" applying the create mode; see richacl_compute_max_masks().
+They should set the RICHACL_DEFAULTED flag.  (A mechanism that would allow to
+indicate to the kernel to ignore the create mode in the first place when there
+are inherited permissions would be nice to have.)
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c                 | 20 +++++++++++++++++++-
+ include/linux/richacl.h      | 12 ++++++++++++
+ include/uapi/linux/richacl.h | 11 ++++++++++-
+ 3 files changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 8051181..4edce8b 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -567,7 +567,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	    acl->a_group_mask == group_mask &&
+ 	    acl->a_other_mask == other_mask &&
+ 	    (acl->a_flags & RICHACL_MASKED) &&
+-	    (acl->a_flags & RICHACL_WRITE_THROUGH))
++	    (acl->a_flags & RICHACL_WRITE_THROUGH) &&
++	    (!richacl_is_auto_inherit(acl) || richacl_is_protected(acl)))
+ 		return acl;
+ 
+ 	clone = richacl_clone(acl, GFP_KERNEL);
+@@ -579,6 +580,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	clone->a_owner_mask = owner_mask;
+ 	clone->a_group_mask = group_mask;
+ 	clone->a_other_mask = other_mask;
++	if (richacl_is_auto_inherit(clone))
++		clone->a_flags |= RICHACL_PROTECTED;
+ 
+ 	return clone;
+ }
+@@ -794,6 +797,14 @@ richacl_inherit(const struct richacl *dir_acl, int isdir)
+ 			ace++;
+ 		}
+ 	}
++	if (richacl_is_auto_inherit(dir_acl)) {
++		acl->a_flags = RICHACL_AUTO_INHERIT;
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags |= RICHACE_INHERITED_ACE;
++	} else {
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags &= ~RICHACE_INHERITED_ACE;
++	}
+ 
+ 	return acl;
+ }
+@@ -822,6 +833,13 @@ richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
+ 			richacl_put(acl);
+ 			acl = NULL;
+ 		} else {
++			/*
++			 * We need to set RICHACL_PROTECTED because we are
++			 * doing an implicit chmod
++			 */
++			if (richacl_is_auto_inherit(acl))
++				acl->a_flags |= RICHACL_PROTECTED;
++
+ 			richacl_compute_max_masks(acl);
+ 			/*
+ 			 * Ensure that the acl will not grant any permissions
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 6354ef0..737513b 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -81,6 +81,18 @@ extern void set_cached_richacl(struct inode *, struct richacl *);
+ extern void forget_cached_richacl(struct inode *);
+ extern struct richacl *get_richacl(struct inode *);
+ 
++static inline int
++richacl_is_auto_inherit(const struct richacl *acl)
++{
++	return acl->a_flags & RICHACL_AUTO_INHERIT;
++}
++
++static inline int
++richacl_is_protected(const struct richacl *acl)
++{
++	return acl->a_flags & RICHACL_PROTECTED;
++}
++
+ /**
+  * richace_is_owner  -  check if @ace is an OWNER@ entry
+  */
+diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+index 1ed48ac..8849a53 100644
+--- a/include/uapi/linux/richacl.h
++++ b/include/uapi/linux/richacl.h
+@@ -18,6 +18,9 @@
+ #define __UAPI_RICHACL_H
+ 
+ /* a_flags values */
++#define RICHACL_AUTO_INHERIT			0x01
++#define RICHACL_PROTECTED			0x02
++#define RICHACL_DEFAULTED			0x04
+ #define RICHACL_WRITE_THROUGH			0x40
+ #define RICHACL_MASKED				0x80
+ 
+@@ -31,6 +34,7 @@
+ #define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
+ #define RICHACE_INHERIT_ONLY_ACE		0x0008
+ #define RICHACE_IDENTIFIER_GROUP		0x0040
++#define RICHACE_INHERITED_ACE			0x0080
+ #define RICHACE_SPECIAL_WHO			0x4000
+ 
+ /* e_mask bitflags */
+@@ -60,6 +64,9 @@
+ #define RICHACE_EVERYONE_SPECIAL_ID		2
+ 
+ #define RICHACL_VALID_FLAGS (					\
++	RICHACL_AUTO_INHERIT |					\
++	RICHACL_PROTECTED |					\
++	RICHACL_DEFAULTED |					\
+ 	RICHACL_WRITE_THROUGH |					\
+ 	RICHACL_MASKED )
+ 
+@@ -69,13 +76,15 @@
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+ 	RICHACE_INHERIT_ONLY_ACE |				\
+ 	RICHACE_IDENTIFIER_GROUP |				\
++	RICHACE_INHERITED_ACE |					\
+ 	RICHACE_SPECIAL_WHO )
+ 
+ #define RICHACE_INHERITANCE_FLAGS (				\
+ 	RICHACE_FILE_INHERIT_ACE |				\
+ 	RICHACE_DIRECTORY_INHERIT_ACE |				\
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+-	RICHACE_INHERIT_ONLY_ACE )
++	RICHACE_INHERIT_ONLY_ACE |				\
++	RICHACE_INHERITED_ACE )
+ 
+ /* Valid RICHACE_* flags for directories and non-directories */
+ #define RICHACE_VALID_MASK (					\
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
