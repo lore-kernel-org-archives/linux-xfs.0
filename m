@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C97987CA4
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:03:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 25154AC066
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:29 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3886A7CDC
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:04:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E25A88F8173
+	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4dwXrKUpIm7hkwTS (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Cgo3FHyBRH9BV3HI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:03:27 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:04:56 -0700 (PDT)
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 03/22] vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD
-	permission flags
-Date: Tue, 16 Aug 2016 13:02:44 +0200
-Message-Id: <1471345383-15334-4-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v25 20/22] vfs: Move check_posix_acl and check_richacl out of
+	fs/namei.c
+Date: Tue, 16 Aug 2016 13:03:01 +0200
+Message-Id: <1471345383-15334-21-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,88 +32,228 @@ Sender: xfs-bounces@oss.sgi.com
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-Normally, deleting a file requires MAY_WRITE access to the parent
-directory.  With richacls, a file may be deleted with MAY_DELETE_CHILD access
-to the parent directory or with MAY_DELETE_SELF access to the file.
+By moving those functions into fs/posix_acl.c and fs/richacl.c, the
+ifdefs can be moved into include/linux/posix_acl.h and
+include/linux/richacl.h.  This may be seen as a small improvement.
 
-To support that, pass the MAY_DELETE_CHILD mask flag to inode_permission()
-when checking for delete access inside a directory, and MAY_DELETE_SELF
-when checking for delete access to a file itself.
-
-The MAY_DELETE_SELF permission overrides the sticky directory check.
-
+Suggested-by: Jeff Layton <jlayton@redhat.com>
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
-Reviewed-by: Steve French <steve.french@primarydata.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/namei.c         | 20 +++++++++++++-------
- include/linux/fs.h |  2 ++
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ fs/namei.c                | 72 ++++-------------------------------------------
+ fs/posix_acl.c            | 28 ++++++++++++++++++
+ fs/richacl.c              | 28 ++++++++++++++++++
+ include/linux/posix_acl.h |  5 ++++
+ include/linux/richacl.h   |  8 ++++++
+ 5 files changed, 74 insertions(+), 67 deletions(-)
 
 diff --git a/fs/namei.c b/fs/namei.c
-index 6cd7a10..4292c33 100644
+index 63feb3c..3830ef1 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
-@@ -463,9 +463,9 @@ static int sb_permission(struct super_block *sb, struct inode *inode, int mask)
-  * this, letting us set arbitrary permissions for filesystem access without
-  * changing the "normal" UIDs which are used for other things.
-  *
-- * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE, or
-- * MAY_CREATE_DIR are set.  That way, file systems that don't support these
-- * permissions will check for MAY_WRITE instead.
-+ * MAY_WRITE must be set in @mask whenever MAY_APPEND, MAY_CREATE_FILE,
-+ * MAY_CREATE_DIR, or MAY_DELETE_CHILD are set.  That way, file systems that
-+ * don't support these permissions will check for MAY_WRITE instead.
-  */
- int inode_permission(struct inode *inode, int mask)
- {
-@@ -2780,14 +2780,20 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
- 	BUG_ON(victim->d_parent->d_inode != dir);
- 	audit_inode_child(dir, victim, AUDIT_TYPE_CHILD_DELETE);
- 
--	error = inode_permission(dir, mask);
-+	error = inode_permission(dir, mask | MAY_WRITE | MAY_DELETE_CHILD);
-+	if (!error && check_sticky(dir, inode))
-+		error = -EPERM;
-+	if (error && IS_RICHACL(inode) &&
-+	    inode_permission(inode, MAY_DELETE_SELF) == 0 &&
-+	    inode_permission(dir, mask) == 0)
-+		error = 0;
- 	if (error)
- 		return error;
- 	if (IS_APPEND(dir))
- 		return -EPERM;
- 
--	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
--	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
-+	if (IS_APPEND(inode) || IS_IMMUTABLE(inode) ||
-+	    IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
- 		return -EPERM;
- 	if (isdir) {
- 		if (!d_is_dir(victim))
-@@ -2805,7 +2811,7 @@ static int may_delete_or_replace(struct inode *dir, struct dentry *victim,
- 
- static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
- {
--	return may_delete_or_replace(dir, victim, isdir, MAY_WRITE | MAY_EXEC);
-+	return may_delete_or_replace(dir, victim, isdir, MAY_EXEC);
+@@ -258,73 +258,6 @@ void putname(struct filename *name)
+ 		__putname(name);
  }
  
- static int may_replace(struct inode *dir, struct dentry *victim, bool isdir)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 99bbd6c..907869d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -86,6 +86,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- #define MAY_NOT_BLOCK		0x00000080
- #define MAY_CREATE_FILE		0x00000100
- #define MAY_CREATE_DIR		0x00000200
-+#define MAY_DELETE_CHILD	0x00000400
-+#define MAY_DELETE_SELF		0x00000800
- 
+-static int check_richacl(struct inode *inode, int mask)
+-{
+-#ifdef CONFIG_FS_RICHACL
+-	if (mask & MAY_NOT_BLOCK) {
+-		struct base_acl *base_acl;
+-
+-		base_acl = rcu_dereference(inode->i_acl);
+-		if (!base_acl)
+-			goto no_acl;
+-		/* no ->get_richacl() calls in RCU mode... */
+-		if (is_uncached_acl(base_acl))
+-			return -ECHILD;
+-		return richacl_permission(inode, richacl(base_acl),
+-					  mask & ~MAY_NOT_BLOCK);
+-	} else {
+-		struct richacl *acl;
+-
+-		acl = get_richacl(inode);
+-		if (IS_ERR(acl))
+-			return PTR_ERR(acl);
+-		if (acl) {
+-			int error = richacl_permission(inode, acl, mask);
+-			richacl_put(acl);
+-			return error;
+-		}
+-	}
+-no_acl:
+-#endif
+-	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
+-		    MAY_CHMOD | MAY_SET_TIMES)) {
+-		/* File permission bits cannot grant this. */
+-		return -EACCES;
+-	}
+-	return -EAGAIN;
+-}
+-
+-static int check_posix_acl(struct inode *inode, int mask)
+-{
+-#ifdef CONFIG_FS_POSIX_ACL
+-	if (mask & MAY_NOT_BLOCK) {
+-		struct base_acl *base_acl;
+-
+-		base_acl = rcu_dereference(inode->i_acl);
+-	        if (!base_acl)
+-	                return -EAGAIN;
+-		/* no ->get_acl() calls in RCU mode... */
+-		if (is_uncached_acl(base_acl))
+-			return -ECHILD;
+-	        return posix_acl_permission(inode, posix_acl(base_acl),
+-					    mask & ~MAY_NOT_BLOCK);
+-	} else {
+-		struct posix_acl *acl;
+-
+-		acl = get_acl(inode, ACL_TYPE_ACCESS);
+-		if (IS_ERR(acl))
+-			return PTR_ERR(acl);
+-		if (acl) {
+-			int error = posix_acl_permission(inode, acl, mask);
+-			posix_acl_release(acl);
+-			return error;
+-		}
+-	}
+-#endif
+-
+-	return -EAGAIN;
+-}
+-
  /*
-  * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
+  * This does the basic permission checking
+  */
+@@ -344,6 +277,11 @@ static int acl_permission_check(struct inode *inode, int mask)
+ 		int error = check_richacl(inode, mask);
+ 		if (error != -EAGAIN)
+ 			return error;
++		if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
++			    MAY_CHMOD | MAY_SET_TIMES)) {
++			/* File permission bits cannot grant this. */
++			return -EACCES;
++		}
+ 	}
+ 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
+ 		mode >>= 6;
+diff --git a/fs/posix_acl.c b/fs/posix_acl.c
+index f7e1a29..6415675 100644
+--- a/fs/posix_acl.c
++++ b/fs/posix_acl.c
+@@ -374,6 +374,34 @@ check_perm:
+ 	return -EACCES;
+ }
+ 
++int check_posix_acl(struct inode *inode, int mask)
++{
++	if (mask & MAY_NOT_BLOCK) {
++		struct base_acl *base_acl;
++
++		base_acl = rcu_dereference(inode->i_acl);
++	        if (!base_acl)
++	                return -EAGAIN;
++		/* no ->get_acl() calls in RCU mode... */
++		if (is_uncached_acl(base_acl))
++			return -ECHILD;
++	        return posix_acl_permission(inode, posix_acl(base_acl),
++					    mask & ~MAY_NOT_BLOCK);
++	} else {
++		struct posix_acl *acl;
++
++		acl = get_acl(inode, ACL_TYPE_ACCESS);
++		if (IS_ERR(acl))
++			return PTR_ERR(acl);
++		if (acl) {
++			int error = posix_acl_permission(inode, acl, mask);
++			posix_acl_release(acl);
++			return error;
++		}
++	}
++	return -EAGAIN;
++}
++
+ /*
+  * Modify acl when creating a new inode. The caller must ensure the acl is
+  * only referenced once.
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 1945691..ece9d0b 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -385,6 +385,34 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(richacl_permission);
+ 
++int check_richacl(struct inode *inode, int mask)
++{
++	if (mask & MAY_NOT_BLOCK) {
++		struct base_acl *base_acl;
++
++		base_acl = rcu_dereference(inode->i_acl);
++		if (!base_acl)
++			return -EAGAIN;
++		/* no ->get_richacl() calls in RCU mode... */
++		if (is_uncached_acl(base_acl))
++			return -ECHILD;
++		return richacl_permission(inode, richacl(base_acl),
++					  mask & ~MAY_NOT_BLOCK);
++	} else {
++		struct richacl *acl;
++
++		acl = get_richacl(inode);
++		if (IS_ERR(acl))
++			return PTR_ERR(acl);
++		if (acl) {
++			int error = richacl_permission(inode, acl, mask);
++			richacl_put(acl);
++			return error;
++		}
++	}
++	return -EAGAIN;
++}
++
+ /*
+  * Note: functions like richacl_allowed_to_who(), richacl_group_class_allowed(),
+  * and richacl_compute_max_masks() iterate through the entire acl in reverse
+diff --git a/include/linux/posix_acl.h b/include/linux/posix_acl.h
+index eafb358..07225c1 100644
+--- a/include/linux/posix_acl.h
++++ b/include/linux/posix_acl.h
+@@ -94,6 +94,7 @@ extern struct posix_acl *get_posix_acl(struct inode *, int);
+ extern int set_posix_acl(struct inode *, int, struct posix_acl *);
+ 
+ #ifdef CONFIG_FS_POSIX_ACL
++extern int check_posix_acl(struct inode *, int);
+ extern int posix_acl_chmod(struct inode *, umode_t);
+ extern int posix_acl_create(struct inode *, umode_t *, struct posix_acl **,
+ 		struct posix_acl **);
+@@ -112,6 +113,10 @@ static inline void cache_no_acl(struct inode *inode)
+ 	inode->i_default_acl = NULL;
+ }
+ #else
++static inline int check_posix_acl(struct inode *inode, int mask) {
++	return -EAGAIN;
++}
++
+ static inline int posix_acl_chmod(struct inode *inode, umode_t mode)
+ {
+ 	return 0;
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 7530920..368e918 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -207,4 +207,12 @@ extern struct richacl *richacl_inherit(const struct richacl *, int);
+ extern struct richacl *richacl_create(umode_t *, struct inode *);
+ extern int set_richacl(struct inode *, struct richacl *);
+ 
++#ifdef CONFIG_FS_RICHACL
++extern int check_richacl(struct inode *, int);
++#else
++static inline int check_richacl(struct inode *inode, int mask) {
++	return -EAGAIN;
++}
++#endif  /* CONFIG_FS_RICHACL */
++
+ #endif /* __RICHACL_H */
 -- 
 2.7.4
 
