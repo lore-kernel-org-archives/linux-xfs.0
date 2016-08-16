@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0252A7CA1
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 07:29:42 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 00BC67CA2
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 22:17:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3421CAC03E
-	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 05:29:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lgCAAjGM1cXvcWKg (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 15 Aug 2016 05:29:39 -0700 (PDT)
-Date: Mon, 15 Aug 2016 20:29:37 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2] tests/generic: test xfs log recovery metadata LSN
-	ordering
-Message-ID: <20160815122937.GJ27776@eguan.usersys.redhat.com>
-References: <1471262744-19668-1-git-send-email-bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 793B1AC05A
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 20:17:24 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 8ElwmUSCxXpvhUrj for <xfs@oss.sgi.com>;
+	Mon, 15 Aug 2016 20:17:20 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 36DE74454
+	for <xfs@oss.sgi.com>; Mon, 15 Aug 2016 22:17:20 -0500 (CDT)
+Subject: [PATCH V2] xfs_quota: wire up XFS_GETQSTATV
+References: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <2ca2dc3b-53d2-0791-644f-c9cd5abef89f@sandeen.net>
+Date: Mon, 15 Aug 2016 22:17:19 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1471262744-19668-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,168 +32,247 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 15, 2016 at 08:05:44AM -0400, Brian Foster wrote:
-> XFS had a bug that lead to a possible out-of-order log recovery
-> situation (e.g., replay a stale modification from the log over more
-> recent metadata in destination buffer). This resulted in false
-> corruption reports during log recovery and thus mount failure.
-> 
-> This condition is caused by system crash or filesystem shutdown shortly
-> after a successful log recovery. Add a test to run a combined workload,
-> fs shutdown and log recovery loop known to reproduce the problem on
-> affected kernels.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> v2:
-> - Use $KILLALL_PROG for killall command.
-> - Convert to generic test.
-> v1: http://marc.info/?l=linux-xfs&m=147100402211629&w=2
-> 
->  tests/generic/999     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  2 ++
->  tests/generic/group   |  1 +
->  3 files changed, 91 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 0000000..f3257e4
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# FS QA Test No. 999
-> +#
-> +# Test XFS log recovery ordering on v5 superblock filesystems. XFS had a problem
-> +# where it would incorrectly replay older modifications from the log over more
-> +# recent versions of metadata due to failure to update metadata LSNs during log
-> +# recovery. This could result in false positive reports of corruption during log
-> +# recovery and permanent mount failure.
-> +#
-> +# To test this situation, run frequent shutdowns immediately after log recovery.
-> +# Ensure that log recovery does not recover stale modifications and cause
-> +# spurious corruption reports and/or mount failures.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +	_scratch_unmount > /dev/null 2>&1
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
+The new XFS_GETQSTATV quotactl, available since kernel v3.12,
+was never implemented in xfs_quota, and the "state" command
+continues to use XFS_GETQSTAT, which cannot report both
+group & project quota on newer formats.
 
-"xfs" should be "generic"?
+The new call has room for all 3 quota types (user, group, and
+quota), vs just two, where previously project and quota
+overlapped.
 
-> +_supported_os Linux
-> +
-> +_require_scratch
+So:
 
-Missed a "_require_scratch_shutdown"?
+First, try XFS_GETQSTATV.
+If it passes, we have all the information we need, and we print
+it. state_qfilestat() is modified to take the newer structure.
 
-> +_require_command "$KILLALL_PROG"
-> +
-> +rm -f $seqres.full
-> +
-> +echo "Silence is golden."
-> +
-> +_scratch_mkfs_xfs >> $seqres.full 2>&1
+If it fails, try XFS_GETQSTAT.  If that passes, we are on an
+older kernel with neither XFS_GETQSTATV nor the on-disk project
+quota inode.  We copy the available information into the newer
+statv structure, carefully determining wither group or project
+(or neither) is actually active, and print it with the same
+state_qfilestat routine.
 
-If this is a generic test, _scratch_mkfs should be used here.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> +_scratch_mount || _fail "mount failed"
-> +
-> +for i in $(seq 1 50); do
-> +	($FSSTRESS_PROG -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
-> +		> /dev/null 2>&1
-> +
-> +	# purposely include 0 second sleeps to test shutdown immediately after
-> +	# recovery
-> +	sleep $((RANDOM % 3))
-> +	$XFS_IO_PROG -xc shutdown $SCRATCH_MNT
-> +
-> +	ps -e | grep fsstress > /dev/null 2>&1
-> +	while [ $? == 0 ]; do
+I probably could have done some memcpy()'s in 
+state_stat_to_statv(), but opted for the explicit copy-out;
+the structures aren't identical, although the newer one 
+only differs by padding on the end.  If memcpy() is preferable
+I could send a V2...
 
-Better to use "-eq" for integers.
+V2: set sv.qs_version = FS_QSTATV_VERSION1; before calling
+the quotactl (thanks Zorro!)
 
-Thanks,
-Eryu
-
-> +		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +		wait > /dev/null 2>&1
-> +		ps -e | grep fsstress > /dev/null 2>&1
-> +	done
-> +
-> +	# quit if mount fails so we don't shutdown the host fs
-> +	_scratch_cycle_mount || _fail "cycle mount failed"
-> +done
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 0000000..d254382
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 999
-> +Silence is golden.
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 4acae99..605a244 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -375,3 +375,4 @@
->  370 auto quick richacl
->  371 auto quick enospc prealloc
->  372 auto quick clone
-> +999 auto log metadata
-> -- 
-> 2.5.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/xqm.h b/include/xqm.h
+index c084b2d..5b6934a 100644
+--- a/include/xqm.h
++++ b/include/xqm.h
+@@ -32,6 +32,7 @@
+ #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
+ #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
+ #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
++#define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
+ #define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage */
+ 
+ /*
+@@ -149,4 +150,35 @@ typedef struct fs_quota_stat {
+ 	__u16		qs_iwarnlimit;	/* limit for num warnings */
+ } fs_quota_stat_t;
+ 
++
++#ifndef FS_QSTATV_VERSION1
++#define FS_QSTATV_VERSION1	1	/* fs_quota_statv.qs_version */
++#endif
++
++/*
++ * Some basic information about 'quota files' for Q_XGETQSTATV command
++ */
++struct fs_qfilestatv {
++	__u64		qfs_ino;	/* inode number */
++	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
++	__u32		qfs_nextents;	/* number of extents */
++	__u32		qfs_pad;	/* pad for 8-byte alignment */
++};
++
++struct fs_quota_statv {
++	__s8			qs_version;	/* version for future changes */
++	__u8			qs_pad1;	/* pad for 16bit alignment */
++	__u16			qs_flags;	/* FS_QUOTA_.* flags */
++	__u32			qs_incoredqs;	/* number of dquots incore */
++	struct fs_qfilestatv	qs_uquota;	/* user quota information */
++	struct fs_qfilestatv	qs_gquota;	/* group quota information */
++	struct fs_qfilestatv	qs_pquota;	/* project quota information */
++	__s32			qs_btimelimit;	/* limit for blks timer */
++	__s32			qs_itimelimit;	/* limit for inodes timer */
++	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
++	__u16			qs_bwarnlimit;	/* limit for num warnings */
++	__u16			qs_iwarnlimit;	/* limit for num warnings */
++	__u64			qs_pad2[8];	/* for future proofing */
++};
++
+ #endif	/* __XQM_H__ */
+diff --git a/quota/linux.c b/quota/linux.c
+index 74dba01..4f1f3c4 100644
+--- a/quota/linux.c
++++ b/quota/linux.c
+@@ -55,6 +55,8 @@ xcommand_to_qcommand(
+ 		return Q_XSETQLIM;
+ 	case XFS_GETQSTAT:
+ 		return Q_XGETQSTAT;
++	case XFS_GETQSTATV:
++		return Q_XGETQSTATV;
+ 	case XFS_QUOTARM:
+ 		return Q_XQUOTARM;
+ 	case XFS_QSYNC:
+diff --git a/quota/state.c b/quota/state.c
+index 8186762..9f6616e 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -111,12 +111,12 @@ remove_help(void)
+ 
+ static void
+ state_qfilestat(
+-	FILE		*fp,
+-	fs_path_t	*mount,
+-	uint		type,
+-	fs_qfilestat_t	*qfs,
+-	int		accounting,
+-	int		enforcing)
++	FILE			*fp,
++	struct fs_path		*mount,
++	uint			type,
++	struct fs_qfilestatv	*qfs,
++	int			accounting,
++	int			enforcing)
+ {
+ 	fprintf(fp, _("%s quota state on %s (%s)\n"), type_to_string(type),
+ 		mount->fs_dir, mount->fs_name);
+@@ -142,39 +142,96 @@ state_timelimit(
+ 		time_to_string(timelimit, VERBOSE_FLAG | ABSOLUTE_FLAG));
+ }
+ 
++/*
++ * fs_quota_stat holds a subset of fs_quota_statv; this copies
++ * the smaller into the larger, leaving any not-present fields
++ * empty.  This is so the same reporting function can be used
++ * for both XFS_GETQSTAT and XFS_GETQSTATV results.
++ */
+ static void
+-state_quotafile_mount(
+-	FILE		*fp,
+-	uint		type,
+-	fs_path_t	*mount,
+-	uint		flags)
++state_stat_to_statv(
++	struct fs_quota_stat	*s,
++	struct fs_quota_statv	*sv)
+ {
+-	fs_quota_stat_t	s;
+-	char		*dev = mount->fs_name;
++	memset(sv, 0, sizeof(struct fs_quota_statv));
++
++	/* shared information */
++	sv->qs_version = s->qs_version;
++	sv->qs_flags = s->qs_flags;
++	sv->qs_incoredqs = s->qs_incoredqs;
++	sv->qs_btimelimit = s->qs_btimelimit;
++	sv->qs_itimelimit = s->qs_itimelimit;
++	sv->qs_rtbtimelimit = s->qs_rtbtimelimit;
++	sv->qs_bwarnlimit = s->qs_bwarnlimit;
++	sv->qs_iwarnlimit = s->qs_iwarnlimit;
++
++	/* Always room for uquota */
++	sv->qs_uquota.qfs_ino = s->qs_uquota.qfs_ino;
++	sv->qs_uquota.qfs_nblks = s->qs_uquota.qfs_nblks;
++	sv->qs_uquota.qfs_nextents = s->qs_uquota.qfs_nextents;
++
++	/*
++	 * If we are here, XFS_GETQSTATV failed and XFS_GETQSTAT passed;
++	 * that is a very strong hint that we're on a kernel which predates
++	 * the on-disk pquota inode; both were added in v3.12.  So, we do
++	 * some tricksy determination here.
++	 * gs_gquota may hold either group quota inode info, or project
++	 * quota if that is used instead; which one it actually holds depends
++	 * on the quota flags.  (If neither is set, neither is used)
++	 */
++	if (s->qs_flags & XFS_QUOTA_GDQ_ACCT) {
++		/* gs_gquota holds group quota info */
++		sv->qs_gquota.qfs_ino = s->qs_gquota.qfs_ino;
++		sv->qs_gquota.qfs_nblks = s->qs_gquota.qfs_nblks;
++		sv->qs_gquota.qfs_nextents = s->qs_gquota.qfs_nextents;
++	} else if (s->qs_flags & XFS_QUOTA_PDQ_ACCT) {
++		/* gs_gquota actually holds project quota info */
++		sv->qs_pquota.qfs_ino = s->qs_gquota.qfs_ino;
++		sv->qs_pquota.qfs_nblks = s->qs_gquota.qfs_nblks;
++		sv->qs_pquota.qfs_nextents = s->qs_gquota.qfs_nextents;
++	}
++}
+ 
+-	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
+-		if (flags & VERBOSE_FLAG)
+-			fprintf(fp, _("%s quota are not enabled on %s\n"),
+-				type_to_string(type), dev);
+-		return;
++static void
++state_quotafile_mount(
++	FILE			*fp,
++	uint			type,
++	struct fs_path		*mount,
++	uint			flags)
++{
++	struct fs_quota_stat	s;
++	struct fs_quota_statv	sv;
++	char			*dev = mount->fs_name;
++
++	sv.qs_version = FS_QSTATV_VERSION1;
++
++	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
++		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
++			if (flags & VERBOSE_FLAG)
++				fprintf(fp,
++					_("%s quota are not enabled on %s\n"),
++					type_to_string(type), dev);
++			return;
++		}
++		state_stat_to_statv(&s, &sv);
+ 	}
+ 
+ 	if (type & XFS_USER_QUOTA)
+-		state_qfilestat(fp, mount, XFS_USER_QUOTA, &s.qs_uquota,
+-				s.qs_flags & XFS_QUOTA_UDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_UDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
++				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
+ 	if (type & XFS_GROUP_QUOTA)
+-		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &s.qs_gquota,
+-				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
++				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
+ 	if (type & XFS_PROJ_QUOTA)
+-		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
+-				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
+-				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
++		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
++				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
++				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
+ 
+-	state_timelimit(fp, XFS_BLOCK_QUOTA, s.qs_btimelimit);
+-	state_timelimit(fp, XFS_INODE_QUOTA, s.qs_itimelimit);
+-	state_timelimit(fp, XFS_RTBLOCK_QUOTA, s.qs_rtbtimelimit);
++	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
++	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
++	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
+ }
+ 
+ static void
 
 _______________________________________________
 xfs mailing list
