@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8272E7CA1
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:39:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 03B0EAC003
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:39:52 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 348817CA1
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:47:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A71F8AC002
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:47:44 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 61isu3U3of3dzAxj (version=TLSv1.2
+	ESMTP id GuKG8WCWPDKuh3fR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:39:51 -0700 (PDT)
-Date: Thu, 18 Aug 2016 10:39:51 -0700
+	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:47:43 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.85_2 #1 (Red
+	Hat Linux)) id 1baRPq-00048h-2m
+	for xfs@oss.sgi.com; Thu, 18 Aug 2016 17:47:42 +0000
+Date: Thu, 18 Aug 2016 10:47:42 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv2 xfsprogs 08/14] replace sendfile64 by equivalent sendfile
-Message-ID: <20160818173951.GH27799@infradead.org>
-References: <cover.1471107858.git.felix.janda@posteo.de>
-	<4606f95e95d055534c17ed8a998351824298f627.1471107858.git.felix.janda@posteo.de>
+Subject: RFC: dropping IRIX support in xfsprogs
+Message-ID: <20160818174742.GA14464@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4606f95e95d055534c17ed8a998351824298f627.1471107858.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Felix Janda <felix.janda@posteo.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Looks good,
+Hi all,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'd like to know if anyone would complain about removing IRIX support
+in xfsprogs?  It very much looks unmaintained for years, and due to
+the IRIX differences in type defintions and kernel interfaces it's
+actually a bit of a drag on xfsprogs, so unlike the other ports
+to FreeBSD and Darwin it would actually be really helpful to remove
+it.
+
+I'd volunteer to prepare patches to remove the IRIX support and do
+the resulting cleanups.
 
 _______________________________________________
 xfs mailing list
