@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AF0EC7CA2
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:38:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 82182304051
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:38:48 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0A5FF7CA1
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:43:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C108E8F8033
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:43:03 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id bgCXxsnWAggHkkFa (version=TLSv1.2
+	ESMTP id RUuZmFY4KsumhcBX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:38:47 -0700 (PDT)
-Date: Thu, 18 Aug 2016 10:38:46 -0700
+	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:43:02 -0700 (PDT)
+Date: Thu, 18 Aug 2016 10:43:01 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv2 xfsprogs 06/14] replace lseek64 by equivalent lseek
-Message-ID: <20160818173846.GF27799@infradead.org>
+Subject: Re: [PATCHv2 xfsprogs 10/14] Makefile: disable fsr for Mac OS X
+Message-ID: <20160818174301.GJ27799@infradead.org>
 References: <cover.1471107858.git.felix.janda@posteo.de>
-	<5579d796a9131b28e13b271a041728bf0154aa12.1471107858.git.felix.janda@posteo.de>
+	<7b393c92e885edd551cdd0c46b21807f653c8c1d.1471107858.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5579d796a9131b28e13b271a041728bf0154aa12.1471107858.git.felix.janda@posteo.de>
+In-Reply-To: <7b393c92e885edd551cdd0c46b21807f653c8c1d.1471107858.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,7 +33,14 @@ Sender: xfs-bounces@oss.sgi.com
 To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+On Sat, Aug 13, 2016 at 06:17:41PM +0200, Felix Janda wrote:
+> Since its kernel does not support XFS anyway this utility is not
+> useful, and with its removal the portability framework can be
+> simplified.
+> 
+> Signed-off-by: Felix Janda <felix.janda@posteo.de>
+
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
