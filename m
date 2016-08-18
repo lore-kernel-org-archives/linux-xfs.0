@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B2CEB7CA0
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:37:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 856458F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:37:48 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B82597CA0
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 12:38:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CD24304051
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:38:26 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id glDpfAx3B65RsUuc (version=TLSv1.2
+	ESMTP id CNWK29YByhSkToQP (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:37:46 -0700 (PDT)
-Date: Thu, 18 Aug 2016 10:37:45 -0700
+	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 10:38:22 -0700 (PDT)
+Date: Thu, 18 Aug 2016 10:38:21 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv2 xfsprogs 02/14] configure: error out when LFS does not
-	work
-Message-ID: <20160818173745.GB27799@infradead.org>
+Subject: Re: [PATCHv2 xfsprogs 04/14] replace [fl]stat64 by equivalent [fl]stat
+Message-ID: <20160818173821.GD27799@infradead.org>
 References: <cover.1471107858.git.felix.janda@posteo.de>
-	<ee6222efd5b5b46e61b25bc9bd4ea222d3d3b188.1471107858.git.felix.janda@posteo.de>
+	<cc6dba8dc1c5e2110aba511739dde78b0049063c.1471107858.git.felix.janda@posteo.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <ee6222efd5b5b46e61b25bc9bd4ea222d3d3b188.1471107858.git.felix.janda@posteo.de>
+In-Reply-To: <cc6dba8dc1c5e2110aba511739dde78b0049063c.1471107858.git.felix.janda@posteo.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,9 +32,6 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
-
-On Sat, Aug 13, 2016 at 06:50:28PM +0200, Felix Janda wrote:
-> Signed-off-by: Felix Janda <felix.janda@posteo.de>
 
 Looks good,
 
