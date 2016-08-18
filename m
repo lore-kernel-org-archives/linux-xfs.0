@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2F027CA1
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 09:16:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 609AB304101
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 07:16:55 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aNQetku6HaHl9XBu (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 07:16:54 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id BD193C04B320
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 14:16:53 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-57-220.rdu2.redhat.com
-	[10.10.57.220])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7GEGp7h012243
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:16:53 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH v2 2/3] xfs_quota: changes to accomodate hoisted ioctl defs
-Date: Tue, 16 Aug 2016 09:16:37 -0500
-Message-Id: <1471356998-2876-3-git-send-email-billodo@redhat.com>
-In-Reply-To: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 131377CA0
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 08:18:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E215AC002
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 06:18:38 -0700 (PDT)
+Received: from mail-wm0-f68.google.com (mail-wm0-f68.google.com
+	[74.125.82.68]) by cuda.sgi.com with ESMTP id 2oJFt3SpamtTzAAb
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Aug 2016 06:18:36 -0700 (PDT)
+Received: by mail-wm0-f68.google.com with SMTP id o80so5612005wme.0
+	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 06:18:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1464792297-13185-9-git-send-email-hch@lst.de>
+References: <1464792297-13185-1-git-send-email-hch@lst.de>
+	<1464792297-13185-9-git-send-email-hch@lst.de>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Thu, 18 Aug 2016 15:18:34 +0200
+Message-ID: <CAHpGcMLUtVDiW1e_kuviBNXsn1z_FR0raS3xo9t1bdXyx7kX2g@mail.gmail.com>
+Subject: Re: [PATCH 08/14] fs: iomap based fiemap implementation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,93 +28,159 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bob Peterson <rpeterso@redhat.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-The kernel commit to make the ioctl promotion (334e580a6f) moved
-the definitions for the XFS ioctl to uapi/linux/fs.h for the
-following reason:
+Christoph,
 
-    Hoist the ioctl definitions for the XFS_IOC_FS[SG]SETXATTR API
-    from fs/xfs/libxfs/xfs_fs.h to include/uapi/linux/fs.h so that
-    the ioctls can be used by all filesystems, not just XFS. This
-    enables (initially) ext4 to use the ioctl to set project IDs on
-    inodes.
+2016-06-01 16:44 GMT+02:00 Christoph Hellwig <hch@lst.de>:
+> Add a simple fiemap implementation based on iomap_ops, partially based
+> on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/iomap.h |  3 ++
+>  2 files changed, 93 insertions(+)
+>
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index e51adb6..e874c78 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -405,3 +405,93 @@ out_unlock:
+>         return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
+> +
+> +struct fiemap_ctx {
+> +       struct fiemap_extent_info *fi;
+> +       struct iomap prev;
+> +};
+> +
+> +static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+> +               struct iomap *iomap, u32 flags)
+> +{
+> +       switch (iomap->type) {
+> +       case IOMAP_HOLE:
+> +               /* skip holes */
+> +               return 0;
+> +       case IOMAP_DELALLOC:
+> +               flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
+> +               break;
+> +       case IOMAP_UNWRITTEN:
+> +               flags |= FIEMAP_EXTENT_UNWRITTEN;
+> +               break;
+> +       case IOMAP_MAPPED:
+> +               break;
+> +       }
+> +
+> +       return fiemap_fill_next_extent(fi, iomap->offset,
+> +                       iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
+> +                       iomap->length, flags | FIEMAP_EXTENT_MERGED);
 
-This means we now need to handle this change in userspace as the
-uapi/linux/fs.h file may not contain the definitions (i.e. new
-xfsprogs/ old linux uapi files) xfsprogs needs to build. Hence we
-need to massage the definition in xfs_fs.h to take the values from
-the system header if it exists, otherwise keep the old definitions
-for compatibility and platforms other than linux..
+According to Documentation/filesystems/fiemap.txt, it seems that
+FIEMAP_EXTENT_MERGED flag should only be set by filesystems with
+block-based rather than extent-based allocation. Am I overlooking
+something?
 
-This patch was originally submitted by Dave Chinner
-(http://oss.sgi.com/archives/xfs/2016-02/msg00108.html)
+> +
+> +}
+> +
+> +static loff_t
+> +iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> +               struct iomap *iomap)
+> +{
+> +       struct fiemap_ctx *ctx = data;
+> +       loff_t ret = length;
+> +
+> +       if (iomap->type == IOMAP_HOLE)
+> +               return length;
+> +
+> +       ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
+> +       ctx->prev = *iomap;
+> +       switch (ret) {
+> +       case 0:         /* success */
+> +               return length;
+> +       case 1:         /* extent array full */
+> +               return 0;
+> +       default:
+> +               return ret;
+> +       }
+> +}
+> +
+> +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+> +               loff_t start, loff_t len, struct iomap_ops *ops)
+> +{
+> +       struct fiemap_ctx ctx;
+> +       loff_t ret;
+> +
+> +       memset(&ctx, 0, sizeof(ctx));
+> +       ctx.fi = fi;
+> +       ctx.prev.type = IOMAP_HOLE;
+> +
+> +       ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
+> +       if (ret)
+> +               return ret;
+> +
+> +       ret = filemap_write_and_wait(inode->i_mapping);
+> +       if (ret)
+> +               return ret;
+> +
+> +       while (len > 0) {
+> +               ret = iomap_apply(inode, start, len, 0, ops, &ctx,
+> +                               iomap_fiemap_actor);
+> +               if (ret < 0)
+> +                       return ret;
+> +               if (ret == 0)
+> +                       break;
+> +
+> +               start += ret;
+> +               len -= ret;
+> +       }
+> +
+> +       if (ctx.prev.type != IOMAP_HOLE) {
+> +               ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
+> +               if (ret < 0)
+> +                       return ret;
+> +       }
+> +
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_fiemap);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 854766f..b3deee1 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -3,6 +3,7 @@
+>
+>  #include <linux/types.h>
+>
+> +struct fiemap_extent_info;
+>  struct inode;
+>  struct iov_iter;
+>  struct kiocb;
+> @@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>                 struct iomap_ops *ops);
+>  int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+>                 struct iomap_ops *ops);
+> +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+> +               loff_t start, loff_t len, struct iomap_ops *ops);
+>
+>  #endif /* LINUX_IOMAP_H */
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Resubmitting with changes to accomodate upstream changes since
-initial submission.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- libxfs/xfs_fs.h | 37 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 34 insertions(+), 3 deletions(-)
-
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 085ea6f..6ecb7f2 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -35,10 +35,41 @@ struct dioattr {
- };
- #endif
- 
-+/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
-+#ifndef FS_IOC_FSGETXATTR
-+struct fsxattr {
-+	__u32		fsx_xflags;	/* xflags field value (get/set) */
-+	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-+	__u32		fsx_projid;	/* project identifier (get/set) */
-+	unsigned char	fsx_pad[12];
-+};
-+
-+/*
-+ * Flags for the fsx_xflags field
-+ */
-+#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
-+#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
-+#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
-+#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
-+#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
-+#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
-+#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
-+#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
-+#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
-+#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
-+#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
-+#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
-+#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
-+#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
-+#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
-+
-+#define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
-+#define FS_IOC_FSSETXATTR     _IOW ('X', 32, struct fsxattr)
-+
-+#endif
-+
- /*
-- * Flags for the bs_xflags/fsx_xflags field in XFS_IOC_FS[GS]ETXATTR[A]
-- * These are for backwards compatibility only. New code should
-- * use the kernel [4.5 onwards] defined FS_XFLAG_* definitions directly.
-+ * Flags for the bs_xflags/fsx_xflags field in FS_IOC_FS[GS]ETXATTR[A]
-  */
- #define	XFS_XFLAG_REALTIME	FS_XFLAG_REALTIME
- #define	XFS_XFLAG_PREALLOC	FS_XFLAG_PREALLOC
--- 
-2.7.4
+Thanks,
+Andreas
 
 _______________________________________________
 xfs mailing list
