@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2BA1D7CA0
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 16:56:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D3FA68F8035
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 14:56:44 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Exjo0MSH3v8TZpYs (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Aug 2016 14:56:42 -0700 (PDT)
-Date: Thu, 18 Aug 2016 14:56:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: dropping IRIX support in xfsprogs
-Message-ID: <20160818215642.GA17607@infradead.org>
-References: <20160818174742.GA14464@infradead.org>
-	<20160818205914.GI19025@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 3C44A7CA2
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 12:55:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 008C78F8037
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:55:15 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id r3rxcANfxsHo2kD3 (version=TLSv1
+	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:55:13 -0700 (PDT)
+Date: Fri, 19 Aug 2016 13:55:12 -0400 (EDT)
+From: Zirong Lang <zlang@redhat.com>
+Message-ID: <618760559.2359845.1471629312793.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1471629105-13359-1-git-send-email-zlang@redhat.com>
+References: <1471629105-13359-1-git-send-email-zlang@redhat.com>
+Subject: Re: [PATCH 1/2] common/rc: add functions to check or write objects
+	under /sys/fs/$FSTYP
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160818205914.GI19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,23 +25,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: fstests@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 19, 2016 at 06:59:14AM +1000, Dave Chinner wrote:
-> We dropped support for older irix only filesystems some time ago,
-> so this seems like a natural progression from that. I have no
-> objections to removing it...
-
-Ok, I'll start sending patches once you're ok (or not ok)
-with the patches from Felix to turn on LFS support to avoid
-conflicting with those.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U29ycnksIEkgc2VudCB3cm9uZyBwYXRjaC4gUGxlYXNlIGlnbm9yZSB0aGlzIHBhdGNoLgpUaGlz
+J3Mgbm90IHRoZSByZWFsIFtQQVRDSCAxLzJdLiAgSSdsbCByZXNlbmQgYm90aCBwYXRjaGVzIGxh
+dGVyLgoKVGhhbmtzLApab3JybwoKLS0tLS0g5Y6f5aeL6YKu5Lu2IC0tLS0tCj4g5Y+R5Lu25Lq6
+OiAiWm9ycm8gTGFuZyIgPHpsYW5nQHJlZGhhdC5jb20+Cj4g5pS25Lu25Lq6OiBmc3Rlc3RzQHZn
+ZXIua2VybmVsLm9yZwo+IOaKhOmAgTogeGZzQG9zcy5zZ2kuY29tLCAiWm9ycm8gTGFuZyIgPHps
+YW5nQHJlZGhhdC5jb20+Cj4g5Y+R6YCB5pe26Ze0OiDmmJ/mnJ/lha0sIDIwMTblubQgOCDmnIgg
+MjDml6Ug5LiK5Y2IIDE6NTE6NDQKPiDkuLvpopg6IFtQQVRDSCAxLzJdIGNvbW1vbi9yYzogYWRk
+IGZ1bmN0aW9ucyB0byBjaGVjayBvciB3cml0ZSBvYmplY3RzIHVuZGVyIC9zeXMvZnMvJEZTVFlQ
+Cj4gCj4gWEZTIGFkZCBtb3JlIGNvbmZpZ3VyYXRpb25zIGluIC9zeXMvZnMveGZzIHJlY2VudGx5
+LiBGb3IgdXNlCj4gdGhlbSwgdGhpcyBwYXRjaCBhZGQgc29tZSBjb21tb24gZnVuY3Rpb25zIGZv
+cjoKPiAgIDEuICJyZXF1aXJlIiBhIGZpbGUvZGlyIGluIC9zeXMvZnMvJHtGU1RZUH0uCj4gICAy
+LiB3cml0ZSBhIGZpbGUgaW4gL3N5cy9mcy8ke0ZTVFlQfS4KPiAKPiBGb3IgY29tbW9uIHVzZSwg
+dGhlc2UgZnVuY3Rpb25zIGNhbiBiZSB1c2VkIGJ5IG90aGVyIGZpbGVzeXN0ZW1zLgo+IAo+IFNp
+Z25lZC1vZmYtYnk6IFpvcnJvIExhbmcgPHpsYW5nQHJlZGhhdC5jb20+Cj4gLS0tCj4gIGNvbW1v
+bi9yYyB8IDQyICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+ICAx
+IGZpbGUgY2hhbmdlZCwgNDIgaW5zZXJ0aW9ucygrKQo+IAo+IGRpZmYgLS1naXQgYS9jb21tb24v
+cmMgYi9jb21tb24vcmMKPiBpbmRleCA1MTA5MmEwLi5kNWVkZmVmIDEwMDY0NAo+IC0tLSBhL2Nv
+bW1vbi9yYwo+ICsrKyBiL2NvbW1vbi9yYwo+IEBAIC0zNTU2LDYgKzM1NTYsNDggQEAgcnVuX2Zz
+eCgpCj4gIAlmaQo+ICB9Cj4gIAo+ICsjIFRlc3QgZm9yIHRoZSBleGlzdGVuY2Ugb2YgYSBzeXNm
+cyBlbnRyeSBhdCAvc3lzL2ZzLyRGU1RZUC8kREVWLyRFTlRSWQo+ICtfcmVxdWlyZV9mc19zeXNm
+cygpCj4gK3sKPiArCWxvY2FsIGRldj0kMQo+ICsJbG9jYWwgZW50cnk9JDIKPiArCWxvY2FsIHRt
+cF9tbnQ9YG1rdGVtcCAtZGAKPiArCj4gKwlpZiBbICEgLWIgIiRkZXYiIC1vIC16ICIkZW50cnki
+IF07dGhlbgo+ICsJCV9mYWlsICJVc2FnZTogX3JlcXVpcmVfZnNfc3lzZnMgPGRldmljZT4gPHN5
+c2ZzX3BhdGg+Igo+ICsgICAgICAgIGZpCj4gKwo+ICsJbG9jYWwgZG5hbWU9JChfc2hvcnRfZGV2
+ICRkZXYpCj4gKwlfbW91bnQgLXQgJEZTVFlQIGBfY29tbW9uX2Rldl9tb3VudF9vcHRpb25zYCAk
+ZGV2ICR0bXBfbW50Cj4gKwlpZiBbICQ/IC1uZSAwIF07dGhlbgo+ICsJCXJtIC1mICR0bXBfbW50
+Cj4gKwkJX2ZhaWwgIl9yZXF1aXJlX2ZzX3N5c2ZzOiBjb3VsZCBub3QgbW91bnQsIG1rZnMgZmly
+c3QgaW4geW91ciB0ZXN0PyIKPiArCWVsaWYgWyAhIC1lIC9zeXMvZnMvJHtGU1RZUH0vJHtkbmFt
+ZX0vJHtlbnRyeX0gXTt0aGVuCj4gKwkJJFVNT1VOVF9QUk9HICR0bXBfbW50Cj4gKwkJcm0gLWYg
+JHRtcF9tbnQKPiArCQlfbm90cnVuICIvc3lzL2ZzLyR7RlNUWVB9LyR7ZG5hbWV9LyR7ZW50cnl9
+OiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Igo+ICsJZmkKPiArCSRVTU9VTlRfUFJPRyAkdG1w
+X21udAo+ICsJcm0gLXJmICR0bXBfbW50Cj4gK30KPiArCj4gKyMgV3JpdGUgImNvbnRlbnQiIGlu
+dG8gL3N5cy9mcy8kRlNUWVAvJERFVi8kRU5UUlkKPiArX3NldF9mc19zeXNmc19wYXJhbSgpCj4g
+K3sKPiArCWxvY2FsIGRldj0kMQo+ICsJc2hpZnQKPiArCWxvY2FsIGVudHJ5PSQxCj4gKwlzaGlm
+dAo+ICsJbG9jYWwgY29udGVudD0iJCoiCj4gKwo+ICsJaWYgWyAhIC1iICIkZGV2IiAtbyAteiAi
+JGVudHJ5IiAtbyAteiAiJGNvbnRlbnQiIF07dGhlbgo+ICsJCV9mYWlsICJVc2FnZTogX3NldF9z
+eXNfZnNfcGFyYW0gPG1vdW50ZWRfZGV2aWNlPiA8ZW50cnk+IDxjb250ZW50PiIKPiArCWZpCj4g
+Kwo+ICsJbG9jYWwgZG5hbWU9JChfc2hvcnRfZGV2ICRkZXYpCj4gKwllY2hvICIkY29udGVudCIg
+PiAvc3lzL2ZzLyR7RlNUWVB9LyR7ZG5hbWV9LyR7ZW50cnl9Cj4gK30KPiArCj4gIGluaXRfcmMK
+PiAgCj4gICMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
+IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjCj4gLS0KPiAyLjUuNQo+IAo+IC0tCj4gVG8g
+dW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGZz
+dGVzdHMiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
+bC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
+am9yZG9tby1pbmZvLmh0bWwKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
