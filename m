@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4A9D97CA0
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 20:18:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A0D89AC001
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 18:18:18 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	noag6Q1vTzVyuG60 for <xfs@oss.sgi.com>;
-	Sun, 21 Aug 2016 18:18:14 -0700 (PDT)
-Date: Mon, 22 Aug 2016 11:18:12 +1000
+	by oss.sgi.com (Postfix) with ESMTP id 3B9C47CA0
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 05:29:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BDB90AC002
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 03:29:03 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	uDPorchSSWs6g8dM for <xfs@oss.sgi.com>;
+	Fri, 19 Aug 2016 03:29:01 -0700 (PDT)
+Date: Fri, 19 Aug 2016 20:28:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/3] xfs_quota: changes to accomodate hoisted ioctl defs
-Message-ID: <20160822011812.GP19025@dastard>
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-	<1471356998-2876-3-git-send-email-billodo@redhat.com>
+Subject: Re: [PATCH] PING...  mkfs.xfs: fix static-lib build
+Message-ID: <20160819102858.GK19025@dastard>
+References: <1470907976-2362-1-git-send-email-dmonakhov@openvz.org>
+	<87bn0p6ql4.fsf@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1471356998-2876-3-git-send-email-billodo@redhat.com>
+In-Reply-To: <87bn0p6ql4.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-xfs@vger.kernel.org, billodo@redhat.com, xfs@oss.sgi.com
 
-On Tue, Aug 16, 2016 at 09:16:37AM -0500, Bill O'Donnell wrote:
-> The kernel commit to make the ioctl promotion (334e580a6f) moved
-> the definitions for the XFS ioctl to uapi/linux/fs.h for the
-> following reason:
+On Fri, Aug 19, 2016 at 12:44:07PM +0300, Dmitry Monakhov wrote:
 > 
->     Hoist the ioctl definitions for the XFS_IOC_FS[SG]SETXATTR API
->     from fs/xfs/libxfs/xfs_fs.h to include/uapi/linux/fs.h so that
->     the ioctls can be used by all filesystems, not just XFS. This
->     enables (initially) ext4 to use the ioctl to set project IDs on
->     inodes.
-> 
-> This means we now need to handle this change in userspace as the
-> uapi/linux/fs.h file may not contain the definitions (i.e. new
-> xfsprogs/ old linux uapi files) xfsprogs needs to build. Hence we
-> need to massage the definition in xfs_fs.h to take the values from
-> the system header if it exists, otherwise keep the old definitions
-> for compatibility and platforms other than linux..
-> 
-> This patch was originally submitted by Dave Chinner
-> (http://oss.sgi.com/archives/xfs/2016-02/msg00108.html)
-> 
-> Resubmitting with changes to accomodate upstream changes since
-> initial submission.
+> I'm just want to double check that this list is still alive, and
+> not yet moved some where XXX-xfs@kernel.org  :)
 
-This is unnecessary - the "include local version" changes were made
-to the platform headers (e.g. include/linux.h) in commit 83f4b5a
-("xfs_fs.h: XFS_IOC_FS[SG]SETXATTR to FS_IOC_FS[SG]ETXATTR
-promotion").
+linux-xfs@vger.kernel.org is active and we'll be moving there soon -
+stay tuned. For the moment, I'll see any email you send there, at
+least ;P
+
+> > diff --git a/mkfs/Makefile b/mkfs/Makefile
+> > index 170e3c1..c13b903 100644
+> > --- a/mkfs/Makefile
+> > +++ b/mkfs/Makefile
+> > @@ -10,7 +10,7 @@ LTCOMMAND = mkfs.xfs
+> >  HFILES =
+> >  CFILES = maxtrres.c proto.c xfs_mkfs.c
+> >  
+> > -LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID)
+> > +LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) $(LIBUUID)
+> >  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD)
+> >  LLDFLAGS = -static-libtool-libs
+
+I've already got a patch from Darrick to fix that in my queue.
 
 Cheers,
 
