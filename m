@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 11B417CA0
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 08:27:45 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9529D7CA2
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 15:32:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BBEDD8F8033
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 06:27:41 -0700 (PDT)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id oEapYHjMmBy17mpB (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 06:27:39 -0700 (PDT)
-Date: Fri, 19 Aug 2016 15:27:36 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
-	inode instead
-Message-ID: <20160819132736.GH10121@twins.programming.kicks-ass.net>
-References: <1470935423-12329-1-git-send-email-hch@lst.de>
-	<20160811215444.GY30192@twins.programming.kicks-ass.net>
-	<20160818173707.GA1240@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 598A5304048
+	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 13:32:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id UgnHVMphLJRkPMTH (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 13:32:13 -0700 (PDT)
+Date: Fri, 19 Aug 2016 13:32:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: disallow mounting of realtime + rmap filesystems
+Message-ID: <20160819203207.GE8268@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160818173707.GA1240@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +27,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Aug 18, 2016 at 07:37:07PM +0200, Christoph Hellwig wrote:
-> On Thu, Aug 11, 2016 at 11:54:44PM +0200, Peter Zijlstra wrote:
-> > Sure, find below. Not been near a compiler.
-> 
-> It has now.  Below are the additions I need, and things seem to be
-> passing fine with that.
-> 
-> Note that to fit the existing XFS lock asserts I'm using
-> _lockdep_is_held directly instead of lockdep_assert_held_exclusive.
-> All the exports are there, but I'm just trying to make sure you're
-> not going to shout at me for that later :)
+Since the kernel doesn't currently support the realtime rmapbt,
+don't allow such filesystems to be mounted.  Support will appear
+in a future release.
 
-Hurm, if you're going to directly use that maybe we should pick a better
-name ;-)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_super.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Also, be sure to check the debug_locks variable, if that's cleared the
-result of _lockdep_is_held() isn't reliable -- we stop tracking lock
-state when there's an error.
-
-Thanks!
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 24ef83e..fd6be45 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1574,9 +1574,16 @@ xfs_fs_fill_super(
+ 		}
+ 	}
+ 
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		if (mp->m_sb.sb_rblocks) {
++			xfs_alert(mp,
++	"EXPERIMENTAL reverse mapping btree not compatible with realtime device!");
++			error = -EINVAL;
++			goto out_filestream_unmount;
++		}
+ 		xfs_alert(mp,
+ 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
++	}
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
 
 _______________________________________________
 xfs mailing list
