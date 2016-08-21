@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 431177CA4
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:27:13 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 744727CB0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 16:51:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AACFAAC005
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:12 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id PHCX28l9Ca57iOTA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:10 -0700 (PDT)
-Subject: [PATCH 1/7] journaling_log: fix some typos in the section about EFDs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:27:02 -0700
-Message-ID: <147216762268.32447.4258135326050076262.stgit@birch.djwong.org>
-In-Reply-To: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
-References: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 45A7C304032
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:24 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id CiG27IdlcIw9LbBV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:22 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1bbaeG-0002TV-Pz
+	for xfs@oss.sgi.com; Sun, 21 Aug 2016 21:51:21 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/4] xfs: factor our a helper to calculate the EOF alignment
+Date: Sun, 21 Aug 2016 23:51:11 +0200
+Message-Id: <1471816273-28940-3-git-send-email-hch@lst.de>
+In-Reply-To: <1471816273-28940-1-git-send-email-hch@lst.de>
+References: <1471816273-28940-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,44 +27,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+And drop the pointless mp argument to xfs_iomap_eof_align_last_fsb,
+while we're at it.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- .../journaling_log.asciidoc                        |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iomap.c | 31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-
-diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-index a67fcc2..67d209f 100644
---- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-+++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-@@ -368,7 +368,7 @@ typedef struct xfs_efd_log_format {
- ----
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ba3592f..918511a 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -70,15 +70,13 @@ xfs_bmbt_to_iomap(
+ 	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
+ }
  
- *efd_type*::
--The signature of an EFI operation, 0x1236.  This value is in host-endian order,
-+The signature of an EFD operation, 0x1237.  This value is in host-endian order,
- not big-endian like the rest of XFS.
+-STATIC int
+-xfs_iomap_eof_align_last_fsb(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,
+-	xfs_extlen_t	extsize,
+-	xfs_fileoff_t	*last_fsb)
++static xfs_extlen_t
++xfs_eof_alignment(
++	struct xfs_inode	*ip,
++	xfs_extlen_t		extsize)
+ {
+-	xfs_extlen_t	align = 0;
+-	int		eof, error;
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_extlen_t		align = 0;
  
- *efd_size*::
-@@ -382,9 +382,9 @@ A 64-bit number that binds the corresponding EFI log item to this EFD log item.
+ 	if (!XFS_IS_REALTIME_INODE(ip)) {
+ 		/*
+@@ -109,8 +107,21 @@ xfs_iomap_eof_align_last_fsb(
+ 			align = extsize;
+ 	}
  
- *efd_extents*::
- Variable-length array of extents to be freed.  The array length is given by
--+efi_nextents+.  The record type will be either +xfs_extent_64_t+ or
-++efd_nextents+.  The record type will be either +xfs_extent_64_t+ or
- +xfs_extent_32_t+; this can be determined from the log item size (+oh_len+) and
--the number of extents (+efi_nextents+).
-+the number of extents (+efd_nextents+).
++	return align;
++}
++
++STATIC int
++xfs_iomap_eof_align_last_fsb(
++	struct xfs_inode	*ip,
++	xfs_extlen_t		extsize,
++	xfs_fileoff_t		*last_fsb)
++{
++	xfs_extlen_t		align = xfs_eof_alignment(ip, extsize);
++
+ 	if (align) {
+ 		xfs_fileoff_t	new_last_fsb = roundup_64(*last_fsb, align);
++		int		eof, error;
++
+ 		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
+ 		if (error)
+ 			return error;
+@@ -180,7 +191,7 @@ xfs_iomap_write_direct(
+ 		 */
+ 		ASSERT(XFS_IFORK_PTR(ip, XFS_DATA_FORK)->if_flags &
+ 								XFS_IFEXTENTS);
+-		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
++		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
+ 		if (error)
+ 			goto out_unlock;
+ 	} else {
+@@ -638,7 +649,7 @@ retry:
+ 	}
  
- [[Inode_Log_Item]]
- === Inode Updates
+ 	if (prealloc || extsz) {
+-		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
++		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
+ 		if (error)
+ 			return error;
+ 	}
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
