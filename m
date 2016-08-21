@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4F8257CBD
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:27:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 13C598F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:51 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id dEjiwVcGGwAnVPSu (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:48 -0700 (PDT)
-Subject: [PATCH 7/7] xfsdocs: document the realtime reverse mapping btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:27:42 -0700
-Message-ID: <147216766221.32447.9777486170830928374.stgit@birch.djwong.org>
-In-Reply-To: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
-References: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2D41C7CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 16:51:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C5331304032
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:29 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id LafEcu8ggDRaAQlm (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:26 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1bbaeL-0002Tf-P1
+	for xfs@oss.sgi.com; Sun, 21 Aug 2016 21:51:26 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/4] xfs: rewrite and optimize the delalloc write path
+Date: Sun, 21 Aug 2016 23:51:13 +0200
+Message-Id: <1471816273-28940-5-git-send-email-hch@lst.de>
+In-Reply-To: <1471816273-28940-1-git-send-email-hch@lst.de>
+References: <1471816273-28940-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,360 +27,678 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Currently xfs_iomap_write_delay does up to lookups in the inode extent
+tree, which is rather costly especially with the new iomap based
+write path and small write sizes.
+
+But it turns out that the low-level xfs_bmap_search_extents gives us all
+the information we need in the regular delalloc buffered write path:
+
+ - it will return us an extent covering the block we are looking up if
+   it exists.  In that case we can simply return that extent to the
+   caller and are done
+ - it will tell us if we are beyoned the last current allocated block
+   with an eof return parameter.  In that case we can create a delalloc
+   reservation and use the also returned information about the last
+   extent in the file as the hint to size our delalloc reservation.
+ - it can tell us that we are writing into a hole, but that there is
+   an extent beyoned this hole.  In this case we can create a delalloc
+   reservation that covers the requested size (possible capped to the
+   next existing allocation).
+
+All that can be done in one single routine instead of bouncing up
+and down a few layers.  This reduced the CPU overhead of the block
+mapping routines and also simplified the code a lot.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- .../allocation_groups.asciidoc                     |    8 +
- design/XFS_Filesystem_Structure/docinfo.xml        |   14 +
- .../internal_inodes.asciidoc                       |    2 
- design/XFS_Filesystem_Structure/magic.asciidoc     |    1 
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    6 -
- design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  |  234 ++++++++++++++++++++
- 6 files changed, 263 insertions(+), 2 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
+ fs/xfs/libxfs/xfs_bmap.c |  89 +----------
+ fs/xfs/libxfs/xfs_bmap.h |  10 +-
+ fs/xfs/xfs_iomap.c       | 381 ++++++++++++++++++++---------------------------
+ fs/xfs/xfs_iomap.h       |   2 -
+ 4 files changed, 169 insertions(+), 313 deletions(-)
 
-
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index cafa8b7..7ba636a 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -105,6 +105,7 @@ struct xfs_sb
- 	xfs_ino_t		sb_pquotino;
- 	xfs_lsn_t		sb_lsn;
- 	uuid_t			sb_meta_uuid;
-+	xfs_ino_t		sb_rrmapino;
- };
- ----
- *sb_magicnum*::
-@@ -449,6 +450,13 @@ If the +XFS_SB_FEAT_INCOMPAT_META_UUID+ feature is set, then the UUID field in
- all metadata blocks must match this UUID.  If not, the block header UUID field
- must match +sb_uuid+.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b060bca..614803b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1388,7 +1388,7 @@ xfs_bmap_search_multi_extents(
+  * Else, *lastxp will be set to the index of the found
+  * entry; *gotp will contain the entry.
+  */
+-STATIC xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
++xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
+ xfs_bmap_search_extents(
+ 	xfs_inode_t     *ip,            /* incore inode pointer */
+ 	xfs_fileoff_t   bno,            /* block number searched for */
+@@ -4074,7 +4074,7 @@ xfs_bmapi_read(
+ 	return 0;
+ }
  
-+*sb_rrmapino*::
-+If the +XFS_SB_FEAT_COMPAT_RMAPBT+ feature is set and a real-time
-+device is present (+sb_rblocks+ > 0), this field points to an inode
-+that contains the root to the
-+xref:Real_time_Reverse_Mapping_Btree[Real-Time Reverse Mapping B+tree].
-+This field is zero otherwise.
-+
- === xfs_db Superblock Example
+-STATIC int
++int
+ xfs_bmapi_reserve_delalloc(
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		aoff,
+@@ -4170,91 +4170,6 @@ out_unreserve_quota:
+ 	return error;
+ }
  
- A filesystem is made on a single disk with the following command:
-diff --git a/design/XFS_Filesystem_Structure/docinfo.xml b/design/XFS_Filesystem_Structure/docinfo.xml
-index f5e62bc..5cdcf6c 100644
---- a/design/XFS_Filesystem_Structure/docinfo.xml
-+++ b/design/XFS_Filesystem_Structure/docinfo.xml
-@@ -141,4 +141,18 @@
- 			</simplelist>
- 		</revdescription>
- 	</revision>
-+	<revision>
-+		<revnumber>3.1415</revnumber>
-+		<date>July 2016</date>
-+		<author>
-+			<firstname>Darrick</firstname>
-+			<surname>Wong</surname>
-+			<email></email>
-+		</author>
-+		<revdescription>
-+			<simplelist>
-+				<member>Document the real-time reverse-mapping btree.</member>
-+			</simplelist>
-+		</revdescription>
-+	</revision>
- </revhistory>
-diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-index 9ace3ea..e6bf75f 100644
---- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-@@ -201,3 +201,5 @@ rtbitmap location, and positive if there are any.
- This data structure is not particularly space efficient, however it is a very
- fast way to provide the same data as the two free space B+trees for regular
- files since the space is preallocated and metadata maintenance is minimal.
-+
-+include::rtrmapbt.asciidoc[]
-diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
-index bc172f3..77bed6d 100644
---- a/design/XFS_Filesystem_Structure/magic.asciidoc
-+++ b/design/XFS_Filesystem_Structure/magic.asciidoc
-@@ -45,6 +45,7 @@ relevant chapters.  Magic numbers tend to have consistent locations:
- | +XFS_ATTR3_LEAF_MAGIC+	| 0x3bee	|     	| xref:Leaf_Attributes[Leaf Attribute], v5 only
- | +XFS_ATTR3_RMT_MAGIC+		| 0x5841524d	| XARM	| xref:Remote_Values[Remote Attribute Value], v5 only
- | +XFS_RMAP_CRC_MAGIC+		| 0x524d4233	| RMB3	| xref:Reverse_Mapping_Btree[Reverse Mapping B+tree], v5 only
-+| +XFS_RTRMAP_CRC_MAGIC+	| 0x4d415052	| MAPR	| xref:Real_time_Reverse_Mapping_Btree[Real-Time Reverse Mapping B+tree], v5 only
- | +XFS_REFC_CRC_MAGIC+		| 0x52334643	| R3FC	| xref:Reference_Count_Btree[Reference Count B+tree], v5 only
- |=====
+-/*
+- * Map file blocks to filesystem blocks, adding delayed allocations as needed.
+- */
+-int
+-xfs_bmapi_delay(
+-	struct xfs_inode	*ip,	/* incore inode */
+-	xfs_fileoff_t		bno,	/* starting file offs. mapped */
+-	xfs_filblks_t		len,	/* length to map in file */
+-	struct xfs_bmbt_irec	*mval,	/* output: map values */
+-	int			*nmap,	/* i/o: mval size/count */
+-	int			flags)	/* XFS_BMAPI_... */
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-	struct xfs_bmbt_irec	got;	/* current file extent record */
+-	struct xfs_bmbt_irec	prev;	/* previous file extent record */
+-	xfs_fileoff_t		obno;	/* old block number (offset) */
+-	xfs_fileoff_t		end;	/* end of mapped file region */
+-	xfs_extnum_t		lastx;	/* last useful extent number */
+-	int			eof;	/* we've hit the end of extents */
+-	int			n = 0;	/* current extent index */
+-	int			error = 0;
+-
+-	ASSERT(*nmap >= 1);
+-	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+-	ASSERT(!(flags & ~XFS_BMAPI_ENTIRE));
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	if (unlikely(XFS_TEST_ERROR(
+-	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
+-	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
+-	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+-		XFS_ERROR_REPORT("xfs_bmapi_delay", XFS_ERRLEVEL_LOW, mp);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+-	XFS_STATS_INC(mp, xs_blk_mapw);
+-
+-	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+-		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+-		if (error)
+-			return error;
+-	}
+-
+-	xfs_bmap_search_extents(ip, bno, XFS_DATA_FORK, &eof, &lastx, &got, &prev);
+-	end = bno + len;
+-	obno = bno;
+-
+-	while (bno < end && n < *nmap) {
+-		if (eof || got.br_startoff > bno) {
+-			error = xfs_bmapi_reserve_delalloc(ip, bno, len, &got,
+-							   &prev, &lastx, eof);
+-			if (error) {
+-				if (n == 0) {
+-					*nmap = 0;
+-					return error;
+-				}
+-				break;
+-			}
+-		}
+-
+-		/* set up the extent map to return. */
+-		xfs_bmapi_trim_map(mval, &got, &bno, len, obno, end, n, flags);
+-		xfs_bmapi_update_map(&mval, &bno, &len, obno, end, &n, flags);
+-
+-		/* If we're done, stop now. */
+-		if (bno >= end || n >= *nmap)
+-			break;
+-
+-		/* Else go on to the next record. */
+-		prev = got;
+-		if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
+-			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &got);
+-		else
+-			eof = 1;
+-	}
+-
+-	*nmap = n;
+-	return 0;
+-}
+-
+-
+ static int
+ xfs_bmapi_allocate(
+ 	struct xfs_bmalloca	*bma)
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 254034f..d660069 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -181,9 +181,6 @@ int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+ int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
+ 		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
+ 		int *nmap, int flags);
+-int	xfs_bmapi_delay(struct xfs_inode *ip, xfs_fileoff_t bno,
+-		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
+-		int *nmap, int flags);
+ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
+ 		xfs_fsblock_t *firstblock, xfs_extlen_t total,
+@@ -202,5 +199,12 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		struct xfs_defer_ops *dfops, enum shift_direction direction,
+ 		int num_exts);
+ int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
++struct xfs_bmbt_rec_host *
++	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
++		int fork, int *eofp, xfs_extnum_t *lastxp,
++		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
++int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, xfs_fileoff_t aoff,
++		xfs_filblks_t len, struct xfs_bmbt_irec *got,
++		struct xfs_bmbt_irec *prev, xfs_extnum_t *lastx, int eof);
  
-diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-index 4415c38..02d44ac 100644
---- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-+++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-@@ -141,7 +141,8 @@ the associated metadata or data; or ``btree'' where the inode contains a B+tree
- root node which points to filesystem blocks containing the metadata or data.
- Migration between the formats depends on the amount of metadata associated with
- the inode. ``dev'' is used for character and block devices while ``uuid'' is
--currently not used.
-+currently not used.  ``rmap'' indicates that a reverse-mapping B+tree
-+is rooted in the fork.
+ #endif	/* __XFS_BMAP_H__ */
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 918511a..2b449f5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2016 Christoph Hellwig.
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -42,7 +43,6 @@
  
- [source, c]
- ----
-@@ -150,7 +151,8 @@ typedef enum xfs_dinode_fmt {
-      XFS_DINODE_FMT_LOCAL,
-      XFS_DINODE_FMT_EXTENTS,
-      XFS_DINODE_FMT_BTREE,
--     XFS_DINODE_FMT_UUID
-+     XFS_DINODE_FMT_UUID,
-+     XFS_DINODE_FMT_RMAP,
- } xfs_dinode_fmt_t;
- ----
+ #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
+ 						<< mp->m_writeio_log)
+-#define XFS_WRITE_IMAPS		XFS_BMAP_MAX_NMAP
  
-diff --git a/design/XFS_Filesystem_Structure/rtrmapbt.asciidoc b/design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
-new file mode 100644
-index 0000000..3a109b2
---- /dev/null
-+++ b/design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
-@@ -0,0 +1,234 @@
-+[[Real_time_Reverse_Mapping_Btree]]
-+=== Real-Time Reverse-Mapping B+tree
+ void
+ xfs_bmbt_to_iomap(
+@@ -311,130 +311,6 @@ out_trans_cancel:
+ 	goto out_unlock;
+ }
+ 
+-/*
+- * If the caller is doing a write at the end of the file, then extend the
+- * allocation out to the file system's write iosize.  We clean up any extra
+- * space left over when the file is closed in xfs_inactive().
+- *
+- * If we find we already have delalloc preallocation beyond EOF, don't do more
+- * preallocation as it it not needed.
+- */
+-STATIC int
+-xfs_iomap_eof_want_preallocate(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,
+-	xfs_off_t	offset,
+-	size_t		count,
+-	xfs_bmbt_irec_t *imap,
+-	int		nimaps,
+-	int		*prealloc)
+-{
+-	xfs_fileoff_t   start_fsb;
+-	xfs_filblks_t   count_fsb;
+-	int		n, error, imaps;
+-	int		found_delalloc = 0;
+-
+-	*prealloc = 0;
+-	if (offset + count <= XFS_ISIZE(ip))
+-		return 0;
+-
+-	/*
+-	 * If the file is smaller than the minimum prealloc and we are using
+-	 * dynamic preallocation, don't do any preallocation at all as it is
+-	 * likely this is the only write to the file that is going to be done.
+-	 */
+-	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
+-	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks))
+-		return 0;
+-
+-	/*
+-	 * If there are any real blocks past eof, then don't
+-	 * do any speculative allocation.
+-	 */
+-	start_fsb = XFS_B_TO_FSBT(mp, ((xfs_ufsize_t)(offset + count - 1)));
+-	count_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	while (count_fsb > 0) {
+-		imaps = nimaps;
+-		error = xfs_bmapi_read(ip, start_fsb, count_fsb, imap, &imaps,
+-				       0);
+-		if (error)
+-			return error;
+-		for (n = 0; n < imaps; n++) {
+-			if ((imap[n].br_startblock != HOLESTARTBLOCK) &&
+-			    (imap[n].br_startblock != DELAYSTARTBLOCK))
+-				return 0;
+-			start_fsb += imap[n].br_blockcount;
+-			count_fsb -= imap[n].br_blockcount;
+-
+-			if (imap[n].br_startblock == DELAYSTARTBLOCK)
+-				found_delalloc = 1;
+-		}
+-	}
+-	if (!found_delalloc)
+-		*prealloc = 1;
+-	return 0;
+-}
+-
+-/*
+- * Determine the initial size of the preallocation. We are beyond the current
+- * EOF here, but we need to take into account whether this is a sparse write or
+- * an extending write when determining the preallocation size.  Hence we need to
+- * look up the extent that ends at the current write offset and use the result
+- * to determine the preallocation size.
+- *
+- * If the extent is a hole, then preallocation is essentially disabled.
+- * Otherwise we take the size of the preceeding data extent as the basis for the
+- * preallocation size. If the size of the extent is greater than half the
+- * maximum extent length, then use the current offset as the basis. This ensures
+- * that for large files the preallocation size always extends to MAXEXTLEN
+- * rather than falling short due to things like stripe unit/width alignment of
+- * real extents.
+- */
+-STATIC xfs_fsblock_t
+-xfs_iomap_eof_prealloc_initial_size(
+-	struct xfs_mount	*mp,
+-	struct xfs_inode	*ip,
+-	xfs_off_t		offset,
+-	xfs_bmbt_irec_t		*imap,
+-	int			nimaps)
+-{
+-	xfs_fileoff_t   start_fsb;
+-	int		imaps = 1;
+-	int		error;
+-
+-	ASSERT(nimaps >= imaps);
+-
+-	/* if we are using a specific prealloc size, return now */
+-	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+-		return 0;
+-
+-	/* If the file is small, then use the minimum prealloc */
+-	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign))
+-		return 0;
+-
+-	/*
+-	 * As we write multiple pages, the offset will always align to the
+-	 * start of a page and hence point to a hole at EOF. i.e. if the size is
+-	 * 4096 bytes, we only have one block at FSB 0, but XFS_B_TO_FSB(4096)
+-	 * will return FSB 1. Hence if there are blocks in the file, we want to
+-	 * point to the block prior to the EOF block and not the hole that maps
+-	 * directly at @offset.
+-	 */
+-	start_fsb = XFS_B_TO_FSB(mp, offset);
+-	if (start_fsb)
+-		start_fsb--;
+-	error = xfs_bmapi_read(ip, start_fsb, 1, imap, &imaps, XFS_BMAPI_ENTIRE);
+-	if (error)
+-		return 0;
+-
+-	ASSERT(imaps == 1);
+-	if (imap[0].br_startblock == HOLESTARTBLOCK)
+-		return 0;
+-	if (imap[0].br_blockcount <= (MAXEXTLEN >> 1))
+-		return imap[0].br_blockcount << 1;
+-	return XFS_B_TO_FSB(mp, offset);
+-}
+-
+ STATIC bool
+ xfs_quota_need_throttle(
+ 	struct xfs_inode *ip,
+@@ -503,20 +379,37 @@ xfs_quota_calc_throttle(
+  */
+ STATIC xfs_fsblock_t
+ xfs_iomap_prealloc_size(
+-	struct xfs_mount	*mp,
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	struct xfs_bmbt_irec	*imap,
+-	int			nimaps)
++	struct xfs_bmbt_irec	*prev)
+ {
+-	xfs_fsblock_t		alloc_blocks = 0;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	int			shift = 0;
+ 	int64_t			freesp;
+ 	xfs_fsblock_t		qblocks;
+ 	int			qshift = 0;
++	xfs_fsblock_t		alloc_blocks = 0;
+ 
+-	alloc_blocks = xfs_iomap_eof_prealloc_initial_size(mp, ip, offset,
+-							   imap, nimaps);
++	/*
++	 * Determine the initial size of the preallocation. We are beyond the
++	 * current EOF here, but we need to take into account whether this is
++	 * a sparse write or an extending write when determining the
++	 * preallocation size.  Hence we need to look up the extent that ends
++	 * at the current write offset and use the result to determine the
++	 * preallocation size.
++	 *
++	 * If the extent is a hole, then preallocation is essentially disabled.
++	 * Otherwise we take the size of the preceding data extent as the basis
++	 * for the preallocation size. If the size of the extent is greater than
++	 * half the maximum extent length, then use the current offset as the
++	 * basis. This ensures that for large files the preallocation size
++	 * always extends to MAXEXTLEN rather than falling short due to things
++	 * like stripe unit/width alignment of real extents.
++	 */
++	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
++		alloc_blocks = prev->br_blockcount << 1;
++	else
++		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+ 	if (!alloc_blocks)
+ 		goto check_writeio;
+ 	qblocks = alloc_blocks;
+@@ -587,120 +480,167 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	while (alloc_blocks && alloc_blocks >= freesp)
+ 		alloc_blocks >>= 4;
+-
+ check_writeio:
+ 	if (alloc_blocks < mp->m_writeio_blocks)
+ 		alloc_blocks = mp->m_writeio_blocks;
+-
+ 	trace_xfs_iomap_prealloc_size(ip, alloc_blocks, shift,
+ 				      mp->m_writeio_blocks);
+-
+ 	return alloc_blocks;
+ }
+ 
+-int
+-xfs_iomap_write_delay(
+-	xfs_inode_t	*ip,
+-	xfs_off_t	offset,
+-	size_t		count,
+-	xfs_bmbt_irec_t *ret_imap)
++static int
++xfs_file_iomap_begin_delay(
++	struct inode		*inode,
++	loff_t			offset,
++	loff_t			count,
++	unsigned		flags,
++	struct iomap		*iomap)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_fileoff_t	offset_fsb;
+-	xfs_fileoff_t	last_fsb;
+-	xfs_off_t	aligned_offset;
+-	xfs_fileoff_t	ioalign;
+-	xfs_extlen_t	extsz;
+-	int		nimaps;
+-	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
+-	int		prealloc;
+-	int		error;
+-
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-
+-	/*
+-	 * Make sure that the dquots are there. This doesn't hold
+-	 * the ilock across a disk read.
+-	 */
+-	error = xfs_qm_dqattach_locked(ip, 0);
+-	if (error)
+-		return error;
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		maxbytes_fsb =
++		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
++	xfs_fileoff_t		end_fsb, orig_end_fsb;
++	int			error = 0, eof = 0;
++	struct xfs_bmbt_irec	got;
++	struct xfs_bmbt_irec	prev;
++	xfs_extnum_t		idx;
+ 
+-	extsz = xfs_get_extsz_hint(ip);
+-	offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	ASSERT(!XFS_IS_REALTIME_INODE(ip));
++	ASSERT(!xfs_get_extsz_hint(ip));
+ 
+-	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
+-				imap, XFS_WRITE_IMAPS, &prealloc);
+-	if (error)
+-		return error;
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+-retry:
+-	if (prealloc) {
+-		xfs_fsblock_t	alloc_blocks;
++	if (unlikely(XFS_TEST_ERROR(
++	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
++	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
++	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
++		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
++		error = -EFSCORRUPTED;
++		goto out_unlock;
++	}
+ 
+-		alloc_blocks = xfs_iomap_prealloc_size(mp, ip, offset, imap,
+-						       XFS_WRITE_IMAPS);
++	XFS_STATS_INC(mp, xs_blk_mapw);
+ 
+-		aligned_offset = XFS_WRITEIO_ALIGN(mp, (offset + count - 1));
+-		ioalign = XFS_B_TO_FSBT(mp, aligned_offset);
+-		last_fsb = ioalign + alloc_blocks;
+-	} else {
+-		last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++		if (error)
++			goto out_unlock;
+ 	}
+ 
+-	if (prealloc || extsz) {
+-		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
+-		if (error)
+-			return error;
++	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
++			&got, &prev);
++	if (!eof && got.br_startoff <= offset_fsb) {
++		trace_xfs_iomap_found(ip, offset, count, 0, &got);
++		goto done;
+ 	}
+ 
++	error = xfs_qm_dqattach_locked(ip, 0);
++	if (error)
++		goto out_unlock;
 +
-+[NOTE]
-+This data structure is under construction!  Details may change.
+ 	/*
+-	 * Make sure preallocation does not create extents beyond the range we
+-	 * actually support in this filesystem.
++	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
++	 * to keep the chunks of work done where somewhat symmetric with the
++	 * work writeback does. This is a completely arbitrary number pulled
++	 * out of thin air as a best guess for initial testing.
++	 *
++	 * Note that the values needs to be less than 32-bits wide until
++	 * the lower level functions are updated.
+ 	 */
+-	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes))
+-		last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
++	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
++	end_fsb = orig_end_fsb =
++		min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
 +
-+If the reverse-mapping B+tree and real-time storage device features
-+are enabled, the real-time device has its own reverse block-mapping
-+B+tree.
++	/*
++	 * If we are doing a write at the end of the file and there are no
++	 * allocations past this one, then extend the allocation out to the
++	 * file system's write iosize.
++	 *
++	 * As an exception we don't do any preallocation at all if the file
++	 * is smaller than the minimum preallocation and we are using the
++	 * default dynamic preallocation scheme, as it is likely this is the
++	 * only write to the file that is going to be done.
++	 *
++	 * We clean up any extra space left over when the file is closed in
++	 * xfs_inactive().
++	 */
++	if (eof && offset + count > XFS_ISIZE(ip) &&
++	    ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
++	     XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, mp->m_writeio_blocks))) {
++		xfs_fsblock_t		alloc_blocks;
++		xfs_off_t		aligned_offset;
++		xfs_extlen_t		align;
 +
-+As mentioned in the chapter about xref:Reconstruction[reconstruction],
-+this data structure is another piece of the puzzle necessary to
-+reconstruct the data or attribute fork of a file from reverse-mapping
-+records; we can also use it to double-check allocations to ensure that
-+we are not accidentally cross-linking blocks, which can cause severe
-+damage to the filesystem.
++		/*
++		 * If an explicit allocsize is set, the file is small, or we
++		 * are writing behind a hole, then use the minimum prealloc:
++		 */
++		if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
++		    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
++		    idx == 0 ||
++		    prev.br_startoff + prev.br_blockcount < offset_fsb)
++			alloc_blocks = mp->m_writeio_blocks;
++		else
++			alloc_blocks =
++				xfs_iomap_prealloc_size(ip, offset, &prev);
 +
-+This B+tree is only present if the +XFS_SB_FEAT_RO_COMPAT_RMAPBT+
-+feature is enabled and a real time device is present.  The feature
-+requires a version 5 filesystem.
++		aligned_offset = XFS_WRITEIO_ALIGN(mp, offset + count - 1);
++		end_fsb = XFS_B_TO_FSBT(mp, aligned_offset) + alloc_blocks;
 +
-+The real-time reverse mapping B+tree is rooted in an inode's data
-+fork; the inode number is given by the +sb_rrmapino+ field in the
-+superblock.  The B+tree blocks themselves are stored in the regular
-+filesystem.  The structures used for an inode's B+tree root are:
++		align = xfs_eof_alignment(ip, 0);
++		if (align)
++			end_fsb = roundup_64(end_fsb, align);
+ 
+-	ASSERT(last_fsb > offset_fsb);
++		end_fsb = min(end_fsb, maxbytes_fsb);
++		ASSERT(end_fsb > offset_fsb);
++	}
+ 
+-	nimaps = XFS_WRITE_IMAPS;
+-	error = xfs_bmapi_delay(ip, offset_fsb, last_fsb - offset_fsb,
+-				imap, &nimaps, XFS_BMAPI_ENTIRE);
++retry:
++	error = xfs_bmapi_reserve_delalloc(ip, offset_fsb,
++			end_fsb - offset_fsb, &got,
++			&prev, &idx, eof);
+ 	switch (error) {
+ 	case 0:
++		break;
+ 	case -ENOSPC:
+ 	case -EDQUOT:
+-		break;
+-	default:
+-		return error;
+-	}
+-
+-	/*
+-	 * If bmapi returned us nothing, we got either ENOSPC or EDQUOT. Retry
+-	 * without EOF preallocation.
+-	 */
+-	if (nimaps == 0) {
++		/* retry without any preallocation */
+ 		trace_xfs_delalloc_enospc(ip, offset, count);
+-		if (prealloc) {
+-			prealloc = 0;
+-			error = 0;
++		if (end_fsb != orig_end_fsb) {
++			end_fsb = orig_end_fsb;
+ 			goto retry;
+ 		}
+-		return error ? error : -ENOSPC;
++		/*FALLTHRU*/
++	default:
++		goto out_unlock;
+ 	}
+ 
+-	if (!(imap[0].br_startblock || XFS_IS_REALTIME_INODE(ip)))
+-		return xfs_alert_fsblock_zero(ip, &imap[0]);
+-
+ 	/*
+ 	 * Tag the inode as speculatively preallocated so we can reclaim this
+ 	 * space on demand, if necessary.
+ 	 */
+-	if (prealloc)
++	if (end_fsb != orig_end_fsb)
+ 		xfs_inode_set_eofblocks_tag(ip);
+ 
+-	*ret_imap = imap[0];
+-	return 0;
++	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
++done:
++	if (isnullstartblock(got.br_startblock))
++		got.br_startblock = DELAYSTARTBLOCK;
 +
-+[source, c]
-+----
-+struct xfs_rtrmap_root {
-+     __be16                     bb_level;
-+     __be16                     bb_numrecs;
-+};
-+----
++	if (!got.br_startblock) {
++		error = xfs_alert_fsblock_zero(ip, &got);
++		if (error)
++			goto out_unlock;
++	}
 +
-+* On disk, the B+tree node starts with the +xfs_rtrmap_root+ header
-+followed by an array of +xfs_rtrmap_key+ values and then an array of
-++xfs_rtrmap_ptr_t+ values. The size of both arrays is specified by the
-+header's +bb_numrecs+ value.
++	xfs_bmbt_to_iomap(ip, iomap, &got);
 +
-+* The root node in the inode can only contain up to 10 key/pointer
-+pairs for a standard 512 byte inode before a new level of nodes is
-+added between the root and the leaves.  +di_forkoff+ should always
-+be zero, because there are no extended attributes.
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
+ }
+ 
+ /*
+@@ -1008,6 +948,11 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	if ((flags & IOMAP_WRITE) && !xfs_get_extsz_hint(ip)) {
++		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
++				iomap);
++	}
 +
-+Each record in the real-time reverse-mapping B+tree has the following
-+structure:
-+
-+[source, c]
-+----
-+struct xfs_rtrmap_rec {
-+     __be64                     rm_startblock;
-+     __be64                     rm_blockcount;
-+     __be64                     rm_owner;
-+     __be64                     rm_fork:1;
-+     __be64                     rm_bmbt:1;
-+     __be64                     rm_unwritten:1;
-+     __be64                     rm_unused:7;
-+     __be64                     rm_offset:54;
-+};
-+----
-+
-+*rm_startblock*::
-+Real-time device block number of this record.
-+
-+*rm_blockcount*::
-+The length of this extent, in real-time blocks.
-+
-+*rm_owner*::
-+A 64-bit number describing the owner of this extent.  This must be an
-+inode number, because the real-time device is for file data only.
-+
-+*rm_fork*::
-+If +rm_owner+ describes an inode, this can be 1 if this record is for
-+an attribute fork.  This value will always be zero for real-time
-+extents.
-+
-+*rm_bmbt*::
-+If +rm_owner+ describes an inode, this can be 1 to signify that this
-+record is for a block map B+tree block.  In this case, +rm_offset+ has
-+no meaning.  This value will always be zero for real-time extents.
-+
-+*rm_unwritten*::
-+A flag indicating that the extent is unwritten.  This corresponds to
-+the flag in the xref:Data_Extents[extent record] format which means
-++XFS_EXT_UNWRITTEN+.
-+
-+*rm_offset*::
-+The 54-bit logical file block offset, if +rm_owner+ describes an
-+inode.
-+
-+[NOTE]
-+The single-bit flag values +rm_unwritten+, +rm_fork+, and +rm_bmbt+
-+are packed into the larger fields in the C structure definition.
-+
-+The key has the following structure:
-+
-+[source, c]
-+----
-+struct xfs_rtrmap_key {
-+     __be64                     rm_startblock;
-+     __be64                     rm_owner;
-+     __be64                     rm_fork:1;
-+     __be64                     rm_bmbt:1;
-+     __be64                     rm_reserved:1;
-+     __be64                     rm_unused:7;
-+     __be64                     rm_offset:54;
-+};
-+----
-+
-+* All block numbers are 64-bit real-time device block numbers.
-+
-+* The +bb_magic+ value is ``MAPR'' (0x4d415052).
-+
-+* The +xfs_btree_lblock_t+ header is used for intermediate B+tree node as well
-+as the leaves.
-+
-+* Each pointer is associated with two keys.  The first of these is the
-+"low key", which is the key of the smallest record accessible through
-+the pointer.  This low key has the same meaning as the key in all
-+other btrees.  The second key is the high key, which is the maximum of
-+the largest key that can be used to access a given record underneath
-+the pointer.  Recall that each record in the real-time reverse mapping
-+b+tree describes an interval of physical blocks mapped to an interval
-+of logical file block offsets; therefore, it makes sense that a range
-+of keys can be used to find to a record.
-+
-+==== xfs_db rtrmapbt Example
-+
-+This example shows a real-time reverse-mapping B+tree from a freshly
-+populated root filesystem:
-+
-+----
-+xfs_db> sb 0
-+xfs_db> addr rrmapino
-+xfs_db> p
-+core.magic = 0x494e
-+core.mode = 0100000
-+core.version = 3
-+core.format = 5 (rtrmapbt)
-+...
-+u3.rtrmapbt.level = 3
-+u3.rtrmapbt.numrecs = 1
-+u3.rtrmapbt.keys[1] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,
-+		       owner_hi,offset_hi,attrfork_hi,bmbtblock_hi]
-+	1:[1,132,1,0,0,1705337,133,54431,0,0]
-+u3.rtrmapbt.ptrs[1] = 1:671
-+xfs_db> addr u3.rtrmapbt.ptrs[1]
-+xfs_db> p
-+magic = 0x4d415052
-+level = 2
-+numrecs = 8
-+leftsib = null
-+rightsib = null
-+bno = 5368
-+lsn = 0x400000000
-+uuid = 98bbde42-67e7-46a5-a73e-d64a76b1b5ce
-+owner = 131
-+crc = 0x2560d199 (correct)
-+keys[1-8] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,
-+	     offset_hi,attrfork_hi,bmbtblock_hi]
-+	1:[1,132,1,0,0,17749,132,17749,0,0]
-+	2:[17751,132,17751,0,0,35499,132,35499,0,0]
-+	3:[35501,132,35501,0,0,53249,132,53249,0,0]
-+	4:[53251,132,53251,0,0,1658473,133,7567,0,0]
-+	5:[1658475,133,7569,0,0,1667473,133,16567,0,0]
-+	6:[1667475,133,16569,0,0,1685223,133,34317,0,0]
-+	7:[1685225,133,34319,0,0,1694223,133,43317,0,0]
-+	8:[1694225,133,43319,0,0,1705337,133,54431,0,0]
-+ptrs[1-8] = 1:134 2:238 3:345 4:453 5:795 6:563 7:670 8:780
-+----
-+
-+We arbitrarily pick pointer 7 (twice) to traverse downwards:
-+
-+----
-+xfs_db> addr ptrs[7]
-+xfs_db> p
-+magic = 0x4d415052
-+level = 1
-+numrecs = 36
-+leftsib = 563
-+rightsib = 780
-+bno = 5360
-+lsn = 0
-+uuid = 98bbde42-67e7-46a5-a73e-d64a76b1b5ce
-+owner = 131
-+crc = 0x6807761d (correct)
-+keys[1-36] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,
-+	      offset_hi,attrfork_hi,bmbtblock_hi]
-+	1:[1685225,133,34319,0,0,1685473,133,34567,0,0]
-+	2:[1685475,133,34569,0,0,1685723,133,34817,0,0]
-+	3:[1685725,133,34819,0,0,1685973,133,35067,0,0]
-+	...
-+	34:[1693475,133,42569,0,0,1693723,133,42817,0,0]
-+	35:[1693725,133,42819,0,0,1693973,133,43067,0,0]
-+	36:[1693975,133,43069,0,0,1694223,133,43317,0,0]
-+ptrs[1-36] = 1:669 2:672 3:674...34:722 35:723 36:725
-+xfs_db> addr ptrs[7]
-+xfs_db> p
-+magic = 0x4d415052
-+level = 0
-+numrecs = 125
-+leftsib = 678
-+rightsib = 681
-+bno = 5440
-+lsn = 0
-+uuid = 98bbde42-67e7-46a5-a73e-d64a76b1b5ce
-+owner = 131
-+crc = 0xefce34d4 (correct)
-+recs[1-125] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+	1:[1686725,1,133,35819,0,0,0]
-+	2:[1686727,1,133,35821,0,0,0]
-+	3:[1686729,1,133,35823,0,0,0]
-+	...
-+	123:[1686969,1,133,36063,0,0,0]
-+	124:[1686971,1,133,36065,0,0,0]
-+	125:[1686973,1,133,36067,0,0,0]
-+----
-+
-+Several interesting things pop out here.  The first record shows that
-+inode 133 has mapped real-time block 1,686,725 at offset 35,819.  We
-+confirm this by looking at the block map for that inode:
-+
-+----
-+xfs_db> inode 133
-+xfs_db> p core.realtime
-+core.realtime = 1
-+xfs_db> bmap
-+data offset 35817 startblock 1686723 (1/638147) count 1 flag 0
-+data offset 35819 startblock 1686725 (1/638149) count 1 flag 0
-+data offset 35821 startblock 1686727 (1/638151) count 1 flag 0
-+----
-+
-+Notice that inode 133 has the real-time flag set, which means that its
-+data blocks are all allocated from the real-time device.
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+@@ -1035,19 +980,13 @@ xfs_file_iomap_begin(
+ 		 * the lower level functions are updated.
+ 		 */
+ 		length = min_t(loff_t, length, 1024 * PAGE_SIZE);
+-		if (xfs_get_extsz_hint(ip)) {
+-			/*
+-			 * xfs_iomap_write_direct() expects the shared lock. It
+-			 * is unlocked on return.
+-			 */
+-			xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
+-			error = xfs_iomap_write_direct(ip, offset, length, &imap,
+-					nimaps);
+-		} else {
+-			error = xfs_iomap_write_delay(ip, offset, length, &imap);
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		}
+-
++		/*
++		 * xfs_iomap_write_direct() expects the shared lock. It
++		 * is unlocked on return.
++		 */
++		xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
++		error = xfs_iomap_write_direct(ip, offset, length, &imap,
++				nimaps);
+ 		if (error)
+ 			return error;
+ 
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index fb8aca3..6498be4 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -25,8 +25,6 @@ struct xfs_bmbt_irec;
+ 
+ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *, int);
+-int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
+-			struct xfs_bmbt_irec *);
+ int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+ 			struct xfs_bmbt_irec *);
+ int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
