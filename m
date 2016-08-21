@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2F5777CA0
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 10:02:32 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 071377CAF
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 16:51:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4788AAC03E
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 08:02:28 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TIxwwzLmdNu4ci6s (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Aug 2016 08:02:26 -0700 (PDT)
-Date: Wed, 17 Aug 2016 23:02:24 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH V2] xfs_quota: wire up XFS_GETQSTATV
-Message-ID: <20160817150224.GE7193@zlang.usersys.redhat.com>
-References: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
-	<2ca2dc3b-53d2-0791-644f-c9cd5abef89f@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <2ca2dc3b-53d2-0791-644f-c9cd5abef89f@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 66B14AC001
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:26 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id sa9GO2JuQYhbgXLh (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:24 -0700 (PDT)
+Received: from [83.175.99.196] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+	id 1bbaeJ-0002Tb-AP
+	for xfs@oss.sgi.com; Sun, 21 Aug 2016 21:51:23 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/4] xfs: make xfs_inode_set_eofblocks_tag cheaper for the
+	common case
+Date: Sun, 21 Aug 2016 23:51:12 +0200
+Message-Id: <1471816273-28940-4-git-send-email-hch@lst.de>
+In-Reply-To: <1471816273-28940-1-git-send-email-hch@lst.de>
+References: <1471816273-28940-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,267 +28,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 15, 2016 at 10:17:19PM -0500, Eric Sandeen wrote:
-> The new XFS_GETQSTATV quotactl, available since kernel v3.12,
-> was never implemented in xfs_quota, and the "state" command
-> continues to use XFS_GETQSTAT, which cannot report both
-> group & project quota on newer formats.
-> 
-> The new call has room for all 3 quota types (user, group, and
-> quota), vs just two, where previously project and quota
-> overlapped.
-> 
-> So:
-> 
-> First, try XFS_GETQSTATV.
-> If it passes, we have all the information we need, and we print
-> it. state_qfilestat() is modified to take the newer structure.
-> 
-> If it fails, try XFS_GETQSTAT.  If that passes, we are on an
-> older kernel with neither XFS_GETQSTATV nor the on-disk project
-> quota inode.  We copy the available information into the newer
-> statv structure, carefully determining wither group or project
-> (or neither) is actually active, and print it with the same
-> state_qfilestat routine.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+For long growing file writes we will usually already have the eofblocks
+tag set when adding more speculative preallocations.  Add a flag in the
+inode to allow us to skip the the fairly expensive AG-wide spinlocks
+and multiple radix tree operations in that case.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_icache.c | 14 ++++++++++++++
+ fs/xfs/xfs_inode.h  |  1 +
+ 2 files changed, 15 insertions(+)
 
-Everything looks good to me now, all problems I can find have
-been resolved.
-
-Thanks,
-Zorro
-
-> 
-> I probably could have done some memcpy()'s in 
-> state_stat_to_statv(), but opted for the explicit copy-out;
-> the structures aren't identical, although the newer one 
-> only differs by padding on the end.  If memcpy() is preferable
-> I could send a V2...
-> 
-> V2: set sv.qs_version = FS_QSTATV_VERSION1; before calling
-> the quotactl (thanks Zorro!)
-> 
-> diff --git a/include/xqm.h b/include/xqm.h
-> index c084b2d..5b6934a 100644
-> --- a/include/xqm.h
-> +++ b/include/xqm.h
-> @@ -32,6 +32,7 @@
->  #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
->  #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
->  #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
-> +#define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
->  #define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage */
->  
->  /*
-> @@ -149,4 +150,35 @@ typedef struct fs_quota_stat {
->  	__u16		qs_iwarnlimit;	/* limit for num warnings */
->  } fs_quota_stat_t;
->  
-> +
-> +#ifndef FS_QSTATV_VERSION1
-> +#define FS_QSTATV_VERSION1	1	/* fs_quota_statv.qs_version */
-> +#endif
-> +
-> +/*
-> + * Some basic information about 'quota files' for Q_XGETQSTATV command
-> + */
-> +struct fs_qfilestatv {
-> +	__u64		qfs_ino;	/* inode number */
-> +	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
-> +	__u32		qfs_nextents;	/* number of extents */
-> +	__u32		qfs_pad;	/* pad for 8-byte alignment */
-> +};
-> +
-> +struct fs_quota_statv {
-> +	__s8			qs_version;	/* version for future changes */
-> +	__u8			qs_pad1;	/* pad for 16bit alignment */
-> +	__u16			qs_flags;	/* FS_QUOTA_.* flags */
-> +	__u32			qs_incoredqs;	/* number of dquots incore */
-> +	struct fs_qfilestatv	qs_uquota;	/* user quota information */
-> +	struct fs_qfilestatv	qs_gquota;	/* group quota information */
-> +	struct fs_qfilestatv	qs_pquota;	/* project quota information */
-> +	__s32			qs_btimelimit;	/* limit for blks timer */
-> +	__s32			qs_itimelimit;	/* limit for inodes timer */
-> +	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
-> +	__u16			qs_bwarnlimit;	/* limit for num warnings */
-> +	__u16			qs_iwarnlimit;	/* limit for num warnings */
-> +	__u64			qs_pad2[8];	/* for future proofing */
-> +};
-> +
->  #endif	/* __XQM_H__ */
-> diff --git a/quota/linux.c b/quota/linux.c
-> index 74dba01..4f1f3c4 100644
-> --- a/quota/linux.c
-> +++ b/quota/linux.c
-> @@ -55,6 +55,8 @@ xcommand_to_qcommand(
->  		return Q_XSETQLIM;
->  	case XFS_GETQSTAT:
->  		return Q_XGETQSTAT;
-> +	case XFS_GETQSTATV:
-> +		return Q_XGETQSTATV;
->  	case XFS_QUOTARM:
->  		return Q_XQUOTARM;
->  	case XFS_QSYNC:
-> diff --git a/quota/state.c b/quota/state.c
-> index 8186762..9f6616e 100644
-> --- a/quota/state.c
-> +++ b/quota/state.c
-> @@ -111,12 +111,12 @@ remove_help(void)
->  
->  static void
->  state_qfilestat(
-> -	FILE		*fp,
-> -	fs_path_t	*mount,
-> -	uint		type,
-> -	fs_qfilestat_t	*qfs,
-> -	int		accounting,
-> -	int		enforcing)
-> +	FILE			*fp,
-> +	struct fs_path		*mount,
-> +	uint			type,
-> +	struct fs_qfilestatv	*qfs,
-> +	int			accounting,
-> +	int			enforcing)
->  {
->  	fprintf(fp, _("%s quota state on %s (%s)\n"), type_to_string(type),
->  		mount->fs_dir, mount->fs_name);
-> @@ -142,39 +142,96 @@ state_timelimit(
->  		time_to_string(timelimit, VERBOSE_FLAG | ABSOLUTE_FLAG));
->  }
->  
-> +/*
-> + * fs_quota_stat holds a subset of fs_quota_statv; this copies
-> + * the smaller into the larger, leaving any not-present fields
-> + * empty.  This is so the same reporting function can be used
-> + * for both XFS_GETQSTAT and XFS_GETQSTATV results.
-> + */
->  static void
-> -state_quotafile_mount(
-> -	FILE		*fp,
-> -	uint		type,
-> -	fs_path_t	*mount,
-> -	uint		flags)
-> +state_stat_to_statv(
-> +	struct fs_quota_stat	*s,
-> +	struct fs_quota_statv	*sv)
->  {
-> -	fs_quota_stat_t	s;
-> -	char		*dev = mount->fs_name;
-> +	memset(sv, 0, sizeof(struct fs_quota_statv));
-> +
-> +	/* shared information */
-> +	sv->qs_version = s->qs_version;
-> +	sv->qs_flags = s->qs_flags;
-> +	sv->qs_incoredqs = s->qs_incoredqs;
-> +	sv->qs_btimelimit = s->qs_btimelimit;
-> +	sv->qs_itimelimit = s->qs_itimelimit;
-> +	sv->qs_rtbtimelimit = s->qs_rtbtimelimit;
-> +	sv->qs_bwarnlimit = s->qs_bwarnlimit;
-> +	sv->qs_iwarnlimit = s->qs_iwarnlimit;
-> +
-> +	/* Always room for uquota */
-> +	sv->qs_uquota.qfs_ino = s->qs_uquota.qfs_ino;
-> +	sv->qs_uquota.qfs_nblks = s->qs_uquota.qfs_nblks;
-> +	sv->qs_uquota.qfs_nextents = s->qs_uquota.qfs_nextents;
-> +
-> +	/*
-> +	 * If we are here, XFS_GETQSTATV failed and XFS_GETQSTAT passed;
-> +	 * that is a very strong hint that we're on a kernel which predates
-> +	 * the on-disk pquota inode; both were added in v3.12.  So, we do
-> +	 * some tricksy determination here.
-> +	 * gs_gquota may hold either group quota inode info, or project
-> +	 * quota if that is used instead; which one it actually holds depends
-> +	 * on the quota flags.  (If neither is set, neither is used)
-> +	 */
-> +	if (s->qs_flags & XFS_QUOTA_GDQ_ACCT) {
-> +		/* gs_gquota holds group quota info */
-> +		sv->qs_gquota.qfs_ino = s->qs_gquota.qfs_ino;
-> +		sv->qs_gquota.qfs_nblks = s->qs_gquota.qfs_nblks;
-> +		sv->qs_gquota.qfs_nextents = s->qs_gquota.qfs_nextents;
-> +	} else if (s->qs_flags & XFS_QUOTA_PDQ_ACCT) {
-> +		/* gs_gquota actually holds project quota info */
-> +		sv->qs_pquota.qfs_ino = s->qs_gquota.qfs_ino;
-> +		sv->qs_pquota.qfs_nblks = s->qs_gquota.qfs_nblks;
-> +		sv->qs_pquota.qfs_nextents = s->qs_gquota.qfs_nextents;
-> +	}
-> +}
->  
-> -	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-> -		if (flags & VERBOSE_FLAG)
-> -			fprintf(fp, _("%s quota are not enabled on %s\n"),
-> -				type_to_string(type), dev);
-> -		return;
-> +static void
-> +state_quotafile_mount(
-> +	FILE			*fp,
-> +	uint			type,
-> +	struct fs_path		*mount,
-> +	uint			flags)
-> +{
-> +	struct fs_quota_stat	s;
-> +	struct fs_quota_statv	sv;
-> +	char			*dev = mount->fs_name;
-> +
-> +	sv.qs_version = FS_QSTATV_VERSION1;
-> +
-> +	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
-> +		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-> +			if (flags & VERBOSE_FLAG)
-> +				fprintf(fp,
-> +					_("%s quota are not enabled on %s\n"),
-> +					type_to_string(type), dev);
-> +			return;
-> +		}
-> +		state_stat_to_statv(&s, &sv);
->  	}
->  
->  	if (type & XFS_USER_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_USER_QUOTA, &s.qs_uquota,
-> -				s.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_UDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
-> +				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
->  	if (type & XFS_GROUP_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &s.qs_gquota,
-> -				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
-> +				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
->  	if (type & XFS_PROJ_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
-> -				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
-> +				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
->  
-> -	state_timelimit(fp, XFS_BLOCK_QUOTA, s.qs_btimelimit);
-> -	state_timelimit(fp, XFS_INODE_QUOTA, s.qs_itimelimit);
-> -	state_timelimit(fp, XFS_RTBLOCK_QUOTA, s.qs_rtbtimelimit);
-> +	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
-> +	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
-> +	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
->  }
->  
->  static void
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index fb39a66..65b2e3f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1414,6 +1414,16 @@ xfs_inode_set_eofblocks_tag(
+ 	struct xfs_perag *pag;
+ 	int tagged;
+ 
++	/*
++	 * Don't bother locking the AG and looking up in the radix trees
++	 * if we already know that we have the tag set.
++	 */
++	if (ip->i_flags & XFS_IEOFBLOCKS)
++		return;
++	spin_lock(&ip->i_flags_lock);
++	ip->i_flags |= XFS_IEOFBLOCKS;
++	spin_unlock(&ip->i_flags_lock);
++
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	spin_lock(&pag->pag_ici_lock);
+ 	trace_xfs_inode_set_eofblocks_tag(ip);
+@@ -1449,6 +1459,10 @@ xfs_inode_clear_eofblocks_tag(
+ 	struct xfs_mount *mp = ip->i_mount;
+ 	struct xfs_perag *pag;
+ 
++	spin_lock(&ip->i_flags_lock);
++	ip->i_flags &= ~XFS_IEOFBLOCKS;
++	spin_unlock(&ip->i_flags_lock);
++
+ 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+ 	spin_lock(&pag->pag_ici_lock);
+ 	trace_xfs_inode_clear_eofblocks_tag(ip);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e1a411e..8f30d25 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -216,6 +216,7 @@ xfs_get_initial_prid(struct xfs_inode *dp)
+ #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
+ #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+ #define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
++#define XFS_IEOFBLOCKS		(1 << 10)/* has the preallocblocks tag set */
+ 
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
