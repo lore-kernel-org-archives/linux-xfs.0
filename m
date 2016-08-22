@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 48DF67CA0
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 11:24:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E324B3040E0
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 09:23:59 -0700 (PDT)
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com
-	(mail-sn1nam02on0043.outbound.protection.outlook.com
-	[104.47.36.43]) by cuda.sgi.com with ESMTP id 4XWwohOaLdS2NAEt
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 09:23:54 -0700 (PDT)
-From: Jeff Gibson <jgibson@spscommerce.com>
-Subject: Re: XFS on top of LVM span in AWS. Stripe or are AG's good enough?
-Date: Wed, 17 Aug 2016 16:23:51 +0000
-Message-ID: <CY1PR04MB201082A9ACE83B23FE701409AC140@CY1PR04MB2010.namprd04.prod.outlook.com>
-References: <CY1PR04MB20100FE6C3039717BD27825AAC120@CY1PR04MB2010.namprd04.prod.outlook.com>
-	<20160816005931.GD19025@dastard>
-	<CY1PR04MB20106F50E177A61934986A92AC130@CY1PR04MB2010.namprd04.prod.outlook.com>,
-	<6ec8fbba-27ff-7386-e72a-d9f8e81f9252@sandeen.net>
-In-Reply-To: <6ec8fbba-27ff-7386-e72a-d9f8e81f9252@sandeen.net>
-Content-Language: en-US
+	by oss.sgi.com (Postfix) with ESMTP id 07F877CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 19:54:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 706DA304032
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 17:54:45 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ip09lgQ7jI3CYZM5 for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 17:54:43 -0700 (PDT)
+Date: Mon, 22 Aug 2016 10:54:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V5] xfs_db: add crc manipulation commands
+Message-ID: <20160822005441.GO19025@dastard>
+References: <8cb34b7c-5154-ebb4-7706-1375e94abd74@redhat.com>
+	<0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,42 +26,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Thanks for the great info guys.
+On Sun, Aug 14, 2016 at 07:30:51PM -0500, Eric Sandeen wrote:
+> This adds a new "crc" command to xfs_db for CRC-enabled filesystems.
+> 
+> If a structure has a CRC field, we can validate it, invalidate/corrupt
+> it, or revalidate/rewrite it:
+> 
+> xfs_db> sb 0
+> xfs_db> crc -v
+> crc = 0x796c814f (correct)
+> xfs_db> crc -i
+> Metadata CRC error detected at block 0x0/0x200
+> crc = 0x796c8150 (bad)
+> xfs_db> crc -r
+> crc = 0x796c814f (correct)
+> 
+> (-i and -r require "expert" write-capable mode)
+> 
+> This requires temporarily replacing the write verifier with
+> a dummy which won't recalculate the CRC on the way to disk.
+> 
+> It also required me to write a new flist function, which is
+> totally foreign to me, so hopefully done right - but it seems
+> to work here.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Sorry to beat a dead horse here. =A0Just to be absolutely clear-
+Actually, this need more help....
 
-> > I guess what I'm trying to ask is - will XFS *indirectly* compensate
-> > if one subvolume is busier? =A0For example, if writes to a "slow"
-> > subvolume and resident AGs take longer to complete, will XFS tend to
-> > prefer to use other less-busy AGs more often (with the exception of
-> > locality) for writes? =A0What is the basic algorithm for determining
-> > where new data is written? =A0In load-balancer terms, does it
-> > round-robin, pick the least busy, etc?
->=A0
-> xfs has no notion of fast vs slow regions. =A0See above for the basic
-> algorithm; it's round-robin for new directories, keep inodes and blocks
-> near their parent if possible. =A0
-So if one EBS LVM subvolume has subpar performance it will basically slow d=
-own writes to the whole XFS volume. =A0XFS doesn't have any notion of a que=
-ue per AG or any other mechanism for compensating uneven performance of AGs.
+> @@ -473,12 +474,15 @@ xfs_verify_recalc_crc(
+>  void
+>  write_cur(void)
+>  {
+> +	int skip_crc = (iocur_top->bp->b_ops->verify_write == xfs_dummy_verify);
+> +
 
+bool, and we can't use the iocur until we've checked if it's valid.
+i.e. after this first check:
 
-> There are a few other smaller-granularity
-> heuristics related to stripe geometry as well.
-Oh, cool. =A0Since I'm considering stripe vs. linear for the LVM volume, I'=
-d be very interested in what these are.
+>  	if (iocur_sp < 0) {
+>  		dbprintf(_("nothing to write\n"));
+>  		return;
+>  	}
+>  
+> -	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf) {
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf &&
+> +	    !skip_crc) {
+>  		libxfs_dinode_calc_crc(mp, iocur_top->data);
+>  		iocur_top->ino_crc_ok = 1;
+>  	}
 
+The line of code below this calculates CRCs for dquot buffers, so it
+seems kind of broken to be skipping crc update for an inode but not
+a dquot given they are updated in the same way....
 
-Thank you again,
-JG
+Shouldn't this "skip_crc" condition also be applied to dquot
+buffers, too?
 
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
