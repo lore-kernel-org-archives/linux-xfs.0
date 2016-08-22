@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 04BAA7CA2
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 16:54:07 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 160947CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 20:47:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB647304039
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 14:54:03 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 9L8dj2uRXDnPxwgV (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 14:54:01 -0700 (PDT)
-Date: Fri, 19 Aug 2016 14:53:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 13/17] xfs: test swapext with reflink
-Message-ID: <20160819215354.GA15174@birch.djwong.org>
-References: <146914477514.11762.3144320628851923350.stgit@birch.djwong.org>
-	<146914485888.11762.1688573359701830686.stgit@birch.djwong.org>
-	<20160808081359.GB27776@eguan.usersys.redhat.com>
-	<20160808174132.GC11291@birch.djwong.org>
-	<20160809062943.GF19025@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CDC068F8033
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 18:47:47 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	kcHkDTjYWbcwYnAF for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 18:47:44 -0700 (PDT)
+Date: Mon, 22 Aug 2016 11:47:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 1/3] xfs_quota: add capabilities for use on ext4
+Message-ID: <20160822014742.GQ19025@dastard>
+References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	<1471356998-2876-2-git-send-email-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160809062943.GF19025@dastard>
+In-Reply-To: <1471356998-2876-2-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 09, 2016 at 04:29:43PM +1000, Dave Chinner wrote:
-> On Mon, Aug 08, 2016 at 10:41:32AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 08, 2016 at 04:13:59PM +0800, Eryu Guan wrote:
-> > > On Thu, Jul 21, 2016 at 04:47:38PM -0700, Darrick J. Wong wrote:
-> > > > Add a few tests to stress the new swapext code for reflink and rmap.
-> > > > +_reflink_range "$testdir/file1" 0 "$testdir/file2" 0 $bytes >> "$seqres.full"
-> > > > +
-> > > > +echo "Defrag the big file"
-> > > > +old_nextents=$(xfs_io -c 'stat -v' $testdir/file1 | grep 'nextents' | cut -d ' ' -f 3)
-> > > 
-> > > There's a "_count_extents" helper, does that work for this case?
-> > 
-> > It can, though stat -v reports GETFSXATTR results, which should be faster than
-> > _count_extents because the latter FIEMAPs the entire file and counts lines.
-> > Seeing as XFS records the extent count in the inode, we might as well use it.
+On Tue, Aug 16, 2016 at 09:16:36AM -0500, Bill O'Donnell wrote:
+> This allows xfs_quota to be used on ext4 for project quota testing
+> in xfstests.
 > 
-> perhaps put a special xfs case in _count_extents() that does this
-> rather than FIEMAP?
-
-Ok.  Seems simple enough to do.
-
---D
-
+> This patch was originally submitted by Dave Chinner
+> (http://oss.sgi.com/archives/xfs/2016-02/msg00131.html)
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Resubmitting with the following change:
+> quota/init.c: correct logic error in loop contained in init_args_command()
+> function (lines 85-91).
+
+What logic error?
+
+Commit messages like this really don't tell the reader anything
+about what is different the original patch.  I've had to go archive
+spelunking to work out what is different, and I'm still not sure
+what the logic error you fixed is....
+
+And, FWIW, whilst spelunking, I noticed that Eric's last review
+comments on my original patch:
+
+	Looks ok, but now with the new option:
+
+	1) needs a manpage update
+	2) usage() should be updated to include -f
+
+	3) and I just noticed,
+
+	_("foreign mount active, %s command is for XFS filesystems only\n"),
+
+	seems kind of unclear; maybe just
+
+	_("%s command is for XFS filesystems only\n"),
+
+have not been addressed by this update.
+
+Can you please add these these changes, update the commit message
+and resubmit?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
