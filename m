@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 131377CA0
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 08:18:42 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1C0237CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 21:07:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7E215AC002
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 06:18:38 -0700 (PDT)
-Received: from mail-wm0-f68.google.com (mail-wm0-f68.google.com
-	[74.125.82.68]) by cuda.sgi.com with ESMTP id 2oJFt3SpamtTzAAb
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Aug 2016 06:18:36 -0700 (PDT)
-Received: by mail-wm0-f68.google.com with SMTP id o80so5612005wme.0
-	for <xfs@oss.sgi.com>; Thu, 18 Aug 2016 06:18:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 84D13AC003
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 19:07:30 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	mCEPyBHwKktH5yrd for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 19:07:28 -0700 (PDT)
+Date: Mon, 22 Aug 2016 12:06:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
+Message-ID: <20160822020650.GR19025@dastard>
+References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	<1471356998-2876-4-git-send-email-billodo@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1464792297-13185-9-git-send-email-hch@lst.de>
-References: <1464792297-13185-1-git-send-email-hch@lst.de>
-	<1464792297-13185-9-git-send-email-hch@lst.de>
-From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date: Thu, 18 Aug 2016 15:18:34 +0200
-Message-ID: <CAHpGcMLUtVDiW1e_kuviBNXsn1z_FR0raS3xo9t1bdXyx7kX2g@mail.gmail.com>
-Subject: Re: [PATCH 08/14] fs: iomap based fiemap implementation
+Content-Disposition: inline
+In-Reply-To: <1471356998-2876-4-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,155 +30,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bob Peterson <rpeterso@redhat.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Christoph,
-
-2016-06-01 16:44 GMT+02:00 Christoph Hellwig <hch@lst.de>:
-> Add a simple fiemap implementation based on iomap_ops, partially based
-> on a previous implementation from Bob Peterson <rpeterso@redhat.com>.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, Aug 16, 2016 at 09:16:38AM -0500, Bill O'Donnell wrote:
+> Further changes to allow xfs_quota to be used on foreign filesystem(s)
+> (e.g. ext4) for project quota testing in xfstests.
+> 
+> Add CMD_FLAG_GENERIC to enable generic xfs_quota commands (help and
+> quit) when xfs_quota is run on foreign filesystems.
+> 
+> Use CMD_FLAG_FOREIGN_OK on commands suitable for foreign filesystems.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 > ---
->  fs/iomap.c            | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/iomap.h |  3 ++
->  2 files changed, 93 insertions(+)
->
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index e51adb6..e874c78 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -405,3 +405,93 @@ out_unlock:
->         return ret;
->  }
->  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
-> +
-> +struct fiemap_ctx {
-> +       struct fiemap_extent_info *fi;
-> +       struct iomap prev;
-> +};
-> +
-> +static int iomap_to_fiemap(struct fiemap_extent_info *fi,
-> +               struct iomap *iomap, u32 flags)
-> +{
-> +       switch (iomap->type) {
-> +       case IOMAP_HOLE:
-> +               /* skip holes */
-> +               return 0;
-> +       case IOMAP_DELALLOC:
-> +               flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
-> +               break;
-> +       case IOMAP_UNWRITTEN:
-> +               flags |= FIEMAP_EXTENT_UNWRITTEN;
-> +               break;
-> +       case IOMAP_MAPPED:
-> +               break;
-> +       }
-> +
-> +       return fiemap_fill_next_extent(fi, iomap->offset,
-> +                       iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
-> +                       iomap->length, flags | FIEMAP_EXTENT_MERGED);
+>  include/command.h | 1 +
+>  libxcmd/help.c    | 3 ++-
+>  libxcmd/quit.c    | 3 ++-
+>  quota/init.c      | 3 ++-
+>  4 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/command.h b/include/command.h
+> index 81d5a4d..1c2898a 100644
+> --- a/include/command.h
+> +++ b/include/command.h
+> @@ -22,6 +22,7 @@
+>  
+>  #define CMD_FLAG_GLOBAL		(1<<31)	/* don't iterate "args" */
+>  #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
+> +#define CMD_FLAG_GENERIC	(1<<29) /* command is generic (help, quit) */
 
-According to Documentation/filesystems/fiemap.txt, it seems that
-FIEMAP_EXTENT_MERGED flag should only be set by filesystems with
-block-based rather than extent-based allocation. Am I overlooking
-something?
+I don't think this belongs in include/command.h - it's an xfs_quota
+specific behaviour so I'd put this in quota/init.h:
 
-> +
-> +}
-> +
-> +static loff_t
-> +iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-> +               struct iomap *iomap)
-> +{
-> +       struct fiemap_ctx *ctx = data;
-> +       loff_t ret = length;
-> +
-> +       if (iomap->type == IOMAP_HOLE)
-> +               return length;
-> +
-> +       ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
-> +       ctx->prev = *iomap;
-> +       switch (ret) {
-> +       case 0:         /* success */
-> +               return length;
-> +       case 1:         /* extent array full */
-> +               return 0;
-> +       default:
-> +               return ret;
-> +       }
-> +}
-> +
-> +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-> +               loff_t start, loff_t len, struct iomap_ops *ops)
-> +{
-> +       struct fiemap_ctx ctx;
-> +       loff_t ret;
-> +
-> +       memset(&ctx, 0, sizeof(ctx));
-> +       ctx.fi = fi;
-> +       ctx.prev.type = IOMAP_HOLE;
-> +
-> +       ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-> +       if (ret)
-> +               return ret;
-> +
-> +       ret = filemap_write_and_wait(inode->i_mapping);
-> +       if (ret)
-> +               return ret;
-> +
-> +       while (len > 0) {
-> +               ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-> +                               iomap_fiemap_actor);
-> +               if (ret < 0)
-> +                       return ret;
-> +               if (ret == 0)
-> +                       break;
-> +
-> +               start += ret;
-> +               len -= ret;
-> +       }
-> +
-> +       if (ctx.prev.type != IOMAP_HOLE) {
-> +               ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
-> +               if (ret < 0)
-> +                       return ret;
-> +       }
-> +
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_fiemap);
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 854766f..b3deee1 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -3,6 +3,7 @@
->
->  #include <linux/types.h>
->
-> +struct fiemap_extent_info;
->  struct inode;
->  struct iov_iter;
->  struct kiocb;
-> @@ -63,5 +64,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
->                 struct iomap_ops *ops);
->  int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->                 struct iomap_ops *ops);
-> +int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
-> +               loff_t start, loff_t len, struct iomap_ops *ops);
->
->  #endif /* LINUX_IOMAP_H */
-> --
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+#define CMD_SKIP_CHECK	(1<<0)	/* command is always run */
 
-Thanks,
-Andreas
+> diff --git a/quota/init.c b/quota/init.c
+> index d5d80c2..85931bf 100644
+> --- a/quota/init.c
+> +++ b/quota/init.c
+> @@ -104,7 +104,8 @@ init_check_command(
+>  	const cmdinfo_t	*ct)
+>  {
+>  	if (fs_path &&
+> -	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
+> +	    !((ct->flags & CMD_FLAG_FOREIGN_OK) && foreign_allowed) &&
+> +	    !(ct->flags & CMD_FLAG_GENERIC) &&
+>  	     (fs_path->fs_flags & FS_FOREIGN)) {
+
+This is now sufficiently confusing that it needs to be reworked to
+make the logic clear and easily commented. i.e. something like this:
+
+static int
+init_check_command(
+	const cmdinfo_t *ct)
+{
+	if (!fspath)
+		return 1;
+
+	/* Always run commands that we are told to skip here */
+	if (ct->flags & CMD_SKIP_CHECK)
+		return 1;
+
+	/* if it's an XFS filesystem, always run the command */
+	if (!(fs_path->fs_flags & FS_FOREIGN))
+		return 1;
+
+	/* If the user specified foreign filesysetms are ok, run it */
+	if (foreign_allowed &&
+	    (ct->flags & CMD_FLAG_FOREIGN_OK))
+		return 1;
+
+	/* foreign filesystem and it's no a valid command! */
+	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
+			ct->name);
+	return 0;
+}
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
