@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 07F877CA0
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 19:54:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 706DA304032
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 17:54:45 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ip09lgQ7jI3CYZM5 for <xfs@oss.sgi.com>;
-	Sun, 21 Aug 2016 17:54:43 -0700 (PDT)
-Date: Mon, 22 Aug 2016 10:54:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V5] xfs_db: add crc manipulation commands
-Message-ID: <20160822005441.GO19025@dastard>
-References: <8cb34b7c-5154-ebb4-7706-1375e94abd74@redhat.com>
-	<0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 628387CA0
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 14:17:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 33AF4304032
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 12:17:47 -0700 (PDT)
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
+	cuda.sgi.com with ESMTP id CkV5kLbM59MuqLwP (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 22 Aug 2016 12:17:44 -0700 (PDT)
+Received: from submission (posteo.de [89.146.220.130])
+	by mout02.posteo.de (Postfix) with ESMTPS id 77B6620ADC
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 21:17:42 +0200 (CEST)
+Date: Mon, 22 Aug 2016 21:16:03 +0200
+From: Felix Janda <felix.janda@posteo.de>
+Subject: Re: [PATCHv2 xfsprogs 00/14] Convert from off64_t to off_t
+Message-ID: <20160822191603.GA3227@nyan>
+References: <cover.1471107858.git.felix.janda@posteo.de>
+	<20160822030953.GS19025@dastard> <20160822070601.GA1205@nyan>
+	<20160822115101.GV19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
+In-Reply-To: <20160822115101.GV19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,72 +34,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Aug 14, 2016 at 07:30:51PM -0500, Eric Sandeen wrote:
-> This adds a new "crc" command to xfs_db for CRC-enabled filesystems.
+Dave Chinner wrote:
+> On Mon, Aug 22, 2016 at 09:06:01AM +0200, Felix Janda wrote:
+> > Dave Chinner wrote:
+> > > Felix, can you check how you are sending these patches? The last two
+> > > sets of patches you've sent have not threaded in the correct order
+> > > (they thread in a random order) which means I have to manually
+> > > reorder the patch set to get it to apply in the correct order via
+> > > git am....
+> > 
+> > I am sorry for that. Should I resend the patch series?
 > 
-> If a structure has a CRC field, we can validate it, invalidate/corrupt
-> it, or revalidate/rewrite it:
-> 
-> xfs_db> sb 0
-> xfs_db> crc -v
-> crc = 0x796c814f (correct)
-> xfs_db> crc -i
-> Metadata CRC error detected at block 0x0/0x200
-> crc = 0x796c8150 (bad)
-> xfs_db> crc -r
-> crc = 0x796c814f (correct)
-> 
-> (-i and -r require "expert" write-capable mode)
-> 
-> This requires temporarily replacing the write verifier with
-> a dummy which won't recalculate the CRC on the way to disk.
-> 
-> It also required me to write a new flist function, which is
-> totally foreign to me, so hopefully done right - but it seems
-> to work here.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> No, I've re-ordered it appropriately.
 
-Actually, this need more help....
+Ok. Anyway thanks for drawing my attention to the ordering issues. (I
+was not quite aware that git am does not take the patch numbers in the
+subject into account.)
 
-> @@ -473,12 +474,15 @@ xfs_verify_recalc_crc(
->  void
->  write_cur(void)
->  {
-> +	int skip_crc = (iocur_top->bp->b_ops->verify_write == xfs_dummy_verify);
-> +
-
-bool, and we can't use the iocur until we've checked if it's valid.
-i.e. after this first check:
-
->  	if (iocur_sp < 0) {
->  		dbprintf(_("nothing to write\n"));
->  		return;
->  	}
->  
-> -	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf) {
-> +	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf &&
-> +	    !skip_crc) {
->  		libxfs_dinode_calc_crc(mp, iocur_top->data);
->  		iocur_top->ino_crc_ok = 1;
->  	}
-
-The line of code below this calculates CRCs for dquot buffers, so it
-seems kind of broken to be skipping crc update for an inode but not
-a dquot given they are updated in the same way....
-
-Shouldn't this "skip_crc" condition also be applied to dquot
-buffers, too?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Felix
 
 _______________________________________________
 xfs mailing list
