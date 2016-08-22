@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1BA977CA0
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 03:08:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CEE818F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:08:14 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id YQxQEehDyboJktOP (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:08:13 -0700 (PDT)
-Date: Thu, 25 Aug 2016 01:08:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix superblock inprogress check
-Message-ID: <20160825080812.GE28747@infradead.org>
-References: <1471844367-9679-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8720A7CA0
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 00:35:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 56DE9304043
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 22:35:01 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	JFtDiKVjfe2OirJq for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 22:34:58 -0700 (PDT)
+Date: Mon, 22 Aug 2016 15:34:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
+Message-ID: <20160822053455.GT19025@dastard>
+References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	<1471356998-2876-4-git-send-email-billodo@redhat.com>
+	<20160822020650.GR19025@dastard>
+	<86d459e4-6853-9f3c-3851-3e212f8c7adf@sandeen.net>
+	<8c1b4044-ff69-f891-a4f4-b302bd3bfef3@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1471844367-9679-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <8c1b4044-ff69-f891-a4f4-b302bd3bfef3@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +33,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 22, 2016 at 03:39:27PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Sun, Aug 21, 2016 at 11:46:14PM -0500, Eric Sandeen wrote:
+> On 8/21/16 10:34 PM, Eric Sandeen wrote:
+> > On 8/21/16 9:06 PM, Dave Chinner wrote:
+> >> On Tue, Aug 16, 2016 at 09:16:38AM -0500, Bill O'Donnell wrote:
 > 
-> >From inspection, the superblock sb_inprogress check is done in the
-> verifier and triggered only for the primary superblock via a
-> "bp->b_bn == XFS_SB_DADDR" check.
+> ...
 > 
-> Unfortunately, the primary superblock is an uncached buffer, and
-> hence it is configured by xfs_buf_read_uncached() with:
+> >> static int
+> >> init_check_command(
+> >> 	const cmdinfo_t *ct)
+> >> {
+> >> 	if (!fspath)
+> >> 		return 1;
+> >>
+> >> 	/* Always run commands that we are told to skip here */
+> >> 	if (ct->flags & CMD_SKIP_CHECK)
+> >> 		return 1;
+> >>
+> >> 	/* if it's an XFS filesystem, always run the command */
+> >> 	if (!(fs_path->fs_flags & FS_FOREIGN))
+> >> 		return 1;
+> > 
+> > Sorry for the late review; thanks for getting on it, Dave - but,
+> > isn't "foreign ok" exactly == "skip check?"
+> > 
+> > The only check that gets skipped is the foreign check, so just
+> > setting FOREIGN_OK seems to accomplish the same thing without
+> > more flag complexity, no?
 > 
-> 	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
+> Oh, the subliminal brain reminded me that we want to be able to
+> issue help or quit whether or not we had the "-f" flag, regardless
+> of the filesystem, and that "foreign" isn't ok unless the -f flag
+> is set, so we do need a class of "always works" commands.
 
-Hmm, I wonder why we did that, it seems a bit counter intuitive.
+Right, but that was something that was done in patch 1/3. I pointed
+out that no mention of it was made in the cmmit message there....
 
-But the patch itself looks fine,
+> I guess that was the point of the patch, but I suppose some clarity
+> in comments or commitlog would help slow people like me.  ;)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Right. better explanations needed all round :P
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
