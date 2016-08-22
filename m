@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 31D367CA0
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 07:38:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD29330405F
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 05:38:03 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wnGbHh4A9CIhGX6e (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 05:38:02 -0700 (PDT)
-Date: Thu, 25 Aug 2016 08:38:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: move xfs_bmbt_to_iomap up
-Message-ID: <20160825123800.GA25041@bfoster.bfoster>
-References: <1471816273-28940-1-git-send-email-hch@lst.de>
-	<1471816273-28940-2-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2A5057CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 23:46:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9590DAC001
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 21:46:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id qDzI2iKyevf7NZ54 for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 21:46:15 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 45E3B474BA7
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 23:46:15 -0500 (CDT)
+Subject: Re: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
+References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	<1471356998-2876-4-git-send-email-billodo@redhat.com>
+	<20160822020650.GR19025@dastard>
+	<86d459e4-6853-9f3c-3851-3e212f8c7adf@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8c1b4044-ff69-f891-a4f4-b302bd3bfef3@sandeen.net>
+Date: Sun, 21 Aug 2016 23:46:14 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1471816273-28940-2-git-send-email-hch@lst.de>
+In-Reply-To: <86d459e4-6853-9f3c-3851-3e212f8c7adf@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,98 +35,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Aug 21, 2016 at 11:51:10PM +0200, Christoph Hellwig wrote:
-> We'll need it earlier in the file soon, so the unchanged function to the
-> top of xfs_iomap.c
+On 8/21/16 10:34 PM, Eric Sandeen wrote:
+> On 8/21/16 9:06 PM, Dave Chinner wrote:
+>> On Tue, Aug 16, 2016 at 09:16:38AM -0500, Bill O'Donnell wrote:
+
+...
+
+>> static int
+>> init_check_command(
+>> 	const cmdinfo_t *ct)
+>> {
+>> 	if (!fspath)
+>> 		return 1;
+>>
+>> 	/* Always run commands that we are told to skip here */
+>> 	if (ct->flags & CMD_SKIP_CHECK)
+>> 		return 1;
+>>
+>> 	/* if it's an XFS filesystem, always run the command */
+>> 	if (!(fs_path->fs_flags & FS_FOREIGN))
+>> 		return 1;
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_iomap.c | 52 ++++++++++++++++++++++++++--------------------------
->  1 file changed, 26 insertions(+), 26 deletions(-)
+> Sorry for the late review; thanks for getting on it, Dave - but,
+> isn't "foreign ok" exactly == "skip check?"
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 2af0dda..ba3592f 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -44,6 +44,32 @@
->  						<< mp->m_writeio_log)
->  #define XFS_WRITE_IMAPS		XFS_BMAP_MAX_NMAP
->  
-> +void
-> +xfs_bmbt_to_iomap(
-> +	struct xfs_inode	*ip,
-> +	struct iomap		*iomap,
-> +	struct xfs_bmbt_irec	*imap)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (imap->br_startblock == HOLESTARTBLOCK) {
-> +		iomap->blkno = IOMAP_NULL_BLOCK;
-> +		iomap->type = IOMAP_HOLE;
-> +	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
-> +		iomap->blkno = IOMAP_NULL_BLOCK;
-> +		iomap->type = IOMAP_DELALLOC;
-> +	} else {
-> +		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
-> +		if (imap->br_state == XFS_EXT_UNWRITTEN)
-> +			iomap->type = IOMAP_UNWRITTEN;
-> +		else
-> +			iomap->type = IOMAP_MAPPED;
-> +	}
-> +	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-> +	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
-> +	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> +}
-> +
->  STATIC int
->  xfs_iomap_eof_align_last_fsb(
->  	xfs_mount_t	*mp,
-> @@ -947,32 +973,6 @@ error_on_bmapi_transaction:
->  	return error;
->  }
->  
-> -void
-> -xfs_bmbt_to_iomap(
-> -	struct xfs_inode	*ip,
-> -	struct iomap		*iomap,
-> -	struct xfs_bmbt_irec	*imap)
-> -{
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -
-> -	if (imap->br_startblock == HOLESTARTBLOCK) {
-> -		iomap->blkno = IOMAP_NULL_BLOCK;
-> -		iomap->type = IOMAP_HOLE;
-> -	} else if (imap->br_startblock == DELAYSTARTBLOCK) {
-> -		iomap->blkno = IOMAP_NULL_BLOCK;
-> -		iomap->type = IOMAP_DELALLOC;
-> -	} else {
-> -		iomap->blkno = xfs_fsb_to_db(ip, imap->br_startblock);
-> -		if (imap->br_state == XFS_EXT_UNWRITTEN)
-> -			iomap->type = IOMAP_UNWRITTEN;
-> -		else
-> -			iomap->type = IOMAP_MAPPED;
-> -	}
-> -	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
-> -	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
-> -	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> -}
-> -
->  static inline bool imap_needs_alloc(struct xfs_bmbt_irec *imap, int nimaps)
->  {
->  	return !nimaps ||
-> -- 
-> 2.1.4
+> The only check that gets skipped is the foreign check, so just
+> setting FOREIGN_OK seems to accomplish the same thing without
+> more flag complexity, no?
+
+Oh, the subliminal brain reminded me that we want to be able to
+issue help or quit whether or not we had the "-f" flag, regardless
+of the filesystem, and that "foreign" isn't ok unless the -f flag
+is set, so we do need a class of "always works" commands.
+
+I guess that was the point of the patch, but I suppose some clarity
+in comments or commitlog would help slow people like me.  ;)
+
+Thanks,
+-Eric
+
+> Thanks,
+> -Eric
+> 
+> 
+>> 	/* If the user specified foreign filesysetms are ok, run it */
+>> 	if (foreign_allowed &&
+>> 	    (ct->flags & CMD_FLAG_FOREIGN_OK))
+>> 		return 1;
+>>
+>> 	/* foreign filesystem and it's no a valid command! */
+>> 	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
+>> 			ct->name);
+>> 	return 0;
+>> }
+>>
+>> Cheers,
+>>
+>> Dave.
+>>
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
