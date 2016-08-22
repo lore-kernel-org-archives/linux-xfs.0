@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 685917CE1
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 06:05:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 38D748F8173
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:05:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1NVP3E75brB5hzFc (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 16 Aug 2016 04:05:02 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 21/22] ext4: Add richacl support
-Date: Tue, 16 Aug 2016 13:03:02 +0200
-Message-Id: <1471345383-15334-22-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
-References: <1471345383-15334-1-git-send-email-agruenba@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 0AA707CA0
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 19:38:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B3D5C8F8033
+	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 17:38:05 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	WHddRiHW5rGUrG6F for <xfs@oss.sgi.com>;
+	Sun, 21 Aug 2016 17:38:03 -0700 (PDT)
+Date: Mon, 22 Aug 2016 10:38:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V5] xfs_db: add crc manipulation commands
+Message-ID: <20160822003800.GN19025@dastard>
+References: <8cb34b7c-5154-ebb4-7706-1375e94abd74@redhat.com>
+	<0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <0bb88897-3dfc-de4e-05fb-b737221f0d80@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,422 +26,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+On Sun, Aug 14, 2016 at 07:30:51PM -0500, Eric Sandeen wrote:
+> This adds a new "crc" command to xfs_db for CRC-enabled filesystems.
+....
+> diff --git a/db/io.c b/db/io.c
+> index 91cab12..240b129 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -27,6 +27,7 @@
+>  #include "output.h"
+>  #include "init.h"
+>  #include "malloc.h"
+> +#include "crc.h"
+>  =
 
-Support the richacl permission model in ext4.  The richacls are stored
-in "system.richacl" xattrs.  Richacls need to be enabled by tune2fs or
-at file system create time.
+>  static int	pop_f(int argc, char **argv);
+>  static void     pop_help(void);
+> @@ -473,12 +474,15 @@ xfs_verify_recalc_crc(
+>  void
+>  write_cur(void)
+>  {
+> +	int skip_crc =3D (iocur_top->bp->b_ops->verify_write =3D=3D xfs_dummy_v=
+erify);
+> +
+>  	if (iocur_sp < 0) {
+>  		dbprintf(_("nothing to write\n"));
+>  		return;
+>  	}
+>  =
 
-Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Andreas Dilger <adilger@dilger.ca>
----
- fs/ext4/Kconfig     |  11 +++++
- fs/ext4/Makefile    |   1 +
- fs/ext4/file.c      |   3 ++
- fs/ext4/ialloc.c    |  11 ++++-
- fs/ext4/inode.c     |   5 +-
- fs/ext4/namei.c     |   5 ++
- fs/ext4/richacl.c   | 134 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/ext4/richacl.h   |  40 ++++++++++++++++
- fs/ext4/xattr.c     |   7 +++
- include/linux/acl.h |  15 ++++++
- 10 files changed, 228 insertions(+), 4 deletions(-)
- create mode 100644 fs/ext4/richacl.c
- create mode 100644 fs/ext4/richacl.h
- create mode 100644 include/linux/acl.h
+> -	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf) {
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) && iocur_top->ino_buf &&
+> +	    !skip_crc) {
+>  		libxfs_dinode_calc_crc(mp, iocur_top->data);
+>  		iocur_top->ino_crc_ok =3D 1;
+>  	}
+> @@ -489,6 +493,19 @@ write_cur(void)
+>  		write_cur_bbs();
+>  	else
+>  		write_cur_buf();
+> +
+> +	/* If we didn't write the crc automatically, re-check validity */
+> +	if (iocur_top->ino_buf && skip_crc) {
+> +		xfs_dinode_t	*dip;
+> +		xfs_ino_t	ino;
+> +
+> +		dip =3D iocur_top->data;
+> +		ino =3D iocur_top->ino;
+> +		iocur_top->ino_crc_ok =3D xfs_verify_cksum((char *)dip,
+> +						mp->m_sb.sb_inodesize,
+> +						XFS_DINODE_CRC_OFF);
+> +	}
+> +
 
-diff --git a/fs/ext4/Kconfig b/fs/ext4/Kconfig
-index e38039f..72acd01 100644
---- a/fs/ext4/Kconfig
-+++ b/fs/ext4/Kconfig
-@@ -22,6 +22,17 @@ config EXT3_FS_POSIX_ACL
- 	  This config option is here only for backward compatibility. ext3
- 	  filesystem is now handled by the ext4 driver.
- 
-+config EXT4_FS_RICHACL
-+	bool "Ext4 Rich Access Control Lists"
-+	depends on EXT4_FS
-+	select FS_RICHACL
-+	help
-+	  Richacls are an implementation of NFSv4 ACLs, extended by file masks
-+	  to cleanly integrate into the POSIX file permission model.  To learn
-+	  more about them, see http://www.bestbits.at/richacl/.
-+
-+	  If you don't know what Richacls are, say N.
-+
- config EXT3_FS_SECURITY
- 	bool "Ext3 Security Labels"
- 	depends on EXT3_FS
-diff --git a/fs/ext4/Makefile b/fs/ext4/Makefile
-index 354103f..c65d2675 100644
---- a/fs/ext4/Makefile
-+++ b/fs/ext4/Makefile
-@@ -12,3 +12,4 @@ ext4-y	:= balloc.o bitmap.o dir.o file.o fsync.o ialloc.o inode.o page-io.o \
- 
- ext4-$(CONFIG_EXT4_FS_POSIX_ACL)	+= acl.o
- ext4-$(CONFIG_EXT4_FS_SECURITY)		+= xattr_security.o
-+ext4-$(CONFIG_EXT4_FS_RICHACL) 		+= richacl.o
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 261ac37..79db060 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -30,6 +30,7 @@
- #include "ext4_jbd2.h"
- #include "xattr.h"
- #include "acl.h"
-+#include "richacl.h"
- 
- /*
-  * Called when an inode is released. Note that this is different
-@@ -717,6 +718,8 @@ const struct inode_operations ext4_file_inode_operations = {
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
- 	.set_acl	= ext4_set_acl,
-+	.get_richacl	= ext4_get_richacl,
-+	.set_richacl	= ext4_set_richacl,
- 	.fiemap		= ext4_fiemap,
- };
- 
-diff --git a/fs/ext4/ialloc.c b/fs/ext4/ialloc.c
-index 9e66cd1..8ce6051 100644
---- a/fs/ext4/ialloc.c
-+++ b/fs/ext4/ialloc.c
-@@ -27,6 +27,7 @@
- #include "ext4_jbd2.h"
- #include "xattr.h"
- #include "acl.h"
-+#include "richacl.h"
- 
- #include <trace/events/ext4.h>
- 
-@@ -729,6 +730,14 @@ out:
- 	return ret;
- }
- 
-+static inline int
-+ext4_new_acl(handle_t *handle, struct inode *inode, struct inode *dir)
-+{
-+	if (IS_RICHACL(dir))
-+		return ext4_init_richacl(handle, inode, dir);
-+	return ext4_init_acl(handle, inode, dir);
-+}
-+
- /*
-  * There are two policies for allocating an inode.  If the new inode is
-  * a directory, then a forward search is made for a block group with both
-@@ -1093,7 +1102,7 @@ got:
- 	if (err)
- 		goto fail_drop;
- 
--	err = ext4_init_acl(handle, inode, dir);
-+	err = ext4_new_acl(handle, inode, dir);
- 	if (err)
- 		goto fail_free_drop;
- 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 3131747..e0f9702 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -37,10 +37,10 @@
- #include <linux/printk.h>
- #include <linux/slab.h>
- #include <linux/bitops.h>
-+#include <linux/acl.h>
- 
- #include "ext4_jbd2.h"
- #include "xattr.h"
--#include "acl.h"
- #include "truncate.h"
- 
- #include <trace/events/ext4.h>
-@@ -5212,8 +5212,7 @@ int ext4_setattr(struct dentry *dentry, struct iattr *attr)
- 		ext4_orphan_del(NULL, inode);
- 
- 	if (!rc && (ia_valid & ATTR_MODE))
--		rc = posix_acl_chmod(inode, inode->i_mode);
--
-+		rc = acl_chmod(inode);
- err_out:
- 	ext4_std_error(inode->i_sb, error);
- 	if (!error)
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index 34c0142..2ca3efa 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -38,6 +38,7 @@
- 
- #include "xattr.h"
- #include "acl.h"
-+#include "richacl.h"
- 
- #include <trace/events/ext4.h>
- /*
-@@ -3888,6 +3889,8 @@ const struct inode_operations ext4_dir_inode_operations = {
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
- 	.set_acl	= ext4_set_acl,
-+	.get_richacl	= ext4_get_richacl,
-+	.set_richacl	= ext4_set_richacl,
- 	.fiemap         = ext4_fiemap,
- };
- 
-@@ -3899,4 +3902,6 @@ const struct inode_operations ext4_special_inode_operations = {
- 	.removexattr	= generic_removexattr,
- 	.get_acl	= ext4_get_acl,
- 	.set_acl	= ext4_set_acl,
-+	.get_richacl	= ext4_get_richacl,
-+	.set_richacl	= ext4_set_richacl,
- };
-diff --git a/fs/ext4/richacl.c b/fs/ext4/richacl.c
-new file mode 100644
-index 0000000..0c316ff
---- /dev/null
-+++ b/fs/ext4/richacl.c
-@@ -0,0 +1,134 @@
-+/*
-+ * Copyright IBM Corporation, 2010
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Author: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>,
-+ * 	   Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2.1 of the GNU Lesser General Public License
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/fs.h>
-+#include <linux/richacl_xattr.h>
-+
-+#include "ext4.h"
-+#include "ext4_jbd2.h"
-+#include "xattr.h"
-+#include "acl.h"
-+#include "richacl.h"
-+
-+struct richacl *
-+ext4_get_richacl(struct inode *inode)
-+{
-+	const int name_index = EXT4_XATTR_INDEX_RICHACL;
-+	void *value = NULL;
-+	struct richacl *acl = NULL;
-+	int retval;
-+
-+	retval = ext4_xattr_get(inode, name_index, "", NULL, 0);
-+	if (retval > 0) {
-+		value = kmalloc(retval, GFP_NOFS);
-+		if (!value)
-+			return ERR_PTR(-ENOMEM);
-+		retval = ext4_xattr_get(inode, name_index, "", value, retval);
-+	}
-+	if (retval > 0)
-+		acl = richacl_from_xattr(&init_user_ns, value, retval, -EIO);
-+	else if (retval != -ENODATA && retval != -ENOSYS)
-+		acl = ERR_PTR(retval);
-+	kfree(value);
-+
-+	return acl;
-+}
-+
-+static int
-+__ext4_remove_richacl(handle_t *handle, struct inode *inode)
-+{
-+	const int name_index = EXT4_XATTR_INDEX_RICHACL;
-+	int retval;
-+
-+	retval = ext4_xattr_set_handle(handle, inode, name_index, "",
-+				       NULL, 0, 0);
-+	if (!retval)
-+		set_cached_richacl(inode, NULL);
-+	return retval;
-+}
-+
-+static int
-+__ext4_set_richacl(handle_t *handle, struct inode *inode, struct richacl *acl)
-+{
-+	const int name_index = EXT4_XATTR_INDEX_RICHACL;
-+	umode_t mode = inode->i_mode;
-+	int retval, size;
-+	void *value;
-+
-+	if (richacl_equiv_mode(acl, &mode) == 0) {
-+		inode->i_ctime = ext4_current_time(inode);
-+		inode->i_mode = mode;
-+		ext4_mark_inode_dirty(handle, inode);
-+		return __ext4_remove_richacl(handle, inode);
-+	}
-+
-+	mode &= ~S_IRWXUGO;
-+	mode |= richacl_masks_to_mode(acl);
-+
-+	size = richacl_xattr_size(acl);
-+	value = kmalloc(size, GFP_NOFS);
-+	if (!value)
-+		return -ENOMEM;
-+	richacl_to_xattr(&init_user_ns, acl, value, size);
-+	inode->i_mode = mode;
-+	retval = ext4_xattr_set_handle(handle, inode, name_index, "",
-+				       value, size, 0);
-+	kfree(value);
-+	if (retval)
-+		return retval;
-+
-+	set_cached_richacl(inode, acl);
-+
-+	return 0;
-+}
-+
-+int
-+ext4_set_richacl(struct inode *inode, struct richacl *acl)
-+{
-+	handle_t *handle;
-+	int retval, retries = 0;
-+
-+retry:
-+	handle = ext4_journal_start(inode, EXT4_HT_XATTR,
-+				    ext4_jbd2_credits_xattr(inode));
-+	if (IS_ERR(handle))
-+		return PTR_ERR(handle);
-+
-+	if (acl)
-+		retval = __ext4_set_richacl(handle, inode, acl);
-+	else
-+		retval = __ext4_remove_richacl(handle, inode);
-+
-+	ext4_journal_stop(handle);
-+	if (retval == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
-+		goto retry;
-+	return retval;
-+}
-+
-+int
-+ext4_init_richacl(handle_t *handle, struct inode *inode, struct inode *dir)
-+{
-+	struct richacl *acl = richacl_create(&inode->i_mode, dir);
-+	int error;
-+
-+	error = PTR_ERR(acl);
-+	if (!IS_ERR_OR_NULL(acl)) {
-+		error = __ext4_set_richacl(handle, inode, acl);
-+		richacl_put(acl);
-+	}
-+	return error;
-+}
-diff --git a/fs/ext4/richacl.h b/fs/ext4/richacl.h
-new file mode 100644
-index 0000000..6fe9a92
---- /dev/null
-+++ b/fs/ext4/richacl.h
-@@ -0,0 +1,40 @@
-+/*
-+ * Copyright IBM Corporation, 2010
-+ * Copyright (C)  2015 Red Hat, Inc.
-+ * Author Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2.1 of the GNU Lesser General Public License
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-+ */
-+
-+#ifndef __FS_EXT4_RICHACL_H
-+#define __FS_EXT4_RICHACL_H
-+
-+#include <linux/richacl.h>
-+
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+
-+extern struct richacl *ext4_get_richacl(struct inode *);
-+extern int ext4_set_richacl(struct inode *, struct richacl *);
-+
-+extern int ext4_init_richacl(handle_t *, struct inode *, struct inode *);
-+
-+#else  /* CONFIG_EXT4_FS_RICHACL */
-+
-+#define ext4_get_richacl NULL
-+#define ext4_set_richacl NULL
-+
-+static inline int
-+ext4_init_richacl(handle_t *handle, struct inode *inode, struct inode *dir)
-+{
-+	return 0;
-+}
-+
-+#endif  /* CONFIG_EXT4_FS_RICHACL */
-+#endif  /* __FS_EXT4_RICHACL_H */
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 39e9cfb..c7e8519 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -55,6 +55,7 @@
- #include <linux/slab.h>
- #include <linux/mbcache.h>
- #include <linux/quotaops.h>
-+#include <linux/richacl_xattr.h>
- #include "ext4_jbd2.h"
- #include "ext4.h"
- #include "xattr.h"
-@@ -97,6 +98,9 @@ static const struct xattr_handler *ext4_xattr_handler_map[] = {
- #ifdef CONFIG_EXT4_FS_SECURITY
- 	[EXT4_XATTR_INDEX_SECURITY]	     = &ext4_xattr_security_handler,
- #endif
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+	[EXT4_XATTR_INDEX_RICHACL]           = &richacl_xattr_handler,
-+#endif
- };
- 
- const struct xattr_handler *ext4_xattr_handlers[] = {
-@@ -109,6 +113,9 @@ const struct xattr_handler *ext4_xattr_handlers[] = {
- #ifdef CONFIG_EXT4_FS_SECURITY
- 	&ext4_xattr_security_handler,
- #endif
-+#ifdef CONFIG_EXT4_FS_RICHACL
-+	&richacl_xattr_handler,
-+#endif
- 	NULL
- };
- 
-diff --git a/include/linux/acl.h b/include/linux/acl.h
-new file mode 100644
-index 0000000..3c3b5ce
---- /dev/null
-+++ b/include/linux/acl.h
-@@ -0,0 +1,15 @@
-+#ifndef __LINUX_ACL_H
-+#define __LINUX_ACL_H
-+
-+#include <linux/posix_acl.h>
-+#include <linux/richacl.h>
-+
-+static inline int
-+acl_chmod(struct inode *inode)
-+{
-+	if (IS_RICHACL(inode))
-+		return richacl_chmod(inode, inode->i_mode);
-+	return posix_acl_chmod(inode, inode->i_mode);
-+}
-+
-+#endif
--- 
-2.7.4
+io.c: In function =BFwrite_cur=BF:
+io.c:500:13: warning: variable =BFino=BF set but not used [-Wunused-but-set=
+-variable]
+   xfs_ino_t ino;
+
+I've just removed the unused xfs_ino_t here, because it doesn't seem
+to have any purpose here.
+
+
+> diff --git a/db/write.h b/db/write.h
+> index 31e2665..664ddcc 100644
+> --- a/db/write.h
+> +++ b/db/write.h
+> @@ -20,5 +20,5 @@ struct field;
+>  =
+
+>  extern void	write_init(void);
+>  extern void	write_block(const field_t *fields, int argc, char **argv);
+> -extern void	write_string(const field_t *fields, int argc, char **argv);
+>  extern void	write_struct(const field_t *fields, int argc, char **argv);
+> +extern void	write_string(const field_t *fields, int argc, char **argv);
+
+Stray hunk? (removed)
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
