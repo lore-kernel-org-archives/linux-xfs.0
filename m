@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 904A47CB9
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 15:22:11 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6AC347CA0
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 18:27:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 621B58F8040
-	for <xfs@oss.sgi.com>; Fri,  5 Aug 2016 13:22:08 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C6A30AC002
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 16:27:12 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Z3vrAAnXoXbTpKST (version=TLSv1.2
+	cuda.sgi.com with ESMTP id QJS0o7pg9nbHG101 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 05 Aug 2016 13:22:06 -0700 (PDT)
-Date: Fri, 5 Aug 2016 13:22:02 -0700
+	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 16:27:10 -0700 (PDT)
+Date: Tue, 23 Aug 2016 16:26:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: remove OWN_AG rmap when allocating a block from the AGFL
-Message-ID: <20160805202202.GJ25565@birch.djwong.org>
-References: <20160805202104.GB8590@birch.djwong.org>
+Subject: Re: [PATCH] xfs: kill __uint*_t and __int*_t
+Message-ID: <20160823232640.GG8268@birch.djwong.org>
+References: <20160807173835.GA20839@nyan> <20160809083332.GA1489@infradead.org>
+	<20160823223500.GZ19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160805202104.GB8590@birch.djwong.org>
+In-Reply-To: <20160823223500.GZ19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +31,55 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Felix Janda <felix.janda@posteo.de>, xfs@oss.sgi.com
 
-[resend, cc list this time]
+On Wed, Aug 24, 2016 at 08:35:00AM +1000, Dave Chinner wrote:
+> On Tue, Aug 09, 2016 at 01:33:32AM -0700, Christoph Hellwig wrote:
+> > On Sun, Aug 07, 2016 at 07:38:35PM +0200, Felix Janda wrote:
+> > > Replace them by the more widely used uint*_t and int*_t.
+> > > 
+> > > Signed-off-by: Felix Janda <felix.janda@posteo.de>
+> > > ---
+> > > This patch is essentially a global
+> > > 'sed -i "s/__\(u*\)int\([0-9]*\)_t/\1int\2_t/"'. The only other changes
+> > > are whitespace changes and removing the now unecessary type definitions.
+> > > 
+> > > Running 'sed "s/^.//"' on the patch might be useful for checking that
+> > > I didn't mess up the indentation.
+> > 
+> > If everyone is fine using (u)int*_t over s*/u* this looks good.  I'd
+> > have a slight preference for s*/u* as in the rest of the kernel, but
+> > either way getting rid of our crazy __ types is a good thing.
+> 
+> Don't really care that much. I'd prefer (marginally) to go with the
+> (u)int*_t types as userspace then doesn't need a set of typedefs in
+> the platform headers to support the kernel specific types in libxfs
+> code....
 
-I ftrace'd the rmap code while trying to repro the g/299 assert you
-saw.  Eventually I got it to reproduce and it looks like a block would
-go onto the AGFL and we'd add an OWN_AG rmap for the block.  ~20s
-later the block mysteriously ends up being mapped in a second time as
-some inode's BMBT block without the OWN_AG rmap being removed.  So I
-looked around for anything that grabbed a block off the AGFL and
-noticed that the regular allocation function can do that if we get
-really tight on space.  I also noticed that it doesn't remove the
-OWN_AG rmap, nor does it credit the per-AG reservation for the block
-it used.  So here's a test patch that updates the rmap.  (The per-AG
-stuff is in the reflink patchset so we don't need it here.)
+I don't mind moving from __uintXX_t to uintXX_t so long as the changes
+land in the kernel and xfsprogs at the same time.
 
----
-When we're really tight on space, xfs_alloc_ag_vextent_small() can
-allocate a block from the AGFL and give it to the caller.  Since the
-caller is never the AGFL-fixing method, we must remove the OWN_AG
-reverse mapping because it will clash with whatever rmap the caller
-wants to set up.  This bug was discovered by running generic/299
-repeatedly.
+Basically, I use stgit with my kernel/xfsprogs git repos to maintain the
+stack of patches that go to the mailing lists.  Right now the libxfs
+code in both are nearly identical, so it's very easy to jump to the
+middle of the stack, make a change, and send it to the other git repo.
+This becomes much more painful if I have to edit a diff as it jumps
+between repos so that they apply and build.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+--D
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index af1a72e..3dd8f1d 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1582,6 +1582,7 @@ xfs_alloc_ag_vextent_small(
- 	xfs_extlen_t	*flenp,	/* result length */
- 	int		*stat)	/* status: 0-freelist, 1-normal/none */
- {
-+	struct xfs_owner_info	oinfo;
- 	int		error;
- 	xfs_agblock_t	fbno;
- 	xfs_extlen_t	flen;
-@@ -1624,6 +1625,18 @@ xfs_alloc_ag_vextent_small(
- 				error0);
- 			args->wasfromfl = 1;
- 			trace_xfs_alloc_small_freelist(args);
-+
-+			/*
-+			 * If we're feeding an AGFL block to something that
-+			 * doesn't live in the free space, we need to clear
-+			 * out the OWN_AG rmap.
-+			 */
-+			xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-+			error = xfs_rmap_free(args->tp, args->agbp, args->agno,
-+					fbno, 1, &oinfo);
-+			if (error)
-+				goto error0;
-+
- 			*stat = 0;
- 			return 0;
- 		}
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
