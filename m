@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 46A737CA0
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 12:05:34 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BB5A67CA0
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 20:27:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 161AC30407F
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:05:30 -0700 (PDT)
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com
-	(mail-sn1nam02on0081.outbound.protection.outlook.com
-	[104.47.36.81]) by cuda.sgi.com with ESMTP id A2bXmgwzmxsr8dYw
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 16 Aug 2016 10:05:24 -0700 (PDT)
-From: Jeff Gibson <jgibson@spscommerce.com>
-Subject: Re: XFS on top of LVM span in AWS.  Stripe or are AG's good enough?
-Date: Tue, 16 Aug 2016 17:05:11 +0000
-Message-ID: <CY1PR04MB20106F50E177A61934986A92AC130@CY1PR04MB2010.namprd04.prod.outlook.com>
-References: <CY1PR04MB20100FE6C3039717BD27825AAC120@CY1PR04MB2010.namprd04.prod.outlook.com>,
-	<20160816005931.GD19025@dastard>
-In-Reply-To: <20160816005931.GD19025@dastard>
-Content-Language: en-US
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F0FBAC001
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 18:27:27 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id hXkhLGx38LJFDwHX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 22 Aug 2016 18:27:25 -0700 (PDT)
+Date: Mon, 22 Aug 2016 18:27:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] iomap: don't set FIEMAP_EXTENT_MERGED for extent based
+	filesystems
+Message-ID: <20160823012719.GF8268@birch.djwong.org>
+References: <1471816023-28739-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1471816023-28739-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,101 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rpeterso@redhat.com, linux-fsdevel@vger.kernel.org, agruenba@redhat.com, xfs@oss.sgi.com
 
->On Mon, Aug 15, 2016 at 11:36:14PM +0000, Jeff Gibson wrote:
->> So I'm creating an LVM volume with 8 AWS EBS disks that are
->> spanned (linear) per Redhat's documentation for Gluster
->> (https://access.redhat.com/documentation/en-US/Red_Hat_Storage/3.1/html/=
-Deployment_Guide_for_Public_Cloud/>ch02s03.html#Provisioning_Storage_for_Th=
-ree-way_Replication_Volumes).
->> =
+On Sun, Aug 21, 2016 at 11:47:03PM +0200, Christoph Hellwig wrote:
+> Filesystems like XFS that use extents should not set the
+> FIEMAP_EXTENT_MERGED flag in the fiemap extent structures.  To allow
+> for both behaviors for the upcoming gfs2 usage split the iomap
+> type field into type and flags, and only set FIEMAP_EXTENT_MERGED if
+> the IOMAP_F_MERGED flag is set.  The flags field will also come in
+> handy for future features such as shared extents on reflink-enabled
+> file systems.
 
->> 2 questions-
->> =
+You can add an:
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
->> 1.=A0 Will XFS's Allocation Groups essentially stripe the data for
->> me
->
->No. XFS does not stripe data. It does, however, *distribute* data
->different AGs according to locality policy (e.g. inode32 vs
->inode64), so it uses all the AGs as the directory structure grows.
-Poor wording on my part.  By "essentially stripe" I mean distribute data th=
-roughout all of the EBS subvolumes instead of just using one EBS subvolume =
-at a time until full.  I do plan on using inode64.
+I'm going to send in a similar patch adding a SHARED flag when I
+send out the XFS reflink series for review later this week.
 
->> or should I stripe the underlying volumes with LVM?
->
->No, you're using EBS. Forget anything you know about storage layout
->and geometry, because EBS has no guaranteed physical layout you can
->optimise for.
-Right.  However there could still be some gains from striping due to IOP li=
-mits for single volumes. - That is the combined IOPS for all the volumes st=
-riped together can be higher than they are for a single volume. =
+--D
 
-
->> I'm not
->> worried as much about data integrity with a stripe/span since
->> Gluster is doing the redundancy work.
->> =
-
->> 2.=A0 AWS volumes sometimes have inconsistent performance.=A0 If I
->> understand things correctly, AG's run in parallel.
->
->Define "run". AGs can allocate/free blocks in parallel.
-By run I meant read/write data to/from the AGs.
-
->If IO does
->not require allocation, then AGs play no part in the IO path.
-Can you explain this a bit please?  From my understanding data is written a=
-nd read from space inside of AGs, so I don't see how it couldn't be part of=
- the IO path.  Or do you simply mean reads just use inodes and don't care a=
-bout the AGs?
-
->> In a
->> non-striped volume, if some of the AGs are temporarily slower to
->> respond than others due to one of the underlying volumes being
->> slow, will XFS prefer the quicker responding AGs
->
->No, it does not.
->
->> or is I/O always
->> evenly distributed?
->
->No, it is not.
->
->> If XFS prefers the more responsive AG's it
->> seems to me that it would be better NOT to stripe the underlying
->> disk since all AG's that are distributed in a stripe will
->> continuously hit all component volumes, including the slow volume
->> (unless if XFS compensates for this?)
->
->I think you have the wrong idea about what allocation groups do.
-I'm reading the XFS File System Structure doc on xfs.org.  It says, "XFS fi=
-lesystems are divided into a number of equally sized chunks called Allocati=
-on Groups. Each AG can almost be thought of as an individual filesystem." s=
-o that's where most of my assumptions are coming from.
-
->They are for maintaining allocation concurrency and locality of
->related objects on disk - they have no influence on where IO is
->directed based on IO load or response time.
-I understand that XFS has locality as far as trying to write files to the s=
-ame AG as the parent directory.  Are there other cases?
-I get that it's probably not measuring the responsiveness of each AG. I gue=
-ss what I'm trying to ask is - will XFS *indirectly* compensate if one subv=
-olume is busier?  For example, if writes to a "slow" subvolume and resident=
- AGs take longer to complete, will XFS tend to prefer to use other less-bus=
-y AGs more often (with the exception of locality) for writes?  What is the =
-basic algorithm for determining where new data is written?  In load-balance=
-r terms, does it round-robin, pick the least busy, etc?
-
-Thank you very much!
-JG
-    =
+> 
+> Reported-by: Andreas Gruenbacher <agruenba@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap.c            | 5 ++++-
+>  include/linux/iomap.h | 8 +++++++-
+>  2 files changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 0342254..706270f 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -428,9 +428,12 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+>  		break;
+>  	}
+>  
+> +	if (iomap->flags & IOMAP_F_MERGED)
+> +		flags |= FIEMAP_EXTENT_MERGED;
+> +
+>  	return fiemap_fill_next_extent(fi, iomap->offset,
+>  			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
+> -			iomap->length, flags | FIEMAP_EXTENT_MERGED);
+> +			iomap->length, flags);
+>  
+>  }
+>  
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 3267df4..3d70ece 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -19,6 +19,11 @@ struct vm_fault;
+>  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+>  
+>  /*
+> + * Flags for iomap mappings:
+> + */
+> +#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
+> +
+> +/*
+>   * Magic value for blkno:
+>   */
+>  #define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+> @@ -27,7 +32,8 @@ struct iomap {
+>  	sector_t		blkno;	/* 1st sector of mapping, 512b units */
+>  	loff_t			offset;	/* file offset of mapping, bytes */
+>  	u64			length;	/* length of mapping, bytes */
+> -	int			type;	/* type of mapping */
+> +	u16			type;	/* type of mapping */
+> +	u16			flags;	/* flags for mapping */
+>  	struct block_device	*bdev;	/* block device for I/O */
+>  };
+>  
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
