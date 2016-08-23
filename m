@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41E1F7CA1
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 03:10:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 069BF304048
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:10:50 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id rzRiBtTamUdl1b5i (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:10:48 -0700 (PDT)
-Date: Thu, 25 Aug 2016 01:10:47 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfs: fix some key handling problems in
-	_btree_simple_query_range
-Message-ID: <20160825081047.GH28747@infradead.org>
-References: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
-	<147200524743.14738.15760103598513525911.stgit@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 0F8A67CA0
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 19:13:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D426030404E
+	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 17:13:00 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	HuanugFQnPt2BQOP for <xfs@oss.sgi.com>;
+	Mon, 22 Aug 2016 17:12:37 -0700 (PDT)
+Date: Tue, 23 Aug 2016 10:09:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 1/3] xfs_quota: add capabilities for use on ext4
+Message-ID: <20160823000916.GX19025@dastard>
+References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
+	<1471356998-2876-2-git-send-email-billodo@redhat.com>
+	<20160822014742.GQ19025@dastard> <20160822160207.GC2736@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <147200524743.14738.15760103598513525911.stgit@birch.djwong.org>
+In-Reply-To: <20160822160207.GC2736@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,12 +31,121 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Looks fine,
+On Mon, Aug 22, 2016 at 11:02:07AM -0500, Bill O'Donnell wrote:
+> On Mon, Aug 22, 2016 at 11:47:42AM +1000, Dave Chinner wrote:
+> > On Tue, Aug 16, 2016 at 09:16:36AM -0500, Bill O'Donnell wrote:
+> > > This allows xfs_quota to be used on ext4 for project quota testing
+> > > in xfstests.
+> > > 
+> > > This patch was originally submitted by Dave Chinner
+> > > (http://oss.sgi.com/archives/xfs/2016-02/msg00131.html)
+> > > 
+> > > Resubmitting with the following change:
+> > > quota/init.c: correct logic error in loop contained in init_args_command()
+> > > function (lines 85-91).
+> > 
+> > What logic error?
+> 
+> In your original patch, in init_args_command():
+> 
+>    	do {
+>  		fs_path = &fs_table[index++];
+> -	} while ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count);
+> +		if (fs_path->fs_flags & FS_PROJECT_PATH)
+> +			continue;
+> +		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
+> +			continue;
+> +	} while (index < fs_count);
+> 
+> The loop should break out, when (fs_path->fs_flags & FS_PROJECT_PATH) is false,
+> but instead moves onto the next test (and then back to the top). See in the
+> original while statement, the loop stops when the false condition occurs, that is,
+> ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count) == False.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Hi Bill - now I see *how* you changed the logic changed, but I still
+don't know *why* it needed to be changed. What problem did you
+encounter that needed to be solved?  The code I wrote had different
+logic for good reason: the fstable is now populated with non-XFS
+mount points now, and so we have to walk it differently.
+
+In more detail, the fstable is initialised from two place - the
+mount table for FS_MOUNT_POINT entries, and the projects files for
+FS_PROJECT_PATH entries.  The original init_args_command() code was
+searching for the first mount point entry in the filesystem table
+(i.e. a FS_MOUNT_POINT entry) and it did so by skipping over
+FS_PROJECT_PATH entries. It could do this because it "knew" that the
+fs_table was only populated with XFS filesystem mount points. Hence
+once it found an entry that was not a project quota path entry, it
+could stop knowing it had an XFS mount point to work from.
+
+Now we are populating the fstable with all types of filesystem mount
+points as well as project quota paths. Hence if we are operating
+only on XFS filesystems we now have to skip over any foreign mount
+point entries we find in the table.  IOWs, the original code I wrote
+is supposed to skip both project paths and foreign mounts when "-f"
+is not set.
+
+But that said, I've analysed your change sufficiently that I can now
+see the problem you tried to solve: it doesn't break out of the
+search loop when it finds the first mount point it can use. This is
+the "why" of the logic change you made, and if you said that in the
+commit message, it would have been easy to spot it in the patch.
+
+It would have also been much easier to review, because now it's
+clear that the logic change you've made makes it stop searching at
+the first FS_MOUNT_POINT entry, regardless of whether it is foreign
+or not, or whether we are allowing foreign mounts to be used. This
+is incorrect behaviour, as you can now see from the above
+explanation of what the code was supposed to be doing.
+
+i.e. the search loop should now look something like this:
+
+	/* lookup the first FS_MOUNT_POINT entry we should use */
+	do {
+		/* skip project quota entries */
+		if (fs_path->fs_flags & FS_PROJECT_PATH)
+			continue;
+
+		/* only consider foreign filesystems if told to */
+		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
+			continue;
+
+		/* We can use this one */
+		break;
+	} while (index < fs_count);
+
+> My commit message was completely terse, sorry. I'll clarify it in v3.
+
+Writing good commit messages is hard and takes practice. If you
+read the commit message and you can't answer the following questions
+after reading it, the commit message needs more work:
+
+	1 what problem is being solved?
+	2 why did the problem need to be solved?
+	3 what unforeseen or tricky issues needed to be addressed
+	  while solving the problem?
+	4 what changed from the last version, and why did it change?
+	  (see 1, 2 and 3)
+
+Note that there's no "how did the problem get solved?" in that list?
+That's because the "how?" is the code. Reviewers can read the code
+change to understand the how - what they can't get from the code is
+the "why?" and "what changed from last time?" and that's what needs
+to be in comments and commit messages...
+
+Often 1) and 2) can be described in the patch series summary (i.e.
+patch 0/N) as it doesn't need to be explained in every patch in the
+series.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
