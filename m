@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 335877CA0
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 14:12:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DB2ED30404E
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 12:12:03 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F00507CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 07:55:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B13168F8035
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 05:55:32 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Dl4faCCRzChCVYmg (version=TLSv1.2
+	cuda.sgi.com with ESMTP id BlXzzlKpPlml4xJb (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 12:11:59 -0700 (PDT)
-Date: Tue, 23 Aug 2016 14:11:56 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH v3 2/2] xfs_quota: additional changes to allow use on ext4
-Message-ID: <20160823191156.GA1358@redhat.com>
-References: <1471970426-5509-1-git-send-email-billodo@redhat.com>
-	<1471970426-5509-3-git-send-email-billodo@redhat.com>
-	<07c520b8-ead6-4ff9-cc8c-463cc2c33d47@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <07c520b8-ead6-4ff9-cc8c-463cc2c33d47@sandeen.net>
+	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 05:55:31 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mx1.redhat.com (Postfix) with ESMTPS id B194F81255
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 12:55:30 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-33.bos.redhat.com [10.18.41.33])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id u7OCtUUr011897
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 08:55:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: prevent dropping ioend completions during buftarg wait
+Date: Wed, 24 Aug 2016 08:55:29 -0400
+Message-Id: <1472043329-30700-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,154 +31,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Aug 23, 2016 at 11:54:48AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 8/23/16 11:40 AM, Bill O'Donnell wrote:
-> > Further changes to allow xfs_quota to be used on foreign filesystem(s)
-> > (e.g. ext4) for project quota testing in xfstests.
-> > 
-> > Add CMD_SKIP_CHECK to enable "generic" xfs_quota commands (help and
-> > quit) when xfs_quota is run on foreign filesystems.
-> > Use CMD_FLAG_FOREIGN_OK on commands suitable for foreign filesystems.
-> > Refactor init_check_command in quota/init.c for clarity.
-> > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > ---
-> >  libxcmd/help.c |  4 +++-
-> >  libxcmd/quit.c |  4 +++-
-> >  quota/init.c   | 29 ++++++++++++++++++++---------
-> >  quota/init.h   |  2 ++
-> >  4 files changed, 28 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/libxcmd/help.c b/libxcmd/help.c
-> > index fad0ab9..d2e72a0 100644
-> > --- a/libxcmd/help.c
-> > +++ b/libxcmd/help.c
-> > @@ -18,6 +18,7 @@
-> >  
-> >  #include "platform_defs.h"
-> >  #include "command.h"
-> > +#include "../quota/init.h"
-> >  
-> >  static cmdinfo_t help_cmd;
-> >  static void help_onecmd(const char *cmd, const cmdinfo_t *ct);
-> > @@ -88,7 +89,8 @@ help_init(void)
-> >  	help_cmd.cfunc = help_f;
-> >  	help_cmd.argmin = 0;
-> >  	help_cmd.argmax = 1;
-> > -	help_cmd.flags = CMD_FLAG_GLOBAL;
-> > +	help_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-> > +		CMD_SKIP_CHECK;
-> 
-> Nitpick, but no need to set both FOREIGN_OK and SKIP_CHECK, right?
-> If the first is set, the 2nd is never tested (below), I think?
+xfs_wait_buftarg() waits for all pending I/O, drains the ioend
+completion workqueue and walks the LRU until all buffers in the cache
+have been released. This is traditionally an unmount operation` but the
+mechanism is also reused during filesystem freeze.
 
-Yes. Good catch.
+xfs_wait_buftarg() invokes drain_workqueue() as part of the quiesce,
+which is intended more for a shutdown sequence in that it indicates to
+the queue that new operations are not expected once the drain has begun.
+New work jobs after this point result in a WARN_ON_ONCE() and are
+otherwise dropped.
 
-> 
-> >  	help_cmd.args = _("[command]");
-> >  	help_cmd.oneline = _("help for one or all commands");
-> >  
-> > diff --git a/libxcmd/quit.c b/libxcmd/quit.c
-> > index 0183b8f..9dbd29a 100644
-> > --- a/libxcmd/quit.c
-> > +++ b/libxcmd/quit.c
-> > @@ -18,6 +18,7 @@
-> >  
-> >  #include "platform_defs.h"
-> >  #include "command.h"
-> > +#include "../quota/init.h"
-> >  
-> >  static cmdinfo_t quit_cmd;
-> >  
-> > @@ -38,7 +39,8 @@ quit_init(void)
-> >  	quit_cmd.cfunc = quit_f;
-> >  	quit_cmd.argmin = -1;
-> >  	quit_cmd.argmax = -1;
-> > -	quit_cmd.flags = CMD_FLAG_GLOBAL;
-> > +	quit_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK |
-> > +		CMD_SKIP_CHECK;
-> >  	quit_cmd.oneline = _("exit the program");
-> >  
-> >  	add_command(&quit_cmd);
-> > diff --git a/quota/init.c b/quota/init.c
-> > index 137cd68..b487dd5 100644
-> > --- a/quota/init.c
-> > +++ b/quota/init.c
-> > @@ -109,15 +109,26 @@ static int
-> >  init_check_command(
-> >  	const cmdinfo_t	*ct)
-> >  {
-> > -	if (fs_path &&
-> > -	    !(ct->flags & CMD_FLAG_FOREIGN_OK) &&
-> > -	     (fs_path->fs_flags & FS_FOREIGN)) {
-> > -		fprintf(stderr,
-> > -	_("foreign mount active, %s command is for XFS filesystems only\n"),
-> > -			ct->name);
-> > -		return 0;
-> > -	}
-> > -	return 1;
-> > +	if (!fs_path)
-> > +		return 1;
-> > +
-> > +	/* Always run commands that we are told to skip here */
-> > +	if (ct->flags & CMD_SKIP_CHECK)
-> > +		return 1;
-> > +
-> > +	/* if it's an XFS filesystem, always run the command */
-> > +	if (!(fs_path->fs_flags & FS_FOREIGN))
-> > +		return 1;
-> > +
-> > +	/* If the user specified foreign filesysetms are ok, run it */
-> > +	if (foreign_allowed &&
-> > +	    (ct->flags & CMD_FLAG_FOREIGN_OK))
-> > +		return 1;
-> > +
-> > +	/* foreign filesystem and it's no a valid command! */
-> 
-> s/no/not/ while you're at it :)
-> 
-Yep.
+With filesystem freeze, however, read operations are allowed and can
+proceed during or after the workqueue drain. If such a read occurs
+during the drain sequence, the workqueue infrastructure complains about
+the queued ioend completion work item and drops it on the floor. As a
+result, the buffer remains on the LRU and the freeze never completes.
 
-> > +	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-> > +		ct->name);
-> > +	return 0;
-> >  }
-> >  
-> >  static void
-> > diff --git a/quota/init.h b/quota/init.h
-> > index 6879855..aa1cc51 100644
-> > --- a/quota/init.h
-> > +++ b/quota/init.h
-> > @@ -31,3 +31,5 @@ extern void	report_init(void);
-> >  extern void	state_init(void);
-> >  
-> >  extern void init_cvtnum(unsigned int *, unsigned int *);
-> > +
-> > +#define CMD_SKIP_CHECK	(1<<0) /* command is always run */
-> 
-> how about "always available" - it's not run unless it's invoked.  ;)
+Despite the fact that the overall buffer cache cleanup is not necessary
+during freeze, fix up this operation such that it is safe to invoke
+during non-unmount quiesce operations. Replace the drain_workqueue()
+call with flush_workqueue(), which runs a similar serialization on
+pending workqueue jobs without causing new jobs to be dropped. This is
+safe for unmount as unmount independently locks out new operations by
+the time xfs_wait_buftarg() is invoked.
 
-Agreed.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks for the review-
-Bill
-
-> 
-> -Eric
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 607cc29..b5b9bff 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1611,7 +1611,7 @@ xfs_wait_buftarg(
+ 	 */
+ 	while (percpu_counter_sum(&btp->bt_io_count))
+ 		delay(100);
+-	drain_workqueue(btp->bt_mount->m_buf_workqueue);
++	flush_workqueue(btp->bt_mount->m_buf_workqueue);
+ 
+ 	/* loop until there is nothing left on the lru list. */
+ 	while (list_lru_count(&btp->bt_lru)) {
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
