@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 06E607CA0
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:02:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA54C304048
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:01:58 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 45F8A7CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:07:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 167F28F8035
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:07:42 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HrnCJOsQtmRu8wR7 (version=TLSv1.2
+	cuda.sgi.com with ESMTP id xg1wTHg4epGakkYi (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:01:57 -0700 (PDT)
-Date: Wed, 24 Aug 2016 14:01:55 -0400
+	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:07:41 -0700 (PDT)
+Date: Wed, 24 Aug 2016 14:07:38 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: don't perform lookups on zero-height btrees
-Message-ID: <20160824180154.GA8982@bfoster.bfoster>
-References: <20160819203022.GD8268@birch.djwong.org>
+Subject: Re: [PATCH] xfs: fix superblock inprogress check
+Message-ID: <20160824180738.GB8982@bfoster.bfoster>
+References: <1471844367-9679-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160819203022.GD8268@birch.djwong.org>
+In-Reply-To: <1471844367-9679-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Aug 19, 2016 at 01:30:22PM -0700, Darrick J. Wong wrote:
-> If the caller passes in a cursor to a zero-height btree (which is
-> impossible), we never set block to anything but NULL, which causes the
-> later dereference of it to crash.  Instead, just return -EFSCORRUPTED.
+On Mon, Aug 22, 2016 at 03:39:27PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> From inspection, the superblock sb_inprogress check is done in the
+> verifier and triggered only for the primary superblock via a
+> "bp->b_bn == XFS_SB_DADDR" check.
+> 
+> Unfortunately, the primary superblock is an uncached buffer, and
+> hence it is configured by xfs_buf_read_uncached() with:
+> 
+> 	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
+> 
+> And so this check never triggers. Fix it.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-Did something actually cause this to happen?
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
-
->  fs/xfs/libxfs/xfs_btree.c |    4 ++++
->  1 file changed, 4 insertions(+)
+>  fs/xfs/libxfs/xfs_sb.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 64fd847..4bffea4 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -1814,6 +1814,10 @@ xfs_btree_lookup(
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 0e3d4f5..4aecc5f 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -583,7 +583,8 @@ xfs_sb_verify(
+>  	 * Only check the in progress field for the primary superblock as
+>  	 * mkfs.xfs doesn't clear it from secondary superblocks.
+>  	 */
+> -	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
+> +	return xfs_mount_validate_sb(mp, &sb,
+> +				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
+>  				     check_version);
+>  }
 >  
->  	XFS_BTREE_STATS_INC(cur, lookup);
->  
-> +	/* No such thing as a zero-level tree. */
-> +	if (cur->bc_nlevels == 0)
-> +		return -EFSCORRUPTED;
-> +
->  	block = NULL;
->  	keyno = 0;
->  
+> -- 
+> 2.8.0.rc3
 > 
 > _______________________________________________
 > xfs mailing list
