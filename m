@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F9827CAE
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 12:56:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F0F54AC006
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:56:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BSOln2raCQHNwsvo (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2C8187CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 18:42:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D65968F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 16:42:44 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 8qupufAXPwnUkwAk (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:56:39 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH 2/2] fstests: xfs EIO error handling test
-Date: Sat, 20 Aug 2016 01:56:32 +0800
-Message-Id: <1471629392-13661-2-git-send-email-zlang@redhat.com>
-In-Reply-To: <1471629392-13661-1-git-send-email-zlang@redhat.com>
-References: <1471629392-13661-1-git-send-email-zlang@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 16:42:42 -0700 (PDT)
+Date: Wed, 24 Aug 2016 16:42:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: "Bad page state" errors when calling BULKSTAT under memory pressure?
+Message-ID: <20160824234237.GA22760@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,212 +23,153 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Besides fail_at_unmount, all EIO error handling can stop umount
-hanging on IO error too.
+Hi everyone,
 
-This case test EIO/max_retries and EIO/retry_timeout_seconds as
-below:
+[cc'ing Brian because he was the last one to touch xfs_buf.c]
 
-1) fail_at_unmount=0 && \
-   EIO/max_retries=1 && \
-   EIO/retry_timeout_seconds=0
+I've been stress-testing xfs_scrub against a 900GB filesystem with 2M inodes
+using a VM with 512M of RAM.  I've noticed that I get BUG messages about
+pages with negative refcount, but only if the system is under memory pressure.
+No errors are seen if the VM memory is increased to, say, 20GB.
 
-2) fail_at_unmount=0 && \
-   EIO/max_retries=-1 && \
-   EIO/retry_timeout_seconds=1
+: BUG: Bad page state in process xfs_scrub  pfn:00426
+: page:ffffea0000010980 count:-1 mapcount:0 mapping:          (null) index:0x0
+: flags: 0x0()
+: page dumped because: nonzero _count
+: Modules linked in: xfs libcrc32c sch_fq_codel af_packet
+: CPU: 1 PID: 2058 Comm: xfs_scrub Not tainted 4.8.0-rc3-mcsum #18
+: Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+:  0000000000000000 ffff906f9c4237b0 ffffffff98331bf3 ffffea0000010980
+:  ffffffff989d923c ffff906f9c4237d8 ffffffff9819c5b4 0000000000000000
+:  0000000000000000 0000000000000000 ffff906f9c4237e8 ffffffff9819c701
+: Call Trace:
+:  [<ffffffff98331bf3>] dump_stack+0x85/0xc2
+:  [<ffffffff9819c5b4>] bad_page+0xc4/0x130
+:  [<ffffffff9819c701>] check_new_page_bad+0x71/0x80
+:  [<ffffffff9819fd97>] get_page_from_freelist+0x907/0xa60
+:  [<ffffffff981a05a6>] __alloc_pages_nodemask+0x156/0xf70
+:  [<ffffffff9812812f>] ? is_module_address+0x2f/0x50
+:  [<ffffffffc03ca746>] xfs_buf_allocate_memory+0x1f6/0x2f0 [xfs]
+:  [<ffffffffc03cc49d>] xfs_buf_get_map+0x1bd/0x400 [xfs]
+:  [<ffffffffc03cdb2c>] xfs_buf_read_map+0x2c/0x360 [xfs]
+:  [<ffffffff98307767>] ? queue_unplugged+0x57/0x190
+:  [<ffffffffc03cdeb2>] xfs_buf_readahead_map+0x52/0x70 [xfs]
+:  [<ffffffffc037fdfd>] xfs_btree_reada_bufs+0x9d/0xb0 [xfs]
+:  [<ffffffffc03eea6a>] xfs_bulkstat_ichunk_ra+0xda/0x110 [xfs]
+:  [<ffffffffc037ef14>] ? xfs_btree_check_block+0x14/0x20 [xfs]
+:  [<ffffffffc03eeec8>] xfs_bulkstat+0x2b8/0x6c0 [xfs]
+:  [<ffffffffc03ee960>] ? xfs_bulkstat_one_int+0x430/0x430 [xfs]
+:  [<ffffffffc03e0826>] xfs_ioc_bulkstat+0x116/0x210 [xfs]
+:  [<ffffffffc03e2631>] xfs_file_ioctl+0x591/0xf10 [xfs]
+:  [<ffffffff98045b03>] ? kvm_clock_read+0x23/0x40
+:  [<ffffffff98045b39>] ? kvm_sched_clock_read+0x9/0x20
+:  [<ffffffff98022729>] ? sched_clock+0x9/0x10
+:  [<ffffffff980dddcd>] ? __lock_acquire+0x25d/0x14b0
+:  [<ffffffff98234993>] ? __fget+0xf3/0x200
+:  [<ffffffff98234993>] ? __fget+0xf3/0x200
+:  [<ffffffff98350277>] ? debug_smp_processor_id+0x17/0x20
+:  [<ffffffff980d9a19>] ? get_lock_stats+0x19/0x60
+:  [<ffffffff982276d3>] do_vfs_ioctl+0x93/0x700
+:  [<ffffffff982349b0>] ? __fget+0x110/0x200
+:  [<ffffffff982348a5>] ? __fget+0x5/0x200
+:  [<ffffffff98227d81>] SyS_ioctl+0x41/0x70
+:  [<ffffffff9866d6bc>] entry_SYSCALL_64_fastpath+0x1f/0xbd
+: Disabling lock debugging due to kernel taint
 
-Make sure when fail_at_unmount=0, umount won't hang there.
+Obviously, a page refcount of -1 is not a good sign.  I had a hunch that
+the page in question was (hopefully) a page backing an xfs_buf, so I
+applied the following debug patch:
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/xfs/263     | 126 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/263.out |  21 +++++++++
- tests/xfs/group   |   1 +
- 3 files changed, 148 insertions(+)
- create mode 100755 tests/xfs/263
- create mode 100644 tests/xfs/263.out
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 607cc29..144b976 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -317,7 +317,7 @@ xfs_buf_free(
+ 
+                for (i = 0; i < bp->b_page_count; i++) {
+                        struct page     *page = bp->b_pages[i];
+-
++if (page_ref_count(page) != 1) {xfs_err(NULL, "%s: OHNO! daddr=%llu page=%p ref=%d", __func__, bp->b_bn, page, page_ref_count(page)); dump_stack();}
+                        __free_page(page);
+                }
+        } else if (bp->b_flags & _XBF_KMEM)
 
-diff --git a/tests/xfs/263 b/tests/xfs/263
-new file mode 100755
-index 0000000..2df139c
---- /dev/null
-+++ b/tests/xfs/263
-@@ -0,0 +1,126 @@
-+#! /bin/bash
-+# FS QA Test 263
-+#
-+# Test XFS EIO error handling configuration. Stop XFS from retrying
-+# to writeback forever when hit EIO.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmerror
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_dm_target error
-+_require_scratch
-+_require_fs_sysfs error/fail_at_unmount
-+_require_fs_sysfs error/metadata/EIO/max_retries
-+_require_fs_sysfs error/metadata/EIO/retry_timeout_seconds
-+
-+_scratch_mkfs >> $seqres.full 2>&1
-+_dmerror_init
-+
-+do_test()
-+{
-+	local attr="$1"
-+	local num=0
-+
-+	_dmerror_mount
-+	reset_xfs_sysfs_error_handling $DMERROR_DEV
-+	# Disable fail_at_unmount before test EIO error handling
-+	_set_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount 0
-+	echo -n "error/fail_at_unmount="
-+	_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount
-+
-+	_set_fs_sysfs_attr $DMERROR_DEV $attr 1
-+	num=`_get_fs_sysfs_attr $DMERROR_DEV $attr`
-+	echo "$attr=$num"
-+	# _fail the test if we fail to set $attr to 1, because the test
-+	# probably will hang in such case and block subsequent tests.
-+	if [ "$num" != "1" ]; then
-+		_fail "Failed to set $attr: 1"
-+	fi
-+
-+	# start a metadata-intensive workload, but no data allocation operation.
-+	# Because uncompleted new space allocation I/Os may cause XFS to shutdown
-+	# after loading error table.
-+	$FSSTRESS_PROG -z -n 5000 -p 10 \
-+		       -f creat=10 \
-+		       -f resvsp=1 \
-+		       -f truncate=1 \
-+		       -f punch=1 \
-+		       -f chown=5 \
-+		       -f mkdir=5 \
-+		       -f rmdir=1 \
-+		       -f mknod=1 \
-+		       -f unlink=1 \
-+		       -f symlink=1 \
-+		       -f rename=1 \
-+		       -d $SCRATCH_MNT/fsstress >> $seqres.full 2>&1
-+
-+	# Loading error table without "--nolockfs" option. Because "--nolockfs"
-+	# won't freeze fs, then some running I/Os may cause XFS to shutdown
-+	# prematurely. That's not what we want to test.
-+	_dmerror_load_error_table lockfs
-+	_dmerror_unmount
-+
-+	# Mount again to replay log after loading working table, so we have a
-+	# consistent XFS after test.
-+	_dmerror_load_working_table
-+	_dmerror_mount
-+	_dmerror_unmount
-+}
-+
-+#### Test EIO/max_retries ####
-+# Set EIO/max_retries a limited number(>-1), then even if fail_at_unmount=0,
-+# the test won't hang.
-+echo "=== Test EIO/max_retries ==="
-+do_test error/metadata/EIO/max_retries
-+
-+#### Test EIO/retry_timeout_seconds ####
-+# Set EIO/retry_timeout_seconds to a limited number(>0), then even if
-+# fail_at_unmount=0, the test won't hang.
-+echo "=== Test EIO/retry_timeout_seconds ==="
-+do_test error/metadata/EIO/retry_timeout_seconds
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/263.out b/tests/xfs/263.out
-new file mode 100644
-index 0000000..714350f
---- /dev/null
-+++ b/tests/xfs/263.out
-@@ -0,0 +1,21 @@
-+QA output created by 263
-+=== Test EIO/max_retries ===
-+error/fail_at_unmount=1
-+error/metadata/default/max_retries=-1
-+error/metadata/default/retry_timeout_seconds=0
-+error/metadata/EIO/max_retries=-1
-+error/metadata/EIO/retry_timeout_seconds=0
-+error/metadata/ENOSPC/max_retries=-1
-+error/metadata/ENOSPC/retry_timeout_seconds=0
-+error/fail_at_unmount=0
-+error/metadata/EIO/max_retries=1
-+=== Test EIO/retry_timeout_seconds ===
-+error/fail_at_unmount=1
-+error/metadata/default/max_retries=-1
-+error/metadata/default/retry_timeout_seconds=0
-+error/metadata/EIO/max_retries=-1
-+error/metadata/EIO/retry_timeout_seconds=0
-+error/metadata/ENOSPC/max_retries=-1
-+error/metadata/ENOSPC/retry_timeout_seconds=0
-+error/fail_at_unmount=0
-+error/metadata/EIO/retry_timeout_seconds=1
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 6905a62..ec3c022 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -260,6 +260,7 @@
- 260 auto quick quota
- 261 auto quick quota
- 262 auto quick quota
-+263 auto quick mount
- 265 auto clone
- 266 dump ioctl auto quick
- 267 dump ioctl tape
--- 
-2.7.4
+I then saw this:
+
+: SGI XFS with ACLs, security attributes, realtime, debug enabled
+: XFS (sda): Mounting V4 Filesystem
+: XFS (sda): Ending clean mount
+: XFS: xfs_buf_free: OHNO! daddr=113849120 page=ffffea0000010980 ref=0
+: CPU: 2 PID: 2058 Comm: xfs_scrub Not tainted 4.8.0-rc3-mcsum #18
+: Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+:  0000000000000000 ffff906f9c4239f8 ffffffff98331bf3 ffff906f95e86b00
+:  0000000000000000 ffff906f9c423a20 ffffffffc03ca53e ffff906f9c604900
+:  0000000000000000 0000000000010015 ffff906f9c423a60 ffffffffc03cc640
+: Call Trace:
+:  [<ffffffff98331bf3>] dump_stack+0x85/0xc2
+:  [<ffffffffc03ca53e>] xfs_buf_free+0x27e/0x290 [xfs]
+:  [<ffffffffc03cc640>] xfs_buf_get_map+0x360/0x400 [xfs]
+:  [<ffffffffc03cdb2c>] xfs_buf_read_map+0x2c/0x360 [xfs]
+:  [<ffffffffc03cdeb2>] ? xfs_buf_readahead_map+0x52/0x70 [xfs]
+:  [<ffffffffc03cdeb2>] xfs_buf_readahead_map+0x52/0x70 [xfs]
+:  [<ffffffffc037fdfd>] xfs_btree_reada_bufs+0x9d/0xb0 [xfs]
+:  [<ffffffffc03eea6a>] xfs_bulkstat_ichunk_ra+0xda/0x110 [xfs]
+:  [<ffffffffc037ef14>] ? xfs_btree_check_block+0x14/0x20 [xfs]
+:  [<ffffffffc03eeec8>] xfs_bulkstat+0x2b8/0x6c0 [xfs]
+:  [<ffffffffc03ee960>] ? xfs_bulkstat_one_int+0x430/0x430 [xfs]
+:  [<ffffffffc03e0826>] xfs_ioc_bulkstat+0x116/0x210 [xfs]
+:  [<ffffffffc03e2631>] xfs_file_ioctl+0x591/0xf10 [xfs]
+:  [<ffffffff98045b03>] ? kvm_clock_read+0x23/0x40
+:  [<ffffffff98045b39>] ? kvm_sched_clock_read+0x9/0x20
+:  [<ffffffff98022729>] ? sched_clock+0x9/0x10
+:  [<ffffffff980dddcd>] ? __lock_acquire+0x25d/0x14b0
+:  [<ffffffff98234993>] ? __fget+0xf3/0x200
+:  [<ffffffff98234993>] ? __fget+0xf3/0x200
+:  [<ffffffff98350277>] ? debug_smp_processor_id+0x17/0x20
+:  [<ffffffff980d9a19>] ? get_lock_stats+0x19/0x60
+:  [<ffffffff982276d3>] do_vfs_ioctl+0x93/0x700
+:  [<ffffffff982349b0>] ? __fget+0x110/0x200
+:  [<ffffffff982348a5>] ? __fget+0x5/0x200
+:  [<ffffffff98227d81>] SyS_ioctl+0x41/0x70
+:  [<ffffffff9866d6bc>] entry_SYSCALL_64_fastpath+0x1f/0xbd
+
+...followed several seconds later by the BUG message seen earlier.
+It looks as though the bulkstat call is attempting to start readahead
+of the inode chunk, but I'm not familiar enough with how RA works to
+readily tell what's going on here, or why it's freeing a xfs_buf as
+part of starting RA.  The sector 113849120 does indeed contain an
+inode.
+
+# xfs_info /mnt
+meta-data=/dev/sda               isize=512    agcount=4, agsize=56308224 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=0        finobt=0 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=225232896, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=109977, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# df -i /mnt ; df -k /mnt
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/sda         430M  2.0M  428M    1% /mnt
+Filesystem     1K-blocks      Used Available Use% Mounted on
+/dev/sda       900491676 326109388 574382288  37% /mnt
+
+Kernel is 4.8-rc3 + Darrick's giant patchset, though I can reproduce
+it with plain 4.8-rc3 if I beat on bulkstat somewhat harder.  Not
+sure what the fix is here, though disabling inode chunk readahead
+for bulkstat does make the BUG go away. :$
+
+--D
 
 _______________________________________________
 xfs mailing list
