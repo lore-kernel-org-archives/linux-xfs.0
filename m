@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EF6297CB5
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 21:20:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B543A304051
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:20:58 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 016657CA1
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 21:21:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BA6D68F8033
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:21:11 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zZuxS7jDeGr0egzN (version=TLSv1.2
+	cuda.sgi.com with ESMTP id QG3aJAFBg6eOJyLV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:20:57 -0700 (PDT)
-Subject: [PATCH 4/5] xfs: simple btree query range should look right if LE
-	lookup fails
+	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:21:10 -0700 (PDT)
+Subject: [PATCH 5/5] xfs: disallow mounting of realtime + rmap filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Aug 2016 19:20:53 -0700
-Message-ID: <147200525360.14738.17074008566594507843.stgit@birch.djwong.org>
+Date: Tue, 23 Aug 2016 19:20:59 -0700
+Message-ID: <147200525982.14738.18075322042697360316.stgit@birch.djwong.org>
 In-Reply-To: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
 References: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,37 +31,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-If the initial LOOKUP_LE in the simple query range fails to find
-anything, we should attempt to increment the btree cursor to see
-if there actually /are/ records for what we're trying to find.
-Without this patch, a bnobt range query of (0, $agsize) returns
-no results because the leftmost record never has a startblock
-of zero.
+Since the kernel doesn't currently support the realtime rmapbt,
+don't allow such filesystems to be mounted.  Support will appear
+in a future release.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/xfs_super.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index b70d9f9..0856979 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4558,6 +4558,13 @@ xfs_btree_simple_query_range(
- 	if (error)
- 		goto out;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 24ef83e..fd6be45 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1574,9 +1574,16 @@ xfs_fs_fill_super(
+ 		}
+ 	}
  
-+	/* Nothing?  See if there's anything to the right. */
-+	if (!stat) {
-+		error = xfs_btree_increment(cur, 0, &stat);
-+		if (error)
-+			goto out;
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		if (mp->m_sb.sb_rblocks) {
++			xfs_alert(mp,
++	"EXPERIMENTAL reverse mapping btree not compatible with realtime device!");
++			error = -EINVAL;
++			goto out_filestream_unmount;
++		}
+ 		xfs_alert(mp,
+ 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
 +	}
-+
- 	while (stat) {
- 		/* Find the record. */
- 		error = xfs_btree_get_rec(cur, &recp, &stat);
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
 
 _______________________________________________
 xfs mailing list
