@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2D41C7CA0
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 16:51:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C5331304032
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:29 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LafEcu8ggDRaAQlm (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 21 Aug 2016 14:51:26 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-	id 1bbaeL-0002Tf-P1
-	for xfs@oss.sgi.com; Sun, 21 Aug 2016 21:51:26 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] xfs: rewrite and optimize the delalloc write path
-Date: Sun, 21 Aug 2016 23:51:13 +0200
-Message-Id: <1471816273-28940-5-git-send-email-hch@lst.de>
-In-Reply-To: <1471816273-28940-1-git-send-email-hch@lst.de>
-References: <1471816273-28940-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 84ABD7CB1
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 21:25:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 472058F8033
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:25:10 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 7bbnz9LlSKjpydLv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:25:05 -0700 (PDT)
+Subject: [PATCH 6/7] misc: fix libxfs api violations
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 23 Aug 2016 19:25:02 -0700
+Message-ID: <147200550258.15538.5184942465515335880.stgit@birch.djwong.org>
+In-Reply-To: <147200546481.15538.12724000421579716885.stgit@birch.djwong.org>
+References: <147200546481.15538.12724000421579716885.stgit@birch.djwong.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,678 +24,827 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Currently xfs_iomap_write_delay does up to lookups in the inode extent
-tree, which is rather costly especially with the new iomap based
-write path and small write sizes.
+Fix all the client programs to use 'libxfs_' prefixes for non-inline
+function calls and to negate integer return codes.
 
-But it turns out that the low-level xfs_bmap_search_extents gives us all
-the information we need in the regular delalloc buffered write path:
-
- - it will return us an extent covering the block we are looking up if
-   it exists.  In that case we can simply return that extent to the
-   caller and are done
- - it will tell us if we are beyoned the last current allocated block
-   with an eof return parameter.  In that case we can create a delalloc
-   reservation and use the also returned information about the last
-   extent in the file as the hint to size our delalloc reservation.
- - it can tell us that we are writing into a hole, but that there is
-   an extent beyoned this hole.  In this case we can create a delalloc
-   reservation that covers the requested size (possible capped to the
-   next existing allocation).
-
-All that can be done in one single routine instead of bouncing up
-and down a few layers.  This reduced the CPU overhead of the block
-mapping routines and also simplified the code a lot.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |  89 +----------
- fs/xfs/libxfs/xfs_bmap.h |  10 +-
- fs/xfs/xfs_iomap.c       | 381 ++++++++++++++++++++---------------------------
- fs/xfs/xfs_iomap.h       |   2 -
- 4 files changed, 169 insertions(+), 313 deletions(-)
+ db/bmap.c                    |    4 ++-
+ db/bmroot.c                  |    4 ++-
+ db/check.c                   |    6 +++--
+ db/frag.c                    |    2 +-
+ db/fsmap.c                   |    8 +++----
+ db/init.c                    |    2 +-
+ db/logformat.c               |    2 +-
+ db/metadump.c                |    4 ++-
+ io/open.c                    |    2 +-
+ libxfs/libxfs_api_defs.h     |   15 +++++++++++++
+ mkfs/maxtrres.c              |    2 +-
+ mkfs/xfs_mkfs.c              |   46 +++++++++++++++++++--------------------
+ repair/dinode.c              |    8 +++----
+ repair/phase5.c              |   50 +++++++++++++++++++++---------------------
+ repair/phase6.c              |    6 +++--
+ repair/prefetch.c            |    4 ++-
+ repair/rmap.c                |   24 ++++++++++----------
+ repair/sb.c                  |    2 +-
+ tools/find-api-violations.sh |   38 ++++++++++++++++++++++++++++++++
+ 19 files changed, 141 insertions(+), 88 deletions(-)
+ create mode 100755 tools/find-api-violations.sh
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b060bca..614803b 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1388,7 +1388,7 @@ xfs_bmap_search_multi_extents(
-  * Else, *lastxp will be set to the index of the found
-  * entry; *gotp will contain the entry.
-  */
--STATIC xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
-+xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
- xfs_bmap_search_extents(
- 	xfs_inode_t     *ip,            /* incore inode pointer */
- 	xfs_fileoff_t   bno,            /* block number searched for */
-@@ -4074,7 +4074,7 @@ xfs_bmapi_read(
- 	return 0;
+
+diff --git a/db/bmap.c b/db/bmap.c
+index c71b6b4..58833f7 100644
+--- a/db/bmap.c
++++ b/db/bmap.c
+@@ -90,7 +90,7 @@ bmap(
+ 		push_cur();
+ 		rblock = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 		fsize = XFS_DFORK_SIZE(dip, mp, whichfork);
+-		pp = XFS_BMDR_PTR_ADDR(rblock, 1, xfs_bmdr_maxrecs(fsize, 0));
++		pp = XFS_BMDR_PTR_ADDR(rblock, 1, libxfs_bmdr_maxrecs(fsize, 0));
+ 		kp = XFS_BMDR_KEY_ADDR(rblock, 1);
+ 		bno = select_child(curoffset, kp, pp,
+ 					be16_to_cpu(rblock->bb_numrecs));
+@@ -101,7 +101,7 @@ bmap(
+ 			if (be16_to_cpu(block->bb_level) == 0)
+ 				break;
+ 			pp = XFS_BMBT_PTR_ADDR(mp, block, 1,
+-				xfs_bmbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0));
++				libxfs_bmbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0));
+ 			kp = XFS_BMBT_KEY_ADDR(mp, block, 1);
+ 			bno = select_child(curoffset, kp, pp,
+ 					be16_to_cpu(block->bb_numrecs));
+diff --git a/db/bmroot.c b/db/bmroot.c
+index 0950e19..7697e61 100644
+--- a/db/bmroot.c
++++ b/db/bmroot.c
+@@ -140,7 +140,7 @@ bmroota_ptr_offset(
+ 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+ 	pp = XFS_BMDR_PTR_ADDR(block, idx,
+-		xfs_bmdr_maxrecs(XFS_DFORK_ASIZE(dip, mp), 0));
++		libxfs_bmdr_maxrecs(XFS_DFORK_ASIZE(dip, mp), 0));
+ 	return bitize((int)((char *)pp - (char *)block));
  }
  
--STATIC int
-+int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		aoff,
-@@ -4170,91 +4170,6 @@ out_unreserve_quota:
- 	return error;
+@@ -235,7 +235,7 @@ bmrootd_ptr_offset(
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+ 	pp = XFS_BMDR_PTR_ADDR(block, idx,
+-		xfs_bmdr_maxrecs(XFS_DFORK_DSIZE(dip, mp), 0));
++		libxfs_bmdr_maxrecs(XFS_DFORK_DSIZE(dip, mp), 0));
+ 	return bitize((int)((char *)pp - (char *)block));
  }
  
--/*
-- * Map file blocks to filesystem blocks, adding delayed allocations as needed.
-- */
--int
--xfs_bmapi_delay(
--	struct xfs_inode	*ip,	/* incore inode */
--	xfs_fileoff_t		bno,	/* starting file offs. mapped */
--	xfs_filblks_t		len,	/* length to map in file */
--	struct xfs_bmbt_irec	*mval,	/* output: map values */
--	int			*nmap,	/* i/o: mval size/count */
--	int			flags)	/* XFS_BMAPI_... */
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
--	struct xfs_bmbt_irec	got;	/* current file extent record */
--	struct xfs_bmbt_irec	prev;	/* previous file extent record */
--	xfs_fileoff_t		obno;	/* old block number (offset) */
--	xfs_fileoff_t		end;	/* end of mapped file region */
--	xfs_extnum_t		lastx;	/* last useful extent number */
--	int			eof;	/* we've hit the end of extents */
--	int			n = 0;	/* current extent index */
--	int			error = 0;
--
--	ASSERT(*nmap >= 1);
--	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
--	ASSERT(!(flags & ~XFS_BMAPI_ENTIRE));
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
--	if (unlikely(XFS_TEST_ERROR(
--	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
--	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
--		XFS_ERROR_REPORT("xfs_bmapi_delay", XFS_ERRLEVEL_LOW, mp);
--		return -EFSCORRUPTED;
--	}
--
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	XFS_STATS_INC(mp, xs_blk_mapw);
--
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
--		if (error)
--			return error;
--	}
--
--	xfs_bmap_search_extents(ip, bno, XFS_DATA_FORK, &eof, &lastx, &got, &prev);
--	end = bno + len;
--	obno = bno;
--
--	while (bno < end && n < *nmap) {
--		if (eof || got.br_startoff > bno) {
--			error = xfs_bmapi_reserve_delalloc(ip, bno, len, &got,
--							   &prev, &lastx, eof);
--			if (error) {
--				if (n == 0) {
--					*nmap = 0;
--					return error;
--				}
--				break;
--			}
--		}
--
--		/* set up the extent map to return. */
--		xfs_bmapi_trim_map(mval, &got, &bno, len, obno, end, n, flags);
--		xfs_bmapi_update_map(&mval, &bno, &len, obno, end, &n, flags);
--
--		/* If we're done, stop now. */
--		if (bno >= end || n >= *nmap)
--			break;
--
--		/* Else go on to the next record. */
--		prev = got;
--		if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
--			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &got);
--		else
--			eof = 1;
--	}
--
--	*nmap = n;
--	return 0;
--}
--
--
- static int
- xfs_bmapi_allocate(
- 	struct xfs_bmalloca	*bma)
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 254034f..d660069 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -181,9 +181,6 @@ int	xfs_bmap_read_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_bmapi_read(struct xfs_inode *ip, xfs_fileoff_t bno,
- 		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
- 		int *nmap, int flags);
--int	xfs_bmapi_delay(struct xfs_inode *ip, xfs_fileoff_t bno,
--		xfs_filblks_t len, struct xfs_bmbt_irec *mval,
--		int *nmap, int flags);
- int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
- 		xfs_fsblock_t *firstblock, xfs_extlen_t total,
-@@ -202,5 +199,12 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		struct xfs_defer_ops *dfops, enum shift_direction direction,
- 		int num_exts);
- int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
-+struct xfs_bmbt_rec_host *
-+	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
-+		int fork, int *eofp, xfs_extnum_t *lastxp,
-+		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
-+int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, xfs_fileoff_t aoff,
-+		xfs_filblks_t len, struct xfs_bmbt_irec *got,
-+		struct xfs_bmbt_irec *prev, xfs_extnum_t *lastx, int eof);
- 
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 918511a..2b449f5 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-+ * Copyright (c) 2016 Christoph Hellwig.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -42,7 +43,6 @@
- 
- #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
- 						<< mp->m_writeio_log)
--#define XFS_WRITE_IMAPS		XFS_BMAP_MAX_NMAP
- 
- void
- xfs_bmbt_to_iomap(
-@@ -311,130 +311,6 @@ out_trans_cancel:
- 	goto out_unlock;
- }
- 
--/*
-- * If the caller is doing a write at the end of the file, then extend the
-- * allocation out to the file system's write iosize.  We clean up any extra
-- * space left over when the file is closed in xfs_inactive().
-- *
-- * If we find we already have delalloc preallocation beyond EOF, don't do more
-- * preallocation as it it not needed.
-- */
--STATIC int
--xfs_iomap_eof_want_preallocate(
--	xfs_mount_t	*mp,
--	xfs_inode_t	*ip,
--	xfs_off_t	offset,
--	size_t		count,
--	xfs_bmbt_irec_t *imap,
--	int		nimaps,
--	int		*prealloc)
--{
--	xfs_fileoff_t   start_fsb;
--	xfs_filblks_t   count_fsb;
--	int		n, error, imaps;
--	int		found_delalloc = 0;
--
--	*prealloc = 0;
--	if (offset + count <= XFS_ISIZE(ip))
--		return 0;
--
--	/*
--	 * If the file is smaller than the minimum prealloc and we are using
--	 * dynamic preallocation, don't do any preallocation at all as it is
--	 * likely this is the only write to the file that is going to be done.
--	 */
--	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
--	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks))
--		return 0;
--
--	/*
--	 * If there are any real blocks past eof, then don't
--	 * do any speculative allocation.
--	 */
--	start_fsb = XFS_B_TO_FSBT(mp, ((xfs_ufsize_t)(offset + count - 1)));
--	count_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
--	while (count_fsb > 0) {
--		imaps = nimaps;
--		error = xfs_bmapi_read(ip, start_fsb, count_fsb, imap, &imaps,
--				       0);
--		if (error)
--			return error;
--		for (n = 0; n < imaps; n++) {
--			if ((imap[n].br_startblock != HOLESTARTBLOCK) &&
--			    (imap[n].br_startblock != DELAYSTARTBLOCK))
--				return 0;
--			start_fsb += imap[n].br_blockcount;
--			count_fsb -= imap[n].br_blockcount;
--
--			if (imap[n].br_startblock == DELAYSTARTBLOCK)
--				found_delalloc = 1;
--		}
--	}
--	if (!found_delalloc)
--		*prealloc = 1;
--	return 0;
--}
--
--/*
-- * Determine the initial size of the preallocation. We are beyond the current
-- * EOF here, but we need to take into account whether this is a sparse write or
-- * an extending write when determining the preallocation size.  Hence we need to
-- * look up the extent that ends at the current write offset and use the result
-- * to determine the preallocation size.
-- *
-- * If the extent is a hole, then preallocation is essentially disabled.
-- * Otherwise we take the size of the preceeding data extent as the basis for the
-- * preallocation size. If the size of the extent is greater than half the
-- * maximum extent length, then use the current offset as the basis. This ensures
-- * that for large files the preallocation size always extends to MAXEXTLEN
-- * rather than falling short due to things like stripe unit/width alignment of
-- * real extents.
-- */
--STATIC xfs_fsblock_t
--xfs_iomap_eof_prealloc_initial_size(
--	struct xfs_mount	*mp,
--	struct xfs_inode	*ip,
--	xfs_off_t		offset,
--	xfs_bmbt_irec_t		*imap,
--	int			nimaps)
--{
--	xfs_fileoff_t   start_fsb;
--	int		imaps = 1;
--	int		error;
--
--	ASSERT(nimaps >= imaps);
--
--	/* if we are using a specific prealloc size, return now */
--	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
--		return 0;
--
--	/* If the file is small, then use the minimum prealloc */
--	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign))
--		return 0;
--
--	/*
--	 * As we write multiple pages, the offset will always align to the
--	 * start of a page and hence point to a hole at EOF. i.e. if the size is
--	 * 4096 bytes, we only have one block at FSB 0, but XFS_B_TO_FSB(4096)
--	 * will return FSB 1. Hence if there are blocks in the file, we want to
--	 * point to the block prior to the EOF block and not the hole that maps
--	 * directly at @offset.
--	 */
--	start_fsb = XFS_B_TO_FSB(mp, offset);
--	if (start_fsb)
--		start_fsb--;
--	error = xfs_bmapi_read(ip, start_fsb, 1, imap, &imaps, XFS_BMAPI_ENTIRE);
--	if (error)
--		return 0;
--
--	ASSERT(imaps == 1);
--	if (imap[0].br_startblock == HOLESTARTBLOCK)
--		return 0;
--	if (imap[0].br_blockcount <= (MAXEXTLEN >> 1))
--		return imap[0].br_blockcount << 1;
--	return XFS_B_TO_FSB(mp, offset);
--}
--
- STATIC bool
- xfs_quota_need_throttle(
- 	struct xfs_inode *ip,
-@@ -503,20 +379,37 @@ xfs_quota_calc_throttle(
-  */
- STATIC xfs_fsblock_t
- xfs_iomap_prealloc_size(
--	struct xfs_mount	*mp,
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	struct xfs_bmbt_irec	*imap,
--	int			nimaps)
-+	struct xfs_bmbt_irec	*prev)
- {
--	xfs_fsblock_t		alloc_blocks = 0;
-+	struct xfs_mount	*mp = ip->i_mount;
- 	int			shift = 0;
- 	int64_t			freesp;
- 	xfs_fsblock_t		qblocks;
- 	int			qshift = 0;
-+	xfs_fsblock_t		alloc_blocks = 0;
- 
--	alloc_blocks = xfs_iomap_eof_prealloc_initial_size(mp, ip, offset,
--							   imap, nimaps);
-+	/*
-+	 * Determine the initial size of the preallocation. We are beyond the
-+	 * current EOF here, but we need to take into account whether this is
-+	 * a sparse write or an extending write when determining the
-+	 * preallocation size.  Hence we need to look up the extent that ends
-+	 * at the current write offset and use the result to determine the
-+	 * preallocation size.
-+	 *
-+	 * If the extent is a hole, then preallocation is essentially disabled.
-+	 * Otherwise we take the size of the preceding data extent as the basis
-+	 * for the preallocation size. If the size of the extent is greater than
-+	 * half the maximum extent length, then use the current offset as the
-+	 * basis. This ensures that for large files the preallocation size
-+	 * always extends to MAXEXTLEN rather than falling short due to things
-+	 * like stripe unit/width alignment of real extents.
-+	 */
-+	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
-+		alloc_blocks = prev->br_blockcount << 1;
-+	else
-+		alloc_blocks = XFS_B_TO_FSB(mp, offset);
- 	if (!alloc_blocks)
- 		goto check_writeio;
- 	qblocks = alloc_blocks;
-@@ -587,120 +480,167 @@ xfs_iomap_prealloc_size(
- 	 */
- 	while (alloc_blocks && alloc_blocks >= freesp)
- 		alloc_blocks >>= 4;
--
- check_writeio:
- 	if (alloc_blocks < mp->m_writeio_blocks)
- 		alloc_blocks = mp->m_writeio_blocks;
--
- 	trace_xfs_iomap_prealloc_size(ip, alloc_blocks, shift,
- 				      mp->m_writeio_blocks);
--
- 	return alloc_blocks;
- }
- 
--int
--xfs_iomap_write_delay(
--	xfs_inode_t	*ip,
--	xfs_off_t	offset,
--	size_t		count,
--	xfs_bmbt_irec_t *ret_imap)
-+static int
-+xfs_file_iomap_begin_delay(
-+	struct inode		*inode,
-+	loff_t			offset,
-+	loff_t			count,
-+	unsigned		flags,
-+	struct iomap		*iomap)
- {
--	xfs_mount_t	*mp = ip->i_mount;
--	xfs_fileoff_t	offset_fsb;
--	xfs_fileoff_t	last_fsb;
--	xfs_off_t	aligned_offset;
--	xfs_fileoff_t	ioalign;
--	xfs_extlen_t	extsz;
--	int		nimaps;
--	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
--	int		prealloc;
--	int		error;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
--	/*
--	 * Make sure that the dquots are there. This doesn't hold
--	 * the ilock across a disk read.
--	 */
--	error = xfs_qm_dqattach_locked(ip, 0);
--	if (error)
--		return error;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		maxbytes_fsb =
-+		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-+	xfs_fileoff_t		end_fsb, orig_end_fsb;
-+	int			error = 0, eof = 0;
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_bmbt_irec	prev;
-+	xfs_extnum_t		idx;
- 
--	extsz = xfs_get_extsz_hint(ip);
--	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-+	ASSERT(!xfs_get_extsz_hint(ip));
- 
--	error = xfs_iomap_eof_want_preallocate(mp, ip, offset, count,
--				imap, XFS_WRITE_IMAPS, &prealloc);
--	if (error)
--		return error;
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--retry:
--	if (prealloc) {
--		xfs_fsblock_t	alloc_blocks;
-+	if (unlikely(XFS_TEST_ERROR(
-+	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-+		error = -EFSCORRUPTED;
-+		goto out_unlock;
-+	}
- 
--		alloc_blocks = xfs_iomap_prealloc_size(mp, ip, offset, imap,
--						       XFS_WRITE_IMAPS);
-+	XFS_STATS_INC(mp, xs_blk_mapw);
- 
--		aligned_offset = XFS_WRITEIO_ALIGN(mp, (offset + count - 1));
--		ioalign = XFS_B_TO_FSBT(mp, aligned_offset);
--		last_fsb = ioalign + alloc_blocks;
--	} else {
--		last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+		if (error)
-+			goto out_unlock;
+diff --git a/db/check.c b/db/check.c
+index 11c6b56..a6a8372 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -2186,7 +2186,7 @@ process_btinode(
+ 		return;
  	}
- 
--	if (prealloc || extsz) {
--		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
--		if (error)
--			return error;
-+	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
-+			&got, &prev);
-+	if (!eof && got.br_startoff <= offset_fsb) {
-+		trace_xfs_iomap_found(ip, offset, count, 0, &got);
-+		goto done;
+ 	if (be16_to_cpu(dib->bb_numrecs) >
+-			xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork),
++			libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork),
+ 			be16_to_cpu(dib->bb_level) == 0)) {
+ 		if (!sflag || id->ilist)
+ 			dbprintf(_("numrecs for ino %lld %s fork bmap root too "
+@@ -2204,7 +2204,7 @@ process_btinode(
+ 		*nex += be16_to_cpu(dib->bb_numrecs);
+ 		return;
+ 	} else {
+-		pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(
++		pp = XFS_BMDR_PTR_ADDR(dib, 1, libxfs_bmdr_maxrecs(
+ 				XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+ 		for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
+ 			scan_lbtree(get_unaligned_be64(&pp[i]),
+@@ -2684,7 +2684,7 @@ process_inode(
+ 		error++;
+ 		return;
  	}
+-	if (!xfs_dinode_good_version(mp, xino.i_d.di_version)) {
++	if (!libxfs_dinode_good_version(mp, xino.i_d.di_version)) {
+ 		if (isfree || v)
+ 			dbprintf(_("bad version number %#x for inode %lld\n"),
+ 				xino.i_d.di_version, ino);
+diff --git a/db/frag.c b/db/frag.c
+index e11b140..8005e45 100644
+--- a/db/frag.c
++++ b/db/frag.c
+@@ -260,7 +260,7 @@ process_btinode(
+ 		return;
+ 	}
+ 	pp = XFS_BMDR_PTR_ADDR(dib, 1,
+-		xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
++		libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+ 	for (i = 0; i < be16_to_cpu(dib->bb_numrecs); i++)
+ 		scan_lbtree(get_unaligned_be64(&pp[i]),
+ 			 be16_to_cpu(dib->bb_level), scanfunc_bmap, extmapp,
+diff --git a/db/fsmap.c b/db/fsmap.c
+index 4b245b9..67fed20 100644
+--- a/db/fsmap.c
++++ b/db/fsmap.c
+@@ -85,13 +85,13 @@ fsmap(
+ 		if (agno == end_ag)
+ 			high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsb);
  
-+	error = xfs_qm_dqattach_locked(ip, 0);
-+	if (error)
-+		goto out_unlock;
-+
- 	/*
--	 * Make sure preallocation does not create extents beyond the range we
--	 * actually support in this filesystem.
-+	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
-+	 * to keep the chunks of work done where somewhat symmetric with the
-+	 * work writeback does. This is a completely arbitrary number pulled
-+	 * out of thin air as a best guess for initial testing.
-+	 *
-+	 * Note that the values needs to be less than 32-bits wide until
-+	 * the lower level functions are updated.
- 	 */
--	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes))
--		last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-+	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
-+	end_fsb = orig_end_fsb =
-+		min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-+
-+	/*
-+	 * If we are doing a write at the end of the file and there are no
-+	 * allocations past this one, then extend the allocation out to the
-+	 * file system's write iosize.
-+	 *
-+	 * As an exception we don't do any preallocation at all if the file
-+	 * is smaller than the minimum preallocation and we are using the
-+	 * default dynamic preallocation scheme, as it is likely this is the
-+	 * only write to the file that is going to be done.
-+	 *
-+	 * We clean up any extra space left over when the file is closed in
-+	 * xfs_inactive().
-+	 */
-+	if (eof && offset + count > XFS_ISIZE(ip) &&
-+	    ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
-+	     XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, mp->m_writeio_blocks))) {
-+		xfs_fsblock_t		alloc_blocks;
-+		xfs_off_t		aligned_offset;
-+		xfs_extlen_t		align;
-+
-+		/*
-+		 * If an explicit allocsize is set, the file is small, or we
-+		 * are writing behind a hole, then use the minimum prealloc:
-+		 */
-+		if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
-+		    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
-+		    idx == 0 ||
-+		    prev.br_startoff + prev.br_blockcount < offset_fsb)
-+			alloc_blocks = mp->m_writeio_blocks;
-+		else
-+			alloc_blocks =
-+				xfs_iomap_prealloc_size(ip, offset, &prev);
-+
-+		aligned_offset = XFS_WRITEIO_ALIGN(mp, offset + count - 1);
-+		end_fsb = XFS_B_TO_FSBT(mp, aligned_offset) + alloc_blocks;
-+
-+		align = xfs_eof_alignment(ip, 0);
-+		if (align)
-+			end_fsb = roundup_64(end_fsb, align);
- 
--	ASSERT(last_fsb > offset_fsb);
-+		end_fsb = min(end_fsb, maxbytes_fsb);
-+		ASSERT(end_fsb > offset_fsb);
-+	}
- 
--	nimaps = XFS_WRITE_IMAPS;
--	error = xfs_bmapi_delay(ip, offset_fsb, last_fsb - offset_fsb,
--				imap, &nimaps, XFS_BMAPI_ENTIRE);
-+retry:
-+	error = xfs_bmapi_reserve_delalloc(ip, offset_fsb,
-+			end_fsb - offset_fsb, &got,
-+			&prev, &idx, eof);
- 	switch (error) {
- 	case 0:
-+		break;
- 	case -ENOSPC:
- 	case -EDQUOT:
--		break;
--	default:
--		return error;
--	}
--
--	/*
--	 * If bmapi returned us nothing, we got either ENOSPC or EDQUOT. Retry
--	 * without EOF preallocation.
--	 */
--	if (nimaps == 0) {
-+		/* retry without any preallocation */
- 		trace_xfs_delalloc_enospc(ip, offset, count);
--		if (prealloc) {
--			prealloc = 0;
--			error = 0;
-+		if (end_fsb != orig_end_fsb) {
-+			end_fsb = orig_end_fsb;
- 			goto retry;
+-		error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++		error = -libxfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 		if (error) {
+ 			dbprintf(_("Error %d while reading AGF.\n"), error);
+ 			return;
  		}
--		return error ? error : -ENOSPC;
-+		/*FALLTHRU*/
-+	default:
-+		goto out_unlock;
+ 
+-		bt_cur = xfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
++		bt_cur = libxfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
+ 		if (!bt_cur) {
+ 			libxfs_putbuf(agbp);
+ 			dbprintf(_("Not enough memory.\n"));
+@@ -102,14 +102,14 @@ fsmap(
+ 		error = -libxfs_rmap_query_range(bt_cur, &low, &high,
+ 				fsmap_fn, &info);
+ 		if (error) {
+-			xfs_btree_del_cursor(bt_cur, XFS_BTREE_ERROR);
++			libxfs_btree_del_cursor(bt_cur, XFS_BTREE_ERROR);
+ 			libxfs_putbuf(agbp);
+ 			dbprintf(_("Error %d while querying fsmap btree.\n"),
+ 				error);
+ 			return;
+ 		}
+ 
+-		xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++		libxfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
+ 		libxfs_putbuf(agbp);
+ 
+ 		if (agno == start_ag)
+diff --git a/db/init.c b/db/init.c
+index c0472c8..ec1e274 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -164,7 +164,7 @@ init(
+ 	 */
+ 	if (sbp->sb_rootino != NULLFSINO &&
+ 	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+-		int error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
++		int error = -libxfs_initialize_perag_data(mp, sbp->sb_agcount);
+ 		if (error) {
+ 			fprintf(stderr,
+ 	_("%s: cannot init perag data (%d). Continuing anyway.\n"),
+diff --git a/db/logformat.c b/db/logformat.c
+index 254f33d..70097bc 100644
+--- a/db/logformat.c
++++ b/db/logformat.c
+@@ -101,7 +101,7 @@ logformat_f(int argc, char **argv)
+ 
+ 	dbprintf("Formatting the log to cycle %d, stripe unit %d bytes.\n",
+ 		 cycle, lsunit);
+-	error = libxfs_log_clear(mp->m_logdev_targp, NULL,
++	error = -libxfs_log_clear(mp->m_logdev_targp, NULL,
+ 				 mp->m_log->l_logBBstart,
+ 				 mp->m_log->l_logBBsize,
+ 				 &mp->m_sb.sb_uuid, logversion, lsunit,
+diff --git a/db/metadump.c b/db/metadump.c
+index 609a5d7..44359e1 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2016,7 +2016,7 @@ process_btinode(
+ 					    nrecs, itype);
  	}
  
--	if (!(imap[0].br_startblock || XFS_IS_REALTIME_INODE(ip)))
--		return xfs_alert_fsblock_zero(ip, &imap[0]);
--
- 	/*
- 	 * Tag the inode as speculatively preallocated so we can reclaim this
- 	 * space on demand, if necessary.
- 	 */
--	if (prealloc)
-+	if (end_fsb != orig_end_fsb)
- 		xfs_inode_set_eofblocks_tag(ip);
+-	maxrecs = xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0);
++	maxrecs = libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0);
+ 	if (nrecs > maxrecs) {
+ 		if (show_warnings)
+ 			print_warning("invalid numrecs (%u) in inode %lld %s "
+@@ -2132,7 +2132,7 @@ process_inode(
  
--	*ret_imap = imap[0];
--	return 0;
-+	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
-+done:
-+	if (isnullstartblock(got.br_startblock))
-+		got.br_startblock = DELAYSTARTBLOCK;
+ 	/* we only care about crc recalculation if we will modify the inode. */
+ 	if (obfuscate || zero_stale_data) {
+-		crc_was_ok = xfs_verify_cksum((char *)dip,
++		crc_was_ok = libxfs_verify_cksum((char *)dip,
+ 					mp->m_sb.sb_inodesize,
+ 					offsetof(struct xfs_dinode, di_crc));
+ 	}
+diff --git a/io/open.c b/io/open.c
+index 2303527..a5d465a 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -878,7 +878,7 @@ inode_f(
+ 
+ 	lastgrp--;
+ 	lastino = igroup[lastgrp].xi_startino +
+-		  xfs_highbit64(igroup[lastgrp].xi_allocmask);
++		  libxfs_highbit64(igroup[lastgrp].xi_allocmask);
+ 
+ 	if (verbose)
+ 		printf("%llu:%d\n", lastino,
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 993ca9f..626c79f 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -122,4 +122,19 @@
+ 
+ #define xfs_verify_cksum		libxfs_verify_cksum
+ 
++#define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
++#define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
++#define xfs_bmbt_maxrecs		libxfs_bmbt_maxrecs
++#define xfs_bmdr_maxrecs		libxfs_bmdr_maxrecs
++#define xfs_btree_init_block		libxfs_btree_init_block
++#define xfs_dir_ino_validate		libxfs_dir_ino_validate
++#define xfs_initialize_perag_data	libxfs_initialize_perag_data
++#define xfs_inobt_maxrecs		libxfs_inobt_maxrecs
++#define xfs_iread_extents		libxfs_iread_extents
++#define xfs_log_calc_minimum_size	libxfs_log_calc_minimum_size
++#define xfs_perag_get			libxfs_perag_get
++#define xfs_perag_put			libxfs_perag_put
++#define xfs_prealloc_blocks		libxfs_prealloc_blocks
++#define xfs_dinode_good_version		libxfs_dinode_good_version
 +
-+	if (!got.br_startblock) {
-+		error = xfs_alert_fsblock_zero(ip, &got);
-+		if (error)
-+			goto out_unlock;
-+	}
-+
-+	xfs_bmbt_to_iomap(ip, iomap, &got);
-+
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
- }
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+index fc24eac..d7978b6 100644
+--- a/mkfs/maxtrres.c
++++ b/mkfs/maxtrres.c
+@@ -77,7 +77,7 @@ max_trans_res(
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
+ 
+ 	libxfs_mount(&mount, sbp, 0,0,0,0);
+-	maxfsb = xfs_log_calc_minimum_size(&mount);
++	maxfsb = libxfs_log_calc_minimum_size(&mount);
+ 	libxfs_umount(&mount);
+ 
+ #if 0
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8c69f69..580119e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2675,7 +2675,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 
+ 	/*
+ 	 * sb_versionnum, finobt and rmapbt flags must be set before we use
+-	 * xfs_prealloc_blocks().
++	 * libxfs_prealloc_blocks().
+ 	 */
+ 	sb_set_features(&mp->m_sb, &sb_feat, sectorsize, lsectorsize, dsunit);
+ 
+@@ -2687,12 +2687,12 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		 */
+ 		if (!logsize) {
+ 			logblocks = MIN(logblocks,
+-					xfs_alloc_ag_max_usable(mp));
++					libxfs_alloc_ag_max_usable(mp));
+ 
+ 			/* revalidate the log size is valid if we changed it */
+ 			validate_log_size(logblocks, blocklog, min_logblocks);
+ 		}
+-		if (logblocks > agsize - xfs_prealloc_blocks(mp)) {
++		if (logblocks > agsize - libxfs_prealloc_blocks(mp)) {
+ 			fprintf(stderr,
+ 	_("internal log size %lld too large, must fit in allocation group\n"),
+ 				(long long)logblocks);
+@@ -2709,7 +2709,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		} else
+ 			logagno = (xfs_agnumber_t)(agcount / 2);
+ 
+-		logstart = XFS_AGB_TO_FSB(mp, logagno, xfs_prealloc_blocks(mp));
++		logstart = XFS_AGB_TO_FSB(mp, logagno, libxfs_prealloc_blocks(mp));
+ 		/*
+ 		 * Align the logstart at stripe unit boundary.
+ 		 */
+@@ -2788,7 +2788,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_imax_pct = imaxpct;
+ 	sbp->sb_icount = 0;
+ 	sbp->sb_ifree = 0;
+-	sbp->sb_fdblocks = dblocks - agcount * xfs_prealloc_blocks(mp) -
++	sbp->sb_fdblocks = dblocks - agcount * libxfs_prealloc_blocks(mp) -
+ 		(loginternal ? logblocks : 0);
+ 	sbp->sb_frextents = 0;	/* will do a free later */
+ 	sbp->sb_uquotino = sbp->sb_gquotino = sbp->sb_pquotino = 0;
+@@ -2893,7 +2893,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	for (agno = 0; agno < agcount; agno++) {
+ 		struct xfs_agfl	*agfl;
+ 		int		bucket;
+-		struct xfs_perag *pag = xfs_perag_get(mp, agno);
++		struct xfs_perag *pag = libxfs_perag_get(mp, agno);
+ 
+ 		/*
+ 		 * Superblock.
+@@ -2937,7 +2937,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+ 		agf->agf_flcount = 0;
+-		nbmblocks = (xfs_extlen_t)(agsize - xfs_prealloc_blocks(mp));
++		nbmblocks = (xfs_extlen_t)(agsize - libxfs_prealloc_blocks(mp));
+ 		agf->agf_freeblks = cpu_to_be32(nbmblocks);
+ 		agf->agf_longest = cpu_to_be32(nbmblocks);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+@@ -2948,8 +2948,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			agf->agf_longest = cpu_to_be32(agsize -
+ 				XFS_FSB_TO_AGBNO(mp, logstart) - logblocks);
+ 		}
+-		if (xfs_alloc_min_freelist(mp, pag) > worst_freelist)
+-			worst_freelist = xfs_alloc_min_freelist(mp, pag);
++		if (libxfs_alloc_min_freelist(mp, pag) > worst_freelist)
++			worst_freelist = libxfs_alloc_min_freelist(mp, pag);
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 
+ 		/*
+@@ -3011,14 +3011,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		block = XFS_BUF_TO_BLOCK(buf);
+ 		memset(block, 0, blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, buf, XFS_ABTB_CRC_MAGIC, 0, 1,
++			libxfs_btree_init_block(mp, buf, XFS_ABTB_CRC_MAGIC, 0, 1,
+ 						agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, buf, XFS_ABTB_MAGIC, 0, 1,
++			libxfs_btree_init_block(mp, buf, XFS_ABTB_MAGIC, 0, 1,
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+-		arec->ar_startblock = cpu_to_be32(xfs_prealloc_blocks(mp));
++		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+ 		if (loginternal && agno == logagno) {
+ 			if (lalign) {
+ 				/*
+@@ -3066,14 +3066,14 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		block = XFS_BUF_TO_BLOCK(buf);
+ 		memset(block, 0, blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, buf, XFS_ABTC_CRC_MAGIC, 0, 1,
++			libxfs_btree_init_block(mp, buf, XFS_ABTC_CRC_MAGIC, 0, 1,
+ 						agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, buf, XFS_ABTC_MAGIC, 0, 1,
++			libxfs_btree_init_block(mp, buf, XFS_ABTC_MAGIC, 0, 1,
+ 						agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+-		arec->ar_startblock = cpu_to_be32(xfs_prealloc_blocks(mp));
++		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+ 		if (loginternal && agno == logagno) {
+ 			if (lalign) {
+ 				arec->ar_blockcount = cpu_to_be32(
+@@ -3111,10 +3111,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		block = XFS_BUF_TO_BLOCK(buf);
+ 		memset(block, 0, blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, buf, XFS_IBT_CRC_MAGIC, 0, 0,
++			libxfs_btree_init_block(mp, buf, XFS_IBT_CRC_MAGIC, 0, 0,
+ 						agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, buf, XFS_IBT_MAGIC, 0, 0,
++			libxfs_btree_init_block(mp, buf, XFS_IBT_MAGIC, 0, 0,
+ 						agno, 0);
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 
+@@ -3129,10 +3129,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			block = XFS_BUF_TO_BLOCK(buf);
+ 			memset(block, 0, blocksize);
+ 			if (xfs_sb_version_hascrc(&mp->m_sb))
+-				xfs_btree_init_block(mp, buf, XFS_FIBT_CRC_MAGIC, 0, 0,
++				libxfs_btree_init_block(mp, buf, XFS_FIBT_CRC_MAGIC, 0, 0,
+ 							agno, XFS_BTREE_CRC_BLOCKS);
+ 			else
+-				xfs_btree_init_block(mp, buf, XFS_FIBT_MAGIC, 0, 0,
++				libxfs_btree_init_block(mp, buf, XFS_FIBT_MAGIC, 0, 0,
+ 							agno, 0);
+ 			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 		}
+@@ -3148,7 +3148,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			block = XFS_BUF_TO_BLOCK(buf);
+ 			memset(block, 0, blocksize);
+ 
+-			xfs_btree_init_block(mp, buf, XFS_RMAP_CRC_MAGIC, 0, 0,
++			libxfs_btree_init_block(mp, buf, XFS_RMAP_CRC_MAGIC, 0, 0,
+ 						agno, XFS_BTREE_CRC_BLOCKS);
+ 
+ 			/*
+@@ -3203,7 +3203,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 		}
+ 
+-		xfs_perag_put(pag);
++		libxfs_perag_put(pag);
+ 	}
+ 
+ 	/*
+@@ -3241,10 +3241,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		args.mp = mp;
+ 		args.agno = agno;
+ 		args.alignment = 1;
+-		args.pag = xfs_perag_get(mp,agno);
++		args.pag = libxfs_perag_get(mp,agno);
+ 
+ 		libxfs_alloc_fix_freelist(&args, 0);
+-		xfs_perag_put(args.pag);
++		libxfs_perag_put(args.pag);
+ 		libxfs_trans_commit(tp);
+ 	}
+ 
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 89163b1..db55860 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -131,7 +131,7 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 	}
+ 
+-	if (!xfs_dinode_good_version(mp, dinoc->di_version)) {
++	if (!libxfs_dinode_good_version(mp, dinoc->di_version)) {
+ 		__dirty_no_modify_ret(dirty);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+ 			dinoc->di_version = 3;
+@@ -966,7 +966,7 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
+ 	init_bm_cursor(&cursor, level + 1);
+ 
+ 	pp = XFS_BMDR_PTR_ADDR(dib, 1,
+-		xfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
++		libxfs_bmdr_maxrecs(XFS_DFORK_SIZE(dip, mp, whichfork), 0));
+ 	pkey = XFS_BMDR_KEY_ADDR(dib, 1);
+ 	last_key = NULLFILEOFF;
+ 
+@@ -2240,7 +2240,7 @@ process_dinode_int(xfs_mount_t *mp,
+ 	 * rewritten, and the CRC is updated automagically.
+ 	 */
+ 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
++	    !libxfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
+ 				XFS_DINODE_CRC_OFF)) {
+ 		retval = 1;
+ 		if (!uncertain)
+@@ -2271,7 +2271,7 @@ process_dinode_int(xfs_mount_t *mp,
+ 		}
+ 	}
+ 
+-	if (!xfs_dinode_good_version(mp, dino->di_version)) {
++	if (!libxfs_dinode_good_version(mp, dino->di_version)) {
+ 		retval = 1;
+ 		if (!uncertain)
+ 			do_warn(_("bad version number 0x%x on inode %" PRIu64 "%c"),
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 5a7185c..93b1f75 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -360,7 +360,7 @@ finish_cursor(bt_status_t *curs)
+  * XXX(hch): any reason we don't just look at mp->m_alloc_mxr?
+  */
+ #define XR_ALLOC_BLOCK_MAXRECS(mp, level) \
+-	(xfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, (level) == 0) - 2)
++	(libxfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, (level) == 0) - 2)
  
  /*
-@@ -1008,6 +948,11 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+  * this calculates a freespace cursor for an ag.
+@@ -693,10 +693,10 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, level,
++			libxfs_btree_init_block(mp, lptr->buf_p, crc_magic, level,
+ 						0, agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, magic, level,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic, level,
+ 						0, agno, 0);
  
-+	if ((flags & IOMAP_WRITE) && !xfs_get_extsz_hint(ip)) {
-+		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
-+				iomap);
-+	}
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
+@@ -779,10 +779,10 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, i,
++			libxfs_btree_init_block(mp, lptr->buf_p, crc_magic, i,
+ 						0, agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, magic, i,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic, i,
+ 						0, agno, 0);
+ 	}
+ 	/*
+@@ -811,10 +811,10 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, crc_magic, 0,
++			libxfs_btree_init_block(mp, lptr->buf_p, crc_magic, 0,
+ 						0, agno, XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, magic, 0,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic, 0,
+ 						0, agno, 0);
  
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
-@@ -1035,19 +980,13 @@ xfs_file_iomap_begin(
- 		 * the lower level functions are updated.
- 		 */
- 		length = min_t(loff_t, length, 1024 * PAGE_SIZE);
--		if (xfs_get_extsz_hint(ip)) {
--			/*
--			 * xfs_iomap_write_direct() expects the shared lock. It
--			 * is unlocked on return.
--			 */
--			xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
--			error = xfs_iomap_write_direct(ip, offset, length, &imap,
--					nimaps);
--		} else {
--			error = xfs_iomap_write_delay(ip, offset, length, &imap);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		}
--
-+		/*
-+		 * xfs_iomap_write_direct() expects the shared lock. It
-+		 * is unlocked on return.
-+		 */
-+		xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
-+		error = xfs_iomap_write_direct(ip, offset, length, &imap,
-+				nimaps);
+ 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
+@@ -895,7 +895,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+  * XXX(hch): any reason we don't just look at mp->m_inobt_mxr?
+  */
+ #define XR_INOBT_BLOCK_MAXRECS(mp, level) \
+-			xfs_inobt_maxrecs((mp), (mp)->m_sb.sb_blocksize, \
++			libxfs_inobt_maxrecs((mp), (mp)->m_sb.sb_blocksize, \
+ 						(level) == 0)
+ 
+ /*
+@@ -1073,11 +1073,11 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
++			libxfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_CRC_MAGIC,
+ 						level, 0, agno,
+ 						XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
++			libxfs_btree_init_block(mp, lptr->buf_p, XFS_IBT_MAGIC,
+ 						level, 0, agno, 0);
+ 
+ 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
+@@ -1198,11 +1198,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, magic,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic,
+ 						i, 0, agno,
+ 						XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, magic,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic,
+ 						i, 0, agno, 0);
+ 	}
+ 
+@@ -1232,11 +1232,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+ 		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, lptr->buf_p, magic,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic,
+ 						0, 0, agno,
+ 						XFS_BTREE_CRC_BLOCKS);
+ 		else
+-			xfs_btree_init_block(mp, lptr->buf_p, magic,
++			libxfs_btree_init_block(mp, lptr->buf_p, magic,
+ 						0, 0, agno, 0);
+ 
+ 		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
+@@ -1490,7 +1490,7 @@ prop_rmap_cursor(
+ 		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+-		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
++		libxfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
+ 					level, 0, agno,
+ 					XFS_BTREE_CRC_BLOCKS);
+ 
+@@ -1604,7 +1604,7 @@ build_rmap_tree(
+ 		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+-		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
++		libxfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
+ 					i, 0, agno,
+ 					XFS_BTREE_CRC_BLOCKS);
+ 	}
+@@ -1629,7 +1629,7 @@ _("Insufficient memory to construct reverse-map cursor."));
+ 		lptr->buf_p->b_ops = &xfs_rmapbt_buf_ops;
+ 		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
+ 		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
+-		xfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
++		libxfs_btree_init_block(mp, lptr->buf_p, XFS_RMAP_CRC_MAGIC,
+ 					0, 0, agno,
+ 					XFS_BTREE_CRC_BLOCKS);
+ 
+@@ -2162,21 +2162,21 @@ phase5(xfs_mount_t *mp)
+ 
+ #ifdef XR_BLD_FREE_TRACE
+ 	fprintf(stderr, "inobt level 1, maxrec = %d, minrec = %d\n",
+-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0),
+-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0) / 2);
++		libxfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0),
++		libxfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 0) / 2);
+ 	fprintf(stderr, "inobt level 0 (leaf), maxrec = %d, minrec = %d\n",
+-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1),
+-		xfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1) / 2);
++		libxfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1),
++		libxfs_inobt_maxrecs(mp, mp->m_sb.sb_blocksize, 1) / 2);
+ 	fprintf(stderr, "xr inobt level 0 (leaf), maxrec = %d\n",
+ 		XR_INOBT_BLOCK_MAXRECS(mp, 0));
+ 	fprintf(stderr, "xr inobt level 1 (int), maxrec = %d\n",
+ 		XR_INOBT_BLOCK_MAXRECS(mp, 1));
+ 	fprintf(stderr, "bnobt level 1, maxrec = %d, minrec = %d\n",
+-		xfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0),
+-		xfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0) / 2);
++		libxfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0),
++		libxfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 0) / 2);
+ 	fprintf(stderr, "bnobt level 0 (leaf), maxrec = %d, minrec = %d\n",
+-		xfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 1),
+-		xfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 1) / 2);
++		libxfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 1),
++		libxfs_allocbt_maxrecs(mp, mp->m_sb.sb_blocksize, 1) / 2);
+ #endif
+ 	/*
+ 	 * make sure the root and realtime inodes show up allocated
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 2500def..973a5f8 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -451,7 +451,7 @@ bmap_next_offset(
+ 	}
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+-	    (error = xfs_iread_extents(tp, ip, whichfork)))
++	    (error = -libxfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+ 	bno = *bnop + 1;
+ 	libxfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx,
+@@ -1286,7 +1286,7 @@ longform_dir2_rebuild(
+ 	 */
+ 	pip.i_ino = get_inode_parent(irec, ino_offset);
+ 	if (pip.i_ino == NULLFSINO ||
+-	    xfs_dir_ino_validate(mp, pip.i_ino))
++	    libxfs_dir_ino_validate(mp, pip.i_ino))
+ 		pip.i_ino = mp->m_sb.sb_rootino;
+ 
+ 	libxfs_defer_init(&dfops, &firstblock);
+@@ -1311,7 +1311,7 @@ longform_dir2_rebuild(
+ 
+ 	ASSERT(done);
+ 
+-	error = libxfs_dir_init(tp, ip, &pip);
++	error = -libxfs_dir_init(tp, ip, &pip);
+ 	if (error) {
+ 		do_warn(_("xfs_dir_init failed -- error - %d\n"), error);
+ 		goto out_bmap_cancel;
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index b4f20d9..b76a784 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -369,7 +369,7 @@ pf_read_btinode(
+ 		return;
+ 
+ 	dsize = XFS_DFORK_DSIZE(dino, mp);
+-	pp = XFS_BMDR_PTR_ADDR(dib, 1, xfs_bmdr_maxrecs(dsize, 0));
++	pp = XFS_BMDR_PTR_ADDR(dib, 1, libxfs_bmdr_maxrecs(dsize, 0));
+ 
+ 	for (i = 0; i < numrecs; i++) {
+ 		dbno = get_unaligned_be64(&pp[i]);
+@@ -431,7 +431,7 @@ pf_read_inode_dirs(
+ 		if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)
+ 			continue;
+ 
+-		if (!xfs_dinode_good_version(mp, dino->di_version))
++		if (!libxfs_dinode_good_version(mp, dino->di_version))
+ 			continue;
+ 
+ 		if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp))
+diff --git a/repair/rmap.c b/repair/rmap.c
+index b3d4c25..43b821d 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -61,8 +61,8 @@ rmap_compare(
+ 	__u64			ob;
+ 
+ 	pa = a; pb = b;
+-	oa = xfs_rmap_irec_offset_pack(pa);
+-	ob = xfs_rmap_irec_offset_pack(pb);
++	oa = libxfs_rmap_irec_offset_pack(pa);
++	ob = libxfs_rmap_irec_offset_pack(pb);
+ 
+ 	if (pa->rm_startblock < pb->rm_startblock)
+ 		return -1;
+@@ -498,7 +498,7 @@ store_ag_btree_rmap_data(
+ 		goto err;
+ 
+ 	/* Add the AGFL blocks to the rmap list */
+-	error = libxfs_trans_read_buf(
++	error = -libxfs_trans_read_buf(
+ 			mp, NULL, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+ 			XFS_FSS_TO_BB(mp, 1), 0, &agflbp, &xfs_agfl_buf_ops);
+@@ -536,13 +536,13 @@ store_ag_btree_rmap_data(
  		if (error)
- 			return error;
+ 			goto err_slab;
  
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index fb8aca3..6498be4 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -25,8 +25,6 @@ struct xfs_bmbt_irec;
+-		error = libxfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++		error = -libxfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+ 		if (error)
+ 			goto err_trans;
  
- int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- 			struct xfs_bmbt_irec *, int);
--int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
--			struct xfs_bmbt_irec *);
- int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
- 			struct xfs_bmbt_irec *);
- int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
--- 
-2.1.4
+ 		ASSERT(XFS_RMAP_NON_INODE_OWNER(rm_rec->rm_owner));
+ 		libxfs_rmap_ag_owner(&oinfo, rm_rec->rm_owner);
+-		error = libxfs_rmap_alloc(tp, agbp, agno, rm_rec->rm_startblock,
++		error = -libxfs_rmap_alloc(tp, agbp, agno, rm_rec->rm_startblock,
+ 				rm_rec->rm_blockcount, &oinfo);
+ 		if (error)
+ 			goto err_trans;
+@@ -716,9 +716,9 @@ check_rmaps(
+ 		goto err;
+ 
+ 	/* Leave the per-ag data "uninitialized" since we rewrite it later */
+-	pag = xfs_perag_get(mp, agno);
++	pag = libxfs_perag_get(mp, agno);
+ 	pag->pagf_init = 0;
+-	xfs_perag_put(pag);
++	libxfs_perag_put(pag);
+ 
+ 	bt_cur = libxfs_rmapbt_init_cursor(mp, NULL, agbp, agno);
+ 	if (!bt_cur) {
+@@ -804,10 +804,10 @@ rmap_diffkeys(
+ 
+ 	tmp = *kp1;
+ 	tmp.rm_flags &= ~XFS_RMAP_REC_FLAGS;
+-	oa = xfs_rmap_irec_offset_pack(&tmp);
++	oa = libxfs_rmap_irec_offset_pack(&tmp);
+ 	tmp = *kp2;
+ 	tmp.rm_flags &= ~XFS_RMAP_REC_FLAGS;
+-	ob = xfs_rmap_irec_offset_pack(&tmp);
++	ob = libxfs_rmap_irec_offset_pack(&tmp);
+ 
+ 	d = (__int64_t)kp1->rm_startblock - kp2->rm_startblock;
+ 	if (d)
+@@ -867,7 +867,7 @@ fix_freelist(
+ 	args.mp = mp;
+ 	args.agno = agno;
+ 	args.alignment = 1;
+-	args.pag = xfs_perag_get(mp, agno);
++	args.pag = libxfs_perag_get(mp, agno);
+ 	error = -libxfs_trans_alloc(mp, &tres,
+ 			libxfs_alloc_min_freelist(mp, args.pag), 0, 0, &tp);
+ 	if (error)
+@@ -899,8 +899,8 @@ fix_freelist(
+ 	flags = XFS_ALLOC_FLAG_NOSHRINK;
+ 	if (skip_rmapbt)
+ 		flags |= XFS_ALLOC_FLAG_NORMAP;
+-	error = libxfs_alloc_fix_freelist(&args, flags);
+-	xfs_perag_put(args.pag);
++	error = -libxfs_alloc_fix_freelist(&args, flags);
++	libxfs_perag_put(args.pag);
+ 	if (error) {
+ 		do_error(_("failed to fix AGFL on AG %d, error %d\n"),
+ 				agno, error);
+diff --git a/repair/sb.c b/repair/sb.c
+index a8170ba..ac13a66 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -384,7 +384,7 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+ 
+ 	/* sector size in range - CRC check time */
+ 	if (xfs_sb_version_hascrc(sb) &&
+-	    !xfs_verify_cksum(sb_buf, sb->sb_sectsize, XFS_SB_CRC_OFF))
++	    !libxfs_verify_cksum(sb_buf, sb->sb_sectsize, XFS_SB_CRC_OFF))
+ 		return XR_BAD_CRC;
+ 
+ 	/* check to ensure blocksize and blocklog are legal */
+diff --git a/tools/find-api-violations.sh b/tools/find-api-violations.sh
+new file mode 100755
+index 0000000..7937749
+--- /dev/null
++++ b/tools/find-api-violations.sh
+@@ -0,0 +1,38 @@
++#!/bin/bash
++
++# Find libxfs API violations -- calls to functions defined in libxfs/*.c that
++# don't use the libxfs wrappers; or failing to negate the integer return
++# values.
++
++# NOTE: This script doesn't look for API violations in function parameters.
++
++tool_dirs="copy db estimate fs fsck fsr growfs io mdrestore mkfs quota repair rtcp"
++
++# Calls to xfs_* functions in libxfs/*.c without the libxfs_ prefix
++find_possible_api_calls() {
++	grep -rn '[[:space:],-(]xfs_[a-z_]*(' $tool_dirs | sed -e 's/^.*\(xfs_[a-z_]*\)(.*$/\1/g' | sort | uniq
++}
++
++check_if_api_calls() {
++	while read f; do grep "^$f(" libxfs/*.c; done | sed -e 's/^.*:xfs_/xfs_/g' -e 's/.$//g'
++}
++
++find_libxfs_violations() {
++	grep -r -n -f <(find_possible_api_calls | check_if_api_calls | sed -e 's/^/[[:space:],-(]/g' -e 's/$/(/g' ) $tool_dirs
++}
++
++# libxfs calls without negated error codes
++find_errcode_violations() {
++	grep -r -n 'err.* = libxfs' $tool_dirs
++}
++
++# Find xfs_* calls that are in the libxfs definition list
++find_possible_libxfs_api_calls() {
++	grep '#define[[:space:]]*xfs' libxfs/libxfs_api_defs.h | awk '{print $2}'
++}
++
++find_libxfs_api_violations() {
++	grep -r -n -f <(find_possible_libxfs_api_calls | sed -e 's/^/[[:space:],-(]/g' -e 's/$/(/g') $tool_dirs
++}
++
++(find_libxfs_violations ; find_errcode_violations ; find_libxfs_api_violations) | sort -g -t ':' -k 2 | sort -g -t ':' -k 1 | uniq
 
 _______________________________________________
 xfs mailing list
