@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 016657CA1
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 21:21:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BA6D68F8033
-	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:21:11 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id QG3aJAFBg6eOJyLV (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 06E607CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:02:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CA54C304048
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:01:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HrnCJOsQtmRu8wR7 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:21:10 -0700 (PDT)
-Subject: [PATCH 5/5] xfs: disallow mounting of realtime + rmap filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Aug 2016 19:20:59 -0700
-Message-ID: <147200525982.14738.18075322042697360316.stgit@birch.djwong.org>
-In-Reply-To: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
-References: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:01:57 -0700 (PDT)
+Date: Wed, 24 Aug 2016 14:01:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: don't perform lookups on zero-height btrees
+Message-ID: <20160824180154.GA8982@bfoster.bfoster>
+References: <20160819203022.GD8268@birch.djwong.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160819203022.GD8268@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Since the kernel doesn't currently support the realtime rmapbt,
-don't allow such filesystems to be mounted.  Support will appear
-in a future release.
+On Fri, Aug 19, 2016 at 01:30:22PM -0700, Darrick J. Wong wrote:
+> If the caller passes in a cursor to a zero-height btree (which is
+> impossible), we never set block to anything but NULL, which causes the
+> later dereference of it to crash.  Instead, just return -EFSCORRUPTED.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_super.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Did something actually cause this to happen?
 
+Brian
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 24ef83e..fd6be45 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1574,9 +1574,16 @@ xfs_fs_fill_super(
- 		}
- 	}
- 
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		if (mp->m_sb.sb_rblocks) {
-+			xfs_alert(mp,
-+	"EXPERIMENTAL reverse mapping btree not compatible with realtime device!");
-+			error = -EINVAL;
-+			goto out_filestream_unmount;
-+		}
- 		xfs_alert(mp,
- 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
-+	}
- 
- 	error = xfs_mountfs(mp);
- 	if (error)
+>  fs/xfs/libxfs/xfs_btree.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 64fd847..4bffea4 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -1814,6 +1814,10 @@ xfs_btree_lookup(
+>  
+>  	XFS_BTREE_STATS_INC(cur, lookup);
+>  
+> +	/* No such thing as a zero-level tree. */
+> +	if (cur->bc_nlevels == 0)
+> +		return -EFSCORRUPTED;
+> +
+>  	block = NULL;
+>  	keyno = 0;
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
