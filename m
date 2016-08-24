@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A7E427CA0
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:27:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79313304043
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:07 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6F5617CA1
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 21:24:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 01AD1AC002
+	for <xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:24:30 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id cbYQweOBnHFDqAwE (version=TLSv1.2
+	cuda.sgi.com with ESMTP id wi5aFJ60N25zWZLf (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:27:01 -0700 (PDT)
-Subject: [PATCH v8 0/7] xfs-docs: reorganize chapters,
-	document rmap and reflink
+	<xfs@oss.sgi.com>; Tue, 23 Aug 2016 19:24:29 -0700 (PDT)
+Subject: [PATCH 0/7] xfsprogs: reverse mapping fixes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:26:56 -0700
-Message-ID: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
+Date: Tue, 23 Aug 2016 19:24:24 -0700
+Message-ID: <147200546481.15538.12724000421579716885.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,38 +31,17 @@ Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
 Hi all,
 
-This is the eighth revision of a patchset that adds to XFS kernel
-support for mapping multiple file logical blocks to the same physical
-block (reflink/deduplication), implements the beginnings of online
-metadata scrubbing and preening, and implements reverse mapping for
-the realtime device.  There shouldn't be any incompatible on-disk
-format changes, pending a thorough review of the patches within.
+This is a roll-up of a few fixes[1] for reverse-mapping in xfsprogs 4.8.
 
-The patches in this series fix various errors, bring the documentation
-up to date as of kernel 4.6, and add entirely new chapters about the
-reverse mapping and reference count btrees.  The new log redo items
-are also documented.
-
-If you're going to start using this mess, you probably ought to just
-pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
-xfs-docs[4], and man-pages[5].  The kernel patches in the git trees
-should apply to 4.8-rc3; xfsprogs patches to for-next; and xfstest to
-master.
-
-The patches have been xfstested with x64, ppc64, and armhf; all tests
-in the clone and rmap groups pass.  AFAICT they don't cause any new
-failures for the 'auto' group.
+The patches have been xfstested with the 'auto' group on x64
+and (afaict) don't cause any regressions.
 
 This is an extraordinary way to eat your data.  Enjoy! 
 Comments and questions are, as always, welcome.
 
 --D
 
-[1] https://github.com/djwong/linux/tree/djwong-devel
-[2] https://github.com/djwong/xfsprogs/tree/djwong-devel
-[3] https://github.com/djwong/xfstests/tree/djwong-devel
-[4] https://github.com/djwong/xfs-documentation/tree/djwong-devel
-[5] https://github.com/djwong/man-pages/tree/djwong-devel
+[1] https://github.com/djwong/xfsprogs/tree/for-dave-for-4.8-6
 
 _______________________________________________
 xfs mailing list
