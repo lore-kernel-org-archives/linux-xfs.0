@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA46E7CA0
-	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 19:24:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B28B304048
-	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 17:24:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8ohmoMees9ujH0BL (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Aug 2016 17:24:17 -0700 (PDT)
-Date: Mon, 22 Aug 2016 19:24:13 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH v2 1/3] xfs_quota: add capabilities for use on ext4
-Message-ID: <20160823002413.GA21673@redhat.com>
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-	<1471356998-2876-2-git-send-email-billodo@redhat.com>
-	<20160822014742.GQ19025@dastard> <20160822160207.GC2736@redhat.com>
-	<20160823000916.GX19025@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 046267CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 19:35:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9CAE48F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 17:35:53 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	5GeudHNjOPQGHoot for <xfs@oss.sgi.com>;
+	Wed, 24 Aug 2016 17:35:50 -0700 (PDT)
+Date: Thu, 25 Aug 2016 10:35:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: "Bad page state" errors when calling BULKSTAT under memory
+	pressure?
+Message-ID: <20160825003548.GD19025@dastard>
+References: <20160824234237.GA22760@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160823000916.GX19025@dastard>
+In-Reply-To: <20160824234237.GA22760@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,132 +30,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Aug 23, 2016 at 10:09:16AM +1000, Dave Chinner wrote:
-> On Mon, Aug 22, 2016 at 11:02:07AM -0500, Bill O'Donnell wrote:
-> > On Mon, Aug 22, 2016 at 11:47:42AM +1000, Dave Chinner wrote:
-> > > On Tue, Aug 16, 2016 at 09:16:36AM -0500, Bill O'Donnell wrote:
-> > > > This allows xfs_quota to be used on ext4 for project quota testing
-> > > > in xfstests.
-> > > > 
-> > > > This patch was originally submitted by Dave Chinner
-> > > > (http://oss.sgi.com/archives/xfs/2016-02/msg00131.html)
-> > > > 
-> > > > Resubmitting with the following change:
-> > > > quota/init.c: correct logic error in loop contained in init_args_command()
-> > > > function (lines 85-91).
-> > > 
-> > > What logic error?
-> > 
-> > In your original patch, in init_args_command():
-> > 
-> >    	do {
-> >  		fs_path = &fs_table[index++];
-> > -	} while ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count);
-> > +		if (fs_path->fs_flags & FS_PROJECT_PATH)
-> > +			continue;
-> > +		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
-> > +			continue;
-> > +	} while (index < fs_count);
-> > 
-> > The loop should break out, when (fs_path->fs_flags & FS_PROJECT_PATH) is false,
-> > but instead moves onto the next test (and then back to the top). See in the
-> > original while statement, the loop stops when the false condition occurs, that is,
-> > ((fs_path->fs_flags & FS_PROJECT_PATH) && index < fs_count) == False.
+On Wed, Aug 24, 2016 at 04:42:37PM -0700, Darrick J. Wong wrote:
+> Hi everyone,
 > 
-> Hi Bill - now I see *how* you changed the logic changed, but I still
-> don't know *why* it needed to be changed. What problem did you
-> encounter that needed to be solved?  The code I wrote had different
-> logic for good reason: the fstable is now populated with non-XFS
-> mount points now, and so we have to walk it differently.
+> [cc'ing Brian because he was the last one to touch xfs_buf.c]
 > 
-> In more detail, the fstable is initialised from two place - the
-> mount table for FS_MOUNT_POINT entries, and the projects files for
-> FS_PROJECT_PATH entries.  The original init_args_command() code was
-> searching for the first mount point entry in the filesystem table
-> (i.e. a FS_MOUNT_POINT entry) and it did so by skipping over
-> FS_PROJECT_PATH entries. It could do this because it "knew" that the
-> fs_table was only populated with XFS filesystem mount points. Hence
-> once it found an entry that was not a project quota path entry, it
-> could stop knowing it had an XFS mount point to work from.
+> I've been stress-testing xfs_scrub against a 900GB filesystem with 2M inodes
+> using a VM with 512M of RAM.  I've noticed that I get BUG messages about
+> pages with negative refcount, but only if the system is under memory pressure.
+> No errors are seen if the VM memory is increased to, say, 20GB.
 > 
-> Now we are populating the fstable with all types of filesystem mount
-> points as well as project quota paths. Hence if we are operating
-> only on XFS filesystems we now have to skip over any foreign mount
-> point entries we find in the table.  IOWs, the original code I wrote
-> is supposed to skip both project paths and foreign mounts when "-f"
-> is not set.
-> 
-> But that said, I've analysed your change sufficiently that I can now
-> see the problem you tried to solve: it doesn't break out of the
-> search loop when it finds the first mount point it can use. This is
-> the "why" of the logic change you made, and if you said that in the
-> commit message, it would have been easy to spot it in the patch.
-> 
-> It would have also been much easier to review, because now it's
-> clear that the logic change you've made makes it stop searching at
-> the first FS_MOUNT_POINT entry, regardless of whether it is foreign
-> or not, or whether we are allowing foreign mounts to be used. This
-> is incorrect behaviour, as you can now see from the above
-> explanation of what the code was supposed to be doing.
-> 
-> i.e. the search loop should now look something like this:
-> 
-> 	/* lookup the first FS_MOUNT_POINT entry we should use */
-> 	do {
-> 		/* skip project quota entries */
-> 		if (fs_path->fs_flags & FS_PROJECT_PATH)
-> 			continue;
-> 
-> 		/* only consider foreign filesystems if told to */
-> 		if (!foreign_allowed && (fs_path->fs_flags & FS_FOREIGN))
-> 			continue;
-> 
-> 		/* We can use this one */
-> 		break;
-> 	} while (index < fs_count);
-> 
-> > My commit message was completely terse, sorry. I'll clarify it in v3.
-> 
-> Writing good commit messages is hard and takes practice. If you
-> read the commit message and you can't answer the following questions
-> after reading it, the commit message needs more work:
-> 
-> 	1 what problem is being solved?
-> 	2 why did the problem need to be solved?
-> 	3 what unforeseen or tricky issues needed to be addressed
-> 	  while solving the problem?
-> 	4 what changed from the last version, and why did it change?
-> 	  (see 1, 2 and 3)
-> 
-> Note that there's no "how did the problem get solved?" in that list?
-> That's because the "how?" is the code. Reviewers can read the code
-> change to understand the how - what they can't get from the code is
-> the "why?" and "what changed from last time?" and that's what needs
-> to be in comments and commit messages...
-> 
-> Often 1) and 2) can be described in the patch series summary (i.e.
-> patch 0/N) as it doesn't need to be explained in every patch in the
-> series.
+> : BUG: Bad page state in process xfs_scrub  pfn:00426
+> : page:ffffea0000010980 count:-1 mapcount:0 mapping:          (null) index:0x0
+> : flags: 0x0()
+> : page dumped because: nonzero _count
 
-Hi Dave-
+Unless we are double-freeing a buffer, that's not an XFS problem.
+Have you tried with memory posioning and allocation debug turned on?
 
-Thanks for your thorough review. I do appreciate it, and I'll fix up
-things in v3.
+> : Modules linked in: xfs libcrc32c sch_fq_codel af_packet
+> : CPU: 1 PID: 2058 Comm: xfs_scrub Not tainted 4.8.0-rc3-mcsum #18
 
-Cheers-
-Bill
+the mm architecture was significantly modified in 4.8.0-rc1 - it
+went from per-zone to per-node infrastructure, so it's entirely
+possible this is a memory reclaim regression. can you reproduce it
+on an older kernel (e.g. 4.7.0)?
 
-
+> Obviously, a page refcount of -1 is not a good sign.  I had a hunch that
+> the page in question was (hopefully) a page backing an xfs_buf, so I
+> applied the following debug patch:
 > 
-> Cheers,
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 607cc29..144b976 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -317,7 +317,7 @@ xfs_buf_free(
+>  
+>                 for (i = 0; i < bp->b_page_count; i++) {
+>                         struct page     *page = bp->b_pages[i];
+> -
+> +if (page_ref_count(page) != 1) {xfs_err(NULL, "%s: OHNO! daddr=%llu page=%p ref=%d", __func__, bp->b_bn, page, page_ref_count(page)); dump_stack();}
+>                         __free_page(page);
+>                 }
+>         } else if (bp->b_flags & _XBF_KMEM)
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> I then saw this:
+> 
+> : SGI XFS with ACLs, security attributes, realtime, debug enabled
+> : XFS (sda): Mounting V4 Filesystem
+> : XFS (sda): Ending clean mount
+> : XFS: xfs_buf_free: OHNO! daddr=113849120 page=ffffea0000010980 ref=0
+
+Which implies something else has dropped the page reference count on
+us while we hold a reference to it. What you might like to check
+what the page reference counts are on /allocation/ to see if we're
+being handed a page from the freelist with a bad ref count....
+
+If the ref counts are good at allocation, but bad on free, then I
+very much doubt it's an XFS problem. We don't actually touch the
+page reference count anywhere, so let's make sure that it's not a
+double free or something like that in XFS first.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
