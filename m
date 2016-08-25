@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A682882AC
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:53:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 783DB304039
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:53:36 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B0DE982B4
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:53:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 82ECA8F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:53:42 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id aTG5yA7E0Evcjr3T (version=TLSv1.2
+	cuda.sgi.com with ESMTP id Cma82d5GSoDEB1Uz (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:53:34 -0700 (PDT)
-Subject: [PATCH 64/71] xfs_repair: fix inode reflink flags
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:53:40 -0700 (PDT)
+Subject: [PATCH 65/71] xfs_repair: check the refcount btree against our
+	observed reference counts when -n
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:53:29 -0700
-Message-ID: <147216920968.4420.261618033432866879.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:53:35 -0700
+Message-ID: <147216921590.4420.3306219015258022080.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,36 +32,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-While we're computing reference counts, record which inodes actually
-share blocks with other files and fix the flags as necessary.
+Check the observed reference counts against whatever's in the refcount
+btree for discrepancies.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase4.c |   20 ++++++++
- repair/rmap.c   |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/rmap.h   |    1 
- 3 files changed, 154 insertions(+)
+ libxfs/libxfs_api_defs.h |    4 +
+ repair/phase4.c          |   20 +++++++
+ repair/rmap.c            |  126 ++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h            |    5 ++
+ repair/scan.c            |    3 +
+ 5 files changed, 158 insertions(+)
 
 
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index b9eb2cf..28bac11 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -137,4 +137,8 @@
+ #define xfs_prealloc_blocks		libxfs_prealloc_blocks
+ #define xfs_dinode_good_version		libxfs_dinode_good_version
+ 
++#define xfs_refcountbt_init_cursor	libxfs_refcountbt_init_cursor
++#define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
++#define xfs_refcount_get_rec		libxfs_refcount_get_rec
++
+ #endif /* __LIBXFS_API_DEFS_H__ */
 diff --git a/repair/phase4.c b/repair/phase4.c
-index 86992c9..2c2d611 100644
+index 2c2d611..395d373 100644
 --- a/repair/phase4.c
 +++ b/repair/phase4.c
-@@ -208,6 +208,21 @@ _("%s while computing reference count records.\n"),
+@@ -223,6 +223,21 @@ _("%s while fixing inode reflink flags.\n"),
  }
  
  static void
-+process_inode_reflink_flags(
-+	struct work_queue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
++check_refcount_btrees(
++	work_queue_t	*wq,
++	xfs_agnumber_t	agno,
++	void		*arg)
 +{
-+	int			error;
++	int		error;
 +
-+	error = fix_inode_reflink_flags(wq->mp, agno);
++	error = check_refcounts(wq->mp, agno);
 +	if (error)
 +		do_error(
-+_("%s while fixing inode reflink flags.\n"),
++_("%s while checking reference counts"),
 +			 strerror(-error));
 +}
 +
@@ -68,177 +84,156 @@ index 86992c9..2c2d611 100644
  process_rmap_data(
  	struct xfs_mount	*mp)
  {
-@@ -229,6 +244,11 @@ process_rmap_data(
+@@ -249,6 +264,11 @@ process_rmap_data(
  	for (i = 0; i < mp->m_sb.sb_agcount; i++)
- 		queue_work(&wq, compute_ag_refcounts, i, NULL);
+ 		queue_work(&wq, process_inode_reflink_flags, i, NULL);
  	destroy_work_queue(&wq);
 +
 +	create_work_queue(&wq, mp, libxfs_nproc());
 +	for (i = 0; i < mp->m_sb.sb_agcount; i++)
-+		queue_work(&wq, process_inode_reflink_flags, i, NULL);
++		queue_work(&wq, check_refcount_btrees, i, NULL);
 +	destroy_work_queue(&wq);
  }
  
  void
 diff --git a/repair/rmap.c b/repair/rmap.c
-index 4507420..5206206 100644
+index 5206206..c53d6b7 100644
 --- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -665,6 +665,39 @@ rmap_dump(
-  */
+@@ -47,6 +47,7 @@ struct xfs_ag_rmap {
+ 
+ static struct xfs_ag_rmap *ag_rmaps;
+ static bool rmapbt_suspect;
++static bool refcbt_suspect;
  
  /*
-+ * Mark all inodes in the reverse-mapping observation stack as requiring the
-+ * reflink inode flag, if the stack depth is greater than 1.
-+ */
-+static void
-+mark_inode_rl(
-+	struct xfs_mount		*mp,
-+	struct xfs_bag		*rmaps)
-+{
-+	xfs_agnumber_t		iagno;
-+	struct xfs_rmap_irec	*rmap;
-+	struct ino_tree_node	*irec;
-+	int			off;
-+	size_t			idx;
-+	xfs_agino_t		ino;
-+
-+	if (bag_count(rmaps) < 2)
-+		return;
-+
-+	/* Reflink flag accounting */
-+	foreach_bag_ptr(rmaps, idx, rmap) {
-+		ASSERT(!XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner));
-+		iagno = XFS_INO_TO_AGNO(mp, rmap->rm_owner);
-+		ino = XFS_INO_TO_AGINO(mp, rmap->rm_owner);
-+		pthread_mutex_lock(&ag_locks[iagno].lock);
-+		irec = find_inode_rec(mp, iagno, ino);
-+		off = get_inode_offset(mp, rmap->rm_owner, irec);
-+		/* lock here because we might go outside this ag */
-+		set_inode_is_rl(irec, off);
-+		pthread_mutex_unlock(&ag_locks[iagno].lock);
-+	}
-+}
-+
-+/*
-  * Emit a refcount object for refcntbt reconstruction during phase 5.
-  */
- #define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
-@@ -745,6 +778,7 @@ compute_refcounts(
- 			if (error)
- 				goto err;
- 		}
-+		mark_inode_rl(mp, stack_top);
- 
- 		/* Set nbno to the bno of the next refcount change */
- 		if (n < slab_count(rmaps))
-@@ -781,6 +815,7 @@ compute_refcounts(
- 				if (error)
- 					goto err;
- 			}
-+			mark_inode_rl(mp, stack_top);
- 
- 			/* Emit refcount if necessary */
- 			ASSERT(nbno > cbno);
-@@ -1102,6 +1137,104 @@ record_inode_reflink_flag(
+  * Compare rmap observations for array sorting.
+@@ -1235,6 +1236,131 @@ _("Unable to fix reflink flag on inode %"PRIu64".\n"),
  }
  
  /*
-+ * Fix an inode's reflink flag.
++ * Return the number of refcount objects for an AG.
 + */
-+static int
-+fix_inode_reflink_flag(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino,
-+	bool			set)
++size_t
++refcount_record_count(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t		agno)
 +{
-+	struct xfs_dinode	*dino;
-+	struct xfs_buf		*buf;
-+
-+	if (set)
-+		do_warn(
-+_("setting reflink flag on inode %"PRIu64"\n"),
-+			XFS_AGINO_TO_INO(mp, agno, agino));
-+	else if (!no_modify) /* && !set */
-+		do_warn(
-+_("clearing reflink flag on inode %"PRIu64"\n"),
-+			XFS_AGINO_TO_INO(mp, agno, agino));
-+	if (no_modify)
-+		return 0;
-+
-+	buf = get_agino_buf(mp, agno, agino, &dino);
-+	if (!buf)
-+		return 1;
-+	ASSERT(XFS_AGINO_TO_INO(mp, agno, agino) == be64_to_cpu(dino->di_ino));
-+	if (set)
-+		dino->di_flags2 |= cpu_to_be64(XFS_DIFLAG2_REFLINK);
-+	else
-+		dino->di_flags2 &= cpu_to_be64(~XFS_DIFLAG2_REFLINK);
-+	libxfs_dinode_calc_crc(mp, dino);
-+	libxfs_writebuf(buf, 0);
-+
-+	return 0;
++	return slab_count(ag_rmaps[agno].ar_refcount_items);
 +}
 +
 +/*
-+ * Fix discrepancies between the state of the inode reflink flag and our
-+ * observations as to whether or not the inode really needs it.
++ * Return a slab cursor that will return refcount objects in order.
 + */
 +int
-+fix_inode_reflink_flags(
++init_refcount_cursor(
++	xfs_agnumber_t		agno,
++	struct xfs_slab_cursor	**cur)
++{
++	return init_slab_cursor(ag_rmaps[agno].ar_refcount_items, NULL, cur);
++}
++
++/*
++ * Disable the refcount btree check.
++ */
++void
++refcount_avoid_check(void)
++{
++	refcbt_suspect = true;
++}
++
++/*
++ * Compare the observed reference counts against what's in the ag btree.
++ */
++int
++check_refcounts(
 +	struct xfs_mount	*mp,
 +	xfs_agnumber_t		agno)
 +{
-+	struct ino_tree_node	*irec;
-+	int			bit;
-+	__uint64_t		was;
-+	__uint64_t		is;
-+	__uint64_t		diff;
-+	__uint64_t		mask;
-+	int			error = 0;
-+	xfs_agino_t		agino;
++	struct xfs_slab_cursor	*rl_cur;
++	struct xfs_btree_cur	*bt_cur = NULL;
++	int			error;
++	int			have;
++	int			i;
++	struct xfs_buf		*agbp = NULL;
++	struct xfs_refcount_irec	*rl_rec;
++	struct xfs_refcount_irec	tmp;
++	struct xfs_perag	*pag;		/* per allocation group data */
 +
-+	/*
-+	 * Update the reflink flag for any inode where there's a discrepancy
-+	 * between the inode flag and whether or not we found any reflinked
-+	 * extents.
-+	 */
-+	for (irec = findfirst_inode_rec(agno);
-+	     irec != NULL;
-+	     irec = next_ino_rec(irec)) {
-+		ASSERT((irec->ino_was_rl & irec->ir_free) == 0);
-+		ASSERT((irec->ino_is_rl & irec->ir_free) == 0);
-+		was = irec->ino_was_rl;
-+		is = irec->ino_is_rl;
-+		if (was == is)
-+			continue;
-+		diff = was ^ is;
-+		dbg_printf("mismatch ino=%llu was=0x%lx is=0x%lx dif=0x%lx\n",
-+			(unsigned long long)XFS_AGINO_TO_INO(mp, agno,
-+						irec->ino_startnum),
-+			was, is, diff);
-+
-+		for (bit = 0, mask = 1; bit < 64; bit++, mask <<= 1) {
-+			agino = bit + irec->ino_startnum;
-+			if (!(diff & mask))
-+				continue;
-+			else if (was & mask)
-+				error = fix_inode_reflink_flag(mp, agno, agino,
-+						false);
-+			else if (is & mask)
-+				error = fix_inode_reflink_flag(mp, agno, agino,
-+						true);
-+			else
-+				ASSERT(0);
-+			if (error)
-+				do_error(
-+_("Unable to fix reflink flag on inode %"PRIu64".\n"),
-+					XFS_AGINO_TO_INO(mp, agno, agino));
-+		}
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return 0;
++	if (refcbt_suspect) {
++		if (no_modify && agno == 0)
++			do_warn(_("would rebuild corrupt refcount btrees.\n"));
++		return 0;
 +	}
 +
-+	return error;
++	/* Create cursors to refcount structures */
++	error = init_refcount_cursor(agno, &rl_cur);
++	if (error)
++		return error;
++
++	error = -libxfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		goto err;
++
++	/* Leave the per-ag data "uninitialized" since we rewrite it later */
++	pag = libxfs_perag_get(mp, agno);
++	pag->pagf_init = 0;
++	libxfs_perag_put(pag);
++
++	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
++	if (!bt_cur) {
++		error = -ENOMEM;
++		goto err;
++	}
++
++	rl_rec = pop_slab_cursor(rl_cur);
++	while (rl_rec) {
++		/* Look for a refcount record in the btree */
++		error = -libxfs_refcount_lookup_le(bt_cur,
++				rl_rec->rc_startblock, &have);
++		if (error)
++			goto err;
++		if (!have) {
++			do_warn(
++_("Missing reference count record for (%u/%u) len %u count %u\n"),
++				agno, rl_rec->rc_startblock,
++				rl_rec->rc_blockcount, rl_rec->rc_refcount);
++			goto next_loop;
++		}
++
++		error = -libxfs_refcount_get_rec(bt_cur, &tmp, &i);
++		if (error)
++			goto err;
++		if (!i) {
++			do_warn(
++_("Missing reference count record for (%u/%u) len %u count %u\n"),
++				agno, rl_rec->rc_startblock,
++				rl_rec->rc_blockcount, rl_rec->rc_refcount);
++			goto next_loop;
++		}
++
++		/* Compare each refcount observation against the btree's */
++		if (tmp.rc_startblock != rl_rec->rc_startblock ||
++		    tmp.rc_blockcount < rl_rec->rc_blockcount ||
++		    tmp.rc_refcount < rl_rec->rc_refcount)
++			do_warn(
++_("Incorrect reference count: saw (%u/%u) len %u nlinks %u; should be (%u/%u) len %u nlinks %u\n"),
++				agno, tmp.rc_startblock, tmp.rc_blockcount,
++				tmp.rc_refcount, agno, rl_rec->rc_startblock,
++				rl_rec->rc_blockcount, rl_rec->rc_refcount);
++next_loop:
++		rl_rec = pop_slab_cursor(rl_cur);
++	}
++
++err:
++	if (bt_cur)
++		libxfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++	if (agbp)
++		libxfs_putbuf(agbp);
++	free_slab_cursor(&rl_cur);
++	return 0;
 +}
 +
 +/*
@@ -246,17 +241,42 @@ index 4507420..5206206 100644
   * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
   * because we're updating the rmapbt).
 diff --git a/repair/rmap.h b/repair/rmap.h
-index ab6f434..266448f 100644
+index 266448f..752ece8 100644
 --- a/repair/rmap.h
 +++ b/repair/rmap.h
-@@ -52,6 +52,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+@@ -50,6 +50,11 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ 		struct xfs_rmap_irec *key);
+ 
  extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
++extern size_t refcount_record_count(struct xfs_mount *, xfs_agnumber_t);
++extern int init_refcount_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
++extern void refcount_avoid_check(void);
++extern int check_refcounts(struct xfs_mount *, xfs_agnumber_t);
++
  extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
  	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
-+extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
+ extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
+diff --git a/repair/scan.c b/repair/scan.c
+index d3a1a82..1c60784 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1370,6 +1370,8 @@ _("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 		}
+ 	}
+ out:
++	if (suspect)
++		refcount_avoid_check();
+ 	return;
+ }
  
- extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
- extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+@@ -2173,6 +2175,7 @@ validate_agf(
+ 		} else  {
+ 			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
+ 				bno, agno);
++			refcount_avoid_check();
+ 		}
+ 	}
+ 
 
 _______________________________________________
 xfs mailing list
