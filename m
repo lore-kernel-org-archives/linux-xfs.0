@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 873647FA5
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:42:59 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D38717FBB
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:43:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5AA84304039
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:42:59 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 74GOYGXS8T8jemAc (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A3F5304043
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:43:04 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ca037RmKMmlr5XEm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:42:57 -0700 (PDT)
-Subject: [PATCH 24/25] xfs: scrub should cross-reference the realtime bitmap
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:43:03 -0700 (PDT)
+Subject: [PATCH 25/25] xfs: query the per-AG reservation counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:42:52 -0700
-Message-ID: <147216857200.3108.11169547765266171675.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:42:58 -0700
+Message-ID: <147216857818.3108.11355542277200889786.stgit@birch.djwong.org>
 In-Reply-To: <147216841262.3108.10746252464845687338.stgit@birch.djwong.org>
 References: <147216841262.3108.10746252464845687338.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,102 +31,131 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-While we're scrubbing various btrees, cross-reference the records
-with the other metadata.
+Establish an ioctl for userspace to query the original and current
+per-AG reservation counts.  This will be used by xfs_scrub to
+check that the vfs counters are at least somewhat sane.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   29 +++++++++++++++++++++++++++++
- fs/xfs/xfs_rtalloc.h         |    3 +++
- fs/xfs/xfs_scrub.c           |    9 +++++++++
- 3 files changed, 41 insertions(+)
+ fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
+ fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsops.h     |    2 ++
+ fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
+ 4 files changed, 57 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index f4b68c0..0f95c19 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1016,3 +1016,32 @@ xfs_rtfree_extent(
- 	}
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 211c874..f273e76 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -556,6 +556,15 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_FLAGS_ALL	0x0	/* no flags yet */
+ 
+ /*
++ * AG reserved block counters
++ */
++struct xfs_fsop_ag_resblks {
++	__u64 resblks;		/* blocks reserved now */
++	__u64 resblks_orig;	/* blocks reserved at mount time */
++	__u64 reserved[2];
++};
++
++/*
+  * ioctl limits
+  */
+ #ifdef XATTR_LIST_MAX
+@@ -631,6 +640,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ /* reflink ioctls; these MUST match the btrfs ioctl definitions */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 9880eeb..9d7984d 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -44,6 +44,7 @@
+ #include "xfs_filestream.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_fs.h"
+ 
+ /*
+  * File system operations
+@@ -1044,3 +1045,31 @@ xfs_fs_unreserve_ag_blocks(
+ 	if (error)
+ 		xfs_warn(mp, "Error %d unreserving metadata blocks.", error);
  }
 +
-+/* Is the given extent all free? */
++/* Query the per-AG reservations to see how many blocks we have reserved. */
 +int
-+xfs_rtbitmap_extent_is_free(
++xfs_fs_get_ag_reserve_blocks(
 +	struct xfs_mount		*mp,
-+	xfs_rtblock_t			start,
-+	xfs_rtblock_t			len,
-+	bool				*is_free)
++	struct xfs_fsop_ag_resblks	*out)
 +{
-+	xfs_rtblock_t			end;
-+	xfs_extlen_t			clen;
-+	int				matches;
-+	int				error;
++	struct xfs_ag_resv		*r;
++	struct xfs_perag		*pag;
++	xfs_agnumber_t			agno;
 +
-+	*is_free = false;
-+	while (len) {
-+		clen = len > ~0U ? ~0U : len;
-+		error = xfs_rtcheck_range(mp, NULL, start, clen, 1, &end,
-+				&matches);
-+		if (error || !matches || end < start + clen)
-+			return error;
++	out->resblks = 0;
++	out->resblks_orig = 0;
++	out->reserved[0] = out->reserved[1] = 0;
 +
-+		len -= end - start;
-+		start = end + 1;
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
++		out->resblks += r->ar_reserved;
++		out->resblks_orig += r->ar_asked;
++		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
++		out->resblks += r->ar_reserved;
++		out->resblks_orig += r->ar_asked;
++		xfs_perag_put(pag);
 +	}
 +
-+	*is_free = true;
-+	return error;
++	return 0;
 +}
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 91e48f9..14fd2c3 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -121,6 +121,8 @@ int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
- int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		     xfs_rtblock_t start, xfs_extlen_t len,
- 		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
-+int xfs_rtbitmap_extent_is_free(struct xfs_mount *mp,
-+		xfs_rtblock_t start, xfs_rtblock_t len, bool *is_free);
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 71e32480..58b584b 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
++extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
++		struct xfs_fsop_ag_resblks *out);
  
- 
- #else
-@@ -129,6 +131,7 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- # define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
- # define xfs_growfs_rt(mp,in)                           (ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
-+# define xfs_rtbitmap_extent_is_free(m,s,l,i)           (ENOSYS)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index ff55d8c..e4e3210 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -2304,6 +2304,7 @@ xfs_scrub_bmap_extent(
- 	xfs_extlen_t			flen;
- 	bool				is_freesp;
- 	bool				has_inodes;
-+	bool				is_free;
- 	unsigned int			rflags;
- 	int				has_rmap;
- 	int				has_refcount;
-@@ -2390,6 +2391,14 @@ xfs_scrub_bmap_extent(
- 			xfs_btree_del_cursor(xcur, err2 ? XFS_BTREE_ERROR :
- 							  XFS_BTREE_NOERROR);
- 		}
-+	} else {
-+		/* Cross-reference with rtbitmap. */
-+		xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
-+		err2 = xfs_rtbitmap_extent_is_free(mp, irec->br_startblock,
-+				irec->br_blockcount, &is_free);
-+		if (!err2)
-+			XFS_BTREC_SCRUB_CHECK(&info->bs, !is_free);
-+		xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+ extern void xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
+ extern void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 65f0c03..2a61268 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1993,6 +1993,22 @@ xfs_file_ioctl(
+ 		return 0;
  	}
  
- 	/* Cross-reference with rmapbt. */
++	case XFS_IOC_GET_AG_RESBLKS: {
++		struct xfs_fsop_ag_resblks	out;
++
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++
++		error = xfs_fs_get_ag_reserve_blocks(mp, &out);
++		if (error)
++			return error;
++
++		if (copy_to_user(arg, &out, sizeof(out)))
++			return -EFAULT;
++
++		return 0;
++	}
++
+ 	case XFS_IOC_FSGROWFSDATA: {
+ 		xfs_growfs_data_t in;
+ 
 
 _______________________________________________
 xfs mailing list
