@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 327A57CA0
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 17:40:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F41898F8040
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 15:40:16 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	mD1qOnxomW0Hr12O for <xfs@oss.sgi.com>;
-	Mon, 08 Aug 2016 15:40:14 -0700 (PDT)
-Date: Tue, 9 Aug 2016 08:40:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Document error handling behavior
-Message-ID: <20160808224011.GC19025@dastard>
-References: <1468922657-3895-1-git-send-email-cmaiolino@redhat.com>
-	<20160722040955.GB16413@zlang.usersys.redhat.com>
-	<20160722085804.GA2990@redhat.com>
-	<907731470.210439.1470653835697.JavaMail.zimbra@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 878EA7CE2
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:32:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 597D3304039
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:08 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id RJ5q6svmGrIh1KKO (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:06 -0700 (PDT)
+Subject: [PATCH 01/71] xfs: remove xfs_btree_bigkey
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 25 Aug 2016 16:32:02 -0700
+Message-ID: <147216792277.867.4345768462787186616.stgit@birch.djwong.org>
+In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <907731470.210439.1470653835697.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,27 +28,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Eduardo Maiolino <cmaiolin@redhat.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Aug 08, 2016 at 06:57:15AM -0400, Carlos Eduardo Maiolino wrote:
-> Hi folks,
-> 
-> is there any update about this? I didn't see any comments if I need to change
-> something on this patch to get the documentation applied, or perhaps I missed some e-mail?
+Remove the xfs_btree_bigkey mess and simply make xfs_btree_key big enough
+to hold both keys in-core.
 
-I've been waiting for a v2.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_btree.c |   12 ++++++------
+ fs/xfs/libxfs/xfs_btree.h |   24 ++++++------------------
+ 2 files changed, 12 insertions(+), 24 deletions(-)
 
-i.e. If you have to explain how fail at unmount works (or doesn't,
-in this case) during review, then that clearly needs to be added to
-the documentation.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 67fd2ce..d1155ca 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2070,7 +2070,7 @@ __xfs_btree_updkeys(
+ 	struct xfs_buf		*bp0,
+ 	bool			force_all)
+ {
+-	union xfs_btree_bigkey	key;	/* keys from current level */
++	union xfs_btree_key	key;	/* keys from current level */
+ 	union xfs_btree_key	*lkey;	/* keys from the next level up */
+ 	union xfs_btree_key	*hkey;
+ 	union xfs_btree_key	*nlkey;	/* keys from the next level up */
+@@ -2086,7 +2086,7 @@ __xfs_btree_updkeys(
+ 
+ 	trace_xfs_btree_updkeys(cur, level, bp0);
+ 
+-	lkey = (union xfs_btree_key *)&key;
++	lkey = &key;
+ 	hkey = xfs_btree_high_key_from_key(cur, lkey);
+ 	xfs_btree_get_keys(cur, block, lkey);
+ 	for (level++; level < cur->bc_nlevels; level++) {
+@@ -3230,7 +3230,7 @@ xfs_btree_insrec(
+ 	struct xfs_buf		*bp;	/* buffer for block */
+ 	union xfs_btree_ptr	nptr;	/* new block ptr */
+ 	struct xfs_btree_cur	*ncur;	/* new btree cursor */
+-	union xfs_btree_bigkey	nkey;	/* new block key */
++	union xfs_btree_key	nkey;	/* new block key */
+ 	union xfs_btree_key	*lkey;
+ 	int			optr;	/* old key/record index */
+ 	int			ptr;	/* key/record index */
+@@ -3245,7 +3245,7 @@ xfs_btree_insrec(
+ 	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
+ 
+ 	ncur = NULL;
+-	lkey = (union xfs_btree_key *)&nkey;
++	lkey = &nkey;
+ 
+ 	/*
+ 	 * If we have an external root pointer, and we've made it to the
+@@ -3448,14 +3448,14 @@ xfs_btree_insert(
+ 	union xfs_btree_ptr	nptr;	/* new block number (split result) */
+ 	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
+ 	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
+-	union xfs_btree_bigkey	bkey;	/* key of block to insert */
++	union xfs_btree_key	bkey;	/* key of block to insert */
+ 	union xfs_btree_key	*key;
+ 	union xfs_btree_rec	rec;	/* record to insert */
+ 
+ 	level = 0;
+ 	ncur = NULL;
+ 	pcur = cur;
+-	key = (union xfs_btree_key *)&bkey;
++	key = &bkey;
+ 
+ 	xfs_btree_set_ptr_null(cur, &nptr);
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 72f8b3c..870a5ab 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -37,30 +37,18 @@ union xfs_btree_ptr {
+ 	__be64			l;	/* long form ptr */
+ };
+ 
+-union xfs_btree_key {
+-	struct xfs_bmbt_key		bmbt;
+-	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
+-	xfs_alloc_key_t			alloc;
+-	struct xfs_inobt_key		inobt;
+-	struct xfs_rmap_key		rmap;
+-};
+-
+ /*
+- * In-core key that holds both low and high keys for overlapped btrees.
+- * The two keys are packed next to each other on disk, so do the same
+- * in memory.  Preserve the existing xfs_btree_key as a single key to
+- * avoid the mental model breakage that would happen if we passed a
+- * bigkey into a function that operates on a single key.
++ * The in-core btree key.  Overlapping btrees actually store two keys
++ * per pointer, so we reserve enough memory to hold both.  The __*bigkey
++ * items should never be accessed directly.
+  */
+-union xfs_btree_bigkey {
++union xfs_btree_key {
+ 	struct xfs_bmbt_key		bmbt;
+ 	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
+ 	xfs_alloc_key_t			alloc;
+ 	struct xfs_inobt_key		inobt;
+-	struct {
+-		struct xfs_rmap_key	rmap;
+-		struct xfs_rmap_key	rmap_hi;
+-	};
++	struct xfs_rmap_key		rmap;
++	struct xfs_rmap_key		__rmap_bigkey[2];
+ };
+ 
+ union xfs_btree_rec {
 
 _______________________________________________
 xfs mailing list
