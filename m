@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E20C68096
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 83852809E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A717D8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:45 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id z1w8GZm7uxpYrrTV (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 55F9F8F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:51 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id nMUn09DVxSixQ1Y2 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:43 -0700 (PDT)
-Subject: [PATCH 01/71] xfs: remove xfs_btree_bigkey
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:49 -0700 (PDT)
+Subject: [PATCH 02/71] xfs: create a standard btree size calculator code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:46:38 -0700
-Message-ID: <147216879842.4420.13542552343853332867.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:46:44 -0700
+Message-ID: <147216880460.4420.4815652191731578681.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,114 +31,69 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Remove the xfs_btree_bigkey mess and simply make xfs_btree_key big enough
-to hold both keys in-core.
+Create a helper to generate AG btree height calculator functions.
+This will be used (much) later when we get to the refcount btree.
+
+v2: Use a helper function instead of a macro.
+v3: We can (theoretically) store more than 2^32 records in a btree, so
+    widen the fields to accept that.
+v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
+    is to estimate the worst-case number of blocks needed for a bmbt
+    expansion, not to calculate the space required to store nr records.
+v5: More minor tweaks to the loop control; move down to reflink patches.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_btree.c |   12 ++++++------
- libxfs/xfs_btree.h |   24 ++++++------------------
- 2 files changed, 12 insertions(+), 24 deletions(-)
+ libxfs/xfs_btree.c |   24 ++++++++++++++++++++++++
+ libxfs/xfs_btree.h |    2 ++
+ 2 files changed, 26 insertions(+)
 
 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 27db736..99bf808 100644
+index 99bf808..b3e2ce9 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -2066,7 +2066,7 @@ __xfs_btree_updkeys(
- 	struct xfs_buf		*bp0,
- 	bool			force_all)
- {
--	union xfs_btree_bigkey	key;	/* keys from current level */
-+	union xfs_btree_key	key;	/* keys from current level */
- 	union xfs_btree_key	*lkey;	/* keys from the next level up */
- 	union xfs_btree_key	*hkey;
- 	union xfs_btree_key	*nlkey;	/* keys from the next level up */
-@@ -2082,7 +2082,7 @@ __xfs_btree_updkeys(
- 
- 	trace_xfs_btree_updkeys(cur, level, bp0);
- 
--	lkey = (union xfs_btree_key *)&key;
-+	lkey = &key;
- 	hkey = xfs_btree_high_key_from_key(cur, lkey);
- 	xfs_btree_get_keys(cur, block, lkey);
- 	for (level++; level < cur->bc_nlevels; level++) {
-@@ -3226,7 +3226,7 @@ xfs_btree_insrec(
- 	struct xfs_buf		*bp;	/* buffer for block */
- 	union xfs_btree_ptr	nptr;	/* new block ptr */
- 	struct xfs_btree_cur	*ncur;	/* new btree cursor */
--	union xfs_btree_bigkey	nkey;	/* new block key */
-+	union xfs_btree_key	nkey;	/* new block key */
- 	union xfs_btree_key	*lkey;
- 	int			optr;	/* old key/record index */
- 	int			ptr;	/* key/record index */
-@@ -3241,7 +3241,7 @@ xfs_btree_insrec(
- 	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
- 
- 	ncur = NULL;
--	lkey = (union xfs_btree_key *)&nkey;
-+	lkey = &nkey;
- 
- 	/*
- 	 * If we have an external root pointer, and we've made it to the
-@@ -3444,14 +3444,14 @@ xfs_btree_insert(
- 	union xfs_btree_ptr	nptr;	/* new block number (split result) */
- 	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
- 	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
--	union xfs_btree_bigkey	bkey;	/* key of block to insert */
-+	union xfs_btree_key	bkey;	/* key of block to insert */
- 	union xfs_btree_key	*key;
- 	union xfs_btree_rec	rec;	/* record to insert */
- 
- 	level = 0;
- 	ncur = NULL;
- 	pcur = cur;
--	key = (union xfs_btree_key *)&bkey;
-+	key = &bkey;
- 
- 	xfs_btree_set_ptr_null(cur, &nptr);
- 
+@@ -4797,3 +4797,27 @@ xfs_btree_query_range(
+ 	return xfs_btree_overlapped_query_range(cur, &low_key, &high_key,
+ 			fn, priv);
+ }
++
++/*
++ * Calculate the number of blocks needed to store a given number of records
++ * in a short-format (per-AG metadata) btree.
++ */
++xfs_extlen_t
++xfs_btree_calc_size(
++	struct xfs_mount	*mp,
++	uint			*limits,
++	unsigned long long	len)
++{
++	int			level;
++	int			maxrecs;
++	xfs_extlen_t		rval;
++
++	maxrecs = limits[0];
++	for (level = 0, rval = 0; len > 1; level++) {
++		len += maxrecs - 1;
++		do_div(len, maxrecs);
++		maxrecs = limits[1];
++		rval += len;
++	}
++	return rval;
++}
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 72f8b3c..870a5ab 100644
+index 870a5ab..607463a 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -37,30 +37,18 @@ union xfs_btree_ptr {
- 	__be64			l;	/* long form ptr */
- };
+@@ -501,6 +501,8 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
++xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
++		unsigned long long len);
  
--union xfs_btree_key {
--	struct xfs_bmbt_key		bmbt;
--	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
--	xfs_alloc_key_t			alloc;
--	struct xfs_inobt_key		inobt;
--	struct xfs_rmap_key		rmap;
--};
--
- /*
-- * In-core key that holds both low and high keys for overlapped btrees.
-- * The two keys are packed next to each other on disk, so do the same
-- * in memory.  Preserve the existing xfs_btree_key as a single key to
-- * avoid the mental model breakage that would happen if we passed a
-- * bigkey into a function that operates on a single key.
-+ * The in-core btree key.  Overlapping btrees actually store two keys
-+ * per pointer, so we reserve enough memory to hold both.  The __*bigkey
-+ * items should never be accessed directly.
-  */
--union xfs_btree_bigkey {
-+union xfs_btree_key {
- 	struct xfs_bmbt_key		bmbt;
- 	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
- 	xfs_alloc_key_t			alloc;
- 	struct xfs_inobt_key		inobt;
--	struct {
--		struct xfs_rmap_key	rmap;
--		struct xfs_rmap_key	rmap_hi;
--	};
-+	struct xfs_rmap_key		rmap;
-+	struct xfs_rmap_key		__rmap_bigkey[2];
- };
- 
- union xfs_btree_rec {
+ /* return codes */
+ #define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
 
 _______________________________________________
 xfs mailing list
