@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 48AA68141
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:49:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D54D2814B
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:49:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1AA038F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:49:10 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id AvJD1hUzuFLyK8Ro (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 95BB18F8035
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:49:16 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id wGI3iSdgy5fDpDAa (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:49:08 -0700 (PDT)
-Subject: [PATCH 24/71] xfs: return work remaining at the end of a bunmapi
-	operation
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:49:15 -0700 (PDT)
+Subject: [PATCH 25/71] xfs: add reflink feature flag to geometry
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:49:03 -0700
-Message-ID: <147216894396.4420.2834251749095179855.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:49:10 -0700
+Message-ID: <147216895011.4420.827445237391951114.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,115 +31,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Return the range of file blocks that bunmapi didn't free.  This hint
-is used by CoW and reflink to figure out what part of an extent
-actually got freed so that it can set up the appropriate atomic
-remapping of just the freed range.
+Report the reflink feature in the XFS geometry so that xfs_info and
+friends know the filesystem has this feature.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_bmap.c |   36 ++++++++++++++++++++++++++++++------
- libxfs/xfs_bmap.h |    4 ++++
- 2 files changed, 34 insertions(+), 6 deletions(-)
+ libxfs/xfs_fs.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index a919371..011ac9b 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -5159,17 +5159,16 @@ done:
-  * *done is set.
-  */
- int						/* error */
--xfs_bunmapi(
-+__xfs_bunmapi(
- 	xfs_trans_t		*tp,		/* transaction pointer */
- 	struct xfs_inode	*ip,		/* incore inode */
- 	xfs_fileoff_t		bno,		/* starting offset to unmap */
--	xfs_filblks_t		len,		/* length to unmap in file */
-+	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
- 	int			flags,		/* misc flags */
- 	xfs_extnum_t		nexts,		/* number of extents max */
- 	xfs_fsblock_t		*firstblock,	/* first allocated block
- 						   controls a.g. for allocs */
--	struct xfs_defer_ops	*dfops,		/* i/o: list extents to free */
--	int			*done)		/* set if not done yet */
-+	struct xfs_defer_ops	*dfops)		/* i/o: deferred updates */
- {
- 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
- 	xfs_bmbt_irec_t		del;		/* extent being deleted */
-@@ -5191,6 +5190,7 @@ xfs_bunmapi(
- 	int			wasdel;		/* was a delayed alloc extent */
- 	int			whichfork;	/* data or attribute fork */
- 	xfs_fsblock_t		sum;
-+	xfs_filblks_t		len = *rlen;	/* length to unmap in file */
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 085ea6f..f291a53 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -230,7 +230,8 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+ #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
+ #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+-#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* Reverse mapping btree */
++#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
++#define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
  
- 	trace_xfs_bunmap(ip, bno, len, flags, _RET_IP_);
- 
-@@ -5217,7 +5217,7 @@ xfs_bunmapi(
- 		return error;
- 	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
- 	if (nextents == 0) {
--		*done = 1;
-+		*rlen = 0;
- 		return 0;
- 	}
- 	XFS_STATS_INC(mp, xs_blk_unmap);
-@@ -5488,7 +5488,10 @@ nodelete:
- 			extno++;
- 		}
- 	}
--	*done = bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0;
-+	if (bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0)
-+		*rlen = 0;
-+	else
-+		*rlen = bno - start + 1;
- 
- 	/*
- 	 * Convert to a btree if necessary.
-@@ -5544,6 +5547,27 @@ error0:
- 	return error;
- }
- 
-+/* Unmap a range of a file. */
-+int
-+xfs_bunmapi(
-+	xfs_trans_t		*tp,
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		bno,
-+	xfs_filblks_t		len,
-+	int			flags,
-+	xfs_extnum_t		nexts,
-+	xfs_fsblock_t		*firstblock,
-+	struct xfs_defer_ops	*dfops,
-+	int			*done)
-+{
-+	int			error;
-+
-+	error = __xfs_bunmapi(tp, ip, bno, &len, flags, nexts, firstblock,
-+			dfops);
-+	*done = (len == 0);
-+	return error;
-+}
-+
  /*
-  * Determine whether an extent shift can be accomplished by a merge with the
-  * extent that precedes the target hole of the shift.
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 858788b..4b68e96 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -200,6 +200,10 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fsblock_t *firstblock, xfs_extlen_t total,
- 		struct xfs_bmbt_irec *mval, int *nmap,
- 		struct xfs_defer_ops *dfops);
-+int	__xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_fileoff_t bno, xfs_filblks_t *rlen, int flags,
-+		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
-+		struct xfs_defer_ops *dfops);
- int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
- 		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
+  * Minimum and maximum sizes need for growth checks.
 
 _______________________________________________
 xfs mailing list
