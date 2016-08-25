@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A8C27CA0
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 15:39:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18722304032
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:39:41 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RJKTRwbVLlvEeaZu (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id B13497CA0
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 19:48:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80879304051
+	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 17:48:32 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 8g28MEaXDfVHAmTO (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:39:38 -0700 (PDT)
-Date: Wed, 24 Aug 2016 13:39:33 -0700
+	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 17:48:29 -0700 (PDT)
+Date: Wed, 24 Aug 2016 17:48:22 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't perform lookups on zero-height btrees
-Message-ID: <20160824203933.GA20705@birch.djwong.org>
-References: <20160819203022.GD8268@birch.djwong.org>
-	<20160824180154.GA8982@bfoster.bfoster>
+Subject: Re: "Bad page state" errors when calling BULKSTAT under memory
+	pressure?
+Message-ID: <20160825004631.GC20705@birch.djwong.org>
+References: <20160824234237.GA22760@birch.djwong.org>
+	<20160825003548.GD19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160824180154.GA8982@bfoster.bfoster>
+In-Reply-To: <20160825003548.GD19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +31,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Wed, Aug 24, 2016 at 02:01:55PM -0400, Brian Foster wrote:
-> On Fri, Aug 19, 2016 at 01:30:22PM -0700, Darrick J. Wong wrote:
-> > If the caller passes in a cursor to a zero-height btree (which is
-> > impossible), we never set block to anything but NULL, which causes the
-> > later dereference of it to crash.  Instead, just return -EFSCORRUPTED.
+On Thu, Aug 25, 2016 at 10:35:48AM +1000, Dave Chinner wrote:
+> On Wed, Aug 24, 2016 at 04:42:37PM -0700, Darrick J. Wong wrote:
+> > Hi everyone,
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+> > [cc'ing Brian because he was the last one to touch xfs_buf.c]
+> > 
+> > I've been stress-testing xfs_scrub against a 900GB filesystem with 2M inodes
+> > using a VM with 512M of RAM.  I've noticed that I get BUG messages about
+> > pages with negative refcount, but only if the system is under memory pressure.
+> > No errors are seen if the VM memory is increased to, say, 20GB.
+> > 
+> > : BUG: Bad page state in process xfs_scrub  pfn:00426
+> > : page:ffffea0000010980 count:-1 mapcount:0 mapping:          (null) index:0x0
+> > : flags: 0x0()
+> > : page dumped because: nonzero _count
 > 
-> Did something actually cause this to happen?
+> Unless we are double-freeing a buffer, that's not an XFS problem.
+> Have you tried with memory posioning and allocation debug turned on?
 
-Well, if you took a reflink xfs that was formatted before we added the
-rmap/refcount btree block counters to the AGF and then tried to mount
-it after will blow up like this, because the refcount_level field got
-moved to somewhere that's zero in the old image.
+Yes.  The BUG did not reproduce, though it did take nearly 35min to run
+scrub (which usually takes ~2min).
 
-Anyone being malicious with xfs_db can also do this to any other _level field.
+> > : Modules linked in: xfs libcrc32c sch_fq_codel af_packet
+> > : CPU: 1 PID: 2058 Comm: xfs_scrub Not tainted 4.8.0-rc3-mcsum #18
+> 
+> the mm architecture was significantly modified in 4.8.0-rc1 - it
+> went from per-zone to per-node infrastructure, so it's entirely
+> possible this is a memory reclaim regression. can you reproduce it
+> on an older kernel (e.g. 4.7.0)?
 
-(Yay automounting!)
+I'll try.  I noticed that it's easier to make it happen when scrub is
+using getfsmap and/or the new in-kernel scrubbers, but that's no big
+surprise since that means we're pounding harder on the metadata. :)
+
+> > Obviously, a page refcount of -1 is not a good sign.  I had a hunch that
+> > the page in question was (hopefully) a page backing an xfs_buf, so I
+> > applied the following debug patch:
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 607cc29..144b976 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -317,7 +317,7 @@ xfs_buf_free(
+> >  
+> >                 for (i = 0; i < bp->b_page_count; i++) {
+> >                         struct page     *page = bp->b_pages[i];
+> > -
+> > +if (page_ref_count(page) != 1) {xfs_err(NULL, "%s: OHNO! daddr=%llu page=%p ref=%d", __func__, bp->b_bn, page, page_ref_count(page)); dump_stack();}
+> >                         __free_page(page);
+> >                 }
+> >         } else if (bp->b_flags & _XBF_KMEM)
+> > 
+> > I then saw this:
+> > 
+> > : SGI XFS with ACLs, security attributes, realtime, debug enabled
+> > : XFS (sda): Mounting V4 Filesystem
+> > : XFS (sda): Ending clean mount
+> > : XFS: xfs_buf_free: OHNO! daddr=113849120 page=ffffea0000010980 ref=0
+> 
+> Which implies something else has dropped the page reference count on
+> us while we hold a reference to it. What you might like to check
+> what the page reference counts are on /allocation/ to see if we're
+> being handed a page from the freelist with a bad ref count....
+
+Zero on allocation, except when we hit the BUG case.
+
+> If the ref counts are good at allocation, but bad on free, then I
+> very much doubt it's an XFS problem. We don't actually touch the
+> page reference count anywhere, so let's make sure that it's not a
+> double free or something like that in XFS first.
+
+I couldn't find any smoking gun inside XFS, which is why I went to
+the list -- I figured something must be doing something I don't know
+about. :)
+
+Anyway, I was going to push out the reflink patches for review, but
+the scrubber crashing held me up.  Tomorrow, probably. :/
 
 --D
 
 > 
-> Brian
+> Cheers,
 > 
-> >  fs/xfs/libxfs/xfs_btree.c |    4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index 64fd847..4bffea4 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -1814,6 +1814,10 @@ xfs_btree_lookup(
-> >  
-> >  	XFS_BTREE_STATS_INC(cur, lookup);
-> >  
-> > +	/* No such thing as a zero-level tree. */
-> > +	if (cur->bc_nlevels == 0)
-> > +		return -EFSCORRUPTED;
-> > +
-> >  	block = NULL;
-> >  	keyno = 0;
-> >  
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
