@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 45F8A7CA0
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 13:07:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 167F28F8035
-	for <xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:07:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xg1wTHg4epGakkYi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 24 Aug 2016 11:07:41 -0700 (PDT)
-Date: Wed, 24 Aug 2016 14:07:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix superblock inprogress check
-Message-ID: <20160824180738.GB8982@bfoster.bfoster>
-References: <1471844367-9679-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D289E7CA0
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 04:11:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 92523304032
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 02:11:08 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id gMIkAFCmgM9R4ppJ (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 02:11:04 -0700 (PDT)
+Date: Thu, 25 Aug 2016 02:11:01 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/7] xfs: don't perform lookups on zero-height btrees
+Message-ID: <20160825091101.GA5685@infradead.org>
+References: <147200546481.15538.12724000421579716885.stgit@birch.djwong.org>
+	<147200547113.15538.538811110514829359.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1471844367-9679-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <147200547113.15538.538811110514829359.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,52 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Aug 22, 2016 at 03:39:27PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> From inspection, the superblock sb_inprogress check is done in the
-> verifier and triggered only for the primary superblock via a
-> "bp->b_bn == XFS_SB_DADDR" check.
-> 
-> Unfortunately, the primary superblock is an uncached buffer, and
-> hence it is configured by xfs_buf_read_uncached() with:
-> 
-> 	bp->b_bn = XFS_BUF_DADDR_NULL;  /* always null for uncached buffers */
-> 
-> And so this check never triggers. Fix it.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Looks good,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_sb.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 0e3d4f5..4aecc5f 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -583,7 +583,8 @@ xfs_sb_verify(
->  	 * Only check the in progress field for the primary superblock as
->  	 * mkfs.xfs doesn't clear it from secondary superblocks.
->  	 */
-> -	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
-> +	return xfs_mount_validate_sb(mp, &sb,
-> +				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
->  				     check_version);
->  }
->  
-> -- 
-> 2.8.0.rc3
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
