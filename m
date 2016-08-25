@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8720A7CA0
-	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 00:35:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 56DE9304043
-	for <xfs@oss.sgi.com>; Sun, 21 Aug 2016 22:35:01 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	JFtDiKVjfe2OirJq for <xfs@oss.sgi.com>;
-	Sun, 21 Aug 2016 22:34:58 -0700 (PDT)
-Date: Mon, 22 Aug 2016 15:34:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 3/3] xfs_quota: additional changes to allow use on ext4
-Message-ID: <20160822053455.GT19025@dastard>
-References: <1471356998-2876-1-git-send-email-billodo@redhat.com>
-	<1471356998-2876-4-git-send-email-billodo@redhat.com>
-	<20160822020650.GR19025@dastard>
-	<86d459e4-6853-9f3c-3851-3e212f8c7adf@sandeen.net>
-	<8c1b4044-ff69-f891-a4f4-b302bd3bfef3@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 22F7E7CA1
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 03:09:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D763B8F8037
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:09:48 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id OLsitMaAV1bIJQxu (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:09:47 -0700 (PDT)
+Date: Thu, 25 Aug 2016 01:09:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: don't log the entire end of the AGF
+Message-ID: <20160825080944.GF28747@infradead.org>
+References: <147200522764.14738.15186015137934319456.stgit@birch.djwong.org>
+	<147200523494.14738.13569285576029583652.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <8c1b4044-ff69-f891-a4f4-b302bd3bfef3@sandeen.net>
+In-Reply-To: <147200523494.14738.13569285576029583652.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Aug 21, 2016 at 11:46:14PM -0500, Eric Sandeen wrote:
-> On 8/21/16 10:34 PM, Eric Sandeen wrote:
-> > On 8/21/16 9:06 PM, Dave Chinner wrote:
-> >> On Tue, Aug 16, 2016 at 09:16:38AM -0500, Bill O'Donnell wrote:
+On Tue, Aug 23, 2016 at 07:20:35PM -0700, Darrick J. Wong wrote:
+> When we're logging the last non-spare field in the AGF, we don't
+> need to log the spare fields, so plumb in a new AGF logging flag
+> to help us avoid that.
 > 
-> ...
-> 
-> >> static int
-> >> init_check_command(
-> >> 	const cmdinfo_t *ct)
-> >> {
-> >> 	if (!fspath)
-> >> 		return 1;
-> >>
-> >> 	/* Always run commands that we are told to skip here */
-> >> 	if (ct->flags & CMD_SKIP_CHECK)
-> >> 		return 1;
-> >>
-> >> 	/* if it's an XFS filesystem, always run the command */
-> >> 	if (!(fs_path->fs_flags & FS_FOREIGN))
-> >> 		return 1;
-> > 
-> > Sorry for the late review; thanks for getting on it, Dave - but,
-> > isn't "foreign ok" exactly == "skip check?"
-> > 
-> > The only check that gets skipped is the foreign check, so just
-> > setting FOREIGN_OK seems to accomplish the same thing without
-> > more flag complexity, no?
-> 
-> Oh, the subliminal brain reminded me that we want to be able to
-> issue help or quit whether or not we had the "-f" flag, regardless
-> of the filesystem, and that "foreign" isn't ok unless the -f flag
-> is set, so we do need a class of "always works" commands.
+> (This patch is already in xfsprogs.)
 
-Right, but that was something that was done in patch 1/3. I pointed
-out that no mention of it was made in the cmmit message there....
+Looks fine, and reminds me that I need to send out my patches that
+fix the SGF/AGI logging API..
 
-> I guess that was the point of the patch, but I suppose some clarity
-> in comments or commitlog would help slow people like me.  ;)
-
-Right. better explanations needed all round :P
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
