@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F1E0882F4
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:55:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84DE1AC003
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:55:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B24B682FB
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:55:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19FDEAC003
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:55:38 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id S84b1x9495FjRE1v (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 4nbqRSKbzP6rCXIX (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:55:28 -0700 (PDT)
-Subject: [PATCH 01/24] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:55:36 -0700 (PDT)
+Subject: [PATCH 02/24] xfs: have getfsmap fall back to the freesp btrees
+	when rmap is not present
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:55:25 -0700
-Message-ID: <147216932511.6398.11162170353495454793.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:55:31 -0700
+Message-ID: <147216933141.6398.3843782526499785752.stgit@birch.djwong.org>
 In-Reply-To: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 References: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,102 +32,87 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
-
-v2: shorten the device field to u32 since that's all we need for
-dev_t.  Support reporting reverse mapping information for all the
-devices that XFS supports (data, log).
+If the reverse-mapping btree isn't available, fall back to the
+free space btrees to provide partial reverse mapping information.
+The online scrub tool can make use of even partial information to
+speed up the data block scan.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_fs.h |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 65 insertions(+)
+ libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_alloc.h |   10 ++++++++++
+ 2 files changed, 52 insertions(+)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index df58c1c..11149fa 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -117,6 +117,70 @@ struct getbmapx {
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
- 
- /*
-+ *	Structure for XFS_IOC_GETFSMAP.
-+ *
-+ *	Similar to XFS_IOC_GETBMAPX, the first two elements in the array are
-+ *	used to constrain the output.  The first element in the array should
-+ *	represent the lowest disk address that the user wants to learn about.
-+ *	The second element in the array should represent the highest disk
-+ *	address to query.  Subsequent array elements will be filled out by the
-+ *	command.
-+ *
-+ *	The fmv_iflags field is only used in the first structure.  The
-+ *	fmv_oflags field is filled in for each returned structure after the
-+ *	second structure.  The fmv_unused1 fields in the first two array
-+ *	elements must be zero.
-+ *
-+ *	The fmv_count, fmv_entries, and fmv_iflags fields in the second array
-+ *	element must be zero.
-+ *
-+ *	fmv_block, fmv_offset, and fmv_length are expressed in units of 512
-+ *	byte sectors.
-+ */
-+#ifndef HAVE_GETFSMAP
-+struct getfsmap {
-+	__u32		fmv_device;	/* device id */
-+	__u32		fmv_unused1;	/* future use, must be zero */
-+	__u64		fmv_block;	/* starting block */
-+	__u64		fmv_owner;	/* owner id */
-+	__u64		fmv_offset;	/* file offset of segment */
-+	__u64		fmv_length;	/* length of segment, blocks */
-+	__u32		fmv_oflags;	/* mapping flags */
-+	__u32		fmv_iflags;	/* control flags (1st structure) */
-+	__u32		fmv_count;	/* # of entries in array incl. input */
-+	__u32		fmv_entries;	/* # of entries filled in (output). */
-+	__u64		fmv_unused2;	/* future use, must be zero */
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 3151fbb..0f93016 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -2928,3 +2928,45 @@ err:
+ 	xfs_trans_brelse(tp, agbp);
+ 	return error;
+ }
++
++struct xfs_alloc_query_range_info {
++	xfs_alloc_query_range_fn	fn;
++	void				*priv;
 +};
-+#endif
 +
-+/*	fmv_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMV_HIF_VALID		0
++/* Format btree record and pass to our callback. */
++STATIC int
++xfs_alloc_query_range_helper(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
++{
++	struct xfs_alloc_query_range_info	*query = priv;
++	struct xfs_alloc_rec_incore		irec;
 +
-+/*	fmv_oflags values - returned in the header segment only. */
-+#define FMV_HOF_DEV_T		0x1	/* fmv_device values will be dev_t */
++	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
++	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
++	return query->fn(cur, &irec, query->priv);
++}
 +
-+/*	fmv_flags values - returned for each non-header segment */
-+#define FMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMV_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMV_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMV_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMV_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMV_OF_LAST		0x20	/* segment is the last in the FS */
++/* Find all rmaps between two keys. */
++int
++xfs_alloc_query_range(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*low_rec,
++	struct xfs_alloc_rec_incore	*high_rec,
++	xfs_alloc_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_brec;
++	union xfs_btree_irec		high_brec;
++	struct xfs_alloc_query_range_info	query;
 +
-+/*	fmv_owner special values */
-+#define FMV_OWN_FREE		(-1ULL)	/* free space */
-+#define FMV_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
-+#define FMV_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define FMV_OWN_LOG		(-4ULL)	/* journalling log */
-+#define FMV_OWN_AG		(-5ULL)	/* per-AG metadata */
-+#define FMV_OWN_INOBT		(-6ULL)	/* inode btree blocks */
-+#define FMV_OWN_INODES		(-7ULL)	/* inodes */
-+#define FMV_OWN_REFC		(-8ULL) /* refcount tree */
-+#define FMV_OWN_COW		(-9ULL) /* cow staging */
-+#define FMV_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
-+
-+/*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-@@ -523,6 +587,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+#define XFS_IOC_GETFSMAP	_IOWR('X', 59, struct getfsmap)
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	low_brec.a = *low_rec;
++	high_brec.a = *high_rec;
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_range(cur, &low_brec, &high_brec,
++			xfs_alloc_query_range_helper, &query);
++}
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index f7c5201..0b00de0 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -210,4 +210,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
+ xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+ 
++typedef int (*xfs_alloc_query_range_fn)(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv);
++
++int xfs_alloc_query_range(struct xfs_btree_cur *cur,
++		struct xfs_alloc_rec_incore *low_rec,
++		struct xfs_alloc_rec_incore *high_rec,
++		xfs_alloc_query_range_fn fn, void *priv);
++
+ #endif	/* __XFS_ALLOC_H__ */
 
 _______________________________________________
 xfs mailing list
