@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8FA64839E
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED2EEAC002
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:45 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5656983A6
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 19D088F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:53 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id oKsWnX8LlJSkgD6E (version=TLSv1.2
+	cuda.sgi.com with ESMTP id mVRwCexNP2hLZsyT (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:44 -0700 (PDT)
-Subject: [PATCH 22/24] xfs: query the per-AG reservation counters
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:50 -0700 (PDT)
+Subject: [PATCH 23/24] xfs_io: provide an interface to the scrub ioctls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:57:39 -0700
-Message-ID: <147216945986.6398.8799705861500901774.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:57:46 -0700
+Message-ID: <147216946601.6398.16187695052276931699.stgit@birch.djwong.org>
 In-Reply-To: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 References: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,44 +31,253 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Establish an ioctl for userspace to query the original and current
-per-AG reservation counts.  This will be used by xfs_scrub to
-check that the vfs counters are at least somewhat sane.
+Create a new xfs_io command to call the new XFS metadata scrub ioctl.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_fs.h |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ io/Makefile       |    2 -
+ io/init.c         |    1 
+ io/io.h           |    2 +
+ io/scrub.c        |  174 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |    8 ++
+ 5 files changed, 186 insertions(+), 1 deletion(-)
+ create mode 100644 io/scrub.c
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index fd2dd80..2c37d57 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -580,6 +580,15 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_FLAGS_ALL	0x0	/* no flags yet */
+diff --git a/io/Makefile b/io/Makefile
+index cc27dba..c430418 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -11,7 +11,7 @@ HFILES = init.h io.h
+ CFILES = init.c \
+ 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+-	sync.c truncate.c reflink.c fsmap.c
++	sync.c truncate.c reflink.c fsmap.c scrub.c
  
- /*
-+ * AG reserved block counters
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+diff --git a/io/init.c b/io/init.c
+index 9c0da0e..c16bc69 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -87,6 +87,7 @@ init_commands(void)
+ 	truncate_init();
+ 	reflink_init();
+ 	cowextsize_init();
++	scrub_init();
+ }
+ 
+ static int
+diff --git a/io/io.h b/io/io.h
+index 83a8366..10be081 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -176,3 +176,5 @@ extern void		cowextsize_init(void);
+ #else
+ #define cowextsize_init()	do { } while (0)
+ #endif
++
++extern void		scrub_init(void);
+diff --git a/io/scrub.c b/io/scrub.c
+new file mode 100644
+index 0000000..8b93121
+--- /dev/null
++++ b/io/scrub.c
+@@ -0,0 +1,174 @@
++/*
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+struct xfs_fsop_ag_resblks {
-+	__u64 resblks;		/* blocks reserved now */
-+	__u64 resblks_orig;	/* blocks reserved at mount time */
-+	__u64 reserved[2];
++
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "io.h"
++
++static cmdinfo_t scrub_cmd;
++
++/* These must correspond with XFS_SCRUB_TYPE_ */
++struct scrub_descr {
++	const char	*name;
++	bool		is_ag;
 +};
 +
-+/*
-  * ioctl limits
-  */
- #ifdef XATTR_LIST_MAX
-@@ -652,6 +661,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-+#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
++static const struct scrub_descr scrubbers[] = {
++	{"sb",		true},
++	{"agf",		true},
++	{"agfl",	true},
++	{"agi",		true},
++	{"bnobt",	true},
++	{"cntbt",	true},
++	{"inobt",	true},
++	{"finobt",	true},
++	{"rmapbt",	true},
++	{"refcountbt",	true},
++	{"inode",	false},
++	{"bmapbtd",	false},
++	{"bmapbta",	false},
++	{"bmapbtc",	false},
++	{"rtbitmap",	false},
++	{"rtsummary",	false},
++	{NULL, false},
++};
++
++static void
++scrub_help(void)
++{
++	const struct scrub_descr	*d;
++
++	printf(_("\n\
++ Scrubs a piece of XFS filesystem metadata.  The first argument is the type\n\
++ of metadata to examine.  Allocation group number(s) can be specified to\n\
++ restrict the scrub operation to a subset of allocation groups.\n\
++ Certain metadata types do not take AG numbers.\n\
++\n\
++ Example:\n\
++ 'scrub inobt 3 5 7' - scrubs the inode btree in groups 3, 5, and 7.\n\
++\n\
++ Known metadata scrub types are:"));
++	for (d = scrubbers; d->name; d++)
++		printf(" %s", d->name);
++	printf("\n");
++}
++
++static void
++scrub_ioctl(
++	int				fd,
++	int				type,
++	unsigned long long		control)
++{
++	struct xfs_scrub_metadata	meta;
++	int				error;
++
++	memset(&meta, 0, sizeof(meta));
++	meta.type = type;
++	meta.control = control;
++
++	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	if (error)
++		perror("scrub");
++}
++
++static int
++scrub_f(
++	int				argc,
++	char				**argv)
++{
++	char				*p;
++	int				type = -1;
++	int				i, c;
++	unsigned long long		control;
++	bool				is_ag;
++	struct xfs_fsop_geom		geom;
++	const struct scrub_descr	*d;
++
++	while ((c = getopt(argc, argv, "")) != EOF) {
++		switch (c) {
++		default:
++			return command_usage(&scrub_cmd);
++		}
++	}
++	if (optind > argc - 1)
++		return command_usage(&scrub_cmd);
++
++	for (i = 0, d = scrubbers; d->name; i++, d++) {
++		if (strcmp(d->name, argv[optind]) == 0) {
++			type = i;
++			is_ag = d->is_ag;
++		}
++	}
++	optind++;
++
++	if (type < 0)
++		return command_usage(&scrub_cmd);
++
++	if (!is_ag)
++		geom.agcount = 1;
++	else {
++		i = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &geom);
++		if (i < 0) {
++			fprintf(stderr,
++				_("%s: can't get geometry [\"%s\"]: %s\n"),
++				progname, file->name, strerror(errno));
++			exitcode = 1;
++			return 0;
++		}
++	}
++
++	if (optind == argc) {
++		for (control = 0; control < geom.agcount; control++)
++			scrub_ioctl(file->fd, type, control);
++		return 0;
++	}
++
++	for (i = optind; i < argc; i++) {
++		control = strtoull(argv[i], &p, 0);
++		if (*p != '\0') {
++			fprintf(stderr,
++				_("bad control number %s\n"), argv[i]);
++			return 0;
++		}
++
++		scrub_ioctl(file->fd, type, control);
++	}
++	return 0;
++}
++
++void
++scrub_init(void)
++{
++	scrub_cmd.name = "scrub";
++	scrub_cmd.altname = "sc";
++	scrub_cmd.cfunc = scrub_f;
++	scrub_cmd.argmin = 1;
++	scrub_cmd.argmax = -1;
++	scrub_cmd.flags = CMD_NOMAP_OK;
++	scrub_cmd.args =
++_("type [agno...]");
++	scrub_cmd.oneline =
++		_("scrubs filesystem metadata");
++	scrub_cmd.help = scrub_help;
++
++	add_command(&scrub_cmd);
++}
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index a275a63..884db2a 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -926,6 +926,14 @@ verbose output will be printed.
+ .IP
+ .B [NOTE: Not currently operational on Linux.]
+ .PD
++.TP
++.BI "scrub " type " [ " agnumber... " ]"
++Scrub internal XFS filesystem metadata.  The
++.BI type
++parameter specifies which type of metadata to scrub.
++AG numbers can optionally be specified to restrict the scrub operation
++to a particular set of allocation groups.
++By default, all allocation groups are scrubbed.
  
- /* reflink ioctls; these MUST match the btrfs ioctl definitions */
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
 
 _______________________________________________
 xfs mailing list
