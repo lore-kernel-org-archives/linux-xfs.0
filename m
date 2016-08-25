@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B37F67E6F
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:38:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 85DC48F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 822437E7D
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:38:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 45D858F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:38 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id kqzVtDZx5ZNo2l2D (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 3ESJmNep2NaHKYXD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:30 -0700 (PDT)
-Subject: [PATCH 60/71] xfs: increase log reservations for reflink
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:36 -0700 (PDT)
+Subject: [PATCH 61/71] xfs: add shared rmap map/unmap/convert log item types
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:38:26 -0700
-Message-ID: <147216830650.867.11021857693291070796.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:38:32 -0700
+Message-ID: <147216831268.867.9941303230739520022.stgit@birch.djwong.org>
 In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,73 +31,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Increase the log reservations to handle the increased rolling that
-happens at the end of copy-on-write operations.
+Wire up some rmap log redo item type codes to map, unmap, or convert
+shared data block extents.  The actual log item recovery comes in a
+later patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c |   16 +++++++++++++---
- fs/xfs/libxfs/xfs_trans_resv.h |    2 ++
- 2 files changed, 15 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h |    3 +++
+ fs/xfs/xfs_rmap_item.c         |    3 +++
+ fs/xfs/xfs_trans_rmap.c        |    9 +++++++++
+ 3 files changed, 15 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index a59838f..b456cca 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -812,11 +812,18 @@ xfs_trans_resv_calc(
- 	 * require a permanent reservation on space.
- 	 */
- 	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
--	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-+	else
-+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
- 	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index d788d01..75f9890 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -635,8 +635,11 @@ struct xfs_map_extent {
  
- 	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
--	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		resp->tr_itruncate.tr_logcount =
-+				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
-+	else
-+		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
- 	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
- 	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
-@@ -873,7 +880,10 @@ xfs_trans_resv_calc(
- 	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
- 	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
--	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-+	else
-+		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
- 	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index 36a1511..b7e5357 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -87,6 +87,7 @@ struct xfs_trans_resv {
- #define	XFS_DEFAULT_LOG_COUNT		1
- #define	XFS_DEFAULT_PERM_LOG_COUNT	2
- #define	XFS_ITRUNCATE_LOG_COUNT		2
-+#define	XFS_ITRUNCATE_LOG_COUNT_REFLINK	8
- #define XFS_INACTIVE_LOG_COUNT		2
- #define	XFS_CREATE_LOG_COUNT		2
- #define	XFS_CREATE_TMPFILE_LOG_COUNT	2
-@@ -96,6 +97,7 @@ struct xfs_trans_resv {
- #define	XFS_LINK_LOG_COUNT		2
- #define	XFS_RENAME_LOG_COUNT		2
- #define	XFS_WRITE_LOG_COUNT		2
-+#define	XFS_WRITE_LOG_COUNT_REFLINK	8
- #define	XFS_ADDAFORK_LOG_COUNT		2
- #define	XFS_ATTRINVAL_LOG_COUNT		1
- #define	XFS_ATTRSET_LOG_COUNT		3
+ /* rmap me_flags: upper bits are flags, lower byte is type code */
+ #define XFS_RMAP_EXTENT_MAP		1
++#define XFS_RMAP_EXTENT_MAP_SHARED	2
+ #define XFS_RMAP_EXTENT_UNMAP		3
++#define XFS_RMAP_EXTENT_UNMAP_SHARED	4
+ #define XFS_RMAP_EXTENT_CONVERT		5
++#define XFS_RMAP_EXTENT_CONVERT_SHARED	6
+ #define XFS_RMAP_EXTENT_ALLOC		7
+ #define XFS_RMAP_EXTENT_FREE		8
+ #define XFS_RMAP_EXTENT_TYPE_MASK	0xFF
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 2500f28..f4bf026 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -459,8 +459,11 @@ xfs_rui_recover(
+ 				   XFS_FSB_TO_DADDR(mp, rmap->me_startblock));
+ 		switch (rmap->me_flags & XFS_RMAP_EXTENT_TYPE_MASK) {
+ 		case XFS_RMAP_EXTENT_MAP:
++		case XFS_RMAP_EXTENT_MAP_SHARED:
+ 		case XFS_RMAP_EXTENT_UNMAP:
++		case XFS_RMAP_EXTENT_UNMAP_SHARED:
+ 		case XFS_RMAP_EXTENT_CONVERT:
++		case XFS_RMAP_EXTENT_CONVERT_SHARED:
+ 		case XFS_RMAP_EXTENT_ALLOC:
+ 		case XFS_RMAP_EXTENT_FREE:
+ 			op_ok = true;
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+index 5a50ef8..9ead064 100644
+--- a/fs/xfs/xfs_trans_rmap.c
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -48,12 +48,21 @@ xfs_trans_set_rmap_flags(
+ 	case XFS_RMAP_MAP:
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+ 		break;
++	case XFS_RMAP_MAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
++		break;
+ 	case XFS_RMAP_UNMAP:
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
+ 		break;
++	case XFS_RMAP_UNMAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
++		break;
+ 	case XFS_RMAP_CONVERT:
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
+ 		break;
++	case XFS_RMAP_CONVERT_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
++		break;
+ 	case XFS_RMAP_ALLOC:
+ 		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
+ 		break;
 
 _______________________________________________
 xfs mailing list
