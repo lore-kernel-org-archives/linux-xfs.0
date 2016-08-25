@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 92BCA808E
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 16650AC002
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:38 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E20C68096
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A717D8F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:45 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id mJDhkSH9N2dMEDbY (version=TLSv1.2
+	cuda.sgi.com with ESMTP id z1w8GZm7uxpYrrTV (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:36 -0700 (PDT)
-Subject: [PATCH v8 00/71] xfsprogs: add reflink and dedupe support
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:43 -0700 (PDT)
+Subject: [PATCH 01/71] xfs: remove xfs_btree_bigkey
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:46:32 -0700
-Message-ID: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:46:38 -0700
+Message-ID: <147216879842.4420.13542552343853332867.stgit@birch.djwong.org>
+In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
+References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -29,53 +31,114 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi all,
+Remove the xfs_btree_bigkey mess and simply make xfs_btree_key big enough
+to hold both keys in-core.
 
-This is the eighth revision of a patchset that adds to XFS kernel
-support for mapping multiple file logical blocks to the same physical
-block (reflink/deduplication), implements the beginnings of online
-metadata scrubbing and preening, and implements reverse mapping for
-the realtime device.  There shouldn't be any incompatible on-disk
-format changes, pending a thorough review of the patches within.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_btree.c |   12 ++++++------
+ libxfs/xfs_btree.h |   24 ++++++------------------
+ 2 files changed, 12 insertions(+), 24 deletions(-)
 
-(NOTE: In the git trees, this series is preceded by the pending rmap
-fixes patches posted to linux-xfs a few days ago.)
 
-At the beginning of this series are imports of all the kernel patches
-against libxfs/ that are needed to provide refcount btrees and reflink
-support.  Please note that these patches /do/ have diffs against files
-in the libxfs/ directory (mostly for deferred ops) that do not start
-with 'xfs_', so the libxfs-apply script cannot be used in isolation.
-
-After that are the various small changes required for db, growfs, io,
-logprint, and manpages to support the new reference counting data
-structures.  The mkfs patch is, as usual, at the end.
-
-Before that, however, are a bunch of patches to xfs_repair that
-spot-check the refcount btree and use the rmap tracking code
-introduced in xfsprogs 4.8 to regenerate the refcount btree.  It also
-fixes discrepancies in the inode reflink flag.
-
-If you're going to start using this mess, you probably ought to just
-pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
-xfs-docs[4], and man-pages[5].  The kernel patches in the git trees
-should apply to 4.8-rc3; xfsprogs patches to for-next; and xfstest to
-master.
-
-The patches have been xfstested with x64, ppc64, and armhf; all tests
-in the clone and rmap groups pass.  AFAICT they don't cause any new
-failures for the 'auto' group.
-
-This is an extraordinary way to eat your data.  Enjoy! 
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://github.com/djwong/linux/tree/djwong-devel
-[2] https://github.com/djwong/xfsprogs/tree/djwong-devel
-[3] https://github.com/djwong/xfstests/tree/djwong-devel
-[4] https://github.com/djwong/xfs-documentation/tree/djwong-devel
-[5] https://github.com/djwong/man-pages/tree/djwong-devel
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index 27db736..99bf808 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -2066,7 +2066,7 @@ __xfs_btree_updkeys(
+ 	struct xfs_buf		*bp0,
+ 	bool			force_all)
+ {
+-	union xfs_btree_bigkey	key;	/* keys from current level */
++	union xfs_btree_key	key;	/* keys from current level */
+ 	union xfs_btree_key	*lkey;	/* keys from the next level up */
+ 	union xfs_btree_key	*hkey;
+ 	union xfs_btree_key	*nlkey;	/* keys from the next level up */
+@@ -2082,7 +2082,7 @@ __xfs_btree_updkeys(
+ 
+ 	trace_xfs_btree_updkeys(cur, level, bp0);
+ 
+-	lkey = (union xfs_btree_key *)&key;
++	lkey = &key;
+ 	hkey = xfs_btree_high_key_from_key(cur, lkey);
+ 	xfs_btree_get_keys(cur, block, lkey);
+ 	for (level++; level < cur->bc_nlevels; level++) {
+@@ -3226,7 +3226,7 @@ xfs_btree_insrec(
+ 	struct xfs_buf		*bp;	/* buffer for block */
+ 	union xfs_btree_ptr	nptr;	/* new block ptr */
+ 	struct xfs_btree_cur	*ncur;	/* new btree cursor */
+-	union xfs_btree_bigkey	nkey;	/* new block key */
++	union xfs_btree_key	nkey;	/* new block key */
+ 	union xfs_btree_key	*lkey;
+ 	int			optr;	/* old key/record index */
+ 	int			ptr;	/* key/record index */
+@@ -3241,7 +3241,7 @@ xfs_btree_insrec(
+ 	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
+ 
+ 	ncur = NULL;
+-	lkey = (union xfs_btree_key *)&nkey;
++	lkey = &nkey;
+ 
+ 	/*
+ 	 * If we have an external root pointer, and we've made it to the
+@@ -3444,14 +3444,14 @@ xfs_btree_insert(
+ 	union xfs_btree_ptr	nptr;	/* new block number (split result) */
+ 	struct xfs_btree_cur	*ncur;	/* new cursor (split result) */
+ 	struct xfs_btree_cur	*pcur;	/* previous level's cursor */
+-	union xfs_btree_bigkey	bkey;	/* key of block to insert */
++	union xfs_btree_key	bkey;	/* key of block to insert */
+ 	union xfs_btree_key	*key;
+ 	union xfs_btree_rec	rec;	/* record to insert */
+ 
+ 	level = 0;
+ 	ncur = NULL;
+ 	pcur = cur;
+-	key = (union xfs_btree_key *)&bkey;
++	key = &bkey;
+ 
+ 	xfs_btree_set_ptr_null(cur, &nptr);
+ 
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 72f8b3c..870a5ab 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -37,30 +37,18 @@ union xfs_btree_ptr {
+ 	__be64			l;	/* long form ptr */
+ };
+ 
+-union xfs_btree_key {
+-	struct xfs_bmbt_key		bmbt;
+-	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
+-	xfs_alloc_key_t			alloc;
+-	struct xfs_inobt_key		inobt;
+-	struct xfs_rmap_key		rmap;
+-};
+-
+ /*
+- * In-core key that holds both low and high keys for overlapped btrees.
+- * The two keys are packed next to each other on disk, so do the same
+- * in memory.  Preserve the existing xfs_btree_key as a single key to
+- * avoid the mental model breakage that would happen if we passed a
+- * bigkey into a function that operates on a single key.
++ * The in-core btree key.  Overlapping btrees actually store two keys
++ * per pointer, so we reserve enough memory to hold both.  The __*bigkey
++ * items should never be accessed directly.
+  */
+-union xfs_btree_bigkey {
++union xfs_btree_key {
+ 	struct xfs_bmbt_key		bmbt;
+ 	xfs_bmdr_key_t			bmbr;	/* bmbt root block */
+ 	xfs_alloc_key_t			alloc;
+ 	struct xfs_inobt_key		inobt;
+-	struct {
+-		struct xfs_rmap_key	rmap;
+-		struct xfs_rmap_key	rmap_hi;
+-	};
++	struct xfs_rmap_key		rmap;
++	struct xfs_rmap_key		__rmap_bigkey[2];
+ };
+ 
+ union xfs_btree_rec {
 
 _______________________________________________
 xfs mailing list
