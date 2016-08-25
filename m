@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 609B57CFE
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:32:51 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 861BB7CBC
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:33:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D7794AC001
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:50 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 6ptFJZylDH8W7iDV (version=TLSv1.2
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D5AE304043
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:33:00 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id jhIAnhvX8dBywaW3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:48 -0700 (PDT)
-Subject: [PATCH 07/71] xfs: define tracepoints for refcount btree activities
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:58 -0700 (PDT)
+Subject: [PATCH 08/71] xfs: introduce refcount btree definitions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:32:44 -0700
-Message-ID: <147216796400.867.3093949883691867882.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:32:50 -0700
+Message-ID: <147216797030.867.2576348201175433862.stgit@birch.djwong.org>
 In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,337 +29,264 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Define all the tracepoints we need to inspect the refcount btree
-runtime operation.
+Add new per-AG refcount btree definitions to the per-AG structures.
+
+v2: Move the reflink inode flag out of the way of the DAX flag, and
+add the new cowextsize flag.
+
+v3: Don't allow pNFS to export reflinked files; this will be removed
+some day when the Linux pNFS server supports it.
+
+[hch: don't allow pNFS export of reflinked files]
+[darrick: fix the feature test in hch's patch]
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trace.h |  302 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 302 insertions(+)
+ fs/xfs/libxfs/xfs_alloc.c      |    5 +++++
+ fs/xfs/libxfs/xfs_btree.c      |    5 +++--
+ fs/xfs/libxfs/xfs_btree.h      |    3 +++
+ fs/xfs/libxfs/xfs_format.h     |   31 +++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_rmap_btree.c |    7 +++++--
+ fs/xfs/libxfs/xfs_types.h      |    2 +-
+ fs/xfs/xfs_inode.h             |    5 +++++
+ fs/xfs/xfs_mount.h             |    3 +++
+ fs/xfs/xfs_pnfs.c              |    7 +++++++
+ 9 files changed, 59 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index ed91efd..148afc6 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -40,6 +40,16 @@ struct xfs_inode_log_format;
- struct xfs_bmbt_irec;
- struct xfs_btree_cur;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 2f58277..1a7e46f 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2457,6 +2457,10 @@ xfs_agf_verify(
+ 	    be32_to_cpu(agf->agf_btreeblks) > be32_to_cpu(agf->agf_length))
+ 		return false;
  
-+#ifndef XFS_REFCOUNT_IREC_PLACEHOLDER
-+#define XFS_REFCOUNT_IREC_PLACEHOLDER
-+/* Placeholder definition to avoid breaking bisectability. */
-+struct xfs_refcount_irec {
-+	xfs_agblock_t	rc_startblock;	/* starting block number */
-+	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
-+	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
-+};
-+#endif
++	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS)
++		return false;
 +
- DECLARE_EVENT_CLASS(xfs_attr_list_class,
- 	TP_PROTO(struct xfs_attr_list_context *ctx),
- 	TP_ARGS(ctx),
-@@ -2613,6 +2623,298 @@ DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
- DEFINE_AG_ERROR_EVENT(xfs_ag_resv_free_error);
- DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
+ 	return true;;
  
-+/* refcount tracepoint classes */
-+
-+/* reuse the discard trace class for agbno/aglen-based traces */
-+#define DEFINE_AG_EXTENT_EVENT(name) DEFINE_DISCARD_EVENT(name)
-+
-+/* ag btree lookup tracepoint class */
-+#define XFS_AG_BTREE_CMP_FORMAT_STR \
-+	{ XFS_LOOKUP_EQ,	"eq" }, \
-+	{ XFS_LOOKUP_LE,	"le" }, \
-+	{ XFS_LOOKUP_GE,	"ge" }
-+DECLARE_EVENT_CLASS(xfs_ag_btree_lookup_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_lookup_t dir),
-+	TP_ARGS(mp, agno, agbno, dir),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_lookup_t, dir)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->dir = dir;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u cmp %s(%d)\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __print_symbolic(__entry->dir, XFS_AG_BTREE_CMP_FORMAT_STR),
-+		  __entry->dir)
-+)
-+
-+#define DEFINE_AG_BTREE_LOOKUP_EVENT(name) \
-+DEFINE_EVENT(xfs_ag_btree_lookup_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_lookup_t dir), \
-+	TP_ARGS(mp, agno, agbno, dir))
-+
-+/* single-rcext tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *irec),
-+	TP_ARGS(mp, agno, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, startblock)
-+		__field(xfs_extlen_t, blockcount)
-+		__field(xfs_nlink_t, refcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startblock = irec->rc_startblock;
-+		__entry->blockcount = irec->rc_blockcount;
-+		__entry->refcount = irec->rc_refcount;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->startblock,
-+		  __entry->blockcount,
-+		  __entry->refcount)
-+)
-+
-+#define DEFINE_REFCOUNT_EXTENT_EVENT(name) \
-+DEFINE_EVENT(xfs_refcount_extent_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 struct xfs_refcount_irec *irec), \
-+	TP_ARGS(mp, agno, irec))
-+
-+/* single-rcext and an agbno tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno),
-+	TP_ARGS(mp, agno, irec, agbno),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, startblock)
-+		__field(xfs_extlen_t, blockcount)
-+		__field(xfs_nlink_t, refcount)
-+		__field(xfs_agblock_t, agbno)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startblock = irec->rc_startblock;
-+		__entry->blockcount = irec->rc_blockcount;
-+		__entry->refcount = irec->rc_refcount;
-+		__entry->agbno = agbno;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u @ agbno %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->startblock,
-+		  __entry->blockcount,
-+		  __entry->refcount,
-+		  __entry->agbno)
-+)
-+
-+#define DEFINE_REFCOUNT_EXTENT_AT_EVENT(name) \
-+DEFINE_EVENT(xfs_refcount_extent_at_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 struct xfs_refcount_irec *irec, xfs_agblock_t agbno), \
-+	TP_ARGS(mp, agno, irec, agbno))
-+
-+/* double-rcext tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2),
-+	TP_ARGS(mp, agno, i1, i2),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, i1_startblock)
-+		__field(xfs_extlen_t, i1_blockcount)
-+		__field(xfs_nlink_t, i1_refcount)
-+		__field(xfs_agblock_t, i2_startblock)
-+		__field(xfs_extlen_t, i2_blockcount)
-+		__field(xfs_nlink_t, i2_refcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->i1_startblock = i1->rc_startblock;
-+		__entry->i1_blockcount = i1->rc_blockcount;
-+		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_startblock = i2->rc_startblock;
-+		__entry->i2_blockcount = i2->rc_blockcount;
-+		__entry->i2_refcount = i2->rc_refcount;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
-+		  "agbno %u len %u refcount %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->i1_startblock,
-+		  __entry->i1_blockcount,
-+		  __entry->i1_refcount,
-+		  __entry->i2_startblock,
-+		  __entry->i2_blockcount,
-+		  __entry->i2_refcount)
-+)
-+
-+#define DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(name) \
-+DEFINE_EVENT(xfs_refcount_double_extent_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2), \
-+	TP_ARGS(mp, agno, i1, i2))
-+
-+/* double-rcext and an agbno tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
-+		 xfs_agblock_t agbno),
-+	TP_ARGS(mp, agno, i1, i2, agbno),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, i1_startblock)
-+		__field(xfs_extlen_t, i1_blockcount)
-+		__field(xfs_nlink_t, i1_refcount)
-+		__field(xfs_agblock_t, i2_startblock)
-+		__field(xfs_extlen_t, i2_blockcount)
-+		__field(xfs_nlink_t, i2_refcount)
-+		__field(xfs_agblock_t, agbno)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->i1_startblock = i1->rc_startblock;
-+		__entry->i1_blockcount = i1->rc_blockcount;
-+		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_startblock = i2->rc_startblock;
-+		__entry->i2_blockcount = i2->rc_blockcount;
-+		__entry->i2_refcount = i2->rc_refcount;
-+		__entry->agbno = agbno;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
-+		  "agbno %u len %u refcount %u @ agbno %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->i1_startblock,
-+		  __entry->i1_blockcount,
-+		  __entry->i1_refcount,
-+		  __entry->i2_startblock,
-+		  __entry->i2_blockcount,
-+		  __entry->i2_refcount,
-+		  __entry->agbno)
-+)
-+
-+#define DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(name) \
-+DEFINE_EVENT(xfs_refcount_double_extent_at_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
-+		 xfs_agblock_t agbno), \
-+	TP_ARGS(mp, agno, i1, i2, agbno))
-+
-+/* triple-rcext tracepoint class */
-+DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2,
-+		 struct xfs_refcount_irec *i3),
-+	TP_ARGS(mp, agno, i1, i2, i3),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, i1_startblock)
-+		__field(xfs_extlen_t, i1_blockcount)
-+		__field(xfs_nlink_t, i1_refcount)
-+		__field(xfs_agblock_t, i2_startblock)
-+		__field(xfs_extlen_t, i2_blockcount)
-+		__field(xfs_nlink_t, i2_refcount)
-+		__field(xfs_agblock_t, i3_startblock)
-+		__field(xfs_extlen_t, i3_blockcount)
-+		__field(xfs_nlink_t, i3_refcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->i1_startblock = i1->rc_startblock;
-+		__entry->i1_blockcount = i1->rc_blockcount;
-+		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_startblock = i2->rc_startblock;
-+		__entry->i2_blockcount = i2->rc_blockcount;
-+		__entry->i2_refcount = i2->rc_refcount;
-+		__entry->i3_startblock = i3->rc_startblock;
-+		__entry->i3_blockcount = i3->rc_blockcount;
-+		__entry->i3_refcount = i3->rc_refcount;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u -- "
-+		  "agbno %u len %u refcount %u -- "
-+		  "agbno %u len %u refcount %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->i1_startblock,
-+		  __entry->i1_blockcount,
-+		  __entry->i1_refcount,
-+		  __entry->i2_startblock,
-+		  __entry->i2_blockcount,
-+		  __entry->i2_refcount,
-+		  __entry->i3_startblock,
-+		  __entry->i3_blockcount,
-+		  __entry->i3_refcount)
-+);
-+
-+#define DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(name) \
-+DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 struct xfs_refcount_irec *i1, struct xfs_refcount_irec *i2, \
-+		 struct xfs_refcount_irec *i3), \
-+	TP_ARGS(mp, agno, i1, i2, i3))
-+
-+/* refcount btree tracepoints */
-+DEFINE_BUSY_EVENT(xfs_refcountbt_alloc_block);
-+DEFINE_BUSY_EVENT(xfs_refcountbt_free_block);
-+DEFINE_AG_BTREE_LOOKUP_EVENT(xfs_refcount_lookup);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_get);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_update);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_insert);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_delete);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_insert_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_delete_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_update_error);
-+
-+/* refcount adjustment tracepoints */
-+DEFINE_AG_EXTENT_EVENT(xfs_refcount_increase);
-+DEFINE_AG_EXTENT_EVENT(xfs_refcount_decrease);
-+DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(xfs_refcount_merge_center_extents);
-+DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_modify_extent);
-+DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_extent);
-+DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_left_extent);
-+DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_right_extent);
-+DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_left_extent);
-+DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_right_extent);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_center_extents_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_modify_extent_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_split_extent_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_left_extent_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_right_extent_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_find_left_extent_error);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_find_right_extent_error);
-+DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_rec_order_error);
-+
-+/* reflink helpers */
-+DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared);
-+DEFINE_AG_EXTENT_EVENT(xfs_refcount_find_shared_result);
-+DEFINE_AG_ERROR_EVENT(xfs_refcount_find_shared_error);
-+
- #endif /* _TRACE_XFS_H */
+ }
+@@ -2577,6 +2581,7 @@ xfs_alloc_read_agf(
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+ 		pag->pagf_levels[XFS_BTNUM_RMAPi] =
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
++		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
+ 		spin_lock_init(&pag->pagb_lock);
+ 		pag->pagb_count = 0;
+ #ifdef __KERNEL__
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 3dfb541..e860002 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -45,9 +45,10 @@ kmem_zone_t	*xfs_btree_cur_zone;
+  */
+ static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
+ 	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
+-	  XFS_FIBT_MAGIC },
++	  XFS_FIBT_MAGIC, 0 },
+ 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
+-	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
++	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC,
++	  XFS_REFC_CRC_MAGIC }
+ };
+ #define xfs_btree_magic(cur) \
+ 	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index be4a0c1..cd54a5b 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -72,6 +72,7 @@ union xfs_btree_rec {
+ #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
+ #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
+ #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
++#define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
  
- #undef TRACE_INCLUDE_PATH
+ /*
+  * For logging record fields.
+@@ -105,6 +106,7 @@ do {    \
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
+ 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
+ 	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(__mp, rmap, stat); break; \
++	case XFS_BTNUM_REFC: break; \
+ 	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+@@ -127,6 +129,7 @@ do {    \
+ 		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
+ 	case XFS_BTNUM_RMAP:	\
+ 		__XFS_BTREE_STATS_ADD(__mp, rmap, stat, val); break; \
++	case XFS_BTNUM_REFC: break;	\
+ 	case XFS_BTNUM_MAX: ASSERT(0); __mp = __mp /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 74dabd0..9fdc86c 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -456,6 +456,7 @@ xfs_sb_has_compat_feature(
+ 
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
++#define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+ 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+@@ -546,6 +547,12 @@ static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
+ }
+ 
++static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
++{
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
++}
++
+ /*
+  * end of superblock version macros
+  */
+@@ -641,14 +648,17 @@ typedef struct xfs_agf {
+ 	uuid_t		agf_uuid;	/* uuid of filesystem */
+ 
+ 	__be32		agf_rmap_blocks;	/* rmapbt blocks used */
+-	__be32		agf_padding;		/* padding */
++	__be32		agf_refcount_blocks;	/* refcountbt blocks used */
++
++	__be32		agf_refcount_root;	/* refcount tree root block */
++	__be32		agf_refcount_level;	/* refcount btree levels */
+ 
+ 	/*
+ 	 * reserve some contiguous space for future logged fields before we add
+ 	 * the unlogged fields. This makes the range logging via flags and
+ 	 * structure offsets much simpler.
+ 	 */
+-	__be64		agf_spare64[15];
++	__be64		agf_spare64[14];
+ 
+ 	/* unlogged fields, written during buffer writeback. */
+ 	__be64		agf_lsn;	/* last write sequence */
+@@ -1040,9 +1050,14 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+  * 16 bits of the XFS_XFLAG_s range.
+  */
+ #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
++#define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
++#define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
+ #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
++#define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
++#define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
+ 
+-#define XFS_DIFLAG2_ANY		(XFS_DIFLAG2_DAX)
++#define XFS_DIFLAG2_ANY \
++	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
+ 
+ /*
+  * Inode number format:
+@@ -1352,7 +1367,8 @@ struct xfs_owner_info {
+ #define XFS_RMAP_OWN_AG		(-5ULL)	/* AG freespace btree blocks */
+ #define XFS_RMAP_OWN_INOBT	(-6ULL)	/* Inode btree blocks */
+ #define XFS_RMAP_OWN_INODES	(-7ULL)	/* Inode chunk */
+-#define XFS_RMAP_OWN_MIN	(-8ULL) /* guard */
++#define XFS_RMAP_OWN_REFC	(-8ULL) /* refcount tree */
++#define XFS_RMAP_OWN_MIN	(-9ULL) /* guard */
+ 
+ #define XFS_RMAP_NON_INODE_OWNER(owner)	(!!((owner) & (1ULL << 63)))
+ 
+@@ -1433,6 +1449,13 @@ typedef __be32 xfs_rmap_ptr_t;
+ 	 XFS_IBT_BLOCK(mp) + 1)
+ 
+ /*
++ * Reference Count Btree format definitions
++ *
++ */
++#define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
++
++
++/*
+  * BMAP Btree format definitions
+  *
+  * This includes both the root block definition that sits inside an inode fork
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 17b8eeb..7834956 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -512,6 +512,9 @@ void
+ xfs_rmapbt_compute_maxlevels(
+ 	struct xfs_mount		*mp)
+ {
+-	mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
+-			mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		mp->m_rmap_maxlevels = XFS_BTREE_MAXLEVELS;
++	else
++		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
++				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
+ }
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index da87796..690d616 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -112,7 +112,7 @@ typedef enum {
+ 
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+-	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
++	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
+ struct xfs_name {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e1a411e..4094f2c 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -202,6 +202,11 @@ xfs_get_initial_prid(struct xfs_inode *dp)
+ 	return XFS_PROJID_DEFAULT;
+ }
+ 
++static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
++{
++	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++}
++
+ /*
+  * In-core inode flags.
+  */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index a3c2e2d..6141d68 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -393,6 +393,9 @@ typedef struct xfs_perag {
+ 	struct xfs_ag_resv	pag_meta_resv;
+ 	/* Blocks reserved for just AGFL-based metadata. */
+ 	struct xfs_ag_resv	pag_agfl_resv;
++
++	/* reference count */
++	__uint8_t	pagf_refcount_level;
+ } xfs_perag_t;
+ 
+ static inline struct xfs_ag_resv *
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 0f14b2e..93a7aaf 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -114,6 +114,13 @@ xfs_fs_map_blocks(
+ 		return -ENXIO;
+ 
+ 	/*
++	 * The pNFS block layout spec actually supports reflink like
++	 * functionality, but the Linux pNFS server doesn't implement it yet.
++	 */
++	if (xfs_is_reflink_inode(ip))
++		return -ENXIO;
++
++	/*
+ 	 * Lock out any other I/O before we flush and invalidate the pagecache,
+ 	 * and then hand out a layout to the remote system.  This is very
+ 	 * similar to direct I/O, except that the synchronization is much more
 
 _______________________________________________
 xfs mailing list
