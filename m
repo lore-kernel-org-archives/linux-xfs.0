@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 83852809E
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 55F9F8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:51 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id nMUn09DVxSixQ1Y2 (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 752E580A6
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:46:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 44DF18F8035
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:56 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id a3yjzckw23GfsmfL (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:49 -0700 (PDT)
-Subject: [PATCH 02/71] xfs: create a standard btree size calculator code
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:46:54 -0700 (PDT)
+Subject: [PATCH 03/71] xfs: count the blocks in a btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:46:44 -0700
-Message-ID: <147216880460.4420.4815652191731578681.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:46:50 -0700
+Message-ID: <147216881078.4420.6999962677135186371.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,69 +31,62 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Create a helper to generate AG btree height calculator functions.
-This will be used (much) later when we get to the refcount btree.
+Provide a helper method to count the number of blocks in a short form
+btree.  The refcount and rmap btrees need to know the number of blocks
+already in use to set up their per-AG block reservations during mount.
 
-v2: Use a helper function instead of a macro.
-v3: We can (theoretically) store more than 2^32 records in a btree, so
-    widen the fields to accept that.
-v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
-    is to estimate the worst-case number of blocks needed for a bmbt
-    expansion, not to calculate the space required to store nr records.
-v5: More minor tweaks to the loop control; move down to reflink patches.
+v2: Use btree_visit_blocks instead of open-coding our own traversal
+routine.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_btree.c |   24 ++++++++++++++++++++++++
+ libxfs/xfs_btree.c |   23 +++++++++++++++++++++++
  libxfs/xfs_btree.h |    2 ++
- 2 files changed, 26 insertions(+)
+ 2 files changed, 25 insertions(+)
 
 
 diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 99bf808..b3e2ce9 100644
+index b3e2ce9..43c809f 100644
 --- a/libxfs/xfs_btree.c
 +++ b/libxfs/xfs_btree.c
-@@ -4797,3 +4797,27 @@ xfs_btree_query_range(
- 	return xfs_btree_overlapped_query_range(cur, &low_key, &high_key,
- 			fn, priv);
+@@ -4821,3 +4821,26 @@ xfs_btree_calc_size(
+ 	}
+ 	return rval;
  }
 +
-+/*
-+ * Calculate the number of blocks needed to store a given number of records
-+ * in a short-format (per-AG metadata) btree.
-+ */
-+xfs_extlen_t
-+xfs_btree_calc_size(
-+	struct xfs_mount	*mp,
-+	uint			*limits,
-+	unsigned long long	len)
++int
++xfs_btree_count_blocks_helper(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*data)
 +{
-+	int			level;
-+	int			maxrecs;
-+	xfs_extlen_t		rval;
++	xfs_extlen_t		*blocks = data;
++	(*blocks)++;
 +
-+	maxrecs = limits[0];
-+	for (level = 0, rval = 0; len > 1; level++) {
-+		len += maxrecs - 1;
-+		do_div(len, maxrecs);
-+		maxrecs = limits[1];
-+		rval += len;
-+	}
-+	return rval;
++	return 0;
++}
++
++/* Count the blocks in a btree and return the result in *blocks. */
++int
++xfs_btree_count_blocks(
++	struct xfs_btree_cur	*cur,
++	xfs_extlen_t		*blocks)
++{
++	*blocks = 0;
++	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
++			blocks);
 +}
 diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 870a5ab..607463a 100644
+index 607463a..be4a0c1 100644
 --- a/libxfs/xfs_btree.h
 +++ b/libxfs/xfs_btree.h
-@@ -501,6 +501,8 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
- bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
- uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
- 				 unsigned long len);
-+xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
-+		unsigned long long len);
+@@ -519,4 +519,6 @@ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+ 		xfs_btree_visit_blocks_fn fn, void *data);
  
- /* return codes */
- #define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
++int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
++
+ #endif	/* __XFS_BTREE_H__ */
 
 _______________________________________________
 xfs mailing list
