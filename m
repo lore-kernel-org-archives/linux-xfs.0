@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 471F28061
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:45:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18073304039
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:45:20 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id b2DusGrEfdHBjPPa (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:45:17 -0700 (PDT)
-Subject: [PATCH 17/20] xfs: wire up getfsmap to the realtime reverse mapping
-	btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:45:13 -0700
-Message-ID: <147216871382.3688.13083744368929762457.stgit@birch.djwong.org>
-In-Reply-To: <147216860614.3688.3200692982609112535.stgit@birch.djwong.org>
-References: <147216860614.3688.3200692982609112535.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CA114806E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:45:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9CE068F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:45:22 -0700 (PDT)
+Received: from tshirtfashion.com ([182.85.248.16]) by cuda.sgi.com with SMTP
+	id nWAWUv8kAwh4PnUG for <xfs@oss.sgi.com>;
+	Thu, 25 Aug 2016 16:45:19 -0700 (PDT)
+From: "betsy_fashiongroup@163.com" <betsy_fashiongroup@163.com>
+Subject: Re: Knitted Garment Factory with Disney Audit
 MIME-Version: 1.0
+Date: Thu, 25 Aug 2016 19:15:21 +0800
+Message-Id: <20160825234522.386A16430F3@cuda.sgi.com>
+Reply-To: betsy_fashiongroup@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,136 +22,223 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5189927862043026299=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Connect the getfsmap ioctl to the realtime rmapbt.
+--===============5189927862043026299==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_fsmap.c |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIj48SEVBRD4NCjxNRVRBIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIg
+aHR0cC1lcXVpdj1jb250ZW50LXR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJN
+U0hUTUwgMTEuMDAuOTYwMC4xODA1NyI+PC9IRUFEPg0KPEJPRFk+PFNQQU4gbGFuZz1FTi1VUyAN
+CnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBBcmlhbDsgQkFDS0dST1VORDog
+d2hpdGU7IENPTE9SOiAjMzMzMzk5Ij48bzpwPg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9
+IkJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtQUxJR046IGxlZnQ7IE1BUkdJTjog
+MHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCnN0eWxlPSJGT05ULVNJ
+WkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBBcmlhbDsgQkFDS0dST1VORDogcmdiKDI1NSwyNTUsMjU1
+KTsgQ09MT1I6IHJnYig1MSw1MSwxNTMpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1z
+by1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0
+OyBtc28tc2hhZGluZzogcmdiKDI1NSwyNTUsMjU1KSI+SGVsbG8sPC9TUEFOPjxTUEFOIA0Kc3R5
+bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2Io
+MjU1LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5
+ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2Vybmlu
+ZzogMC4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj48QlI+PC9TUEFOPjxT
+UEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JP
+VU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1
+bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZv
+bnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj48QlI+
+PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFs
+OyBCQUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1z
+by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9
+kzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwy
+NTUpIj5HbGFkIA0KdG8gbGVhcm4geW91JiMzOTtyZSBvbiB0aGUgbWFya2V0IG9mIGFwcGFyZWwg
+cHJvZHVjdHMuJm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9O
+VC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBDT0xPUjogcmdi
+KDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9u
+dC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1zby1zaGFkaW5n
+OiByZ2IoMjU1LDI1NSwyNTUpIj48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29O
+b3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1BTElHTjog
+bGVmdDsgTUFSR0lOOiAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iPjxTUEFOIA0K
+c3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiBy
+Z2IoMjU1LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMz
+OTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2Vy
+bmluZzogMS4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj48bzpwPiZuYnNw
+OzwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1wIA0Kc3R5bGU9IlZFUlRJQ0FMLUFMSUdOOiBi
+YXNlbGluZTsgTUFSR0lOOiA1cHQgMHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuOyBt
+c28tbGluZS1oZWlnaHQtYWx0OiAxMnB0Ij48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7
+IEZPTlQtRkFNSUxZOiBBcmlhbDsgQ09MT1I6IHJnYig1MSw1MSwxNTMpOyBtc28tc3BhY2VydW46
+ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250
+LWtlcm5pbmc6IDAuMDAwMHB0Ij5PdXIgDQo8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpF
+OiAxMnB0OyBGT05ULUZBTUlMWTog5a6L5L2TOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1z
+cGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQ7IG1zby1i
+aWRpLWZvbnQtZmFtaWx5OiBBcmlhbDsgbXNvLWFzY2lpLWZvbnQtZmFtaWx5OiBBcmlhbDsgbXNv
+LWhhbnNpLWZvbnQtZmFtaWx5OiBBcmlhbCI+RmFzaGlvbjwvU1BBTj48U1BBTiANCnN0eWxlPSJG
+T05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBBcmlhbDsgQ09MT1I6IHJnYig1MSw1MSwxNTMp
+OyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDl
+rovkvZM7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij4mbmJzcDtoYXZlIA0KPC9TUEFOPjxT
+UEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IOWui+S9kzsgQ09MT1I6
+IHJnYig1MSw1MSwxNTMpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mb250LWtl
+cm5pbmc6IDAuMDAwMHB0OyBtc28tYmlkaS1mb250LWZhbWlseTogQXJpYWw7IG1zby1hc2NpaS1m
+b250LWZhbWlseTogQXJpYWw7IG1zby1oYW5zaS1mb250LWZhbWlseTogQXJpYWwiPjIwPC9TUEFO
+PjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBDT0xP
+UjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVh
+c3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPiZuYnNw
+O3llYXJzIA0KaGlzdG9yeSBub3cgYXMgZmFjdG9yeSBydW5uaW5nLCB3aXRoIHR3byBmYWN0b3J5
+IHdvcmtzaG9wcyBhbG9uZyB3aXRoIDMgDQpwcm9kdWNpbmcgbGluZXMuIEFscmVhZHkgY29vcGVy
+YXRlZCB3aXRoIERpc25leSwgV2FsLU1hcnQsIFpBSU4sIFNBTVNVTkcsIFVTIA0KTmF2eS4gPC9T
+UEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBD
+T0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPjxv
+OnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPXAgDQpzdHlsZT0iVkVSVElDQUwtQUxJR046
+IGJhc2VsaW5lOyBNQVJHSU46IDVwdCAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW47
+IG1zby1saW5lLWhlaWdodC1hbHQ6IDEycHQiPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJw
+dDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1
+bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZv
+bnQta2VybmluZzogMC4wMDAwcHQiPk1haW4gDQpwcm9kdWN0czogPC9TUEFOPjxCPjxTUEFOIA0K
+c3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVdFSUdIVDog
+Ym9sZDsgQ09MT1I6IHJnYig1MSw1MSwxNTMpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7
+IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDAuMDAw
+MHB0Ij5ULXNoaXJ0LCANClBvbG8gc2hpcnQsIENvbXByZXNzZWQgdC1zaGlydCwgSG9vZGllJmFt
+cDtzd2VhdGVyLCB2ZXN0IGFuZCANCnVuZGVyd2VhcjwvU1BBTj48L0I+PFNQQU4gDQpzdHlsZT0i
+Rk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTogQXJpYWw7IENPTE9SOiByZ2IoNTEsNTEsMTUz
+KTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog
+5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdCI+Jm5ic3A7ZXRjLjwvU1BBTj48U1BB
+TiANCnN0eWxlPSJGT05ULVNJWkU6IDEycHQ7IEZPTlQtRkFNSUxZOiBBcmlhbDsgQkFDS0dST1VO
+RDogcmdiKDI1NSwyNTUsMjU1KTsgQ09MT1I6IHJnYig1MSw1MSwxNTMpOyBtc28tc3BhY2VydW46
+ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250
+LWtlcm5pbmc6IDAuMDAwMHB0OyBtc28tc2hhZGluZzogcmdiKDI1NSwyNTUsMjU1KSI+Jm5ic3A7
+PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFs
+OyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNv
+LWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQi
+PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNL
+R1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBwdDsg
+bXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAx
+MnB0OyBGT05ULUZBTUlMWTogQXJpYWw7IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IENP
+TE9SOiByZ2IoNTEsNTEsMTUzKTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFy
+ZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNv
+LXNoYWRpbmc6IHJnYigyNTUsMjU1LDI1NSkiPklmIA0KYW55IHByb2R1Y3QgbWVlZCB5b3VyIGRl
+bWFuZCwgcGxlYXNlIGNvbnRhY3QgdXMgZm9yIGZ1cnRoZXIgDQppbmZvcm1hdGlvbi4mbmJzcDs8
+L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTogQXJpYWw7
+IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IENPTE9SOiByZ2IoNTEsNTEsMTUzKTsgbXNv
+LXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2T
+OyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsgbXNvLXNoYWRpbmc6IHJnYigyNTUsMjU1LDI1
+NSkiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJC
+QUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBw
+dDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpF
+OiAxMnB0OyBGT05ULUZBTUlMWTogQXJpYWw7IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7
+IENPTE9SOiByZ2IoNTEsNTEsMTUzKTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28t
+ZmFyZWFzdC1mb250LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAxLjAwMDBwdDsg
+bXNvLXNoYWRpbmc6IHJnYigyNTUsMjU1LDI1NSkiPjxvOnA+Jm5ic3A7PC9vOnA+PC9TUEFOPjwv
+UD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwy
+NTUpOyBURVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93
+LW9ycGhhbiI+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTogQXJp
+YWw7IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IENPTE9SOiByZ2IoNTEsNTEsMTUzKTsg
+bXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog5a6L
+5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLXNoYWRpbmc6IHJnYigyNTUsMjU1
+LDI1NSkiPldlJiMzOTtyZSANCnN1cmUgeW91ciBhbnkgaW5xdWlyeSBvciByZXF1aXJlbWVudCB3
+aWxsIGdldCBwcm9tcHQgDQphdHRlbnRpb24uJm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2IoMjU1LDI1
+NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5
+OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4w
+MDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj48bzpwPjwvbzpwPjwvU1BBTj48
+L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogcmdiKDI1NSwyNTUs
+MjU1KTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRv
+dy1vcnBoYW4iPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFy
+aWFsOyBCQUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7
+IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWu
+i+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1
+NSwyNTUpIj48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwg
+DQpzdHlsZT0iQkFDS0dST1VORDogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1BTElHTjogbGVmdDsg
+TUFSR0lOOiAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iPjxTUEFOIA0Kc3R5bGU9
+IkZPTlQtU0laRTogMTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2IoMjU1
+LDI1NSwyNTUpOyBDT0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMm
+IzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzog
+MC4wMDAwcHQ7IG1zby1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj5CZXN0IA0KcmVnYXJkcywm
+bmJzcDs8L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05ULUZBTUlMWTog
+QXJpYWw7IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IENPTE9SOiByZ2IoNTEsNTEsMTUz
+KTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250LWZhbWlseTog
+5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLXNoYWRpbmc6IHJnYigyNTUs
+MjU1LDI1NSkiPjxCUj48L1NQQU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMnB0OyBGT05U
+LUZBTUlMWTogQXJpYWw7IEJBQ0tHUk9VTkQ6IHJnYigyNTUsMjU1LDI1NSk7IENPTE9SOiByZ2Io
+NTEsNTEsMTUzKTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyBtc28tZmFyZWFzdC1mb250
+LWZhbWlseTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwLjAwMDBwdDsgbXNvLXNoYWRpbmc6
+IHJnYigyNTUsMjU1LDI1NSkiPkJldHN5PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTog
+MTJwdDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBCQUNLR1JPVU5EOiByZ2IoMjU1LDI1NSwyNTUpOyBD
+T0xPUjogcmdiKDUxLDUxLDE1Myk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZh
+cmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQ7IG1z
+by1zaGFkaW5nOiByZ2IoMjU1LDI1NSwyNTUpIj48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBj
+bGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IFRFWFQtQUxJR046IGxl
+ZnQ7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIA0K
+YWxpZ249bGVmdD4mbmJzcDs8L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgc3R5bGU9Ik1BUkdJTjog
+MHB0Ij48QSBuYW1lPU9MRV9MSU5LNj48L0E+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMC41
+cHQ7IEZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVdFSUdIVDog
+bm9ybWFsOyBDT0xPUjogcmdiKDMxLDc4LDEyMSk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5
+OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4w
+MDAwcHQiPkIyQiANCndlYnNpdGU6IDwvU1BBTj48U1BBTj48QSBocmVmPSJodHRwczovL3Byb21v
+dGUuZW4uYWxpYmFiYS5jb20vIj48VT48U1BBTiANCmNsYXNzPTE1IA0Kc3R5bGU9IkZPTlQtU0la
+RTogMTAuNXB0OyBURVhULURFQ09SQVRJT046IHVuZGVybGluZTsgRk9OVC1GQU1JTFk6ICYjMzk7
+VGltZXMgTmV3IFJvbWFuJiMzOTs7IEZPTlQtV0VJR0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMzEs
+NzgsMTIxKTsgbXNvLXNwYWNlcnVuOiAmIzM5O3llcyYjMzk7OyB0ZXh0LXVuZGVybGluZTogc2lu
+Z2xlIj5odHRwczovL3Byb21vdGUuZW4uYWxpYmFiYS5jb208L1NQQU4+PC9VPjwvQT48L1NQQU4+
+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMC41cHQ7IEZPTlQtRkFNSUxZOiAmIzM5O1RpbWVz
+IE5ldyBSb21hbiYjMzk7OyBGT05ULVdFSUdIVDogbm9ybWFsOyBDT0xPUjogcmdiKDMxLDc4LDEy
+MSk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6
+IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFOPjwv
+UD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJURVhULUFMSUdOOiBqdXN0aWZ5OyBNQVJH
+SU46IDBwdDsgVEVYVC1KVVNUSUZZOiBpbnRlci1pZGVvZ3JhcGg7IExJTkUtSEVJR0hUOiAxNS43
+NXB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiANCmFsaWduPWp1c3RpZnk+PFNQQU4g
+DQpzdHlsZT0iRk9OVC1TSVpFOiAxMC41cHQ7IEZPTlQtRkFNSUxZOiAmIzM5O1RpbWVzIE5ldyBS
+b21hbiYjMzk7OyBGT05ULVdFSUdIVDogbm9ybWFsOyBDT0xPUjogcmdiKDMxLDc4LDEyMSk7IG1z
+by1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IOWui+S9
+kzsgbXNvLWZvbnQta2VybmluZzogMC4wMDAwcHQiPlNreXBlOiZuYnNwO2JldHN5LnJpY2hhYmxl
+Jm5ic3A7PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlM
+WTogJiMzOTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6
+IHJnYigzMSw3OCwxMjEpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0
+LWZvbnQtZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwv
+bzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iVEVYVC1BTElHTjog
+anVzdGlmeTsgTUFSR0lOOiAwcHQ7IFRFWFQtSlVTVElGWTogaW50ZXItaWRlb2dyYXBoOyBMSU5F
+LUhFSUdIVDogMTUuNzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1q
+dXN0aWZ5PjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlMWTogJiMz
+OTtUaW1lcyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigz
+MSw3OCwxMjEpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQt
+ZmFtaWx5OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5NUDogDQowMDg2LTEz
+NTc2OTkwOTM2Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7PC9TUEFO
+PjxTUEFOIA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlMWTogJiMzOTtUaW1l
+cyBOZXcgUm9tYW4mIzM5OzsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigzMSw3OCwx
+MjEpOyBtc28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5
+OiDlrovkvZM7IG1zby1mb250LWtlcm5pbmc6IDEuMDAwMHB0Ij48bzpwPjwvbzpwPjwvU1BBTj48
+L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iVEVYVC1BTElHTjoganVzdGlmeTsgTUFS
+R0lOOiAwcHQ7IFRFWFQtSlVTVElGWTogaW50ZXItaWRlb2dyYXBoOyBMSU5FLUhFSUdIVDogMTUu
+NzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1qdXN0aWZ5PjxTUEFO
+IA0Kc3R5bGU9IkZPTlQtU0laRTogMTAuNXB0OyBGT05ULUZBTUlMWTogJiMzOTtUaW1lcyBOZXcg
+Um9tYW4mIzM5OzsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigzMSw3OCwxMjEpOyBt
+c28tc3BhY2VydW46ICYjMzk7eWVzJiMzOTs7IG1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiDlrovk
+vZM7IG1zby1mb250LWtlcm5pbmc6IDAuMDAwMHB0Ij5UZWw6MDA4Ni03OTEtODgzNzUyMzc8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMC41cHQ7IEZPTlQtRkFNSUxZOiAmIzM5O1Rp
+bWVzIE5ldyBSb21hbiYjMzk7OyBGT05ULVdFSUdIVDogbm9ybWFsOyBDT0xPUjogcmdiKDMxLDc4
+LDEyMSk7IG1zby1zcGFjZXJ1bjogJiMzOTt5ZXMmIzM5OzsgbXNvLWZhcmVhc3QtZm9udC1mYW1p
+bHk6IOWui+S9kzsgbXNvLWZvbnQta2VybmluZzogMS4wMDAwcHQiPjxvOnA+PC9vOnA+PC9TUEFO
+PjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgVEVY
+VC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93
+LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjwhLS1FbmRGcmFnbWVudC0tPjwhLS1FbmRGcmFnbWVudC0t
+PjwvbzpwPjwvU1BBTj48L1A+PC9CT0RZPjwvSFRNTD4NCg0K
 
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 1c5ce01..a816955 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -41,6 +41,7 @@
- #include "xfs_refcount_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_rtalloc.h"
-+#include "xfs_rtrmap_btree.h"
- 
- /* getfsmap query state */
- struct xfs_getfsmap_info {
-@@ -431,6 +432,81 @@ xfs_getfsmap_logdev(
- 	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
- }
- 
-+/* Execute a getfsmap query against the realtime data device. */
-+STATIC int
-+xfs_getfsmap_rtdev(
-+	struct xfs_mount		*mp,
-+	struct getfsmap			*keys,
-+	struct xfs_getfsmap_info	*info)
-+{
-+	struct xfs_btree_cur		*bt_cur = NULL;
-+	struct getfsmap			*lowkey;
-+	struct getfsmap			*highkey;
-+	xfs_fsblock_t			start_fsb;
-+	xfs_fsblock_t			end_fsb;
-+	xfs_daddr_t			eofs;
-+	int				error = 0;
-+
-+	lowkey = keys;
-+	highkey = keys + 1;
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
-+	if (lowkey->fmv_block >= eofs)
-+		return 0;
-+	if (highkey->fmv_block >= eofs)
-+		highkey->fmv_block = eofs - 1;
-+	start_fsb = XFS_BB_TO_FSBT(mp, lowkey->fmv_block);
-+	end_fsb = XFS_BB_TO_FSB(mp, highkey->fmv_block);
-+
-+	/* Set up search keys */
-+	info->low.rm_startblock = start_fsb;
-+	info->low.rm_owner = lowkey->fmv_owner;
-+	info->low.rm_offset = XFS_BB_TO_FSBT(mp, lowkey->fmv_offset);
-+	info->low.rm_blockcount = 0;
-+	xfs_getfsmap_set_irec_flags(&info->low, lowkey);
-+
-+	info->high.rm_startblock = end_fsb;
-+	info->high.rm_owner = highkey->fmv_owner;
-+	info->high.rm_offset = XFS_BB_TO_FSBT(mp, highkey->fmv_offset);
-+	info->high.rm_blockcount = 0;
-+	xfs_getfsmap_set_irec_flags(&info->high, highkey);
-+
-+	info->missing_owner = FMV_OWN_FREE;
-+
-+	trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
-+			info->low.rm_startblock,
-+			info->low.rm_blockcount,
-+			info->low.rm_owner,
-+			info->low.rm_offset);
-+
-+	trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
-+			info->high.rm_startblock,
-+			info->high.rm_blockcount,
-+			info->high.rm_owner,
-+			info->high.rm_offset);
-+
-+	/* Query the rtrmapbt */
-+	xfs_ilock(mp->m_rrmapip, XFS_ILOCK_EXCL);
-+	bt_cur = xfs_rtrmapbt_init_cursor(mp, NULL, mp->m_rrmapip);
-+
-+	error = xfs_rmap_query_range(bt_cur, &info->low, &info->high,
-+			xfs_getfsmap_rtdev_helper, info);
-+	if (error)
-+		goto err;
-+
-+	/* Report any free space at the end of the rtdev */
-+	info->last = true;
-+	error = xfs_getfsmap_rtdev_helper(bt_cur, &info->high, info);
-+	if (error)
-+		goto err;
-+
-+err:
-+	xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
-+						 XFS_BTREE_NOERROR);
-+	xfs_iunlock(mp->m_rrmapip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
- /* Execute a getfsmap query against the realtime data device (rtbitmap). */
- STATIC int
- xfs_getfsmap_rtdev_rtbitmap(
-@@ -769,6 +845,9 @@ xfs_getfsmap_is_valid_device(
- 	if (mp->m_logdev_targp &&
- 	    fmv->fmv_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
- 		return true;
-+	if (mp->m_rtdev_targp &&
-+	    fmv->fmv_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
-+		return true;
- 	return false;
- }
- 
-@@ -824,6 +903,8 @@ xfs_getfsmap(
- 		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
- 		if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 			handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
-+		else
-+			handlers[2].fn = xfs_getfsmap_rtdev;
- 	}
- 
- 	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+--===============5189927862043026299==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5189927862043026299==--
