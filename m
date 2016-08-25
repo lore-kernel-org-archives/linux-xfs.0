@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AEC867CA1
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 02:34:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F1A9304039
-	for <xfs@oss.sgi.com>; Tue,  9 Aug 2016 00:34:55 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id CKE3dreryaPNWjJd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Aug 2016 00:34:53 -0700 (PDT)
-Date: Tue, 9 Aug 2016 00:34:50 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] iomap: add fiemap support for attribute mappings
-Message-ID: <20160809073450.GB25647@infradead.org>
-References: <1470637351-27933-1-git-send-email-david@fromorbit.com>
-	<1470637351-27933-3-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id B79C07DA5
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:35:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E81F304051
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:35:08 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id ZzwvtqtzaRMKYFWv (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:35:06 -0700 (PDT)
+Subject: [PATCH 28/71] xfs: when replaying bmap operations,
+	don't let unlinked inodes get reaped
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 25 Aug 2016 16:35:01 -0700
+Message-ID: <147216810156.867.6921848738908792090.stgit@birch.djwong.org>
+In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1470637351-27933-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,77 +29,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Aug 08, 2016 at 04:22:31PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Prior to the iomap conversion, XFS supported the FIEMAP_FLAG_XATTR
-> flag for mapping the attribute fork block map. This flag was not
-> added to the iomap fiemap support so we have regressed fiemap
-> functionality with this change.
-> 
-> Add an iomap control flag to indicate that we should be operating
-> on the attribute map rather than the file data map and pass it from
-> iomap_fiemap() as appropriate. Add the appropriate flags to the XFS
-> code to switch to the attribute fork lookup, and ensure we return
-> EINVAL if anyone attempts a write mapping of the attribute fork.
+Log recovery will iget an inode to replay BUI items and iput the inode
+when it's done.  Unfortunately, the iput will see that i_nlink == 0
+and decide to truncate & free the inode, which prevents us from
+replaying subsequent BUIs.  We can't skip the BUIs because we have to
+replay all the redo items to ensure that atomic operations complete.
 
-I'm a little worried about this for a few reasons:
+Since unlinked inode recovery will reap the inode anyway, we can
+safely introduce a new inode flag to indicate that an inode is in this
+'unlinked recovery' state and should not be auto-reaped in the
+drop_inode path.
 
-> -	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-> +	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC | FIEMAP_FLAG_XATTR);
-
-FIEMAP_FLAG_XATTR is a magic thing only supported by ext4 and
-historically XFS.  By claiming general support here we make iomap_fiemap
-unsuitable for general use.  At least we should pass in a flag if it's
-supported or not into the generic helper.  Or see below for another
-idea.
-
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 4398932..17b5b82 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -993,10 +993,22 @@ xfs_file_iomap_begin(
->  	struct xfs_bmbt_irec	imap;
->  	xfs_fileoff_t		offset_fsb, end_fsb;
->  	int			nimaps = 1, error = 0;
-> +	int			bmflags = XFS_BMAPI_ENTIRE;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> +	/* Attribute fork can only be read via this interface */
-> +	if (flags & IOMAP_ATTR) {
-> +		if (flags & ~IOMAP_ATTR)
-> +			return -EINVAL;
-> +		/* if there are no attribute fork or extents, return ENOENT */
-> +		if (!XFS_IFORK_Q(ip) || !ip->i_d.di_anextents)
-> +			return -ENOENT;
-> +		ASSERT(ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL);
-> +		bmflags |= XFS_BMAPI_ATTRFORK;
-> +	}
-
-And this adds a special case for totally rare attr fork operation to
-the fast path that we'll soon be using for all file I/O.
-
-I'd suggest to just have a separate stub set of iomap_ops for the xattr
-case.  xfs_vn_fiemap would then look something like:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_bmap_item.c   |    1 +
+ fs/xfs/xfs_inode.c       |    8 ++++++++
+ fs/xfs/xfs_inode.h       |    6 ++++++
+ fs/xfs/xfs_log_recover.c |    1 +
+ 4 files changed, 16 insertions(+)
 
 
-	xfs_ilock(XFS_I(inode), XFS_IOLOCK_SHARED);
-	if (fi->fi_flags & FIEMAP_FLAG_XATTR) {
-		fi->fi_flags &= ~FIEMAP_FLAG_XATTR;
-		error = iomap_fiemap(inode, fieinfo, start, length,
-				&xfs_attr_iomap_ops);
-	} else {
-		error = iomap_fiemap(inode, fieinfo, start, length,
-				&xfs_iomap_ops);
-	}
-	xfs_iunlock(XFS_I(inode), XFS_IOLOCK_SHARED);
-
-	return error;
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 9b1720c..418c012 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -492,6 +492,7 @@ xfs_bui_recover(
+ 	if (error)
+ 		goto err_inode;
+ 
++	xfs_iflags_set(ip, XFS_IRECOVER_UNLINKED);
+ 	xfs_defer_init(&dfops, &firstfsb);
+ 
+ 	/* Process deferred bmap item. */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e08eaea..0c25a76 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1855,6 +1855,14 @@ xfs_inactive(
+ 	if (mp->m_flags & XFS_MOUNT_RDONLY)
+ 		return;
+ 
++	/*
++	 * If this unlinked inode is in the middle of recovery, don't
++	 * truncate and free the inode just yet; log recovery will take
++	 * care of that.  See the comment for this inode flag.
++	 */
++	if (xfs_iflags_test(ip, XFS_IRECOVER_UNLINKED))
++		return;
++
+ 	if (VFS_I(ip)->i_nlink != 0) {
+ 		/*
+ 		 * force is true because we are evicting an inode from the
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 4094f2c..7283db3 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -221,6 +221,12 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
+ #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+ #define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
++/*
++ * If this unlinked inode is in the middle of recovery, don't let drop_inode
++ * truncate and free the inode.  This can happen if we iget the inode during
++ * log recovery to replay a bmap operation on the inode.
++ */
++#define XFS_IRECOVER_UNLINKED	(1 << 10)
+ 
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 37673d6..c9c05b9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4854,6 +4854,7 @@ xlog_recover_process_one_iunlink(
+ 	if (error)
+ 		goto fail_iput;
+ 
++	xfs_iflags_clear(ip, XFS_IRECOVER_UNLINKED);
+ 	ASSERT(VFS_I(ip)->i_nlink == 0);
+ 	ASSERT(VFS_I(ip)->i_mode != 0);
+ 
 
 _______________________________________________
 xfs mailing list
