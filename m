@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B64618234
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:52:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9BCF5823B
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:52:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2A5C9AC004
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:52:00 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id CxewFiGxIfkdhOVj (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 601118F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:52:07 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id TjhFyTY311YEIDSF (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:58 -0700 (PDT)
-Subject: [PATCH 50/71] xfs_io: bmap should support querying CoW fork,
-	shared blocks
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:52:04 -0700 (PDT)
+Subject: [PATCH 51/71] libxfs: add configure option to override system
+	header fsxattr
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:51:54 -0700
-Message-ID: <147216911412.4420.8062599654968728476.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:52:00 -0700
+Message-ID: <147216912039.4420.11989639519430308847.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,171 +32,110 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Teach the bmap command to report shared and delayed allocation
-extents, and to be able to query the CoW fork.
+By default, libxfs will use the kernel/system headers to define struct
+fsxattr.  Unfortunately, this creates a problem for developers who are
+writing new features but building xfsprogs on a stable system, because
+the stable kernel's headers don't reflect the new feature.  In this
+case, we want to be able to use the internal fsxattr definition while
+the kernel headers catch up, so provide some configure magic to allow
+developers to force the use of the internal definition.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/bmap.c           |   43 ++++++++++++++++++++++++++++++++++---------
- man/man8/xfs_bmap.8 |   14 ++++++++++++++
- man/man8/xfs_io.8   |    2 +-
- 3 files changed, 49 insertions(+), 10 deletions(-)
+ configure.ac         |    5 +++++
+ include/builddefs.in |    4 ++++
+ include/linux.h      |   10 +++++++++-
+ io/fiemap.c          |    1 -
+ 4 files changed, 18 insertions(+), 2 deletions(-)
 
 
-diff --git a/io/bmap.c b/io/bmap.c
-index b2e48da..2333244 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -41,7 +41,9 @@ bmap_help(void)
- " Holes are marked by replacing the startblock..endblock with 'hole'.\n"
- " All the file offsets and disk blocks are in units of 512-byte blocks.\n"
- " -a -- prints the attribute fork map instead of the data fork.\n"
-+" -c -- prints the copy-on-write fork map instead of the data fork.\n"
- " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
-+" -e -- print delayed allocation extents.\n"
- " -l -- also displays the length of each extent in 512-byte blocks.\n"
- " -n -- query n extents.\n"
- " -p -- obtain all unwritten extents as well (w/ -v show which are unwritten.)\n"
-@@ -75,6 +77,7 @@ bmap_f(
- 	int			loop = 0;
- 	int			flg = 0;
- 	int			aflag = 0;
-+	int			cflag = 0;
- 	int			lflag = 0;
- 	int			nflag = 0;
- 	int			pflag = 0;
-@@ -85,12 +88,19 @@ bmap_f(
- 	int			c;
- 	int			egcnt;
+diff --git a/configure.ac b/configure.ac
+index 1bb5fef..66a562f 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -61,6 +61,11 @@ AC_ARG_ENABLE(librt,
+ 	enable_librt=yes)
+ AC_SUBST(enable_librt)
  
--	while ((c = getopt(argc, argv, "adln:pv")) != EOF) {
-+	while ((c = getopt(argc, argv, "acdeln:pv")) != EOF) {
- 		switch (c) {
- 		case 'a':	/* Attribute fork. */
- 			bmv_iflags |= BMV_IF_ATTRFORK;
- 			aflag = 1;
- 			break;
-+		case 'c':	/* CoW fork. */
-+			bmv_iflags |= BMV_IF_COWFORK | BMV_IF_DELALLOC;
-+			cflag = 1;
-+			break;
-+		case 'e':
-+			bmv_iflags |= BMV_IF_DELALLOC;
-+			break;
- 		case 'l':	/* list number of blocks with each extent */
- 			lflag = 1;
- 			break;
-@@ -113,7 +123,7 @@ bmap_f(
- 			return command_usage(&bmap_cmd);
- 		}
- 	}
--	if (aflag)
-+	if (aflag || cflag)
- 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
++AC_ARG_ENABLE(internal-fsxattr,
++[ --enable-internal-fsxattr=[yes/no] Override system definition of struct fsxattr [default=no]],,
++	enable_internal_fsxattr=no)
++AC_SUBST(enable_internal_fsxattr)
++
+ #
+ # If the user specified a libdir ending in lib64 do not append another
+ # 64 to the library names.
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 7153d7a..fd7eb74 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -109,6 +109,7 @@ HAVE_MNTENT = @have_mntent@
+ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
++ENABLE_INTERNAL_FSXATTR = @enable_internal_fsxattr@
  
- 	if (vflag) {
-@@ -273,13 +283,14 @@ bmap_f(
- #define MINRANGE_WIDTH	16
- #define MINAG_WIDTH	2
- #define MINTOT_WIDTH	5
--#define NFLG		5	/* count of flags */
--#define	FLG_NULL	000000	/* Null flag */
--#define	FLG_PRE		010000	/* Unwritten extent */
--#define	FLG_BSU		001000	/* Not on begin of stripe unit  */
--#define	FLG_ESU		000100	/* Not on end   of stripe unit  */
--#define	FLG_BSW		000010	/* Not on begin of stripe width */
--#define	FLG_ESW		000001	/* Not on end   of stripe width */
-+#define NFLG		6	/* count of flags */
-+#define	FLG_NULL	0000000	/* Null flag */
-+#define	FLG_SHARED	0100000	/* shared extent */
-+#define	FLG_PRE		0010000	/* Unwritten extent */
-+#define	FLG_BSU		0001000	/* Not on begin of stripe unit  */
-+#define	FLG_ESU		0000100	/* Not on end   of stripe unit  */
-+#define	FLG_BSW		0000010	/* Not on begin of stripe width */
-+#define	FLG_ESW		0000001	/* Not on end   of stripe width */
- 		int	agno;
- 		off64_t agoff, bbperag;
- 		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
-@@ -350,6 +361,10 @@ bmap_f(
- 			if (map[i + 1].bmv_oflags & BMV_OF_PREALLOC) {
- 				flg |= FLG_PRE;
- 			}
-+			if (map[i + 1].bmv_oflags & BMV_OF_SHARED)
-+				flg |= FLG_SHARED;
-+			if (map[i + 1].bmv_oflags & BMV_OF_DELALLOC)
-+				map[i + 1].bmv_block = -2;
- 			/*
- 			 * If striping enabled, determine if extent starts/ends
- 			 * on a stripe unit boundary.
-@@ -382,6 +397,14 @@ bmap_f(
- 					agno_w, "",
- 					aoff_w, "",
- 					tot_w, (long long)map[i+1].bmv_length);
-+			} else if (map[i + 1].bmv_block == -2) {
-+				printf("%4d: %-*s %-*s %*s %-*s %*lld\n",
-+					i,
-+					foff_w, rbuf,
-+					boff_w, _("delalloc"),
-+					agno_w, "",
-+					aoff_w, "",
-+					tot_w, (long long)map[i+1].bmv_length);
- 			} else {
- 				snprintf(bbuf, sizeof(bbuf), "%lld..%lld",
- 					(long long) map[i + 1].bmv_block,
-@@ -413,6 +436,8 @@ bmap_f(
- 		}
- 		if ((flg || pflag) && vflag > 1) {
- 			printf(_(" FLAG Values:\n"));
-+			printf(_("    %*.*o Shared extent\n"),
-+				NFLG+1, NFLG+1, FLG_SHARED);
- 			printf(_("    %*.*o Unwritten preallocated extent\n"),
- 				NFLG+1, NFLG+1, FLG_PRE);
- 			printf(_("    %*.*o Doesn't begin on stripe unit\n"),
-diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-index e196559..098cfae 100644
---- a/man/man8/xfs_bmap.8
-+++ b/man/man8/xfs_bmap.8
-@@ -36,6 +36,10 @@ no matter what the filesystem's block size is.
- If this option is specified, information about the file's
- attribute fork is printed instead of the default data fork.
- .TP
-+.B \-c
-+If this option is specified, information about the file's
-+copy on write fork is printed instead of the default data fork.
-+.TP
- .B \-d
- If portions of the file have been migrated offline by
- a DMAPI application, a DMAPI read event will be generated to
-@@ -45,6 +49,16 @@ printed.  However if the
- option is used, no DMAPI read event will be generated for a
- DMAPI file and offline portions will be reported as holes.
- .TP
-+.B \-e
-+If this option is used,
-+.B xfs_bmap
-+obtains all delayed allocation extents, and does not flush dirty pages
-+to disk before querying extent data. With the
-+.B \-v
-+option, the
-+.I flags
-+column will show which extents have not yet been allocated.
-+.TP
- .B \-l
- If this option is used, then
- .IP
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 2c56f09..d089524 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -256,7 +256,7 @@ See the
- .B pwrite
- command.
- .TP
--.BI "bmap [ \-adlpv ] [ \-n " nx " ]"
-+.BI "bmap [ \-acdelpv ] [ \-n " nx " ]"
- Prints the block mapping for the current open file. Refer to the
- .BR xfs_bmap (8)
- manual page for complete documentation.
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+@@ -148,6 +149,9 @@ endif
+ ifeq ($(ENABLE_BLKID),yes)
+ PCFLAGS+= -DENABLE_BLKID
+ endif
++ifeq ($(ENABLE_INTERNAL_FSXATTR),yes)
++PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
++endif
+ 
+ 
+ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+diff --git a/include/linux.h b/include/linux.h
+index bc7af9f..cd0de71 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -32,7 +32,13 @@
+ #include <stdio.h>
+ #include <asm/types.h>
+ #include <mntent.h>
++#ifdef OVERRIDE_SYSTEM_FSXATTR
++# define fsxattr sys_fsxattr
++#endif
+ #include <linux/fs.h> /* fsxattr defintion for new kernels */
++#ifdef OVERRIDE_SYSTEM_FSXATTR
++# undef fsxattr
++#endif
+ 
+ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+ {
+@@ -175,7 +181,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
+  * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
+  * so this is purely for supporting builds against old kernel headers.
+  */
+-#ifndef FS_IOC_FSGETXATTR
++#if !defined FS_IOC_FSGETXATTR || defined OVERRIDE_SYSTEM_FSXATTR
+ struct fsxattr {
+ 	__u32		fsx_xflags;	/* xflags field value (get/set) */
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+@@ -184,7 +190,9 @@ struct fsxattr {
+ 	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
+ 	unsigned char	fsx_pad[8];
+ };
++#endif
+ 
++#ifndef FS_IOC_FSGETXATTR
+ /*
+  * Flags for the fsx_xflags field
+  */
+diff --git a/io/fiemap.c b/io/fiemap.c
+index f89da06..bcbae49 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -19,7 +19,6 @@
+ #include "platform_defs.h"
+ #include "command.h"
+ #include <linux/fiemap.h>
+-#include <linux/fs.h>
+ #include "init.h"
+ #include "io.h"
+ 
 
 _______________________________________________
 xfs mailing list
