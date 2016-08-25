@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 63C3C7DDA
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:36:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2847A8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:36:36 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F14CB7DDA
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:36:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A8FF3304043
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:36:44 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id HHlZ1ztlKT4b4pKa (version=TLSv1.2
+	cuda.sgi.com with ESMTP id QpMIBaCT5mhCYP39 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:36:34 -0700 (PDT)
-Subject: [PATCH 42/71] xfs: cancel CoW reservations and clear inode reflink
-	flag when freeing blocks
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:36:42 -0700 (PDT)
+Subject: [PATCH 43/71] xfs: cancel pending CoW reservations when destroying
+	inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:36:30 -0700
-Message-ID: <147216819041.867.11860151583478539823.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:36:36 -0700
+Message-ID: <147216819658.867.12009703316700069391.stgit@birch.djwong.org>
 In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,47 +32,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-When we're freeing blocks (truncate, punch, etc.), clear all CoW
-reservations in the range being freed.  If the file block count
-drops to zero, also clear the inode reflink flag.
+When destroying the inode, cancel all pending reservations in the CoW
+fork so that all the reserved blocks go back to the free pile.  In
+theory this sort of cleanup is only needed to clean up after write
+errors.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ fs/xfs/xfs_super.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0c25a76..8c971fd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f62d50c..86afb15 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
 @@ -49,6 +49,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
+ #include "xfs_rmap_item.h"
+ #include "xfs_refcount_item.h"
+ #include "xfs_bmap_item.h"
 +#include "xfs_reflink.h"
  
- kmem_zone_t *xfs_inode_zone;
+ #include <linux/namei.h>
+ #include <linux/init.h>
+@@ -938,6 +939,7 @@ xfs_fs_destroy_inode(
+ 	struct inode		*inode)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	int			error;
  
-@@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
- 			goto out;
- 	}
+ 	trace_xfs_destroy_inode(ip);
  
-+	/* Remove all pending CoW reservations. */
-+	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
-+			last_block);
-+	if (error)
-+		goto out;
+@@ -945,6 +947,12 @@ xfs_fs_destroy_inode(
+ 	XFS_STATS_INC(ip->i_mount, vn_rele);
+ 	XFS_STATS_INC(ip->i_mount, vn_remove);
+ 
++	error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
++	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
++		xfs_warn(ip->i_mount, "Error %d while evicting CoW blocks "
++				"for inode %llu.",
++				error, ip->i_ino);
 +
-+	/*
-+	 * Clear the reflink flag if we truncated everything.
-+	 */
-+	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
-+		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+
- 	/*
- 	 * Always re-log the inode so that our permanent transaction can keep
- 	 * on rolling it forward in the log.
+ 	xfs_inactive(ip);
+ 
+ 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
 
 _______________________________________________
 xfs mailing list
