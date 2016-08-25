@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 160E581EF
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:51:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA86E8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:09 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 501DC81F7
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:51:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C5BCCAC001
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:16 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id IBVL7qAiCAGa41rp (version=TLSv1.2
+	cuda.sgi.com with ESMTP id z3BtBNcj3vz5kIua (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:08 -0700 (PDT)
-Subject: [PATCH 42/71] xfs: don't mix reflink and DAX mode for now
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:14 -0700 (PDT)
+Subject: [PATCH 43/71] xfs: recognize the reflink feature bit
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:51:04 -0700
-Message-ID: <147216906459.4420.5585305790072253161.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:51:10 -0700
+Message-ID: <147216907076.4420.2565511908216135157.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,30 +31,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Since we don't have a strategy for handling both DAX and reflink,
-for now we'll just prohibit both being set at the same time.
+Add the reflink feature flag to the set of recognized feature flags.
+This enables users to write to reflink filesystems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_inode_buf.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ libxfs/xfs_format.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 2966d54..3f2049b 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -416,6 +416,10 @@ xfs_dinode_verify(
- 	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
- 		return false;
- 
-+	/* don't let reflink and dax mix */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags2 & XFS_DIFLAG2_DAX))
-+		return false;
-+
- 	return true;
- }
- 
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index e1551f1..f2b9737 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -459,7 +459,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
 
 _______________________________________________
 xfs mailing list
