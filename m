@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E446F836C
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B6DCE8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:07 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 59FC58374
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EB9A730404E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:14 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id EcyZekrXMI1SgfAz (version=TLSv1.2
+	cuda.sgi.com with ESMTP id JTlmgrQlBPQ3jRRq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:06 -0700 (PDT)
-Subject: [PATCH 16/24] xfs: scrub should cross-reference with the bnobt
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:13 -0700 (PDT)
+Subject: [PATCH 17/24] xfs: cross-reference bnobt records with cntbt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:57:02 -0700
-Message-ID: <147216942202.6398.14566422832252652021.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:57:08 -0700
+Message-ID: <147216942818.6398.9538162566803812115.stgit@birch.djwong.org>
 In-Reply-To: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 References: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,55 +31,47 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-When we're scrubbing various btrees, cross-reference the records with
-the bnobt to ensure that we don't also think the space is free.
+Scrub should make sure that each bnobt record has a corresponding
+cntbt record.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_alloc.c |   19 +++++++++++++++++++
- libxfs/xfs_alloc.h |    3 +++
- 2 files changed, 22 insertions(+)
+ libxfs/xfs_alloc.c |    2 +-
+ libxfs/xfs_alloc.h |    7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 
 diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 055d57e..96c6e2e 100644
+index 96c6e2e..380ade3 100644
 --- a/libxfs/xfs_alloc.c
 +++ b/libxfs/xfs_alloc.c
-@@ -2970,3 +2970,22 @@ xfs_alloc_query_range(
- 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
- 			xfs_alloc_query_range_helper, &query);
- }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_alloc_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.a.ar_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.a.ar_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
-+}
+@@ -166,7 +166,7 @@ xfs_alloc_lookup_ge(
+  * Lookup the first record less than or equal to [bno, len]
+  * in the btree given by cur.
+  */
+-static int				/* error */
++int					/* error */
+ xfs_alloc_lookup_le(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	xfs_agblock_t		bno,	/* starting block of extent */
 diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index c3ada6b..b740456 100644
+index b740456..2afc024 100644
 --- a/libxfs/xfs_alloc.h
 +++ b/libxfs/xfs_alloc.h
-@@ -222,4 +222,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_alloc_rec_incore *high_rec,
- 		xfs_alloc_query_range_fn fn, void *priv);
+@@ -189,6 +189,13 @@ xfs_free_extent(
+ 	enum xfs_ag_resv_type	type);	/* block reservation type */
  
-+int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-+		xfs_extlen_t len, bool *exist);
+ int				/* error */
++xfs_alloc_lookup_le(
++	struct xfs_btree_cur	*cur,	/* btree cursor */
++	xfs_agblock_t		bno,	/* starting block of extent */
++	xfs_extlen_t		len,	/* length of extent */
++	int			*stat);	/* success/failure */
 +
- #endif	/* __XFS_ALLOC_H__ */
++int				/* error */
+ xfs_alloc_lookup_ge(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	xfs_agblock_t		bno,	/* starting block of extent */
 
 _______________________________________________
 xfs mailing list
