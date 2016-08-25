@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DE3FC82D6
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:54:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 531F8AC001
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:54:13 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EE24682E2
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:54:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A30CF8F8037
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:54:23 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id h1hwwQX2pzXRkqzm (version=TLSv1.2
+	cuda.sgi.com with ESMTP id LvUeCogVatJCOQja (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:54:11 -0700 (PDT)
-Subject: [PATCH 70/71] xfs_repair: check for mergeable refcount records
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:54:21 -0700 (PDT)
+Subject: [PATCH 71/71] mkfs.xfs: format reflink enabled filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:54:06 -0700
-Message-ID: <147216924692.4420.10874812188502361823.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:54:14 -0700
+Message-ID: <147216925429.4420.3323449215866524186.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,90 +31,280 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Make sure there aren't adjacent refcount records that could be merged;
-this is a sign that the refcount tree algorithms aren't working
-correctly.
+Create the refcount btree at mkfs time and set the feature flag.
+
+v2: Turn on the reflink feature when calculating the minimum log size.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/scan.c |   32 +++++++++++++++++++++++++++++++-
- 1 file changed, 31 insertions(+), 1 deletion(-)
+ include/xfs_multidisk.h  |    3 +-
+ libxfs/libxfs_api_defs.h |    1 +
+ man/man8/mkfs.xfs.8      |   28 ++++++++++++++++++
+ mkfs/maxtrres.c          |    5 +++
+ mkfs/xfs_mkfs.c          |   70 ++++++++++++++++++++++++++++++++++++++++++----
+ 5 files changed, 99 insertions(+), 8 deletions(-)
 
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 499253e..f4d6f89 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1215,6 +1215,12 @@ out:
- 		rmap_avoid_check();
- }
+diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
+index 8dc3027..ce9bbce 100644
+--- a/include/xfs_multidisk.h
++++ b/include/xfs_multidisk.h
+@@ -68,6 +68,7 @@ extern void res_failed (int err);
+ /* maxtrres.c */
+ extern int max_trans_res(unsigned long agsize, int crcs_enabled, int dirversion,
+ 		int sectorlog, int blocklog, int inodelog, int dirblocklog,
+-		int logversion, int log_sunit, int finobt, int rmapbt);
++		int logversion, int log_sunit, int finobt, int rmapbt,
++		int reflink);
  
-+struct refc_priv {
-+	struct xfs_refcount_irec	last_rec;
-+	xfs_agblock_t			nr_blocks;
-+};
-+
-+
+ #endif	/* __XFS_MULTIDISK_H__ */
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 8026522..8d57a66 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -141,5 +141,6 @@
+ #define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
+ #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+ #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
++#define xfs_refc_block			libxfs_refc_block
+ 
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 9578c4d..6dab46a 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -213,6 +213,34 @@ for filesystems created with the (default)
+ option set. When the option
+ .B \-m crc=0
+ is used, the reverse mapping btree feature is not supported and is disabled.
++.TP
++.BI reflink= value
++This option enables the use of a separate reference count btree index in each
++allocation group. The value is either 0 to disable the feature, or 1 to create
++a reference count btree in each allocation group.
++.IP
++The reference count btree enables the sharing of physical extents between
++the data forks of different files, which is commonly known as "reflink".
++Unlike traditional Unix filesystems which assume that every inode and
++logical block pair map to a unique physical block, a reflink-capable
++XFS filesystem removes the uniqueness requirement, allowing up to four
++billion arbitrary inode/logical block pairs to map to a physical block.
++If a program tries to write to a multiply-referenced block in a file, the write
++will be redirected to a new block, and that file's logical-to-physical
++mapping will be changed to the new block ("copy on write").  This feature
++enables the creation of per-file snapshots and deduplication.  It is only
++available for the data forks of regular files.
++.IP
++By default,
++.B mkfs.xfs
++will not create reference count btrees and therefore will not enable the
++reflink feature.  This feature is only available for filesystems created with
++the (default)
++.B \-m crc=1
++option set. When the option
++.B \-m crc=0
++is used, the reference count btree feature is not supported and reflink is
++disabled.
+ .RE
+ .TP
+ .BI \-d " data_section_options"
+diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+index d7978b6..fba7818 100644
+--- a/mkfs/maxtrres.c
++++ b/mkfs/maxtrres.c
+@@ -39,7 +39,8 @@ max_trans_res(
+ 	int		logversion,
+ 	int		log_sunit,
+ 	int		finobt,
+-	int		rmapbt)
++	int		rmapbt,
++	int		reflink)
+ {
+ 	xfs_sb_t	*sbp;
+ 	xfs_mount_t	mount;
+@@ -75,6 +76,8 @@ max_trans_res(
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FINOBT;
+ 	if (rmapbt)
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
++	if (reflink)
++		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
+ 
+ 	libxfs_mount(&mount, sbp, 0,0,0,0);
+ 	maxfsb = libxfs_log_calc_minimum_size(&mount);
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 580119e..fc565c0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -672,6 +672,8 @@ struct opt_params mopts = {
+ 		"uuid",
+ #define M_RMAPBT	3
+ 		"rmapbt",
++#define M_REFLINK	4
++		"reflink",
+ 		NULL
+ 	},
+ 	.subopt_params = {
+@@ -697,6 +699,12 @@ struct opt_params mopts = {
+ 		  .maxval = 1,
+ 		  .defaultval = 0,
+ 		},
++		{ .index = M_REFLINK,
++		  .conflicts = { LAST_CONFLICT },
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 0,
++		},
+ 	},
+ };
+ 
+@@ -1155,6 +1163,7 @@ struct sb_feat_args {
+ 	bool	dirftype;
+ 	bool	parent_pointers;
+ 	bool	rmapbt;
++	bool	reflink;
+ };
+ 
  static void
- scan_refcbt(
- 	struct xfs_btree_block	*block,
-@@ -1234,6 +1240,7 @@ scan_refcbt(
- 	int			numrecs;
- 	int			state;
- 	xfs_agblock_t		lastblock = 0;
-+	struct refc_priv	*refc_priv = priv;
+@@ -1227,6 +1236,8 @@ sb_set_features(
+ 		sbp->sb_features_ro_compat = XFS_SB_FEAT_RO_COMPAT_FINOBT;
+ 	if (fp->rmapbt)
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
++	if (fp->reflink)
++		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
  
- 	if (magic != XFS_REFC_CRC_MAGIC) {
- 		name = "(unknown)";
-@@ -1258,6 +1265,8 @@ scan_refcbt(
- 			goto out;
+ 	/*
+ 	 * Sparse inode chunk support has two main inode alignment requirements.
+@@ -1488,6 +1499,7 @@ main(
+ 		.dirftype = true,
+ 		.parent_pointers = false,
+ 		.rmapbt = false,
++		.reflink = false,
+ 	};
+ 
+ 	platform_uuid_generate(&uuid);
+@@ -1776,6 +1788,10 @@ main(
+ 					sb_feat.rmapbt = getnum(
+ 						value, &mopts, M_RMAPBT);
+ 					break;
++				case M_REFLINK:
++					sb_feat.reflink = getnum(
++						value, &mopts, M_REFLINK);
++					break;
+ 				default:
+ 					unknown('m', value);
+ 				}
+@@ -2115,6 +2131,13 @@ _("rmapbt not supported without CRC support\n"));
+ 			usage();
+ 		}
+ 		sb_feat.rmapbt = false;
++
++		if (sb_feat.reflink) {
++			fprintf(stderr,
++_("reflink not supported without CRC support\n"));
++			usage();
++		}
++		sb_feat.reflink = false;
  	}
  
-+	refc_priv->nr_blocks++;
-+
- 	/* check for btree blocks multiply claimed */
- 	state = get_bmap(agno, bno);
- 	if (!(state == XR_E_UNKNOWN || state == XR_E_REFC))  {
-@@ -1349,6 +1358,20 @@ _("extent (%u/%u) len %u claimed, state is %d\n"),
- 				lastblock = b;
- 			}
  
-+			/* Is this record mergeable with the last one? */
-+			if (refc_priv->last_rec.rc_startblock +
-+			    refc_priv->last_rec.rc_blockcount == b &&
-+			    refc_priv->last_rec.rc_refcount == nr) {
-+				do_warn(
-+	_("record %d in block (%u/%u) of %s tree should be merged with previous record\n"),
-+					i, agno, bno, name);
-+				refc_priv->last_rec.rc_blockcount += len;
-+			} else {
-+				refc_priv->last_rec.rc_startblock = b;
-+				refc_priv->last_rec.rc_blockcount = len;
-+				refc_priv->last_rec.rc_refcount = nr;
+@@ -2599,7 +2622,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 				   sb_feat.crcs_enabled, sb_feat.dir_version,
+ 				   sectorlog, blocklog, inodelog, dirblocklog,
+ 				   sb_feat.log_version, lsunit, sb_feat.finobt,
+-				   sb_feat.rmapbt);
++				   sb_feat.rmapbt, sb_feat.reflink);
+ 	ASSERT(min_logblocks);
+ 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+ 	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+@@ -2734,7 +2757,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+ 		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
++		   "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+@@ -2745,7 +2768,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			"", sectorsize, sb_feat.attr_version,
+ 				    !sb_feat.projid16bit,
+ 			"", sb_feat.crcs_enabled, sb_feat.finobt, sb_feat.spinodes,
+-			sb_feat.rmapbt,
++			sb_feat.rmapbt, sb_feat.reflink,
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+ 			sb_feat.dir_version, dirblocksize, sb_feat.nci,
+@@ -2933,7 +2956,12 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+ 			agf->agf_rmap_blocks = cpu_to_be32(1);
+ 		}
+-
++		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			agf->agf_refcount_root = cpu_to_be32(
++					libxfs_refc_block(mp));
++			agf->agf_refcount_level = cpu_to_be32(1);
++			agf->agf_refcount_blocks = cpu_to_be32(1);
++		}
+ 		agf->agf_flfirst = 0;
+ 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+ 		agf->agf_flcount = 0;
+@@ -3102,6 +3130,24 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 
+ 		/*
++		 * refcount btree root block
++		 */
++		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++			buf = libxfs_getbuf(mp->m_ddev_targp,
++					XFS_AGB_TO_DADDR(mp, agno,
++						libxfs_refc_block(mp)),
++					bsize);
++			buf->b_ops = &xfs_refcountbt_buf_ops;
++
++			block = XFS_BUF_TO_BLOCK(buf);
++			memset(block, 0, blocksize);
++			libxfs_btree_init_block(mp, buf, XFS_REFC_CRC_MAGIC, 0,
++						0, agno, XFS_BTREE_CRC_BLOCKS);
++
++			libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++		}
++
++		/*
+ 		 * INO btree root block
+ 		 */
+ 		buf = libxfs_getbuf(mp->m_ddev_targp,
+@@ -3189,9 +3235,21 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			rrec->rm_offset = 0;
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 
++			/* account for refcount btree root */
++			if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++				rrec = XFS_RMAP_REC_ADDR(block, 5);
++				rrec->rm_startblock = cpu_to_be32(
++							libxfs_refc_block(mp));
++				rrec->rm_blockcount = cpu_to_be32(1);
++				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
++				rrec->rm_offset = 0;
++				be16_add_cpu(&block->bb_numrecs, 1);
 +			}
 +
- 			/* XXX: probably want to mark the reflinked areas? */
- 		}
- 		goto out;
-@@ -2192,10 +2215,17 @@ validate_agf(
- 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
- 		bno = be32_to_cpu(agf->agf_refcount_root);
- 		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+			struct refc_priv	priv;
-+
-+			memset(&priv, 0, sizeof(priv));
- 			scan_sbtree(bno,
- 				    be32_to_cpu(agf->agf_refcount_level),
- 				    agno, 0, scan_refcbt, 1, XFS_REFC_CRC_MAGIC,
--				    agcnts, &xfs_refcountbt_buf_ops);
-+				    &priv, &xfs_refcountbt_buf_ops);
-+			if (be32_to_cpu(agf->agf_refcount_blocks) != priv.nr_blocks)
-+				do_warn(_("bad refcountbt block count %u, saw %u\n"),
-+					priv.nr_blocks,
-+					be32_to_cpu(agf->agf_refcount_blocks));
- 		} else  {
- 			do_warn(_("bad agbno %u for refcntbt root, agno %d\n"),
- 				bno, agno);
+ 			/* account for the log space */
+ 			if (loginternal && agno == logagno) {
+-				rrec = XFS_RMAP_REC_ADDR(block, 5);
++				rrec = XFS_RMAP_REC_ADDR(block,
++					be16_to_cpu(block->bb_numrecs) + 1);
+ 				rrec->rm_startblock = cpu_to_be32(
+ 						XFS_FSB_TO_AGBNO(mp, logstart));
+ 				rrec->rm_blockcount = cpu_to_be32(logblocks);
+@@ -3446,7 +3504,7 @@ usage( void )
+ {
+ 	fprintf(stderr, _("Usage: %s\n\
+ /* blocksize */		[-b log=n|size=num]\n\
+-/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1]\n\
++/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
+ /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+ 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+ 			    sectlog=n|sectsize=num\n\
 
 _______________________________________________
 xfs mailing list
