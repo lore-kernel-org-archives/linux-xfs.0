@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9725B7CA4
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 07:38:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3281D8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 05:38:07 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3qhHxTKxWRI5L3TD (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 05:38:06 -0700 (PDT)
-Date: Thu, 25 Aug 2016 08:38:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: factor our a helper to calculate the EOF
-	alignment
-Message-ID: <20160825123804.GB25041@bfoster.bfoster>
-References: <1471816273-28940-1-git-send-email-hch@lst.de>
-	<1471816273-28940-3-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4A7B27CA0
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:43:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A45A7AC001
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 15:43:01 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	mQhebFFjH7Qlaiyn for <xfs@oss.sgi.com>;
+	Thu, 25 Aug 2016 15:42:33 -0700 (PDT)
+Date: Fri, 26 Aug 2016 08:42:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Make __xfs_xattr_put_listen preperly report errors.
+Message-ID: <20160825224215.GF19025@dastard>
+References: <1471967653-2561-1-git-send-email-asavkov@redhat.com>
+	<20160824015551.GB19025@dastard>
+	<20160824080833.GA11104@shodan.usersys.redhat.com>
+	<20160825002408.GC19025@dastard>
+	<20160825082109.GB11104@shodan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1471816273-28940-3-git-send-email-hch@lst.de>
+In-Reply-To: <20160825082109.GB11104@shodan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,94 +33,135 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: Artem Savkov <asavkov@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sun, Aug 21, 2016 at 11:51:11PM +0200, Christoph Hellwig wrote:
-> And drop the pointless mp argument to xfs_iomap_eof_align_last_fsb,
-> while we're at it.
+On Thu, Aug 25, 2016 at 10:21:09AM +0200, Artem Savkov wrote:
+> On Thu, Aug 25, 2016 at 10:24:08AM +1000, Dave Chinner wrote:
+> > On Wed, Aug 24, 2016 at 10:08:33AM +0200, Artem Savkov wrote:
+> > > On Wed, Aug 24, 2016 at 11:55:51AM +1000, Dave Chinner wrote:
+> > > > On Tue, Aug 23, 2016 at 05:54:13PM +0200, Artem Savkov wrote:
+> > > > > Commit "xfs: only return -errno or success from attr ->put_listent" changes the
+> > > > 
+> > > > Please quote commits in --oneline format in changelogs - it makes it
+> > > > much easier to find the change you are refering to if there is both
+> > > > a commit ID and the text string in the commit message. (i.e. text
+> > > > string confirms the commit id is the one you meant to quote).
+> > > 
+> > > Noted, thanks.
+> > > 
+> > > > 
+> > > > commit 2a6fba6 ("xfs: only return -errno or success from attr
+> > > > ->put_listent") is the one you are refering to here, right?
+> > > 
+> > > Yes, that is the one.
+> > > 
+> > > > > returnvalue of __xfs_xattr_put_listen to 0 in case when there is insufficient
+> > > > > space in the buffer assuming that setting context->count to -1 would be enough,
+> > > > > but all of the ->put_listent callers only check seen_enough. This results in
+> > > > > a failed assertion:
+> > > > > XFS: Assertion failed: context->count >= 0, file: fs/xfs/xfs_xattr.c, line: 175
+> > > > > in insufficient buffer size case.
+> > > > 
+> > > > You have a test case? Can you turn it into an xfstest? We really
+> > > > need regression tests that cover issues like this....
+> > > > 
+> > > 
+> > > llistxattr02 test from LTP reliably hits this, I'll see how this can be
+> > > ported to xfstest.
+> > 
+> > So, after battling the obtuse, completely useless ltp install
+> > documentation and having to resort to reverse engineering a working
+> > configuration using strace, I finally got this running, I think, on
+> > an XFS filesystem:
+> > 
+> > /mnt/scratch/ltp$ sudo ./runltp -b /dev/pmem1 -B xfs -z /dev/vdc -Z xfs -q -p -s llistxattr -I 100
+> > ....
+> > Summary:
+> > passed   1
+> > failed   0
+> > skipped  0
+> > warnings 0
+> > tst_test.c:756: INFO: Timeout per run is 0h 05m 00s
+> > llistxattr02.c:76: PASS: llistxattr() failed as expected: ERANGE
+> > llistxattr02.c:76: PASS: llistxattr() failed as expected: ENOENT
+> > llistxattr02.c:76: PASS: llistxattr() failed as expected: EFAULT
+> > ....
+> > 
+> > And it doesn't fail. strace output:
+> > 
+> > 24833 lsetxattr("symlink", "security.ltptest", "test", 4, XATTR_CREATE) = 0
+> > 24833 llistxattr("symlink", 0x7ffe312356b0, 1) = -1 ERANGE (Numerical result out of range)
+> > 24833 llistxattr("", 0x7ffe312356a0, 20) = -1 ENOENT (No such file or directory)
+> > 24833 llistxattr(0xffffffffffffffff, 0x7ffe312356a0, 20) = -1 EFAULT (Bad address)
+> > 
+> > I'm assuming from your description that it is the first one of these
+> > that fails for you as it is the "buffer too small" test case. So,
+> > not as obvious as it first seems - ltp doesn't appear to be a
+> > reliable reproducer of the problem, so we are going to need a custom
+> > test to exercise it....
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> LTP doesn't check dmesg for warnings on it's own, so it is ok for the test
+> to be marked as "PASSED" since we get ERANGE after all. But you should
+> be able to see the warnings in dmesg.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Of course. My systems are set up so that any critical message that
+comes through dmesg is wall'd to all active sessions, so it doesn't
+matter that xfstests or ltp doesn't capture the error, I know it's
+happened.
 
->  fs/xfs/xfs_iomap.c | 31 +++++++++++++++++++++----------
->  1 file changed, 21 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index ba3592f..918511a 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -70,15 +70,13 @@ xfs_bmbt_to_iomap(
->  	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
->  }
->  
-> -STATIC int
-> -xfs_iomap_eof_align_last_fsb(
-> -	xfs_mount_t	*mp,
-> -	xfs_inode_t	*ip,
-> -	xfs_extlen_t	extsize,
-> -	xfs_fileoff_t	*last_fsb)
-> +static xfs_extlen_t
-> +xfs_eof_alignment(
-> +	struct xfs_inode	*ip,
-> +	xfs_extlen_t		extsize)
->  {
-> -	xfs_extlen_t	align = 0;
-> -	int		eof, error;
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_extlen_t		align = 0;
->  
->  	if (!XFS_IS_REALTIME_INODE(ip)) {
->  		/*
-> @@ -109,8 +107,21 @@ xfs_iomap_eof_align_last_fsb(
->  			align = extsize;
->  	}
->  
-> +	return align;
-> +}
-> +
-> +STATIC int
-> +xfs_iomap_eof_align_last_fsb(
-> +	struct xfs_inode	*ip,
-> +	xfs_extlen_t		extsize,
-> +	xfs_fileoff_t		*last_fsb)
-> +{
-> +	xfs_extlen_t		align = xfs_eof_alignment(ip, extsize);
-> +
->  	if (align) {
->  		xfs_fileoff_t	new_last_fsb = roundup_64(*last_fsb, align);
-> +		int		eof, error;
-> +
->  		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
->  		if (error)
->  			return error;
-> @@ -180,7 +191,7 @@ xfs_iomap_write_direct(
->  		 */
->  		ASSERT(XFS_IFORK_PTR(ip, XFS_DATA_FORK)->if_flags &
->  								XFS_IFEXTENTS);
-> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-> +		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
->  		if (error)
->  			goto out_unlock;
->  	} else {
-> @@ -638,7 +649,7 @@ retry:
->  	}
->  
->  	if (prealloc || extsz) {
-> -		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
-> +		error = xfs_iomap_eof_align_last_fsb(ip, extsz, &last_fsb);
->  		if (error)
->  			return error;
->  	}
-> -- 
-> 2.1.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Besides, I always use CONFIG_XFS_DEBUG=y, which means these things
+BUG() rather than just print a warning, and that tends to be fatal
+in more ways than one...
+
+> I'm attaching the config I'm using. With this config I can repdroduce the
+> issue with both 4.8-rc3 and next-20160825.
+
+What I suggest you do is try to recreate the problem manually. I'm
+pretty certain I know what is different between our test
+environments that is resulting in me not seeing the problem
+but, really, we need more people with root cause analysis skills
+around here so I don't have to spend time solving every problem that
+is reported.
+
+That is, it's all well and good to send a patch to fix a problem,
+but if we don't understand the root cause of the problem being
+fixed, then we have no idea whether we've fixed the problem fully or
+not.  Part of understanding the root cause is finding a reliable
+reproducer of the problem, part of it is reading and understanding
+the code being fixed, and part of it is understanding the
+environment and behaviour that demonstrates the problem.
+
+So when I look at the fix, and see that it doesn't reproduce on my
+systems, it's clear that it's either not yet fully understood or
+hasn't been fully explained by the person who understands the issue.
+These are some of the questions I've asked myself to understand why
+we are seeing what we've been seeing:
+
+	- what condition in the unfixed code leads to the ASSERT
+	  being tripped?
+	- how does the patch prevent that from occurring?
+	- at what threshold does the problem trigger (i.e. n=0, n=1,
+	  n=2 .... ?)
+	- how do the environmental initial conditions affect the
+	  test being run?
+	- what do security layers automatically store in the inode
+	  at creation time?
+	- how can we modify the test to always trigger the assert?
+
+I know the answer, and it would take much less time to tell everyone
+that it does to write an email like this.  But that means I'll just
+have to do the same thing next time, and the next time, and so on.
+The more people we have that can think through issues like this and
+come to the right conclusion without needing my help, the better off
+we'll all be...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
