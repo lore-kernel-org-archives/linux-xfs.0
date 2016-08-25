@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E9DC81A1
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:50:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 11250304043
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:50:13 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 4XdIANjMATwyd3ST (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 080C881A9
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:50:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 83A02AC005
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:50:20 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5fW4Qf3ykn7zMtXR (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:50:11 -0700 (PDT)
-Subject: [PATCH 33/71] xfs: support FS_XFLAG_REFLINK on reflink filesystems
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:50:18 -0700 (PDT)
+Subject: [PATCH 34/71] xfs: create a separate cow extent size hint for the
+	allocator
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:50:05 -0700
-Message-ID: <147216900528.4420.3049697376537013476.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:50:13 -0700
+Message-ID: <147216901370.4420.5128548957073800504.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,95 +32,218 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Add support for reporting the "reflink" inode flag in the XFS-specific
-getxflags ioctl, and allow the user to clear the flag if file size is
-zero.
+Create a per-inode extent size allocator hint for copy-on-write.  This
+hint is separate from the existing extent size hint so that CoW can
+take advantage of the fragmentation-reducing properties of extent size
+hints without disabling delalloc for regular writes.
 
-v2: Move the reflink flag out of the way of the DAX flag, and add the
-new cowextsize flag.
+The extent size hint that's fed to the allocator during a copy on
+write operation is the greater of the cowextsize and regular extsize
+hint.
 
-v3: do not report (or allow changes to) FL_NOCOW_FL, since we don't
-support a flag to prevent CoWing and the reflink flag is a poor
-proxy.  We'll try to design away the need for the NOCOW flag.
+During reflink, if we're sharing the entire source file to the entire
+destination file and the destination file doesn't already have a
+cowextsize hint, propagate the source file's cowextsize hint to the
+destination file.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/darwin.h  |    8 ++++++++
- include/freebsd.h |    7 +++++++
- include/irix.h    |    7 +++++++
- include/linux.h   |    8 ++++++++
- 4 files changed, 30 insertions(+)
+ include/darwin.h        |    3 ++-
+ include/freebsd.h       |    3 ++-
+ include/irix.h          |    3 ++-
+ include/linux.h         |    3 ++-
+ libxfs/libxfs_priv.h    |    1 +
+ libxfs/xfs_bmap.c       |   13 +++++++++++--
+ libxfs/xfs_format.h     |    3 ++-
+ libxfs/xfs_fs.h         |    3 ++-
+ libxfs/xfs_inode_buf.c  |    4 +++-
+ libxfs/xfs_inode_buf.h  |    1 +
+ libxfs/xfs_log_format.h |    3 ++-
+ 11 files changed, 30 insertions(+), 10 deletions(-)
 
 
 diff --git a/include/darwin.h b/include/darwin.h
-index 140386a..71a63a1 100644
+index 71a63a1..2b242e0 100644
 --- a/include/darwin.h
 +++ b/include/darwin.h
-@@ -320,4 +320,12 @@ struct fsxattr {
+@@ -292,7 +292,8 @@ struct fsxattr {
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+ 	__u32		fsx_nextents;	/* nextents field value (get)	*/
+ 	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
++	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
++	unsigned char	fsx_pad[8];
+ };
  
- #endif
- 
-+#ifndef FS_XFLAG_REFLINK
-+#define FS_XFLAG_REFLINK	0x00010000	/* file is reflinked */
-+#endif
-+
-+#ifndef FS_XFLAG_COWEXTSIZE
-+#define FS_XFLAG_COWEXTSIZE	0x00020000	/* CoW extent size allocator hint */
-+#endif
-+
- #endif	/* __XFS_DARWIN_H__ */
+ /*
 diff --git a/include/freebsd.h b/include/freebsd.h
-index 668dcea..e8970a5 100644
+index e8970a5..8ee7279 100644
 --- a/include/freebsd.h
 +++ b/include/freebsd.h
-@@ -209,5 +209,12 @@ struct fsxattr {
+@@ -181,7 +181,8 @@ struct fsxattr {
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+ 	__u32		fsx_nextents;	/* nextents field value (get)	*/
+ 	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
++	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
++	unsigned char	fsx_pad[8];
+ };
  
- #endif
- 
-+#ifndef FS_XFLAG_REFLINK
-+#define FS_XFLAG_REFLINK	0x00010000	/* file is reflinked */
-+#endif
-+
-+#ifndef FS_XFLAG_COWEXTSIZE
-+#define FS_XFLAG_COWEXTSIZE	0x00020000	/* CoW extent size allocator hint */
-+#endif
- 
- #endif	/* __XFS_FREEBSD_H__ */
+ /*
 diff --git a/include/irix.h b/include/irix.h
-index 8b9d588..fea7c7c 100644
+index fea7c7c..d4f9467 100644
 --- a/include/irix.h
 +++ b/include/irix.h
-@@ -454,6 +454,13 @@ struct fsxattr {
+@@ -426,7 +426,8 @@ struct fsxattr {
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+ 	__u32		fsx_nextents;	/* nextents field value (get)	*/
+ 	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
++	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
++	unsigned char	fsx_pad[8];
+ };
  
- #endif
- 
-+#ifndef FS_XFLAG_REFLINK
-+#define FS_XFLAG_REFLINK	0x00010000	/* file is reflinked */
-+#endif
-+
-+#ifndef FS_XFLAG_COWEXTSIZE
-+#define FS_XFLAG_COWEXTSIZE	0x00020000	/* CoW extent size allocator hint */
-+#endif
- 
- /**
-  * Abstraction of mountpoints.
+ /*
 diff --git a/include/linux.h b/include/linux.h
-index 1663930..67337d6 100644
+index 67337d6..bc7af9f 100644
 --- a/include/linux.h
 +++ b/include/linux.h
-@@ -209,4 +209,12 @@ struct fsxattr {
+@@ -181,7 +181,8 @@ struct fsxattr {
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+ 	__u32		fsx_nextents;	/* nextents field value (get)	*/
+ 	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
++	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
++	unsigned char	fsx_pad[8];
+ };
  
- #endif
+ /*
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index ba4503d..8e7cb33 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -426,6 +426,7 @@ do { \
+ #define xfs_rotorstep				1
+ #define xfs_bmap_rtalloc(a)			(-ENOSYS)
+ #define xfs_get_extsz_hint(ip)			(0)
++#define xfs_get_cowextsz_hint(ip)		(0)
+ #define xfs_inode_is_filestream(ip)		(0)
+ #define xfs_filestream_lookup_ag(ip)		(0)
+ #define xfs_filestream_new_ag(ip,ag)		(0)
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index a94f855..875a15f 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -3657,7 +3657,13 @@ xfs_bmap_btalloc(
+ 	else if (mp->m_dalign)
+ 		stripe_align = mp->m_dalign;
  
-+#ifndef FS_XFLAG_REFLINK
-+#define FS_XFLAG_REFLINK	0x00010000	/* file is reflinked */
-+#endif
-+
-+#ifndef FS_XFLAG_COWEXTSIZE
-+#define FS_XFLAG_COWEXTSIZE	0x00020000	/* CoW extent size allocator hint */
-+#endif
-+
- #endif	/* __XFS_LINUX_H__ */
+-	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
++	if (ap->userdata) {
++		if (ap->flags & XFS_BMAPI_COWFORK)
++			align = xfs_get_cowextsz_hint(ap->ip);
++		else
++			align = xfs_get_extsz_hint(ap->ip);
++	} else
++		align = 0;
+ 	if (unlikely(align)) {
+ 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+ 						align, 0, ap->eof, 0, ap->conv,
+@@ -4171,7 +4177,10 @@ xfs_bmapi_reserve_delalloc(
+ 		alen = XFS_FILBLKS_MIN(alen, got->br_startoff - aoff);
+ 
+ 	/* Figure out the extent size, adjust alen */
+-	extsz = xfs_get_extsz_hint(ip);
++	if (whichfork == XFS_COW_FORK)
++		extsz = xfs_get_cowextsz_hint(ip);
++	else
++		extsz = xfs_get_extsz_hint(ip);
+ 	if (extsz) {
+ 		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
+ 					       1, 0, &aoff, &alen);
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 3991eaa..e1551f1 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -900,7 +900,8 @@ typedef struct xfs_dinode {
+ 	__be64		di_changecount;	/* number of attribute changes */
+ 	__be64		di_lsn;		/* flush sequence */
+ 	__be64		di_flags2;	/* more random flags */
+-	__u8		di_pad2[16];	/* more padding for future expansion */
++	__be32		di_cowextsize;	/* basic cow extent size for file */
++	__u8		di_pad2[12];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+ 	xfs_timestamp_t	di_crtime;	/* time created */
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index bb70066..df58c1c 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -302,7 +302,8 @@ typedef struct xfs_bstat {
+ #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
+ 	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
+ 	__u16		bs_projid_hi;	/* higher part of project id	*/
+-	unsigned char	bs_pad[10];	/* pad space, unused		*/
++	unsigned char	bs_pad[6];	/* pad space, unused		*/
++	__u32		bs_cowextsize;	/* cow extent size		*/
+ 	__u32		bs_dmevmask;	/* DMIG event mask		*/
+ 	__u16		bs_dmstate;	/* DMIG state info		*/
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 572c101..8a804e2 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -265,6 +265,7 @@ xfs_inode_from_disk(
+ 		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+ 		to->di_flags2 = be64_to_cpu(from->di_flags2);
++		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
+ 	}
+ }
+ 
+@@ -314,7 +315,7 @@ xfs_inode_to_disk(
+ 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+ 		to->di_flags2 = cpu_to_be64(from->di_flags2);
+-
++		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
+ 		to->di_ino = cpu_to_be64(ip->i_ino);
+ 		to->di_lsn = cpu_to_be64(lsn);
+ 		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+@@ -366,6 +367,7 @@ xfs_log_dinode_to_disk(
+ 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+ 		to->di_flags2 = cpu_to_be64(from->di_flags2);
++		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
+ 		to->di_ino = cpu_to_be64(from->di_ino);
+ 		to->di_lsn = cpu_to_be64(from->di_lsn);
+ 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+diff --git a/libxfs/xfs_inode_buf.h b/libxfs/xfs_inode_buf.h
+index 958c543..6848a0a 100644
+--- a/libxfs/xfs_inode_buf.h
++++ b/libxfs/xfs_inode_buf.h
+@@ -47,6 +47,7 @@ struct xfs_icdinode {
+ 	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+ 
+ 	__uint64_t	di_flags2;	/* more random flags */
++	__uint32_t	di_cowextsize;	/* basic cow extent size for file */
+ 
+ 	xfs_ictimestamp_t di_crtime;	/* time created */
+ };
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index fffcc0f..d788d01 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -423,7 +423,8 @@ struct xfs_log_dinode {
+ 	__uint64_t	di_changecount;	/* number of attribute changes */
+ 	xfs_lsn_t	di_lsn;		/* flush sequence */
+ 	__uint64_t	di_flags2;	/* more random flags */
+-	__uint8_t	di_pad2[16];	/* more padding for future expansion */
++	__uint32_t	di_cowextsize;	/* basic cow extent size for file */
++	__uint8_t	di_pad2[12];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+ 	xfs_ictimestamp_t di_crtime;	/* time created */
 
 _______________________________________________
 xfs mailing list
