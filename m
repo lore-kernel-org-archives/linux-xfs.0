@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B47ED7CEC
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 02:35:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1777FAC007
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 00:35:47 -0700 (PDT)
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66]) by
-	cuda.sgi.com with ESMTP id iu7nGCslB61gwFrV (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2C9927CD2
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:32:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DA3C18F8037
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:16 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id uSppi8WMfNcEKOp7 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 07 Aug 2016 00:35:44 -0700 (PDT)
-Received: from submission (posteo.de [89.146.220.130])
-	by mout02.posteo.de (Postfix) with ESMTPS id 4B0742045A
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:43 +0200 (CEST)
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 3s6XQQ5zcBzysK
-	for <xfs@oss.sgi.com>; Sun,  7 Aug 2016 09:35:42 +0200 (CEST)
-Message-Id: <cover.1470552214.git.felix.janda@posteo.de>
-From: Felix Janda <felix.janda@posteo.de>
-Date: Sun, 7 Aug 2016 08:43:34 +0200
-Subject: [PATCH xfsprogs 00/14] Convert from off64_t to off_t
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:32:15 -0700 (PDT)
+Subject: [PATCH 02/71] xfs: create a standard btree size calculator code
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 25 Aug 2016 16:32:09 -0700
+Message-ID: <147216792896.867.711816517859232858.stgit@birch.djwong.org>
+In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +24,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-The off64_t type and structs/functions dependent on it were envisaged
-as a stepping stone for the LFS (large file support) transition [1].
-On most systems today, transparent LFS is enabled, i.e. off_t is 64bit
-and all interfaces are 64bit clean -- on many of these systems the type
-off64_t is even not defined. For a long time, we have used
--D_FILE_OFFSET_BITS=64 on linux, which is the only supported system
-without transparent LFS by default.
+Create a helper to generate AG btree height calculator functions.
+This will be used (much) later when we get to the refcount btree.
 
-This patch series does several related things:
-- Enable transparent LFS support via an autoconf macro instead of using
-  -D_FILE_OFFSET_BITS=64
-- Replace all types/function involving off64_t by their equivalent
-  involving off_t
-- Ensure that the xfs headers can only be used when transparent LFS is
-  enabled.
+v2: Use a helper function instead of a macro.
+v3: We can (theoretically) store more than 2^32 records in a btree, so
+    widen the fields to accept that.
+v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
+    is to estimate the worst-case number of blocks needed for a bmbt
+    expansion, not to calculate the space required to store nr records.
+v5: More minor tweaks to the loop control; move down to reflink patches.
 
-[1]: http://users.suse.com/~aj/linux_lfs.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_btree.c |   24 ++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ 2 files changed, 26 insertions(+)
 
-Felix Janda (14):
-  configure: use AC_SYS_LARGEFILE
-  remove unecessary definitions of _FILE_OFFSET_BITS
-  replace fstat64 by equivalent fstat
-  replace lstat64 by equivalent lstat
-  replace stat64 by equivalent stat
-  replace ftruncate64 by equivalent ftruncate
-  replace lseek64 by equivalent lseek
-  replace pread64 by equivalent pread
-  replace pwrite64 by equivalent pwrite
-  replace sendfile64 by equivalent sendfile
-  replace statvfs64 by equivalent statvfs
-  replace off64_t by off_t outside of public headers
-  xfs.h: require transparent LFS
-  platform: remove use of off64_t
 
- configure.ac              |  2 ++
- copy/xfs_copy.c           | 24 +++++++++---------
- fsr/xfs_fsr.c             | 64 +++++++++++++++++++++--------------------------
- include/builddefs.in      |  2 +-
- include/darwin.h          | 12 ++-------
- include/freebsd.h         |  7 ------
- include/irix.h            |  2 +-
- include/linux.h           |  2 +-
- include/xfs.h             |  2 ++
- io/bmap.c                 | 10 ++++----
- io/copy_file_range.c      | 12 ++++-----
- io/fadvise.c              |  2 +-
- io/io.h                   | 10 ++++----
- io/madvise.c              |  2 +-
- io/mincore.c              |  2 +-
- io/mmap.c                 | 12 ++++-----
- io/open.c                 | 20 +++++++--------
- io/pread.c                | 38 ++++++++++++++--------------
- io/pwrite.c               | 28 ++++++++++-----------
- io/reflink.c              |  4 +--
- io/seek.c                 | 12 ++++-----
- io/sendfile.c             | 16 ++++++------
- io/sync_file_range.c      |  2 +-
- io/truncate.c             |  4 +--
- libxcmd/paths.c           |  4 +--
- libxfs/darwin.c           |  8 +++---
- libxfs/freebsd.c          |  8 +++---
- libxfs/init.c             | 12 ++++-----
- libxfs/init.h             |  6 ++---
- libxfs/irix.c             |  8 +++---
- libxfs/linux.c            | 20 +++++++--------
- libxfs/rdwr.c             | 18 ++++++-------
- logprint/log_misc.c       |  4 +--
- logprint/logprint.c       |  2 +-
- m4/package_libcdev.m4     |  9 -------
- mdrestore/xfs_mdrestore.c | 14 +++++------
- mkfs/proto.c              |  4 +--
- mkfs/xfs_mkfs.c           |  8 +++---
- po/de.po                  | 28 ++++++++++-----------
- po/pl.po                  | 32 ++++++++++++------------
- repair/prefetch.c         |  4 +--
- repair/sb.c               |  6 ++---
- repair/xfs_repair.c       |  4 +--
- rtcp/xfs_rtcp.c           | 18 ++++++-------
- 44 files changed, 240 insertions(+), 268 deletions(-)
-
--- 
-2.7.3
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index d1155ca..1bc483b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4801,3 +4801,27 @@ xfs_btree_query_range(
+ 	return xfs_btree_overlapped_query_range(cur, &low_key, &high_key,
+ 			fn, priv);
+ }
++
++/*
++ * Calculate the number of blocks needed to store a given number of records
++ * in a short-format (per-AG metadata) btree.
++ */
++xfs_extlen_t
++xfs_btree_calc_size(
++	struct xfs_mount	*mp,
++	uint			*limits,
++	unsigned long long	len)
++{
++	int			level;
++	int			maxrecs;
++	xfs_extlen_t		rval;
++
++	maxrecs = limits[0];
++	for (level = 0, rval = 0; len > 1; level++) {
++		len += maxrecs - 1;
++		do_div(len, maxrecs);
++		maxrecs = limits[1];
++		rval += len;
++	}
++	return rval;
++}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 870a5ab..607463a 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -501,6 +501,8 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
++xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
++		unsigned long long len);
+ 
+ /* return codes */
+ #define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
 
 _______________________________________________
 xfs mailing list
