@@ -1,19 +1,18 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 839CF7DC1
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 20:01:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 55D2C304043
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:01:04 -0700 (PDT)
-Received: from tea.teachservices.com ([192.232.206.62]) by cuda.sgi.com with
-	ESMTP id WGpe55tX6mZIpzjx (version=TLSv1
-	cipher=DHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:00:59 -0700 (PDT)
-From: Freeradius-Users <bunkertor@tiscali.it>
-Subject: Re: happy))
-Date: Fri, 26 Aug 2016 04:00:53 +0300
-Message-ID: <0000683414a4$3c3566b6$89d960b1$@tiscali.it>
+	by oss.sgi.com (Postfix) with ESMTP id B2FAB7CA0
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 15:04:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A285304039
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 13:04:15 -0700 (PDT)
+Received: from sender.234.com (d720-7.lesmails.info [91.236.254.107]) by
+	cuda.sgi.com with ESMTP id UC8Ax6wrTiKHhyGO for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 13:04:07 -0700 (PDT)
+Message-ID: <91134ef005ed45bcb0bfc26220701989@kiaxxcommunication.com>
+From: "Pierre-Arnaud de VALLEY" <contact@kiaxxcommunication.com>
+Subject: =?utf-8?B?Q29tbWVudCBhdHRpcmVyIGRlcyBjbGllbnRzIGdyYWNlIGEgWW91VG==?=
+	=?utf-8?B?dWJlIChmb3JtYXRpb24gb2ZmZXJ0ZSl=?=
+Date: Thu, 25 Aug 2016 22:03:53 +0200
 MIME-Version: 1.0
-Content-Language: de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,99 +21,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8740893558305018872=="
+Content-Type: multipart/mixed; boundary="===============8967089422053563040=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: trump_zhang <trump_zhang@126.com>, xen-users-request <xen-users-request@lists.xen.org>, wagnermarques <wagnerdocri@gmail.com>, xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-This is a multipart message in MIME format.
+This is a multi-part message in MIME format.
 
---===============8740893558305018872==
+--===============8967089422053563040==
 Content-Type: multipart/alternative;
-        boundary="----=_NextPart_000_0025_0117FEA6.0778C777"
-Content-Language: de
+	boundary="----=MailPart0000_0010_353735AC"
 
-This is a multipart message in MIME format.
+This is a multi-part message in MIME format.
 
-------=_NextPart_000_0025_0117FEA6.0778C777
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-
-Hey friend, 
-
-
-I'm so happy to hear the  latest news from our friends, you may read it  here <http://thubithinu.sandersdefense.com/oihgp>
-
-Later, Freeradius-Users
-
-
-
-------=_NextPart_000_0025_0117FEA6.0778C777
-Content-Type: text/html; charset="us-ascii"
+------=MailPart0000_0010_353735AC
+Content-Type: text/plain;
+	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas=
--microsoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:off=
-ice:word" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml"=
- xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META HTTP-EQUIV=3D"C=
-ontent-Type" CONTENT=3D"text/html; charset=3Dus-ascii"><meta name=3DGe=
-nerator content=3D"Microsoft Word 15 (filtered medium)"><style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;
-	mso-fareast-language:EN-US;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-=2EMsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri",sans-serif;
-	mso-fareast-language:EN-US;}
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:2.0cm 42.5pt 2.0cm 3.0cm;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]--></head><body lang=3DEN link=3D"#0563=
-C1" vlink=3D"#954F72"><div class=3DWordSection1><p class=3DMsoNormal><=
-span lang=3DEN-US>Hey friend, <o:p></o:p></span></p><p class=3DMsoNorm=
-al><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal=
-><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p><p class=3DMsoNormal><=
-span lang=3DEN-US>I'm so happy to hear the  latest news from our frien=
-ds, you may read it  here <a href=3D"http://thubithinu.sandersdefense.=
-com/oihgp">http://thubithinu.sandersdefense.com/oihgp</a><o:p></o:p></=
-span></p><p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></sp=
-an></p><p class=3DMsoNormal><span lang=3DEN-US>Later, Freeradius-Users=
-<o:p></o:p></span></p></div></body></html>
+Si vous voulez utiliser la puissance de YouTube pour attirer de nouveaux =
+visiteurs sur vos sites, des prospects et clients dans votre entreprise, =
+voici une formation qui devrait vous =C3=AAtre tr=C3=A8s utile : =
+http://bit.ly/ytbpPEfly
+ - Acc=C3=A8s libre =C3=A0 la formation -
+Youtube c'est : - Plus d' 1 milliard d'utilisateurs (1/3 de la population =
+mondiale des internautes).- Plus de 200 millions de vid=C3=A9os =
+regard=C3=A9es chaque jour.Ce n'est pas =C3=A9tonnant que le g=C3=A9ant =
+Google ait d=C3=A9cid=C3=A9 de racheter YouTube.Mais alors, comment =
+utiliser cette puissance pour faire connaitre votre entreprise et =
+d=C3=A9multiplier vos ventes?Cliquez sur le lien suivant pour recevoir des =
+strat=C3=A9gies simples =C3=A0 mettre en place d=C3=A8s aujourd'hui : =
+http://bit.ly/ytbpPEfly
+Recevez nos salutations les plus cordiales.Pierre-Arnaud de =
+VALLEY,Directeur Marketing Et CommercialPour la KIAXX ACADEMYCDV70444, 350 =
+Chemin Pr=C3=A9 Neuf38350 LA MURE PS: Les strat=C3=A9gies que vous =
+d=C3=A9couvrirez dans cette formation vont =C3=A0 l'encontre de celles =
+utilis=C3=A9es par "les youtubeurs c=C3=A9l=C3=A8bres".Vous pouvez =
+atteindre d'excellent r=C3=A9sultats sans avoir besoin d'avoir des =
+milliers d'abonn=C3=A9s ni des millions de vues.Vous =C3=AAtes =
+entrepreneurs, vous n'avez pas besoin de faire du youtube BUZ... =
+uniquement du youtube BIZ (business).Tout est d=C3=A9taill=C3=A9 ici : =
+http://bit.ly/ytbpPEfly
+=20
+Vous ne voulez plus recevoir de communication de notre part? Vous pouvez =
+cliquer ici pour vous d=C3=A9sabonner : D=C3=A9sabonnez-moi
 
-------=_NextPart_000_0025_0117FEA6.0778C777--
+------=MailPart0000_0010_353735AC
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html><title>Comment attirer des clients grace a YouTube (formation =
+offerte)</title><meta HTTP-EQUIV=3D"Content-Type" Content=3D"text-html; =
+charset=3Dutf-8"><META content=3D"MSHTML 6.00.2900.2769" =
+name=3DGENERATOR><body><P>Si vous voulez utiliser la puissance de YouTube =
+pour attirer de nouveaux&nbsp;visiteurs sur vos sites, des prospects et =
+clients dans votre entreprise, voici <STRONG>une formation</STRONG> qui =
+devrait vous =C3=AAtre tr=C3=A8s utile : <A =
+href=3D"http://bit.ly/ytbpPEfly">http://bit.ly/ytbpPEfly</A></P>
+<P><IMG border=3D0 hspace=3D0 alt=3D"" =
+src=3D"http://www.succes-et-liberte.com/wp-content/uploads/2016/08/YouTube-=
+icon-full_color_100px.png" align=3Dbaseline>&nbsp;<BR><EM>- Acc=C3=A8s =
+libre =C3=A0 la formation -</EM></P>
+<P>Youtube c'est : <BR>- Plus d' <STRONG>1 milliard =
+d'utilisateurs</STRONG> (1/3 de la population mondiale des =
+internautes).<BR>- Plus de <STRONG>200 millions de vid=C3=A9os</STRONG> =
+regard=C3=A9es chaque jour.<BR><BR>Ce n'est pas =C3=A9tonnant que le =
+g=C3=A9ant Google ait d=C3=A9cid=C3=A9 de racheter YouTube.<BR><BR>Mais =
+alors,&nbsp;comment utiliser cette puissance pour faire connaitre votre =
+entreprise et <U>d=C3=A9multiplier</U> vos =
+ventes?<BR><BR><STRONG>Cliquez</STRONG> sur le lien suivant pour recevoir =
+des strat=C3=A9gies simples =C3=A0 mettre en place d=C3=A8s aujourd'hui : =
+<A href=3D"http://bit.ly/ytbpPEfly">http://bit.ly/ytbpPEfly</A></P>
+<P>Recevez nos salutations les plus cordiales.<BR><BR>Pierre-Arnaud de =
+VALLEY,<BR>Directeur Marketing Et Commercial<BR><STRONG>Pour la KIAXX =
+ACADEMY<BR></STRONG>CDV70444, 350 Chemin Pr=C3=A9 Neuf<BR>38350 LA MURE =
+<BR><IMG border=3D0 hspace=3D0 alt=3D"" =
+src=3D"http://www.succes-et-liberte.com/wp-content/uploads/2016/08/kiaxx-ac=
+ademy-final_250x173.png" align=3Dbaseline><BR><STRONG>PS:</STRONG> Les =
+strat=C3=A9gies que vous d=C3=A9couvrirez dans cette formation&nbsp;vont =
+=C3=A0 l'encontre de celles utilis=C3=A9es par "les youtubeurs =
+c=C3=A9l=C3=A8bres".<BR>Vous pouvez atteindre d'excellent r=C3=A9sultats =
+sans avoir besoin d'avoir des milliers d'abonn=C3=A9s ni des millions de =
+vues.<BR>Vous =C3=AAtes entrepreneurs, vous n'avez pas besoin de faire du =
+youtube BUZ... uniquement du youtube BIZ (business).<BR><BR>Tout est =
+d=C3=A9taill=C3=A9 ici : <A =
+href=3D"http://bit.ly/ytbpPEfly">http://bit.ly/ytbpPEfly</A></P>
+<P>&nbsp;</P>
+<P>Vous ne voulez plus recevoir de communication de notre part? Vous =
+pouvez cliquer ici pour vous d=C3=A9sabonner : <A =
+href=3D"http://www.matisoft-data.com/ContactExpress/tracking/redirection.ph=
+p?a=3DTrue&amp;ID=3D4726092-HSM&amp;l=3D%27http://%27&amp;t=3D%27DESINSCRIP=
+TION%27&amp;e=3D%27Pierre-Arnaud de VALLEY =
+contact@kiaxxcommunication.com%27&amp;d=3D%27xfs@oss.sgi.com%27&amp;r=3D6XI=
+W-6JQI-2OAF-3ZAP&amp;o=3D%27Comment attirer des clients grace a YouTube =
+(formation offerte)%27">D=C3=A9sabonnez-moi</A></P></body></html>
+
+------=MailPart0000_0010_353735AC--
 
 
---===============8740893558305018872==
+--===============8967089422053563040==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -125,4 +131,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8740893558305018872==--
+--===============8967089422053563040==--
