@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B74727DDA
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:38:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7D367304039
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:26 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id s18c7qE51mfuDWGc (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B37F67E6F
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:38:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 85DC48F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:32 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id kqzVtDZx5ZNo2l2D (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:24 -0700 (PDT)
-Subject: [PATCH 59/71] xfs: provide switch to force filesystem to
-	copy-on-write all the time
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:38:30 -0700 (PDT)
+Subject: [PATCH 60/71] xfs: increase log reservations for reflink
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:38:20 -0700
-Message-ID: <147216830032.867.12177632219145817933.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:38:26 -0700
+Message-ID: <147216830650.867.11021857693291070796.stgit@birch.djwong.org>
 In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,94 +31,73 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Make it possible to force XFS to use copy on write all the time, at
-least if reflink is turned on.
+Increase the log reservations to handle the increased rolling that
+happens at the end of copy-on-write operations.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_globals.c |    1 +
- fs/xfs/xfs_linux.h   |    1 +
- fs/xfs/xfs_reflink.c |    6 ++++++
- fs/xfs/xfs_sysctl.c  |   11 +++++++++++
- fs/xfs/xfs_sysctl.h  |    1 +
- 5 files changed, 20 insertions(+)
+ fs/xfs/libxfs/xfs_trans_resv.c |   16 +++++++++++++---
+ fs/xfs/libxfs/xfs_trans_resv.h |    2 ++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index f3f6aa9..9a55966 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -43,6 +43,7 @@ xfs_param_t xfs_params = {
- 	.fstrm_timer	= {	1,		30*100,		3600*100},
- 	.eofb_timer	= {	1,		300,		3600*24},
- 	.cowb_timer	= {	1,		300,		3600*24},
-+	.always_cow	= {	0,		0,		1	},
- };
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index a59838f..b456cca 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -812,11 +812,18 @@ xfs_trans_resv_calc(
+ 	 * require a permanent reservation on space.
+ 	 */
+ 	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+-	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+ 	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
  
- struct xfs_globals xfs_globals = {
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 68640fb..a9c1765 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -117,6 +117,7 @@ typedef __u32			xfs_nlink_t;
- #define xfs_fstrm_centisecs	xfs_params.fstrm_timer.val
- #define xfs_eofb_secs		xfs_params.eofb_timer.val
- #define xfs_cowb_secs		xfs_params.cowb_timer.val
-+#define xfs_always_cow		xfs_params.always_cow.val
+ 	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+-	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_itruncate.tr_logcount =
++				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+ 	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
  
- #define current_cpu()		(raw_smp_processor_id())
- #define current_pid()		(current->pid)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 0db3a34..1299a42 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -166,6 +166,12 @@ xfs_reflink_find_shared(
- 	struct xfs_btree_cur	*cur;
- 	int			error;
+ 	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+@@ -873,7 +880,10 @@ xfs_trans_resv_calc(
+ 	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
  
-+	if (xfs_always_cow) {
-+		*fbno = agbno;
-+		*flen = aglen;
-+		return 0;
-+	}
-+
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index afe1f66..650b8d5 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -193,6 +193,17 @@ static struct ctl_table xfs_table[] = {
- 		.extra1		= &xfs_params.cowb_timer.min,
- 		.extra2		= &xfs_params.cowb_timer.max,
- 	},
-+#ifdef DEBUG
-+	{
-+		.procname	= "always_cow",
-+		.data		= &xfs_params.always_cow.val,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec_minmax,
-+		.extra1		= &xfs_params.always_cow.min,
-+		.extra2		= &xfs_params.always_cow.max,
-+	},
-+#endif
- 	/* please keep this the last entry */
- #ifdef CONFIG_PROC_FS
- 	{
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index 984a349..16099dc 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -49,6 +49,7 @@ typedef struct xfs_param {
- 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
- 	xfs_sysctl_val_t eofb_timer;	/* Interval between eofb scan wakeups */
- 	xfs_sysctl_val_t cowb_timer;	/* Interval between cowb scan wakeups */
-+	xfs_sysctl_val_t always_cow;	/* Always copy on write? */
- } xfs_param_t;
+ 	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
+-	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+ 	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
  
- /*
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 36a1511..b7e5357 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -87,6 +87,7 @@ struct xfs_trans_resv {
+ #define	XFS_DEFAULT_LOG_COUNT		1
+ #define	XFS_DEFAULT_PERM_LOG_COUNT	2
+ #define	XFS_ITRUNCATE_LOG_COUNT		2
++#define	XFS_ITRUNCATE_LOG_COUNT_REFLINK	8
+ #define XFS_INACTIVE_LOG_COUNT		2
+ #define	XFS_CREATE_LOG_COUNT		2
+ #define	XFS_CREATE_TMPFILE_LOG_COUNT	2
+@@ -96,6 +97,7 @@ struct xfs_trans_resv {
+ #define	XFS_LINK_LOG_COUNT		2
+ #define	XFS_RENAME_LOG_COUNT		2
+ #define	XFS_WRITE_LOG_COUNT		2
++#define	XFS_WRITE_LOG_COUNT_REFLINK	8
+ #define	XFS_ADDAFORK_LOG_COUNT		2
+ #define	XFS_ATTRINVAL_LOG_COUNT		1
+ #define	XFS_ATTRSET_LOG_COUNT		3
 
 _______________________________________________
 xfs mailing list
