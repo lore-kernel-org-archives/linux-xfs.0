@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A95FD7CA0
-	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 06:51:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 785D6304039
-	for <xfs@oss.sgi.com>; Mon, 22 Aug 2016 04:51:07 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RkCQTsXIas3sdNd6 for <xfs@oss.sgi.com>;
-	Mon, 22 Aug 2016 04:51:04 -0700 (PDT)
-Date: Mon, 22 Aug 2016 21:51:01 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5ABE87CA0
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 03:04:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FAF030404E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:04:07 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ZLX0VyP4pIl8ZwHw (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 01:04:05 -0700 (PDT)
+Date: Thu, 25 Aug 2016 01:04:02 -0700
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCHv2 xfsprogs 00/14] Convert from off64_t to off_t
-Message-ID: <20160822115101.GV19025@dastard>
+Message-ID: <20160825080402.GA28747@infradead.org>
 References: <cover.1471107858.git.felix.janda@posteo.de>
-	<20160822030953.GS19025@dastard> <20160822070601.GA1205@nyan>
+	<20160824011911.GA19025@dastard> <20160824204746.GA25162@nyan>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160822070601.GA1205@nyan>
+In-Reply-To: <20160824204746.GA25162@nyan>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,39 +33,22 @@ Sender: xfs-bounces@oss.sgi.com
 To: Felix Janda <felix.janda@posteo.de>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 22, 2016 at 09:06:01AM +0200, Felix Janda wrote:
-> Dave Chinner wrote:
-> > On Sat, Aug 13, 2016 at 07:04:18PM +0200, Felix Janda wrote:
-> > > This patch series does several things related to large file support.
-> > > 
-> > > Patches 1-3 enable transparent LFS in the build system and make it
-> > > mandatory.
-> > > 
-> > > Patches 4-9 and 12 replace *64 function and structure aliases.
-> > > 
-> > > Patches 10 and 11 disable fsr on Mac OS X and do cleanup to enable
-> > > Patch 12. Further cleanup of the portability code is possible later.
-> > > 
-> > > Patch 13 makes tranparent LFS also mandatory for all users of libxfs.
-> > > 
-> > > Patch 14 finally replaces off64_t by off_t.
-> > 
-> > Felix, can you check how you are sending these patches? The last two
-> > sets of patches you've sent have not threaded in the correct order
-> > (they thread in a random order) which means I have to manually
-> > reorder the patch set to get it to apply in the correct order via
-> > git am....
+On Wed, Aug 24, 2016 at 10:47:46PM +0200, Felix Janda wrote:
+> > screws up xfstests because it changes all the error messages
+> > that are output to stderr and captured by the test harness.
+> > There are quite a few tests that this causes failures for,
+> > and because it's stderr, it's not as simple as just adding a new
+> > filter to do 'sed -e "s/^\(.*\)64\(: .*$\)/\1\2/"' on stderr.
 > 
-> I am sorry for that. Should I resend the patch series?
+> Thanks for testing!
+> 
+> I can rework the patches to leave stderr unchanged. I guess that this
+> is preferable as opposed to updating the output expected by xfstests
+> since xfstests should be usable with both old and new xfsprogs.
 
-No, I've re-ordered it appropriately.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I would prefer to change the output if we can find a good way to
+filter it.  I suspect the issues are things like perror lines
+which would look odd if we leave the 64 back in.
 
 _______________________________________________
 xfs mailing list
