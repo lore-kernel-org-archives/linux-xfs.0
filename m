@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 793087F06
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:41:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D89487EC5
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:40:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3491AC001
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:41:09 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id xcmzOKikXm6CGtu4 (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4063DAC001
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:40:20 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 101sGUCefcIs1Sxq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:41:07 -0700 (PDT)
-Subject: [PATCH 08/25] xfs: scrub the backup superblocks
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:40:18 -0700 (PDT)
+Subject: [PATCH v8 00/25] xfs: online scrub support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:41:03 -0700
-Message-ID: <147216846337.3108.10510729691563285944.stgit@birch.djwong.org>
-In-Reply-To: <147216841262.3108.10746252464845687338.stgit@birch.djwong.org>
-References: <147216841262.3108.10746252464845687338.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:40:13 -0700
+Message-ID: <147216841262.3108.10746252464845687338.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,122 +29,66 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Ensure that the geometry presented in the backup superblocks matches
-the primary superblock so that repair can recover the filesystem if
-that primary gets corrupted.
+Hi all,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_fs.h |    1 +
- fs/xfs/xfs_scrub.c     |   75 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 76 insertions(+)
+This is the eighth revision of a patchset that adds to XFS kernel
+support for mapping multiple file logical blocks to the same physical
+block (reflink/deduplication), implements the beginnings of online
+metadata scrubbing and preening, and implements reverse mapping for
+the realtime device.  There shouldn't be any incompatible on-disk
+format changes, pending a thorough review of the patches within.
 
+Online scrub support consists of three pieces -- first, an ioctl that
+maps physical extents to their owners; second, various in-kernel
+metadata scrubbing ioctls to examine metadata records and
+cross-reference them with other filesystem metadata; and third, a
+userspace component to initiate kernel scrubbing, walk all inodes and
+the directory tree, and scrub data extents.
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 22559ab..8d58061 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -535,6 +535,7 @@ struct xfs_scrub_metadata {
- /*
-  * Metadata types and flags for scrub operation.
-  */
-+#define XFS_SCRUB_TYPE_SB	0	/* superblock */
- #define XFS_SCRUB_TYPE_MAX	0
- 
- #define XFS_SCRUB_FLAGS_ALL	0x0	/* no flags yet */
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index fd24af7..3def216 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -704,6 +704,80 @@ out_badcursor:
- 	return error;
- }
- 
-+/* Metadata scrubbers */
-+
-+/* Scrub the filesystem superblock. */
-+STATIC int
-+xfs_scrub_sb(
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_buf			*bp;
-+	struct xfs_sb			sb;
-+	xfs_agnumber_t			agno;
-+	int				error;
-+
-+	if (sm->control >= mp->m_sb.sb_agcount || sm->flags)
-+		return -EINVAL;
-+	agno = sm->control;
-+
-+	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-+		  &xfs_sb_buf_ops);
-+	if (error)
-+		return error;
-+
-+	if (agno == 0)
-+		goto out;
-+
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+
-+	/* Verify the geometries match. */
-+#define XFS_SCRUB_SB_FIELD(fn) \
-+		XFS_SCRUB_CHECK(mp, bp, "superblock", \
-+		sb.sb_##fn == mp->m_sb.sb_##fn)
-+	XFS_SCRUB_SB_FIELD(blocksize);
-+	XFS_SCRUB_SB_FIELD(dblocks);
-+	XFS_SCRUB_SB_FIELD(rblocks);
-+	XFS_SCRUB_SB_FIELD(rextents);
-+	XFS_SCRUB_SB_FIELD(logstart);
-+	XFS_SCRUB_SB_FIELD(rextsize);
-+	XFS_SCRUB_SB_FIELD(agblocks);
-+	XFS_SCRUB_SB_FIELD(agcount);
-+	XFS_SCRUB_SB_FIELD(rbmblocks);
-+	XFS_SCRUB_SB_FIELD(logblocks);
-+	XFS_SCRUB_SB_FIELD(sectsize);
-+	XFS_SCRUB_SB_FIELD(inodesize);
-+#undef XFS_SCRUB_SB_FIELD
-+
-+#define XFS_SCRUB_SB_FEAT(fn) \
-+		XFS_SCRUB_CHECK(mp, bp, "superblock", \
-+		xfs_sb_version_has##fn(&sb) == xfs_sb_version_has##fn(&mp->m_sb))
-+        XFS_SCRUB_SB_FEAT(align);
-+        XFS_SCRUB_SB_FEAT(dalign);
-+        XFS_SCRUB_SB_FEAT(logv2);
-+        XFS_SCRUB_SB_FEAT(extflgbit);
-+        XFS_SCRUB_SB_FEAT(sector);
-+        XFS_SCRUB_SB_FEAT(asciici);
-+        XFS_SCRUB_SB_FEAT(morebits);
-+        XFS_SCRUB_SB_FEAT(lazysbcount);
-+        XFS_SCRUB_SB_FEAT(crc);
-+        XFS_SCRUB_SB_FEAT(_pquotino);
-+        XFS_SCRUB_SB_FEAT(ftype);
-+        XFS_SCRUB_SB_FEAT(finobt);
-+        XFS_SCRUB_SB_FEAT(sparseinodes);
-+        XFS_SCRUB_SB_FEAT(metauuid);
-+        XFS_SCRUB_SB_FEAT(rmapbt);
-+        XFS_SCRUB_SB_FEAT(reflink);
-+#undef XFS_SCRUB_SB_FEAT
-+
-+out:
-+	xfs_buf_relse(bp);
-+	return error;
-+}
-+
- /* Scrubbing dispatch. */
- 
- struct xfs_scrub_meta_fns {
-@@ -712,6 +786,7 @@ struct xfs_scrub_meta_fns {
- };
- 
- static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
-+	{xfs_scrub_sb,		NULL},
- };
- 
- /* Dispatch metadata scrubbing. */
+The first few patches in this series implements the GETFSMAP ioctl
+that maps a device number and physical extent either to filesystem
+metadata or to a range of file blocks.  The initial implementation
+uses the reverse-mapping B+tree to supply the mapping information,
+however a fallback implementation based on the free space btrees is
+also provided.  The flexibility of having both implementations is
+important when it comes to the userspace tool -- even without the
+owner/offset data, we still have enough information to set up a read
+verification.
+
+The bulk of the patches implement in-kernel scrubbing.  This is
+implemented as a new ioctl.  Pass in a metadata type and a control
+number (when applicable); the kernel will examine each record in that
+metadata structure looking for obvious logical errors.  External
+corruption should be discoverable via the checksum embedded in each
+(v5) filesystem metadata block.  When applicable, the metadata record
+will be cross-referenced with the other metadata structures to look
+for discrepancies.  Should any errors be found, an error code is
+returned to userspace, which should take the filesystem offline and
+repair it.
+
+The final patch in the series enables xfs_scrub to query the per-AG
+block reservations so that the summary counters can be sanity-checked.
+
+If you're going to start using this mess, you probably ought to just
+pull from my github trees for kernel[1], xfsprogs[2], xfstests[3],
+xfs-docs[4], and man-pages[5].  The kernel patches in the git trees
+should apply to 4.8-rc3; xfsprogs patches to for-next; and xfstest to
+master.
+
+The patches have been xfstested with x64, ppc64, and armhf; all tests
+in the clone and rmap groups pass.  AFAICT they don't cause any new
+failures for the 'auto' group.
+
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://github.com/djwong/linux/tree/djwong-devel
+[2] https://github.com/djwong/xfsprogs/tree/djwong-devel
+[3] https://github.com/djwong/xfstests/tree/djwong-devel
+[4] https://github.com/djwong/xfs-documentation/tree/djwong-devel
+[5] https://github.com/djwong/man-pages/tree/djwong-devel
 
 _______________________________________________
 xfs mailing list
