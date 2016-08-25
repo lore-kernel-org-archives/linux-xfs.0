@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 70DCD7CA7
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:31:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1ED1F304043
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:15 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id x2H7BFHNBfMFTDtT (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0D9397D01
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:31:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C669B8F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:25 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id dtNjsNlY7y0OIKS9 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:12 -0700 (PDT)
-Subject: [PATCH 4/6] fs: add iomap_file_dirty
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 25 Aug 2016 16:31:07 -0700
-Message-ID: <147216786712.525.5901639662288553230.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:31:23 -0700 (PDT)
+Subject: [PATCH 5/6] iomap: don't set FIEMAP_EXTENT_MERGED for extent based
+	filesystems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 25 Aug 2016 16:31:13 -0700
+Message-ID: <147216787356.525.16980820316846690768.stgit@birch.djwong.org>
 In-Reply-To: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
 References: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,130 +30,70 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, viro@ZenIV.linux.org.uk, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-api@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-api@vger.kernel.org, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Originally-from: Christoph Hellwig <hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
 
-This function uses the iomap infrastructure to re-write all pages
-in a given range.  This is useful for doing a copy-up of COW ranges,
-and might be useful for scrubbing in the future.
+Filesystems like XFS that use extents should not set the
+FIEMAP_EXTENT_MERGED flag in the fiemap extent structures.  To allow
+for both behaviors for the upcoming gfs2 usage split the iomap
+type field into type and flags, and only set FIEMAP_EXTENT_MERGED if
+the IOMAP_F_MERGED flag is set.  The flags field will also come in
+handy for future features such as shared extents on reflink-enabled
+file systems.
 
-XXX: might want a bigger name, and possible a better implementation
-that doesn't require two lookups in the radix tree.
-
+Reported-by: Andreas Gruenbacher <agruenba@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c            |   82 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |    2 +
- 2 files changed, 84 insertions(+)
+ fs/iomap.c            |    5 ++++-
+ include/linux/iomap.h |    8 +++++++-
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index 0342254..7b295d5 100644
+index 7b295d5..e9b3f99 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -252,6 +252,88 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
- }
- EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+@@ -510,9 +510,12 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+ 		break;
+ 	}
  
-+static struct page *
-+__iomap_read_page(struct inode *inode, loff_t offset)
-+{
-+	struct address_space *mapping = inode->i_mapping;
-+	struct page *page;
++	if (iomap->flags & IOMAP_F_MERGED)
++		flags |= FIEMAP_EXTENT_MERGED;
 +
-+	page = read_mapping_page(mapping, offset >> PAGE_SHIFT, NULL);
-+	if (IS_ERR(page))
-+		return page;
-+	if (!PageUptodate(page)) {
-+		put_page(page);
-+		return ERR_PTR(-EIO);
-+	}
-+	return page;
-+}
-+
-+static loff_t
-+iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	long status = 0;
-+	ssize_t written = 0;
-+
-+	do {
-+		struct page *page, *rpage;
-+		unsigned long offset;	/* Offset into pagecache page */
-+		unsigned long bytes;	/* Bytes to write to page */
-+
-+		offset = (pos & (PAGE_SIZE - 1));
-+		bytes = min_t(unsigned long, PAGE_SIZE - offset, length);
-+
-+		rpage = __iomap_read_page(inode, pos);
-+		if (IS_ERR(rpage))
-+			return PTR_ERR(rpage);
-+
-+		status = iomap_write_begin(inode, pos, bytes,
-+				AOP_FLAG_NOFS | AOP_FLAG_UNINTERRUPTIBLE,
-+				&page, iomap);
-+		put_page(rpage);
-+		if (unlikely(status))
-+			return status;
-+
-+		WARN_ON_ONCE(!PageUptodate(page));
-+
-+		status = iomap_write_end(inode, pos, bytes, bytes, page);
-+		if (unlikely(status <= 0)) {
-+			if (WARN_ON_ONCE(status == 0))
-+				return -EIO;
-+			return status;
-+		}
-+
-+		cond_resched();
-+
-+		pos += status;
-+		written += status;
-+		length -= status;
-+
-+		balance_dirty_pages_ratelimited(inode->i_mapping);
-+	} while (length);
-+
-+	return written;
-+}
-+
-+int
-+iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
-+		struct iomap_ops *ops)
-+{
-+	loff_t ret;
-+
-+	while (len) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_WRITE, ops, NULL,
-+				iomap_dirty_actor);
-+		if (ret <= 0)
-+			return ret;
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iomap_file_dirty);
-+
- static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 		unsigned bytes, struct iomap *iomap)
- {
+ 	return fiemap_fill_next_extent(fi, iomap->offset,
+ 			iomap->blkno != IOMAP_NULL_BLOCK ? iomap->blkno << 9: 0,
+-			iomap->length, flags | FIEMAP_EXTENT_MERGED);
++			iomap->length, flags);
+ 
+ }
+ 
 diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 3267df4..b2e30e5 100644
+index b2e30e5..3a56212 100644
 --- a/include/linux/iomap.h
 +++ b/include/linux/iomap.h
-@@ -58,6 +58,8 @@ struct iomap_ops {
+@@ -19,6 +19,11 @@ struct vm_fault;
+ #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
  
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- 		struct iomap_ops *ops);
-+int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
-+		struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, struct iomap_ops *ops);
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ /*
++ * Flags for iomap mappings:
++ */
++#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
++
++/*
+  * Magic value for blkno:
+  */
+ #define IOMAP_NULL_BLOCK -1LL	/* blkno is not valid */
+@@ -27,7 +32,8 @@ struct iomap {
+ 	sector_t		blkno;	/* 1st sector of mapping, 512b units */
+ 	loff_t			offset;	/* file offset of mapping, bytes */
+ 	u64			length;	/* length of mapping, bytes */
+-	int			type;	/* type of mapping */
++	u16			type;	/* type of mapping */
++	u16			flags;	/* flags for mapping */
+ 	struct block_device	*bdev;	/* block device for I/O */
+ };
+ 
 
 _______________________________________________
 xfs mailing list
