@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B1F868396
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 26DB4AC002
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:40 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id x9b3OWlICGzSFazG (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 8FA64839E
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:57:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ED2EEAC002
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:45 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id oKsWnX8LlJSkgD6E (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:38 -0700 (PDT)
-Subject: [PATCH 21/24] xfs: scrub should cross-reference the realtime bitmap
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:57:44 -0700 (PDT)
+Subject: [PATCH 22/24] xfs: query the per-AG reservation counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:57:33 -0700
-Message-ID: <147216945371.6398.4788072006138447787.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:57:39 -0700
+Message-ID: <147216945986.6398.8799705861500901774.stgit@birch.djwong.org>
 In-Reply-To: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 References: <147216931783.6398.1716678878794493264.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,52 +31,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-While we're scrubbing various btrees, cross-reference the records
-with the other metadata.
+Establish an ioctl for userspace to query the original and current
+per-AG reservation counts.  This will be used by xfs_scrub to
+check that the vfs counters are at least somewhat sane.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_rtbitmap.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ libxfs/xfs_fs.h |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 70ea975..d7a1acd 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -1011,3 +1011,32 @@ xfs_rtfree_extent(
- 	}
- 	return 0;
- }
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index fd2dd80..2c37d57 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -580,6 +580,15 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_FLAGS_ALL	0x0	/* no flags yet */
+ 
+ /*
++ * AG reserved block counters
++ */
++struct xfs_fsop_ag_resblks {
++	__u64 resblks;		/* blocks reserved now */
++	__u64 resblks_orig;	/* blocks reserved at mount time */
++	__u64 reserved[2];
++};
 +
-+/* Is the given extent all free? */
-+int
-+xfs_rtbitmap_extent_is_free(
-+	struct xfs_mount		*mp,
-+	xfs_rtblock_t			start,
-+	xfs_rtblock_t			len,
-+	bool				*is_free)
-+{
-+	xfs_rtblock_t			end;
-+	xfs_extlen_t			clen;
-+	int				matches;
-+	int				error;
-+
-+	*is_free = false;
-+	while (len) {
-+		clen = len > ~0U ? ~0U : len;
-+		error = xfs_rtcheck_range(mp, NULL, start, clen, 1, &end,
-+				&matches);
-+		if (error || !matches || end < start + clen)
-+			return error;
-+
-+		len -= end - start;
-+		start = end + 1;
-+	}
-+
-+	*is_free = true;
-+	return error;
-+}
++/*
+  * ioctl limits
+  */
+ #ifdef XATTR_LIST_MAX
+@@ -652,6 +661,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ /* reflink ioctls; these MUST match the btrfs ioctl definitions */
 
 _______________________________________________
 xfs mailing list
