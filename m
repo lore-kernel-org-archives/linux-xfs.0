@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 417428219
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:51:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC6A8304039
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:40 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3DF68821A
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 18:51:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A7B43AC002
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:47 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id yXvHg1zU87u6oCWa (version=TLSv1.2
+	cuda.sgi.com with ESMTP id INWacP4GGrIMuZcZ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:39 -0700 (PDT)
-Subject: [PATCH 47/71] xfs_db: deal with the CoW extent size hint
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 16:51:46 -0700 (PDT)
+Subject: [PATCH 48/71] xfs_db: print one array element per line
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 16:51:35 -0700
-Message-ID: <147216909559.4420.8839992477749709326.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 16:51:41 -0700
+Message-ID: <147216910176.4420.2022527266903445188.stgit@birch.djwong.org>
 In-Reply-To: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 References: <147216879156.4420.2446767701729565218.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,35 +31,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Display the CoW extent hint size when dumping inodes.
+Print one array element per line so that the debugger output isn't
+a gigantic pile of screen snow.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/inode.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ db/print.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/db/inode.c b/db/inode.c
-index 702cdf8..cac19fc 100644
---- a/db/inode.c
-+++ b/db/inode.c
-@@ -172,12 +172,16 @@ const field_t	inode_v3_flds[] = {
- 	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
- 	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
-+	{ "cowextsize", FLDT_EXTLEN, OI(COFF(cowextsize)), C1, 0, TYP_NONE },
- 	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
- 	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
- 	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
- 	{ "reflink", FLDT_UINT1,
- 	  OI(COFF(flags2) + bitsz(__uint64_t) - XFS_DIFLAG2_REFLINK_BIT-1), C1,
- 	  0, TYP_NONE },
-+	{ "cowextsz", FLDT_UINT1,
-+	  OI(COFF(flags2) + bitsz(__uint64_t) - XFS_DIFLAG2_COWEXTSIZE_BIT-1), C1,
-+	  0, TYP_NONE },
- 	{ NULL }
- };
- 
+diff --git a/db/print.c b/db/print.c
+index 998daf4..e31372f 100644
+--- a/db/print.c
++++ b/db/print.c
+@@ -197,7 +197,7 @@ print_sarray(
+ 	     i < count && !seenint();
+ 	     i++, bitoff += size) {
+ 		if (array)
+-			dbprintf("%d:", i + base);
++			dbprintf("\n%d:", i + base);
+ 		for (f = flds, first = 1; f->name; f++) {
+ 			if (f->flags & FLD_SKIPALL)
+ 				continue;
 
 _______________________________________________
 xfs mailing list
