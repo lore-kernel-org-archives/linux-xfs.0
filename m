@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1EE667CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 20:50:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A8DAD7CB4
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:56:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E203E304043
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 18:50:08 -0700 (PDT)
-Received: from mail-oi0-f48.google.com (mail-oi0-f48.google.com
-	[209.85.218.48]) by cuda.sgi.com with ESMTP id viqu2DEr71goAfAs
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Aug 2016 18:50:06 -0700 (PDT)
-Received: by mail-oi0-f48.google.com with SMTP id l203so7392582oib.1
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 18:50:06 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7970D304039
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 05:56:41 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id nTK2tVy0jcWc1oML (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 05:56:39 -0700 (PDT)
+Date: Fri, 26 Aug 2016 05:56:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v8 00/71] xfs: add reflink and dedupe support
+Message-ID: <20160826125636.GA1548@infradead.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
-References: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 29 Aug 2016 18:50:05 -0700
-Message-ID: <CAPcyv4g1CkMZoq+vHcyPZW3ME7Qr=6pW10BTxg2n+e+28+MFKA@mail.gmail.com>
-Subject: Re: xfstests xfs fuzzers fail with DAX
+Content-Disposition: inline
+In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,89 +29,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xiong Zhou <xzhou@redhat.com>
-Cc: linux-nvdimm <linux-nvdimm@ml01.01.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-[ Adding Darrick on the off chance that this triggers an "aha, of
-course it does!" ]
+FTI, with your djwong-devel tree I see sporadic slab corruption when
+running xfstests with reflinks force enabled in mkfs.
 
-Darrick these corruption tests you added to xfstests last year all
-fail the same way with DAX enabled.  They spew:
+And while the trace looks like from the rmap code it doesn't happen
+without the reflink patches.
 
-    "pwrite64: Structure needs cleaning"
+Example during xfs/313 below:
 
-...reports that are cleaned up by running without "-o dax".
-
-Alternatively you could sit back and watch me try to figure it out,
-that should be quite entertaining... as a start I'll try to pin down a
-stack trace when the error is returned.
-
-
-On Wed, Aug 3, 2016 at 7:45 PM, Xiong Zhou <xzhou@redhat.com> wrote:
-> Hi,
->
-> A few xfs fuzzers in xfstests fail with dax mount option, pass without dax.
-> They are xfs/086 xfs/088 xfs/089 xfs/091.
->
-> xfstests to commit 4470ad4c7e  (Jul 26)
-> kernel   to commit dd95069545  (Jul 24)
->
-> + ./check xfs/091
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
->
-> xfs/091  104s
-> Ran: xfs/091
-> Passed all 1 tests
->
-> + echo 'MOUNT_OPTIONS="-o dax"'
-> + ./check xfs/091
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 rhel73 4.7.0+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem1
-> MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem1 /daxsch
->
-> xfs/091 104s ...  - output mismatch (see /root/xfstests/results//xfs/091.out.bad)
->     --- tests/xfs/091.out       2016-07-18 02:57:47.670000000 -0400
->     +++ /root/xfstests/results//xfs/091.out.bad 2016-08-03 22:38:14.948000000 -0400
->     @@ -6,6 +6,70 @@
->      + corrupt image
->      + mount image
->      + modify files
->     +pwrite64: Structure needs cleaning
->     +pwrite64: Structure needs cleaning
->     +pwrite64: Structure needs cleaning
->     +pwrite64: Structure needs cleaning
->     ...
->     (Run 'diff -u tests/xfs/091.out /root/xfstests/results//xfs/091.out.bad'  to see the entire diff)
-> Ran: xfs/091
-> Failures: xfs/091
-> Failed 1 of 1 tests
->
-> # diff -u xfstests/tests/xfs/091.out /root/xfstests/results//xfs/091.out.bad
-> --- xfstests/tests/xfs/091.out  2016-07-18 02:57:47.670000000 -0400
-> +++ /root/xfstests/results//xfs/091.out.bad     2016-08-03 22:38:14.948000000 -0400
-> @@ -6,6 +6,70 @@
->  + corrupt image
->  + mount image
->  + modify files
-> +pwrite64: Structure needs cleaning
-> <snip 62 more same lines>
-> +pwrite64: Structure needs cleaning
->  + repair fs
->  + mount image
->  + chattr -R -i
->
->
-> Thanks,
-> Xiong
->
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+[14751.774252] Slab corruption (Tainted: G        W      ): xfs_cui_item start=ffff88013afb3748, len=408
+[14751.775170] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[14751.775731] Last user: [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
+[14751.776397] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
+[14751.777157] Single bit error detected. Probably bad RAM.
+[14751.777591] Run memtest86+ or a similar memory test tool.
+[14751.778015] Prev obj: start=ffff88013afb3598, len=408
+[14751.778468] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[14751.778940] Last user:
+[<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
+[14751.779621] 000: 6b 6b 6b 6b 6b 00 01 02 03 6b 6b 6b 6b 6b 6b 6b kkkkk....kkkkkkk
+[14751.780378] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[14751.781140] Next obj: start=ffff88013afb38f8, len=408
+[14751.781639] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[14751.782216] Last user:
+[<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
+[14751.782885] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[14751.783608] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[14751.784287] Slab corruption (Tainted: G        W      ): xfs_bui_item start=ffff880131b67048, len=184
+[14751.785126] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[14751.785979] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)0
+[14751.786636] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
+[14751.787414] Single bit error detected. Probably bad RAM.
+[14751.787948] Run memtest86+ or a similar memory test tool.
+[14751.788477] Next obj: start=ffff880131b67118, len=184
+[14751.789002] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[14751.789559] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)
+[14751.790259] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[14751.791055] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
 
 _______________________________________________
 xfs mailing list
