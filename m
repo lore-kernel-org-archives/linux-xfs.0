@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 86B467CA2
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 12:56:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B7558F8037
-	for <xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:56:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gDtw0CHDt6uDfns4 (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 41BB87CCC
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:33:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBCD2304048
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:33:56 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id NAWbOSvc39ddPKmw (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Aug 2016 10:56:36 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH 1/2] xfs/006: move code about resetting error handling to
-	common/rc
-Date: Sat, 20 Aug 2016 01:56:31 +0800
-Message-Id: <1471629392-13661-1-git-send-email-zlang@redhat.com>
+	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:33:46 -0700 (PDT)
+Date: Fri, 26 Aug 2016 16:33:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/4] xfs: rewrite and optimize the delalloc write path
+Message-ID: <20160826143344.GB21535@lst.de>
+References: <1471816273-28940-1-git-send-email-hch@lst.de>
+	<1471816273-28940-5-git-send-email-hch@lst.de>
+	<20160825143708.GD25041@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160825143708.GD25041@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,130 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Nearly 1/3 code is used to reset the xfs error handling attributes,
-This part can be picked up, and used for other cases. So move them
-to a new function reset_xfs_sysfs_error_handling() in common/rc.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- common/rc         | 37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/006     | 27 +++++++--------------------
- tests/xfs/006.out |  1 +
- 3 files changed, 45 insertions(+), 20 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index 3fb0600..b038d8e 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3888,6 +3888,43 @@ _get_fs_sysfs_attr()
- 	cat /sys/fs/${FSTYP}/${dname}/${attr}
- }
- 
-+
-+# Reset all xfs error handling attributes, set them to original
-+# status.
-+#
-+# Only one argument, and it's necessary:
-+#  - dev: device name, e.g. $SCRATCH_DEV
-+#
-+# Note: this function only works for XFS
-+reset_xfs_sysfs_error_handling()
-+{
-+	local dev=$1
-+
-+	if [ ! -b "$dev" -o "$FSTYP" != "xfs" ];then
-+		_fail "Usage: reset_xfs_sysfs_error_handling <device>"
-+	fi
-+
-+	_set_fs_sysfs_attr $dev error/fail_at_unmount 1
-+	echo -n "error/fail_at_unmount="
-+	_get_fs_sysfs_attr $dev error/fail_at_unmount
-+
-+	# Make sure all will be configured to retry forever by default, except
-+	# for ENODEV, which is an unrecoverable error, so it will be configured
-+	# to not retry on error by default.
-+	for e in default EIO ENOSPC; do
-+		_set_fs_sysfs_attr $dev \
-+				   error/metadata/${e}/max_retries -1
-+		echo -n "error/metadata/${e}/max_retries="
-+		_get_fs_sysfs_attr $dev error/metadata/${e}/max_retries
-+
-+		_set_fs_sysfs_attr $dev \
-+				   error/metadata/${e}/retry_timeout_seconds 0
-+		echo -n "error/metadata/${e}/retry_timeout_seconds="
-+		_get_fs_sysfs_attr $dev \
-+				   error/metadata/${e}/retry_timeout_seconds
-+	done
-+}
-+
- # Skip if we are running an older binary without the stricter input checks.
- # Make multiple checks to be sure that there is no regression on the one
- # selected feature check, which would skew the result.
-diff --git a/tests/xfs/006 b/tests/xfs/006
-index 8910026..58f9348 100755
---- a/tests/xfs/006
-+++ b/tests/xfs/006
-@@ -57,31 +57,18 @@ _scratch_mkfs > $seqres.full 2>&1
- _dmerror_init
- _dmerror_mount
- 
--# Enable fail_at_unmount, so XFS stops retrying on errors at unmount
--# time. _fail the test if we fail to set it to 1, because the test
--# probably will hang in such case and block subsequent tests.
--_set_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount 1
-+# Make sure all error handling attributes are original status
-+reset_xfs_sysfs_error_handling $DMERROR_DEV
-+
-+# Make sure fail_at_unmount is enabled, so XFS stops retrying on
-+# errors at unmount time. _fail the test if we fail to set it to 1,
-+# because the test probably will hang in such case and block
-+# subsequent tests.
- attr=`_get_fs_sysfs_attr $DMERROR_DEV error/fail_at_unmount`
- if [ "$attr" != "1" ]; then
- 	_fail "Failed to set error/fail_at_unmount: $attr"
- fi
- 
--# Make sure all will be configured to retry forever by default, except
--# for ENODEV, which is an unrecoverable error, so it will be configured
--# to not retry on error by default.
--for e in default EIO ENOSPC; do
--	_set_fs_sysfs_attr $DMERROR_DEV \
--			   error/metadata/${e}/max_retries -1
--	echo -n "error/metadata/${e}/max_retries="
--	_get_fs_sysfs_attr $DMERROR_DEV error/metadata/${e}/max_retries
--
--	_set_fs_sysfs_attr $DMERROR_DEV \
--			   error/metadata/${e}/retry_timeout_seconds 0
--	echo -n "error/metadata/${e}/retry_timeout_seconds="
--	_get_fs_sysfs_attr $DMERROR_DEV \
--			   error/metadata/${e}/retry_timeout_seconds
--done
--
- # start a metadata-intensive workload, but no data allocation operation.
- # Because uncompleted new space allocation I/Os may cause XFS to shutdown
- # after loading error table.
-diff --git a/tests/xfs/006.out b/tests/xfs/006.out
-index 393f411..3260b3a 100644
---- a/tests/xfs/006.out
-+++ b/tests/xfs/006.out
-@@ -1,4 +1,5 @@
- QA output created by 006
-+error/fail_at_unmount=1
- error/metadata/default/max_retries=-1
- error/metadata/default/retry_timeout_seconds=0
- error/metadata/EIO/max_retries=-1
--- 
-2.7.4
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBBdWcgMjUsIDIwMTYgYXQgMTA6Mzc6MDlBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdy
+b3RlOgo+IE9uIGp1c3Qgc2tpbW1pbmcgb3ZlciB0aGlzIHNvIGZhciwgSSBmZWVsIGxpa2UgdGhp
+cyBzaG91bGQgYmUgYXQgbGVhc3QKPiB0d28gcGF0Y2hlcywgcG9zc2libHkgMzoKPiAKPiAtIEtp
+bGwgeGZzX2JtYXBpX2RlbGF5KCkgYW5kIHB1bGwgdXAgYXNzb2NpYXRlZCBiaXRzIHRvIGlvbWFw
+KCkuCgpBcyBpbiBqdXN0IGEgbW92ZSBvZiBjb2RlIHRvIHhmc19pb21hcC5jIG9yIGFsc28gbWVy
+Z2VkIGl0IHdpdGggYQpwYXJ00ZZhbCBjb3B5IG9mIHhmc19maWxlX2lvbWFwX2JlZ2luPyAgVGhl
+IGZpcnN0IGlzIHRyaXZpYWwsIGJ1dCBhbHNvCnJhdGhlciBwb2ludGxlc3MuICBUaGUgc2Vjb25k
+IGlzIGEgYml0IG1vcmUgd29yaywgc3RpbGwgdmVyeSBkb2FibGUKYnV0IHByb2JhYmx5IGFsc28g
+bm90IHRoYXQgdXNlZnVsIGFzIHdlJ3JlIGdvaW5nIHRvIHRvdGFsbHkgcmV3cml0ZSBpdAphZ2Fp
+biBpbiB0aGUgbmV4dCBzdGVwLgoKPiAtIFBvc3NpYmx5IHNlcGFyYXRlIG91dCB0aGUgcGFydCB0
+aGF0IG1vdmVzIGl0ZXJhdGlvbiBmcm9tIHRoZSAoZm9ybWVyKQo+ICAgeGZzX2JtYXBpX2RlbGF5
+KCkgY29kZSB1cCB0byB0aGUgaW9tYXAgY29kZSwgaWYgd2UgY2FuIGRvIHNvIGNsZWFubHkuCgpX
+ZWxsLCB0aGUgbWFqb3IgcG9pbnQgaXMgdGhhdCB3ZSBnZXQgcmlkIG9mIHRoZSBpdGVyYXRpb24g
+YXMgdGhlcmUgaXNuJ3QKYW55IGFjdHVhbCBuZWVkIGZvciBpdC4KCj4gLSBSZWZhY3Rvci9yZXdv
+cmsgdGhlIHByZWFsbG9jYXRlIGxvZ2ljLgoKQnV0IEkgZ3Vlc3MgSSBjb3VsZCBkbyBhIHBhc3Mg
+dGhhdCBjcmVhdGVzIHhmc19maWxlX2lvbWFwX2JlZ2luX2RlbGF5CmFzIGluIHRoZSBuZXcgdmVy
+c2lvbiBleGNlcHQgd2l0aG91dCB0aGUgcHJlYWxsb2MgY2hhbmdlcywgYW5kIHRoZW4Kc2VwYXJh
+dGUgdGhlbSBvdXQuICBJIGRvbid0IHF1aXRlIHNlZSB0aGUgcG9pbnQsIHRob3VnaC4uCj4gSSdt
+IG5vdCBuZWNlc3NhcmlseSBhZ2FpbnN0IGNsZWFuaW5nIHVwL3Jld29ya2luZyB0aGUgcHJlYWxs
+b2MgYml0cywgYnV0Cj4gSSdtIG5vdCBhIGh1Z2UgZmFuIG9mIG9wZW4gY29kaW5nIGFsbCBvZiB0
+aGlzIGhlcmUgaW4gdGhlIGlvbWFwCj4gZnVuY3Rpb24uIElmIG5vdGhpbmcgZWxzZSwgdGhlIGlu
+ZGVudGF0aW9uIHN0YXJ0cyB0byBtYWtlIG15IGV5ZXMKPiBjcm9zcy4uLiBjb3VsZCB3ZSByZXRh
+aW4gb25lIGxldmVsIG9mIGFic3RyYWN0aW9uIGhlcmUgZm9yIHRoaXMgaHVuayBvZgo+IGxvZ2lj
+IHRoYXQgdXBkYXRlcyBlbmRfZnNiPwoKV2UncmUgb25seSBoYXZpbmcgdGhyZWUgdGFicyBvZiBp
+bmRlbnRhdGlvbi4gIEkgYWN0dWFsbHkgbG9va2VkIGludG8KYSBoZWxwZXIgZm9yIHRoYXQgd2hv
+bGUgYmxvY2ssIGJ1dCB3ZSdkIG5lZWQgdG8gcGFzczoKCmlwLCBpZHgsIHByZXYsIG9mZnNldF9m
+c2IsIG9mZnNldCwgY291bnQsIG1heGJ5dGVzX2ZzYgoKKHdlIGNvdWxkIHBvdGVudGlhbGx5IHJl
+LWRlcml2ZSBvZmZzZXRfZnNiIGZyb20gb2Zmc2V0IGlmIHdlIGRvbid0Cm1pbmQgdGhlIGluZWZm
+aWNpZW55IGFuZCByZWNhbGN1bGF0ZSBtYXhieXRlc19mc2IuICBUaGlzIGFscmVhZHkKYXNzdW1l
+cyBtcCBpcyB0cml2aWFsbHkgZGVyaXZlZCBmcm9tIGlwKQoKYW5kIHJldHVybgoKYWxsb2NfYmxv
+Y2tzLCBlbmRfZnNiCgpzbyB0aGUgZnVuY3Rpb24gd291bGQgYmUgcXVpdGUgYSBtb25zdGVyIGlu
+IHRlcm1zIG9mIGl0cyBjYWxsaW5nCmNvbnZlbnRpb24uICBBZGRpdGlvbmFsbHkgd2UnZCBoYXZl
+IHRoZSByZWxhdGVkIGJ5IG5vdCBxdXRlIHRoZQpzYW1lIGlmIGJsb2NrcyBhcm91bmQgWEZTX01P
+VU5UX0RGTFRfSU9TSVpFIGFuZCB0aGUgaXNpemUgc3BsaXQKb3ZlciB0d28gZnVuY3Rpb25zLCB3
+aGljaCBkb2Vzbid0IGV4YWN0bHkgaGVscCB1bmRlcnN0YW5kaW5nCnRoZSBmbG93LgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
