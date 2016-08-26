@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FBFD7CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 18:12:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B4797AC002
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 16:12:12 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vvAGGBNRU5iJWZvM for <xfs@oss.sgi.com>;
-	Mon, 29 Aug 2016 16:12:10 -0700 (PDT)
-Date: Tue, 30 Aug 2016 09:12:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
-	unless foreign_allowed
-Message-ID: <20160829231205.GO19025@dastard>
-References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 435207F2C
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 21:16:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0635A8F8039
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:16:31 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id pDrRp59XuWDP6PXW (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:16:30 -0700 (PDT)
+Subject: Re: [PATCH v10 0/3] fallocate for block devices
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <147216972158.7860.13484490862091226290.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 22:15:52 -0400
+In-Reply-To: <147216972158.7860.13484490862091226290.stgit@birch.djwong.org>
+	(Darrick J. Wong's message of "Thu, 25 Aug 2016 17:02:01 -0700")
+Message-ID: <yq1shtsb7hj.fsf@sermon.lab.mkp.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1472478012-23627-1-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
-> Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-> non-XFS filesystems. One modification in fs_initialise_mounts
-> (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-> fs paths entering the fs table.
+>>>>> "Darrick" == Darrick J Wong <darrick.wong@oracle.com> writes:
 
-What's the failure? I'm not seeing it here on any of my test
-machines...
+Darrick,
 
-Cheers,
+Darrick> This is a redesign of the patch series that fixes various
+Darrick> interface problems with the existing "zero out this part of a
+Darrick> block device" code.  BLKZEROOUT2 is gone.
 
-Dave.
+Looks good to me. Let's get this merged. Pretty please!
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Martin K. Petersen	Oracle Linux Engineering
 
 _______________________________________________
 xfs mailing list
