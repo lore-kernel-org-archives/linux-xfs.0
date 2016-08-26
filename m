@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C0A5E7CA1
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:29:27 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECBF77CA0
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 13:43:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31FA6AC002
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:29:26 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AD9EE30404E
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:43:18 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id I7dq2ubQjAvOsxmr (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 4mddH4VHkJCsGdVJ (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:29:24 -0700 (PDT)
-Date: Fri, 26 Aug 2016 09:28:50 -0700
+	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:43:16 -0700 (PDT)
+Date: Fri, 26 Aug 2016 11:42:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH v8 00/71] xfs: add reflink and dedupe support
-Message-ID: <20160826162850.GE22760@birch.djwong.org>
+Message-ID: <20160826184246.GF20705@birch.djwong.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
 	<20160826125636.GA1548@infradead.org>
 MIME-Version: 1.0
@@ -41,6 +41,18 @@ On Fri, Aug 26, 2016 at 05:56:36AM -0700, Christoph Hellwig wrote:
 > without the reflink patches.
 > 
 > Example during xfs/313 below:
+
+Ok, so this was caused by a bug in the deferred ops abort code where we'd
+unconditionally free a log intent item even if a log done item has already been
+attached.  That in turn led to the intent item being freed three times (once
+when the CUI was committed, again when the deferred op aborted, and again when
+the CUD was committed during transaction abort), hence the slab corruption.
+Oops.
+
+Will post patch shortly.
+
+--D
+
 > 
 > [14751.774252] Slab corruption (Tainted: G        W      ): xfs_cui_item start=ffff88013afb3748, len=408
 > [14751.775170] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
@@ -52,13 +64,6 @@ On Fri, Aug 26, 2016 at 05:56:36AM -0700, Christoph Hellwig wrote:
 > [14751.778468] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
 > [14751.778940] Last user:
 > [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
-
-CUI == refCount Update Item, so it /is/ the reflink code.
-
-Will take a look.  Sigh...
-
---D
-
 > [14751.779621] 000: 6b 6b 6b 6b 6b 00 01 02 03 6b 6b 6b 6b 6b 6b 6b kkkkk....kkkkkkk
 > [14751.780378] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
 > [14751.781140] Next obj: start=ffff88013afb38f8, len=408
@@ -79,10 +84,6 @@ Will take a look.  Sigh...
 > [14751.790259] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
 > [14751.791055] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
