@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6C0848481
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:01:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B80B8AC002
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:01:16 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id SaMx39n1tyRxOXbs (version=TLSv1.2
+	by oss.sgi.com (Postfix) with ESMTP id 2D0BF8481
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:01:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 95BEDAC002
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:01:21 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id EzP2cMqkCG3QSRzc (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:01:13 -0700 (PDT)
-Subject: [PATCH 23/29] xfs_repair: use realtime rmap btree data to check
-	block types
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:01:19 -0700 (PDT)
+Subject: [PATCH 24/29] xfs_repair: extend ag_rmap[] for realtime mapping
+	collection
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 17:01:07 -0700
-Message-ID: <147216966788.7022.1787278022218422520.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 17:01:14 -0700
+Message-ID: <147216967425.7022.18324030801464543217.stgit@birch.djwong.org>
 In-Reply-To: <147216950911.7022.438115723996286926.stgit@birch.djwong.org>
 References: <147216950911.7022.438115723996286926.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -32,721 +32,452 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Use the realtime rmap btree to pre-populate the block type information
-so that when repair iterates the primary metadata, we can confirm the
-block type.
+Extend the ag_rmap[] infrastructure to have an extra group to store
+realtime extent reverse mappings.  Since we're pretending that the
+realtime device is AG "-1", we can just play some pointer arithmetic
+to make this work out.  In the next patch we'll actually use this
+data for something.  Extend the ag_locks[] array in a similar manner.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/dinode.c |  170 +++++++++++++++++++++++-
- repair/dinode.h |    2 
- repair/scan.c   |  391 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- repair/scan.h   |   33 +++++
- 4 files changed, 583 insertions(+), 13 deletions(-)
+ repair/dinode.c |    2 +
+ repair/incore.c |    9 ++++-
+ repair/phase4.c |   10 +++--
+ repair/rmap.c   |  105 ++++++++++++++++++++++++++++++++++++-------------------
+ repair/rmap.h   |   10 +++++
+ 5 files changed, 91 insertions(+), 45 deletions(-)
 
 
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 843c465..6718cd2 100644
+index 6718cd2..f768cdf 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -423,6 +423,18 @@ verify_agbno(xfs_mount_t	*mp,
- 	return verify_ag_bno(sbp, agno, agbno) == 0;
- }
- 
-+/*
-+ * Verify realtime device block number.
-+ * Returns 1 for good rtfsb or 0 if it's invalid.
-+ */
-+int
-+verify_drtbno(
-+	struct xfs_mount	*mp,
-+	xfs_fsblock_t		fsb)
-+{
-+	return fsb < mp->m_sb.sb_rblocks;
-+}
-+
- static int
- process_rt_rec(
- 	xfs_mount_t		*mp,
-@@ -439,7 +451,7 @@ process_rt_rec(
- 	/*
- 	 * check numeric validity of the extent
- 	 */
--	if (irec->br_startblock >= mp->m_sb.sb_rblocks) {
-+	if (!verify_drtbno(mp, irec->br_startblock)) {
- 		do_warn(
- _("inode %" PRIu64 " - bad rt extent start block number %" PRIu64 ", offset %" PRIu64 "\n"),
- 			ino,
-@@ -447,7 +459,7 @@ _("inode %" PRIu64 " - bad rt extent start block number %" PRIu64 ", offset %" P
- 			irec->br_startoff);
- 		return 1;
- 	}
--	if (irec->br_startblock + irec->br_blockcount - 1 >= mp->m_sb.sb_rblocks) {
-+	if (!verify_drtbno(mp, irec->br_startblock + irec->br_blockcount)) {
- 		do_warn(
- _("inode %" PRIu64 " - bad rt extent last block number %" PRIu64 ", offset %" PRIu64 "\n"),
- 			ino,
-@@ -917,6 +929,145 @@ get_agino_buf(
-  * return 1 if inode should be cleared, 0 otherwise
-  */
- static int
-+process_rtrmap(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		ino,
-+	struct xfs_dinode	*dip,
-+	int			type,
-+	int			*dirty,
-+	xfs_rfsblock_t		*tot,
-+	__uint64_t		*nex,
-+	blkmap_t		**blkmapp,
-+	int			check_dups)
-+{
-+	struct xfs_rtrmap_root	*dib;
-+	xfs_ino_t		lino;
-+	xfs_rtrmap_ptr_t	*pp;
-+	struct xfs_rtrmap_key	*kp;
-+	struct xfs_rtrmap_rec	*rp;
-+	int			whichfork = XFS_DATA_FORK;
-+	char			*forkname = get_forkname(whichfork);
-+	int			i;
-+	int			level;
-+	int			numrecs;
-+	xfs_fsblock_t		bno;
-+	struct xfs_rmap_irec	oldkey;
-+	struct xfs_rmap_irec	key;
-+	struct rmap_priv	priv;
-+	int			suspect = 0;
-+	int			error;
-+
-+	/* We rebuild the rtrmapbt, so no need to process blocks again. */
-+	if (check_dups) {
-+		*tot = be64_to_cpu(dip->di_nblocks);
-+		return 0;
-+	}
-+
-+	memset(&priv.high_key, 0xFF, sizeof(priv.high_key));
-+	priv.high_key.rm_blockcount = 0;
-+	priv.agcnts = NULL;
-+	priv.last_rec.rm_owner = XFS_RMAP_OWN_UNKNOWN;
-+
-+	dib = (struct xfs_rtrmap_root *)XFS_DFORK_PTR(dip, whichfork);
-+	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-+	*tot = 0;
-+	*nex = 0;
-+
-+	level = be16_to_cpu(dib->bb_level);
-+	numrecs = be16_to_cpu(dib->bb_numrecs);
-+
-+	if (level > mp->m_rtrmap_maxlevels) {
-+		do_warn(
-+_("bad level %d in inode %" PRIu64 " rtrmap btree root block\n"),
-+			level, lino);
-+		return 1;
-+	}
-+
-+	/*
-+	 * use rtroot/dfork_dsize since the root block is in the data fork
-+	 */
-+	if (XFS_RTRMAP_ROOT_SPACE_CALC(numrecs, level) >
-+	    XFS_DFORK_SIZE(dip, mp, whichfork)) {
-+		do_warn(
-+_("indicated size of %s rtrmapbt root (%d bytes) greater than space in "
-+	  "inode %" PRIu64 " %s fork\n"),
-+			forkname, XFS_RTRMAP_ROOT_SPACE_CALC(numrecs, level),
-+			lino, forkname);
-+		return 1;
-+	}
-+
-+	if (level == 0) {
-+		rp = XFS_RTRMAP_ROOT_REC_ADDR(dib, 1);
-+		error = process_rtrmap_reclist(mp, rp, numrecs,
-+				&priv.last_rec, NULL, "rtrmapbt root");
-+		if (error) {
-+			rmap_avoid_check();
-+			return 1;
-+		}
-+		return 0;
-+	}
-+
-+	pp = XFS_RTRMAP_ROOT_PTR_ADDR(dib, 1,
-+			libxfs_rtrmapbt_maxrecs(mp,
-+				XFS_DFORK_SIZE(dip, mp, whichfork), 0));
-+
-+	/* check for in-order keys */
-+	for (i = 0; i < numrecs; i++)  {
-+		kp = XFS_RTRMAP_ROOT_KEY_ADDR(dib, i + 1);
-+
-+		key.rm_flags = 0;
-+		key.rm_startblock = be64_to_cpu(kp->rm_startblock);
-+		key.rm_owner = be64_to_cpu(kp->rm_owner);
-+		if (libxfs_rmap_irec_offset_unpack(be64_to_cpu(kp->rm_offset),
-+				&key)) {
-+			/* Look for impossible flags. */
-+			do_warn(
-+_("invalid flags in key %u of rtrmap root ino %" PRIu64 "\n"),
-+				i, lino);
-+			suspect++;
-+			continue;
-+		}
-+		if (i == 0) {
-+			oldkey = key;
-+			continue;
-+		}
-+		if (rmap_diffkeys(&oldkey, &key) > 0) {
-+			do_warn(
-+_("out of order key %u in rtrmap root ino %" PRIu64 "\n"),
-+				i, lino);
-+			suspect++;
-+			continue;
-+		}
-+		oldkey = key;
-+	}
-+
-+	/* probe keys */
-+	for (i = 0; i < numrecs; i++)  {
-+		bno = get_unaligned_be64(&pp[i]);
-+
-+		if (!verify_dfsbno(mp, bno))  {
-+			do_warn(
-+_("bad rtrmap btree ptr 0x%" PRIx64 " in ino %" PRIu64 "\n"),
-+				bno, lino);
-+			return 1;
-+		}
-+
-+		if (scan_lbtree(bno, level, scan_rtrmapbt,
-+				type, whichfork, lino, tot, nex, blkmapp,
-+				NULL, 1, check_dups, XFS_RTRMAP_CRC_MAGIC,
-+				&priv,
-+				&xfs_rtrmapbt_buf_ops))
-+			return 1;
-+	}
-+
-+	return suspect ? 1 : 0;
-+}
-+
-+/*
-+ * return 1 if inode should be cleared, 0 otherwise
-+ */
-+static int
- process_btinode(
- 	xfs_mount_t		*mp,
- 	xfs_agnumber_t		agno,
-@@ -1545,9 +1696,13 @@ change_dinode_fmt(
- 
- static int
- check_dinode_mode_format(
--	xfs_dinode_t *dinoc)
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		lino,
-+	struct xfs_dinode	*dinoc)
- {
--	if (dinoc->di_format >= XFS_DINODE_FMT_UUID)
-+	if (lino == mp->m_sb.sb_rrmapino)
-+		return dinoc->di_format != XFS_DINODE_FMT_RMAP;
-+	else if (dinoc->di_format >= XFS_DINODE_FMT_UUID)
- 		return -1;	/* FMT_UUID is not used */
- 
- 	switch (dinode_fmt(dinoc)) {
-@@ -1947,6 +2102,10 @@ process_inode_data_fork(
- 			totblocks, nextents, dblkmap, XFS_DATA_FORK,
- 			check_dups);
- 		break;
-+	case XFS_DINODE_FMT_RMAP:
-+		err = process_rtrmap(mp, agno, ino, dino, type, dirty,
-+			totblocks, nextents, dblkmap, check_dups);
-+		break;
- 	case XFS_DINODE_FMT_DEV:	/* fall through */
- 		err = 0;
- 		break;
-@@ -1986,6 +2145,7 @@ process_inode_data_fork(
- 				XFS_DATA_FORK, 0);
- 			break;
- 		case XFS_DINODE_FMT_DEV:	/* fall through */
-+		case XFS_DINODE_FMT_RMAP:
- 			err = 0;
- 			break;
- 		default:
-@@ -2395,7 +2555,7 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	 * free inodes since technically any format is legal
- 	 * as we reset the inode when we re-use it.
- 	 */
--	if (di_mode != 0 && check_dinode_mode_format(dino) != 0) {
-+	if (di_mode != 0 && check_dinode_mode_format(mp, lino, dino) != 0) {
- 		if (!uncertain)
- 			do_warn(
- 	_("bad inode format in inode %" PRIu64 "\n"), lino);
-diff --git a/repair/dinode.h b/repair/dinode.h
-index 61d0736..70d5d91 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -30,6 +30,8 @@ int
- verify_dfsbno(xfs_mount_t	*mp,
- 		xfs_fsblock_t	fsbno);
- 
-+int verify_drtbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
-+
- void
- convert_extent(
- 	xfs_bmbt_rec_t		*rp,
-diff --git a/repair/scan.c b/repair/scan.c
-index 8935be7..7c88b6f 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -824,7 +824,10 @@ process_rmap_rec(
- 			break;
- 		default:
- 			/* file data */
--			set_bmap_ext(agno, b, blen, XR_E_INUSE1);
-+			if (owner == mp->m_sb.sb_rrmapino)
-+				set_bmap_ext(agno, b, blen, XR_E_FS_MAP1);
-+			else
-+				set_bmap_ext(agno, b, blen, XR_E_INUSE1);
- 			break;
+@@ -801,7 +801,7 @@ _("illegal state %d in block map %" PRIu64 "\n"),
+ 			}
  		}
- 		break;
-@@ -896,13 +899,6 @@ _("unknown block (%d,%d-%d) mismatch on %s tree, state - %d,%" PRIx64 "\n"),
+ 		if (collect_rmaps) { /* && !check_dups */
+-			error = rmap_add_rec(mp, ino, whichfork, &irec);
++			error = rmap_add_rec(mp, ino, whichfork, &irec, false);
+ 			if (error)
+ 				do_error(
+ _("couldn't add reverse mapping\n")
+diff --git a/repair/incore.c b/repair/incore.c
+index cb57316..fbb05ad 100644
+--- a/repair/incore.c
++++ b/repair/incore.c
+@@ -294,14 +294,17 @@ init_bmaps(xfs_mount_t *mp)
+ 	if (!ag_bmap)
+ 		do_error(_("couldn't allocate block map btree roots\n"));
+ 
+-	ag_locks = calloc(mp->m_sb.sb_agcount, sizeof(struct aglock));
++	ag_locks = calloc(mp->m_sb.sb_agcount + 1, sizeof(struct aglock));
+ 	if (!ag_locks)
+ 		do_error(_("couldn't allocate block map locks\n"));
+ 
++	/* One ag_lock per AG, and one more for the realtime device. */
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+ 		btree_init(&ag_bmap[i]);
+ 		pthread_mutex_init(&ag_locks[i].lock, NULL);
  	}
++	pthread_mutex_init(&ag_locks[mp->m_sb.sb_agcount].lock, NULL);
++	ag_locks++;
+ 
+ 	init_rt_bmap(mp);
+ 	reset_bmaps(mp);
+@@ -312,6 +315,10 @@ free_bmaps(xfs_mount_t *mp)
+ {
+ 	xfs_agnumber_t i;
+ 
++	ag_locks--;
++	free(ag_locks);
++	ag_locks = NULL;
++
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+ 		btree_destroy(ag_bmap[i]);
+ 	free(ag_bmap);
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 395d373..512f774 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -158,7 +158,7 @@ process_ags(
+ 	int			error;
+ 
+ 	do_inode_prefetch(mp, ag_stride, process_ag_func, true, false);
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++	for_each_rmap_group(mp, i) {
+ 		error = rmap_finish_collecting_fork_recs(mp, i);
+ 		if (error)
+ 			do_error(
+@@ -248,7 +248,7 @@ process_rmap_data(
+ 		return;
+ 
+ 	create_work_queue(&wq, mp, libxfs_nproc());
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++	for_each_rmap_group(mp, i)
+ 		queue_work(&wq, check_rmap_btrees, i, NULL);
+ 	destroy_work_queue(&wq);
+ 
+@@ -256,17 +256,17 @@ process_rmap_data(
+ 		return;
+ 
+ 	create_work_queue(&wq, mp, libxfs_nproc());
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++	for_each_ag(mp, i)
+ 		queue_work(&wq, compute_ag_refcounts, i, NULL);
+ 	destroy_work_queue(&wq);
+ 
+ 	create_work_queue(&wq, mp, libxfs_nproc());
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++	for_each_ag(mp, i)
+ 		queue_work(&wq, process_inode_reflink_flags, i, NULL);
+ 	destroy_work_queue(&wq);
+ 
+ 	create_work_queue(&wq, mp, libxfs_nproc());
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++	for_each_ag(mp, i)
+ 		queue_work(&wq, check_refcount_btrees, i, NULL);
+ 	destroy_work_queue(&wq);
+ }
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 3b3a195..37da251 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -45,6 +45,7 @@ struct xfs_ag_rmap {
+ 	struct xfs_slab	*ar_refcount_items;	/* refcount items, p4-5 */
+ };
+ 
++/* One ag_rmap per AG, and one more for the realtime device. */
+ static struct xfs_ag_rmap *ag_rmaps;
+ static bool rmapbt_suspect;
+ static bool refcbt_suspect;
+@@ -83,6 +84,17 @@ rmap_compare(
  }
  
--struct rmap_priv {
--	struct aghdr_cnts	*agcnts;
--	struct xfs_rmap_irec	high_key;
--	struct xfs_rmap_irec	last_rec;
--	xfs_agblock_t		nr_blocks;
--};
--
- static bool
- rmap_in_order(
- 	xfs_agblock_t	b,
-@@ -1218,6 +1214,385 @@ out:
- 		rmap_avoid_check();
+ /*
++ * Return the ag_rmap for a given AG.
++ * Note that NULLAGNUMBER (-1) is the realtime device.
++ */
++static struct xfs_ag_rmap*
++rmap_for_ag(
++	xfs_agnumber_t		agno)
++{
++	return &ag_rmaps[(signed)agno];
++}
++
++/*
+  * Returns true if we must reconstruct either the reference count or reverse
+  * mapping trees.
+  */
+@@ -107,11 +119,12 @@ rmaps_init(
+ 	if (!rmap_needs_work(mp))
+ 		return;
+ 
+-	ag_rmaps = calloc(mp->m_sb.sb_agcount, sizeof(struct xfs_ag_rmap));
++	/* One ag_rmap per AG, and one more for the realtime device. */
++	ag_rmaps = calloc(mp->m_sb.sb_agcount + 1, sizeof(struct xfs_ag_rmap));
+ 	if (!ag_rmaps)
+ 		do_error(_("couldn't allocate per-AG reverse map roots\n"));
+ 
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++	for (i = 0; i < mp->m_sb.sb_agcount + 1; i++) {
+ 		error = init_slab(&ag_rmaps[i].ar_rmaps,
+ 				sizeof(struct xfs_rmap_irec));
+ 		if (error)
+@@ -129,6 +142,7 @@ _("Insufficient memory while allocating raw metadata reverse mapping slabs."));
+ 			do_error(
+ _("Insufficient memory while allocating refcount item slabs."));
+ 	}
++	ag_rmaps++;
  }
  
-+int
-+process_rtrmap_reclist(
-+	struct xfs_mount	*mp,
-+	struct xfs_rtrmap_rec	*rp,
-+	int			numrecs,
-+	struct xfs_rmap_irec	*last_rec,
-+	struct xfs_rmap_irec	*high_key,
-+	const char		*name)
-+{
-+	int			suspect = 0;
-+	int			i;
-+	struct xfs_rmap_irec	oldkey;
-+	struct xfs_rmap_irec	key;
-+
-+	for (i = 0; i < numrecs; i++) {
-+		xfs_fsblock_t		b, end;
-+		xfs_filblks_t		len;
-+		uint64_t		owner, offset;
-+
-+		b = be64_to_cpu(rp[i].rm_startblock);
-+		len = be64_to_cpu(rp[i].rm_blockcount);
-+		owner = be64_to_cpu(rp[i].rm_owner);
-+		offset = be64_to_cpu(rp[i].rm_offset);
-+
-+		key.rm_flags = 0;
-+		key.rm_startblock = b;
-+		key.rm_blockcount = len;
-+		key.rm_owner = owner;
-+		if (libxfs_rmap_irec_offset_unpack(offset, &key)) {
-+			/* Look for impossible flags. */
-+			do_warn(
-+_("invalid flags in record %u of %s\n"),
-+				i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+
-+		end = key.rm_startblock + key.rm_blockcount;
-+
-+		/* Make sure startblock & len make sense. */
-+		if (!verify_drtbno(mp, b)) {
-+			do_warn(
-+_("invalid start block %llu in record %u of %s\n"),
-+				(unsigned long long)b, i, name);
-+			suspect++;
-+			continue;
-+		}
-+		if (len == 0 || !verify_drtbno(mp, end - 1)) {
-+			do_warn(
-+_("invalid length %llu in record %u of %s\n"),
-+				(unsigned long long)len, i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		/* We only store inode data in the rtrmap. */
-+		if (XFS_RMAP_NON_INODE_OWNER(owner)) {
-+			do_warn(
-+_("invalid owner %lld in record %u of %s\n"),
-+				(long long int)owner, i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		/* Look for impossible record field combinations. */
-+		if (key.rm_flags & XFS_RMAP_KEY_FLAGS) {
-+			do_warn(
-+_("record %d cannot have attr fork/key flags in %s\n"),
-+					i, name);
-+			suspect++;
-+			continue;
-+		}
-+
-+		/* Check for out of order records. */
-+		if (i == 0)
-+			oldkey = key;
-+		else {
-+			if (rmap_diffkeys(&oldkey, &key) > 0)
-+				do_warn(
-+_("out-of-order record %d (%llu %"PRId64" %"PRIu64" %llu) in %s\n"),
-+				i, (unsigned long long)b, owner, offset,
-+				(unsigned long long)len, name);
-+			else
-+				oldkey = key;
-+		}
-+
-+		/* Is this mergeable with the previous record? */
-+		if (rmaps_are_mergeable(last_rec, &key)) {
-+			do_warn(
-+_("record %d in %s should be merged with previous record\n"),
-+				i, name);
-+			last_rec->rm_blockcount += key.rm_blockcount;
-+		} else
-+			*last_rec = key;
-+
-+		/* Check that we don't go past the high key. */
-+		key.rm_startblock += key.rm_blockcount - 1;
-+		key.rm_offset += key.rm_blockcount - 1;
-+		key.rm_blockcount = 0;
-+		if (high_key && rmap_diffkeys(&key, high_key) > 0) {
-+			do_warn(
-+_("record %d greater than high key of %s\n"),
-+				i, name);
-+			suspect++;
-+		}
-+	}
-+
-+	return suspect;
-+}
-+
-+int
-+scan_rtrmapbt(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	int			type,
-+	int			whichfork,
-+	xfs_fsblock_t		fsbno,
-+	xfs_ino_t		ino,
-+	xfs_rfsblock_t		*tot,
-+	__uint64_t		*nex,
-+	blkmap_t		**blkmapp,
-+	bmap_cursor_t		*bm_cursor,
-+	int			isroot,
-+	int			check_dups,
-+	int			*dirty,
-+	__uint64_t		magic,
-+	void			*priv)
-+{
-+	const char		*name = "rtrmap";
-+	char			rootname[256];
-+	int			i;
-+	xfs_rtrmap_ptr_t	*pp;
-+	struct xfs_rtrmap_rec	*rp;
-+	struct rmap_priv	*rmap_priv = priv;
-+	int			hdr_errors = 0;
-+	int			numrecs;
-+	int			state;
-+	struct xfs_rtrmap_key	*kp;
-+	struct xfs_rmap_irec	oldkey;
-+	struct xfs_rmap_irec	key;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	int			suspect = 0;
-+	int			error;
-+
-+	agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+
-+	/* If anything here is bad, just bail. */
-+	if (be32_to_cpu(block->bb_magic) != magic) {
-+		do_warn(
-+_("bad magic # %#x in inode %" PRIu64 " %s block %" PRIu64 "\n"),
-+			be32_to_cpu(block->bb_magic), ino, name, fsbno);
-+		return 1;
-+	}
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		do_warn(
-+_("expected level %d got %d in inode %" PRIu64 ", %s block %" PRIu64 "\n"),
-+			level, be16_to_cpu(block->bb_level),
-+			ino, name, fsbno);
-+		return(1);
-+	}
-+
-+	/* verify owner */
-+	if (be64_to_cpu(block->bb_u.l.bb_owner) != ino) {
-+		do_warn(
-+_("expected owner inode %" PRIu64 ", got %llu, %s block %" PRIu64 "\n"),
-+			ino, be64_to_cpu(block->bb_u.l.bb_owner), name, fsbno);
-+		return 1;
-+	}
-+	/* verify block number */
-+	if (be64_to_cpu(block->bb_u.l.bb_blkno) !=
-+	    XFS_FSB_TO_DADDR(mp, fsbno)) {
-+		do_warn(
-+_("expected block %" PRIu64 ", got %llu, %s block %" PRIu64 "\n"),
-+			XFS_FSB_TO_DADDR(mp, fsbno),
-+			be64_to_cpu(block->bb_u.l.bb_blkno), name, fsbno);
-+		return 1;
-+	}
-+	/* verify uuid */
-+	if (platform_uuid_compare(&block->bb_u.l.bb_uuid,
-+				  &mp->m_sb.sb_meta_uuid) != 0) {
-+		do_warn(
-+_("wrong FS UUID, %s block %" PRIu64 "\n"),
-+			name, fsbno);
-+		return 1;
-+	}
-+
-+	/* check for btree blocks multiply claimed */
-+	state = get_bmap(agno, agbno);
-+	if (!(state == XR_E_UNKNOWN || state == XR_E_FS_MAP1))  {
-+		set_bmap(agno, agbno, XR_E_MULT);
-+		do_warn(
-+_("%s btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
-+				name, state, agno, agbno, suspect);
-+		suspect++;
-+		goto out;
-+	}
-+
-+	set_bmap(agno, agbno, XR_E_FS_MAP);
-+
-+	numrecs = be16_to_cpu(block->bb_numrecs);
-+
-+	/*
-+	 * All realtime rmap btree blocks are freed for a fully empty
-+	 * filesystem, thus they are counted towards the free data
-+	 * block counter.  The root lives in an inode and is thus not
-+	 * counted.
-+	 */
-+	(*tot)++;
-+
-+	if (level == 0) {
-+		if (numrecs > mp->m_rtrmap_mxr[0])  {
-+			numrecs = mp->m_rtrmap_mxr[0];
-+			hdr_errors++;
-+		}
-+		if (isroot == 0 && numrecs < mp->m_rtrmap_mnr[0])  {
-+			numrecs = mp->m_rtrmap_mnr[0];
-+			hdr_errors++;
-+		}
-+
-+		if (hdr_errors) {
-+			do_warn(
-+_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs),
-+				mp->m_rtrmap_mnr[0], mp->m_rtrmap_mxr[0],
-+				name, agno, agbno);
-+			suspect++;
-+		}
-+
-+		rp = XFS_RTRMAP_REC_ADDR(block, 1);
-+		snprintf(rootname, 256, "%s btree block %u/%u", name, agno, agbno);
-+		error = process_rtrmap_reclist(mp, rp, numrecs,
-+				&rmap_priv->last_rec, &rmap_priv->high_key,
-+				rootname);
-+		if (error)
-+			suspect++;
-+		goto out;
-+	}
-+
-+	/*
-+	 * interior record
-+	 */
-+	pp = XFS_RTRMAP_PTR_ADDR(block, 1, mp->m_rtrmap_mxr[1]);
-+
-+	if (numrecs > mp->m_rtrmap_mxr[1])  {
-+		numrecs = mp->m_rtrmap_mxr[1];
-+		hdr_errors++;
-+	}
-+	if (isroot == 0 && numrecs < mp->m_rtrmap_mnr[1])  {
-+		numrecs = mp->m_rtrmap_mnr[1];
-+		hdr_errors++;
-+	}
-+
-+	/*
-+	 * don't pass bogus tree flag down further if this block
-+	 * looked ok.  bail out if two levels in a row look bad.
-+	 */
-+	if (hdr_errors)  {
-+		do_warn(
-+_("bad btree nrecs (%u, min=%u, max=%u) in bt%s block %u/%u\n"),
-+			be16_to_cpu(block->bb_numrecs),
-+			mp->m_rtrmap_mnr[1], mp->m_rtrmap_mxr[1],
-+			name, agno, agbno);
-+		if (suspect)
-+			goto out;
-+		suspect++;
-+	} else if (suspect) {
-+		suspect = 0;
-+	}
-+
-+	/* check the node's high keys */
-+	for (i = 0; !isroot && i < numrecs; i++) {
-+		kp = XFS_RTRMAP_HIGH_KEY_ADDR(block, i + 1);
-+
-+		key.rm_flags = 0;
-+		key.rm_startblock = be64_to_cpu(kp->rm_startblock);
-+		key.rm_owner = be64_to_cpu(kp->rm_owner);
-+		if (libxfs_rmap_irec_offset_unpack(be64_to_cpu(kp->rm_offset),
-+				&key)) {
-+			/* Look for impossible flags. */
-+			do_warn(
-+_("invalid flags in key %u of %s btree block %u/%u\n"),
-+				i, name, agno, agbno);
-+			suspect++;
-+			continue;
-+		}
-+		if (rmap_diffkeys(&key, &rmap_priv->high_key) > 0) {
-+			do_warn(
-+_("key %d greater than high key of block (%u/%u) in %s tree\n"),
-+				i, agno, agbno, name);
-+			suspect++;
-+		}
-+	}
-+
-+	/* check for in-order keys */
-+	for (i = 0; i < numrecs; i++)  {
-+		kp = XFS_RTRMAP_KEY_ADDR(block, i + 1);
-+
-+		key.rm_flags = 0;
-+		key.rm_startblock = be64_to_cpu(kp->rm_startblock);
-+		key.rm_owner = be64_to_cpu(kp->rm_owner);
-+		if (libxfs_rmap_irec_offset_unpack(be64_to_cpu(kp->rm_offset),
-+				&key)) {
-+			/* Look for impossible flags. */
-+			do_warn(
-+_("invalid flags in key %u of %s btree block %u/%u\n"),
-+				i, name, agno, agbno);
-+			suspect++;
-+			continue;
-+		}
-+		if (i == 0) {
-+			oldkey = key;
-+			continue;
-+		}
-+		if (rmap_diffkeys(&oldkey, &key) > 0) {
-+			do_warn(
-+_("out of order key %u in %s btree block (%u/%u)\n"),
-+				i, name, agno, agbno);
-+			suspect++;
-+		}
-+		oldkey = key;
-+	}
-+
-+	for (i = 0; i < numrecs; i++)  {
-+		xfs_fsblock_t		pbno = be64_to_cpu(pp[i]);
-+
-+		/*
-+		 * XXX - put sibling detection right here.
-+		 * we know our sibling chain is good.  So as we go,
-+		 * we check the entry before and after each entry.
-+		 * If either of the entries references a different block,
-+		 * check the sibling pointer.  If there's a sibling
-+		 * pointer mismatch, try and extract as much data
-+		 * as possible.
-+		 */
-+		kp = XFS_RTRMAP_HIGH_KEY_ADDR(block, i + 1);
-+		rmap_priv->high_key.rm_flags = 0;
-+		rmap_priv->high_key.rm_startblock =
-+				be64_to_cpu(kp->rm_startblock);
-+		rmap_priv->high_key.rm_owner =
-+				be64_to_cpu(kp->rm_owner);
-+		if (libxfs_rmap_irec_offset_unpack(be64_to_cpu(kp->rm_offset),
-+				&rmap_priv->high_key)) {
-+			/* Look for impossible flags. */
-+			do_warn(
-+_("invalid flags in high key %u of %s btree block %u/%u\n"),
-+				i, name, agno, agbno);
-+			suspect++;
-+			continue;
-+		}
-+
-+		if (!verify_dfsbno(mp, pbno)) {
-+			do_warn(
-+_("bad %s btree ptr 0x%llx in ino %" PRIu64 "\n"),
-+			       name, (unsigned long long)pbno, ino);
-+			return 1;
-+		}
-+
-+		error = scan_lbtree(pbno, level, scan_rtrmapbt,
-+				type, whichfork, ino, tot, nex, blkmapp,
-+				bm_cursor, 0, check_dups, magic,
-+				rmap_priv,
-+				&xfs_rtrmapbt_buf_ops);
-+		if (error) {
-+			suspect++;
-+			goto out;
-+		}
-+	}
-+
-+out:
-+	if (hdr_errors || suspect) {
-+		rmap_avoid_check();
-+		return 1;
-+	}
-+	return 0;
-+}
-+
- struct refc_priv {
- 	struct xfs_refcount_irec	last_rec;
- 	xfs_agblock_t			nr_blocks;
-diff --git a/repair/scan.h b/repair/scan.h
-index 854897c..f51f950 100644
---- a/repair/scan.h
-+++ b/repair/scan.h
-@@ -73,4 +73,37 @@ scan_ags(
+ /*
+@@ -143,7 +157,8 @@ rmaps_free(
+ 	if (!rmap_needs_work(mp))
+ 		return;
+ 
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++	ag_rmaps--;
++	for (i = 0; i < mp->m_sb.sb_agcount + 1; i++) {
+ 		free_slab(&ag_rmaps[i].ar_rmaps);
+ 		free_slab(&ag_rmaps[i].ar_raw_rmaps);
+ 		free_slab(&ag_rmaps[i].ar_refcount_items);
+@@ -186,22 +201,31 @@ rmap_add_rec(
  	struct xfs_mount	*mp,
- 	int			scan_threads);
+ 	xfs_ino_t		ino,
+ 	int			whichfork,
+-	struct xfs_bmbt_irec	*irec)
++	struct xfs_bmbt_irec	*irec,
++	bool			realtime)
+ {
++	struct xfs_ag_rmap	*ag_rmap;
+ 	struct xfs_rmap_irec	rmap;
+ 	xfs_agnumber_t		agno;
+-	xfs_agblock_t		agbno;
++	xfs_fsblock_t		agbno;
+ 	struct xfs_rmap_irec	*last_rmap;
+ 	int			error = 0;
  
-+struct rmap_priv {
-+	struct aghdr_cnts	*agcnts;
-+	struct xfs_rmap_irec	high_key;
-+	struct xfs_rmap_irec	last_rec;
-+	xfs_agblock_t		nr_blocks;
-+};
+ 	if (!rmap_needs_work(mp))
+ 		return 0;
+ 
+-	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
+-	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+-	ASSERT(agno != NULLAGNUMBER);
+-	ASSERT(agno < mp->m_sb.sb_agcount);
+-	ASSERT(agbno + irec->br_blockcount <= mp->m_sb.sb_agblocks);
++	if (realtime) {
++		agno = NULLAGNUMBER;
++		agbno = irec->br_startblock;
++		ASSERT(agbno + irec->br_blockcount <= mp->m_sb.sb_rblocks);
++	} else {
++		agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
++		agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
++		ASSERT(agno != NULLAGNUMBER);
++		ASSERT(agno < mp->m_sb.sb_agcount);
++		ASSERT(agbno + irec->br_blockcount <= mp->m_sb.sb_agblocks);
++	}
++	ag_rmap = rmap_for_ag(agno);
+ 	ASSERT(ino != NULLFSINO);
+ 	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
+ 
+@@ -214,13 +238,13 @@ rmap_add_rec(
+ 	rmap.rm_blockcount = irec->br_blockcount;
+ 	if (irec->br_state == XFS_EXT_UNWRITTEN)
+ 		rmap.rm_flags |= XFS_RMAP_UNWRITTEN;
+-	last_rmap = &ag_rmaps[agno].ar_last_rmap;
++	last_rmap = &ag_rmap->ar_last_rmap;
+ 	if (last_rmap->rm_owner == XFS_RMAP_OWN_UNKNOWN)
+ 		*last_rmap = rmap;
+ 	else if (rmaps_are_mergeable(last_rmap, &rmap))
+ 		last_rmap->rm_blockcount += rmap.rm_blockcount;
+ 	else {
+-		error = slab_add(ag_rmaps[agno].ar_rmaps, last_rmap);
++		error = slab_add(ag_rmap->ar_rmaps, last_rmap);
+ 		if (error)
+ 			return error;
+ 		*last_rmap = rmap;
+@@ -236,9 +260,10 @@ rmap_finish_collecting_fork_recs(
+ 	xfs_agnumber_t		agno)
+ {
+ 	if (!rmap_needs_work(mp) ||
+-	    ag_rmaps[agno].ar_last_rmap.rm_owner == XFS_RMAP_OWN_UNKNOWN)
++	    rmap_for_ag(agno)->ar_last_rmap.rm_owner == XFS_RMAP_OWN_UNKNOWN)
+ 		return 0;
+-	return slab_add(ag_rmaps[agno].ar_rmaps, &ag_rmaps[agno].ar_last_rmap);
++	return slab_add(rmap_for_ag(agno)->ar_rmaps,
++			&rmap_for_ag(agno)->ar_last_rmap);
+ }
+ 
+ /* add a raw rmap; these will be merged later */
+@@ -264,7 +289,7 @@ __rmap_add_raw_rec(
+ 		rmap.rm_flags |= XFS_RMAP_BMBT_BLOCK;
+ 	rmap.rm_startblock = agbno;
+ 	rmap.rm_blockcount = len;
+-	return slab_add(ag_rmaps[agno].ar_raw_rmaps, &rmap);
++	return slab_add(rmap_for_ag(agno)->ar_raw_rmaps, &rmap);
+ }
+ 
+ /*
+@@ -322,16 +347,18 @@ rmap_fold_raw_recs(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+ {
++	struct xfs_ag_rmap	*ag_rmap;
+ 	struct xfs_slab_cursor	*cur = NULL;
+ 	struct xfs_rmap_irec	*prev, *rec;
+ 	size_t			old_sz;
+ 	int			error = 0;
+ 
+-	old_sz = slab_count(ag_rmaps[agno].ar_rmaps);
+-	if (slab_count(ag_rmaps[agno].ar_raw_rmaps) == 0)
++	ag_rmap = rmap_for_ag(agno);
++	old_sz = slab_count(ag_rmap->ar_rmaps);
++	if (slab_count(ag_rmap->ar_raw_rmaps) == 0)
+ 		goto no_raw;
+-	qsort_slab(ag_rmaps[agno].ar_raw_rmaps, rmap_compare);
+-	error = init_slab_cursor(ag_rmaps[agno].ar_raw_rmaps, rmap_compare,
++	qsort_slab(ag_rmap->ar_raw_rmaps, rmap_compare);
++	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare,
+ 			&cur);
+ 	if (error)
+ 		goto err;
+@@ -344,26 +371,26 @@ rmap_fold_raw_recs(
+ 			rec = pop_slab_cursor(cur);
+ 			continue;
+ 		}
+-		error = slab_add(ag_rmaps[agno].ar_rmaps, prev);
++		error = slab_add(ag_rmap->ar_rmaps, prev);
+ 		if (error)
+ 			goto err;
+ 		prev = rec;
+ 		rec = pop_slab_cursor(cur);
+ 	}
+ 	if (prev) {
+-		error = slab_add(ag_rmaps[agno].ar_rmaps, prev);
++		error = slab_add(ag_rmap->ar_rmaps, prev);
+ 		if (error)
+ 			goto err;
+ 	}
+-	free_slab(&ag_rmaps[agno].ar_raw_rmaps);
+-	error = init_slab(&ag_rmaps[agno].ar_raw_rmaps,
++	free_slab(&ag_rmap->ar_raw_rmaps);
++	error = init_slab(&ag_rmap->ar_raw_rmaps,
+ 			sizeof(struct xfs_rmap_irec));
+ 	if (error)
+ 		do_error(
+ _("Insufficient memory while allocating raw metadata reverse mapping slabs."));
+ no_raw:
+ 	if (old_sz)
+-		qsort_slab(ag_rmaps[agno].ar_rmaps, rmap_compare);
++		qsort_slab(ag_rmap->ar_rmaps, rmap_compare);
+ err:
+ 	free_slab_cursor(&cur);
+ 	return error;
+@@ -419,6 +446,9 @@ rmap_add_fixed_ag_rec(
+ 	if (!rmap_needs_work(mp))
+ 		return 0;
+ 
++	if (agno == NULLAGNUMBER)
++		return 0;
 +
-+int
-+process_rtrmap_reclist(
+ 	/* sb/agi/agf/agfl headers */
+ 	error = rmap_add_ag_rec(mp, agno, 0, XFS_BNO_BLOCK(mp),
+ 			XFS_RMAP_OWN_FS);
+@@ -493,6 +523,7 @@ rmap_store_ag_btree_rec(
+ 	struct xfs_trans	*tp;
+ 	struct xfs_trans_res tres = {0};
+ 	__be32			*agfl_bno, *b;
++	struct xfs_ag_rmap	*ag_rmap;
+ 	int			error = 0;
+ 	struct xfs_owner_info	oinfo;
+ 
+@@ -500,9 +531,9 @@ rmap_store_ag_btree_rec(
+ 		return 0;
+ 
+ 	/* Release the ar_rmaps; they were put into the rmapbt during p5. */
+-	free_slab(&ag_rmaps[agno].ar_rmaps);
+-	error = init_slab(&ag_rmaps[agno].ar_rmaps,
+-				  sizeof(struct xfs_rmap_irec));
++	ag_rmap = rmap_for_ag(agno);
++	free_slab(&ag_rmap->ar_rmaps);
++	error = init_slab(&ag_rmap->ar_rmaps, sizeof(struct xfs_rmap_irec));
+ 	if (error)
+ 		goto err;
+ 
+@@ -515,7 +546,7 @@ rmap_store_ag_btree_rec(
+ 		goto err;
+ 
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+-	agfl_bno += ag_rmaps[agno].ar_flcount;
++	agfl_bno += ag_rmap->ar_flcount;
+ 	b = agfl_bno;
+ 	while (*b != NULLAGBLOCK && b - agfl_bno <= XFS_AGFL_SIZE(mp)) {
+ 		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
+@@ -533,7 +564,7 @@ rmap_store_ag_btree_rec(
+ 		goto err;
+ 
+ 	/* Create cursors to refcount structures */
+-	error = init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare,
++	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare,
+ 			&rm_cur);
+ 	if (error)
+ 		goto err;
+@@ -714,7 +745,7 @@ refcount_emit(
+ 	int			error;
+ 	struct xfs_slab		*rlslab;
+ 
+-	rlslab = ag_rmaps[agno].ar_refcount_items;
++	rlslab = rmap_for_ag(agno)->ar_refcount_items;
+ 	ASSERT(nr_rmaps > 0);
+ 
+ 	dbg_printf("REFL: agno=%u pblk=%u, len=%u -> refcount=%zu\n",
+@@ -736,7 +767,7 @@ _("Insufficient memory while recreating refcount tree."));
+ #define RMAP_END(r)	((r)->rm_startblock + (r)->rm_blockcount)
+ int
+ compute_refcounts(
+-	struct xfs_mount		*mp,
 +	struct xfs_mount	*mp,
-+	struct xfs_rtrmap_rec	*rp,
-+	int			numrecs,
-+	struct xfs_rmap_irec	*last_rec,
-+	struct xfs_rmap_irec	*high_key,
-+	const char		*name);
+ 	xfs_agnumber_t		agno)
+ {
+ 	struct xfs_bag		*stack_top = NULL;
+@@ -754,7 +785,7 @@ compute_refcounts(
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
+-	rmaps = ag_rmaps[agno].ar_rmaps;
++	rmaps = rmap_for_ag(agno)->ar_rmaps;
+ 
+ 	error = init_slab_cursor(rmaps, rmap_compare, &rmaps_cur);
+ 	if (error)
+@@ -864,7 +895,7 @@ rmap_record_count(
+ 	struct xfs_mount		*mp,
+ 	xfs_agnumber_t		agno)
+ {
+-	return slab_count(ag_rmaps[agno].ar_rmaps);
++	return slab_count(rmap_for_ag(agno)->ar_rmaps);
+ }
+ 
+ /*
+@@ -875,7 +906,7 @@ rmap_init_cursor(
+ 	xfs_agnumber_t		agno,
+ 	struct xfs_slab_cursor	**cur)
+ {
+-	return init_slab_cursor(ag_rmaps[agno].ar_rmaps, rmap_compare, cur);
++	return init_slab_cursor(rmap_for_ag(agno)->ar_rmaps, rmap_compare, cur);
+ }
+ 
+ /*
+@@ -1269,7 +1300,7 @@ refcount_record_count(
+ 	struct xfs_mount		*mp,
+ 	xfs_agnumber_t		agno)
+ {
+-	return slab_count(ag_rmaps[agno].ar_refcount_items);
++	return slab_count(rmap_for_ag(agno)->ar_refcount_items);
+ }
+ 
+ /*
+@@ -1280,7 +1311,7 @@ init_refcount_cursor(
+ 	xfs_agnumber_t		agno,
+ 	struct xfs_slab_cursor	**cur)
+ {
+-	return init_slab_cursor(ag_rmaps[agno].ar_refcount_items, NULL, cur);
++	return init_slab_cursor(rmap_for_ag(agno)->ar_refcount_items, NULL, cur);
+ }
+ 
+ /*
+@@ -1461,5 +1492,5 @@ rmap_store_agflcount(
+ 	if (!rmap_needs_work(mp))
+ 		return;
+ 
+-	ag_rmaps[agno].ar_flcount = count;
++	rmap_for_ag(agno)->ar_flcount = count;
+ }
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 752ece8..7069b6b 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -27,7 +27,8 @@ extern bool rmap_needs_work(struct xfs_mount *);
+ extern void rmaps_init(struct xfs_mount *);
+ extern void rmaps_free(struct xfs_mount *);
+ 
+-extern int rmap_add_rec(struct xfs_mount *, xfs_ino_t, int, struct xfs_bmbt_irec *);
++extern int rmap_add_rec(struct xfs_mount *, xfs_ino_t, int,
++		struct xfs_bmbt_irec *, bool realtime);
+ extern int rmap_finish_collecting_fork_recs(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno);
+ extern int rmap_add_ag_rec(struct xfs_mount *, xfs_agnumber_t agno,
+@@ -62,4 +63,11 @@ extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+ 
++#define for_each_ag(mp, agno) \
++	for ((agno) = 0; (agno) < (mp)->m_sb.sb_agcount; (agno)++)
 +
-+int scan_rtrmapbt(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	int			type,
-+	int			whichfork,
-+	xfs_fsblock_t		bno,
-+	xfs_ino_t		ino,
-+	xfs_rfsblock_t		*tot,
-+	__uint64_t		*nex,
-+	struct blkmap		**blkmapp,
-+	bmap_cursor_t		*bm_cursor,
-+	int			isroot,
-+	int			check_dups,
-+	int			*dirty,
-+	__uint64_t		magic,
-+	void			*priv);
++#define for_each_rmap_group(mp, agno) \
++	for ((agno) = NULLAGNUMBER; (agno) == NULLAGNUMBER || \
++	(agno) < (mp)->m_sb.sb_agcount; (agno)++)
 +
- #endif /* _XR_SCAN_H */
+ #endif /* RMAP_H_ */
 
 _______________________________________________
 xfs mailing list
