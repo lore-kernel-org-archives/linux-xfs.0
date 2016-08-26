@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 052057CA6
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 12:11:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8881A7CA3
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 14:03:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BC138304043
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AjKxIAqLuXHneOBd (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 11 Aug 2016 10:11:10 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA8E4AC001
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 12:03:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 8anI3GFA4zmwrgta for <xfs@oss.sgi.com>;
+	Fri, 26 Aug 2016 12:03:26 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 9216246203
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 17:11:09 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-69.bos.redhat.com [10.18.41.69])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7BHB9a7008725
-	for <xfs@oss.sgi.com>; Thu, 11 Aug 2016 13:11:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/5] fix log recovery for v5 superblocks
-Date: Thu, 11 Aug 2016 13:11:02 -0400
-Message-Id: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+	by sandeen.net (Postfix) with ESMTPSA id 57AF34A1
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 14:03:26 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfs_db: properly set dquot_buf when operating on dquot
+Message-ID: <d2abfb81-38d2-3f00-fea9-8a405664dea1@sandeen.net>
+Date: Fri, 26 Aug 2016 14:03:25 -0500
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,75 +26,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hi all,
+The earlier commit:
 
-This series addresses a problem with log recovery on v5 superblocks
-where log recovery doesn't update the metadata LSN of buffers it writes
-out. The v5 superblock metadata LSN recovery ordering logic helps
-prevent transient corruption states and works fine in most cases. Since
-recovery doesn't update the metadata LSN of buffers it writes out,
-however, it introduces the possibility of ordering problems if the
-recovery happens to repeat from the beginning (e.g., system crash after
-recovery I/O has completed but before the log tail is pushed forward).
+66a40d02 db: verify and calculate dquot CRCs
 
-This tends to manifest as reports of directory corruption during log
-recovery and commonly reproduces in situations where a system is
-restarted frequently (e.g., constant/frequent reboot tests). It can be
-reproduced fairly easily on demand by running fsstress in a simple
-(non-log forcing) shutdown loop, e.g.:
+added a "dquot_buf" to the iocur to specify when we were operating
+on a dquot and thus handle dquot CRC updates - but nothing ever
+actually set dquot_buf to a non-zero value.
 
-	while [ true ]; do 
-		fsstress -d <dir> -p 4 &
-		sleep $((RANDOM % 5))
-		xfs_io -xc shutdown <dir>
-		umount <dir>
-		mount <dev> <dir> || break
-	done
+Without doing so, we don't recalculate the dquot crc when
+changing contents of a dquot:
 
-The problem is that the log attempts to replay a buffer update that is
-no longer valid due to subsequent, already replayed updates. This
-results in a corruption error when, in fact, the filesystem is perfectly
-fine. The problem is addressed by updating the metadata LSN of buffers
-submitted for I/O by log recovery. This bit is implemented in patch 4.
+# xfs_db -x -c "dquot -u 500" -c "p crc" -c "write diskdq.bcount 2" \
+	    -c "p crc" crctestfile
+crc = 0xfd293c68 (correct)
+diskdq.bcount = 2
+crc = 0xfd293c68 (correct)
 
-Updating metadata LSNs in this manner uncovered another issue in which
-log recovery would incorrectly skip modifications from independent
-transactions if they happen to share an LSN with a previous transaction
-that modified the same buffer (which had already updated the LSN). This
-particular problem is addressed in patch 2, which modifies log recovery
-to submit buffers on current LSN boundaries rather than transaction
-boundaries. The remaining patches fix up some minor issues, refactor a
-bit and add some tracepoints.
+[ the "(correct)" tag is another, different issue ]
 
-This has survived a single xfstests run so far but still requires more
-regression testing. It has also survived several thousand iterations of
-a shutdown test similar to the above that normally reproduces problems
-within tens of iterations (xfstests test tbd).
+# xfs_db -x -c "dquot -u 500" -c "p crc" crctestfile
+Metadata CRC error detected at xfs_dquot block 0xd8/0x1000
+crc = 0xfd293c68 (bad)
 
-Brian
+With this change, dquot CRCs are properly recalculated in write_cur.
 
-Brian Foster (5):
-  xfs: rework log recovery to submit buffers on LSN boundaries
-  xfs: pass current lsn to log recovery buffer validation
-  xfs: don't warn on buffers not being recovered due to LSN
-  xfs: update metadata LSN in buffers during log recovery
-  xfs: log recovery tracepoints to track current lsn and buffer
-    submission
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
- fs/xfs/xfs_log_priv.h    |   3 +-
- fs/xfs/xfs_log_recover.c | 188 +++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_trace.h       |  31 +++++++-
- 3 files changed, 163 insertions(+), 59 deletions(-)
-
--- 
-2.5.5
+diff --git a/db/dquot.c b/db/dquot.c
+index 47740f0..061eca5 100644
+--- a/db/dquot.c
++++ b/db/dquot.c
+@@ -164,6 +164,7 @@ dquot_f(
+ 	}
+ 	set_cur(&typtab[TYP_DQBLK], XFS_FSB_TO_DADDR(mp, bm.startblock), blkbb,
+ 		DB_RING_IGN, NULL);
++	iocur_top->dquot_buf = 1;
+ 	off_cur(qoff * (int)sizeof(xfs_dqblk_t), sizeof(xfs_dqblk_t));
+ 	ring_add();
+ 	return 0;
 
 _______________________________________________
 xfs mailing list
