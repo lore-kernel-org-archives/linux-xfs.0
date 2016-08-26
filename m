@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 377947CC7
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 01:44:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BA44D8F8054
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 23:43:51 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3exjtSCyBzcS2MQB for <xfs@oss.sgi.com>;
-	Thu, 25 Aug 2016 23:25:42 -0700 (PDT)
-Date: Fri, 26 Aug 2016 16:25:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 800b269
-Message-ID: <20160826062508.GG19025@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C0A5E7CA1
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:29:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 31FA6AC002
+	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:29:26 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id I7dq2ubQjAvOsxmr (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:29:24 -0700 (PDT)
+Date: Fri, 26 Aug 2016 09:28:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v8 00/71] xfs: add reflink and dedupe support
+Message-ID: <20160826162850.GE22760@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<20160826125636.GA1548@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160826125636.GA1548@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,109 +26,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1706257211698420559=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
+On Fri, Aug 26, 2016 at 05:56:36AM -0700, Christoph Hellwig wrote:
+> FTI, with your djwong-devel tree I see sporadic slab corruption when
+> running xfstests with reflinks force enabled in mkfs.
+> 
+> And while the trace looks like from the rmap code it doesn't happen
+> without the reflink patches.
+> 
+> Example during xfs/313 below:
+> 
+> [14751.774252] Slab corruption (Tainted: G        W      ): xfs_cui_item start=ffff88013afb3748, len=408
+> [14751.775170] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+> [14751.775731] Last user: [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
+> [14751.776397] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
+> [14751.777157] Single bit error detected. Probably bad RAM.
+> [14751.777591] Run memtest86+ or a similar memory test tool.
+> [14751.778015] Prev obj: start=ffff88013afb3598, len=408
+> [14751.778468] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+> [14751.778940] Last user:
+> [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
 
---===============1706257211698420559==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SnV5plBeK2Ge1I9g"
-Content-Disposition: inline
+CUI == refCount Update Item, so it /is/ the reflink code.
 
+Will take a look.  Sigh...
 
---SnV5plBeK2Ge1I9g
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+--D
 
-Hi folks,
-
-The for-next branch of the xfs kernel repository at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated.
-
-This (hopefully) is the last set of fixes for the 4.8 cycle - I plan
-to send them to linus by the middle of next week. For this point
-onwards I'll be focussing on patches for the 4.9 merge window - I'm
-not sure how much of the reflink set we'll get through before the
-window closes, but I'm going to take a good swing at getting that
-merged for 4.9....
-
--Dave.
-
-The new head of the for-next branch is commit:
-
-800b269 xfs: prevent dropping ioend completions during buftarg wait
-
-New Commits:
-
-Brian Foster (1):
-      [800b269] xfs: prevent dropping ioend completions during buftarg wait
-
-Darrick J. Wong (5):
-      [ed150e1] xfs: don't perform lookups on zero-height btrees
-      [738f57c] xfs: disallow mounting of realtime + rmap filesystems
-      [da1f039] xfs: don't log the entire end of the AGF
-      [7222789] xfs: fix some key handling problems in _btree_simple_query_=
-range
-      [5b5c2db] xfs: simple btree query range should look right if LE looku=
-p fails
-
-Dave Chinner (1):
-      [f3d7ebd] xfs: fix superblock inprogress check
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c  |  2 ++
- fs/xfs/libxfs/xfs_btree.c  | 14 +++++++++++++-
- fs/xfs/libxfs/xfs_format.h |  6 ++++--
- fs/xfs/libxfs/xfs_sb.c     |  3 ++-
- fs/xfs/xfs_buf.c           |  2 +-
- fs/xfs/xfs_super.c         |  9 ++++++++-
- 6 files changed, 30 insertions(+), 6 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---SnV5plBeK2Ge1I9g
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJXv+DDAAoJEK3oKUf0dfodYFYP/jeCAlZh1UFn/0v6gas2TzH9
-yxtUJcCN2I/6Dj6+uIT74Ny+v/ELkpwQUC7FUPgvk7nLxokVhgGc+q3EUu2jQhYy
-sT41gWDs2vrtsFeWBhHoLrKC/qOsyCZrvsDz47K6xYTVj+YeK3VCDUUiwmMuIrZY
-pJDpwIJwVY84O8kx7j736U8UPsLz+56iVG8lzaJ2YE55tZOUCKLVB2nKNmgMo8XK
-PeQJB0LtGZvcU7EycqM8t/K1NQl7i4z815VLNAkKPBFtklI+CPOCvVuGX6sbfeaL
-WaWZBZVDBrwA0HOLcedTRlYO69BlbnYPklWEj1QOkzHLqucafMgBB3+0JAMHk4ec
-tVQIAbD5RsHl6jdq6n1voSPDeTmXH7HTyEVA9uWfIpPUFizQO+Ovy1TzDwri+Twa
-AkBRiEpLts93Bfpw17mklJmg5o+PEIJnpEhwTSemRrw3Anf1YnXXWKtaVmXllc+J
-Ek0Opo34nxUK7shtLmWw1bqUUE7nOcVeYxlHlHcrYmeS4yuI8g3NtIRAKZ7sWRur
-ZLfNE8HsOZdWes8/1R7C6uN7Scehlxezka/mB1fbKo6/Q6kmKEAuRc7YfDvfZ9x9
-rNSnng+fJKlGFQLNLlz78EEzmmjRe7CwUOAZXJCr3A96fW87/Rz0Y8VoYC56q7ZL
-6SUoukic2tYzsT/GJPjt
-=0LS3
------END PGP SIGNATURE-----
-
---SnV5plBeK2Ge1I9g--
-
-
---===============1706257211698420559==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> [14751.779621] 000: 6b 6b 6b 6b 6b 00 01 02 03 6b 6b 6b 6b 6b 6b 6b kkkkk....kkkkkkk
+> [14751.780378] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> [14751.781140] Next obj: start=ffff88013afb38f8, len=408
+> [14751.781639] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+> [14751.782216] Last user:
+> [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
+> [14751.782885] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> [14751.783608] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> [14751.784287] Slab corruption (Tainted: G        W      ): xfs_bui_item start=ffff880131b67048, len=184
+> [14751.785126] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+> [14751.785979] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)0
+> [14751.786636] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
+> [14751.787414] Single bit error detected. Probably bad RAM.
+> [14751.787948] Run memtest86+ or a similar memory test tool.
+> [14751.788477] Next obj: start=ffff880131b67118, len=184
+> [14751.789002] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+> [14751.789559] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)
+> [14751.790259] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> [14751.791055] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1706257211698420559==--
