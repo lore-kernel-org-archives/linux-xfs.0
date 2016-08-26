@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A2B584BC
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:02:50 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0ED1284BC
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 19:02:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6702AC001
-	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:02:46 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id w45mqi6ZwDVDxhDX (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D5D448F8039
+	for <xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:02:50 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 368GVYjtDFzVktly (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:02:42 -0700 (PDT)
-Subject: [PATCH 1/3] block: invalidate the page cache when issuing BLKZEROOUT.
+	<xfs@oss.sgi.com>; Thu, 25 Aug 2016 17:02:45 -0700 (PDT)
+Subject: [PATCH 2/3] block: require write_same and discard requests align to
+	logical block size
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Aug 2016 17:02:08 -0700
-Message-ID: <147216972858.7860.4375500103860205870.stgit@birch.djwong.org>
+Date: Thu, 25 Aug 2016 17:02:15 -0700
+Message-ID: <147216973554.7860.12766463906492752223.stgit@birch.djwong.org>
 In-Reply-To: <147216972158.7860.13484490862091226290.stgit@birch.djwong.org>
 References: <147216972158.7860.13484490862091226290.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,64 +32,72 @@ Sender: xfs-bounces@oss.sgi.com
 To: axboe@kernel.dk, darrick.wong@oracle.com
 Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
 
-Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
-returning stale cache contents at a later time.
-
-v5: Refactor the 4.4 refactoring of the ioctl code into separate functions.
-Split the page invalidation and the new ioctl into separate patches.
-v6: Remove the call to invalidate_inode_pages2_range since we don't need it.
+Make sure that the offset and length arguments that we're using to
+construct WRITE SAME and DISCARD requests are actually aligned to the
+logical block size.  Failure to do this causes other errors in other
+parts of the block layer or the SCSI layer because disks don't support
+partial logical block writes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/ioctl.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ block/blk-lib.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..755119c 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -225,7 +225,8 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg)
- {
- 	uint64_t range[2];
--	uint64_t start, len;
-+	struct address_space *mapping;
-+	uint64_t start, end, len;
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 083e56f..46fe924 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -31,6 +31,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	unsigned int granularity;
+ 	enum req_op op;
+ 	int alignment;
++	sector_t bs_mask;
  
- 	if (!(mode & FMODE_WRITE))
- 		return -EBADF;
-@@ -235,18 +236,23 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+ 	if (!q)
+ 		return -ENXIO;
+@@ -50,6 +51,10 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		op = REQ_OP_DISCARD;
+ 	}
  
- 	start = range[0];
- 	len = range[1];
-+	end = start + len - 1;
- 
- 	if (start & 511)
- 		return -EINVAL;
- 	if (len & 511)
- 		return -EINVAL;
--	start >>= 9;
--	len >>= 9;
--
--	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
-+	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
 +		return -EINVAL;
-+	if (end < start)
- 		return -EINVAL;
- 
--	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
-+	/* Invalidate the page cache, including dirty pages */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
 +
-+	return blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
-+				    false);
- }
+ 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+ 	granularity = max(q->limits.discard_granularity >> 9, 1U);
+ 	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
+@@ -150,10 +155,15 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 	unsigned int max_write_same_sectors;
+ 	struct bio *bio = NULL;
+ 	int ret = 0;
++	sector_t bs_mask;
  
- static int put_ushort(unsigned long arg, unsigned short val)
+ 	if (!q)
+ 		return -ENXIO;
+ 
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
++
+ 	/* Ensure that max_write_same_sectors doesn't overflow bi_size */
+ 	max_write_same_sectors = UINT_MAX >> 9;
+ 
+@@ -202,6 +212,11 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	int ret;
+ 	struct bio *bio = NULL;
+ 	unsigned int sz;
++	sector_t bs_mask;
++
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
+ 
+ 	while (nr_sects != 0) {
+ 		bio = next_bio(bio, min(nr_sects, (sector_t)BIO_MAX_PAGES),
 
 _______________________________________________
 xfs mailing list
