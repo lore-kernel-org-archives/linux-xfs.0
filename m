@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 426367CA0
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 02:35:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1408E8F8033
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 00:35:14 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E03917CAF
+	for <xfs@oss.sgi.com>; Sat, 27 Aug 2016 09:57:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 932618F8039
+	for <xfs@oss.sgi.com>; Sat, 27 Aug 2016 07:57:28 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ClYDG1BlfJBMXw0s (version=TLSv1.2
+	cuda.sgi.com with ESMTP id xHTYCgos5CvZNOVU (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 28 Aug 2016 00:35:08 -0700 (PDT)
-Date: Sun, 28 Aug 2016 15:35:05 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2] fstests: test xfs rw remount with unknown ro-compat
-	features
-Message-ID: <20160828073505.GD27776@eguan.usersys.redhat.com>
-References: <1472311713-12992-1-git-send-email-zlang@redhat.com>
+	<xfs@oss.sgi.com>; Sat, 27 Aug 2016 07:57:27 -0700 (PDT)
+Date: Sat, 27 Aug 2016 22:57:25 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs_db: new -FF option help to continue the command
+	without verify
+Message-ID: <20160827145724.GJ10350@dhcp12-143.nay.redhat.com>
+References: <1472209496-2401-1-git-send-email-zlang@redhat.com>
+	<20160827004318.GH19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1472311713-12992-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <20160827004318.GH19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,203 +31,163 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Aug 27, 2016 at 11:28:33PM +0800, Zorro Lang wrote:
-> Although ro-compat features cannot be mounted rw, a bug allows
-> an ro->rw remount transition, and this will corrupt the filesystem
-> if it contains ro-compat features unknown to the running kernel.
+On Sat, Aug 27, 2016 at 10:43:18AM +1000, Dave Chinner wrote:
+> On Fri, Aug 26, 2016 at 07:04:56PM +0800, Zorro Lang wrote:
+> > When I try to do below steps(a V5 xfs on $fsile):
+> > 
+> >   # xfs_db -x -c "sb 0" -c "write features_ro_compat 4096" $fsfile
+> >   # xfs_db -x -c "sb 0" -c "write features_ro_compat 0" $fsfile
+> >   # xfs_db -c "sb 0" -c p $fsfile
+> > 
+> > The step#2 and #3 all failed, as:
+> > 
+> >   Superblock has unknown read-only compatible features (0x1000) enable
 > 
-> This bug has been fix on linux kernel (d0a58e8 xfs: disallow rw
-> remount on fs with unknown ro-compat features), this case is
-> the regression testcase of that bug.
+> As it should. xfs_db *in expert mode* allows you to shoot yourself
+> in the foot. However, it doesn't guarantee you'll have the expertise
+> to be able to fix the hole you just shot in your foot.
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> V2 fix some mistakes of golden image(.out) file.
-> 
-> Thanks,
-> Zorro
-> 
->  tests/xfs/263     | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/263.out |  6 ++++
->  tests/xfs/group   |  1 +
->  3 files changed, 106 insertions(+)
->  create mode 100755 tests/xfs/263
->  create mode 100644 tests/xfs/263.out
-> 
-> diff --git a/tests/xfs/263 b/tests/xfs/263
-> new file mode 100755
-> index 0000000..a46e250
-> --- /dev/null
-> +++ b/tests/xfs/263
-> @@ -0,0 +1,99 @@
-> +#! /bin/bash
-> +# FS QA Test 263
-> +#
-> +# Test upstream d0a58e8:
-> +#   xfs: disallow rw remount on fs with unknown ro-compat features
+> You have much to learn, grasshopper. :P
 
-Need detailed test description here too.
+So I wrote a *stupid* patch at here... HaHa, I'm not afraid to try more
+*this* if I can learn more:)
 
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	# Due to we've broken the superblock of SCRATCH_DEV by
-> +	# xfs_db, so clean bad superblock at the end
-> +	_scratch_unmount
-> +	_scratch_mkfs >/dev/null 2>&1
-
-This can be done by calling _require_scratch_nocheck in the test
-instead of _require_scratch, so there's no fsck run after test.
-
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_crc
-
-_require_scratch_xfs_crc and ..
-
-> +
-> +# Only V5 XFS disallow rw mount/remount with unknown ro-compat
-> +# features
-> +MKFS_OPTIONS="-m crc=1"
-
-you don't have to overwrite MKFS_OPTIONS, let the user specify test
-config, and just skip the test if scratch_dev has no crc support.
-
-> +_scratch_mkfs_xfs >>$seqres.full 2>&1
-> +
-> +# set the highest bit of features_ro_compat, use it as an unknown
-> +# feature bit. If one day this bit become known feature, please
-> +# change this case.
-> +$XFS_DB_PROG -x -c "sb 0" \
-> +                -c "write features_ro_compat $((2**31))" \
-> +		$SCRATCH_DEV
-> +
-> +echo "rw mount test"
-> +# Maybe this mount will fail by bad superblock
-> +# But keep testing this anyway
-> +MOUNT_OPTIONS="-o rw"
-
-rw mount is the default, I don't think overwriting MOUNT_OPTIONS is
-necessary.
-
-> +_scratch_mount 2>>$seqres.full
-> +if [ $? -eq 0 ]; then
-> +	_fail "rw mount test failed"
-> +fi
-> +
-> +echo "ro mount test"
-> +MOUNT_OPTIONS="-o ro"
-> +_scratch_mount
-
-_scratch_mount -o ro
-
-No need to overwrite MOUNT_OPTIONS either.
-
-> +if [ $? -ne 0 ]; then
-> +	_fail "ro mount test failed"
-> +else
-> +	# no hang/panic is fine
-> +	$FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 400 >>$seqres.full 2>&1
-
-I don't think this is necessary, because the fs is ro-mounted, but it's
-fine by me, just make sure there's no hang/panic on unknown ro_compat
-feature ro-mount.
-
-> +fi
-> +
-> +dmesg -c >/dev/null
-> +echo "rw remount test"
-> +MOUNT_OPTIONS="-o rw,remount"
-> +_scratch_mount 2>>$seqres.full
-
-_scratch_remount rw
-
-> +if [ $? -eq 0 ]; then
-> +	_fail "rw,remount test failed"
-> +fi
-> +dmesg -c | sed -n -e "s/.*XFS.*: \(ro->rw transition prohibited.*\)/\1/p"
-
-We probably don't want to clear dmesg buffer if possible, and I think
-making sure remount,rw failed is good enough. Or we can write a new
-helper to look for specific dmesg by following how _check_dmesg does? 
+Thanks so much you take time to explain lots of things for me. That's my
+pleasure:) And they're very helpful for me, I'm trying to read more
+man-pages and code for understand all you said below(Looks like I have
+much things to do this weekend:-P)
 
 Thanks,
-Eryu
+Zorro
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/263.out b/tests/xfs/263.out
-> new file mode 100644
-> index 0000000..440ed32
-> --- /dev/null
-> +++ b/tests/xfs/263.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 263
-> +features_ro_compat = 0x80000000
-> +rw mount test
-> +ro mount test
-> +rw remount test
-> +ro->rw transition prohibited on unknown (0x80000000) ro-compat filesystem
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 6905a62..ec3c022 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -260,6 +260,7 @@
->  260 auto quick quota
->  261 auto quick quota
->  262 auto quick quota
-> +263 auto quick mount
->  265 auto clone
->  266 dump ioctl auto quick
->  267 dump ioctl tape
+> 
+> > If we break the superblock, at least xfs_db should help to print the
+> > superblock info.
+> 
+> It should. You tried to write to it in expert mode, though. Try just
+> printing the field in read-only mode (-r)....
+> 
+> > And as a xfs debugger, xfs_db should can ignore
+> > unexpected errors to continue the "expert" command which an expert
+> > want to do.
+> 
+> You're making the assumption that "-x" makes the user an expert.
+> That is far from the truth - it just means someone read a man page,
+> not that they have any specific XFS knowledge. The talk I
+> gave at LCA 2015 is relevant here:
+> 
+> https://www.youtube.com/watch?v=VpuVDfSXs-g
+> 
+> I go into a bit of depth about how cognitive biases affect how
+> people learn and assess their levels of expertise. This should
+> explain why "expert" mode still needs /some/ safeguards.
+> 
+> Remember: feature flags are the most critical part of the on-disk
+> format because they tell everything that parses the on-disk format
+> what format exists on disk. If it is changed to something the tools
+> don't recognise, the tools should /absolutely refuse/ to run in
+> anything other than the mode indicated by the feature flags (i.e.
+> read-only or not at all).
+> 
+> This, however, only turns off part of xfs_db's "make it
+> easy-for-non-experts" automatic type detection functionality. If you
+> know what you are doing and how xfs_db works (i.e. the user is an
+> expert), this is trivial to get around.
+> 
+> So, let me demonstrate:
+> 
+> $ sudo xfs_db -x -c "sb 0" -c "write features_ro_compat 4096" /dev/vdc
+> features_ro_compat = 0x1000
+> $ sudo xfs_db -x -c "sb 0" -c "write features_ro_compat 0" /dev/vdc
+> Superblock has unknown read-only compatible features (0x1000) enabled.
+> Attempted to mount read-only compatible filesystem read-write.
+> Filesystem can only be safely mounted read only.
+> no current type
+> $
+> 
+> Ok, there's an error there that tells me I can't decode the buffer
+> that was loaded because automatic type detection was not run. So,
+> lets load it as a raw buffer and set the type manually:
+> 
+> $ sudo xfs_db -r -c "daddr 0" -c "type sb" -c "p features_ro_compat" /dev/vdc
+> Superblock has unknown read-only compatible features (0x1000) enabled.
+> Attempted to mount read-only compatible filesystem read-write.
+> Filesystem can only be safely mounted read only.
+> features_ro_compat = 0x1000
+> 
+> Yup, there we go, access to the superblock type parsing is
+> re-enabled by starting with a raw data buffer, then setting the type
+> manually. We probably should fix userspace to then remount in
+> read-only mode so this works correctly without needing this step.
+> (It's probably just a libxfs init flag that is wrong.)
+> 
+> So:
+> 
+> $ sudo xfs_db -x -c "daddr 0" -c "type sb" -c "write features_ro_compat 0" /dev/vdc
+> Superblock has unknown read-only compatible features (0x1000) enabled.
+> Attempted to mount read-only compatible filesystem read-write.
+> Filesystem can only be safely mounted read only.
+> features_ro_compat = 0
+> $ sudo xfs_db -r -c "sb 0" -c "p features_ro_compat" /dev/vdc
+> features_ro_compat = 0
+> $
+> 
+> Yup, I just reset it to zero with expert mode, simply by knowing how
+> xfs_db works and avoiding the error that occurred with automatic type
+> detection. But even if I can't set the type manually, I can still
+> fix this by going back to first principles.
+> 
+> $ sudo xfs_db -x -c "sb 0" -c "write features_ro_compat 4096" /dev/vdc
+> features_ro_compat = 0x1000
+> $
+> 
+> First - manually find the on-disk format structure offset:
+> 
+> $ pahole fs/xfs/libxfs/xfs_sb.o |grep sb_features_ro_compat
+> 	__uint32_t                 sb_features_ro_compat; /*   212     4 */
+> 	__be32                     sb_features_ro_compat; /*   212     4 */
+> $
+> 
+> Now we can just write zeros directly to the raw buffer, then check
+> it by re-reading the superblock using the automatic type detection:
+> 
+> $ sudo xfs_db -x -c "daddr 0" -c "write fill 0 212 4" -c "sb 0" -c "p features_ro_compat" /dev/vdc
+> features_ro_compat = 0
+> 
+> Yup, problem solved.  But:
+> 
+> $ sudo xfs_db -r -c "sb 0" -c "p features_ro_compat" /dev/vdc
+> Metadata CRC error detected at xfs_sb block 0x0/0x200
+> features_ro_compat = 0
+> 
+> It's not a clean solution for v5 filesystems - I have to recalc the
+> CRC. Previous I would have simply run xfs_repair to fix this, but
+> now I can do this:
+> 
+> $ sudo xfs_db -x -c "sb 0" -c "crc" -c "crc -r" /dev/vdc
+> Verifying CRC:
+> crc = 0xdea3392d (bad)
+> Recalculating CRC:
+> crc = 0x3a7763c8 (correct)
+> $ sudo xfs_db -r -c "sb 0" -c "p features_ro_compat" /dev/vdc
+> features_ro_compat = 0
+> $
+> 
+> And now it's all good.
+> 
+> So, as you can see we have /multiple ways/ we can fix bad feature
+> fields with xfs_db. None of them require magic force flags, but it
+> does require the ability to solve problems from first principles.
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.7.4
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
