@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 457AD7CA0
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 20:26:18 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E711F7CB1
+	for <xfs@oss.sgi.com>; Sat, 27 Aug 2016 17:55:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C50C7AC001
-	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 18:26:14 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB95F8F8037
+	for <xfs@oss.sgi.com>; Sat, 27 Aug 2016 15:55:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EpCNorA2643OpG1H for <xfs@oss.sgi.com>;
-	Sun, 28 Aug 2016 18:26:12 -0700 (PDT)
-Date: Mon, 29 Aug 2016 11:25:14 +1000
+	Xm5GYoP62O39QiCT for <xfs@oss.sgi.com>;
+	Sat, 27 Aug 2016 15:55:22 -0700 (PDT)
+Date: Sun, 28 Aug 2016 08:55:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: don't warn on buffers not being recovered due
-	to LSN
-Message-ID: <20160829012514.GL19025@dastard>
-References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
-	<1470935467-52772-4-git-send-email-bfoster@redhat.com>
+Subject: Re: XFS discards more data than it writes
+Message-ID: <20160827225519.GI19025@dastard>
+References: <20160827014537.GA4119@Juns-MacBook-Pro.local>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1470935467-52772-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20160827014537.GA4119@Juns-MacBook-Pro.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +29,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Jun He <jhe@cs.wisc.edu>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 11, 2016 at 01:11:05PM -0400, Brian Foster wrote:
-> The log recovery buffer validation function is invoked in cases where a
-> buffer update may be skipped due to LSN ordering. If the validation
-> function happens to come across directory conversion situations (e.g., a
-> dir3 block to data conversion), it may warn about seeing a buffer log
-> format of one type and a buffer with a magic number of another.
+On Fri, Aug 26, 2016 at 08:45:37PM -0500, Jun He wrote:
+> Hi all,
 > 
-> This warning is not valid as the buffer update is ultimately skipped.
-> This is indicated by a current_lsn of NULLCOMMITLSN provided by the
-> caller. As such, update xlog_recover_validate_buf_type() to only warn in
-> such cases when a buffer update is expected.
+> I find that, with '-o discard', XFS sometimes discards more data than it
+> writes. This may slow down XFS more on slow-discard SSDs. Also, could
+> problematic discard implementation lead to data loss?
 > 
-> XXX: other issues here? better to not validate in such cases?
+> Setup to reproduce: 
+> - Linux 4.5.4
+> - Workload: LevelDB
+> 
+> $ mkfs.xfs  -K -f -s size=4096 -b size=4096 /dev/sdc1
+> $ mount -o discard /dev/sdc1 /mnt/fsonloop
+> $ leveldb/db_bench --benchmarks=overwrite --num=3000000 --db=/mnt/fsonloop/leveldb_data0 --threads=1 --use_existing_db=0
+> 
+> I found that XFS discarded ~2.4GB while only wrote ~1.4GB,
+> by blktrace. (This is not due to the mkfs discarding the
+> whole disk.)
 
-I think this is OK - we really want to ensure that buffers that are
-in cache always have the correct verifier attached to them. Hence if
-we've read the buffer in, even if we are not modifying it because
-it's more recent that what is being replayed we should still attach
-the verifiers to it.
+Yup. Discard covers extents being freed, not ranges being written.
+So there's metadata, preallocated (unwritten) regions, speculative
+prealloc beyond EOF, etc, all of which won't be counted in "writes"
+but will be counted in "discards".
 
-If it changes type due to later recovery replay, we'll change the
-verifier appropriately at that point.
+> Some visual https://github.com/junhe/xfs-bug-report/blob/master/xfs-double-discard.png 
+> Some spaces are discarded twice in this case.
+> 
+> Is it a bug?
 
-> @@ -2557,6 +2542,16 @@ xlog_recover_validate_buf_type(
->  			 xfs_blft_from_flags(buf_f));
->  		break;
->  	}
-> +
-> +	/*
-> +	 * A NULL current LSN indicates the buffer update is skipped due to LSN
-> +	 * ordering. Don't warn in such cases, we skip the update for a reason
-> +	 * (it's no longer valid)!
-> +	 */
-
-I read that the first time as "we skip the update for a reason that
-is no longer valid" :P
-
-perhaps rework this to make it clear what is being referred to here.
-e.g. No need to warn if the the buffer contents are more recent
-that this recovery item and hence recovery did not modify the
-buffer.
+No.
 
 Cheers,
 
