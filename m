@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EB3417CE7
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 10:44:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ADA538F8033
-	for <xfs@oss.sgi.com>; Mon,  8 Aug 2016 08:44:26 -0700 (PDT)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id mmORfeVaZRm3FlQZ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 08 Aug 2016 08:44:24 -0700 (PDT)
-Date: Mon, 8 Aug 2016 17:44:27 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Advice needed with file system corruption
-Message-ID: <20160808174427.24d8272c@harpe.intellique.com>
-In-Reply-To: <1470670691.8958.11.camel@filmlight.ltd.uk>
-References: <5787852A.7030900@st-andrews.ac.uk>
-	<20160808161132.1d76eb5c@harpe.intellique.com>
-	<1470670691.8958.11.camel@filmlight.ltd.uk>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 234AE7CA0
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 20:16:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D9CA6304039
+	for <xfs@oss.sgi.com>; Sun, 28 Aug 2016 18:16:37 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	iX34jNE7C8wEONr1 for <xfs@oss.sgi.com>;
+	Sun, 28 Aug 2016 18:16:34 -0700 (PDT)
+Date: Mon, 29 Aug 2016 11:16:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] xfs: rework log recovery to submit buffers on LSN
+	boundaries
+Message-ID: <20160829011631.GK19025@dastard>
+References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+	<1470935467-52772-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1470935467-52772-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +27,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: Steve Brooks <sjb14@st-andrews.ac.uk>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-TGUgTW9uLCAwOCBBdWcgMjAxNiAxNjozODoxMSArMDEwMApSb2dlciBXaWxsY29ja3MgPHJvZ2Vy
-QGZpbG1saWdodC5sdGQudWs+IMOpY3JpdmFpdDoKCj4gPiAKPiA+IExhdGUgdG8gdGhlIGdhbWUs
-IEkganVzdCB3YW50ZWQgdG8gcmVtYXJrIHRoYXQgSSd2ZSB1bmZvcnR1bmF0ZWx5Cj4gPiB2ZXJp
-ZmllZCBtYW55IHRpbWVzIHRoYXQgd3JpdGUgYWN0aXZpdHkgZHVyaW5nIHJlYnVpbGRzIG9uIEFk
-YXB0ZWMKPiA+IFJBSUQgY29udHJvbGxlcnMgb2Z0ZW4gY3JlYXRlcyBjb3JydXB0aW9uLiBJJ3Zl
-IHJlcG9ydGVkIHRoYXQgdG8KPiA+IEFkYXB0ZWMsIGJ1dCB0aGV5IGRvbid0IHNlZW0gdG8gY2Fy
-ZSBtdWNoLi4uCj4gPiAgIAo+IAo+IEl0IHJhdGhlciBkZXBlbmRzIG9uIHdoeSB0aGUgZGlzayB3
-YXMgcmVwbGFjZWQgaW4gdGhlIGZpcnN0IHBsYWNlLi4uCgpXZWxsLCBnaXZlbiBJIGFsd2F5cyB1
-c2UgUkFJRC02LCBpdCBzaG91bGRuJ3QgbWF0dGVyOyBhIGZhaWxlZCBkcml2ZQpzaG91bGRuJ3Qg
-YWx0ZXIgdGhlIGFycmF5IGJlaGF2aW91ciBzaWduaWZpY2FudGx5LCBhcyBpdCBzaW1wbHkgZmFs
-bHMKYmFjayB0byBzb3J0LW9mIFJBSUQtNSAoYW55IGJhZCBibG9jayByZWFkIG9yIHdyaXRlIHNo
-b3VsZCBiZSBjb3JyZWN0ZWQKb24gdGhlIGZseSkuCgpJdCBzZWVtcyBsaWtlIGV4cGxpY2l0bHkg
-ZGlzYWJsaW5nIGluZGl2aWR1YWwgZGlzayBkcml2ZXMgd3JpdGUtYmFjawpjYWNoZSBzb21ld2hh
-dCBtaXRpZ2F0ZXMgdGhlIGVmZmVjdC4gCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZs
-b3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAg
-SW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+
-CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On Thu, Aug 11, 2016 at 01:11:03PM -0400, Brian Foster wrote:
+> The fix to log recovery to update the metadata LSN in recovered buffers
+> introduces the requirement that a buffer is submitted only once per
+> current LSN. Log recovery currently submits buffers on transaction
+> boundaries. This is not sufficient as the abstraction between log
+> records and transactions allows for various scenarios where multiple
+> transactions can share the same current LSN. If independent transactions
+> share an LSN and both modify the same buffer, log recovery can
+> incorrectly skip updates and leave the filesystem in an inconsisent
+> state.
+> 
+> In preparation for proper metadata LSN updates during log recovery,
+> update log recovery to submit buffers for write on LSN change boundaries
+> rather than transaction boundaries. Explicitly track the current LSN in
+> a new struct xlog field to handle the various corner cases of when the
+> current LSN may or may not change.
+
+.....
+
+> @@ -4221,8 +4223,39 @@ xlog_recover_process_ophdr(
+>  		return 0;
+>  	}
+>  
+> +	/*
+> +	 * Recovered buffers are submitted for I/O on current LSN change
+> +	 * boundaries. This is necessary to accommodate metadata LSN ordering
+> +	 * rules of v5 superblock filesystems.
+> +	 *
+> +	 * Store the new current LSN in l_recovery_lsn as we cannot rely on
+> +	 * either record boundaries or transaction boundaries alone to track LSN
+> +	 * changes. This has several contributing factors:
+> +	 *
+> +	 * - Metadata LSNs are updated at buffer submission time. Thus, buffers
+> +	 *   can only be submitted safely once per current LSN value.
+> +	 * - The current LSN is defined as the start cycle/block of the first
+> +	 *   record in which a transaction appears.
+> +	 * - A record can hold multiple transactions. Thus, a transaction change
+> +	 *   does not guarantee a change in current LSN.
+> +	 * - A transaction can span multiple records. Thus, a record change does
+> +	 *   not guarantee a change in current LSN. Consider the case where a
+> +	 *   record holds one small transaction and a subsequent that carries
+> +	 *   over to the next record. Both transactions share the same LSN as
+> +	 *   per the definition of the current LSN.
+> +	 *
+> +	 * In summary, this means we must track the current LSN independently
+> +	 * and submit buffers for the previous LSN only when it has changed.
+> +	 */
+> +	if (log->l_recovery_lsn != trans->r_lsn) {
+> +		error = xfs_buf_delwri_submit(buffer_list);
+> +		if (error)
+> +			return error;
+> +		log->l_recovery_lsn = trans->r_lsn;
+> +	}
+
+I'm not sure this is the right place to be submitting buffers. We
+can have multiple transactions open at once because the writing of
+the transaction to the log is split into two parts: xlog_write()
+which writes the changes to the log, and xfs_log_done() which writes
+the commit record (via xlog_commit_record()) to close the
+transaction.
+
+Hence we can get the situation where we have multiple open
+transactions such as:
+
+                              CA CB                  CC CD
+ +---------+--------+--------+--+--+--------+-------+--+--+
+   trans A   trans B  trans C       trans C  trans D
+
+where the changes in multiple transactions are written before the
+ophdr that contains the commit record ("CA", "CB", ....) is written.
+With the above code, we'd be doing writeback of A when we see B, not
+when we see the commit record for A. Like wise B when we see C. And
+worse, partial writeback of C when we see the commit record for A...
+
+i.e. We are very careful to write commit records in the correct
+order because that is what determines recovery order, but we don't
+care what order we write the actual contents of the checkpoints or
+whether they interleave with other checkpoints.  As such, ophdrs
+change transactions and LSNs without having actually completed
+recovery of a checkpoint. 
+
+I think writeback should occur when all the transactions with a
+given lsn have been committed. I'm not sure there's a simple way to
+track and detect this, but using the ophdrs to detect a change of
+lsn to trigger buffer writeback does not look correct to me at this
+point in time.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
