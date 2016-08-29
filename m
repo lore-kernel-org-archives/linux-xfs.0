@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2431A7CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 13:17:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA4EC304039
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:46 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 419117CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 18:47:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96E52AC002
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 16:47:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1VD9MeNuDJplP8oI (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 8jm49UEEHzNAsqei (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:45 -0700 (PDT)
-Date: Mon, 29 Aug 2016 14:17:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/5] xfs: don't warn on buffers not being recovered due
-	to LSN
-Message-ID: <20160829181743.GB54904@bfoster.bfoster>
-References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
-	<1470935467-52772-4-git-send-email-bfoster@redhat.com>
-	<20160829012514.GL19025@dastard>
+	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 16:47:07 -0700 (PDT)
+Date: Mon, 29 Aug 2016 18:47:04 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
+	unless foreign_allowed
+Message-ID: <20160829234704.GC29648@redhat.com>
+References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+	<20160829231205.GO19025@dastard>
+	<20160829232615.GA29648@redhat.com>
+	<20160829234044.GS19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160829012514.GL19025@dastard>
+In-Reply-To: <20160829234044.GS19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,71 +36,76 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 29, 2016 at 11:25:14AM +1000, Dave Chinner wrote:
-> On Thu, Aug 11, 2016 at 01:11:05PM -0400, Brian Foster wrote:
-> > The log recovery buffer validation function is invoked in cases where a
-> > buffer update may be skipped due to LSN ordering. If the validation
-> > function happens to come across directory conversion situations (e.g., a
-> > dir3 block to data conversion), it may warn about seeing a buffer log
-> > format of one type and a buffer with a magic number of another.
+On Tue, Aug 30, 2016 at 09:40:44AM +1000, Dave Chinner wrote:
+> On Mon, Aug 29, 2016 at 06:26:15PM -0500, Bill O'Donnell wrote:
+> > On Tue, Aug 30, 2016 at 09:12:06AM +1000, Dave Chinner wrote:
+> > > On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
+> > > > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+> > > > non-XFS filesystems. One modification in fs_initialise_mounts
+> > > > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+> > > > fs paths entering the fs table.
+> > > 
+> > > What's the failure? I'm not seeing it here on any of my test
+> > > machines...
 > > 
-> > This warning is not valid as the buffer update is ultimately skipped.
-> > This is indicated by a current_lsn of NULLCOMMITLSN provided by the
-> > caller. As such, update xlog_recover_validate_buf_type() to only warn in
-> > such cases when a buffer update is expected.
-> > 
-> > XXX: other issues here? better to not validate in such cases?
+> > On my box, there are a few ext4 mounts, and test xfs/261 
+> > populates the fs table with those paths.
 > 
-> I think this is OK - we really want to ensure that buffers that are
-> in cache always have the correct verifier attached to them. Hence if
-> we've read the buffer in, even if we are not modifying it because
-> it's more recent that what is being replayed we should still attach
-> the verifiers to it.
+> I have ext2 and ext3 mounts on these machines as well, and they
+> don't throw any errors.
 > 
-> If it changes type due to later recovery replay, we'll change the
-> verifier appropriately at that point.
+> > So when xfs_quota commands
+> > in 261 are executed, a "foreign filesystem" message is thrown.
 > 
+> What is the output that is causing the failure? When someone
+> asks you to describe the error that is occurring, please quote the
+> /exact error/ that is occurring - describing it via paraphrasing
+> does not tell anything useful about the error as I cannot correlate
+> that description to the code that is throwing it.
 
-Sounds good, thanks for commenting on this.
+Ahh, ok, I'm sorry about that.
+[root@dell-pesc440-01 xfstests-dev]# ./check -d tests/xfs/261
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 dell-pesc440-01 4.7.0-rc108052016bill02+
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/fedora_dell--pesc440--01-csdf
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/mapper/fedora_dell--pesc440--01-csdf /mnt/scratch
 
-> > @@ -2557,6 +2542,16 @@ xlog_recover_validate_buf_type(
-> >  			 xfs_blft_from_flags(buf_f));
-> >  		break;
-> >  	}
-> > +
-> > +	/*
-> > +	 * A NULL current LSN indicates the buffer update is skipped due to LSN
-> > +	 * ordering. Don't warn in such cases, we skip the update for a reason
-> > +	 * (it's no longer valid)!
-> > +	 */
+xfs/261 2s ...QA output created by 261
+Silence is golden.
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+print command is for XFS filesystems only
+ - output mismatch (see /root/xfstests-dev/results//xfs/261.out.bad)
+    --- tests/xfs/261.out       2016-08-09 15:45:47.471465224 -0400
+    +++ /root/xfstests-dev/results//xfs/261.out.bad     2016-08-29 19:45:58.166965834 -0400
+    @@ -1,2 +1,10 @@
+     QA output created by 261
+     Silence is golden.
+    +print command is for XFS filesystems only
+    +print command is for XFS filesystems only
+    +print command is for XFS filesystems only
+    +print command is for XFS filesystems only
+    +print command is for XFS filesystems only
+    ...
+    (Run 'diff -u tests/xfs/261.out /root/xfstests-dev/results//xfs/261.out.bad'  to see the entire diff)
+Ran: xfs/261
+Failures: xfs/261
+Failed 1 of 1 tests
+
+
+
 > 
-> I read that the first time as "we skip the update for a reason that
-> is no longer valid" :P
-> 
-
-Heh, Ok.
-
-> perhaps rework this to make it clear what is being referred to here.
-> e.g. No need to warn if the the buffer contents are more recent
-> that this recovery item and hence recovery did not modify the
-> buffer.
-> 
-
-Yeah, I'll try to make that more clear.
-
-Brian
-
 > Cheers,
 > 
 > Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
