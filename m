@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8A1C97CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 09:53:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5AE5B8F8033
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 07:53:23 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Kv61lUKbpbNQZ1a2 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 07:53:19 -0700 (PDT)
-Date: Mon, 29 Aug 2016 07:52:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 800b269
-Message-ID: <20160829145249.GF22760@birch.djwong.org>
-References: <20160826062508.GG19025@dastard>
-	<20160826074844.GA17137@infradead.org>
-	<20160829013111.GN19025@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CB7157CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 18:40:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 46E02AC004
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 16:40:49 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	yrRD1DXplFSsZNyN for <xfs@oss.sgi.com>;
+	Mon, 29 Aug 2016 16:40:46 -0700 (PDT)
+Date: Tue, 30 Aug 2016 09:40:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
+	unless foreign_allowed
+Message-ID: <20160829234044.GS19025@dastard>
+References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+	<20160829231205.GO19025@dastard>
+	<20160829232615.GA29648@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160829013111.GN19025@dastard>
+In-Reply-To: <20160829232615.GA29648@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +32,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Aug 29, 2016 at 11:31:12AM +1000, Dave Chinner wrote:
-> On Fri, Aug 26, 2016 at 12:48:44AM -0700, Christoph Hellwig wrote:
-> > Hi Dave,
+On Mon, Aug 29, 2016 at 06:26:15PM -0500, Bill O'Donnell wrote:
+> On Tue, Aug 30, 2016 at 09:12:06AM +1000, Dave Chinner wrote:
+> > On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
+> > > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+> > > non-XFS filesystems. One modification in fs_initialise_mounts
+> > > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+> > > fs paths entering the fs table.
 > > 
-> > please consider: "[PATCH] iomap: don't set FIEMAP_EXTENT_MERGED for
-> > extent based filesystems"
-> > 
-> > for 4.8.  It fixes a regression in the iomap-based fiemap
-> > implementation, and it's fairly trivial as well.
+> > What's the failure? I'm not seeing it here on any of my test
+> > machines...
 > 
-> Oh, damn, I thought I got that one. I'll append it to the
-> series and push it out.
+> On my box, there are a few ext4 mounts, and test xfs/261 
+> populates the fs table with those paths.
 
-It might be a good idea to pick up "xfs: track log done items directly
-in the deferred pending work item" too, if it fixes the slab
-corruptions that Christoph reported.
+I have ext2 and ext3 mounts on these machines as well, and they
+don't throw any errors.
 
---D
+> So when xfs_quota commands
+> in 261 are executed, a "foreign filesystem" message is thrown.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+What is the output that is causing the failure? When someone
+asks you to describe the error that is occurring, please quote the
+/exact error/ that is occurring - describing it via paraphrasing
+does not tell anything useful about the error as I cannot correlate
+that description to the code that is throwing it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
