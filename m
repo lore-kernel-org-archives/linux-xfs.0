@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 578377CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 10:43:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25E61304066
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 08:43:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2431A7CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 13:17:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EA4EC304039
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:46 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iZx6dIewJEoIpZ0d (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 1VD9MeNuDJplP8oI (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 08:43:52 -0700 (PDT)
-Date: Mon, 29 Aug 2016 10:43:49 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
-	unless foreign_allowed
-Message-ID: <20160829154349.GA4643@redhat.com>
-References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
-	<20160829151323.GG22760@birch.djwong.org>
+	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:45 -0700 (PDT)
+Date: Mon, 29 Aug 2016 14:17:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/5] xfs: don't warn on buffers not being recovered due
+	to LSN
+Message-ID: <20160829181743.GB54904@bfoster.bfoster>
+References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+	<1470935467-52772-4-git-send-email-bfoster@redhat.com>
+	<20160829012514.GL19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160829151323.GG22760@birch.djwong.org>
+In-Reply-To: <20160829012514.GL19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,81 +32,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 29, 2016 at 08:13:23AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
-> > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-> > non-XFS filesystems. One modification in fs_initialise_mounts
-> > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-> > fs paths entering the fs table.
+On Mon, Aug 29, 2016 at 11:25:14AM +1000, Dave Chinner wrote:
+> On Thu, Aug 11, 2016 at 01:11:05PM -0400, Brian Foster wrote:
+> > The log recovery buffer validation function is invoked in cases where a
+> > buffer update may be skipped due to LSN ordering. If the validation
+> > function happens to come across directory conversion situations (e.g., a
+> > dir3 block to data conversion), it may warn about seeing a buffer log
+> > format of one type and a buffer with a magic number of another.
 > > 
-> > This patch reverts the behavior in fs_initialise_mounts back
-> > to skip populating the table with foreign paths, unless the
-> > -f flag is thrown in xfs_quota to set foreign_allowed true.
+> > This warning is not valid as the buffer update is ultimately skipped.
+> > This is indicated by a current_lsn of NULLCOMMITLSN provided by the
+> > caller. As such, update xlog_recover_validate_buf_type() to only warn in
+> > such cases when a buffer update is expected.
 > > 
-> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > ---
-> >  libxcmd/paths.c | 5 +++++
-> >  quota/init.c    | 1 -
-> >  2 files changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-> > index 4158688..7375c0e 100644
-> > --- a/libxcmd/paths.c
-> > +++ b/libxcmd/paths.c
-> > @@ -34,6 +34,7 @@ extern char *progname;
-> >  int fs_count;
-> >  struct fs_path *fs_table;
-> >  struct fs_path *fs_path;
-> > +bool foreign_allowed = false;	/* foreign filesystems not allowed (default) */
+> > XXX: other issues here? better to not validate in such cases?
 > 
-> /me wonders if this would be better as a parameter to
-> fs_table_initialise_mounts() ?
+> I think this is OK - we really want to ensure that buffers that are
+> in cache always have the correct verifier attached to them. Hence if
+> we've read the buffer in, even if we are not modifying it because
+> it's more recent that what is being replayed we should still attach
+> the verifiers to it.
+> 
+> If it changes type due to later recovery replay, we'll change the
+> verifier appropriately at that point.
+> 
 
-Hrmm, it could be, but my notion is that keeping it global
-is a bit cleaner than having to add automatics in 4
-function calls.
-Thanks-
-Bill
+Sounds good, thanks for commenting on this.
 
+> > @@ -2557,6 +2542,16 @@ xlog_recover_validate_buf_type(
+> >  			 xfs_blft_from_flags(buf_f));
+> >  		break;
+> >  	}
+> > +
+> > +	/*
+> > +	 * A NULL current LSN indicates the buffer update is skipped due to LSN
+> > +	 * ordering. Don't warn in such cases, we skip the update for a reason
+> > +	 * (it's no longer valid)!
+> > +	 */
 > 
-> --D
+> I read that the first time as "we skip the update for a reason that
+> is no longer valid" :P
 > 
-> >  
-> >  char *mtab_file;
-> >  #define PROC_MOUNTS	"/proc/self/mounts"
-> > @@ -311,6 +312,10 @@ fs_table_initialise_mounts(
-> >  			return errno;
-> >  
-> >  	while ((mnt = getmntent(mtp)) != NULL) {
-> > +		/* don't populate if not XFS, and foreign fs disallowed */
-> > +		if ((strcmp(mnt->mnt_type, "xfs") != 0) &&
-> > +		    !foreign_allowed)
-> > +			continue;
-> >  		if (!realpath(mnt->mnt_dir, rmnt_dir))
-> >  			continue;
-> >  		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
-> > diff --git a/quota/init.c b/quota/init.c
-> > index 44be322..65e4dad 100644
-> > --- a/quota/init.c
-> > +++ b/quota/init.c
-> > @@ -24,7 +24,6 @@
-> >  char	*progname;
-> >  int	exitcode;
-> >  int	expert;
-> > -bool	foreign_allowed = false;
-> >  
-> >  static char **projopts;	/* table of project names (cmdline) */
-> >  static int nprojopts;	/* number of entries in name table. */
-> > -- 
-> > 2.7.4
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+
+Heh, Ok.
+
+> perhaps rework this to make it clear what is being referred to here.
+> e.g. No need to warn if the the buffer contents are more recent
+> that this recovery item and hence recovery did not modify the
+> buffer.
+> 
+
+Yeah, I'll try to make that more clear.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
