@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4C5007CA0
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 08:40:18 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AD4EF7CAF
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 13:17:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1184B8F8033
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 06:40:17 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F662AC002
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:55 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qz56OcRQxMfwDiiY (version=TLSv1.2
+	cuda.sgi.com with ESMTP id ttFbGW47p5cp965H (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 06:40:13 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.redhat.com (Postfix) with ESMTPS id 752FDC057FA6
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 13:40:13 +0000 (UTC)
-Received: from localhost.localdomain.com (vpn-60-194.rdu2.redhat.com
-	[10.10.60.194])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id u7TDeC8b010745
-	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 09:40:13 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
-	unless foreign_allowed
-Date: Mon, 29 Aug 2016 08:40:12 -0500
-Message-Id: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 11:17:54 -0700 (PDT)
+Date: Mon, 29 Aug 2016 14:17:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs: update metadata LSN in buffers during log
+	recovery
+Message-ID: <20160829181751.GC54904@bfoster.bfoster>
+References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+	<1470935467-52772-5-git-send-email-bfoster@redhat.com>
+	<20160829012923.GM19025@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160829012923.GM19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +28,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-non-XFS filesystems. One modification in fs_initialise_mounts
-(paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-fs paths entering the fs table.
+On Mon, Aug 29, 2016 at 11:29:23AM +1000, Dave Chinner wrote:
+> On Thu, Aug 11, 2016 at 01:11:06PM -0400, Brian Foster wrote:
+> > @@ -2552,6 +2562,27 @@ xlog_recover_validate_buf_type(
+> >  		xfs_warn(mp, warnmsg);
+> >  		ASSERT(0);
+> >  	}
+> > +
+> > +	/*
+> > +	 * We must update the metadata LSN of the buffer as it is written out to
+> > +	 * ensure that older transactions never replay over this one and corrupt
+> > +	 * the buffer. This can occur if log recovery is interrupted at some
+> > +	 * point after the current transaction completes, at which point a
+> > +	 * subsequent mount starts recovery from the beginning.
+> > +	 *
+> > +	 * Write verifiers update the metadata LSN from log items attached to
+> > +	 * the buffer. Therefore, initialize a bli purely to carry the LSN to
+> > +	 * the verifier. We'll clean it up in our ->iodone() callback.
+> > +	 */
+> > +	if (bp->b_ops && current_lsn != NULLCOMMITLSN) {
+> > +		struct xfs_buf_log_item	*bip;
+> > +
+> > +		ASSERT(!bp->b_iodone || bp->b_iodone == xlog_recover_iodone);
+> > +		bp->b_iodone = xlog_recover_iodone;
+> > +		xfs_buf_item_init(bp, mp);
+> > +		bip = bp->b_fspriv;
+> > +		bip->bli_item.li_lsn = current_lsn;
+> > +	}
+> >  }
+> 
+> Of, so now we have two things we do when current_lsn !=
+> NULLCOMMITLSN. I'd change this to something like:
+> 
+> 
+> 	ASSERT(bp->b_fspriv == NULL);
+> 	if (current_lsn == NULLCOMMITLSN)
+> 		return;
+> 
+> 	if (warn) {
+> 		....
+> 	}
+> 
+> 	if (!bp->b_ops)
+> 		return
+> 
+> 	/* add buf_item */
 
-This patch reverts the behavior in fs_initialise_mounts back
-to skip populating the table with foreign paths, unless the
--f flag is thrown in xfs_quota to set foreign_allowed true.
+Ok, I may still invert the bp->b_ops check as that seems more clear to
+me for whatever reason, but otherwise that looks like a nice cleanup.
+Thanks.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- libxcmd/paths.c | 5 +++++
- quota/init.c    | 1 -
- 2 files changed, 5 insertions(+), 1 deletion(-)
+Brian
 
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 4158688..7375c0e 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -34,6 +34,7 @@ extern char *progname;
- int fs_count;
- struct fs_path *fs_table;
- struct fs_path *fs_path;
-+bool foreign_allowed = false;	/* foreign filesystems not allowed (default) */
- 
- char *mtab_file;
- #define PROC_MOUNTS	"/proc/self/mounts"
-@@ -311,6 +312,10 @@ fs_table_initialise_mounts(
- 			return errno;
- 
- 	while ((mnt = getmntent(mtp)) != NULL) {
-+		/* don't populate if not XFS, and foreign fs disallowed */
-+		if ((strcmp(mnt->mnt_type, "xfs") != 0) &&
-+		    !foreign_allowed)
-+			continue;
- 		if (!realpath(mnt->mnt_dir, rmnt_dir))
- 			continue;
- 		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
-diff --git a/quota/init.c b/quota/init.c
-index 44be322..65e4dad 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -24,7 +24,6 @@
- char	*progname;
- int	exitcode;
- int	expert;
--bool	foreign_allowed = false;
- 
- static char **projopts;	/* table of project names (cmdline) */
- static int nprojopts;	/* number of entries in name table. */
--- 
-2.7.4
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
