@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2AC887CA0
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 03:33:48 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1C70F7CA2
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 09:48:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EFC718F8033
-	for <xfs@oss.sgi.com>; Wed, 17 Aug 2016 01:33:44 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DFB2AC004
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 07:48:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AUSl28Y4FZocrICN (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 2i2IQe7cWMIMKMpm (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 17 Aug 2016 01:33:43 -0700 (PDT)
-Date: Wed, 17 Aug 2016 16:33:40 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH V2] xfs_quota: wire up XFS_GETQSTATV
-Message-ID: <20160817083340.GB7193@zlang.usersys.redhat.com>
-References: <a8d81afb-8c95-c6bf-028d-8d6e463557b3@redhat.com>
-	<2ca2dc3b-53d2-0791-644f-c9cd5abef89f@sandeen.net>
+	<xfs@oss.sgi.com>; Tue, 30 Aug 2016 07:48:52 -0700 (PDT)
+Date: Tue, 30 Aug 2016 22:48:49 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: BUG: Internal error xfs_trans_cancel at line 984 of file
+	fs/xfs/xfs_trans.c
+Message-ID: <20160830144849.GL27776@eguan.usersys.redhat.com>
+References: <20160829103754.GH27776@eguan.usersys.redhat.com>
+	<20160830023905.GU19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <2ca2dc3b-53d2-0791-644f-c9cd5abef89f@sandeen.net>
+In-Reply-To: <20160830023905.GU19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,312 +31,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 15, 2016 at 10:17:19PM -0500, Eric Sandeen wrote:
-> The new XFS_GETQSTATV quotactl, available since kernel v3.12,
-> was never implemented in xfs_quota, and the "state" command
-> continues to use XFS_GETQSTAT, which cannot report both
-> group & project quota on newer formats.
+On Tue, Aug 30, 2016 at 12:39:05PM +1000, Dave Chinner wrote:
+> > [root@hp-dl360g9-15 ~]# xfs_info /
+> > meta-data=/dev/mapper/systemvg-root isize=256    agcount=16, agsize=2927744 blks
+> >          =                       sectsz=512   attr=2, projid32bit=1
+> >          =                       crc=0        finobt=0 spinodes=0
+> > data     =                       bsize=4096   blocks=46843904, imaxpct=25
+> >          =                       sunit=64     swidth=192 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> > log      =internal               bsize=4096   blocks=22912, version=2
+> >          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> The new call has room for all 3 quota types (user, group, and
-> quota), vs just two, where previously project and quota
-> overlapped.
-> 
-> So:
-> 
-> First, try XFS_GETQSTATV.
-> If it passes, we have all the information we need, and we print
-> it. state_qfilestat() is modified to take the newer structure.
-> 
-> If it fails, try XFS_GETQSTAT.  If that passes, we are on an
-> older kernel with neither XFS_GETQSTATV nor the on-disk project
-> quota inode.  We copy the available information into the newer
-> statv structure, carefully determining wither group or project
-> (or neither) is actually active, and print it with the same
-> state_qfilestat routine.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Does it reproduce on a CRC enabled filesystem?
 
-Hi Eric,
+Yes, it does. And I tried to reduce the test time by reducing the
+workload (less processes forked 30->10, less iterations in each process
+10->5) but failed. I'll continue work on that.
 
-This's what I tried to explain to you:
+[root@hp-dl360g9-15 ~]# xfs_info /mnt/xfs/
+meta-data=/dev/mapper/systemvg-lv50g isize=512    agcount=16, agsize=819200 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+data     =                       bsize=4096   blocks=13107200, imaxpct=25
+         =                       sunit=64     swidth=192 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=6400, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-  [root@dhcp-13-149 ~]# mount /dev/mapper/testvg-scratchdev /mnt/scratch -o pquota,gquota,uquota
-  [root@dhcp-13-149 xfsprogs-dev]# xfs_quota -xc "limit bsoft=100m bhard=200m fsgqa" /mnt/scratch
-  [root@dhcp-13-149 xfsprogs-dev]# xfs_quota -xc "limit -g bsoft=100m bhard=200m fsgqa" /mnt/scratch
-  [root@dhcp-13-149 xfsprogs-dev]# xfs_quota -xc "state" /mnt/scratch
-  User quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: ON
-    Enforcement: ON
-    Inode: #101 (2 blocks, 2 extents)
-  Group quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: ON
-    Enforcement: ON
-    Inode: #99 (2 blocks, 2 extents)
-  Project quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: ON
-    Enforcement: ON
-    Inode: #100 (1 blocks, 1 extents)
-  Blocks grace time: [7 days]
-  Inodes grace time: [7 days]
-  Realtime Blocks grace time: [7 days]
-  [root@dhcp-13-149 xfsprogs-dev]# umount /mnt/scratch
-  [root@dhcp-13-149 xfsprogs-dev]# mount /dev/mapper/testvg-scratchdev /mnt/scratch -o pquota
-  [root@dhcp-13-149 xfsprogs-dev]# xfs_quota -xc "state" /mnt/scratch
-  User quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: OFF
-    Enforcement: OFF
-    Inode: #0 (0 blocks, 0 extents)
-  Group quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: OFF
-    Enforcement: OFF
-    Inode: #0 (0 blocks, 0 extents)
-  Project quota state on /mnt/scratch (/dev/mapper/testvg-scratchdev)
-    Accounting: ON
-    Enforcement: ON
-    Inode: #100 (1 blocks, 1 extents)
-  Blocks grace time: [7 days]
-  Inodes grace time: [7 days]
-  Realtime Blocks grace time: [7 days]
-  [root@dhcp-13-149 ~]# xfs_db -r -c "sb 0" -c "p" /dev/mapper/testvg-scratchdev|grep quot
-  uquotino = 101
-  gquotino = 99
-  pquotino = 100
-
-
-If I someone quota isn't enable, "state" command will print that inode
-number, blocks and extents as 0.
-
-Do you think this's a problem should be fixed?
-If it's a bug, maybe we can fix it on another patch later, because
-it's another bug?
+[39200.052565] XFS (dm-3): Internal error xfs_trans_cancel at line 984 of file fs/xfs/xfs_trans.c.  Caller xfs_iomap_write_allocate+0x2d7/0x380 [xfs]
+[39200.117990] CPU: 2 PID: 13175 Comm: kworker/u33:0 Tainted: G        W       4.8.0-rc3 #1
+[39200.155312] Hardware name: HP ProLiant DL360 Gen9, BIOS P89 05/06/2015
+[39200.184549] Workqueue: writeback wb_workfn (flush-253:3)
+[39200.208417]  0000000000000286 00000000ee09c3c6 ffff88005208b7a0 ffffffff8135c53c
+[39200.241625]  ffff880316eb8bc8 0000000000000001 ffff88005208b7b8 ffffffffa02e99cb
+[39200.274892]  ffffffffa02f5537 ffff88005208b7e0 ffffffffa03053e6 ffff880fe8d28f00
+[39200.308115] Call Trace:
+[39200.319060]  [<ffffffff8135c53c>] dump_stack+0x63/0x87
+[39200.342241]  [<ffffffffa02e99cb>] xfs_error_report+0x3b/0x40 [xfs]
+[39200.370008]  [<ffffffffa02f5537>] ? xfs_iomap_write_allocate+0x2d7/0x380 [xfs]
+[39200.402497]  [<ffffffffa03053e6>] xfs_trans_cancel+0xb6/0xe0 [xfs]
+[39200.430260]  [<ffffffffa02f5537>] xfs_iomap_write_allocate+0x2d7/0x380 [xfs]
+[39200.461871]  [<ffffffffa02df949>] xfs_map_blocks+0x1a9/0x220 [xfs]
+[39200.489701]  [<ffffffffa02e0c5b>] xfs_do_writepage+0x16b/0x560 [xfs]
+[39200.518171]  [<ffffffff811a7d8f>] write_cache_pages+0x26f/0x510
+[39200.544290]  [<ffffffff81330cbb>] ? blk_queue_bio+0x1ab/0x3a0
+[39200.570043]  [<ffffffffa02e0af0>] ? xfs_vm_set_page_dirty+0x1e0/0x1e0 [xfs]
+[39200.606240]  [<ffffffffa02e08e6>] xfs_vm_writepages+0xb6/0xe0 [xfs]
+[39200.636151]  [<ffffffff811a8c5e>] do_writepages+0x1e/0x30
+[39200.660355]  [<ffffffff8125a1f5>] __writeback_single_inode+0x45/0x330
+[39200.689176]  [<ffffffff8125aa32>] writeback_sb_inodes+0x282/0x570
+[39200.716875]  [<ffffffff8125adac>] __writeback_inodes_wb+0x8c/0xc0
+[39200.744181]  [<ffffffff8125b066>] wb_writeback+0x286/0x320
+[39200.768725]  [<ffffffff8125b889>] wb_workfn+0x109/0x3f0
+[39200.792110]  [<ffffffff810a6642>] process_one_work+0x152/0x400
+[39200.818480]  [<ffffffff810a6f35>] worker_thread+0x125/0x4b0
+[39200.843463]  [<ffffffff810a6e10>] ? rescuer_thread+0x380/0x380
+[39200.869279]  [<ffffffff810aca28>] kthread+0xd8/0xf0
+[39200.891301]  [<ffffffff816f8dbf>] ret_from_fork+0x1f/0x40
+[39200.916321]  [<ffffffff810ac950>] ? kthread_park+0x60/0x60
+[39200.941595] XFS (dm-3): xfs_do_force_shutdown(0x8) called from line 985 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffffa03053ff
+[39201.097512] XFS (dm-3): Corruption of in-memory data detected.  Shutting down filesystem
+[39201.137777] XFS (dm-3): Please umount the filesystem and rectify the problem(s)
+[39201.170534] Buffer I/O error on dev dm-3, logical block 2653783, lost async page write
+[39201.206111] Buffer I/O error on dev dm-3, logical block 2653784, lost async page write
+[39201.241644] Buffer I/O error on dev dm-3, logical block 2653785, lost async page write
+[39201.276902] Buffer I/O error on dev dm-3, logical block 2653786, lost async page write
+[39201.312405] Buffer I/O error on dev dm-3, logical block 2653787, lost async page write
+[39201.347927] Buffer I/O error on dev dm-3, logical block 2653788, lost async page write
+[39201.383415] Buffer I/O error on dev dm-3, logical block 2653789, lost async page write
+[39201.419254] Buffer I/O error on dev dm-3, logical block 2653790, lost async page write
+[39201.454723] Buffer I/O error on dev dm-3, logical block 2653791, lost async page write
+[39222.364615] XFS (dm-3): xfs_log_force: error -5 returned.
+[39252.572790] XFS (dm-3): xfs_log_force: error -5 returned.
+[39282.780966] XFS (dm-3): xfs_log_force: error -5 returned.
 
 Thanks,
-Zorro
-
-> 
-> I probably could have done some memcpy()'s in 
-> state_stat_to_statv(), but opted for the explicit copy-out;
-> the structures aren't identical, although the newer one 
-> only differs by padding on the end.  If memcpy() is preferable
-> I could send a V2...
-> 
-> V2: set sv.qs_version = FS_QSTATV_VERSION1; before calling
-> the quotactl (thanks Zorro!)
-> 
-> diff --git a/include/xqm.h b/include/xqm.h
-> index c084b2d..5b6934a 100644
-> --- a/include/xqm.h
-> +++ b/include/xqm.h
-> @@ -32,6 +32,7 @@
->  #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
->  #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
->  #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
-> +#define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
->  #define Q_XGETNEXTQUOTA	XQM_CMD(9)	/* get disk limits and usage */
->  
->  /*
-> @@ -149,4 +150,35 @@ typedef struct fs_quota_stat {
->  	__u16		qs_iwarnlimit;	/* limit for num warnings */
->  } fs_quota_stat_t;
->  
-> +
-> +#ifndef FS_QSTATV_VERSION1
-> +#define FS_QSTATV_VERSION1	1	/* fs_quota_statv.qs_version */
-> +#endif
-> +
-> +/*
-> + * Some basic information about 'quota files' for Q_XGETQSTATV command
-> + */
-> +struct fs_qfilestatv {
-> +	__u64		qfs_ino;	/* inode number */
-> +	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
-> +	__u32		qfs_nextents;	/* number of extents */
-> +	__u32		qfs_pad;	/* pad for 8-byte alignment */
-> +};
-> +
-> +struct fs_quota_statv {
-> +	__s8			qs_version;	/* version for future changes */
-> +	__u8			qs_pad1;	/* pad for 16bit alignment */
-> +	__u16			qs_flags;	/* FS_QUOTA_.* flags */
-> +	__u32			qs_incoredqs;	/* number of dquots incore */
-> +	struct fs_qfilestatv	qs_uquota;	/* user quota information */
-> +	struct fs_qfilestatv	qs_gquota;	/* group quota information */
-> +	struct fs_qfilestatv	qs_pquota;	/* project quota information */
-> +	__s32			qs_btimelimit;	/* limit for blks timer */
-> +	__s32			qs_itimelimit;	/* limit for inodes timer */
-> +	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
-> +	__u16			qs_bwarnlimit;	/* limit for num warnings */
-> +	__u16			qs_iwarnlimit;	/* limit for num warnings */
-> +	__u64			qs_pad2[8];	/* for future proofing */
-> +};
-> +
->  #endif	/* __XQM_H__ */
-> diff --git a/quota/linux.c b/quota/linux.c
-> index 74dba01..4f1f3c4 100644
-> --- a/quota/linux.c
-> +++ b/quota/linux.c
-> @@ -55,6 +55,8 @@ xcommand_to_qcommand(
->  		return Q_XSETQLIM;
->  	case XFS_GETQSTAT:
->  		return Q_XGETQSTAT;
-> +	case XFS_GETQSTATV:
-> +		return Q_XGETQSTATV;
->  	case XFS_QUOTARM:
->  		return Q_XQUOTARM;
->  	case XFS_QSYNC:
-> diff --git a/quota/state.c b/quota/state.c
-> index 8186762..9f6616e 100644
-> --- a/quota/state.c
-> +++ b/quota/state.c
-> @@ -111,12 +111,12 @@ remove_help(void)
->  
->  static void
->  state_qfilestat(
-> -	FILE		*fp,
-> -	fs_path_t	*mount,
-> -	uint		type,
-> -	fs_qfilestat_t	*qfs,
-> -	int		accounting,
-> -	int		enforcing)
-> +	FILE			*fp,
-> +	struct fs_path		*mount,
-> +	uint			type,
-> +	struct fs_qfilestatv	*qfs,
-> +	int			accounting,
-> +	int			enforcing)
->  {
->  	fprintf(fp, _("%s quota state on %s (%s)\n"), type_to_string(type),
->  		mount->fs_dir, mount->fs_name);
-> @@ -142,39 +142,96 @@ state_timelimit(
->  		time_to_string(timelimit, VERBOSE_FLAG | ABSOLUTE_FLAG));
->  }
->  
-> +/*
-> + * fs_quota_stat holds a subset of fs_quota_statv; this copies
-> + * the smaller into the larger, leaving any not-present fields
-> + * empty.  This is so the same reporting function can be used
-> + * for both XFS_GETQSTAT and XFS_GETQSTATV results.
-> + */
->  static void
-> -state_quotafile_mount(
-> -	FILE		*fp,
-> -	uint		type,
-> -	fs_path_t	*mount,
-> -	uint		flags)
-> +state_stat_to_statv(
-> +	struct fs_quota_stat	*s,
-> +	struct fs_quota_statv	*sv)
->  {
-> -	fs_quota_stat_t	s;
-> -	char		*dev = mount->fs_name;
-> +	memset(sv, 0, sizeof(struct fs_quota_statv));
-> +
-> +	/* shared information */
-> +	sv->qs_version = s->qs_version;
-> +	sv->qs_flags = s->qs_flags;
-> +	sv->qs_incoredqs = s->qs_incoredqs;
-> +	sv->qs_btimelimit = s->qs_btimelimit;
-> +	sv->qs_itimelimit = s->qs_itimelimit;
-> +	sv->qs_rtbtimelimit = s->qs_rtbtimelimit;
-> +	sv->qs_bwarnlimit = s->qs_bwarnlimit;
-> +	sv->qs_iwarnlimit = s->qs_iwarnlimit;
-> +
-> +	/* Always room for uquota */
-> +	sv->qs_uquota.qfs_ino = s->qs_uquota.qfs_ino;
-> +	sv->qs_uquota.qfs_nblks = s->qs_uquota.qfs_nblks;
-> +	sv->qs_uquota.qfs_nextents = s->qs_uquota.qfs_nextents;
-> +
-> +	/*
-> +	 * If we are here, XFS_GETQSTATV failed and XFS_GETQSTAT passed;
-> +	 * that is a very strong hint that we're on a kernel which predates
-> +	 * the on-disk pquota inode; both were added in v3.12.  So, we do
-> +	 * some tricksy determination here.
-> +	 * gs_gquota may hold either group quota inode info, or project
-> +	 * quota if that is used instead; which one it actually holds depends
-> +	 * on the quota flags.  (If neither is set, neither is used)
-> +	 */
-> +	if (s->qs_flags & XFS_QUOTA_GDQ_ACCT) {
-> +		/* gs_gquota holds group quota info */
-> +		sv->qs_gquota.qfs_ino = s->qs_gquota.qfs_ino;
-> +		sv->qs_gquota.qfs_nblks = s->qs_gquota.qfs_nblks;
-> +		sv->qs_gquota.qfs_nextents = s->qs_gquota.qfs_nextents;
-> +	} else if (s->qs_flags & XFS_QUOTA_PDQ_ACCT) {
-> +		/* gs_gquota actually holds project quota info */
-> +		sv->qs_pquota.qfs_ino = s->qs_gquota.qfs_ino;
-> +		sv->qs_pquota.qfs_nblks = s->qs_gquota.qfs_nblks;
-> +		sv->qs_pquota.qfs_nextents = s->qs_gquota.qfs_nextents;
-> +	}
-> +}
->  
-> -	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-> -		if (flags & VERBOSE_FLAG)
-> -			fprintf(fp, _("%s quota are not enabled on %s\n"),
-> -				type_to_string(type), dev);
-> -		return;
-> +static void
-> +state_quotafile_mount(
-> +	FILE			*fp,
-> +	uint			type,
-> +	struct fs_path		*mount,
-> +	uint			flags)
-> +{
-> +	struct fs_quota_stat	s;
-> +	struct fs_quota_statv	sv;
-> +	char			*dev = mount->fs_name;
-> +
-> +	sv.qs_version = FS_QSTATV_VERSION1;
-> +
-> +	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
-> +		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-> +			if (flags & VERBOSE_FLAG)
-> +				fprintf(fp,
-> +					_("%s quota are not enabled on %s\n"),
-> +					type_to_string(type), dev);
-> +			return;
-> +		}
-> +		state_stat_to_statv(&s, &sv);
->  	}
->  
->  	if (type & XFS_USER_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_USER_QUOTA, &s.qs_uquota,
-> -				s.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_UDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
-> +				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
->  	if (type & XFS_GROUP_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &s.qs_gquota,
-> -				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
-> +				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
->  	if (type & XFS_PROJ_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
-> -				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
-> -				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
-> +		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
-> +				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
-> +				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
->  
-> -	state_timelimit(fp, XFS_BLOCK_QUOTA, s.qs_btimelimit);
-> -	state_timelimit(fp, XFS_INODE_QUOTA, s.qs_itimelimit);
-> -	state_timelimit(fp, XFS_RTBLOCK_QUOTA, s.qs_rtbtimelimit);
-> +	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
-> +	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
-> +	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
->  }
->  
->  static void
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Eryu
 
 _______________________________________________
 xfs mailing list
