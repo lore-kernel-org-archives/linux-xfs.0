@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A8DAD7CB4
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 07:56:41 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EA0CA7CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 21:39:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7970D304039
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 05:56:41 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id nTK2tVy0jcWc1oML (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 05:56:39 -0700 (PDT)
-Date: Fri, 26 Aug 2016 05:56:36 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v8 00/71] xfs: add reflink and dedupe support
-Message-ID: <20160826125636.GA1548@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D4CFAC004
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 19:39:39 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	5BKpM8HEKR6YKId0 for <xfs@oss.sgi.com>;
+	Mon, 29 Aug 2016 19:39:36 -0700 (PDT)
+Date: Tue, 30 Aug 2016 12:39:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: BUG: Internal error xfs_trans_cancel at line 984 of file
+	fs/xfs/xfs_trans.c
+Message-ID: <20160830023905.GU19025@dastard>
+References: <20160829103754.GH27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+In-Reply-To: <20160829103754.GH27776@eguan.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,46 +30,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs@oss.sgi.com
 
-FTI, with your djwong-devel tree I see sporadic slab corruption when
-running xfstests with reflinks force enabled in mkfs.
+On Mon, Aug 29, 2016 at 06:37:54PM +0800, Eryu Guan wrote:
+> Hi,
+> 
+> I've hit an XFS internal error then filesystem shutdown with 4.8-rc3
+> kernel but not with 4.8-rc2
+.....
+> I attached a script too to reproduce it. Please note that the XFS
+> partition needs about 40G frees space, and it may take hours to finish
+> based on your memory setup on your host.
 
-And while the trace looks like from the rmap code it doesn't happen
-without the reflink patches.
+Ugh. can you try to narrow the cause so it takes less time to
+reproduce? This is almost certainly one of two things:
 
-Example during xfs/313 below:
+	1) a ENOSPC issue where an AG is almost-but-not-quite full,
+	but fixing up the freelist results in there being not enough
+	blocks left to allocate the data extent; or
 
-[14751.774252] Slab corruption (Tainted: G        W      ): xfs_cui_item start=ffff88013afb3748, len=408
-[14751.775170] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[14751.775731] Last user: [<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
-[14751.776397] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
-[14751.777157] Single bit error detected. Probably bad RAM.
-[14751.777591] Run memtest86+ or a similar memory test tool.
-[14751.778015] Prev obj: start=ffff88013afb3598, len=408
-[14751.778468] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[14751.778940] Last user:
-[<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
-[14751.779621] 000: 6b 6b 6b 6b 6b 00 01 02 03 6b 6b 6b 6b 6b 6b 6b kkkkk....kkkkkkk
-[14751.780378] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[14751.781140] Next obj: start=ffff88013afb38f8, len=408
-[14751.781639] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[14751.782216] Last user:
-[<ffffffff815ce4cc>](xfs_cui_item_free+0x1c/0x30)
-[14751.782885] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[14751.783608] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[14751.784287] Slab corruption (Tainted: G        W      ): xfs_bui_item start=ffff880131b67048, len=184
-[14751.785126] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[14751.785979] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)0
-[14751.786636] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
-[14751.787414] Single bit error detected. Probably bad RAM.
-[14751.787948] Run memtest86+ or a similar memory test tool.
-[14751.788477] Next obj: start=ffff880131b67118, len=184
-[14751.789002] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[14751.789559] Last user: [<ffffffff815c9584>](xfs_bui_release+0x44/0x70)
-[14751.790259] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[14751.791055] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+	2) we've split a delalloc extent so many times that we've
+	run out of indirect block reservation and we hit ENOSPC as a
+	result.
+
+For the latter, I suspect a test case where we take a large delalloc
+range and use sync_file_range to do single page writeback to "binary
+split" the delalloc range. i.e. start with a 128MB delalloc, then
+sync a 4k block at offset 64MB, then 4k at 32MB, then 16MB, then
+8MB, ... all the way down to writing the first block in the file,
+and also all the way up to the final block in the file.
+
+Then write every second 4k block to cause worse case growth of the
+bmbt and hopefully then exhaust the indirect block reservation for
+that delalloc region...
+
+> [root@hp-dl360g9-15 ~]# xfs_info /
+> meta-data=/dev/mapper/systemvg-root isize=256    agcount=16, agsize=2927744 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=0        finobt=0 spinodes=0
+> data     =                       bsize=4096   blocks=46843904, imaxpct=25
+>          =                       sunit=64     swidth=192 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal               bsize=4096   blocks=22912, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Does it reproduce on a CRC enabled filesystem?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
