@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6D6807CA0
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 02:35:40 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BFFC37CA4
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 09:53:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 31C0D8F8039
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 00:35:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YjW0hjBFvkY897T5 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 30 Aug 2016 00:35:36 -0700 (PDT)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs/187: fix new sb_features2 ftype stop case running
-Date: Tue, 30 Aug 2016 15:35:32 +0800
-Message-Id: <1472542532-16497-1-git-send-email-zlang@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8F9BF304039
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 07:53:45 -0700 (PDT)
+Received: from mail-qk0-f180.google.com (mail-qk0-f180.google.com
+	[209.85.220.180]) by cuda.sgi.com with ESMTP id
+	WyBPClcvTGilrcQV (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 30 Aug 2016 07:53:43 -0700 (PDT)
+Received: by mail-qk0-f180.google.com with SMTP id l2so20858013qkf.3
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 07:53:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160830023727.GH22760@birch.djwong.org>
+References: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
+	<CAPcyv4g1CkMZoq+vHcyPZW3ME7Qr=6pW10BTxg2n+e+28+MFKA@mail.gmail.com>
+	<20160830023727.GH22760@birch.djwong.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 30 Aug 2016 07:53:41 -0700
+Message-ID: <CAA9_cmfFMGQHTA_N5CGbXhdc=4qJsJbNJXu0WyUEJp7YguFo7Q@mail.gmail.com>
+Subject: Re: xfstests xfs fuzzers fail with DAX
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,156 +29,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: Zorro Lang <zlang@redhat.com>, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-nvdimm <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
 
-This case is too old, at that time there's no "ftype" feature for
-XFS. Due to this case need to clear features2 bits when mkfs.xfs,
-so ftype bit stop case running for long time.
+On Mon, Aug 29, 2016 at 7:37 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Mon, Aug 29, 2016 at 06:50:05PM -0700, Dan Williams wrote:
+>> [ Adding Darrick on the off chance that this triggers an "aha, of
+>> course it does!" ]
+>
+> Aha!  Of course it does!!! :)
 
-We care 6 features2 bits in this case:
+Heh, thanks :).  And apologies to Dave for missing his earlier note
+pointing out the delalloc failure, linux-nvdimm list ate the response.
 
-  "ATTR2, LAZYSBCOUNT, PROJID32BIT, CRC, FTYPE, FINOBT"
+>
+>> Darrick these corruption tests you added to xfstests last year all
+>> fail the same way with DAX enabled.  They spew:
+>>
+>>     "pwrite64: Structure needs cleaning"
+>>
+>> ...reports that are cleaned up by running without "-o dax".
+>
+> I think this happens because in non-dax mode, the pwrite is a buffered
+> write and so long as we can create a delalloc reservation, everything
+> is ok and nothing fails.  Whereas for dax we have to allocate the
+> blocks for the pwrite immediately, thereby triggering the cntbt
+> verifier error.
+>
+> Proceeding from the assumption "DAX behaves a lot like DIO", all the
+> tests that rely on buffered mode semantics are going to choke if DAX
+> is turned on without them knowing about it.
+>
+>> Alternatively you could sit back and watch me try to figure it out,
+>> that should be quite entertaining... as a start I'll try to pin down a
+>> stack trace when the error is returned.
+>
+> As for how to fix this, probably the best option is to change line 98
+> to 'pwrite -W -S 0x62...' and update the output to include the
+> 'structure needs cleaning' message.
 
-ATTR2 and LAZYSBCOUNT bits will be tested in case. FINBOT will be
-disabled if CRC=0. So this patch only check and disable PROJID32BIT,
-CRC and FTYPE features when mkfs.xfs.
+I'll give it a shot.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+> Or get rid of the mount option and require explicitly turning on DAX
+> on a per-inode basis, which I think is where Dave is already going.
 
-Hi,
-
-I think we shouldn't skip this case if user doesn't specify suitable
-MKFS_OPTIONS and MOUNT_OPTIONS. Because this case need complex options,
-nearly no one will specify these all options for xfstests at same time.
-
-Thanks,
-Zorro
-
- tests/xfs/187 | 51 ++++++++++++++++++++++++++++-----------------------
- 1 file changed, 28 insertions(+), 23 deletions(-)
-
-diff --git a/tests/xfs/187 b/tests/xfs/187
-index 836b924..5e7c677 100755
---- a/tests/xfs/187
-+++ b/tests/xfs/187
-@@ -31,7 +31,6 @@ seq=`basename $0`
- seqres=$RESULT_DIR/$seq
- echo "QA output created by $seq"
- 
--here=`pwd`
- tmp=/tmp/$$
- status=1	# failure is the default!
- trap "_cleanup; exit \$status" 0 1 2 3 15
-@@ -58,24 +57,32 @@ _supported_os Linux
- 
- _require_scratch
- _require_attrs
--_require_attr_v1
--_require_projid16bit
- 
- rm -f $seqres.full
--
-+_scratch_mkfs >/dev/null 2>&1
- # Reset the options so that we can control what is going on here
--export MKFS_OPTIONS=""
--export MOUNT_OPTIONS=""
--
--# lazysb, attr2 and other feature bits are held in features2 and will require
--# morebitsbit on So test with lazysb and without it to see if the morebitsbit is
--# okay etc. If the mkfs defaults change, these need to change as well.
--export MKFS_NO_LAZY="-m crc=0 -l lazy-count=0 -i projid32bit=0"
--export MKFS_LAZY="-m crc=0 -l lazy-count=1 -i projid32bit=0"
-+MKFS_OPTIONS=""
-+MOUNT_OPTIONS=""
-+ver2=`$XFS_DB_PROG -c version $SCRATCH_DEV | sed -n -e "s/,/ /g" \
-+						   -e "s/.*MOREBITS\(.*\)/\1/p"`
-+# clear features2 bits which we won't test
-+for b in $ver2; do
-+	case $b in
-+	CRC)
-+		MKFS_OPTIONS="$MKFS_OPTIONS -m crc=0"
-+		;;
-+	PROJID32BIT)
-+		MKFS_OPTIONS="$MKFS_OPTIONS -i projid32bit=0"
-+		;;
-+	FTYPE)
-+		MKFS_OPTIONS="$MKFS_OPTIONS -n ftype=0"
-+		;;
-+	esac
-+done
- 
- # Make sure that when we think we are testing with morebits off
- # that we really are.
--_scratch_mkfs -i attr=1 $MKFS_NO_LAZY  >/dev/null 2>&1
-+_scratch_mkfs -i attr=1 -l lazy-count=0 >/dev/null 2>&1
- $XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 >$tmp.db
- if grep -i morebits $tmp.db
- then
-@@ -90,13 +97,13 @@ echo "*** 1. test attr2 mkfs and then noattr2 mount ***"
- echo ""
- echo "attr2 fs"
- echo ""
--_scratch_mkfs -i attr=2 $MKFS_NO_LAZY >/dev/null 2>&1
-+_scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- echo ""
- echo "noattr2 fs"
- echo ""
- _scratch_mount -o noattr2
--$UMOUNT_PROG $SCRATCH_MNT
-+_scratch_unmount
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- 
- # adding an EA will ensure the ATTR1 flag is turned on
-@@ -105,7 +112,7 @@ echo "*** 2. test attr2 mkfs and then noattr2 mount with 1 EA ***"
- echo ""
- echo "attr2 fs"
- echo ""
--_scratch_mkfs -i attr=2 $MKFS_NO_LAZY >/dev/null 2>&1
-+_scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- echo ""
- echo "noattr2 fs"
-@@ -115,8 +122,8 @@ cd $SCRATCH_MNT
- touch testfile
- $SETFATTR_PROG -n user.test -v 0xbabe testfile
- $GETFATTR_PROG testfile
--cd $here
--$UMOUNT_PROG $SCRATCH_MNT
-+cd - >/dev/null
-+_scratch_unmount
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- 
- echo ""
-@@ -125,16 +132,14 @@ echo ""
- echo ""
- echo "attr2 fs"
- echo ""
--_scratch_mkfs -i attr=2 $MKFS_LAZY >/dev/null 2>&1
-+_scratch_mkfs -i attr=2 -l lazy-count=1 >/dev/null 2>&1
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- echo ""
- echo "noattr2 fs"
- echo ""
- _scratch_mount -o noattr2
--cd $SCRATCH_MNT
--touch testfile
--cd $here
--$UMOUNT_PROG $SCRATCH_MNT
-+touch $SCRATCH_MNT/testfile
-+_scratch_unmount
- $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
- 
- # success, all done
--- 
-2.7.4
+Yes, I think we can't run away from the dax mount option fast enough.
+The semantics are different, so an application / administrator needs
+to explicitly opt-in to DAX semantics per-inode otherwise we are
+guaranteed to cause surprises.
 
 _______________________________________________
 xfs mailing list
