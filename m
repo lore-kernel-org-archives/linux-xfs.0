@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA3B47CA0
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 11:25:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F0FC8F8054
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 09:25:27 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EWmwgUEsrSCPzMzk for <xfs@oss.sgi.com>;
-	Tue, 30 Aug 2016 09:25:24 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 95625170B5B
-	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 11:25:24 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] Mailing list migration to vger.kernel.org
-Message-ID: <548eff95-ae10-d1ae-a785-e1ffc9e04c94@sandeen.net>
-Date: Tue, 30 Aug 2016 11:25:24 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B2D837CA0
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 11:40:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A5A3AC002
+	for <xfs@oss.sgi.com>; Tue, 30 Aug 2016 09:40:00 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id H9DvLtjf8ZOJMhai (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 30 Aug 2016 09:39:58 -0700 (PDT)
+Date: Tue, 30 Aug 2016 09:39:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfstests xfs fuzzers fail with DAX
+Message-ID: <20160830163953.GA26710@birch.djwong.org>
+References: <20160804024514.GA2906@xzhoul.usersys.redhat.com>
+	<CAPcyv4g1CkMZoq+vHcyPZW3ME7Qr=6pW10BTxg2n+e+28+MFKA@mail.gmail.com>
+	<20160830023727.GH22760@birch.djwong.org>
+	<CAA9_cmfFMGQHTA_N5CGbXhdc=4qJsJbNJXu0WyUEJp7YguFo7Q@mail.gmail.com>
+	<CAPcyv4hK9z7uqYEykk5Xq=+e6wGiai5wibGy7Xks9GzC--R9Dg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hK9z7uqYEykk5Xq=+e6wGiai5wibGy7Xks9GzC--R9Dg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +33,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
 
-(3rd try, with still more obfuscated information, ugh)
+On Tue, Aug 30, 2016 at 09:25:45AM -0700, Dan Williams wrote:
+> On Tue, Aug 30, 2016 at 7:53 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> > On Mon, Aug 29, 2016 at 7:37 PM, Darrick J. Wong
+> > <darrick.wong@oracle.com> wrote:
+> >> On Mon, Aug 29, 2016 at 06:50:05PM -0700, Dan Williams wrote:
+> >>> [ Adding Darrick on the off chance that this triggers an "aha, of
+> >>> course it does!" ]
+> >>
+> >> Aha!  Of course it does!!! :)
+> >
+> > Heh, thanks :).  And apologies to Dave for missing his earlier note
+> > pointing out the delalloc failure, linux-nvdimm list ate the response.
+> >
+> >>
+> >>> Darrick these corruption tests you added to xfstests last year all
+> >>> fail the same way with DAX enabled.  They spew:
+> >>>
+> >>>     "pwrite64: Structure needs cleaning"
+> >>>
+> >>> ...reports that are cleaned up by running without "-o dax".
+> >>
+> >> I think this happens because in non-dax mode, the pwrite is a buffered
+> >> write and so long as we can create a delalloc reservation, everything
+> >> is ok and nothing fails.  Whereas for dax we have to allocate the
+> >> blocks for the pwrite immediately, thereby triggering the cntbt
+> >> verifier error.
+> >>
+> >> Proceeding from the assumption "DAX behaves a lot like DIO", all the
+> >> tests that rely on buffered mode semantics are going to choke if DAX
+> >> is turned on without them knowing about it.
+> >>
+> >>> Alternatively you could sit back and watch me try to figure it out,
+> >>> that should be quite entertaining... as a start I'll try to pin down a
+> >>> stack trace when the error is returned.
+> >>
+> >> As for how to fix this, probably the best option is to change line 98
+> >> to 'pwrite -W -S 0x62...' and update the output to include the
+> >> 'structure needs cleaning' message.
+> >
+> > I'll give it a shot.
+> 
+> So, that did not modulate the failure or the passing case.  However,
+> using -d at line 122 makes the no-dax case fail the same as the dax
+> case.
+> 
+> Would a change like this be acceptable in the interim while we figure
+> out which tests are delalloc sensitive, or did I just invalidate the
+> test?
+> 
+> diff --git a/tests/xfs/086 b/tests/xfs/086
+> index 143915bafaa1..26607c7a4697 100755
+> --- a/tests/xfs/086
+> +++ b/tests/xfs/086
+> @@ -96,7 +96,7 @@ _scratch_mount
+> 
+>  echo "+ modify files"
+>  for x in `seq 1 64`; do
+> -       $XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}"
+> "${TESTFILE}.${x}" >> $seqres.full
+> +       $XFS_IO_PROG -f -c "pwrite -d -S 0x62 0 ${blksz}"
+> "${TESTFILE}.${x}" >> $seqres.full
+>  done
+>  umount "${SCRATCH_MNT}"
+> 
+> @@ -119,7 +119,7 @@ echo "broken: ${broken}"
+>  # Try appending again, now that we've fixed the fs
+>  echo "+ modify files (2)"
+>  for x in `seq 1 64`; do
+> -       $XFS_IO_PROG -f -c "pwrite -S 0x62 ${blksz} ${blksz}"
+> "${TESTFILE}.${x}" >> $seqres.fu
+> +       $XFS_IO_PROG -f -c "pwrite -d -S 0x62 ${blksz} ${blksz}"
+> "${TESTFILE}.${x}" >> $seqres
+>  done
+>  umount "${SCRATCH_MNT}"
+> 
+> diff --git a/tests/xfs/086.out b/tests/xfs/086.out
+> index 6c053f42deea..e2ec84e6b90f 100644
+> --- a/tests/xfs/086.out
+> +++ b/tests/xfs/086.out
+> @@ -16,5 +16,5 @@ broken: 1
+>  + mount image
+>  + chattr -R -i
+>  + check files (2)
+> -broken: 0
+> +broken: 1
 
-(2nd try, first was caught in the spam trap?)
+There shouldn't be any brokenness left over at this point in the test.
 
-The XFS mailing list will be moving to linux-xfs at vger.kernel.org
-by the end of this month.  As of Oct 1, we plan to disable this
-list hosted on the oss sgi server.
+--D
 
-We are unable to transfer the current subscriber list to vger, so
-anyone who wishes to remain subscribed to the xfs mailing list will
-need to manually subscribe to the list on vger dot kernel.org.
-
-Please see the URL:
-
-vger.kernel.org/vger-lists.html#linux-xfs
-
-for details and a helpful link.
-
-The kernel.org list is active now, so please start making
-the mental and technological transition to using that list for
-new emails in the coming weeks.  It is probably be best to
-cc: the old list for the time being, for the benefit of those
-not yet subscribed to the new list.
-
-In addition to list migration, we will also be moving all other
-resources - git, ftp, etc away from the sgi server and onto
-kernel.org infrastructure in coming weeks.
-
-I'll send out periodic reminders as we approach the deadline as well.
-
-Thanks,
--Eric
+>  + check fs (2)
 
 _______________________________________________
 xfs mailing list
