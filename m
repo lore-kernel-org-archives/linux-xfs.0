@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 77FD67CA2
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 11:03:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6E40F7CA0
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 19:53:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 34FE2AC003
-	for <xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:03:43 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3B0AA8F804C
+	for <xfs@oss.sgi.com>; Mon, 29 Aug 2016 17:53:47 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yzW3X2t389sBosjK (version=TLSv1.2
+	cuda.sgi.com with ESMTP id dXhaq2ZMJpMksz4n (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 26 Aug 2016 09:03:41 -0700 (PDT)
-Date: Fri, 26 Aug 2016 12:03:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: rewrite and optimize the delalloc write path
-Message-ID: <20160826160339.GC17728@bfoster.bfoster>
-References: <1471816273-28940-1-git-send-email-hch@lst.de>
-	<1471816273-28940-5-git-send-email-hch@lst.de>
-	<20160825143708.GD25041@bfoster.bfoster>
-	<20160826143344.GB21535@lst.de>
+	<xfs@oss.sgi.com>; Mon, 29 Aug 2016 17:53:42 -0700 (PDT)
+Date: Mon, 29 Aug 2016 19:53:38 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
+	unless foreign_allowed
+Message-ID: <20160830005338.GA21506@redhat.com>
+References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+	<20160829231205.GO19025@dastard>
+	<20160829232615.GA29648@redhat.com>
+	<20160829234044.GS19025@dastard>
+	<20160829234704.GC29648@redhat.com>
+	<20160830002513.GT19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160826143344.GB21535@lst.de>
+In-Reply-To: <20160830002513.GT19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,134 +31,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gRnJpLCBBdWcgMjYsIDIwMTYgYXQgMDQ6MzM6NDRQTSArMDIwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gT24gVGh1LCBBdWcgMjUsIDIwMTYgYXQgMTA6Mzc6MDlBTSAtMDQwMCwgQnJp
-YW4gRm9zdGVyIHdyb3RlOgo+ID4gT24ganVzdCBza2ltbWluZyBvdmVyIHRoaXMgc28gZmFyLCBJ
-IGZlZWwgbGlrZSB0aGlzIHNob3VsZCBiZSBhdCBsZWFzdAo+ID4gdHdvIHBhdGNoZXMsIHBvc3Np
-Ymx5IDM6Cj4gPiAKPiA+IC0gS2lsbCB4ZnNfYm1hcGlfZGVsYXkoKSBhbmQgcHVsbCB1cCBhc3Nv
-Y2lhdGVkIGJpdHMgdG8gaW9tYXAoKS4KPiAKPiBBcyBpbiBqdXN0IGEgbW92ZSBvZiBjb2RlIHRv
-IHhmc19pb21hcC5jIG9yIGFsc28gbWVyZ2VkIGl0IHdpdGggYQo+IHBhcnTRlmFsIGNvcHkgb2Yg
-eGZzX2ZpbGVfaW9tYXBfYmVnaW4/ICBUaGUgZmlyc3QgaXMgdHJpdmlhbCwgYnV0IGFsc28KPiBy
-YXRoZXIgcG9pbnRsZXNzLiAgVGhlIHNlY29uZCBpcyBhIGJpdCBtb3JlIHdvcmssIHN0aWxsIHZl
-cnkgZG9hYmxlCj4gYnV0IHByb2JhYmx5IGFsc28gbm90IHRoYXQgdXNlZnVsIGFzIHdlJ3JlIGdv
-aW5nIHRvIHRvdGFsbHkgcmV3cml0ZSBpdAo+IGFnYWluIGluIHRoZSBuZXh0IHN0ZXAuCj4gCj4g
-PiAtIFBvc3NpYmx5IHNlcGFyYXRlIG91dCB0aGUgcGFydCB0aGF0IG1vdmVzIGl0ZXJhdGlvbiBm
-cm9tIHRoZSAoZm9ybWVyKQo+ID4gICB4ZnNfYm1hcGlfZGVsYXkoKSBjb2RlIHVwIHRvIHRoZSBp
-b21hcCBjb2RlLCBpZiB3ZSBjYW4gZG8gc28gY2xlYW5seS4KPiAKPiBXZWxsLCB0aGUgbWFqb3Ig
-cG9pbnQgaXMgdGhhdCB3ZSBnZXQgcmlkIG9mIHRoZSBpdGVyYXRpb24gYXMgdGhlcmUgaXNuJ3QK
-PiBhbnkgYWN0dWFsIG5lZWQgZm9yIGl0Lgo+IAoKLi4uIHdoaWNoIHNob3VsZCBwcm9iYWJseSBi
-ZSBtZW50aW9uZWQgaW4gdGhlIGNvbW1pdCBsb2cgZGVzY3JpcHRpb24uIEluCmFueSBldmVudCwg
-SSB0aGluayBpdCdzIHByb2JhYmx5IGhlbHBmdWwgZW5vdWdoIHRvIGp1c3Qgc2VwYXJhdGUgb3V0
-IHRoZQpwcmVhbGxvYyByZXdvcmsgZnJvbSBldmVyeXRoaW5nIGVsc2UuCgo+ID4gLSBSZWZhY3Rv
-ci9yZXdvcmsgdGhlIHByZWFsbG9jYXRlIGxvZ2ljLgo+IAo+IEJ1dCBJIGd1ZXNzIEkgY291bGQg
-ZG8gYSBwYXNzIHRoYXQgY3JlYXRlcyB4ZnNfZmlsZV9pb21hcF9iZWdpbl9kZWxheQo+IGFzIGlu
-IHRoZSBuZXcgdmVyc2lvbiBleGNlcHQgd2l0aG91dCB0aGUgcHJlYWxsb2MgY2hhbmdlcywgYW5k
-IHRoZW4KPiBzZXBhcmF0ZSB0aGVtIG91dC4gIEkgZG9uJ3QgcXVpdGUgc2VlIHRoZSBwb2ludCwg
-dGhvdWdoLi4KClRoZXkgZG9uJ3QgYXBwZWFyIHRvIGJlIHJlbGF0ZWQsIGZvciBvbmUuIFNlY29u
-ZCAoYW5kIElNTyksIGl0IG1ha2VzIGl0Cm5vdGFibHkgZWFzaWVyIHRvIHJldmlldyBhbmQgZGVh
-bCB3aXRoIGFueSBwb3RlbnRpYWwgcmVncmVzc2lvbnMgZG93bgp0aGUgcm9hZC4gQXMgaXQgaXMs
-IEkgbWFkZSBhIG1vcmUgdGhvcm91Z2ggcGFzcyB0aHJvdWdoIHRoZSBjb2RlIGFuZCBJCmRpZG4n
-dCBub3RpY2UgYW55dGhpbmcgdGhhdCBsb29rZWQgd3JvbmcsIGJ1dCBJJ2Qgc3RpbGwgcHJlZmVy
-IHRvIHNlZQp0aGUgY2hhbmdlcyBzZXBhcmF0ZWQgb3V0IHRvIGJlIGNvbmZpZGVudCBJIGRpZG4n
-dCBtaXNzIGFueXRoaW5nLgoKPiA+IEknbSBub3QgbmVjZXNzYXJpbHkgYWdhaW5zdCBjbGVhbmlu
-ZyB1cC9yZXdvcmtpbmcgdGhlIHByZWFsbG9jIGJpdHMsIGJ1dAo+ID4gSSdtIG5vdCBhIGh1Z2Ug
-ZmFuIG9mIG9wZW4gY29kaW5nIGFsbCBvZiB0aGlzIGhlcmUgaW4gdGhlIGlvbWFwCj4gPiBmdW5j
-dGlvbi4gSWYgbm90aGluZyBlbHNlLCB0aGUgaW5kZW50YXRpb24gc3RhcnRzIHRvIG1ha2UgbXkg
-ZXllcwo+ID4gY3Jvc3MuLi4gY291bGQgd2UgcmV0YWluIG9uZSBsZXZlbCBvZiBhYnN0cmFjdGlv
-biBoZXJlIGZvciB0aGlzIGh1bmsgb2YKPiA+IGxvZ2ljIHRoYXQgdXBkYXRlcyBlbmRfZnNiPwo+
-IAo+IFdlJ3JlIG9ubHkgaGF2aW5nIHRocmVlIHRhYnMgb2YgaW5kZW50YXRpb24uICBJIGFjdHVh
-bGx5IGxvb2tlZCBpbnRvCj4gYSBoZWxwZXIgZm9yIHRoYXQgd2hvbGUgYmxvY2ssIGJ1dCB3ZSdk
-IG5lZWQgdG8gcGFzczoKPiAKClllYWgsIEkgc3VwcG9zZSB0aGUgaW5kZW50YXRpb24gaXRzZWxm
-IGlzIG5vdCBzbyBtdWNoIHdoYXQgc3RhbmRzIG91dC4KTG9va2luZyBhZ2FpbiwgSSB0aGluayBp
-dCdzIG1vcmUgdGhlIGNvbWJpbmF0aW9uIG9mIHRoYXQgYW5kIHRoZQptdWx0aS1saW5lIGNoZWNr
-cyB3ZSdyZSBjb21iaW5pbmcuCgo+IGlwLCBpZHgsIHByZXYsIG9mZnNldF9mc2IsIG9mZnNldCwg
-Y291bnQsIG1heGJ5dGVzX2ZzYgo+IAo+ICh3ZSBjb3VsZCBwb3RlbnRpYWxseSByZS1kZXJpdmUg
-b2Zmc2V0X2ZzYiBmcm9tIG9mZnNldCBpZiB3ZSBkb24ndAo+IG1pbmQgdGhlIGluZWZmaWNpZW55
-IGFuZCByZWNhbGN1bGF0ZSBtYXhieXRlc19mc2IuICBUaGlzIGFscmVhZHkKPiBhc3N1bWVzIG1w
-IGlzIHRyaXZpYWxseSBkZXJpdmVkIGZyb20gaXApCj4gCj4gYW5kIHJldHVybgo+IAo+IGFsbG9j
-X2Jsb2NrcywgZW5kX2ZzYgo+IAo+IHNvIHRoZSBmdW5jdGlvbiB3b3VsZCBiZSBxdWl0ZSBhIG1v
-bnN0ZXIgaW4gdGVybXMgb2YgaXRzIGNhbGxpbmcKPiBjb252ZW50aW9uLiAgQWRkaXRpb25hbGx5
-IHdlJ2QgaGF2ZSB0aGUgcmVsYXRlZCBieSBub3QgcXV0ZSB0aGUKPiBzYW1lIGlmIGJsb2NrcyBh
-cm91bmQgWEZTX01PVU5UX0RGTFRfSU9TSVpFIGFuZCB0aGUgaXNpemUgc3BsaXQKPiBvdmVyIHR3
-byBmdW5jdGlvbnMsIHdoaWNoIGRvZXNuJ3QgZXhhY3RseSBoZWxwIHVuZGVyc3RhbmRpbmcKPiB0
-aGUgZmxvdy4KPiAKCk5vdCBxdWl0ZSBzdXJlIEkgZm9sbG93IHRoZSBsYXN0IGJpdCwgYnV0IEkg
-ZG9uJ3QgbmVjZXNzYXJpbHkgdGhpbmsgdGhlCndob2xlIHRoaW5nIGhhcyB0byBiZSBib3hlZCBp
-bnRvIGEgaGVscGVyIHRvIGNsZWFuIGl0IHVwLiBFLmcuLCBJJ2QgZG8Kc29tZXRoaW5nIGxpa2Ug
-dGhlIGFwcGVuZGVkIGRpZmYgKGNvbXBpbGUgdGVzdGVkIG9ubHkpLgoKQnJpYW4KCi0tLTg8LS0t
-CgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19pb21hcC5jIGIvZnMveGZzL3hmc19pb21hcC5jCmlu
-ZGV4IDJiNDQ5ZjUuLjQ1ZTUyNjggMTAwNjQ0Ci0tLSBhL2ZzL3hmcy94ZnNfaW9tYXAuYworKysg
-Yi9mcy94ZnMveGZzX2lvbWFwLmMKQEAgLTQ4OCw2ICs0ODgsNTQgQEAgY2hlY2tfd3JpdGVpbzoK
-IAlyZXR1cm4gYWxsb2NfYmxvY2tzOwogfQogCisvKgorICogSWYgd2UgYXJlIGRvaW5nIGEgd3Jp
-dGUgYXQgdGhlIGVuZCBvZiB0aGUgZmlsZSBhbmQgdGhlcmUgYXJlIG5vIGFsbG9jYXRpb25zCisg
-KiBwYXN0IHRoaXMgb25lLCB0aGVuIGV4dGVuZCB0aGUgYWxsb2NhdGlvbiBvdXQgdG8gdGhlIGZp
-bGUgc3lzdGVtJ3Mgd3JpdGUKKyAqIGlvc2l6ZS4KKyAqCisgKiBBcyBhbiBleGNlcHRpb24gd2Ug
-ZG9uJ3QgZG8gYW55IHByZWFsbG9jYXRpb24gYXQgYWxsIGlmIHRoZSBmaWxlIGlzIHNtYWxsZXIK
-KyAqIHRoYW4gdGhlIG1pbmltdW0gcHJlYWxsb2NhdGlvbiBhbmQgd2UgYXJlIHVzaW5nIHRoZSBk
-ZWZhdWx0IGR5bmFtaWMKKyAqIHByZWFsbG9jYXRpb24gc2NoZW1lLCBhcyBpdCBpcyBsaWtlbHkg
-dGhpcyBpcyB0aGUgb25seSB3cml0ZSB0byB0aGUgZmlsZSB0aGF0CisgKiBpcyBnb2luZyB0byBi
-ZSBkb25lLgorICoKKyAqIFdlIGNsZWFuIHVwIGFueSBleHRyYSBzcGFjZSBsZWZ0IG92ZXIgd2hl
-biB0aGUgZmlsZSBpcyBjbG9zZWQgaW4KKyAqIHhmc19pbmFjdGl2ZSgpLgorICovCitzdGF0aWMg
-aW50Cit4ZnNfaW9tYXBfcHJlYWxsb2MoCisJc3RydWN0IHhmc19pbm9kZQkqaXAsCisJbG9mZl90
-CQkJb2Zmc2V0LAorCWxvZmZfdAkJCWNvdW50LAorCXhmc19leHRudW1fdAkJaWR4LAorCXN0cnVj
-dCB4ZnNfYm1idF9pcmVjCSpwcmV2KQoreworCXN0cnVjdCB4ZnNfbW91bnQJKm1wID0gaXAtPmlf
-bW91bnQ7CisJeGZzX2ZzYmxvY2tfdAkJYWxsb2NfYmxvY2tzOworCXhmc19maWxlb2ZmX3QJCW9m
-ZnNldF9mc2IgPSBYRlNfQl9UT19GU0JUKG1wLCBvZmZzZXQpOworCisJaWYgKG9mZnNldCArIGNv
-dW50IDw9IFhGU19JU0laRShpcCkpCisJCXJldHVybiAwOworCisJaWYgKCEobXAtPm1fZmxhZ3Mg
-JiBYRlNfTU9VTlRfREZMVF9JT1NJWkUpICYmCisJICAgIChYRlNfSVNJWkUoaXApIDwgWEZTX0ZT
-Ql9UT19CKG1wLCBtcC0+bV93cml0ZWlvX2Jsb2NrcykpKQorCQlyZXR1cm4gMDsKKworCS8qCisJ
-ICogSWYgYW4gZXhwbGljaXQgYWxsb2NzaXplIGlzIHNldCwgdGhlIGZpbGUgaXMgc21hbGwsIG9y
-IHdlCisJICogYXJlIHdyaXRpbmcgYmVoaW5kIGEgaG9sZSwgdGhlbiB1c2UgdGhlIG1pbmltdW0g
-cHJlYWxsb2M6CisJICovCisJaWYgKChtcC0+bV9mbGFncyAmIFhGU19NT1VOVF9ERkxUX0lPU0la
-RSkgfHwKKwkgICAgWEZTX0lTSVpFKGlwKSA8IFhGU19GU0JfVE9fQihtcCwgbXAtPm1fZGFsaWdu
-KSB8fAorCSAgICBpZHggPT0gMCB8fAorCSAgICBwcmV2LT5icl9zdGFydG9mZiArIHByZXYtPmJy
-X2Jsb2NrY291bnQgPCBvZmZzZXRfZnNiKQorCQlhbGxvY19ibG9ja3MgPSBtcC0+bV93cml0ZWlv
-X2Jsb2NrczsKKwllbHNlCisJCWFsbG9jX2Jsb2NrcyA9CisJCQl4ZnNfaW9tYXBfcHJlYWxsb2Nf
-c2l6ZShpcCwgb2Zmc2V0LCBwcmV2KTsKKworCXJldHVybiBhbGxvY19ibG9ja3M7Cit9CisKIHN0
-YXRpYyBpbnQKIHhmc19maWxlX2lvbWFwX2JlZ2luX2RlbGF5KAogCXN0cnVjdCBpbm9kZQkJKmlu
-b2RlLApAQCAtNTA3LDYgKzU1NSw3IEBAIHhmc19maWxlX2lvbWFwX2JlZ2luX2RlbGF5KAogCXN0
-cnVjdCB4ZnNfYm1idF9pcmVjCWdvdDsKIAlzdHJ1Y3QgeGZzX2JtYnRfaXJlYwlwcmV2OwogCXhm
-c19leHRudW1fdAkJaWR4OworCXhmc19mc2Jsb2NrX3QJCXByZWFsbG9jID0gMDsKIAogCUFTU0VS
-VCghWEZTX0lTX1JFQUxUSU1FX0lOT0RFKGlwKSk7CiAJQVNTRVJUKCF4ZnNfZ2V0X2V4dHN6X2hp
-bnQoaXApKTsKQEAgLTU1NCw0MSArNjAzLDE0IEBAIHhmc19maWxlX2lvbWFwX2JlZ2luX2RlbGF5
-KAogCWVuZF9mc2IgPSBvcmlnX2VuZF9mc2IgPQogCQltaW4oWEZTX0JfVE9fRlNCKG1wLCBvZmZz
-ZXQgKyBjb3VudCksIG1heGJ5dGVzX2ZzYik7CiAKLQkvKgotCSAqIElmIHdlIGFyZSBkb2luZyBh
-IHdyaXRlIGF0IHRoZSBlbmQgb2YgdGhlIGZpbGUgYW5kIHRoZXJlIGFyZSBubwotCSAqIGFsbG9j
-YXRpb25zIHBhc3QgdGhpcyBvbmUsIHRoZW4gZXh0ZW5kIHRoZSBhbGxvY2F0aW9uIG91dCB0byB0
-aGUKLQkgKiBmaWxlIHN5c3RlbSdzIHdyaXRlIGlvc2l6ZS4KLQkgKgotCSAqIEFzIGFuIGV4Y2Vw
-dGlvbiB3ZSBkb24ndCBkbyBhbnkgcHJlYWxsb2NhdGlvbiBhdCBhbGwgaWYgdGhlIGZpbGUKLQkg
-KiBpcyBzbWFsbGVyIHRoYW4gdGhlIG1pbmltdW0gcHJlYWxsb2NhdGlvbiBhbmQgd2UgYXJlIHVz
-aW5nIHRoZQotCSAqIGRlZmF1bHQgZHluYW1pYyBwcmVhbGxvY2F0aW9uIHNjaGVtZSwgYXMgaXQg
-aXMgbGlrZWx5IHRoaXMgaXMgdGhlCi0JICogb25seSB3cml0ZSB0byB0aGUgZmlsZSB0aGF0IGlz
-IGdvaW5nIHRvIGJlIGRvbmUuCi0JICoKLQkgKiBXZSBjbGVhbiB1cCBhbnkgZXh0cmEgc3BhY2Ug
-bGVmdCBvdmVyIHdoZW4gdGhlIGZpbGUgaXMgY2xvc2VkIGluCi0JICogeGZzX2luYWN0aXZlKCku
-Ci0JICovCi0JaWYgKGVvZiAmJiBvZmZzZXQgKyBjb3VudCA+IFhGU19JU0laRShpcCkgJiYKLQkg
-ICAgKChtcC0+bV9mbGFncyAmIFhGU19NT1VOVF9ERkxUX0lPU0laRSkgfHwKLQkgICAgIFhGU19J
-U0laRShpcCkgPj0gWEZTX0ZTQl9UT19CKG1wLCBtcC0+bV93cml0ZWlvX2Jsb2NrcykpKSB7Ci0J
-CXhmc19mc2Jsb2NrX3QJCWFsbG9jX2Jsb2NrczsKLQkJeGZzX29mZl90CQlhbGlnbmVkX29mZnNl
-dDsKLQkJeGZzX2V4dGxlbl90CQlhbGlnbjsKLQotCQkvKgotCQkgKiBJZiBhbiBleHBsaWNpdCBh
-bGxvY3NpemUgaXMgc2V0LCB0aGUgZmlsZSBpcyBzbWFsbCwgb3Igd2UKLQkJICogYXJlIHdyaXRp
-bmcgYmVoaW5kIGEgaG9sZSwgdGhlbiB1c2UgdGhlIG1pbmltdW0gcHJlYWxsb2M6Ci0JCSAqLwot
-CQlpZiAoKG1wLT5tX2ZsYWdzICYgWEZTX01PVU5UX0RGTFRfSU9TSVpFKSB8fAotCQkgICAgWEZT
-X0lTSVpFKGlwKSA8IFhGU19GU0JfVE9fQihtcCwgbXAtPm1fZGFsaWduKSB8fAotCQkgICAgaWR4
-ID09IDAgfHwKLQkJICAgIHByZXYuYnJfc3RhcnRvZmYgKyBwcmV2LmJyX2Jsb2NrY291bnQgPCBv
-ZmZzZXRfZnNiKQotCQkJYWxsb2NfYmxvY2tzID0gbXAtPm1fd3JpdGVpb19ibG9ja3M7Ci0JCWVs
-c2UKLQkJCWFsbG9jX2Jsb2NrcyA9Ci0JCQkJeGZzX2lvbWFwX3ByZWFsbG9jX3NpemUoaXAsIG9m
-ZnNldCwgJnByZXYpOworCWlmIChlb2YpCisJCXByZWFsbG9jID0geGZzX2lvbWFwX3ByZWFsbG9j
-KGlwLCBvZmZzZXQsIGNvdW50LCBpZHgsICZwcmV2KTsKKwlpZiAocHJlYWxsb2MpIHsKKwkJeGZz
-X29mZl90CWFsaWduZWRfb2Zmc2V0OworCQl4ZnNfZXh0bGVuX3QJYWxpZ247CiAKIAkJYWxpZ25l
-ZF9vZmZzZXQgPSBYRlNfV1JJVEVJT19BTElHTihtcCwgb2Zmc2V0ICsgY291bnQgLSAxKTsKLQkJ
-ZW5kX2ZzYiA9IFhGU19CX1RPX0ZTQlQobXAsIGFsaWduZWRfb2Zmc2V0KSArIGFsbG9jX2Jsb2Nr
-czsKKwkJZW5kX2ZzYiA9IFhGU19CX1RPX0ZTQlQobXAsIGFsaWduZWRfb2Zmc2V0KSArIHByZWFs
-bG9jOwogCiAJCWFsaWduID0geGZzX2VvZl9hbGlnbm1lbnQoaXAsIDApOwogCQlpZiAoYWxpZ24p
-Cgo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZz
-IG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Aug 30, 2016 at 10:25:13AM +1000, Dave Chinner wrote:
+> On Mon, Aug 29, 2016 at 06:47:04PM -0500, Bill O'Donnell wrote:
+> > On Tue, Aug 30, 2016 at 09:40:44AM +1000, Dave Chinner wrote:
+> > > On Mon, Aug 29, 2016 at 06:26:15PM -0500, Bill O'Donnell wrote:
+> > > > On Tue, Aug 30, 2016 at 09:12:06AM +1000, Dave Chinner wrote:
+> > > > > On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
+> > > > > > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+> > > > > > non-XFS filesystems. One modification in fs_initialise_mounts
+> > > > > > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+> > > > > > fs paths entering the fs table.
+> > > > > 
+> > > > > What's the failure? I'm not seeing it here on any of my test
+> > > > > machines...
+> > > > 
+> > > > On my box, there are a few ext4 mounts, and test xfs/261 
+> > > > populates the fs table with those paths.
+> > > 
+> > > I have ext2 and ext3 mounts on these machines as well, and they
+> > > don't throw any errors.
+> > > 
+> > > > So when xfs_quota commands
+> > > > in 261 are executed, a "foreign filesystem" message is thrown.
+> > > 
+> > > What is the output that is causing the failure? When someone
+> > > asks you to describe the error that is occurring, please quote the
+> > > /exact error/ that is occurring - describing it via paraphrasing
+> > > does not tell anything useful about the error as I cannot correlate
+> > > that description to the code that is throwing it.
+> > 
+> > Ahh, ok, I'm sorry about that.
+> > [root@dell-pesc440-01 xfstests-dev]# ./check -d tests/xfs/261
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 dell-pesc440-01 4.7.0-rc108052016bill02+
+> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/fedora_dell--pesc440--01-csdf
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/mapper/fedora_dell--pesc440--01-csdf /mnt/scratch
+> > 
+> > xfs/261 2s ...QA output created by 261
+> > Silence is golden.
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> 
+> Bill, slow down and work through the code from first principles. I
+> don't care about getting a fix quickly - I care about the process
+> you use to find the problem and whether you end up fully
+> understanding the problem.  Walk through the code in the debugger if
+> you have to - it will show you the flow and how the pieces connect
+> together.
+> 
+> The question that needs to be answered is this: what set of initial
+> conditions is causing this error to occur? We don't really care
+> about what previous changes caused the issue at this point - working
+> that out comes /after/ diagnosing the problem when we are trying to
+> work out a fix.
+> 
+> So, yes, the issue occurs because there are foreign fs types in the
+> fstable, but that's not the underlying problem nor the problem that
+> needs to be solved.
+> 
+> Use the debugger and cssope to connect the dots between the fstable
+> initialisation, the fs_path initialisation, and the function that
+> prints that error. That should give you a good idea of why the error
+> is being printed.
+> 
+> Then have a look at print_f() and see what it does with the fstable.
+> Then tell me whether we should even care about checking for foreign
+> filesystems before we run the print_f command. At this point, the
+> fix should be obvious.
+> 
+> And then have a look at printpath() and tell me what the foriegn
+> filesystem handling bug it contains.
+> 
+> And, yes, I could have written and tested the patch to fix all this
+> in the time it took to write this email, but then you don't have the
+> opportunity to learn from doing it....
+
+OK, will do. Thanks Dave.
+
+-Bill
+
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
