@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 26ACF7CA2
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 16:34:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 890F0AC001
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 14:34:10 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	l2Ak94q1tBVfQ39f for <xfs@oss.sgi.com>;
-	Thu, 01 Sep 2016 14:34:04 -0700 (PDT)
-Date: Fri, 2 Sep 2016 07:34:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/13] xfs: fix $XFS_DB_PROG usage
-Message-ID: <20160901213400.GW22388@dastard>
-References: <147216769914.32641.55434969009554013.stgit@birch.djwong.org>
-	<147216773738.32641.691363173215857168.stgit@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AE3947CA2
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 17:07:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7EE71304039
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 15:07:20 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id etXK44Vvim31FOuF (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 01 Sep 2016 15:07:19 -0700 (PDT)
+Date: Thu, 1 Sep 2016 17:07:14 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
+	unless foreign_allowed
+Message-ID: <20160901220714.GA5207@redhat.com>
+References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
+	<20160829231205.GO19025@dastard>
+	<20160829232615.GA29648@redhat.com>
+	<20160829234044.GS19025@dastard>
+	<20160829234704.GC29648@redhat.com>
+	<20160830002513.GT19025@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <147216773738.32641.691363173215857168.stgit@birch.djwong.org>
+In-Reply-To: <20160830002513.GT19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +35,122 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Aug 25, 2016 at 04:28:57PM -0700, Darrick J. Wong wrote:
-> xfs_db requires us to pass in the log device, if any; this can be
-> accomplished via _scratch_xfs_db_options (if we're operating on the
-> scratch device, anyway).  However, many of the tests/xfs/ scripts
-> pass only $SCRATCH_DEV directly, so they'll fail if we test with an
-> external log.  So, fix that.
+On Tue, Aug 30, 2016 at 10:25:13AM +1000, Dave Chinner wrote:
+> On Mon, Aug 29, 2016 at 06:47:04PM -0500, Bill O'Donnell wrote:
+> > On Tue, Aug 30, 2016 at 09:40:44AM +1000, Dave Chinner wrote:
+> > > On Mon, Aug 29, 2016 at 06:26:15PM -0500, Bill O'Donnell wrote:
+> > > > On Tue, Aug 30, 2016 at 09:12:06AM +1000, Dave Chinner wrote:
+> > > > > On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
+> > > > > > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+> > > > > > non-XFS filesystems. One modification in fs_initialise_mounts
+> > > > > > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+> > > > > > fs paths entering the fs table.
+> > > > > 
+> > > > > What's the failure? I'm not seeing it here on any of my test
+> > > > > machines...
+> > > > 
+> > > > On my box, there are a few ext4 mounts, and test xfs/261 
+> > > > populates the fs table with those paths.
+> > > 
+> > > I have ext2 and ext3 mounts on these machines as well, and they
+> > > don't throw any errors.
+> > > 
+> > > > So when xfs_quota commands
+> > > > in 261 are executed, a "foreign filesystem" message is thrown.
+> > > 
+> > > What is the output that is causing the failure? When someone
+> > > asks you to describe the error that is occurring, please quote the
+> > > /exact error/ that is occurring - describing it via paraphrasing
+> > > does not tell anything useful about the error as I cannot correlate
+> > > that description to the code that is throwing it.
+> > 
+> > Ahh, ok, I'm sorry about that.
+> > [root@dell-pesc440-01 xfstests-dev]# ./check -d tests/xfs/261
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 dell-pesc440-01 4.7.0-rc108052016bill02+
+> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/fedora_dell--pesc440--01-csdf
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/mapper/fedora_dell--pesc440--01-csdf /mnt/scratch
+> > 
+> > xfs/261 2s ...QA output created by 261
+> > Silence is golden.
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> > print command is for XFS filesystems only
+> 
+> Bill, slow down and work through the code from first principles. I
+> don't care about getting a fix quickly - I care about the process
+> you use to find the problem and whether you end up fully
+> understanding the problem.  Walk through the code in the debugger if
+> you have to - it will show you the flow and how the pieces connect
+> together.
+> 
+> The question that needs to be answered is this: what set of initial
+> conditions is causing this error to occur? We don't really care
+> about what previous changes caused the issue at this point - working
+> that out comes /after/ diagnosing the problem when we are trying to
+> work out a fix.
+> 
+> So, yes, the issue occurs because there are foreign fs types in the
+> fstable, but that's not the underlying problem nor the problem that
+> needs to be solved.
+> 
+> Use the debugger and cssope to connect the dots between the fstable
+> initialisation, the fs_path initialisation, and the function that
+> prints that error. That should give you a good idea of why the error
+> is being printed.
+> 
+> Then have a look at print_f() and see what it does with the fstable.
+> Then tell me whether we should even care about checking for foreign
+> filesystems before we run the print_f command. At this point, the
+> fix should be obvious.
 
-I hadn't looked at this until now, but....
+I used gdb to check the flow, and realized that
+instead of modifying paths.c, it makes sense to simply allow the
+print (and paths) command regardless of whether or not the fs is
+foreign or not. So to that end, no, we shouldn't care about checking
+for foreign fs before print_f. This will dispense with the notion of
+involving foreign_allowed in libxcmd/paths.c.
 
-> diff --git a/tests/xfs/001 b/tests/xfs/001
-> index c33adae..e1e1411 100755
-> --- a/tests/xfs/001
-> +++ b/tests/xfs/001
-> @@ -44,11 +44,11 @@ _do_bit_test()
->  	bits="$2"
->  
->  	echo "testing $field with $bits bits"
-> -	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $field 0" $SCRATCH_DEV
-> +	$XFS_DB_PROG -x -c "inode $FILE_INO" -c "write $field 0" `_scratch_xfs_db_options`
+That's fine, but I'm still a bit stymied understanding the original
+intent for the "-f" flag.  Did we not want to remind the user that one
+must use -f when using xfs_quota on a foreign fs (exceptions being
+help and quit)?
 
-*yuck*
+Also, I had thought adding "-f" was to ensure that the default
+behavior of xfs_quota didn't change in the face of other filesystems.
+Wouldn't not populating the fs table with foreign fs entries be the
+simplest way to ensure that no "print all the info" options which
+iterate over the table will change their output?
 
-We are going to be getting that wrong -all the time-.
+> 
+> And then have a look at printpath() and tell me what the foriegn
+> filesystem handling bug it contains.
 
-I'd suggest changing these to
+Other than some minor output formatting issues, I've not been able
+to discover a bug in printpath(). I'm obviously missing something ;)
 
-	_scratch_xfs_db <command string>
+Thanks-
+Bill
 
-and
-
-_scratch_xfs_db()
-{
-	$XFS_DB_PROG $* `_scratch_xfs_db_options`
-}
-
-And hiding everything to do with devices completely i a much cleaner
-and more maintainable solution to the problem.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> And, yes, I could have written and tested the patch to fix all this
+> in the time it took to write this email, but then you don't have the
+> opportunity to learn from doing it....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
