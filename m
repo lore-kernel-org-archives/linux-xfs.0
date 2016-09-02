@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AE3947CA2
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 17:07:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 897927CA7
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 16:22:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7EE71304039
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 15:07:20 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DAB62AC002
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 14:22:11 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id etXK44Vvim31FOuF (version=TLSv1.2
+	cuda.sgi.com with ESMTP id 4URyBEEKLKtTMHvq (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 01 Sep 2016 15:07:19 -0700 (PDT)
-Date: Thu, 1 Sep 2016 17:07:14 -0500
+	<xfs@oss.sgi.com>; Fri, 02 Sep 2016 14:22:10 -0700 (PDT)
 From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfsprogs: don't populate fs table with foreign fs paths
-	unless foreign_allowed
-Message-ID: <20160901220714.GA5207@redhat.com>
+Subject: [PATCH v2] xfsprogs: (xfs_quota) foreign fs path handling changes
+Date: Fri,  2 Sep 2016 16:22:08 -0500
+Message-Id: <1472851328-25542-1-git-send-email-billodo@redhat.com>
+In-Reply-To: <1472478012-23627-1-git-send-email-billodo@redhat.com>
 References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
-	<20160829231205.GO19025@dastard>
-	<20160829232615.GA29648@redhat.com>
-	<20160829234044.GS19025@dastard>
-	<20160829234704.GC29648@redhat.com>
-	<20160830002513.GT19025@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160830002513.GT19025@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,126 +23,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-On Tue, Aug 30, 2016 at 10:25:13AM +1000, Dave Chinner wrote:
-> On Mon, Aug 29, 2016 at 06:47:04PM -0500, Bill O'Donnell wrote:
-> > On Tue, Aug 30, 2016 at 09:40:44AM +1000, Dave Chinner wrote:
-> > > On Mon, Aug 29, 2016 at 06:26:15PM -0500, Bill O'Donnell wrote:
-> > > > On Tue, Aug 30, 2016 at 09:12:06AM +1000, Dave Chinner wrote:
-> > > > > On Mon, Aug 29, 2016 at 08:40:12AM -0500, Bill O'Donnell wrote:
-> > > > > > Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-> > > > > > non-XFS filesystems. One modification in fs_initialise_mounts
-> > > > > > (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-> > > > > > fs paths entering the fs table.
-> > > > > 
-> > > > > What's the failure? I'm not seeing it here on any of my test
-> > > > > machines...
-> > > > 
-> > > > On my box, there are a few ext4 mounts, and test xfs/261 
-> > > > populates the fs table with those paths.
-> > > 
-> > > I have ext2 and ext3 mounts on these machines as well, and they
-> > > don't throw any errors.
-> > > 
-> > > > So when xfs_quota commands
-> > > > in 261 are executed, a "foreign filesystem" message is thrown.
-> > > 
-> > > What is the output that is causing the failure? When someone
-> > > asks you to describe the error that is occurring, please quote the
-> > > /exact error/ that is occurring - describing it via paraphrasing
-> > > does not tell anything useful about the error as I cannot correlate
-> > > that description to the code that is throwing it.
-> > 
-> > Ahh, ok, I'm sorry about that.
-> > [root@dell-pesc440-01 xfstests-dev]# ./check -d tests/xfs/261
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 dell-pesc440-01 4.7.0-rc108052016bill02+
-> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/fedora_dell--pesc440--01-csdf
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/mapper/fedora_dell--pesc440--01-csdf /mnt/scratch
-> > 
-> > xfs/261 2s ...QA output created by 261
-> > Silence is golden.
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> > print command is for XFS filesystems only
-> 
-> Bill, slow down and work through the code from first principles. I
-> don't care about getting a fix quickly - I care about the process
-> you use to find the problem and whether you end up fully
-> understanding the problem.  Walk through the code in the debugger if
-> you have to - it will show you the flow and how the pieces connect
-> together.
-> 
-> The question that needs to be answered is this: what set of initial
-> conditions is causing this error to occur? We don't really care
-> about what previous changes caused the issue at this point - working
-> that out comes /after/ diagnosing the problem when we are trying to
-> work out a fix.
-> 
-> So, yes, the issue occurs because there are foreign fs types in the
-> fstable, but that's not the underlying problem nor the problem that
-> needs to be solved.
-> 
-> Use the debugger and cssope to connect the dots between the fstable
-> initialisation, the fs_path initialisation, and the function that
-> prints that error. That should give you a good idea of why the error
-> is being printed.
-> 
-> Then have a look at print_f() and see what it does with the fstable.
-> Then tell me whether we should even care about checking for foreign
-> filesystems before we run the print_f command. At this point, the
-> fix should be obvious.
+Version 2 of this patch to xfs_quota in order to properly
+handle foreign fs mount paths. Note that this version (2)
+abandons the incorrect approach of version 1, in which the
+fs-table wasn't populated with the foreign fs paths.
 
-I used gdb to check the flow, and realized that
-instead of modifying paths.c, it makes sense to simply allow the
-print (and paths) command regardless of whether or not the fs is
-foreign or not. So to that end, no, we shouldn't care about checking
-for foreign fs before print_f. This will dispense with the notion of
-involving foreign_allowed in libxcmd/paths.c.
+Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+non-XFS filesystems. Modifications to fs_initialise_mounts
+(paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+fs paths being picked up from the fs table, and the xfs_quota
+print command complaining about not being able to print the
+foreign paths.
 
-That's fine, but I'm still a bit stymied understanding the original
-intent for the "-f" flag.  Did we not want to remind the user that one
-must use -f when using xfs_quota on a foreign fs (exceptions being
-help and quit)?
+This patch fixes the foreign path print problem, with a
+modification of the print and path commands to always be
+allowed, regardless of fs type (similar to the help and quit
+commands).
 
-Also, I had thought adding "-f" was to ensure that the default
-behavior of xfs_quota didn't change in the face of other filesystems.
-Wouldn't not populating the fs table with foreign fs entries be the
-simplest way to ensure that no "print all the info" options which
-iterate over the table will change their output?
+Additionally, the printpath() function in path.c is corrected
+to skip printing foreign paths unless the -f flag is thrown
+in the xfs_quota invocation. Also, some minor formatting
+changes and comment clarifications to the print command are
+made.
 
-> 
-> And then have a look at printpath() and tell me what the foriegn
-> filesystem handling bug it contains.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ quota/init.c | 19 +++++++++++++------
+ quota/path.c | 19 ++++++++++++++-----
+ 2 files changed, 27 insertions(+), 11 deletions(-)
 
-Other than some minor output formatting issues, I've not been able
-to discover a bug in printpath(). I'm obviously missing something ;)
-
-Thanks-
-Bill
-
-> 
-> And, yes, I could have written and tested the patch to fix all this
-> in the time it took to write this email, but then you don't have the
-> opportunity to learn from doing it....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/quota/init.c b/quota/init.c
+index 44be322..9f95e8f 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -112,21 +112,28 @@ init_check_command(
+ 	if (!fs_path)
+ 		return 1;
+ 
+-	/* Always run commands that we are told to skip here */
++	/* Always run commands that are valid for all fs types. */
+ 	if (ct->flags & CMD_ALL_FSTYPES)
+ 		return 1;
+ 
+-	/* if it's an XFS filesystem, always run the command */
++	/* If it's an XFS filesystem, always run the command. */
+ 	if (!(fs_path->fs_flags & FS_FOREIGN))
+ 		return 1;
+ 
+-	/* If the user specified foreign filesysetms are ok, run it */
++	/* If the user specified foreign filesystems are ok (-f), run cmd. */
+ 	if (foreign_allowed &&
+-	    (ct->flags & CMD_FLAG_FOREIGN_OK))
++		(ct->flags & CMD_FLAG_FOREIGN_OK))
+ 		return 1;
+ 
+-	/* foreign filesystem and it's not a valid command! */
+-	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
++	/* If cmd not allowed on foreign fs, regardless of -f flag, skip it. */
++	if (!(ct->flags & CMD_FLAG_FOREIGN_OK)) {
++		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
++		ct->name);
++		return 0;
++	}
++
++	/* foreign fs, but cmd only allowed via -f flag. Skip it. */
++	fprintf(stderr, _("%s: foreign filesystem. Use -f to enable.\n"),
+ 		ct->name);
+ 	return 0;
+ }
+diff --git a/quota/path.c b/quota/path.c
+index a623d25..d8f8f3c 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -36,14 +36,23 @@ printpath(
+ 	int		c;
+ 
+ 	if (index == 0) {
+-		printf(_("%sFilesystem          Pathname\n"),
++		printf(_("%s    Filesystem          Pathname\n"),
+ 			number ? _("      ") : "");
+ 	}
+ 	if (number) {
+ 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+ 	}
+-	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+-	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
++	if (path->fs_flags & FS_FOREIGN) {
++	    if (foreign_allowed) {
++	      printf("(F) ");
++	      printf(_("%-19s %s"), path->fs_dir, path->fs_name);
++	    }
++	}
++	else {
++	      printf("    ");
++	      printf(_("%-19s %s"), path->fs_dir, path->fs_name);
++	}
++
+ 	if (path->fs_flags & FS_PROJECT_PATH) {
+ 		prj = getprprid(path->fs_prid);
+ 		printf(_(" (project %u"), path->fs_prid);
+@@ -128,7 +137,7 @@ path_init(void)
+ 	path_cmd.cfunc = path_f;
+ 	path_cmd.argmin = 0;
+ 	path_cmd.argmax = 1;
+-	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
++	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_ALL_FSTYPES;
+ 	path_cmd.oneline = _("set current path, or show the list of paths");
+ 
+ 	print_cmd.name = "print";
+@@ -136,7 +145,7 @@ path_init(void)
+ 	print_cmd.cfunc = print_f;
+ 	print_cmd.argmin = 0;
+ 	print_cmd.argmax = 0;
+-	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
++	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_ALL_FSTYPES;
+ 	print_cmd.oneline = _("list known mount points and projects");
+ 
+ 	if (expert)
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
