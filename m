@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2F74B7CA7
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 21:28:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3CBCA7CA2
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 03:38:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 928C3AC005
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 19:28:03 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	0ZS3MqGxfHEmMeQL for <xfs@oss.sgi.com>;
-	Thu, 01 Sep 2016 19:28:01 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: clean up XFS_AGFL_SIZE
-Date: Fri,  2 Sep 2016 12:27:32 +1000
-Message-Id: <1472783257-15941-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1472783257-15941-1-git-send-email-david@fromorbit.com>
-References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F0A08F8033
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 01:38:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id P0wpeJlyHaIDd1hT (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 02 Sep 2016 01:38:29 -0700 (PDT)
+Date: Fri, 2 Sep 2016 16:38:26 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2] xfs/187: fix new sb_features2 stop case running
+Message-ID: <20160902083826.GK27776@eguan.usersys.redhat.com>
+References: <1472642336-28112-1-git-send-email-zlang@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1472642336-28112-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,171 +25,277 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 31, 2016 at 07:18:56PM +0800, Zorro Lang wrote:
+> This case is too old, at that time there's no "ftype" feature for
+> XFS. Due to this case need to clear features2 bits when mkfs.xfs,
+> so ftype bit stop case running for long time.
+> 
+> New common function _require_old_xfs_format() will help to fix
+> this problem. Call it as:
+> 
+>   _require_old_xfs_format ATTR2 LAZYSBCOUNT
+> 
+> Then it'll help to clear all features2 bits, besides ATTR2 and
+> LAZYSBCOUNT which will be tested in case.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-The AGFL size calculation is about to get more complex, so lets turn
-the macro into a function first and remove the macro.
+Looks good to me overall, but the commit log and comments seem not so
+clear to me :)
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c  | 33 ++++++++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_alloc.h  |  2 ++
- fs/xfs/libxfs/xfs_format.h | 13 +------------
- fs/xfs/xfs_fsops.c         |  2 +-
- 4 files changed, 30 insertions(+), 20 deletions(-)
+Some comments inline.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 05b5243..23559b9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -63,6 +63,24 @@ xfs_prealloc_blocks(
- }
- 
- /*
-+ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
-+ * the beginning of the block for a proper header with the location information
-+ * and CRC.
-+ */
-+int
-+xfs_agfl_size(
-+	struct xfs_mount	*mp)
-+
-+{
-+	int			size = mp->m_sb.sb_sectsize;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return size / sizeof(xfs_agblock_t);
-+
-+	return (size - sizeof(struct xfs_agfl)) / sizeof(xfs_agblock_t);
-+}
-+
-+/*
-  * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
-  * AGF buffer (PV 947395), we place constraints on the relationship among
-  * actual allocations for data blocks, freelist blocks, and potential file data
-@@ -554,7 +572,7 @@ xfs_agfl_verify(
- 	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
- 		return false;
- 
--	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
-+	for (i = 0; i < xfs_agfl_size(mp); i++) {
- 		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
- 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
- 			return false;
-@@ -2230,7 +2248,7 @@ xfs_alloc_get_freelist(
- 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
- 	be32_add_cpu(&agf->agf_flfirst, 1);
- 	xfs_trans_brelse(tp, agflbp);
--	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
- 		agf->agf_flfirst = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2338,7 +2356,7 @@ xfs_alloc_put_freelist(
- 			be32_to_cpu(agf->agf_seqno), &agflbp)))
- 		return error;
- 	be32_add_cpu(&agf->agf_fllast, 1);
--	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
- 		agf->agf_fllast = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2356,7 +2374,7 @@ xfs_alloc_put_freelist(
- 
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 
--	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
-+	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
- 
- 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
- 	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
-@@ -2377,6 +2395,7 @@ xfs_agf_verify(
- 	struct xfs_buf	*bp)
-  {
- 	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
-+	int32_t		agfl_size = xfs_agfl_size(mp);
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
-@@ -2389,9 +2408,9 @@ xfs_agf_verify(
- 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
- 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
- 	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
--	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
-+	      be32_to_cpu(agf->agf_flfirst) < agfl_size &&
-+	      be32_to_cpu(agf->agf_fllast) < agfl_size &&
-+	      be32_to_cpu(agf->agf_flcount) <= agfl_size))
- 		return false;
- 
- 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 6fe2d6b..cfdd02f 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -202,6 +202,8 @@ xfs_alloc_get_rec(
- 
- int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
-+int xfs_agfl_size(struct xfs_mount *mp);
-+
- int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
- int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
- 		struct xfs_buf **agbp);
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 270fb5c..60085f3 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -781,24 +781,13 @@ typedef struct xfs_agi {
- 		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
- 		(__be32 *)(bp)->b_addr)
- 
--/*
-- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-- * slots in the beginning of the block for a proper header with the
-- * location information and CRC.
-- */
--#define XFS_AGFL_SIZE(mp) \
--	(((mp)->m_sb.sb_sectsize - \
--	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
--		sizeof(struct xfs_agfl) : 0)) / \
--	  sizeof(xfs_agblock_t))
--
- typedef struct xfs_agfl {
- 	__be32		agfl_magicnum;
- 	__be32		agfl_seqno;
- 	uuid_t		agfl_uuid;
- 	__be64		agfl_lsn;
- 	__be32		agfl_crc;
--	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
-+	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
- } __attribute__((packed)) xfs_agfl_t;
- 
- #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 0b7f986..622ca71 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -285,7 +285,7 @@ xfs_growfs_data_private(
- 		}
- 
- 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
--		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
-+		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
- 			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
- 
- 		error = xfs_bwrite(bp);
--- 
-2.8.0.rc3
+> ---
+> 
+> Hi,
+> 
+> V2 add a new common function _require_old_xfs_format(), which help to
+> to make sure no features2 xfs bits will be set.
+> 
+> But mostly we still want to test some features2 bits, so I make
+> this function won't deal with those features which are specified by
+> arguments.
+> 
+> For clear CRC feature, we can set MKFS_OPTIONS="$MKFS_OPTIONS -m crc=0"
+> simply. But if the user specify crc=1/0 in local.config file, the test
+> can't continue running. So I check if it has been set in the function.
+
+I think this is because newer version of xfsprogs doesn't allow
+specifying an option multiple times.
+
+> 
+> Please tell me if you have better way to implement this function:)
+> 
+> By the way, did I miss some features2?
+> 
+> Thanks,
+> Zorro
+> 
+>  common/rc     | 75 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/187 | 36 ++++++++++------------------
+>  2 files changed, 87 insertions(+), 24 deletions(-)
+> 
+> diff --git a/common/rc b/common/rc
+> index 3fb0600..29e2987 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3923,6 +3923,81 @@ _require_xfs_mkfs_without_validation()
+>  	fi
+>  }
+>  
+> +# Make sure no features2 bits in XFS, besides those features are
+
+By "besides" I think you mean "except" :)
+
+> +# specified by arguments. All current features2 names as below:
+> +#   "CRC FINOBT PROJID32BIT ATTR2 LAZYSBCOUNT FTYPE"
+> +_require_old_xfs_format()
+> +{
+> +	local skiplist="$*"
+> +	local ftr2=""
+> +	local b
+
+Seems not a good var name
+
+> +	local opts
+
+"opts" is not used.
+
+> +
+> +	_scratch_mkfs >/dev/null 2>&1
+> +	ftr2=`$XFS_DB_PROG -c version $SCRATCH_DEV | tr 'a-z' 'A-Z' |\
+> +		sed -n -e "s/,/ /g" -e "s/.*MOREBITS\(.*\)/\1/p"`
+> +
+> +	for b in `echo $skiplist | tr 'a-z' 'A-Z'`; do
+> +		i=`echo $ftr2 | sed -n -e "s/\(.*\)$b\(.*\)/\1\2/p"`
+> +		if [ -n "$b" ]; then
+> +			ftr2="$i"
+> +		fi
+> +	done
+> +
+> +	for b in $ftr2; do
+> +		case $b in
+> +		CRC)
+> +			if echo $MKFS_OPTIONS | grep -q "crc=1"; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/crc=1/crc=0/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -m crc=0"
+> +			fi
+> +			;;
+> +		FINOBT)
+> +			if echo $MKFS_OPTIONS | grep -q "finobt=1"; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/finobt=1/finobt=0/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -m finobt=0"
+> +			fi
+> +			;;
+> +		PROJID32BIT)
+> +			if echo $MKFS_OPTIONS | grep -q "projid32bit=1"; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/projid32bit=1/projid32bit=0/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -i projid32bit=0"
+> +			fi
+> +			;;
+> +		ATTR2)
+> +			if echo $MKFS_OPTIONS | grep -q "attr="; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/attr=[0-9]/attr=1/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -i attr=1"
+> +			fi
+> +			;;
+> +		LAZYSBCOUNT)
+> +			if echo $MKFS_OPTIONS | grep -q "lazy-count=1"; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/lazy-count=1/lazy-count=0/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -l lazy-count=0"
+> +			fi
+> +			;;
+> +		FTYPE)
+> +			if echo $MKFS_OPTIONS | grep -q "ftype=1"; then
+> +				MKFS_OPTIONS=`echo $MKFS_OPTIONS | \
+> +					sed -e "s/ftype=1/ftype=0/g"`
+> +			else
+> +				MKFS_OPTIONS="$MKFS_OPTIONS -n ftype=0"
+> +			fi
+> +			;;
+> +		esac
+> +	done
+> +}
+> +
+>  init_rc
+>  
+>  ################################################################################
+> diff --git a/tests/xfs/187 b/tests/xfs/187
+> index 836b924..ffc851c 100755
+> --- a/tests/xfs/187
+> +++ b/tests/xfs/187
+> @@ -31,7 +31,6 @@ seq=`basename $0`
+>  seqres=$RESULT_DIR/$seq
+>  echo "QA output created by $seq"
+>  
+> -here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+>  trap "_cleanup; exit \$status" 0 1 2 3 15
+> @@ -57,25 +56,16 @@ _supported_fs xfs
+>  _supported_os Linux
+>  
+>  _require_scratch
+> +# clear features2 bits which we won't test
+> +_require_old_xfs_format ATTR2 LAZYSBCOUNT
+
+Need more comments to state that ATTR2 and LAZYSBCOUNT are features we
+want to keep, otherwise this looks like only these two features are
+cleared.
+
+>  _require_attrs
+> -_require_attr_v1
+> -_require_projid16bit
+
+I'd keep above two requires to make sure mkfs supports such features.
+
+>  
+>  rm -f $seqres.full
+> -
+> -# Reset the options so that we can control what is going on here
+> -export MKFS_OPTIONS=""
+> -export MOUNT_OPTIONS=""
+> -
+> -# lazysb, attr2 and other feature bits are held in features2 and will require
+> -# morebitsbit on So test with lazysb and without it to see if the morebitsbit is
+> -# okay etc. If the mkfs defaults change, these need to change as well.
+> -export MKFS_NO_LAZY="-m crc=0 -l lazy-count=0 -i projid32bit=0"
+> -export MKFS_LAZY="-m crc=0 -l lazy-count=1 -i projid32bit=0"
+> +_scratch_mkfs >/dev/null 2>&1
+
+What does this _scratch_mkfs do?
+
+Thanks,
+Eryu
+
+>  
+>  # Make sure that when we think we are testing with morebits off
+>  # that we really are.
+> -_scratch_mkfs -i attr=1 $MKFS_NO_LAZY  >/dev/null 2>&1
+> +_scratch_mkfs -i attr=1 -l lazy-count=0 >/dev/null 2>&1
+>  $XFS_DB_PROG -c version $SCRATCH_DEV 2>&1 >$tmp.db
+>  if grep -i morebits $tmp.db
+>  then
+> @@ -90,13 +80,13 @@ echo "*** 1. test attr2 mkfs and then noattr2 mount ***"
+>  echo ""
+>  echo "attr2 fs"
+>  echo ""
+> -_scratch_mkfs -i attr=2 $MKFS_NO_LAZY >/dev/null 2>&1
+> +_scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  echo ""
+>  echo "noattr2 fs"
+>  echo ""
+>  _scratch_mount -o noattr2
+> -$UMOUNT_PROG $SCRATCH_MNT
+> +_scratch_unmount
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  
+>  # adding an EA will ensure the ATTR1 flag is turned on
+> @@ -105,7 +95,7 @@ echo "*** 2. test attr2 mkfs and then noattr2 mount with 1 EA ***"
+>  echo ""
+>  echo "attr2 fs"
+>  echo ""
+> -_scratch_mkfs -i attr=2 $MKFS_NO_LAZY >/dev/null 2>&1
+> +_scratch_mkfs -i attr=2 -l lazy-count=0 >/dev/null 2>&1
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  echo ""
+>  echo "noattr2 fs"
+> @@ -115,8 +105,8 @@ cd $SCRATCH_MNT
+>  touch testfile
+>  $SETFATTR_PROG -n user.test -v 0xbabe testfile
+>  $GETFATTR_PROG testfile
+> -cd $here
+> -$UMOUNT_PROG $SCRATCH_MNT
+> +cd - >/dev/null
+> +_scratch_unmount
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  
+>  echo ""
+> @@ -125,16 +115,14 @@ echo ""
+>  echo ""
+>  echo "attr2 fs"
+>  echo ""
+> -_scratch_mkfs -i attr=2 $MKFS_LAZY >/dev/null 2>&1
+> +_scratch_mkfs -i attr=2 -l lazy-count=1 >/dev/null 2>&1
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  echo ""
+>  echo "noattr2 fs"
+>  echo ""
+>  _scratch_mount -o noattr2
+> -cd $SCRATCH_MNT
+> -touch testfile
+> -cd $here
+> -$UMOUNT_PROG $SCRATCH_MNT
+> +touch $SCRATCH_MNT/testfile
+> +_scratch_unmount
+>  $XFS_DB_PROG -r -c version $SCRATCH_DEV 2>&1 | _filter_version
+>  
+>  # success, all done
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
