@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 861027CA0
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 09:59:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EFCF0AC005
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 07:59:53 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id VHg6n5O9cD3SogoA (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 07:59:51 -0700 (PDT)
-Date: Tue, 6 Sep 2016 07:59:48 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/71] xfs: add refcount btree stats infrastructure
-Message-ID: <20160906145948.GD24287@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216797669.867.2688861926901884645.stgit@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id 81E3A7CA4
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 08:25:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3B72AC002
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 06:25:15 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id YDsgoMleXVnqImT8 for <xfs@oss.sgi.com>;
+	Fri, 02 Sep 2016 06:25:12 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id A339A4A1
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 08:25:12 -0500 (CDT)
+Subject: Re: [PATCH 2/6] xfs: shadow agfl indexes in the per-ag structures
+References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
+	<1472783257-15941-3-git-send-email-david@fromorbit.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d32c1b10-107c-a1fc-3864-76223661ab71@sandeen.net>
+Date: Fri, 2 Sep 2016 08:25:12 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <147216797669.867.2688861926901884645.stgit@birch.djwong.org>
+In-Reply-To: <1472783257-15941-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +33,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 25, 2016 at 04:32:56PM -0700, Darrick J. Wong wrote:
-> The refcount btree presents the same stats as the other btrees, so
-> add all the code for that now.
+On 9/1/16 9:27 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> To verify that the AGFL contents is sane, we need to have access to
+> the indexes that tell us what part of the AGFL is active. We cannot
+> access the AGF buffer from the AGFL verifier, so we need to shadow
+> these values in the struct xfs_perag so we check them when required.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 4 ++++
+>  fs/xfs/xfs_mount.h        | 2 ++
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 23559b9..1aef556 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2255,6 +2255,7 @@ xfs_alloc_get_freelist(
+>  	be32_add_cpu(&agf->agf_flcount, -1);
+>  	xfs_trans_agflist_delta(tp, -1);
+>  	pag->pagf_flcount--;
+> +	pag->pagf_flfirst = be32_to_cpu(agf->agf_flfirst);
+>  	xfs_perag_put(pag);
+>  
+>  	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
 
-Looks fine, although I'd prefer it to be merged into the previous patch:
+Still reviewing, but this kind of jumped out at me, seems like the get/put
+functions are a bit jumbled up:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+        /*
+         * Get the block number and update the data structures.
+         */
+        agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+        bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+        be32_add_cpu(&agf->agf_flfirst, 1);
+        xfs_trans_brelse(tp, agflbp);
+        if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+                agf->agf_flfirst = 0;
+
+        pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+        be32_add_cpu(&agf->agf_flcount, -1);
+        xfs_trans_agflist_delta(tp, -1);
+        pag->pagf_flcount--;
+        xfs_perag_put(pag);
+
+
+why is there a trans_brelse in between two lines which handle proper setting
+of flfirst?  I was looking at this thinking about where the pag structures
+get updated, then saw the kind of swiss-cheese placement of the first/count
+manipulation...
+
+If pagf_flcount/agf_flcount, pagf_flfirst/agf_flfirst etc need to stay in
+sync, should there be a wrapper to encapsulate it all?
+
+like:
+
+xfs_agf_{advance/drop/remove}_first(mp, agf, pagf)
+{
+        be32_add_cpu(&agf->agf_flfirst, 1);
+        if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+                agf->agf_flfirst = 0;
+	pag->pagf_flfirst = be32_to_cpu(agf->agf_flfirst);
+        be32_add_cpu(&agf->agf_flcount, -1);
+        pag->pagf_flcount--;
+}
+
+or something similar?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
