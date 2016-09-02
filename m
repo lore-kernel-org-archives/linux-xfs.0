@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5AEC87CA0
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 06:40:33 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 340A67CA2
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 21:27:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A15B8F8049
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 04:40:33 -0700 (PDT)
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [58.251.152.64])
-	by cuda.sgi.com with ESMTP id PyLs9mr8dp6hjDMj (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Sep 2016 04:40:29 -0700 (PDT)
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH] xfs_logprint: remove the printing of transaction type
-Date: Wed, 14 Sep 2016 19:31:54 +0800
-Message-ID: <1473852714-192623-1-git-send-email-houtao1@huawei.com>
-In-Reply-To: <20160914053110.GM30497@dastard>
-References: <20160914053110.GM30497@dastard>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E7E51304039
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 19:27:58 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	qWeaGhvUPjZ5xAdp for <xfs@oss.sgi.com>;
+	Thu, 01 Sep 2016 19:27:56 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/6] xfs: shadow agfl indexes in the per-ag structures
+Date: Fri,  2 Sep 2016 12:27:33 +1000
+Message-Id: <1472783257-15941-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1472783257-15941-1-git-send-email-david@fromorbit.com>
+References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,124 +23,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-th_type in struct xfs_trans_header was used to store
-the transaction type for xfs without delaylog feature.
-Now delaylog is a built-in feature (commit 93b8a58 "xfs:
-remove the deprecated nodelaylog option" v3.3-rc1), so
-remove the printing of transaction type.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Hou Tao <houtao1@huawei.com>
+To verify that the AGFL contents is sane, we need to have access to
+the indexes that tell us what part of the AGFL is active. We cannot
+access the AGF buffer from the AGFL verifier, so we need to shadow
+these values in the struct xfs_perag so we check them when required.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- logprint/log_misc.c        | 50 ++--------------------------------------------
- logprint/log_print_trans.c |  4 ++--
- logprint/logprint.h        |  2 --
- 3 files changed, 4 insertions(+), 52 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 4 ++++
+ fs/xfs/xfs_mount.h        | 2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 479fc14..e4af09b 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -28,52 +28,6 @@
- #define NO_ERROR	(0)
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 23559b9..1aef556 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2255,6 +2255,7 @@ xfs_alloc_get_freelist(
+ 	be32_add_cpu(&agf->agf_flcount, -1);
+ 	xfs_trans_agflist_delta(tp, -1);
+ 	pag->pagf_flcount--;
++	pag->pagf_flfirst = be32_to_cpu(agf->agf_flfirst);
+ 	xfs_perag_put(pag);
  
- static int logBBsize;
--char *trans_type[] = {
--	"",
--	"SETATTR",
--	"SETATTR_SIZE",
--	"INACTIVE",
--	"CREATE",
--	"CREATE_TRUNC",
--	"TRUNCATE_FILE",
--	"REMOVE",
--	"LINK",
--	"RENAME",
--	"MKDIR",
--	"RMDIR",
--	"SYMLINK",
--	"SET_DMATTRS",
--	"GROWFS",
--	"STRAT_WRITE",
--	"DIOSTRAT",
--	"WRITE_SYNC",
--	"WRITEID",
--	"ADDAFORK",
--	"ATTRINVAL",
--	"ATRUNCATE",
--	"ATTR_SET",
--	"ATTR_RM",
--	"ATTR_FLAG",
--	"CLEAR_AGI_BUCKET",
--	"QM_SBCHANGE",
--	"DUMMY1",
--	"DUMMY2",
--	"QM_QUOTAOFF",
--	"QM_DQALLOC",
--	"QM_SETQLIM",
--	"QM_DQCLUSTER",
--	"QM_QINOCREATE",
--	"QM_QUOTAOFF_END",
--	"SB_UNIT",
--	"FSYNC_TS",
--	"GROWFSRT_ALLOC",
--	"GROWFSRT_ZERO",
--	"GROWFSRT_FREE",
--	"SWAPEXT",
--	"SB_COUNT",
--	"CHECKPOINT",
--	"ICREATE",
--};
+ 	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
+@@ -2363,6 +2364,7 @@ xfs_alloc_put_freelist(
+ 	be32_add_cpu(&agf->agf_flcount, 1);
+ 	xfs_trans_agflist_delta(tp, 1);
+ 	pag->pagf_flcount++;
++	pag->pagf_fllast = be32_to_cpu(agf->agf_fllast);
  
- typedef struct xlog_split_item {
- 	struct xlog_split_item	*si_next;
-@@ -233,8 +187,8 @@ xlog_print_trans_header(char **ptr, int len)
- 	return 1;
-     }
-     h = (xfs_trans_header_t *)cptr;
--    printf(_("    type: %s       tid: %x       num_items: %d\n"),
--	   trans_type[h->th_type], h->th_tid, h->th_num_items);
-+    printf(_("     tid: %x  num_items: %d\n"),
-+	   h->th_tid, h->th_num_items);
-     return 0;
- }	/* xlog_print_trans_header */
- 
-diff --git a/logprint/log_print_trans.c b/logprint/log_print_trans.c
-index 9bf2b37..0fecbce 100644
---- a/logprint/log_print_trans.c
-+++ b/logprint/log_print_trans.c
-@@ -24,8 +24,8 @@ void
- xlog_recover_print_trans_head(
- 	xlog_recover_t	*tr)
- {
--	printf(_("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n"),
--	       tr->r_log_tid, trans_type[tr->r_theader.th_type],
-+	printf(_("TRANS: tid:0x%x  #items:%d  trans:0x%x  q:0x%lx\n"),
-+	       tr->r_log_tid,
- 	       tr->r_theader.th_num_items,
- 	       tr->r_theader.th_tid, (long)&tr->r_itemq);
- }
-diff --git a/logprint/logprint.h b/logprint/logprint.h
-index 0c03c08..bdd0ee1 100644
---- a/logprint/logprint.h
-+++ b/logprint/logprint.h
-@@ -30,8 +30,6 @@ extern int	print_no_data;
- extern int	print_no_print;
- 
- /* exports */
--extern char *trans_type[];
--
- extern void xlog_print_lseek(struct xlog *, int, xfs_daddr_t, int);
- 
- extern void xfs_log_copy(struct xlog *, int, char *);
+ 	logflags = XFS_AGF_FLLAST | XFS_AGF_FLCOUNT;
+ 	if (btreeblk) {
+@@ -2547,6 +2549,8 @@ xfs_alloc_read_agf(
+ 		pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
+ 		pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
+ 		pag->pagf_flcount = be32_to_cpu(agf->agf_flcount);
++		pag->pagf_flfirst = be32_to_cpu(agf->agf_flfirst);
++		pag->pagf_fllast = be32_to_cpu(agf->agf_fllast);
+ 		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
+ 		pag->pagf_levels[XFS_BTNUM_BNOi] =
+ 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index b36676c..3eb1b20 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -340,6 +340,8 @@ typedef struct xfs_perag {
+ 	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
+ 					/* # of levels in bno & cnt btree */
+ 	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
++	__uint32_t	pagf_flfirst;	/* first freelist block's index */
++	__uint32_t	pagf_fllast;	/* last freelist block's index */
+ 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+ 	xfs_extlen_t	pagf_longest;	/* longest free space */
+ 	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
 -- 
-2.5.5
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
