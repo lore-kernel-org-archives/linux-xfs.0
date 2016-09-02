@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E7427CA1
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 10:12:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 64288304032
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 08:12:52 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id GCKftaN8C0lFmDfl (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 05 Sep 2016 08:12:46 -0700 (PDT)
-Date: Mon, 5 Sep 2016 17:12:44 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
-	inode instead
-Message-ID: <20160905151244.GA16726@lst.de>
-References: <1470935423-12329-1-git-send-email-hch@lst.de>
-	<20160811215444.GY30192@twins.programming.kicks-ass.net>
-	<20160818173707.GA1240@lst.de>
-	<20160819132736.GH10121@twins.programming.kicks-ass.net>
-	<20160820063723.GA7013@lst.de>
-	<20160822083455.GH10153@twins.programming.kicks-ass.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160822083455.GH10153@twins.programming.kicks-ass.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2F74B7CA7
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 21:28:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 928C3AC005
+	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 19:28:03 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	0ZS3MqGxfHEmMeQL for <xfs@oss.sgi.com>;
+	Thu, 01 Sep 2016 19:28:01 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/6] xfs: clean up XFS_AGFL_SIZE
+Date: Fri,  2 Sep 2016 12:27:32 +1000
+Message-Id: <1472783257-15941-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1472783257-15941-1-git-send-email-david@fromorbit.com>
+References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,218 +23,171 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-Peter, this is the fixed up patch.  Can you write a proper changelog
-and add your signoff?
+From: Dave Chinner <dchinner@redhat.com>
 
+The AGFL size calculation is about to get more complex, so lets turn
+the macro into a function first and remove the macro.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/lockdep.h  | 18 ++++++++++++++++--
- kernel/locking/lockdep.c | 43 ++++++++++++++++++++++++++-----------------
- 2 files changed, 42 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c  | 33 ++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_alloc.h  |  2 ++
+ fs/xfs/libxfs/xfs_format.h | 13 +------------
+ fs/xfs/xfs_fsops.c         |  2 +-
+ 4 files changed, 30 insertions(+), 20 deletions(-)
 
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index eabe013..4cef9f8 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -338,9 +338,15 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- extern void lock_release(struct lockdep_map *lock, int nested,
- 			 unsigned long ip);
- 
--#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
-+extern int _lock_is_held(struct lockdep_map *lock, int read);
- 
--extern int lock_is_held(struct lockdep_map *lock);
-+static inline int lock_is_held(struct lockdep_map *lock)
-+{
-+	return _lock_is_held(lock, -1);
-+}
-+
-+#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
-+#define _lockdep_is_held(lock, r)	_lock_is_held(&(lock)->dep_map, (r))
- 
- extern void lock_set_class(struct lockdep_map *lock, const char *name,
- 			   struct lock_class_key *key, unsigned int subclass,
-@@ -372,6 +378,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
- 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
- 	} while (0)
- 
-+#define lockdep_assert_held_exclusive(l)	do {		\
-+		WARN_ON(debug_locks && !_lockdep_is_held(l, 0));\
-+	} while (0)
-+
-+#define lockdep_assert_held_read(l)	do {			\
-+		WARN_ON(debug_locks && !_lockdep_is_held(l, 1));\
-+	} while (0)
-+
- #define lockdep_assert_held_once(l)	do {				\
- 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
- 	} while (0)
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 589d763..f39573b 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
- 	return 0;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 05b5243..23559b9 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -63,6 +63,24 @@ xfs_prealloc_blocks(
  }
- 
--static int __lock_is_held(struct lockdep_map *lock);
-+static int __lock_is_held(struct lockdep_map *lock, int read);
  
  /*
-  * This gets called for every mutex_lock*()/spin_lock*() operation.
-@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- 	}
- 	chain_key = iterate_chain_key(chain_key, class_idx);
- 
--	if (nest_lock && !__lock_is_held(nest_lock))
-+	if (nest_lock && !__lock_is_held(nest_lock, -1))
- 		return print_lock_nested_lock_not_held(curr, hlock, ip);
- 
- 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
-@@ -3390,10 +3390,17 @@ print_unlock_imbalance_bug(struct task_struct *curr, struct lockdep_map *lock,
- 	return 0;
- }
- 
--static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock)
-+static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock, int read)
- {
--	if (hlock->instance == lock)
--		return 1;
-+	if (hlock->instance == lock) {
-+		if (read == -1)
-+			return 1;
++ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
++ * the beginning of the block for a proper header with the location information
++ * and CRC.
++ */
++int
++xfs_agfl_size(
++	struct xfs_mount	*mp)
 +
-+		if (hlock->read == read)
-+			return 1;
++{
++	int			size = mp->m_sb.sb_sectsize;
 +
-+		return 0;
-+	}
- 
- 	if (hlock->references) {
- 		struct lock_class *class = lock->class_cache[0];
-@@ -3420,6 +3427,8 @@ static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock)
- 
- 		if (hlock->class_idx == class - lock_classes + 1)
- 			return 1;
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return size / sizeof(xfs_agblock_t);
 +
-+		/* XXX do we want @read stuff for nested locks !? */
- 	}
++	return (size - sizeof(struct xfs_agfl)) / sizeof(xfs_agblock_t);
++}
++
++/*
+  * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
+  * AGF buffer (PV 947395), we place constraints on the relationship among
+  * actual allocations for data blocks, freelist blocks, and potential file data
+@@ -554,7 +572,7 @@ xfs_agfl_verify(
+ 	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
+ 		return false;
  
- 	return 0;
-@@ -3452,7 +3461,7 @@ __lock_set_class(struct lockdep_map *lock, const char *name,
- 		 */
- 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
- 			break;
--		if (match_held_lock(hlock, lock))
-+		if (match_held_lock(hlock, lock, -1))
- 			goto found_it;
- 		prev_hlock = hlock;
- 	}
-@@ -3523,7 +3532,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
- 		 */
- 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
- 			break;
--		if (match_held_lock(hlock, lock))
-+		if (match_held_lock(hlock, lock, -1))
- 			goto found_it;
- 		prev_hlock = hlock;
- 	}
-@@ -3576,7 +3585,7 @@ found_it:
- 	return 1;
- }
+-	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
++	for (i = 0; i < xfs_agfl_size(mp); i++) {
+ 		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+ 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+ 			return false;
+@@ -2230,7 +2248,7 @@ xfs_alloc_get_freelist(
+ 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+ 	be32_add_cpu(&agf->agf_flfirst, 1);
+ 	xfs_trans_brelse(tp, agflbp);
+-	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
++	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
+ 		agf->agf_flfirst = 0;
  
--static int __lock_is_held(struct lockdep_map *lock)
-+static int __lock_is_held(struct lockdep_map *lock, int read)
- {
- 	struct task_struct *curr = current;
- 	int i;
-@@ -3584,7 +3593,7 @@ static int __lock_is_held(struct lockdep_map *lock)
- 	for (i = 0; i < curr->lockdep_depth; i++) {
- 		struct held_lock *hlock = curr->held_locks + i;
+ 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+@@ -2338,7 +2356,7 @@ xfs_alloc_put_freelist(
+ 			be32_to_cpu(agf->agf_seqno), &agflbp)))
+ 		return error;
+ 	be32_add_cpu(&agf->agf_fllast, 1);
+-	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
++	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
+ 		agf->agf_fllast = 0;
  
--		if (match_held_lock(hlock, lock))
-+		if (match_held_lock(hlock, lock, read))
- 			return 1;
- 	}
+ 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+@@ -2356,7 +2374,7 @@ xfs_alloc_put_freelist(
  
-@@ -3603,7 +3612,7 @@ static struct pin_cookie __lock_pin_lock(struct lockdep_map *lock)
- 	for (i = 0; i < curr->lockdep_depth; i++) {
- 		struct held_lock *hlock = curr->held_locks + i;
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
  
--		if (match_held_lock(hlock, lock)) {
-+		if (match_held_lock(hlock, lock, -1)) {
- 			/*
- 			 * Grab 16bits of randomness; this is sufficient to not
- 			 * be guessable and still allows some pin nesting in
-@@ -3630,7 +3639,7 @@ static void __lock_repin_lock(struct lockdep_map *lock, struct pin_cookie cookie
- 	for (i = 0; i < curr->lockdep_depth; i++) {
- 		struct held_lock *hlock = curr->held_locks + i;
+-	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
++	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
  
--		if (match_held_lock(hlock, lock)) {
-+		if (match_held_lock(hlock, lock, -1)) {
- 			hlock->pin_count += cookie.val;
- 			return;
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+ 	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
+@@ -2377,6 +2395,7 @@ xfs_agf_verify(
+ 	struct xfs_buf	*bp)
+  {
+ 	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
++	int32_t		agfl_size = xfs_agfl_size(mp);
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
+@@ -2389,9 +2408,9 @@ xfs_agf_verify(
+ 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+ 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+ 	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+-	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+-	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+-	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
++	      be32_to_cpu(agf->agf_flfirst) < agfl_size &&
++	      be32_to_cpu(agf->agf_fllast) < agfl_size &&
++	      be32_to_cpu(agf->agf_flcount) <= agfl_size))
+ 		return false;
+ 
+ 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 6fe2d6b..cfdd02f 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -202,6 +202,8 @@ xfs_alloc_get_rec(
+ 
+ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
++int xfs_agfl_size(struct xfs_mount *mp);
++
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 		struct xfs_buf **agbp);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 270fb5c..60085f3 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -781,24 +781,13 @@ typedef struct xfs_agi {
+ 		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
+ 		(__be32 *)(bp)->b_addr)
+ 
+-/*
+- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
+- * slots in the beginning of the block for a proper header with the
+- * location information and CRC.
+- */
+-#define XFS_AGFL_SIZE(mp) \
+-	(((mp)->m_sb.sb_sectsize - \
+-	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+-		sizeof(struct xfs_agfl) : 0)) / \
+-	  sizeof(xfs_agblock_t))
+-
+ typedef struct xfs_agfl {
+ 	__be32		agfl_magicnum;
+ 	__be32		agfl_seqno;
+ 	uuid_t		agfl_uuid;
+ 	__be64		agfl_lsn;
+ 	__be32		agfl_crc;
+-	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
++	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
+ } __attribute__((packed)) xfs_agfl_t;
+ 
+ #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 0b7f986..622ca71 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -285,7 +285,7 @@ xfs_growfs_data_private(
  		}
-@@ -3650,7 +3659,7 @@ static void __lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie cookie
- 	for (i = 0; i < curr->lockdep_depth; i++) {
- 		struct held_lock *hlock = curr->held_locks + i;
  
--		if (match_held_lock(hlock, lock)) {
-+		if (match_held_lock(hlock, lock, -1)) {
- 			if (WARN(!hlock->pin_count, "unpinning an unpinned lock\n"))
- 				return;
+ 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+-		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
++		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+ 			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
  
-@@ -3769,7 +3778,7 @@ void lock_release(struct lockdep_map *lock, int nested,
- }
- EXPORT_SYMBOL_GPL(lock_release);
- 
--int lock_is_held(struct lockdep_map *lock)
-+int _lock_is_held(struct lockdep_map *lock, int read)
- {
- 	unsigned long flags;
- 	int ret = 0;
-@@ -3781,13 +3790,13 @@ int lock_is_held(struct lockdep_map *lock)
- 	check_flags(flags);
- 
- 	current->lockdep_recursion = 1;
--	ret = __lock_is_held(lock);
-+	ret = __lock_is_held(lock, read);
- 	current->lockdep_recursion = 0;
- 	raw_local_irq_restore(flags);
- 
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(lock_is_held);
-+EXPORT_SYMBOL_GPL(_lock_is_held);
- 
- struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
- {
-@@ -3908,7 +3917,7 @@ __lock_contended(struct lockdep_map *lock, unsigned long ip)
- 		 */
- 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
- 			break;
--		if (match_held_lock(hlock, lock))
-+		if (match_held_lock(hlock, lock, -1))
- 			goto found_it;
- 		prev_hlock = hlock;
- 	}
-@@ -3961,7 +3970,7 @@ __lock_acquired(struct lockdep_map *lock, unsigned long ip)
- 		 */
- 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
- 			break;
--		if (match_held_lock(hlock, lock))
-+		if (match_held_lock(hlock, lock, -1))
- 			goto found_it;
- 		prev_hlock = hlock;
- 	}
+ 		error = xfs_bwrite(bp);
 -- 
-2.1.4
+2.8.0.rc3
 
 _______________________________________________
 xfs mailing list
