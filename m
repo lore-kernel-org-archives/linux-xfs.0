@@ -1,18 +1,19 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DD187CA1
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 07:23:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 619FF304032
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 05:23:42 -0700 (PDT)
-Received: from importlists.net ([91.214.169.81]) by cuda.sgi.com with ESMTP id
-	XZZAgpncTUU7Y120 for <xfs@oss.sgi.com>;
-	Mon, 05 Sep 2016 05:23:38 -0700 (PDT)
-Subject: SI QUIERE EXPORTAR, NO DEJE DE LEER ESTE CORREO
-Date: Mon, 5 Sep 2016 12:16:26 +0200
-From: Ideas para Exportar <importlists@importlists.net>
-Message-ID: <0679e5045facecb1146cfe40b3b4d81e@importlists.net>
-List-Owner: <mailto:importlists@importlists.net>
+	by oss.sgi.com (Postfix) with ESMTP id 7B21D7CA2
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 03:59:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4AEA6304039
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 01:59:05 -0700 (PDT)
+Received: from mail163-228.dm.aliyun.com (mail163-228.dm.aliyun.com
+	[42.120.163.228]) by cuda.sgi.com with ESMTP id
+	mNH220qm99xjCQ7u for <xfs@oss.sgi.com>;
+	Fri, 02 Sep 2016 01:59:02 -0700 (PDT)
+From: "vicky@fivestargroup.cn" <vicky@fivestargroup.cn>
+Subject: black annealed wire /galvanized iron wire
 MIME-Version: 1.0
+Date: Fri, 2 Sep 2016 16:58:57 +0800
+Message-Id: <20160902085905.B462D6430F8@cuda.sgi.com>
+Reply-To: vicky@fivestargroup.cn
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,408 +22,307 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6736681463340685715=="
+Content-Type: multipart/mixed; boundary="===============5516387333024718635=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
-
---===============6736681463340685715==
-Content-Type: multipart/alternative;
-	boundary="b1_0679e5045facecb1146cfe40b3b4d81e"
-
-This is a multi-part message in MIME format.
-
---b1_0679e5045facecb1146cfe40b3b4d81e
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
- Julio C=C3=A9sar Herrera Gonz=C3=A1lez
-
-*Economista. MBA en Econom=C3=ADa Internacional*
-
-*Investigaci=C3=B3n de Mercados Internacionales*
-
-*Inscrito en el Colegio de Economistas de Pichincha (Ecuador) con el N=
-=C2=B0
-3364*
-
-Distinguido Empresario / Exportador:
-
-Una de los mayores problemas que afrontan las empresas cuando quieren
-expandir sus exportaciones o se inician en la actividad exportadora, es
-encontrar listas confiables de clientes potenciales. Conseguir directorios
-de exportadores es un juego de ni=C3=B1os, ya que abundan en ediciones impr=
-esas
-disponible en embajadas, en CD-ROM y en Internet. Ahora bien, encontrar y
-consultar directorios fiables de IMPORTADORES, en cambio, es una tarea
-ardua. La informaci=C3=B3n publicada es escasa, a menudo cara, est=C3=A1 di=
-spersa o
-es de calidad desigual. Los directorios de importadores no abundan y son
-poco frecuentes. LOS VENDEDORES NO FALTAN, PERO S=C3=8D LOS COMPRADORES.
-
-A un precio bastante asequible de $30 por partida arancelaria, le ofrecemos
-listas de importadores provenientes de bases de datos de m=C3=A1s de 400 mi=
-l
-empresas importadoras provenientes de 94 pa=C3=ADses, entre los cuales est=
-=C3=A1n
-las mayores econom=C3=ADas del mundo (el n=C3=BAmero de contactos de las li=
-stas de
-importadores va a variar de acuerdo con el c=C3=B3digo arancelario, sin
-embargo, normalmente cantidad es muy considerable). El servicio incluye el
-env=C3=ADo de las listas en formato MS Excel a su correo electr=C3=B3nico a=
- m=C3=A1s
-tardar 24 horas despu=C3=A9s de recibir el pago a trav=C3=A9s de PayPal (la=
-s listas
-ser=C3=A1n enviadas a su correo electr=C3=B3nico de PayPal, a menos que ind=
-ique
-otro). Tenga en cuenta que solamente tenemos acceso a informaci=C3=B3n de
-importadores activos y establecidos de sus productos. As=C3=AD que usted pu=
-ede
-estar seguro de que lo podemos ayudar a iniciarse o a aumentar las
-exportaciones de su empresa, se=C3=B1al=C3=A1ndole importadores fiables de =
-todo el
-mundo. Nuestras listas de importadores y la informaci=C3=B3n all=C3=AD cont=
-enida se
-actualizan continuamente y proviene de fuentes y bases de datos de
-importadores m=C3=A1s valiosas y confiables disponibles en el mundo, mayorm=
-ente
-oficiales y tambi=C3=A9n de empresas privadas muy prestigiosas. Dichas base=
-s de
-datos incluyen a los siguientes pa=C3=ADses:
-
-Alemania, Antillas Holandesas (Curazao, Aruba y Bonaire), Argelia,
-Argentina, Arabia Saudita, Australia, Austria, Bahr=C3=A9in, Barbados,
-Bielorrusia, B=C3=A9lgica, Bolivia, Bosnia, Brasil, Brunei, Bulgaria, Canad=
-=C3=A1,
-Chile, China, Colombia, Corea del Sur, Costa Rica, Croacia, Chipre,
-Dinamarca, Ecuador, Egipto, El Salvador, Emiratos =C3=81rabes Unidos,
-Eslovaquia, Eslovenia, Espa=C3=B1a, Estados Unidos de Am=C3=A9rica, Finland=
-ia,
-Francia, Grecia, Guatemala, Honduras, Hong Kong, Hungr=C3=ADa, Islandia, In=
-dia,
-Indonesia, Ir=C3=A1n, Irlanda, Israel, Italia, Jamaica, Jap=C3=B3n, Jordani=
-a,
-Kenia, Kuwait, Letonia, L=C3=ADbano, Luxemburgo, Macao (China), Lituania,
-Malasia, M=C3=A9xico, Marruecos, Holanda, Nueva Zelanda, Nicaragua, Nigeria=
-,
-Noruega, Om=C3=A1n, Pakist=C3=A1n, Panam=C3=A1, Paraguay, Per=C3=BA, Filipi=
-nas, Polonia,
-Portugal, Qatar, Rep=C3=BAblica Checa, Reino Unido, Rep=C3=BAblica Dominica=
-na,
-Rumania, Rusia, Serbia, Singapur, Sud=C3=A1frica, Suecia, Suiza, Siria,
-Taiw=C3=A1n, Tailandia, Trinidad y Tobago, T=C3=BAnez, Turqu=C3=ADa, Ucrani=
-a, Uruguay,
-Venezuela y Vietnam.
-
-Los datos de cada empresa incluyen las siguientes informaciones:
-
- Nombre de la empresa.
- Ciudad y pa=C3=ADs.
- Lista de productos que comercializa (disponibles a trav=C3=A9s de la p=
-=C3=A1gina
-web).
- N=C3=BAmero de empleados.
- P=C3=A1gina web.
- N=C3=BAmeros telef=C3=B3nicos y correo electr=C3=B3nico (disponibles a tra=
-v=C3=A9s de la
-p=C3=A1gina web).
-
-=C2=BFInteresado(a)? =C2=BFQuiere incrementar sus exportaciones o comenzarl=
-as con
-buen pie? =C2=BFQuiere adquirir algunas listas de importadores activos de s=
-us
-productos? Ingrese al siguiente enlace de E-Bay:
-http://www.ebay.com/itm/IMPORTERS-DATABASE-A-World-of-potential-customers-t=
-o-export-your-products-/152164999065?ssPageName=3DADME:L:LCA:US
-.=20
-
-Posteriormente participar a trav=C3=A9s de los siguientes correos:
-ideasparaexportar@gmail.com / info@exportideas.com
-<mailto:info@exportideas.com>
-. Favor indicar el(los) c=C3=B3digo(s) arancelario(s) de su inter=C3=A9s y =
-el
-correo electr=C3=B3nico a donde se le remitir=C3=A1 la informaci=C3=B3n.=20
-
-
-
-NOTA IMPORTANTE: Si no quiere continuar recibiendo informaci=C3=B3n nuestra=
-,=0Austed puede ser removido de nuestra lista enviando un correo a:=0Aexclu=
-ir21@gmail.com con la palabra quitar en la casilla correspondiente al=0Aasu=
-nto. Este env=C3=ADo de publicidad no podr=C3=A1 ser considerado como corre=
-o=0Aspam mientras se incluya una forma de ser removido. FAVOR USAR EL MISMO=
-=0ACORREO QUE SE DESEA QUE SE EXCLUYA.
-
-
--- powered by phpList, www.phplist.com --
-
-
-
---b1_0679e5045facecb1146cfe40b3b4d81e
-Content-Type: multipart/related;
-	boundary="b2_0679e5045facecb1146cfe40b3b4d81e"
-
---b2_0679e5045facecb1146cfe40b3b4d81e
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<html><head>=0A        <meta content=3D"text/html;charset=3DUTF-8" http-equ=
-iv=3D"Content-Type">=0A        <title></title></head><body><p style=3D"text=
--align: center;">&nbsp;<b style=3D"text-align: center;"><span style=3D"font=
--size:13.0pt;font-family:&quot;Times New Roman&quot;,serif">Julio C&eacute;=
-sar Herrera Gonz&aacute;lez</span></b></p>
-<p class=3D"MsoNormal" align=3D"center" style=3D"margin-bottom: 0.0001pt; t=
-ext-align: center;"><b><span style=3D"font-size:13.0pt;font-family:&quot;Ti=
-mes New Roman&quot;,serif">Economista. MBA en Econom&iacute;a Internacional=
-<o:p></o:p></span></b></p>
-<p class=3D"MsoNormal" align=3D"center" style=3D"margin-bottom: 0.0001pt; t=
-ext-align: center;"><b><span style=3D"font-size:13.0pt;font-family:&quot;Ti=
-mes New Roman&quot;,serif">Investigaci&oacute;n de Mercados Internacionales=
-<o:p></o:p></span></b></p>
-<p class=3D"MsoNormal" align=3D"center" style=3D"margin-bottom: 0.0001pt; t=
-ext-align: center;"><b><span style=3D"font-size:13.0pt;font-family:&quot;Ti=
-mes New Roman&quot;,serif">Inscrito en el Colegio de Economistas de Pichinc=
-ha (Ecuador) con el N&deg; 3364<o:p></o:p></span></b></p>
-<p class=3D"MsoNormal"><span style=3D"font-size:13.0pt;line-height:107%;fon=
-t-family:&#10;&quot;Times New Roman&quot;,serif">&nbsp;</span></p>
-<p class=3D"MsoNormal"><span style=3D"font-size:13.0pt;line-height:107%;fon=
-t-family:&#10;&quot;Times New Roman&quot;,serif">Distinguido Empresario / E=
-xportador:<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span style=3D"font-size:13.0pt;line-height:107%;fon=
-t-family:&#10;&quot;Times New Roman&quot;,serif">Una de los mayores problem=
-as que afrontan las empresas cuando quieren expandir sus exportaciones o se=
- inician en la actividad exportadora, es encontrar listas confiables de cli=
-entes potenciales. <span style=3D"background-image: initial; background-att=
-achment: initial; background-size: initial; background-origin: initial; bac=
-kground-clip: initial; background-position: initial; background-repeat: ini=
-tial;">Conseguir directorios de exportadores es un juego de ni&ntilde;os, y=
-a que abundan en ediciones impresas disponible en embajadas, en CD-ROM y en=
- Internet. Ahora bien, <u>encontrar y consultar directorios fiables de IMPO=
-RTADORES, en cambio, es una tarea ardua. La informaci&oacute;n publicada es=
- escasa, a menudo cara, est&aacute; dispersa o es de calidad desigual. Los =
-directorios de importadores no abundan y son poco frecuentes. LOS VENDEDORE=
-S NO FALTAN, PERO S&Iacute; LOS COMPRADORES</u>.</span><o:p></o:p></span></=
-p>
-<p class=3D"MsoNormal"><span style=3D"font-size:13.0pt;line-height:107%;fon=
-t-family:&#10;&quot;Times New Roman&quot;,serif">A un precio bastante asequ=
-ible de $30 por partida arancelaria, le ofrecemos listas de importadores pr=
-ovenientes de bases de datos de m&aacute;s de 400 mil empresas importadoras=
- provenientes de 94 pa&iacute;ses, entre los cuales est&aacute;n las mayore=
-s econom&iacute;as del mundo (el n&uacute;mero de contactos de las listas d=
-e importadores va a variar de acuerdo con el c&oacute;digo arancelario, sin=
- embargo, normalmente cantidad es muy considerable). El servicio incluye el=
- env&iacute;o de las listas en formato MS Excel a su correo electr&oacute;n=
-ico a m&aacute;s tardar 24 horas despu&eacute;s de recibir el pago a trav&e=
-acute;s de PayPal (las listas ser&aacute;n enviadas a su correo electr&oacu=
-te;nico de PayPal, a menos que indique otro). Tenga en cuenta que solamente=
- tenemos acceso a informaci&oacute;n de <u>importadores activos y estableci=
-dos de sus productos</u>. As&iacute; que usted puede estar seguro de que lo=
- podemos ayudar a iniciarse o a aumentar las exportaciones de su empresa, s=
-e&ntilde;al&aacute;ndole importadores fiables de todo el mundo. Nuestras li=
-stas de importadores y la informaci&oacute;n all&iacute; contenida se actua=
-lizan continuamente y proviene de fuentes y bases de datos de importadores =
-m&aacute;s valiosas y confiables disponibles en el mundo, mayormente oficia=
-les y tambi&eacute;n de empresas privadas muy prestigiosas. Dichas bases de=
- datos incluyen a los siguientes pa&iacute;ses:<o:p></o:p></span></p>
-<p class=3D"MsoNormal" style=3D"margin-bottom: 0.0001pt;"><span style=3D"fo=
-nt-size:13.0pt;font-family:&quot;Times New Roman&quot;,serif;&#10;mso-farea=
-st-font-family:&quot;Times New Roman&quot;;mso-fareast-language:#580A">Alem=
-ania, Antillas Holandesas (Curazao, Aruba y Bonaire), Argelia, Argentina, A=
-rabia Saudita, Australia, Austria, Bahr&eacute;in, Barbados, Bielorrusia, B=
-&eacute;lgica, Bolivia, Bosnia, Brasil, Brunei, Bulgaria, Canad&aacute;, Ch=
-ile, China, Colombia, Corea del Sur, Costa Rica, Croacia, Chipre, Dinamarca=
-, Ecuador, Egipto, El Salvador, Emiratos &Aacute;rabes Unidos, Eslovaquia, =
-Eslovenia, Espa&ntilde;a, Estados Unidos de Am&eacute;rica, Finlandia, Fran=
-cia, Grecia, Guatemala, Honduras, Hong Kong, Hungr&iacute;a, Islandia, Indi=
-a, Indonesia, Ir&aacute;n, Irlanda, Israel, Italia, Jamaica, Jap&oacute;n, =
-Jordania, Kenia, Kuwait, Letonia, L&iacute;bano, Luxemburgo, Macao (China),=
- Lituania, Malasia, M&eacute;xico, Marruecos, Holanda, Nueva Zelanda, Nicar=
-agua, Nigeria, Noruega, Om&aacute;n, Pakist&aacute;n, Panam&aacute;, Paragu=
-ay, Per&uacute;, Filipinas, Polonia, Portugal, Qatar, Rep&uacute;blica Chec=
-a, Reino Unido, Rep&uacute;blica Dominicana, Rumania, Rusia, Serbia, Singap=
-ur, Sud&aacute;frica, Suecia, Suiza, Siria, Taiw&aacute;n, Tailandia, Trini=
-dad y Tobago, T&uacute;nez, Turqu&iacute;a, Ucrania, Uruguay, Venezuela y V=
-ietnam.<o:p></o:p></span></p>
-<p class=3D"MsoNormal" style=3D"margin-bottom: 0.0001pt;"><span style=3D"fo=
-nt-size:13.0pt;line-height:107%;font-family:&#10;&quot;Times New Roman&quot=
-;,serif">Los datos de cada empresa incluyen las siguientes informaciones:<o=
-:p></o:p></span></p>
-<ul type=3D"disc">
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">Nombre de la empresa.<o:p></o=
-:p></span></li>
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">Ciudad y pa&iacute;s.<o:p></o=
-:p></span></li>
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">Lista de productos que      c=
-omercializa (disponibles a trav&eacute;s de la p&aacute;gina web).<o:p></o:=
-p></span></li>
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">N&uacute;mero de empleados.<o=
-:p></o:p></span></li>
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">P&aacute;gina web.<o:p></o:p>=
-</span></li>
-    <li class=3D"MsoNormal"><span style=3D"font-size:13.0pt;font-family:&qu=
-ot;Times New Roman&quot;,serif;mso-fareast-font-family:&#10;     &quot;Time=
-s New Roman&quot;;mso-fareast-language:#580A">N&uacute;meros telef&oacute;n=
-icos y correo      electr&oacute;nico (disponibles a trav&eacute;s de la p&=
-aacute;gina web).<o:p></o:p></span></li>
-</ul>
-<p class=3D"MsoNormal"><span style=3D"font-size:13.0pt;line-height:107%;fon=
-t-family:&#10;&quot;Times New Roman&quot;,serif;mso-fareast-font-family:&qu=
-ot;Times New Roman&quot;;mso-fareast-language:&#10;#580A;mso-bidi-font-weig=
-ht:bold">&iquest;Interesado(a)? &iquest;Quiere incrementar sus exportacione=
-s o comenzarlas con buen pie? &iquest;Quiere adquirir algunas listas de imp=
-ortadores activos de sus productos? Ingrese al siguiente enlace de E-Bay:</=
-span><span style=3D"font-size:13.0pt;line-height:107%;font-family:&quot;Tim=
-es New Roman&quot;,serif"> </span><a href=3D"http://www.ebay.com/itm/IMPORT=
-ERS-DATABASE-A-World-of-potential-customers-to-export-your-products-/152164=
-999065?ssPageName=3DADME:L:LCA:US"><span style=3D"font-size:13.0pt;line-hei=
-ght:107%;font-family:&quot;Times New Roman&quot;,serif;&#10;mso-fareast-fon=
-t-family:&quot;Times New Roman&quot;;color:#4472C4;mso-themecolor:accent5;&=
-#10;mso-fareast-language:#580A;mso-bidi-font-weight:bold">http://www.ebay.c=
-om/itm/IMPORTERS-DATABASE-A-World-of-potential-customers-to-export-your-pro=
-ducts-/152164999065?ssPageName=3DADME:L:LCA:US</span></a><span style=3D"fon=
-t-size:13.0pt;line-height:107%;font-family:&quot;Times New Roman&quot;,seri=
-f;&#10;mso-fareast-font-family:&quot;Times New Roman&quot;;mso-fareast-lang=
-uage:#580A;&#10;mso-bidi-font-weight:bold">. <o:p></o:p></span></p>
-<p><span style=3D"font-size:13.0pt;line-height:107%;font-family:&quot;Times=
- New Roman&quot;,serif;&#10;mso-fareast-font-family:&quot;Times New Roman&q=
-uot;;mso-ansi-language:#580A;mso-fareast-language:&#10;#580A;mso-bidi-langu=
-age:AR-SA;mso-bidi-font-weight:bold">Posteriormente participar a trav&eacut=
-e;s de los siguientes correos:&nbsp;</span><span class=3D"MsoHyperlink"><sp=
-an style=3D"font-size:13.0pt;line-height:107%;font-family:&#10;&quot;Times =
-New Roman&quot;,serif;mso-fareast-font-family:&quot;Times New Roman&quot;;c=
-olor:#4472C4;&#10;mso-themecolor:accent5;mso-ansi-language:#580A;mso-fareas=
-t-language:#580A;&#10;mso-bidi-language:AR-SA;mso-bidi-font-weight:bold">id=
-easparaexportar@gmail.com</span></span><span style=3D"font-size:13.0pt;line=
--height:107%;font-family:&quot;Times New Roman&quot;,serif;&#10;mso-fareast=
--font-family:&quot;Times New Roman&quot;;mso-ansi-language:#580A;mso-fareas=
-t-language:&#10;#580A;mso-bidi-language:AR-SA;mso-bidi-font-weight:bold"> /=
-<span style=3D"color:#4472C4;mso-themecolor:accent5"> </span></span><span s=
-tyle=3D"font-size:11.0pt;line-height:107%;font-family:&quot;Calibri&quot;,s=
-ans-serif;&#10;mso-ascii-theme-font:minor-latin;mso-fareast-font-family:Cal=
-ibri;mso-fareast-theme-font:&#10;minor-latin;mso-hansi-theme-font:minor-lat=
-in;mso-bidi-font-family:&quot;Times New Roman&quot;;&#10;mso-bidi-theme-fon=
-t:minor-bidi;mso-ansi-language:#580A;mso-fareast-language:&#10;EN-US;mso-bi=
-di-language:AR-SA"><a href=3D"mailto:info@exportideas.com"><span style=3D"f=
-ont-size:13.0pt;line-height:107%;font-family:&quot;Times New Roman&quot;,se=
-rif;&#10;mso-fareast-font-family:&quot;Times New Roman&quot;;mso-fareast-la=
-nguage:#580A;&#10;mso-bidi-font-weight:bold">info@exportideas.com</span></a=
-></span><span style=3D"font-size:13.0pt;line-height:107%;font-family:&quot;=
-Times New Roman&quot;,serif;&#10;mso-fareast-font-family:&quot;Times New Ro=
-man&quot;;mso-ansi-language:#580A;mso-fareast-language:&#10;#580A;mso-bidi-=
-language:AR-SA;mso-bidi-font-weight:bold">. Favor indicar el(los) c&oacute;=
-digo(s) arancelario(s) de su inter&eacute;s y el correo electr&oacute;nico =
-a donde se le remitir&aacute; la informaci&oacute;n.&nbsp;</span></p><br />=
-NOTA IMPORTANTE: Si no quiere continuar recibiendo informaci=C3=B3n nuestra=
-, usted puede ser removido de nuestra lista enviando un correo a: <a href=
-=3D"mailto:excluir21@gmail.com" class=3D"email">excluir21@gmail.com</a> con=
- la palabra quitar en la casilla correspondiente al asunto. Este env=C3=
-=ADo de publicidad no podr=C3=A1 ser considerado como correo spam mientras =
-se incluya una forma de ser removido. FAVOR USAR EL MISMO CORREO QUE SE DES=
-EA QUE SE EXCLUYA.=0A<p class=3D"poweredby" style=3D"text-align:center"><a =
-style=3D"display:inline-block;width:5%;max-width:120px;min-width:70px" href=
-=3D"https://www.phplist.com/poweredby?utm_source=3Dpl3.2.5&amp;utm_medium=
-=3Dpoweredhostedimg&amp;utm_campaign=3DphpList" title=3D"visit the phpList =
-website" ><img src=3D"cid:6651f0bc8300e9e2217080b8a19769e0" width=3D"100%" =
-height=3D"auto" title=3D"powered by phpList version 3.2.5, &copy; phpList l=
-td" alt=3D"powered by phpList 3.2.5, &copy; phpList ltd" border=3D"0" /></a=
-></p><img src=3D"http://importlists.net/lists/ut.php?u=3Dcf9b3d0f54b42311f8=
-7a0ecbd8054211&amp;m=3D4" width=3D"1" height=3D"1" border=3D"0" alt=3D"" />=
-</body></html>
-
---b2_0679e5045facecb1146cfe40b3b4d81e
-Content-Type: image/png; name="powerphplist.png"
+--===============5516387333024718635==
+Content-Type: text/html; charset="UTF-8"
 Content-Transfer-Encoding: base64
-Content-ID: <6651f0bc8300e9e2217080b8a19769e0>
-Content-Disposition: inline; filename=powerphplist.png
+Content-Disposition: inline
 
-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
-RK5CYII=
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MIHhtbG5zOm8gPSAidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTpvZmZpY2U6
+b2ZmaWNlIiB4bWxuczp2ID0gDQoidXJuOnNjaGVtYXMtbWljcm9zb2Z0LWNvbTp2bWwiPjxIRUFE
+Pg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVURi04IiBodHRwLWVxdWl2PWNv
+bnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRlbnQ9Ik1TSFRNTCAxMS4wMC45
+NjAwLjE4MzQ5Ij48L0hFQUQ+DQo8Qk9EWT4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJC
+QUNLR1JPVU5EOiB3aGl0ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsg
+TElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIA0KYWxp
+Z249bGVmdD48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IGJhY2tn
+cm91bmQxOyANCm1zby10aGVtZWNvbG9yOiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogd2hp
+dGU7IENPTE9SOiBCQUNLR1JPVU5EOiANClJvbWFuPyw/c2VyaWY/OyBOZXcgP1RpbWVzPkNvbW1v
+bk5haWxzIFVTRDQwMC9UT048L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyANCjBwdCYjMzk7IG1zby1m
+b250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9udC1zaXplOiB3aGl0ZTsgQ09MT1I6IEJB
+Q0tHUk9VTkQ6IA0KUm9tYW4/LD9zZXJpZj87IE5ldyA/VGltZXMgYmxhY2s7PjxvOnA+PC9vOnA+
+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0
+ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1
+Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIA0KYWxpZ249bGVmdD48U1BBTiBs
+YW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgDQptc28tYmlkaS1m
+b250LXNpemU6IHdoaXRlOyBDT0xPUjogQkFDS0dST1VORDogUm9tYW4/LD9zZXJpZj87IE5ldyA/
+VGltZXMgDQpibGFjazs+RGVhciBEaXJlY3RvciBNYW5hZ2VyLDwvU1BBTj48U1BBTiBsYW5nPUVO
+LVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IA0KMTAuNXB0OyBtc28tYmlkaS1mb250LXNp
+emU6IENPTE9SOiBibGFjazsgDQo/QXJpYWw/LD9zYW5zLXNlcmlmPzs+PG86cD48L286cD48L1NQ
+QU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBU
+RVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5FLUhFSUdIVDogMTUuNzVw
+dDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxhbmc9
+RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyANCm1zby1iaWRpLWZvbnQt
+c2l6ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3NhbnMtc2VyaWY/Oz48bzpwPiZuYnNwOzwv
+bzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDog
+d2hpdGU7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAxNS43NXB0OyBtc28tcGFn
+aW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZv
+bnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENPTE9SOiANClJvbWFuPyw/
+c2VyaWY/OyBOZXcgP1RpbWVzIGJsYWNrOz5OaWNlIERheSE8L1NQQU4+PFNQQU4gbGFuZz1FTi1V
+UyAwcHQmIzM5OyANCm1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9udC1zaXpl
+OiBDT0xPUjogYmxhY2s7IA0KP0FyaWFsPyw/c2Fucy1zZXJpZj87PjxvOnA+PC9vOnA+PC9TUEFO
+PjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgTUFS
+R0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3
+aWRvdy1vcnBoYW4iPjxTUEFOIA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5n
+OiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3Nh
+bnMtc2VyaWY/Oz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3Jt
+YWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IExJTkUt
+SEVJR0hUOiAxNS43NXB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCmxh
+bmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250
+LXNpemU6IHdoaXRlOyBDT0xPUjogDQpCQUNLR1JPVU5EOiBSb21hbj8sP3NlcmlmPzsgTmV3ID9U
+aW1lcyBibGFjazs+VGhpcyBpcyBWaWNreSwgZnJvbSBBbnBpbmcgRml2ZSANClN0YXIgV2lyZSBN
+ZXNoIENvLixMVEQsIHdobyB2aXNpdCB5b3VyIHdlYnNpdGUuPC9TUEFOPjxTUEFOIGxhbmc9RU4t
+VVMgMHB0JiMzOTsgDQptc28tZm9udC1rZXJuaW5nOiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6
+ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3NhbnMtc2VyaWY/Oz48bzpwPjwvbzpwPjwvU1BB
+Tj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IE1B
+UkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAxNS43NXB0OyBtc28tcGFnaW5hdGlvbjog
+d2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2Vybmlu
+ZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENPTE9SOiANClJvbWFuPyw/c2VyaWY/OyBO
+ZXcgP1RpbWVzIGJsYWNrOz5BbmQga25vdyB5b3UgZW5nYWdlZCBpbiBIb3QtZGlwcGVkIGdhbHZh
+bml6ZWQgDQp3aXJlIGFuZCBhbGwga2luZHMgb2YgbmFpbHMuPC9TUEFOPjxTUEFOIGxhbmc9RU4t
+VVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogDQoxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6
+ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3NhbnMtc2VyaWY/Oz48bzpwPjwvbzpwPjwvU1BB
+Tj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IE1B
+UkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAxNS43NXB0OyBtc28tcGFnaW5hdGlvbjog
+d2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2Vybmlu
+ZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENPTE9SOiBibGFjazsgDQo/QXJpYWw/LD9z
+YW5zLXNlcmlmPzs+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9y
+bWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5F
+LUhFSUdIVDogMTUuNzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiI+PFNQQU4gDQps
+YW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9u
+dC1zaXplOiBDT0xPUjogDQpSb21hbj8sP3NlcmlmPzsgTmV3ID9UaW1lcyBibGFjazs+T3VyIGZh
+Y3RvciBpcyBpbiBBbnBpbmcsIGVuc3VyZSB0aGUgZ29vZHMgaGlnaCANCnF1YWxpdHkgYW5kIGRl
+bGl2ZXJ5IHRpbWUuPC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2Vy
+bmluZzogDQoxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IGJsYWNrOyANCj9Bcmlh
+bD8sP3NhbnMtc2VyaWY/Oz48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3Jt
+YWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IExJTkUt
+SEVJR0hUOiAxNS43NXB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCmxh
+bmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250
+LXNpemU6IENPTE9SOiANClJvbWFuPyw/c2VyaWY/OyBOZXcgP1RpbWVzIGJsYWNrOz5Qcm9kdWN0
+IGxpbmU6PC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgMHB0JiMzOTsgDQptc28tZm9udC1rZXJuaW5n
+OiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3Nh
+bnMtc2VyaWY/Oz48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8VUwgdHlwZT1kaXNjPg0KICA8TEkg
+Y2xhc3M9TXNvTm9ybWFsIA0KICBzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20g
+MGNtIDBwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbjsgbXNvLW1hcmdpbi10b3AtYWx0
+OiBhdXRvOyBtc28tbWFyZ2luLWJvdHRvbS1hbHQ6IGF1dG87IG1zby1saXN0OiBsMCBsZXZlbDEg
+bGZvMTsgdGFiLXN0b3BzOiBsaXN0IDM2LjBwdCI+PFNQQU4gDQogIGxhbmc9RU4tVVMgMHB0JiMz
+OTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IHdoaXRlOyAN
+CiAgQkFDS0dST1VORDogUm9tYW4/LD9zZXJpZj87IE5ldyA/VGltZXM+TWV0YWwgV2lyZSAoaG90
+LWRpcC9lbGVjdHJvbC9wdmMgDQogIHdpcmUvYmxhY2sgd2lyZSk8L1NQQU4+PFNQQU4gbGFuZz1F
+Ti1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiANCiAgUm9tYW4/LD9zZXJpZj87IE5ldyA/
+VGltZXMgRk9OVC1GQU1JTFk6IDEycHQ7PjxvOnA+PC9vOnA+PC9TUEFOPiANCiAgPExJIGNsYXNz
+PU1zb05vcm1hbCANCiAgc3R5bGU9IlRFWFQtQUxJR046IGxlZnQ7IE1BUkdJTjogMGNtIDBjbSAw
+cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW47IG1zby1tYXJnaW4tdG9wLWFsdDogYXV0
+bzsgbXNvLW1hcmdpbi1ib3R0b20tYWx0OiBhdXRvOyBtc28tbGlzdDogbDAgbGV2ZWwxIGxmbzE7
+IHRhYi1zdG9wczogbGlzdCAzNi4wcHQiPjxTUEFOIA0KICBsYW5nPUVOLVVTIDBwdCYjMzk7IG1z
+by1mb250LWtlcm5pbmc6IFJvbWFuPyw/c2VyaWY/OyBOZXcgP1RpbWVzIEZPTlQtRkFNSUxZOiAN
+CiAgMTJwdDs+TmFpbHMgKENvbW1vbiBOYWlscy9VIEZlbmNlIE5haWwvUm9vZmluZyANCk5haWxz
+KTxvOnA+PC9vOnA+PC9TUEFOPjwvTEk+PC9VTD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxl
+PSJCQUNLR1JPVU5EOiB3aGl0ZTsgTUFSR0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1
+Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iPjxTUEFOIA0KbGFuZz1FTi1VUyAw
+cHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09M
+T1I6IGJsYWNrOyANCj9BcmlhbD8sP3NhbnMtc2VyaWY/Oz48bzpwPiZuYnNwOzwvbzpwPjwvU1BB
+Tj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IE1B
+UkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAxNS43NXB0OyBtc28tcGFnaW5hdGlvbjog
+d2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2Vybmlu
+ZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENPTE9SOiANClJvbWFuPyw/c2VyaWY/OyBO
+ZXcgP1RpbWVzIGJsYWNrOz5Gb3Igbm93LCB0aGVyZSBhcmUgc29tZSBuZXcgaW5mb3JtYXRpb24g
+YWJvdXQgDQp5b3VyIGxvY2FsIG1hcmtldC48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9ybWFs
+IA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5FLUhF
+SUdIVDogMTUuNzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiI+PFNQQU4gDQpsYW5n
+PUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9udC1z
+aXplOiBDT0xPUjogDQpSb21hbj8sP3NlcmlmPzsgTmV3ID9UaW1lcyBibGFjazs+PC9TUEFOPiZu
+YnNwOzwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsg
+TUFSR0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9u
+OiB3aWRvdy1vcnBoYW4iPjxTUEFOIA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJu
+aW5nOiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IA0KUm9tYW4/LD9zZXJpZj87
+IE5ldyA/VGltZXMgYmxhY2s7PjxFTT48U1RST05HPkJsYWNrIEFubmVhbGVkIFdpcmU6IEJXRyAx
+OCANCjI1a2cvcm9sbCBVU0QgNDUwL210IEZPQiBUaWFuamluIDwvU1RST05HPjwvRU0+PC9TUEFO
+PjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgTUFS
+R0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3
+aWRvdy1vcnBoYW4iPjxCPjxJPjxTUEFOIA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1r
+ZXJuaW5nOiAxMC41cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IA0KUm9tYW4/LD9zZXJp
+Zj87IE5ldyA/VGltZXMgYmxhY2s7PkhvdC1kaXAgZ2FsdmFuaXplZCB3aXJlOkJXRzE2IDI1a2cv
+cm9sbDxTUEFOIA0Kc3R5bGU9Im1zby1zcGFjZXJ1bjogeWVzIj4mbmJzcDsgPC9TUEFOPlVTRCA1
+NjAvbXQgRk9CIFRpYW5qaW4gDQo8bzpwPjwvbzpwPjwvU1BBTj48L0k+PC9CPjwvUD4NCjxQIGNs
+YXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgTUFSR0lOOiAwY20gMGNt
+IDBwdDsgTElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4i
+PjxCPjxJPjxTUEFOIA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiAxMC41
+cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogQ09MT1I6IA0KUm9tYW4/LD9zZXJpZj87IE5ldyA/VGlt
+ZXMgYmxhY2s7PkNvbW1vbiBuYWlsczogMeKAmeKAmVgxNkcgVVNEIDY4MC9tZSBGT0IgVGlhbmpp
+biANCjxvOnA+PC9vOnA+PC9TUEFOPjwvST48L0I+PC9QPg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0K
+c3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5FLUhFSUdI
+VDogMTUuNzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiI+PEI+PEk+PFNQQU4gDQps
+YW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9u
+dC1zaXplOiBDT0xPUjogDQpSb21hbj8sP3NlcmlmPzsgTmV3ID9UaW1lcyBibGFjazs+PG86cD4m
+bmJzcDs8L286cD48L1NQQU4+PC9JPjwvQj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHls
+ZT0iQkFDS0dST1VORDogd2hpdGU7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAx
+NS43NXB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMg
+MHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENP
+TE9SOiANClJvbWFuPyw/c2VyaWY/OyBOZXcgP1RpbWVzIGJsYWNrOz5JZiB5b3UgaW50ZXJlc3Rl
+ZCBpbiB0aG9zZSBwcm9kdWN0cywgZmVlbCBmcmVlIA0KdG8gY29udGFjdCBtZS4gV2UgY2FuIGdp
+dmUgeW91IHRoZSBvZmZlci48L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyANCm1zby1m
+b250LWtlcm5pbmc6IDEwLjVwdDsgbXNvLWJpZGktZm9udC1zaXplOiBDT0xPUjogYmxhY2s7IA0K
+P0FyaWFsPyw/c2Fucy1zZXJpZj87PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1z
+b05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgTUFSR0lOOiAwY20gMGNtIDBwdDsg
+TElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iPjxTUEFO
+IA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiAxMC41cHQ7IG1zby1iaWRp
+LWZvbnQtc2l6ZTogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3NhbnMtc2VyaWY/Oz48bzpwPiZu
+YnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dS
+T1VORDogd2hpdGU7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IExJTkUtSEVJR0hUOiAxNS43NXB0OyBt
+c28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsg
+bXNvLWZvbnQta2VybmluZzogMTAuNXB0OyBtc28tYmlkaS1mb250LXNpemU6IENPTE9SOiANClJv
+bWFuPyw/c2VyaWY/OyBOZXcgP1RpbWVzIGJsYWNrOz5Ib3BlIHRvIGhlYXIgZnJvbSB5b3Ugc29v
+bi48L1NQQU4+PFNQQU4gDQpsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IDEw
+LjVwdDsgbXNvLWJpZGktZm9udC1zaXplOiBDT0xPUjogYmxhY2s7IA0KP0FyaWFsPyw/c2Fucy1z
+ZXJpZj87PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxl
+PSJURVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5FLUhFSUdIVDogMTUu
+NzVwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxh
+bmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyANCm1zby1iaWRpLWZv
+bnQtc2l6ZTogd2hpdGU7IENPTE9SOiBCQUNLR1JPVU5EOiBSb21hbj8sP3NlcmlmPzsgTmV3ID9U
+aW1lcyANCmJsYWNrOz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29O
+b3JtYWwgDQpzdHlsZT0iVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgbXNv
+LXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxhbmc9RU4tVVMg
+MHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogMTAuNXB0OyANCm1zby1iaWRpLWZvbnQtc2l6ZTog
+d2hpdGU7IENPTE9SOiBCQUNLR1JPVU5EOiBSb21hbj8sP3NlcmlmPzsgTmV3ID9UaW1lcyANCmJs
+YWNrOz5CZXN0IHJlZ2FyZHMsPC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgDQpzdHlsZT0iRk9OVC1T
+SVpFOiAxMnB0OyBGT05ULUZBTUlMWTog5a6L5L2TOyBtc28tZm9udC1rZXJuaW5nOiAwcHQ7IG1z
+by1iaWRpLWZvbnQtZmFtaWx5OiDlrovkvZMiPjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNs
+YXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgVEVYVC1BTElHTjogbGVm
+dDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgTElORS1IRUlHSFQ6IDE1Ljc1cHQ7IG1zby1wYWdpbmF0
+aW9uOiB3aWRvdy1vcnBoYW4iIA0KYWxpZ249bGVmdD48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7
+IG1zby1mb250LWtlcm5pbmc6IDEwLjVwdDsgDQptc28tYmlkaS1mb250LXNpemU6IENPTE9SOiBi
+bGFjazsgDQo/QXJpYWw/LD9zYW5zLXNlcmlmPzs+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9Q
+Pg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBURVhULUFM
+SUdOOiBsZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBMSU5FLUhFSUdIVDogMTUuNzVwdDsgbXNv
+LXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxCPjxTUEFOIGxhbmc9RU4t
+VVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogd2hpdGU7IENPTE9SOiANCkJBQ0tHUk9VTkQ6
+ID9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogIzAwOTkzMzsgDQoxNXB0Oz5NaXNz
+LlZpY2t5PC9TUEFOPjwvQj48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5p
+bmc6IDEwLjVwdDsgDQptc28tYmlkaS1mb250LXNpemU6IENPTE9SOiBibGFjazsgP0FyaWFsPyw/
+c2Fucy1zZXJpZj87PjxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCAN
+CnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20g
+MGNtIDBwdDsgbXNvLXBhZ2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFO
+IGxhbmc9RU4tVVMgbXNvLWZvbnQta2VybmluZzogQ09MT1I6IGJsYWNrOyANCj9BcmlhbD8sP3Nh
+bnMtc2VyaWY/OyBGT05ULUZBTUlMWTogeWVzJiMzOTsgbXNvLW5vLXByb29mOiAwcHQ7IDlwdDs+
+PHY6c2hhcGV0eXBlIA0KaWQ9X3gwMDAwX3Q3NSBjb29yZHNpemU9IjIxNjAwLDIxNjAwIiBvOnNw
+dD0iNzUiIG86cHJlZmVycmVsYXRpdmU9InQiIA0KcGF0aD0ibUA0QDVsQDRAMTFAOUAxMUA5QDV4
+ZSIgZmlsbGVkPSJmIiBzdHJva2VkPSJmIj48djpzdHJva2UgDQpqb2luc3R5bGU9Im1pdGVyIj48
+L3Y6c3Ryb2tlPjx2OmZvcm11bGFzPjx2OmYgDQplcW49ImlmIGxpbmVEcmF3biBwaXhlbExpbmVX
+aWR0aCAwIj48L3Y6Zj48djpmIGVxbj0ic3VtIEAwIDEgMCI+PC92OmY+PHY6ZiANCmVxbj0ic3Vt
+IDAgMCBAMSI+PC92OmY+PHY6ZiBlcW49InByb2QgQDIgMSAyIj48L3Y6Zj48djpmIA0KZXFuPSJw
+cm9kIEAzIDIxNjAwIHBpeGVsV2lkdGgiPjwvdjpmPjx2OmYgDQplcW49InByb2QgQDMgMjE2MDAg
+cGl4ZWxIZWlnaHQiPjwvdjpmPjx2OmYgZXFuPSJzdW0gQDAgMCAxIj48L3Y6Zj48djpmIA0KZXFu
+PSJwcm9kIEA2IDEgMiI+PC92OmY+PHY6ZiBlcW49InByb2QgQDcgMjE2MDAgcGl4ZWxXaWR0aCI+
+PC92OmY+PHY6ZiANCmVxbj0ic3VtIEA4IDIxNjAwIDAiPjwvdjpmPjx2OmYgZXFuPSJwcm9kIEA3
+IDIxNjAwIHBpeGVsSGVpZ2h0Ij48L3Y6Zj48djpmIA0KZXFuPSJzdW0gQDEwIDIxNjAwIDAiPjwv
+djpmPjwvdjpmb3JtdWxhcz48djpwYXRoIG86ZXh0cnVzaW9ub2s9ImYiIA0KZ3JhZGllbnRzaGFw
+ZW9rPSJ0IiBvOmNvbm5lY3R0eXBlPSJyZWN0Ij48L3Y6cGF0aD48bzpsb2NrIHY6ZXh0PSJlZGl0
+IiANCmFzcGVjdHJhdGlvPSJ0Ij48L286bG9jaz48L3Y6c2hhcGV0eXBlPjx2OnNoYXBlIGlkPeWb
+vueJh194MDAyMF8xIA0Kc3R5bGU9IkhFSUdIVDogMTVwdDsgV0lEVEg6IDEyOS43NXB0OyBWSVNJ
+QklMSVRZOiB2aXNpYmxlOyBtc28td3JhcC1zdHlsZTogc3F1YXJlIiANCm86c3BpZD0iX3gwMDAw
+X2kxMDI1IiB0eXBlPSIjX3gwMDAwX3Q3NSIgDQphbHQ9Imh0dHA6Ly9yYXpvci1iYXJiZWQtd2ly
+ZS5jb20vc3lzdGVtL2ltZy9maXZlc3Rhci1lbWFpbC1sb2dvLmdpZiI+PHY6aW1hZ2VkYXRhIA0K
+c3JjPSJmaWxlOi8vL0M6XFVzZXJzXEpJQU5TSEVcQXBwRGF0YVxMb2NhbFxUZW1wXG1zb2h0bWxj
+bGlwMVwwMVxjbGlwX2ltYWdlMDAxLmdpZiIgDQpvOnRpdGxlPSJmaXZlc3Rhci1lbWFpbC1sb2dv
+Ij48L3Y6aW1hZ2VkYXRhPjwvdjpzaGFwZT48L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyANCjBwdCYj
+Mzk7IG1zby1mb250LWtlcm5pbmc6IENPTE9SOiBibGFjazsgP0FyaWFsPyw/c2Fucy1zZXJpZj87
+IEZPTlQtRkFNSUxZOiANCjlwdDs+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNv
+Tm9ybWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBURVhULUFMSUdOOiBsZWZ0OyBNQVJH
+SU46IDBjbSAwY20gMHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiANCmFsaWduPWxl
+ZnQ+PEI+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBDT0xPUjog
+YmxhY2s7IA0KP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFNSUxZOiA5cHQ7PkFOUElORyBG
+SVZFIFNUQVIgV0lSRSBNRVNIIA0KQ08sLkxURDxvOnA+PC9vOnA+PC9TUEFOPjwvQj48L1A+DQo8
+UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7IFRFWFQtQUxJR046
+IGxlZnQ7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4i
+IA0KYWxpZ249bGVmdD48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6
+IENPTE9SOiANCj9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogOXB0OyAjODg4ODg4
+Oz5XZWJzaXRlOiA8L1NQQU4+PFNQQU4gDQpsYW5nPUVOLVVTPjxBIGhyZWY9Imh0dHA6Ly93d3cu
+Y2hpbmFmaXZlc3Rhci5uZXQvI3ZpY2t5Ij48U1BBTiAwcHQmIzM5OyANCm1zby1mb250LWtlcm5p
+bmc6ID9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogOXB0Oz48Rk9OVCANCmNvbG9y
+PSMwMDAwZmY+aHR0cDovL2NoaW5hZml2ZXN0YXIubmV0LyN2aWNreTwvRk9OVD48L1NQQU4+PC9B
+PjwvU1BBTj48U1BBTiANCmxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogQ09M
+T1I6ID9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogDQo5cHQ7ICM4ODg4ODg7Pjxv
+OnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JP
+VU5EOiB3aGl0ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgbXNvLXBh
+Z2luYXRpb246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxhbmc9RU4tVVMgMHB0
+JiMzOTsgbXNvLWZvbnQta2VybmluZzogQ09MT1I6IA0KP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZP
+TlQtRkFNSUxZOiA5cHQ7ICM4ODg4ODg7PkUtbWFpbDogPC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMg
+DQowcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBDT0xPUjogP0FyaWFsPyw/c2Fucy1zZXJpZj87
+IEZPTlQtRkFNSUxZOiA5cHQ7IA0KIzMzMzMzMzs+dmlja3lAZml2ZXN0YXJncm91cC5jbjwvU1BB
+Tj48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IA0KbXNvLWZvbnQta2VybmluZzogQ09MT1I6ID9B
+cmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogOXB0OyANCiM4ODg4ODg7PjxvOnA+PC9v
+OnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3
+aGl0ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgbXNvLXBhZ2luYXRp
+b246IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxhbmc9RU4tVVMgMHB0JiMzOTsg
+bXNvLWZvbnQta2VybmluZzogQ09MT1I6IA0KP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFN
+SUxZOiA5cHQ7ICM4ODg4ODg7PlNreXBlOiA8L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyANCjBwdCYj
+Mzk7IG1zby1mb250LWtlcm5pbmc6IENPTE9SOiA/QXJpYWw/LD9zYW5zLXNlcmlmPzsgRk9OVC1G
+QU1JTFk6IDlwdDsgDQojMzMzMzMzOz5maXZlc3RhcjE1ODA8L1NQQU4+PFNQQU4gbGFuZz1FTi1V
+UyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBDT0xPUjogDQo/QXJpYWw/LD9zYW5zLXNlcmlm
+PzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4ODg4ODs+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAg
+Y2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBURVhULUFMSUdOOiBs
+ZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiAN
+CmFsaWduPWxlZnQ+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBD
+T0xPUjogDQo/QXJpYWw/LD9zYW5zLXNlcmlmPzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4ODg4ODs+
+UVE6IDwvU1BBTj48U1BBTiBsYW5nPUVOLVVTIA0KMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzog
+Q09MT1I6ID9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogOXB0OyANCiMzMzMzMzM7
+PjMyMjQ5NTI1NjM8L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJu
+aW5nOiBDT0xPUjogDQo/QXJpYWw/LD9zYW5zLXNlcmlmPzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4
+ODg4ODs+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9
+IkJBQ0tHUk9VTkQ6IHdoaXRlOyBURVhULUFMSUdOOiBsZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0
+OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiANCmFsaWduPWxlZnQ+PFNQQU4gbGFuZz1F
+Ti1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBDT0xPUjogDQo/QXJpYWw/LD9zYW5zLXNl
+cmlmPzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4ODg4ODs+Q2VsbDogPC9TUEFOPjxTUEFOIGxhbmc9
+RU4tVVMgDQowcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBDT0xPUjogP0FyaWFsPyw/c2Fucy1z
+ZXJpZj87IEZPTlQtRkFNSUxZOiA5cHQ7IA0KIzMzMzMzMzs+Kzg2IDE1MSA3Njk3IDg2ODImbmJz
+cDs8L1NQQU4+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyANCm1zby1mb250LWtlcm5pbmc6IENP
+TE9SOiA/QXJpYWw/LD9zYW5zLXNlcmlmPzsgRk9OVC1GQU1JTFk6ICMwMDk5MzM7IA0KOXB0Oz4o
+V2hhdHNhcHAgKTwvU1BBTj48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5p
+bmc6IENPTE9SOiANCj9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTogOXB0OyAjODg4
+ODg4Oz48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwgDQpzdHlsZT0i
+QkFDS0dST1VORDogd2hpdGU7IFRFWFQtQUxJR046IGxlZnQ7IE1BUkdJTjogMGNtIDBjbSAwcHQ7
+IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIA0KYWxpZ249bGVmdD48U1BBTiBsYW5nPUVO
+LVVTIDBwdCYjMzk7IG1zby1mb250LWtlcm5pbmc6IENPTE9SOiANCj9BcmlhbD8sP3NhbnMtc2Vy
+aWY/OyBGT05ULUZBTUlMWTogOXB0OyAjODg4ODg4Oz5UZWw6IDwvU1BBTj48U1BBTiBsYW5nPUVO
+LVVTIA0KMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogQ09MT1I6ID9BcmlhbD8sP3NhbnMtc2Vy
+aWY/OyBGT05ULUZBTUlMWTogOXB0OyANCiMzMzMzMzM7PjAwODYtMzExLTg5MTgwNDMzPC9TUEFO
+PjxTUEFOIGxhbmc9RU4tVVMgMHB0JiMzOTsgbXNvLWZvbnQta2VybmluZzogDQpDT0xPUjogP0Fy
+aWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFNSUxZOiA5cHQ7ICM4ODg4ODg7PjxvOnA+PC9vOnA+
+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1zb05vcm1hbCANCnN0eWxlPSJCQUNLR1JPVU5EOiB3aGl0
+ZTsgVEVYVC1BTElHTjogbGVmdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgbXNvLXBhZ2luYXRpb246
+IHdpZG93LW9ycGhhbiIgDQphbGlnbj1sZWZ0PjxTUEFOIGxhbmc9RU4tVVMgMHB0JiMzOTsgbXNv
+LWZvbnQta2VybmluZzogQ09MT1I6IA0KP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFNSUxZ
+OiA5cHQ7ICM4ODg4ODg7PkZheDogPC9TUEFOPjxTUEFOIGxhbmc9RU4tVVMgDQowcHQmIzM5OyBt
+c28tZm9udC1rZXJuaW5nOiBDT0xPUjogP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFNSUxZ
+OiA5cHQ7IA0KIzMzMzMzMzs+MDA4Ni0zMTEtODkxODA0MzI8L1NQQU4+PFNQQU4gbGFuZz1FTi1V
+UyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiANCkNPTE9SOiA/QXJpYWw/LD9zYW5zLXNlcmlm
+PzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4ODg4ODs+PG86cD48L286cD48L1NQQU4+PC9QPg0KPFAg
+Y2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9IkJBQ0tHUk9VTkQ6IHdoaXRlOyBURVhULUFMSUdOOiBs
+ZWZ0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBtc28tcGFnaW5hdGlvbjogd2lkb3ctb3JwaGFuIiAN
+CmFsaWduPWxlZnQ+PFNQQU4gbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJuaW5nOiBD
+T0xPUjogDQo/QXJpYWw/LD9zYW5zLXNlcmlmPzsgRk9OVC1GQU1JTFk6IDlwdDsgIzg4ODg4ODs+
+QWRkcmVzczogPC9TUEFOPjxTUEFOIA0KbGFuZz1FTi1VUyAwcHQmIzM5OyBtc28tZm9udC1rZXJu
+aW5nOiBDT0xPUjogP0FyaWFsPyw/c2Fucy1zZXJpZj87IEZPTlQtRkFNSUxZOiANCjlwdDsgIzMz
+MzMzMzs+Tm8uNiBDaGFuZyYjMzk7YW4gRGlzdHJpY3QsIFNoaWppYXpodWFuZyBDaXR5LCBIZWJl
+aSBQcm92aW5jZSwgDQpDaGluYTwvU1BBTj48U1BBTiBsYW5nPUVOLVVTIDBwdCYjMzk7IG1zby1m
+b250LWtlcm5pbmc6IENPTE9SOiANCj9BcmlhbD8sP3NhbnMtc2VyaWY/OyBGT05ULUZBTUlMWTog
+OXB0OyAjODg4ODg4Oz48bzpwPjwvbzpwPjwvU1BBTj48L1A+DQo8UCBjbGFzcz1Nc29Ob3JtYWwg
+c3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiPjxTUEFOIGxhbmc9RU4tVVM+PG86cD48Rk9OVCAN
+CmZhY2U9Q2FsaWJyaT4mbmJzcDs8L0ZPTlQ+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIGNsYXNzPU1z
+b05vcm1hbCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCI+PFNQQU4gbGFuZz1FTi1VUz48bzpw
+PjxGT05UIA0KZmFjZT1DYWxpYnJpPiZuYnNwOzwvRk9OVD48L286cD48L1NQQU4+PC9QPg0KPFAg
+Y2xhc3M9TXNvTm9ybWFsIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0Ij48U1BBTiBsYW5nPUVO
+LVVTPjxvOnA+PEZPTlQgDQpmYWNlPUNhbGlicmk+Jm5ic3A7PC9GT05UPjwvbzpwPjwvU1BBTj48
+L1A+DQo8UD4mbmJzcDs8L1A+PC9CT0RZPjwvSFRNTD4NCg0K
 
 
---b2_0679e5045facecb1146cfe40b3b4d81e--
-
-
---b1_0679e5045facecb1146cfe40b3b4d81e--
-
-
---===============6736681463340685715==
+--===============5516387333024718635==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -433,4 +333,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6736681463340685715==--
+--===============5516387333024718635==--
