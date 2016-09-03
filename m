@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 06A797CA7
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 17:57:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C100D304039
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 15:57:16 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id a4FQifa6dEV2tRQm for <xfs@oss.sgi.com>;
-	Fri, 02 Sep 2016 15:57:13 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 097DF4A1
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 17:57:13 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v2] xfsprogs: (xfs_quota) foreign fs path handling changes
-References: <1472478012-23627-1-git-send-email-billodo@redhat.com>
-	<1472851328-25542-1-git-send-email-billodo@redhat.com>
-Message-ID: <45ba5c3c-9971-b117-98c0-cc8b65ea0704@sandeen.net>
-Date: Fri, 2 Sep 2016 17:57:12 -0500
+	by oss.sgi.com (Postfix) with ESMTP id BAE047CA0
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 19:39:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62F66304048
+	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 17:39:24 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	kTysB9hPDTMxYAq9 for <xfs@oss.sgi.com>;
+	Fri, 02 Sep 2016 17:39:21 -0700 (PDT)
+Date: Sat, 3 Sep 2016 10:39:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+	detected
+Message-ID: <20160903003919.GI30056@dastard>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+	<1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1472851328-25542-1-git-send-email-billodo@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,268 +31,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: CAI Qian <caiqian@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
 
-On 9/2/16 4:22 PM, Bill O'Donnell wrote:
-> Version 2 of this patch to xfs_quota in order to properly
-> handle foreign fs mount paths. Note that this version (2)
-> abandons the incorrect approach of version 1, in which the
-> fs-table wasn't populated with the foreign fs paths.
-
-Normally version stuff goes after the "---" so that it doesn't
-end up in the permanent commitlog; it's useful to a reviewer,
-but not so much to a code archaeologist in the future.
-In theory, the committed version corrects the sins of all prior
-versions.  :)
-
-> Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-> non-XFS filesystems. Modifications to fs_initialise_mounts
-> (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-> fs paths being picked up from the fs table, and the xfs_quota
-> print command complaining about not being able to print the
-> foreign paths.
+On Fri, Sep 02, 2016 at 01:02:16PM -0400, CAI Qian wrote:
+> Spice seems start to deadlock using the reproducer,
 > 
-> This patch fixes the foreign path print problem, with a
-> modification of the print and path commands to always be
-> allowed, regardless of fs type (similar to the help and quit
-> commands).
+> https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/syscalls/splice/splice01.c
 > 
-> Additionally, the printpath() function in path.c is corrected
-> to skip printing foreign paths unless the -f flag is thrown
-> in the xfs_quota invocation. Also, some minor formatting
-> changes and comment clarifications to the print command are
-> made.
-
-In general, if you say "Additionally..." in a commitlog that's
-your hint that you should be starting a new commitlog on a
-new patch.  :)  Probably best to do the formatting stuff as
-a last patch once everything else works nicely.
-
-I think this commit contains at least 3 distinct changes:
-
-* Fix the print & path command functionality
-* Fix the printpath text alignment
-* Modify the init_check_command to cover a new case
-
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> ---
->  quota/init.c | 19 +++++++++++++------
->  quota/path.c | 19 ++++++++++++++-----
->  2 files changed, 27 insertions(+), 11 deletions(-)
+> This seems introduced recently after v4.8-rc3 or -rc4, so suspect this xfs update was one to blame,
 > 
-> diff --git a/quota/init.c b/quota/init.c
-> index 44be322..9f95e8f 100644
-> --- a/quota/init.c
-> +++ b/quota/init.c
-> @@ -112,21 +112,28 @@ init_check_command(
->  	if (!fs_path)
->  		return 1;
->  
-> -	/* Always run commands that we are told to skip here */
-> +	/* Always run commands that are valid for all fs types. */
->  	if (ct->flags & CMD_ALL_FSTYPES)
->  		return 1;
->  
-> -	/* if it's an XFS filesystem, always run the command */
-> +	/* If it's an XFS filesystem, always run the command. */
->  	if (!(fs_path->fs_flags & FS_FOREIGN))
->  		return 1;
->  
-> -	/* If the user specified foreign filesysetms are ok, run it */
-> +	/* If the user specified foreign filesystems are ok (-f), run cmd. */
->  	if (foreign_allowed &&
-> -	    (ct->flags & CMD_FLAG_FOREIGN_OK))
-> +		(ct->flags & CMD_FLAG_FOREIGN_OK))
+> 7d1ce606a37922879cbe40a6122047827105a332
 
-original indentation is preferred, otherwise it looks like this line
-is inside the conditional rather than part of it.
+Nope, this goes back to the splice rework back around ~3.16, IIRC.
 
->  		return 1;
->  
-> -	/* foreign filesystem and it's not a valid command! */
-> -	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-> +	/* If cmd not allowed on foreign fs, regardless of -f flag, skip it. */
-> +	if (!(ct->flags & CMD_FLAG_FOREIGN_OK)) {
-> +		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
-> +		ct->name);
+> [ 1749.956818] 
+> [ 1749.958492] ======================================================
+> [ 1749.965386] [ INFO: possible circular locking dependency detected ]
+> [ 1749.972381] 4.8.0-rc4+ #34 Not tainted
+> [ 1749.976560] -------------------------------------------------------
+> [ 1749.983554] splice01/35921 is trying to acquire lock:
+> [ 1749.989188]  (&sb->s_type->i_mutex_key#14){+.+.+.}, at: [<ffffffffa083c1f7>] xfs_file_buffered_aio_write+0x127/0x840 [xfs]
+> [ 1750.001644] 
+> [ 1750.001644] but task is already holding lock:
+> [ 1750.008151]  (&pipe->mutex/1){+.+.+.}, at: [<ffffffff8169e7c1>] pipe_lock+0x51/0x60
+> [ 1750.016753] 
+> [ 1750.016753] which lock already depends on the new lock.
+> [ 1750.016753] 
+> [ 1750.025880] 
+> [ 1750.025880] the existing dependency chain (in reverse order) is:
+> [ 1750.034229] 
+> -> #2 (&pipe->mutex/1){+.+.+.}:
+> [ 1750.039139]        [<ffffffff812af52a>] lock_acquire+0x1fa/0x440
+> [ 1750.045857]        [<ffffffff8266448d>] mutex_lock_nested+0xdd/0x850
+> [ 1750.052963]        [<ffffffff8169e7c1>] pipe_lock+0x51/0x60
+> [ 1750.059190]        [<ffffffff8171ee25>] splice_to_pipe+0x75/0x9e0
+> [ 1750.066001]        [<ffffffff81723991>] __generic_file_splice_read+0xa71/0xe90
+> [ 1750.074071]        [<ffffffff81723e71>] generic_file_splice_read+0xc1/0x1f0
+> [ 1750.081849]        [<ffffffffa0838628>] xfs_file_splice_read+0x368/0x7b0 [xfs]
+> [ 1750.089940]        [<ffffffff8171fa7e>] do_splice_to+0xee/0x150
+> [ 1750.096555]        [<ffffffff817262f4>] SyS_splice+0x1144/0x1c10
+> [ 1750.103269]        [<ffffffff81007b66>] do_syscall_64+0x1a6/0x500
+> [ 1750.110084]        [<ffffffff8266ea7f>] return_from_SYSCALL_64+0x0/0x7a
 
-and here we'd normally tab the argument over to the start of the first (, like:
+pipe_lock taken below the filesystem IO path, filesystem holds locks
+to protect against racing hole punch, etc...
 
-+		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
-+			ct->name);
+> [ 1750.188328] 
+> -> #0 (&sb->s_type->i_mutex_key#14){+.+.+.}:
+> [ 1750.194508]        [<ffffffff812adbc3>] __lock_acquire+0x3043/0x3dd0
+> [ 1750.201609]        [<ffffffff812af52a>] lock_acquire+0x1fa/0x440
+> [ 1750.208321]        [<ffffffff82668cda>] down_write+0x5a/0xe0
+> [ 1750.214645]        [<ffffffffa083c1f7>] xfs_file_buffered_aio_write+0x127/0x840 [xfs]
+> [ 1750.223421]        [<ffffffffa083cb7d>] xfs_file_write_iter+0x26d/0x6d0 [xfs]
+> [ 1750.231423]        [<ffffffff816859be>] vfs_iter_write+0x29e/0x550
+> [ 1750.238330]        [<ffffffff81722729>] iter_file_splice_write+0x529/0xb70
+> [ 1750.246012]        [<ffffffff817258d4>] SyS_splice+0x724/0x1c10
+> [ 1750.252627]        [<ffffffff81007b66>] do_syscall_64+0x1a6/0x500
+> [ 1750.259438]        [<ffffffff8266ea7f>] return_from_SYSCALL_64+0x0/0x7a
 
-> +		return 0;
-> +	}
-> +
-> +	/* foreign fs, but cmd only allowed via -f flag. Skip it. */
-> +	fprintf(stderr, _("%s: foreign filesystem. Use -f to enable.\n"),
->  		ct->name);
+pipe_lock taken above the filesystem IO path, filesystem tries to
+take locks to protect against racing hole punch, etc, lockdep goes
+boom.
 
-I *think* that changes to this function - determining when a command is OK, and
-what to say if it's not - should probably be a separate commit for ease of
-review.
+Fundamentally a splice infrastructure problem. If we let splice race
+with hole punch and other fallocate() based extent manipulations to
+avoid this lockdep warning, we allow potential for read or write to
+regions of the file that have been freed. We can live with having
+lockdep complain about this potential deadlock as it is unlikely to
+ever occur in practice. The other option is simply not an acceptible
+solution....
 
->  	return 0;
->  }
-> diff --git a/quota/path.c b/quota/path.c
-> index a623d25..d8f8f3c 100644
-> --- a/quota/path.c
-> +++ b/quota/path.c
-> @@ -36,14 +36,23 @@ printpath(
->  	int		c;
->  
->  	if (index == 0) {
-> -		printf(_("%sFilesystem          Pathname\n"),
-> +		printf(_("%s    Filesystem          Pathname\n"),
->  			number ? _("      ") : "");
+Cheers,
 
-This unconditionally changes the resulting table even without -f;
-probably best to avoid that if the goal is to behave as before
-without -f.
-
->  	}
->  	if (number) {
->  		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
->  	}
-
-so we print a path number unconditionally here if asked...
-
-> -	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
-> -	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
-> +	if (path->fs_flags & FS_FOREIGN) {
-> +	    if (foreign_allowed) {
-> +	      printf("(F) ");
-> +	      printf(_("%-19s %s"), path->fs_dir, path->fs_name);
-> +	    }
-> +	}
-
-4-space tabs?
-
-If it's foreign and foreign is allowed, you print (F) and the info,
-above...
-
-> +	else {
-
-On the same line as the previous closing brace, please: } else {
-
-> +	      printf("    ");
-> +	      printf(_("%-19s %s"), path->fs_dir, path->fs_name);
-> +	}
-
-4-space tabs?
-
-And here, if it's not foreign, you print the info without the (F).
-
-but the remaining case is if it's foreign and foreign isn't allowed,
-in that case we fall through and print "\n", so we get a blank line.
-
-So now with -f we get:
-
-# quota/xfs_quota -x -f -c print
-    Filesystem          Pathname
-(F) /                   /dev/mapper/vg_bp05-lv_root
-(F) /boot               /dev/sda1
-    /mnt/test2          /dev/sdc1
-    /root/mnt           /dev/loop0
-
-
-but without -f we get:
-
-# quota/xfs_quota -x -c print
-    Filesystem          Pathname
-
-
-    /mnt/test2          /dev/sdc1
-    /root/mnt           /dev/loop0
-
-those blank lines probably aren't quite what you wanted.
-(same behavior exists for the path command)
-
-I think the way to fix this is to not call printpath from path_f
-and print_f if (flags & FOREIGN && !foreign_allowed); just skip
-over those filesystems.
-
-But that leads to another issue; if the first path in the
-table is foreign, we won't get index zero, so we won't get the
-header line.  And, we'll have weird gaps in the ordering,
-because we skip over intermingled foreign filesystems.
-
-The way to fix that is to change fs_table_insert() to insert xfs
-filesystems at the front of the fs_table, and foreign filesystems
-at the end of the fs_table.  The easiest way to do that is to
-just push xfs filesystems onto the front and foreign filesystems
-onto the end, but that will reverse the ordering of the xfs
-filesystems; probably best to keep that ordering intact - again,
-to keep things as close as possible to prior behavior.
-
-That patch to sort fs_table should probably be a separate patch,
-early in a series.
-
-If you do all that, I think you can clean up the the various formatting
-conditionals in this function, too; you'll only get here with a foreign
-filesystem if foreign filesystems are OK, and that might simplify
-things, something like:
-
-        /* print header, accommodating for path nr and/or foreign flag */
-        if (index == 0) {
-                if (number)
-                        printf(_("      "));
-                if (foreign_allowed)
-                        printf("    ");
-                printf(_("Filesystem          Pathname\n"));
-        }
-	/* print path number if requested */
-        if (number)
-                printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
-
-	/* Print foreign or not, if we're into that kind of thing */
-        if (foreign_allowed)
-                printf("%s", path->fs_flags & FS_FOREIGN ? "(F) " : "    ");
-
-	/* Ok finally, print the actual fs info */
-        printf(_("%-19s %s"), path->fs_dir, path->fs_name);
-
-I *think* that should make the output identical to before, if -f
-isn't specified.
-
-> +
->  	if (path->fs_flags & FS_PROJECT_PATH) {
->  		prj = getprprid(path->fs_prid);
->  		printf(_(" (project %u"), path->fs_prid);
-> @@ -128,7 +137,7 @@ path_init(void)
->  	path_cmd.cfunc = path_f;
->  	path_cmd.argmin = 0;
->  	path_cmd.argmax = 1;
-> -	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
-> +	path_cmd.flags = CMD_FLAG_GLOBAL | CMD_ALL_FSTYPES;
-
-that's a little unexpected, because we don't actually want to
-unconditionally print all filesystem types; it's only done if requested
-with -f.
-
-I think you did this so we didn't get a failure on the first foreign fs,
-if -f wasn't specified, and stop printing anything else after that.
-
-But if the table is sorted as suggested above, you can just break out
-of the loops calling printpath when you hit the first foreign path,
-if foreign filesystems aren't allowed with "-f," and then it looks a
-little more consistent here, if you leave it as FOREIGN_OK.
-
--Eric
-
->  	path_cmd.oneline = _("set current path, or show the list of paths");
->  
->  	print_cmd.name = "print";
-> @@ -136,7 +145,7 @@ path_init(void)
->  	print_cmd.cfunc = print_f;
->  	print_cmd.argmin = 0;
->  	print_cmd.argmax = 0;
-> -	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_FLAG_FOREIGN_OK;
-> +	print_cmd.flags = CMD_FLAG_GLOBAL | CMD_ALL_FSTYPES;
->  	print_cmd.oneline = _("list known mount points and projects");
->  
->  	if (expert)
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
