@@ -1,96 +1,148 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40616 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757246AbcIHMNl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Sep 2016 08:13:41 -0400
-Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
- <20160907222753.GR30056@dastard>
- <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
- <20160908104131.479349ae@gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E9A097CA2
+	for <xfs@oss.sgi.com>; Sat,  3 Sep 2016 20:23:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BC454304032
+	for <xfs@oss.sgi.com>; Sat,  3 Sep 2016 18:23:56 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id bcOGUtK7lICK2o6k for <xfs@oss.sgi.com>;
+	Sat, 03 Sep 2016 18:23:53 -0700 (PDT)
+Subject: Re: [PATCH 2/6] libxfs/linux.c: Replace use of ustat by stat
+References: <cover.1452627740.git.felix.janda@posteo.de>
+	<20160112195945.GC568@nyan>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ed4c5fc0-d33d-553e-bae8-ea4e269888cc@sandeen.net>
-Date: Thu, 8 Sep 2016 07:13:40 -0500
+Message-ID: <5d979944-cd03-dbdd-8308-cd8fe4eefe73@sandeen.net>
+Date: Sat, 3 Sep 2016 20:23:51 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160908104131.479349ae@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+In-Reply-To: <20160112195945.GC568@nyan>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On 9/8/16 3:41 AM, Ralph Sennhauser wrote:
-> Hi Eric
-> 
-> On Wed, 7 Sep 2016 17:40:01 -0500
-> Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
->> On 9/7/16 5:27 PM, Dave Chinner wrote:
->>> On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:  
->>>> To get xfsprogs to cross-compile for musl some hacks were needed.
->>>>
->>>> 1) d_namlen isn't available with musl  
->>>
->>> musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
->>> to tell applications what the struct dirent it defines contains.
->>>
->>> (Haven't we been through this before?)  
->>
->> (yes: http://www.openwall.com/lists/musl/2016/01/15/9)
->>
->> what *does* it contain?
->>
->> We do already have:
->>
->>  #ifdef _DIRENT_HAVE_D_RECLEN
->>  		*total += dirent->d_reclen;
->>  #else
->> 		*total += dirent->d_namlen + sizeof(*dirent);
->>  #endif
->>
->> but you'd like:
->>
->>  #ifdef _DIRENT_HAVE_D_RECLEN
->>  		*total += dirent->d_reclen;
->>  #else
->> -		*total += dirent->d_namlen + sizeof(*dirent);
->> +		*total += strlen(dirent->d_name) + sizeof(*dirent);
->>  #endif
->>
->> but musl *does* have d_reclen:
->>
->> http://git.musl-libc.org/cgit/musl/tree/include/dirent.h
->>
->> so if it simply advertised that fact we'd be good...
-> 
-> Why not test for d_reclen in configure instead?
+Ok, this has become a bit more urgent:
 
-Why not advertise it in headers, as the manpage tells us to expect?
+Building on F24 on arm64, I noticed this:
 
-In the end Dave is the final arbiter here.  I don't really care,
-but what I would not want to see is #ifdef hell resulting from
-several different ways to check.  If it can be hidden in configure,
-it doesn't bother me.
+../libxfs/.libs/libxfs.a(linux.o): In function `platform_check_ismounted':
+/root/sandeen/xfsprogs-dev/libxfs/linux.c:66: warning: ustat is not implemented and will always fail
 
->>
->> Whatever happened to that request from January above?
+And lo:
 
-Nobody knows? ;)
+# xfs_metadump -o /dev/sda3 dump
+# mount /dev/sda3 /mnt/scratch
+# xfs_mdrestore dump /dev/sda3
+# echo $?
+0
+#
 
->>>> 2) crc32selftest doesn't make sense in case of cross-compilation,
->>>> the same can be said if building for a different host with the
->>>> native toolchain. So maybe an --disable-crc32selftest configure
->>>> option could be used here.
+Are we scared yet?
 
-...
+(I independently rewrote Felix's patch after seeing the above, then
+searched and found this old thread)
 
-> So for 2) the plan is disable if cross-compiling, run unconditionally
-> otherwise and no way to overwrite at configure time.
+We need to fix this, now.  Performance issues or not I'd advocate for
+taking this patch, unless hch made any progress on the O_EXCL approach.
 
-Seems reasonable.  I agree that it should be automatic, not a config-time
-switch.  We know if we're cross compiling, so DTRT...
+hch said:
+
+> That being said I think ustat fits pretty well for this use case,
+> so getting rid of it might need a little more justification.
+
+but it looks like that ship has sailed.
+
+So for this patch I'll add:
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 -Eric
- 
+
+On 1/12/16 1:59 PM, Felix Janda wrote:
+> ustat has been used to check whether a device file is mounted.
+> The function is deprecated and not supported by uclibc and musl.
+> Now do the check using the *mntent functions.
+> 
+> Based on patch by Natanael Copa <ncopa@alpinelinux.org>.
+> 
+> Signed-off-by: Felix Janda <felix.janda@posteo.de>
+> ---
+>  libxfs/linux.c | 29 ++++++++++++++++++++---------
+>  1 file changed, 20 insertions(+), 9 deletions(-)
+> 
+> diff --git a/libxfs/linux.c b/libxfs/linux.c
+> index c532d65..e7adcf2 100644
+> --- a/libxfs/linux.c
+> +++ b/libxfs/linux.c
+> @@ -16,11 +16,8 @@
+>   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>   */
+>  
+> -#define ustat __kernel_ustat
+>  #include <mntent.h>
+>  #include <sys/stat.h>
+> -#undef ustat
+> -#include <sys/ustat.h>
+>  #include <sys/mount.h>
+>  #include <sys/ioctl.h>
+>  #include <sys/sysinfo.h>
+> @@ -51,9 +48,10 @@ static int max_block_alignment;
+>  int
+>  platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+>  {
+> -	/* Pad ust; pre-2.6.28 linux copies out too much in 32bit compat mode */
+> -	struct ustat	ust[2];
+> -	struct stat64	st;
+> +	FILE		*f;
+> +	struct stat64	st, mst;
+> +	struct mntent	*mnt;
+> +	char		mounts[MAXPATHLEN];
+>  
+>  	if (!s) {
+>  		if (stat64(block, &st) < 0)
+> @@ -63,14 +61,27 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+>  		s = &st;
+>  	}
+>  
+> -	if (ustat(s->st_rdev, ust) >= 0) {
+> +	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
+> +	if ((f = setmntent(mounts, "r")) == NULL) {
+> +		fprintf(stderr,
+> +		    _("%s: %s possibly contains a mounted filesystem\n"),
+> +		    progname, name);
+> +		return 1;
+> +	}
+> +	while ((mnt = getmntent(f)) != NULL) {
+> +		if (stat64(mnt->mnt_dir, &mst) < 0)
+> +			continue;
+> +		if (mst.st_dev != s->st_rdev)
+> +			continue;
+> +
+>  		if (verbose)
+>  			fprintf(stderr,
+>  				_("%s: %s contains a mounted filesystem\n"),
+>  				progname, name);
+> -		return 1;
+> +		break;
+>  	}
+> -	return 0;
+> +	endmntent(f);
+> +	return mnt == NULL;
+>  }
+>  
+>  int
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
