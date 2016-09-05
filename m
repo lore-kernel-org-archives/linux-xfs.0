@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F0EC7CA1
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 08:26:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 701CD304039
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 06:26:55 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 8hy2GAcDhWg1S3tR for <xfs@oss.sgi.com>;
-	Mon, 19 Sep 2016 06:26:52 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 7FE6351C06B
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 08:26:36 -0500 (CDT)
-Subject: [PATCH V2] mkfs.xfs: clarify ftype defaults in manpage
-References: <1f98ea1d-893c-d1c0-2307-3f5a9b478238@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5a728f87-665a-1b1a-84b5-ab420cfa4250@sandeen.net>
-Date: Mon, 19 Sep 2016 08:26:51 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ADA2C7CA1
+	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 10:04:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 14DB8AC003
+	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 08:04:31 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Ms00Wgg6gadu7q4w (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 05 Sep 2016 08:04:29 -0700 (PDT)
+Date: Mon, 5 Sep 2016 08:04:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/71] xfs: remove xfs_btree_bigkey
+Message-ID: <20160905150427.GE7662@infradead.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<147216792277.867.4345768462787186616.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1f98ea1d-893c-d1c0-2307-3f5a9b478238@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <147216792277.867.4345768462787186616.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +30,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-When CRCs were made default, a few leftovers related to its
-prior non-default status remained in the manpage, in the ftype
-section.  Clean those up, stating the correct default for this
-feature.
+On Thu, Aug 25, 2016 at 04:32:02PM -0700, Darrick J. Wong wrote:
+> Remove the xfs_btree_bigkey mess and simply make xfs_btree_key big enough
+> to hold both keys in-core.
 
-Reported-by: Chris Murphy <chris@cmurf.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Looks good:
 
-V2: reflect reality regarding defaults, sorry about that.
-
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 9578c4d..c44b3bd 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -636,13 +636,11 @@ do not need to look up the inode to determine the inode type.
- 
- The
- .I value
--is either 0 or 1, with 1 signifiying that filetype information
--will be stored in the directory structure. The default value is 0.
-+is either 0 or 1, with 1 signifying that filetype information
-+will be stored in the directory structure.  The default value is 1.
- 
--When CRCs are enabled via
--.B \-m crc=1,
--the ftype functionality is always enabled. This feature can not be turned
--off for such filesystem configurations.
-+When CRCs are enabled (the default), the ftype functionality is always
-+enabled, and cannot be turned off.
- .IP
- .RE
- .TP
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
