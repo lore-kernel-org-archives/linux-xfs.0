@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A9E097CA2
-	for <xfs@oss.sgi.com>; Sun,  4 Sep 2016 00:36:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 522518F8033
-	for <xfs@oss.sgi.com>; Sat,  3 Sep 2016 22:36:23 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id ufC9a4rFMi9lbxGJ (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E7427CA1
+	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 10:12:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 64288304032
+	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 08:12:52 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id GCKftaN8C0lFmDfl (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 03 Sep 2016 22:36:20 -0700 (PDT)
-Date: Sat, 3 Sep 2016 22:36:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/3] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20160904053612.GJ8265@birch.djwong.org>
-References: <147216758326.32321.8525481353986871349.stgit@birch.djwong.org>
-	<147216760214.32321.8331561706153372268.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Mon, 05 Sep 2016 08:12:46 -0700 (PDT)
+Date: Mon, 5 Sep 2016 17:12:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
+	inode instead
+Message-ID: <20160905151244.GA16726@lst.de>
+References: <1470935423-12329-1-git-send-email-hch@lst.de>
+	<20160811215444.GY30192@twins.programming.kicks-ass.net>
+	<20160818173707.GA1240@lst.de>
+	<20160819132736.GH10121@twins.programming.kicks-ass.net>
+	<20160820063723.GA7013@lst.de>
+	<20160822083455.GH10153@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <147216760214.32321.8331561706153372268.stgit@birch.djwong.org>
+In-Reply-To: <20160822083455.GH10153@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,337 +35,214 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: mtk.manpages@gmail.com
-Cc: linux-man@vger.kernel.org, linux-api@vger.kernel.org, xfs <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Document the new GETFSMAP ioctl that returns the physical layout of a
-(disk-based) filesystem.
+Peter, this is the fixed up patch.  Can you write a proper changelog
+and add your signoff?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man2/ioctl_getfsmap.2 |  313 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 313 insertions(+)
- create mode 100644 man2/ioctl_getfsmap.2
+ include/linux/lockdep.h  | 18 ++++++++++++++++--
+ kernel/locking/lockdep.c | 43 ++++++++++++++++++++++++++-----------------
+ 2 files changed, 42 insertions(+), 19 deletions(-)
 
-diff --git a/man2/ioctl_getfsmap.2 b/man2/ioctl_getfsmap.2
-new file mode 100644
-index 0000000..99de417
---- /dev/null
-+++ b/man2/ioctl_getfsmap.2
-@@ -0,0 +1,313 @@
-+.\" Copyright (c) 2016, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" This is free documentation; you can redistribute it and/or
-+.\" modify it under the terms of the GNU General Public License as
-+.\" published by the Free Software Foundation; either version 2 of
-+.\" the License, or (at your option) any later version.
-+.\"
-+.\" The GNU General Public License's references to "object code"
-+.\" and "executables" are to be interpreted as the output of any
-+.\" document formatting or typesetting system, including
-+.\" intermediate and printed output.
-+.\"
-+.\" This manual is distributed in the hope that it will be useful,
-+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+.\" GNU General Public License for more details.
-+.\"
-+.\" You should have received a copy of the GNU General Public
-+.\" License along with this manual; if not, see
-+.\" <http://www.gnu.org/licenses/>.
-+.\" %%%LICENSE_END
-+.TH IOCTL-GETFSMAP 2 2016-09-03 "Linux" "Linux Programmer's Manual"
-+.SH NAME
-+ioctl_getfsmap \- retrieve the physical layout of the filesystem
-+.SH SYNOPSIS
-+.br
-+.B #include <sys/ioctl.h>
-+.br
-+.B #include <linux/fs.h>
-+.sp
-+.BI "int ioctl(int " fd ", GETFSMAP, struct fsmap_head * " arg );
-+.SH DESCRIPTION
-+This
-+.BR ioctl (2)
-+retrieves physical extent mappings for a filesystem.
-+This information can be used to discover which files are mapped to a physical
-+block, examine free space, or find known bad blocks, among other things.
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index eabe013..4cef9f8 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -338,9 +338,15 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ extern void lock_release(struct lockdep_map *lock, int nested,
+ 			 unsigned long ip);
+ 
+-#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
++extern int _lock_is_held(struct lockdep_map *lock, int read);
+ 
+-extern int lock_is_held(struct lockdep_map *lock);
++static inline int lock_is_held(struct lockdep_map *lock)
++{
++	return _lock_is_held(lock, -1);
++}
 +
-+The sole argument to this ioctl should be a pointer to a single
-+.BR "struct fsmap_head" ":"
-+.in +4n
-+.nf
++#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
++#define _lockdep_is_held(lock, r)	_lock_is_held(&(lock)->dep_map, (r))
+ 
+ extern void lock_set_class(struct lockdep_map *lock, const char *name,
+ 			   struct lock_class_key *key, unsigned int subclass,
+@@ -372,6 +378,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+ 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+ 
++#define lockdep_assert_held_exclusive(l)	do {		\
++		WARN_ON(debug_locks && !_lockdep_is_held(l, 0));\
++	} while (0)
 +
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved;	/* future use, must be zero */
-+};
++#define lockdep_assert_held_read(l)	do {			\
++		WARN_ON(debug_locks && !_lockdep_is_held(l, 1));\
++	} while (0)
 +
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[2];	/* must be zero */
+ #define lockdep_assert_held_once(l)	do {				\
+ 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 589d763..f39573b 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
+ 	return 0;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock);
++static int __lock_is_held(struct lockdep_map *lock, int read);
+ 
+ /*
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
+@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ 	}
+ 	chain_key = iterate_chain_key(chain_key, class_idx);
+ 
+-	if (nest_lock && !__lock_is_held(nest_lock))
++	if (nest_lock && !__lock_is_held(nest_lock, -1))
+ 		return print_lock_nested_lock_not_held(curr, hlock, ip);
+ 
+ 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
+@@ -3390,10 +3390,17 @@ print_unlock_imbalance_bug(struct task_struct *curr, struct lockdep_map *lock,
+ 	return 0;
+ }
+ 
+-static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock)
++static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock, int read)
+ {
+-	if (hlock->instance == lock)
+-		return 1;
++	if (hlock->instance == lock) {
++		if (read == -1)
++			return 1;
 +
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[0];	/* returned records */
-+};
++		if (hlock->read == read)
++			return 1;
 +
-+.fi
-+.in
-+The two
-+.I fmh_keys
-+array elements specify the lowest and highest reverse-mapping
-+keys, respectively, for which userspace would like physical mapping
-+information.
-+A reverse mapping key consists of the tuple (device, block, owner, offset).
-+The owner and offset fields are part of the key because some filesystems
-+support sharing physical blocks between multiple files and
-+therefore may return multiple mappings for a given physical block.
-+.PP
-+Filesystem mappings are copied into the
-+.I fmh_recs
-+array, which immediately follows the header data.
-+.SS Fields of struct fsmap_head
-+.PP
-+The
-+.I fmh_iflags
-+field is a bitmask passed to the kernel to alter the output.
-+There are no flags defined, so this value must be zero.
++		return 0;
++	}
+ 
+ 	if (hlock->references) {
+ 		struct lock_class *class = lock->class_cache[0];
+@@ -3420,6 +3427,8 @@ static int match_held_lock(struct held_lock *hlock, struct lockdep_map *lock)
+ 
+ 		if (hlock->class_idx == class - lock_classes + 1)
+ 			return 1;
 +
-+.PP
-+The
-+.I fmh_oflags
-+field is a bitmask of flags that concern all output mappings.
-+If
-+.B FMH_OF_DEV_T
-+is set, then the
-+.I fmr_device
-+field represents a
-+.B dev_t
-+structure containing the major and minor numbers of the block device.
-+
-+.PP
-+The
-+.I fmh_count
-+field contains the number of elements in the array being passed to the
-+kernel.
-+If this value is 0,
-+.I fmh_entries
-+will be set to the number of records that would have been returned had
-+the array been large enough;
-+no mapping information will be returned.
-+
-+.PP
-+The
-+.I fmh_entries
-+field contains the number of elements in the
-+.I fmh_recs
-+array that contain useful information.
-+
-+.PP
-+The
-+.I fmh_reserved
-+fields must be set to zero.
-+
-+.SS Keys
-+.PP
-+The two key records in
-+.B fsmap_head.fmh_keys
-+specify the lowest and highest extent records in the keyspace that the caller
-+wants returned.
-+A filesystem that can share blocks between files likely requires the tuple
-+.RI "(" "device" ", " "physical" ", " "owner" ", " "offset" ", " "flags" ")"
-+to uniquely index any filesystem mapping record.
-+Classic non-sharing filesystems might be able to identify any record with only
-+.RI "(" "device" ", " "physical" ", " "flags" ")."
-+For example, if the low key is set to (0, 36864, 0, 0, 0), the filesystem will
-+only return records for extents starting at or above 36KiB on disk.
-+If the high key is set to (0, 1048576, 0, 0, 0), only records below 1MiB will
-+be returned.
-+By convention, the field
-+.B fsmap_head.fmh_keys[0]
-+must contain the low key and
-+.B fsmap_head.fmh_keys[1]
-+must contain the high key for the request.
-+.PP
-+For convenience, if
-+.B fmr_length
-+is set in the low key, it will be added to
-+.IR fmr_block " or " fmr_offset
-+as appropriate.
-+The caller can take advantage of this subtlety to set up subsequent calls
-+by copying
-+.B fsmap_head.fmh_recs[fsmap_head.fmh_entries - 1]
-+into the low key.
-+
-+.SS Fields of struct fsmap
-+.PP
-+The
-+.I fmr_device
-+field contains a 32-bit cookie to uniquely identify the underlying storage
-+device.
-+If the
-+.B FMH_OF_DEV_T
-+flag is set in the header's
-+.I fmh_oflags
-+field, this field contains a
-+.B dev_t
-+from which major and minor numbers can be extracted.
-+If the flag is not set, this field contains a value that must be unique
-+for each unique storage device.
-+
-+.PP
-+The
-+.I fmr_physical
-+field contains the disk address of the extent in bytes.
-+
-+.PP
-+The
-+.I fmr_owner
-+field contains the owner of the extent.
-+This is an inode number unless
-+.B FMR_OF_SPECIAL_OWNER
-+is set in the
-+.I fmr_flags
-+field, in which case the owner value is one of the following special values:
-+.RS 0.4i
-+.TP
-+.B FMR_OWN_FREE
-+Free space.
-+.TP
-+.B FMR_OWN_UNKNOWN
-+This extent has an unknown owner.
-+.TP
-+.B FMR_OWN_FS
-+Static filesystem metadata which exists at a fixed address.
-+On XFS these are the AG superblock, AGF, AGFL, and AGI headers.
-+.TP
-+.B FMR_OWN_LOG
-+The filesystem journal.
-+.TP
-+.B FMR_OWN_AG
-+Allocation group metadata.
-+On XFS these are the free space btrees or the reverse mapping btrees.
-+.TP
-+.B FMR_OWN_INOBT
-+Inode indexing, if any are provided.
-+On XFS these are the inode and free inode btrees.
-+.TP
-+.B FMR_OWN_INODES
-+Inode records.
-+.TP
-+.B FMR_OWN_REFC
-+Reference count information.
-+On XFS this is the reference count btree.
-+.TP
-+.B FMR_OWN_COW
-+This extent is being used to stage a copy-on-write.
-+.TP
-+.B FMR_OWN_DEFECTIVE:
-+This extent has been marked defective either by the filesystem or the
-+underlying device.
-+.RE
-+
-+.PP
-+The
-+.I fmr_offset
-+field contains the logical address in the mapping record in bytes.
-+This field has no meaning if the
-+.BR FMR_OF_SPECIAL_OWNER " or " FMR_OF_EXTENT_MAP
-+flags are set in
-+.IR fmr_flags "."
-+
-+.PP
-+The
-+.I fmr_length
-+field contains the length of the extent in bytes.
-+
-+.PP
-+The
-+.I fmr_flags
-+field is a bitmask of extent state flags.
-+The bits are:
-+.RS 0.4i
-+.TP
-+.B FMR_OF_PREALLOC
-+The extent is allocated but not yet written.
-+.TP
-+.B FMR_OF_ATTR_FORK
-+This extent contains extended attribute data.
-+.TP
-+.B FMR_OF_EXTENT_MAP
-+This extent contains extent map information for the owner.
-+.TP
-+.B FMR_OF_SHARED
-+Parts of this extent may be shared.
-+.TP
-+.B FMR_OF_SPECIAL_OWNER
-+The
-+.I fmr_owner
-+field contains a special value instead of an inode number.
-+.TP
-+.B FMR_OF_LAST
-+This is the last record in the filesystem.
-+.RE
-+
-+.PP
-+The
-+.I fmr_reserved
-+field will be set to zero.
-+
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EINVAL
-+The array is not long enough, or a non-zero value was passed in one of the
-+fields that must be zero.
-+.TP
-+.B EFAULT
-+The pointer passed in was not mapped to a valid memory address.
-+.TP
-+.B EBADF
-+.IR fd
-+is not open for reading.
-+.TP
-+.B EPERM
-+This query is not allowed.
-+.TP
-+.B EOPNOTSUPP
-+The filesystem does not support this command.
-+.TP
-+.B EUCLEAN
-+The filesystem metadata is corrupt and needs repair.
-+.TP
-+.B EBADMSG
-+The filesystem has detected a checksum error in the metadata.
-+.TP
-+.B ENOMEM
-+Insufficient memory to process the request.
-+
-+.SH EXAMPLE
-+.TP
-+Please see io/fsmap.c in the xfsprogs distribution for a sample program.
-+
-+.SH CONFORMING TO
-+This API is Linux-specific.
-+Not all filesystems support it.
-+.fi
-+.in
-+.SH SEE ALSO
-+.BR ioctl (2)
++		/* XXX do we want @read stuff for nested locks !? */
+ 	}
+ 
+ 	return 0;
+@@ -3452,7 +3461,7 @@ __lock_set_class(struct lockdep_map *lock, const char *name,
+ 		 */
+ 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
+ 			break;
+-		if (match_held_lock(hlock, lock))
++		if (match_held_lock(hlock, lock, -1))
+ 			goto found_it;
+ 		prev_hlock = hlock;
+ 	}
+@@ -3523,7 +3532,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
+ 		 */
+ 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
+ 			break;
+-		if (match_held_lock(hlock, lock))
++		if (match_held_lock(hlock, lock, -1))
+ 			goto found_it;
+ 		prev_hlock = hlock;
+ 	}
+@@ -3576,7 +3585,7 @@ found_it:
+ 	return 1;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock)
++static int __lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	struct task_struct *curr = current;
+ 	int i;
+@@ -3584,7 +3593,7 @@ static int __lock_is_held(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock))
++		if (match_held_lock(hlock, lock, read))
+ 			return 1;
+ 	}
+ 
+@@ -3603,7 +3612,7 @@ static struct pin_cookie __lock_pin_lock(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock)) {
++		if (match_held_lock(hlock, lock, -1)) {
+ 			/*
+ 			 * Grab 16bits of randomness; this is sufficient to not
+ 			 * be guessable and still allows some pin nesting in
+@@ -3630,7 +3639,7 @@ static void __lock_repin_lock(struct lockdep_map *lock, struct pin_cookie cookie
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock)) {
++		if (match_held_lock(hlock, lock, -1)) {
+ 			hlock->pin_count += cookie.val;
+ 			return;
+ 		}
+@@ -3650,7 +3659,7 @@ static void __lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie cookie
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock)) {
++		if (match_held_lock(hlock, lock, -1)) {
+ 			if (WARN(!hlock->pin_count, "unpinning an unpinned lock\n"))
+ 				return;
+ 
+@@ -3769,7 +3778,7 @@ void lock_release(struct lockdep_map *lock, int nested,
+ }
+ EXPORT_SYMBOL_GPL(lock_release);
+ 
+-int lock_is_held(struct lockdep_map *lock)
++int _lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -3781,13 +3790,13 @@ int lock_is_held(struct lockdep_map *lock)
+ 	check_flags(flags);
+ 
+ 	current->lockdep_recursion = 1;
+-	ret = __lock_is_held(lock);
++	ret = __lock_is_held(lock, read);
+ 	current->lockdep_recursion = 0;
+ 	raw_local_irq_restore(flags);
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lock_is_held);
++EXPORT_SYMBOL_GPL(_lock_is_held);
+ 
+ struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
+ {
+@@ -3908,7 +3917,7 @@ __lock_contended(struct lockdep_map *lock, unsigned long ip)
+ 		 */
+ 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
+ 			break;
+-		if (match_held_lock(hlock, lock))
++		if (match_held_lock(hlock, lock, -1))
+ 			goto found_it;
+ 		prev_hlock = hlock;
+ 	}
+@@ -3961,7 +3970,7 @@ __lock_acquired(struct lockdep_map *lock, unsigned long ip)
+ 		 */
+ 		if (prev_hlock && prev_hlock->irq_context != hlock->irq_context)
+ 			break;
+-		if (match_held_lock(hlock, lock))
++		if (match_held_lock(hlock, lock, -1))
+ 			goto found_it;
+ 		prev_hlock = hlock;
+ 	}
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
