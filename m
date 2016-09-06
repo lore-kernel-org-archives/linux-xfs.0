@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9E5667CA0
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 15:39:40 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3B1267CA1
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 14:15:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 20009AC002
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 13:39:39 -0700 (PDT)
-Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
-	cuda.sgi.com with ESMTP id wuo6ZcOHxX6Hen1m (version=TLSv1.2
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AAA03AC007
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 12:15:46 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id MBmJjr8VkXHu66CD (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 08 Sep 2016 13:39:38 -0700 (PDT)
-Date: Thu, 8 Sep 2016 16:39:34 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <268523885.1013251.1473367174650.JavaMail.zimbra@redhat.com>
-In-Reply-To: <CA+55aFyfDNR9vkQ3sZMhLcoizE5VCLJDVukyPk=gbhDz9aNLgA@mail.gmail.com>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
-	<1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
-	<20160903003919.GI30056@dastard>
-	<1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
-	<CA+55aFyfDNR9vkQ3sZMhLcoizE5VCLJDVukyPk=gbhDz9aNLgA@mail.gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
-	detected
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 12:15:44 -0700 (PDT)
+Date: Tue, 6 Sep 2016 12:15:15 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/6] vfs: support FS_XFLAG_REFLINK and FS_XFLAG_COWEXTSIZE
+Message-ID: <20160906191515.GA26927@birch.djwong.org>
+References: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
+	<147216786073.525.16014208838990530622.stgit@birch.djwong.org>
+	<20160905145622.GB7662@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160905145622.GB7662@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,37 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-api@vger.kernel.org, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, viro@ZenIV.linux.org.uk, linux-fsdevel@vger.kernel.org
 
-
-
------ Original Message -----
-> From: "Linus Torvalds" <torvalds@linux-foundation.org>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: "Dave Chinner" <david@fromorbit.com>, "Al Viro" <viro@zeniv.linux.org.uk>, "linux-xfs"
-> <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
-> Sent: Thursday, September 8, 2016 2:01:23 PM
-> Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+On Mon, Sep 05, 2016 at 07:56:22AM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 25, 2016 at 04:31:00PM -0700, Darrick J. Wong wrote:
+> > Introduce XFLAGs for the new XFS reflink inode flag and the CoW extent
+> > size hint, and actually plumb the CoW extent size hint into the fsxattr
+> > structure.
 > 
-> On Thu, Sep 8, 2016 at 8:29 AM, CAI Qian <caiqian@redhat.com> wrote:
-> > Right. FYI, revert the commit below fixes the regression,
-> >
-> > 8d02076 : ->splice_write() via ->write_iter()
-> 
-> I guess you didn't actually revert that, because so much else has
-> changed. So you just tested the pre- and post- state of that commit?
-Right, I just reverted that commit while that one is as a HEAD. It is
-not going to be a straight-forward revert. There have had a few commits
-on the top already, so there will be some additional work to bake a proper
-revert to the current origin HEAD.
+> Just curious, but why would we even bother to expose the reflink flag
+> to userspace?
 
-Though, Everything else looks straigtforward (PAGE_CACHE_* conversion,
-inode_lock* conversion, file_remove_privs() converstion). It seems only
-tricky thing is that generic_write_sync() starts to use struct kiocb *
-instead of struct file *, so generic_file_splice_write() and probably
-xfs_file_splice_write() need to change to use kiocb as well.
-   CAI Qian
+So far I've put the reflink flag to use in xfs_scrub to look for
+obvious signs of brokenness such as extents that overlap or have the
+shared flag set but the inode flag is off; and to skip various kinds
+of checks that don't have to happen when blocks don't overlap.
+
+I doubt there's much of a use for the flag outside of the XFS utilities.
+For a while I pondered only exposing the fsxattr flag if the caller had
+CAP_SYS_ADMIN (the level of priviledge required to run scrub) but
+decided that I wouldn't change the existing interface like that unless
+I had a really good reason.
+
+--D
 
 _______________________________________________
 xfs mailing list
