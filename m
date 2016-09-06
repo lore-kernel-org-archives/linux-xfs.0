@@ -1,91 +1,79 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23672 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757657AbcIHTOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 15:14:46 -0400
-Date: Thu, 8 Sep 2016 12:14:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/71] xfs: log refcount intent items
-Message-ID: <20160908191404.GB8969@birch.djwong.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
- <147216802075.867.12945255918683675311.stgit@birch.djwong.org>
- <20160906152155.GJ24287@infradead.org>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D90F7CA4
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 17:36:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FD568F8037
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 15:36:26 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Fs0DvlnuFoqIJzOF for <xfs@oss.sgi.com>;
+	Tue, 06 Sep 2016 15:36:23 -0700 (PDT)
+Date: Wed, 7 Sep 2016 08:35:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: undo block reservation correctly in
+	xfs_trans_reserve()
+Message-ID: <20160906223533.GL30056@dastard>
+References: <1473149039-30487-1-git-send-email-guaneryu@gmail.com>
+	<20160906084828.GK30056@dastard>
+	<20160906115045.GG2462@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160906152155.GJ24287@infradead.org>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <20160906115045.GG2462@eguan.usersys.redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 06, 2016 at 08:21:55AM -0700, Christoph Hellwig wrote:
-> > +	__uint64_t			cui_id;
-> > +	struct xfs_ail_cursor		cur;
-> > +	struct xfs_ail			*ailp = log->l_ailp;
-> > +
-> > +	cud_formatp = item->ri_buf[0].i_addr;
-> > +	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_cud_log_format));
+On Tue, Sep 06, 2016 at 07:50:45PM +0800, Eryu Guan wrote:
+> On Tue, Sep 06, 2016 at 06:48:28PM +1000, Dave Chinner wrote:
+> > On Tue, Sep 06, 2016 at 04:03:59PM +0800, Eryu Guan wrote:
+> > > Fixes: 0d485ada404b ("xfs: use generic percpu counters for free block counter")
+> > 
+> > I really don't like this sort of "annotation". It wrongly implies
+> > the commit was broken (it wasn't) and there's no scope for stating
+> > the problem context. i.e.  that the problem is a minor regression in
+> > a rarely travelled corner case that is unlikely to affect production
+> > machines in any significant way. It's better to describe things with
+> > all the relevant context:
+> > 
+> > "This is a regression introduced in commit ... and only occurs when
+> > .... "
 > 
-> Should we return -EFSCORRUPTED here instead?
-
-Yes.  The RUD recovery routine should probably get that change too.
-
-> > +	/* XXX: do nothing for now */
+> Makes sense, will do so.
 > 
-> What else would be do in the future here?
+> > 
+> > > Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+> > 
+> > Not @redhat?
 > 
-> > +static void
-> > +xfs_trans_set_refcount_flags(
-> > +	struct xfs_phys_extent		*refc,
-> > +	enum xfs_refcount_intent_type	type)
-> > +{
-> > +	refc->pe_flags = 0;
-> > +	switch (type) {
-> > +	case XFS_REFCOUNT_INCREASE:
-> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_INCREASE;
-> > +		break;
-> > +	case XFS_REFCOUNT_DECREASE:
-> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_DECREASE;
-> > +		break;
-> > +	case XFS_REFCOUNT_ALLOC_COW:
-> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_ALLOC_COW;
-> > +		break;
-> > +	case XFS_REFCOUNT_FREE_COW:
-> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_FREE_COW;
-> > +		break;
-> 
-> Is there any good reasons to use a type enum in core, but flags on
-> disk?
+> I thought that I'm employed by Red Hat as a QE not a filesystem
+> developer, all filesystem patches I send reflect my own opinions not my
+> employer's, so all silly mistakes I made in the patches are under my
+> personal email too :)
 
-I suppose since log structures aren't guaranteed to be platform agnostic
-it's fine to just copy in the in-core enum here.
+Copyright assignments rarely work like that. It's a big grey area,
+though, so I think you should check with your legal department as to
+what you should use here.
 
-> > +int
-> > +xfs_trans_log_finish_refcount_update(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_cud_log_item		*cudp,
-> > +	enum xfs_refcount_intent_type	type,
-> > +	xfs_fsblock_t			startblock,
-> > +	xfs_extlen_t			blockcount,
-> > +	struct xfs_btree_cur		**pcur)
-> > +{
-> > +	int				error;
-> > +
-> > +	/* XXX: leave this empty for now */
-> > +	error = -EFSCORRUPTED;
-> 
-> Lift might be a lot easier if this patch and "xfs: connect refcount
-> adjust functions to upper layers" were merged into one.  It's not like
-> they are testable independently anyway.
+Cheers,
 
-I'll think about it.  I think it might not be too difficult to push "xfs: log
-refcount intent items" down one and merge it with "xfs: connect refcount adjust
-functions to upper layers", though my preference biases towards not stirring
-things up just to reduce commit count.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-(Basically, I'll give it a try after I'm done making the other fixes and commit
-it if it doesn't make a total mess of things.)
-
---D
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
