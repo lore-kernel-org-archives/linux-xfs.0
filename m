@@ -1,36 +1,55 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:43228 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754073AbcIHR4g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 13:56:36 -0400
-Date: Thu, 8 Sep 2016 18:56:32 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160908175632.GH2356@ZenIV.linux.org.uk>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard>
- <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8FFCF7CA1
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 18:40:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 53CE530404E
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 16:40:38 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	ozTso4oCidSYdfpy for <xfs@oss.sgi.com>;
+	Tue, 06 Sep 2016 16:40:36 -0700 (PDT)
+Date: Wed, 7 Sep 2016 09:40:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 34/71] xfs: support bmapping delalloc extents in the CoW
+	fork
+Message-ID: <20160906234001.GN30056@dastard>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<147216814006.867.6404376654574855233.stgit@birch.djwong.org>
+	<20160906152553.GA9760@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: CAI Qian <caiqian@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
+In-Reply-To: <20160906152553.GA9760@infradead.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Thu, Sep 08, 2016 at 11:29:11AM -0400, CAI Qian wrote:
+On Tue, Sep 06, 2016 at 08:25:53AM -0700, Christoph Hellwig wrote:
+> FYI, this has some major conflicts with the iomap updates - we'll need
+> to know from Dave which one should go in first.
 
-> > Nope, this goes back to the splice rework back around ~3.16, IIRC.
-> Right. FYI, revert the commit below fixes the regression,
-> 
-> 8d02076 : ->splice_write() via ->write_iter()
+I've already got the iomap updates in my local tree, so they will go
+in first.
 
-... and brings back a lot of other crap.  The thing is, pipe lock should
-be on the outside of everything fs might be taking, so that splice IO
-is the same as normal IO as far as filesystem locking is concerned.  For
-the write side it had been done in that commit, for the read side it's yet
-to be done.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
