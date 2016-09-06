@@ -1,60 +1,111 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34972 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932232AbcILOD1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Sep 2016 10:03:27 -0400
-Subject: Re: [PATCH] xfs_repair: fix exit code documentation in manpage
-References: <62881d1e-8980-00c6-1d04-642a49b3b252@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e31a51d9-c8f6-dc69-1507-9f6c7dad13da@sandeen.net>
-Date: Mon, 12 Sep 2016 09:03:25 -0500
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 885787CA1
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 06:50:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B2768F8035
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 04:50:51 -0700 (PDT)
+Received: from mail-pa0-f67.google.com (mail-pa0-f67.google.com
+	[209.85.220.67]) by cuda.sgi.com with ESMTP id RnO2uphRGL55NXcz
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Sep 2016 04:50:49 -0700 (PDT)
+Received: by mail-pa0-f67.google.com with SMTP id pp5so4398203pac.2
+	for <xfs@oss.sgi.com>; Tue, 06 Sep 2016 04:50:49 -0700 (PDT)
+Date: Tue, 6 Sep 2016 19:50:45 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfs: undo block reservation correctly in
+	xfs_trans_reserve()
+Message-ID: <20160906115045.GG2462@eguan.usersys.redhat.com>
+References: <1473149039-30487-1-git-send-email-guaneryu@gmail.com>
+	<20160906084828.GK30056@dastard>
 MIME-Version: 1.0
-In-Reply-To: <62881d1e-8980-00c6-1d04-642a49b3b252@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20160906084828.GK30056@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 9/12/16 7:35 AM, Eric Sandeen wrote:
-> xfs_repair cannot proceed with a dirty log, and exits with
-> a status code of 2 in that case; fix the manpage to
-> reflect this.
+On Tue, Sep 06, 2016 at 06:48:28PM +1000, Dave Chinner wrote:
+> On Tue, Sep 06, 2016 at 04:03:59PM +0800, Eryu Guan wrote:
+> > "blocks" should be added back to fdblocks at undo time, not taken
+> > away, i.e. the minus sign should not be used.
 > 
-> (This has been the case for years, but was never documented).
+> You've described the code change you made, not about the problem you
+> hit and are fixing.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> i.e. I've got no idea how you found this, or even how to identify a
+> system that is tripping over this problem. By describing how you
+> found it and the symptoms being displayed, I'll learn from you how
+> to identify the problem and hence, in future, be able to identify
+> systems that are tripping over the problem, too.
 
-Sorry, I missed Zorro's earlier patch,
+Usually I will describe the symptoms, how I hit the problem and the
+reproducer in commit log in details, but this time I found this bug by
+code inspection, I don't have these information. I should have mentioned
+this info too.
 
-xfs_repair: update the manual content about xfs_repair exit status
-
-So drop this one, i'll go review Zorro's patch.
-
--Eric
-
-
-> ---
 > 
-> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> index 1b4d9e3..57c970a 100644
-> --- a/man/man8/xfs_repair.8
-> +++ b/man/man8/xfs_repair.8
-> @@ -509,7 +509,9 @@ If the directory were small, the message would read "junking entry ...".
->  will return a status of 1 if filesystem corruption was detected and
->  0 if no filesystem corruption was detected.
->  .B xfs_repair
-> -run without the \-n option will always return a status code of 0.
-> +run without the \-n option will return a status code of 2 if the log is
-> +dirty and needs to be replayed, otherwise it will always return a status
-> +code of 0.
->  .SH BUGS
->  The filesystem to be checked and repaired must have been
->  unmounted cleanly using normal system administration procedures
+> > Fixes: 0d485ada404b ("xfs: use generic percpu counters for free block counter")
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I really don't like this sort of "annotation". It wrongly implies
+> the commit was broken (it wasn't) and there's no scope for stating
+> the problem context. i.e.  that the problem is a minor regression in
+> a rarely travelled corner case that is unlikely to affect production
+> machines in any significant way. It's better to describe things with
+> all the relevant context:
 > 
+> "This is a regression introduced in commit ... and only occurs when
+> .... "
+
+Makes sense, will do so.
+
+> 
+> > Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+> 
+> Not @redhat?
+
+I thought that I'm employed by Red Hat as a QE not a filesystem
+developer, all filesystem patches I send reflect my own opinions not my
+employer's, so all silly mistakes I made in the patches are under my
+personal email too :)
+
+> 
+> > ---
+> >  fs/xfs/xfs_trans.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 5f3d33d..011dace 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -217,7 +217,7 @@ undo_log:
+> >  
+> >  undo_blocks:
+> >  	if (blocks > 0) {
+> > -		xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
+> > +		xfs_mod_fdblocks(tp->t_mountp, ((int64_t)blocks), rsvd);
+> 
+> Outer () can be dropped, too.
+
+OK.
+
+Thanks for the review!
+
+Eryu
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
