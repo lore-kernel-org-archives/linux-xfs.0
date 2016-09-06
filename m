@@ -1,57 +1,62 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33548 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752011AbcIHSSq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 14:18:46 -0400
-Received: by mail-oi0-f50.google.com with SMTP id y2so83995879oie.0
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 11:18:46 -0700 (PDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E00D57CA1
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 01:38:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 66CA8AC001
+	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 23:38:19 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id I9giJMitqjGMv5Uk (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 05 Sep 2016 23:38:17 -0700 (PDT)
+Date: Mon, 5 Sep 2016 23:38:15 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 04/71] xfs: defer should allow ->finish_item to request a
+	new transaction
+Message-ID: <20160906063815.GA11411@infradead.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<147216794133.867.4063030531885190227.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 8 Sep 2016 11:18:45 -0700
-Message-ID: <CA+55aFyPye0WM3RYx=K_eEy=xWbYvMTFtG3Hc1U0_BU4bMMPnA@mail.gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: CAI Qian <caiqian@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+Content-Disposition: inline
+In-Reply-To: <147216794133.867.4063030531885190227.stgit@birch.djwong.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Sep 8, 2016 at 11:12 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> So the problem really is that the vfs layer seems to simply not allow
-> the filesystem to do any locking around the generic page cache helper
-> functions. And XFS really wants to do that.
+On Thu, Aug 25, 2016 at 04:32:21PM -0700, Darrick J. Wong wrote:
+> When xfs_defer_finish calls ->finish_item, it's possible that
+> (refcount) won't be able to finish all the work in a single
+> transaction.  When this happens, the ->finish_item handler should
+> shorten the log done item's list count, update the work item to
+> reflect where work should continue, and return -EAGAIN so that
+> defer_finish knows to retain the pending item on the pending list,
+> roll the transaction, and restart processing where we left off.
+> 
+> Plumb in the code and document how this mechanism is supposed to work.
 
-Hmm.
+I've voiced this before, and I will again:  I think the whole xfs_defer
+mechanism is a major, major mistake.  All three users look somewhat
+similar, but actually are different underneath.  Especially the extent
+free case is a lot simpler than all others, and we now place the burden
+of a complex abstraction onto code that would otherwise be fairly
+easily understandable.
 
-I wonder if we could just take the pipe lock *much* earlier at the
-splice() layer? Do it before any callbacks to the low-level
-filesystems, not inside the "generic" splice helpers at all?
+Also it adds a memory allocation to the extent free code, and gets in
+the way of merging the freed extent and extent busy structures,
+something I prototyped a while ago.
 
-That would clean up a ton of crap.
-
-The *one* reason that seems impossible right now seems to be that we
-use "pipe_wait()" in our splice ops. And "pipe_wait()" drops and
-retakes the pipe lock over the waiting.
-
-BUT.
-
-What if we got rid of all the pipe-wait crap entirely, and just made
-all the splice routines return EAGAIN instead of waiting? And then do
-the pipe_wait() at the higher level, outside the filesystem callback
-code, and outside the low-level generic helpers?
-
-Maybe that pipe_wait() movement doesn't really work for some reason
-that I didn't look at, but that would really help make the locking
-enormously simpler. And then the pipe lock would *obviously* be the
-outermost lock, and we'd get rid of all the issues with filesystem
-lock ordering.
-
-               Linus
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
