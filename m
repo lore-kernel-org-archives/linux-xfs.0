@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 885787CA1
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 06:50:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B2768F8035
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 04:50:51 -0700 (PDT)
-Received: from mail-pa0-f67.google.com (mail-pa0-f67.google.com
-	[209.85.220.67]) by cuda.sgi.com with ESMTP id RnO2uphRGL55NXcz
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Sep 2016 04:50:49 -0700 (PDT)
-Received: by mail-pa0-f67.google.com with SMTP id pp5so4398203pac.2
-	for <xfs@oss.sgi.com>; Tue, 06 Sep 2016 04:50:49 -0700 (PDT)
-Date: Tue, 6 Sep 2016 19:50:45 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfs: undo block reservation correctly in
-	xfs_trans_reserve()
-Message-ID: <20160906115045.GG2462@eguan.usersys.redhat.com>
-References: <1473149039-30487-1-git-send-email-guaneryu@gmail.com>
-	<20160906084828.GK30056@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id EC2637CA3
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 02:40:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A98A78F8035
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 00:40:02 -0700 (PDT)
+Received: from mail-yb0-f174.google.com (mail-yb0-f174.google.com
+	[209.85.213.174]) by cuda.sgi.com with ESMTP id
+	Z45FymmEp1p1jkMz (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 00:40:01 -0700 (PDT)
+Received: by mail-yb0-f174.google.com with SMTP id 125so68070618ybe.3
+	for <xfs@oss.sgi.com>; Tue, 06 Sep 2016 00:40:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160906084828.GK30056@dastard>
+From: Elie Rozen <elie@plexistor.com>
+Date: Tue, 6 Sep 2016 10:40:00 +0300
+Message-ID: <CA++TfmAabVgL0RqKKLNFL+mGqbQEiscAirwVTJh2DfK2=LfCvg@mail.gmail.com>
+Subject: Please add me to the xfstest mailing list
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,82 +25,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4362627440178093584=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 06, 2016 at 06:48:28PM +1000, Dave Chinner wrote:
-> On Tue, Sep 06, 2016 at 04:03:59PM +0800, Eryu Guan wrote:
-> > "blocks" should be added back to fdblocks at undo time, not taken
-> > away, i.e. the minus sign should not be used.
-> 
-> You've described the code change you made, not about the problem you
-> hit and are fixing.
-> 
-> i.e. I've got no idea how you found this, or even how to identify a
-> system that is tripping over this problem. By describing how you
-> found it and the symptoms being displayed, I'll learn from you how
-> to identify the problem and hence, in future, be able to identify
-> systems that are tripping over the problem, too.
+--===============4362627440178093584==
+Content-Type: multipart/alternative; boundary=001a113c45da6e6cb5053bd1e739
 
-Usually I will describe the symptoms, how I hit the problem and the
-reproducer in commit log in details, but this time I found this bug by
-code inspection, I don't have these information. I should have mentioned
-this info too.
+--001a113c45da6e6cb5053bd1e739
+Content-Type: text/plain; charset=UTF-8
 
-> 
-> > Fixes: 0d485ada404b ("xfs: use generic percpu counters for free block counter")
-> 
-> I really don't like this sort of "annotation". It wrongly implies
-> the commit was broken (it wasn't) and there's no scope for stating
-> the problem context. i.e.  that the problem is a minor regression in
-> a rarely travelled corner case that is unlikely to affect production
-> machines in any significant way. It's better to describe things with
-> all the relevant context:
-> 
-> "This is a regression introduced in commit ... and only occurs when
-> .... "
+Thanx
 
-Makes sense, will do so.
+--001a113c45da6e6cb5053bd1e739
+Content-Type: text/html; charset=UTF-8
 
-> 
-> > Signed-off-by: Eryu Guan <guaneryu@gmail.com>
-> 
-> Not @redhat?
+<div dir="ltr">Thanx</div>
 
-I thought that I'm employed by Red Hat as a QE not a filesystem
-developer, all filesystem patches I send reflect my own opinions not my
-employer's, so all silly mistakes I made in the patches are under my
-personal email too :)
+--001a113c45da6e6cb5053bd1e739--
 
-> 
-> > ---
-> >  fs/xfs/xfs_trans.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 5f3d33d..011dace 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -217,7 +217,7 @@ undo_log:
-> >  
-> >  undo_blocks:
-> >  	if (blocks > 0) {
-> > -		xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
-> > +		xfs_mod_fdblocks(tp->t_mountp, ((int64_t)blocks), rsvd);
-> 
-> Outer () can be dropped, too.
 
-OK.
-
-Thanks for the review!
-
-Eryu
+--===============4362627440178093584==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4362627440178093584==--
