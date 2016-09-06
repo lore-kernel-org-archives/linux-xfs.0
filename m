@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5A4BB7CA1
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 00:34:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E57F8F8033
-	for <xfs@oss.sgi.com>; Sun,  4 Sep 2016 22:33:58 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 9hoUgwEK9d7EStch (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 04 Sep 2016 22:33:48 -0700 (PDT)
-Date: Sun, 4 Sep 2016 22:33:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: XFS reflink and development tip git trees updated
-Message-ID: <20160905053317.GA15302@birch.djwong.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C761D7CA4
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 09:54:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4AC21AC003
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 07:54:50 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Di3cgS6Li3gx79b1 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 07:54:49 -0700 (PDT)
+Date: Tue, 6 Sep 2016 07:54:46 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/71] xfs: define tracepoints for refcount btree
+	activities
+Message-ID: <20160906145446.GB24287@infradead.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+	<147216796400.867.3093949883691867882.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <147216796400.867.3093949883691867882.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +31,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hi everyone,
+> +#ifndef XFS_REFCOUNT_IREC_PLACEHOLDER
+> +#define XFS_REFCOUNT_IREC_PLACEHOLDER
+> +/* Placeholder definition to avoid breaking bisectability. */
+> +struct xfs_refcount_irec {
+> +	xfs_agblock_t	rc_startblock;	/* starting block number */
+> +	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
+> +	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
+> +};
+> +#endif
 
-I've just rebased the reflink patches against kernel 4.8-rc5 and the xfsprogs
-dev branch:
-
-https://github.com/djwong/linux/tree/for-dave-for-4.9-1 [17f66c42de]
-https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-1 [7b015920a]
-
-These branches should contain /only/ the patches needed to get reflink working:
-no fsmap ioctl, no online scrub, and no realtime rmapbt.  I'm publishing these
-branches in the hopes of getting wider testing prior to the merge window.  I
-haven't heard any complaints for several weeks now.
-
-I created these two branches partly because Brian was complaining about it
-being a PITA to carve out a working branch.  The patches haven't changed at all
-since the giant mailing a couple of weeks ago.
-
------------
-
-For the latest development branch, check out the djwong-wtf branches on github:
-https://github.com/djwong/linux/tree/djwong-wtf
-https://github.com/djwong/xfsprogs/tree/djwong-wtf
-
-Note that I'm in the middle of reworking the GETFSMAP ioctl to eliminate the
-problems that Andreas pointed out last week, and reworking the getfsmap and
-scrub code to eliminate buffer deadlocks when a btree loop exists, so the last
-few patches are ... very scraggly.
-
---D
+I didn't really understand the point earlier either - why can't
+you just merge the patch adding the tracepoints into that defining
+the structures and calling the tracepoints?  That would avoid that
+whole exercise.
 
 _______________________________________________
 xfs mailing list
