@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 13A027CA1
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 12:02:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D08D7CA1
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 12:03:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA834304039
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 10:02:26 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D200C8F8037
+	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 10:03:22 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id iFXA4B9F8Fp6CuTv (version=TLSv1.2
+	ESMTP id 6xXxFOGdSAPwzr3l (version=TLSv1.2
 	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 10:02:25 -0700 (PDT)
-Date: Tue, 6 Sep 2016 10:02:22 -0700
+	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 10:03:21 -0700 (PDT)
+Date: Tue, 6 Sep 2016 10:03:19 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 67/71] xfs: fail ->bmap for reflink inodes
-Message-ID: <20160906170222.GA22753@infradead.org>
+Subject: Re: [PATCH 15/71] xfs: create refcount update intent log items
+Message-ID: <20160906170319.GB22753@infradead.org>
 References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216835350.867.14512964799631563964.stgit@birch.djwong.org>
-	<20160906152948.GB9760@infradead.org>
-	<20160906162651.GB16696@birch.djwong.org>
+	<147216801436.867.13017543869659604138.stgit@birch.djwong.org>
+	<20160906151603.GI24287@infradead.org>
+	<20160906164341.GD16696@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160906162651.GB16696@birch.djwong.org>
+In-Reply-To: <20160906164341.GD16696@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,25 +33,25 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 06, 2016 at 09:26:51AM -0700, Darrick J. Wong wrote:
-> Yeah, at the time I thought I was going to write out a clever resolution to the
-> conflict between swap and CoW by using swap_activate to punch and fallocate all
-> the shared extents and turn off the inode reflink flag which would then enable
-> me to drop this patch altogether, but then got busy and forgot all about it.
-> Clearly I didn't fix the changelog here either. :(
+On Tue, Sep 06, 2016 at 09:43:41AM -0700, Darrick J. Wong wrote:
+> <shrug> I'm relatively indifferent either way, though I noticed that
+> EFIs have a separate copy_format function in xfs_extfree_item.c which
+> reduces the amount of clutter in xfs_log_recover.c.  It seemed more
+> neat to keep all the log item functions corralled within a separate
+> file rather than putting them in xfs_log_recover.c, so I maintained
+> that pattern for the rui/cui/bui items.
 
-I looked at that, but that code is such a mess, doing reads through
-->readpage and writes using direct_IO and requiring all kinds of ropes
-to jump through..
+The big difference with the EFI is that we had packing problems with
+them so we might have to do a few different conversions.
 
-> "Have xfs_vm_bmap return zero for reflinked files because the bmap-based
-> swap code requires static block mappings, which is incompatible with
-> copy on write."
+> In a semi-related side note I've been toying with turning on LTO in
+> xfsprogs to see how much it shrinks all the XFS code.  Code size goes
+> down considerably (repair shrinks by nearly 1MB!) but wow the
+> resulting tangle can be a PITA to debug.  :(
 
-Sounds fine.  Might be worth addings something like: "And existing
-userspace bmap users such as lilo will have the same problems".
+Yes. LTO is a nightmare for debugging.
 
 _______________________________________________
 xfs mailing list
