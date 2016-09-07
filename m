@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 856637CA0
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 13:41:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 494D78F8033
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 11:41:28 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id AvdgyylHW5sTDrvi (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 12 Sep 2016 11:41:25 -0700 (PDT)
-Date: Mon, 12 Sep 2016 11:40:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/71] xfs: log refcount intent items
-Message-ID: <20160912184054.GA23422@birch.djwong.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216802075.867.12945255918683675311.stgit@birch.djwong.org>
-	<20160906152155.GJ24287@infradead.org>
-	<20160908191404.GB8969@birch.djwong.org>
-	<20160908231326.GA30056@dastard>
-	<20160908231656.GC8969@birch.djwong.org>
-	<20160911125246.GA1399@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 71BC07CA7
+	for <xfs@oss.sgi.com>; Wed,  7 Sep 2016 16:22:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 440AE30404E
+	for <xfs@oss.sgi.com>; Wed,  7 Sep 2016 14:22:12 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	Iq5Jd78S6QxPaOEa for <xfs@oss.sgi.com>;
+	Wed, 07 Sep 2016 14:22:08 -0700 (PDT)
+Date: Thu, 8 Sep 2016 07:22:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG REPORT] missing memory counter introduced by xfs
+Message-ID: <20160907212206.GP30056@dastard>
+References: <57CFEDA3.9000005@chinanetcenter.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20160911125246.GA1399@infradead.org>
+In-Reply-To: <57CFEDA3.9000005@chinanetcenter.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,35 +29,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Lin Feng <linf@chinanetcenter.com>
+Cc: dchinner@redhat.com, xfs@oss.sgi.com
 
-On Sun, Sep 11, 2016 at 05:52:46AM -0700, Christoph Hellwig wrote:
-> On Thu, Sep 08, 2016 at 04:16:56PM -0700, Darrick J. Wong wrote:
-> > > Carfeul there - enums are not defined to have a fixed size and so
-> > > can change from compiler version to compiler version. IOWs, the
-> > > enum values can be written idirectly to an on-disk structure, but
-> > > the on-disk structure should not be using the enum as the type
-> > > definition for whatever gets stored on disk.
-> > 
-> > <nod>  I left the fields (and the #define flags) definitions alone,
-> > so it's only writing enum values indirectly into a fixed size (u32)
-> > variable on-disk.
-> > 
-> > i.e. I'm not using enums in the on-disk structure definitions.
+On Wed, Sep 07, 2016 at 06:36:19PM +0800, Lin Feng wrote:
+> Hi all nice xfs folks,
 > 
-> now add a byte swap for the flags and everything should be fine.
-> The whole idea of architecture-dependent log items was a horrible
-> idea, and I still have hopes of fixing it eventually.
+> I'm a rookie and really fresh new in xfs and currently I ran into an
+> issue same as the following link described:
+> http://oss.sgi.com/archives/xfs/2014-04/msg00058.html
+> 
+> In my box(running cephfs osd using xfs kernel 2.6.32-358) and I sum
+> all possible memory counter can be find but it seems that nearlly
+> 26GB memory has gone and they are back after I echo 2 >
+> /proc/sys/vm/drop_caches, so seems these memory can be reclaimed by
+> slab.
 
-There are other fields in the CUI/BUI log items that would also
-need byte swapping.  Not so hard to fix now, though fixing the
-EFI/RUI/everythingelse will have to be part of that future patchset.
+It isn't "reclaimed by slab". The XFS metadata buffer cache is
+reclaimed by a memory shrinker, which are for reclaiming objects
+from caches that aren't the page cache. "echo 2 >
+/proc/sys/vm/drop_caches" runs the memory shrinkers rather than page
+cache reclaim. Many slab caches are backed by memory shrinkers,
+which is why it is thought that "2" is "slab reclaim"....
 
-<shrug> I also have a vague memory of Dave telling me not to worry
-about making the log item fields arch-independent...
+> And according to what David said replying in the list:
+..
+> That's where your memory is - in metadata buffers. The xfs_buf slab
+> entries are just the handles - the metadata pages in the buffers
+> usually take much more space and it's not accounted to the slab
+> cache nor the page cache.
 
---D
+That's exactly the case.
+
+>  Minimum / Average / Maximum Object : 0.02K / 0.33K / 4096.00K
+> 
+>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+> 4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
+> 5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
+
+So, you have *5.4 million* active metadata buffers. Each buffer will
+hold  1 or 2 4k pages on your kernel, so simple math says 4M * 4k +
+1.4M * 8k = 26G. There's no missing counter here....
+
+Obviously your workload is doing something extremely metadata
+intensive to have a cache footprint like this - you have more cached
+buffers than inodes, dentries, etc. That in itself is very unusual -
+can you describe what is stored on that filesystem and how large the
+attributes being stored in each inode are?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
