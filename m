@@ -1,61 +1,63 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C66AF7CA7
-	for <xfs@oss.sgi.com>; Wed,  7 Sep 2016 16:45:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 86D51304032
-	for <xfs@oss.sgi.com>; Wed,  7 Sep 2016 14:45:41 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	oFwuC5R1i7pf0MAN for <xfs@oss.sgi.com>;
-	Wed, 07 Sep 2016 14:45:38 -0700 (PDT)
-Date: Thu, 8 Sep 2016 07:45:36 +1000
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41187 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750859AbcIGW15 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 18:27:57 -0400
+Date: Thu, 8 Sep 2016 08:27:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
-	inode instead
-Message-ID: <20160907214536.GQ30056@dastard>
-References: <1470935423-12329-1-git-send-email-hch@lst.de>
-	<20160811234335.GX16044@dastard> <20160812025026.GA975@lst.de>
-	<20160812095813.GZ16044@dastard> <20160905151529.GB16726@lst.de>
+Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
+Message-ID: <20160907222753.GR30056@dastard>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160905151529.GB16726@lst.de>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: peterz@infradead.org, xfs@oss.sgi.com
+In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 05, 2016 at 05:15:29PM +0200, Christoph Hellwig wrote:
-> Hi Dave,
+On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:
+> To get xfsprogs to cross-compile for musl some hacks were needed.
 > 
-> I looked into killing the mrlock and ran into an unexpected problem.
+> 1) d_namlen isn't available with musl
+
+musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
+to tell applications what the struct dirent it defines contains.
+
+(Haven't we been through this before?)
+
+> 2) crc32selftest doesn't make sense in case of cross-compilation, the
+> same can be said if building for a different host with the native
+> toolchain. So maybe an --disable-crc32selftest configure option could
+> be used here.
 > 
-> Currently mr_writer tracks that there is someone holding a write lock,
-> lockdep on the other hand checks if the calling thread has that lock.
-> 
-> While that generally is the right semantic, our hack to offload
-> btree splits to a work item offends lockdep.  E.g. this callstack
-> now asserts:
+> 3) The CFLAGS passed to BUILD_CC weren't understood by the native
+> compiler. Set BUILD_CFLAGS to CFLAGS if not cross-compiling or let it
+> blank anyway?
 
-It's a semaphore, not a mutex. Semaphore locking is independent of
-task context, the lock follows the object it protects, not the task
-that took the lock. i.e. Lockdep is wrong to assume the "owner" of a
-rw_sem will not change between lock and unlock.
+Ah, yes, we've definitely been through this before. Last time I said
+"send patches" and they never appeared.
 
-> While it previously did fine.  I fear there might be other locking
-> asserts in the code called from that work item as well.
+As it is, I'm really hesitant to remove the crc32c sanity check,
+mainly because we've just been through a XFS corruption drill where
+one in 10^6 crc calculations would end up wrong because of a bug in
+a compiler.
 
-Probably.
+Can we "auto detect" cross compilation in the makefile and avoid the
+check only in that situation? configure options are really only a
+last resort...
+
+> 4) sys/ustat.h is missing in musl.
+
+Yup, been reported before. I'm about to commit a fix for that,
+mainly because certain new arches don't even implement the ustat
+system call, and glibc completely fucks up the handling of that.
+i.e. programs that call ustat don't fail at build time, the syscall
+is stubbed to print "not supported, will fail" at runtime. Hence
+nobody noticed that the xfsprogs code calling ustat was actually
+broken until a week ago...
 
 Cheers,
 
@@ -63,8 +65,3 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
