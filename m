@@ -1,62 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13772 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752363AbcIHBin (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 21:38:43 -0400
-Date: Thu, 8 Sep 2016 11:38:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfsdocs: document the realtime reverse mapping btree
-Message-ID: <20160908013838.GT30056@dastard>
-References: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
- <147216766221.32447.9777486170830928374.stgit@birch.djwong.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:45684 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758092AbcIHVaL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 17:30:11 -0400
+Date: Thu, 8 Sep 2016 22:30:07 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+ detected
+Message-ID: <20160908213007.GK2356@ZenIV.linux.org.uk>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard>
+ <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <CA+55aFyfDNR9vkQ3sZMhLcoizE5VCLJDVukyPk=gbhDz9aNLgA@mail.gmail.com>
+ <268523885.1013251.1473367174650.JavaMail.zimbra@redhat.com>
+ <20160908211931.GX30056@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147216766221.32447.9777486170830928374.stgit@birch.djwong.org>
+In-Reply-To: <20160908211931.GX30056@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: CAI Qian <caiqian@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, Aug 25, 2016 at 04:27:42PM -0700, Darrick J. Wong wrote:
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  .../allocation_groups.asciidoc                     |    8 +
->  design/XFS_Filesystem_Structure/docinfo.xml        |   14 +
->  .../internal_inodes.asciidoc                       |    2 
->  design/XFS_Filesystem_Structure/magic.asciidoc     |    1 
->  .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    6 -
->  design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  |  234 ++++++++++++++++++++
->  6 files changed, 263 insertions(+), 2 deletions(-)
->  create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
+On Fri, Sep 09, 2016 at 07:19:31AM +1000, Dave Chinner wrote:
+
+> Don't bother. You'll just hit a different lockdep issue - a locking
+> order problem on the write side. I tried to get that fixed years
+> ago:
 > 
+> https://lkml.org/lkml/2011/7/18/4
+> http://oss.sgi.com/archives/xfs/2011-08/msg00122.html
+> http://oss.sgi.com/archives/xfs/2012-11/msg00671.html
 > 
-> diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> index cafa8b7..7ba636a 100644
-> --- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> @@ -105,6 +105,7 @@ struct xfs_sb
->  	xfs_ino_t		sb_pquotino;
->  	xfs_lsn_t		sb_lsn;
->  	uuid_t			sb_meta_uuid;
-> +	xfs_ino_t		sb_rrmapino;
->  };
->  ----
->  *sb_magicnum*::
-> @@ -449,6 +450,13 @@ If the +XFS_SB_FEAT_INCOMPAT_META_UUID+ feature is set, then the UUID field in
->  all metadata blocks must match this UUID.  If not, the block header UUID field
->  must match +sb_uuid+.
->  
-> +*sb_rrmapino*::
-> +If the +XFS_SB_FEAT_COMPAT_RMAPBT+ feature is set and a real-time
+> That specific problem was fixed by the above write_iter
+> infrastructure fixes, but introduced the read side problem.  i.e.
+> splice has /always/ had locking order issues that XFS exposed.
 
-XFS_SB_FEAT_RO_COMPAT_RMAPBT?
+Yep.  I'll try to slap together something testable for the variant I'd
+outlined; I really think that the root of problems here is that we have
+parallel logics in ->read_iter and ->splice_read.  That just might
+get rid of special-casing DAX in there, while we are at it...
 
-(yes, I am reading these patches!)
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Looking at the DAX side of things, we need iov_iter_zero() to grok those
+as well (in addition to copy_page_to_iter() and copy_to_iter()).
