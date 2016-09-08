@@ -1,38 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36977 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751099AbcIGWru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 18:47:50 -0400
-Date: Thu, 8 Sep 2016 08:47:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/279: filter scsi debug device correctly
-Message-ID: <20160907224747.GH22388@dastard>
-References: <1473053427-15498-1-git-send-email-eguan@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1473053427-15498-1-git-send-email-eguan@redhat.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36331 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757539AbcIHPbF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 11:31:05 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH] ovl: use copy_file_range for copy up if possible
+Date: Thu,  8 Sep 2016 18:29:54 +0300
+Message-Id: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, linux-xfs@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>
 
-On Mon, Sep 05, 2016 at 01:30:27PM +0800, Eryu Guan wrote:
-> This test assumes scsi debug device is "/dev/sd." when doing the
-> filter, but that isn't always true, I've seen failure like
-> 
->   -mkfs with opts: DEVICE
->   +mkfs with opts: DEVICEl
+When copying up within the same fs, try to use f_op->copy_file_range().
+This becomes very efficient when lower and upper are on the same fs
+with file reflink support.
 
-Yeah, I can see how that would occur when you have enough scsi
-devices to go to multiple device characters (e.g. /dev/sdal).
+Tested correct behavior when lower and upper are on:
+1. same ext4 (copy)
+2. same xfs + reflink patches + mkfs.xfs (copy)
+3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 
-> So use $SCSI_DEBUG_DEV to match the correct scsi debug device name.
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+Verified that all the overlay xfstests pass in the 'same xfs+reflink'
+setup.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+For comparison, on my laptop, xfstest overlay/001 (copy up of large
+sparse files) takes less than 1 second in the xfs reflink setup vs.
+25 seconds on the rest of the setups.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/overlayfs/copy_up.c | 28 +++++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+index 43fdc27..400567b 100644
+--- a/fs/overlayfs/copy_up.c
++++ b/fs/overlayfs/copy_up.c
+@@ -121,6 +121,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 	struct file *new_file;
+ 	loff_t old_pos = 0;
+ 	loff_t new_pos = 0;
++	int try_copy_file = 0;
+ 	int error = 0;
+ 
+ 	if (len == 0)
+@@ -136,6 +137,13 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 		goto out_fput;
+ 	}
+ 
++	/*
++	 * When copying up within the same fs, try to use fs's copy_file_range
++	 */
++	if (file_inode(old_file)->i_sb == file_inode(new_file)->i_sb) {
++		try_copy_file = (new_file->f_op->copy_file_range != NULL);
++	}
++
+ 	/* FIXME: copy up sparse files efficiently */
+ 	while (len) {
+ 		size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
+@@ -149,9 +157,23 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 			break;
+ 		}
+ 
+-		bytes = do_splice_direct(old_file, &old_pos,
+-					 new_file, &new_pos,
+-					 this_len, SPLICE_F_MOVE);
++		if (try_copy_file) {
++			bytes = new_file->f_op->copy_file_range(
++					old_file, old_pos,
++					new_file, new_pos,
++					len, 0);
++			if (bytes == -EOPNOTSUPP) {
++				try_copy_file = 0;
++				continue;
++			} else if (bytes > 0) {
++				old_pos += bytes;
++				new_pos += bytes;
++			}
++		} else {
++			bytes = do_splice_direct(old_file, &old_pos,
++					new_file, &new_pos,
++					this_len, SPLICE_F_MOVE);
++		}
+ 		if (bytes <= 0) {
+ 			error = bytes;
+ 			break;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
