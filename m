@@ -1,76 +1,151 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50155 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752549AbcIHCEC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 22:04:02 -0400
-Date: Wed, 7 Sep 2016 19:03:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfsdocs: document the realtime reverse mapping btree
-Message-ID: <20160908020353.GA9314@birch.djwong.org>
-References: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
- <147216766221.32447.9777486170830928374.stgit@birch.djwong.org>
- <20160908013838.GT30056@dastard>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 79A757CA0
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 15:44:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 403CA304048
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 13:44:19 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	QIMs4wJaNBXEH9V2 for <xfs@oss.sgi.com>;
+	Thu, 08 Sep 2016 13:44:16 -0700 (PDT)
+Date: Fri, 9 Sep 2016 06:44:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG REPORT] missing memory counter introduced by xfs
+Message-ID: <20160908204413.GW30056@dastard>
+References: <57CFEDA3.9000005@chinanetcenter.com>
+	<20160907212206.GP30056@dastard>
+	<57D13871.9070603@chinanetcenter.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160908013838.GT30056@dastard>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <57D13871.9070603@chinanetcenter.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Lin Feng <linf@chinanetcenter.com>
+Cc: dchinner@redhat.com, xfs@oss.sgi.com
 
-On Thu, Sep 08, 2016 at 11:38:38AM +1000, Dave Chinner wrote:
-> On Thu, Aug 25, 2016 at 04:27:42PM -0700, Darrick J. Wong wrote:
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  .../allocation_groups.asciidoc                     |    8 +
-> >  design/XFS_Filesystem_Structure/docinfo.xml        |   14 +
-> >  .../internal_inodes.asciidoc                       |    2 
-> >  design/XFS_Filesystem_Structure/magic.asciidoc     |    1 
-> >  .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    6 -
-> >  design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  |  234 ++++++++++++++++++++
-> >  6 files changed, 263 insertions(+), 2 deletions(-)
-> >  create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
-> > 
-> > 
-> > diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> > index cafa8b7..7ba636a 100644
-> > --- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> > +++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-> > @@ -105,6 +105,7 @@ struct xfs_sb
-> >  	xfs_ino_t		sb_pquotino;
-> >  	xfs_lsn_t		sb_lsn;
-> >  	uuid_t			sb_meta_uuid;
-> > +	xfs_ino_t		sb_rrmapino;
-> >  };
-> >  ----
-> >  *sb_magicnum*::
-> > @@ -449,6 +450,13 @@ If the +XFS_SB_FEAT_INCOMPAT_META_UUID+ feature is set, then the UUID field in
-> >  all metadata blocks must match this UUID.  If not, the block header UUID field
-> >  must match +sb_uuid+.
-> >  
-> > +*sb_rrmapino*::
-> > +If the +XFS_SB_FEAT_COMPAT_RMAPBT+ feature is set and a real-time
+On Thu, Sep 08, 2016 at 06:07:45PM +0800, Lin Feng wrote:
+> Hi Dave,
 > 
-> XFS_SB_FEAT_RO_COMPAT_RMAPBT?
+> Thank you for your fast reply, look beblow please.
 > 
-> (yes, I am reading these patches!)
+> On 09/08/2016 05:22 AM, Dave Chinner wrote:
+> >On Wed, Sep 07, 2016 at 06:36:19PM +0800, Lin Feng wrote:
+> >>Hi all nice xfs folks,
+> >>
+> >>I'm a rookie and really fresh new in xfs and currently I ran into an
+> >>issue same as the following link described:
+> >>http://oss.sgi.com/archives/xfs/2014-04/msg00058.html
+> >>
+> >>In my box(running cephfs osd using xfs kernel 2.6.32-358) and I sum
+> >>all possible memory counter can be find but it seems that nearlly
+> >>26GB memory has gone and they are back after I echo 2 >
+> >>/proc/sys/vm/drop_caches, so seems these memory can be reclaimed by
+> >>slab.
+> >
+> >It isn't "reclaimed by slab". The XFS metadata buffer cache is
+> >reclaimed by a memory shrinker, which are for reclaiming objects
+> >from caches that aren't the page cache. "echo 2 >
+> >/proc/sys/vm/drop_caches" runs the memory shrinkers rather than page
+> >cache reclaim. Many slab caches are backed by memory shrinkers,
+> >which is why it is thought that "2" is "slab reclaim"....
+> >
+> >>And according to what David said replying in the list:
+> >..
+> >>That's where your memory is - in metadata buffers. The xfs_buf slab
+> >>entries are just the handles - the metadata pages in the buffers
+> >>usually take much more space and it's not accounted to the slab
+> >>cache nor the page cache.
+> >
+> >That's exactly the case.
+> >
+> >>  Minimum / Average / Maximum Object : 0.02K / 0.33K / 4096.00K
+> >>
+> >>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+> >>4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
+> >>5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
+> >
+> >So, you have *5.4 million* active metadata buffers. Each buffer will
+> >hold  1 or 2 4k pages on your kernel, so simple math says 4M * 4k +
+> >1.4M * 8k = 26G. There's no missing counter here....
+> 
+> Does xattr contribute to such metadata buffers or there is something else?
 
-Woohoo!!!
+xattrs are metadata, so if they don't fit in line in the inode
+(typical for ceph because it uses xattrs larger than 256 bytes) then
+they are held in external blocks which are cached in the buffer
+cache.
 
-Thank you for catching this! :)
+> After consulting to my teammate, who told me that in our case small files
+> (there are a looot, look below) always use xattr.
 
---D
+Which means that if you have 4.4M cached inodes, you probably have
+~4.4M xattr metadata buffers in cache for those inodes, too.
 
+> Another thing is do we need to export such thing or we have to make
+> the computation every time to figure out if we leak memory.
+> And more important is that seems these memory has a low priority to
+> be reclaimed by memory reclaim mechanism, does it due to most of the
+> slab objects are active?
+
+"active" slab objects simply mean they are allocated. It does not
+mean they are cached or imply anything else about the object's life
+cycle.
+
+> >>    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+> >> 4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
+> >> 5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
 > 
-> -Dave.
+> In fact xfs eats a lot of my ram and I will never know where it goes
+> without diving into xfs source, at least I'm the second extreme user
+> ;-)
 > 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> >
+> >Obviously your workload is doing something extremely metadata
+> >intensive to have a cache footprint like this - you have more cached
+> >buffers than inodes, dentries, etc. That in itself is very unusual -
+> >can you describe what is stored on that filesystem and how large the
+> >attributes being stored in each inode are?
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> The fs-user behavior is that ceph-osd daemon will intensively
+> pull/synchronize/update files from other osd when the server is up.
+> In our case cephfs osd stores a lot of small pictures in the
+> filesystem, and I do some simple analysis, there are nearly
+> 3,000,000 files on each disk and there are 10 such disk.
+> [root@wzdx49 osd.670]# find current -type f -size -512k | wc -l
+> 2668769
+> [root@wzdx49 ~]# find /data/osd/osd.67 -type f | wc -l
+> 2682891
+> [root@wzdx49 ~]# find /data/osd/osd.67 -type d | wc -l
+> 109760
+
+Yup, that's a pretty good indication that you have a high metadata
+to data ratio in each filesystem, and that ceph is accessing the
+metadata more intensively than the data. The fact that the metadata
+buffer count roughly matches the cached inode count tells me that
+the memory reclaim code is being fairly balanced about what it
+reclaims under memory pressure - I think the problem here is more
+that you didn't know where the memory was being used than anything
+else....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
