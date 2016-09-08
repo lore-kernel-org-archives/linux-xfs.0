@@ -1,22 +1,22 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A6557CA1
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 16:33:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 852707CA0
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 17:28:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C216AAC003
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 14:33:16 -0700 (PDT)
-Received: from mail1.swingprofesional.org (mail1.swingprofesional.org
-	[178.162.193.197]) by cuda.sgi.com with ESMTP id
-	c41gdkE9lmJf4YrB for <xfs@oss.sgi.com>;
-	Fri, 09 Sep 2016 14:33:14 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 53D5B304043
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 15:28:34 -0700 (PDT)
+Received: from mail3.swingprofesional.org (mail4.swingprofesional.org
+	[178.162.193.225]) by cuda.sgi.com with ESMTP id
+	peeLLl2CDHuTCl31 for <xfs@oss.sgi.com>;
+	Thu, 08 Sep 2016 15:28:31 -0700 (PDT)
 Received: from swingprofesional (178.162.193.198) by
-	mail1.swingprofesional.org id hqcl8e0our09 for <xfs@oss.sgi.com>;
-	Fri, 9 Sep 2016 16:32:54 -0500 (envelope-from
-	<fideicomiso09@swingprofesional.org>)
-Message-ID: <a0933570f1dc99fe46c67d2e001c55cc@swingprofesional.org>
+	mail3.swingprofesional.org id hq7j020our00 for <xfs@oss.sgi.com>;
+	Thu, 8 Sep 2016 17:28:15 -0500 (envelope-from
+	<fideicomiso08@swingprofesional.org>)
+Message-ID: <b0a12f5475b65b85502c41ca001d14b3@swingprofesional.org>
 From: "=?windows-1252?Q?Qu=E9_Beneficios_se_obtienen_con_su_creaci=F3n?="
-	<fideicomiso09@swingprofesional.org>
+	<fideicomiso08@swingprofesional.org>
 Subject: =?windows-1252?Q?Fideicomisos_en_M=E9xico_-_Seguridad_y_confidencialidad?=
-Date: Fri, 9 Sep 2016 16:32:54 -0500
+Date: Thu, 8 Sep 2016 17:28:15 -0500
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,20 +26,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1823701481186024283=="
+Content-Type: multipart/mixed; boundary="===============6427163012943913614=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 This is a multi-part message in MIME format.
 
---===============1823701481186024283==
+--===============6427163012943913614==
 Content-Type: multipart/alternative;
-	boundary="----=SPLITOR00A_001_220133588D"
+	boundary="----=SPLITOR00A_001_137054927D"
 
 This is a multi-part message in MIME format.
 
-------=SPLITOR00A_001_220133588D
+------=SPLITOR00A_001_137054927D
 Content-Type: text/plain;
 	charset="windows-1252"
 Content-Transfer-Encoding: base64
@@ -58,18 +58,18 @@ ZGVzIGV4aXN0ZW50ZXMsIGxhcyBvYmxpZ2FjaW9uZXMgcXVlIGltcGxpY2EgZW4gbWF0ZXJpYSBm
 aXNjYWwgeSBlbCBtYXJjbyBsZWdhbCBxdWUgbG8gcmVndWxhLiBQYXJhIGVsIGZpbmFuY2lhbWll
 bnRvIGVtcHJlc2FyaWFsIHkgbGEgaW52ZXJzafNuIGVuIHN1IHBlcXVl8WEsIG1lZGlhbmEgbyBn
 cmFuZGUgZW1wcmVzYSwgZWwgZmlkZWljb21pc28gbGUgYnJpbmRhcuEgY2VydGV6YSBwYXJhIGxh
-IGNvbnNlY3VjafNuIGRlIGxvcyBmaW5lcyBwbGFudGVhZG9zLg0KDQpURU1BUklPOiANCg0KDQoN
-CjEuIENvbmNlcHRvIGp1cu1kaWNvIGRlbCBmaWRlaWNvbWlzby4NCg0KDQoyLiBS6WdpbWVuIGZp
-c2NhbCBkZWwgZmlkZWljb21pc28uIA0KDQozLiC/UXXpIEJlbmVmaWNpb3Mgc2Ugb2J0aWVuZW4g
-Y29uIHN1IGNyZWFjafNuPw0KDQoNCjQuIEVuYWplbmFjafNuIGRlIGJpZW5lcyBhcG9ydGFkb3Mg
-YWwgZmlkZWljb21pc28uDQoNCg0KLi4uoVkgbXVjaG8gbeFzIQ0KDQoNCg0KIL9SZXF1aWVyZSBs
-YSBpbmZvcm1hY2nzbiBhIGxhIEJyZXZlZGFkPw0KDQpyZXNwb25kYSBlc3RlIGVtYWlsIGNvbiBs
-YSBwYWxhYnJhOiANCg0KSW5mbyAtIGZpZGVpY29taXNvLg0KDQpjZW50cm8gdGVsZWbzbmljbzog
-MDE4MDAyMTIwNzQ0DQoNCg0KU2Vy4SB1biBwbGFjZXIgQXRlbmRlcmxlDQoNCg0KDQoNCg0KU2kg
-ZGVzZWEgY2FuY2VsYXIgbGEgc3VzY3JpcGNp824sIHNvbGljaXRlIHN1IEJBSkEgeSBzZSByZWFs
-aXphcuEgZW4gbGFzIHBy83hpbWFzIDI0IEhycy4gDQo=
+IGNvbnNlY3VjafNuIGRlIGxvcyBmaW5lcyBwbGFudGVhZG9zLg0KDQpURU1BUklPOiANCg0KIA0K
+DQogDQoNCjEuIENvbmNlcHRvIGp1cu1kaWNvIGRlbCBmaWRlaWNvbWlzby4NCg0KIA0KDQoyLiBS
+6WdpbWVuIGZpc2NhbCBkZWwgZmlkZWljb21pc28uIA0KDQozLiC/UXXpIEJlbmVmaWNpb3Mgc2Ug
+b2J0aWVuZW4gY29uIHN1IGNyZWFjafNuPw0KDQoNCjQuIEVuYWplbmFjafNuIGRlIGJpZW5lcyBh
+cG9ydGFkb3MgYWwgZmlkZWljb21pc28uDQoNCiANCg0KLi4uoVkgbXVjaG8gbeFzIQ0KDQogDQoN
+CiANCg0KIL9SZXF1aWVyZSBsYSBpbmZvcm1hY2nzbiBhIGxhIEJyZXZlZGFkPw0KDQpyZXNwb25k
+YSBlc3RlIGVtYWlsIGNvbiBsYSBwYWxhYnJhOiANCg0KSW5mbyAtIGZpZGVpY29taXNvLg0KDQpj
+ZW50cm8gdGVsZWbzbmljbzogMDE4MDAyMTIwNzQ0DQoNCiANCg0KU2Vy4SB1biBwbGFjZXIgQXRl
+bmRlcmxlDQoNCg0KDQoNCiANCg0KU2kgZGVzZWEgY2FuY2VsYXIgbGEgc3VzY3JpcGNp824sIHNv
+bGljaXRlIHN1IEJBSkEgeSBzZSByZWFsaXphcuEgZW4gbGFzIHBy83hpbWFzIDI0MSBIcnMuIA0K
 
-------=SPLITOR00A_001_220133588D
+------=SPLITOR00A_001_137054927D
 Content-Type: text/html;
 	charset="windows-1252"
 Content-Transfer-Encoding: base64
@@ -174,12 +174,12 @@ L3NwYW4+PC9wPg0KPHAgY2xhc3M9TXNvTm9ybWFsIA0Kc3R5bGU9Im1zby1tYXJnaW4tdG9wLWFs
 dDogYXV0bzsgbXNvLW1hcmdpbi1ib3R0b20tYWx0OiBhdXRvIj48c3BhbiANCnN0eWxlPSdGT05U
 LUZBTUlMWTogIkFyaWFsIiwic2Fucy1zZXJpZiInPlNpIGRlc2VhIGNhbmNlbGFyIGxhIHN1c2Ny
 aXBjafNuLCANCnNvbGljaXRlIHN1IEJBSkEgeSBzZSByZWFsaXphcuEgZW4gbGFzIHBy83hpbWFz
-IDI0IEhycy4gDQo8bzpwPjwvbzpwPjwvc3Bhbj48L3A+DQo8L2JvZHk+DQo8L2h0bWw+
+IDI0MSBIcnMuIA0KPG86cD48L286cD48L3NwYW4+PC9wPg0KPC9ib2R5Pg0KPC9odG1sPg==
 
-------=SPLITOR00A_001_220133588D--
+------=SPLITOR00A_001_137054927D--
 
 
---===============1823701481186024283==
+--===============6427163012943913614==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -190,4 +190,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1823701481186024283==--
+--===============6427163012943913614==--
