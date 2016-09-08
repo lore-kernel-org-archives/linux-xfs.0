@@ -1,47 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx6-phx2.redhat.com ([209.132.183.39]:49434 "EHLO
-        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbcIHP3T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 11:29:19 -0400
-Date: Thu, 8 Sep 2016 11:29:11 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20160903003919.GI30056@dastard>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com> <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com> <20160903003919.GI30056@dastard>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
+Received: from aserp1040.oracle.com ([141.146.126.69]:23672 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757657AbcIHTOq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 15:14:46 -0400
+Date: Thu, 8 Sep 2016 12:14:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 16/71] xfs: log refcount intent items
+Message-ID: <20160908191404.GB8969@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+ <147216802075.867.12945255918683675311.stgit@birch.djwong.org>
+ <20160906152155.GJ24287@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160906152155.GJ24287@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Al Viro <viro@zeniv.linux.org.uk>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-
-
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: "linux-xfs" <linux-xfs@vger.kernel.org>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Al Viro"
-> <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
-> Sent: Friday, September 2, 2016 8:39:19 PM
-> Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+On Tue, Sep 06, 2016 at 08:21:55AM -0700, Christoph Hellwig wrote:
+> > +	__uint64_t			cui_id;
+> > +	struct xfs_ail_cursor		cur;
+> > +	struct xfs_ail			*ailp = log->l_ailp;
+> > +
+> > +	cud_formatp = item->ri_buf[0].i_addr;
+> > +	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_cud_log_format));
 > 
-> On Fri, Sep 02, 2016 at 01:02:16PM -0400, CAI Qian wrote:
-> > Spice seems start to deadlock using the reproducer,
-> > 
-> > https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/syscalls/splice/splice01.c
-> > 
-> > This seems introduced recently after v4.8-rc3 or -rc4, so suspect this xfs
-> > update was one to blame,
-> > 
-> > 7d1ce606a37922879cbe40a6122047827105a332
+> Should we return -EFSCORRUPTED here instead?
+
+Yes.  The RUD recovery routine should probably get that change too.
+
+> > +	/* XXX: do nothing for now */
 > 
-> Nope, this goes back to the splice rework back around ~3.16, IIRC.
-Right. FYI, revert the commit below fixes the regression,
+> What else would be do in the future here?
+> 
+> > +static void
+> > +xfs_trans_set_refcount_flags(
+> > +	struct xfs_phys_extent		*refc,
+> > +	enum xfs_refcount_intent_type	type)
+> > +{
+> > +	refc->pe_flags = 0;
+> > +	switch (type) {
+> > +	case XFS_REFCOUNT_INCREASE:
+> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_INCREASE;
+> > +		break;
+> > +	case XFS_REFCOUNT_DECREASE:
+> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_DECREASE;
+> > +		break;
+> > +	case XFS_REFCOUNT_ALLOC_COW:
+> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_ALLOC_COW;
+> > +		break;
+> > +	case XFS_REFCOUNT_FREE_COW:
+> > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_FREE_COW;
+> > +		break;
+> 
+> Is there any good reasons to use a type enum in core, but flags on
+> disk?
 
-8d02076 : ->splice_write() via ->write_iter()
+I suppose since log structures aren't guaranteed to be platform agnostic
+it's fine to just copy in the in-core enum here.
 
-   CAI Qian
+> > +int
+> > +xfs_trans_log_finish_refcount_update(
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_cud_log_item		*cudp,
+> > +	enum xfs_refcount_intent_type	type,
+> > +	xfs_fsblock_t			startblock,
+> > +	xfs_extlen_t			blockcount,
+> > +	struct xfs_btree_cur		**pcur)
+> > +{
+> > +	int				error;
+> > +
+> > +	/* XXX: leave this empty for now */
+> > +	error = -EFSCORRUPTED;
+> 
+> Lift might be a lot easier if this patch and "xfs: connect refcount
+> adjust functions to upper layers" were merged into one.  It's not like
+> they are testable independently anyway.
+
+I'll think about it.  I think it might not be too difficult to push "xfs: log
+refcount intent items" down one and merge it with "xfs: connect refcount adjust
+functions to upper layers", though my preference biases towards not stirring
+things up just to reduce commit count.
+
+(Basically, I'll give it a try after I'm done making the other fixes and commit
+it if it doesn't make a total mess of things.)
+
+--D
