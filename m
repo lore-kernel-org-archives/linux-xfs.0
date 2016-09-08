@@ -1,162 +1,154 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54387 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753104AbcIIQfC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:02 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/10] dax: provide an iomap based dax read/write path
-Date: Fri,  9 Sep 2016 18:34:39 +0200
-Message-Id: <1473438884-674-6-git-send-email-hch@lst.de>
-In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 97D9B7CA0
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 17:28:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B3BF304043
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 15:28:17 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	qYMEvGBwlwI2ZwLQ for <xfs@oss.sgi.com>;
+	Thu, 08 Sep 2016 15:28:13 -0700 (PDT)
+Date: Fri, 9 Sep 2016 08:27:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsprogs: v4.8.0-rc1 released
+Message-ID: <20160908222757.GZ30056@dastard>
+MIME-Version: 1.0
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============3568718439449087020=="
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-This is a much simpler implementation of the DAX read/write path that makes
-use of the iomap infrastructure.  It does not try to mirror the direct I/O
-calling conventions and thus doesn't have to deal with i_dio_count or the
-end_io handler, but instead leaves locking and filesystem-specific I/O
-completion to the caller.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/dax.c              | 103 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |   2 +
- 2 files changed, 105 insertions(+)
+--===============3568718439449087020==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="S1BNGpv0yoYahz37"
+Content-Disposition: inline
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 84343ce..57ad456 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -31,6 +31,8 @@
- #include <linux/vmstat.h>
- #include <linux/pfn_t.h>
- #include <linux/sizes.h>
-+#include <linux/iomap.h>
-+#include "internal.h"
- 
- /*
-  * We use lowest available bit in exceptional entry for locking, other two
-@@ -1241,3 +1243,104 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- 	return dax_zero_page_range(inode, from, length, get_block);
- }
- EXPORT_SYMBOL_GPL(dax_truncate_page);
-+
-+#ifdef CONFIG_FS_IOMAP
-+static loff_t
-+iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	struct iov_iter *iter = data;
-+	loff_t end = pos + length, done = 0;
-+	ssize_t ret = 0;
-+
-+	if (iov_iter_rw(iter) == READ) {
-+		end = min(end, i_size_read(inode));
-+		if (pos >= end)
-+			return 0;
-+
-+		if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
-+			return iov_iter_zero(min(length, end - pos), iter);
-+	}
-+
-+	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED))
-+		return -EIO;
-+
-+	while (pos < end) {
-+		unsigned offset = pos & (PAGE_SIZE - 1);
-+		struct blk_dax_ctl dax = { 0 };
-+		ssize_t map_len;
-+
-+		dax.sector = iomap->blkno +
-+			(((pos & PAGE_MASK) - iomap->offset) >> 9);
-+		dax.size = (length + offset + PAGE_SIZE - 1) & PAGE_MASK;
-+		map_len = dax_map_atomic(iomap->bdev, &dax);
-+		if (map_len < 0) {
-+			ret = map_len;
-+			break;
-+		}
-+
-+		dax.addr += offset;
-+		map_len -= offset;
-+		if (map_len > end - pos)
-+			map_len = end - pos;
-+
-+		if (iov_iter_rw(iter) == WRITE)
-+			map_len = copy_from_iter_pmem(dax.addr, map_len, iter);
-+		else
-+			map_len = copy_to_iter(dax.addr, map_len, iter);
-+		dax_unmap_atomic(iomap->bdev, &dax);
-+		if (map_len <= 0) {
-+			ret = map_len ? map_len : -EFAULT;
-+			break;
-+		}
-+
-+		pos += map_len;
-+		length -= map_len;
-+		done += map_len;
-+	}
-+
-+	return done ? done : ret;
-+}
-+
-+/**
-+ * iomap_dax_rw - Perform I/O to a DAX file
-+ * @iocb: The control block for this I/O
-+ * @iter: The addresses to do I/O from or to
-+ * @ops: iomap ops passed from the file system
-+ *
-+ * This funtions performs read and write operations to directly mapped
-+ * persistent memory.  The callers needs to take care of read/write exclusion
-+ * and evicting any page cache pages in the region under I/O.
-+ */
-+ssize_t
-+iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops)
-+{
-+	struct inode *inode = iocb->ki_filp->f_mapping->host;
-+	loff_t pos = iocb->ki_pos, ret = 0, done = 0;
-+	size_t count = iov_iter_count(iter);
-+	unsigned flags = 0;
-+
-+	if (!count)
-+		return 0;
-+
-+	if (iov_iter_rw(iter) == WRITE)
-+		flags |= IOMAP_WRITE;
-+
-+	do {
-+		ret = iomap_apply(inode, pos, count, flags, ops, iter,
-+				  iomap_dax_actor);
-+		if (ret <= 0)
-+			break;
-+		pos += ret;
-+		done += ret;
-+	} while ((count = iov_iter_count(iter)));
-+
-+	if (!done)
-+		return ret;
-+
-+	iocb->ki_pos += done;
-+	return done;
-+}
-+EXPORT_SYMBOL_GPL(iomap_dax_rw);
-+#endif /* CONFIG_FS_IOMAP */
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 14d7067..3d5f785 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -65,6 +65,8 @@ struct iomap_ops {
- 
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- 		struct iomap_ops *ops);
-+ssize_t iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
- 		bool *did_zero, struct iomap_ops *ops);
- int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
--- 
-2.1.4
 
+--S1BNGpv0yoYahz37
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Folks,
+
+The xfsprogs repository at:
+
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged with v4.8.0-rc1. This is the first
+release candidate with support for the new reverse mapping on-disk
+format support, and contains many other updates and fixes. See the
+doc/CHANGES file summary included below for details.
+
+While you're all reading, I'll drop a reminder that the XFS list is
+moving permanently to linux-xfs@vger.kernel.org at the end of
+September.  Please resubscribe to the new list before then!
+
+-Dave.
+
+xfsprogs-4.8-0-rc1 (9 Sep 2016)
+	- change contact emails to linux-xfs@vger.kernel.org
+	- libxfs: kernel sync up to 4.8-rc1
+	- Initial reverse mapping support (Darrick Wong)
+	- buffer lock trace analysis tool (Darrick Wong)
+	- logprint: cleanups and fixes (Darrick Wong)
+	- man page updates (various)
+	- libxcmd: mount option parsing fixes (Darrick Wong)
+	- xfs_quota: use XFS_GETQSTATV (Eric Sandeen)
+	- xfs_quota: allow use on non-XFS filesystems (Bill O'Donnell)
+	- xfs_db: allow direct manipulation of CRCs (Eric Sandeen)
+	- libxfs: get rid of ustat() calls (Felix Janda)
+
+The new head of the master branch is commit:
+
+130093a xfsprogs: Release 4.8.0-rc1
+
+New Commits:
+
+Darrick J. Wong (2):
+      [6761d5a] xfs_repair: don't crash on ENOSPC rebuilding a btree
+      [752ae76] xfs_db: pass the inode cluster offset when copying inodes
+
+Dave Chinner (2):
+      [4222d00] db: write via array indexing doesn't work
+      [130093a] xfsprogs: Release 4.8.0-rc1
+
+Eric Sandeen (1):
+      [13061b8] xfs_db: properly set dquot_buf when operating on dquot
+
+Felix Janda (1):
+      [4e7a824] libxfs/linux.c: Replace use of ustat by stat
+
+Zorro Lang (1):
+      [88dabc1] xfs_quota: fix missing break after foreign_allowed option
+
+
+Code Diffstat:
+
+ README                   |  2 +-
+ VERSION                  |  4 ++--
+ configure.ac             |  2 +-
+ db/dquot.c               |  1 +
+ db/metadump.c            |  2 +-
+ db/write.c               | 18 +++++++++++++++++-
+ debian/control           |  6 +++---
+ doc/CHANGES              | 13 +++++++++++++
+ libxfs/linux.c           | 29 ++++++++++++++++++++---------
+ libxfs/util.c            |  5 +++--
+ man/man8/xfs_mdrestore.8 |  2 +-
+ man/man8/xfs_metadump.8  |  2 +-
+ quota/init.c             |  1 +
+ repair/phase5.c          |  6 ++++--
+ 14 files changed, 69 insertions(+), 24 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--S1BNGpv0yoYahz37
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX0eXsAAoJEK3oKUf0dfodqC4P/3msCKAX7i3fP85y2YE296rP
+ztLWuNcGwNmxhJlyK9X8245/pOz4XhH270nnehTFjPQ7hKyvtEqhTBtSWw6GPtiy
+HC7wXeq9AlitUv4FFiFFY76rGiqGZsepsCLIcX5K3Oa7T/m/tNyHS4++R4I9pOY0
+s1bD+C0CLOqsPJk4FiiqHkFmo4KePWGaiu5FHA1lxoYr01YWxL6k215Ml+jqwdow
+UIOJ/yuGQCdWTuk4P8+K306iDJDdb/6dPJAyPqtDjL3XFhRlRfZOqYUTsm+6bMR0
+Xl8lSmI02x3iXv4AvAmKFnHk3R+yc+ldZYZgqwdWKSgcse9+Dx1Ev4ynUoCP1KjS
+U/HWZ+K4WA6ubN5wn7SXkl8bc7Kjyumd85HLFEG5eypvJA2GfS2P4KluWEhUOFpr
+BXPwsan3RF6nHh3UQnHPhiMji7Tek3G2uzxTqAjEA+GvndXAD91u69/tk/pu5HUi
+zmlmi6RS6QT9sFu2EAuQClUt0WcIJRJvmxy0f4Ng53S8huaF9EkJ8yi2N9p+Yzsx
+fQJaQH7W+99wnTw9SnR/NlQQxUycDcBBherkqEdZDaUL1H+105HTdUMpi7fQvJq/
+zg1mgFVZNyI3l3l+RRiYYr2y2biffekPsnYMdQES+sbdxJ4U0W3VsX9BIOk8EN+f
+mt8j8zm0qxAHV0iURePe
+=OUcY
+-----END PGP SIGNATURE-----
+
+--S1BNGpv0yoYahz37--
+
+
+--===============3568718439449087020==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3568718439449087020==--
