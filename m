@@ -1,118 +1,148 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A9A4B7CBB
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 05:08:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 79AB08F8050
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 03:08:01 -0700 (PDT)
-Received: from chinanetcenter.com (mail.chinanetcenter.com [123.103.13.31]) by
-	cuda.sgi.com with ESMTP id 3TgduxRjavhbGpyZ for
-	<xfs@oss.sgi.com>; Thu, 08 Sep 2016 03:07:56 -0700 (PDT)
-Message-ID: <57D13871.9070603@chinanetcenter.com>
-Date: Thu, 08 Sep 2016 18:07:45 +0800
-From: Lin Feng <linf@chinanetcenter.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35841 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752532AbcIHIle (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 04:41:34 -0400
+Received: by mail-wm0-f65.google.com with SMTP id l65so6719153wmf.3
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 01:41:34 -0700 (PDT)
+Date: Thu, 8 Sep 2016 10:41:31 +0200
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
+Message-ID: <20160908104131.479349ae@gmail.com>
+In-Reply-To: <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+        <20160907222753.GR30056@dastard>
+        <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [BUG REPORT] missing memory counter introduced by xfs
-References: <57CFEDA3.9000005@chinanetcenter.com>
-	<20160907212206.GP30056@dastard>
-In-Reply-To: <20160907212206.GP30056@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: dchinner@redhat.com, xfs@oss.sgi.com
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Hi Dave,
+Hi Eric
 
-Thank you for your fast reply, look beblow please.
+On Wed, 7 Sep 2016 17:40:01 -0500
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-On 09/08/2016 05:22 AM, Dave Chinner wrote:
-> On Wed, Sep 07, 2016 at 06:36:19PM +0800, Lin Feng wrote:
->> Hi all nice xfs folks,
->>
->> I'm a rookie and really fresh new in xfs and currently I ran into an
->> issue same as the following link described:
->> http://oss.sgi.com/archives/xfs/2014-04/msg00058.html
->>
->> In my box(running cephfs osd using xfs kernel 2.6.32-358) and I sum
->> all possible memory counter can be find but it seems that nearlly
->> 26GB memory has gone and they are back after I echo 2 >
->> /proc/sys/vm/drop_caches, so seems these memory can be reclaimed by
->> slab.
->
-> It isn't "reclaimed by slab". The XFS metadata buffer cache is
-> reclaimed by a memory shrinker, which are for reclaiming objects
-> from caches that aren't the page cache. "echo 2 >
-> /proc/sys/vm/drop_caches" runs the memory shrinkers rather than page
-> cache reclaim. Many slab caches are backed by memory shrinkers,
-> which is why it is thought that "2" is "slab reclaim"....
->
->> And according to what David said replying in the list:
-> ..
->> That's where your memory is - in metadata buffers. The xfs_buf slab
->> entries are just the handles - the metadata pages in the buffers
->> usually take much more space and it's not accounted to the slab
->> cache nor the page cache.
->
-> That's exactly the case.
->
->>   Minimum / Average / Maximum Object : 0.02K / 0.33K / 4096.00K
->>
->>    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
->> 4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
->> 5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
->
-> So, you have *5.4 million* active metadata buffers. Each buffer will
-> hold  1 or 2 4k pages on your kernel, so simple math says 4M * 4k +
-> 1.4M * 8k = 26G. There's no missing counter here....
+> On 9/7/16 5:27 PM, Dave Chinner wrote:
+> > On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:  
+> >> To get xfsprogs to cross-compile for musl some hacks were needed.
+> >>
+> >> 1) d_namlen isn't available with musl  
+> > 
+> > musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
+> > to tell applications what the struct dirent it defines contains.
+> > 
+> > (Haven't we been through this before?)  
+> 
+> (yes: http://www.openwall.com/lists/musl/2016/01/15/9)
+> 
+> what *does* it contain?
+> 
+> We do already have:
+> 
+>  #ifdef _DIRENT_HAVE_D_RECLEN
+>  		*total += dirent->d_reclen;
+>  #else
+> 		*total += dirent->d_namlen + sizeof(*dirent);
+>  #endif
+> 
+> but you'd like:
+> 
+>  #ifdef _DIRENT_HAVE_D_RECLEN
+>  		*total += dirent->d_reclen;
+>  #else
+> -		*total += dirent->d_namlen + sizeof(*dirent);
+> +		*total += strlen(dirent->d_name) + sizeof(*dirent);
+>  #endif
+> 
+> but musl *does* have d_reclen:
+> 
+> http://git.musl-libc.org/cgit/musl/tree/include/dirent.h
+> 
+> so if it simply advertised that fact we'd be good...
 
-Does xattr contribute to such metadata buffers or there is something else?
-After consulting to my teammate, who told me that in our case small files
-(there are a looot, look below) always use xattr.
+Why not test for d_reclen in configure instead?
 
-Another thing is do we need to export such thing or we have to make the 
-computation every time to figure out if we leak memory.
-And more important is that seems these memory has a low priority to be reclaimed 
-by memory reclaim mechanism, does it due to most of the slab objects are active?
- >>    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
- >> 4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
- >> 5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
+> 
+> Whatever happened to that request from January above?
+> 
+> That said, I suppose strlen is fine to use here, so I guess I don't
+> see a strong reason to object to this change.
+> 
 
-In fact xfs eats a lot of my ram and I will never know where it goes without 
-diving into xfs source, at least I'm the second extreme user ;-)
+Guessing uClibc would benefit as well.
 
->
-> Obviously your workload is doing something extremely metadata
-> intensive to have a cache footprint like this - you have more cached
-> buffers than inodes, dentries, etc. That in itself is very unusual -
-> can you describe what is stored on that filesystem and how large the
-> attributes being stored in each inode are?
+So how does testing for d_reclen and making the slow-path more portable
+by using strlen sound for a plan?
 
-The fs-user behavior is that ceph-osd daemon will intensively 
-pull/synchronize/update files from other osd when the server is up.
-In our case cephfs osd stores a lot of small pictures in the filesystem, and I 
-do some simple analysis, there are nearly 3,000,000 files on each disk and there 
-are 10 such disk.
-[root@wzdx49 osd.670]# find current -type f -size -512k | wc -l
-2668769
-[root@wzdx49 ~]# find /data/osd/osd.67 -type f | wc -l
-2682891
-[root@wzdx49 ~]# find /data/osd/osd.67 -type d | wc -l
-109760
+> >> 2) crc32selftest doesn't make sense in case of cross-compilation,
+> >> the same can be said if building for a different host with the
+> >> native toolchain. So maybe an --disable-crc32selftest configure
+> >> option could be used here.
+> >>
+> >> 3) The CFLAGS passed to BUILD_CC weren't understood by the native
+> >> compiler. Set BUILD_CFLAGS to CFLAGS if not cross-compiling or let
+> >> it blank anyway?  
+> > 
+> > Ah, yes, we've definitely been through this before. Last time I said
+> > "send patches" and they never appeared.
 
-thanks,
-linfeng
+Well this is a case of easy to write the code but hard to figure out
+what the upstream preferred way of handling it is. I'd just put it
+behind a test target. Distribution developers are conditioned to run
+make test.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> > As it is, I'm really hesitant to remove the crc32c sanity check,
+> > mainly because we've just been through a XFS corruption drill where
+> > one in 10^6 crc calculations would end up wrong because of a bug in
+> > a compiler.
+> > 
+> > Can we "auto detect" cross compilation in the makefile and avoid the
+> > check only in that situation? configure options are really only a
+> > last resort...  
+> 
+> That sounds like the right path to me.
+
+So for 2) the plan is disable if cross-compiling, run unconditionally
+otherwise and no way to overwrite at configure time.
+
+As for 3) is there a point in having BUILD_CFLAGS introduced?
+
+> 
+> Or cross-compile it but don't run it, and let package managers run
+> it at install time?  ;)
+
+Of course I can implement it but I doubt we would see many packagers go
+that length. :)
+
+Cheers
+Ralph
+
+
+> 
+> >> 4) sys/ustat.h is missing in musl.  
+> > 
+> > Yup, been reported before. I'm about to commit a fix for that,
+> > mainly because certain new arches don't even implement the ustat
+> > system call, and glibc completely fucks up the handling of that.
+> > i.e. programs that call ustat don't fail at build time, the syscall
+> > is stubbed to print "not supported, will fail" at runtime. Hence
+> > nobody noticed that the xfsprogs code calling ustat was actually
+> > broken until a week ago...  
+> 
+> Partly because we only checked for success, not failure, but nobody
+> rationally expected -ENOSYS any more than they expected the
+> Spanish Inquisition...
+> 
+> -Eric
+> 
+> > Cheers,
+> > 
+> > Dave.
+> >   
+
