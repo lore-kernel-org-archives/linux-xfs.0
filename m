@@ -1,63 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41187 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750859AbcIGW15 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 18:27:57 -0400
-Date: Thu, 8 Sep 2016 08:27:53 +1000
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:15229 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758502AbcIHUZQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 16:25:16 -0400
+Date: Fri, 9 Sep 2016 06:25:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
-Message-ID: <20160907222753.GR30056@dastard>
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+Subject: Re: [PATCH] ovl: use copy_file_range for copy up if possible
+Message-ID: <20160908202511.GV30056@dastard>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+In-Reply-To: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:
-> To get xfsprogs to cross-compile for musl some hacks were needed.
+On Thu, Sep 08, 2016 at 06:29:54PM +0300, Amir Goldstein wrote:
+> When copying up within the same fs, try to use f_op->copy_file_range().
+> This becomes very efficient when lower and upper are on the same fs
+> with file reflink support.
 > 
-> 1) d_namlen isn't available with musl
-
-musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
-to tell applications what the struct dirent it defines contains.
-
-(Haven't we been through this before?)
-
-> 2) crc32selftest doesn't make sense in case of cross-compilation, the
-> same can be said if building for a different host with the native
-> toolchain. So maybe an --disable-crc32selftest configure option could
-> be used here.
+> Tested correct behavior when lower and upper are on:
+> 1. same ext4 (copy)
+> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 > 
-> 3) The CFLAGS passed to BUILD_CC weren't understood by the native
-> compiler. Set BUILD_CFLAGS to CFLAGS if not cross-compiling or let it
-> blank anyway?
+> Verified that all the overlay xfstests pass in the 'same xfs+reflink'
+> setup.
+> 
+> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> 25 seconds on the rest of the setups.
+> 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/overlayfs/copy_up.c | 28 +++++++++++++++++++++++++---
+>  1 file changed, 25 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> index 43fdc27..400567b 100644
+> --- a/fs/overlayfs/copy_up.c
+> +++ b/fs/overlayfs/copy_up.c
+> @@ -121,6 +121,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>  	struct file *new_file;
+>  	loff_t old_pos = 0;
+>  	loff_t new_pos = 0;
+> +	int try_copy_file = 0;
+>  	int error = 0;
+>  
+>  	if (len == 0)
+> @@ -136,6 +137,13 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>  		goto out_fput;
+>  	}
+>  
+> +	/*
+> +	 * When copying up within the same fs, try to use fs's copy_file_range
+> +	 */
+> +	if (file_inode(old_file)->i_sb == file_inode(new_file)->i_sb) {
+> +		try_copy_file = (new_file->f_op->copy_file_range != NULL);
+> +	}
 
-Ah, yes, we've definitely been through this before. Last time I said
-"send patches" and they never appeared.
+You don't need this. .copy_file_range() should return -EXDEV when
+you try to use it to copy files across different mount points or
+superblocks.
 
-As it is, I'm really hesitant to remove the crc32c sanity check,
-mainly because we've just been through a XFS corruption drill where
-one in 10^6 crc calculations would end up wrong because of a bug in
-a compiler.
-
-Can we "auto detect" cross compilation in the makefile and avoid the
-check only in that situation? configure options are really only a
-last resort...
-
-> 4) sys/ustat.h is missing in musl.
-
-Yup, been reported before. I'm about to commit a fix for that,
-mainly because certain new arches don't even implement the ustat
-system call, and glibc completely fucks up the handling of that.
-i.e. programs that call ustat don't fail at build time, the syscall
-is stubbed to print "not supported, will fail" at runtime. Hence
-nobody noticed that the xfsprogs code calling ustat was actually
-broken until a week ago...
+i.e. you should probably be calling vfs_copy_file_range() here to do
+the copy up, and if that fails (for whatever reason) then fall back
+to the existing data copying code.
 
 Cheers,
 
