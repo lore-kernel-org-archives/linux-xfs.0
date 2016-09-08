@@ -1,129 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38137 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752737AbcITAUW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2016 20:20:22 -0400
-Date: Tue, 20 Sep 2016 10:13:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: rework log recovery to submit buffers on LSN
- boundaries
-Message-ID: <20160920001330.GF340@dastard>
-References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
- <1470935467-52772-2-git-send-email-bfoster@redhat.com>
- <20160829011631.GK19025@dastard>
- <20160829181721.GA54904@bfoster.bfoster>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33994 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752900AbcIHSBY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 14:01:24 -0400
+Received: by mail-oi0-f66.google.com with SMTP id x125so3370783oia.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 11:01:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160829181721.GA54904@bfoster.bfoster>
+In-Reply-To: <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 8 Sep 2016 11:01:23 -0700
+Message-ID: <CA+55aFyfDNR9vkQ3sZMhLcoizE5VCLJDVukyPk=gbhDz9aNLgA@mail.gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com, linux-xfs@vger.kernel.org
+To: CAI Qian <caiqian@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-[ sorry to take so long to get back to this, Brian, I missed your
-reply and only yesterday when I was sorting out for-next updates
-that I still had this on my "for-review" patch stack. ]
+On Thu, Sep 8, 2016 at 8:29 AM, CAI Qian <caiqian@redhat.com> wrote:
+> Right. FYI, revert the commit below fixes the regression,
+>
+> 8d02076 : ->splice_write() via ->write_iter()
 
-On Mon, Aug 29, 2016 at 02:17:22PM -0400, Brian Foster wrote:
-> On Mon, Aug 29, 2016 at 11:16:31AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 11, 2016 at 01:11:03PM -0400, Brian Foster wrote:
-> > i.e. We are very careful to write commit records in the correct
-> > order because that is what determines recovery order, but we don't
-> > care what order we write the actual contents of the checkpoints or
-> > whether they interleave with other checkpoints.  As such, ophdrs
-> > change transactions and LSNs without having actually completed
-> > recovery of a checkpoint. 
-> > 
-> > I think writeback should occur when all the transactions with a
-> > given lsn have been committed. I'm not sure there's a simple way to
-> > track and detect this, but using the ophdrs to detect a change of
-> > lsn to trigger buffer writeback does not look correct to me at this
-> > point in time.
-> > 
-> 
-> That is precisely the intent of this patch. What I think could be a
-> problem is something like the following, if possible:
-> 
->                     CA         CB                  CC CD
-> +---------+--------+--+-------+--+--------+-------+--+--+
->   trans A   trans B    trans C    trans C  trans D
+I guess you didn't actually revert that, because so much else has
+changed. So you just tested the pre- and post- state of that commit?
 
-Yes, that's possible.
+It does look like that commit is just buggy, exactly because XSF was
+the only user of -generic_file_splice_write() in order to be able to
+do the filesystem locks *before* taking the pipe lock.
 
-> Assume that trans A and trans B are within the same record and trans C
-> is in a separate record. In that case, we commit trans A which populates
-> buffer_list. We lookup trans C, note a new LSN and drain buffer_list.
-> Then we ultimately commit trans B, which has the same metadata LSN as
-> trans A and thus is a path to the original problem if trans B happened
-> to modify any of the same blocks as trans A.
+Al? I wonder if we could just re-introduce xfs_file_splice_write()
+(except with the modern iter-based interface)?
 
-Yes, that's right, we still are exposed to the same problem, and
-there's much more convoluted versions of it possible.
+Looking at not holding the pipe lock, that really does seem very bad,
+because it would require us to:
 
-> Do note however that this is just an occurrence of the problem with log
-> recovery as implemented today (once we update metadata LSNs, and is
-> likely rare as I haven't been able to reproduce corruption in many
-> tries).
+ (a) play the ref-count games with each page
 
-Yeah, it's damn hard to intentionally cause interleaving of
-checkpoint and commit records these days because of the delayed
-logging does aggregation in memory rather than in the log buffers
-themselves.
+ (b) make concurrent splice writers have very subtle semantics
 
-> If that analysis is correct, I think a straightforward solution
-> might be to defer submission to the lookup of a transaction with a new
-> LSN that _also_ corresponds with processing of a commit record based on
-> where we are in the on-disk log. E.g.:
-> 
-> 	if (log->l_recovery_lsn != trans->r_lsn &&
-> 	    oh_flags & XLOG_COMMIT_TRANS) {
-> 		error = xfs_buf_delwri_submit(buffer_list);
-> 		...
-> 	}
-> 
-> So in the above, we'd submit buffers for A and B once we visit the
-> commit record for trans C. Thoughts?
+I'm not sure (b) is a big issue, because concurrent splice writers
+already have random ordering, but at least right now they'd have
+non-overlapping data accesses rather than possibly splicing the same
+data twice (and some data not at all).
 
-Sounds plausible - let me just check I understood by repeating it
-back. Given the above case, we start with log->l_recovery_lsn set to
-the lsn before trans A and an empty buffer list.
+The basic issue with splice and xfs is that right now our splice
+interface *forces*:
 
-1. We now recover trans A and trans B into their respective structures,
-but we don't don't add their dirty buffers to the delwri list yet -
-they are kept internal to the trans.
+ - generic_file_splice_read() when called by a filesystem will take
+the filesystem locks *first*, and the pipe lock second (ie
+xfs_file_splice_read)
 
-2. We then see commit A, and because the buffer list is empty we
-simply add them to the buffer list and update log->l_recovery_lsn to
-point at the transaction LSN.
+ - iter_file_splice_write() forces the reverse ordering.
 
-3. We now see trans C, and start recovering it into an internal buffer
-list.
+So it really is our splice helpers that do things in fundamentally the
+wrong order.
 
-4. Then we process commit B, see that there are already queued buffers
-and so check the transaction LSN against log->l_recovery_lsn. They
-are the same, so we simply add the transactions dirty buffers to
-the buffer list.
+Other filesystems don't seem to have that extra filesystem lock that shows this.
 
-5. We continue processing transaction C, and start on transaction D.
-We then see commit C. Buffer list is populated, so we check
-transaction lsn against log->l_recovery_lsn. They are different.
-At this point we know we have fully processed all the transactions
-that are associated with log->l_recovery_lsn, hence we can submit
-the buffer_list and mark it empty again.
+Ideas?
 
-6. At this point we jump back to step 2, this time processing commit
-C onwards....
-
-7. At the end of log recovery, we commit the remaining buffer list
-from the last transaction we recovered from the log.
-
-Did I understand it right? If so, I think this will work just fine.
-
-Thanks, Brian!
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+             Linus
