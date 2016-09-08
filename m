@@ -1,106 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48862 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752769AbcIHDkf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 23:40:35 -0400
-Date: Thu, 8 Sep 2016 13:40:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsdocs: master branch updated to 242d533
-Message-ID: <20160908034031.GU30056@dastard>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35057 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758992AbcIHSMe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 14:12:34 -0400
+Received: by mail-oi0-f65.google.com with SMTP id 2so6003981oif.2
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 11:12:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
-Content-Disposition: inline
+In-Reply-To: <20160908175632.GH2356@ZenIV.linux.org.uk>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 8 Sep 2016 11:12:33 -0700
+Message-ID: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: CAI Qian <caiqian@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
+On Thu, Sep 8, 2016 at 10:56 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> ... and brings back a lot of other crap.  The thing is, pipe lock should
+> be on the outside of everything fs might be taking, so that splice IO
+> is the same as normal IO as far as filesystem locking is concerned.  For
+> the write side it had been done in that commit, for the read side it's yet
+> to be done.
 
---61jdw2sOBCFtR2d/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Al, look at generic_file_splice_read().
 
-Hi folks,
+The problem is that XFS takes its own
 
-The xfs documentation repository at
+        xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+        ..
+        xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+around all the generic file accessors. So for example, it doesn't use
+"generic_file_read_iter()", it does
 
-has just been updated.
+STATIC ssize_t
+xfs_file_buffered_aio_read(
+        struct kiocb            *iocb,
+        struct iov_iter         *to)
+{
+        struct xfs_inode        *ip = XFS_I(file_inode(iocb->ki_filp));
+        ssize_t                 ret;
 
-The new head of the master branch is commit:
+        trace_xfs_file_buffered_read(ip, iov_iter_count(to), iocb->ki_pos);
 
-242d533 xfsdocs: document the realtime reverse mapping btree
+        xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+        ret = generic_file_read_iter(iocb, to);
+        xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
 
-New Commits:
+        return ret;
+}
 
-Darrick J. Wong (7):
-      [8b5acc6] journaling_log: fix some typos in the section about EFDs
-      [3db09b6] xfsdocs: document known testing procedures
-      [afcda10] xfsdocs: update the on-disk format with changes for Linux 4=
-=2E5
-      [6e7cbb4] xfsdocs: move the discussions of short and long format btre=
-es to a separate chapter
-      [4302a13] xfsdocs: reverse-mapping btree documentation
-      [5a9c232] xfsdocs: document refcount btree and reflink
-      [242d533] xfsdocs: document the realtime reverse mapping btree
+and the exact same pattern holds for generic_file_splice_read().
 
+So the XFS model *requires* that XFS_IOLOCK to be outside all the operations.
 
-Code Diffstat:
+But then in iter_file_splice_write we have the other ordering.
 
- .../allocation_groups.asciidoc                       | 119 ++++----
- design/XFS_Filesystem_Structure/btrees.asciidoc      | 196 +++++++++++++
- .../XFS_Filesystem_Structure/data_extents.asciidoc   |  72 +----
- design/XFS_Filesystem_Structure/directories.asciidoc |   1 +
- design/XFS_Filesystem_Structure/docinfo.xml          |  47 ++++
- .../internal_inodes.asciidoc                         |   2 +
- .../XFS_Filesystem_Structure/journaling_log.asciidoc | 320 +++++++++++++++=
-++++++-
- design/XFS_Filesystem_Structure/magic.asciidoc       |   9 +
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc   |  50 +++-
- .../XFS_Filesystem_Structure/reconstruction.asciidoc |  53 ++++
- design/XFS_Filesystem_Structure/refcountbt.asciidoc  | 145 ++++++++++
- design/XFS_Filesystem_Structure/reflink.asciidoc     |  40 +++
- design/XFS_Filesystem_Structure/rmapbt.asciidoc      | 307 +++++++++++++++=
-++++++
- design/XFS_Filesystem_Structure/rtrmapbt.asciidoc    | 234 ++++++++++++++++
- design/XFS_Filesystem_Structure/testing.asciidoc     |  23 ++
- .../xfs_filesystem_structure.asciidoc                |  12 +
- 16 files changed, 1482 insertions(+), 148 deletions(-)
- create mode 100644 design/XFS_Filesystem_Structure/btrees.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/reconstruction.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/refcountbt.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/reflink.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/rmapbt.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
- create mode 100644 design/XFS_Filesystem_Structure/testing.asciidoc
---=20
-Dave Chinner
-david@fromorbit.com
+Now, xfs could do a wrapper for ->splice_write() like it used to, and
+have that same "take the xfs lock around the call to
+iter_file_splice_write(). That was my first obvious patch.
 
---61jdw2sOBCFtR2d/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+I threw it out because that's garbage too: then we end up doing
+->write_iter(), which takes the xfs_rw_ilock() again, and would
+immediately deadlock *there* instead.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+So the problem really is that the vfs layer seems to simply not allow
+the filesystem to do any locking around the generic page cache helper
+functions. And XFS really wants to do that.
 
-iQIcBAEBAgAGBQJX0N2uAAoJEK3oKUf0dfodsDYP/2YaajuRZNl6pLg72FMOayyW
-l1FbV7L96z35uQ0DrSimT0P0/8QvQQtePZvJTz5UCdJ8VLOfEutf8XQhZjMrxiTC
-jd7s+R/mccm0IKzguwMOHV9nYNzqe852KjWbVrSPid9yzl7La6tLUhVr0USIfC69
-OodtTfkDhMoJVhH+iML1pgN3S4p4HzvmOArvthvS1bqTsIQ77xgjEkTMTRXzSow7
-8WyTV/VRZQK8jn7APQehyrtOCJMUNGSWDtaZsdrIWpLr+N/dPtXqjub9sVbkzd+l
-teGX2qm0RwJR0SPFjln/QPkKRvoh808TSk+uRuMQPPBozLuZ8PNZ1R734uRaMLGr
-YOgak10Lo5MIU7WLilyW2Grar+BnQcW7K1iM1/oXjE4FhNMm5ok3/9VaMnimZ6vW
-kbPaBVQK+QvSZSUq7gr2QzFGnwn6PPWejZJer8j9n7SmAoOymGSWxLbN7o6ajZBZ
-gN6DhRlCZompZfeDSS1sR0WToCa2WEBgL/UTBlBURGy6/1VWjndH7Kiew2yLX5gu
-tG6XIqShDqqP6QnVmXh59NiLAR4GFwfE5lEbWk0ha/c0Jr0dIyiDSbifOo6uFNxv
-VpgJG8FyEwSi8/SIuSEJWvqdEjtQL2r7/3b5ryewvs4VkG41vrO/vdvRkT+3ntVR
-Mq7ZhPmcPtV8vUwfoaIY
-=xJMY
------END PGP SIGNATURE-----
-
---61jdw2sOBCFtR2d/--
+              Linus
