@@ -1,74 +1,64 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED7AB7CA7
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 18:34:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63835AC003
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 16:34:23 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2Nd4mfXBGYACXSBh for <xfs@oss.sgi.com>;
-	Tue, 06 Sep 2016 16:34:20 -0700 (PDT)
-Date: Wed, 7 Sep 2016 09:34:18 +1000
-From: Dave Chinner <david@fromorbit.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:45178 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753267AbcIHUox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 16:44:53 -0400
+Date: Thu, 8 Sep 2016 21:44:50 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: xfs_file_splice_read: possible circular locking dependency
-	detected
-Message-ID: <20160906233418.GM30056@dastard>
+ detected
+Message-ID: <20160908204450.GJ2356@ZenIV.linux.org.uk>
 References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
-	<1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
-	<20160903003919.GI30056@dastard>
-	<58974432.234567.1473198839605.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard>
+ <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk>
+ <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <58974432.234567.1473198839605.JavaMail.zimbra@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com
+In-Reply-To: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: CAI Qian <caiqian@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue, Sep 06, 2016 at 05:53:59PM -0400, CAI Qian wrote:
+On Thu, Sep 08, 2016 at 11:12:33AM -0700, Linus Torvalds wrote:
+
+> So the XFS model *requires* that XFS_IOLOCK to be outside all the operations.
 > 
+> But then in iter_file_splice_write we have the other ordering.
 > 
-> ----- Original Message -----
-> > Fundamentally a splice infrastructure problem. If we let splice race
-> > with hole punch and other fallocate() based extent manipulations to
-> > avoid this lockdep warning, we allow potential for read or write to
-> > regions of the file that have been freed. We can live with having
-> > lockdep complain about this potential deadlock as it is unlikely to
-> > ever occur in practice. The other option is simply not an acceptible
-> > solution....
-> The problem with living with having this lockdep complain that
-> it seems once this lockdep happens, it will prevent other complains from
-> showing up. For example, I have to apply the commit dc3a04d to fix an early
-> rcu lockdep first during the bisecting.
+> Now, xfs could do a wrapper for ->splice_write() like it used to, and
+> have that same "take the xfs lock around the call to
+> iter_file_splice_write(). That was my first obvious patch.
+> 
+> I threw it out because that's garbage too: then we end up doing
+> ->write_iter(), which takes the xfs_rw_ilock() again, and would
+> immediately deadlock *there* instead.
+> 
+> So the problem really is that the vfs layer seems to simply not allow
+> the filesystem to do any locking around the generic page cache helper
+> functions. And XFS really wants to do that.
 
-Not my problem.
+Why *have* ->splice_read() there at all?  Let's use its ->read_iter(), where
+it will take its lock as it always did for read.
 
-My primary responsibility is to maintain the filesystem integrity
-and data safety for the hundreds of thousands (millions?) of XFS
-users: it's their data, and I will always err on the side of safety
-and integrity. As such I really don't care if there's collateral
-damage to developer debug tools - user data integrity requirements
-always come first...
+All we need is a variant of __generic_file_splice_read() that would pass
+a new kind of iov_iter down to filesystem's own ->read_iter().  And let that
+guy do whatever locking it wants.  It will end up doing a sequence of
+copy_page_to_iter() and, possibly, copy_to_iter() (XFS one would only do the
+former).  So let's add an iov_iter flavour that would simply grab a reference
+to page passed to copy_page_to_iter() and allocate-and-copy for copy_to_iter().
+As the result, you'll get an array of <page, offset, count> triples - same
+as you would from the existing __generic_file_splice_read().  Pages already
+uptodate, with all readahead logics done as usual, etc.
 
-Cheers,
+What else do we need?  Just feed the resulting triples into the pipe and
+that's it.  Sure, they can get stale by truncate/punchhole/whatnot.  So
+they can right after we return from xfs_file_splice_read()...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Moreover, I don't see why we need to hold pipe lock the actual call of
+->read_iter().  Right now we only grab it for "feed into pipe buffers"
+part.  Objections?
