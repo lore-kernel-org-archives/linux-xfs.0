@@ -1,151 +1,106 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 79A757CA0
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 15:44:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 403CA304048
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 13:44:19 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QIMs4wJaNBXEH9V2 for <xfs@oss.sgi.com>;
-	Thu, 08 Sep 2016 13:44:16 -0700 (PDT)
-Date: Fri, 9 Sep 2016 06:44:13 +1000
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48862 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752769AbcIHDkf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 23:40:35 -0400
+Date: Thu, 8 Sep 2016 13:40:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG REPORT] missing memory counter introduced by xfs
-Message-ID: <20160908204413.GW30056@dastard>
-References: <57CFEDA3.9000005@chinanetcenter.com>
-	<20160907212206.GP30056@dastard>
-	<57D13871.9070603@chinanetcenter.com>
+Subject: [ANNOUNCE] xfsdocs: master branch updated to 242d533
+Message-ID: <20160908034031.GU30056@dastard>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
 Content-Disposition: inline
-In-Reply-To: <57D13871.9070603@chinanetcenter.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Lin Feng <linf@chinanetcenter.com>
-Cc: dchinner@redhat.com, xfs@oss.sgi.com
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 08, 2016 at 06:07:45PM +0800, Lin Feng wrote:
-> Hi Dave,
-> 
-> Thank you for your fast reply, look beblow please.
-> 
-> On 09/08/2016 05:22 AM, Dave Chinner wrote:
-> >On Wed, Sep 07, 2016 at 06:36:19PM +0800, Lin Feng wrote:
-> >>Hi all nice xfs folks,
-> >>
-> >>I'm a rookie and really fresh new in xfs and currently I ran into an
-> >>issue same as the following link described:
-> >>http://oss.sgi.com/archives/xfs/2014-04/msg00058.html
-> >>
-> >>In my box(running cephfs osd using xfs kernel 2.6.32-358) and I sum
-> >>all possible memory counter can be find but it seems that nearlly
-> >>26GB memory has gone and they are back after I echo 2 >
-> >>/proc/sys/vm/drop_caches, so seems these memory can be reclaimed by
-> >>slab.
-> >
-> >It isn't "reclaimed by slab". The XFS metadata buffer cache is
-> >reclaimed by a memory shrinker, which are for reclaiming objects
-> >from caches that aren't the page cache. "echo 2 >
-> >/proc/sys/vm/drop_caches" runs the memory shrinkers rather than page
-> >cache reclaim. Many slab caches are backed by memory shrinkers,
-> >which is why it is thought that "2" is "slab reclaim"....
-> >
-> >>And according to what David said replying in the list:
-> >..
-> >>That's where your memory is - in metadata buffers. The xfs_buf slab
-> >>entries are just the handles - the metadata pages in the buffers
-> >>usually take much more space and it's not accounted to the slab
-> >>cache nor the page cache.
-> >
-> >That's exactly the case.
-> >
-> >>  Minimum / Average / Maximum Object : 0.02K / 0.33K / 4096.00K
-> >>
-> >>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
-> >>4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
-> >>5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
-> >
-> >So, you have *5.4 million* active metadata buffers. Each buffer will
-> >hold  1 or 2 4k pages on your kernel, so simple math says 4M * 4k +
-> >1.4M * 8k = 26G. There's no missing counter here....
-> 
-> Does xattr contribute to such metadata buffers or there is something else?
 
-xattrs are metadata, so if they don't fit in line in the inode
-(typical for ceph because it uses xattrs larger than 256 bytes) then
-they are held in external blocks which are cached in the buffer
-cache.
+--61jdw2sOBCFtR2d/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> After consulting to my teammate, who told me that in our case small files
-> (there are a looot, look below) always use xattr.
+Hi folks,
 
-Which means that if you have 4.4M cached inodes, you probably have
-~4.4M xattr metadata buffers in cache for those inodes, too.
+The xfs documentation repository at
 
-> Another thing is do we need to export such thing or we have to make
-> the computation every time to figure out if we leak memory.
-> And more important is that seems these memory has a low priority to
-> be reclaimed by memory reclaim mechanism, does it due to most of the
-> slab objects are active?
+git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
 
-"active" slab objects simply mean they are allocated. It does not
-mean they are cached or imply anything else about the object's life
-cycle.
+has just been updated.
 
-> >>    OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
-> >> 4383036 4383014  99%    1.00K 1095759        4   4383036K xfs_inode
-> >> 5394610 5394544  99%    0.38K 539461       10   2157844K xfs_buf
-> 
-> In fact xfs eats a lot of my ram and I will never know where it goes
-> without diving into xfs source, at least I'm the second extreme user
-> ;-)
-> 
-> >
-> >Obviously your workload is doing something extremely metadata
-> >intensive to have a cache footprint like this - you have more cached
-> >buffers than inodes, dentries, etc. That in itself is very unusual -
-> >can you describe what is stored on that filesystem and how large the
-> >attributes being stored in each inode are?
-> 
-> The fs-user behavior is that ceph-osd daemon will intensively
-> pull/synchronize/update files from other osd when the server is up.
-> In our case cephfs osd stores a lot of small pictures in the
-> filesystem, and I do some simple analysis, there are nearly
-> 3,000,000 files on each disk and there are 10 such disk.
-> [root@wzdx49 osd.670]# find current -type f -size -512k | wc -l
-> 2668769
-> [root@wzdx49 ~]# find /data/osd/osd.67 -type f | wc -l
-> 2682891
-> [root@wzdx49 ~]# find /data/osd/osd.67 -type d | wc -l
-> 109760
+The new head of the master branch is commit:
 
-Yup, that's a pretty good indication that you have a high metadata
-to data ratio in each filesystem, and that ceph is accessing the
-metadata more intensively than the data. The fact that the metadata
-buffer count roughly matches the cached inode count tells me that
-the memory reclaim code is being fairly balanced about what it
-reclaims under memory pressure - I think the problem here is more
-that you didn't know where the memory was being used than anything
-else....
+242d533 xfsdocs: document the realtime reverse mapping btree
 
-Cheers,
+New Commits:
 
-Dave.
--- 
+Darrick J. Wong (7):
+      [8b5acc6] journaling_log: fix some typos in the section about EFDs
+      [3db09b6] xfsdocs: document known testing procedures
+      [afcda10] xfsdocs: update the on-disk format with changes for Linux 4=
+=2E5
+      [6e7cbb4] xfsdocs: move the discussions of short and long format btre=
+es to a separate chapter
+      [4302a13] xfsdocs: reverse-mapping btree documentation
+      [5a9c232] xfsdocs: document refcount btree and reflink
+      [242d533] xfsdocs: document the realtime reverse mapping btree
+
+
+Code Diffstat:
+
+ .../allocation_groups.asciidoc                       | 119 ++++----
+ design/XFS_Filesystem_Structure/btrees.asciidoc      | 196 +++++++++++++
+ .../XFS_Filesystem_Structure/data_extents.asciidoc   |  72 +----
+ design/XFS_Filesystem_Structure/directories.asciidoc |   1 +
+ design/XFS_Filesystem_Structure/docinfo.xml          |  47 ++++
+ .../internal_inodes.asciidoc                         |   2 +
+ .../XFS_Filesystem_Structure/journaling_log.asciidoc | 320 +++++++++++++++=
+++++++-
+ design/XFS_Filesystem_Structure/magic.asciidoc       |   9 +
+ .../XFS_Filesystem_Structure/ondisk_inode.asciidoc   |  50 +++-
+ .../XFS_Filesystem_Structure/reconstruction.asciidoc |  53 ++++
+ design/XFS_Filesystem_Structure/refcountbt.asciidoc  | 145 ++++++++++
+ design/XFS_Filesystem_Structure/reflink.asciidoc     |  40 +++
+ design/XFS_Filesystem_Structure/rmapbt.asciidoc      | 307 +++++++++++++++=
+++++++
+ design/XFS_Filesystem_Structure/rtrmapbt.asciidoc    | 234 ++++++++++++++++
+ design/XFS_Filesystem_Structure/testing.asciidoc     |  23 ++
+ .../xfs_filesystem_structure.asciidoc                |  12 +
+ 16 files changed, 1482 insertions(+), 148 deletions(-)
+ create mode 100644 design/XFS_Filesystem_Structure/btrees.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/reconstruction.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/refcountbt.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/reflink.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/rmapbt.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
+ create mode 100644 design/XFS_Filesystem_Structure/testing.asciidoc
+--=20
 Dave Chinner
 david@fromorbit.com
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+--61jdw2sOBCFtR2d/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX0N2uAAoJEK3oKUf0dfodsDYP/2YaajuRZNl6pLg72FMOayyW
+l1FbV7L96z35uQ0DrSimT0P0/8QvQQtePZvJTz5UCdJ8VLOfEutf8XQhZjMrxiTC
+jd7s+R/mccm0IKzguwMOHV9nYNzqe852KjWbVrSPid9yzl7La6tLUhVr0USIfC69
+OodtTfkDhMoJVhH+iML1pgN3S4p4HzvmOArvthvS1bqTsIQ77xgjEkTMTRXzSow7
+8WyTV/VRZQK8jn7APQehyrtOCJMUNGSWDtaZsdrIWpLr+N/dPtXqjub9sVbkzd+l
+teGX2qm0RwJR0SPFjln/QPkKRvoh808TSk+uRuMQPPBozLuZ8PNZ1R734uRaMLGr
+YOgak10Lo5MIU7WLilyW2Grar+BnQcW7K1iM1/oXjE4FhNMm5ok3/9VaMnimZ6vW
+kbPaBVQK+QvSZSUq7gr2QzFGnwn6PPWejZJer8j9n7SmAoOymGSWxLbN7o6ajZBZ
+gN6DhRlCZompZfeDSS1sR0WToCa2WEBgL/UTBlBURGy6/1VWjndH7Kiew2yLX5gu
+tG6XIqShDqqP6QnVmXh59NiLAR4GFwfE5lEbWk0ha/c0Jr0dIyiDSbifOo6uFNxv
+VpgJG8FyEwSi8/SIuSEJWvqdEjtQL2r7/3b5ryewvs4VkG41vrO/vdvRkT+3ntVR
+Mq7ZhPmcPtV8vUwfoaIY
+=xJMY
+-----END PGP SIGNATURE-----
+
+--61jdw2sOBCFtR2d/--
