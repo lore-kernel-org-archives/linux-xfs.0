@@ -1,45 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:45612 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbcIHVXp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 17:23:45 -0400
-Date: Thu, 8 Sep 2016 22:23:42 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160908212342.GA3791@ZenIV.linux.org.uk>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard>
- <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk>
- <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908204450.GJ2356@ZenIV.linux.org.uk>
+Received: from userp1040.oracle.com ([156.151.31.81]:50155 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752549AbcIHCEC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Sep 2016 22:04:02 -0400
+Date: Wed, 7 Sep 2016 19:03:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/7] xfsdocs: document the realtime reverse mapping btree
+Message-ID: <20160908020353.GA9314@birch.djwong.org>
+References: <147216761636.32447.4229640006064129056.stgit@birch.djwong.org>
+ <147216766221.32447.9777486170830928374.stgit@birch.djwong.org>
+ <20160908013838.GT30056@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160908204450.GJ2356@ZenIV.linux.org.uk>
+In-Reply-To: <20160908013838.GT30056@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: CAI Qian <caiqian@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Sep 08, 2016 at 09:44:50PM +0100, Al Viro wrote:
+On Thu, Sep 08, 2016 at 11:38:38AM +1000, Dave Chinner wrote:
+> On Thu, Aug 25, 2016 at 04:27:42PM -0700, Darrick J. Wong wrote:
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  .../allocation_groups.asciidoc                     |    8 +
+> >  design/XFS_Filesystem_Structure/docinfo.xml        |   14 +
+> >  .../internal_inodes.asciidoc                       |    2 
+> >  design/XFS_Filesystem_Structure/magic.asciidoc     |    1 
+> >  .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    6 -
+> >  design/XFS_Filesystem_Structure/rtrmapbt.asciidoc  |  234 ++++++++++++++++++++
+> >  6 files changed, 263 insertions(+), 2 deletions(-)
+> >  create mode 100644 design/XFS_Filesystem_Structure/rtrmapbt.asciidoc
+> > 
+> > 
+> > diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+> > index cafa8b7..7ba636a 100644
+> > --- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+> > +++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
+> > @@ -105,6 +105,7 @@ struct xfs_sb
+> >  	xfs_ino_t		sb_pquotino;
+> >  	xfs_lsn_t		sb_lsn;
+> >  	uuid_t			sb_meta_uuid;
+> > +	xfs_ino_t		sb_rrmapino;
+> >  };
+> >  ----
+> >  *sb_magicnum*::
+> > @@ -449,6 +450,13 @@ If the +XFS_SB_FEAT_INCOMPAT_META_UUID+ feature is set, then the UUID field in
+> >  all metadata blocks must match this UUID.  If not, the block header UUID field
+> >  must match +sb_uuid+.
+> >  
+> > +*sb_rrmapino*::
+> > +If the +XFS_SB_FEAT_COMPAT_RMAPBT+ feature is set and a real-time
+> 
+> XFS_SB_FEAT_RO_COMPAT_RMAPBT?
+> 
+> (yes, I am reading these patches!)
 
-> Moreover, I don't see why we need to hold pipe lock the actual call of
-> ->read_iter().  Right now we only grab it for "feed into pipe buffers"
-> part.  Objections?
+Woohoo!!!
 
-Actually, screw the "array of bvec"; we'd need to mark the ones that are
-pagecache-backed somehow to tell which methods should be used.  Let's
-add a variant of iov_iter that would be backed by pipe_buffer array;
-copy_page_to_iter() fills the next slot with an extra reference to the
-page we'd been given and using page_cache_pipe_buf_ops for ->ops.
-copy_to_iter() adds to the last slot if it has default_pipe_buf_ops for
-->ops and still has space in it or allocates a new page, sticks into the
-next slot, copies data into it and sets default_pipe_ops for ->ops.
+Thank you for catching this! :)
 
-Then all we need is a variant of splice_to_pipe()/splice_{grow,shrink}_spd()
-that would work with an array of pipe_buffer instead of page/partial_page
-array pair.
+--D
+
+> 
+> -Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
