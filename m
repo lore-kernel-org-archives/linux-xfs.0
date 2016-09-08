@@ -1,148 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35841 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752532AbcIHIle (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 04:41:34 -0400
-Received: by mail-wm0-f65.google.com with SMTP id l65so6719153wmf.3
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 01:41:34 -0700 (PDT)
-Date: Thu, 8 Sep 2016 10:41:31 +0200
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
-Message-ID: <20160908104131.479349ae@gmail.com>
-In-Reply-To: <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
-        <20160907222753.GR30056@dastard>
-        <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:17206 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932862AbcIHVii (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 17:38:38 -0400
+Date: Fri, 9 Sep 2016 07:38:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+ detected
+Message-ID: <20160908213835.GY30056@dastard>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard>
+ <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk>
+ <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-Hi Eric
+On Thu, Sep 08, 2016 at 11:12:33AM -0700, Linus Torvalds wrote:
+> On Thu, Sep 8, 2016 at 10:56 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> >
+> > ... and brings back a lot of other crap.  The thing is, pipe lock should
+> > be on the outside of everything fs might be taking, so that splice IO
+> > is the same as normal IO as far as filesystem locking is concerned.  For
+> > the write side it had been done in that commit, for the read side it's yet
+> > to be done.
+> 
+> Al, look at generic_file_splice_read().
+> 
+> The problem is that XFS takes its own
+> 
+>         xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+>         ..
+>         xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+> 
+> around all the generic file accessors. So for example, it doesn't use
+> "generic_file_read_iter()", it does
+> 
+> STATIC ssize_t
+> xfs_file_buffered_aio_read(
+>         struct kiocb            *iocb,
+>         struct iov_iter         *to)
+> {
+>         struct xfs_inode        *ip = XFS_I(file_inode(iocb->ki_filp));
+>         ssize_t                 ret;
+> 
+>         trace_xfs_file_buffered_read(ip, iov_iter_count(to), iocb->ki_pos);
+> 
+>         xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+>         ret = generic_file_read_iter(iocb, to);
+>         xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+> 
+>         return ret;
+> }
+> 
+> and the exact same pattern holds for generic_file_splice_read().
+> 
+> So the XFS model *requires* that XFS_IOLOCK to be outside all the operations.
+> 
+> But then in iter_file_splice_write we have the other ordering.
+> 
+> Now, xfs could do a wrapper for ->splice_write() like it used to, and
+> have that same "take the xfs lock around the call to
+> iter_file_splice_write(). That was my first obvious patch.
+> 
+> I threw it out because that's garbage too: then we end up doing
+> ->write_iter(), which takes the xfs_rw_ilock() again, and would
+> immediately deadlock *there* instead.
 
-On Wed, 7 Sep 2016 17:40:01 -0500
-Eric Sandeen <sandeen@sandeen.net> wrote:
+That's what I first tried when this was first reported back in
+3.18-rc0, and after a couple of other aborted attempts to work
+around the pipe_lock I came to the same conclusion:
 
-> On 9/7/16 5:27 PM, Dave Chinner wrote:
-> > On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:  
-> >> To get xfsprogs to cross-compile for musl some hacks were needed.
-> >>
-> >> 1) d_namlen isn't available with musl  
-> > 
-> > musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
-> > to tell applications what the struct dirent it defines contains.
-> > 
-> > (Haven't we been through this before?)  
-> 
-> (yes: http://www.openwall.com/lists/musl/2016/01/15/9)
-> 
-> what *does* it contain?
-> 
-> We do already have:
-> 
->  #ifdef _DIRENT_HAVE_D_RECLEN
->  		*total += dirent->d_reclen;
->  #else
-> 		*total += dirent->d_namlen + sizeof(*dirent);
->  #endif
-> 
-> but you'd like:
-> 
->  #ifdef _DIRENT_HAVE_D_RECLEN
->  		*total += dirent->d_reclen;
->  #else
-> -		*total += dirent->d_namlen + sizeof(*dirent);
-> +		*total += strlen(dirent->d_name) + sizeof(*dirent);
->  #endif
-> 
-> but musl *does* have d_reclen:
-> 
-> http://git.musl-libc.org/cgit/musl/tree/include/dirent.h
-> 
-> so if it simply advertised that fact we'd be good...
+	"That smells like a splice architecture bug. splice write puts the
+	pipe lock outside the inode locks, but splice read puts the pipes
+	locks *inside* the inode locks. "
 
-Why not test for d_reclen in configure instead?
+http://oss.sgi.com/archives/xfs/2014-10/msg00319.html
 
-> 
-> Whatever happened to that request from January above?
-> 
-> That said, I suppose strlen is fine to use here, so I guess I don't
-> see a strong reason to object to this change.
-> 
+> So the problem really is that the vfs layer seems to simply not allow
+> the filesystem to do any locking around the generic page cache helper
+> functions. And XFS really wants to do that.
 
-Guessing uClibc would benefit as well.
+It's not an XFS specific problem: any filesystem that supports hole
+punch and it's fallocate() friends needs this high level splice IO
+exclusion as well.
 
-So how does testing for d_reclen and making the slow-path more portable
-by using strlen sound for a plan?
+Cheers,
 
-> >> 2) crc32selftest doesn't make sense in case of cross-compilation,
-> >> the same can be said if building for a different host with the
-> >> native toolchain. So maybe an --disable-crc32selftest configure
-> >> option could be used here.
-> >>
-> >> 3) The CFLAGS passed to BUILD_CC weren't understood by the native
-> >> compiler. Set BUILD_CFLAGS to CFLAGS if not cross-compiling or let
-> >> it blank anyway?  
-> > 
-> > Ah, yes, we've definitely been through this before. Last time I said
-> > "send patches" and they never appeared.
-
-Well this is a case of easy to write the code but hard to figure out
-what the upstream preferred way of handling it is. I'd just put it
-behind a test target. Distribution developers are conditioned to run
-make test.
-
-> > 
-> > As it is, I'm really hesitant to remove the crc32c sanity check,
-> > mainly because we've just been through a XFS corruption drill where
-> > one in 10^6 crc calculations would end up wrong because of a bug in
-> > a compiler.
-> > 
-> > Can we "auto detect" cross compilation in the makefile and avoid the
-> > check only in that situation? configure options are really only a
-> > last resort...  
-> 
-> That sounds like the right path to me.
-
-So for 2) the plan is disable if cross-compiling, run unconditionally
-otherwise and no way to overwrite at configure time.
-
-As for 3) is there a point in having BUILD_CFLAGS introduced?
-
-> 
-> Or cross-compile it but don't run it, and let package managers run
-> it at install time?  ;)
-
-Of course I can implement it but I doubt we would see many packagers go
-that length. :)
-
-Cheers
-Ralph
-
-
-> 
-> >> 4) sys/ustat.h is missing in musl.  
-> > 
-> > Yup, been reported before. I'm about to commit a fix for that,
-> > mainly because certain new arches don't even implement the ustat
-> > system call, and glibc completely fucks up the handling of that.
-> > i.e. programs that call ustat don't fail at build time, the syscall
-> > is stubbed to print "not supported, will fail" at runtime. Hence
-> > nobody noticed that the xfsprogs code calling ustat was actually
-> > broken until a week ago...  
-> 
-> Partly because we only checked for success, not failure, but nobody
-> rationally expected -ENOSYS any more than they expected the
-> Spanish Inquisition...
-> 
-> -Eric
-> 
-> > Cheers,
-> > 
-> > Dave.
-> >   
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
