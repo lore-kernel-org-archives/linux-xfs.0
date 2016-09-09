@@ -1,89 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27681 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753204AbcIHXR3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 19:17:29 -0400
-Date: Thu, 8 Sep 2016 16:16:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/71] xfs: log refcount intent items
-Message-ID: <20160908231656.GC8969@birch.djwong.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
- <147216802075.867.12945255918683675311.stgit@birch.djwong.org>
- <20160906152155.GJ24287@infradead.org>
- <20160908191404.GB8969@birch.djwong.org>
- <20160908231326.GA30056@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160908231326.GA30056@dastard>
+Received: from bombadil.infradead.org ([198.137.202.9]:54220 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753119AbcIIQe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:34:56 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/10] dax: don't pass buffer_head to dax_insert_mapping
+Date: Fri,  9 Sep 2016 18:34:37 +0200
+Message-Id: <1473438884-674-4-git-send-email-hch@lst.de>
+In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Fri, Sep 09, 2016 at 09:13:26AM +1000, Dave Chinner wrote:
-> On Thu, Sep 08, 2016 at 12:14:04PM -0700, Darrick J. Wong wrote:
-> > On Tue, Sep 06, 2016 at 08:21:55AM -0700, Christoph Hellwig wrote:
-> > > > +	__uint64_t			cui_id;
-> > > > +	struct xfs_ail_cursor		cur;
-> > > > +	struct xfs_ail			*ailp = log->l_ailp;
-> > > > +
-> > > > +	cud_formatp = item->ri_buf[0].i_addr;
-> > > > +	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_cud_log_format));
-> > > 
-> > > Should we return -EFSCORRUPTED here instead?
-> > 
-> > Yes.  The RUD recovery routine should probably get that change too.
-> > 
-> > > > +	/* XXX: do nothing for now */
-> > > 
-> > > What else would be do in the future here?
-> > > 
-> > > > +static void
-> > > > +xfs_trans_set_refcount_flags(
-> > > > +	struct xfs_phys_extent		*refc,
-> > > > +	enum xfs_refcount_intent_type	type)
-> > > > +{
-> > > > +	refc->pe_flags = 0;
-> > > > +	switch (type) {
-> > > > +	case XFS_REFCOUNT_INCREASE:
-> > > > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_INCREASE;
-> > > > +		break;
-> > > > +	case XFS_REFCOUNT_DECREASE:
-> > > > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_DECREASE;
-> > > > +		break;
-> > > > +	case XFS_REFCOUNT_ALLOC_COW:
-> > > > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_ALLOC_COW;
-> > > > +		break;
-> > > > +	case XFS_REFCOUNT_FREE_COW:
-> > > > +		refc->pe_flags |= XFS_REFCOUNT_EXTENT_FREE_COW;
-> > > > +		break;
-> > > 
-> > > Is there any good reasons to use a type enum in core, but flags on
-> > > disk?
-> > 
-> > I suppose since log structures aren't guaranteed to be platform agnostic
-> > it's fine to just copy in the in-core enum here.
-> 
-> Carfeul there - enums are not defined to have a fixed size and so
-> can change from compiler version to compiler version. IOWs, the
-> enum values can be written idirectly to an on-disk structure, but
-> the on-disk structure should not be using the enum as the type
-> definition for whatever gets stored on disk.
+This way we can use this helper for the iomap based DAX implementation
+as well.
 
-<nod>  I left the fields (and the #define flags) definitions alone,
-so it's only writing enum values indirectly into a fixed size (u32)
-variable on-disk.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/dax.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-i.e. I'm not using enums in the on-disk structure definitions.
+diff --git a/fs/dax.c b/fs/dax.c
+index 993dc6f..98463bb 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -790,14 +790,13 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
+ 
+ static int dax_insert_mapping(struct address_space *mapping,
+-			struct buffer_head *bh, void **entryp,
+-			struct vm_area_struct *vma, struct vm_fault *vmf)
++		struct block_device *bdev, sector_t sector, size_t size,
++		void **entryp, struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+ 	unsigned long vaddr = (unsigned long)vmf->virtual_address;
+-	struct block_device *bdev = bh->b_bdev;
+ 	struct blk_dax_ctl dax = {
+-		.sector = to_sector(bh, mapping->host),
+-		.size = bh->b_size,
++		.sector = sector,
++		.size = size,
+ 	};
+ 	void *ret;
+ 	void *entry = *entryp;
+@@ -898,7 +897,8 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 
+ 	/* Filesystem should not return unwritten buffers to us! */
+ 	WARN_ON_ONCE(buffer_unwritten(&bh) || buffer_new(&bh));
+-	error = dax_insert_mapping(mapping, &bh, &entry, vma, vmf);
++	error = dax_insert_mapping(mapping, bh.b_bdev, to_sector(&bh, inode),
++			bh.b_size, &entry, vma, vmf);
+  unlock_entry:
+ 	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
+  out:
+-- 
+2.1.4
 
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
