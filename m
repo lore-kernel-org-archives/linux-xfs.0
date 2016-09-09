@@ -1,48 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:36852 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750974AbcIIC0q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:26:46 -0400
-Received: by mail-oi0-f45.google.com with SMTP id x125so54555195oia.3
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 19:26:45 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:62467 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754738AbcIIW4S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 18:56:18 -0400
+Date: Sat, 10 Sep 2016 08:55:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160909225557.GF30056@dastard>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+ <1473438884-674-7-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk>
- <20160909015324.GD30056@dastard> <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 8 Sep 2016 19:26:44 -0700
-Message-ID: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473438884-674-7-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Thu, Sep 8, 2016 at 7:22 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Sep 8, 2016 at 6:53 PM, Dave Chinner <david@fromorbit.com> wrote:
->>
->> So if we race iwth a truncate, the pages in spd.pages[] that are
->> beyond the new EOF may or may not have been removed from the page
->> cache.
->
-> So I'm not sure why we'd need to care?
+On Fri, Sep 09, 2016 at 06:34:40PM +0200, Christoph Hellwig wrote:
+> Very similar to the existing dax_fault function, but instead of using
+> the get_block callback we rely on the iomap_ops vector from iomap.c.
+> That also avoids having to do two calls into the file system for write
+> faults.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Side note, just to clarify: I'm not actually convinced that turning
-things into page/offset/len tuples is the right thing to do.
+Just noticed this on a quick initial browse...
 
-I still suspect that the reference count updates on each page may not
-be a good idea.  I suspect we'd easily be better off trying to do
-everything under the pipe lock exactly so that we can *avoid* having
-to do per-page "increment ref-count, then decrement it again". But the
-locking would have to be changed radically for us to be able to do
-that (and the only sane model ios, I think, to make pipe_lock be the
-outermost lock, and outside *every* downcall)
+> +	if (vmf->cow_page) {
+> +		switch (iomap.type) {
+> +		case IOMAP_HOLE:
+> +		case IOMAP_UNWRITTEN:
+> +			clear_user_highpage(vmf->cow_page, vaddr);
+> +			break;
+> +		case IOMAP_MAPPED:
+> +			error = copy_user_dax(iomap.bdev, sector, PAGE_SIZE,
+> +					vmf->cow_page, vaddr);
+> +			break;
+> +		default:
+> +			WARN_ON_ONCE(1);
+> +			error = -EIO;
+> +			break;
+> +		}
+> +
+> +		if (error)
+> +			goto unlock_entry;
+> +		if (!radix_tree_exceptional_entry(entry)) {
+> +			vmf->page = entry;
+> +			return VM_FAULT_LOCKED;
+> +		}
+> +		vmf->entry = entry;
+> +		return VM_FAULT_DAX_LOCKED;
+> +	}
+> +
+> +	switch (iomap.type) {
+> +	case IOMAP_MAPPED:
+> +		if (iomap.flags & IOMAP_F_NEW) {
+> +			count_vm_event(PGMAJFAULT);
+> +			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+> +			major = VM_FAULT_MAJOR;
+> +		}
+> +		break;
+> +	case IOMAP_UNWRITTEN:
+> +	case IOMAP_HOLE:
+> +		if (!(vmf->flags & FAULT_FLAG_WRITE))
+> +			return dax_load_hole(mapping, entry, vmf);
+> +	default:
+> +		WARN_ON_ONCE(1);
+> +		error = -EIO;
+> +	}
 
-               Linus
+THe errors from the above two cases are not acted on. they are
+immediately overwritten by:
+
+> +
+> +	/* Filesystem should not return unwritten buffers to us! */
+> +	error = dax_insert_mapping(mapping, iomap.bdev, sector, PAGE_SIZE,
+> +			&entry, vma, vmf);
+> +unlock_entry:
+> +	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
+> +out:
+> +	if (error == -ENOMEM)
+> +		return VM_FAULT_OOM | major;
+> +	/* -EBUSY is fine, somebody else faulted on the same PTE */
+> +	if (error < 0 && error != -EBUSY)
+> +		return VM_FAULT_SIGBUS | major;
+> +	return VM_FAULT_NOPAGE | major;
+> +}
+
+Is there a missing "if (error) goto out;" check somewhere here?
+
+I'm also wondering if you've looked at supporting the PMD fault case
+with iomap?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
