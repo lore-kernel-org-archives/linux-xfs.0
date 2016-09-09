@@ -1,64 +1,109 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:47148 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbcIHXzZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 19:55:25 -0400
-Date: Fri, 9 Sep 2016 00:55:21 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160908235521.GL2356@ZenIV.linux.org.uk>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard>
- <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk>
- <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C04A37CA0
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 20:06:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73E86304051
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 18:06:07 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	tqTU8e7ZFJjekSeD for <xfs@oss.sgi.com>;
+	Thu, 08 Sep 2016 18:06:04 -0700 (PDT)
+Date: Fri, 9 Sep 2016 11:06:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
+	inode instead
+Message-ID: <20160909010601.GC30056@dastard>
+References: <1470935423-12329-1-git-send-email-hch@lst.de>
+	<20160811234335.GX16044@dastard> <20160812025026.GA975@lst.de>
+	<20160812095813.GZ16044@dastard> <20160905151529.GB16726@lst.de>
+	<20160907214536.GQ30056@dastard>
+	<20160908065442.GV10138@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160908213835.GY30056@dastard>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+In-Reply-To: <20160908065442.GV10138@twins.programming.kicks-ass.net>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Fri, Sep 09, 2016 at 07:38:35AM +1000, Dave Chinner wrote:
+On Thu, Sep 08, 2016 at 08:54:42AM +0200, Peter Zijlstra wrote:
+> On Thu, Sep 08, 2016 at 07:45:36AM +1000, Dave Chinner wrote:
+> > On Mon, Sep 05, 2016 at 05:15:29PM +0200, Christoph Hellwig wrote:
+> > > Hi Dave,
+> > > 
+> > > I looked into killing the mrlock and ran into an unexpected problem.
+> > > 
+> > > Currently mr_writer tracks that there is someone holding a write lock,
+> > > lockdep on the other hand checks if the calling thread has that lock.
+> > > 
+> > > While that generally is the right semantic, our hack to offload
+> > > btree splits to a work item offends lockdep.  E.g. this callstack
+> > > now asserts:
+> > 
+> > It's a semaphore, not a mutex. Semaphore locking is independent of
+> > task context, the lock follows the object it protects, not the task
+> > that took the lock. i.e. Lockdep is wrong to assume the "owner" of a
+> > rw_sem will not change between lock and unlock.
+> 
+> We've added strict owner semantics to rwsem a long time ago.
 
-> It's not an XFS specific problem: any filesystem that supports hole
-> punch and it's fallocate() friends needs this high level splice IO
-> exclusion as well.
+/me sighs.
 
-How is hole punch different from truncate()?  My reading of the situation
-is that we don't need exclusion between that and insertion into pipe;
-only for "gather uptodate page references" part.  If some page gets
-evicted afterwards... how is that different from having that happen
-right after we'd finished with ->splice_read()?  Am I missing something
-subtle in there?
+History repeats.
 
-I'm still looking at the O_DIRECT paths in that stuff; we'll probably
-need iov_iter_get_pages() for these suckers to allocate pages and stick
-them into slots.  The tricky part is to get the semantics of iov_iter_advance()
-right for them, but it does look feasible.
+We went through all this crap about semaphores and strict ownership
+a few years ago when someone tried to make the struct semaphore
+require strict ownership and XFS went all explodey. :/
 
-Again, what I propose is a new iov_iter flavour.  Backed by pipe_buffer array,
-used only for reads (i.e. copy to, not copy from).  Three states for element:
-pagecache one, copied data, empty.  Semantics:
-	* copy_page_to_iter(): grab a reference to page and stick it into
-the next element (making it a pagecache one) with offset and len coming
-directly from arguments.
-	* copy_to_iter(): if the last element is a 'copied data' with empty
-space remaining - copy to the end.  Otherwise allocate a new page and stick
-it into the next element (making it 'copied data'), then copy into it.  If 
-still not all data copied, do the same for the next element, etc.  Of course,
-if there's no elements left, we are done copying.
-	* zero_iter(): ditto, with s/copy/fill with zeroes/
-	* iov_iter_get_pages(): allocate pages, stick them into the next
-slots (making those 'copied data').  That might need some changes, though -
-I'm still looking through the users.  The tricky part is decision when to
-update the lengths.
-	* iov_iter_get_pages_alloc(): not sure, hadn't really looked yet.
-	* iov_iter_alignment(): probably just returns 0.
-	* iov_iter_advance(): probably like bvec variant.
+> If you want the actual semaphore semantics (which we greatly discourage,
+> because you cannot do validation on it)
+
+What you actually means is "you cannot use /lockdep/ on it", not
+"cannot do validation" on it.  Indeed, this discussion started from
+wanting to remove the wrappers that implement XFS context
+specific locking validation on top of rwsems.
+
+Yes, lockdep has it's uses, but let's not ignore the fact that it
+also has significant limitations, introduces serious annotation
+complexity for non-trivial locking models (e.g. XFS inodes), and
+many people use it as a crutch to avoid thinking about locking
+models (i.e. "lockdep doesn't complain, so it must be good!").
+
+>From my perspective, lockdep is a very poor replacement for
+architecting a robust locking model and then implementing code that
+directly asserts that the correct locks are held at the correct
+time. We trip over failed XFS locking asserts during development all
+the time, but it's very, very rare to have lockdep tell us we have a
+problem in XFS because we catch the problems long before lockdep
+will notice them.
+
+> you should use
+> {down,up}_read_non_owner().
+> I'm not sure we've got write_non_owner() variants for this.
+
+For the case Christoph reported, it's the write side context of the
+inode locks that is handed off to other threads. And no, we don't
+have annotations for that.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
