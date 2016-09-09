@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0952B7CA0
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 09:10:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 680A0AC002
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 07:10:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VD6NW2rCXFEuuehR for <xfs@oss.sgi.com>;
-	Thu, 08 Sep 2016 07:10:12 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 93E8AEC2
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 09:10:11 -0500 (CDT)
-Subject: [PATCH 1/2] libxfs: move iswritable "fatal" decision to caller
-References: <ed60d5a2-0343-fd49-236e-52f9442291d2@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <39fbb09c-698f-58cf-99d2-013726773bcb@sandeen.net>
-Date: Thu, 8 Sep 2016 09:10:11 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5C4A37CA1
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 04:51:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 06651304048
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 02:51:51 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id KZ3rGQLvUMXaQCRi (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 09 Sep 2016 02:51:50 -0700 (PDT)
+Date: Fri, 9 Sep 2016 11:51:48 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
+	inode instead
+Message-ID: <20160909095148.GH10153@twins.programming.kicks-ass.net>
+References: <1470935423-12329-1-git-send-email-hch@lst.de>
+	<20160811234335.GX16044@dastard> <20160812025026.GA975@lst.de>
+	<20160812095813.GZ16044@dastard> <20160905151529.GB16726@lst.de>
+	<20160907214536.GQ30056@dastard> <20160909083306.GA19964@lst.de>
+	<20160909084450.GF10153@twins.programming.kicks-ass.net>
+	<20160909090544.GA21779@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <ed60d5a2-0343-fd49-236e-52f9442291d2@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20160909090544.GA21779@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,145 +35,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Simplify platform_check_iswritable by moving the
-"fatal" decision up to the (one) caller.  In other words,
-simply return whether mounted+writable is true, and
-return 1 if so.  Caller decides what to do with that info
-based on /its/ "fatal" argument.
+On Fri, Sep 09, 2016 at 11:05:44AM +0200, Christoph Hellwig wrote:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> Your clearly missed out on our little Linux-RT conference in June :)
 
-diff --git a/libxfs/darwin.c b/libxfs/darwin.c
-index 017e190..19d2ab6 100644
---- a/libxfs/darwin.c
-+++ b/libxfs/darwin.c
-@@ -33,7 +33,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
- 	int	fd, writable;
- 
-diff --git a/libxfs/freebsd.c b/libxfs/freebsd.c
-index 6c9f089..9e22183 100644
---- a/libxfs/freebsd.c
-+++ b/libxfs/freebsd.c
-@@ -66,7 +66,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
-         int cnt, i;
-         struct statfs *fsinfo;
-@@ -74,7 +74,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-         if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
- 		fprintf(stderr, _("%s: %s contains a possibly writable, "
- 				"mounted filesystem\n"), progname, name);
--			return fatal;
-+			return 1;
- 	}
- 
-         for (i = 0; i < cnt; i++) {
-@@ -88,7 +88,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-         if (i == cnt) {
- 		fprintf(stderr, _("%s: %s contains a mounted and writable "
- 				"filesystem\n"), progname, name);
--		return fatal;
-+		return 1;
- 	}
- 	return 0;
- }
-diff --git a/libxfs/init.c b/libxfs/init.c
-index c13b123..828ae3e 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -75,7 +75,9 @@ check_isactive(char *name, char *block, int fatal)
- 		return 0;
- 	if (platform_check_ismounted(name, block, &st, 0) == 0)
- 		return 0;
--	return platform_check_iswritable(name, block, &st, fatal);
-+	if (platform_check_iswritable(name, block, &st))
-+		return fatal ? 1 : 0;
-+	return 0;
- }
- 
- /* libxfs_device_to_fd:
-diff --git a/libxfs/init.h b/libxfs/init.h
-index 112febb..4dda3ee 100644
---- a/libxfs/init.h
-+++ b/libxfs/init.h
-@@ -22,8 +22,7 @@ struct stat64;
- 
- extern int platform_check_ismounted (char *path, char *block,
- 					struct stat64 *sptr, int verbose);
--extern int platform_check_iswritable (char *path, char *block,
--					struct stat64 *sptr, int fatal);
-+extern int platform_check_iswritable (char *path, char *block, struct stat64 *sptr);
- extern int platform_set_blocksize (int fd, char *path, dev_t device, int bsz, int fatal);
- extern void platform_flush_device (int fd, dev_t device);
- extern char *platform_findrawpath(char *path);
-diff --git a/libxfs/irix.c b/libxfs/irix.c
-index 65aaa7e..c23ebe0 100644
---- a/libxfs/irix.c
-+++ b/libxfs/irix.c
-@@ -31,7 +31,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
- 	return 1;
- }
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index c9f2baf..67b615b 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -74,9 +74,8 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
--	int		sts = 0;
- 	FILE		*f;
- 	struct stat64	mst;
- 	struct mntent	*mnt;
-@@ -86,7 +85,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
- 	if ((f = setmntent(mounts, "r")) == NULL) {
- 		fprintf(stderr, _("%s: %s contains a possibly writable, "
- 				"mounted filesystem\n"), progname, name);
--			return fatal;
-+			return 1;
- 	}
- 	while ((mnt = getmntent(f)) != NULL) {
- 		if (stat64(mnt->mnt_fsname, &mst) < 0)
-@@ -97,13 +96,14 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
- 		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
- 			break;
- 	}
-+	endmntent(f);
-+
- 	if (mnt == NULL) {
- 		fprintf(stderr, _("%s: %s contains a mounted and writable "
- 				"filesystem\n"), progname, name);
--		sts = fatal;
-+		return 1;
- 	}
--	endmntent(f);
--	return sts;
-+	return 0;
- }
- 
- int
+Indeed.
+
+> While I basically agree with you there is an important class of problems
+> that warrant a non-owner release, and that is I/O.  The easiest example
+> (which also happens to be somewhat relevant for this thread) is the
+> XFS iolock (or i_rwsem for that matter).  We need to hold this over
+> file writes, but for direct I/O those always go out to disk.  In the
+> AIO case there simply is no owner left once control is handed off
+> to the disk / controller and we'll only be able to unlock once we
+> get a completion.  Currenrly we work around that using i_dio_count
+> and a hashed waitqueue, but in many ways that solution is worse than
+> the problem (and I say that as the person that introduced it!).
+
+Right, the IO problem.
+
+> We have many many similar issues all over the tree, and people are
+> "fixing" it using home grown lock primitives like the one above
+> or using bitlocks (see the recent thread on cross-release semantics
+> for those). 
+
+Completions and semaphores don't work? And yes, I need to look at that
+cross-release muck, but as is that stuff sets my teeth on edge.
+
+> I think everyone would be better server by accepting
+> that this case exists and finding a place for it in the framework.
+> E.g. for RT trying to boost something that is fully under control
+> of hardware is pointless, but if we have a way to transfer a lock
+> from an owner to a hardware owned state we could at least boost
+> until that handoff happened.
+
+Could be worse than pointless, could indicate borkage. But yes, once you
+have that event you could propagate it up the PI chain and notify
+things.
+
+IO rarely is deterministic, so having RT tasks in a blocked-on chain
+with it is fail. And yes, there's exceptions etc..
 
 _______________________________________________
 xfs mailing list
