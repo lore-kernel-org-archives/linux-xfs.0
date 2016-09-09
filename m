@@ -1,79 +1,115 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F2E0C7CA1
-	for <xfs@oss.sgi.com>; Sat, 10 Sep 2016 11:20:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B95D88F8039
-	for <xfs@oss.sgi.com>; Sat, 10 Sep 2016 09:20:41 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id Urjakb5mB79vN7tC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 10 Sep 2016 09:20:39 -0700 (PDT)
-Date: Sat, 10 Sep 2016 18:20:37 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
-	inode instead
-Message-ID: <20160910162037.GA29651@lst.de>
-References: <1470935423-12329-1-git-send-email-hch@lst.de>
-	<20160811234335.GX16044@dastard> <20160812025026.GA975@lst.de>
-	<20160812095813.GZ16044@dastard> <20160905151529.GB16726@lst.de>
-	<20160907214536.GQ30056@dastard> <20160909083306.GA19964@lst.de>
-	<20160909084450.GF10153@twins.programming.kicks-ass.net>
-	<20160909090544.GA21779@lst.de>
-	<20160909095148.GH10153@twins.programming.kicks-ass.net>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32366 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752436AbcIIHzW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 03:55:22 -0400
+Date: Fri, 9 Sep 2016 17:54:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] ovl: use copy_file_range for copy up if possible
+Message-ID: <20160909075439.GE30056@dastard>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <20160908202511.GV30056@dastard>
+ <CAOQ4uxigN71Evm_mhFzijtDaXAvKQqstryvNoBEL7=Uwgt5xFg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160909095148.GH10153@twins.programming.kicks-ass.net>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: xfs@oss.sgi.com
+In-Reply-To: <CAOQ4uxigN71Evm_mhFzijtDaXAvKQqstryvNoBEL7=Uwgt5xFg@mail.gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Fri, Sep 09, 2016 at 11:51:48AM +0200, Peter Zijlstra wrote:
-> Completions and semaphores don't work? And yes, I need to look at that
-> cross-release muck, but as is that stuff sets my teeth on edge.
-
-Completions can be used as hacks for some of it - we have two or three
-places where we do that in XFS.  Using semaphores doesn't seem very
-popular.  Also I'd much prefer to have a proper lock instead of working
-around it, most importantly to get good lockdep support.
-
-And none of that addresses the fact that we're talking about a
-shared/exclusive lock here.
-
-> > I think everyone would be better server by accepting
-> > that this case exists and finding a place for it in the framework.
-> > E.g. for RT trying to boost something that is fully under control
-> > of hardware is pointless, but if we have a way to transfer a lock
-> > from an owner to a hardware owned state we could at least boost
-> > until that handoff happened.
+On Fri, Sep 09, 2016 at 10:31:02AM +0300, Amir Goldstein wrote:
+> On Thu, Sep 8, 2016 at 11:25 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Sep 08, 2016 at 06:29:54PM +0300, Amir Goldstein wrote:
+> >> When copying up within the same fs, try to use f_op->copy_file_range().
+> >> This becomes very efficient when lower and upper are on the same fs
+> >> with file reflink support.
+> >>
+> >> Tested correct behavior when lower and upper are on:
+> >> 1. same ext4 (copy)
+> >> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> >> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+> >> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+> >>
+> >> Verified that all the overlay xfstests pass in the 'same xfs+reflink'
+> >> setup.
+> >>
+> >> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> >> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> >> 25 seconds on the rest of the setups.
+> >>
+> >> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >> ---
+> >>  fs/overlayfs/copy_up.c | 28 +++++++++++++++++++++++++---
+> >>  1 file changed, 25 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> >> index 43fdc27..400567b 100644
+> >> --- a/fs/overlayfs/copy_up.c
+> >> +++ b/fs/overlayfs/copy_up.c
+> >> @@ -121,6 +121,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+> >>       struct file *new_file;
+> >>       loff_t old_pos = 0;
+> >>       loff_t new_pos = 0;
+> >> +     int try_copy_file = 0;
+> >>       int error = 0;
+> >>
+> >>       if (len == 0)
+> >> @@ -136,6 +137,13 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+> >>               goto out_fput;
+> >>       }
+> >>
+> >> +     /*
+> >> +      * When copying up within the same fs, try to use fs's copy_file_range
+> >> +      */
+> >> +     if (file_inode(old_file)->i_sb == file_inode(new_file)->i_sb) {
+> >> +             try_copy_file = (new_file->f_op->copy_file_range != NULL);
+> >> +     }
+> >
+> > You don't need this. .copy_file_range() should return -EXDEV when
+> > you try to use it to copy files across different mount points or
+> > superblocks.
+> >
 > 
-> Could be worse than pointless, could indicate borkage.
-
-Yes - pointless is still the best case.
-
-> But yes, once you
-> have that event you could propagate it up the PI chain and notify
-> things.
+> Right.
 > 
-> IO rarely is deterministic, so having RT tasks in a blocked-on chain
-> with it is fail. And yes, there's exceptions etc..
+> > i.e. you should probably be calling vfs_copy_file_range() here to do
+> > the copy up, and if that fails (for whatever reason) then fall back
+> > to the existing data copying code.
+> >
+> 
+> Yes, I considered that. With this V0 patch, copy_file_range() is
+> called inside the copy data 'killable loop'
+> but, unlike the slower splice, it tries to copy the entire remaining
+> len on every cycle and will most likely get all or nothing without
+> causing any major stalls.
+> So my options for V1 are:
+> 1. use the existing loop only fallback to splice on any
+> copy_file_range() failure.
+> 2. add another (non killable?) loop before the splice killable loop to
+> try and copy up as much data with copy_file_range()
+> 3. implement ovl_copy_up_file_range() and do the fallback near the
+> call site of ovl_copy_up_data()
 
-That's often true, but not always.  There is things like battery backed
-DRAM which is very deterministic, and there is a lot of work going on
-to provide relatively deterministic ways of using flash storage.
+vfs_copy_file_range() already has a fallback to call
+do_splice_direct() itself if ->copy_file_range() is not supported.
+i.e. it will behave identically to the existing code if
+copy_file_range is not supported by the underlying fs.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+If copy_file_range() fails, then it's for a reason that will cause
+do_splice_direct() to fail as well.
+
+vfs_copy_file_range() should really be a direct replacement for any
+code that calls do_splice_direct(). If it's not, we should make it
+so (e.g call do_splice direct for cross-fs copies automatically
+rather than returning EXDEV) and then replace all the calls in the
+kernel to do_splice_direct() with vfs_copy_file_range()....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
