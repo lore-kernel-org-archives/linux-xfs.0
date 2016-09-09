@@ -1,57 +1,69 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4E3627CA1
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 10:05:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9D147AC004
-	for <xfs@oss.sgi.com>; Mon,  5 Sep 2016 08:05:03 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id jMfddJCMFkOrk1A7 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 05 Sep 2016 08:05:01 -0700 (PDT)
-Date: Mon, 5 Sep 2016 08:05:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/71] xfs: create a standard btree size calculator code
-Message-ID: <20160905150500.GF7662@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216792896.867.711816517859232858.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <147216792896.867.711816517859232858.stgit@birch.djwong.org>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36358 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbcIINcp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 09:32:45 -0400
+Received: by mail-wm0-f66.google.com with SMTP id l65so2787699wmf.3
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2016 06:32:45 -0700 (PDT)
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: [PATCH] xfs_io: fix building with musl
+Date: Fri,  9 Sep 2016 15:32:22 +0200
+Message-Id: <1473427942-10726-1-git-send-email-ralph.sennhauser@gmail.com>
+In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org
+Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>
 
-On Thu, Aug 25, 2016 at 04:32:09PM -0700, Darrick J. Wong wrote:
-> Create a helper to generate AG btree height calculator functions.
-> This will be used (much) later when we get to the refcount btree.
-> 
-> v2: Use a helper function instead of a macro.
-> v3: We can (theoretically) store more than 2^32 records in a btree, so
->     widen the fields to accept that.
-> v4: Don't modify xfs_bmap_worst_indlen; the purpose of /that/ function
->     is to estimate the worst-case number of blocks needed for a bmbt
->     expansion, not to calculate the space required to store nr records.
-> v5: More minor tweaks to the loop control; move down to reflink patches.
+The fallback in case the libc doesn't have or doesn't advertise the
+existence of d_reclen in struct dirent uses d_namlen. Musl neither
+advertises d_reclen nor does it have a d_namlen member.
 
-This should move down below the "---" line.
+Calculate the value for d_namlen from d_name in the fallback path.
 
-Otherwise the patch looks fine:
+Signed-off-by: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+---
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+With ustat.h issue resolved in 4.8.0-rc1 this is the only musl related
+one left.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+An alternative could be some autoconf magic [1] or waiting for a long
+time for musl to add _DIRENT_HAVE_D_RECLEN [2] and for it to propagate
+to distributions.
+
+[1] http://oss.sgi.com/archives/xfs/2016-01/msg00388.html
+[2] http://www.openwall.com/lists/musl/2016/01/15/9
+
+---
+ io/readdir.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/io/readdir.c b/io/readdir.c
+index 151b72e..2b56dc8 100644
+--- a/io/readdir.c
++++ b/io/readdir.c
+@@ -24,6 +24,10 @@
+ #include <sys/types.h>
+ #include <dirent.h>
+ 
++#ifndef _DIRENT_HAVE_D_RECLEN
++#include <string.h>
++#endif
++
+ static struct cmdinfo readdir_cmd;
+ 
+ const char *d_type_str(unsigned int type)
+@@ -106,7 +110,7 @@ read_directory(
+ #ifdef _DIRENT_HAVE_D_RECLEN
+ 		*total += dirent->d_reclen;
+ #else
+-		*total += dirent->d_namlen + sizeof(*dirent);
++		*total += strlen(dirent->d_name) + sizeof(*dirent);
+ #endif
+ 		count++;
+ 
+-- 
+2.7.3
+
