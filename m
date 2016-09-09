@@ -1,153 +1,165 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 035C97CA1
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 01:07:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A46368F8037
-	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 23:07:27 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Kla4HKNWLSbG3RU8 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 08 Sep 2016 23:07:24 -0700 (PDT)
-Date: Thu, 8 Sep 2016 23:07:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] ioctl_xfs_ioc_getfsmap.2: document XFS_IOC_GETFSMAP
-	ioctl
-Message-ID: <20160909060716.GD8969@birch.djwong.org>
-References: <147216758326.32321.8525481353986871349.stgit@birch.djwong.org>
-	<147216760214.32321.8331561706153372268.stgit@birch.djwong.org>
-	<32A3DAED-21FC-4252-B53E-3503764342E8@dilger.ca>
-	<20160830190949.GA8262@birch.djwong.org>
-	<20160908233806.GB30056@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160908233806.GB30056@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, linux-man@vger.kernel.org, linux-api@vger.kernel.org, xfs <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:54467 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753455AbcIIQfE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:04 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/10] dax: provide an iomap based fault handler
+Date: Fri,  9 Sep 2016 18:34:40 +0200
+Message-Id: <1473438884-674-7-git-send-email-hch@lst.de>
+In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Fri, Sep 09, 2016 at 09:38:06AM +1000, Dave Chinner wrote:
-> On Tue, Aug 30, 2016 at 12:09:49PM -0700, Darrick J. Wong wrote:
-> > > I recall for FIEMAP that some filesystems may not have files aligned
-> > > to sector offsets, and we just used byte offsets.  Storage like
-> > > NVDIMMs are cacheline granular, so I don't think it makes sense to
-> > > tie this to old disk sector sizes.  Alternately, the units could be
-> > > in terms of fs blocks as returned by statvfs.st_bsize, but mixing
-> > > units for fmv_block, fmv_offset, fmv_length is uneeded complexity.
-> > 
-> > Ugh.  I'd rather just change the units to bytes rather than force all
-> > the users to multiply things. :)
-> 
-> Yup, units need to be either in disk addresses (i.e. 512 byte units)
-> or bytes. If people can't handle disk addresses (seems to be the
-> case), the bytes it should be.
+Very similar to the existing dax_fault function, but instead of using
+the get_block callback we rely on the iomap_ops vector from iomap.c.
+That also avoids having to do two calls into the file system for write
+faults.
 
-<nod>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/dax.c              | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |   2 +
+ 2 files changed, 115 insertions(+)
 
-> > I'd much rather just add more special owner codes for any other
-> > filesystem that has distinguishable metadata types that are not
-> > covered by the existing OWN_ codes.  We /do/ have 2^64 possible
-> > values, so it's not like we're going to run out.
-> 
-> This is diagnositc information as much as anything, just like
-> fiemap is diagnostic information. So if we have specific type
-> information, it needs to be reported accurately to be useful.
-> 
-> Hence I really don't care if the users and developers of other fs
-> types don't understand what the special owner codes that a specific
-> filesystem returns mean. i.e. it's not useful user information -
-> only a tool that groks the specific filesystem is going to be able
-> to anything useful with special owner codes. So, IMO, there's little
-> point trying to make them generic or to even trying to define and
-> explain them in the man page....
+diff --git a/fs/dax.c b/fs/dax.c
+index 57ad456..a170a94 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1343,4 +1343,117 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return done;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dax_rw);
++
++/**
++ * iomap_dax_fault - handle a page fault on a DAX file
++ * @vma: The virtual memory area where the fault occurred
++ * @vmf: The description of the fault
++ * @ops: iomap ops passed from the file system
++ *
++ * When a page fault occurs, filesystems may call this helper in their fault
++ * or mkwrite handler for DAX files. Sssumes the caller has done all the
++ * necessary locking for the page fault to proceed successfully.
++ */
++int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++			struct iomap_ops *ops)
++{
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	struct inode *inode = mapping->host;
++	unsigned long vaddr = (unsigned long)vmf->virtual_address;
++	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
++	sector_t sector;
++	struct iomap iomap = { 0 };
++	unsigned flags = 0;
++	int error, major = 0;
++	void *entry;
++
++	/*
++	 * Check whether offset isn't beyond end of file now. Caller is supposed
++	 * to hold locks serializing us with truncate / punch hole so this is
++	 * a reliable test.
++	 */
++	if (pos >= i_size_read(inode))
++		return VM_FAULT_SIGBUS;
++
++	entry = grab_mapping_entry(mapping, vmf->pgoff);
++	if (IS_ERR(entry)) {
++		error = PTR_ERR(entry);
++		goto out;
++	}
++
++	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
++		flags |= IOMAP_WRITE;
++
++	/*
++	 * Note that we don't bother to use iomap_apply here: DAX required
++	 * the file system block size to be equal the page size, which means
++	 * that we never have to deal with more than a single extent here.
++	 */
++	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
++	if (error)
++		goto unlock_entry;
++	if (WARN_ON_ONCE(iomap.offset + iomap.length < pos + PAGE_SIZE)) {
++		error = -EIO;		/* fs corruption? */
++		goto unlock_entry;
++	}
++
++	sector = iomap.blkno + (((pos & PAGE_MASK) - iomap.offset) >> 9);
++
++	if (vmf->cow_page) {
++		switch (iomap.type) {
++		case IOMAP_HOLE:
++		case IOMAP_UNWRITTEN:
++			clear_user_highpage(vmf->cow_page, vaddr);
++			break;
++		case IOMAP_MAPPED:
++			error = copy_user_dax(iomap.bdev, sector, PAGE_SIZE,
++					vmf->cow_page, vaddr);
++			break;
++		default:
++			WARN_ON_ONCE(1);
++			error = -EIO;
++			break;
++		}
++
++		if (error)
++			goto unlock_entry;
++		if (!radix_tree_exceptional_entry(entry)) {
++			vmf->page = entry;
++			return VM_FAULT_LOCKED;
++		}
++		vmf->entry = entry;
++		return VM_FAULT_DAX_LOCKED;
++	}
++
++	switch (iomap.type) {
++	case IOMAP_MAPPED:
++		if (iomap.flags & IOMAP_F_NEW) {
++			count_vm_event(PGMAJFAULT);
++			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
++			major = VM_FAULT_MAJOR;
++		}
++		break;
++	case IOMAP_UNWRITTEN:
++	case IOMAP_HOLE:
++		if (!(vmf->flags & FAULT_FLAG_WRITE))
++			return dax_load_hole(mapping, entry, vmf);
++	default:
++		WARN_ON_ONCE(1);
++		error = -EIO;
++	}
++
++	/* Filesystem should not return unwritten buffers to us! */
++	error = dax_insert_mapping(mapping, iomap.bdev, sector, PAGE_SIZE,
++			&entry, vma, vmf);
++unlock_entry:
++	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
++out:
++	if (error == -ENOMEM)
++		return VM_FAULT_OOM | major;
++	/* -EBUSY is fine, somebody else faulted on the same PTE */
++	if (error < 0 && error != -EBUSY)
++		return VM_FAULT_SIGBUS | major;
++	return VM_FAULT_NOPAGE | major;
++}
++EXPORT_SYMBOL_GPL(iomap_dax_fault);
+ #endif /* CONFIG_FS_IOMAP */
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 3d5f785..a4ef953 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -73,6 +73,8 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ 		struct iomap_ops *ops);
+ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		struct iomap_ops *ops);
++int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++			struct iomap_ops *ops);
+ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		loff_t start, loff_t len, struct iomap_ops *ops);
+ 
+-- 
+2.1.4
 
-<shrug> I'm ok with describing generally what each special owner code
-means.  Maybe the manpage could be more explicit about "None of these
-codes are useful unless you're a low level filesystem tool"?
-
-> > > It seems like there are several fields in the structure that are used for
-> > > only input or only output?  Does it make more sense to have one structure
-> > > used only for the input request, and then the array of values returned be
-> > > in a different structure?  I'm not necessarily requesting that it be changed,
-> > > but it definitely is something I noticed a few times while reading this doc.
-> > 
-> > I've been thinking about rearranging this a bit, since the flags
-> > handling is very awkward with the current array structure.  Each
-> > rmap has its own flags; we may someday want to pass operation flags
-> > into the ioctl; and we currently have one operation flag to pass back
-> > to userspace.  Each of those flags can be a separate field.  I think
-> > people will get confused about FMV_OF_* and FMV_HOF_* being referenced
-> > in oflags, and iflags has no meaning for returned records.
-> 
-> Yup, that's what I initially noticed when I glanced at this. The XFS
-> getbmap interface is just plain nasty, and we shouldn't be copying
-> that API pattern if we can help it.
-
-Lol ok. :)
-
-> > So, this instead?
-> > 
-> > struct getfsmap_rec {
-> > 	u32 device;		/* device id */
-> > 	u32 flags;		/* mapping flags */
-> > 	u64 block;		/* physical addr, bytes */
-> > 	u64 owner;		/* inode or special owner code */
-> > 	u64 offset;		/* file offset of mapping, bytes */
-> > 	u64 length;		/* length of segment, bytes */
-> > 	u64 reserved;		/* will be set to zero */
-> > }; /* 48 bytes */
-> > 
-> > struct getfsmap_head {
-> > 	u32 iflags;		/* none defined yet */
-> > 	u32 oflags;		/* FMV_HOF_DEV_T */
-> > 	u32 count;		/* # entries in recs array */
-> > 	u32 entries;		/* # entries filled in (output) */
-> > 	u64 reserved[2]; 	/* must be zero */
-> > 
-> > 	struct getfsmap_rec keys[2]; /* low and high keys for the mapping search */
-> > 	struct getfsmap_rec recs[0];
-> > }; /* 32 bytes + 2*48 = 128 bytes */
-> > 
-> > #define XFS_IOC_GETFSMAP	_IOWR('X', 59, struct getfsmap_head)
-> > 
-> > This also means that userspace can set up for the next ioctl
-> > invocation with memcpy(&head->keys[0], &head->recs[head->entries - 1]).
-> > 
-> > Yes, I think I like this better.  Everyone else, please chime in. :)
-> 
-> That's pretty much the structure I was going to suggest - it matches
-> the fiemap pattern. i.e control parameters are separated from record
-> data. I'd dump a bit more reserved space in the structure, though;
-> we've got heaps of flag space for future expansion, but if we need
-> to pass new parameters into/out of the kernel we'll quickly use the
-> reserved space.
-
-I padded struct fsmap with enough reserved space to make it an even 64 bytes,
-and padded struct fsmap_head so that the space before keys is 64 bytes in
-length.  See v3 patch of the ioctl manpage.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
