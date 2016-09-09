@@ -1,196 +1,51 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 71D937CA1
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 07:28:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE558AC002
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 05:28:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pd8zDmrrsMvEfPeT (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 09 Sep 2016 05:28:34 -0700 (PDT)
-Date: Fri, 9 Sep 2016 20:28:32 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH v2] xfs/098: fix xfs_repair on newer xfsprogs
-Message-ID: <20160909122831.GD12847@dhcp12-143.nay.redhat.com>
-References: <20160825154052.GD20705@birch.djwong.org>
-	<1472182612-10218-1-git-send-email-yangx.jy@cn.fujitsu.com>
-	<20160826044818.GH10350@dhcp12-143.nay.redhat.com>
-	<57BFDD38.7080101@cn.fujitsu.com>
-	<20160826090503.GI10350@dhcp12-143.nay.redhat.com>
-	<57D28101.6000902@cn.fujitsu.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:36338 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751830AbcIICuG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:50:06 -0400
+Received: by mail-oi0-f48.google.com with SMTP id x125so55670800oia.3
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 19:50:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <57D28101.6000902@cn.fujitsu.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <20160909023452.GO2356@ZenIV.linux.org.uk>
+References: <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+ <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk>
+ <20160909015324.GD30056@dastard> <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
+ <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20160909023452.GO2356@ZenIV.linux.org.uk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 8 Sep 2016 19:50:05 -0700
+Message-ID: <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-T24gRnJpLCBTZXAgMDksIDIwMTYgYXQgMDU6Mjk6MzdQTSArMDgwMCwgWGlhbyBZYW5nIHdyb3Rl
-Ogo+INPaIDIwMTYvMDgvMjYgMTc6MDUsIFpvcnJvIExhbmcg0LS1wDoKPiA+T24gRnJpLCBBdWcg
-MjYsIDIwMTYgYXQgMDI6MTA6MDBQTSArMDgwMCwgWGlhbyBZYW5nIHdyb3RlOgo+ID4+T24gMjAx
-Ni8wOC8yNiAxMjo0OCwgWm9ycm8gTGFuZyB3cm90ZToKPiA+Pj5PbiBGcmksIEF1ZyAyNiwgMjAx
-NiBhdCAxMTozNjo1MkFNICswODAwLCBYaWFvIFlhbmcgd3JvdGU6Cj4gPj4+Pk1ha2Ugc3VyZSB4
-ZnNfcmVwYWlyIGNhbid0IGNsZWFyIHRoZSBsb2cgYnkgZGVmYXVsdCB3aGVuIGl0IGlzIGNvcnJ1
-cHRlZC4KPiA+Pj4+eGZzX3JlcGFpciBhbHdheXMgYW5kIG9ubHkgY2xlYXIgdGhlIGxvZyB3aGVu
-IHRoZSAtTCBwYXJhbWV0ZXIgaXMgc3BlY2lmaWVkLgo+ID4+Pj5UaGlzIGhhcyB1cGRhdGVkIGJ5
-Ogo+ID4+Pj5Db21taXQgZjIwNTNiYyAoInhmc19yZXBhaXI6IGRvbid0IGNsZWFyIHRoZSBsb2cg
-YnkgZGVmYXVsdCIpCj4gPj4+Pgo+ID4+Pj5TaWduZWQtb2ZmLWJ5OiBYaWFvIFlhbmc8eWFuZ3gu
-anlAY24uZnVqaXRzdS5jb20+Cj4gPj4+Pi0tLQo+ID4+Pj4gIGNvbW1vbi9yYyAgICAgfCA0ICsr
-LS0KPiA+Pj4+ICB0ZXN0cy94ZnMvMDk4IHwgMiArLQo+ID4+Pj4gIDIgZmlsZXMgY2hhbmdlZCwg
-MyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQo+ID4+Pj4KPiA+Pj4+ZGlmZiAtLWdpdCBh
-L2NvbW1vbi9yYyBiL2NvbW1vbi9yYwo+ID4+Pj5pbmRleCAzZmIwNjAwLi5jNjkzYTMxIDEwMDY0
-NAo+ID4+Pj4tLS0gYS9jb21tb24vcmMKPiA+Pj4+KysrIGIvY29tbW9uL3JjCj4gPj4+PkBAIC0x
-MTQzLDkgKzExNDMsOSBAQCBfcmVwYWlyX3NjcmF0Y2hfZnMoKQo+ID4+PkhpIFhpYW8KPiA+Pj4K
-PiA+Pj5Zb3Ugc2hvdWxkIGV4cGxhaW4gd2h5IHlvdSBjaGFuZ2VkIHRoaXMgZnVuY3Rpb24gaW4g
-Y29tbWl0IGxvZy4gT3IKPiA+Pj50aGUgcmV2aWV3ZXIgY2FuJ3QgdW5kZXJzdGFuZCB3aHkgeW91
-IGNoYW5nZSBpdC4KPiA+Pj4KPiA+Pj4+ICAgICAgeGZzKQo+ID4+Pj4gICAgICAgICAgX3NjcmF0
-Y2hfeGZzX3JlcGFpciAiJEAiIDI+JjEKPiA+Pj4+ICAJcmVzPSQ/Cj4gPj4+Pi0JaWYgWyAiJHJl
-cyIgLWVxIDIgXTsgdGhlbgo+ID4+Pj4rCWlmIFsgIiRyZXMiIC1uZSAwIF07IHRoZW4KPiA+Pj5I
-aSBEYXJyaWNrLAo+ID4+Pgo+ID4+PlRoZSB4ZnNfcmVwYWlyIG1hbnBhZ2Ugc2FpZDoKPiA+Pj54
-ZnNfcmVwYWlyIHJ1biB3aXRob3V0IHRoZSAtbiBvcHRpb24gd2lsbCBhbHdheXMgcmV0dXJuIGEg
-c3RhdHVzIGNvZGUgb2YgMC4KPiA+Pj4KPiA+Pj5JIGRvbid0IHVuZGVyc3RhbmQgd2h5IHlvdSB0
-aGluayBpdCByZXR1cm4gMiBoZXJlPyAoUGxlYXNlIGNoZWNrIGJlbG93KQo+ID4+Pgo+ID4+SGkg
-Wm9ycm8KPiA+Pgo+ID4+SSBkb24ndCB1bmRlcnN0YW5kIHdoeSBpdCByZXR1cm4gMiBoZXJlIHRv
-by4gIEkgd2FudCB0byBjaGFuZ2UgdGhpcwo+ID4+ZnVuY3Rpb24gYmVjYXVzZSB4ZnNfcmVwYWly
-Cj4gPj53aXRob3V0IC1MIG9wdGlvbiByZXR1cm4gMSB3aGVuIGxvZyBpcyBjb3JydXB0ZWQgb24g
-bmV3ZXIgeGZzcHJvZ3MtZGV2Lgo+ID4+Pj4gIAkJZWNobyAieGZzX3JlcGFpciByZXR1cm5zICRy
-ZXM7IHJlcGxheSBsb2c/Igo+ID4+Pj4tCQlfc2NyYXRjaF9tb3VudAo+ID4+Pj4rCQlfc2NyYXRj
-aF9tb3VudCAyPiYxCj4gPj4+PiAgCQlyZXM9JD8KPiA+Pj4+ICAJCWlmIFsgIiRyZXMiIC1ndCAw
-IF07IHRoZW4KPiA+Pj4+ICAJCQllY2hvICJtb3VudCByZXR1cm5zICRyZXM7IHphcCBsb2c/Igo+
-ID4+Pj5kaWZmIC0tZ2l0IGEvdGVzdHMveGZzLzA5OCBiL3Rlc3RzL3hmcy8wOTgKPiA+Pj4+aW5k
-ZXggZDkxZDYxNy4uZWIzM2JiMSAxMDA3NTUKPiA+Pj4+LS0tIGEvdGVzdHMveGZzLzA5OAo+ID4+
-Pj4rKysgYi90ZXN0cy94ZnMvMDk4Cj4gPj4+PkBAIC05Myw3ICs5Myw3IEBAIGVjaG8gIisgbW91
-bnQgaW1hZ2UiCj4gPj4+PiAgX3NjcmF0Y2hfbW91bnQgMj4vZGV2L251bGwmJiAgIF9mYWlsICJt
-b3VudCBzaG91bGQgbm90IHN1Y2NlZWQiCj4gPj4+Pgo+ID4+Pj4gIGVjaG8gIisgcmVwYWlyIGZz
-Igo+ID4+Pj4tX3NjcmF0Y2hfeGZzX3JlcGFpcj4+ICAgJHNlcXJlcy5mdWxsIDI+JjEKPiA+Pj4+
-K19yZXBhaXJfc2NyYXRjaF9mcz4+ICAgJHNlcXJlcy5mdWxsCj4gPllvdSBzaG91bGQgcHJpbnQg
-dGhlIHN0ZGVyciB0byAkc2VxcmVzLmZ1bGwgdG9vLiBCZWNhdXNlIGluCj4gPiJfcmVwYWlyX3Nj
-cmF0Y2hfZnMiLCBpdHMgY29kZSBsaWtlcyBiZWxvdzoKPiA+Cj4gPiAgICAgeGZzKQo+ID4gICAg
-ICAgICBfc2NyYXRjaF94ZnNfcmVwYWlyICIkQCIgMj4mMQo+ID4+Pj5UaGlzIHJlcGFpciB3b24n
-dCBjbGVhciB0aGUgY29ycnVwdGVkIGxvZyBhbnltb3JlLgo+ID4gICAgICAgICByZXM9JD8KPiA+
-ICAgICAgICAgaWYgWyAiJHJlcyIgLWVxIDIgXTsgdGhlbgo+ID4gICAgICAgICAgICAgICAgIGVj
-aG8gInhmc19yZXBhaXIgcmV0dXJucyAkcmVzOyByZXBsYXkgbG9nPyIKPiA+ICAgICAgICAgICAg
-ICAgICBfc2NyYXRjaF9tb3VudAo+ID4+Pj5TbyB0aGlzIG1vdW50IG1heWJlIGZhaWxlZCBpZiBp
-dCBjYW4ndCBkZWFsIHdpdGggdGhlIGNvcnJ1cHRlZCBsb2cuCj4gPj4+PklmIGl0IHByaW50IHNv
-bWUgZXJyb3IgbWVzc2FnZXMsIGl0J2xsIGJyZWFrIHRoZSBnb2xkZW4gaW1hZ2Ugb2YgeGZzLzA5
-OAo+ID4gICAgICAgICAgICAgICAgIHJlcz0kPwo+ID4gICAgICAgICAgICAgICAgIGlmIFsgIiRy
-ZXMiIC1ndCAwIF07IHRoZW4KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgIGVjaG8gIm1vdW50
-IHJldHVybnMgJHJlczsgemFwIGxvZz8iCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBfc2Ny
-YXRjaF94ZnNfcmVwYWlyIC1MIDI+JjEKPiA+Cj4gPgo+ID4+PklmIGp1c3QgY2FsbCB4ZnNfcmVw
-YWlyIHdpdGhvdXQgYW55IG9wdGlvbnMsIHRoZSBfcmVwYWlyX3NjcmF0Y2hfZnMgd29uJ3QKPiA+
-Pj5oZWxwIHRvIGNhbGwgeGZzX3JlcGFpciAtTCBJIHRoaW5rLgo+ID4+Pgo+ID4+PlNvIEkgdGhp
-bmsgdGhpcyBwYXRjaCB3b24ndCBmaXggdGhlIHByb2JsZW0uCj4gPj4+Cj4gPj4+RmVlbCBmcmVl
-IHRvIGNvcnJlY3QgbWUsIGlmIEkgbWlzdW5kZXJzdGFuZCBzb21ldGhpbmc6KQo+ID4+Pgo+ID4+
-PlRoYW5rcywKPiA+Pj5ab3Jybwo+ID4+Pgo+ID4+SWYgeGZzX3JlcGFpciB3aXRob3V0IGFueSBv
-cHRpb24gc3VjY2VlZCB0byByZXBhaXIgZmlsZXN5c3RlbSB3aGVuCj4gPj5sb2cgaXMgY29ycnVw
-dGVkLAo+ID4+X3JlcGFpcl9zY3JhdGNoX2ZzIGRvbid0IG5lZWQgIHRvIGNhbGwgIHhmc19yZXBh
-aXIgLUwuICBJZiBpdCBmYWlsZWQKPiA+PnRvIHJlcGFpciBmaWxlc3lzdGVtLAo+ID4+X3JlcGFp
-cl9zY3JhdGNoX2ZzIG5lZWRzICB0byBjYWxsICB4ZnNfcmVwYWlyIC1MLgo+ID5PaCwgc29ycnks
-IEkganVzdCB0cmllZCB0byBydW4gdGhzIGNhc2UuIFRoZSAiX3NjcmF0Y2hfeGZzX3JlcGFpciIg
-cmVhbGx5IHJldHVybgo+ID5ub24temVybyB3aGVuIGl0IHRyeSB0byByZXBhaXIgYSBjb3JydXB0
-ZWQgeGZzLi4uCj4gPgo+ID5CdXQgdGhlIG1hbnBhZ2UobWFuIHhmc19yZXBhaXIpIHJlYWxseSBz
-YWlkOgo+ID54ZnNfcmVwYWlyIHJ1biB3aXRob3V0IHRoZSAtbiBvcHRpb24gd2lsbCBhbHdheXMg
-cmV0dXJuIGEgc3RhdHVzIGNvZGUgb2YgMC4KPiA+Cj4gPk1heWJlIHdlIHNob3VsZCB1cGRhdGUg
-dGhlIG1hbnBhZ2U/IEknbGwgY2hlY2sgaXQgbGF0ZXIuCj4gPgo+ID5Bbnkgd2F5LCB0aGVyZSdz
-IHN0aWxsIGEgcHJvYmxlbSBpbiB5b3VyIHBhdGNoLCBwbGVhc2Ugc2VlIGFib3ZlOgo+ID4KPiA+
-VGhhbmtzLAo+ID5ab3Jybwo+IEhpIFpvcnJvCj4gRG8geW91IGtub3cgd2h5IGl0IHJldHVybnMg
-MiBpbnN0ZWFkIG9mIDEgd2hlbiB3ZSB1c2UgeGZzX3JlcGFpcgo+IHdpdGhvdXQgYW55IG9wdGlv
-bnMuCj4gSSBjYW4ndCB1bmRlcnN0YW5kIGl0LCBiZWNhdXNlIGl0IGFsd2F5cyByZXR1cm4gMSBv
-biBteSBtYWNoaW5lLgoKSGkgWGlhbywKClBsZWFzZSBDQyB0aGUgbWFpbCBsaXN0LCB0aGVyZSdz
-IG5vIHNlY3JldC4gQW5kIHRoZSBtb3N0IGltcG9ydGFudAp0aGluZyBpcyBpZiBJIHNhaWQgc29t
-ZXRoaW5nIHdyb25nLCBvdGhlcnMgZ3JlYXQgZGV2ZWxvcGVycyBtYXliZQpnbGFkIHRvIGNvcnJl
-Y3QgbWU6LVAKCkkndmUgYXNrZWQgREogV29uZyBhYm91dCB0aGUgcmV0dXJuIHZhbHVlIG9mIHhm
-c19yZXBhaXIsIGFuZCBoZQphbHJlYWR5IHJlcGxpZWQ6CgoieGZzX3JlcGFpciByZXR1cm5zIDIg
-d2hlbiB0aGUgbG9nIGlzIGNvcnJ1cHRlZCwgMSB3aGVuIHRoZXJlJ3MgY29ycnVwdGlvbiBsZWZ0
-CnRvIGJlIGZpeGVkICpvciogc29tZSBraW5kIG9mIG9wZXJhdGlvbiBlcnJvciBoYXBwZW5lZCwg
-YW5kIDAgaWYgZWl0aGVyIGl0CmZvdW5kIG5vdGhpbmcgd3Jvbmcgb3IgYWxsIHRoZSBjb3JydXB0
-aW9ucyB3ZXJlIGZpeGVkLiIKCkknbSBzdXJlIHRoYXQgZW1haWwgaGFzIGJlZW4gc2VudCB0byB5
-b3UgdG9vLgoKSWYgeW91IGNhbid0IHVuZGVyc3RhbmQgd2h5IGl0IHJldHVybiAxLCB5b3UgY2Fu
-IGNoZWNrIHlvdXIgeGZzLzA5OC5mdWxsIGZpbGUsCnlvdSdsbCBmaW5kOgoKIlBoYXNlIDEgLSBm
-aW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgpQaGFzZSAyIC0gdXNpbmcgaW50ZXJuYWwgbG9n
-CiAgICAgICAgLSB6ZXJvIGxvZy4uLgpMb2cgaW5jb25zaXN0ZW50IChkaWRuJ3QgZmluZCBwcmV2
-aW91cyBoZWFkZXIpCmZhaWxlZCB0byBmaW5kIGxvZyBoZWFkCnplcm9fbG9nOiBjYW5ub3QgZmlu
-ZCBsb2cgaGVhZC90YWlsICh4bG9nX2ZpbmRfdGFpbD01KQoKZmF0YWwgZXJyb3IgLS0gRVJST1I6
-IFRoZSBsb2cgaGVhZCBhbmQvb3IgdGFpbCBjYW5ub3QgYmUgZGlzY292ZXJlZC4gQXR0ZW1wdCB0
-byBtb3VudCB0aGUKZmlsZXN5c3RlbSB0byByZXBsYXkgdGhlIGxvZyBvciB1c2UgdGhlIC1MIG9w
-dGlvbiB0byBkZXN0cm95IHRoZSBsb2cgYW5kCmF0dGVtcHQgYSByZXBhaXIuCnhmc19yZXBhaXIg
-ZmFpbGVkLCBlcnI9MSIKClRoaXMgb3V0cHV0IGZyb20gYmVsb3cgeGZzcHJvZ3MgY29kZToKCiAg
-ICAgICAgZXJyb3IgPSB4bG9nX2ZpbmRfdGFpbChsb2csICZoZWFkX2JsaywgJnRhaWxfYmxrKTsK
-ICAgICAgICBpZiAoZXJyb3IpIHsKICAgICAgICAgICAgICAgIGRvX3dhcm4oCiAgICAgICAgICAg
-ICAgICBfKCJ6ZXJvX2xvZzogY2Fubm90IGZpbmQgbG9nIGhlYWQvdGFpbCAoeGxvZ19maW5kX3Rh
-aWw9JWQpXG4iKSwKICAgICAgICAgICAgICAgICAgICAgICAgZXJyb3IpOwogICAgICAgICAgICAg
-ICAgaWYgKCFub19tb2RpZnkgJiYgIXphcF9sb2cpCj4+PiBbZXhpdCBmcm9tIGhlcmVdID4+PiAg
-ICBkb19lcnJvcihfKAoiRVJST1I6IFRoZSBsb2cgaGVhZCBhbmQvb3IgdGFpbCBjYW5ub3QgYmUg
-ZGlzY292ZXJlZC4gQXR0ZW1wdCB0byBtb3VudCB0aGVcbiIKImZpbGVzeXN0ZW0gdG8gcmVwbGF5
-IHRoZSBsb2cgb3IgdXNlIHRoZSAtTCBvcHRpb24gdG8gZGVzdHJveSB0aGUgbG9nIGFuZFxuIgoi
-YXR0ZW1wdCBhIHJlcGFpci5cbiIpKTsKICAgICAgICB9IGVsc2UgewogICAgICAgICAgICAgICAg
-aWYgKHZlcmJvc2UpIHsKICAgICAgICAgICAgICAgICAgICAgICAgZG9fd2FybigKICAgICAgICBf
-KCJ6ZXJvX2xvZzogaGVhZCBibG9jayAlIiBQUklkNjQgIiB0YWlsIGJsb2NrICUiIFBSSWQ2NCAi
-XG4iKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBoZWFkX2JsaywgdGFpbF9ibGsp
-OwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgaWYgKCFub19tb2RpZnkgJiYgaGVh
-ZF9ibGsgIT0gdGFpbF9ibGspIHsKICAgICAgICAgICAgICAgICAgICAgICAgaWYgKHphcF9sb2cp
-IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkb193YXJuKF8oCiJBTEVSVDogVGhl
-IGZpbGVzeXN0ZW0gaGFzIHZhbHVhYmxlIG1ldGFkYXRhIGNoYW5nZXMgaW4gYSBsb2cgd2hpY2gg
-aXMgYmVpbmdcbiIKImRlc3Ryb3llZCBiZWNhdXNlIHRoZSAtTCBvcHRpb24gd2FzIHVzZWQuXG4i
-KSk7CiAgICAgICAgICAgICAgICAgICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgZG9fd2FybihfKAoiRVJST1I6IFRoZSBmaWxlc3lzdGVtIGhhcyB2YWx1YWJs
-ZSBtZXRhZGF0YSBjaGFuZ2VzIGluIGEgbG9nIHdoaWNoIG5lZWRzIHRvXG4iCiJiZSByZXBsYXll
-ZC4gIE1vdW50IHRoZSBmaWxlc3lzdGVtIHRvIHJlcGxheSB0aGUgbG9nLCBhbmQgdW5tb3VudCBp
-dCBiZWZvcmVcbiIKInJlLXJ1bm5pbmcgeGZzX3JlcGFpci4gIElmIHlvdSBhcmUgdW5hYmxlIHRv
-IG1vdW50IHRoZSBmaWxlc3lzdGVtLCB0aGVuIHVzZVxuIgoidGhlIC1MIG9wdGlvbiB0byBkZXN0
-cm95IHRoZSBsb2cgYW5kIGF0dGVtcHQgYSByZXBhaXIuXG4iCiJOb3RlIHRoYXQgZGVzdHJveWlu
-ZyB0aGUgbG9nIG1heSBjYXVzZSBjb3JydXB0aW9uIC0tIHBsZWFzZSBhdHRlbXB0IGEgbW91bnRc
-biIKIm9mIHRoZSBmaWxlc3lzdGVtIGJlZm9yZSBkb2luZyB0aGlzLlxuIikpOwogICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGV4aXQoMik7CiAgICAgICAgICAgICAgICAgICAgICAgIH0K
-ICAgICAgICAgICAgICAgIH0KICAgICAgICB9CgpJJ3ZlIG1hcmtlZCBbZXhpdCBmcm9tIGhlcmVd
-IGZvciB5b3UuIGRvX2Vycm9yIHdpbGwgY2FsbCBleGl0KDEpLiBBbmQgdGhlIG91dHB1dAptZXNz
-YWdlIGFscmVhZHkgdGVsbCB5b3UgdGhlIHJlYXNvbiBhYm91dCB3aHkgaXQgZmFpbC4KCllvdSBj
-YW4ga2VlcCByZWFkaW5nLCB0aGVyZSdzIGEgImV4aXQoMikiIGF0IHRoZSBlbmQgb2YgYWJvdmUg
-Y29kZS4gSSBjYW4ndCBmaW5kCm1vcmUgZXhpdCgyKSBmcm9tIHhmc3Byb2dzL3JlcGFpci8gLiBT
-byBtYXliZSB0aGlzJ3MgdGhlIG9ubHkgb25lIHBsYWNlIHdoaWNoCmNhbiByZXR1cm4gMi4gRnJv
-bSB0aGUgaW5mb3JtYXRpb24gYWJvdmUgdGhhdCBleGl0KDIpLCB5b3UgY2FuIHNlZSB0aGF0Cnhm
-c19yZXBhaXIgd2lsbCByZXR1cm4gMiB3aGVuIGl0IGZpbmQgdGhlcmUncmUgc29tZSB2YWx1YWJs
-ZSBtZXRhZGF0YSBjaGFuZ2VzIGluCmEgbG9nLiBJdCB0aGluayBhIG1vdW50IG9wZXJhdGlvbiBt
-YXliZSBjYW4gcmVwbGF5IHRoaXMgbG9nLCBzbyBpdCByZXR1cm4gMiBhbmQKc3VnZ2VzdCB0aGUg
-dXNlciB0cnkgdG8gbW91bnQgdGhlIGZpbGVzeXN0ZW0uIElmIG1vdW50IGNhbid0IHJlcGxheSB0
-aGUgbG9nLCAtTAppcyB0aGUgbmV4dCBjaG9pY2UuCgpTbyBJIHRoaW5rIHRoZSBfcmVwYWlyX3Nj
-cmF0Y2hfZnMgZnVuY3Rpb24gaW4geGZzdGVzdHMvY29tbW9uL3JjIGRvZXNuJ3QgdGhpbmsKYWJv
-dXQgYWJvdmUgc2l0dWF0aW9uLiB4ZnNfcmVwYWlyIGRvZXNuJ3QgYWx3YXlzIHJldHVybiAyIGlm
-IGxvZyBjb3JydXB0ZWQuCk9ubHkgeGZzX3JlcGFpciBmZWVsIGxvZyBjYW4gYmUgcmVwbGF5LCBp
-dCdsbCByZXR1cm4gMiwgb3IgaXQnbGwgcmV0dXJuIDEuIFNvCm1heWJlIHdlIHNob3VsZCBjaGFu
-Z2UgImlmIFsgJHJlcyAtZXEgMiBdIiB0byAiaWYgWyAkcmVzIC1uZSAwIF0iLiBPciB3ZSBuZWVk
-CnRvIGNoYW5nZSB4ZnNfcmVwYWlyIHRvIG1ha2UgaXQgcmV0dXJuIDI6LVAKCkZvciB4ZnMvMDk4
-J3MgcHJvYmxlbSwgeW91IGNhbiBjaGFuZ2UgdGhlIGxpbmUjOTY6CmZyb20KX3NjcmF0Y2hfeGZz
-X3JlcGFpciA+PiAkc2VxcmVzLmZ1bGwgMj4mMQp0bwpfcmVwYWlyX3NjcmF0Y2hfZnMgPj4gJHNl
-cXJlcy5mdWxsIDI+JjEKCkFuZCBfcmVwYWlyX3NjcmF0Y2hfZnMgbmVlZCB0byBiZSBtb2RpZmll
-ZCBhcyBJIHNhaWQgYWJvdmUuIEkgdGhpbmsgSSBzaG91bGQgd3JpdGUKYSBwYXRjaCB0byBkZXNj
-cmliZSB0aGUgcmV0dXJuIHZhbHVlIG9mIHhmc19yZXBhaXIod2l0aG91dCAtbikuIFRoZSBjdXJy
-ZW50Cnhmc19yZXBhaXIgbWFucGFnZSBzYWlkOgoieGZzX3JlcGFpciBydW4gd2l0aG91dCB0aGUg
-LW4gb3B0aW9uIHdpbGwgYWx3YXlzIHJldHVybiBhIHN0YXR1cyBjb2RlIG9mIDAuIgppdCdzIHdy
-b25nLgoKT0ssIEkndmUgdGFsa2VkIHRvbyBtdWNoLiBJZiBhbnlvbmUgZmVlbCBhbnl0aGluZyB3
-cm9uZywgcGxlYXNlIGNvcnJlbnQgbWU6KQoKVGhhbmtzLApab3JybwoKPiAKPiBUaGFua3MsCj4g
-eWFuZwo+ID4+VGhhbmtzCj4gPj5YaWFvIFlhbmcuCj4gPj4+PiAgZWNobyAiKyBtb3VudCBpbWFn
-ZSAoMikiCj4gPj4+PiAgX3NjcmF0Y2hfbW91bnQKPiA+Pj4+LS0gCj4gPj4+PjEuOC4zLjEKPiA+
-Pj4+Cj4gPj4+Pgo+ID4+Pj4KPiA+Pj4+LS0KPiA+Pj4+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
-IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGZzdGVzdHMiIGluCj4gPj4+PnRoZSBi
-b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gPj4+Pk1vcmUg
-bWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8u
-aHRtbAo+ID4+Pi4KPiA+Pj4KPiA+Pgo+ID4+Cj4gPj4tLQo+ID4+VG8gdW5zdWJzY3JpYmUgZnJv
-bSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGZzdGVzdHMiIGluCj4gPj50
-aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+ID4+TW9y
-ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
-by5odG1sCj4gPgo+ID4uCj4gPgo+IAo+IAo+IAoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Sep 8, 2016 at 7:34 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> IDGI.  Suppose we do splice from file to pipe.  Everything had been in
+> page cache, so we want to end up with pipe_buffers containing references
+> to those page cache pages.  How do you propose to do that without having
+> grabbed references to them?  What's to keep them from being freed by the
+> time we get to reading from the pipe?
+
+So that's obviously what we already do. That is, after all, why splice
+doesn't actually keep track of "pages", it keeps track of "struct
+pipe_buffer". So each page has not just offset/len associated with it,
+but also a get/release/verify operation block and some flags with them
+(it might not be a page-cache page, so in some cases it might be a skb
+or something that needs different release semantics).
+
+And if you can make the iterator basically interface with turning the
+page/offset/len directly into a "struct pipe_buffer" and not do any
+extra reference operations, then it actually would work very well.
+
+But the way I read your description of what you'd do I just expected
+you to have an extra "get/put" ref at the iterator level.
+
+Maybe I misunderstood. I'd love to see a rough patch.
+
+                           Linus
