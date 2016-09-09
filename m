@@ -1,74 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54551 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753520AbcIIQfM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:12 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/10] xfs: fix locking for DAX writes
-Date: Fri,  9 Sep 2016 18:34:41 +0200
-Message-Id: <1473438884-674-8-git-send-email-hch@lst.de>
-In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:48516 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750792AbcIICTY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:19:24 -0400
+Date: Fri, 9 Sep 2016 03:19:20 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+ detected
+Message-ID: <20160909021920.GA19181@ZenIV.linux.org.uk>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard>
+ <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk>
+ <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+ <20160908213835.GY30056@dastard>
+ <20160908235521.GL2356@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160908235521.GL2356@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-So far DAX writes inherited the locking from direct I/O writes, but the direct
-I/O model of using shared locks for writes is actually wrong for DAX.  For
-direct I/O we're out of any standards and don't have to provide the Posix
-required exclusion between writers, but for DAX which gets transparently
-enable on applications without any knowledge of it we can't simply drop the
-requirement.  Even worse this only happens for aligned writes and thus
-doesn't show up for many typical use cases.
+On Fri, Sep 09, 2016 at 12:55:21AM +0100, Al Viro wrote:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+> Again, what I propose is a new iov_iter flavour.  Backed by pipe_buffer array,
+> used only for reads (i.e. copy to, not copy from).  Three states for element:
+> pagecache one, copied data, empty.  Semantics:
+> 	* copy_page_to_iter(): grab a reference to page and stick it into
+> the next element (making it a pagecache one) with offset and len coming
+> directly from arguments.
+	Start with checking if we are asking for the next chunk of the
+same page and simply adjust ->length if so.
+	
+> 	* copy_to_iter(): if the last element is a 'copied data' with empty
+> space remaining - copy to the end.  Otherwise allocate a new page and stick
+> it into the next element (making it 'copied data'), then copy into it.  If 
+> still not all data copied, do the same for the next element, etc.  Of course,
+> if there's no elements left, we are done copying.
+> 	* zero_iter(): ditto, with s/copy/fill with zeroes/
+> 	* iov_iter_get_pages(): allocate pages, stick them into the next
+> slots (making those 'copied data').  That might need some changes, though -
+> I'm still looking through the users.  The tricky part is decision when to
+> update the lengths.
+	... setting lengths to PAGE_SIZE.
+	* a new primitive to be used instead of iov_iter_advance() in
+success case of ->direct_IO() from generic_file_read_iter() - equivalent
+to iov_iter_advance() for all existing iov_iter flavours.  For this one:
+iov_iter_advance() + truncate ->length on the element we'd ended up on +
+free pages on all subsequent elements, converting them to "empty".
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e612a02..62649cc 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -714,24 +714,11 @@ xfs_file_dax_write(
- 	struct address_space	*mapping = iocb->ki_filp->f_mapping;
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
--	int			unaligned_io = 0;
--	int			iolock;
-+	int			iolock = XFS_IOLOCK_EXCL;
- 	struct iov_iter		data;
- 
--	/* "unaligned" here means not aligned to a filesystem block */
--	if ((iocb->ki_pos & mp->m_blockmask) ||
--	    ((iocb->ki_pos + iov_iter_count(from)) & mp->m_blockmask)) {
--		unaligned_io = 1;
--		iolock = XFS_IOLOCK_EXCL;
--	} else if (mapping->nrpages) {
--		iolock = XFS_IOLOCK_EXCL;
--	} else {
--		iolock = XFS_IOLOCK_SHARED;
--	}
- 	xfs_rw_ilock(ip, iolock);
--
- 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
-@@ -758,11 +745,6 @@ xfs_file_dax_write(
- 		WARN_ON_ONCE(ret);
- 	}
- 
--	if (iolock == XFS_IOLOCK_EXCL && !unaligned_io) {
--		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
--		iolock = XFS_IOLOCK_SHARED;
--	}
--
- 	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
- 
- 	data = *from;
--- 
-2.1.4
+> 	* iov_iter_get_pages_alloc(): not sure, hadn't really looked yet.
 
+Usual "allocate array, then as in iov_iter_get_pages()"
+
+> 	* iov_iter_alignment(): probably just returns 0.
+> 	* iov_iter_advance(): probably like bvec variant.
+	Probably needs to scream bloody murder if we are seeking _not_ to
+the end of the last element.
+
+	* ->count handling: capacity.  IOW, number of unused elements times
+PAGE_SIZE + if the current element is 'copied data' the amount of data left
+in this one.  That will need a careful review - any ->read_iter() making
+assumptions about iov_iter_count() after copy_page_to_iter() might need
+to be adjusted (i.e. we can't assume that iov_iter_count() decreases exactly
+by the amount returned by copy_page_to_iter()).
+
+	* copying from such iov_iter: BUG()
+	* fault-in: nop
+	* iov_iter_npages(): elements left
+	* dup_iter(): BUG() for now
+	* csum_and_copy_to_iter(): similar to copy_to_iter(), with obvious
+modifications for actually calculating csum.  Or just BUG() - we are not
+likely to use it at the moment.
+
+	Looks like that should suffice...  And it looks like that ought to
+take shmem ->splice_read() out as well, so that's one fewer caller of
+splice_to_pipe() to switch...
