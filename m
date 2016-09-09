@@ -1,83 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:48516 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750792AbcIICTY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:19:24 -0400
-Date: Fri, 9 Sep 2016 03:19:20 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160909021920.GA19181@ZenIV.linux.org.uk>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard>
- <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk>
- <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard>
- <20160908235521.GL2356@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160908235521.GL2356@ZenIV.linux.org.uk>
+Received: from bombadil.infradead.org ([198.137.202.9]:54626 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753455AbcIIQfJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:09 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/10] xfs: take the ilock shared if possible in xfs_file_iomap_begin
+Date: Fri,  9 Sep 2016 18:34:42 +0200
+Message-Id: <1473438884-674-9-git-send-email-hch@lst.de>
+In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Fri, Sep 09, 2016 at 12:55:21AM +0100, Al Viro wrote:
+We always just read the extent first, and will later lock exlusively
+after first dropping the lock in case we actually allocate blocks.
 
-> Again, what I propose is a new iov_iter flavour.  Backed by pipe_buffer array,
-> used only for reads (i.e. copy to, not copy from).  Three states for element:
-> pagecache one, copied data, empty.  Semantics:
-> 	* copy_page_to_iter(): grab a reference to page and stick it into
-> the next element (making it a pagecache one) with offset and len coming
-> directly from arguments.
-	Start with checking if we are asking for the next chunk of the
-same page and simply adjust ->length if so.
-	
-> 	* copy_to_iter(): if the last element is a 'copied data' with empty
-> space remaining - copy to the end.  Otherwise allocate a new page and stick
-> it into the next element (making it 'copied data'), then copy into it.  If 
-> still not all data copied, do the same for the next element, etc.  Of course,
-> if there's no elements left, we are done copying.
-> 	* zero_iter(): ditto, with s/copy/fill with zeroes/
-> 	* iov_iter_get_pages(): allocate pages, stick them into the next
-> slots (making those 'copied data').  That might need some changes, though -
-> I'm still looking through the users.  The tricky part is decision when to
-> update the lengths.
-	... setting lengths to PAGE_SIZE.
-	* a new primitive to be used instead of iov_iter_advance() in
-success case of ->direct_IO() from generic_file_read_iter() - equivalent
-to iov_iter_advance() for all existing iov_iter flavours.  For this one:
-iov_iter_advance() + truncate ->length on the element we'd ended up on +
-free pages on all subsequent elements, converting them to "empty".
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_iomap.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-> 	* iov_iter_get_pages_alloc(): not sure, hadn't really looked yet.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5d06a2d..c3cc175 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -955,6 +955,7 @@ xfs_file_iomap_begin(
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	int			nimaps = 1, error = 0;
++	unsigned		lockmode;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+@@ -964,7 +965,7 @@ xfs_file_iomap_begin(
+ 				iomap);
+ 	}
+ 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	lockmode = xfs_ilock_data_map_shared(ip);
+ 
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 	if ((xfs_fsize_t)offset + length > mp->m_super->s_maxbytes)
+@@ -975,7 +976,7 @@ xfs_file_iomap_begin(
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+ 			       &nimaps, XFS_BMAPI_ENTIRE);
+ 	if (error) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_iunlock(ip, lockmode);
+ 		return error;
+ 	}
+ 
+@@ -995,7 +996,8 @@ xfs_file_iomap_begin(
+ 		 * xfs_iomap_write_direct() expects the shared lock. It
+ 		 * is unlocked on return.
+ 		 */
+-		xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
++		if (lockmode == XFS_ILOCK_EXCL)
++			xfs_ilock_demote(ip, lockmode);
+ 		error = xfs_iomap_write_direct(ip, offset, length, &imap,
+ 				nimaps);
+ 		if (error)
+@@ -1006,7 +1008,7 @@ xfs_file_iomap_begin(
+ 	} else {
+ 		ASSERT(nimaps);
+ 
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_iunlock(ip, lockmode);
+ 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+ 	}
+ 
+-- 
+2.1.4
 
-Usual "allocate array, then as in iov_iter_get_pages()"
-
-> 	* iov_iter_alignment(): probably just returns 0.
-> 	* iov_iter_advance(): probably like bvec variant.
-	Probably needs to scream bloody murder if we are seeking _not_ to
-the end of the last element.
-
-	* ->count handling: capacity.  IOW, number of unused elements times
-PAGE_SIZE + if the current element is 'copied data' the amount of data left
-in this one.  That will need a careful review - any ->read_iter() making
-assumptions about iov_iter_count() after copy_page_to_iter() might need
-to be adjusted (i.e. we can't assume that iov_iter_count() decreases exactly
-by the amount returned by copy_page_to_iter()).
-
-	* copying from such iov_iter: BUG()
-	* fault-in: nop
-	* iov_iter_npages(): elements left
-	* dup_iter(): BUG() for now
-	* csum_and_copy_to_iter(): similar to copy_to_iter(), with obvious
-modifications for actually calculating csum.  Or just BUG() - we are not
-likely to use it at the moment.
-
-	Looks like that should suffice...  And it looks like that ought to
-take shmem ->splice_read() out as well, so that's one fewer caller of
-splice_to_pipe() to switch...
