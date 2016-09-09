@@ -1,171 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54783 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753665AbcIIQfO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:14 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/10] xfs: use iomap to implement DAX
-Date: Fri,  9 Sep 2016 18:34:44 +0200
-Message-Id: <1473438884-674-11-git-send-email-hch@lst.de>
-In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35140 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751271AbcIICWY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:22:24 -0400
+Received: by mail-oi0-f68.google.com with SMTP id 2so7673105oif.2
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 19:22:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160909015324.GD30056@dastard>
+References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
+ <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
+ <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
+ <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+ <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk> <20160909015324.GD30056@dastard>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 8 Sep 2016 19:22:22 -0700
+Message-ID: <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
 
-Another users of buffer_heads bytes the dust.
+On Thu, Sep 8, 2016 at 6:53 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> So if we race iwth a truncate, the pages in spd.pages[] that are
+> beyond the new EOF may or may not have been removed from the page
+> cache.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 44 +++++++++++++++++++-------------------------
- fs/xfs/xfs_iomap.c | 11 +++++++----
- 2 files changed, 26 insertions(+), 29 deletions(-)
+So I'm not sure why we'd need to care?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 62649cc..b5aef20 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -332,10 +332,7 @@ xfs_file_dax_read(
- 	struct kiocb		*iocb,
- 	struct iov_iter		*to)
- {
--	struct address_space	*mapping = iocb->ki_filp->f_mapping;
--	struct inode		*inode = mapping->host;
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct iov_iter		data = *to;
-+	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
- 	size_t			count = iov_iter_count(to);
- 	ssize_t			ret = 0;
- 
-@@ -345,11 +342,7 @@ xfs_file_dax_read(
- 		return 0; /* skip atime */
- 
- 	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
--	ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct, NULL, 0);
--	if (ret > 0) {
--		iocb->ki_pos += ret;
--		iov_iter_advance(to, ret);
--	}
-+	ret = iomap_dax_rw(iocb, to, &xfs_iomap_ops);
- 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	file_accessed(iocb->ki_filp);
-@@ -714,15 +707,19 @@ xfs_file_dax_write(
- 	struct address_space	*mapping = iocb->ki_filp->f_mapping;
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	ssize_t			ret = 0;
- 	int			iolock = XFS_IOLOCK_EXCL;
--	struct iov_iter		data;
-+	ssize_t			ret, error = 0;
-+	size_t			count;
-+	loff_t			pos;
- 
- 	xfs_rw_ilock(ip, iolock);
- 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
- 
-+	pos = iocb->ki_pos;
-+	count = iov_iter_count(from);
-+
- 	/*
- 	 * Yes, even DAX files can have page cache attached to them:  A zeroed
- 	 * page is inserted into the pagecache when we have to serve a write
-@@ -737,26 +734,23 @@ xfs_file_dax_write(
- 	 * dax_do_io() is fixed up.
- 	 */
- 	if (mapping->nrpages) {
--		loff_t end = iocb->ki_pos + iov_iter_count(from) - 1;
--
- 		ret = invalidate_inode_pages2_range(mapping,
--						    iocb->ki_pos >> PAGE_SHIFT,
--						    end >> PAGE_SHIFT);
-+				pos >> PAGE_SHIFT,
-+				(pos + count - 1) >> PAGE_SHIFT);
- 		WARN_ON_ONCE(ret);
- 	}
- 
--	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
-+	trace_xfs_file_dax_write(ip, count, pos);
- 
--	data = *from;
--	ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct,
--			xfs_end_io_direct_write, 0);
--	if (ret > 0) {
--		iocb->ki_pos += ret;
--		iov_iter_advance(from, ret);
-+	ret = iomap_dax_rw(iocb, from, &xfs_iomap_ops);
-+	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
-+		i_size_write(inode, iocb->ki_pos);
-+		error = xfs_setfilesize(ip, pos, count);
- 	}
-+
- out:
- 	xfs_rw_iunlock(ip, iolock);
--	return ret;
-+	return error ? error : ret;
- }
- 
- STATIC ssize_t
-@@ -1495,7 +1489,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault);
-+		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
- 	} else {
- 		ret = iomap_page_mkwrite(vma, vmf, &xfs_iomap_ops);
- 		ret = block_page_mkwrite_return(ret);
-@@ -1529,7 +1523,7 @@ xfs_filemap_fault(
- 		 * changes to xfs_get_blocks_direct() to map unwritten extent
- 		 * ioend for conversion on read-only mappings.
- 		 */
--		ret = dax_fault(vma, vmf, xfs_get_blocks_dax_fault);
-+		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
- 	} else
- 		ret = filemap_fault(vma, vmf);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c3cc175..23f7811 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -935,11 +935,13 @@ error_on_bmapi_transaction:
- 	return error;
- }
- 
--static inline bool imap_needs_alloc(struct xfs_bmbt_irec *imap, int nimaps)
-+static inline bool imap_needs_alloc(struct inode *inode,
-+		struct xfs_bmbt_irec *imap, int nimaps)
- {
- 	return !nimaps ||
- 		imap->br_startblock == HOLESTARTBLOCK ||
--		imap->br_startblock == DELAYSTARTBLOCK;
-+		imap->br_startblock == DELAYSTARTBLOCK ||
-+		(IS_DAX(inode) && ISUNWRITTEN(imap));
- }
- 
- static int
-@@ -960,7 +962,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	if ((flags & IOMAP_WRITE) && !xfs_get_extsz_hint(ip)) {
-+	if ((flags & IOMAP_WRITE) &&
-+	    !IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
- 				iomap);
- 	}
-@@ -980,7 +983,7 @@ xfs_file_iomap_begin(
- 		return error;
- 	}
- 
--	if ((flags & IOMAP_WRITE) && imap_needs_alloc(&imap, nimaps)) {
-+	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
- 		/*
- 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
- 		 * pages to keep the chunks of work done where somewhat symmetric
--- 
-2.1.4
+The thing is, if the splicer and the hole puncher aren't synchronized,
+then there is by definition no "before/after" point.
 
+The splice data may be "stale" in the sense that we look at the page
+after the hole punch has happened and the page no longer has a
+->mapping associated with it, but it is equally valid to treat that as
+just a case of "the read happened before the hole punch".
+
+Put another way: it's not wrong to use the ostensibly "stale" data, it
+just means that the splice acts as if the IO had happened before the
+data became stale.
+
+The whole point of "splice" is for the pipe to act as a in-kernel
+buffer. So a splice does not *synchronize* the two end-points, quite
+the reverse: it is meant to act as a "read + write" with the pipe
+itself being the buffer in between (and because it's a in-kernel
+buffer rather than a user space buffer like a real read()+write() pair
+would be, it means that we then *can* do things like zero-copy, but
+realistically it really aims for "one-copy" rather than "two-copy".
+
+So if the splice buffer contains stale values, then that's exactly
+similar to a user space application having done a "read()" of old
+data, then the file is truncated (or hole punched), and then the
+application does a "write()" on that data. The target clearly sees
+*different* data than is on the filesystem at that point, but since
+"complete synchronization" has never been a guarantee of splice() in
+the first place, that's just not a downside.
+
+If an application expects to have "splice()" give some kind of data
+consistency guarantees wrt people writing to the file (or with
+truncate or hole punching), then the application would have to
+implement that serialization itself. Splice in itself does not do
+serialization, it does data copying.
+
+            Linus
