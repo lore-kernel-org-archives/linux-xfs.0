@@ -1,68 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35140 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751271AbcIICWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Sep 2016 22:22:24 -0400
-Received: by mail-oi0-f68.google.com with SMTP id 2so7673105oif.2
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Sep 2016 19:22:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160909015324.GD30056@dastard>
-References: <723420070.1340881.1472835555274.JavaMail.zimbra@redhat.com>
- <1832555471.1341372.1472835736236.JavaMail.zimbra@redhat.com>
- <20160903003919.GI30056@dastard> <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk> <20160909015324.GD30056@dastard>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 8 Sep 2016 19:22:22 -0700
-Message-ID: <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
-Content-Type: text/plain; charset=UTF-8
+Received: from bombadil.infradead.org ([198.137.202.9]:54712 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753538AbcIIQfM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 12:35:12 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/10] xfs: refactor xfs_setfilesize
+Date: Fri,  9 Sep 2016 18:34:43 +0200
+Message-Id: <1473438884-674-10-git-send-email-hch@lst.de>
+In-Reply-To: <1473438884-674-1-git-send-email-hch@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Thu, Sep 8, 2016 at 6:53 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> So if we race iwth a truncate, the pages in spd.pages[] that are
-> beyond the new EOF may or may not have been removed from the page
-> cache.
+Rename the current function to __xfs_setfilesize and add a non-static
+wrapper that also takes care of creating the transaction.  This new
+helper will be used by the new iomap-based DAX path.
 
-So I'm not sure why we'd need to care?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 33 ++++++++++++++++++++++-----------
+ fs/xfs/xfs_aops.h |  1 +
+ 2 files changed, 23 insertions(+), 11 deletions(-)
 
-The thing is, if the splicer and the hole puncher aren't synchronized,
-then there is by definition no "before/after" point.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7575cfc..0bd3e27 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -199,8 +199,8 @@ xfs_setfilesize_trans_alloc(
+ /*
+  * Update on-disk file size now that data has been written to disk.
+  */
+-STATIC int
+-xfs_setfilesize(
++int
++__xfs_setfilesize(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_trans	*tp,
+ 	xfs_off_t		offset,
+@@ -225,6 +225,23 @@ xfs_setfilesize(
+ 	return xfs_trans_commit(tp);
+ }
+ 
++int
++xfs_setfilesize(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	size_t			size)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
++	if (error)
++		return error;
++
++	return __xfs_setfilesize(ip, tp, offset, size);
++}
++
+ STATIC int
+ xfs_setfilesize_ioend(
+ 	struct xfs_ioend	*ioend,
+@@ -247,7 +264,7 @@ xfs_setfilesize_ioend(
+ 		return error;
+ 	}
+ 
+-	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
++	return __xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+ }
+ 
+ /*
+@@ -1336,13 +1353,12 @@ xfs_end_io_direct_write(
+ {
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+ 	uintptr_t		flags = (uintptr_t)private;
+ 	int			error = 0;
+ 
+ 	trace_xfs_end_io_direct_write(ip, offset, size);
+ 
+-	if (XFS_FORCED_SHUTDOWN(mp))
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+ 	if (size <= 0)
+@@ -1380,14 +1396,9 @@ xfs_end_io_direct_write(
+ 
+ 		error = xfs_iomap_write_unwritten(ip, offset, size);
+ 	} else if (flags & XFS_DIO_FLAG_APPEND) {
+-		struct xfs_trans *tp;
+-
+ 		trace_xfs_end_io_direct_write_append(ip, offset, size);
+ 
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0,
+-				&tp);
+-		if (!error)
+-			error = xfs_setfilesize(ip, tp, offset, size);
++		error = xfs_setfilesize(ip, offset, size);
+ 	}
+ 
+ 	return error;
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index bf2d9a1..1950e3b 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -62,6 +62,7 @@ int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+ 
+ int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+ 		ssize_t size, void *private);
++int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+ 
+ extern void xfs_count_page_state(struct page *, int *, int *);
+ extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
+-- 
+2.1.4
 
-The splice data may be "stale" in the sense that we look at the page
-after the hole punch has happened and the page no longer has a
-->mapping associated with it, but it is equally valid to treat that as
-just a case of "the read happened before the hole punch".
-
-Put another way: it's not wrong to use the ostensibly "stale" data, it
-just means that the splice acts as if the IO had happened before the
-data became stale.
-
-The whole point of "splice" is for the pipe to act as a in-kernel
-buffer. So a splice does not *synchronize* the two end-points, quite
-the reverse: it is meant to act as a "read + write" with the pipe
-itself being the buffer in between (and because it's a in-kernel
-buffer rather than a user space buffer like a real read()+write() pair
-would be, it means that we then *can* do things like zero-copy, but
-realistically it really aims for "one-copy" rather than "two-copy".
-
-So if the splice buffer contains stale values, then that's exactly
-similar to a user space application having done a "read()" of old
-data, then the file is truncated (or hole punched), and then the
-application does a "write()" on that data. The target clearly sees
-*different* data than is on the filesystem at that point, but since
-"complete synchronization" has never been a guarantee of splice() in
-the first place, that's just not a downside.
-
-If an application expects to have "splice()" give some kind of data
-consistency guarantees wrt people writing to the file (or with
-truncate or hole punching), then the application would have to
-implement that serialization itself. Splice in itself does not do
-serialization, it does data copying.
-
-            Linus
