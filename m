@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CB0907CA1
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 18:14:49 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 035C97CA1
+	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 01:07:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 80D9E8F8039
-	for <xfs@oss.sgi.com>; Fri,  9 Sep 2016 16:14:46 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	B7n9FieMwu96vATK for <xfs@oss.sgi.com>;
-	Fri, 09 Sep 2016 16:14:43 -0700 (PDT)
-Date: Sat, 10 Sep 2016 09:13:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG REPORT] missing memory counter introduced by xfs
-Message-ID: <20160909231320.GG30056@dastard>
-References: <57CFEDA3.9000005@chinanetcenter.com>
-	<20160907212206.GP30056@dastard>
-	<57D13871.9070603@chinanetcenter.com>
-	<20160908204413.GW30056@dastard>
-	<57D25772.3070304@chinanetcenter.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A46368F8037
+	for <xfs@oss.sgi.com>; Thu,  8 Sep 2016 23:07:27 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id Kla4HKNWLSbG3RU8 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 08 Sep 2016 23:07:24 -0700 (PDT)
+Date: Thu, 8 Sep 2016 23:07:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] ioctl_xfs_ioc_getfsmap.2: document XFS_IOC_GETFSMAP
+	ioctl
+Message-ID: <20160909060716.GD8969@birch.djwong.org>
+References: <147216758326.32321.8525481353986871349.stgit@birch.djwong.org>
+	<147216760214.32321.8331561706153372268.stgit@birch.djwong.org>
+	<32A3DAED-21FC-4252-B53E-3503764342E8@dilger.ca>
+	<20160830190949.GA8262@birch.djwong.org>
+	<20160908233806.GB30056@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <57D25772.3070304@chinanetcenter.com>
+In-Reply-To: <20160908233806.GB30056@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,68 +34,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lin Feng <linf@chinanetcenter.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, linux-man@vger.kernel.org, linux-api@vger.kernel.org, xfs <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Fri, Sep 09, 2016 at 02:32:18PM +0800, Lin Feng wrote:
-> Hi Dave,
+On Fri, Sep 09, 2016 at 09:38:06AM +1000, Dave Chinner wrote:
+> On Tue, Aug 30, 2016 at 12:09:49PM -0700, Darrick J. Wong wrote:
+> > > I recall for FIEMAP that some filesystems may not have files aligned
+> > > to sector offsets, and we just used byte offsets.  Storage like
+> > > NVDIMMs are cacheline granular, so I don't think it makes sense to
+> > > tie this to old disk sector sizes.  Alternately, the units could be
+> > > in terms of fs blocks as returned by statvfs.st_bsize, but mixing
+> > > units for fmv_block, fmv_offset, fmv_length is uneeded complexity.
+> > 
+> > Ugh.  I'd rather just change the units to bytes rather than force all
+> > the users to multiply things. :)
 > 
-> A final not-clear concept about XFS, look beblow please.
+> Yup, units need to be either in disk addresses (i.e. 512 byte units)
+> or bytes. If people can't handle disk addresses (seems to be the
+> case), the bytes it should be.
+
+<nod>
+
+> > I'd much rather just add more special owner codes for any other
+> > filesystem that has distinguishable metadata types that are not
+> > covered by the existing OWN_ codes.  We /do/ have 2^64 possible
+> > values, so it's not like we're going to run out.
 > 
-> On 09/09/2016 04:44 AM, Dave Chinner wrote:
-> >On Thu, Sep 08, 2016 at 06:07:45PM +0800, Lin Feng wrote:
-....
-> >>>So, you have *5.4 million* active metadata buffers. Each buffer will
-> >>>hold  1 or 2 4k pages on your kernel, so simple math says 4M * 4k +
-> >>>1.4M * 8k = 26G. There's no missing counter here....
-> >>
-> >>Does xattr contribute to such metadata buffers or there is something else?
-> >
-> >xattrs are metadata, so if they don't fit in line in the inode
-> >(typical for ceph because it uses xattrs larger than 256 bytes) then
-> >they are held in external blocks which are cached in the buffer
-> >cache.
-> >
+> This is diagnositc information as much as anything, just like
+> fiemap is diagnostic information. So if we have specific type
+> information, it needs to be reported accurately to be useful.
 > 
-> So the 'buffer cache' here you mean is the pages handled by xfs_buf
-> struct,
+> Hence I really don't care if the users and developers of other fs
+> types don't understand what the special owner codes that a specific
+> filesystem returns mean. i.e. it's not useful user information -
+> only a tool that groks the specific filesystem is going to be able
+> to anything useful with special owner codes. So, IMO, there's little
+> point trying to make them generic or to even trying to define and
+> explain them in the man page....
 
-Yes.
+<shrug> I'm ok with describing generally what each special owner code
+means.  Maybe the manpage could be more explicit about "None of these
+codes are useful unless you're a low level filesystem tool"?
 
-> used to hold the xattrs if the inode inline data space
-> overflows,
+> > > It seems like there are several fields in the structure that are used for
+> > > only input or only output?  Does it make more sense to have one structure
+> > > used only for the input request, and then the array of values returned be
+> > > in a different structure?  I'm not necessarily requesting that it be changed,
+> > > but it definitely is something I noticed a few times while reading this doc.
+> > 
+> > I've been thinking about rearranging this a bit, since the flags
+> > handling is very awkward with the current array structure.  Each
+> > rmap has its own flags; we may someday want to pass operation flags
+> > into the ioctl; and we currently have one operation flag to pass back
+> > to userspace.  Each of those flags can be a separate field.  I think
+> > people will get confused about FMV_OF_* and FMV_HOF_* being referenced
+> > in oflags, and iflags has no meaning for returned records.
+> 
+> Yup, that's what I initially noticed when I glanced at this. The XFS
+> getbmap interface is just plain nasty, and we shouldn't be copying
+> that API pattern if we can help it.
 
-And all other cached metadata that is accessed via struct xfs_buf.
+Lol ok. :)
 
-> not the 'beffer/cache' seen via free command, they won't
-> reflect in cache field by free command, right?
+> > So, this instead?
+> > 
+> > struct getfsmap_rec {
+> > 	u32 device;		/* device id */
+> > 	u32 flags;		/* mapping flags */
+> > 	u64 block;		/* physical addr, bytes */
+> > 	u64 owner;		/* inode or special owner code */
+> > 	u64 offset;		/* file offset of mapping, bytes */
+> > 	u64 length;		/* length of segment, bytes */
+> > 	u64 reserved;		/* will be set to zero */
+> > }; /* 48 bytes */
+> > 
+> > struct getfsmap_head {
+> > 	u32 iflags;		/* none defined yet */
+> > 	u32 oflags;		/* FMV_HOF_DEV_T */
+> > 	u32 count;		/* # entries in recs array */
+> > 	u32 entries;		/* # entries filled in (output) */
+> > 	u64 reserved[2]; 	/* must be zero */
+> > 
+> > 	struct getfsmap_rec keys[2]; /* low and high keys for the mapping search */
+> > 	struct getfsmap_rec recs[0];
+> > }; /* 32 bytes + 2*48 = 128 bytes */
+> > 
+> > #define XFS_IOC_GETFSMAP	_IOWR('X', 59, struct getfsmap_head)
+> > 
+> > This also means that userspace can set up for the next ioctl
+> > invocation with memcpy(&head->keys[0], &head->recs[head->entries - 1]).
+> > 
+> > Yes, I think I like this better.  Everyone else, please chime in. :)
+> 
+> That's pretty much the structure I was going to suggest - it matches
+> the fiemap pattern. i.e control parameters are separated from record
+> data. I'd dump a bit more reserved space in the structure, though;
+> we've got heaps of flag space for future expansion, but if we need
+> to pass new parameters into/out of the kernel we'll quickly use the
+> reserved space.
 
-Correct. From the "free" man page:
+I padded struct fsmap with enough reserved space to make it an even 64 bytes,
+and padded struct fsmap_head so that the space before keys is 64 bytes in
+length.  See v3 patch of the ioctl manpage.
 
-	buffers
-	     Memory used by kernel buffers (Buffers in /proc/meminfo)
+--D
 
-	cache
-	     Memory used by the page cache and slabs (Cached and
-	     Slab in /proc/meminfo)
-
-	buff/cache
-	     Sum of buffers and cache
-
-
-So, "Buffers" is the amount of cached block device pages - this is
-always zero for XFS filesystems as we don't use the block device
-page cache at all (IIRC, that's where ext4 caches it's metadata).
-"cache" is obvious, but it does not include memory attached to slab
-objects. Hence it will account for struct xfs_buf memory usage, but
-not the pages attached to each xfs_buf....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
