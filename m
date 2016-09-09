@@ -1,68 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35448 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbcIJCGb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 22:06:31 -0400
-Received: by mail-oi0-f67.google.com with SMTP id 2so12867293oif.2
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2016 19:06:31 -0700 (PDT)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35103 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750953AbcIIRHz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 13:07:55 -0400
+Received: by mail-wm0-f68.google.com with SMTP id a6so3597296wmc.2
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2016 10:07:54 -0700 (PDT)
+Date: Fri, 9 Sep 2016 19:07:51 +0200
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: Re: [PATCH] xfs_io: fix building with musl
+Message-ID: <20160909190751.40fb7e75@gmail.com>
+In-Reply-To: <106faf8f-3b68-56b9-6188-af01601cc870@sandeen.net>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+        <1473427942-10726-1-git-send-email-ralph.sennhauser@gmail.com>
+        <106faf8f-3b68-56b9-6188-af01601cc870@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20160909221945.GQ2356@ZenIV.linux.org.uk>
-References: <1450936953.949798.1473348551588.JavaMail.zimbra@redhat.com>
- <20160908175632.GH2356@ZenIV.linux.org.uk> <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk>
- <20160909015324.GD30056@dastard> <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
- <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <20160909023452.GO2356@ZenIV.linux.org.uk> <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 9 Sep 2016 19:06:29 -0700
-Message-ID: <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 9, 2016 at 3:19 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->
-> Cooking it...  The thing I really hate about the use of pipe_buffer is that
-> we want to keep the "use on-stack array for default pipe size" trick, and
-> pipe_buffer is fatter than I'd like.  Instead of pointer + two numbers +
-> something to indicate whether it's picked from page cache or something we'd
-> allocated we get get pointer + int + int + pointer + int + long, which turns
-> into 5 words on 64bit.  With 16-element array of those on stack frame, it's
-> not nice - more than half kilobyte of stack space with ->read_iter() yet to
-> be called...  bvec would be better (60% savings boils down to 384 bytes
-> shaved off that thing), but we'd need to play games with encoding the "is
-> it page cache or not" bit somewhere in it.
+On Fri, 9 Sep 2016 08:59:16 -0500
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-No, please don't play games like that.
+> On 9/9/16 8:32 AM, Ralph Sennhauser wrote:
+> > The fallback in case the libc doesn't have or doesn't advertise the
+> > existence of d_reclen in struct dirent uses d_namlen. Musl neither
+> > advertises d_reclen nor does it have a d_namlen member.
+> > 
+> > Calculate the value for d_namlen from d_name in the fallback path.
+> > 
+> > Signed-off-by: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+> > ---
+> > 
+> > With ustat.h issue resolved in 4.8.0-rc1 this is the only musl
+> > related one left.
+> > 
+> > An alternative could be some autoconf magic [1] or waiting for a
+> > long time for musl to add _DIRENT_HAVE_D_RECLEN [2] and for it to
+> > propagate to distributions.
+> > 
+> > [1] http://oss.sgi.com/archives/xfs/2016-01/msg00388.html
+> > [2] http://www.openwall.com/lists/musl/2016/01/15/9  
+> 
+> eh, this is fine by me.  Even Linus has hated d_namlen for over
+> a decade ;)  http://lkml.iu.edu/hypermail/linux/kernel/9506/0033.html
+> 
+> Last question, have you tested it beyond the build, i.e.
+> with xfs_io -c "readdir -v" /some/dir ?  Works here but it'd be nice
+> to know that it's working properly on musl as well.
+> 
 
-I think you'd be better off with just a really small on-stack case
-(like maybe 2-3 entries), and just allocate anything bigger
-dynamically. Or you could even see how bad it is if you just
-force-limit it to max 4 entries or something like that and just do
-partial writes.
+Kernel is 4.8-rc5, xfsprogs 4-8.0-rc1 plus fixups mentioned. An xfs
+filesystem is mounted at /mnt/xfs.
 
->From when I looked at things (admittedly a *long* time ago), the
-buffer sizes for things like read/write system calls were *very*
-skewed.
+# xfs_io -c "readdir -v" /mnt/xfs/test/
+00000000: d_ino: 0x00000063 d_name: .
+00000000: d_ino: 0x00000060 d_name: ..
+00000000: d_ino: 0x00000064 d_name: file
+read 847 bytes from offset 0
+847.000000 bytes, 3 ops, 0.0000 sec (20 MiB/sec and 75000.0000 ops/sec)
 
-There's a lot of small stuff, then there is the stuff that actually
-honors st.st_blksize (normally one page), and then there is the big
-buffers stuff.
+> the d_reclen field doesn't exist in any xfstests output, so looks
+> like its loss on some platforms won't affect any existing tests.
+> 
+> If you can verify that you did a runtime test as well, that'd
+> be great, but in any case:
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
 
-And the thing is, the big buffers are almost never worth it. It's
-often better to have a tight loop over smaller data than bouncing lots
-of data into buffers and then out of buffers.
+Thanks for the review
+Ralph
 
-So I suspect all the "let's do many pages in one go" stuff is actually
-not worth it. Especially since the pipes will basically force a wait
-event when the pipe buffers fill up anyway.
+> Thanks,
+> -Eric
+> 
+> > ---
+> >  io/readdir.c | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/io/readdir.c b/io/readdir.c
+> > index 151b72e..2b56dc8 100644
+> > --- a/io/readdir.c
+> > +++ b/io/readdir.c
+> > @@ -24,6 +24,10 @@
+> >  #include <sys/types.h>
+> >  #include <dirent.h>
+> >  
+> > +#ifndef _DIRENT_HAVE_D_RECLEN
+> > +#include <string.h>
+> > +#endif
+> > +
+> >  static struct cmdinfo readdir_cmd;
+> >  
+> >  const char *d_type_str(unsigned int type)
+> > @@ -106,7 +110,7 @@ read_directory(
+> >  #ifdef _DIRENT_HAVE_D_RECLEN
+> >  		*total += dirent->d_reclen;
+> >  #else
+> > -		*total += dirent->d_namlen + sizeof(*dirent);
+> > +		*total += strlen(dirent->d_name) + sizeof(*dirent);
+> >  #endif
+> >  		count++;
+> >  
+> >   
 
-So feel free to try maxing out using only a small handful of
-pipe_buffer entries. Returning partial IO from splice() is fine.
-
-                   Linus
