@@ -1,68 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34024 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:58703 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1762158AbcINPUO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Sep 2016 11:20:14 -0400
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 3/3] xfs_quota: add case for foreign fs, disabled regardless of foreign_allowed
-Date: Wed, 14 Sep 2016 10:19:41 -0500
-Message-Id: <1473866381-28975-4-git-send-email-billodo@redhat.com>
-In-Reply-To: <1473866381-28975-1-git-send-email-billodo@redhat.com>
-References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+        id S1750812AbcIJHgt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Sep 2016 03:36:49 -0400
+Date: Sat, 10 Sep 2016 09:36:46 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160910073646.GA18547@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de> <1473438884-674-7-git-send-email-hch@lst.de> <20160909225557.GF30056@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160909225557.GF30056@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, elliott@hpe.com
 
-Some commands are disallowed for foreign filesystems,
-regardless of whether or not the -f flag is thrown.
-Add a case for this condition and improve commenting
-and output messaging accordingly in init_check_command.
+On Sat, Sep 10, 2016 at 08:55:57AM +1000, Dave Chinner wrote:
+> THe errors from the above two cases are not acted on. they are
+> immediately overwritten by:
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- quota/init.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+Yes, Robert also pointed this out.  Fix below.
 
-diff --git a/quota/init.c b/quota/init.c
-index 2c18c8b..7d69663 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -112,21 +112,28 @@ init_check_command(
- 	if (!fs_path)
- 		return 1;
- 
--	/* Always run commands that we are told to skip here */
-+	/* Always run commands that are valid for all fs types. */
- 	if (ct->flags & CMD_ALL_FSTYPES)
- 		return 1;
- 
--	/* if it's an XFS filesystem, always run the command */
-+	/* If it's an XFS filesystem, always run the command. */
- 	if (!(fs_path->fs_flags & FS_FOREIGN))
- 		return 1;
- 
--	/* If the user specified foreign filesysetms are ok, run it */
-+	/* If the user specified foreign filesystems are ok (-f), run cmd. */
- 	if (foreign_allowed &&
- 	    (ct->flags & CMD_FLAG_FOREIGN_OK))
- 		return 1;
- 
--	/* foreign filesystem and it's not a valid command! */
--	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-+	/* If cmd not allowed on foreign fs, regardless of -f flag, skip it. */
-+	if (!(ct->flags & CMD_FLAG_FOREIGN_OK)) {
-+		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
-+			ct->name);
-+		return 0;
-+	}
-+
-+	/* foreign fs, but cmd only allowed via -f flag. Skip it. */
-+	fprintf(stderr, _("%s: foreign filesystem. Use -f to enable.\n"),
- 		ct->name);
- 	return 0;
- }
--- 
-2.7.4
+> Is there a missing "if (error) goto out;" check somewhere here?
 
+Just the one above.
+
+> I'm also wondering if you've looked at supporting the PMD fault case
+> with iomap?
+
+PMD faults currently don't work at all.  Ross has a series to resurrect
+them, but we'll need to coordinate between the two series somehow.  My
+preference would be to not resurrect them for the bh path and only do
+it for the iomap version.
+
+
+diff --git a/fs/dax.c b/fs/dax.c
+index a170a94..5534594 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1440,6 +1440,7 @@ int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		error = -EIO;
++		goto unlock_entry;
+ 	}
+ 
+ 	/* Filesystem should not return unwritten buffers to us! */
