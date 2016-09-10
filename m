@@ -1,87 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51802 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750710AbcIIN7S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Sep 2016 09:59:18 -0400
-Subject: Re: [PATCH] xfs_io: fix building with musl
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
- <1473427942-10726-1-git-send-email-ralph.sennhauser@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <106faf8f-3b68-56b9-6188-af01601cc870@sandeen.net>
-Date: Fri, 9 Sep 2016 08:59:16 -0500
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:36568 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754945AbcIJSPJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Sep 2016 14:15:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <1473427942-10726-1-git-send-email-ralph.sennhauser@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20160910074034.GA18332@infradead.org>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <20160908202511.GV30056@dastard> <CAOQ4uxigN71Evm_mhFzijtDaXAvKQqstryvNoBEL7=Uwgt5xFg@mail.gmail.com>
+ <20160909075439.GE30056@dastard> <CAOQ4uxguEpSeq5A==gGCcVocY=5xSO+cEcUNr2GDYAbjvx4+Dw@mail.gmail.com>
+ <20160909235221.GH30056@dastard> <20160910074034.GA18332@infradead.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 10 Sep 2016 21:15:06 +0300
+Message-ID: <CAOQ4uxj=XzcPe1HdynToitEHo4SEtaU3pV86yFWj3y=MURY-7g@mail.gmail.com>
+Subject: Re: [PATCH] ovl: use copy_file_range for copy up if possible
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On 9/9/16 8:32 AM, Ralph Sennhauser wrote:
-> The fallback in case the libc doesn't have or doesn't advertise the
-> existence of d_reclen in struct dirent uses d_namlen. Musl neither
-> advertises d_reclen nor does it have a d_namlen member.
-> 
-> Calculate the value for d_namlen from d_name in the fallback path.
-> 
-> Signed-off-by: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-> ---
-> 
-> With ustat.h issue resolved in 4.8.0-rc1 this is the only musl related
-> one left.
-> 
-> An alternative could be some autoconf magic [1] or waiting for a long
-> time for musl to add _DIRENT_HAVE_D_RECLEN [2] and for it to propagate
-> to distributions.
-> 
-> [1] http://oss.sgi.com/archives/xfs/2016-01/msg00388.html
-> [2] http://www.openwall.com/lists/musl/2016/01/15/9
+On Sat, Sep 10, 2016 at 10:40 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Sat, Sep 10, 2016 at 09:52:21AM +1000, Dave Chinner wrote:
+>> > vfs_copy_file_range() implementation because ovl_copy_up_data()
+>> > splices in small chunks allowing the user to kill the copying process.
+>> > This makes sense because the poor process only called open(),
+>> > so the app writer may not have been expecting a stall of copying
+>> > a large file...
+>>
+>> So call vfs_copy_file_range() iteratively, just like is being done
+>> right now for do_splice_direct() to limit latency on kill.
+>
+> I wish vfs_copy_file_range would do useful chinking itself.
+>
 
-eh, this is fine by me.  Even Linus has hated d_namlen for over
-a decade ;)  http://lkml.iu.edu/hypermail/linux/kernel/9506/0033.html
+I guess that is more changes then I set out to do here, but
+if there is consensus about this idea I don't mind drafting the patch.
 
-Last question, have you tested it beyond the build, i.e.
-with xfs_io -c "readdir -v" /some/dir ?  Works here but it'd be nice
-to know that it's working properly on musl as well.
+> But either way it might be a good idea to call vfs_clone_file_range
+> first, because that gives your a very efficient copy without the need
+> to copy anything if supported.
 
-the d_reclen field doesn't exist in any xfstests output, so looks
-like its loss on some platforms won't affect any existing tests.
-
-If you can verify that you did a runtime test as well, that'd
-be great, but in any case:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Thanks,
--Eric
-
-> ---
->  io/readdir.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/readdir.c b/io/readdir.c
-> index 151b72e..2b56dc8 100644
-> --- a/io/readdir.c
-> +++ b/io/readdir.c
-> @@ -24,6 +24,10 @@
->  #include <sys/types.h>
->  #include <dirent.h>
->  
-> +#ifndef _DIRENT_HAVE_D_RECLEN
-> +#include <string.h>
-> +#endif
-> +
->  static struct cmdinfo readdir_cmd;
->  
->  const char *d_type_str(unsigned int type)
-> @@ -106,7 +110,7 @@ read_directory(
->  #ifdef _DIRENT_HAVE_D_RECLEN
->  		*total += dirent->d_reclen;
->  #else
-> -		*total += dirent->d_namlen + sizeof(*dirent);
-> +		*total += strlen(dirent->d_name) + sizeof(*dirent);
->  #endif
->  		count++;
->  
-> 
+Definitely. I'll do that.
+Thanks.
