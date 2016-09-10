@@ -1,54 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:35491 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758956AbcISH0c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2016 03:26:32 -0400
-Date: Mon, 19 Sep 2016 17:26:23 +1000
-From: Nicholas Piggin <npiggin@gmail.com>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160919172623.14f2d5cb@roar.ozlabs.ibm.com>
-In-Reply-To: <20160919061120.GK2356@ZenIV.linux.org.uk>
-References: <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
-        <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
-        <20160909023452.GO2356@ZenIV.linux.org.uk>
-        <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
-        <20160909221945.GQ2356@ZenIV.linux.org.uk>
-        <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
-        <20160914031648.GB2356@ZenIV.linux.org.uk>
-        <20160914133925.2fba4629@roar.ozlabs.ibm.com>
-        <20160918053337.GA32207@ZenIV.linux.org.uk>
-        <20160919130830.14bde3b0@roar.ozlabs.ibm.com>
-        <20160919061120.GK2356@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35406 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751068AbcIJHhs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Sep 2016 03:37:48 -0400
+Received: by mail-wm0-f65.google.com with SMTP id a6so5649092wmc.2
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Sep 2016 00:37:47 -0700 (PDT)
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: [RFC] libxfs: cross-compile fixes
+Date: Sat, 10 Sep 2016 09:37:31 +0200
+Message-Id: <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
+In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>
 
-On Mon, 19 Sep 2016 07:11:21 +0100
-Al Viro <viro@ZenIV.linux.org.uk> wrote:
+---
 
-> On Mon, Sep 19, 2016 at 01:08:30PM +1000, Nicholas Piggin wrote:
-> 
-> > Without looking through all the patches again, I believe the issue was
-> > just that filesystems were not expecting (or at least, not audited to
-> > expect) pages being added to their pagecache in that particular state
-> > (they'd expect to go through ->readpage or see !uptodate in prepare_write).
-> > 
-> > If some wanted to attach metadata to uptodate pages for example, this
-> > may have caused a problem. It wasn't some big fundamental problem, just a
-> > mechanical one.  
-> 
-> Umm...  Why not make it non-uptodate/locked, try to replace the original
-> with it in pagecache and then do full-page ->write_begin immediately
-> followed by full-page ->write_end?  Looks like that ought to work in
-> all in-tree cases...
+Based on the earlier discussion this seems to be the preferred way of
+handling things.
 
-That sounds like it probably should work for that case. IIRC, I was looking
-at using a write_begin flag to notify the case of of replacing the page, so
-the fs could also handle the case of replacing existing pagecache.
+Should I split it into 3 patches?
+Do you want something different to happen when cross-compiling?
+
+Cheers
+Ralph
+
+---
+ configure.ac         |  3 +++
+ include/builddefs.in |  1 +
+ libxfs/Makefile      | 10 ++++++++--
+ 3 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 79053e5..89334d6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -10,11 +10,14 @@ AC_PROG_LIBTOOL
+ 
+ AC_PROG_CC
+ if test $cross_compiling = no; then
++  CROSS_COMPILING=no
+   BUILD_CC="$CC"
+   AC_SUBST(BUILD_CC)
+ else
++  CROSS_COMPILING=yes
+   AC_CHECK_PROGS(BUILD_CC, gcc cc)
+ fi
++AC_SUBST(CROSS_COMPILING)
+ 
+ AC_ARG_ENABLE(shared,
+ [ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 7153d7a..0c4ce36 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -26,6 +26,7 @@ MALLOCLIB = @malloc_lib@
+ LOADERFLAGS = @LDFLAGS@
+ LTLDFLAGS = @LDFLAGS@
+ CFLAGS = @CFLAGS@
++CROSS_COMPILING = @CROSS_COMPILING@
+ 
+ LIBRT = @librt@
+ LIBUUID = @libuuid@
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 62608bd..ad492e5 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
+ 
+ LDIRT = gen_crc32table crc32table.h crc32selftest
+ 
++ifeq ($(CROSS_COMPILING),no)
++BUILD_CFLAGS:=$(CFLAGS)
++endif
++
+ default: crc32selftest ltdepend $(LTLIBRARY)
+ 
+ crc32table.h: gen_crc32table.c
+ 	@echo "    [CC]     gen_crc32table"
+-	$(Q) $(BUILD_CC) $(CFLAGS) -o gen_crc32table $<
++	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+ 	@echo "    [GENERATE] $@"
+ 	$(Q) ./gen_crc32table > crc32table.h
+ 
+@@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
+ # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+ # disk.
+ crc32selftest: gen_crc32table.c crc32table.h crc32.c
++ifeq ($(CROSS_COMPILING),no)
+ 	@echo "    [TEST]    CRC32"
+-	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
++	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+ 	$(Q) ./$@
++endif
+ 
+ # set up include/xfs header directory
+ include $(BUILDRULES)
+-- 
+2.7.3
 
