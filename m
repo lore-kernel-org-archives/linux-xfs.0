@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CE81A7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:09:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A1E7D304064
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 00:09:18 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	GXcevInHME57lUAa for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 00:09:15 -0700 (PDT)
-Date: Tue, 13 Sep 2016 17:09:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_logprint: fix the transcation type string for
-	delaylog-enabled fs
-Message-ID: <20160913070913.GG30497@dastard>
-References: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F2E0C7CA1
+	for <xfs@oss.sgi.com>; Sat, 10 Sep 2016 11:20:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B95D88F8039
+	for <xfs@oss.sgi.com>; Sat, 10 Sep 2016 09:20:41 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id Urjakb5mB79vN7tC (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 10 Sep 2016 09:20:39 -0700 (PDT)
+Date: Sat, 10 Sep 2016 18:20:37 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH, RFC] xfs: remove i_iolock and use i_rwsem in the VFS
+	inode instead
+Message-ID: <20160910162037.GA29651@lst.de>
+References: <1470935423-12329-1-git-send-email-hch@lst.de>
+	<20160811234335.GX16044@dastard> <20160812025026.GA975@lst.de>
+	<20160812095813.GZ16044@dastard> <20160905151529.GB16726@lst.de>
+	<20160907214536.GQ30056@dastard> <20160909083306.GA19964@lst.de>
+	<20160909084450.GF10153@twins.programming.kicks-ass.net>
+	<20160909090544.GA21779@lst.de>
+	<20160909095148.GH10153@twins.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
+In-Reply-To: <20160909095148.GH10153@twins.programming.kicks-ass.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +36,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hou Tao <houtao1@huawei.com>
+To: Peter Zijlstra <peterz@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Sep 09, 2016 at 12:08:27PM +0800, Hou Tao wrote:
-> For delaylog-enabled fs, the only th_type is XFS_TRANS_CHECKPOINT,
-> but the value of XFS_TRANS_CHECKPOINT had been change from 42 to 40
-> by xfs commit 61e63ec (xfs: consolidate superblock logging functions),
-> so return trans_type[type] directly will be incorrect.
-> And there is no flag for delaylog testing, so the suboptimal solution
-> is to use super v5 flag instead. For pre-v5 fs used by kernel after
-> commit 61e63ec, the result of xlog_trans_type will still be incorrect.
+On Fri, Sep 09, 2016 at 11:51:48AM +0200, Peter Zijlstra wrote:
+> Completions and semaphores don't work? And yes, I need to look at that
+> cross-release muck, but as is that stuff sets my teeth on edge.
 
-delaylog and v5 superblocks are completely unrelated and so this is
-incorrect.
+Completions can be used as hacks for some of it - we have two or three
+places where we do that in XFS.  Using semaphores doesn't seem very
+popular.  Also I'd much prefer to have a proper lock instead of working
+around it, most importantly to get good lockdep support.
 
-> before patch:
-> (1) v5 fs
-> TRAN:    type: SWAPEXT       tid: 321be024       num_items: 2
-> TRANS: tid:0x772d0805  type:SWAPEXT  #items:37  trans:0x772d0805  q:0x559104d71bc0
+And none of that addresses the fact that we're talking about a
+shared/exclusive lock here.
+
+> > I think everyone would be better server by accepting
+> > that this case exists and finding a place for it in the framework.
+> > E.g. for RT trying to boost something that is fully under control
+> > of hardware is pointless, but if we have a way to transfer a lock
+> > from an owner to a hardware owned state we could at least boost
+> > until that handoff happened.
 > 
-> after patch:
-> (2) v5 fs
-> TRAN:    type: CHECKPOINT       tid: 321be024       num_items: 2
-> TRANS: tid:0x772d0805  type:SWAPEXT  #items:37  trans:0x772d0805  q:0x559104d71bc0
+> Could be worse than pointless, could indicate borkage.
 
-And so v4 filesystems are still incorrect.
+Yes - pointless is still the best case.
 
-Indeed, when delaylog is enabled, the only transaction type in the
-log is "CHECKPOINT" - the whole "trans type" stuff has gone away
-from the kernel and only exists as this in xfs_log_format.h:
+> But yes, once you
+> have that event you could propagate it up the PI chain and notify
+> things.
+> 
+> IO rarely is deterministic, so having RT tasks in a blocked-on chain
+> with it is fail. And yes, there's exceptions etc..
 
-/*
- * The only type valid for th_type in CIL-enabled file system logs:
- */
-#define XFS_TRANS_CHECKPOINT    40
-
-IOWs, most of the logprint code is for printing log information from
-pre-delaylog kernels. IOWs, for the anyone using a 3.0+ kernel, the
-"trans type" output from xfs_logprint is completely useless
-information, so we should probably either put it behind a command
-line option or remove it completely...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+That's often true, but not always.  There is things like battery backed
+DRAM which is very deterministic, and there is a lot of work going on
+to provide relatively deterministic ways of using flash storage.
 
 _______________________________________________
 xfs mailing list
