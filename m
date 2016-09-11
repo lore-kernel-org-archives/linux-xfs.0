@@ -1,75 +1,101 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 715FD7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 20:03:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 33D76304066
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 18:03:12 -0700 (PDT)
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [58.251.152.64])
-	by cuda.sgi.com with ESMTP id NkRNAqBaJH0ZNp4c (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 18:03:06 -0700 (PDT)
-Subject: Re: [PATCH] xfs_logprint: fix the transcation type string for
-	delaylog-enabled fs
-References: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
-	<20160913070913.GG30497@dastard>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <57D8A1BE.60906@huawei.com>
-Date: Wed, 14 Sep 2016 09:02:54 +0800
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:28885 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752264AbcIKWMI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2016 18:12:08 -0400
+Date: Mon, 12 Sep 2016 08:11:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] ovl: use copy_file_range for copy up if possible
+Message-ID: <20160911221128.GK30056@dastard>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <20160908202511.GV30056@dastard>
+ <CAOQ4uxigN71Evm_mhFzijtDaXAvKQqstryvNoBEL7=Uwgt5xFg@mail.gmail.com>
+ <20160909075439.GE30056@dastard>
+ <CAOQ4uxguEpSeq5A==gGCcVocY=5xSO+cEcUNr2GDYAbjvx4+Dw@mail.gmail.com>
+ <20160909235221.GH30056@dastard>
+ <CAOQ4uxhzigks7Jyx_SdBTFq8S3CpoTcXbgAFS79OiHXj42EjYg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160913070913.GG30497@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhzigks7Jyx_SdBTFq8S3CpoTcXbgAFS79OiHXj42EjYg@mail.gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
->> but the value of XFS_TRANS_CHECKPOINT had been change from 42 to 40
->> by xfs commit 61e63ec (xfs: consolidate superblock logging functions),
->> so return trans_type[type] directly will be incorrect.
->> And there is no flag for delaylog testing, so the suboptimal solution
->> is to use super v5 flag instead. For pre-v5 fs used by kernel after
->> commit 61e63ec, the result of xlog_trans_type will still be incorrect.
+On Sat, Sep 10, 2016 at 09:54:59PM +0300, Amir Goldstein wrote:
+> On Sat, Sep 10, 2016 at 2:52 AM, Dave Chinner <david@fromorbit.com> wrote:
 > 
-> delaylog and v5 superblocks are completely unrelated and so this is
-> incorrect.
-I don't agree. As we can see from the commit log, v5 superblock was supported
-after making delaylog as the only option, so v5 superblock implies delaylog.
-
-Commit 93b8a5854f247138e401471a9c3b82ccb62ff608 makes the delaylog as the only
-option, and its date is "Tue Dec 6 21:58:07 2011".
-
-Commit 04a1e6c5b222b089c6960dfc5352002002a4355f adds the support of v5 superblock,
-and its date is "Wed Apr 3 16:11:31 2013".
-
-> And so v4 filesystems are still incorrect.
+> > You can test whether this is supported at mount time, so you do a
+> > simply flag test at copyup to determine if a clone should be
+> > attempted or not.
+> >
 > 
-Partial yes: For v4 filesystem before 3.19 (commit 61e63ec), the result
-is still correct.
+> I am not sure that would not be over optimization.
+> I am already checking for the obvious reason for clone to fail in copyup -
+> different i_sb.
 
-> IOWs, most of the logprint code is for printing log information from
-> pre-delaylog kernels. IOWs, for the anyone using a 3.0+ kernel, the
-> "trans type" output from xfs_logprint is completely useless
-> information, so we should probably either put it behind a command
-> line option or remove it completely...
-I prefer the command line option over removing it. Pre-delaylog kernel
-need it and some cases of xfstests rely on the transaction type string.
+Again, please don't do that.  Call vfs_clone_file_range() as it
+checks a whole lot more stuff that can cause a clone to fail. And it
+makes sure that the write references to the mnt are taken so that
+things like freeze and remount-ro behave correctly while a clone is
+in progress.
 
-The command line will be used to tell whether or not it is a delaylog-enabled
-xfs, and if it's a v5 superblock, it must be a delaylog-enabled xfs.
+> After all, if I just call clone_file_range() once and it fails, then we are back
+> to copying and that is going to make the cost of calling clone insignificant.
 
-I will send a v2 patch.
+Apart from the fact that the ->clone_file_range() calls assume that
+all the validity checks have already been done by the caller, which
+you are not doing.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> > If cloning fails or is not supported, then try vfs_copy_file_range()
+> > to do an optimised iterative partial range file copy.  Finally, try
+> > a slow, iterative partial range file copies using
+> > do_splice_direct(). This part can be wholly handled by
+> > vfs_copy_file_range() - this 'not supported' fallback doesn't need
+> > to be implemented every time someone wants to copy data between two
+> > files...
+> 
+> You do realize that vfs_copy_file_range() itself does the 'not
+> supported' fallback
+> and if I do call it iteratively, then there will be a lot more 'not
+> supported' attempts
+> then there are in my current patch.
+
+No shit, Sherlock. But you're concentrating on the wrong thing -
+the overhead of checking if .clone_file_range/.copy_file_range is
+implemented and can be executed is effectively zero compared to
+copying any amount of data.
+
+IOWs, Amir, you're trying to *optimise the wrong thing*. It's the
+data copy that is costly and needs to be optimised, not the
+iteration or the checks done to determine what type of clone/copy
+can be executed. Shortcuts around generic helpers like you are
+proposing are more costly in the long run because code like this is
+much more likely to contain/mask bugs that only appear months or
+years later when something else is changed. Case in point: the mnt
+write references that need to be taken before calling
+clone/copy_file_range()....
+
+Please, just use vfs_clone_file_range() and vfs_copy_file_range()
+and only fall back to a slower method if the error returned is
+-EOPNOTSUPP. For any other error, the copy should fail, not be
+ignored.
+
+> But regardless, as I wrote to Christoph, changing the
+> vfs_copy_file_range() helper
+> and changing users of do_splice to use it like you suggested sounds
+> like it may be the right thing to do, but without consensus, I am a bit hesitant
+> to make those changes. I am definitely willing to draft the patch and test it
+> if I get more ACKs on the idea.
+
+Send a patch - that's the only way you'll get anyone to comment
+on it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
