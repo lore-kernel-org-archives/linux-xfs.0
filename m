@@ -1,34 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57326 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:57346 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755569AbcIKM5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2016 08:57:07 -0400
-Date: Sun, 11 Sep 2016 05:57:06 -0700
+        with ESMTP id S1755724AbcIKM6L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Sep 2016 08:58:11 -0400
+Date: Sun, 11 Sep 2016 05:58:08 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 34/71] xfs: support bmapping delalloc extents in the CoW
- fork
-Message-ID: <20160911125706.GC1399@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
- <147216814006.867.6404376654574855233.stgit@birch.djwong.org>
- <20160906152553.GA9760@infradead.org>
- <20160906234001.GN30056@dastard>
+Subject: Re: [PATCH 3/6] vfs: support FS_XFLAG_REFLINK and FS_XFLAG_COWEXTSIZE
+Message-ID: <20160911125808.GD1399@infradead.org>
+References: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
+ <147216786073.525.16014208838990530622.stgit@birch.djwong.org>
+ <20160905145622.GB7662@infradead.org>
+ <20160906191515.GA26927@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160906234001.GN30056@dastard>
+In-Reply-To: <20160906191515.GA26927@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, david@fromorbit.com, viro@ZenIV.linux.org.uk, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-api@vger.kernel.org
 
-On Wed, Sep 07, 2016 at 09:40:01AM +1000, Dave Chinner wrote:
-> On Tue, Sep 06, 2016 at 08:25:53AM -0700, Christoph Hellwig wrote:
-> > FYI, this has some major conflicts with the iomap updates - we'll need
-> > to know from Dave which one should go in first.
+On Tue, Sep 06, 2016 at 12:15:15PM -0700, Darrick J. Wong wrote:
+> So far I've put the reflink flag to use in xfs_scrub to look for
+> obvious signs of brokenness such as extents that overlap or have the
+> shared flag set but the inode flag is off; and to skip various kinds
+> of checks that don't have to happen when blocks don't overlap.
 > 
-> I've already got the iomap updates in my local tree, so they will go
-> in first.
+> I doubt there's much of a use for the flag outside of the XFS utilities.
+> For a while I pondered only exposing the fsxattr flag if the caller had
+> CAP_SYS_ADMIN (the level of priviledge required to run scrub) but
+> decided that I wouldn't change the existing interface like that unless
+> I had a really good reason.
 
-Can you push that tree out so we get the reflink code rebase against
-it ASAP?
+I don't think CAP_SYS_ADMIN is nessecarily the right thing, but it's
+still an XFS implementation detail which I don't think we should
+pollute a flags API for normal user space applications with.
