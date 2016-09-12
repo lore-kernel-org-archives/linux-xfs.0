@@ -1,88 +1,59 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:55106 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750839AbcIMALu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 20:11:50 -0400
-Date: Tue, 13 Sep 2016 10:11:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 4/4] ovl: use vfs_copy_file_range() to copy up file
- data
-Message-ID: <20160913001147.GO22388@dastard>
-References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-5-git-send-email-amir73il@gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4E0E77CA1
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 07:35:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A25EAC001
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 05:35:38 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id NO5PZKBeCIOG9Ezu (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 Sep 2016 05:35:34 -0700 (PDT)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: fix exit code documentation in manpage
+Message-ID: <62881d1e-8980-00c6-1d04-642a49b3b252@redhat.com>
+Date: Mon, 12 Sep 2016 07:35:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1473692803-11964-5-git-send-email-amir73il@gmail.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 12, 2016 at 06:06:43PM +0300, Amir Goldstein wrote:
-> Use vfs_copy_file_range() helper instead of calling do_splice_direct()
-> when copying up file data.
-> When copying up within the same fs, which supports copy_file_range(),
-> fs implementation can be more efficient then do_splice_direct().
-> vfs_copy_file_range() helper falls back to do_splice_direct() if
-> it cannot use the file system's copy_file_range() implementation.
-> 
-> Tested correct behavior when lower and upper are on:
-> 1. same ext4 (copy)
-> 2. same xfs + reflink patches + mkfs.xfs (copy)
-> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
-> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
-> 
-> For comparison, on my laptop, xfstest overlay/001 (copy up of large
-> sparse files) takes less than 1 second in the xfs reflink setup vs.
-> 25 seconds on the rest of the setups.
+xfs_repair cannot proceed with a dirty log, and exits with
+a status code of 2 in that case; fix the manpage to
+reflect this.
 
-This is now stale, right? the reflink is done from the
-vfs_clone_file_range() call added in an earlier patch, not this
-change....
+(This has been the case for years, but was never documented).
 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/overlayfs/copy_up.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-> index e432d7e..32ea54f 100644
-> --- a/fs/overlayfs/copy_up.c
-> +++ b/fs/overlayfs/copy_up.c
-> @@ -159,15 +159,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
->  			break;
->  		}
->  
-> -		bytes = do_splice_direct(old_file, &old_pos,
-> -					 new_file, &new_pos,
-> -					 this_len, SPLICE_F_MOVE);
-> +		bytes = vfs_copy_file_range(old_file, old_pos,
-> +					    new_file, new_pos,
-> +					    this_len, 0);
->  		if (bytes <= 0) {
->  			error = bytes;
->  			break;
->  		}
-> -		WARN_ON(old_pos != new_pos);
->  
-> +		old_pos += bytes;
-> +		new_pos += bytes;
->  		len -= bytes;
->  	}
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Patch does not remove the
+diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+index 1b4d9e3..57c970a 100644
+--- a/man/man8/xfs_repair.8
++++ b/man/man8/xfs_repair.8
+@@ -509,7 +509,9 @@ If the directory were small, the message would read "junking entry ...".
+ will return a status of 1 if filesystem corruption was detected and
+ 0 if no filesystem corruption was detected.
+ .B xfs_repair
+-run without the \-n option will always return a status code of 0.
++run without the \-n option will return a status code of 2 if the log is
++dirty and needs to be replayed, otherwise it will always return a status
++code of 0.
+ .SH BUGS
+ The filesystem to be checked and repaired must have been
+ unmounted cleanly using normal system administration procedures
 
-	/* FIXME: copy up sparse files efficiently */
-
-comment. Efficient copying of sparse files is something
-vfs_copy_file_range() should do internally....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
