@@ -1,84 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:5106 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750940AbcIMVPH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 17:15:07 -0400
-Date: Wed, 14 Sep 2016 07:15:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
-Message-ID: <20160913211502.GH30497@dastard>
-References: <1473755322-883-1-git-send-email-david@fromorbit.com>
- <20160913090657.gz75xuhjhb6645sd@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160913090657.gz75xuhjhb6645sd@redhat.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36471 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932765AbcILPH3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 11:07:29 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 4/4] ovl: use vfs_copy_file_range() to copy up file data
+Date: Mon, 12 Sep 2016 18:06:43 +0300
+Message-Id: <1473692803-11964-5-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1473692803-11964-1-git-send-email-amir73il@gmail.com>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-On Tue, Sep 13, 2016 at 11:06:57AM +0200, Carlos Maiolino wrote:
-> On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Embedding a switch statement in every btree stats inc/add adds a lot
-> > of code overhead to the core btree infrastructure paths. Stats are
-> > supposed to be small and lightweight, but the btree stats have
-> > become big and bloated as we've added more btrees. It needs fixing
-> > because the reflink code will just add more overhead again.
-> 
-> Talking about stats, is there any documentation for that? I was using the log
-> stats while working on the fail_at_unmount hang, and I couldn't find anything
-> other than looking into the code to see what each number means.
+Use vfs_copy_file_range() helper instead of calling do_splice_direct()
+when copying up file data.
+When copying up within the same fs, which supports copy_file_range(),
+fs implementation can be more efficient then do_splice_direct().
+vfs_copy_file_range() helper falls back to do_splice_direct() if
+it cannot use the file system's copy_file_range() implementation.
 
-Most XFS stats are documented in PCP. IIRC, this page was originally
-pulled from the PCP metric info but is now (like most stuff in
-wikis) is out of date: http://xfs.org/index.php/Runtime_Stats
+Tested correct behavior when lower and upper are on:
+1. same ext4 (copy)
+2. same xfs + reflink patches + mkfs.xfs (copy)
+3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 
-$ pminfo -T xfs.log
+For comparison, on my laptop, xfstest overlay/001 (copy up of large
+sparse files) takes less than 1 second in the xfs reflink setup vs.
+25 seconds on the rest of the setups.
 
-xfs.log.writes
-Help:
-This variable counts the number of log buffer writes going to the
-physical log partitions of all XFS filesystems. Log data traffic is
-proportional to the level of meta-data updating. Log buffer writes
-get generated when they fill up or external syncs occur.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/overlayfs/copy_up.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-xfs.log.blocks
-Help:
-This variable counts the number of Kbytes of information being
-written to the physical log partitions of all XFS filesystems. Log
-data traffic is proportional to the level of meta-data updating. The
-rate with which log data gets written depends on the size of
-internal log buffers and disk write speed. Therefore, filesystems
-with very high meta-data updating may need to stripe the log
-partition or put the log partition on a separate drive.
-
-xfs.log.write_ratio
-Help:
-The ratio of log blocks written to log writes.  If block count isn't
-a "reasonable" multiple of writes, then many small log writes are
-being performed - this is suboptimal.  Perfection is 64.  Fine-grain
-control can be obtained when this metric is used in conjuntion with
-pmstore(1) and the xfs.control.reset metric.
-
-xfs.log.noiclogs
-Help:
-This variable keeps track of times when a logged transaction can not
-get any log buffer space. When this occurs, all of the internal log
-buffers are busy flushing their data to the physical on-disk log.
-
-xfs.log.force
-Help:
-The number of times the in-core log is forced to disk.  It is
-equivalent to the number of successful calls to the function
-xfs_log_force().
-
-xfs.log.force_sleep
-Help:
-This metric is exported from the xs_log_force_sleep field of struct
-xfsstats
+diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+index e432d7e..32ea54f 100644
+--- a/fs/overlayfs/copy_up.c
++++ b/fs/overlayfs/copy_up.c
+@@ -159,15 +159,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 			break;
+ 		}
+ 
+-		bytes = do_splice_direct(old_file, &old_pos,
+-					 new_file, &new_pos,
+-					 this_len, SPLICE_F_MOVE);
++		bytes = vfs_copy_file_range(old_file, old_pos,
++					    new_file, new_pos,
++					    this_len, 0);
+ 		if (bytes <= 0) {
+ 			error = bytes;
+ 			break;
+ 		}
+-		WARN_ON(old_pos != new_pos);
+ 
++		old_pos += bytes;
++		new_pos += bytes;
+ 		len -= bytes;
+ 	}
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
