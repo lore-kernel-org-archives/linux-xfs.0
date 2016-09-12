@@ -1,90 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34643 "EHLO
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35251 "EHLO
         mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759566AbcILPHW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 11:07:22 -0400
+        with ESMTP id S1759817AbcILPHY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 11:07:24 -0400
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 0/4] ovl: efficient copy up by reflink
-Date: Mon, 12 Sep 2016 18:06:39 +0300
-Message-Id: <1473692803-11964-1-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+Subject: [PATCH v2 1/4] vfs: allow vfs_clone_file_range() across mount points
+Date: Mon, 12 Sep 2016 18:06:40 +0300
+Message-Id: <1473692803-11964-2-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1473692803-11964-1-git-send-email-amir73il@gmail.com>
 References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-Btrfs has file reflink support and XFS is about to gain
-file reflink support soon. It is very useful to use reflink
-to implement copy up of regular file data when possible.
+FICLONE/FICLONERANGE ioctls return -EXDEV if src and dest
+files are not on the same mount point.
+Practically, clone only requires that src and dest files
+are on the same file system.
 
-For example, on my laptop, xfstest overlay/001 (copy up of 4G
-sparse files) takes less than 1 second with copy up by reflink
-vs. 25 seconds with regular copy up.
+Move the check for same mount point to ioctl code and keep
+only the check for same super block in the vfs helper.
 
-This series includes two pairs of patches:
-- patches 1,2 utilize the clone_file_range() API
-- patches 3,4 utilize the copy_file_range() API
+A following patch is going to use the vfs_clone_file_range()
+helper in overlayfs to copy up between lower and upper
+mount points on the same file system.
 
-The two pairs of patches are independent of each other.
-They were each tested separately and both tested together.
-All combinations passed the unionmount-testsuite (over tmpfs)
-All combinations passed the overlay/??? xfstests over the
-following underlying fs:
-1. ext4 (copy up)
-2. xfs + reflink patches + mkfs.xfs (copy up)
-3. xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink up)
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/ioctl.c      | 2 ++
+ fs/read_write.c | 8 ++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Dave Chinner suggested the following implementation for copy up,
-which I implemented in this series:
-1. try to clone_file_range() entire length
-2. fallback to trying copy_file_range() in small chunks
-3. fallback to do_splice_direct() in small chunks
-
-This is a good general implementation to cover the future use cases of
-file systems that can do either clone_file_range() or copy_file_range().
-However, currently, the only in-tree file systems that support
-clone/copy_file_range are btrfs, xfs (soon), cifs and nfs.
-btrfs and xfs use the same implementation for clone and copy range,
-so the copy_file_range() step is never needed.
-cifs supports only clone_file_range() so copy_file_range() step is moot.
-nfs does have a different implementation for clone_file_range() and
-copy_file_range(), but nfs is not supported as upper layer for overlayfs
-at the moment.
-
-Please pick patches 1,2 for clear and immediate benefit to copy up
-performance on filesystems with reflink support.
-
-Please consider picking patches 3,4 additionally for future generations
-and for code consolidation into vfs helpers.
-
-Cheers,
-Amir.
-
-V2:
-- Re-factor vfs helpers so they can be called from copy up
-- Single call to vfs_clone_file_range() and fallback to
-  vfs_copy_file_range() loop
-
-V1:
-- Replace iteravite call to copy_file_range() with
-  a single call to clone_file_range()
-
-V0:
-- Call clone_file_range() and fallback to do_splice_direct()
-
-Amir Goldstein (4):
-  vfs: allow vfs_clone_file_range() across mount points
-  ovl: use vfs_clone_file_range() for copy up if possible
-  vfs: allow vfs_copy_file_range() across file systems
-  ovl: use vfs_copy_file_range() to copy up file data
-
- fs/ioctl.c             |  2 ++
- fs/overlayfs/copy_up.c | 19 +++++++++++++++----
- fs/read_write.c        | 23 ++++++++++++++++-------
- 3 files changed, 33 insertions(+), 11 deletions(-)
-
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index c415668..34d2994 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -223,6 +223,8 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
+ 
+ 	if (!src_file.file)
+ 		return -EBADF;
++	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
++		return -EXDEV;
+ 	ret = vfs_clone_file_range(src_file.file, off, dst_file, destoff, olen);
+ 	fdput(src_file);
+ 	return ret;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 66215a7..9dc6e52 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1628,8 +1628,12 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	struct inode *inode_out = file_inode(file_out);
+ 	int ret;
+ 
+-	if (inode_in->i_sb != inode_out->i_sb ||
+-	    file_in->f_path.mnt != file_out->f_path.mnt)
++	/*
++	 * FICLONE/FICLONERANGE ioctls enforce that src and dest files
++	 * are on the same mount point. Practically, they only need
++	 * to be on the same file system.
++	 */
++	if (inode_in->i_sb != inode_out->i_sb)
+ 		return -EXDEV;
+ 
+ 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
 -- 
 2.7.4
 
