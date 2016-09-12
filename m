@@ -1,22 +1,22 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E823A7CA0
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 19:08:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9A5A2304064
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 17:08:06 -0700 (PDT)
-Received: from mail1.swingprofesional.org (mail1.swingprofesional.org
-	[178.162.193.197]) by cuda.sgi.com with ESMTP id
-	dYQQLFVBve1buAdP for <xfs@oss.sgi.com>;
-	Mon, 12 Sep 2016 17:07:59 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3DE757CA0
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 14:39:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EC88F8F8039
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 12:39:34 -0700 (PDT)
+Received: from mail3.swingprofesional.org (mail3.swingprofesional.org
+	[178.162.193.220]) by cuda.sgi.com with ESMTP id
+	8S7hkV9YjRCGJ4z7 for <xfs@oss.sgi.com>;
+	Mon, 12 Sep 2016 12:39:32 -0700 (PDT)
 Received: from swingprofesional (178.162.193.198) by
-	mail1.swingprofesional.org id hqt1lq0our05 for <xfs@oss.sgi.com>;
-	Mon, 12 Sep 2016 19:07:52 -0500 (envelope-from
-	<asistente12T@swingprofesional.org>)
-Message-ID: <be4f8823e2e18aca671a92db001b9766@swingprofesional.org>
-From: "Asistentes - Habilidades y Competencias"
-	<asistente12T@swingprofesional.org>
-Subject: Como planificar adecuadamente el tiempo
-Date: Mon, 12 Sep 2016 19:07:52 -0500
+	mail3.swingprofesional.org id hqs26u0our0g for <xfs@oss.sgi.com>;
+	Mon, 12 Sep 2016 14:39:25 -0500 (envelope-from
+	<asistente12@swingprofesional.org>)
+Message-ID: <60b718216357949f3be04b9d0010bdf0@swingprofesional.org>
+From: "Como planificar adecuadamente el tiempo"
+	<asistente12@swingprofesional.org>
+Subject: Asistentes - Habilidades y Competencias
+Date: Mon, 12 Sep 2016 14:39:25 -0500
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,20 +26,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7590418986212434652=="
+Content-Type: multipart/mixed; boundary="===============8094713993464484004=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 This is a multi-part message in MIME format.
 
---===============7590418986212434652==
+--===============8094713993464484004==
 Content-Type: multipart/alternative;
-	boundary="----=SPLITOR00A_001_488608141D"
+	boundary="----=SPLITOR00A_001_472500804D"
 
 This is a multi-part message in MIME format.
 
-------=SPLITOR00A_001_488608141D
+------=SPLITOR00A_001_472500804D
 Content-Type: text/plain;
 	charset="windows-1252"
 Content-Transfer-Encoding: base64
@@ -70,7 +70,7 @@ bGVm825pY286IDAxODAwMjEyMDc0NA0KDQoNClNlcuEgdW4gcGxhY2VyIEF0ZW5kZXJsZQ0KDQoN
 Cg0KDQoNClNpIGRlc2VhIGNhbmNlbGFyIGxhIHN1c2NyaXBjafNuLCBzb2xpY2l0ZSBzdSBCQUpB
 IHkgc2UgcmVhbGl6YXLhIGVuIGxhcyBwcvN4aW1hcyAyNCBIcnMuIA0K
 
-------=SPLITOR00A_001_488608141D
+------=SPLITOR00A_001_472500804D
 Content-Type: text/html;
 	charset="windows-1252"
 Content-Transfer-Encoding: base64
@@ -188,10 +188,10 @@ YW5zLXNlcmlmIic+U2kgZGVzZWEgY2FuY2VsYXIgbGEgc3VzY3JpcGNp824sIA0Kc29saWNpdGUg
 c3UgQkFKQSB5IHNlIHJlYWxpemFy4SBlbiBsYXMgcHLzeGltYXMgMjQgSHJzLiA8bzpwPjwvbzpw
 Pjwvc3Bhbj48L3A+DQo8cD48L3A+DQo8L2JvZHk+DQo8L2h0bWw+
 
-------=SPLITOR00A_001_488608141D--
+------=SPLITOR00A_001_472500804D--
 
 
---===============7590418986212434652==
+--===============8094713993464484004==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -202,4 +202,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7590418986212434652==--
+--===============8094713993464484004==--
