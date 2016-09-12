@@ -1,89 +1,63 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7DE697CA7
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 18:06:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4CD148F8037
-	for <xfs@oss.sgi.com>; Fri,  2 Sep 2016 16:06:22 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3vZZzNiLRSk3HbMB for <xfs@oss.sgi.com>;
-	Fri, 02 Sep 2016 16:06:19 -0700 (PDT)
-Date: Sat, 3 Sep 2016 09:06:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: shadow agfl indexes in the per-ag structures
-Message-ID: <20160902230612.GG30056@dastard>
-References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
-	<1472783257-15941-3-git-send-email-david@fromorbit.com>
-	<d32c1b10-107c-a1fc-3864-76223661ab71@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <d32c1b10-107c-a1fc-3864-76223661ab71@sandeen.net>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33400 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932172AbcILPHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 11:07:25 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2 2/4] ovl: use vfs_clone_file_range() for copy up if possible
+Date: Mon, 12 Sep 2016 18:06:41 +0300
+Message-Id: <1473692803-11964-3-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1473692803-11964-1-git-send-email-amir73il@gmail.com>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-On Fri, Sep 02, 2016 at 08:25:12AM -0500, Eric Sandeen wrote:
-> On 9/1/16 9:27 PM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > To verify that the AGFL contents is sane, we need to have access to
-> > the indexes that tell us what part of the AGFL is active. We cannot
-> > access the AGF buffer from the AGFL verifier, so we need to shadow
-> > these values in the struct xfs_perag so we check them when required.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c | 4 ++++
-> >  fs/xfs/xfs_mount.h        | 2 ++
-> >  2 files changed, 6 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 23559b9..1aef556 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2255,6 +2255,7 @@ xfs_alloc_get_freelist(
-> >  	be32_add_cpu(&agf->agf_flcount, -1);
-> >  	xfs_trans_agflist_delta(tp, -1);
-> >  	pag->pagf_flcount--;
-> > +	pag->pagf_flfirst = be32_to_cpu(agf->agf_flfirst);
-> >  	xfs_perag_put(pag);
-> >  
-> >  	logflags = XFS_AGF_FLFIRST | XFS_AGF_FLCOUNT;
-> 
-> Still reviewing, but this kind of jumped out at me, seems like the get/put
-> functions are a bit jumbled up:
+When copying up within the same fs, try to use vfs_clone_file_range().
+This is very efficient when lower and upper are on the same fs
+with file reflink support. If vfs_clone_file_range() fails because
+lower and upper are not on the same fs or if fs has no reflink support,
+copy up falls back to the regular data copy code.
 
-Gets cleaned up in a later patch.
+Tested correct behavior when lower and upper are on:
+1. same ext4 (copy)
+2. same xfs + reflink patches + mkfs.xfs (copy)
+3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 
-> sync, should there be a wrapper to encapsulate it all?
-> 
-> like:
-> 
-> xfs_agf_{advance/drop/remove}_first(mp, agf, pagf)
+For comparison, on my laptop, xfstest overlay/001 (copy up of large
+sparse files) takes less than 1 second in the xfs reflink setup vs.
+25 seconds on the rest of the setups.
 
-Not really necessary for single use functions whose express purpose
-is manipulating the agfl indexes
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/overlayfs/copy_up.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Cheers,
-
-Dave.
+diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+index 43fdc27..e432d7e 100644
+--- a/fs/overlayfs/copy_up.c
++++ b/fs/overlayfs/copy_up.c
+@@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 		goto out_fput;
+ 	}
+ 
++	/*
++	 * Try to use clone_file_range to clone up within the same fs.
++	 * On failure to clone entire file, fallback to copy loop.
++	 */
++	error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
++	if (error == -EXDEV || error == -EOPNOTSUPP)
++		error = 0;
++	else
++		len = 0;
++
+ 	/* FIXME: copy up sparse files efficiently */
+ 	while (len) {
+ 		size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
