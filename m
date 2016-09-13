@@ -1,104 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37846 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754396AbcILGxC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 02:53:02 -0400
+Received: from sandeen.net ([63.231.237.45]:56910 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753312AbcIMQRs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Sep 2016 12:17:48 -0400
+Subject: Re: [PATCH v2] xfs_repair: update the manual content about xfs_repair
+ exit status
+References: <1473782076-9137-1-git-send-email-zlang@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <df581259-c96e-879d-4406-d909cc3a81d3@sandeen.net>
+Date: Tue, 13 Sep 2016 11:17:46 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160911221128.GK30056@dastard>
-References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
- <20160908202511.GV30056@dastard> <CAOQ4uxigN71Evm_mhFzijtDaXAvKQqstryvNoBEL7=Uwgt5xFg@mail.gmail.com>
- <20160909075439.GE30056@dastard> <CAOQ4uxguEpSeq5A==gGCcVocY=5xSO+cEcUNr2GDYAbjvx4+Dw@mail.gmail.com>
- <20160909235221.GH30056@dastard> <CAOQ4uxhzigks7Jyx_SdBTFq8S3CpoTcXbgAFS79OiHXj42EjYg@mail.gmail.com>
- <20160911221128.GK30056@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 12 Sep 2016 09:52:59 +0300
-Message-ID: <CAOQ4uxj6bF2AXiiVGiRc6VfXhF42CW805iQNZTb+e_-KOsBdzQ@mail.gmail.com>
-Subject: Re: [PATCH] ovl: use copy_file_range for copy up if possible
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1473782076-9137-1-git-send-email-zlang@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 12, 2016 at 1:11 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sat, Sep 10, 2016 at 09:54:59PM +0300, Amir Goldstein wrote:
->> On Sat, Sep 10, 2016 at 2:52 AM, Dave Chinner <david@fromorbit.com> wrote:
->>
->> > You can test whether this is supported at mount time, so you do a
->> > simply flag test at copyup to determine if a clone should be
->> > attempted or not.
->> >
->>
->> I am not sure that would not be over optimization.
->> I am already checking for the obvious reason for clone to fail in copyup -
->> different i_sb.
->
-> Again, please don't do that.  Call vfs_clone_file_range() as it
-> checks a whole lot more stuff that can cause a clone to fail. And it
-> makes sure that the write references to the mnt are taken so that
-> things like freeze and remount-ro behave correctly while a clone is
-> in progress.
->
+On 9/13/16 10:54 AM, Zorro Lang wrote:
+> The man 8 xfs_repair said "xfs_repair run without the -n option will
+> always return a status code of 0". That's not correct.
+> 
+> xfs_repair will return 2 if it finds a fs log which needs to be
+> replayed or cleared, 1 if runtime error is encountered, and 0 for
+> all other cases.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> V2 patch did below things:
+>  - change the description for xfs_repair
+>  - remove the description for "xfs_repair -L"
+> 
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_repair.8 | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+> index 1b4d9e3..e45fd90 100644
+> --- a/man/man8/xfs_repair.8
+> +++ b/man/man8/xfs_repair.8
+> @@ -504,12 +504,17 @@ that is known to be free. The entry is therefore invalid and is deleted.
+>  This message refers to a large directory.
+>  If the directory were small, the message would read "junking entry ...".
+>  .SH EXIT STATUS
+> +.TP
+>  .B xfs_repair \-n
+>  (no modify node)
 
-OK
+s/node/mode/, maybe Dave can fix that on commit.  Sorry I missed it the first time.
 
->> After all, if I just call clone_file_range() once and it fails, then we are back
->> to copying and that is going to make the cost of calling clone insignificant.
->
-> Apart from the fact that the ->clone_file_range() calls assume that
-> all the validity checks have already been done by the caller, which
-> you are not doing.
->
->> > If cloning fails or is not supported, then try vfs_copy_file_range()
->> > to do an optimised iterative partial range file copy.  Finally, try
->> > a slow, iterative partial range file copies using
->> > do_splice_direct(). This part can be wholly handled by
->> > vfs_copy_file_range() - this 'not supported' fallback doesn't need
->> > to be implemented every time someone wants to copy data between two
->> > files...
->>
->> You do realize that vfs_copy_file_range() itself does the 'not
->> supported' fallback
->> and if I do call it iteratively, then there will be a lot more 'not
->> supported' attempts
->> then there are in my current patch.
->
-> No shit, Sherlock. But you're concentrating on the wrong thing -
-> the overhead of checking if .clone_file_range/.copy_file_range is
-> implemented and can be executed is effectively zero compared to
-> copying any amount of data.
->
-> IOWs, Amir, you're trying to *optimise the wrong thing*. It's the
-> data copy that is costly and needs to be optimised, not the
-> iteration or the checks done to determine what type of clone/copy
-> can be executed. Shortcuts around generic helpers like you are
-> proposing are more costly in the long run because code like this is
-> much more likely to contain/mask bugs that only appear months or
-> years later when something else is changed. Case in point: the mnt
-> write references that need to be taken before calling
-> clone/copy_file_range()....
->
-> Please, just use vfs_clone_file_range() and vfs_copy_file_range()
-> and only fall back to a slower method if the error returned is
-> -EOPNOTSUPP. For any other error, the copy should fail, not be
-> ignored.
->
+>  will return a status of 1 if filesystem corruption was detected and
+>  0 if no filesystem corruption was detected.
+> +.TP
+>  .B xfs_repair
+> -run without the \-n option will always return a status code of 0.
+> +run without the \-n option will return a status code of 2 if it finds a
+> +filesystem log which needs to be replayed(by a mount/umount cycle) or
 
-Obviously, you meant to check for -EOPNOTSUPP or -EXDEV
+space after replayed
 
->> But regardless, as I wrote to Christoph, changing the
->> vfs_copy_file_range() helper
->> and changing users of do_splice to use it like you suggested sounds
->> like it may be the right thing to do, but without consensus, I am a bit hesitant
->> to make those changes. I am definitely willing to draft the patch and test it
->> if I get more ACKs on the idea.
->
-> Send a patch - that's the only way you'll get anyone to comment
-> on it.
->
+> +cleared(by -L option), 1 if a runtime error is encountered, and 0 in all
 
-Will do.
+space after cleared
+
+> +other cases, whether or not filesystem corruption was detected.
+
+Yep, I think this is ok with the small fixes above.  I hope the "whether or
+not" is not more confusing, but I think it probably clarifies.
+
+Dave, if you don't mind the small fixups on the way in,
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 Thanks,
-Amir.
+-Eric
+
+
+>  .SH BUGS
+>  The filesystem to be checked and repaired must have been
+>  unmounted cleanly using normal system administration procedures
+> 
