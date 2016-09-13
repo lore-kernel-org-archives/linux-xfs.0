@@ -1,85 +1,86 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36517 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752677AbcIMGrK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 02:47:10 -0400
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE4B87CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 16:52:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6CA6EAC001
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 14:52:37 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id IpAEUc6CLtUtaCEF for <xfs@oss.sgi.com>;
+	Tue, 13 Sep 2016 14:52:34 -0700 (PDT)
+Received: from Liberator.example.com
+	(74-95-67-117-Minnesota.hfc.comcastbusiness.net [74.95.67.117])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id D24982B51
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 16:52:26 -0500 (CDT)
+Subject: Re: [PATCH v2] xfs_repair: update the manual content about xfs_repair
+	exit status
+References: <1473782076-9137-1-git-send-email-zlang@redhat.com>
+	<20160913163226.GE9314@birch.djwong.org>
+	<5b36e20b-9238-0694-f919-31e33cd9ecbb@sandeen.net>
+	<20160913214801.GJ30497@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <28a1500b-c3cb-9718-696d-e35f7fa99a75@sandeen.net>
+Date: Tue, 13 Sep 2016 16:52:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160913000225.GM22388@dastard>
-References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-1-git-send-email-amir73il@gmail.com> <1473692803-11964-3-git-send-email-amir73il@gmail.com>
- <20160913000225.GM22388@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 13 Sep 2016 09:47:08 +0300
-Message-ID: <CAOQ4uxhZSKgYyXjime6xLm_rG-coKM4d7mYi1LbfU9w6p9E7gg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] ovl: use vfs_clone_file_range() for copy up if possible
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+In-Reply-To: <20160913214801.GJ30497@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 13, 2016 at 3:02 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Sep 12, 2016 at 06:06:41PM +0300, Amir Goldstein wrote:
->> When copying up within the same fs, try to use vfs_clone_file_range().
->> This is very efficient when lower and upper are on the same fs
->> with file reflink support. If vfs_clone_file_range() fails because
->> lower and upper are not on the same fs or if fs has no reflink support,
->> copy up falls back to the regular data copy code.
->>
->> Tested correct behavior when lower and upper are on:
->> 1. same ext4 (copy)
->> 2. same xfs + reflink patches + mkfs.xfs (copy)
->> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
->> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
->>
->> For comparison, on my laptop, xfstest overlay/001 (copy up of large
->> sparse files) takes less than 1 second in the xfs reflink setup vs.
->> 25 seconds on the rest of the setups.
->>
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> ---
->>  fs/overlayfs/copy_up.c | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
->> index 43fdc27..e432d7e 100644
->> --- a/fs/overlayfs/copy_up.c
->> +++ b/fs/overlayfs/copy_up.c
->> @@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
->>               goto out_fput;
->>       }
->>
->> +     /*
->> +      * Try to use clone_file_range to clone up within the same fs.
->> +      * On failure to clone entire file, fallback to copy loop.
->> +      */
->> +     error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
->> +     if (error == -EXDEV || error == -EOPNOTSUPP)
->> +             error = 0;
->> +     else
->> +             len = 0;
->> +
->>       /* FIXME: copy up sparse files efficiently */
->>       while (len) {
->>               size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
->
-> That's nasty. Just use a goto to skip the code that doesn't need to
-> be run if vfs_clone_file_range() succeeds. This is much better, IMO:
 
-OK, but I prefer to write up explicit comments for all cases.
 
->
->         if (!error)
->                 goto out_done;
->         if (error != -EXDEV && error != -EOPNOTSUPP)
->                 goto out_error;
->
->         /* Can't clone, so now we try to copy the data */
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+On 9/13/16 4:48 PM, Dave Chinner wrote:
+> On Tue, Sep 13, 2016 at 11:57:59AM -0500, Eric Sandeen wrote:
+>> On 9/13/16 11:32 AM, Darrick J. Wong wrote:
+
+...
+
+>>> So... I'd rather the documentation about the return code reflect the
+>>> status of the filesystem -- 2 means "unclean log, replay it or zap it",
+>>> 1 means "errors encountered, fs may not be correct", and 0 /should/ mean
+>>> "fs is correct".
+>>>
+>>> OTOH I don't know for sure that xfs_repair always cleans up the fs on
+>>> the first try.
+>>
+>> That's certainly the intent; I can't imagine a manpage documenting
+>> return codes qualified with "... unless bugs happen." :)
+> 
+> Right - if we hit bugs, all bets are off. But otherwise, the fs
+> should be repaired and clean after a single pass.
+> 
+>>>  ISTR
+>>> asking Dave about this, and I think he said that the FS should be clean
+>>> if repair returns 0.  But I'll let him reiterate that if it's true;
+>>> don't trust my crummy memory, that's why I have filesystems. ;)
+>>
+>> Did you have an alternate wording in mind?
+> 
+> Yup, 0 = " fs is clean", 1 = "fs is still b0rken",
+> 2 = "couldn't run for whatever reason given"
+
+Technically, 1 = "may or may not be broken" - we really don't know.
+We could get an exit of 1 for a consistent filesystem, for example
+if some allocation failed... all we know is something bonked out in
+the middle.
+
+Maybe "1 == xfs_repair did not run to completion?"
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
