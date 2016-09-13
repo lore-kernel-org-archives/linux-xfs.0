@@ -1,135 +1,83 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DA58F7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 10:02:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 92E3A8F8035
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 08:02:17 -0700 (PDT)
-Received: from resqmta-ch2-02v.sys.comcast.net
-	(resqmta-ch2-02v.sys.comcast.net [69.252.207.34]) by
-	cuda.sgi.com with ESMTP id oh210bTuBXxYApq9 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 08:02:13 -0700 (PDT)
-Subject: Re: [INFO] xfs: kernel debugging with trace_printk()
-References: <20160906082045.GJ30056@dastard>
-From: Joshua Kinard <kumba@gentoo.org>
-Message-ID: <e5b07fd7-3c4e-e183-008b-877b0c237b72@gentoo.org>
-Date: Tue, 13 Sep 2016 11:02:01 -0400
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:63190 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750747AbcIMAC3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 20:02:29 -0400
+Date: Tue, 13 Sep 2016 10:02:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/4] ovl: use vfs_clone_file_range() for copy up if
+ possible
+Message-ID: <20160913000225.GM22388@dastard>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-3-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160906082045.GJ30056@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473692803-11964-3-git-send-email-amir73il@gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-On 09/06/2016 04:20, Dave Chinner wrote:
-> Hi folks,
+On Mon, Sep 12, 2016 at 06:06:41PM +0300, Amir Goldstein wrote:
+> When copying up within the same fs, try to use vfs_clone_file_range().
+> This is very efficient when lower and upper are on the same fs
+> with file reflink support. If vfs_clone_file_range() fails because
+> lower and upper are not on the same fs or if fs has no reflink support,
+> copy up falls back to the regular data copy code.
 > 
-> I learnt something today that made my life immediately better:
-> trace_printk(). After I discovered it, Darrick mentioned on #xfs
-> that he didn't know about it either, hence I figured I should send
-> an email to the list so that everyone working with XFS knows about
-> it....
+> Tested correct behavior when lower and upper are on:
+> 1. same ext4 (copy)
+> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 > 
-> Yes, this community service starts with me admitting I am a heavy
-> user of printk() for debugging code, and I'm about to go cold
-> turkey.
+> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> 25 seconds on the rest of the setups.
 > 
-> "Me Ugg, Caveman. Big Club mine. Hit Stuff Hard. Fix It Good."
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/overlayfs/copy_up.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> But, really, everyone does the same thing - anyone what says they
-> don't is lying. :P
-> 
-> You all know the drill: add a printk, recompile, test, see what gets
-> output on the console, go back to step one. It starts like this:
-> 
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> 
-> Then if there's lots of output, you turn off the console output with
-> 'dmesg -n X' and look at the output in /var/log/messages instead, or
-> directly run dmesg to see it. You spend time wading through reams of
-> output.
-> 
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> 
-> Then you start going mad because the code runs so slow and it's
-> extremely hard to correlate with other diagnostic information (such
-> as trace events) that you're also using to try work out what is
-> going on. And then you end up adding so much debug that it turns
-> into a heisenbug and you think you're going insane...
-> 
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> 
-> And, finally, when you think you've fixed the problem, you remove
-> the debug printk()s and find the problem is still there....
-> 
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> Eat, sleep, printk(), repeat.
-> 
-> So, avoid the existential crisis and the hard liquor and drugs:
-> use trace_printk() and `trace-cmd record -e printk` to maintain your
-> sanity!
-> 
-> (You all know about trace-cmd, right?)
-> 
+> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> index 43fdc27..e432d7e 100644
+> --- a/fs/overlayfs/copy_up.c
+> +++ b/fs/overlayfs/copy_up.c
+> @@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>  		goto out_fput;
+>  	}
+>  
+> +	/*
+> +	 * Try to use clone_file_range to clone up within the same fs.
+> +	 * On failure to clone entire file, fallback to copy loop.
+> +	 */
+> +	error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
+> +	if (error == -EXDEV || error == -EOPNOTSUPP)
+> +		error = 0;
+> +	else
+> +		len = 0;
+> +
+>  	/* FIXME: copy up sparse files efficiently */
+>  	while (len) {
+>  		size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
 
-[snip]
+That's nasty. Just use a goto to skip the code that doesn't need to
+be run if vfs_clone_file_range() succeeds. This is much better, IMO:
 
-But this assumes one can even get to a working shell prompt from which one can
-run commands, like 'trace-cmd'.  I've been trying to hunt down and fix various
-bugs in running Linux on some of the old SGI machines (which is an appropriate
-statement for this list), and some of them, you never even get as far as a
-working shell prompt that accepts keyboard or serial input (thanks, IOC3!).
+	if (!error)
+		goto out_done;
+	if (error != -EXDEV && error != -EOPNOTSUPP)
+		goto out_error;
 
-Usually, I'm not only doing the "Eat, sleep, printk(), repeat." dance.  In some
-instances, my only workable debugging aid is printk() (or actually the pr_*()
-versions), and a DSLR mounted on a tripod with a fast shutter speed, high ISO,
-and a remote trigger to try and catch error messages as they zoom by on the
-screen.  Luckily, I have a really old LCD flat panel that has a slow refresh
-rate, so I can sometimes read the fading text of the errors as they're
-overwritten by new output.
+	/* Can't clone, so now we try to copy the data */
 
-Now I just need to figure out how to write a kgdb shim driver for the IOC3 chip
-so I can get GDB to do remote debugging over serial.  That will *really* help
-hunt down some of the really screwy bugs I've run into (like Onyx2's mysterious
-hard-lockup NUMA bug).
+Cheers,
 
-And yes, the SGI machines that do work well all use XFS as their Linux
-filesystem of choice :)
-
+Dave.
 -- 
-Joshua Kinard
-Gentoo/MIPS
-kumba@gentoo.org
-6144R/F5C6C943 2015-04-27
-177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
-
-"The past tempts us, the present confuses us, the future frightens us.  And our
-lives slip away, moment by moment, lost in that vast, terrible in-between."
-
---Emperor Turhan, Centauri Republic
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Dave Chinner
+david@fromorbit.com
