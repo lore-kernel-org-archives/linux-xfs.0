@@ -1,72 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:22456 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754132AbcIMPv2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:51:28 -0400
-Date: Tue, 13 Sep 2016 09:51:26 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
-Message-ID: <20160913155126.GA10622@linux.intel.com>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
- <1473438884-674-7-git-send-email-hch@lst.de>
- <20160909225557.GF30056@dastard>
- <20160910073646.GA18547@lst.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:5106 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750940AbcIMVPH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 17:15:07 -0400
+Date: Wed, 14 Sep 2016 07:15:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
+Message-ID: <20160913211502.GH30497@dastard>
+References: <1473755322-883-1-git-send-email-david@fromorbit.com>
+ <20160913090657.gz75xuhjhb6645sd@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160910073646.GA18547@lst.de>
+In-Reply-To: <20160913090657.gz75xuhjhb6645sd@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Sep 10, 2016 at 09:36:46AM +0200, Christoph Hellwig wrote:
-> On Sat, Sep 10, 2016 at 08:55:57AM +1000, Dave Chinner wrote:
-> > THe errors from the above two cases are not acted on. they are
-> > immediately overwritten by:
+On Tue, Sep 13, 2016 at 11:06:57AM +0200, Carlos Maiolino wrote:
+> On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Embedding a switch statement in every btree stats inc/add adds a lot
+> > of code overhead to the core btree infrastructure paths. Stats are
+> > supposed to be small and lightweight, but the btree stats have
+> > become big and bloated as we've added more btrees. It needs fixing
+> > because the reflink code will just add more overhead again.
 > 
-> Yes, Robert also pointed this out.  Fix below.
-> 
-> > Is there a missing "if (error) goto out;" check somewhere here?
-> 
-> Just the one above.
-> 
-> > I'm also wondering if you've looked at supporting the PMD fault case
-> > with iomap?
-> 
-> PMD faults currently don't work at all.  Ross has a series to resurrect
-> them, but we'll need to coordinate between the two series somehow.  My
-> preference would be to not resurrect them for the bh path and only do
-> it for the iomap version.
+> Talking about stats, is there any documentation for that? I was using the log
+> stats while working on the fail_at_unmount hang, and I couldn't find anything
+> other than looking into the code to see what each number means.
 
-I'm working on this right now.  I expect that most/all of the infrastructure
-between the bh+get_block_t version and the iomap version to be shared, it'll
-just be a matter of having a PMD version of the iomap fault handler.  This
-should be pretty minor.
+Most XFS stats are documented in PCP. IIRC, this page was originally
+pulled from the PCP metric info but is now (like most stuff in
+wikis) is out of date: http://xfs.org/index.php/Runtime_Stats
 
-Let's see how it goes, but right now my plan is to have both - I'd like to
-keep feature parity between ext2/ext4 and XFS, and that means having PMD
-faults in ext4 via bh+get_block_t until they move over to iomap.
+$ pminfo -T xfs.log
 
-Regarding coordination, the PMD v2 series hasn't gotten much review so far, so
-I'm not sure it'll go in for v4.9.  At this point I'm planning on just
-rebasing on top of your iomap series, though if it gets taken sooner I
-wouldn't object.
+xfs.log.writes
+Help:
+This variable counts the number of log buffer writes going to the
+physical log partitions of all XFS filesystems. Log data traffic is
+proportional to the level of meta-data updating. Log buffer writes
+get generated when they fill up or external syncs occur.
 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index a170a94..5534594 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -1440,6 +1440,7 @@ int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
->  	default:
->  		WARN_ON_ONCE(1);
->  		error = -EIO;
-> +		goto unlock_entry;
->  	}
->  
->  	/* Filesystem should not return unwritten buffers to us! */
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+xfs.log.blocks
+Help:
+This variable counts the number of Kbytes of information being
+written to the physical log partitions of all XFS filesystems. Log
+data traffic is proportional to the level of meta-data updating. The
+rate with which log data gets written depends on the size of
+internal log buffers and disk write speed. Therefore, filesystems
+with very high meta-data updating may need to stripe the log
+partition or put the log partition on a separate drive.
+
+xfs.log.write_ratio
+Help:
+The ratio of log blocks written to log writes.  If block count isn't
+a "reasonable" multiple of writes, then many small log writes are
+being performed - this is suboptimal.  Perfection is 64.  Fine-grain
+control can be obtained when this metric is used in conjuntion with
+pmstore(1) and the xfs.control.reset metric.
+
+xfs.log.noiclogs
+Help:
+This variable keeps track of times when a logged transaction can not
+get any log buffer space. When this occurs, all of the internal log
+buffers are busy flushing their data to the physical on-disk log.
+
+xfs.log.force
+Help:
+The number of times the in-core log is forced to disk.  It is
+equivalent to the number of successful calls to the function
+xfs_log_force().
+
+xfs.log.force_sleep
+Help:
+This metric is exported from the xs_log_force_sleep field of struct
+xfsstats
+-- 
+Dave Chinner
+david@fromorbit.com
