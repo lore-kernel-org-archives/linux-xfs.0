@@ -1,84 +1,107 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DCD677CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:24:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD31B8F8035
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 00:24:16 -0700 (PDT)
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [58.251.152.64])
-	by cuda.sgi.com with ESMTP id qtJWjCvvBoIcHS73 (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 00:24:13 -0700 (PDT)
-Subject: Re: [PATCH] xfs: fix signed integer overflow
-References: <1473403112-31072-1-git-send-email-xiexiuqi@huawei.com>
-	<1473403321.13672.35.camel@perches.com> <57D261E0.7080005@huawei.com>
-	<20160913065738.GF30497@dastard>
-From: Xie XiuQi <xiexiuqi@huawei.com>
-Message-ID: <57D7A97B.4080901@huawei.com>
-Date: Tue, 13 Sep 2016 15:23:39 +0800
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60776 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756820AbcIMI76 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Sep 2016 04:59:58 -0400
+Date: Tue, 13 Sep 2016 10:59:54 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: Document error handlers behavior
+Message-ID: <20160913085954.utmek4734tp2utli@redhat.com>
+References: <1473326635-30209-1-git-send-email-cmaiolino@redhat.com>
+ <15083dbd-d598-0ec1-25d7-26cb039dd78d@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20160913065738.GF30497@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <15083dbd-d598-0ec1-25d7-26cb039dd78d@sandeen.net>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 2016/9/13 14:57, Dave Chinner wrote:
-> On Fri, Sep 09, 2016 at 03:16:48PM +0800, Xie XiuQi wrote:
->> On 2016/9/9 14:42, Joe Perches wrote:
->>> On Fri, 2016-09-09 at 14:38 +0800, Xie XiuQi wrote:
->>>> Use 1U for unsigned long, or we'll meet a overflow issue with UBSAN.
->>> trivia: misleading commit message
->>>
->>> 1U is for unsigned int not unsigned long int
->>>
->> Sorry, my fault. Thank you for your comments.
->>
->> From 9cb8e36406a54ce0eaade31dd28f6068f03de1d2 Mon Sep 17 00:00:00 2001
->> From: Xie XiuQi <xiexiuqi@huawei.com>
->> Date: Tue, 6 Sep 2016 11:15:34 +0800
->> Subject: [PATCH v2] xfs: fix signed integer overflow
-> ....
->> ---
->>  fs/xfs/xfs_buf_item.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
->> index e455f90..3a27997 100644
->> --- a/fs/xfs/xfs_buf_item.c
->> +++ b/fs/xfs/xfs_buf_item.c
->> @@ -865,7 +865,7 @@ xfs_buf_item_log_segment(
->>          */
->>         if (bit) {
->>                 end_bit = MIN(bit + bits_to_set, (uint)NBWORD);
->> -               mask = ((1 << (end_bit - bit)) - 1) << bit;
->> +               mask = ((1U << (end_bit - bit)) - 1) << bit;
->>                 *wordp |= mask;
->>                 wordp++;
->>                 bits_set = end_bit - bit;
-> This patch is whitespace damaged and fails to apply. I've fixed it
-> up as this is a trivial change. However, please fix the problem
-> before you submit more patches.
+On Thu, Sep 08, 2016 at 09:29:18AM -0500, Eric Sandeen wrote:
+> On 9/8/16 4:23 AM, Carlos Maiolino wrote:
+> > Document the implementation of error handlers into sysfs.
+> > 
+> > Changelog:
+> > 
+> > V2:
+> > 	- Add a description of the precedence order of each option, focusing on
+> > 	  the behavior of "fail_at_unmount" which was not well explained in V1
+> > 
+> > V3:
+> > 	- Fix English spelling mistakes suggested by Eric
+> 
+> Please put the patch version changelog after the "---" so it doesn't become
+> part of the permanent commit log; it's for current patch reviewers, not for
+> future code archaeologists.
 
-I will, thank you very mush.
+Thanks, I'll make sure to do it with next patches too
+> > +
+> > +The filesystem behavior during an error can be set via sysfs files, where the
+> > +errors are organized with the structure below. Each configuration option works
+> > +independently, the first condition met for a specific configuration will cause
+> > +the filesystem to shut down:
+> > +
+> > +  /sys/fs/xfs/<dev>/error/<class>/<error>/
+> 
+> The above line kind of hangs there oddly, because the first thing you do below
+> is describe a file which isn't in the above hierarchy.
+> 
+> Maybe we should show something like:
+> 
+> +  /sys/fs/xfs/<dev>/error/fail_at_unmount
+> +  /sys/fs/xfs/<dev>/error/<class>/<error>/<configuration>
+> 
+> to show everything that might be under it?  Not sure if that's better.
+> 
+> > +
+> > +Each directory contains:
+> > +
+> > + /sys/fs/xfs/<dev>/error/
+> > +
+> > +	fail_at_unmount		(Min:  0  Default:  1  Max: 1)
+> > +		Defines the global error behavior at unmount time. If set to the
+> > +		default value of 1, XFS will cancel any pending IO retries, shut
+> > +		down, and unmount. If set to 0, pending IO retries may prevent
+> > +		the filesystem from unmounting.
+> > +
+> > +	<class> subdirectories
+> > +		Contains specific error handlers configuration
+> > +		(Ex: /sys/fs/xfs/<dev>/error/metadata, see below).
+> > +
+> > + /sys/fs/xfs/<dev>/error/<class>/
+> > +
+> > +	Directory containing configuration for a specific error <class>;
+> > +	currently only the "metadata" <class> is implemented.
+> > +	The contents of this directory are <class> specific, since each <class>
+> > +	might need to handle different types of errors.
+> > +
+> > + /sys/fs/xfs/<dev>/error/<class>/<error>/
+> > +
+> 
+> The default for ENODEV is different ... tricky to document that.  Good luck.  ;)
+> 
+> The maximum for retry_timeout_seconds is 86400 (1 day), not INTMAX:
+> 
+> retry_timeout_seconds_store()
+> {
+> ...
+>         /* 1 day timeout maximum */
+>         if (val < 0 || val > 86400)
+>                 return -EINVAL;
+> ...
 
->
-> Cheers,
->
-> Dave.
+Fixing it, thanks for catching it, copy/paste sux :)
 
+> }
+> 
+> The default of -1 vs. 0 might change with the other patch I sent, but we can
+> fix this up if it's accepted.
+> 
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Ok.
+
+Thanks for the review, I'll submit a new version in a few
+-- 
+Carlos
