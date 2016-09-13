@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 76BFC7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 09:49:29 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CE81A7CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:09:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 477A98F8050
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 07:49:28 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id tvttVDwoHb0Ok3qR for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 07:49:25 -0700 (PDT)
-Subject: Re: [PATCH] xfs_repair: update the manual content about xfs_repair
-	exit status
-References: <1473482849-5706-1-git-send-email-zlang@redhat.com>
-	<0e20a2e5-eb5a-aa6c-eff7-e67d35c6f227@sandeen.net>
-	<20160913144405.GG12847@dhcp12-143.nay.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <424a93e5-dbd4-dbc1-1f2c-3ae57131fab8@sandeen.net>
-Date: Tue, 13 Sep 2016 09:49:22 -0500
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A1E7D304064
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 00:09:18 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	GXcevInHME57lUAa for <xfs@oss.sgi.com>;
+	Tue, 13 Sep 2016 00:09:15 -0700 (PDT)
+Date: Tue, 13 Sep 2016 17:09:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_logprint: fix the transcation type string for
+	delaylog-enabled fs
+Message-ID: <20160913070913.GG30497@dastard>
+References: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20160913144405.GG12847@dhcp12-143.nay.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,157 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Hou Tao <houtao1@huawei.com>
+Cc: xfs@oss.sgi.com
 
+On Fri, Sep 09, 2016 at 12:08:27PM +0800, Hou Tao wrote:
+> For delaylog-enabled fs, the only th_type is XFS_TRANS_CHECKPOINT,
+> but the value of XFS_TRANS_CHECKPOINT had been change from 42 to 40
+> by xfs commit 61e63ec (xfs: consolidate superblock logging functions),
+> so return trans_type[type] directly will be incorrect.
+> And there is no flag for delaylog testing, so the suboptimal solution
+> is to use super v5 flag instead. For pre-v5 fs used by kernel after
+> commit 61e63ec, the result of xlog_trans_type will still be incorrect.
 
+delaylog and v5 superblocks are completely unrelated and so this is
+incorrect.
 
-On 9/13/16 9:44 AM, Zorro Lang wrote:
-> On Mon, Sep 12, 2016 at 11:01:12AM -0500, Eric Sandeen wrote:
->> On 9/9/16 11:47 PM, Zorro Lang wrote:
->>> The man 8 xfs_repair said "xfs_repair run without the -n option will
->>> always return a status code of 0". That's not correct.
->>>
->>> xfs_repair will return 2 if it find valuable metadata changes in log
->>> which needs to be replayed, 1 if it can't fix the corruption or some
->>> other errors happened and 0 if nothing wrong or all the corruptions
->>> were fixed.
->>>
->>> Generally xfs_repair -L will always return 0, except it can't clear
->>> the log.
->>
->> And I think that's an operational type error, not the result
->> of a filesystem problem; more like an IO error, or a code bug,
->> I *think* ... more below.
->>
->>
->>> Signed-off-by: Zorro Lang <zlang@redhat.com>
->>> ---
->>>
->>> Hi,
->>>
->>> I  trusted the xfs_repair manpage, and thought xfs_repair will always return 0.
->>> But recently I found it lies when I tried to review someone xfstests case.
->>>
->>> A correct manpage will help more people to write right cases, so I try to modify
->>> the manpage, by search all exit/do_error in xfsprogs/repair. I'm not the best
->>> one who learn about xfs_repair, so I just hope I did the right thing:-P Please
->>> feel free to correct me.
->>>
->>> Thanks,
->>> Zorro
->>>
->>>  man/man8/xfs_repair.8 | 13 ++++++++++++-
->>>  1 file changed, 12 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
->>> index 1b4d9e3..1f8f13b 100644
->>> --- a/man/man8/xfs_repair.8
->>> +++ b/man/man8/xfs_repair.8
->>> @@ -504,12 +504,23 @@ that is known to be free. The entry is therefore invalid and is deleted.
->>>  This message refers to a large directory.
->>>  If the directory were small, the message would read "junking entry ...".
->>>  .SH EXIT STATUS
->>> +.TP
->>>  .B xfs_repair \-n
->>>  (no modify node)
->>>  will return a status of 1 if filesystem corruption was detected and
->>>  0 if no filesystem corruption was detected.
->>> +.TP
->>>  .B xfs_repair
->>> -run without the \-n option will always return a status code of 0.
->>> +run without the \-n option will return a status code of 2 if it find the
->>> +filesystem has valuable metadata changes in log which needs to be
->>> +replayed, 1 if there's corruption left to be fixed
->>
->> I'm not sure that's the best description; from a quick look, I think
->> those exit values of 1 result from do_error(), and in repair that's
->> (usually?) due to something like a memory allocation failure, or an
->> inconsistent state in the tool; more like hitting an ASSERT.  That might
->> leave corruption, but only as a follow-on effect.
+> before patch:
+> (1) v5 fs
+> TRAN:    type: SWAPEXT       tid: 321be024       num_items: 2
+> TRANS: tid:0x772d0805  type:SWAPEXT  #items:37  trans:0x772d0805  q:0x559104d71bc0
 > 
-> Hi Eric,
-> 
-> Many thanks for you can help to review this patch.
-> 
-> I've check all code will exit(1), generally it caused by memory or disk
-> errors. But some other situations likes:
->  - No enough matching AGs or superblocks
->  - Primary superblock bad after phase 1
->  - Sector size on host filesystem larger than image sector size, when try
->    to repair a file image
->  ...
-> 
-> will exit(1) too.
+> after patch:
+> (2) v5 fs
+> TRAN:    type: CHECKPOINT       tid: 321be024       num_items: 2
+> TRANS: tid:0x772d0805  type:SWAPEXT  #items:37  trans:0x772d0805  q:0x559104d71bc0
 
-Sigh, ok.  I guess the exit(1) has proliferated a lot.  :(
+And so v4 filesystems are still incorrect.
 
-> But yes, they're all belong to runtime error:) There're too many situations
-> can return 1. But only one place can return 2, so we can say except return 0
-> and 2, others will return 1 :-P
-> 
-> 
->>
->>> + or can't find log head
->>> +and tail or some other errors happened, 
->>
->> Which is the same as above, I think - an internal error.
->>
->>> and 0 if nothing wrong or all the
->>> +corruptions were fixed.
->>> +.TP
->>> +.B xfs_repair \-L
->>> +(Force Log Zeroing)
->>> +will return a status code of 1 if it can't clear the log, or will always
->>> +return 0.
->>
->>
->> How about something like this:
->>
->>  .B xfs_repair \-n
->>  (no modify node)
->>  will return a status of 1 if filesystem corruption was detected and
->>  0 if no filesystem corruption was detected.
->>  .TP
->>  .B xfs_repair
->>  run without the \-n option will return a status code of 2 if it finds a
->>  filesystem log which needs to be replayed (by a mount/umount cycle), 1 if
->>  a runtime error is encountered, and 0 in all other cases, whether or not
->>  filesystem corruption was detected.
-> 
-> Your patch(xfs_repair: exit with status 2 if log dirtiness is unknown) will
-> make xfs_repair return 2, when it can't find log head/tail. I think xfs_repair
-> won't think the log needs to be replayed if it can't find the log tail/head.
-> 
-> So how about "return a status code of 2 if it finds filesystem log needs to be
-> replayed or cleared"?
+Indeed, when delaylog is enabled, the only transaction type in the
+log is "CHECKPOINT" - the whole "trans type" stuff has gone away
+from the kernel and only exists as this in xfs_log_format.h:
 
-That seems reasonable...
+/*
+ * The only type valid for th_type in CIL-enabled file system logs:
+ */
+#define XFS_TRANS_CHECKPOINT    40
 
--Eric
+IOWs, most of the logprint code is for printing log information from
+pre-delaylog kernels. IOWs, for the anyone using a 3.0+ kernel, the
+"trans type" output from xfs_logprint is completely useless
+information, so we should probably either put it behind a command
+line option or remove it completely...
 
-> Thanks,
-> Zorro
-> 
->>
->> and I'd leave out the bit about xfs_repair -L; really that's just a runtime
->> error - if we clear the log and then can't find the head/tail, something
->> strange has gone wrong.
->>
->> Thanks,
->>
->> -Eric
->>
->>>  .SH BUGS
->>>  The filesystem to be checked and repaired must have been
->>>  unmounted cleanly using normal system administration procedures
->>>
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
