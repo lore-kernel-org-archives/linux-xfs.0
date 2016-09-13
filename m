@@ -1,99 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33104 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750940AbcIMHBG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 03:01:06 -0400
+Received: from mga04.intel.com ([192.55.52.120]:18728 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758095AbcIMWoI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Sep 2016 18:44:08 -0400
+Date: Tue, 13 Sep 2016 16:43:57 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 01/10] iomap: add IOMAP_F_NEW flag
+Message-ID: <20160913224357.GA26002@linux.intel.com>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+ <1473438884-674-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20160913000811.GN22388@dastard>
-References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-1-git-send-email-amir73il@gmail.com> <1473692803-11964-4-git-send-email-amir73il@gmail.com>
- <20160913000811.GN22388@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 13 Sep 2016 10:01:04 +0300
-Message-ID: <CAOQ4uxgGdshhiA+FJqYrPEqkh3R6=-6jPcO4yygJqEkVUPd1jA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] vfs: allow vfs_copy_file_range() across file systems
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473438884-674-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Tue, Sep 13, 2016 at 3:08 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Sep 12, 2016 at 06:06:42PM +0300, Amir Goldstein wrote:
->> copy_file_range syscall returns -EXDEV if src and dest
->> file are not on the same file system.
->> The vfs_copy_file_range() helper, however, knows how to copy
->> across file systems with do_splice_direct().
->>
->> Move the enforcement of same file system from the vfs helper
->> to the syscall code.
->>
->> A following patch is going to use the vfs_copy_file_range()
->> helper in overlayfs to copy up between lower and upper
->> not on the same file system.
->>
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> ---
->>  fs/read_write.c | 15 ++++++++++-----
->>  1 file changed, 10 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/read_write.c b/fs/read_write.c
->> index 9dc6e52..c4675c6 100644
->> --- a/fs/read_write.c
->> +++ b/fs/read_write.c
->> @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->>           (file_out->f_flags & O_APPEND))
->>               return -EBADF;
->>
->> -     /* this could be relaxed once a method supports cross-fs copies */
->> -     if (inode_in->i_sb != inode_out->i_sb)
->> -             return -EXDEV;
->> -
->>       if (len == 0)
->>               return 0;
->>
->> @@ -1514,7 +1510,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->>               return ret;
->>
->>       ret = -EOPNOTSUPP;
->> -     if (file_out->f_op->copy_file_range)
->> +     if (inode_in->i_sb == inode_out->i_sb &&
->> +                     file_out->f_op->copy_file_range)
->>               ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
->>                                                     pos_out, len, flags);
->
-> Indenting is wrong, and you dropped an important comment. i.e
-> copy_file_range() still doesn't support cross fs copies.....
+On Fri, Sep 09, 2016 at 06:34:35PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-OK. moved the comment down this this same i_sb test
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
->
->>       if (ret == -EOPNOTSUPP)
->> @@ -1569,6 +1566,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
->>               pos_out = f_out.file->f_pos;
->>       }
->>
->> +     /*
->> +      * FIXME: should copy_file_range syscall enforce that src and
->> +      * dest files are on the same mount point or only on the same
->> +      * file system? none of the above?
->> +      */
->> +     if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
->> +             return -EXDEV;
->
-> For the purposes of this patch, it should simply do what it already
-> does. If there's a API semantic change that needs to be made, then
-> get that sorted out now rather than adding a "fixme" comment that
-> will simply be ignored....
+Though I guess I've never seen a patch with a completely empty changelog
+before?  :)   Maybe it's okay for really easy patches?  I just thought I'd get
+shouted down for doing it.
 
-How about:
-
-        /*
-         * vfs_copy_file_range() can do cross-fs copy, but we want to
-         * fulfill the guaranty to userland that copy_file_range syscall
-         * does not allow cross-fs copy
-         */
-
-Cheers,
-Amir.
+> ---
+>  fs/xfs/xfs_iomap.c    | 2 ++
+>  include/linux/iomap.h | 1 +
+>  2 files changed, 3 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index f96c8ff..5d06a2d 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -635,6 +635,7 @@ retry:
+>  	if (end_fsb != orig_end_fsb)
+>  		xfs_inode_set_eofblocks_tag(ip);
+>  
+> +	iomap->flags = IOMAP_F_NEW;
+>  	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+>  done:
+>  	if (isnullstartblock(got.br_startblock))
+> @@ -1000,6 +1001,7 @@ xfs_file_iomap_begin(
+>  		if (error)
+>  			return error;
+>  
+> +		iomap->flags = IOMAP_F_NEW;
+>  		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+>  	} else {
+>  		ASSERT(nimaps);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 3d70ece..14d7067 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -22,6 +22,7 @@ struct vm_fault;
+>   * Flags for iomap mappings:
+>   */
+>  #define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
+> +#define IOMAP_F_NEW	0x02	/* blocks have been newly allocated */
+>  
+>  /*
+>   * Magic value for blkno:
+> -- 
+> 2.1.4
+> 
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
