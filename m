@@ -1,15 +1,15 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61AF27CA0
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 19:48:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA084AC002
-	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 17:48:02 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7720E7CA0
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 19:43:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 28FE28F8035
+	for <xfs@oss.sgi.com>; Mon, 12 Sep 2016 17:43:05 -0700 (PDT)
 Received: from gblgn.com (gblgn.com [172.106.2.136]) by cuda.sgi.com with
-	ESMTP id kxNjOuqE8HtSnFC1 for <xfs@oss.sgi.com>;
-	Mon, 12 Sep 2016 17:48:00 -0700 (PDT)
-Subject: Mobile App Development Services for you
-Message-ID: <07188788b16f804b4df5e357248e4532@pocketapp.co.uk>
-Date: Tue, 13 Sep 2016 02:44:12 +0200
+	ESMTP id dVoqJx6lp2NN2i4W for <xfs@oss.sgi.com>;
+	Mon, 12 Sep 2016 17:43:03 -0700 (PDT)
+Subject: Mobile App Development Solutions
+Message-ID: <97d7d955be9912580a0725f052fcc6a1@londonappbrewery.com>
+Date: Tue, 13 Sep 2016 02:26:37 +0200
 From: "Ron Howard" <safinaty@yandex.com>
 MIME-Version: 1.0
 Reply-To: yoyoangers@aliyun.com
