@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8789C7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 04:07:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CC2A87CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 16:48:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C1428F8039
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:07:03 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id n4Prr4KlPpMQnUKx (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:07:01 -0700 (PDT)
-Date: Tue, 13 Sep 2016 11:06:57 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
-Message-ID: <20160913090657.gz75xuhjhb6645sd@redhat.com>
-References: <1473755322-883-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4676AAC001
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 14:48:05 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	IU43x1xdiZzA4WLd for <xfs@oss.sgi.com>;
+	Tue, 13 Sep 2016 14:48:03 -0700 (PDT)
+Date: Wed, 14 Sep 2016 07:48:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs_repair: update the manual content about
+	xfs_repair exit status
+Message-ID: <20160913214801.GJ30497@dastard>
+References: <1473782076-9137-1-git-send-email-zlang@redhat.com>
+	<20160913163226.GE9314@birch.djwong.org>
+	<5b36e20b-9238-0694-f919-31e33cd9ecbb@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1473755322-883-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <5b36e20b-9238-0694-f919-31e33cd9ecbb@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +32,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Sep 13, 2016 at 11:57:59AM -0500, Eric Sandeen wrote:
+> On 9/13/16 11:32 AM, Darrick J. Wong wrote:
+> > On Tue, Sep 13, 2016 at 11:54:36PM +0800, Zorro Lang wrote:
+> >> The man 8 xfs_repair said "xfs_repair run without the -n option will
+> >> always return a status code of 0". That's not correct.
+> >>
+> >> xfs_repair will return 2 if it finds a fs log which needs to be
+> >> replayed or cleared, 1 if runtime error is encountered, and 0 for
+> >> all other cases.
+> >>
+> >> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> >> ---
+> >>
+> >> Hi,
+> >>
+> >> V2 patch did below things:
+> >>  - change the description for xfs_repair
+> >>  - remove the description for "xfs_repair -L"
+> >>
+> >> Thanks,
+> >> Zorro
+> >>
+> >>  man/man8/xfs_repair.8 | 7 ++++++-
+> >>  1 file changed, 6 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+> >> index 1b4d9e3..e45fd90 100644
+> >> --- a/man/man8/xfs_repair.8
+> >> +++ b/man/man8/xfs_repair.8
+> >> @@ -504,12 +504,17 @@ that is known to be free. The entry is therefore invalid and is deleted.
+> >>  This message refers to a large directory.
+> >>  If the directory were small, the message would read "junking entry ...".
+> >>  .SH EXIT STATUS
+> >> +.TP
+> >>  .B xfs_repair \-n
+> >>  (no modify node)
+> >>  will return a status of 1 if filesystem corruption was detected and
+> >>  0 if no filesystem corruption was detected.
+> >> +.TP
+> >>  .B xfs_repair
+> >> -run without the \-n option will always return a status code of 0.
+> >> +run without the \-n option will return a status code of 2 if it finds a
+> >> +filesystem log which needs to be replayed(by a mount/umount cycle) or
+> >> +cleared(by -L option), 1 if a runtime error is encountered, and 0 in all
+> >> +other cases, whether or not filesystem corruption was detected.
+> > 
+> > So... I'd rather the documentation about the return code reflect the
+> > status of the filesystem -- 2 means "unclean log, replay it or zap it",
+> > 1 means "errors encountered, fs may not be correct", and 0 /should/ mean
+> > "fs is correct".
+> > 
+> > OTOH I don't know for sure that xfs_repair always cleans up the fs on
+> > the first try.
 > 
-> Embedding a switch statement in every btree stats inc/add adds a lot
-> of code overhead to the core btree infrastructure paths. Stats are
-> supposed to be small and lightweight, but the btree stats have
-> become big and bloated as we've added more btrees. It needs fixing
-> because the reflink code will just add more overhead again.
+> That's certainly the intent; I can't imagine a manpage documenting
+> return codes qualified with "... unless bugs happen." :)
 
-Talking about stats, is there any documentation for that? I was using the log
-stats while working on the fail_at_unmount hang, and I couldn't find anything
-other than looking into the code to see what each number means.
+Right - if we hit bugs, all bets are off. But otherwise, the fs
+should be repaired and clean after a single pass.
 
-Cheers
+> >  ISTR
+> > asking Dave about this, and I think he said that the FS should be clean
+> > if repair returns 0.  But I'll let him reiterate that if it's true;
+> > don't trust my crummy memory, that's why I have filesystems. ;)
+> 
+> Did you have an alternate wording in mind?
 
+Yup, 0 = " fs is clean", 1 = "fs is still b0rken",
+2 = "couldn't run for whatever reason given"
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
