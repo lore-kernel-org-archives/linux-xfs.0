@@ -1,93 +1,56 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:61069 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751097AbcIMAIP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 20:08:15 -0400
-Date: Tue, 13 Sep 2016 10:08:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 3/4] vfs: allow vfs_copy_file_range() across file
- systems
-Message-ID: <20160913000811.GN22388@dastard>
-References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-1-git-send-email-amir73il@gmail.com>
- <1473692803-11964-4-git-send-email-amir73il@gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8789C7CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 04:07:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C1428F8039
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:07:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id n4Prr4KlPpMQnUKx (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 02:07:01 -0700 (PDT)
+Date: Tue, 13 Sep 2016 11:06:57 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
+Message-ID: <20160913090657.gz75xuhjhb6645sd@redhat.com>
+References: <1473755322-883-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1473692803-11964-4-git-send-email-amir73il@gmail.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+In-Reply-To: <1473755322-883-1-git-send-email-david@fromorbit.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Sep 12, 2016 at 06:06:42PM +0300, Amir Goldstein wrote:
-> copy_file_range syscall returns -EXDEV if src and dest
-> file are not on the same file system.
-> The vfs_copy_file_range() helper, however, knows how to copy
-> across file systems with do_splice_direct().
+On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Move the enforcement of same file system from the vfs helper
-> to the syscall code.
-> 
-> A following patch is going to use the vfs_copy_file_range()
-> helper in overlayfs to copy up between lower and upper
-> not on the same file system.
-> 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/read_write.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 9dc6e52..c4675c6 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  	    (file_out->f_flags & O_APPEND))
->  		return -EBADF;
->  
-> -	/* this could be relaxed once a method supports cross-fs copies */
-> -	if (inode_in->i_sb != inode_out->i_sb)
-> -		return -EXDEV;
-> -
->  	if (len == 0)
->  		return 0;
->  
-> @@ -1514,7 +1510,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
->  		return ret;
->  
->  	ret = -EOPNOTSUPP;
-> -	if (file_out->f_op->copy_file_range)
-> +	if (inode_in->i_sb == inode_out->i_sb &&
-> +			file_out->f_op->copy_file_range)
->  		ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
->  						      pos_out, len, flags);
+> Embedding a switch statement in every btree stats inc/add adds a lot
+> of code overhead to the core btree infrastructure paths. Stats are
+> supposed to be small and lightweight, but the btree stats have
+> become big and bloated as we've added more btrees. It needs fixing
+> because the reflink code will just add more overhead again.
 
-Indenting is wrong, and you dropped an important comment. i.e
-copy_file_range() still doesn't support cross fs copies.....
+Talking about stats, is there any documentation for that? I was using the log
+stats while working on the fail_at_unmount hang, and I couldn't find anything
+other than looking into the code to see what each number means.
 
->  	if (ret == -EOPNOTSUPP)
-> @@ -1569,6 +1566,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
->  		pos_out = f_out.file->f_pos;
->  	}
->  
-> +	/*
-> +	 * FIXME: should copy_file_range syscall enforce that src and
-> +	 * dest files are on the same mount point or only on the same
-> +	 * file system? none of the above?
-> +	 */
-> +	if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
-> +		return -EXDEV;
+Cheers
 
-For the purposes of this patch, it should simply do what it already
-does. If there's a API semantic change that needs to be made, then
-get that sorted out now rather than adding a "fixme" comment that
-will simply be ignored....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
