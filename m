@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C4A217CA0
-	for <xfs@oss.sgi.com>; Sun, 11 Sep 2016 20:07:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4B0EF7CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 11:32:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 887C7304032
-	for <xfs@oss.sgi.com>; Sun, 11 Sep 2016 18:07:14 -0700 (PDT)
-Received: from heian.cn.fujitsu.com (cn.fujitsu.com [59.151.112.132]) by
-	cuda.sgi.com with ESMTP id ii1RmOft2j5uBMDy for
-	<xfs@oss.sgi.com>; Sun, 11 Sep 2016 18:07:07 -0700 (PDT)
-Message-ID: <57D5FFB7.2070807@cn.fujitsu.com>
-Date: Mon, 12 Sep 2016 09:07:03 +0800
-From: Xiao Yang <yangx.jy@cn.fujitsu.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 186C6304070
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 09:32:37 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id OAmWlmQ1XkXWoSEp (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 09:32:35 -0700 (PDT)
+Date: Tue, 13 Sep 2016 09:32:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs_repair: update the manual content about
+	xfs_repair exit status
+Message-ID: <20160913163226.GE9314@birch.djwong.org>
+References: <1473782076-9137-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfs/098: fix xfs_repair on newer xfsprogs
-References: <20160825154052.GD20705@birch.djwong.org>
-	<1472182612-10218-1-git-send-email-yangx.jy@cn.fujitsu.com>
-	<20160826044818.GH10350@dhcp12-143.nay.redhat.com>
-	<57BFDD38.7080101@cn.fujitsu.com>
-	<20160826090503.GI10350@dhcp12-143.nay.redhat.com>
-	<57D28101.6000902@cn.fujitsu.com>
-	<20160909122831.GD12847@dhcp12-143.nay.redhat.com>
-In-Reply-To: <20160909122831.GD12847@dhcp12-143.nay.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1473782076-9137-1-git-send-email-zlang@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,174 +26,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-09ogMjAxNi8wOS8wOSAyMDoyOCwgWm9ycm8gTGFuZyDQtLXAOgo+IE9uIEZyaSwgU2VwIDA5LCAy
-MDE2IGF0IDA1OjI5OjM3UE0gKzA4MDAsIFhpYW8gWWFuZyB3cm90ZToKPj4g09ogMjAxNi8wOC8y
-NiAxNzowNSwgWm9ycm8gTGFuZyDQtLXAOgo+Pj4gT24gRnJpLCBBdWcgMjYsIDIwMTYgYXQgMDI6
-MTA6MDBQTSArMDgwMCwgWGlhbyBZYW5nIHdyb3RlOgo+Pj4+IE9uIDIwMTYvMDgvMjYgMTI6NDgs
-IFpvcnJvIExhbmcgd3JvdGU6Cj4+Pj4+IE9uIEZyaSwgQXVnIDI2LCAyMDE2IGF0IDExOjM2OjUy
-QU0gKzA4MDAsIFhpYW8gWWFuZyB3cm90ZToKPj4+Pj4+IE1ha2Ugc3VyZSB4ZnNfcmVwYWlyIGNh
-bid0IGNsZWFyIHRoZSBsb2cgYnkgZGVmYXVsdCB3aGVuIGl0IGlzIGNvcnJ1cHRlZC4KPj4+Pj4+
-IHhmc19yZXBhaXIgYWx3YXlzIGFuZCBvbmx5IGNsZWFyIHRoZSBsb2cgd2hlbiB0aGUgLUwgcGFy
-YW1ldGVyIGlzIHNwZWNpZmllZC4KPj4+Pj4+IFRoaXMgaGFzIHVwZGF0ZWQgYnk6Cj4+Pj4+PiBD
-b21taXQgZjIwNTNiYyAoInhmc19yZXBhaXI6IGRvbid0IGNsZWFyIHRoZSBsb2cgYnkgZGVmYXVs
-dCIpCj4+Pj4+Pgo+Pj4+Pj4gU2lnbmVkLW9mZi1ieTogWGlhbyBZYW5nPHlhbmd4Lmp5QGNuLmZ1
-aml0c3UuY29tPgo+Pj4+Pj4gLS0tCj4+Pj4+PiAgY29tbW9uL3JjICAgICB8IDQgKystLQo+Pj4+
-Pj4gIHRlc3RzL3hmcy8wOTggfCAyICstCj4+Pj4+PiAgMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2Vy
-dGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCj4+Pj4+Pgo+Pj4+Pj4gZGlmZiAtLWdpdCBhL2NvbW1v
-bi9yYyBiL2NvbW1vbi9yYwo+Pj4+Pj4gaW5kZXggM2ZiMDYwMC4uYzY5M2EzMSAxMDA2NDQKPj4+
-Pj4+IC0tLSBhL2NvbW1vbi9yYwo+Pj4+Pj4gKysrIGIvY29tbW9uL3JjCj4+Pj4+PiBAQCAtMTE0
-Myw5ICsxMTQzLDkgQEAgX3JlcGFpcl9zY3JhdGNoX2ZzKCkKPj4+Pj4gSGkgWGlhbwo+Pj4+Pgo+
-Pj4+PiBZb3Ugc2hvdWxkIGV4cGxhaW4gd2h5IHlvdSBjaGFuZ2VkIHRoaXMgZnVuY3Rpb24gaW4g
-Y29tbWl0IGxvZy4gT3IKPj4+Pj4gdGhlIHJldmlld2VyIGNhbid0IHVuZGVyc3RhbmQgd2h5IHlv
-dSBjaGFuZ2UgaXQuCj4+Pj4+Cj4+Pj4+PiAgICAgIHhmcykKPj4+Pj4+ICAgICAgICAgIF9zY3Jh
-dGNoX3hmc19yZXBhaXIgIiRAIiAyPiYxCj4+Pj4+PiAgCXJlcz0kPwo+Pj4+Pj4gLQlpZiBbICIk
-cmVzIiAtZXEgMiBdOyB0aGVuCj4+Pj4+PiArCWlmIFsgIiRyZXMiIC1uZSAwIF07IHRoZW4KPj4+
-Pj4gSGkgRGFycmljaywKPj4+Pj4KPj4+Pj4gVGhlIHhmc19yZXBhaXIgbWFucGFnZSBzYWlkOgo+
-Pj4+PiB4ZnNfcmVwYWlyIHJ1biB3aXRob3V0IHRoZSAtbiBvcHRpb24gd2lsbCBhbHdheXMgcmV0
-dXJuIGEgc3RhdHVzIGNvZGUgb2YgMC4KPj4+Pj4KPj4+Pj4gSSBkb24ndCB1bmRlcnN0YW5kIHdo
-eSB5b3UgdGhpbmsgaXQgcmV0dXJuIDIgaGVyZT8gKFBsZWFzZSBjaGVjayBiZWxvdykKPj4+Pj4K
-Pj4+PiBIaSBab3Jybwo+Pj4+Cj4+Pj4gSSBkb24ndCB1bmRlcnN0YW5kIHdoeSBpdCByZXR1cm4g
-MiBoZXJlIHRvby4gIEkgd2FudCB0byBjaGFuZ2UgdGhpcwo+Pj4+IGZ1bmN0aW9uIGJlY2F1c2Ug
-eGZzX3JlcGFpcgo+Pj4+IHdpdGhvdXQgLUwgb3B0aW9uIHJldHVybiAxIHdoZW4gbG9nIGlzIGNv
-cnJ1cHRlZCBvbiBuZXdlciB4ZnNwcm9ncy1kZXYuCj4+Pj4+PiAgCQllY2hvICJ4ZnNfcmVwYWly
-IHJldHVybnMgJHJlczsgcmVwbGF5IGxvZz8iCj4+Pj4+PiAtCQlfc2NyYXRjaF9tb3VudAo+Pj4+
-Pj4gKwkJX3NjcmF0Y2hfbW91bnQgMj4mMQo+Pj4+Pj4gIAkJcmVzPSQ/Cj4+Pj4+PiAgCQlpZiBb
-ICIkcmVzIiAtZ3QgMCBdOyB0aGVuCj4+Pj4+PiAgCQkJZWNobyAibW91bnQgcmV0dXJucyAkcmVz
-OyB6YXAgbG9nPyIKPj4+Pj4+IGRpZmYgLS1naXQgYS90ZXN0cy94ZnMvMDk4IGIvdGVzdHMveGZz
-LzA5OAo+Pj4+Pj4gaW5kZXggZDkxZDYxNy4uZWIzM2JiMSAxMDA3NTUKPj4+Pj4+IC0tLSBhL3Rl
-c3RzL3hmcy8wOTgKPj4+Pj4+ICsrKyBiL3Rlc3RzL3hmcy8wOTgKPj4+Pj4+IEBAIC05Myw3ICs5
-Myw3IEBAIGVjaG8gIisgbW91bnQgaW1hZ2UiCj4+Pj4+PiAgX3NjcmF0Y2hfbW91bnQgMj4vZGV2
-L251bGwmJiAgIF9mYWlsICJtb3VudCBzaG91bGQgbm90IHN1Y2NlZWQiCj4+Pj4+Pgo+Pj4+Pj4g
-IGVjaG8gIisgcmVwYWlyIGZzIgo+Pj4+Pj4gLV9zY3JhdGNoX3hmc19yZXBhaXI+PiAgICRzZXFy
-ZXMuZnVsbCAyPiYxCj4+Pj4+PiArX3JlcGFpcl9zY3JhdGNoX2ZzPj4gICAkc2VxcmVzLmZ1bGwK
-Pj4+IFlvdSBzaG91bGQgcHJpbnQgdGhlIHN0ZGVyciB0byAkc2VxcmVzLmZ1bGwgdG9vLiBCZWNh
-dXNlIGluCj4+PiAiX3JlcGFpcl9zY3JhdGNoX2ZzIiwgaXRzIGNvZGUgbGlrZXMgYmVsb3c6Cj4+
-Pgo+Pj4gICAgIHhmcykKPj4+ICAgICAgICAgX3NjcmF0Y2hfeGZzX3JlcGFpciAiJEAiIDI+JjEK
-Pj4+Pj4+IFRoaXMgcmVwYWlyIHdvbid0IGNsZWFyIHRoZSBjb3JydXB0ZWQgbG9nIGFueW1vcmUu
-Cj4+PiAgICAgICAgIHJlcz0kPwo+Pj4gICAgICAgICBpZiBbICIkcmVzIiAtZXEgMiBdOyB0aGVu
-Cj4+PiAgICAgICAgICAgICAgICAgZWNobyAieGZzX3JlcGFpciByZXR1cm5zICRyZXM7IHJlcGxh
-eSBsb2c/Igo+Pj4gICAgICAgICAgICAgICAgIF9zY3JhdGNoX21vdW50Cj4+Pj4+PiBTbyB0aGlz
-IG1vdW50IG1heWJlIGZhaWxlZCBpZiBpdCBjYW4ndCBkZWFsIHdpdGggdGhlIGNvcnJ1cHRlZCBs
-b2cuCj4+Pj4+PiBJZiBpdCBwcmludCBzb21lIGVycm9yIG1lc3NhZ2VzLCBpdCdsbCBicmVhayB0
-aGUgZ29sZGVuIGltYWdlIG9mIHhmcy8wOTgKPj4+ICAgICAgICAgICAgICAgICByZXM9JD8KPj4+
-ICAgICAgICAgICAgICAgICBpZiBbICIkcmVzIiAtZ3QgMCBdOyB0aGVuCj4+PiAgICAgICAgICAg
-ICAgICAgICAgICAgICBlY2hvICJtb3VudCByZXR1cm5zICRyZXM7IHphcCBsb2c/Igo+Pj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgX3NjcmF0Y2hfeGZzX3JlcGFpciAtTCAyPiYxCj4+Pgo+Pj4K
-Pj4+Pj4gSWYganVzdCBjYWxsIHhmc19yZXBhaXIgd2l0aG91dCBhbnkgb3B0aW9ucywgdGhlIF9y
-ZXBhaXJfc2NyYXRjaF9mcyB3b24ndAo+Pj4+PiBoZWxwIHRvIGNhbGwgeGZzX3JlcGFpciAtTCBJ
-IHRoaW5rLgo+Pj4+Pgo+Pj4+PiBTbyBJIHRoaW5rIHRoaXMgcGF0Y2ggd29uJ3QgZml4IHRoZSBw
-cm9ibGVtLgo+Pj4+Pgo+Pj4+PiBGZWVsIGZyZWUgdG8gY29ycmVjdCBtZSwgaWYgSSBtaXN1bmRl
-cnN0YW5kIHNvbWV0aGluZzopCj4+Pj4+Cj4+Pj4+IFRoYW5rcywKPj4+Pj4gWm9ycm8KPj4+Pj4K
-Pj4+PiBJZiB4ZnNfcmVwYWlyIHdpdGhvdXQgYW55IG9wdGlvbiBzdWNjZWVkIHRvIHJlcGFpciBm
-aWxlc3lzdGVtIHdoZW4KPj4+PiBsb2cgaXMgY29ycnVwdGVkLAo+Pj4+IF9yZXBhaXJfc2NyYXRj
-aF9mcyBkb24ndCBuZWVkICB0byBjYWxsICB4ZnNfcmVwYWlyIC1MLiAgSWYgaXQgZmFpbGVkCj4+
-Pj4gdG8gcmVwYWlyIGZpbGVzeXN0ZW0sCj4+Pj4gX3JlcGFpcl9zY3JhdGNoX2ZzIG5lZWRzICB0
-byBjYWxsICB4ZnNfcmVwYWlyIC1MLgo+Pj4gT2gsIHNvcnJ5LCBJIGp1c3QgdHJpZWQgdG8gcnVu
-IHRocyBjYXNlLiBUaGUgIl9zY3JhdGNoX3hmc19yZXBhaXIiIHJlYWxseSByZXR1cm4KPj4+IG5v
-bi16ZXJvIHdoZW4gaXQgdHJ5IHRvIHJlcGFpciBhIGNvcnJ1cHRlZCB4ZnMuLi4KPj4+Cj4+PiBC
-dXQgdGhlIG1hbnBhZ2UobWFuIHhmc19yZXBhaXIpIHJlYWxseSBzYWlkOgo+Pj4geGZzX3JlcGFp
-ciBydW4gd2l0aG91dCB0aGUgLW4gb3B0aW9uIHdpbGwgYWx3YXlzIHJldHVybiBhIHN0YXR1cyBj
-b2RlIG9mIDAuCj4+Pgo+Pj4gTWF5YmUgd2Ugc2hvdWxkIHVwZGF0ZSB0aGUgbWFucGFnZT8gSSds
-bCBjaGVjayBpdCBsYXRlci4KPj4+Cj4+PiBBbnkgd2F5LCB0aGVyZSdzIHN0aWxsIGEgcHJvYmxl
-bSBpbiB5b3VyIHBhdGNoLCBwbGVhc2Ugc2VlIGFib3ZlOgo+Pj4KPj4+IFRoYW5rcywKPj4+IFpv
-cnJvCj4+IEhpIFpvcnJvCj4+IERvIHlvdSBrbm93IHdoeSBpdCByZXR1cm5zIDIgaW5zdGVhZCBv
-ZiAxIHdoZW4gd2UgdXNlIHhmc19yZXBhaXIKPj4gd2l0aG91dCBhbnkgb3B0aW9ucy4KPj4gSSBj
-YW4ndCB1bmRlcnN0YW5kIGl0LCBiZWNhdXNlIGl0IGFsd2F5cyByZXR1cm4gMSBvbiBteSBtYWNo
-aW5lLgo+IEhpIFhpYW8sCj4KPiBQbGVhc2UgQ0MgdGhlIG1haWwgbGlzdCwgdGhlcmUncyBubyBz
-ZWNyZXQuIEFuZCB0aGUgbW9zdCBpbXBvcnRhbnQKPiB0aGluZyBpcyBpZiBJIHNhaWQgc29tZXRo
-aW5nIHdyb25nLCBvdGhlcnMgZ3JlYXQgZGV2ZWxvcGVycyBtYXliZQo+IGdsYWQgdG8gY29ycmVj
-dCBtZTotUAo+Cj4gSSd2ZSBhc2tlZCBESiBXb25nIGFib3V0IHRoZSByZXR1cm4gdmFsdWUgb2Yg
-eGZzX3JlcGFpciwgYW5kIGhlCj4gYWxyZWFkeSByZXBsaWVkOgo+Cj4gInhmc19yZXBhaXIgcmV0
-dXJucyAyIHdoZW4gdGhlIGxvZyBpcyBjb3JydXB0ZWQsIDEgd2hlbiB0aGVyZSdzIGNvcnJ1cHRp
-b24gbGVmdAo+IHRvIGJlIGZpeGVkICpvciogc29tZSBraW5kIG9mIG9wZXJhdGlvbiBlcnJvciBo
-YXBwZW5lZCwgYW5kIDAgaWYgZWl0aGVyIGl0Cj4gZm91bmQgbm90aGluZyB3cm9uZyBvciBhbGwg
-dGhlIGNvcnJ1cHRpb25zIHdlcmUgZml4ZWQuIgo+Cj4gSSdtIHN1cmUgdGhhdCBlbWFpbCBoYXMg
-YmVlbiBzZW50IHRvIHlvdSB0b28uCj4KPiBJZiB5b3UgY2FuJ3QgdW5kZXJzdGFuZCB3aHkgaXQg
-cmV0dXJuIDEsIHlvdSBjYW4gY2hlY2sgeW91ciB4ZnMvMDk4LmZ1bGwgZmlsZSwKPiB5b3UnbGwg
-ZmluZDoKPgo+ICJQaGFzZSAxIC0gZmluZCBhbmQgdmVyaWZ5IHN1cGVyYmxvY2suLi4KPiBQaGFz
-ZSAyIC0gdXNpbmcgaW50ZXJuYWwgbG9nCj4gICAgICAgICAtIHplcm8gbG9nLi4uCj4gTG9nIGlu
-Y29uc2lzdGVudCAoZGlkbid0IGZpbmQgcHJldmlvdXMgaGVhZGVyKQo+IGZhaWxlZCB0byBmaW5k
-IGxvZyBoZWFkCj4gemVyb19sb2c6IGNhbm5vdCBmaW5kIGxvZyBoZWFkL3RhaWwgKHhsb2dfZmlu
-ZF90YWlsPTUpCj4KPiBmYXRhbCBlcnJvciAtLSBFUlJPUjogVGhlIGxvZyBoZWFkIGFuZC9vciB0
-YWlsIGNhbm5vdCBiZSBkaXNjb3ZlcmVkLiBBdHRlbXB0IHRvIG1vdW50IHRoZQo+IGZpbGVzeXN0
-ZW0gdG8gcmVwbGF5IHRoZSBsb2cgb3IgdXNlIHRoZSAtTCBvcHRpb24gdG8gZGVzdHJveSB0aGUg
-bG9nIGFuZAo+IGF0dGVtcHQgYSByZXBhaXIuCj4geGZzX3JlcGFpciBmYWlsZWQsIGVycj0xIgo+
-Cj4gVGhpcyBvdXRwdXQgZnJvbSBiZWxvdyB4ZnNwcm9ncyBjb2RlOgo+Cj4gICAgICAgICBlcnJv
-ciA9IHhsb2dfZmluZF90YWlsKGxvZywgJmhlYWRfYmxrLCAmdGFpbF9ibGspOwo+ICAgICAgICAg
-aWYgKGVycm9yKSB7Cj4gICAgICAgICAgICAgICAgIGRvX3dhcm4oCj4gICAgICAgICAgICAgICAg
-IF8oInplcm9fbG9nOiBjYW5ub3QgZmluZCBsb2cgaGVhZC90YWlsICh4bG9nX2ZpbmRfdGFpbD0l
-ZClcbiIpLAo+ICAgICAgICAgICAgICAgICAgICAgICAgIGVycm9yKTsKPiAgICAgICAgICAgICAg
-ICAgaWYgKCFub19tb2RpZnkgJiYgIXphcF9sb2cpCj4+Pj4gW2V4aXQgZnJvbSBoZXJlXSA+Pj4g
-ICAgZG9fZXJyb3IoXygKPiAiRVJST1I6IFRoZSBsb2cgaGVhZCBhbmQvb3IgdGFpbCBjYW5ub3Qg
-YmUgZGlzY292ZXJlZC4gQXR0ZW1wdCB0byBtb3VudCB0aGVcbiIKPiAiZmlsZXN5c3RlbSB0byBy
-ZXBsYXkgdGhlIGxvZyBvciB1c2UgdGhlIC1MIG9wdGlvbiB0byBkZXN0cm95IHRoZSBsb2cgYW5k
-XG4iCj4gImF0dGVtcHQgYSByZXBhaXIuXG4iKSk7Cj4gICAgICAgICB9IGVsc2Ugewo+ICAgICAg
-ICAgICAgICAgICBpZiAodmVyYm9zZSkgewo+ICAgICAgICAgICAgICAgICAgICAgICAgIGRvX3dh
-cm4oCj4gICAgICAgICBfKCJ6ZXJvX2xvZzogaGVhZCBibG9jayAlIiBQUklkNjQgIiB0YWlsIGJs
-b2NrICUiIFBSSWQ2NCAiXG4iKSwKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGhl
-YWRfYmxrLCB0YWlsX2Jsayk7Cj4gICAgICAgICAgICAgICAgIH0KPiAgICAgICAgICAgICAgICAg
-aWYgKCFub19tb2RpZnkgJiYgaGVhZF9ibGsgIT0gdGFpbF9ibGspIHsKPiAgICAgICAgICAgICAg
-ICAgICAgICAgICBpZiAoemFwX2xvZykgewo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgZG9fd2FybihfKAo+ICJBTEVSVDogVGhlIGZpbGVzeXN0ZW0gaGFzIHZhbHVhYmxlIG1ldGFk
-YXRhIGNoYW5nZXMgaW4gYSBsb2cgd2hpY2ggaXMgYmVpbmdcbiIKPiAiZGVzdHJveWVkIGJlY2F1
-c2UgdGhlIC1MIG9wdGlvbiB3YXMgdXNlZC5cbiIpKTsKPiAgICAgICAgICAgICAgICAgICAgICAg
-ICB9IGVsc2Ugewo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZG9fd2FybihfKAo+
-ICJFUlJPUjogVGhlIGZpbGVzeXN0ZW0gaGFzIHZhbHVhYmxlIG1ldGFkYXRhIGNoYW5nZXMgaW4g
-YSBsb2cgd2hpY2ggbmVlZHMgdG9cbiIKPiAiYmUgcmVwbGF5ZWQuICBNb3VudCB0aGUgZmlsZXN5
-c3RlbSB0byByZXBsYXkgdGhlIGxvZywgYW5kIHVubW91bnQgaXQgYmVmb3JlXG4iCj4gInJlLXJ1
-bm5pbmcgeGZzX3JlcGFpci4gIElmIHlvdSBhcmUgdW5hYmxlIHRvIG1vdW50IHRoZSBmaWxlc3lz
-dGVtLCB0aGVuIHVzZVxuIgo+ICJ0aGUgLUwgb3B0aW9uIHRvIGRlc3Ryb3kgdGhlIGxvZyBhbmQg
-YXR0ZW1wdCBhIHJlcGFpci5cbiIKPiAiTm90ZSB0aGF0IGRlc3Ryb3lpbmcgdGhlIGxvZyBtYXkg
-Y2F1c2UgY29ycnVwdGlvbiAtLSBwbGVhc2UgYXR0ZW1wdCBhIG1vdW50XG4iCj4gIm9mIHRoZSBm
-aWxlc3lzdGVtIGJlZm9yZSBkb2luZyB0aGlzLlxuIikpOwo+ICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgZXhpdCgyKTsKPiAgICAgICAgICAgICAgICAgICAgICAgICB9Cj4gICAgICAg
-ICAgICAgICAgIH0KPiAgICAgICAgIH0KPgo+IEkndmUgbWFya2VkIFtleGl0IGZyb20gaGVyZV0g
-Zm9yIHlvdS4gZG9fZXJyb3Igd2lsbCBjYWxsIGV4aXQoMSkuIEFuZCB0aGUgb3V0cHV0Cj4gbWVz
-c2FnZSBhbHJlYWR5IHRlbGwgeW91IHRoZSByZWFzb24gYWJvdXQgd2h5IGl0IGZhaWwuCj4KPiBZ
-b3UgY2FuIGtlZXAgcmVhZGluZywgdGhlcmUncyBhICJleGl0KDIpIiBhdCB0aGUgZW5kIG9mIGFi
-b3ZlIGNvZGUuIEkgY2FuJ3QgZmluZAo+IG1vcmUgZXhpdCgyKSBmcm9tIHhmc3Byb2dzL3JlcGFp
-ci8gLiBTbyBtYXliZSB0aGlzJ3MgdGhlIG9ubHkgb25lIHBsYWNlIHdoaWNoCj4gY2FuIHJldHVy
-biAyLiBGcm9tIHRoZSBpbmZvcm1hdGlvbiBhYm92ZSB0aGF0IGV4aXQoMiksIHlvdSBjYW4gc2Vl
-IHRoYXQKPiB4ZnNfcmVwYWlyIHdpbGwgcmV0dXJuIDIgd2hlbiBpdCBmaW5kIHRoZXJlJ3JlIHNv
-bWUgdmFsdWFibGUgbWV0YWRhdGEgY2hhbmdlcyBpbgo+IGEgbG9nLiBJdCB0aGluayBhIG1vdW50
-IG9wZXJhdGlvbiBtYXliZSBjYW4gcmVwbGF5IHRoaXMgbG9nLCBzbyBpdCByZXR1cm4gMiBhbmQK
-PiBzdWdnZXN0IHRoZSB1c2VyIHRyeSB0byBtb3VudCB0aGUgZmlsZXN5c3RlbS4gSWYgbW91bnQg
-Y2FuJ3QgcmVwbGF5IHRoZSBsb2csIC1MCj4gaXMgdGhlIG5leHQgY2hvaWNlLgo+Cj4gU28gSSB0
-aGluayB0aGUgX3JlcGFpcl9zY3JhdGNoX2ZzIGZ1bmN0aW9uIGluIHhmc3Rlc3RzL2NvbW1vbi9y
-YyBkb2Vzbid0IHRoaW5rCj4gYWJvdXQgYWJvdmUgc2l0dWF0aW9uLiB4ZnNfcmVwYWlyIGRvZXNu
-J3QgYWx3YXlzIHJldHVybiAyIGlmIGxvZyBjb3JydXB0ZWQuCj4gT25seSB4ZnNfcmVwYWlyIGZl
-ZWwgbG9nIGNhbiBiZSByZXBsYXksIGl0J2xsIHJldHVybiAyLCBvciBpdCdsbCByZXR1cm4gMS4g
-U28KPiBtYXliZSB3ZSBzaG91bGQgY2hhbmdlICJpZiBbICRyZXMgLWVxIDIgXSIgdG8gImlmIFsg
-JHJlcyAtbmUgMCBdIi4gT3Igd2UgbmVlZAo+IHRvIGNoYW5nZSB4ZnNfcmVwYWlyIHRvIG1ha2Ug
-aXQgcmV0dXJuIDI6LVAKPgo+IEZvciB4ZnMvMDk4J3MgcHJvYmxlbSwgeW91IGNhbiBjaGFuZ2Ug
-dGhlIGxpbmUjOTY6Cj4gZnJvbQo+IF9zY3JhdGNoX3hmc19yZXBhaXIgPj4gJHNlcXJlcy5mdWxs
-IDI+JjEKPiB0bwo+IF9yZXBhaXJfc2NyYXRjaF9mcyA+PiAkc2VxcmVzLmZ1bGwgMj4mMQo+Cj4g
-QW5kIF9yZXBhaXJfc2NyYXRjaF9mcyBuZWVkIHRvIGJlIG1vZGlmaWVkIGFzIEkgc2FpZCBhYm92
-ZS4gSSB0aGluayBJIHNob3VsZCB3cml0ZQo+IGEgcGF0Y2ggdG8gZGVzY3JpYmUgdGhlIHJldHVy
-biB2YWx1ZSBvZiB4ZnNfcmVwYWlyKHdpdGhvdXQgLW4pLiBUaGUgY3VycmVudAo+IHhmc19yZXBh
-aXIgbWFucGFnZSBzYWlkOgo+ICJ4ZnNfcmVwYWlyIHJ1biB3aXRob3V0IHRoZSAtbiBvcHRpb24g
-d2lsbCBhbHdheXMgcmV0dXJuIGEgc3RhdHVzIGNvZGUgb2YgMC4iCj4gaXQncyB3cm9uZy4KPgo+
-IE9LLCBJJ3ZlIHRhbGtlZCB0b28gbXVjaC4gSWYgYW55b25lIGZlZWwgYW55dGhpbmcgd3Jvbmcs
-IHBsZWFzZSBjb3JyZW50IG1lOikKPgo+IFRoYW5rcywKPiBab3Jybwo+ClRoYW5rcyBmb3IgeW91
-ciBjb21tZW50LCBzbyBpIHdpbGwgcmV3cml0ZSB0aGlzIHBhdGNoLgoKVGhhbmtzLApYaWFvIFlh
-bmcKPj4gVGhhbmtzLAo+PiB5YW5nCj4+Pj4gVGhhbmtzCj4+Pj4gWGlhbyBZYW5nLgo+Pj4+Pj4g
-IGVjaG8gIisgbW91bnQgaW1hZ2UgKDIpIgo+Pj4+Pj4gIF9zY3JhdGNoX21vdW50Cj4+Pj4+PiAt
-LSAKPj4+Pj4+IDEuOC4zLjEKPj4+Pj4+Cj4+Pj4+Pgo+Pj4+Pj4KPj4+Pj4+IC0tCj4+Pj4+PiBU
-byB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUg
-ZnN0ZXN0cyIgaW4KPj4+Pj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdl
-ci5rZXJuZWwub3JnCj4+Pj4+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5r
-ZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPj4+Pj4gLgo+Pj4+Pgo+Pj4+Cj4+Pj4gLS0K
-Pj4+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
-Y3JpYmUgZnN0ZXN0cyIgaW4KPj4+PiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
-QHZnZXIua2VybmVsLm9yZwo+Pj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
-Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo+Pj4gLgo+Pj4KPj4KPj4KPgo+IC4KPgoK
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+On Tue, Sep 13, 2016 at 11:54:36PM +0800, Zorro Lang wrote:
+> The man 8 xfs_repair said "xfs_repair run without the -n option will
+> always return a status code of 0". That's not correct.
+> 
+> xfs_repair will return 2 if it finds a fs log which needs to be
+> replayed or cleared, 1 if runtime error is encountered, and 0 for
+> all other cases.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> V2 patch did below things:
+>  - change the description for xfs_repair
+>  - remove the description for "xfs_repair -L"
+> 
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_repair.8 | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+> index 1b4d9e3..e45fd90 100644
+> --- a/man/man8/xfs_repair.8
+> +++ b/man/man8/xfs_repair.8
+> @@ -504,12 +504,17 @@ that is known to be free. The entry is therefore invalid and is deleted.
+>  This message refers to a large directory.
+>  If the directory were small, the message would read "junking entry ...".
+>  .SH EXIT STATUS
+> +.TP
+>  .B xfs_repair \-n
+>  (no modify node)
+>  will return a status of 1 if filesystem corruption was detected and
+>  0 if no filesystem corruption was detected.
+> +.TP
+>  .B xfs_repair
+> -run without the \-n option will always return a status code of 0.
+> +run without the \-n option will return a status code of 2 if it finds a
+> +filesystem log which needs to be replayed(by a mount/umount cycle) or
+> +cleared(by -L option), 1 if a runtime error is encountered, and 0 in all
+> +other cases, whether or not filesystem corruption was detected.
+
+So... I'd rather the documentation about the return code reflect the
+status of the filesystem -- 2 means "unclean log, replay it or zap it",
+1 means "errors encountered, fs may not be correct", and 0 /should/ mean
+"fs is correct".
+
+OTOH I don't know for sure that xfs_repair always cleans up the fs on
+the first try.  From my fuzzing experiments a few years ago this seems
+to be the case nearly all the time (unlike e2fsck) but not 100%.  ISTR
+asking Dave about this, and I think he said that the FS should be clean
+if repair returns 0.  But I'll let him reiterate that if it's true;
+don't trust my crummy memory, that's why I have filesystems. ;)
+
+--D
+
+>  .SH BUGS
+>  The filesystem to be checked and repaired must have been
+>  unmounted cleanly using normal system administration procedures
+> -- 
+> 2.7.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
