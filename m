@@ -1,160 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52932 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752626AbcIMOoH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Sep 2016 10:44:07 -0400
-Date: Tue, 13 Sep 2016 22:44:05 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs_repair: update the manual content about xfs_repair
- exit status
-Message-ID: <20160913144405.GG12847@dhcp12-143.nay.redhat.com>
-References: <1473482849-5706-1-git-send-email-zlang@redhat.com>
- <0e20a2e5-eb5a-aa6c-eff7-e67d35c6f227@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:55106 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750839AbcIMALu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Sep 2016 20:11:50 -0400
+Date: Tue, 13 Sep 2016 10:11:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 4/4] ovl: use vfs_copy_file_range() to copy up file
+ data
+Message-ID: <20160913001147.GO22388@dastard>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-5-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0e20a2e5-eb5a-aa6c-eff7-e67d35c6f227@sandeen.net>
+In-Reply-To: <1473692803-11964-5-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-On Mon, Sep 12, 2016 at 11:01:12AM -0500, Eric Sandeen wrote:
-> On 9/9/16 11:47 PM, Zorro Lang wrote:
-> > The man 8 xfs_repair said "xfs_repair run without the -n option will
-> > always return a status code of 0". That's not correct.
-> > 
-> > xfs_repair will return 2 if it find valuable metadata changes in log
-> > which needs to be replayed, 1 if it can't fix the corruption or some
-> > other errors happened and 0 if nothing wrong or all the corruptions
-> > were fixed.
-> > 
-> > Generally xfs_repair -L will always return 0, except it can't clear
-> > the log.
+On Mon, Sep 12, 2016 at 06:06:43PM +0300, Amir Goldstein wrote:
+> Use vfs_copy_file_range() helper instead of calling do_splice_direct()
+> when copying up file data.
+> When copying up within the same fs, which supports copy_file_range(),
+> fs implementation can be more efficient then do_splice_direct().
+> vfs_copy_file_range() helper falls back to do_splice_direct() if
+> it cannot use the file system's copy_file_range() implementation.
 > 
-> And I think that's an operational type error, not the result
-> of a filesystem problem; more like an IO error, or a code bug,
-> I *think* ... more below.
+> Tested correct behavior when lower and upper are on:
+> 1. same ext4 (copy)
+> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 > 
-> 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> > 
-> > Hi,
-> > 
-> > I  trusted the xfs_repair manpage, and thought xfs_repair will always return 0.
-> > But recently I found it lies when I tried to review someone xfstests case.
-> > 
-> > A correct manpage will help more people to write right cases, so I try to modify
-> > the manpage, by search all exit/do_error in xfsprogs/repair. I'm not the best
-> > one who learn about xfs_repair, so I just hope I did the right thing:-P Please
-> > feel free to correct me.
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> >  man/man8/xfs_repair.8 | 13 ++++++++++++-
-> >  1 file changed, 12 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> > index 1b4d9e3..1f8f13b 100644
-> > --- a/man/man8/xfs_repair.8
-> > +++ b/man/man8/xfs_repair.8
-> > @@ -504,12 +504,23 @@ that is known to be free. The entry is therefore invalid and is deleted.
-> >  This message refers to a large directory.
-> >  If the directory were small, the message would read "junking entry ...".
-> >  .SH EXIT STATUS
-> > +.TP
-> >  .B xfs_repair \-n
-> >  (no modify node)
-> >  will return a status of 1 if filesystem corruption was detected and
-> >  0 if no filesystem corruption was detected.
-> > +.TP
-> >  .B xfs_repair
-> > -run without the \-n option will always return a status code of 0.
-> > +run without the \-n option will return a status code of 2 if it find the
-> > +filesystem has valuable metadata changes in log which needs to be
-> > +replayed, 1 if there's corruption left to be fixed
-> 
-> I'm not sure that's the best description; from a quick look, I think
-> those exit values of 1 result from do_error(), and in repair that's
-> (usually?) due to something like a memory allocation failure, or an
-> inconsistent state in the tool; more like hitting an ASSERT.  That might
-> leave corruption, but only as a follow-on effect.
+> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> 25 seconds on the rest of the setups.
 
-Hi Eric,
+This is now stale, right? the reflink is done from the
+vfs_clone_file_range() call added in an earlier patch, not this
+change....
 
-Many thanks for you can help to review this patch.
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/overlayfs/copy_up.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> index e432d7e..32ea54f 100644
+> --- a/fs/overlayfs/copy_up.c
+> +++ b/fs/overlayfs/copy_up.c
+> @@ -159,15 +159,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>  			break;
+>  		}
+>  
+> -		bytes = do_splice_direct(old_file, &old_pos,
+> -					 new_file, &new_pos,
+> -					 this_len, SPLICE_F_MOVE);
+> +		bytes = vfs_copy_file_range(old_file, old_pos,
+> +					    new_file, new_pos,
+> +					    this_len, 0);
+>  		if (bytes <= 0) {
+>  			error = bytes;
+>  			break;
+>  		}
+> -		WARN_ON(old_pos != new_pos);
+>  
+> +		old_pos += bytes;
+> +		new_pos += bytes;
+>  		len -= bytes;
+>  	}
 
-I've check all code will exit(1), generally it caused by memory or disk
-errors. But some other situations likes:
- - No enough matching AGs or superblocks
- - Primary superblock bad after phase 1
- - Sector size on host filesystem larger than image sector size, when try
-   to repair a file image
- ...
+Patch does not remove the
 
-will exit(1) too.
+	/* FIXME: copy up sparse files efficiently */
 
-But yes, they're all belong to runtime error:) There're too many situations
-can return 1. But only one place can return 2, so we can say except return 0
-and 2, others will return 1 :-P
+comment. Efficient copying of sparse files is something
+vfs_copy_file_range() should do internally....
 
+Cheers,
 
->
-> > + or can't find log head
-> > +and tail or some other errors happened, 
-> 
-> Which is the same as above, I think - an internal error.
-> 
-> > and 0 if nothing wrong or all the
-> > +corruptions were fixed.
-> > +.TP
-> > +.B xfs_repair \-L
-> > +(Force Log Zeroing)
-> > +will return a status code of 1 if it can't clear the log, or will always
-> > +return 0.
-> 
-> 
-> How about something like this:
-> 
->  .B xfs_repair \-n
->  (no modify node)
->  will return a status of 1 if filesystem corruption was detected and
->  0 if no filesystem corruption was detected.
->  .TP
->  .B xfs_repair
->  run without the \-n option will return a status code of 2 if it finds a
->  filesystem log which needs to be replayed (by a mount/umount cycle), 1 if
->  a runtime error is encountered, and 0 in all other cases, whether or not
->  filesystem corruption was detected.
-
-Your patch(xfs_repair: exit with status 2 if log dirtiness is unknown) will
-make xfs_repair return 2, when it can't find log head/tail. I think xfs_repair
-won't think the log needs to be replayed if it can't find the log tail/head.
-
-So how about "return a status code of 2 if it finds filesystem log needs to be
-replayed or cleared"?
-
-Thanks,
-Zorro
-
-> 
-> and I'd leave out the bit about xfs_repair -L; really that's just a runtime
-> error - if we clear the log and then can't find the head/tail, something
-> strange has gone wrong.
-> 
-> Thanks,
-> 
-> -Eric
-> 
-> >  .SH BUGS
-> >  The filesystem to be checked and repaired must have been
-> >  unmounted cleanly using normal system administration procedures
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
