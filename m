@@ -1,211 +1,135 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:18714 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750975AbcINBYX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 21:24:23 -0400
-Date: Wed, 14 Sep 2016 11:23:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V4] xfs: Document error handlers behavior
-Message-ID: <20160914012334.GK30497@dastard>
-References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DA58F7CA2
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 10:02:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 92E3A8F8035
+	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 08:02:17 -0700 (PDT)
+Received: from resqmta-ch2-02v.sys.comcast.net
+	(resqmta-ch2-02v.sys.comcast.net [69.252.207.34]) by
+	cuda.sgi.com with ESMTP id oh210bTuBXxYApq9 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 08:02:13 -0700 (PDT)
+Subject: Re: [INFO] xfs: kernel debugging with trace_printk()
+References: <20160906082045.GJ30056@dastard>
+From: Joshua Kinard <kumba@gentoo.org>
+Message-ID: <e5b07fd7-3c4e-e183-008b-877b0c237b72@gentoo.org>
+Date: Tue, 13 Sep 2016 11:02:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <20160906082045.GJ30056@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 13, 2016 at 05:03:05AM -0400, Carlos Maiolino wrote:
-> Document the implementation of error handlers into sysfs.
+On 09/06/2016 04:20, Dave Chinner wrote:
+> Hi folks,
 > 
+> I learnt something today that made my life immediately better:
+> trace_printk(). After I discovered it, Darrick mentioned on #xfs
+> that he didn't know about it either, hence I figured I should send
+> an email to the list so that everyone working with XFS knows about
+> it....
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> Changelog:
+> Yes, this community service starts with me admitting I am a heavy
+> user of printk() for debugging code, and I'm about to go cold
+> turkey.
 > 
-> V2:
-> 	- Add a description of the precedence order of each option, focusing on
-> 	  the behavior of "fail_at_unmount" which was not well explained in V1
+> "Me Ugg, Caveman. Big Club mine. Hit Stuff Hard. Fix It Good."
 > 
-> V3:
-> 	- Fix English spelling mistakes suggested by Eric
+> But, really, everyone does the same thing - anyone what says they
+> don't is lying. :P
 > 
-> V4:
-> 	- Typo mistakes, document ENODEV default value for max_retries, fix
-> 	  directories's hierarchy description
+> You all know the drill: add a printk, recompile, test, see what gets
+> output on the console, go back to step one. It starts like this:
+> 
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> 
+> Then if there's lots of output, you turn off the console output with
+> 'dmesg -n X' and look at the output in /var/log/messages instead, or
+> directly run dmesg to see it. You spend time wading through reams of
+> output.
+> 
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> 
+> Then you start going mad because the code runs so slow and it's
+> extremely hard to correlate with other diagnostic information (such
+> as trace events) that you're also using to try work out what is
+> going on. And then you end up adding so much debug that it turns
+> into a heisenbug and you think you're going insane...
+> 
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> 
+> And, finally, when you think you've fixed the problem, you remove
+> the debug printk()s and find the problem is still there....
+> 
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> Eat, sleep, printk(), repeat.
+> 
+> So, avoid the existential crisis and the hard liquor and drugs:
+> use trace_printk() and `trace-cmd record -e printk` to maintain your
+> sanity!
+> 
+> (You all know about trace-cmd, right?)
+> 
 
-Ok, I had to update this for the change in retry timeout values from
-Eric, so I went and fixed all the other things I thought needed
-fixing, too. New patch below....
+[snip]
 
-Dave.
+But this assumes one can even get to a working shell prompt from which one can
+run commands, like 'trace-cmd'.  I've been trying to hunt down and fix various
+bugs in running Linux on some of the old SGI machines (which is an appropriate
+statement for this list), and some of them, you never even get as far as a
+working shell prompt that accepts keyboard or serial input (thanks, IOC3!).
+
+Usually, I'm not only doing the "Eat, sleep, printk(), repeat." dance.  In some
+instances, my only workable debugging aid is printk() (or actually the pr_*()
+versions), and a DSLR mounted on a tripod with a fast shutter speed, high ISO,
+and a remote trigger to try and catch error messages as they zoom by on the
+screen.  Luckily, I have a really old LCD flat panel that has a slow refresh
+rate, so I can sometimes read the fading text of the errors as they're
+overwritten by new output.
+
+Now I just need to figure out how to write a kgdb shim driver for the IOC3 chip
+so I can get GDB to do remote debugging over serial.  That will *really* help
+hunt down some of the really screwy bugs I've run into (like Onyx2's mysterious
+hard-lockup NUMA bug).
+
+And yes, the SGI machines that do work well all use XFS as their Linux
+filesystem of choice :)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Joshua Kinard
+Gentoo/MIPS
+kumba@gentoo.org
+6144R/F5C6C943 2015-04-27
+177C 1972 1FB8 F254 BAD0 3E72 5C63 F4E3 F5C6 C943
 
-xfs: Document error handlers behavior
+"The past tempts us, the present confuses us, the future frightens us.  And our
+lives slip away, moment by moment, lost in that vast, terrible in-between."
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+--Emperor Turhan, Centauri Republic
 
-Document the implementation of error handlers into sysfs.
-
-[dchinner: significant update:
-	- removed examples from concept descriptions, placed them in
-	  appropriate detailed descriptions instead
-	- added explanations for <dev>, <class> and <error> strings
-	  in sysfs layout description
-	- added specific definition of "global" per-filesystem error
-	  configuration parameters.
-	- reformatted to remove multiple indents
-	- added more information about fail_at_unmount behaviour and
-	  constraints
-	- added comment that there is a "default" handler to
-	  configure behaviour for all errors that don't have
-	  specific handlers defined.
-	- added specific handler value explanations
-	- added note about handlers having context specific
-	  defaults with example. ]
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
----
- Documentation/filesystems/xfs.txt | 125 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 125 insertions(+)
-
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 8146e9f..705d064 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -348,3 +348,128 @@ Removed Sysctls
-   ----				-------
-   fs.xfs.xfsbufd_centisec	v4.0
-   fs.xfs.age_buffer_centisecs	v4.0
-+
-+
-+Error handling
-+==============
-+
-+XFS can act differently according to the type of error found during its
-+operation. The implementation introduces the following concepts to the error
-+handler:
-+
-+ -failure speed:
-+	Defines how fast XFS should propagate an error upwards when a specific
-+	error is found during the filesystem operation. It can propagate
-+	immediately, after a defined number of retries, after a set time period,
-+	or simply retry forever.
-+
-+ -error classes:
-+	Specifies the subsystem the error configuration will apply to, such as
-+	metadata IO or memory allocation. Different subsystems will have
-+	different error handlers for which behaviour can be configured.
-+
-+ -error handlers:
-+	Defines the behavior for a specific error.
-+
-+The filesystem behavior during an error can be set via sysfs files, Each
-+error handler works independently, the first condition met by and error handler
-+for a specific class will cause the error to be propagated rather than reset and
-+retried.
-+
-+The action taken by the filesystem when the error is propagated is context
-+dependent - it may cause a shut down in the case of an unrecoverable error,
-+it may be reported back to userspace, or it may even be ignored because
-+there's nothing useful we can with the error or anyone we can report it to (e.g.
-+during unmount).
-+
-+The configuration files are organized into the following per-mounted filesystem
-+hierarchy:
-+
-+  /sys/fs/xfs/<dev>/error/<class>/<error>/
-+
-+Where:
-+  <dev>
-+	The short device name of the mounted filesystem. This is the same device
-+	name that shows up in XFS kernel error messages as "XFS(<dev>): ..."
-+
-+  <class>
-+	The subsystem the error configuration belongs to. As of 4.9, the defined
-+	classes are:
-+
-+		- "metadata": applies metadata buffer write IO
-+
-+  <error>
-+	The individual error handler configurations.
-+
-+
-+Each filesystem has "global" error configuration options defined in their top
-+level directory:
-+
-+  /sys/fs/xfs/<dev>/error/
-+
-+  fail_at_unmount		(Min:  0  Default:  1  Max: 1)
-+	Defines the filesystem error behavior at unmount time.
-+
-+	If set to a value of 1, XFS will override all other error configurations
-+	during unmount and replace them with "immediate fail" characteristics.
-+	i.e. no retries, no retry timeout. This will always allow unmount to
-+	succeed when there are persistent errors present.
-+
-+	If set to 0, the configured retry behaviour will continue until all
-+	retries and/or timeouts have been exhausted. This will delay unmount
-+	completion when there are persistent errors, and it may prevent the
-+	filesystem from ever unmounting fully in the case of "retry forever"
-+	handler configurations.
-+
-+	Note: there is no guarantee that fail_at_unmount can be set whilst an
-+	unmount is in progress. It is possible that the sysfs entries are
-+	removed by the unmounting filesystem before a "retry forever" error
-+	handler configuration causes unmount to hang, and hence the filesystem
-+	must be configured appropriately before unmount begins to prevent
-+	unmount hangs.
-+
-+Each filesystem has specific error class handlers that define the error
-+propagation behaviour for specific errors. There is also a "default" error
-+handler defined, which defines the behaviour for all errors that don't have
-+specific handlers defined. The handler configurations are found in the
-+directory:
-+
-+  /sys/fs/xfs/<dev>/error/<class>/<error>/
-+
-+  max_retries			(Min: -1  Default: Varies  Max: INTMAX)
-+	Defines the allowed number of retries of a specific error before
-+	the filesystem will propagate the error. The retry count for a given
-+	error context (e.g. a specific metadata buffer) is reset ever time there
-+	is a successful completion of the operation.
-+
-+	Setting the value to "-1" will cause XFS to retry forever for this
-+	specific error.
-+
-+	Setting the value to "0" will cause XFS to fail immediately when the
-+	specific error is reported.
-+
-+	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
-+	operation "N" times before propagating the error.
-+
-+  retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
-+	Define the amount of time (in seconds) that the filesystem is
-+	allowed to retry its operations when the specific error is
-+	found.
-+
-+	Setting the value to "-1" will set an infinite timeout, causing
-+	error propagation behaviour to be determined solely by the "max_retries"
-+	parameter.
-+
-+	Setting the value to "0" will cause XFS to fail immediately when the
-+	specific error is reported.
-+
-+	Setting the value to  "N" (where 0 < N < Max) will propagate the error
-+	on the first retry that fails at least "N" seconds after the first error
-+	was detected, unless the number of retries defined by max_retries
-+	expires first.
-+
-+Note: The default behaviour for a specific error handler is dependent on both
-+the class and error context. For example, the default values for
-+"metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
-+to "fail immediately" behaviour. This is done because ENODEV is a fatal,
-+unrecoverable error no matter how many times the metadata IO is retried.
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
