@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 990657CA0
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:16:58 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5AEC87CA0
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 06:40:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 62967304039
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:55 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id bNR5msXjWmakTBCm (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:53 -0700 (PDT)
-Subject: [PATCH 1/3] block: invalidate the page cache when issuing BLKZEROOUT.
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 14:16:23 -0700
-Message-ID: <147518378313.22791.16649519283678515021.stgit@birch.djwong.org>
-In-Reply-To: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
-References: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A15B8F8049
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 04:40:33 -0700 (PDT)
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [58.251.152.64])
+	by cuda.sgi.com with ESMTP id PyLs9mr8dp6hjDMj (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2016 04:40:29 -0700 (PDT)
+From: Hou Tao <houtao1@huawei.com>
+Subject: [PATCH] xfs_logprint: remove the printing of transaction type
+Date: Wed, 14 Sep 2016 19:31:54 +0800
+Message-ID: <1473852714-192623-1-git-send-email-houtao1@huawei.com>
+In-Reply-To: <20160914053110.GM30497@dastard>
+References: <20160914053110.GM30497@dastard>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,65 +28,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
-Cc: hch@infradead.org, Hannes Reinecke <hare@suse.com>, tytso@mit.edu, snitzer@redhat.com, martin.petersen@oracle.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
-returning stale cache contents at a later time.
+th_type in struct xfs_trans_header was used to store
+the transaction type for xfs without delaylog feature.
+Now delaylog is a built-in feature (commit 93b8a58 "xfs:
+remove the deprecated nodelaylog option" v3.3-rc1), so
+remove the printing of transaction type.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hou Tao <houtao1@huawei.com>
 ---
- block/ioctl.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ logprint/log_misc.c        | 50 ++--------------------------------------------
+ logprint/log_print_trans.c |  4 ++--
+ logprint/logprint.h        |  2 --
+ 3 files changed, 4 insertions(+), 52 deletions(-)
 
-
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..755119c 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -225,7 +225,8 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg)
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 479fc14..e4af09b 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -28,52 +28,6 @@
+ #define NO_ERROR	(0)
+ 
+ static int logBBsize;
+-char *trans_type[] = {
+-	"",
+-	"SETATTR",
+-	"SETATTR_SIZE",
+-	"INACTIVE",
+-	"CREATE",
+-	"CREATE_TRUNC",
+-	"TRUNCATE_FILE",
+-	"REMOVE",
+-	"LINK",
+-	"RENAME",
+-	"MKDIR",
+-	"RMDIR",
+-	"SYMLINK",
+-	"SET_DMATTRS",
+-	"GROWFS",
+-	"STRAT_WRITE",
+-	"DIOSTRAT",
+-	"WRITE_SYNC",
+-	"WRITEID",
+-	"ADDAFORK",
+-	"ATTRINVAL",
+-	"ATRUNCATE",
+-	"ATTR_SET",
+-	"ATTR_RM",
+-	"ATTR_FLAG",
+-	"CLEAR_AGI_BUCKET",
+-	"QM_SBCHANGE",
+-	"DUMMY1",
+-	"DUMMY2",
+-	"QM_QUOTAOFF",
+-	"QM_DQALLOC",
+-	"QM_SETQLIM",
+-	"QM_DQCLUSTER",
+-	"QM_QINOCREATE",
+-	"QM_QUOTAOFF_END",
+-	"SB_UNIT",
+-	"FSYNC_TS",
+-	"GROWFSRT_ALLOC",
+-	"GROWFSRT_ZERO",
+-	"GROWFSRT_FREE",
+-	"SWAPEXT",
+-	"SB_COUNT",
+-	"CHECKPOINT",
+-	"ICREATE",
+-};
+ 
+ typedef struct xlog_split_item {
+ 	struct xlog_split_item	*si_next;
+@@ -233,8 +187,8 @@ xlog_print_trans_header(char **ptr, int len)
+ 	return 1;
+     }
+     h = (xfs_trans_header_t *)cptr;
+-    printf(_("    type: %s       tid: %x       num_items: %d\n"),
+-	   trans_type[h->th_type], h->th_tid, h->th_num_items);
++    printf(_("     tid: %x  num_items: %d\n"),
++	   h->th_tid, h->th_num_items);
+     return 0;
+ }	/* xlog_print_trans_header */
+ 
+diff --git a/logprint/log_print_trans.c b/logprint/log_print_trans.c
+index 9bf2b37..0fecbce 100644
+--- a/logprint/log_print_trans.c
++++ b/logprint/log_print_trans.c
+@@ -24,8 +24,8 @@ void
+ xlog_recover_print_trans_head(
+ 	xlog_recover_t	*tr)
  {
- 	uint64_t range[2];
--	uint64_t start, len;
-+	struct address_space *mapping;
-+	uint64_t start, end, len;
- 
- 	if (!(mode & FMODE_WRITE))
- 		return -EBADF;
-@@ -235,18 +236,23 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
- 
- 	start = range[0];
- 	len = range[1];
-+	end = start + len - 1;
- 
- 	if (start & 511)
- 		return -EINVAL;
- 	if (len & 511)
- 		return -EINVAL;
--	start >>= 9;
--	len >>= 9;
--
--	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
-+	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
-+		return -EINVAL;
-+	if (end < start)
- 		return -EINVAL;
- 
--	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
-+	/* Invalidate the page cache, including dirty pages */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
-+
-+	return blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
-+				    false);
+-	printf(_("TRANS: tid:0x%x  type:%s  #items:%d  trans:0x%x  q:0x%lx\n"),
+-	       tr->r_log_tid, trans_type[tr->r_theader.th_type],
++	printf(_("TRANS: tid:0x%x  #items:%d  trans:0x%x  q:0x%lx\n"),
++	       tr->r_log_tid,
+ 	       tr->r_theader.th_num_items,
+ 	       tr->r_theader.th_tid, (long)&tr->r_itemq);
  }
+diff --git a/logprint/logprint.h b/logprint/logprint.h
+index 0c03c08..bdd0ee1 100644
+--- a/logprint/logprint.h
++++ b/logprint/logprint.h
+@@ -30,8 +30,6 @@ extern int	print_no_data;
+ extern int	print_no_print;
  
- static int put_ushort(unsigned long arg, unsigned short val)
+ /* exports */
+-extern char *trans_type[];
+-
+ extern void xlog_print_lseek(struct xlog *, int, xfs_daddr_t, int);
+ 
+ extern void xfs_log_copy(struct xlog *, int, char *);
+-- 
+2.5.5
 
 _______________________________________________
 xfs mailing list
