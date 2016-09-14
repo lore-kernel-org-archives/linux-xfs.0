@@ -1,129 +1,50 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5EC67CA0
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 16:51:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 788098F8050
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 14:51:00 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	iWHDdHjiAF2lGYHR for <xfs@oss.sgi.com>;
-	Wed, 14 Sep 2016 14:50:54 -0700 (PDT)
-Date: Thu, 15 Sep 2016 07:50:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/6] xfs: automatically fix up AGFL size issues
-Message-ID: <20160914215051.GO30497@dastard>
-References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
-	<1472783257-15941-5-git-send-email-david@fromorbit.com>
-	<20160914182044.GG9314@birch.djwong.org>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36048 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752960AbcINDuA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 23:50:00 -0400
+Received: by mail-oi0-f67.google.com with SMTP id o7so205230oif.3
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Sep 2016 20:49:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160914182044.GG9314@birch.djwong.org>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <20160914031648.GB2356@ZenIV.linux.org.uk>
+References: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
+ <20160908213835.GY30056@dastard> <20160908235521.GL2356@ZenIV.linux.org.uk>
+ <20160909015324.GD30056@dastard> <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
+ <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <20160909023452.GO2356@ZenIV.linux.org.uk> <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+ <20160909221945.GQ2356@ZenIV.linux.org.uk> <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+ <20160914031648.GB2356@ZenIV.linux.org.uk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 13 Sep 2016 20:49:58 -0700
+Message-ID: <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency detected
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>
 
-On Wed, Sep 14, 2016 at 11:20:44AM -0700, Darrick J. Wong wrote:
-> On Fri, Sep 02, 2016 at 12:27:35PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> I've been wondering whether we need to take the extra step of clearing
-> that last slot in the AGFL.  Prior to 4.5, 32-bit kernels thought
-> XFS_AGFL_SIZE was 119 (4k blocks, 512b sectors) and 64-bit kernels
-> thought it was 118.  Since then, both 32b and 64b think it's 119; with
-> this patchset we're making it 118 everywhere.  My initial fear was that
-> the following could happen:
-> 
-> 1. Mount with an agfl-119 kernel, beat on the fs until the agfl wraps
-> around the end.  The last agfl pointer is set to something.
-> 
-> 2. Remount with a patched agfl-118 kernel that makes this correction.
-> The last agfl pointer remains set to whatever.  Exercise the fs until
-> the agfl active list wraps around again.
-> 
-> 3. Remount with the old agfl-119 kernel.  It is now working with flcount
-> values that don't add up in its worldview, but will it notice?  In any
-> case, it will end up using that last agfl pointer.  Can we guarantee
-> that block is not owned by something else?
+On Tue, Sep 13, 2016 at 8:16 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+>> So feel free to try maxing out using only a small handful of
+>> pipe_buffer entries. Returning partial IO from splice() is fine.
+>
+>         Are you sure that nobody's growing the output pipe buffer before
+> doing splice() into it as a way to reduce the amount of iterations?
 
-Yes, because we left it on the free list and simply adjusted the
-pointers to skip it. Hence if the corrected fs is then mounted again
-on an older kernel while there is a AGFL wrap condition on disk, it
-will pull the block from the AGFL and it's OK because it's still a
-free block that isn't present in the ABTB/ABTC.
+Do we care?
 
-> I /think/ the answer to #2 is that a block only ends up on the AGFL
-> after it's been removed from the freespace btrees, so the block pointed
-> to in that last slot is still free and in fact can be used.
+There's a lot of people who use large buffers. That doesn't
+necessarily mean that it is the right thing to do. A small buffer that
+we can allocate on-stack might well be better even if it causes more
+iterations.
 
-Correct.
+I'd also like to simplify the splice code if at all possible.
+Particularly as there really aren't necessarily all that many actual
+users of it. So if we can say "screw that" and just allocate a small
+buffer on stack, and people end up iterating a bit more, so what? The
+point of splice is to avoid the data copies and VM games, not to make
+big buffers.
 
-> Therefore,
-> the patch is correct and we don't need to write NULLAGBLOCK to the that
-> last AGFL slot that we're never going to use again, and I'm worrying
-> about nothing.
-
-Well, there is still a worry here - mkfs will mark the entry as
-NULLAGBLOCK, so if we take a filesystem like that with a wrapped
-AGFL the older kernel will barf on a NULLAGBLOCK being allocated
-from the AGFL. Nothing we can do about that, though, except to say
-"run xfs_repair and all will be good again".
-
-> xfs_repair writes 0xFF to the entire sector, rebuilds the freesp btrees,
-> and moves the agfl to the start of the sector, so we're covered for that
-> case.
-
-Exactly.
-
-> As for the question of whether or not an old kernel will notice flcount
-> not fitting its world view w.r.t. fllast - flfirst + 1, I don't know if
-> old kernels will notice; the current verifiers don't seem to check.
-
-They don't.
-
-> If we wanted to be really heavy handed I suppose we could set that last
-> slot to sb_agblocks to stop all the agfl-119 kernels dead in their
-> tracks, but I don't know that's necessary.
-
-It still doesn't help us for the case that an existing mkfs is
-usedi, an existing 4.8 kernel is used and then we wrap and then take
-the fs back to an older kernel...
-
-Still, after seeing the "make the fs on distro/kernel X; mount and
-grow the fs to production size on different kernel Y; run production
-on different kernel Z" container deployment infrastructure that
-exposed the problem, I'd suggest that that are still some people we
-cannot fix this problem for because their deployment system is
-so convoluted that there's nothing we can do to avoid such problems
-randomly occurring...
-
-FWIW, this crazy deployment process is one of the reasons I didn't
-make this a transactional correction. i.e. It won't make it to disk
-unless there's a subsequent allocation/free done in the AG. THis
-means mounting on a newer kernel will warn and correct in memory,
-but won't modify on disk until it absolutely has to. Hence the
-grwofs phase won't modify wrapped AGFLs on disk, and so shouldn't
-cause problems for older kernels in this specific case.
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+             Linus
