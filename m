@@ -1,127 +1,201 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:42066 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751567AbcINDQz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Sep 2016 23:16:55 -0400
-Date: Wed, 14 Sep 2016 04:16:48 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160914031648.GB2356@ZenIV.linux.org.uk>
-References: <CA+55aFzg+Q0DzFNBR9TeL13_yfrfFwHu9OrZe--Zpje0EeN4Cw@mail.gmail.com>
- <20160908213835.GY30056@dastard>
- <20160908235521.GL2356@ZenIV.linux.org.uk>
- <20160909015324.GD30056@dastard>
- <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
- <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:37422 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754539AbcINWOp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 18:14:45 -0400
+Subject: Re: [PATCH 2/3] xfs_quota: print and path output formatting: maintain
+ reverse compatibility
+References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+ <1473866381-28975-3-git-send-email-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0e879c60-df5f-b408-8624-5bcddb42301d@sandeen.net>
+Date: Wed, 14 Sep 2016 17:14:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+In-Reply-To: <1473866381-28975-3-git-send-email-billodo@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-[Jens and Nick Cc'd]
+On 9/14/16 10:19 AM, Bill O'Donnell wrote:
+> This patch adjusts the formatting of the xfs_quota print and
+> path outputs, in order to maintain reverse compatability:
+> when -f flag isn't used, need to keep the output same as in
+> previous version.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  quota/path.c | 67 +++++++++++++++++++++++++++++++++++-------------------------
+>  1 file changed, 39 insertions(+), 28 deletions(-)
+> 
+> diff --git a/quota/path.c b/quota/path.c
+> index aa3d33e..ed9c044 100644
+> --- a/quota/path.c
+> +++ b/quota/path.c
+> @@ -36,39 +36,50 @@ printpath(
+>  	int		c;
+>  
+>  	if (index == 0) {
+> -		printf(_("%sFilesystem          Pathname\n"),
+> -			number ? _("      ") : "");
+> +		if (foreign_allowed)
+> +			printf(_("%s    Filesystem          Pathname\n"),
+> +			       number ? _("      ") : "");
+> +		else
+> +			printf(_("%sFilesystem          Pathname\n"),
+> +			       number ? _("      ") : "");
 
-On Fri, Sep 09, 2016 at 07:06:29PM -0700, Linus Torvalds wrote:
+Ok, this prints the header, with differing leading whitespace depending on
+foreign and/or "are we printing the path number?"  It works but it seems
+confusing to me.
 
-> I think you'd be better off with just a really small on-stack case
-> (like maybe 2-3 entries), and just allocate anything bigger
-> dynamically. Or you could even see how bad it is if you just
-> force-limit it to max 4 entries or something like that and just do
-> partial writes.
+What about just being explicit about it, something like:
 
-Umm...  Right now it tries to allocate as much as the output pipe could
-possibly hold.  With default being 16 buffers, you'll end up with doing
-dynamic allocation in all cases (it doesn't even look at the amount of
-data we want to transfer).
++       /* print header, accommodating for path nr and/or foreign flag */
+  	if (index == 0) {
++               if (number)
++                       printf(_("      "));
++               if (foreign_allowed)
++                       printf(_("    "));
++               printf(_("Filesystem          Pathname\n"));
 
-The situation with splice_pipe_desc looks very odd:
+or maybe:
 
-	* all but one instance are on stack frames of some ->splice_read()
-or something called by it (exception is in vmsplice)
+  	if (index == 0) {
++		printf(_("%s%sFilesystem          Pathname\n"),
++			number ? _("      ") : "",
++			foreign_allowed ? _("    ") : "");
 
-	* all but one instance (a different one - see below) go through
-splice_grow_spd / splice_to_pipe / splice_shrink_spd sequence and
-nothing else sees them.  The exception is skb_splice_bits() and there we
-have MAX_SKB_FRAGS for size, don't bother with grow/shrink and the only
-thing done to that spd is splice_to_pipe() (from the callback passed to
-skb_splice_bits()).
+to follow the existing code, just with another "optional" column for (F)?
 
-	* only one ->splice_read() instance does _not_ create
-splice_pipe_descriptor.  It's fuse_dev_splice_read(), and it pays for that
-by open-coding splice_to_pipe().  The only reason for open-coding is that
-we don't have a "stronger SPLICE_F_NONBLOCK" that would fail if the data
-wouldn't fit.  SPLICE_F_NONBLOCK stuffs as much as possible and buggers off
-without waiting, fuse_dev_splice_read() wants all or nothing (and no waiting).
+>  	}
+>  	if (number) {
+>  		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+>  	}
+> -	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+> -	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+> -	if (path->fs_flags & FS_PROJECT_PATH) {
+> -		prj = getprprid(path->fs_prid);
+> -		printf(_(" (project %u"), path->fs_prid);
+> -		if (prj)
+> -			printf(_(", %s"), prj->pr_name);
+> -		printf(")");
+> -	} else if (xfsquotactl(XFS_GETQSTAT, path->fs_name, 0, 0,
+> -				(void *)&qstat) == 0 && qstat.qs_flags) {
+> -		c = 0;
+> -		printf(" (");
+> -		if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
+> -			c = printf("uquota");
+> -		else if (qstat.qs_flags & XFS_QUOTA_UDQ_ACCT)
+> -			c = printf("uqnoenforce");
+> -		if (qstat.qs_flags & XFS_QUOTA_GDQ_ENFD)
+> -			c = printf("%sgquota", c ? ", " : "");
+> -		else if (qstat.qs_flags & XFS_QUOTA_GDQ_ACCT)
+> -			c = printf("%sgqnoenforce", c ? ", " : "");
+> -		if (qstat.qs_flags & XFS_QUOTA_PDQ_ENFD)
+> -			printf("%spquota", c ? ", " : "");
+> -		else if (qstat.qs_flags & XFS_QUOTA_PDQ_ACCT)
+> -			printf("%spqnoenforce", c ? ", " : "");
+> -		printf(")");
 
-	* incidentally, we *can't* add new flags - splice(2)/tee(2)/vmsplice(2)
-quietly ignore all bits they do not recognize.  In fact, splice(2) ends up
-passing them (unsanitized) to ->splice_read and ->splice_write instances.
+Ok below is mostly just moving indentation under this:
 
-	* for splice(2) the IO size is limited by nominal capacity of output
-pipe.  Looks fairly arbitrary (the limit is the same whether the pipe is
-full or empty), but I wouldn't be surprised if userland programmers would
-get unhappy if they have to take more iterations through their loops.
+> +	if (!((path->fs_flags & FS_FOREIGN) && !foreign_allowed)) {
 
-	* the other caller of ->splice_read() is splice_direct_to_actor() and
-that can be called on a fairly deep stack.  However, there we loop ourselves
-and smaller chunk size is not a problem.
+a big conditional, which I think means "If it's not a foreign filesystem
+with foreign filesystems disallowed..."
 
-	* in case of skb_splice_bits(), we probably want a grow/shrink pair
-as well, with well below MAX_SKB_FRAGS for a default - what's the typical
-number of fragments per skb?
+Can we ever get her when that's not true?  Do we ever call into this
+with a foreign fs when !foreign_allowed?  I don't think so, because we
+break in the pathlist_f caller, right?  and in print_f ... oh right, need
+to break out of print_f, too.  See my latest reply to patch 1.
 
-> So feel free to try maxing out using only a small handful of
-> pipe_buffer entries. Returning partial IO from splice() is fine.
+With that, should not need to move any of this code under the conditional;
+it can go away and the code can remain where it's at.
 
-	Are you sure that nobody's growing the output pipe buffer before
-doing splice() into it as a way to reduce the amount of iterations?
+> +		printf("%s", (path->fs_flags & FS_FOREIGN) ? "(F) " : "");
+> +		if (path->fs_flags & FS_FOREIGN)
+> +			printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+> +		else if (foreign_allowed)
+> +			printf(_("    %-19s %s"), path->fs_dir, path->fs_name);
+> +		else
+> +			printf(_("%-19s %s"), path->fs_dir, path->fs_name);
 
-	FWIW, I would love to replace these array of page * + array of
-<offset,len,private> triples with array of pipe_buffer; for one thing,
-this ridiculous ->sbd_release() goes away (we simply call ->ops->release()
-on all unwanted buffers), which gets rid of wonders like
-static void buffer_spd_release(struct splice_pipe_desc *spd, unsigned int i)
-{
-        struct buffer_ref *ref =
-                (struct buffer_ref *)spd->partial[i].private;
+Hm, above you've got 3 cases for 2 different printf strings.  ;)  This would
+be much simpler as:
 
-        if (--ref->ref)
-                return;
+ 	if (number) {
+  		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
++       if (foreign_allowed)
++               printf("%s", path->fs_flags & FS_FOREIGN ? "(F) " : "    ");
++
+        printf(_("%-19s %s"), path->fs_dir, path->fs_name);
 
-        ring_buffer_free_read_page(ref->buffer, ref->page);
-        kfree(ref);
-        spd->partial[i].private = 0;
-}
-static void buffer_pipe_buf_release(struct pipe_inode_info *pipe,
-                                    struct pipe_buffer *buf)
-{
-        struct buffer_ref *ref = (struct buffer_ref *)buf->private;
+So if we're printing numbers, print that column; if we're dealing with foreign FS's,
+print that column, and then print the common information in the last 2 columns.
 
-        if (--ref->ref)
-                return;
+> +		if (path->fs_flags & FS_PROJECT_PATH) {
+> +			prj = getprprid(path->fs_prid);
+> +			printf(_(" (project %u"), path->fs_prid);
+> +			if (prj)
+> +				printf(_(", %s"), prj->pr_name);
+> +			printf(")");
+> +		} else if (xfsquotactl(XFS_GETQSTAT, path->fs_name, 0, 0,
+> +				       (void *)&qstat) == 0 && qstat.qs_flags) {
+> +			c = 0;
+> +			printf(" (");
+> +			if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
+> +				c = printf("uquota");
+> +			else if (qstat.qs_flags & XFS_QUOTA_UDQ_ACCT)
+> +				c = printf("uqnoenforce");
+> +			if (qstat.qs_flags & XFS_QUOTA_GDQ_ENFD)
+> +				c = printf("%sgquota", c ? ", " : "");
+> +			else if (qstat.qs_flags & XFS_QUOTA_GDQ_ACCT)
+> +				c = printf("%sgqnoenforce", c ? ", " : "");
+> +			if (qstat.qs_flags & XFS_QUOTA_PDQ_ENFD)
+> +				printf("%spquota", c ? ", " : "");
+> +			else if (qstat.qs_flags & XFS_QUOTA_PDQ_ACCT)
+> +				printf("%spqnoenforce", c ? ", " : "");
+> +			printf(")");
+> +		}
+> +		printf("\n");
 
-        ring_buffer_free_read_page(ref->buffer, ref->page);
-        kfree(ref);
-        buf->private = 0;
-}
+and again w/o the conditional this whole indentation move goes away, and
+the patch looks much simpler overall :)  -
 
-pairs that need to be kept in sync, etc.
+diff --git a/quota/path.c b/quota/path.c
+index cf00fc5..622c6b5 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -36,14 +36,19 @@ printpath(
+        int             c;
+ 
+        if (index == 0) {
+-               printf(_("%sFilesystem          Pathname\n"),
+-                       number ? _("      ") : "");
++               printf(_("%s%sFilesystem          Pathname\n"),
++                       number ? _("      ") : "",
++                       foreign_allowed ? _("    ") : "");
+        }
+-       if (number) {
++
++       if (number)
+                printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+-       }
+-       printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
++
++       if (foreign_allowed)
++               printf("%s", path->fs_flags & FS_FOREIGN ? "(F) " : "    ");
++
+        printf(_("%-19s %s"), path->fs_dir, path->fs_name);
++
+        if (path->fs_flags & FS_PROJECT_PATH) {
+                prj = getprprid(path->fs_prid);
+                printf(_(" (project %u"), path->fs_prid);
 
-One inconvenience created by that is stuff like
-        spd.nr_pages = find_get_pages_contig(mapping, index, nr_pages, spd.pages);
-in there; granted, this one will go away with __generic_file_splice_read(),
-but e.g. get_iovec_page_array() is using get_user_pages_fast(), which wants
-to put pages next to each other.  That one is from vmsplice_to_pipe() guts,
-and I've no idea what the normal use patterns are.  OTOH, how much overhead
-would we get from repeated calls of get_user_pages_fast() for e.g. 16 pages
-or so, compared to larger chunks?  It is on a shallow stack, so it's not
-as if we couldn't afford a 16-element array of struct page * in there...
+
+
+(but don't take my word for it!  ;)  I think this works though.)
