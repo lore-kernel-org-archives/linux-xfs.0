@@ -1,136 +1,60 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 271197CA6
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 10:20:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D1ACD8F8050
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 08:20:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EmNHFAC4I4OAcD1D (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 14 Sep 2016 08:20:12 -0700 (PDT)
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 1/3] xfsprogs: populate fs table with xfs entries first,
-	foreign entries last
-Date: Wed, 14 Sep 2016 10:19:39 -0500
-Message-Id: <1473866381-28975-2-git-send-email-billodo@redhat.com>
-In-Reply-To: <1473866381-28975-1-git-send-email-billodo@redhat.com>
-References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:49595 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753801AbcINRIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:08:00 -0400
+Date: Wed, 14 Sep 2016 11:07:59 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160914170759.GA14196@linux.intel.com>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+ <1473438884-674-7-git-send-email-hch@lst.de>
+ <20160913231039.GF26002@linux.intel.com>
+ <20160914071910.GC17278@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160914071910.GC17278@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-Commits b20b6c2 and 29647c8 modified xfs_quota for use on
-non-XFS filesystems. Modifications to fs_initialise_mounts
-(paths.c) resulted in an xfstest fail (xfs/261), due to foreign
-fs paths being picked up first from the fs table. The xfs_quota
-print command then complained about not being able to print the
-foreign paths, instead of previous behavior (quiet).
+On Wed, Sep 14, 2016 at 09:19:10AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 13, 2016 at 05:10:39PM -0600, Ross Zwisler wrote:
+> > If you stick a space in front of the labels (as is done in the rest of dax.c)
+> > it prevents future patches from using them at the beginning of hunks.  Here's a
+> > patch adding a random space as an example:
+> 
+> The spaces in front of labels are a fairly horrible style.  But given
+> that the rest of the file uses them I'll add them back.
 
-This patch restores correct behavior, sorting the table so that
-xfs entries are first, followed by foreign fs entries. The patch
-maintains the order of xfs entries and foreign entries in the
-same order as mtab entries.
+I'll bite - why do you think adding a space before labels is a "fairly
+horrible style"?  Adding them gives a tangible benefit for unified diffs and
+patches because it's much more useful to know that a change is in a given
+function than that it follows a label called "out", which could be defined
+many times in a given file.  Again, the example:
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- libxcmd/paths.c | 12 +++++++++++-
- quota/path.c    | 21 ++++++++++++++++-----
- 2 files changed, 27 insertions(+), 6 deletions(-)
-
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 4158688..6363d40 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -34,6 +34,7 @@ extern char *progname;
- int fs_count;
- struct fs_path *fs_table;
- struct fs_path *fs_path;
-+int		xfs_fs_count;
- 
- char *mtab_file;
- #define PROC_MOUNTS	"/proc/self/mounts"
-@@ -138,7 +139,16 @@ fs_table_insert(
- 		goto out_norealloc;
- 	fs_table = tmp_fs_table;
- 
--	fs_path = &fs_table[fs_count];
-+	/* Put foreign filesystems at the end, xfs filesystems at the front */
-+	if (flags & FS_FOREIGN || fs_count == 0) {
-+		fs_path = &fs_table[fs_count];
-+	} else {
-+		/* move foreign fs entries down, insert new one just before */
-+		memmove(&fs_table[xfs_fs_count], &fs_table[xfs_fs_count - 1],
-+			sizeof(fs_path_t)*(fs_count - xfs_fs_count + 1));
-+		fs_path = &fs_table[xfs_fs_count];
-+		xfs_fs_count++;
-+	}
- 	fs_path->fs_dir = dir;
- 	fs_path->fs_prid = prid;
- 	fs_path->fs_flags = flags;
-diff --git a/quota/path.c b/quota/path.c
-index a623d25..aa3d33e 100644
---- a/quota/path.c
-+++ b/quota/path.c
-@@ -75,9 +75,15 @@ static int
- pathlist_f(void)
- {
- 	int		i;
-+	struct fs_path	*path;
- 
--	for (i = 0; i < fs_count; i++)
--		printpath(&fs_table[i], i, 1, &fs_table[i] == fs_path);
-+	for (i = 0; i < fs_count; i++) {
-+		path = &fs_table[i];
-+		/* Table is ordered xfs first, then foreign */
-+		if (path->fs_flags & FS_FOREIGN && !foreign_allowed)
-+			break;
-+		printpath(path, i, 1, path == fs_path);
-+	}
- 	return 0;
+@@ -908,6 +908,7 @@ out:
+                return VM_FAULT_OOM | major;
+        /* -EBUSY is fine, somebody else faulted on the same PTE */
+        if ((error < 0) && (error != -EBUSY))
+                return VM_FAULT_SIGBUS | major;
++
+        return VM_FAULT_NOPAGE | major;
  }
- 
-@@ -98,7 +104,7 @@ path_f(
- 	int		argc,
- 	char		**argv)
- {
--	int	i;
-+	int		i;
- 
- 	if (fs_count == 0) {
- 		printf(_("No paths are available\n"));
-@@ -113,8 +119,13 @@ path_f(
- 		printf(_("value %d is out of range (0-%d)\n"),
- 			i, fs_count-1);
- 	} else {
--		fs_path = &fs_table[i];
--		pathlist_f();
-+		for (i = 0; i < fs_count; i++) {
-+			fs_path = &fs_table[i];
-+			/* Table is ordered xfs first, then foreign */
-+			if (fs_path->fs_flags & FS_FOREIGN && !foreign_allowed)
-+				break;
-+			pathlist_f();
-+		}
- 	}
- 	return 0;
- }
--- 
-2.7.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+vs
+
+@@ -908,6 +908,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+                return VM_FAULT_OOM | major;
+        /* -EBUSY is fine, somebody else faulted on the same PTE */
+        if ((error < 0) && (error != -EBUSY))
+                return VM_FAULT_SIGBUS | major;
++
+        return VM_FAULT_NOPAGE | major;
+ }
+
+where 'out' is a label without a leading space in the first case and with a
+leading space in the second.
