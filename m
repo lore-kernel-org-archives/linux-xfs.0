@@ -1,75 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40798 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758324AbcIPL1o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:44 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/12] xfs: fix locking for DAX writes
-Date: Fri, 16 Sep 2016 13:27:09 +0200
-Message-Id: <1474025234-13804-8-git-send-email-hch@lst.de>
-In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
-References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Received: from mga11.intel.com ([192.55.52.93]:15072 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755275AbcINWvH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 18:51:07 -0400
+Date: Wed, 14 Sep 2016 16:51:05 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 12/12] ext2: use iomap to implement DAX
+Message-ID: <20160914225105.GB29323@linux.intel.com>
+References: <1473847291-18913-1-git-send-email-hch@lst.de>
+ <1473847291-18913-13-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473847291-18913-13-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
-Cc: ross.zwisler@linux.intel.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, ross.zwisler@linux.intel.com
 
-So far DAX writes inherited the locking from direct I/O writes, but the direct
-I/O model of using shared locks for writes is actually wrong for DAX.  For
-direct I/O we're out of any standards and don't have to provide the Posix
-required exclusion between writers, but for DAX which gets transparently
-enable on applications without any knowledge of it we can't simply drop the
-requirement.  Even worse this only happens for aligned writes and thus
-doesn't show up for many typical use cases.
+On Wed, Sep 14, 2016 at 12:01:31PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Now that ext2 is using IOMAP, we need to select FS_IOMAP when EXT2_FS is
+selected else we get a build error:
+
+fs/built-in.o: In function `ext2_dax_fault':
+/home/rzwisler/project/review/fs/ext2/file.c:112: undefined reference to `iomap_dax_fault'
+fs/built-in.o: In function `ext2_dax_write_iter':
+/home/rzwisler/project/review/fs/ext2/file.c:75: undefined reference to `iomap_dax_rw'
+fs/built-in.o: In function `ext2_dax_read_iter':
+/home/rzwisler/project/review/fs/ext2/file.c:45: undefined reference to `iomap_dax_rw'
+Makefile:949: recipe for target 'vmlinux' failed
+make: *** [vmlinux] Error 1
+
+With the following patch squashed into this commit:
+
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+
 ---
- fs/xfs/xfs_file.c | 20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+>From 9c084641049990339b40bfd52a0aebf300d896ea Mon Sep 17 00:00:00 2001
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Date: Wed, 14 Sep 2016 16:48:36 -0600
+Subject: [PATCH] ext2: build in FS_IOMAP support needed by ext2
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index e612a02..62649cc 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -714,24 +714,11 @@ xfs_file_dax_write(
- 	struct address_space	*mapping = iocb->ki_filp->f_mapping;
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
--	int			unaligned_io = 0;
--	int			iolock;
-+	int			iolock = XFS_IOLOCK_EXCL;
- 	struct iov_iter		data;
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/ext2/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/ext2/Kconfig b/fs/ext2/Kconfig
+index c634874e..3391f48 100644
+--- a/fs/ext2/Kconfig
++++ b/fs/ext2/Kconfig
+@@ -1,5 +1,6 @@
+ config EXT2_FS
+ 	tristate "Second extended fs support"
++	select FS_IOMAP
+ 	help
+ 	  Ext2 is a standard Linux file system for hard disks.
  
--	/* "unaligned" here means not aligned to a filesystem block */
--	if ((iocb->ki_pos & mp->m_blockmask) ||
--	    ((iocb->ki_pos + iov_iter_count(from)) & mp->m_blockmask)) {
--		unaligned_io = 1;
--		iolock = XFS_IOLOCK_EXCL;
--	} else if (mapping->nrpages) {
--		iolock = XFS_IOLOCK_EXCL;
--	} else {
--		iolock = XFS_IOLOCK_SHARED;
--	}
- 	xfs_rw_ilock(ip, iolock);
--
- 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
- 	if (ret)
- 		goto out;
-@@ -758,11 +745,6 @@ xfs_file_dax_write(
- 		WARN_ON_ONCE(ret);
- 	}
- 
--	if (iolock == XFS_IOLOCK_EXCL && !unaligned_io) {
--		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
--		iolock = XFS_IOLOCK_SHARED;
--	}
--
- 	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
- 
- 	data = *from;
 -- 
-2.1.4
+2.9.0
 
