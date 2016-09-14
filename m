@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51693 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:51710 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932545AbcINKBl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 06:01:41 -0400
+        with ESMTP id S1760873AbcINKBo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 06:01:44 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/12] iomap: expose iomap_apply outside iomap.c
-Date: Wed, 14 Sep 2016 12:01:21 +0200
-Message-Id: <1473847291-18913-3-git-send-email-hch@lst.de>
+Subject: [PATCH 03/12] dax: don't pass buffer_head to dax_insert_mapping
+Date: Wed, 14 Sep 2016 12:01:22 +0200
+Message-Id: <1473847291-18913-4-git-send-email-hch@lst.de>
 In-Reply-To: <1473847291-18913-1-git-send-email-hch@lst.de>
 References: <1473847291-18913-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,64 +15,48 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 Cc: ross.zwisler@linux.intel.com
 
-This allows the DAX code to use it.
+This way we can use this helper for the iomap based DAX implementation
+as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/internal.h | 11 +++++++++++
- fs/iomap.c    |  5 +----
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ fs/dax.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/internal.h b/fs/internal.h
-index ba07376..8591786 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -12,6 +12,7 @@
- struct super_block;
- struct file_system_type;
- struct iomap;
-+struct iomap_ops;
- struct linux_binprm;
- struct path;
- struct mount;
-@@ -164,3 +165,13 @@ extern struct dentry_operations ns_dentry_operations;
- extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
- 		    unsigned long arg);
- extern long vfs_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
-+
-+/*
-+ * iomap support:
-+ */
-+typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-+		void *data, struct iomap *iomap);
-+
-+loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
-+		unsigned flags, struct iomap_ops *ops, void *data,
-+		iomap_actor_t actor);
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 706270f..f4df9c6 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -27,9 +27,6 @@
- #include <linux/dax.h>
- #include "internal.h"
+diff --git a/fs/dax.c b/fs/dax.c
+index 993dc6f..98463bb 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -790,14 +790,13 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
  
--typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
--		void *data, struct iomap *iomap);
--
- /*
-  * Execute a iomap write on a segment of the mapping that spans a
-  * contiguous range of pages that have identical block mapping state.
-@@ -41,7 +38,7 @@ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-  * resources they require in the iomap_begin call, and release them in the
-  * iomap_end call.
-  */
--static loff_t
-+loff_t
- iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
- 		struct iomap_ops *ops, void *data, iomap_actor_t actor)
+ static int dax_insert_mapping(struct address_space *mapping,
+-			struct buffer_head *bh, void **entryp,
+-			struct vm_area_struct *vma, struct vm_fault *vmf)
++		struct block_device *bdev, sector_t sector, size_t size,
++		void **entryp, struct vm_area_struct *vma, struct vm_fault *vmf)
  {
+ 	unsigned long vaddr = (unsigned long)vmf->virtual_address;
+-	struct block_device *bdev = bh->b_bdev;
+ 	struct blk_dax_ctl dax = {
+-		.sector = to_sector(bh, mapping->host),
+-		.size = bh->b_size,
++		.sector = sector,
++		.size = size,
+ 	};
+ 	void *ret;
+ 	void *entry = *entryp;
+@@ -898,7 +897,8 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 
+ 	/* Filesystem should not return unwritten buffers to us! */
+ 	WARN_ON_ONCE(buffer_unwritten(&bh) || buffer_new(&bh));
+-	error = dax_insert_mapping(mapping, &bh, &entry, vma, vmf);
++	error = dax_insert_mapping(mapping, bh.b_bdev, to_sector(&bh, inode),
++			bh.b_size, &entry, vma, vmf);
+  unlock_entry:
+ 	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
+  out:
 -- 
 2.1.4
 
