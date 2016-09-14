@@ -1,109 +1,104 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D8CCE7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 20:34:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 56301AC001
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 18:34:26 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	mB8GOAQIMamOW6rE for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 18:34:23 -0700 (PDT)
-Date: Wed, 14 Sep 2016 11:34:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs_repair: update the manual content about
-	xfs_repair exit status
-Message-ID: <20160914013421.GL30497@dastard>
-References: <1473782076-9137-1-git-send-email-zlang@redhat.com>
-	<20160913163226.GE9314@birch.djwong.org>
-	<5b36e20b-9238-0694-f919-31e33cd9ecbb@sandeen.net>
-	<20160913214801.GJ30497@dastard>
-	<28a1500b-c3cb-9718-696d-e35f7fa99a75@sandeen.net>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:10334 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755877AbcINRct (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:32:49 -0400
+Date: Wed, 14 Sep 2016 11:32:47 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 10/12] xfs: use iomap to implement DAX
+Message-ID: <20160914173247.GC30852@linux.intel.com>
+References: <1473847291-18913-1-git-send-email-hch@lst.de>
+ <1473847291-18913-11-git-send-email-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <28a1500b-c3cb-9718-696d-e35f7fa99a75@sandeen.net>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+In-Reply-To: <1473847291-18913-11-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, ross.zwisler@linux.intel.com
 
-On Tue, Sep 13, 2016 at 04:52:32PM -0500, Eric Sandeen wrote:
+On Wed, Sep 14, 2016 at 12:01:29PM +0200, Christoph Hellwig wrote:
+> Another users of buffer_heads bytes the dust.
 > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c  | 61 +++++++++++++++---------------------------------------
+>  fs/xfs/xfs_iomap.c | 11 ++++++----
+>  2 files changed, 24 insertions(+), 48 deletions(-)
 > 
-> On 9/13/16 4:48 PM, Dave Chinner wrote:
-> > On Tue, Sep 13, 2016 at 11:57:59AM -0500, Eric Sandeen wrote:
-> >> On 9/13/16 11:32 AM, Darrick J. Wong wrote:
-> 
-> ...
-> 
-> >>> So... I'd rather the documentation about the return code reflect the
-> >>> status of the filesystem -- 2 means "unclean log, replay it or zap it",
-> >>> 1 means "errors encountered, fs may not be correct", and 0 /should/ mean
-> >>> "fs is correct".
-> >>>
-> >>> OTOH I don't know for sure that xfs_repair always cleans up the fs on
-> >>> the first try.
-> >>
-> >> That's certainly the intent; I can't imagine a manpage documenting
-> >> return codes qualified with "... unless bugs happen." :)
-> > 
-> > Right - if we hit bugs, all bets are off. But otherwise, the fs
-> > should be repaired and clean after a single pass.
-> > 
-> >>>  ISTR
-> >>> asking Dave about this, and I think he said that the FS should be clean
-> >>> if repair returns 0.  But I'll let him reiterate that if it's true;
-> >>> don't trust my crummy memory, that's why I have filesystems. ;)
-> >>
-> >> Did you have an alternate wording in mind?
-> > 
-> > Yup, 0 = " fs is clean", 1 = "fs is still b0rken",
-> > 2 = "couldn't run for whatever reason given"
-> 
-> Technically, 1 = "may or may not be broken" - we really don't know.
-> We could get an exit of 1 for a consistent filesystem, for example
-> if some allocation failed... all we know is something bonked out in
-> the middle.
-> 
-> Maybe "1 == xfs_repair did not run to completion?"
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 62649cc..663634f 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+<>
+> @@ -711,52 +704,32 @@ xfs_file_dax_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	struct address_space	*mapping = iocb->ki_filp->f_mapping;
+> -	struct inode		*inode = mapping->host;
+> +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> -	ssize_t			ret = 0;
+>  	int			iolock = XFS_IOLOCK_EXCL;
+> -	struct iov_iter		data;
+> +	ssize_t			ret, error = 0;
+> +	size_t			count;
+> +	loff_t			pos;
+>  
+>  	xfs_rw_ilock(ip, iolock);
+>  	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+>  	if (ret)
+>  		goto out;
+>  
+> -	/*
+> -	 * Yes, even DAX files can have page cache attached to them:  A zeroed
+> -	 * page is inserted into the pagecache when we have to serve a write
+> -	 * fault on a hole.  It should never be dirtied and can simply be
+> -	 * dropped from the pagecache once we get real data for the page.
+> -	 *
+> -	 * XXX: This is racy against mmap, and there's nothing we can do about
+> -	 * it. dax_do_io() should really do this invalidation internally as
+> -	 * it will know if we've allocated over a holei for this specific IO and
+> -	 * if so it needs to update the mapping tree and invalidate existing
+> -	 * PTEs over the newly allocated range. Remove this invalidation when
+> -	 * dax_do_io() is fixed up.
+> -	 */
+> -	if (mapping->nrpages) {
+> -		loff_t end = iocb->ki_pos + iov_iter_count(from) - 1;
+> -
+> -		ret = invalidate_inode_pages2_range(mapping,
+> -						    iocb->ki_pos >> PAGE_SHIFT,
+> -						    end >> PAGE_SHIFT);
+> -		WARN_ON_ONCE(ret);
+> -	}
+> +	pos = iocb->ki_pos;
+> +	count = iov_iter_count(from);
+>  
+> -	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
+> +	trace_xfs_file_dax_write(ip, count, pos);
+>  
+> -	data = *from;
+> -	ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct,
+> -			xfs_end_io_direct_write, 0);
+> -	if (ret > 0) {
+> -		iocb->ki_pos += ret;
+> -		iov_iter_advance(from, ret);
+> +	ret = iomap_dax_rw(iocb, from, &xfs_iomap_ops);
+> +	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
+> +		i_size_write(inode, iocb->ki_pos);
+> +		error = xfs_setfilesize(ip, pos, count);
 
-Well, if it fails part way through phase 5, then the filesystem is
-most definitely broken, even if it was clean to begin with. i.e.
-repair, even when the filesystem is clean, will rebuild parts of the
-filesystem from scratch.
+I think this should be xfs_setfilesize(ip, pos, ret)?  'count' and 'ret' are
+the same in non-error cases, but in error cases where iomap_dax_rw() does some
+work and then encounters an error, 'ret' could be smaller.  In error cases
+like this using 'ret' instead of 'count' will also keep the value we use in
+i_size_write() equal to what we write via xfs_setfilesize() because
+iocb->ki_pos == pos+ret, not pos+count.
 
-And repair nulls out directory entries in phase 4 and doesn't
-rebuild those directories till phase 6, so between those points the
-filesystem is actually in a corrupt state that requires repair.
-hence there is a large scope where a failure in repair really does
-mean that we need to run repair again. Hence I think it's simply
-safer to explicitly document it as:
+Aside from that, even though I'm sure you'll want a review from an XFS
+developer:
 
-	"1 == fs may be even more broken than before repair started,
-	so repair needs to be run again"
-
-because "did not run to completion" does not really tell the user
-what to do when it occurs.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
