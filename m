@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 925157CA4
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 09:53:58 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2A6D27CA0
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 12:50:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5741E304043
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 07:53:55 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id QQC6MF51fwksdhhr (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 07:53:52 -0700 (PDT)
-Date: Tue, 6 Sep 2016 07:53:49 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/71] xfs: set up per-AG free space reservations
-Message-ID: <20160906145349.GA24287@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216795753.867.766643420503917806.stgit@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 93819AC001
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 10:50:24 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ELZZfMk3UVEyC0xq for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2016 10:50:21 -0700 (PDT)
+Subject: Re: [PATCH 1/3] xfsprogs: populate fs table with xfs entries first,
+	foreign entries last
+References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+	<1473866381-28975-2-git-send-email-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b49366ac-d277-a26f-1936-8e736d1c913c@sandeen.net>
+Date: Wed, 14 Sep 2016 12:50:20 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <147216795753.867.766643420503917806.stgit@birch.djwong.org>
+In-Reply-To: <1473866381-28975-2-git-send-email-billodo@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,99 +29,204 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-> v2: There's really only two kinds of per-AG reservation pools -- one
-> to feed the AGFL (rmapbt), and one to feed everything else
-> (refcountbt).  Bearing that in mind, we can embed the reservation
-> controls in xfs_perag and greatly simplify the block accounting.
-> Furthermore, fix some longstanding accounting bugs that were a direct
-> result of the goofy "allocate a block and later fix up the accounting"
-> strategy by integrating the reservation accounting code more tightly
-> with the allocator.  This eliminates the ENOSPC complaints resulting
-> from refcount btree splits during truncate operations.
+On 9/14/16 10:19 AM, Bill O'Donnell wrote:
+> Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+> non-XFS filesystems. Modifications to fs_initialise_mounts
+> (paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+> fs paths being picked up first from the fs table. The xfs_quota
+> print command then complained about not being able to print the
+> foreign paths, instead of previous behavior (quiet).
 > 
-> v3: Since AGFL blocks are considered to be "free", we mustn't change
-> fdblocks in response to any AGFL grow/shrink operation.  Therefore, we
-> must give back to fdblocks at umount whatever we borrowed at mount.
-> We have to let ag_reserved go down to zero because it's used to
-> determine if we're critically low on reservation.
+> This patch restores correct behavior, sorting the table so that
+> xfs entries are first, followed by foreign fs entries. The patch
+> maintains the order of xfs entries and foreign entries in the
+> same order as mtab entries.
 
-The v2/v3 would belong below the --- line.  But there's some pretty
-useful information in here, so it might be worth incorporating some
-of that into the main changelog.
+Then, in functions which print all paths we can simply break at
+the first foreign path if the -f switch is not specified.
 
-> +bool
-> +xfs_ag_resv_critical(
-> +	struct xfs_perag		*pag,
-> +	enum xfs_ag_resv_type		type)
-> +{
-> +	xfs_extlen_t			avail;
-> +	xfs_extlen_t			orig;
-> +
-> +	switch (type) {
-> +	case XFS_AG_RESV_METADATA:
-> +		avail = pag->pagf_freeblks - pag->pag_agfl_resv.ar_reserved;
-> +		orig = pag->pag_meta_resv.ar_asked;
-> +		break;
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  libxcmd/paths.c | 12 +++++++++++-
+>  quota/path.c    | 21 ++++++++++++++++-----
+>  2 files changed, 27 insertions(+), 6 deletions(-)
+> 
+> diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+> index 4158688..6363d40 100644
+> --- a/libxcmd/paths.c
+> +++ b/libxcmd/paths.c
+> @@ -34,6 +34,7 @@ extern char *progname;
+>  int fs_count;
+>  struct fs_path *fs_table;
+>  struct fs_path *fs_path;
+> +int		xfs_fs_count;
 
-This doesn't actually seem to be used in the whole series.  I can see
-why you'd want it for completeness, but that also means the code here
-is pretty much guaranteed to be unused..
+Since there are other changes to be made, this might be prettier:
 
-> +	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
+ int fs_count;
++int xfs_fs_count;
+ struct fs_path *fs_table;
+ struct fs_path *fs_path;
 
-Where does this magic 10 come from?
+>  char *mtab_file;
+>  #define PROC_MOUNTS	"/proc/self/mounts"
+> @@ -138,7 +139,16 @@ fs_table_insert(
+>  		goto out_norealloc;
+>  	fs_table = tmp_fs_table;
+>  
+> -	fs_path = &fs_table[fs_count];
+> +	/* Put foreign filesystems at the end, xfs filesystems at the front */
+> +	if (flags & FS_FOREIGN || fs_count == 0) {
+> +		fs_path = &fs_table[fs_count];
+> +	} else {
+> +		/* move foreign fs entries down, insert new one just before */
+> +		memmove(&fs_table[xfs_fs_count], &fs_table[xfs_fs_count - 1],
+> +			sizeof(fs_path_t)*(fs_count - xfs_fs_count + 1));
+> +		fs_path = &fs_table[xfs_fs_count];
+> +		xfs_fs_count++;
+> +	}
+>  	fs_path->fs_dir = dir;
+>  	fs_path->fs_prid = prid;
+>  	fs_path->fs_flags = flags;
 
-> +	/*
-> +	 * AGFL blocks are always considered "free", so whatever
-> +	 * was reserved at mount time must be given back at umount.
-> +	 */
-> +	oldresv = (type == XFS_AG_RESV_AGFL ? resv->ar_orig_reserved :
-> +					      resv->ar_reserved);
+Ok, if we run this through valgrind it squawks.
 
-Nitpick: Using a plain old if/else here would be a fair bit more
-readable.
+==22170== Invalid read of size 8
+==22170==    at 0x4A09C1C: memmove (mc_replace_strmem.c:1026)
+==22170==    by 0x40B366: fs_table_insert (paths.c:149)
+==22170==    by 0x40B58E: fs_table_initialise_mounts (paths.c:337)
+==22170==    by 0x40BA8E: fs_table_initialise (paths.c:516)
+==22170==    by 0x401CC4: main (init.c:180)
+==22170==  Address 0x4c25cb8 is 8 bytes before a block of size 192 alloc'd
+==22170==    at 0x4A06BE0: realloc (vg_replace_malloc.c:662)
+==22170==    by 0x40B258: fs_table_insert (paths.c:137)
+==22170==    by 0x40B58E: fs_table_initialise_mounts (paths.c:337)
+==22170==    by 0x40BA8E: fs_table_initialise (paths.c:516)
+==22170==    by 0x401CC4: main (init.c:180)
+==22170==
 
-> +int
-> +xfs_ag_resv_free(
-> +	struct xfs_perag		*pag)
-> +{
-> +	int				error = 0;
-> +	int				err2;
-> +
-> +	err2 = __xfs_ag_resv_free(pag, XFS_AG_RESV_AGFL);
-> +	if (err2 && !error)
-> +		error = err2;
+As I mentioned, my quick suggestion may have had off-by-ones, and it did.
+I think this should fix it, but *check it* ;)
 
-error is always 0 here.  So a simple:
+        } else {
+                /* move foreign fs entries down, insert new one just before */
+-               memmove(&fs_table[xfs_fs_count], &fs_table[xfs_fs_count - 1],
+-                       sizeof(fs_path_t)*(fs_count - xfs_fs_count + 1));
++               memmove(&fs_table[xfs_fs_count + 1], &fs_table[xfs_fs_count],
++                       sizeof(fs_path_t)*(fs_count - xfs_fs_count));
+                fs_path = &fs_table[xfs_fs_count];
+                xfs_fs_count++;
+        }
 
-	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_AGFL);
+> diff --git a/quota/path.c b/quota/path.c
+> index a623d25..aa3d33e 100644
+> --- a/quota/path.c
+> +++ b/quota/path.c
+> @@ -75,9 +75,15 @@ static int
+>  pathlist_f(void)
+>  {
+>  	int		i;
+> +	struct fs_path	*path;
+>  
+> -	for (i = 0; i < fs_count; i++)
+> -		printpath(&fs_table[i], i, 1, &fs_table[i] == fs_path);
+> +	for (i = 0; i < fs_count; i++) {
+> +		path = &fs_table[i];
+> +		/* Table is ordered xfs first, then foreign */
+> +		if (path->fs_flags & FS_FOREIGN && !foreign_allowed)
+> +			break;
+> +		printpath(path, i, 1, path == fs_path);
+> +	}
+>  	return 0;
+>  }
+>  
+> @@ -98,7 +104,7 @@ path_f(
+>  	int		argc,
+>  	char		**argv)
+>  {
+> -	int	i;
+> +	int		i;
+>  
+>  	if (fs_count == 0) {
+>  		printf(_("No paths are available\n"));
+> @@ -113,8 +119,13 @@ path_f(
 
-Also why not error and error2 or err and err2 to be consistent?
+Oops, I mentioned this to you as needed, but it's wrong, sorry.
 
-> +	xfs_extlen_t			ask;
-> +	xfs_extlen_t			used;
-> +	int				error = 0;
-> +	int				err2;
-> +
-> +	if (pag->pag_meta_resv.ar_asked)
-> +		goto init_agfl;
-> +
-> +	/* Create the metadata reservation. */
-> +	ask = used = 0;
-> +
-> +	err2 = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA, ask, used);
-> +	if (err2 && !error)
-> +		error = err2;
+Just drop this hunk, this is supposed to select path i, not iterate
+over anything.  Sorry for mentioning it.
 
-Same error is always null case here.
+>  		printf(_("value %d is out of range (0-%d)\n"),
+>  			i, fs_count-1);
+>  	} else {
+> -		fs_path = &fs_table[i];
+> -		pathlist_f();
+> +		for (i = 0; i < fs_count; i++) {
+> +			fs_path = &fs_table[i];
+> +			/* Table is ordered xfs first, then foreign */
+> +			if (fs_path->fs_flags & FS_FOREIGN && !foreign_allowed)
+> +				break;
+> +			pathlist_f();
+> +		}
+>  	}
+>  	return 0;
+>  }
+> 
 
-> +
-> +init_agfl:
+Another oddity:
 
-Why not a simple if instead of the goto above?
+# quota/xfs_quota -x
+xfs_quota> path
+      Filesystem          Pathname
+[000]     /home               /dev/mapper/vg_bp05-lv_home
+ 001      /mnt/test2          /dev/sdc1
+
+<3 foreign paths are loaded into the table but ignored, no "-f">
+
+xfs_quota> path 3
+      Filesystem          Pathname
+ 000      /home               /dev/mapper/vg_bp05-lv_home
+ 001      /mnt/test2          /dev/sdc1
+
+why did that work?
+
+since we're always loading *all* paths in the table now, whatever checks
+the limit is looking at fs_count not xfs_fs_count.  Sigh.
+
+So something like this (need to add xfs_fs_count to path.h too)
+
+diff --git a/quota/path.c b/quota/path.c
+index bb28d82..546db52 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -105,6 +105,7 @@ path_f(
+        char            **argv)
+ {
+        int             i;
++       int             max = foreign_allowed ? fs_count : xfs_fs_count;
+ 
+        if (fs_count == 0) {
+                printf(_("No paths are available\n"));
+@@ -115,9 +116,9 @@ path_f(
+                return pathlist_f();
+ 
+        i = atoi(argv[1]);
+-       if (i < 0 || i >= fs_count) {
++       if (i < 0 || i >= max) {
+                printf(_("value %d is out of range (0-%d)\n"),
+-                       i, fs_count-1);
++                       i, max - 1);
+        } else {
+                fs_path = &fs_table[i];
+                pathlist_f();
+
+and probably need to audit for any other use of "fs_count" ... hohum.
+init_args_command for example, whatever the hell that thing does ;)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
