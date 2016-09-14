@@ -1,195 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42986 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935370AbcI3DKT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:10:19 -0400
-Subject: [PATCH 42/63] xfs: add clone file and clone range vfs functions
+Received: from aserp1040.oracle.com ([141.146.126.69]:50057 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755671AbcINRTA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 13:19:00 -0400
+Date: Wed, 14 Sep 2016 10:18:45 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:10:14 -0700
-Message-ID: <147520501393.29434.5617758777691039165.stgit@birch.djwong.org>
-In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+Subject: Re: [PATCH v3] xfs_repair: update the manual content about
+ xfs_repair exit status
+Message-ID: <20160914171845.GF9314@birch.djwong.org>
+References: <1473872451-17249-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473872451-17249-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Define two VFS functions which allow userspace to reflink a range of
-blocks between two files or to reflink one file's contents to another.
-These functions fit the new VFS ioctls that standardize the checking
-for the btrfs CLONE and CLONE RANGE ioctls.
+On Thu, Sep 15, 2016 at 01:00:51AM +0800, Zorro Lang wrote:
+> The man 8 xfs_repair said "xfs_repair run without the -n option will
+> always return a status code of 0". That's not correct.
+> 
+> xfs_repair will return 2 if it finds a fs log which needs to be
+> replayed or cleared, 1 if runtime error is encountered, and 0 for
+> all other cases.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> V3 add more description for return status 1, suggest the user to run
+> xfs_repair again if it return 1.
+> 
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_repair.8 | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+> index 1b4d9e3..314f2c2 100644
+> --- a/man/man8/xfs_repair.8
+> +++ b/man/man8/xfs_repair.8
+> @@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
+>  This message refers to a large directory.
+>  If the directory were small, the message would read "junking entry ...".
+>  .SH EXIT STATUS
+> +.TP
+>  .B xfs_repair \-n
+> -(no modify node)
+> +(no modify mode)
+>  will return a status of 1 if filesystem corruption was detected and
+>  0 if no filesystem corruption was detected.
+> +.TP
+>  .B xfs_repair
+> -run without the \-n option will always return a status code of 0.
+> +run without the \-n option will return a status code of 2 if it finds a
+> +filesystem log which needs to be replayed (by a mount/umount cycle) or
+> +cleared (by -L option), 1 if a runtime error is encountered, filesystem
+> +may be even more broken than before, so repair needs to be run again,
+> +and 0 in all other cases, whether or not filesystem corruption was detected.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: Plug into the VFS function pointers instead of handling ioctls
-directly.
----
- fs/xfs/xfs_file.c |  142 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 142 insertions(+)
+Hm.  I never did manage to reply with any suggested wording of my own
+yesterday.  I dislike the runon sentence that this is becoming.  How
+about this?
 
+"xfs_repair -n (no modify mode) will return a status code of 1 if it is
+unable to show that the filesystem is clean, whether due to corruption
+or runtime errors.  A status code of 0 is returned if the filesystem
+was clean.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 025d52f..3db3f34 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -974,6 +974,146 @@ xfs_file_fallocate(
- 	return error;
- }
- 
-+/*
-+ * Flush all file writes out to disk.
-+ */
-+static int
-+xfs_file_wait_for_io(
-+	struct inode	*inode,
-+	loff_t		offset,
-+	size_t		len)
-+{
-+	loff_t		rounding;
-+	loff_t		ioffset;
-+	loff_t		iendoffset;
-+	loff_t		bs;
-+	int		ret;
-+
-+	bs = inode->i_sb->s_blocksize;
-+	inode_dio_wait(inode);
-+
-+	rounding = max_t(xfs_off_t, bs, PAGE_SIZE);
-+	ioffset = round_down(offset, rounding);
-+	iendoffset = round_up(offset + len, rounding) - 1;
-+	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
-+					   iendoffset);
-+	return ret;
-+}
-+
-+/* Hook up to the VFS reflink function */
-+STATIC int
-+xfs_file_share_range(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	u64		len)
-+{
-+	struct inode	*inode_in;
-+	struct inode	*inode_out;
-+	ssize_t		ret;
-+	loff_t		bs;
-+	loff_t		isize;
-+	int		same_inode;
-+	loff_t		blen;
-+
-+	inode_in = file_inode(file_in);
-+	inode_out = file_inode(file_out);
-+	bs = inode_out->i_sb->s_blocksize;
-+
-+	/* Don't touch certain kinds of inodes */
-+	if (IS_IMMUTABLE(inode_out))
-+		return -EPERM;
-+	if (IS_SWAPFILE(inode_in) ||
-+	    IS_SWAPFILE(inode_out))
-+		return -ETXTBSY;
-+
-+	/* Reflink only works within this filesystem. */
-+	if (inode_in->i_sb != inode_out->i_sb)
-+		return -EXDEV;
-+	same_inode = (inode_in->i_ino == inode_out->i_ino);
-+
-+	/* Don't reflink dirs, pipes, sockets... */
-+	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-+		return -EISDIR;
-+	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
-+		return -EINVAL;
-+	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-+		return -EINVAL;
-+
-+	/* Are we going all the way to the end? */
-+	isize = i_size_read(inode_in);
-+	if (isize == 0)
-+		return 0;
-+	if (len == 0)
-+		len = isize - pos_in;
-+
-+	/* Ensure offsets don't wrap and the input is inside i_size */
-+	if (pos_in + len < pos_in || pos_out + len < pos_out ||
-+	    pos_in + len > isize)
-+		return -EINVAL;
-+
-+	/* If we're linking to EOF, continue to the block boundary. */
-+	if (pos_in + len == isize)
-+		blen = ALIGN(isize, bs) - pos_in;
-+	else
-+		blen = len;
-+
-+	/* Only reflink if we're aligned to block boundaries */
-+	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
-+	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
-+		return -EINVAL;
-+
-+	/* Don't allow overlapped reflink within the same file */
-+	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
-+		return -EINVAL;
-+
-+	/* Wait for the completion of any pending IOs on srcfile */
-+	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
-+	if (ret)
-+		goto out_unlock;
-+	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
-+	if (ret)
-+		goto out_unlock;
-+
-+	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
-+			pos_out, len);
-+	if (ret < 0)
-+		goto out_unlock;
-+
-+out_unlock:
-+	return ret;
-+}
-+
-+STATIC ssize_t
-+xfs_file_copy_range(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	size_t		len,
-+	unsigned int	flags)
-+{
-+	int		error;
-+
-+	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out,
-+				     len);
-+	if (error)
-+		return error;
-+	return len;
-+}
-+
-+STATIC int
-+xfs_file_clone_range(
-+	struct file	*file_in,
-+	loff_t		pos_in,
-+	struct file	*file_out,
-+	loff_t		pos_out,
-+	u64		len)
-+{
-+	return xfs_file_share_range(file_in, pos_in, file_out, pos_out,
-+				     len);
-+}
- 
- STATIC int
- xfs_file_open(
-@@ -1634,6 +1774,8 @@ const struct file_operations xfs_file_operations = {
- 	.release	= xfs_file_release,
- 	.fsync		= xfs_file_fsync,
- 	.fallocate	= xfs_file_fallocate,
-+	.copy_file_range = xfs_file_copy_range,
-+	.clone_file_range = xfs_file_clone_range,
- };
- 
- const struct file_operations xfs_dir_file_operations = {
+"xfs_repair run without the -n option will return one of three status
+codes.  If the filesystem log is dirty, a status code of 2 will be
+returned.  The dirty log must be replayed by a mount/umount cycle or
+cleared with the -L option.  If xfs_repair was unable to fix corruption
+or encountered a runtime error, a status code of 1 will be returned.
+A status code of 0 is returned if the filesystem is now clean."
 
+--D
+
+>  .SH BUGS
+>  The filesystem to be checked and repaired must have been
+>  unmounted cleanly using normal system administration procedures
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
