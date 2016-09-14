@@ -1,68 +1,232 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 461307CA0
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 10:20:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A7709AC004
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 08:20:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Q1NAuCMZcrEaA5y0 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 14 Sep 2016 08:20:12 -0700 (PDT)
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH 0/3] xfsprogs: xfs_quota foreign fs path handling modifications
-Date: Wed, 14 Sep 2016 10:19:38 -0500
-Message-Id: <1473866381-28975-1-git-send-email-billodo@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from sandeen.net ([63.231.237.45]:35990 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756348AbcINPKI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 11:10:08 -0400
+Subject: Re: [PATCH V4] xfs: Document error handlers behavior
+References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+ <20160914012334.GK30497@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <77fcc1da-9c74-da3e-5bcd-3df420a3bfbb@sandeen.net>
+Date: Wed, 14 Sep 2016 10:10:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+In-Reply-To: <20160914012334.GK30497@dastard>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
+On 9/13/16 8:23 PM, Dave Chinner wrote:
 
-Hello-
+> Ok, I had to update this for the change in retry timeout values from
+> Eric, so I went and fixed all the other things I thought needed
+> fixing, too. New patch below....
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: Document error handlers behavior
+> 
+> From: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Document the implementation of error handlers into sysfs.
+> 
+> [dchinner: significant update:
+> 	- removed examples from concept descriptions, placed them in
+> 	  appropriate detailed descriptions instead
+> 	- added explanations for <dev>, <class> and <error> strings
+> 	  in sysfs layout description
+> 	- added specific definition of "global" per-filesystem error
+> 	  configuration parameters.
+> 	- reformatted to remove multiple indents
+> 	- added more information about fail_at_unmount behaviour and
+> 	  constraints
+> 	- added comment that there is a "default" handler to
+> 	  configure behaviour for all errors that don't have
+> 	  specific handlers defined.
+> 	- added specific handler value explanations
+> 	- added note about handlers having context specific
+> 	  defaults with example. ]
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> ---
+>  Documentation/filesystems/xfs.txt | 125 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 125 insertions(+)
+> 
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 8146e9f..705d064 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -348,3 +348,128 @@ Removed Sysctls
+>    ----				-------
+>    fs.xfs.xfsbufd_centisec	v4.0
+>    fs.xfs.age_buffer_centisecs	v4.0
+> +
+> +
+> +Error handling
+> +==============
+> +
+> +XFS can act differently according to the type of error found during its
+> +operation. The implementation introduces the following concepts to the error
+> +handler:
+> +
+> + -failure speed:
+> +	Defines how fast XFS should propagate an error upwards when a specific
+> +	error is found during the filesystem operation. It can propagate
+> +	immediately, after a defined number of retries, after a set time period,
+> +	or simply retry forever.
+> +
+> + -error classes:
+> +	Specifies the subsystem the error configuration will apply to, such as
+> +	metadata IO or memory allocation. Different subsystems will have
+> +	different error handlers for which behaviour can be configured.
+> +
+> + -error handlers:
+> +	Defines the behavior for a specific error.
+> +
+> +The filesystem behavior during an error can be set via sysfs files, Each
 
-This is a new series that supercedes:
-http://www.spinics.net/lists/xfs/msg42220.html -
-(xfs_quota foreign fs path handling changes).
+files.  Each error ...
 
-The following commits modified xfs_quota for use on foreign
-filesystems:
-b20b6c2 xfs_quota: certain commands must always be available
-29647c8 xfs_quota: add capabilities for use on non-XFS filesystems
+> +error handler works independently, the first condition met by and error handler
 
-Included in those commits were modifications to
-fs_initialise_mounts (paths.c), resulting in a reverse
-compatibility issue. In particular, xfstest xfs/261 failed,
-due to foreign fs paths being picked up from the fs table,
-and the xfs_quota print command complaining about not being
-able to print the foreign paths.
+works independently - the firest condition met by /an/ error handler ...
 
-This series fixes the foreign path print problem, via
-modifications to the xfs_quota paths and print operations.
+> +for a specific class will cause the error to be propagated rather than reset and
+> +retried.
+> +
+> +The action taken by the filesystem when the error is propagated is context
+> +dependent - it may cause a shut down in the case of an unrecoverable error,
+> +it may be reported back to userspace, or it may even be ignored because
+> +there's nothing useful we can with the error or anyone we can report it to (e.g.
+> +during unmount).
+> +
+> +The configuration files are organized into the following per-mounted filesystem
+> +hierarchy:
 
-patch 1: populate the fs table with xfs entries first,
-maintaining mtab order, followed by foreign fs entries.
+... into the following hierarchy for each mounted filesystem:
 
-patch 2: adjust print and path formatting of xfs and
-foreign fs entries, maintaining reverse compatibility.
+> +
+> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
+> +
+> +Where:
+> +  <dev>
+> +	The short device name of the mounted filesystem. This is the same device
+> +	name that shows up in XFS kernel error messages as "XFS(<dev>): ..."
+> +
+> +  <class>
+> +	The subsystem the error configuration belongs to. As of 4.9, the defined
+> +	classes are:
+> +
+> +		- "metadata": applies metadata buffer write IO
+> +
+> +  <error>
+> +	The individual error handler configurations.
+> +
+> +
+> +Each filesystem has "global" error configuration options defined in their top
+> +level directory:
+> +
+> +  /sys/fs/xfs/<dev>/error/
+> +
+> +  fail_at_unmount		(Min:  0  Default:  1  Max: 1)
+> +	Defines the filesystem error behavior at unmount time.
+> +
+> +	If set to a value of 1, XFS will override all other error configurations
+> +	during unmount and replace them with "immediate fail" characteristics.
+> +	i.e. no retries, no retry timeout. This will always allow unmount to
+> +	succeed when there are persistent errors present.
+> +
+> +	If set to 0, the configured retry behaviour will continue until all
+> +	retries and/or timeouts have been exhausted. This will delay unmount
+> +	completion when there are persistent errors, and it may prevent the
+> +	filesystem from ever unmounting fully in the case of "retry forever"
+> +	handler configurations.
+> +
+> +	Note: there is no guarantee that fail_at_unmount can be set whilst an
+> +	unmount is in progress. It is possible that the sysfs entries are
+> +	removed by the unmounting filesystem before a "retry forever" error
+> +	handler configuration causes unmount to hang, and hence the filesystem
+> +	must be configured appropriately before unmount begins to prevent
+> +	unmount hangs.
+> +
+> +Each filesystem has specific error class handlers that define the error
+> +propagation behaviour for specific errors. There is also a "default" error
+> +handler defined, which defines the behaviour for all errors that don't have
+> +specific handlers defined. The handler configurations are found in the
+> +directory:
+> +
+> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
+> +
+> +  max_retries			(Min: -1  Default: Varies  Max: INTMAX)
+> +	Defines the allowed number of retries of a specific error before
+> +	the filesystem will propagate the error. The retry count for a given
+> +	error context (e.g. a specific metadata buffer) is reset ever time there
 
-patch 3: add the case for foreign fs in init_check_command
-to cover both states of the -f (foreign_allowed) flag.
+every time there ...
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> +	is a successful completion of the operation.
+> +
+> +	Setting the value to "-1" will cause XFS to retry forever for this
+> +	specific error.
+> +
+> +	Setting the value to "0" will cause XFS to fail immediately when the
+> +	specific error is reported.
+> +
+> +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
+> +	operation "N" times before propagating the error.
+> +
+> +  retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
+> +	Define the amount of time (in seconds) that the filesystem is
+> +	allowed to retry its operations when the specific error is
+> +	found.
+> +
+> +	Setting the value to "-1" will set an infinite timeout, causing
+> +	error propagation behaviour to be determined solely by the "max_retries"
+> +	parameter.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+This is asymmetric; if you want this, then max_retries should probably say that
+-1 will cause the behavior to be determined solely by retry_timeout_seconds...
+
+Could also say "removing any time limits on retries."  (and above, "removing any
+count limits on retries.)
+
+But that's already covered by "the first condition met by ..., " really.
+
+> +
+> +	Setting the value to "0" will cause XFS to fail immediately when the
+> +	specific error is reported.
+> +
+> +	Setting the value to  "N" (where 0 < N < Max) will propagate the error
+> +	on the first retry that fails at least "N" seconds after the first error
+> +	was detected, unless the number of retries defined by max_retries
+> +	expires first.
+
+Same issue here, really; they are symmetric, right?  First condition met for
+propagation propagates the error, period.  This sounds overly complex, unless
+I'm missing something. Seems like:
+
++	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
++	operation for "N" seconds before propagating the error.
+
+would suffice, no?
+
+> +
+> +Note: The default behaviour for a specific error handler is dependent on both
+> +the class and error context. For example, the default values for
+> +"metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
+> +to "fail immediately" behaviour. This is done because ENODEV is a fatal,
+> +unrecoverable error no matter how many times the metadata IO is retried.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
