@@ -1,232 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35990 "EHLO sandeen.net"
+Received: from mga07.intel.com ([134.134.136.100]:5284 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756348AbcINPKI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Sep 2016 11:10:08 -0400
-Subject: Re: [PATCH V4] xfs: Document error handlers behavior
-References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
- <20160914012334.GK30497@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <77fcc1da-9c74-da3e-5bcd-3df420a3bfbb@sandeen.net>
-Date: Wed, 14 Sep 2016 10:10:05 -0500
+        id S1760668AbcINR1S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:27:18 -0400
+Date: Wed, 14 Sep 2016 11:27:17 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 06/12] dax: provide an iomap based fault handler
+Message-ID: <20160914172717.GB30852@linux.intel.com>
+References: <1473847291-18913-1-git-send-email-hch@lst.de>
+ <1473847291-18913-7-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20160914012334.GK30497@dastard>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1473847291-18913-7-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, ross.zwisler@linux.intel.com
 
-On 9/13/16 8:23 PM, Dave Chinner wrote:
-
-> Ok, I had to update this for the change in retry timeout values from
-> Eric, so I went and fixed all the other things I thought needed
-> fixing, too. New patch below....
+On Wed, Sep 14, 2016 at 12:01:25PM +0200, Christoph Hellwig wrote:
+> Very similar to the existing dax_fault function, but instead of using
+> the get_block callback we rely on the iomap_ops vector from iomap.c.
+> That also avoids having to do two calls into the file system for write
+> faults.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: Document error handlers behavior
-> 
-> From: Carlos Maiolino <cmaiolino@redhat.com>
-> 
-> Document the implementation of error handlers into sysfs.
-> 
-> [dchinner: significant update:
-> 	- removed examples from concept descriptions, placed them in
-> 	  appropriate detailed descriptions instead
-> 	- added explanations for <dev>, <class> and <error> strings
-> 	  in sysfs layout description
-> 	- added specific definition of "global" per-filesystem error
-> 	  configuration parameters.
-> 	- reformatted to remove multiple indents
-> 	- added more information about fail_at_unmount behaviour and
-> 	  constraints
-> 	- added comment that there is a "default" handler to
-> 	  configure behaviour for all errors that don't have
-> 	  specific handlers defined.
-> 	- added specific handler value explanations
-> 	- added note about handlers having context specific
-> 	  defaults with example. ]
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  Documentation/filesystems/xfs.txt | 125 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 125 insertions(+)
+>  fs/dax.c            | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h |   2 +
+>  2 files changed, 116 insertions(+)
 > 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 8146e9f..705d064 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -348,3 +348,128 @@ Removed Sysctls
->    ----				-------
->    fs.xfs.xfsbufd_centisec	v4.0
->    fs.xfs.age_buffer_centisecs	v4.0
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 1f9f2d4..d67147d 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1354,4 +1354,118 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	return done ? done : ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_dax_rw);
 > +
+> +/**
+> + * iomap_dax_fault - handle a page fault on a DAX file
+> + * @vma: The virtual memory area where the fault occurred
+> + * @vmf: The description of the fault
+> + * @ops: iomap ops passed from the file system
+> + *
+> + * When a page fault occurs, filesystems may call this helper in their fault
+> + * or mkwrite handler for DAX files. Assumes the caller has done all the
+> + * necessary locking for the page fault to proceed successfully.
+> + */
+> +int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+> +			struct iomap_ops *ops)
+> +{
+> +	struct address_space *mapping = vma->vm_file->f_mapping;
+> +	struct inode *inode = mapping->host;
+> +	unsigned long vaddr = (unsigned long)vmf->virtual_address;
+> +	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+> +	sector_t sector;
+> +	struct iomap iomap = { 0 };
+> +	unsigned flags = 0;
+> +	int error, major = 0;
+> +	void *entry;
 > +
-> +Error handling
-> +==============
+> +	/*
+> +	 * Check whether offset isn't beyond end of file now. Caller is supposed
+> +	 * to hold locks serializing us with truncate / punch hole so this is
+> +	 * a reliable test.
+> +	 */
+> +	if (pos >= i_size_read(inode))
+> +		return VM_FAULT_SIGBUS;
 > +
-> +XFS can act differently according to the type of error found during its
-> +operation. The implementation introduces the following concepts to the error
-> +handler:
+> +	entry = grab_mapping_entry(mapping, vmf->pgoff);
+> +	if (IS_ERR(entry)) {
+> +		error = PTR_ERR(entry);
+> +		goto out;
+> +	}
 > +
-> + -failure speed:
-> +	Defines how fast XFS should propagate an error upwards when a specific
-> +	error is found during the filesystem operation. It can propagate
-> +	immediately, after a defined number of retries, after a set time period,
-> +	or simply retry forever.
+> +	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
+> +		flags |= IOMAP_WRITE;
 > +
-> + -error classes:
-> +	Specifies the subsystem the error configuration will apply to, such as
-> +	metadata IO or memory allocation. Different subsystems will have
-> +	different error handlers for which behaviour can be configured.
+> +	/*
+> +	 * Note that we don't bother to use iomap_apply here: DAX required
+> +	 * the file system block size to be equal the page size, which means
+> +	 * that we never have to deal with more than a single extent here.
+> +	 */
+> +	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
+> +	if (error)
+> +		goto unlock_entry;
+> +	if (WARN_ON_ONCE(iomap.offset + iomap.length < pos + PAGE_SIZE)) {
+> +		error = -EIO;		/* fs corruption? */
+> +		goto unlock_entry;
+> +	}
 > +
-> + -error handlers:
-> +	Defines the behavior for a specific error.
+> +	sector = iomap.blkno + (((pos & PAGE_MASK) - iomap.offset) >> 9);
 > +
-> +The filesystem behavior during an error can be set via sysfs files, Each
+> +	if (vmf->cow_page) {
+> +		switch (iomap.type) {
+> +		case IOMAP_HOLE:
+> +		case IOMAP_UNWRITTEN:
+> +			clear_user_highpage(vmf->cow_page, vaddr);
+> +			break;
+> +		case IOMAP_MAPPED:
+> +			error = copy_user_dax(iomap.bdev, sector, PAGE_SIZE,
+> +					vmf->cow_page, vaddr);
+> +			break;
+> +		default:
+> +			WARN_ON_ONCE(1);
+> +			error = -EIO;
+> +			break;
+> +		}
+> +
+> +		if (error)
+> +			goto unlock_entry;
+> +		if (!radix_tree_exceptional_entry(entry)) {
+> +			vmf->page = entry;
+> +			return VM_FAULT_LOCKED;
+> +		}
+> +		vmf->entry = entry;
+> +		return VM_FAULT_DAX_LOCKED;
+> +	}
+> +
+> +	switch (iomap.type) {
+> +	case IOMAP_MAPPED:
+> +		if (iomap.flags & IOMAP_F_NEW) {
+> +			count_vm_event(PGMAJFAULT);
+> +			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+> +			major = VM_FAULT_MAJOR;
+> +		}
+> +		error = dax_insert_mapping(mapping, iomap.bdev, sector,
+> +				PAGE_SIZE, &entry, vma, vmf);
+> +		break;
+> +	case IOMAP_UNWRITTEN:
+> +	case IOMAP_HOLE:
+> +		if (!(vmf->flags & FAULT_FLAG_WRITE))
+> +			return dax_load_hole(mapping, entry, vmf);
+> +		/*FALLTHU*/
 
-files.  Each error ...
+		  FALLTHRU
 
-> +error handler works independently, the first condition met by and error handler
+> +	default:
+> +		WARN_ON_ONCE(1);
+> +		error = -EIO;
+> +		break;
 
-works independently - the firest condition met by /an/ error handler ...
+No need to break here.
 
-> +for a specific class will cause the error to be propagated rather than reset and
-> +retried.
-> +
-> +The action taken by the filesystem when the error is propagated is context
-> +dependent - it may cause a shut down in the case of an unrecoverable error,
-> +it may be reported back to userspace, or it may even be ignored because
-> +there's nothing useful we can with the error or anyone we can report it to (e.g.
-> +during unmount).
-> +
-> +The configuration files are organized into the following per-mounted filesystem
-> +hierarchy:
+Aside from those two nits:
 
-... into the following hierarchy for each mounted filesystem:
-
-> +
-> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
-> +
-> +Where:
-> +  <dev>
-> +	The short device name of the mounted filesystem. This is the same device
-> +	name that shows up in XFS kernel error messages as "XFS(<dev>): ..."
-> +
-> +  <class>
-> +	The subsystem the error configuration belongs to. As of 4.9, the defined
-> +	classes are:
-> +
-> +		- "metadata": applies metadata buffer write IO
-> +
-> +  <error>
-> +	The individual error handler configurations.
-> +
-> +
-> +Each filesystem has "global" error configuration options defined in their top
-> +level directory:
-> +
-> +  /sys/fs/xfs/<dev>/error/
-> +
-> +  fail_at_unmount		(Min:  0  Default:  1  Max: 1)
-> +	Defines the filesystem error behavior at unmount time.
-> +
-> +	If set to a value of 1, XFS will override all other error configurations
-> +	during unmount and replace them with "immediate fail" characteristics.
-> +	i.e. no retries, no retry timeout. This will always allow unmount to
-> +	succeed when there are persistent errors present.
-> +
-> +	If set to 0, the configured retry behaviour will continue until all
-> +	retries and/or timeouts have been exhausted. This will delay unmount
-> +	completion when there are persistent errors, and it may prevent the
-> +	filesystem from ever unmounting fully in the case of "retry forever"
-> +	handler configurations.
-> +
-> +	Note: there is no guarantee that fail_at_unmount can be set whilst an
-> +	unmount is in progress. It is possible that the sysfs entries are
-> +	removed by the unmounting filesystem before a "retry forever" error
-> +	handler configuration causes unmount to hang, and hence the filesystem
-> +	must be configured appropriately before unmount begins to prevent
-> +	unmount hangs.
-> +
-> +Each filesystem has specific error class handlers that define the error
-> +propagation behaviour for specific errors. There is also a "default" error
-> +handler defined, which defines the behaviour for all errors that don't have
-> +specific handlers defined. The handler configurations are found in the
-> +directory:
-> +
-> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
-> +
-> +  max_retries			(Min: -1  Default: Varies  Max: INTMAX)
-> +	Defines the allowed number of retries of a specific error before
-> +	the filesystem will propagate the error. The retry count for a given
-> +	error context (e.g. a specific metadata buffer) is reset ever time there
-
-every time there ...
-
-> +	is a successful completion of the operation.
-> +
-> +	Setting the value to "-1" will cause XFS to retry forever for this
-> +	specific error.
-> +
-> +	Setting the value to "0" will cause XFS to fail immediately when the
-> +	specific error is reported.
-> +
-> +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
-> +	operation "N" times before propagating the error.
-> +
-> +  retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
-> +	Define the amount of time (in seconds) that the filesystem is
-> +	allowed to retry its operations when the specific error is
-> +	found.
-> +
-> +	Setting the value to "-1" will set an infinite timeout, causing
-> +	error propagation behaviour to be determined solely by the "max_retries"
-> +	parameter.
-
-This is asymmetric; if you want this, then max_retries should probably say that
--1 will cause the behavior to be determined solely by retry_timeout_seconds...
-
-Could also say "removing any time limits on retries."  (and above, "removing any
-count limits on retries.)
-
-But that's already covered by "the first condition met by ..., " really.
-
-> +
-> +	Setting the value to "0" will cause XFS to fail immediately when the
-> +	specific error is reported.
-> +
-> +	Setting the value to  "N" (where 0 < N < Max) will propagate the error
-> +	on the first retry that fails at least "N" seconds after the first error
-> +	was detected, unless the number of retries defined by max_retries
-> +	expires first.
-
-Same issue here, really; they are symmetric, right?  First condition met for
-propagation propagates the error, period.  This sounds overly complex, unless
-I'm missing something. Seems like:
-
-+	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
-+	operation for "N" seconds before propagating the error.
-
-would suffice, no?
-
-> +
-> +Note: The default behaviour for a specific error handler is dependent on both
-> +the class and error context. For example, the default values for
-> +"metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
-> +to "fail immediately" behaviour. This is done because ENODEV is a fatal,
-> +unrecoverable error no matter how many times the metadata IO is retried.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
