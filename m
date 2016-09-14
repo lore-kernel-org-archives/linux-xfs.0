@@ -1,168 +1,95 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40726 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932447AbcIPL1k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:40 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/12] dax: provide an iomap based fault handler
-Date: Fri, 16 Sep 2016 13:27:08 +0200
-Message-Id: <1474025234-13804-7-git-send-email-hch@lst.de>
-In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
-References: <1474025234-13804-1-git-send-email-hch@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
-Cc: ross.zwisler@linux.intel.com
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ADD857CA0
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 17:31:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 100D0AC001
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 15:31:45 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id UcI3d0EfMFt0LTwG for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2016 15:31:44 -0700 (PDT)
+Subject: Re: [PATCH V4] xfs: Document error handlers behavior
+References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+	<20160914012334.GK30497@dastard>
+	<77fcc1da-9c74-da3e-5bcd-3df420a3bfbb@sandeen.net>
+	<20160914222255.GQ30497@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8b69afc7-0088-e952-8c9b-cc7480a1bb2d@sandeen.net>
+Date: Wed, 14 Sep 2016 17:31:43 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160914222255.GQ30497@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-Very similar to the existing dax_fault function, but instead of using
-the get_block callback we rely on the iomap_ops vector from iomap.c.
-That also avoids having to do two calls into the file system for write
-faults.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/dax.c            | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |   2 +
- 2 files changed, 116 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 1f9f2d4..cc025f8 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1354,4 +1354,118 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return done ? done : ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dax_rw);
-+
-+/**
-+ * iomap_dax_fault - handle a page fault on a DAX file
-+ * @vma: The virtual memory area where the fault occurred
-+ * @vmf: The description of the fault
-+ * @ops: iomap ops passed from the file system
-+ *
-+ * When a page fault occurs, filesystems may call this helper in their fault
-+ * or mkwrite handler for DAX files. Assumes the caller has done all the
-+ * necessary locking for the page fault to proceed successfully.
-+ */
-+int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+			struct iomap_ops *ops)
-+{
-+	struct address_space *mapping = vma->vm_file->f_mapping;
-+	struct inode *inode = mapping->host;
-+	unsigned long vaddr = (unsigned long)vmf->virtual_address;
-+	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
-+	sector_t sector;
-+	struct iomap iomap = { 0 };
-+	unsigned flags = 0;
-+	int error, major = 0;
-+	void *entry;
-+
-+	/*
-+	 * Check whether offset isn't beyond end of file now. Caller is supposed
-+	 * to hold locks serializing us with truncate / punch hole so this is
-+	 * a reliable test.
-+	 */
-+	if (pos >= i_size_read(inode))
-+		return VM_FAULT_SIGBUS;
-+
-+	entry = grab_mapping_entry(mapping, vmf->pgoff);
-+	if (IS_ERR(entry)) {
-+		error = PTR_ERR(entry);
-+		goto out;
-+	}
-+
-+	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
-+		flags |= IOMAP_WRITE;
-+
-+	/*
-+	 * Note that we don't bother to use iomap_apply here: DAX required
-+	 * the file system block size to be equal the page size, which means
-+	 * that we never have to deal with more than a single extent here.
-+	 */
-+	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
-+	if (error)
-+		goto unlock_entry;
-+	if (WARN_ON_ONCE(iomap.offset + iomap.length < pos + PAGE_SIZE)) {
-+		error = -EIO;		/* fs corruption? */
-+		goto unlock_entry;
-+	}
-+
-+	sector = iomap.blkno + (((pos & PAGE_MASK) - iomap.offset) >> 9);
-+
-+	if (vmf->cow_page) {
-+		switch (iomap.type) {
-+		case IOMAP_HOLE:
-+		case IOMAP_UNWRITTEN:
-+			clear_user_highpage(vmf->cow_page, vaddr);
-+			break;
-+		case IOMAP_MAPPED:
-+			error = copy_user_dax(iomap.bdev, sector, PAGE_SIZE,
-+					vmf->cow_page, vaddr);
-+			break;
-+		default:
-+			WARN_ON_ONCE(1);
-+			error = -EIO;
-+			break;
-+		}
-+
-+		if (error)
-+			goto unlock_entry;
-+		if (!radix_tree_exceptional_entry(entry)) {
-+			vmf->page = entry;
-+			return VM_FAULT_LOCKED;
-+		}
-+		vmf->entry = entry;
-+		return VM_FAULT_DAX_LOCKED;
-+	}
-+
-+	switch (iomap.type) {
-+	case IOMAP_MAPPED:
-+		if (iomap.flags & IOMAP_F_NEW) {
-+			count_vm_event(PGMAJFAULT);
-+			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
-+			major = VM_FAULT_MAJOR;
-+		}
-+		error = dax_insert_mapping(mapping, iomap.bdev, sector,
-+				PAGE_SIZE, &entry, vma, vmf);
-+		break;
-+	case IOMAP_UNWRITTEN:
-+	case IOMAP_HOLE:
-+		if (!(vmf->flags & FAULT_FLAG_WRITE))
-+			return dax_load_hole(mapping, entry, vmf);
-+		/*FALLTHRU*/
-+	default:
-+		WARN_ON_ONCE(1);
-+		error = -EIO;
-+		break;
-+	}
-+
-+ unlock_entry:
-+	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
-+ out:
-+	if (error == -ENOMEM)
-+		return VM_FAULT_OOM | major;
-+	/* -EBUSY is fine, somebody else faulted on the same PTE */
-+	if (error < 0 && error != -EBUSY)
-+		return VM_FAULT_SIGBUS | major;
-+	return VM_FAULT_NOPAGE | major;
-+}
-+EXPORT_SYMBOL_GPL(iomap_dax_fault);
- #endif /* CONFIG_FS_IOMAP */
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index a0595b4..add6c4b 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -17,6 +17,8 @@ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
- 		  get_block_t, dio_iodone_t, int flags);
- int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
- int dax_truncate_page(struct inode *, loff_t from, get_block_t);
-+int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+			struct iomap_ops *ops);
- int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- void dax_wake_mapping_entry_waiter(struct address_space *mapping,
--- 
-2.1.4
+On 9/14/16 5:22 PM, Dave Chinner wrote:
+>> Same issue here, really; they are symmetric, right?  First condition met for
+>> > propagation propagates the error, period.  This sounds overly complex, unless
+>> > I'm missing something. Seems like:
+>> > 
+>> > +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
+>> > +	operation for "N" seconds before propagating the error.
+>> > 
+>> > would suffice, no?
+> No, because that's not what the implementation does:
+> 
+> 	if (retries expired)
+> 		fail
+> 	if (retry timer expired)
+> 		fail
+> 
+> IOWs, the retry count has precedence over the retry timer. if you
+> set both retry_timeout and max_retries, the timeout only takes
+> effect if max retries is set high enough that they aren't exhausted
+> before the timeout fires.
 
+Then:
+
++	Setting the value to "N" (where 0 < N < Max) will /allow/ XFS to retry
++	the operation for /up to/ "N" seconds before propagating the error.
+
+?  i.e. it could, but only if the retries don't expire first :)
+
+> This is for the case where an failure might take a variable time to
+> report.  (Think interactions with errors that TLER would address).
+> Normally you might say 10 retries, but if it is taking 5 minutes to
+> then fail when this specific error condition is hit, you might set a retry
+> timeout of 1 minute. In that case, we might get an immediate IO
+> error and retry several times before failing. However, if we hit the
+> "slow to report" error, we still get failure in the same time frame
+> as the immediate failures that have been retried many times before
+> giving up.
+
+Either way, it's still the /first/ condition satisfied which will
+bubble it up.
+
+So "first condition satisfied will propagate up," plus
+one condition is "retry up to N times," plus
+one condition is "retry up for up to N seconds"
+
+seems to cover it all, no?
+
+> It's hard to explain complex stuff like with a simple, concise
+> description. I'll try again....
+> 
+> Cheers,
+> 
+> Dave.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
