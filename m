@@ -1,180 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58510 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751790AbcINICN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Sep 2016 04:02:13 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] fstests: test platform_check_ismounted do its work
-Date: Wed, 14 Sep 2016 16:02:09 +0800
-Message-Id: <1473840129-19203-1-git-send-email-zlang@redhat.com>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:27905 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754743AbcINWJy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 18:09:54 -0400
+Date: Thu, 15 Sep 2016 08:09:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V4] xfs: Document error handlers behavior
+Message-ID: <20160914220951.GP30497@dastard>
+References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+ <20160914012334.GK30497@dastard>
+ <20160914100219.5743534ofe6oktbb@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160914100219.5743534ofe6oktbb@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
+To: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-There's a bug, the ustat() sysetm call is not implemented on someone
-arch, but xfsprogs uses this to detect whether a filesystem is
-mounted in platform_check_ismounted() function.
+On Wed, Sep 14, 2016 at 12:02:19PM +0200, Carlos Maiolino wrote:
+> On Wed, Sep 14, 2016 at 11:23:34AM +1000, Dave Chinner wrote:
+> > Ok, I had to update this for the change in retry timeout values from
+> > Eric, so I went and fixed all the other things I thought needed
+> > fixing, too. New patch below....
+> > 
+> 
+> Hi, thanks, this looks good to me, with one exception described below.
+> 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > 
+> > xfs: Document error handlers behavior
+> > 
+> > From: Carlos Maiolino <cmaiolino@redhat.com>
+> > 
+> > + -error handlers:
+> > +	Defines the behavior for a specific error.
+> > +
+> > +The filesystem behavior during an error can be set via sysfs files, Each
+> > +error handler works independently, the first condition met by and error handler
+> > +for a specific class will cause the error to be propagated rather than reset and
+> > +retried.
+> > +
+> > +The action taken by the filesystem when the error is propagated is context
+> > +dependent - it may cause a shut down in the case of an unrecoverable error,
+> > +it may be reported back to userspace, or it may even be ignored because
+> > +there's nothing useful we can with the error or anyone we can report it to (e.g.
+> 
+> "there's nothing useful we can do with the error"
+> 
+> > +during unmount).
+> 
+> Also, I apologize if I misunderstand it, but being ignored doesn't look a proper
+> description here, it sounds to me something like 'we ignore the error and tell
+> nobody about it", in unmount example, we shut down the filesystem if any error
+> happens, for me it doesn't sound like ignoring an error, but I might be
+> interpreting it in the wrong way.
 
-If ustat() is not implemented, platform_check_ismounted() return
-"isn't mounted" if a filesystem is mounted, that's a big problem, it
-will cause corruption.
+I think you're making the assumption that the only way we handle
+errors once retries are exhausted is to trigger a filesystem shutdown.
+That assumption was repeated throughout the documentation.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/xfs/284     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/284.out |   8 ++++
- tests/xfs/group   |   1 +
- 3 files changed, 122 insertions(+)
- create mode 100755 tests/xfs/284
- create mode 100644 tests/xfs/284.out
+While that may be true for /metadata write IO errors/, it is not
+true for the generic error handling case. e.g. if we extend it to
+memory allocation contexts, we may end up returning ENOMEM to
+userspace. Or, in certain contexts, we might be able to fall back to
+doing a single operation at a time using the stack for storage, in
+which case there is no reason at all to report the allocation
+failure to anyone.
 
-diff --git a/tests/xfs/284 b/tests/xfs/284
-new file mode 100755
-index 0000000..53fbcb1
---- /dev/null
-+++ b/tests/xfs/284
-@@ -0,0 +1,113 @@
-+#! /bin/bash
-+# FS QA Test 284
-+#
-+# Make sure platform_check_ismounted() do its work. A bug cause
-+# platform_check_ismounted return "isn't mounted" status, even if
-+# the filesystem is mounted. That maybe cause corruption, so must
-+# make sure this function always do its work.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Red Hat.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	rm -f $METADUMP_FILE 2>/dev/null
-+	rm -f $COPY_FILE 2>/dev/null
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_test
-+_require_scratch
-+
-+function filter_mounted()
-+{
-+	grep "mounted" | _filter_scratch | head -1
-+}
-+
-+METADUMP_FILE="${TEST_DIR}/${seq}_metadump"
-+COPY_FILE="${TEST_DIR}/${seq}_copyfile"
-+
-+# Test dump a mounted device
-+_scratch_mount
-+_scratch_metadump $METADUMP_FILE 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test dump a mounted device [Failed]"
-+_scratch_unmount
-+
-+# Test restore a mounted device
-+_scratch_metadump $METADUMP_FILE
-+_scratch_mount
-+xfs_mdrestore $METADUMP_FILE $SCRATCH_DEV 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test restore a mounted device [Failed]"
-+_scratch_unmount
-+
-+# Test xfs_copy to a mounted device
-+# If source is mounted, xfs_copy will print a warning, but still
-+# keep on copying. If target is mounted, xfs_copy will failed.
-+$XFS_COPY_PROG $SCRATCH_DEV $COPY_FILE >/dev/null
-+_scratch_mount
-+$XFS_COPY_PROG $COPY_FILE $SCRATCH_DEV 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_copy to a mounted device [Failed]"
-+_scratch_unmount
-+
-+# Test xfs_db a mounted device without readonly (-r) option
-+_scratch_mount
-+$XFS_DB_PROG -c sb $SCRATCH_DEV 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] &&
-+	echo "Test xfs_db a mounted device(without -r option) [Failed]"
-+_scratch_unmount
-+
-+# Test mkfs.xfs a mounted device
-+# Generally mkfs will report device is mounted, but if it can't find
-+# device is mounted, it'll report device busy.
-+_scratch_mount
-+_scratch_mkfs 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test mkfs.xfs a mounted device [Failed]"
-+_scratch_unmount
-+
-+# Test xfs_repair (with/without modify flag) a mounted device
-+_scratch_mount
-+_scratch_xfs_repair -n 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] &&
-+	echo "Test xfs_repair -n a mounted devie [Failed]"
-+_scratch_xfs_repair 2>&1 | filter_mounted
-+[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_repair a mounted devie [Failed]"
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/284.out b/tests/xfs/284.out
-new file mode 100644
-index 0000000..302d75e
---- /dev/null
-+++ b/tests/xfs/284.out
-@@ -0,0 +1,8 @@
-+QA output created by 284
-+xfs_metadump: SCRATCH_DEV contains a mounted and writable filesystem
-+xfs_mdrestore: a filesystem is mounted on target device "SCRATCH_DEV", cannot restore to a mounted filesystem.
-+xfs_copy:  a filesystem is mounted on target device "SCRATCH_DEV".
-+xfs_db: SCRATCH_DEV contains a mounted filesystem
-+mkfs.xfs: SCRATCH_DEV contains a mounted filesystem
-+xfs_repair: SCRATCH_DEV contains a mounted and writable filesystem
-+xfs_repair: SCRATCH_DEV contains a mounted filesystem
-diff --git a/tests/xfs/group b/tests/xfs/group
-index baa0ff6..0ac4bd5 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -281,6 +281,7 @@
- 281 dump ioctl auto quick
- 282 dump ioctl auto quick
- 283 dump ioctl auto quick
-+284 auto quick mount
- 287 auto dump quota quick
- 290 auto rw prealloc quick ioctl zero
- 291 auto repair
+The infrastructure is generic, as is the documentation, and so it
+shouldn't assume anything about what is going to happen once the
+retries are exhausted and the error is propagated upwards. What
+happens with that error after it is returned is a subsystem and
+context dependent behaviour, not something that is defined by the
+error retry configuration infrastructure....
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
