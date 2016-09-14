@@ -1,81 +1,67 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 25AEC7CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 11:01:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E924F304043
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 09:01:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TMYlI44tOPbTXFTh (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Sep 2016 09:01:23 -0700 (PDT)
-Date: Wed, 14 Sep 2016 00:01:20 +0800
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59080 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754272AbcINRBE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:01:04 -0400
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BC45F19C33E
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Sep 2016 17:01:03 +0000 (UTC)
 From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs_repair: exit with status 2 if log dirtiness is unknown
-Message-ID: <20160913160120.GH12847@dhcp12-143.nay.redhat.com>
-References: <4c59d0b7-bf53-ca58-1bcf-b95d1c9c44dc@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4c59d0b7-bf53-ca58-1bcf-b95d1c9c44dc@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+Subject: [PATCH v3] xfs_repair: update the manual content about xfs_repair exit status
+Date: Thu, 15 Sep 2016 01:00:51 +0800
+Message-Id: <1473872451-17249-1-git-send-email-zlang@redhat.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org
+Cc: Zorro Lang <zlang@redhat.com>
 
-On Mon, Sep 12, 2016 at 07:46:05AM -0500, Eric Sandeen wrote:
-> This new case is mostly like the known dirty log case; the log
-> is corrupt, dirtiness cannot be determined, and a mount/umount
-> cycle or an xfs_repair -L is required.
-> 
-> So exit with status 2 here as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index e21ffa6..5964244 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -79,10 +79,11 @@ zero_log(
->  		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
->  			error);
->  		if (!no_modify && !zap_log)
-> -			do_error(_(
-> +			do_warn(_(
->  "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
->  "filesystem to replay the log or use the -L option to destroy the log and\n"
->  "attempt a repair.\n"));
-> +			exit(2);
+The man 8 xfs_repair said "xfs_repair run without the -n option will
+always return a status code of 0". That's not correct.
 
-I think it makes sense for me. Exit 2 means log needs to be replayed or cleared.
-If we meet xfs_repair return 2, we can do the same steps to deal with that:
- 1. try to mount
- 2. If mount fail, try xfs_repair -L
+xfs_repair will return 2 if it finds a fs log which needs to be
+replayed or cleared, 1 if runtime error is encountered, and 0 for
+all other cases.
 
-So I agree with this patch:
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
+V3 add more description for return status 1, suggest the user to run
+xfs_repair again if it return 1.
 
->  	} else {
->  		if (verbose) {
->  			do_warn(
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Zorro
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+ man/man8/xfs_repair.8 | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+index 1b4d9e3..314f2c2 100644
+--- a/man/man8/xfs_repair.8
++++ b/man/man8/xfs_repair.8
+@@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
+ This message refers to a large directory.
+ If the directory were small, the message would read "junking entry ...".
+ .SH EXIT STATUS
++.TP
+ .B xfs_repair \-n
+-(no modify node)
++(no modify mode)
+ will return a status of 1 if filesystem corruption was detected and
+ 0 if no filesystem corruption was detected.
++.TP
+ .B xfs_repair
+-run without the \-n option will always return a status code of 0.
++run without the \-n option will return a status code of 2 if it finds a
++filesystem log which needs to be replayed (by a mount/umount cycle) or
++cleared (by -L option), 1 if a runtime error is encountered, filesystem
++may be even more broken than before, so repair needs to be run again,
++and 0 in all other cases, whether or not filesystem corruption was detected.
+ .SH BUGS
+ The filesystem to be checked and repaired must have been
+ unmounted cleanly using normal system administration procedures
+-- 
+2.7.4
+
