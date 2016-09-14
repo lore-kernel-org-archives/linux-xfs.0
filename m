@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A5897CA0
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 05:02:28 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BA0FB7CA0
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 06:01:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3058530404E
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 03:02:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7r5RgH4GBOpgr8bf (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 14 Sep 2016 03:02:23 -0700 (PDT)
-Date: Wed, 14 Sep 2016 12:02:19 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V4] xfs: Document error handlers behavior
-Message-ID: <20160914100219.5743534ofe6oktbb@redhat.com>
-References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
-	<20160914012334.GK30497@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A92E8F8039
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 04:01:10 -0700 (PDT)
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [119.145.14.66])
+	by cuda.sgi.com with ESMTP id Olsb3zyKeHrb9hFn (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2016 04:01:07 -0700 (PDT)
+Subject: Re: [PATCH] xfs_logprint: fix the transcation type string for
+	delaylog-enabled fs
+References: <1473394107-3399-1-git-send-email-houtao1@huawei.com>
+	<20160913070913.GG30497@dastard> <57D8A1BE.60906@huawei.com>
+	<20160914053110.GM30497@dastard>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <57D92DB9.4020607@huawei.com>
+Date: Wed, 14 Sep 2016 19:00:09 +0800
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160914012334.GK30497@dastard>
+In-Reply-To: <20160914053110.GM30497@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,149 +32,43 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 14, 2016 at 11:23:34AM +1000, Dave Chinner wrote:
-> Ok, I had to update this for the change in retry timeout values from
-> Eric, so I went and fixed all the other things I thought needed
-> fixing, too. New patch below....
+> Tying detection of transaction type numbering to an
+> unrelated on-disk feature change is simply wrong. No ifs, not buts,
+> it's just wrong.
+Yes, I agree with you.
+
+> Actually, it was introduced in 3.20-rc1, aka 4.0. It was propagated
+> into xfsprogs 4.2.0-rc1. The trans type code in logprint is really
+> for legacy filesystems with kernels older than 3.0.
+> I don't see much point in trying to hack legacy support
+> into the TOT diagnostic tool, especailly as it is trivial to pull
+> a logprint from a previous release if such support is actually
+> necessary. e.g:
 > 
-
-Hi, thanks, this looks good to me, with one exception described below.
-
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> $ git checkout -b old_logprint v3.2.3
+> $ make
 > 
-> xfs: Document error handlers behavior
+> And now you have a logprint/xfs_logprint binary that you can use for
+> diagnostics of the pre-delaylog log format.
 > 
-> From: Carlos Maiolino <cmaiolino@redhat.com>
+> Removing functionality from the TOT code base does not mean that
+> functionality is lost - it's still in the revision contorl system
+> and a minute away from being usable if it's ever needed.
+I just think about the compatibility things too much.
+
+> Users won't know this, because "delaylog" is something that has long
+> been deprecated and lots of users don't even know it exists.
 > 
-> + -error handlers:
-> +	Defines the behavior for a specific error.
-> +
-> +The filesystem behavior during an error can be set via sysfs files, Each
-> +error handler works independently, the first condition met by and error handler
-> +for a specific class will cause the error to be propagated rather than reset and
-> +retried.
-> +
-> +The action taken by the filesystem when the error is propagated is context
-> +dependent - it may cause a shut down in the case of an unrecoverable error,
-> +it may be reported back to userspace, or it may even be ignored because
-> +there's nothing useful we can with the error or anyone we can report it to (e.g.
-
-"there's nothing useful we can do with the error"
-
-> +during unmount).
-
-Also, I apologize if I misunderstand it, but being ignored doesn't look a proper
-description here, it sounds to me something like 'we ignore the error and tell
-nobody about it", in unmount example, we shut down the filesystem if any error
-happens, for me it doesn't sound like ignoring an error, but I might be
-interpreting it in the wrong way.
+> Really, just remove the transaction type printing from logprint and
+> both developers and users can continue to ignore it like we have
+> been for the past few years....
+Thanks for your comment.
+I will send a new patch to remove the transaction type printing.
 
 
-> +
-> +The configuration files are organized into the following per-mounted filesystem
-> +hierarchy:
-> +
-> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
-> +
-> +Where:
-> +  <dev>
-> +	The short device name of the mounted filesystem. This is the same device
-> +	name that shows up in XFS kernel error messages as "XFS(<dev>): ..."
-> +
-> +  <class>
-> +	The subsystem the error configuration belongs to. As of 4.9, the defined
-> +	classes are:
-> +
-> +		- "metadata": applies metadata buffer write IO
-> +
-> +  <error>
-> +	The individual error handler configurations.
-> +
-> +
-> +Each filesystem has "global" error configuration options defined in their top
-> +level directory:
-> +
-> +  /sys/fs/xfs/<dev>/error/
-> +
-> +  fail_at_unmount		(Min:  0  Default:  1  Max: 1)
-> +	Defines the filesystem error behavior at unmount time.
-> +
-> +	If set to a value of 1, XFS will override all other error configurations
-> +	during unmount and replace them with "immediate fail" characteristics.
-> +	i.e. no retries, no retry timeout. This will always allow unmount to
-> +	succeed when there are persistent errors present.
-> +
-> +	If set to 0, the configured retry behaviour will continue until all
-> +	retries and/or timeouts have been exhausted. This will delay unmount
-> +	completion when there are persistent errors, and it may prevent the
-> +	filesystem from ever unmounting fully in the case of "retry forever"
-> +	handler configurations.
-> +
-> +	Note: there is no guarantee that fail_at_unmount can be set whilst an
-> +	unmount is in progress. It is possible that the sysfs entries are
-> +	removed by the unmounting filesystem before a "retry forever" error
-> +	handler configuration causes unmount to hang, and hence the filesystem
-> +	must be configured appropriately before unmount begins to prevent
-> +	unmount hangs.
-> +
-> +Each filesystem has specific error class handlers that define the error
-> +propagation behaviour for specific errors. There is also a "default" error
-> +handler defined, which defines the behaviour for all errors that don't have
-> +specific handlers defined. The handler configurations are found in the
-> +directory:
-> +
-> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
-> +
-> +  max_retries			(Min: -1  Default: Varies  Max: INTMAX)
-> +	Defines the allowed number of retries of a specific error before
-> +	the filesystem will propagate the error. The retry count for a given
-> +	error context (e.g. a specific metadata buffer) is reset ever time there
-> +	is a successful completion of the operation.
-> +
-> +	Setting the value to "-1" will cause XFS to retry forever for this
-> +	specific error.
-> +
-> +	Setting the value to "0" will cause XFS to fail immediately when the
-> +	specific error is reported.
-> +
-> +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
-> +	operation "N" times before propagating the error.
-> +
-> +  retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
-> +	Define the amount of time (in seconds) that the filesystem is
-> +	allowed to retry its operations when the specific error is
-> +	found.
-> +
-> +	Setting the value to "-1" will set an infinite timeout, causing
-> +	error propagation behaviour to be determined solely by the "max_retries"
-> +	parameter.
-> +
-> +	Setting the value to "0" will cause XFS to fail immediately when the
-> +	specific error is reported.
-> +
-> +	Setting the value to  "N" (where 0 < N < Max) will propagate the error
-> +	on the first retry that fails at least "N" seconds after the first error
-> +	was detected, unless the number of retries defined by max_retries
-> +	expires first.
-> +
-> +Note: The default behaviour for a specific error handler is dependent on both
-> +the class and error context. For example, the default values for
-> +"metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
-> +to "fail immediately" behaviour. This is done because ENODEV is a fatal,
-> +unrecoverable error no matter how many times the metadata IO is retried.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
--- 
-Carlos
 
 _______________________________________________
 xfs mailing list
