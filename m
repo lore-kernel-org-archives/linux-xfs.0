@@ -1,86 +1,111 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7923A7CA0
-	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 08:31:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B982304066
-	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 06:31:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Kyd5fqM6zMTQeHXM (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 16 Sep 2016 06:31:22 -0700 (PDT)
-Date: Fri, 16 Sep 2016 08:31:19 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_quota: un-flag non-foreign-capable commands
-Message-ID: <20160916133119.GB12342@redhat.com>
-References: <294717b5-f997-ca39-2095-cc144a71de47@redhat.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33313 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755879AbcINMnZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 08:43:25 -0400
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <294717b5-f997-ca39-2095-cc144a71de47@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+In-Reply-To: <CAOQ4uxgbtGV-qJz=+wZL5w533Cb+kPDGJOUd9GVni_oxS0_Cvg@mail.gmail.com>
+References: <1473348594-31425-1-git-send-email-amir73il@gmail.com>
+ <1473692803-11964-1-git-send-email-amir73il@gmail.com> <1473692803-11964-5-git-send-email-amir73il@gmail.com>
+ <20160913001147.GO22388@dastard> <CAOQ4uxgbtGV-qJz=+wZL5w533Cb+kPDGJOUd9GVni_oxS0_Cvg@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 14 Sep 2016 15:43:22 +0300
+Message-ID: <CAOQ4uxjStCO=dGMtypc6rT2PTgsmBstH5RfeCLiZ+Z88rnrRsg@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] ovl: use vfs_copy_file_range() to copy up file data
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Dave Chinner <david@fromorbit.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Thu, Sep 15, 2016 at 05:58:26PM -0500, Eric Sandeen wrote:
-> The off command calls XFS_QUOTAOFF / Q_XQUOTAOFF, which calls
-> quota_disable in the kernel, which returns ENOSYS if the
-> ->quota_enable quota op doesn't exist - and it does not exist
-> on any non-xfs filesystems.
-> 
-> We could get clever if we wanted it, and send Q_QUOTAOFF
-> instead for foreign filesystems, but for now it's broken
-> so just remove the flag.
-> 
-> The free command relies on XFS_IOC_FSGEOMETRY_V1, so unflag it
-> as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Tue, Sep 13, 2016 at 10:26 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Tue, Sep 13, 2016 at 3:11 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Mon, Sep 12, 2016 at 06:06:43PM +0300, Amir Goldstein wrote:
+>>> Use vfs_copy_file_range() helper instead of calling do_splice_direct()
+>>> when copying up file data.
+>>> When copying up within the same fs, which supports copy_file_range(),
+>>> fs implementation can be more efficient then do_splice_direct().
+>>> vfs_copy_file_range() helper falls back to do_splice_direct() if
+>>> it cannot use the file system's copy_file_range() implementation.
+>>>
+>>> Tested correct behavior when lower and upper are on:
+>>> 1. same ext4 (copy)
+>>> 2. same xfs + reflink patches + mkfs.xfs (copy)
+>>> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (clone)
+>>> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+>>>
+>>> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+>>> sparse files) takes less than 1 second in the xfs reflink setup vs.
+>>> 25 seconds on the rest of the setups.
+>>
+>> This is now stale, right? the reflink is done from the
+>> vfs_clone_file_range() call added in an earlier patch, not this
+>> change....
+>
+> Well.. that depends on the definition of "now"
+> as patch 4/4 you are correct, but as I wrote in the cover letter
+> I tested patches 3,4 independently of patches 1,2
+> otherwise, patches 3,4 would be adding moot code
+> or rather a simple re-factoring.
+>
+> So now it boils down to a process question:
+> should patches 3,4 be merged, even though no one can properly test the
+> 'fallback to chunk copy range' case
+> with any of the in-tree filesystems (without modifying them first)?
+>
+> I could be presenting patch 4 as a simple re-factoring
+> (use vfs copy range helper instead of using do_splice_direct)
+> which makes for a cleaner code.
+> But the fact that it changes behavior in a subtle way
+> (hopefully for the best) without anyone noticing this change far into
+> the future is somewhat troubling.
+>
+> Your thoughts?
+>
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Anyway, I added a comment in commit message about how I tested this change
+(by removing the vfs_clone_file_range() call). resending...
 
-> ---
-> 
-> diff --git a/quota/state.c b/quota/state.c
-> index 05e4ec5..09dfa70 100644
-> --- a/quota/state.c
-> +++ b/quota/state.c
-> @@ -584,7 +584,6 @@ state_init(void)
->  	off_cmd.args = _("[-gpu] [-v]");
->  	off_cmd.oneline = _("permanently switch quota off for a path");
->  	off_cmd.help = off_help;
-> -	off_cmd.flags = CMD_FLAG_FOREIGN_OK;
->  
->  	state_cmd.name = "state";
->  	state_cmd.cfunc = state_f;
-> diff --git a/quota/free.c b/quota/free.c
-> index b9be954..3c8a5ce 100644
-> --- a/quota/free.c
-> +++ b/quota/free.c
-> @@ -372,7 +372,6 @@ free_init(void)
->  	free_cmd.args = _("[-bir] [-hn] [-f file]");
->  	free_cmd.oneline = _("show free and used counts for blocks and inodes");
->  	free_cmd.help = free_help;
-> -	free_cmd.flags = CMD_FLAG_FOREIGN_OK;
->  
->  	add_command(&free_cmd);
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>>> ---
+>>>  fs/overlayfs/copy_up.c | 9 +++++----
+>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+>>> index e432d7e..32ea54f 100644
+>>> --- a/fs/overlayfs/copy_up.c
+>>> +++ b/fs/overlayfs/copy_up.c
+>>> @@ -159,15 +159,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>>>                       break;
+>>>               }
+>>>
+>>> -             bytes = do_splice_direct(old_file, &old_pos,
+>>> -                                      new_file, &new_pos,
+>>> -                                      this_len, SPLICE_F_MOVE);
+>>> +             bytes = vfs_copy_file_range(old_file, old_pos,
+>>> +                                         new_file, new_pos,
+>>> +                                         this_len, 0);
+>>>               if (bytes <= 0) {
+>>>                       error = bytes;
+>>>                       break;
+>>>               }
+>>> -             WARN_ON(old_pos != new_pos);
+>>>
+>>> +             old_pos += bytes;
+>>> +             new_pos += bytes;
+>>>               len -= bytes;
+>>>       }
+>>
+>> Patch does not remove the
+>>
+>>         /* FIXME: copy up sparse files efficiently */
+>>
+>> comment. Efficient copying of sparse files is something
+>> vfs_copy_file_range() should do internally....
+>
+> Moved the comment into vfs_copy_file_range()
+>
+> Cheers,
+> Amir.
