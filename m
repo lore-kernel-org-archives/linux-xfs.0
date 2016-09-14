@@ -1,94 +1,233 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35205 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761890AbcINMn6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 08:43:58 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3 0/4] ovl: efficient copy up by reflink
-Date: Wed, 14 Sep 2016 15:43:10 +0300
-Message-Id: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52678 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761833AbcINNOZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Sep 2016 09:14:25 -0400
+Date: Wed, 14 Sep 2016 21:14:23 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] fstests: test platform_check_ismounted do its work
+Message-ID: <20160914131423.GI12847@dhcp12-143.nay.redhat.com>
+References: <1473840129-19203-1-git-send-email-zlang@redhat.com>
+ <20160914092400.GY27776@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160914092400.GY27776@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-This is the 3rd revision of implementing overlayfs
-copy up by reflink.
+On Wed, Sep 14, 2016 at 05:24:00PM +0800, Eryu Guan wrote:
+> On Wed, Sep 14, 2016 at 04:02:09PM +0800, Zorro Lang wrote:
+> > There's a bug, the ustat() sysetm call is not implemented on someone
+> > arch, but xfsprogs uses this to detect whether a filesystem is
+> > mounted in platform_check_ismounted() function.
+> > 
+> > If ustat() is not implemented, platform_check_ismounted() return
+> > "isn't mounted" if a filesystem is mounted, that's a big problem, it
+> > will cause corruption.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >  tests/xfs/284     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/284.out |   8 ++++
+> >  tests/xfs/group   |   1 +
+> >  3 files changed, 122 insertions(+)
+> >  create mode 100755 tests/xfs/284
+> >  create mode 100644 tests/xfs/284.out
+> > 
+> > diff --git a/tests/xfs/284 b/tests/xfs/284
+> > new file mode 100755
+> > index 0000000..53fbcb1
+> > --- /dev/null
+> > +++ b/tests/xfs/284
+> > @@ -0,0 +1,113 @@
+> > +#! /bin/bash
+> > +# FS QA Test 284
+> > +#
+> > +# Make sure platform_check_ismounted() do its work. A bug cause
+> > +# platform_check_ismounted return "isn't mounted" status, even if
+> > +# the filesystem is mounted. That maybe cause corruption, so must
+> > +# make sure this function always do its work.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2016 Red Hat.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +	rm -f $METADUMP_FILE 2>/dev/null
+> > +	rm -f $COPY_FILE 2>/dev/null
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_supported_os Linux
+> > +_require_test
+> > +_require_scratch
+> > +
+> > +function filter_mounted()
+> > +{
+> > +	grep "mounted" | _filter_scratch | head -1
+> > +}
+> > +
+> > +METADUMP_FILE="${TEST_DIR}/${seq}_metadump"
+> > +COPY_FILE="${TEST_DIR}/${seq}_copyfile"
+> > +
+> > +# Test dump a mounted device
+> > +_scratch_mount
+> > +_scratch_metadump $METADUMP_FILE 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test dump a mounted device [Failed]"
+> 
+> I don't think these status checks are needed, because if these
+> metadump/copy/repair/mkfs commands proceed on mounted fs, the golden
+> image will be broken.
 
-Btrfs has file reflink support and XFS is about to gain
-file reflink support soon. It is very useful to use reflink
-to implement copy up of regular file data when possible.
+Originally I want to check the return status, and print the output to
+$seq.full. Because the output can prove platform_check_ismounted() finds
+the fs is mounted, the return value can prove these operations didn't break
+a mounted fs and return pass. (Maybe it do_log() some messages, but
+forgot to exit non-zero :-P. OK, maybe I thought too much:)
 
-For example, on my laptop, xfstest overlay/001 (copy up of 4G
-sparse files) takes less than 1 second with copy up by reflink
-vs. 25 seconds with regular copy up.
+Then I found some operations still can return non-zero even if
+platform_check_ismounted() return a wrong value (e.g: mkfs.xfs). So
+I decided to check the output with the return value together.
 
-This series includes two pairs of patches:
-- patches 1,2 utilize the clone_file_range() API
-- patches 3,4 utilize the copy_file_range() API
+So if it's OK to check both of output and return, I hope to retain them.
+Or I hope to check return value, and print the output to $seq.full.
 
-The two pairs of patches are independent of each other.
-They were each tested separately and both tested together.
-All combinations passed the unionmount-testsuite (over tmpfs)
-All combinations passed the overlay/??? xfstests over the
-following underlying fs:
-1. ext4 (copy up)
-2. xfs + reflink patches + mkfs.xfs (copy up)
-3. xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink up)
+> 
+> > +_scratch_unmount
+> > +
+> > +# Test restore a mounted device
+> 
+> "restore to a mounted device"
 
-Dave Chinner suggested the following implementation for copy up,
-which I implemented in this series:
-1. try to clone_file_range() entire length
-2. fallback to trying copy_file_range() in small chunks
-3. fallback to do_splice_direct() in small chunks
+Sure.
 
-This is a good general implementation to cover the future use cases of
-file systems that can do either clone_file_range() or copy_file_range().
-However, currently, the only in-tree file systems that support
-clone/copy_file_range are btrfs, xfs (soon), cifs and nfs.
-btrfs and xfs use the same implementation for clone and copy range,
-so the copy_file_range() step is never needed.
-cifs supports only clone_file_range() so copy_file_range() step is moot.
-nfs does have a different implementation for clone_file_range() and
-copy_file_range(), but nfs is not supported as upper layer for overlayfs
-at the moment.
+> 
+> > +_scratch_metadump $METADUMP_FILE
+> > +_scratch_mount
+> > +xfs_mdrestore $METADUMP_FILE $SCRATCH_DEV 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test restore a mounted device [Failed]"
+> > +_scratch_unmount
+> > +
+> > +# Test xfs_copy to a mounted device
+> > +# If source is mounted, xfs_copy will print a warning, but still
+> > +# keep on copying. If target is mounted, xfs_copy will failed.
+> > +$XFS_COPY_PROG $SCRATCH_DEV $COPY_FILE >/dev/null
+> > +_scratch_mount
+> > +$XFS_COPY_PROG $COPY_FILE $SCRATCH_DEV 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_copy to a mounted device [Failed]"
+> > +_scratch_unmount
+> > +
+> > +# Test xfs_db a mounted device without readonly (-r) option
+> > +_scratch_mount
+> > +$XFS_DB_PROG -c sb $SCRATCH_DEV 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] &&
+> > +	echo "Test xfs_db a mounted device(without -r option) [Failed]"
+> > +_scratch_unmount
+> > +
+> > +# Test mkfs.xfs a mounted device
+> > +# Generally mkfs will report device is mounted, but if it can't find
+> > +# device is mounted, it'll report device busy.
+> > +_scratch_mount
+> > +_scratch_mkfs 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test mkfs.xfs a mounted device [Failed]"
+> > +_scratch_unmount
+> > +
+> > +# Test xfs_repair (with/without modify flag) a mounted device
+> > +_scratch_mount
+> > +_scratch_xfs_repair -n 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] &&
+> > +	echo "Test xfs_repair -n a mounted devie [Failed]"
+> > +_scratch_xfs_repair 2>&1 | filter_mounted
+> > +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_repair a mounted devie [Failed]"
+> > +_scratch_unmount
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/284.out b/tests/xfs/284.out
+> > new file mode 100644
+> > index 0000000..302d75e
+> > --- /dev/null
+> > +++ b/tests/xfs/284.out
+> > @@ -0,0 +1,8 @@
+> > +QA output created by 284
+> > +xfs_metadump: SCRATCH_DEV contains a mounted and writable filesystem
+> > +xfs_mdrestore: a filesystem is mounted on target device "SCRATCH_DEV", cannot restore to a mounted filesystem.
+> > +xfs_copy:  a filesystem is mounted on target device "SCRATCH_DEV".
+> > +xfs_db: SCRATCH_DEV contains a mounted filesystem
+> > +mkfs.xfs: SCRATCH_DEV contains a mounted filesystem
+> > +xfs_repair: SCRATCH_DEV contains a mounted and writable filesystem
+> > +xfs_repair: SCRATCH_DEV contains a mounted filesystem
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index baa0ff6..0ac4bd5 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -281,6 +281,7 @@
+> >  281 dump ioctl auto quick
+> >  282 dump ioctl auto quick
+> >  283 dump ioctl auto quick
+> > +284 auto quick mount
+> 
+> I'm not sure if this belongs to 'mount' group, it does test against
+> mounted device, not actually test mount.
+> 
+> But perhaps we can add 'dump' 'copy' 'mkfs' 'db' 'repair' groups?
 
-Please pick patches 1,2 for clear and immediate benefit to copy up
-performance on filesystems with reflink support.
+Hmm... sure, add them is ok for me:)
 
-Please consider picking patches 3,4 additionally for future generations
-and for code consolidation into vfs helpers.
-
-Cheers,
-Amir.
-
-V3:
-- Address style comments from Dave Chinner
-
-V2:
-- Re-factor vfs helpers so they can be called from copy up
-- Single call to vfs_clone_file_range() and fallback to
-  vfs_copy_file_range() loop
-
-V1:
-- Replace iteravite call to copy_file_range() with
-  a single call to clone_file_range()
-
-V0:
-- Call clone_file_range() and fallback to do_splice_direct()
-
-Amir Goldstein (4):
-  vfs: allow vfs_clone_file_range() across mount points
-  ovl: use vfs_clone_file_range() for copy up if possible
-  vfs: allow vfs_copy_file_range() across file systems
-  ovl: use vfs_copy_file_range() to copy up file data
-
- fs/ioctl.c             |  2 ++
- fs/overlayfs/copy_up.c | 22 ++++++++++++++++------
- fs/read_write.c        | 25 ++++++++++++++++++-------
- 3 files changed, 36 insertions(+), 13 deletions(-)
-
--- 
-2.7.4
-
+> 
+> Thanks,
+> Eryu
+> 
+> >  287 auto dump quota quick
+> >  290 auto rw prealloc quick ioctl zero
+> >  291 auto repair
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
