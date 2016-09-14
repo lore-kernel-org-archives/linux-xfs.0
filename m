@@ -1,231 +1,181 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51872 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755834AbcINKCM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 06:02:12 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/12] ext2: use iomap to implement DAX
-Date: Wed, 14 Sep 2016 12:01:31 +0200
-Message-Id: <1473847291-18913-13-git-send-email-hch@lst.de>
-In-Reply-To: <1473847291-18913-1-git-send-email-hch@lst.de>
-References: <1473847291-18913-1-git-send-email-hch@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
-Cc: ross.zwisler@linux.intel.com
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A5897CA0
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 05:02:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3058530404E
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 03:02:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7r5RgH4GBOpgr8bf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 14 Sep 2016 03:02:23 -0700 (PDT)
+Date: Wed, 14 Sep 2016 12:02:19 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH V4] xfs: Document error handlers behavior
+Message-ID: <20160914100219.5743534ofe6oktbb@redhat.com>
+References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+	<20160914012334.GK30497@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20160914012334.GK30497@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/ext2/ext2.h  |  1 +
- fs/ext2/file.c  | 72 +++++++++++++++++++++++++++++++++++++++++++++++++++------
- fs/ext2/inode.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 124 insertions(+), 12 deletions(-)
+On Wed, Sep 14, 2016 at 11:23:34AM +1000, Dave Chinner wrote:
+> Ok, I had to update this for the change in retry timeout values from
+> Eric, so I went and fixed all the other things I thought needed
+> fixing, too. New patch below....
+> 
 
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 06af2f9..37e2be7 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -814,6 +814,7 @@ extern const struct file_operations ext2_file_operations;
- /* inode.c */
- extern const struct address_space_operations ext2_aops;
- extern const struct address_space_operations ext2_nobh_aops;
-+extern struct iomap_ops ext2_iomap_ops;
- 
- /* namei.c */
- extern const struct inode_operations ext2_dir_inode_operations;
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 5efeefe..e089e1c 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -22,11 +22,59 @@
- #include <linux/pagemap.h>
- #include <linux/dax.h>
- #include <linux/quotaops.h>
-+#include <linux/iomap.h>
-+#include <linux/uio.h>
- #include "ext2.h"
- #include "xattr.h"
- #include "acl.h"
- 
- #ifdef CONFIG_FS_DAX
-+static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
-+{
-+	struct inode *inode = iocb->ki_filp->f_mapping->host;
-+	ssize_t ret;
-+
-+	if (!iov_iter_count(to))
-+		return 0; /* skip atime */
-+
-+	inode_lock_shared(inode);
-+	ret = iomap_dax_rw(iocb, to, &ext2_iomap_ops);
-+	inode_unlock_shared(inode);
-+
-+	file_accessed(iocb->ki_filp);
-+	return ret;
-+}
-+
-+static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
-+{
-+	struct file *file = iocb->ki_filp;
-+	struct inode *inode = file->f_mapping->host;
-+	ssize_t ret;
-+
-+	inode_lock(inode);
-+	ret = generic_write_checks(iocb, from);
-+	if (ret <= 0)
-+		goto out_unlock;
-+	ret = file_remove_privs(file);
-+	if (ret)
-+		goto out_unlock;
-+	ret = file_update_time(file);
-+	if (ret)
-+		goto out_unlock;
-+
-+	ret = iomap_dax_rw(iocb, from, &ext2_iomap_ops);
-+	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
-+		i_size_write(inode, iocb->ki_pos);
-+		mark_inode_dirty(inode);
-+	}
-+
-+out_unlock:
-+	inode_unlock(inode);
-+	if (ret > 0)
-+		ret = generic_write_sync(iocb, ret);
-+	return ret;
-+}
-+
- /*
-  * The lock ordering for ext2 DAX fault paths is:
-  *
-@@ -51,7 +99,7 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = dax_fault(vma, vmf, ext2_get_block);
-+	ret = iomap_dax_fault(vma, vmf, &ext2_iomap_ops);
- 
- 	up_read(&ei->dax_sem);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-@@ -156,14 +204,24 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- 	return ret;
- }
- 
--/*
-- * We have mostly NULL's here: the current defaults are ok for
-- * the ext2 filesystem.
-- */
-+static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
-+{
-+	if (IS_DAX(iocb->ki_filp->f_mapping->host))
-+		return ext2_dax_read_iter(iocb, to);
-+	return generic_file_read_iter(iocb, to);
-+}
-+
-+static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-+{
-+	if (IS_DAX(iocb->ki_filp->f_mapping->host))
-+		return ext2_dax_write_iter(iocb, from);
-+	return generic_file_write_iter(iocb, from);
-+}
-+
- const struct file_operations ext2_file_operations = {
- 	.llseek		= generic_file_llseek,
--	.read_iter	= generic_file_read_iter,
--	.write_iter	= generic_file_write_iter,
-+	.read_iter	= ext2_file_read_iter,
-+	.write_iter	= ext2_file_write_iter,
- 	.unlocked_ioctl = ext2_ioctl,
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl	= ext2_compat_ioctl,
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 2a69ab2..aae5f61 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -32,6 +32,7 @@
- #include <linux/buffer_head.h>
- #include <linux/mpage.h>
- #include <linux/fiemap.h>
-+#include <linux/iomap.h>
- #include <linux/namei.h>
- #include <linux/uio.h>
- #include "ext2.h"
-@@ -787,6 +788,59 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
- 
- }
- 
-+#ifdef CONFIG_FS_DAX
-+static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
-+		unsigned flags, struct iomap *iomap)
-+{
-+	unsigned int blkbits = inode->i_blkbits;
-+	unsigned long first_block = offset >> blkbits;
-+	unsigned long max_blocks = (length + (1 << blkbits) - 1) >> blkbits;
-+	bool new = false, boundary = false;
-+	u32 bno;
-+	int ret;
-+
-+	ret = ext2_get_blocks(inode, first_block, max_blocks,
-+			&bno, &new, &boundary, flags & IOMAP_WRITE);
-+	if (ret < 0)
-+		return ret;
-+
-+	iomap->flags = 0;
-+	iomap->bdev = inode->i_sb->s_bdev;
-+	iomap->offset = first_block << blkbits;
-+
-+	if (ret == 0) {
-+		iomap->type = IOMAP_HOLE;
-+		iomap->blkno = IOMAP_NULL_BLOCK;
-+		iomap->length = 1 << blkbits;
-+	} else {
-+		iomap->type = IOMAP_MAPPED;
-+		iomap->blkno = (sector_t)bno << (blkbits - 9);
-+		iomap->length = (u64)ret << blkbits;
-+		iomap->flags |= IOMAP_F_MERGED;
-+	}
-+
-+	if (new)
-+		iomap->flags |= IOMAP_F_NEW;
-+	return 0;
-+}
-+
-+static int
-+ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
-+		ssize_t written, unsigned flags, struct iomap *iomap)
-+{
-+	if (iomap->type == IOMAP_MAPPED &&
-+	    written < length &&
-+	    (flags & IOMAP_WRITE))
-+		ext2_write_failed(inode->i_mapping, offset + length);
-+	return 0;
-+}
-+
-+struct iomap_ops ext2_iomap_ops = {
-+	.iomap_begin		= ext2_iomap_begin,
-+	.iomap_end		= ext2_iomap_end,
-+};
-+#endif /* CONFIG_FS_DAX */
-+
- int ext2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		u64 start, u64 len)
- {
-@@ -872,11 +926,10 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 	loff_t offset = iocb->ki_pos;
- 	ssize_t ret;
- 
--	if (IS_DAX(inode))
--		ret = dax_do_io(iocb, inode, iter, ext2_get_block, NULL,
--				DIO_LOCKING);
--	else
--		ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
-+	if (WARN_ON_ONCE(IS_DAX(inode)))
-+		return -EIO;
-+
-+	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
- 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
- 		ext2_write_failed(mapping, offset + count);
- 	return ret;
+Hi, thanks, this looks good to me, with one exception described below.
+
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: Document error handlers behavior
+> 
+> From: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> + -error handlers:
+> +	Defines the behavior for a specific error.
+> +
+> +The filesystem behavior during an error can be set via sysfs files, Each
+> +error handler works independently, the first condition met by and error handler
+> +for a specific class will cause the error to be propagated rather than reset and
+> +retried.
+> +
+> +The action taken by the filesystem when the error is propagated is context
+> +dependent - it may cause a shut down in the case of an unrecoverable error,
+> +it may be reported back to userspace, or it may even be ignored because
+> +there's nothing useful we can with the error or anyone we can report it to (e.g.
+
+"there's nothing useful we can do with the error"
+
+> +during unmount).
+
+Also, I apologize if I misunderstand it, but being ignored doesn't look a proper
+description here, it sounds to me something like 'we ignore the error and tell
+nobody about it", in unmount example, we shut down the filesystem if any error
+happens, for me it doesn't sound like ignoring an error, but I might be
+interpreting it in the wrong way.
+
+
+> +
+> +The configuration files are organized into the following per-mounted filesystem
+> +hierarchy:
+> +
+> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
+> +
+> +Where:
+> +  <dev>
+> +	The short device name of the mounted filesystem. This is the same device
+> +	name that shows up in XFS kernel error messages as "XFS(<dev>): ..."
+> +
+> +  <class>
+> +	The subsystem the error configuration belongs to. As of 4.9, the defined
+> +	classes are:
+> +
+> +		- "metadata": applies metadata buffer write IO
+> +
+> +  <error>
+> +	The individual error handler configurations.
+> +
+> +
+> +Each filesystem has "global" error configuration options defined in their top
+> +level directory:
+> +
+> +  /sys/fs/xfs/<dev>/error/
+> +
+> +  fail_at_unmount		(Min:  0  Default:  1  Max: 1)
+> +	Defines the filesystem error behavior at unmount time.
+> +
+> +	If set to a value of 1, XFS will override all other error configurations
+> +	during unmount and replace them with "immediate fail" characteristics.
+> +	i.e. no retries, no retry timeout. This will always allow unmount to
+> +	succeed when there are persistent errors present.
+> +
+> +	If set to 0, the configured retry behaviour will continue until all
+> +	retries and/or timeouts have been exhausted. This will delay unmount
+> +	completion when there are persistent errors, and it may prevent the
+> +	filesystem from ever unmounting fully in the case of "retry forever"
+> +	handler configurations.
+> +
+> +	Note: there is no guarantee that fail_at_unmount can be set whilst an
+> +	unmount is in progress. It is possible that the sysfs entries are
+> +	removed by the unmounting filesystem before a "retry forever" error
+> +	handler configuration causes unmount to hang, and hence the filesystem
+> +	must be configured appropriately before unmount begins to prevent
+> +	unmount hangs.
+> +
+> +Each filesystem has specific error class handlers that define the error
+> +propagation behaviour for specific errors. There is also a "default" error
+> +handler defined, which defines the behaviour for all errors that don't have
+> +specific handlers defined. The handler configurations are found in the
+> +directory:
+> +
+> +  /sys/fs/xfs/<dev>/error/<class>/<error>/
+> +
+> +  max_retries			(Min: -1  Default: Varies  Max: INTMAX)
+> +	Defines the allowed number of retries of a specific error before
+> +	the filesystem will propagate the error. The retry count for a given
+> +	error context (e.g. a specific metadata buffer) is reset ever time there
+> +	is a successful completion of the operation.
+> +
+> +	Setting the value to "-1" will cause XFS to retry forever for this
+> +	specific error.
+> +
+> +	Setting the value to "0" will cause XFS to fail immediately when the
+> +	specific error is reported.
+> +
+> +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
+> +	operation "N" times before propagating the error.
+> +
+> +  retry_timeout_seconds		(Min:  -1  Default:  Varies  Max: 1 day)
+> +	Define the amount of time (in seconds) that the filesystem is
+> +	allowed to retry its operations when the specific error is
+> +	found.
+> +
+> +	Setting the value to "-1" will set an infinite timeout, causing
+> +	error propagation behaviour to be determined solely by the "max_retries"
+> +	parameter.
+> +
+> +	Setting the value to "0" will cause XFS to fail immediately when the
+> +	specific error is reported.
+> +
+> +	Setting the value to  "N" (where 0 < N < Max) will propagate the error
+> +	on the first retry that fails at least "N" seconds after the first error
+> +	was detected, unless the number of retries defined by max_retries
+> +	expires first.
+> +
+> +Note: The default behaviour for a specific error handler is dependent on both
+> +the class and error context. For example, the default values for
+> +"metadata/ENODEV" are "0" rather than "-1" so that this error handler defaults
+> +to "fail immediately" behaviour. This is done because ENODEV is a fatal,
+> +unrecoverable error no matter how many times the metadata IO is retried.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
 -- 
-2.1.4
+Carlos
 
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
