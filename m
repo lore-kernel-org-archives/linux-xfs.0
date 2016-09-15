@@ -1,67 +1,78 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E0897CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 08:31:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E2F548F8037
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 06:31:28 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4YgzSXPlKet8os7v for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 06:31:25 -0700 (PDT)
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from sandeen.net ([63.231.237.45]:37636 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751627AbcIOT11 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Sep 2016 15:27:27 -0400
+Subject: Re: [PATCH v2 2/3] xfs_quota: print and path output formatting:
+ maintain reverse compatibility
+References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+ <1473953386-10242-1-git-send-email-billodo@redhat.com>
+ <1473953386-10242-3-git-send-email-billodo@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: =?UTF-8?Q?[ANNOUNCE]_-_Reminder:_Mailing_list_migration_to_vger.ker?=
-	=?UTF-8?Q?nel.org=e2=80=8b?=
-Message-ID: <af573841-c58b-2e13-c661-dd49dcc7593a@sandeen.net>
-Date: Thu, 15 Sep 2016 08:31:24 -0500
+Message-ID: <11523705-7d22-d1dd-3360-5203ff9b4d14@sandeen.net>
+Date: Thu, 15 Sep 2016 14:27:24 -0500
 MIME-Version: 1.0
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1473953386-10242-3-git-send-email-billodo@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-The XFS mailing list will be moving to linux-xfs at vger.kernel.org
-by the end of this month.  As of Oct 1, we plan to disable this
-list hosted on the oss sgi server.
+On 9/15/16 10:29 AM, Bill O'Donnell wrote:
+> This patch adjusts the formatting of the xfs_quota print and
+> path outputs, in order to maintain reverse compatability:
+> when -f flag isn't used, need to keep the output same as in
+> previous version.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-At that time I will mass-unsubscribe the entire oss list, and plan to
-set it up to bounce or at least moderate and hold any new messages,
-to effectively disable the oss list.
+Last hunk ended up being a bit extraneous (unrelated whitespace
+changes) but *shrug* Dave could drop it on commit maybe, if not
+no biggie.
 
-Unfortunately we are unable to transfer the current subscriber list
-to vger, so anyone who wishes to remain subscribed to the xfs mailing
-list will need to manually subscribe to the list on vger dot kernel.org.
-
-Please see the URL:
-
-vger.kernel.org/vger-lists.html#linux-xfs
-
-for details and a helpful link.
-
-The kernel.org list is active now, so please start making
-the mental and technological transition to using that list for
-new emails in the coming weeks.  It is probably be best to
-cc: the old list for the time being, for the benefit of those
-not yet subscribed to the new list.
-
-In addition to list migration, we will also be moving all other
-resources - git, ftp, etc away from the sgi server and onto
-kernel.org infrastructure in coming weeks.
-
-I'll continue to send out periodic reminders as we approach the deadline.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 Thanks,
 -Eric
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> ---
+>  quota/path.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/quota/path.c b/quota/path.c
+> index 01ccab4..57d14f0 100644
+> --- a/quota/path.c
+> +++ b/quota/path.c
+> @@ -36,13 +36,14 @@ printpath(
+>  	int		c;
+>  
+>  	if (index == 0) {
+> -		printf(_("%sFilesystem          Pathname\n"),
+> -			number ? _("      ") : "");
+> +		printf(_("%s%sFilesystem          Pathname\n"),
+> +		       number ? _("      ") : "",
+> +		       foreign_allowed ? _("    ") : "");
+>  	}
+> -	if (number) {
+> +	if (number)
+>  		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+> -	}
+> -	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
+> +	if (foreign_allowed)
+> +		printf("%s", (path->fs_flags & FS_FOREIGN) ? "(F) " : "    ");
+>  	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+>  	if (path->fs_flags & FS_PROJECT_PATH) {
+>  		prj = getprprid(path->fs_prid);
+> @@ -51,7 +52,7 @@ printpath(
+>  			printf(_(", %s"), prj->pr_name);
+>  		printf(")");
+>  	} else if (xfsquotactl(XFS_GETQSTAT, path->fs_name, 0, 0,
+> -				(void *)&qstat) == 0 && qstat.qs_flags) {
+> +			       (void *)&qstat) == 0 && qstat.qs_flags) {
+>  		c = 0;
+>  		printf(" (");
+>  		if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
+> 
