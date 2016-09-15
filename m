@@ -1,50 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12457 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57454 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759533AbcIMXMN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Sep 2016 19:12:13 -0400
-Date: Tue, 13 Sep 2016 17:12:10 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 09/10] xfs: refactor xfs_setfilesize
-Message-ID: <20160913231210.GG26002@linux.intel.com>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
- <1473438884-674-10-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1473438884-674-10-git-send-email-hch@lst.de>
+        id S1750922AbcIOP35 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Sep 2016 11:29:57 -0400
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH v2 2/3] xfs_quota: print and path output formatting: maintain reverse compatibility
+Date: Thu, 15 Sep 2016 10:29:45 -0500
+Message-Id: <1473953386-10242-3-git-send-email-billodo@redhat.com>
+In-Reply-To: <1473953386-10242-1-git-send-email-billodo@redhat.com>
+References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+ <1473953386-10242-1-git-send-email-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Fri, Sep 09, 2016 at 06:34:43PM +0200, Christoph Hellwig wrote:
-> Rename the current function to __xfs_setfilesize and add a non-static
-> wrapper that also takes care of creating the transaction.  This new
-> helper will be used by the new iomap-based DAX path.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 33 ++++++++++++++++++++++-----------
->  fs/xfs/xfs_aops.h |  1 +
->  2 files changed, 23 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 7575cfc..0bd3e27 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -199,8 +199,8 @@ xfs_setfilesize_trans_alloc(
->  /*
->   * Update on-disk file size now that data has been written to disk.
->   */
-> -STATIC int
+This patch adjusts the formatting of the xfs_quota print and
+path outputs, in order to maintain reverse compatability:
+when -f flag isn't used, need to keep the output same as in
+previous version.
 
-This can remain STATIC, as it is only used in this file.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ quota/path.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-> -xfs_setfilesize(
-> +int
-> +__xfs_setfilesize(
->  	struct xfs_inode	*ip,
->  	struct xfs_trans	*tp,
->  	xfs_off_t		offset,
+diff --git a/quota/path.c b/quota/path.c
+index 01ccab4..57d14f0 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -36,13 +36,14 @@ printpath(
+ 	int		c;
+ 
+ 	if (index == 0) {
+-		printf(_("%sFilesystem          Pathname\n"),
+-			number ? _("      ") : "");
++		printf(_("%s%sFilesystem          Pathname\n"),
++		       number ? _("      ") : "",
++		       foreign_allowed ? _("    ") : "");
+ 	}
+-	if (number) {
++	if (number)
+ 		printf(_("%c%03d%c "), braces? '[':' ', index, braces? ']':' ');
+-	}
+-	printf("%s ", (path->fs_flags & FS_FOREIGN) ? "(F)" : "   ");
++	if (foreign_allowed)
++		printf("%s", (path->fs_flags & FS_FOREIGN) ? "(F) " : "    ");
+ 	printf(_("%-19s %s"), path->fs_dir, path->fs_name);
+ 	if (path->fs_flags & FS_PROJECT_PATH) {
+ 		prj = getprprid(path->fs_prid);
+@@ -51,7 +52,7 @@ printpath(
+ 			printf(_(", %s"), prj->pr_name);
+ 		printf(")");
+ 	} else if (xfsquotactl(XFS_GETQSTAT, path->fs_name, 0, 0,
+-				(void *)&qstat) == 0 && qstat.qs_flags) {
++			       (void *)&qstat) == 0 && qstat.qs_flags) {
+ 		c = 0;
+ 		printf(" (");
+ 		if (qstat.qs_flags & XFS_QUOTA_UDQ_ENFD)
+-- 
+2.7.4
+
