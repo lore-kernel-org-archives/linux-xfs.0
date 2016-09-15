@@ -1,180 +1,114 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40672 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932447AbcIPL1i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:38 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/12] dax: provide an iomap based dax read/write path
-Date: Fri, 16 Sep 2016 13:27:07 +0200
-Message-Id: <1474025234-13804-6-git-send-email-hch@lst.de>
-In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
-References: <1474025234-13804-1-git-send-email-hch@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
-Cc: ross.zwisler@linux.intel.com
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A22267CA1
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 01:57:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 03A83AC001
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 23:57:43 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
+	Be67iBWlqrYEMF2b (version=TLSv1 cipher=DHE-RSA-CAMELLIA256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 14 Sep 2016 23:57:42 -0700 (PDT)
+Subject: [PATCH v2 0/3] mm,
+	dax: export dax capabilities and mapping size info to userspace
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 14 Sep 2016 23:54:25 -0700
+Message-ID: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-mm@kvack.org
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Xiao Guangrong <guangrong.xiao@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-kernel@vger.kernel.org, npiggin@gmail.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, hch@lst.de, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-This is a much simpler implementation of the DAX read/write path that makes
-use of the iomap infrastructure.  It does not try to mirror the direct I/O
-calling conventions and thus doesn't have to deal with i_dio_count or the
-end_io handler, but instead leaves locking and filesystem-specific I/O
-completion to the caller.
+In the debate about how to support persistent memory applications that
+want to use hardware-platform memory-media persistence
+rules/cpu-instructions rather than filesystem data intergrity system
+calls [1], one of the consistent requests is to move these applications
+to use a device file rather than a filesystem file [2].
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+While there is still a desire to offer the same syscall overhead
+avoidance in filesystem-dax as device-dax, there is performance
+optimization work and analysis that still needs to be done.
+Optimization/analysis to address filesystem-dax performance being slower
+than the typical page-cache path on top of pmem [3], and whether the
+performance gains are worth developing new filesytem data integrity
+mechanisms.
+
+In the meantime we have device-dax and are missing a way to identify its
+capabilities compared to filesytem-dax.  Critically, we want a
+persistent memory transaction library, that is handed an address range
+to manage, to be able to determine if it is safe to forgo calling
+fsync/msync to record newly allocated blocks after a write fault.  This
+question is answered by the new VM_SYNC flag.
+
+It is also important to know if the pages behind a mapping are backed by
+page cache and need to be synced, or are referencing media directly.  We
+have an XFS inode flag that can indicate the inode is DAX enabled, but
+nothing for device-dax or other filesystems.  Yes, an application that
+maps /dev/dax should assume the mapping is DAX, but it is useful to be
+able to tell that from the address range directly, and a common
+mechanism across filesystems.
+
+Finally, while developing and debugging the filesystem-dax huge page
+support it was frustrating that the only way to unit test and verify the
+implementation was via debug print statements.  This series extends
+mincore(2) to optionally provide an indication of the hardware mapping
+size.  This is hopefully useful to other cases that want to evaluate
+transparent-huge-page usage.
+
+
+Changes since the RFC [4]:
+
+1/ Drop DAX indication out of mincore.  It is a vma capability not a
+   per-page property and fits better as a vma flag.  Multiple people
+   indicated it would be better if the new syscall published the capability
+   as an extent or aggregated over a range, and this facility is already
+   provided by smaps.
+
+2/ Add VM_SYNC to explicity disclaim a need to call fsync/msync
+
+3/ Drop the syscall wire-up patch since it is trivial and can be revived
+   if we decide to move forward with the new mincore syscall.
+
+
+[1]: https://lwn.net/Articles/676737/
+[2]: https://lists.01.org/pipermail/linux-nvdimm/2016-September/006893.html
+[3]: https://lists.01.org/pipermail/linux-nvdimm/2016-August/006497.html
+[4]: https://lists.01.org/pipermail/linux-nvdimm/2016-September/006875.html
+
 ---
- fs/dax.c            | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |   4 ++
- 2 files changed, 118 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 84343ce..1f9f2d4 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -31,6 +31,8 @@
- #include <linux/vmstat.h>
- #include <linux/pfn_t.h>
- #include <linux/sizes.h>
-+#include <linux/iomap.h>
-+#include "internal.h"
- 
- /*
-  * We use lowest available bit in exceptional entry for locking, other two
-@@ -1241,3 +1243,115 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- 	return dax_zero_page_range(inode, from, length, get_block);
- }
- EXPORT_SYMBOL_GPL(dax_truncate_page);
-+
-+#ifdef CONFIG_FS_IOMAP
-+static loff_t
-+iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
-+{
-+	struct iov_iter *iter = data;
-+	loff_t end = pos + length, done = 0;
-+	ssize_t ret = 0;
-+
-+	if (iov_iter_rw(iter) == READ) {
-+		end = min(end, i_size_read(inode));
-+		if (pos >= end)
-+			return 0;
-+
-+		if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
-+			return iov_iter_zero(min(length, end - pos), iter);
-+	}
-+
-+	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED))
-+		return -EIO;
-+
-+	while (pos < end) {
-+		unsigned offset = pos & (PAGE_SIZE - 1);
-+		struct blk_dax_ctl dax = { 0 };
-+		ssize_t map_len;
-+
-+		dax.sector = iomap->blkno +
-+			(((pos & PAGE_MASK) - iomap->offset) >> 9);
-+		dax.size = (length + offset + PAGE_SIZE - 1) & PAGE_MASK;
-+		map_len = dax_map_atomic(iomap->bdev, &dax);
-+		if (map_len < 0) {
-+			ret = map_len;
-+			break;
-+		}
-+
-+		dax.addr += offset;
-+		map_len -= offset;
-+		if (map_len > end - pos)
-+			map_len = end - pos;
-+
-+		if (iov_iter_rw(iter) == WRITE)
-+			map_len = copy_from_iter_pmem(dax.addr, map_len, iter);
-+		else
-+			map_len = copy_to_iter(dax.addr, map_len, iter);
-+		dax_unmap_atomic(iomap->bdev, &dax);
-+		if (map_len <= 0) {
-+			ret = map_len ? map_len : -EFAULT;
-+			break;
-+		}
-+
-+		pos += map_len;
-+		length -= map_len;
-+		done += map_len;
-+	}
-+
-+	return done ? done : ret;
-+}
-+
-+/**
-+ * iomap_dax_rw - Perform I/O to a DAX file
-+ * @iocb:	The control block for this I/O
-+ * @iter:	The addresses to do I/O from or to
-+ * @ops:	iomap ops passed from the file system
-+ *
-+ * This function performs read and write operations to directly mapped
-+ * persistent memory.  The callers needs to take care of read/write exclusion
-+ * and evicting any page cache pages in the region under I/O.
-+ */
-+ssize_t
-+iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops)
-+{
-+	struct address_space *mapping = iocb->ki_filp->f_mapping;
-+	struct inode *inode = mapping->host;
-+	loff_t pos = iocb->ki_pos, ret = 0, done = 0;
-+	unsigned flags = 0;
-+
-+	if (iov_iter_rw(iter) == WRITE)
-+		flags |= IOMAP_WRITE;
-+
-+	/*
-+	 * Yes, even DAX files can have page cache attached to them:  A zeroed
-+	 * page is inserted into the pagecache when we have to serve a write
-+	 * fault on a hole.  It should never be dirtied and can simply be
-+	 * dropped from the pagecache once we get real data for the page.
-+	 *
-+	 * XXX: This is racy against mmap, and there's nothing we can do about
-+	 * it. We'll eventually need to shift this down even further so that
-+	 * we can check if we allocated blocks over a hole first.
-+	 */
-+	if (mapping->nrpages) {
-+		ret = invalidate_inode_pages2_range(mapping,
-+				pos >> PAGE_SHIFT,
-+				(pos + iov_iter_count(iter) - 1) >> PAGE_SHIFT);
-+		WARN_ON_ONCE(ret);
-+	}
-+
-+	while (iov_iter_count(iter)) {
-+		ret = iomap_apply(inode, pos, iov_iter_count(iter), flags, ops,
-+				iter, iomap_dax_actor);
-+		if (ret <= 0)
-+			break;
-+		pos += ret;
-+		done += ret;
-+	}
-+
-+	iocb->ki_pos += done;
-+	return done ? done : ret;
-+}
-+EXPORT_SYMBOL_GPL(iomap_dax_rw);
-+#endif /* CONFIG_FS_IOMAP */
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 9c6dc77..a0595b4 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -6,9 +6,13 @@
- #include <linux/radix-tree.h>
- #include <asm/pgtable.h>
- 
-+struct iomap_ops;
-+
- /* We use lowest available exceptional entry bit for locking */
- #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
- 
-+ssize_t iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops);
- ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
- 		  get_block_t, dio_iodone_t, int flags);
- int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
--- 
-2.1.4
+Dan Williams (3):
+      mm, dax: add VM_SYNC flag for device-dax VMAs
+      mm, dax: add VM_DAX flag for DAX VMAs
+      mm, mincore2(): retrieve tlb-size attributes of an address range
 
+
+ drivers/dax/Kconfig                    |    1 
+ drivers/dax/dax.c                      |    2 
+ fs/Kconfig                             |    1 
+ fs/ext2/file.c                         |    2 
+ fs/ext4/file.c                         |    2 
+ fs/proc/task_mmu.c                     |    4 +
+ fs/xfs/xfs_file.c                      |    2 
+ include/linux/mm.h                     |   31 +++++++-
+ include/linux/syscalls.h               |    2 
+ include/uapi/asm-generic/mman-common.h |    2 
+ kernel/sys_ni.c                        |    1 
+ mm/mincore.c                           |  130 ++++++++++++++++++++++++--------
+ 12 files changed, 141 insertions(+), 39 deletions(-)
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
