@@ -1,97 +1,135 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53687 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755261AbcIOGnY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Sep 2016 02:43:24 -0400
-Date: Thu, 15 Sep 2016 08:43:20 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/12] xfs: use iomap to implement DAX
-Message-ID: <20160915064320.GA7665@lst.de>
-References: <1473847291-18913-1-git-send-email-hch@lst.de> <1473847291-18913-11-git-send-email-hch@lst.de> <20160915052933.GH9314@birch.djwong.org>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 94A487CA0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 01:57:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EAD00AC004
+	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 23:57:38 -0700 (PDT)
+Received: from mga06.intel.com (mga06.intel.com [134.134.136.31]) by
+	cuda.sgi.com with ESMTP id ksLaoCd8Rr3RsihX (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 14 Sep 2016 23:57:37 -0700 (PDT)
+Subject: [PATCH v2 1/3] mm, dax: add VM_SYNC flag for device-dax VMAs
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 14 Sep 2016 23:54:33 -0700
+Message-ID: <147392247341.9873.312027612778133485.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160915052933.GH9314@birch.djwong.org>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, ross.zwisler@linux.intel.com, Dave Chinner <david@fromorbit.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-mm@kvack.org
+Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, npiggin@gmail.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, hch@lst.de
 
-On Wed, Sep 14, 2016 at 10:29:33PM -0700, Darrick J. Wong wrote:
-> I'm a little confused about xfs_file_iomap_begin() and IOMAP_WRITE --
-> prior to this patchset, it was only called via page_mkwrite and what
-> used to be write_begin, and all it did was create a delalloc reservation
-> to back the write (or actually allocate blocks if extsize was set).
+Introduce a new vma flag to indicate the property of device-dax VMAs
+that, while file-backed, do not require notification to a filesystem
+agent to sync metadata after a fault.  In particular this enables
+persistent memory applications to know if they can commit transactions
+to media via cpu instructions alone, or need to call back into the
+kernel to synchronize metadata.
 
-No, it was called from write itself in addition, of course.
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dax/Kconfig |    1 +
+ drivers/dax/dax.c   |    2 +-
+ fs/proc/task_mmu.c  |    3 +++
+ include/linux/mm.h  |   21 +++++++++++++++++----
+ 4 files changed, 22 insertions(+), 5 deletions(-)
 
-> Thinking ahead to integrating reflink with DAX (and presumably
-> directio) in both cases _file_iomap_begin has to return a real extent.
-> If the range we're writing is shared, then that means that I'd have to
-> ensure the range is reserved in the COW fork (the reflink patches already do
-> this).  Next, if the caller requires a firm mapping (i.e. dax or dio)
-> I'd have to allocate the range in the COW fork and have that mapping
-> returned to the caller.
+diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
+index cedab7572de3..a4d99e637623 100644
+--- a/drivers/dax/Kconfig
++++ b/drivers/dax/Kconfig
+@@ -2,6 +2,7 @@ menuconfig DEV_DAX
+ 	tristate "DAX: direct access to differentiated memory"
+ 	default m if NVDIMM_DAX
+ 	depends on TRANSPARENT_HUGEPAGE
++	select ARCH_USES_HIGH_VMA_FLAGS if 64BIT
+ 	help
+ 	  Support raw access to differentiated (persistence, bandwidth,
+ 	  latency...) memory via an mmap(2) capable character
+diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
+index 29f600f2c447..88fad2519907 100644
+--- a/drivers/dax/dax.c
++++ b/drivers/dax/dax.c
+@@ -528,7 +528,7 @@ static int dax_dev_mmap(struct file *filp, struct vm_area_struct *vma)
+ 
+ 	kref_get(&dax_dev->kref);
+ 	vma->vm_ops = &dax_dev_vm_ops;
+-	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
++	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE | VM_SYNC;
+ 	return 0;
+ 
+ }
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index f6fa99eca515..03a65ac7f222 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -675,6 +675,9 @@ static void show_smap_vma_flags(struct seq_file *m, struct vm_area_struct *vma)
+ 		[ilog2(VM_PKEY_BIT2)]	= "",
+ 		[ilog2(VM_PKEY_BIT3)]	= "",
+ #endif
++#ifdef CONFIG_ARCH_USES_HIGH_VMA_FLAGS
++		[ilog2(VM_SYNC)]	= "sn",
++#endif
+ 	};
+ 	size_t i;
+ 
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ef815b9cd426..f3f6df6bb498 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -198,14 +198,17 @@ extern unsigned int kobjsize(const void *objp);
+ #define VM_MERGEABLE	0x80000000	/* KSM may merge identical pages */
+ 
+ #ifdef CONFIG_ARCH_USES_HIGH_VMA_FLAGS
+-#define VM_HIGH_ARCH_BIT_0	32	/* bit only usable on 64-bit architectures */
+-#define VM_HIGH_ARCH_BIT_1	33	/* bit only usable on 64-bit architectures */
+-#define VM_HIGH_ARCH_BIT_2	34	/* bit only usable on 64-bit architectures */
+-#define VM_HIGH_ARCH_BIT_3	35	/* bit only usable on 64-bit architectures */
++/* bits below only usable on 64-bit architectures */
++#define VM_HIGH_ARCH_BIT_0	32
++#define VM_HIGH_ARCH_BIT_1	33
++#define VM_HIGH_ARCH_BIT_2	34
++#define VM_HIGH_ARCH_BIT_3	35
++#define VM_HIGH_ARCH_BIT_4	36
+ #define VM_HIGH_ARCH_0	BIT(VM_HIGH_ARCH_BIT_0)
+ #define VM_HIGH_ARCH_1	BIT(VM_HIGH_ARCH_BIT_1)
+ #define VM_HIGH_ARCH_2	BIT(VM_HIGH_ARCH_BIT_2)
+ #define VM_HIGH_ARCH_3	BIT(VM_HIGH_ARCH_BIT_3)
++#define VM_HIGH_ARCH_4	BIT(VM_HIGH_ARCH_BIT_4)
+ #endif /* CONFIG_ARCH_USES_HIGH_VMA_FLAGS */
+ 
+ #if defined(CONFIG_X86)
+@@ -234,6 +237,16 @@ extern unsigned int kobjsize(const void *objp);
+ # define VM_MPX		VM_ARCH_2
+ #endif
+ 
++#ifdef CONFIG_ARCH_USES_HIGH_VMA_FLAGS
++/*
++ * The metadata for file-backed vma does not exist or is otherwise
++ * synced before fault handler returns to userspace
++ */
++#define VM_SYNC		VM_HIGH_ARCH_4
++#else
++#define VM_SYNC		0
++#endif
++
+ #ifndef VM_GROWSUP
+ # define VM_GROWSUP	VM_NONE
+ #endif
 
-Yes.  No different than the existing buffered write case with an
-extent size hint, really.
-
-> So I guess it would look something like this:
-> 
-> /* reserve reflink cow range like the reflink patches already do */
-> if (flags & (IOMAP_WRITE | IOMAP_ZERO) && xfs_is_reflink_inode(ip))
-> 	xfs_reflink_reserve_cow_range(ip, offset, length);
-
-For zeroing we don't need to reserve anything IFF we are finding a hole,
-so this is too early.
-
-> /* do the cow thing if need be */
-> if ((flags & IOMAP_WRITE) &&
->     xfs_is_reflink_inode(ip) &&
->     (IS_DAX(inode) || (flags & IOMAP_DIO)) {
-> 	xfs_reflink_allocate_cow_range(ip, offset, length);
-> 
-> 	if (xfs_reflink_is_cow_pending(ip, offset))
-> 		xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
-> 	else
-> 		xfs_bmapi_read(offset, &imap)
-> } else
-> 	xfs_bmapi_read(offset, &imap) /* non-cow io */
-
-
-We really have three write block allocation variants, of which the first
-two look basically the same except for I/O completion handling:
-
- 1) For DAX we need to allocate real extents and zero them before use.
- 2) For buffered I/O with an extent size hint or direct I/O we need to
-    allocate unwritten extents (and convert after the I/O succeeded for
-    the range that succeeded)
- 3) for buffered I/O without and extent size hint we need to created
-    a delayed allocation
-
-That logic exists both in the old __xfs_get_blocks and and the new
-iomap code (although we don't check for the dio case yet).
-
-So I don't think we should need to change anything in terms of COW
-in relation to DAX or direct I/O here.  I do however need to fully
-audit the usage of the reflink calls for the cases 1 and 2.  For one
-it doesn't really seem nessecary to split the reserve/allocate case
-ehre, and I hope that a lot of the bmap btree looks could be saved,
-similar to my rewrite of the delalloc case.
-    
-
-> Does that look plausible?  If _iomap_begin will have one type of caller
-> that only needs a delalloc reservation and another type that actually
-> needs a firm mapping, should we make a new IOMAP flag to indicate that
-> the caller really needs a firm mapping?  IS_DAX is fine for detecting
-> the DAX case as this patchset shows, but what about directio?
-> 
-> (At this point Dave suggests on IRC that we just make a dio specific
-> iomap_begin.  That eliminates the flag, though it'd be a fairly similar
-> function.)
-
-As explained above, DIO is exaxtly the same as buffered I/O with
-an extent size hint.  We already handle it fine.  DAX is almost
-the same, keyed off a DAX check in lower level code to convert unwritten
-extents and zero the blocks.
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
