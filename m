@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E4DC77CA1
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 14:32:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B17418F8035
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 12:32:59 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4NmuutSOdqUK2UAz for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 12:32:57 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 45D004CDD2F
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 14:32:47 -0500 (CDT)
-Subject: Re: [PATCH v2 3/3] xfs_quota: add case for foreign fs, disabled
-	regardless of foreign_allowed
-References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
-	<1473953386-10242-1-git-send-email-billodo@redhat.com>
-	<1473953386-10242-4-git-send-email-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0f2f1d60-7d43-e7b2-f8db-26f14b9bd84d@sandeen.net>
-Date: Thu, 15 Sep 2016 14:32:57 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C1B097CA0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 18:08:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 798A0304059
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 16:08:03 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	kpGuZ6DoE69gMLPy for <xfs@oss.sgi.com>;
+	Thu, 15 Sep 2016 16:07:57 -0700 (PDT)
+Date: Fri, 16 Sep 2016 09:07:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
+Message-ID: <20160915230748.GS30497@dastard>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1473953386-10242-4-git-send-email-billodo@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,78 +32,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On 9/15/16 10:29 AM, Bill O'Donnell wrote:
-> Some commands are disallowed for foreign filesystems,
-> regardless of whether or not the -f flag is thrown.
-> Add a case for this condition and improve commenting
-> and output messaging accordingly in init_check_command.
+On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+> >> only available internal to the kernel and is a property that userspace
+> >> applications would like to interrogate.
+> >
+> > They have absolutely no business knowing such an implementation detail.
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> Hasn't that train already left the station with FS_XFLAG_DAX?
 
-This looks good, though as I mentioned on IRC, 
+No, that's an admin flag, not a runtime hint for applications. Just
+because that flag is set on an inode, it does not mean that DAX is
+actually in use - it will be ignored if the backing dev is not dax
+capable.
 
-# quota/xfs_quota -x /dev/sdb1 
-xfs_quota> dump
-dump: foreign filesystem. Use -f to enable.
-xfs_quota> dump -f
-dump: foreign filesystem. Use -f to enable.
+> The other problem with hiding the DAX property is that it turns out to
+> not be a transparent acceleration feature.  See xfs/086 xfs/088
+> xfs/089 xfs/091 which fail with DAX and, as far as I understand, it is
+> due to the fact that DAX disallows delayed allocation behavior.
 
-that specific wording might be confusing.  :)
+Which is not a bug, nor is it something that app developers should
+be surprised by.
 
-I think maybe:
+i.e. Subtle differences in error reporting behaviour occur in
+filesystems /all the time/. Run the test on a non-dax filesystem
+with an extent size hint. It fails /exactly the same way as DAX/.
+Run it with direct IO - fails the same way as DAX. Run it
+with synchronous writes - it fails the same way as DAX.
 
--	fprintf(stderr, _("%s: foreign filesystem. Use -f to enable.\n"),
-+	fprintf(stderr, _("%s: foreign filesystem. Invoke xfs_quota with -f to enable.\n"),
+IOWs, if an app can't handle the way DAX reports errors, then they
+are /broken/. Delayed allocation requires checking the return value
+of fsync() or close() to capture the allocation error - many more
+apps get that wrong than the ones that expect the immediate errors
+from write()...
 
-would be better - can you resend with that small change?
+Anyway: to domeonstrate that the nothign is actually broken, and
+you might sometimes need to fix tests and send patches to
+fstests@vger.kernel.org, this makes xfs/086 pass for me on DAX:
 
--Eric
+--- a/tests/xfs/086
++++ b/tests/xfs/086
+@@ -96,7 +96,8 @@ _scratch_mount
+ 
+ echo "+ modify files"
+ for x in `seq 1 64`; do
+-	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
++	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" \
++		>> $seqres.full 2>&1
+ done
+ umount "${SCRATCH_MNT}"
+ 
+Cheers,
 
-> ---
->  quota/init.c | 17 ++++++++++++-----
->  1 file changed, 12 insertions(+), 5 deletions(-)
-> 
-> diff --git a/quota/init.c b/quota/init.c
-> index 2c18c8b..7d69663 100644
-> --- a/quota/init.c
-> +++ b/quota/init.c
-> @@ -112,21 +112,28 @@ init_check_command(
->  	if (!fs_path)
->  		return 1;
->  
-> -	/* Always run commands that we are told to skip here */
-> +	/* Always run commands that are valid for all fs types. */
->  	if (ct->flags & CMD_ALL_FSTYPES)
->  		return 1;
->  
-> -	/* if it's an XFS filesystem, always run the command */
-> +	/* If it's an XFS filesystem, always run the command. */
->  	if (!(fs_path->fs_flags & FS_FOREIGN))
->  		return 1;
->  
-> -	/* If the user specified foreign filesysetms are ok, run it */
-> +	/* If the user specified foreign filesystems are ok (-f), run cmd. */
->  	if (foreign_allowed &&
->  	    (ct->flags & CMD_FLAG_FOREIGN_OK))
->  		return 1;
->  
-> -	/* foreign filesystem and it's not a valid command! */
-> -	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-> +	/* If cmd not allowed on foreign fs, regardless of -f flag, skip it. */
-> +	if (!(ct->flags & CMD_FLAG_FOREIGN_OK)) {
-> +		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
-> +			ct->name);
-> +		return 0;
-> +	}
-> +
-> +	/* foreign fs, but cmd only allowed via -f flag. Skip it. */
-> +	fprintf(stderr, _("%s: foreign filesystem. Use -f to enable.\n"),
->  		ct->name);
->  	return 0;
->  }
-> 
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
