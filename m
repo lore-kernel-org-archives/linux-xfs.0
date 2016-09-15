@@ -1,226 +1,164 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60360 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754281AbcINONj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Sep 2016 10:13:39 -0400
-Subject: Re: [PATCH] fstests: test platform_check_ismounted do its work
-References: <1473840129-19203-1-git-send-email-zlang@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d2a3dc67-dfd2-4ec5-6754-f09ae282d8aa@sandeen.net>
-Date: Wed, 14 Sep 2016 09:13:32 -0500
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D03C47CAF
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 10:30:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9134F304043
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 08:29:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id PcFiIH7uQcVyQl4Y (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 15 Sep 2016 08:29:57 -0700 (PDT)
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH v2 1/3] xfsprogs: populate fs table with xfs entries first,
+	foreign entries last
+Date: Thu, 15 Sep 2016 10:29:44 -0500
+Message-Id: <1473953386-10242-2-git-send-email-billodo@redhat.com>
+In-Reply-To: <1473953386-10242-1-git-send-email-billodo@redhat.com>
+References: <1473866381-28975-1-git-send-email-billodo@redhat.com>
+	<1473953386-10242-1-git-send-email-billodo@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-In-Reply-To: <1473840129-19203-1-git-send-email-zlang@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On 9/14/16 3:02 AM, Zorro Lang wrote:
-> There's a bug, the ustat() sysetm call is not implemented on someone
-> arch, but xfsprogs uses this to detect whether a filesystem is
-> mounted in platform_check_ismounted() function.
-> 
-> If ustat() is not implemented, platform_check_ismounted() return
-> "isn't mounted" if a filesystem is mounted, that's a big problem, it
-> will cause corruption.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
->  tests/xfs/284     | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/284.out |   8 ++++
->  tests/xfs/group   |   1 +
->  3 files changed, 122 insertions(+)
->  create mode 100755 tests/xfs/284
->  create mode 100644 tests/xfs/284.out
-> 
-> diff --git a/tests/xfs/284 b/tests/xfs/284
-> new file mode 100755
-> index 0000000..53fbcb1
-> --- /dev/null
-> +++ b/tests/xfs/284
-> @@ -0,0 +1,113 @@
-> +#! /bin/bash
-> +# FS QA Test 284
-> +#
-> +# Make sure platform_check_ismounted() do its work. A bug cause
-> +# platform_check_ismounted return "isn't mounted" status, even if
-> +# the filesystem is mounted. That maybe cause corruption, so must
-> +# make sure this function always do its work.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2016 Red Hat.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	rm -f $METADUMP_FILE 2>/dev/null
-> +	rm -f $COPY_FILE 2>/dev/null
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_test
-> +_require_scratch
-> +
-> +function filter_mounted()
-> +{
-> +	grep "mounted" | _filter_scratch | head -1
-> +}
-> +
-> +METADUMP_FILE="${TEST_DIR}/${seq}_metadump"
-> +COPY_FILE="${TEST_DIR}/${seq}_copyfile"
-> +
-> +# Test dump a mounted device
+Commits b20b6c2 and 29647c8 modified xfs_quota for use on
+non-XFS filesystems. Modifications to fs_initialise_mounts
+(paths.c) resulted in an xfstest fail (xfs/261), due to foreign
+fs paths being picked up first from the fs table. The xfs_quota
+print command then complained about not being able to print the
+foreign paths, instead of previous behavior (quiet).
 
-comments bout what this should do, what is expected, and why might
-be good, i.e.:
+This patch restores correct behavior, sorting the table so that
+xfs entries are first, followed by foreign fs entries. The patch
+maintains the order of xfs entries and foreign entries in the
+same order as mtab entries. Then, in functions which print all
+paths we can simply break at the first foreign path if the -f
+switch is not specified.
 
-# xfs_metadump should refuse to dump a mounted device.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ include/path.h  |  1 +
+ libxcmd/paths.c | 12 +++++++++++-
+ quota/path.c    | 24 ++++++++++++++++++------
+ 3 files changed, 30 insertions(+), 7 deletions(-)
 
-(I find bash test scripts to be very hard to debug years after they
-are written; IMHO the more comments, the better) :)
+diff --git a/include/path.h b/include/path.h
+index 39c1a95..d077bac 100644
+--- a/include/path.h
++++ b/include/path.h
+@@ -44,6 +44,7 @@ typedef struct fs_path {
+ } fs_path_t;
+ 
+ extern int fs_count;		/* number of entries in fs table */
++extern int xfs_fs_count;	/* number of xfs entries in fs table */
+ extern fs_path_t *fs_table;	/* array of entries in fs table  */
+ extern fs_path_t *fs_path;	/* current entry in the fs table */
+ extern char *mtab_file;
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 4158688..3455217 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -32,6 +32,7 @@
+ extern char *progname;
+ 
+ int fs_count;
++int xfs_fs_count;
+ struct fs_path *fs_table;
+ struct fs_path *fs_path;
+ 
+@@ -138,7 +139,16 @@ fs_table_insert(
+ 		goto out_norealloc;
+ 	fs_table = tmp_fs_table;
+ 
+-	fs_path = &fs_table[fs_count];
++	/* Put foreign filesystems at the end, xfs filesystems at the front */
++	if (flags & FS_FOREIGN || fs_count == 0) {
++		fs_path = &fs_table[fs_count];
++	} else {
++		/* move foreign fs entries down, insert new one just before */
++		memmove(&fs_table[xfs_fs_count + 1], &fs_table[xfs_fs_count],
++			sizeof(fs_path_t)*(fs_count - xfs_fs_count));
++		fs_path = &fs_table[xfs_fs_count];
++		xfs_fs_count++;
++	}
+ 	fs_path->fs_dir = dir;
+ 	fs_path->fs_prid = prid;
+ 	fs_path->fs_flags = flags;
+diff --git a/quota/path.c b/quota/path.c
+index a623d25..01ccab4 100644
+--- a/quota/path.c
++++ b/quota/path.c
+@@ -75,9 +75,15 @@ static int
+ pathlist_f(void)
+ {
+ 	int		i;
++	struct fs_path	*path;
+ 
+-	for (i = 0; i < fs_count; i++)
+-		printpath(&fs_table[i], i, 1, &fs_table[i] == fs_path);
++	for (i = 0; i < fs_count; i++) {
++		path = &fs_table[i];
++		/* Table is ordered xfs first, then foreign */
++		if (path->fs_flags & FS_FOREIGN && !foreign_allowed)
++			break;
++		printpath(path, i, 1, path == fs_path);
++	}
+ 	return 0;
+ }
+ 
+@@ -87,9 +93,14 @@ print_f(
+ 	char		**argv)
+ {
+ 	int		i;
++	struct fs_path	*path;
+ 
+-	for (i = 0; i < fs_count; i++)
+-		printpath(&fs_table[i], i, 0, 0);
++	for (i = 0; i < fs_count; i++) {
++		path = &fs_table[i];
++		if (path->fs_flags & FS_FOREIGN && !foreign_allowed)
++			break;
++		printpath(path, i, 0, 0);
++	}
+ 	return 0;
+ }
+ 
+@@ -99,6 +110,7 @@ path_f(
+ 	char		**argv)
+ {
+ 	int	i;
++	int	max = foreign_allowed ? fs_count : xfs_fs_count;
+ 
+ 	if (fs_count == 0) {
+ 		printf(_("No paths are available\n"));
+@@ -109,9 +121,9 @@ path_f(
+ 		return pathlist_f();
+ 
+ 	i = atoi(argv[1]);
+-	if (i < 0 || i >= fs_count) {
++	if (i < 0 || i >= max) {
+ 		printf(_("value %d is out of range (0-%d)\n"),
+-			i, fs_count-1);
++			i, max - 1);
+ 	} else {
+ 		fs_path = &fs_table[i];
+ 		pathlist_f();
+-- 
+2.7.4
 
-> +_scratch_mount
-> +_scratch_metadump $METADUMP_FILE 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test dump a mounted device [Failed]"
-> +_scratch_unmount
-> +
-> +# Test restore a mounted device
-
-# Test restore to a mounted device
-# xfs_mdrestore should refuse to restore to a mounted device.
-
-It might be more clear to move the _scratch_unmount above to just before
-the metadump, so it's very clear whether we're working on a mounted
-or unmounted device, i.e. move it here:
-
-  +_scratch_unmount
-> +_scratch_metadump $METADUMP_FILE
-> +_scratch_mount
-> +xfs_mdrestore $METADUMP_FILE $SCRATCH_DEV 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test restore a mounted device [Failed]"
-> +_scratch_unmount
-> +
-> +# Test xfs_copy to a mounted device
-> +# If source is mounted, xfs_copy will print a warning, but still
-> +# keep on copying. If target is mounted, xfs_copy will failed.
-
-"xfs_copy should fail."
-
-Same thing, maybe move the unmount:
-
-  +_scratch_unmount
-> +$XFS_COPY_PROG $SCRATCH_DEV $COPY_FILE >/dev/null
-> +_scratch_mount
-> +$XFS_COPY_PROG $COPY_FILE $SCRATCH_DEV 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_copy to a mounted device [Failed]"
-> +_scratch_unmount
-> +
-> +# Test xfs_db a mounted device without readonly (-r) option
-
-"should fail."
-
-having the explicit _mount below seems good to me, it makes it clear.
-
-> +_scratch_mount
-> +$XFS_DB_PROG -c sb $SCRATCH_DEV 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] &&
-> +	echo "Test xfs_db a mounted device(without -r option) [Failed]"
-> +_scratch_unmount
-> +
-> +# Test mkfs.xfs a mounted device
-> +# Generally mkfs will report device is mounted, but if it can't find
-> +# device is mounted, it'll report device busy.
-> +_scratch_mount
-> +_scratch_mkfs 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test mkfs.xfs a mounted device [Failed]"
-> +_scratch_unmount
-> +
-> +# Test xfs_repair (with/without modify flag) a mounted device
-
-Again, maybe comments about what we really expect to see here?
-
-> +_scratch_mount
-> +_scratch_xfs_repair -n 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] &&
-> +	echo "Test xfs_repair -n a mounted devie [Failed]"
-
-s/devie/device/
-
-> +_scratch_xfs_repair 2>&1 | filter_mounted
-> +[ ${PIPESTATUS[0]} -eq 0 ] && echo "Test xfs_repair a mounted devie [Failed]"
-
-s/devie/device/
-
-Testing the "-d dangerous" option of repair would also be good.
-
--Eric
-
-> +_scratch_unmount
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/284.out b/tests/xfs/284.out
-> new file mode 100644
-> index 0000000..302d75e
-> --- /dev/null
-> +++ b/tests/xfs/284.out
-> @@ -0,0 +1,8 @@
-> +QA output created by 284
-> +xfs_metadump: SCRATCH_DEV contains a mounted and writable filesystem
-> +xfs_mdrestore: a filesystem is mounted on target device "SCRATCH_DEV", cannot restore to a mounted filesystem.
-> +xfs_copy:  a filesystem is mounted on target device "SCRATCH_DEV".
-> +xfs_db: SCRATCH_DEV contains a mounted filesystem
-> +mkfs.xfs: SCRATCH_DEV contains a mounted filesystem
-> +xfs_repair: SCRATCH_DEV contains a mounted and writable filesystem
-> +xfs_repair: SCRATCH_DEV contains a mounted filesystem
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index baa0ff6..0ac4bd5 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -281,6 +281,7 @@
->  281 dump ioctl auto quick
->  282 dump ioctl auto quick
->  283 dump ioctl auto quick
-> +284 auto quick mount
->  287 auto dump quota quick
->  290 auto rw prealloc quick ioctl zero
->  291 auto repair
-> 
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
