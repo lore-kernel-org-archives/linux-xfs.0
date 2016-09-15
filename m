@@ -1,47 +1,64 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 313947CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 03:26:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C288B304039
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 01:26:21 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id D3CREgitE7n3ALam (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 15 Sep 2016 01:26:17 -0700 (PDT)
-Date: Thu, 15 Sep 2016 10:26:15 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-Message-ID: <20160915082615.GA9772@lst.de>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46888 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755225AbcIOJSy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Sep 2016 05:18:54 -0400
+Date: Thu, 15 Sep 2016 05:18:51 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH V4] xfs: Document error handlers behavior
+Message-ID: <20160915091851.GA24318@redhat.com>
+References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
+ <20160914012334.GK30497@dastard>
+ <20160914100219.5743534ofe6oktbb@redhat.com>
+ <20160914220951.GP30497@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, npiggin@gmail.com, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, hch@lst.de
+In-Reply-To: <20160914220951.GP30497@dastard>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
-> The DAX property, page cache bypass, of a VMA is only detectable via the
-> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
-> only available internal to the kernel and is a property that userspace
-> applications would like to interrogate.
+> > Also, I apologize if I misunderstand it, but being ignored doesn't look a proper
+> > description here, it sounds to me something like 'we ignore the error and tell
+> > nobody about it", in unmount example, we shut down the filesystem if any error
+> > happens, for me it doesn't sound like ignoring an error, but I might be
+> > interpreting it in the wrong way.
+> 
+> I think you're making the assumption that the only way we handle
+> errors once retries are exhausted is to trigger a filesystem shutdown.
+> That assumption was repeated throughout the documentation.
+> 
+> While that may be true for /metadata write IO errors/, it is not
+> true for the generic error handling case. e.g. if we extend it to
+> memory allocation contexts, we may end up returning ENOMEM to
+> userspace. Or, in certain contexts, we might be able to fall back to
+> doing a single operation at a time using the stack for storage, in
+> which case there is no reason at all to report the allocation
+> failure to anyone.
+> 
+> The infrastructure is generic, as is the documentation, and so it
+> shouldn't assume anything about what is going to happen once the
+> retries are exhausted and the error is propagated upwards. What
+> happens with that error after it is returned is a subsystem and
+> context dependent behaviour, not something that is defined by the
+> error retry configuration infrastructure....
+> 
+> Cheers,
 
-They have absolutely no business knowing such an implementation detail.
+Thanks for the very detailed explanation Dave
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Carlos
