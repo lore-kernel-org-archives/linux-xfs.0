@@ -1,101 +1,29 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 49A417CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 22:41:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B2B18F8039
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 20:41:29 -0700 (PDT)
-Received: from mail-oi0-f53.google.com (mail-oi0-f53.google.com
-	[209.85.218.53]) by cuda.sgi.com with ESMTP id b4xj4icGcTyJqwVZ
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 20:41:26 -0700 (PDT)
-Received: by mail-oi0-f53.google.com with SMTP id r126so97316157oib.0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 20:41:26 -0700 (PDT)
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:53373 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751075AbcIOFMb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Sep 2016 01:12:31 -0400
+Date: Thu, 15 Sep 2016 07:12:29 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160915051229.GD6188@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de> <1473438884-674-7-git-send-email-hch@lst.de> <20160913231039.GF26002@linux.intel.com> <20160914071910.GC17278@lst.de> <20160914170759.GA14196@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160915082615.GA9772@lst.de>
-	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-	<20160915230748.GS30497@dastard>
-	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
-	<20160916012458.GW22388@dastard>
-	<CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Sep 2016 20:41:25 -0700
-Message-ID: <CAPcyv4iDifiY-eGK+Fw7Q4BN7yuJYy=rcnaM6y36P+KLjE=sMg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160914170759.GA14196@linux.intel.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Thu, Sep 15, 2016 at 7:04 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
->> On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
->>> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
->>> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
->>> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
->>> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
->>> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
->>> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
->>> >> >> only available internal to the kernel and is a property that userspace
->>> >> >> applications would like to interrogate.
->>> >> >
->>> >> > They have absolutely no business knowing such an implementation detail.
->>> >>
->>> >> Hasn't that train already left the station with FS_XFLAG_DAX?
->>> >
->>> > No, that's an admin flag, not a runtime hint for applications. Just
->>> > because that flag is set on an inode, it does not mean that DAX is
->>> > actually in use - it will be ignored if the backing dev is not dax
->>> > capable.
->>>
->>> What's the point of an admin flag if an admin can't do cat /proc/<pid
->>> of interest>/smaps, or some other mechanism, to validate that the
->>> setting the admin cares about is in effect?
->>
->> Sorry, I don't follow - why would you be looking at mapping file
->> regions in /proc to determine if some file somewhere in a filesystem
->> has a specific flag set on it or not?
->>
->> FS_XFLAG_DAX is an inode attribute flag, not something you can
->> query or administrate through mmap:
->>
->> I.e.
->> # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
->>  --------------- foo
->>  --------------x foo
->>  --------------- foo
->> #
->>
->> What happens when that flag is set on an inode is determined by a
->> whole bunch of other things that are completely separate to the
->> management of the inode flag itself.
->
-> Right, I understand that, but how does an admin audit those "bunch of
-> other things" that actually gate whether DAX ends up being used in
-> practice?  There's currently no way for userspace to observe that a
-> file with FS_XFLAG_DAX actually results in a change in mmap behavior.
+On Wed, Sep 14, 2016 at 11:07:59AM -0600, Ross Zwisler wrote:
+> I'll bite - why do you think adding a space before labels is a "fairly
+> horrible style"?  Adding them gives a tangible benefit for unified diffs and
+> patches because it's much more useful to know that a change is in a given
+> function than that it follows a label called "out", which could be defined
+> many times in a given file.  Again, the example:
 
-Let me put it another way, if we inadvertently break DAX causing it to
-be disabled in scenarios when it should be enabled.  What is the
-interface for the admin to check "I have the DAX inode flag set, but
-the file this application expects to be mapped DAX is mapped with page
-cache"?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+It's a space based indent in a tab based world.  And with git you can
+get your enhanced diff output with just a small tweak to the git setting.
+Which we're incidentally about to finally get for the kernel tree.
