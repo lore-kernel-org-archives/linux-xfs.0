@@ -1,106 +1,180 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 91B687CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 18:19:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 494E430406A
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 16:19:25 -0700 (PDT)
-Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
-	[209.85.218.44]) by cuda.sgi.com with ESMTP id bdYRqQfjrtw8zMTj
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 16:19:23 -0700 (PDT)
-Received: by mail-oi0-f44.google.com with SMTP id q188so91547763oia.3
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 16:19:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160915230748.GS30497@dastard>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160915082615.GA9772@lst.de>
-	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-	<20160915230748.GS30497@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Sep 2016 16:19:21 -0700
-Message-ID: <CAPcyv4hm4MBDQNJvOgqeG2OaA14WJ8kN5rSndusbhG3K=LP2JQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40672 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932447AbcIPL1i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:38 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/12] dax: provide an iomap based dax read/write path
+Date: Fri, 16 Sep 2016 13:27:07 +0200
+Message-Id: <1474025234-13804-6-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
->> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
->> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
->> >> The DAX property, page cache bypass, of a VMA is only detectable via the
->> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
->> >> only available internal to the kernel and is a property that userspace
->> >> applications would like to interrogate.
->> >
->> > They have absolutely no business knowing such an implementation detail.
->>
->> Hasn't that train already left the station with FS_XFLAG_DAX?
->
-> No, that's an admin flag, not a runtime hint for applications. Just
-> because that flag is set on an inode, it does not mean that DAX is
-> actually in use - it will be ignored if the backing dev is not dax
-> capable.
+This is a much simpler implementation of the DAX read/write path that makes
+use of the iomap infrastructure.  It does not try to mirror the direct I/O
+calling conventions and thus doesn't have to deal with i_dio_count or the
+end_io handler, but instead leaves locking and filesystem-specific I/O
+completion to the caller.
 
-Ok, but then VM_DAX does not suffer from that problem.  I'm trying to
-understand why VM_DAX has no business being in the smaps "VmFlags"
-line, but something ambiguous to userspace like VM_MIXEDMAP does?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/dax.c            | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   4 ++
+ 2 files changed, 118 insertions(+)
 
->
->> The other problem with hiding the DAX property is that it turns out to
->> not be a transparent acceleration feature.  See xfs/086 xfs/088
->> xfs/089 xfs/091 which fail with DAX and, as far as I understand, it is
->> due to the fact that DAX disallows delayed allocation behavior.
->
-> Which is not a bug, nor is it something that app developers should
-> be surprised by.
->
-> i.e. Subtle differences in error reporting behaviour occur in
-> filesystems /all the time/. Run the test on a non-dax filesystem
-> with an extent size hint. It fails /exactly the same way as DAX/.
-> Run it with direct IO - fails the same way as DAX. Run it
-> with synchronous writes - it fails the same way as DAX.
->
-> IOWs, if an app can't handle the way DAX reports errors, then they
-> are /broken/. Delayed allocation requires checking the return value
-> of fsync() or close() to capture the allocation error - many more
-> apps get that wrong than the ones that expect the immediate errors
-> from write()...
->
-> Anyway: to domeonstrate that the nothign is actually broken, and
-> you might sometimes need to fix tests and send patches to
-> fstests@vger.kernel.org, this makes xfs/086 pass for me on DAX:
->
-> --- a/tests/xfs/086
-> +++ b/tests/xfs/086
-> @@ -96,7 +96,8 @@ _scratch_mount
->
->  echo "+ modify files"
->  for x in `seq 1 64`; do
-> -       $XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
-> +       $XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" \
-> +               >> $seqres.full 2>&1
->  done
->  umount "${SCRATCH_MNT}"
+diff --git a/fs/dax.c b/fs/dax.c
+index 84343ce..1f9f2d4 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -31,6 +31,8 @@
+ #include <linux/vmstat.h>
+ #include <linux/pfn_t.h>
+ #include <linux/sizes.h>
++#include <linux/iomap.h>
++#include "internal.h"
+ 
+ /*
+  * We use lowest available bit in exceptional entry for locking, other two
+@@ -1241,3 +1243,115 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
+ 	return dax_zero_page_range(inode, from, length, get_block);
+ }
+ EXPORT_SYMBOL_GPL(dax_truncate_page);
++
++#ifdef CONFIG_FS_IOMAP
++static loff_t
++iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct iov_iter *iter = data;
++	loff_t end = pos + length, done = 0;
++	ssize_t ret = 0;
++
++	if (iov_iter_rw(iter) == READ) {
++		end = min(end, i_size_read(inode));
++		if (pos >= end)
++			return 0;
++
++		if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
++			return iov_iter_zero(min(length, end - pos), iter);
++	}
++
++	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED))
++		return -EIO;
++
++	while (pos < end) {
++		unsigned offset = pos & (PAGE_SIZE - 1);
++		struct blk_dax_ctl dax = { 0 };
++		ssize_t map_len;
++
++		dax.sector = iomap->blkno +
++			(((pos & PAGE_MASK) - iomap->offset) >> 9);
++		dax.size = (length + offset + PAGE_SIZE - 1) & PAGE_MASK;
++		map_len = dax_map_atomic(iomap->bdev, &dax);
++		if (map_len < 0) {
++			ret = map_len;
++			break;
++		}
++
++		dax.addr += offset;
++		map_len -= offset;
++		if (map_len > end - pos)
++			map_len = end - pos;
++
++		if (iov_iter_rw(iter) == WRITE)
++			map_len = copy_from_iter_pmem(dax.addr, map_len, iter);
++		else
++			map_len = copy_to_iter(dax.addr, map_len, iter);
++		dax_unmap_atomic(iomap->bdev, &dax);
++		if (map_len <= 0) {
++			ret = map_len ? map_len : -EFAULT;
++			break;
++		}
++
++		pos += map_len;
++		length -= map_len;
++		done += map_len;
++	}
++
++	return done ? done : ret;
++}
++
++/**
++ * iomap_dax_rw - Perform I/O to a DAX file
++ * @iocb:	The control block for this I/O
++ * @iter:	The addresses to do I/O from or to
++ * @ops:	iomap ops passed from the file system
++ *
++ * This function performs read and write operations to directly mapped
++ * persistent memory.  The callers needs to take care of read/write exclusion
++ * and evicting any page cache pages in the region under I/O.
++ */
++ssize_t
++iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
++		struct iomap_ops *ops)
++{
++	struct address_space *mapping = iocb->ki_filp->f_mapping;
++	struct inode *inode = mapping->host;
++	loff_t pos = iocb->ki_pos, ret = 0, done = 0;
++	unsigned flags = 0;
++
++	if (iov_iter_rw(iter) == WRITE)
++		flags |= IOMAP_WRITE;
++
++	/*
++	 * Yes, even DAX files can have page cache attached to them:  A zeroed
++	 * page is inserted into the pagecache when we have to serve a write
++	 * fault on a hole.  It should never be dirtied and can simply be
++	 * dropped from the pagecache once we get real data for the page.
++	 *
++	 * XXX: This is racy against mmap, and there's nothing we can do about
++	 * it. We'll eventually need to shift this down even further so that
++	 * we can check if we allocated blocks over a hole first.
++	 */
++	if (mapping->nrpages) {
++		ret = invalidate_inode_pages2_range(mapping,
++				pos >> PAGE_SHIFT,
++				(pos + iov_iter_count(iter) - 1) >> PAGE_SHIFT);
++		WARN_ON_ONCE(ret);
++	}
++
++	while (iov_iter_count(iter)) {
++		ret = iomap_apply(inode, pos, iov_iter_count(iter), flags, ops,
++				iter, iomap_dax_actor);
++		if (ret <= 0)
++			break;
++		pos += ret;
++		done += ret;
++	}
++
++	iocb->ki_pos += done;
++	return done ? done : ret;
++}
++EXPORT_SYMBOL_GPL(iomap_dax_rw);
++#endif /* CONFIG_FS_IOMAP */
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 9c6dc77..a0595b4 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -6,9 +6,13 @@
+ #include <linux/radix-tree.h>
+ #include <asm/pgtable.h>
+ 
++struct iomap_ops;
++
+ /* We use lowest available exceptional entry bit for locking */
+ #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
+ 
++ssize_t iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
++		struct iomap_ops *ops);
+ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
+ 		  get_block_t, dio_iodone_t, int flags);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+-- 
+2.1.4
 
-Thanks for that!  Wasn't immediately obvious to me, and didn't get
-that response when I asked on the list a while back.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
