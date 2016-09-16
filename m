@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A0E337CA0
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 05:10:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 640508F8040
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 03:10:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Fv6GhxcDljjeCZ83 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 03:10:09 -0700 (PDT)
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] libxcmd: fix counting of xfs entries in fs_table_insert
-Date: Sun, 25 Sep 2016 18:09:22 +0800
-Message-Id: <1474798162-25960-1-git-send-email-eguan@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 27A137CA0
+	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 00:36:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DBB7E8F8039
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 22:36:38 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	YIcyXugOjtIgTdMO for <xfs@oss.sgi.com>;
+	Thu, 15 Sep 2016 22:36:36 -0700 (PDT)
+Date: Fri, 16 Sep 2016 15:36:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
+Message-ID: <20160916053632.GT30497@dastard>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<20160915230748.GS30497@dastard>
+	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
+	<20160916012458.GW22388@dastard>
+	<CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,62 +32,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: billodo@redhat.com, Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Commit bb80e3d6cd04 ("libxcmd: populate fs table with xfs entries
-first, foreign entries last") adds a new counter "xfs_fs_count" and
-increases the counter when inserting an XFS entry.
+On Thu, Sep 15, 2016 at 07:04:27PM -0700, Dan Williams wrote:
+> On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
+> >> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+> >> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+> >> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+> >> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+> >> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+> >> >> >> only available internal to the kernel and is a property that userspace
+> >> >> >> applications would like to interrogate.
+> >> >> >
+> >> >> > They have absolutely no business knowing such an implementation detail.
+> >> >>
+> >> >> Hasn't that train already left the station with FS_XFLAG_DAX?
+> >> >
+> >> > No, that's an admin flag, not a runtime hint for applications. Just
+> >> > because that flag is set on an inode, it does not mean that DAX is
+> >> > actually in use - it will be ignored if the backing dev is not dax
+> >> > capable.
+> >>
+> >> What's the point of an admin flag if an admin can't do cat /proc/<pid
+> >> of interest>/smaps, or some other mechanism, to validate that the
+> >> setting the admin cares about is in effect?
+> >
+> > Sorry, I don't follow - why would you be looking at mapping file
+> > regions in /proc to determine if some file somewhere in a filesystem
+> > has a specific flag set on it or not?
+> >
+> > FS_XFLAG_DAX is an inode attribute flag, not something you can
+> > query or administrate through mmap:
+> >
+> > I.e.
+> > # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
+> >  --------------- foo
+> >  --------------x foo
+> >  --------------- foo
+> > #
+> >
+> > What happens when that flag is set on an inode is determined by a
+> > whole bunch of other things that are completely separate to the
+> > management of the inode flag itself.
+> 
+> Right, I understand that, but how does an admin audit those "bunch of
+> other things"
 
-But it missed a counter when fs_count is zero (inserting the first
-path) and the entry has no FS_FOREIGN bit set, i.e. the first XFS
-entry doesn't increase xfs_fs_count.
+Filesystem mounts checks all the various stuff that determines
+whether DAX can be used. It logs to the console that it is "Dax
+capable". Any file that then has FS_XFLAG_DAX set will result in DAX
+being used. There is no other possibility when these two things are
+reported.
 
-This results in args_command() mess and infinite loop in xfs/244
-when testing v4 XFS (xfs/244 notrun on v5 XFS, but this bug still
-reproduces on v5 XFS). e.g.
+/me points at runtime diagnostic tracepoints like
+trace_xfs_file_dax_read() and notes that dax is sadly lacking in
+diagnostic tracepoints.
 
-  mkfs -t xfs -f /dev/sda5
-  mount -o pquota /dev/sda5 /mnt/xfs
-  mkdir /mnt/xfs/project
-  touch /mnt/xfs/project/testfile
-  xfs_quota -x -c "project -s -p /mnt/xfs/project/testfile 1" /dev/sda5
+Besides, userspace can't do anything useful with this information,
+because the FS_XFLAG_DAX can be changed /at any time/ by an admin.
+And the filesystem is free to remove it at any time, too, if it
+needs to (e.g. file gets reflinked or snapshotted).
 
-Fix it by increasing xfs_fs_count when flags has no FS_FOREIGN bit.
+That's right, an inode can dynamically change from DAX to non-DAX
+underneath the application, and the application /will not notice/.
+That's because changing the flag will sync and invalidate the
+existing mappings and the next application access will simply fault
+it back in using whatever mechanism the inode is now configured
+with.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- libxcmd/paths.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Plain and simple: userspace has absolutely no fucking idea of
+whether DAX is enabled or not, and whatever the kernel returns to
+userspace above the DAX configuration is stale before it even got
+out of the kernel....
 
-diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-index 3455217..97f47cf 100644
---- a/libxcmd/paths.c
-+++ b/libxcmd/paths.c
-@@ -147,7 +147,6 @@ fs_table_insert(
- 		memmove(&fs_table[xfs_fs_count + 1], &fs_table[xfs_fs_count],
- 			sizeof(fs_path_t)*(fs_count - xfs_fs_count));
- 		fs_path = &fs_table[xfs_fs_count];
--		xfs_fs_count++;
- 	}
- 	fs_path->fs_dir = dir;
- 	fs_path->fs_prid = prid;
-@@ -159,6 +158,8 @@ fs_table_insert(
- 	fs_path->fs_logdev = logdev;
- 	fs_path->fs_rtdev = rtdev;
- 	fs_count++;
-+	if (!(flags & FS_FOREIGN))
-+		xfs_fs_count++;
- 
- 	return 0;
- 
+Cheers,
+
+Dave.
 -- 
-2.7.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
