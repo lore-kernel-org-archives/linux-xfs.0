@@ -1,93 +1,168 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB0CB7CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 21:04:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE4C304051
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 19:04:30 -0700 (PDT)
-Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
-	[209.85.218.44]) by cuda.sgi.com with ESMTP id bIxkGHXRvXnFvDII
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 19:04:28 -0700 (PDT)
-Received: by mail-oi0-f44.google.com with SMTP id m11so95393782oif.1
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 19:04:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160916012458.GW22388@dastard>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160915082615.GA9772@lst.de>
-	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-	<20160915230748.GS30497@dastard>
-	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
-	<20160916012458.GW22388@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Sep 2016 19:04:27 -0700
-Message-ID: <CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40726 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932447AbcIPL1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/12] dax: provide an iomap based fault handler
+Date: Fri, 16 Sep 2016 13:27:08 +0200
+Message-Id: <1474025234-13804-7-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
->> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
->> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
->> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
->> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
->> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
->> >> >> only available internal to the kernel and is a property that userspace
->> >> >> applications would like to interrogate.
->> >> >
->> >> > They have absolutely no business knowing such an implementation detail.
->> >>
->> >> Hasn't that train already left the station with FS_XFLAG_DAX?
->> >
->> > No, that's an admin flag, not a runtime hint for applications. Just
->> > because that flag is set on an inode, it does not mean that DAX is
->> > actually in use - it will be ignored if the backing dev is not dax
->> > capable.
->>
->> What's the point of an admin flag if an admin can't do cat /proc/<pid
->> of interest>/smaps, or some other mechanism, to validate that the
->> setting the admin cares about is in effect?
->
-> Sorry, I don't follow - why would you be looking at mapping file
-> regions in /proc to determine if some file somewhere in a filesystem
-> has a specific flag set on it or not?
->
-> FS_XFLAG_DAX is an inode attribute flag, not something you can
-> query or administrate through mmap:
->
-> I.e.
-> # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
->  --------------- foo
->  --------------x foo
->  --------------- foo
-> #
->
-> What happens when that flag is set on an inode is determined by a
-> whole bunch of other things that are completely separate to the
-> management of the inode flag itself.
+Very similar to the existing dax_fault function, but instead of using
+the get_block callback we rely on the iomap_ops vector from iomap.c.
+That also avoids having to do two calls into the file system for write
+faults.
 
-Right, I understand that, but how does an admin audit those "bunch of
-other things" that actually gate whether DAX ends up being used in
-practice?  There's currently no way for userspace to observe that a
-file with FS_XFLAG_DAX actually results in a change in mmap behavior.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/dax.c            | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   2 +
+ 2 files changed, 116 insertions(+)
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/dax.c b/fs/dax.c
+index 1f9f2d4..cc025f8 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1354,4 +1354,118 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return done ? done : ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dax_rw);
++
++/**
++ * iomap_dax_fault - handle a page fault on a DAX file
++ * @vma: The virtual memory area where the fault occurred
++ * @vmf: The description of the fault
++ * @ops: iomap ops passed from the file system
++ *
++ * When a page fault occurs, filesystems may call this helper in their fault
++ * or mkwrite handler for DAX files. Assumes the caller has done all the
++ * necessary locking for the page fault to proceed successfully.
++ */
++int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++			struct iomap_ops *ops)
++{
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	struct inode *inode = mapping->host;
++	unsigned long vaddr = (unsigned long)vmf->virtual_address;
++	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
++	sector_t sector;
++	struct iomap iomap = { 0 };
++	unsigned flags = 0;
++	int error, major = 0;
++	void *entry;
++
++	/*
++	 * Check whether offset isn't beyond end of file now. Caller is supposed
++	 * to hold locks serializing us with truncate / punch hole so this is
++	 * a reliable test.
++	 */
++	if (pos >= i_size_read(inode))
++		return VM_FAULT_SIGBUS;
++
++	entry = grab_mapping_entry(mapping, vmf->pgoff);
++	if (IS_ERR(entry)) {
++		error = PTR_ERR(entry);
++		goto out;
++	}
++
++	if ((vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page)
++		flags |= IOMAP_WRITE;
++
++	/*
++	 * Note that we don't bother to use iomap_apply here: DAX required
++	 * the file system block size to be equal the page size, which means
++	 * that we never have to deal with more than a single extent here.
++	 */
++	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
++	if (error)
++		goto unlock_entry;
++	if (WARN_ON_ONCE(iomap.offset + iomap.length < pos + PAGE_SIZE)) {
++		error = -EIO;		/* fs corruption? */
++		goto unlock_entry;
++	}
++
++	sector = iomap.blkno + (((pos & PAGE_MASK) - iomap.offset) >> 9);
++
++	if (vmf->cow_page) {
++		switch (iomap.type) {
++		case IOMAP_HOLE:
++		case IOMAP_UNWRITTEN:
++			clear_user_highpage(vmf->cow_page, vaddr);
++			break;
++		case IOMAP_MAPPED:
++			error = copy_user_dax(iomap.bdev, sector, PAGE_SIZE,
++					vmf->cow_page, vaddr);
++			break;
++		default:
++			WARN_ON_ONCE(1);
++			error = -EIO;
++			break;
++		}
++
++		if (error)
++			goto unlock_entry;
++		if (!radix_tree_exceptional_entry(entry)) {
++			vmf->page = entry;
++			return VM_FAULT_LOCKED;
++		}
++		vmf->entry = entry;
++		return VM_FAULT_DAX_LOCKED;
++	}
++
++	switch (iomap.type) {
++	case IOMAP_MAPPED:
++		if (iomap.flags & IOMAP_F_NEW) {
++			count_vm_event(PGMAJFAULT);
++			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
++			major = VM_FAULT_MAJOR;
++		}
++		error = dax_insert_mapping(mapping, iomap.bdev, sector,
++				PAGE_SIZE, &entry, vma, vmf);
++		break;
++	case IOMAP_UNWRITTEN:
++	case IOMAP_HOLE:
++		if (!(vmf->flags & FAULT_FLAG_WRITE))
++			return dax_load_hole(mapping, entry, vmf);
++		/*FALLTHRU*/
++	default:
++		WARN_ON_ONCE(1);
++		error = -EIO;
++		break;
++	}
++
++ unlock_entry:
++	put_locked_mapping_entry(mapping, vmf->pgoff, entry);
++ out:
++	if (error == -ENOMEM)
++		return VM_FAULT_OOM | major;
++	/* -EBUSY is fine, somebody else faulted on the same PTE */
++	if (error < 0 && error != -EBUSY)
++		return VM_FAULT_SIGBUS | major;
++	return VM_FAULT_NOPAGE | major;
++}
++EXPORT_SYMBOL_GPL(iomap_dax_fault);
+ #endif /* CONFIG_FS_IOMAP */
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index a0595b4..add6c4b 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -17,6 +17,8 @@ ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
+ 		  get_block_t, dio_iodone_t, int flags);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
++int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++			struct iomap_ops *ops);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+-- 
+2.1.4
+
