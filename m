@@ -1,95 +1,181 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ADD857CA0
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 17:31:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 100D0AC001
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 15:31:45 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id UcI3d0EfMFt0LTwG for <xfs@oss.sgi.com>;
-	Wed, 14 Sep 2016 15:31:44 -0700 (PDT)
-Subject: Re: [PATCH V4] xfs: Document error handlers behavior
-References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
-	<20160914012334.GK30497@dastard>
-	<77fcc1da-9c74-da3e-5bcd-3df420a3bfbb@sandeen.net>
-	<20160914222255.GQ30497@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8b69afc7-0088-e952-8c9b-cc7480a1bb2d@sandeen.net>
-Date: Wed, 14 Sep 2016 17:31:43 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160914222255.GQ30497@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40962 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758495AbcIPL14 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:56 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/12] xfs: use iomap to implement DAX
+Date: Fri, 16 Sep 2016 13:27:12 +0200
+Message-Id: <1474025234-13804-11-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
+Another users of buffer_heads bytes the dust.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/xfs/xfs_file.c  | 61 +++++++++++++++---------------------------------------
+ fs/xfs/xfs_iomap.c | 11 ++++++----
+ 2 files changed, 24 insertions(+), 48 deletions(-)
 
-On 9/14/16 5:22 PM, Dave Chinner wrote:
->> Same issue here, really; they are symmetric, right?  First condition met for
->> > propagation propagates the error, period.  This sounds overly complex, unless
->> > I'm missing something. Seems like:
->> > 
->> > +	Setting the value to "N" (where 0 < N < Max) will make XFS retry the
->> > +	operation for "N" seconds before propagating the error.
->> > 
->> > would suffice, no?
-> No, because that's not what the implementation does:
-> 
-> 	if (retries expired)
-> 		fail
-> 	if (retry timer expired)
-> 		fail
-> 
-> IOWs, the retry count has precedence over the retry timer. if you
-> set both retry_timeout and max_retries, the timeout only takes
-> effect if max retries is set high enough that they aren't exhausted
-> before the timeout fires.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 62649cc..f99d7fa 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -332,10 +332,7 @@ xfs_file_dax_read(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*to)
+ {
+-	struct address_space	*mapping = iocb->ki_filp->f_mapping;
+-	struct inode		*inode = mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct iov_iter		data = *to;
++	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+ 	size_t			count = iov_iter_count(to);
+ 	ssize_t			ret = 0;
+ 
+@@ -345,11 +342,7 @@ xfs_file_dax_read(
+ 		return 0; /* skip atime */
+ 
+ 	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+-	ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct, NULL, 0);
+-	if (ret > 0) {
+-		iocb->ki_pos += ret;
+-		iov_iter_advance(to, ret);
+-	}
++	ret = iomap_dax_rw(iocb, to, &xfs_iomap_ops);
+ 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+ 
+ 	file_accessed(iocb->ki_filp);
+@@ -711,52 +704,32 @@ xfs_file_dax_write(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*from)
+ {
+-	struct address_space	*mapping = iocb->ki_filp->f_mapping;
+-	struct inode		*inode = mapping->host;
++	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	ssize_t			ret = 0;
+ 	int			iolock = XFS_IOLOCK_EXCL;
+-	struct iov_iter		data;
++	ssize_t			ret, error = 0;
++	size_t			count;
++	loff_t			pos;
+ 
+ 	xfs_rw_ilock(ip, iolock);
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+ 
+-	/*
+-	 * Yes, even DAX files can have page cache attached to them:  A zeroed
+-	 * page is inserted into the pagecache when we have to serve a write
+-	 * fault on a hole.  It should never be dirtied and can simply be
+-	 * dropped from the pagecache once we get real data for the page.
+-	 *
+-	 * XXX: This is racy against mmap, and there's nothing we can do about
+-	 * it. dax_do_io() should really do this invalidation internally as
+-	 * it will know if we've allocated over a holei for this specific IO and
+-	 * if so it needs to update the mapping tree and invalidate existing
+-	 * PTEs over the newly allocated range. Remove this invalidation when
+-	 * dax_do_io() is fixed up.
+-	 */
+-	if (mapping->nrpages) {
+-		loff_t end = iocb->ki_pos + iov_iter_count(from) - 1;
+-
+-		ret = invalidate_inode_pages2_range(mapping,
+-						    iocb->ki_pos >> PAGE_SHIFT,
+-						    end >> PAGE_SHIFT);
+-		WARN_ON_ONCE(ret);
+-	}
++	pos = iocb->ki_pos;
++	count = iov_iter_count(from);
+ 
+-	trace_xfs_file_dax_write(ip, iov_iter_count(from), iocb->ki_pos);
++	trace_xfs_file_dax_write(ip, count, pos);
+ 
+-	data = *from;
+-	ret = dax_do_io(iocb, inode, &data, xfs_get_blocks_direct,
+-			xfs_end_io_direct_write, 0);
+-	if (ret > 0) {
+-		iocb->ki_pos += ret;
+-		iov_iter_advance(from, ret);
++	ret = iomap_dax_rw(iocb, from, &xfs_iomap_ops);
++	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
++		i_size_write(inode, iocb->ki_pos);
++		error = xfs_setfilesize(ip, pos, ret);
+ 	}
++
+ out:
+ 	xfs_rw_iunlock(ip, iolock);
+-	return ret;
++	return error ? error : ret;
+ }
+ 
+ STATIC ssize_t
+@@ -1495,7 +1468,7 @@ xfs_filemap_page_mkwrite(
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 
+ 	if (IS_DAX(inode)) {
+-		ret = dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault);
++		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
+ 	} else {
+ 		ret = iomap_page_mkwrite(vma, vmf, &xfs_iomap_ops);
+ 		ret = block_page_mkwrite_return(ret);
+@@ -1529,7 +1502,7 @@ xfs_filemap_fault(
+ 		 * changes to xfs_get_blocks_direct() to map unwritten extent
+ 		 * ioend for conversion on read-only mappings.
+ 		 */
+-		ret = dax_fault(vma, vmf, xfs_get_blocks_dax_fault);
++		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
+ 	} else
+ 		ret = filemap_fault(vma, vmf);
+ 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index c3cc175..23f7811 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -935,11 +935,13 @@ error_on_bmapi_transaction:
+ 	return error;
+ }
+ 
+-static inline bool imap_needs_alloc(struct xfs_bmbt_irec *imap, int nimaps)
++static inline bool imap_needs_alloc(struct inode *inode,
++		struct xfs_bmbt_irec *imap, int nimaps)
+ {
+ 	return !nimaps ||
+ 		imap->br_startblock == HOLESTARTBLOCK ||
+-		imap->br_startblock == DELAYSTARTBLOCK;
++		imap->br_startblock == DELAYSTARTBLOCK ||
++		(IS_DAX(inode) && ISUNWRITTEN(imap));
+ }
+ 
+ static int
+@@ -960,7 +962,8 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	if ((flags & IOMAP_WRITE) && !xfs_get_extsz_hint(ip)) {
++	if ((flags & IOMAP_WRITE) &&
++	    !IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
+ 				iomap);
+ 	}
+@@ -980,7 +983,7 @@ xfs_file_iomap_begin(
+ 		return error;
+ 	}
+ 
+-	if ((flags & IOMAP_WRITE) && imap_needs_alloc(&imap, nimaps)) {
++	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+-- 
+2.1.4
 
-Then:
-
-+	Setting the value to "N" (where 0 < N < Max) will /allow/ XFS to retry
-+	the operation for /up to/ "N" seconds before propagating the error.
-
-?  i.e. it could, but only if the retries don't expire first :)
-
-> This is for the case where an failure might take a variable time to
-> report.  (Think interactions with errors that TLER would address).
-> Normally you might say 10 retries, but if it is taking 5 minutes to
-> then fail when this specific error condition is hit, you might set a retry
-> timeout of 1 minute. In that case, we might get an immediate IO
-> error and retry several times before failing. However, if we hit the
-> "slow to report" error, we still get failure in the same time frame
-> as the immediate failures that have been retried many times before
-> giving up.
-
-Either way, it's still the /first/ condition satisfied which will
-bubble it up.
-
-So "first condition satisfied will propagate up," plus
-one condition is "retry up to N times," plus
-one condition is "retry up for up to N seconds"
-
-seems to cover it all, no?
-
-> It's hard to explain complex stuff like with a simple, concise
-> description. I'll try again....
-> 
-> Cheers,
-> 
-> Dave.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
