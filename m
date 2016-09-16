@@ -1,83 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42902 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751570AbcIOUnV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Sep 2016 16:43:21 -0400
-Subject: Re: [PATCH v3 3/3] xfs_quota: add case for foreign fs, disabled
- regardless of foreign_allowed
-References: <1473953386-10242-4-git-send-email-billodo@redhat.com>
- <1473969469-27354-1-git-send-email-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e01db6be-d444-da1c-4f93-9d3aeeca1dd6@sandeen.net>
-Date: Thu, 15 Sep 2016 15:43:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <1473969469-27354-1-git-send-email-billodo@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:41066 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765382AbcIPL2D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:28:03 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 12/12] ext2: use iomap to implement DAX
+Date: Fri, 16 Sep 2016 13:27:14 +0200
+Message-Id: <1474025234-13804-13-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-On 9/15/16 2:57 PM, Bill O'Donnell wrote:
-> Some commands are disallowed for foreign filesystems,
-> regardless of whether or not the -f flag is thrown.
-> Add a case for this condition and improve commenting
-> and output messaging accordingly in init_check_command.
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/ext2/Kconfig |  1 +
+ fs/ext2/ext2.h  |  1 +
+ fs/ext2/file.c  | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++------
+ fs/ext2/inode.c | 63 +++++++++++++++++++++++++++++++++++++++++++----
+ 4 files changed, 129 insertions(+), 12 deletions(-)
 
-Thanks, Bill.
+diff --git a/fs/ext2/Kconfig b/fs/ext2/Kconfig
+index c634874e..36bea5a 100644
+--- a/fs/ext2/Kconfig
++++ b/fs/ext2/Kconfig
+@@ -1,5 +1,6 @@
+ config EXT2_FS
+ 	tristate "Second extended fs support"
++	select FS_IOMAP if FS_DAX
+ 	help
+ 	  Ext2 is a standard Linux file system for hard disks.
+ 
+diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+index 06af2f9..37e2be7 100644
+--- a/fs/ext2/ext2.h
++++ b/fs/ext2/ext2.h
+@@ -814,6 +814,7 @@ extern const struct file_operations ext2_file_operations;
+ /* inode.c */
+ extern const struct address_space_operations ext2_aops;
+ extern const struct address_space_operations ext2_nobh_aops;
++extern struct iomap_ops ext2_iomap_ops;
+ 
+ /* namei.c */
+ extern const struct inode_operations ext2_dir_inode_operations;
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index 5efeefe..423cc01 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -22,11 +22,59 @@
+ #include <linux/pagemap.h>
+ #include <linux/dax.h>
+ #include <linux/quotaops.h>
++#include <linux/iomap.h>
++#include <linux/uio.h>
+ #include "ext2.h"
+ #include "xattr.h"
+ #include "acl.h"
+ 
+ #ifdef CONFIG_FS_DAX
++static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
++{
++	struct inode *inode = iocb->ki_filp->f_mapping->host;
++	ssize_t ret;
++
++	if (!iov_iter_count(to))
++		return 0; /* skip atime */
++
++	inode_lock_shared(inode);
++	ret = iomap_dax_rw(iocb, to, &ext2_iomap_ops);
++	inode_unlock_shared(inode);
++
++	file_accessed(iocb->ki_filp);
++	return ret;
++}
++
++static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
++{
++	struct file *file = iocb->ki_filp;
++	struct inode *inode = file->f_mapping->host;
++	ssize_t ret;
++
++	inode_lock(inode);
++	ret = generic_write_checks(iocb, from);
++	if (ret <= 0)
++		goto out_unlock;
++	ret = file_remove_privs(file);
++	if (ret)
++		goto out_unlock;
++	ret = file_update_time(file);
++	if (ret)
++		goto out_unlock;
++
++	ret = iomap_dax_rw(iocb, from, &ext2_iomap_ops);
++	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
++		i_size_write(inode, iocb->ki_pos);
++		mark_inode_dirty(inode);
++	}
++
++out_unlock:
++	inode_unlock(inode);
++	if (ret > 0)
++		ret = generic_write_sync(iocb, ret);
++	return ret;
++}
++
+ /*
+  * The lock ordering for ext2 DAX fault paths is:
+  *
+@@ -51,7 +99,7 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	}
+ 	down_read(&ei->dax_sem);
+ 
+-	ret = dax_fault(vma, vmf, ext2_get_block);
++	ret = iomap_dax_fault(vma, vmf, &ext2_iomap_ops);
+ 
+ 	up_read(&ei->dax_sem);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+@@ -156,14 +204,28 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+ 	return ret;
+ }
+ 
+-/*
+- * We have mostly NULL's here: the current defaults are ok for
+- * the ext2 filesystem.
+- */
++static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
++{
++#ifdef CONFIG_FS_DAX
++	if (IS_DAX(iocb->ki_filp->f_mapping->host))
++		return ext2_dax_read_iter(iocb, to);
++#endif
++	return generic_file_read_iter(iocb, to);
++}
++
++static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
++{
++#ifdef CONFIG_FS_DAX
++	if (IS_DAX(iocb->ki_filp->f_mapping->host))
++		return ext2_dax_write_iter(iocb, from);
++#endif
++	return generic_file_write_iter(iocb, from);
++}
++
+ const struct file_operations ext2_file_operations = {
+ 	.llseek		= generic_file_llseek,
+-	.read_iter	= generic_file_read_iter,
+-	.write_iter	= generic_file_write_iter,
++	.read_iter	= ext2_file_read_iter,
++	.write_iter	= ext2_file_write_iter,
+ 	.unlocked_ioctl = ext2_ioctl,
+ #ifdef CONFIG_COMPAT
+ 	.compat_ioctl	= ext2_compat_ioctl,
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 2a69ab2..aae5f61 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -32,6 +32,7 @@
+ #include <linux/buffer_head.h>
+ #include <linux/mpage.h>
+ #include <linux/fiemap.h>
++#include <linux/iomap.h>
+ #include <linux/namei.h>
+ #include <linux/uio.h>
+ #include "ext2.h"
+@@ -787,6 +788,59 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
+ 
+ }
+ 
++#ifdef CONFIG_FS_DAX
++static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
++		unsigned flags, struct iomap *iomap)
++{
++	unsigned int blkbits = inode->i_blkbits;
++	unsigned long first_block = offset >> blkbits;
++	unsigned long max_blocks = (length + (1 << blkbits) - 1) >> blkbits;
++	bool new = false, boundary = false;
++	u32 bno;
++	int ret;
++
++	ret = ext2_get_blocks(inode, first_block, max_blocks,
++			&bno, &new, &boundary, flags & IOMAP_WRITE);
++	if (ret < 0)
++		return ret;
++
++	iomap->flags = 0;
++	iomap->bdev = inode->i_sb->s_bdev;
++	iomap->offset = first_block << blkbits;
++
++	if (ret == 0) {
++		iomap->type = IOMAP_HOLE;
++		iomap->blkno = IOMAP_NULL_BLOCK;
++		iomap->length = 1 << blkbits;
++	} else {
++		iomap->type = IOMAP_MAPPED;
++		iomap->blkno = (sector_t)bno << (blkbits - 9);
++		iomap->length = (u64)ret << blkbits;
++		iomap->flags |= IOMAP_F_MERGED;
++	}
++
++	if (new)
++		iomap->flags |= IOMAP_F_NEW;
++	return 0;
++}
++
++static int
++ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
++		ssize_t written, unsigned flags, struct iomap *iomap)
++{
++	if (iomap->type == IOMAP_MAPPED &&
++	    written < length &&
++	    (flags & IOMAP_WRITE))
++		ext2_write_failed(inode->i_mapping, offset + length);
++	return 0;
++}
++
++struct iomap_ops ext2_iomap_ops = {
++	.iomap_begin		= ext2_iomap_begin,
++	.iomap_end		= ext2_iomap_end,
++};
++#endif /* CONFIG_FS_DAX */
++
+ int ext2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ 		u64 start, u64 len)
+ {
+@@ -872,11 +926,10 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	loff_t offset = iocb->ki_pos;
+ 	ssize_t ret;
+ 
+-	if (IS_DAX(inode))
+-		ret = dax_do_io(iocb, inode, iter, ext2_get_block, NULL,
+-				DIO_LOCKING);
+-	else
+-		ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
++	if (WARN_ON_ONCE(IS_DAX(inode)))
++		return -EIO;
++
++	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
+ 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+ 		ext2_write_failed(mapping, offset + count);
+ 	return ret;
+-- 
+2.1.4
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
-> history:
-> v3: clarify foreign filesystem user output message.
-> v2: no change
-> v1: http://www.spinics.net/lists/linux-xfs/msg00685.html
-> 
->  quota/init.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/quota/init.c b/quota/init.c
-> index 2c18c8b..3bebbb8 100644
-> --- a/quota/init.c
-> +++ b/quota/init.c
-> @@ -112,21 +112,29 @@ init_check_command(
->  	if (!fs_path)
->  		return 1;
->  
-> -	/* Always run commands that we are told to skip here */
-> +	/* Always run commands that are valid for all fs types. */
->  	if (ct->flags & CMD_ALL_FSTYPES)
->  		return 1;
->  
-> -	/* if it's an XFS filesystem, always run the command */
-> +	/* If it's an XFS filesystem, always run the command. */
->  	if (!(fs_path->fs_flags & FS_FOREIGN))
->  		return 1;
->  
-> -	/* If the user specified foreign filesysetms are ok, run it */
-> +	/* If the user specified foreign filesystems are ok (-f), run cmd. */
->  	if (foreign_allowed &&
->  	    (ct->flags & CMD_FLAG_FOREIGN_OK))
->  		return 1;
->  
-> -	/* foreign filesystem and it's not a valid command! */
-> -	fprintf(stderr, _("%s command is for XFS filesystems only\n"),
-> +	/* If cmd not allowed on foreign fs, regardless of -f flag, skip it. */
-> +	if (!(ct->flags & CMD_FLAG_FOREIGN_OK)) {
-> +		fprintf(stderr, _("%s: command is for XFS filesystems only\n"),
-> +			ct->name);
-> +		return 0;
-> +	}
-> +
-> +	/* foreign fs, but cmd only allowed via -f flag. Skip it. */
-> +	fprintf(stderr,
-> +		_("%s: foreign filesystem. Invoke xfs_quota with -f to enable.\n"),
->  		ct->name);
->  	return 0;
->  }
-> 
