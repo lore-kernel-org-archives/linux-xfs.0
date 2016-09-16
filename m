@@ -1,78 +1,125 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40490 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932447AbcIPL10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:26 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/12] iomap: expose iomap_apply outside iomap.c
-Date: Fri, 16 Sep 2016 13:27:04 +0200
-Message-Id: <1474025234-13804-3-git-send-email-hch@lst.de>
-In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
-References: <1474025234-13804-1-git-send-email-hch@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
-Cc: ross.zwisler@linux.intel.com
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E11B67CA1
+	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 05:47:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4A194AC003
+	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 03:47:36 -0700 (PDT)
+Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com
+	[209.85.218.49]) by cuda.sgi.com with ESMTP id Fx13DFlQ2E4ZJhoP
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 16 Sep 2016 03:47:34 -0700 (PDT)
+Received: by mail-oi0-f49.google.com with SMTP id m11so106885315oif.1
+	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 03:47:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160916053632.GT30497@dastard>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<20160915230748.GS30497@dastard>
+	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
+	<20160916012458.GW22388@dastard>
+	<CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
+	<20160916053632.GT30497@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 16 Sep 2016 03:47:32 -0700
+Message-ID: <CAPcyv4gRww==ftpcsYSU8=T+4DyoUqOBPSx67PQcUNjn3afeJg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-This allows the DAX code to use it.
+On Thu, Sep 15, 2016 at 10:36 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Sep 15, 2016 at 07:04:27PM -0700, Dan Williams wrote:
+>> On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
+>> >> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> >> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+>> >> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> >> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+>> >> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+>> >> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+>> >> >> >> only available internal to the kernel and is a property that userspace
+>> >> >> >> applications would like to interrogate.
+>> >> >> >
+>> >> >> > They have absolutely no business knowing such an implementation detail.
+>> >> >>
+>> >> >> Hasn't that train already left the station with FS_XFLAG_DAX?
+>> >> >
+>> >> > No, that's an admin flag, not a runtime hint for applications. Just
+>> >> > because that flag is set on an inode, it does not mean that DAX is
+>> >> > actually in use - it will be ignored if the backing dev is not dax
+>> >> > capable.
+>> >>
+>> >> What's the point of an admin flag if an admin can't do cat /proc/<pid
+>> >> of interest>/smaps, or some other mechanism, to validate that the
+>> >> setting the admin cares about is in effect?
+>> >
+>> > Sorry, I don't follow - why would you be looking at mapping file
+>> > regions in /proc to determine if some file somewhere in a filesystem
+>> > has a specific flag set on it or not?
+>> >
+>> > FS_XFLAG_DAX is an inode attribute flag, not something you can
+>> > query or administrate through mmap:
+>> >
+>> > I.e.
+>> > # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
+>> >  --------------- foo
+>> >  --------------x foo
+>> >  --------------- foo
+>> > #
+>> >
+>> > What happens when that flag is set on an inode is determined by a
+>> > whole bunch of other things that are completely separate to the
+>> > management of the inode flag itself.
+>>
+>> Right, I understand that, but how does an admin audit those "bunch of
+>> other things"
+>
+> Filesystem mounts checks all the various stuff that determines
+> whether DAX can be used. It logs to the console that it is "Dax
+> capable". Any file that then has FS_XFLAG_DAX set will result in DAX
+> being used. There is no other possibility when these two things are
+> reported.
+>
+> /me points at runtime diagnostic tracepoints like
+> trace_xfs_file_dax_read() and notes that dax is sadly lacking in
+> diagnostic tracepoints.
+>
+> Besides, userspace can't do anything useful with this information,
+> because the FS_XFLAG_DAX can be changed /at any time/ by an admin.
+> And the filesystem is free to remove it at any time, too, if it
+> needs to (e.g. file gets reflinked or snapshotted).
+>
+> That's right, an inode can dynamically change from DAX to non-DAX
+> underneath the application, and the application /will not notice/.
+> That's because changing the flag will sync and invalidate the
+> existing mappings and the next application access will simply fault
+> it back in using whatever mechanism the inode is now configured
+> with.
+>
+> Plain and simple: userspace has absolutely no fucking idea of
+> whether DAX is enabled or not, and whatever the kernel returns to
+> userspace above the DAX configuration is stale before it even got
+> out of the kernel....
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/internal.h | 11 +++++++++++
- fs/iomap.c    |  5 +----
- 2 files changed, 12 insertions(+), 4 deletions(-)
+smaps is already known to be an ephemeral interface, but we output
+useful information there nonetheless.
 
-diff --git a/fs/internal.h b/fs/internal.h
-index ba07376..8591786 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -12,6 +12,7 @@
- struct super_block;
- struct file_system_type;
- struct iomap;
-+struct iomap_ops;
- struct linux_binprm;
- struct path;
- struct mount;
-@@ -164,3 +165,13 @@ extern struct dentry_operations ns_dentry_operations;
- extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
- 		    unsigned long arg);
- extern long vfs_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
-+
-+/*
-+ * iomap support:
-+ */
-+typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-+		void *data, struct iomap *iomap);
-+
-+loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
-+		unsigned flags, struct iomap_ops *ops, void *data,
-+		iomap_actor_t actor);
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 706270f..f4df9c6 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -27,9 +27,6 @@
- #include <linux/dax.h>
- #include "internal.h"
- 
--typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
--		void *data, struct iomap *iomap);
--
- /*
-  * Execute a iomap write on a segment of the mapping that spans a
-  * contiguous range of pages that have identical block mapping state.
-@@ -41,7 +38,7 @@ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-  * resources they require in the iomap_begin call, and release them in the
-  * iomap_end call.
-  */
--static loff_t
-+loff_t
- iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
- 		struct iomap_ops *ops, void *data, iomap_actor_t actor)
- {
--- 
-2.1.4
-
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
