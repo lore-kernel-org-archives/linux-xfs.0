@@ -1,19 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5294B7CA0
-	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 20:00:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25DF8304059
-	for <xfs@oss.sgi.com>; Fri, 16 Sep 2016 18:00:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id h5vEd1K21pCUxaOW (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 16 Sep 2016 18:00:43 -0700 (PDT)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_io: allow chattr & chproj on foreign filesystems
-Message-ID: <e1471cdf-9f83-91d1-9e93-f3877baeccb5@redhat.com>
-Date: Fri, 16 Sep 2016 20:00:39 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 49A417CA0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 22:41:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B2B18F8039
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 20:41:29 -0700 (PDT)
+Received: from mail-oi0-f53.google.com (mail-oi0-f53.google.com
+	[209.85.218.53]) by cuda.sgi.com with ESMTP id b4xj4icGcTyJqwVZ
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 15 Sep 2016 20:41:26 -0700 (PDT)
+Received: by mail-oi0-f53.google.com with SMTP id r126so97316157oib.0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 20:41:26 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<20160915230748.GS30497@dastard>
+	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
+	<20160916012458.GW22388@dastard>
+	<CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 15 Sep 2016 20:41:25 -0700
+Message-ID: <CAPcyv4iDifiY-eGK+Fw7Q4BN7yuJYy=rcnaM6y36P+KLjE=sMg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +38,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Now that FS_IOC_FSSETXATTR is a generic vfs call, these
-functions can be used on non-xfs filesystems, and this is
-needed for generic project quota testing.
+On Thu, Sep 15, 2016 at 7:04 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
+>>> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+>>> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+>>> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+>>> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+>>> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+>>> >> >> only available internal to the kernel and is a property that userspace
+>>> >> >> applications would like to interrogate.
+>>> >> >
+>>> >> > They have absolutely no business knowing such an implementation detail.
+>>> >>
+>>> >> Hasn't that train already left the station with FS_XFLAG_DAX?
+>>> >
+>>> > No, that's an admin flag, not a runtime hint for applications. Just
+>>> > because that flag is set on an inode, it does not mean that DAX is
+>>> > actually in use - it will be ignored if the backing dev is not dax
+>>> > capable.
+>>>
+>>> What's the point of an admin flag if an admin can't do cat /proc/<pid
+>>> of interest>/smaps, or some other mechanism, to validate that the
+>>> setting the admin cares about is in effect?
+>>
+>> Sorry, I don't follow - why would you be looking at mapping file
+>> regions in /proc to determine if some file somewhere in a filesystem
+>> has a specific flag set on it or not?
+>>
+>> FS_XFLAG_DAX is an inode attribute flag, not something you can
+>> query or administrate through mmap:
+>>
+>> I.e.
+>> # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
+>>  --------------- foo
+>>  --------------x foo
+>>  --------------- foo
+>> #
+>>
+>> What happens when that flag is set on an inode is determined by a
+>> whole bunch of other things that are completely separate to the
+>> management of the inode flag itself.
+>
+> Right, I understand that, but how does an admin audit those "bunch of
+> other things" that actually gate whether DAX ends up being used in
+> practice?  There's currently no way for userspace to observe that a
+> file with FS_XFLAG_DAX actually results in a change in mmap behavior.
 
-(not all flags are valid on all filesystems.)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/io/attr.c b/io/attr.c
-index 0186b1d..d1962f3 100644
---- a/io/attr.c
-+++ b/io/attr.c
-@@ -340,7 +340,7 @@ attr_init(void)
- 	chattr_cmd.args = _("[-R|-D] [+/-"CHATTR_XFLAG_LIST"]");
- 	chattr_cmd.argmin = 1;
- 	chattr_cmd.argmax = -1;
--	chattr_cmd.flags = CMD_NOMAP_OK;
-+	chattr_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	chattr_cmd.oneline =
- 		_("change extended inode flags on the currently open file");
- 	chattr_cmd.help = chattr_help;
-diff --git a/io/open.c b/io/open.c
-index a5d465a..3eaa013 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -929,7 +929,7 @@ open_init(void)
- 	chproj_cmd.args = _("[-D | -R] projid");
- 	chproj_cmd.argmin = 1;
- 	chproj_cmd.argmax = -1;
--	chproj_cmd.flags = CMD_NOMAP_OK;
-+	chproj_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	chproj_cmd.oneline =
- 		_("change project identifier on the currently open file");
- 	chproj_cmd.help = chproj_help;
+Let me put it another way, if we inadvertently break DAX causing it to
+be disabled in scenarios when it should be enabled.  What is the
+interface for the admin to check "I have the DAX inode flag set, but
+the file this application expects to be mapped DAX is mapped with page
+cache"?
 
 _______________________________________________
 xfs mailing list
