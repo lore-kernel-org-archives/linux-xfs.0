@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A22267CA1
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 01:57:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 03A83AC001
-	for <xfs@oss.sgi.com>; Wed, 14 Sep 2016 23:57:43 -0700 (PDT)
-Received: from mga11.intel.com ([192.55.52.93]) by cuda.sgi.com with ESMTP id
-	Be67iBWlqrYEMF2b (version=TLSv1 cipher=DHE-RSA-CAMELLIA256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Sep 2016 23:57:42 -0700 (PDT)
-Subject: [PATCH v2 0/3] mm,
-	dax: export dax capabilities and mapping size info to userspace
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 14 Sep 2016 23:54:25 -0700
-Message-ID: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EB0CB7CA0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 21:04:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCE4C304051
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 19:04:30 -0700 (PDT)
+Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
+	[209.85.218.44]) by cuda.sgi.com with ESMTP id bIxkGHXRvXnFvDII
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 15 Sep 2016 19:04:28 -0700 (PDT)
+Received: by mail-oi0-f44.google.com with SMTP id m11so95393782oif.1
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 19:04:28 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20160916012458.GW22388@dastard>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<20160915230748.GS30497@dastard>
+	<CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
+	<20160916012458.GW22388@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 15 Sep 2016 19:04:27 -0700
+Message-ID: <CAPcyv4hoTNw8OM-hoYOqzCS04ZNh+Tv_xhLAiP3AXVcGK6H_mg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,86 +37,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-mm@kvack.org
-Cc: Andrea Arcangeli <aarcange@redhat.com>, Xiao Guangrong <guangrong.xiao@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, linux-nvdimm@lists.01.org, Dave Hansen <dave.hansen@linux.intel.com>, linux-kernel@vger.kernel.org, npiggin@gmail.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, hch@lst.de, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-In the debate about how to support persistent memory applications that
-want to use hardware-platform memory-media persistence
-rules/cpu-instructions rather than filesystem data intergrity system
-calls [1], one of the consistent requests is to move these applications
-to use a device file rather than a filesystem file [2].
+On Thu, Sep 15, 2016 at 6:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Sep 15, 2016 at 05:16:42PM -0700, Dan Williams wrote:
+>> On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+>> >> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> >> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+>> >> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+>> >> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+>> >> >> only available internal to the kernel and is a property that userspace
+>> >> >> applications would like to interrogate.
+>> >> >
+>> >> > They have absolutely no business knowing such an implementation detail.
+>> >>
+>> >> Hasn't that train already left the station with FS_XFLAG_DAX?
+>> >
+>> > No, that's an admin flag, not a runtime hint for applications. Just
+>> > because that flag is set on an inode, it does not mean that DAX is
+>> > actually in use - it will be ignored if the backing dev is not dax
+>> > capable.
+>>
+>> What's the point of an admin flag if an admin can't do cat /proc/<pid
+>> of interest>/smaps, or some other mechanism, to validate that the
+>> setting the admin cares about is in effect?
+>
+> Sorry, I don't follow - why would you be looking at mapping file
+> regions in /proc to determine if some file somewhere in a filesystem
+> has a specific flag set on it or not?
+>
+> FS_XFLAG_DAX is an inode attribute flag, not something you can
+> query or administrate through mmap:
+>
+> I.e.
+> # xfs_io -c "lsattr" -c "chattr +x" -c lsattr -c "chattr -x" -c "lsattr" foo
+>  --------------- foo
+>  --------------x foo
+>  --------------- foo
+> #
+>
+> What happens when that flag is set on an inode is determined by a
+> whole bunch of other things that are completely separate to the
+> management of the inode flag itself.
 
-While there is still a desire to offer the same syscall overhead
-avoidance in filesystem-dax as device-dax, there is performance
-optimization work and analysis that still needs to be done.
-Optimization/analysis to address filesystem-dax performance being slower
-than the typical page-cache path on top of pmem [3], and whether the
-performance gains are worth developing new filesytem data integrity
-mechanisms.
-
-In the meantime we have device-dax and are missing a way to identify its
-capabilities compared to filesytem-dax.  Critically, we want a
-persistent memory transaction library, that is handed an address range
-to manage, to be able to determine if it is safe to forgo calling
-fsync/msync to record newly allocated blocks after a write fault.  This
-question is answered by the new VM_SYNC flag.
-
-It is also important to know if the pages behind a mapping are backed by
-page cache and need to be synced, or are referencing media directly.  We
-have an XFS inode flag that can indicate the inode is DAX enabled, but
-nothing for device-dax or other filesystems.  Yes, an application that
-maps /dev/dax should assume the mapping is DAX, but it is useful to be
-able to tell that from the address range directly, and a common
-mechanism across filesystems.
-
-Finally, while developing and debugging the filesystem-dax huge page
-support it was frustrating that the only way to unit test and verify the
-implementation was via debug print statements.  This series extends
-mincore(2) to optionally provide an indication of the hardware mapping
-size.  This is hopefully useful to other cases that want to evaluate
-transparent-huge-page usage.
-
-
-Changes since the RFC [4]:
-
-1/ Drop DAX indication out of mincore.  It is a vma capability not a
-   per-page property and fits better as a vma flag.  Multiple people
-   indicated it would be better if the new syscall published the capability
-   as an extent or aggregated over a range, and this facility is already
-   provided by smaps.
-
-2/ Add VM_SYNC to explicity disclaim a need to call fsync/msync
-
-3/ Drop the syscall wire-up patch since it is trivial and can be revived
-   if we decide to move forward with the new mincore syscall.
-
-
-[1]: https://lwn.net/Articles/676737/
-[2]: https://lists.01.org/pipermail/linux-nvdimm/2016-September/006893.html
-[3]: https://lists.01.org/pipermail/linux-nvdimm/2016-August/006497.html
-[4]: https://lists.01.org/pipermail/linux-nvdimm/2016-September/006875.html
-
----
-
-Dan Williams (3):
-      mm, dax: add VM_SYNC flag for device-dax VMAs
-      mm, dax: add VM_DAX flag for DAX VMAs
-      mm, mincore2(): retrieve tlb-size attributes of an address range
-
-
- drivers/dax/Kconfig                    |    1 
- drivers/dax/dax.c                      |    2 
- fs/Kconfig                             |    1 
- fs/ext2/file.c                         |    2 
- fs/ext4/file.c                         |    2 
- fs/proc/task_mmu.c                     |    4 +
- fs/xfs/xfs_file.c                      |    2 
- include/linux/mm.h                     |   31 +++++++-
- include/linux/syscalls.h               |    2 
- include/uapi/asm-generic/mman-common.h |    2 
- kernel/sys_ni.c                        |    1 
- mm/mincore.c                           |  130 ++++++++++++++++++++++++--------
- 12 files changed, 141 insertions(+), 39 deletions(-)
+Right, I understand that, but how does an admin audit those "bunch of
+other things" that actually gate whether DAX ends up being used in
+practice?  There's currently no way for userspace to observe that a
+file with FS_XFLAG_DAX actually results in a change in mmap behavior.
 
 _______________________________________________
 xfs mailing list
