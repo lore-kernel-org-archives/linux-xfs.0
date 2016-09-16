@@ -1,64 +1,67 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46888 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755225AbcIOJSy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Sep 2016 05:18:54 -0400
-Date: Thu, 15 Sep 2016 05:18:51 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V4] xfs: Document error handlers behavior
-Message-ID: <20160915091851.GA24318@redhat.com>
-References: <1473757385-81633-1-git-send-email-cmaiolino@redhat.com>
- <20160914012334.GK30497@dastard>
- <20160914100219.5743534ofe6oktbb@redhat.com>
- <20160914220951.GP30497@dastard>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5C6907CA0
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 19:16:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D6080AC001
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 17:16:45 -0700 (PDT)
+Received: from mail-oi0-f44.google.com (mail-oi0-f44.google.com
+	[209.85.218.44]) by cuda.sgi.com with ESMTP id Jbn6NGv0KIS1OZdT
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 15 Sep 2016 17:16:43 -0700 (PDT)
+Received: by mail-oi0-f44.google.com with SMTP id q188so92890838oia.3
+	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 17:16:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160914220951.GP30497@dastard>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
+In-Reply-To: <20160915230748.GS30497@dastard>
+References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20160915082615.GA9772@lst.de>
+	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<20160915230748.GS30497@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 15 Sep 2016 17:16:42 -0700
+Message-ID: <CAPcyv4jvcWEc2TkRh6-MoKb_-1VbFoiKUJEB=svQO+BVN8s-Sg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-> > Also, I apologize if I misunderstand it, but being ignored doesn't look a proper
-> > description here, it sounds to me something like 'we ignore the error and tell
-> > nobody about it", in unmount example, we shut down the filesystem if any error
-> > happens, for me it doesn't sound like ignoring an error, but I might be
-> > interpreting it in the wrong way.
-> 
-> I think you're making the assumption that the only way we handle
-> errors once retries are exhausted is to trigger a filesystem shutdown.
-> That assumption was repeated throughout the documentation.
-> 
-> While that may be true for /metadata write IO errors/, it is not
-> true for the generic error handling case. e.g. if we extend it to
-> memory allocation contexts, we may end up returning ENOMEM to
-> userspace. Or, in certain contexts, we might be able to fall back to
-> doing a single operation at a time using the stack for storage, in
-> which case there is no reason at all to report the allocation
-> failure to anyone.
-> 
-> The infrastructure is generic, as is the documentation, and so it
-> shouldn't assume anything about what is going to happen once the
-> retries are exhausted and the error is propagated upwards. What
-> happens with that error after it is returned is a subsystem and
-> context dependent behaviour, not something that is defined by the
-> error retry configuration infrastructure....
-> 
-> Cheers,
+On Thu, Sep 15, 2016 at 4:07 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
+>> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
+>> >> The DAX property, page cache bypass, of a VMA is only detectable via the
+>> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
+>> >> only available internal to the kernel and is a property that userspace
+>> >> applications would like to interrogate.
+>> >
+>> > They have absolutely no business knowing such an implementation detail.
+>>
+>> Hasn't that train already left the station with FS_XFLAG_DAX?
+>
+> No, that's an admin flag, not a runtime hint for applications. Just
+> because that flag is set on an inode, it does not mean that DAX is
+> actually in use - it will be ignored if the backing dev is not dax
+> capable.
+>
 
-Thanks for the very detailed explanation Dave
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+What's the point of an admin flag if an admin can't do cat /proc/<pid
+of interest>/smaps, or some other mechanism, to validate that the
+setting the admin cares about is in effect?
 
--- 
-Carlos
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
