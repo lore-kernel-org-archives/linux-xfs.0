@@ -1,72 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39818 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S966025AbcIWWV6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 18:21:58 -0400
-Date: Sat, 24 Sep 2016 08:21:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: quiesce the filesystem after recovery on readonly
- mount
-Message-ID: <20160923222153.GQ340@dastard>
-References: <1474589500-13584-1-git-send-email-david@fromorbit.com>
- <af65b5ae-2ff8-c344-0e04-cbbef3efe197@sandeen.net>
- <f693b1a2-1cdb-ed9f-caa0-af9407034927@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f693b1a2-1cdb-ed9f-caa0-af9407034927@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.9]:40892 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934321AbcIPL1v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:51 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/12] xfs: refactor xfs_setfilesize
+Date: Fri, 16 Sep 2016 13:27:11 +0200
+Message-Id: <1474025234-13804-10-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-On Fri, Sep 23, 2016 at 11:24:53AM -0500, Eric Sandeen wrote:
-> On 9/22/16 8:39 PM, Eric Sandeen wrote:
-> > On 9/22/16 7:11 PM, Dave Chinner wrote:
-> >> From: Dave Chinner <dchinner@redhat.com>
-> 
-> ...
-> 
-> >> To avoid this problem, we need to ensure that a read-only mount
-> >> always updates the log when it completes the second phase of
-> >> recovery. We already handle this sort of issue with rw->ro remount
-> >> transitions, so the solution is as simple as quiescing the
-> >> filesystem at the appropriate time during the mount process. This
-> >> results in the log being marked clean so the mount behaviour
-> >> recorded in the logs on repeated RO mounts will change (i.e. log
-> >> recovery will no longer be run on every mount until a RW mount is
-> >> done). This is a user visible change in behaviour, but it is
-> >> harmless.
-> > 
-> > Excellent idea :)
-> > 
-> > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Actually ...  after playing with this a bit ...
-> 
-> Should we restrict this to only when the log got
-> replayed, with a !XFS_LAST_UNMOUNT_WAS_CLEAN(mp) test?
-> 
-> Maybe it's harmless as it is, but it seems we should restrict
-> it to the log-got-replayed case.
+Rename the current function to __xfs_setfilesize and add a non-static
+wrapper that also takes care of creating the transaction.  This new
+helper will be used by the new iomap-based DAX path.
 
-Well, writing another unmount record should be harmless. The thing
-is that the quiesce call also serves to shut down periodic log
-functions that are started when the second phase of recovery is run,
-These are started regardless of whether the mount was clean or not.
-Hence we are currently running periodic log work on ro mounts and
-tryin gto cover/sync the log every so often. For rw mounts this is
-needed, but for ro mounts once we know everything is clean we can
-shut them down, jus tlike we do for a rw->ro remount.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 31 +++++++++++++++++++++----------
+ fs/xfs/xfs_aops.h |  1 +
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
-So I think that just treating the ro mount like a rw mount followed
-by a rw->ro transition after potential mount time modifications are
-complete is the best approach for consistency of RO behaviour....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 7575cfc..4a28fa9 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -200,7 +200,7 @@ xfs_setfilesize_trans_alloc(
+  * Update on-disk file size now that data has been written to disk.
+  */
+ STATIC int
+-xfs_setfilesize(
++__xfs_setfilesize(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_trans	*tp,
+ 	xfs_off_t		offset,
+@@ -225,6 +225,23 @@ xfs_setfilesize(
+ 	return xfs_trans_commit(tp);
+ }
+ 
++int
++xfs_setfilesize(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	size_t			size)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
++	if (error)
++		return error;
++
++	return __xfs_setfilesize(ip, tp, offset, size);
++}
++
+ STATIC int
+ xfs_setfilesize_ioend(
+ 	struct xfs_ioend	*ioend,
+@@ -247,7 +264,7 @@ xfs_setfilesize_ioend(
+ 		return error;
+ 	}
+ 
+-	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
++	return __xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+ }
+ 
+ /*
+@@ -1336,13 +1353,12 @@ xfs_end_io_direct_write(
+ {
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+ 	uintptr_t		flags = (uintptr_t)private;
+ 	int			error = 0;
+ 
+ 	trace_xfs_end_io_direct_write(ip, offset, size);
+ 
+-	if (XFS_FORCED_SHUTDOWN(mp))
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+ 	if (size <= 0)
+@@ -1380,14 +1396,9 @@ xfs_end_io_direct_write(
+ 
+ 		error = xfs_iomap_write_unwritten(ip, offset, size);
+ 	} else if (flags & XFS_DIO_FLAG_APPEND) {
+-		struct xfs_trans *tp;
+-
+ 		trace_xfs_end_io_direct_write_append(ip, offset, size);
+ 
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0,
+-				&tp);
+-		if (!error)
+-			error = xfs_setfilesize(ip, tp, offset, size);
++		error = xfs_setfilesize(ip, offset, size);
+ 	}
+ 
+ 	return error;
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index bf2d9a1..1950e3b 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -62,6 +62,7 @@ int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+ 
+ int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+ 		ssize_t size, void *private);
++int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+ 
+ extern void xfs_count_page_state(struct page *, int *, int *);
+ extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
+
