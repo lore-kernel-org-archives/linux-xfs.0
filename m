@@ -1,102 +1,59 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C1B097CA0
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 18:08:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 798A0304059
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 16:08:03 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	kpGuZ6DoE69gMLPy for <xfs@oss.sgi.com>;
-	Thu, 15 Sep 2016 16:07:57 -0700 (PDT)
-Date: Fri, 16 Sep 2016 09:07:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-Message-ID: <20160915230748.GS30497@dastard>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160915082615.GA9772@lst.de>
-	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40432 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932447AbcIPL1X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:23 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/12] iomap: add IOMAP_F_NEW flag
+Date: Fri, 16 Sep 2016 13:27:03 +0200
+Message-Id: <1474025234-13804-2-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
-> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
-> >> The DAX property, page cache bypass, of a VMA is only detectable via the
-> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
-> >> only available internal to the kernel and is a property that userspace
-> >> applications would like to interrogate.
-> >
-> > They have absolutely no business knowing such an implementation detail.
-> 
-> Hasn't that train already left the station with FS_XFLAG_DAX?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/xfs/xfs_iomap.c    | 2 ++
+ include/linux/iomap.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-No, that's an admin flag, not a runtime hint for applications. Just
-because that flag is set on an inode, it does not mean that DAX is
-actually in use - it will be ignored if the backing dev is not dax
-capable.
-
-> The other problem with hiding the DAX property is that it turns out to
-> not be a transparent acceleration feature.  See xfs/086 xfs/088
-> xfs/089 xfs/091 which fail with DAX and, as far as I understand, it is
-> due to the fact that DAX disallows delayed allocation behavior.
-
-Which is not a bug, nor is it something that app developers should
-be surprised by.
-
-i.e. Subtle differences in error reporting behaviour occur in
-filesystems /all the time/. Run the test on a non-dax filesystem
-with an extent size hint. It fails /exactly the same way as DAX/.
-Run it with direct IO - fails the same way as DAX. Run it
-with synchronous writes - it fails the same way as DAX.
-
-IOWs, if an app can't handle the way DAX reports errors, then they
-are /broken/. Delayed allocation requires checking the return value
-of fsync() or close() to capture the allocation error - many more
-apps get that wrong than the ones that expect the immediate errors
-from write()...
-
-Anyway: to domeonstrate that the nothign is actually broken, and
-you might sometimes need to fix tests and send patches to
-fstests@vger.kernel.org, this makes xfs/086 pass for me on DAX:
-
---- a/tests/xfs/086
-+++ b/tests/xfs/086
-@@ -96,7 +96,8 @@ _scratch_mount
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index f96c8ff..5d06a2d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -635,6 +635,7 @@ retry:
+ 	if (end_fsb != orig_end_fsb)
+ 		xfs_inode_set_eofblocks_tag(ip);
  
- echo "+ modify files"
- for x in `seq 1 64`; do
--	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
-+	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" \
-+		>> $seqres.full 2>&1
- done
- umount "${SCRATCH_MNT}"
++	iomap->flags = IOMAP_F_NEW;
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+ done:
+ 	if (isnullstartblock(got.br_startblock))
+@@ -1000,6 +1001,7 @@ xfs_file_iomap_begin(
+ 		if (error)
+ 			return error;
  
-Cheers,
-
-Dave.
-
++		iomap->flags = IOMAP_F_NEW;
+ 		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+ 	} else {
+ 		ASSERT(nimaps);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 3d70ece..14d7067 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -22,6 +22,7 @@ struct vm_fault;
+  * Flags for iomap mappings:
+  */
+ #define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
++#define IOMAP_F_NEW	0x02	/* blocks have been newly allocated */
+ 
+ /*
+  * Magic value for blkno:
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
