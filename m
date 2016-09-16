@@ -1,149 +1,77 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1FD287CA1
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:29:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C2B7AC002
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:29:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PcG9Bggp2FEuTCqn (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:29:48 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v25 00/21] Richacls (Core and Ext4)
-Date: Thu, 29 Sep 2016 01:29:19 +0200
-Message-Id: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40853 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759135AbcIPL1s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Sep 2016 07:27:48 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/12] xfs: take the ilock shared if possible in xfs_file_iomap_begin
+Date: Fri, 16 Sep 2016 13:27:10 +0200
+Message-Id: <1474025234-13804-9-git-send-email-hch@lst.de>
+In-Reply-To: <1474025234-13804-1-git-send-email-hch@lst.de>
+References: <1474025234-13804-1-git-send-email-hch@lst.de>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+Cc: ross.zwisler@linux.intel.com
 
-Here is another update of the richacl patches.  Changes since the last posting
-(http://lwn.net/Articles/697320/):
+We always just read the extent first, and will later lock exlusively
+after first dropping the lock in case we actually allocate blocks.
 
- * Rebase on top of the VFS for-next branch
-   (git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git for-next;
-   hash 6731cb0f).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_iomap.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-   (This patch queue does not conflict with the xattr inode operation removal
-   patches.)
-   
- * Adjust for the {inode_change_ok => setattr_prepare} rename.
-
-The complete patch queue is available here:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
-	richacl-2016-09-29
-
-
-The richacl user-space utilitites, man pages, and test suite are available
-here:
-
-  https://github.com/andreas-gruenbacher/richacl
-
-
-Changes to other user-space packages for richacl:
-
-  https://github.com/andreas-gruenbacher/coreutils
-  https://github.com/andreas-gruenbacher/e2fsprogs
-  https://github.com/andreas-gruenbacher/samba
-  https://github.com/andreas-gruenbacher/xfsprogs-dev
-  https://github.com/andreas-gruenbacher/nfs-utils
-
-
-Please see the richacl homepage for more information:
-
-  http://www.bestbits.at/richacl/
-
-
-Thanks,
-Andreas
-
-Andreas Gruenbacher (19):
-  vfs: Add IS_ACL() and IS_RICHACL() tests
-  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
-  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
-  vfs: Add permission flags for setting file attributes
-  richacl: In-memory representation and helper functions
-  richacl: Permission mapping functions
-  richacl: Permission check algorithm
-  richacl: Compute maximum file masks from an acl
-  vfs: Cache base_acl objects in inodes
-  vfs: Add get_richacl and set_richacl inode operations
-  vfs: Cache richacl in struct inode
-  richacl: Update the file masks in chmod()
-  richacl: Check if an acl is equivalent to a file mode
-  richacl: Create-time inheritance
-  richacl: Automatic Inheritance
-  richacl: xattr mapping functions
-  richacl: Add richacl xattr handler
-  vfs: Add richacl permission checking
-  vfs: Move check_posix_acl and check_richacl out of fs/namei.c
-
-Aneesh Kumar K.V (2):
-  ext4: Add richacl support
-  ext4: Add richacl feature flag
-
- drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
- fs/9p/acl.c                                     |   8 +-
- fs/Kconfig                                      |   3 +
- fs/Makefile                                     |   1 +
- fs/attr.c                                       |  79 +-
- fs/ext4/Kconfig                                 |  11 +
- fs/ext4/Makefile                                |   1 +
- fs/ext4/ext4.h                                  |   6 +-
- fs/ext4/file.c                                  |   3 +
- fs/ext4/ialloc.c                                |  11 +-
- fs/ext4/inode.c                                 |   5 +-
- fs/ext4/namei.c                                 |   5 +
- fs/ext4/richacl.c                               | 134 ++++
- fs/ext4/richacl.h                               |  40 +
- fs/ext4/super.c                                 |  49 +-
- fs/ext4/xattr.c                                 |   7 +
- fs/f2fs/acl.c                                   |   4 +-
- fs/inode.c                                      |  43 +-
- fs/jffs2/acl.c                                  |   6 +-
- fs/namei.c                                      | 114 +--
- fs/nfs/nfs3acl.c                                |  14 +-
- fs/posix_acl.c                                  |  97 ++-
- fs/richacl.c                                    | 937 ++++++++++++++++++++++++
- fs/richacl_xattr.c                              | 222 ++++++
- include/linux/acl.h                             |  15 +
- include/linux/fs.h                              |  63 +-
- include/linux/posix_acl.h                       |  24 +-
- include/linux/richacl.h                         | 218 ++++++
- include/linux/richacl_xattr.h                   |  31 +
- include/uapi/linux/Kbuild                       |   2 +
- include/uapi/linux/fs.h                         |   3 +-
- include/uapi/linux/richacl.h                    | 152 ++++
- include/uapi/linux/richacl_xattr.h              |  44 ++
- include/uapi/linux/xattr.h                      |   2 +
- 34 files changed, 2195 insertions(+), 161 deletions(-)
- create mode 100644 fs/ext4/richacl.c
- create mode 100644 fs/ext4/richacl.h
- create mode 100644 fs/richacl.c
- create mode 100644 fs/richacl_xattr.c
- create mode 100644 include/linux/acl.h
- create mode 100644 include/linux/richacl.h
- create mode 100644 include/linux/richacl_xattr.h
- create mode 100644 include/uapi/linux/richacl.h
- create mode 100644 include/uapi/linux/richacl_xattr.h
-
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5d06a2d..c3cc175 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -955,6 +955,7 @@ xfs_file_iomap_begin(
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	int			nimaps = 1, error = 0;
++	unsigned		lockmode;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+@@ -964,7 +965,7 @@ xfs_file_iomap_begin(
+ 				iomap);
+ 	}
+ 
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	lockmode = xfs_ilock_data_map_shared(ip);
+ 
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 	if ((xfs_fsize_t)offset + length > mp->m_super->s_maxbytes)
+@@ -975,7 +976,7 @@ xfs_file_iomap_begin(
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+ 			       &nimaps, XFS_BMAPI_ENTIRE);
+ 	if (error) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_iunlock(ip, lockmode);
+ 		return error;
+ 	}
+ 
+@@ -995,7 +996,8 @@ xfs_file_iomap_begin(
+ 		 * xfs_iomap_write_direct() expects the shared lock. It
+ 		 * is unlocked on return.
+ 		 */
+-		xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
++		if (lockmode == XFS_ILOCK_EXCL)
++			xfs_ilock_demote(ip, lockmode);
+ 		error = xfs_iomap_write_direct(ip, offset, length, &imap,
+ 				nimaps);
+ 		if (error)
+@@ -1006,7 +1008,7 @@ xfs_file_iomap_begin(
+ 	} else {
+ 		ASSERT(nimaps);
+ 
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_iunlock(ip, lockmode);
+ 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+ 	}
+ 
 -- 
-2.7.4
+2.1.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
