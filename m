@@ -1,69 +1,75 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36358 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750888AbcIINcp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Sep 2016 09:32:45 -0400
-Received: by mail-wm0-f66.google.com with SMTP id l65so2787699wmf.3
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Sep 2016 06:32:45 -0700 (PDT)
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Subject: [PATCH] xfs_io: fix building with musl
-Date: Fri,  9 Sep 2016 15:32:22 +0200
-Message-Id: <1473427942-10726-1-git-send-email-ralph.sennhauser@gmail.com>
-In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F0EC7CA1
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 08:26:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 701CD304039
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 06:26:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 8hy2GAcDhWg1S3tR for <xfs@oss.sgi.com>;
+	Mon, 19 Sep 2016 06:26:52 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 7FE6351C06B
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 08:26:36 -0500 (CDT)
+Subject: [PATCH V2] mkfs.xfs: clarify ftype defaults in manpage
+References: <1f98ea1d-893c-d1c0-2307-3f5a9b478238@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5a728f87-665a-1b1a-84b5-ab420cfa4250@sandeen.net>
+Date: Mon, 19 Sep 2016 08:26:51 -0500
+MIME-Version: 1.0
+In-Reply-To: <1f98ea1d-893c-d1c0-2307-3f5a9b478238@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com
 
-The fallback in case the libc doesn't have or doesn't advertise the
-existence of d_reclen in struct dirent uses d_namlen. Musl neither
-advertises d_reclen nor does it have a d_namlen member.
+When CRCs were made default, a few leftovers related to its
+prior non-default status remained in the manpage, in the ftype
+section.  Clean those up, stating the correct default for this
+feature.
 
-Calculate the value for d_namlen from d_name in the fallback path.
-
-Signed-off-by: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Reported-by: Chris Murphy <chris@cmurf.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-With ustat.h issue resolved in 4.8.0-rc1 this is the only musl related
-one left.
+V2: reflect reality regarding defaults, sorry about that.
 
-An alternative could be some autoconf magic [1] or waiting for a long
-time for musl to add _DIRENT_HAVE_D_RECLEN [2] and for it to propagate
-to distributions.
-
-[1] http://oss.sgi.com/archives/xfs/2016-01/msg00388.html
-[2] http://www.openwall.com/lists/musl/2016/01/15/9
-
----
- io/readdir.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/io/readdir.c b/io/readdir.c
-index 151b72e..2b56dc8 100644
---- a/io/readdir.c
-+++ b/io/readdir.c
-@@ -24,6 +24,10 @@
- #include <sys/types.h>
- #include <dirent.h>
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 9578c4d..c44b3bd 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -636,13 +636,11 @@ do not need to look up the inode to determine the inode type.
  
-+#ifndef _DIRENT_HAVE_D_RECLEN
-+#include <string.h>
-+#endif
-+
- static struct cmdinfo readdir_cmd;
+ The
+ .I value
+-is either 0 or 1, with 1 signifiying that filetype information
+-will be stored in the directory structure. The default value is 0.
++is either 0 or 1, with 1 signifying that filetype information
++will be stored in the directory structure.  The default value is 1.
  
- const char *d_type_str(unsigned int type)
-@@ -106,7 +110,7 @@ read_directory(
- #ifdef _DIRENT_HAVE_D_RECLEN
- 		*total += dirent->d_reclen;
- #else
--		*total += dirent->d_namlen + sizeof(*dirent);
-+		*total += strlen(dirent->d_name) + sizeof(*dirent);
- #endif
- 		count++;
- 
--- 
-2.7.3
+-When CRCs are enabled via
+-.B \-m crc=1,
+-the ftype functionality is always enabled. This feature can not be turned
+-off for such filesystem configurations.
++When CRCs are enabled (the default), the ftype functionality is always
++enabled, and cannot be turned off.
+ .IP
+ .RE
+ .TP
 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
