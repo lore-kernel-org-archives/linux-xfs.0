@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3FB7C7CCB
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 18:07:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 101E68F8033
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 16:07:25 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E484F7CAF
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 00:09:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 57458AC005
+	for <xfs@oss.sgi.com>; Sun, 18 Sep 2016 22:09:04 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	VaZXfOYye7Wv4s62 for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2016 16:07:21 -0700 (PDT)
-Date: Wed, 21 Sep 2016 09:06:13 +1000
+	FkUppCwPKeatWwBx for <xfs@oss.sgi.com>;
+	Sun, 18 Sep 2016 22:08:58 -0700 (PDT)
+Date: Mon, 19 Sep 2016 15:08:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_message.c:113!
-Message-ID: <20160920230613.GL340@dastard>
-References: <20160920163304.GA8999@linux.intel.com>
-	<20160920201453.GH340@dastard>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 4d50b3b
+Message-ID: <20160919050855.GB340@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20160920201453.GH340@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,454 +22,188 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5433750519381083959=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: ross.zwisler@linux.intel.com, hch@lst.de, xfs@oss.sgi.com
 
-On Wed, Sep 21, 2016 at 06:14:53AM +1000, Dave Chinner wrote:
-> On Tue, Sep 20, 2016 at 10:33:04AM -0600, Ross Zwisler wrote:
-> > I'm consistently able to generate this kernel BUG with both v4.7 and v4.8-rc7.
-> > This bug reproduces both with and without DAX.
-> > Here is the BUG with v4.8-rc7, passed through kasan_symbolize.py:
-> > 
-> >   run fstests generic/026 at 2016-09-20 10:22:58
-> >   XFS (pmem0p2): Unmounting Filesystem
-> >   XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 309
-> 
-> It overran the block allocation reservation for the transaction.
 
-Can you try the patch I've attached below, Ross? it solves the
-problem for me....
+--===============5433750519381083959==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
+Content-Disposition: inline
 
-Cheers,
 
-Dave.
--- 
+--/9DWx/yDrRhgMJTb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated. This includes various fixes and cleanups, a
+bunch of iomap and XFS prep work for reflink, a delayed allocation
+rework optimised for the new iomap infrastructure, and a DAX
+implementation for the iomap infrastructure. Both XFS and ext2 are
+switched over to the new DAX iomap infrastructure.
+
+Christoph and Ross - if there's anything in that I shouldn't have
+merged, then let me know. There are no apparent xfstests regressions
+that I've seen, so it all looks good from my perspective....
+
+-Dave.
+
+The new head of the for-next branch is commit:
+
+4d50b3b Merge branch 'iomap-4.9-dax' into for-next
+
+New Commits:
+
+Artem Savkov (1):
+      [791cc43] Make __xfs_xattr_put_listen preperly report errors.
+
+Carlos Maiolino (1):
+      [5694fe9] xfs: Document error handlers behavior
+
+Christoph Hellwig (17):
+      [5f4e575] fs: add iomap_file_dirty
+      [e9c4973] xfs: move xfs_bmbt_to_iomap up
+      [f8e3a82] xfs: factor our a helper to calculate the EOF alignment
+      [85a6e76] xfs: make xfs_inode_set_eofblocks_tag cheaper for the commo=
+n case
+      [51446f5] xfs: rewrite and optimize the delalloc write path
+      [ecd5072] iomap: add IOMAP_F_NEW flag
+      [befb503] iomap: expose iomap_apply outside iomap.c
+      [1aaba09] dax: don't pass buffer_head to dax_insert_mapping
+      [b0d5e82] dax: don't pass buffer_head to copy_user_dax
+      [a254e56] dax: provide an iomap based dax read/write path
+      [a7d73fe] dax: provide an iomap based fault handler
+      [17879e8] xfs: fix locking for DAX writes
+      [66642c5] xfs: take the ilock shared if possible in xfs_file_iomap_be=
+gin
+      [e372843] xfs: refactor xfs_setfilesize
+      [6c31f49] xfs: use iomap to implement DAX
+      [6750ad7] ext2: stop passing buffer_head to ext2_get_blocks
+      [25f4e70] ext2: use iomap to implement DAX
+
+Darrick J. Wong (7):
+      [e43c460] iomap: add a flag to report shared extents
+      [cd00158] xfs: convert RUI log formats to use variable length arrays
+      [a1d46cf] xfs: remove xfs_btree_bigkey
+      [4ed3f68] xfs: create a standard btree size calculator code
+      [c611cc0] xfs: count the blocks in a btree
+      [385d655] xfs: defer should allow ->finish_item to request a new tran=
+saction
+      [3fd129b] xfs: set up per-AG free space reservations
+
+Dave Chinner (5):
+      [541d48f] xfs: change mailing list address
+      [eb759e37] Merge branch 'iomap-4.9-misc-fixes-1' into for-next
+      [e64d79a3] Merge branch 'xfs-4.9-reflink-prep' into for-next
+      [30ecf4f] Merge branch 'xfs-4.9-delalloc-rework' into for-next
+      [4d50b3b] Merge branch 'iomap-4.9-dax' into for-next
+
+Eric Sandeen (1):
+      [7716981] xfs: normalize "infinite" retries in error configs
+
+Eryu Guan (1):
+      [a27f6ef] xfs: undo block reservation correctly in xfs_trans_reserve()
+
+Xie XiuQi (1):
+      [79c350e] xfs: fix signed integer overflow
+
+
+Code Diffstat:
+
+ Documentation/filesystems/xfs.txt | 123 ++++++++++
+ MAINTAINERS                       |   7 +-
+ fs/dax.c                          | 252 ++++++++++++++++++++-
+ fs/ext2/Kconfig                   |   1 +
+ fs/ext2/ext2.h                    |   1 +
+ fs/ext2/file.c                    |  76 ++++++-
+ fs/ext2/inode.c                   | 100 +++++++--
+ fs/internal.h                     |  11 +
+ fs/iomap.c                        |  89 +++++++-
+ fs/xfs/Makefile                   |   1 +
+ fs/xfs/libxfs/xfs_ag_resv.c       | 325 +++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag_resv.h       |  35 +++
+ fs/xfs/libxfs/xfs_alloc.c         | 112 +++++++---
+ fs/xfs/libxfs/xfs_alloc.h         |   8 +-
+ fs/xfs/libxfs/xfs_bmap.c          |  95 +-------
+ fs/xfs/libxfs/xfs_bmap.h          |  10 +-
+ fs/xfs/libxfs/xfs_btree.c         |  59 ++++-
+ fs/xfs/libxfs/xfs_btree.h         |  28 +--
+ fs/xfs/libxfs/xfs_defer.c         |  79 ++++++-
+ fs/xfs/libxfs/xfs_ialloc_btree.c  |   2 +-
+ fs/xfs/libxfs/xfs_log_format.h    |  10 +-
+ fs/xfs/xfs_aops.c                 |  31 ++-
+ fs/xfs/xfs_aops.h                 |   1 +
+ fs/xfs/xfs_buf_item.c             |   9 +-
+ fs/xfs/xfs_file.c                 |  79 ++-----
+ fs/xfs/xfs_filestream.c           |   4 +-
+ fs/xfs/xfs_fsops.c                |   2 +-
+ fs/xfs/xfs_icache.c               |  14 ++
+ fs/xfs/xfs_inode.h                |   1 +
+ fs/xfs/xfs_iomap.c                | 494 +++++++++++++++++++---------------=
+-------
+ fs/xfs/xfs_iomap.h                |   2 -
+ fs/xfs/xfs_mount.h                |  44 +++-
+ fs/xfs/xfs_rmap_item.c            |  36 +--
+ fs/xfs/xfs_rmap_item.h            |   8 +
+ fs/xfs/xfs_super.c                |   5 +-
+ fs/xfs/xfs_sysfs.c                |  47 +++-
+ fs/xfs/xfs_trace.h                |  75 ++++++-
+ fs/xfs/xfs_trans.c                |   3 +-
+ fs/xfs/xfs_trans_extfree.c        |   3 +-
+ fs/xfs/xfs_xattr.c                |   1 +
+ include/linux/dax.h               |   6 +
+ include/linux/iomap.h             |   4 +
+ 42 files changed, 1685 insertions(+), 608 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_ag_resv.c
+ create mode 100644 fs/xfs/libxfs/xfs_ag_resv.h
+--=20
 Dave Chinner
 david@fromorbit.com
 
-xfs: remote attribute blocks aren't really userdata
+--/9DWx/yDrRhgMJTb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-From: Dave Chinner <dchinner@redhat.com>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-When adding a new remote attribute, we write the attribute to the
-new extent before the allocation transaction is committed. This
-means we cannot reuse busy extents as that violates crash
-consistency semantics. Hence we currently treat remote attribute
-extent allocation like userdata because it has the same overwrite
-ordering constraints as userdata.
+iQIcBAEBAgAGBQJX33LmAAoJEK3oKUf0dfodBsQP/2vAsNOOzU6zxhuVC/vb/6XN
+d9v6oUKL4A3j/LP3jeHjuJLsKBrYmPecva4E/MNEhx9sQBO3MwjTRThtIRwScPka
+aikmEEP9WZOZAOq+cbHKFo7VuqF4Ra9lJHZfu7GqGItE5pNEsjg4sj2UvW/aCHbR
+od78Smb33QUMcxgqx4WSuG0g/WuNTRBJBOb4LfrtZkl9cg3+hYefQFiZzBObmzKY
+nQ2xRjHc4fzInrm7xEKYrYLqpSNK87+TUvYMtcETLH3FMRJYLiHQWZ3M6yPknI3U
+ji2CtO6qLlVdK0zeFfdWszP/kN02nqHLxyyLIZ4YMKUoO4kRRY0s8SOhr8Qk/A43
+vYdq8H3cb2tziUxWeadvOT6RI6SWpxKp3rHsEyLi54WfqW/QTRSD6JhjnYadrEdT
+GMFEBvSzbOEA2OI9CGyoZGXByJSUmx2LPRIzS2DOMv7MR76SRyL6AB0l5p6g3Tc7
+Qtj91iLY08/V9hekgS49dLM+vm2Y9j7+tdrSpKzyV0sdayqa/FzKf8oC86R7P3wA
+9ls+Nk+YFHdSRfjaWMXQNxQUtf29TyGGRLWal/SiJLl4izSII9/Jjc03YOwP9IUH
+ufCdIRboze8TvYESGy37OaASmzF4kWhbeA01Yw6zD0E6prgVXJNNOKUyidZatdD0
+VSFvzF8h0B15rI0DwCi1
+=q4Et
+-----END PGP SIGNATURE-----
 
-Unfortunately, this also allows the allocator to incorrectly apply
-extent size hints to the remote attribute extent allocation. This
-results in interesting failures, such as transaction block
-reservation overruns and in-memory inode attribute fork corruption.
+--/9DWx/yDrRhgMJTb--
 
-To fix this, we need to separate the busy extent reuse configuration
-from the userdata configuration. This changes the definition of
-XFS_BMAPI_METADATA slightly - it now means that allocation is
-metadata and reuse of busy extents is acceptible due to the metadata
-ordering semantics of the journal. If this flag is not set, it
-means the allocation is that has unordered data writeback, and hence
-busy extent reuse is not allowed. It no longer implies the
-allocation is for user data, just that the data write will not be
-strictly ordered. This matches the semantics for both user data
-and remote attribute block allocation.
 
-As such, This patch changes the "userdata" field to a "datatype"
-field, and adds a "no busy reuse" flag to the field.
-When we detect an unordered data extent allocation, we immediately set
-the no reuse flag. We then set the "user data" flags based on the
-inode fork we are allocating the extent to. Hence we only set
-userdata flags on data fork allocations now and consider attribute
-fork remote extents to be an unordered metadata extent.
-
-The result is that remote attribute extents now have the expected
-allocation semantics, and the data fork allocation behaviour is
-completely unchanged.
-
-It should be noted that there may be other ways to fix this (e.g.
-use ordered metadata buffers for the remote attribute extent data
-write) but they are more invasive and difficult to validate both
-from a design and implementation POV. Hence this patch takes the
-simple, obvious route to fixing the problem...
-
-Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 23 ++++++++++++-----------
- fs/xfs/libxfs/xfs_alloc.h | 17 +++++++++++++++--
- fs/xfs/libxfs/xfs_bmap.c  | 41 ++++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_bmap.h  |  2 +-
- fs/xfs/xfs_bmap_util.c    |  2 +-
- fs/xfs/xfs_extent_busy.c  |  2 +-
- fs/xfs/xfs_filestream.c   |  9 ++++++---
- fs/xfs/xfs_trace.h        |  8 ++++----
- 8 files changed, 66 insertions(+), 38 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 2620a86..ca75dc9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -258,7 +258,7 @@ xfs_alloc_compute_diff(
- 	xfs_agblock_t	wantbno,	/* target starting block */
- 	xfs_extlen_t	wantlen,	/* target length */
- 	xfs_extlen_t	alignment,	/* target alignment */
--	char		userdata,	/* are we allocating data? */
-+	int		datatype,	/* are we allocating data? */
- 	xfs_agblock_t	freebno,	/* freespace's starting block */
- 	xfs_extlen_t	freelen,	/* freespace's length */
- 	xfs_agblock_t	*newbnop)	/* result: best start block from free */
-@@ -269,6 +269,7 @@ xfs_alloc_compute_diff(
- 	xfs_extlen_t	newlen1=0;	/* length with newbno1 */
- 	xfs_extlen_t	newlen2=0;	/* length with newbno2 */
- 	xfs_agblock_t	wantend;	/* end of target extent */
-+	bool		userdata = xfs_alloc_is_userdata(datatype);
- 
- 	ASSERT(freelen >= wantlen);
- 	freeend = freebno + freelen;
-@@ -924,7 +925,7 @@ xfs_alloc_find_best_extent(
- 
- 			sdiff = xfs_alloc_compute_diff(args->agbno, args->len,
- 						       args->alignment,
--						       args->userdata, *sbnoa,
-+						       args->datatype, *sbnoa,
- 						       *slena, &new);
- 
- 			/*
-@@ -1108,7 +1109,7 @@ restart:
- 			if (args->len < blen)
- 				continue;
- 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, args->userdata, ltbnoa,
-+				args->alignment, args->datatype, ltbnoa,
- 				ltlena, &ltnew);
- 			if (ltnew != NULLAGBLOCK &&
- 			    (args->len > blen || ltdiff < bdiff)) {
-@@ -1261,7 +1262,7 @@ restart:
- 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, args->userdata, ltbnoa,
-+				args->alignment, args->datatype, ltbnoa,
- 				ltlena, &ltnew);
- 
- 			error = xfs_alloc_find_best_extent(args,
-@@ -1278,7 +1279,7 @@ restart:
- 			args->len = XFS_EXTLEN_MIN(gtlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			gtdiff = xfs_alloc_compute_diff(args->agbno, args->len,
--				args->alignment, args->userdata, gtbnoa,
-+				args->alignment, args->datatype, gtbnoa,
- 				gtlena, &gtnew);
- 
- 			error = xfs_alloc_find_best_extent(args,
-@@ -1338,7 +1339,7 @@ restart:
- 	}
- 	rlen = args->len;
- 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
--				     args->userdata, ltbnoa, ltlena, &ltnew);
-+				     args->datatype, ltbnoa, ltlena, &ltnew);
- 	ASSERT(ltnew >= ltbno);
- 	ASSERT(ltnew + rlen <= ltbnoa + ltlena);
- 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
-@@ -1617,9 +1618,9 @@ xfs_alloc_ag_vextent_small(
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
- 			xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
--					     args->userdata);
-+			      xfs_alloc_allow_busy_reuse(args->datatype));
- 
--			if (args->userdata) {
-+			if (xfs_alloc_is_userdata(args->datatype)) {
- 				xfs_buf_t	*bp;
- 
- 				bp = xfs_btree_get_bufs(args->mp, args->tp,
-@@ -2099,7 +2100,7 @@ xfs_alloc_fix_freelist(
- 	 * somewhere else if we are not being asked to try harder at this
- 	 * point
- 	 */
--	if (pag->pagf_metadata && args->userdata &&
-+	if (pag->pagf_metadata && xfs_alloc_is_userdata(args->datatype) &&
- 	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
- 		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
- 		goto out_agbp_relse;
-@@ -2675,7 +2676,7 @@ xfs_alloc_vextent(
- 		 * Try near allocation first, then anywhere-in-ag after
- 		 * the first a.g. fails.
- 		 */
--		if ((args->userdata & XFS_ALLOC_INITIAL_USER_DATA) &&
-+		if ((args->datatype & XFS_ALLOC_INITIAL_USER_DATA) &&
- 		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
- 			args->fsbno = XFS_AGB_TO_FSB(mp,
- 					((mp->m_agfrotor / rotorstep) %
-@@ -2808,7 +2809,7 @@ xfs_alloc_vextent(
- #endif
- 
- 		/* Zero the extent if we were asked to do so */
--		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
-+		if (args->datatype & XFS_ALLOC_USERDATA_ZERO) {
- 			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
- 			if (error)
- 				goto error0;
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f7c5201..7c404a6 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -85,20 +85,33 @@ typedef struct xfs_alloc_arg {
- 	xfs_extlen_t	len;		/* output: actual size of extent */
- 	xfs_alloctype_t	type;		/* allocation type XFS_ALLOCTYPE_... */
- 	xfs_alloctype_t	otype;		/* original allocation type */
-+	int		datatype;	/* mask defining data type treatment */
- 	char		wasdel;		/* set if allocation was prev delayed */
- 	char		wasfromfl;	/* set if allocation is from freelist */
--	char		userdata;	/* mask defining userdata treatment */
- 	xfs_fsblock_t	firstblock;	/* io first block allocated */
- 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
- 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
- } xfs_alloc_arg_t;
- 
- /*
-- * Defines for userdata
-+ * Defines for datatype
-  */
- #define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
- #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
- #define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
-+#define XFS_ALLOC_NOBUSY		(1 << 3)/* Busy extents not allowed */
-+
-+static inline bool
-+xfs_alloc_is_userdata(int datatype)
-+{
-+	return (datatype & ~XFS_ALLOC_NOBUSY) != 0;
-+}
-+
-+static inline bool
-+xfs_alloc_allow_busy_reuse(int datatype)
-+{
-+	return (datatype & XFS_ALLOC_NOBUSY) == 0;
-+}
- 
- /* freespace limit calculations */
- #define XFS_ALLOC_AGFL_RESERVE	4
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 6fd4586..9d7f61d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3348,7 +3348,8 @@ xfs_bmap_adjacent(
- 
- 	mp = ap->ip->i_mount;
- 	nullfb = *ap->firstblock == NULLFSBLOCK;
--	rt = XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata;
-+	rt = XFS_IS_REALTIME_INODE(ap->ip) &&
-+		xfs_alloc_is_userdata(ap->datatype);
- 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
- 	/*
- 	 * If allocating at eof, and there's a previous real block,
-@@ -3624,7 +3625,7 @@ xfs_bmap_btalloc(
- {
- 	xfs_mount_t	*mp;		/* mount point structure */
- 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
--	xfs_extlen_t	align;		/* minimum allocation alignment */
-+	xfs_extlen_t	align = 0;	/* minimum allocation alignment */
- 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
- 	xfs_agnumber_t	ag;
- 	xfs_alloc_arg_t	args;
-@@ -3647,7 +3648,8 @@ xfs_bmap_btalloc(
- 	else if (mp->m_dalign)
- 		stripe_align = mp->m_dalign;
- 
--	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
-+	if (xfs_alloc_is_userdata(ap->datatype))
-+		align = xfs_get_extsz_hint(ap->ip);
- 	if (unlikely(align)) {
- 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 						align, 0, ap->eof, 0, ap->conv,
-@@ -3660,7 +3662,8 @@ xfs_bmap_btalloc(
- 	nullfb = *ap->firstblock == NULLFSBLOCK;
- 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
- 	if (nullfb) {
--		if (ap->userdata && xfs_inode_is_filestream(ap->ip)) {
-+		if (xfs_alloc_is_userdata(ap->datatype) &&
-+		    xfs_inode_is_filestream(ap->ip)) {
- 			ag = xfs_filestream_lookup_ag(ap->ip);
- 			ag = (ag != NULLAGNUMBER) ? ag : 0;
- 			ap->blkno = XFS_AGB_TO_FSB(mp, ag, 0);
-@@ -3700,7 +3703,8 @@ xfs_bmap_btalloc(
- 		 * enough for the request.  If one isn't found, then adjust
- 		 * the minimum allocation size to the largest space found.
- 		 */
--		if (ap->userdata && xfs_inode_is_filestream(ap->ip))
-+		if (xfs_alloc_is_userdata(ap->datatype) &&
-+		    xfs_inode_is_filestream(ap->ip))
- 			error = xfs_bmap_btalloc_filestreams(ap, &args, &blen);
- 		else
- 			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
-@@ -3784,8 +3788,8 @@ xfs_bmap_btalloc(
- 	args.minleft = ap->minleft;
- 	args.wasdel = ap->wasdel;
- 	args.resv = XFS_AG_RESV_NONE;
--	args.userdata = ap->userdata;
--	if (ap->userdata & XFS_ALLOC_USERDATA_ZERO)
-+	args.datatype = ap->datatype;
-+	if (ap->datatype & XFS_ALLOC_USERDATA_ZERO)
- 		args.ip = ap->ip;
- 
- 	error = xfs_alloc_vextent(&args);
-@@ -3879,7 +3883,8 @@ STATIC int
- xfs_bmap_alloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
--	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
-+	if (XFS_IS_REALTIME_INODE(ap->ip) &&
-+	    xfs_alloc_is_userdata(ap->datatype))
- 		return xfs_bmap_rtalloc(ap);
- 	return xfs_bmap_btalloc(ap);
- }
-@@ -4204,15 +4209,21 @@ xfs_bmapi_allocate(
- 	}
- 
- 	/*
--	 * Indicate if this is the first user data in the file, or just any
--	 * user data. And if it is userdata, indicate whether it needs to
--	 * be initialised to zero during allocation.
-+	 * Set the data type being allocated. For the data fork, the first data
-+	 * in the file is treated differently to all other allocations. For the
-+	 * attribute fork, we only need to ensure the allocated range is not on
-+	 * the busy list.
- 	 */
- 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
--		bma->userdata = (bma->offset == 0) ?
--			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
-+		bma->datatype = XFS_ALLOC_NOBUSY;
-+		if (whichfork == XFS_DATA_FORK) {
-+			if (bma->offset == 0)
-+				bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
-+			else
-+				bma->datatype |= XFS_ALLOC_USERDATA;
-+		}
- 		if (bma->flags & XFS_BMAPI_ZERO)
--			bma->userdata |= XFS_ALLOC_USERDATA_ZERO;
-+			bma->datatype |= XFS_ALLOC_USERDATA_ZERO;
- 	}
- 
- 	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
-@@ -4482,7 +4493,7 @@ xfs_bmapi_write(
- 	bma.tp = tp;
- 	bma.ip = ip;
- 	bma.total = total;
--	bma.userdata = 0;
-+	bma.datatype = 0;
- 	bma.dfops = dfops;
- 	bma.firstblock = firstblock;
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index d660069..8395f6e 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -54,7 +54,7 @@ struct xfs_bmalloca {
- 	bool			wasdel;	/* replacing a delayed allocation */
- 	bool			aeof;	/* allocated space at eof */
- 	bool			conv;	/* overwriting unwritten extents */
--	char			userdata;/* userdata mask */
-+	int			datatype;/* data type being allocated */
- 	int			flags;
- };
- 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4ece4f2..e827d65 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -182,7 +182,7 @@ xfs_bmap_rtalloc(
- 					XFS_TRANS_DQ_RTBCOUNT, (long) ralen);
- 
- 		/* Zero the extent if we were asked to do so */
--		if (ap->userdata & XFS_ALLOC_USERDATA_ZERO) {
-+		if (ap->datatype & XFS_ALLOC_USERDATA_ZERO) {
- 			error = xfs_zero_extent(ap->ip, ap->blkno, ap->length);
- 			if (error)
- 				return error;
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index c263e07..162dc18 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -384,7 +384,7 @@ restart:
- 		 * If this is a metadata allocation, try to reuse the busy
- 		 * extent instead of trimming the allocation.
- 		 */
--		if (!args->userdata &&
-+		if (!xfs_alloc_is_userdata(args->datatype) &&
- 		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
- 			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
- 							  busyp, fbno, flen,
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index c8005fd..043ca380 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -371,7 +371,8 @@ xfs_filestream_new_ag(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_extlen_t		minlen = ap->length;
- 	xfs_agnumber_t		startag = 0;
--	int			flags, err = 0;
-+	int			flags = 0;
-+	int			err = 0;
- 	struct xfs_mru_cache_elem *mru;
- 
- 	*agp = NULLAGNUMBER;
-@@ -387,8 +388,10 @@ xfs_filestream_new_ag(
- 		startag = (item->ag + 1) % mp->m_sb.sb_agcount;
- 	}
- 
--	flags = (ap->userdata ? XFS_PICK_USERDATA : 0) |
--	        (ap->dfops->dop_low ? XFS_PICK_LOWSPACE : 0);
-+	if (xfs_alloc_is_userdata(ap->datatype))
-+		flags |= XFS_PICK_USERDATA;
-+	if (ap->dfops->dop_low)
-+		flags |= XFS_PICK_LOWSPACE;
- 
- 	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 993e2d2..2be97c0 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1624,7 +1624,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__field(char, wasdel)
- 		__field(char, wasfromfl)
- 		__field(int, resv)
--		__field(char, userdata)
-+		__field(int, datatype)
- 		__field(xfs_fsblock_t, firstblock)
- 	),
- 	TP_fast_assign(
-@@ -1645,13 +1645,13 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->wasdel = args->wasdel;
- 		__entry->wasfromfl = args->wasfromfl;
- 		__entry->resv = args->resv;
--		__entry->userdata = args->userdata;
-+		__entry->datatype = args->datatype;
- 		__entry->firstblock = args->firstblock;
- 	),
- 	TP_printk("dev %d:%d agno %u agbno %u minlen %u maxlen %u mod %u "
- 		  "prod %u minleft %u total %u alignment %u minalignslop %u "
- 		  "len %u type %s otype %s wasdel %d wasfromfl %d resv %d "
--		  "userdata %d firstblock 0x%llx",
-+		  "userdata 0x%xfirstblock 0x%llx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
- 		  __entry->agbno,
-@@ -1669,7 +1669,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		  __entry->wasdel,
- 		  __entry->wasfromfl,
- 		  __entry->resv,
--		  __entry->userdata,
-+		  __entry->datatype,
- 		  (unsigned long long)__entry->firstblock)
- )
- 
+--===============5433750519381083959==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5433750519381083959==--
