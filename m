@@ -1,105 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55024 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:38682 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932515AbcI3OyP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 10:54:15 -0400
-Date: Fri, 30 Sep 2016 10:54:13 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
-Message-ID: <20160930145413.GB27528@bfoster.bfoster>
-References: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
- <20160930000147.GH27872@dastard>
+        id S1751443AbcISWI0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Sep 2016 18:08:26 -0400
+Subject: [PATCH 1/2] libxfs: move iswritable "fatal" decision to caller
+References: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <62f0019d-c2fb-bda8-8549-a6985d4be6a4@sandeen.net>
+Date: Mon, 19 Sep 2016 17:08:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160930000147.GH27872@dastard>
+In-Reply-To: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
 
-On Fri, Sep 30, 2016 at 10:01:47AM +1000, Dave Chinner wrote:
-> On Thu, Sep 29, 2016 at 03:03:19PM +0200, Carlos Maiolino wrote:
-> > I have been working in a bug still regarding xfs fail_at_unmount configuration,
-> > where, even though the configuration is enable, an unmount attempt will still
-> > hang if the AIL buf items are locked as a result of a previous failed attempt to
-> > flush these items.
-> > 
-> > Currently, if there is a failure while trying to flush inode buffers to disk,
-> > these items are kept in AIL with FLUSHING status and with the locks held, making
-> > them unable to be retried. Either during unmount, where they will be retried and
-> > 'failed', or if using a thin provisioned device, the pool is actually extended, to
-> > accomodate these not-yet-flushed items, instead of retrying to flush such items,
-> > xfs is unable to retry them, once they are already locked.
-> 
-> [....]
-> 
+Simplify platform_check_iswritable by moving the "fatal decision
+up to the (one) caller.  In other words, simply return whether
+mounted+writable is true, and return 1 if so.  Caller decides
+what to do with that info based on /its/ "fatal" argument.
 
-So this was originally written simply as a hack/experiment to test a
-theory about what could be going wrong here, based on Carlos'
-investigation so far into the issue. It wasn't really intended to be
-posted as a proposed fix, so I'm going to skip over the details...
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-...
-> 
-> Ok, I'm pretty sure that this just addresses a symptom of the
-> underlying problem, not solve the root cause. e.g. dquot flushing
-> has exactly the same problem.
-> 
+V2: Rebase
 
-Agree.
+diff --git a/libxfs/darwin.c b/libxfs/darwin.c
+index 017e190..19d2ab6 100644
+--- a/libxfs/darwin.c
++++ b/libxfs/darwin.c
+@@ -33,7 +33,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ }
+ 
+ int
+-platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
++platform_check_iswritable(char *name, char *block, struct stat64 *s)
+ {
+ 	int	fd, writable;
+ 
+diff --git a/libxfs/freebsd.c b/libxfs/freebsd.c
+index 6c9f089..9e22183 100644
+--- a/libxfs/freebsd.c
++++ b/libxfs/freebsd.c
+@@ -66,7 +66,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ }
+ 
+ int
+-platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
++platform_check_iswritable(char *name, char *block, struct stat64 *s)
+ {
+         int cnt, i;
+         struct statfs *fsinfo;
+@@ -74,7 +74,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+         if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
+ 		fprintf(stderr, _("%s: %s contains a possibly writable, "
+ 				"mounted filesystem\n"), progname, name);
+-			return fatal;
++			return 1;
+ 	}
+ 
+         for (i = 0; i < cnt; i++) {
+@@ -88,7 +88,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+         if (i == cnt) {
+ 		fprintf(stderr, _("%s: %s contains a mounted and writable "
+ 				"filesystem\n"), progname, name);
+-		return fatal;
++		return 1;
+ 	}
+ 	return 0;
+ }
+diff --git a/libxfs/init.c b/libxfs/init.c
+index c13b123..828ae3e 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -75,7 +75,9 @@ check_isactive(char *name, char *block, int fatal)
+ 		return 0;
+ 	if (platform_check_ismounted(name, block, &st, 0) == 0)
+ 		return 0;
+-	return platform_check_iswritable(name, block, &st, fatal);
++	if (platform_check_iswritable(name, block, &st))
++		return fatal ? 1 : 0;
++	return 0;
+ }
+ 
+ /* libxfs_device_to_fd:
+diff --git a/libxfs/init.h b/libxfs/init.h
+index 112febb..4dda3ee 100644
+--- a/libxfs/init.h
++++ b/libxfs/init.h
+@@ -22,8 +22,7 @@ struct stat64;
+ 
+ extern int platform_check_ismounted (char *path, char *block,
+ 					struct stat64 *sptr, int verbose);
+-extern int platform_check_iswritable (char *path, char *block,
+-					struct stat64 *sptr, int fatal);
++extern int platform_check_iswritable (char *path, char *block, struct stat64 *sptr);
+ extern int platform_set_blocksize (int fd, char *path, dev_t device, int bsz, int fatal);
+ extern void platform_flush_device (int fd, dev_t device);
+ extern char *platform_findrawpath(char *path);
+diff --git a/libxfs/irix.c b/libxfs/irix.c
+index 65aaa7e..c23ebe0 100644
+--- a/libxfs/irix.c
++++ b/libxfs/irix.c
+@@ -31,7 +31,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ }
+ 
+ int
+-platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
++platform_check_iswritable(char *name, char *block, struct stat64 *s)
+ {
+ 	return 1;
+ }
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 44bc1f9..2b67d1a 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -85,9 +85,8 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ }
+ 
+ int
+-platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
++platform_check_iswritable(char *name, char *block, struct stat64 *s)
+ {
+-	int		sts = 0;
+ 	FILE		*f;
+ 	struct stat64	mst;
+ 	struct mntent	*mnt;
+@@ -97,7 +96,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+ 	if ((f = setmntent(mounts, "r")) == NULL) {
+ 		fprintf(stderr, _("%s: %s contains a possibly writable, "
+ 				"mounted filesystem\n"), progname, name);
+-			return fatal;
++			return 1;
+ 	}
+ 	while ((mnt = getmntent(f)) != NULL) {
+ 		if (stat64(mnt->mnt_fsname, &mst) < 0)
+@@ -108,13 +107,14 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
+ 		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
+ 			break;
+ 	}
++	endmntent(f);
++
+ 	if (mnt == NULL) {
+ 		fprintf(stderr, _("%s: %s contains a mounted and writable "
+ 				"filesystem\n"), progname, name);
+-		sts = fatal;
++		return 1;
+ 	}
+-	endmntent(f);
+-	return sts;
++	return 0;
+ }
+ 
+ int
 
-> The underlying problem is that when the buffer was failed, the
-> callbacks attached to the buffer were not run. Hence the inodes
-> locked and attached to the buffer were not aborted and unlocked
-> when the buffer IO was failed. That's the underlying problem that
-> needs fixing - this cannot be solved sanely by trying to guess why
-> an inode is flush locked when walking the AIL....
-> 
 
-Are you making the assumption that the filesystem is already shutdown in
-this scenario? I assume so, otherwise I'm not sure simply running the
-callbacks (that remove items from the AIL) is really appropriate.
-
-My _unconfirmed suspicion_ is that the core problem is that any log
-items that are flush locked upon AIL push remain flush locked in the
-event of I/O error (independent of fs shutdown, which is not guaranteed
-after a metadata I/O error). E.g., consider the case of a transient
-error or error configuration that expects more than one retry cycle
-through xfsaild. IOW, the current AIL error retry mechanism doesn't work
-for flush locked items.
-
-(FWIW, another experiment I was thinking about was an optional
-error-specific log item callback that would be specified and invoked in
-the event of any metadata I/O error to release things like flush locks
-and prepare for another retry, but I think that is complicated by the
-fact that the in-core struct has already been flushed to the buffer.)
-
-But stepping back from all that, this is just a theory based on Carlos'
-investigation so far and could easily be wrong. I haven't debugged the
-issue and so I'm not totally confident I actually understand the root
-cause. As such, I'm not sure it's worth getting further into the weeds
-until we have a root cause analysis.
-
-Carlos,
-
-Unless you completely disagree and are confident you have a handle on
-the problem (in which case you can just ignore me and send a new patch
-:), I'd suggest that what we probably need here is a detailed writeup of
-the root cause. E.g., a step by step progression of what happens to the
-log item in relation to the I/O errors and shutdown (if one actually
-occurs), preferably backed by tracepoint data. Just my .02.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
