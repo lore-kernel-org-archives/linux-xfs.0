@@ -1,66 +1,93 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B04D7CA2
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 00:53:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EEDA304032
-	for <xfs@oss.sgi.com>; Sun, 18 Sep 2016 22:53:36 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	rIiAtV8pXzV2zYxK for <xfs@oss.sgi.com>;
-	Sun, 18 Sep 2016 22:53:34 -0700 (PDT)
-Date: Mon, 19 Sep 2016 15:53:32 +1000
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:14949 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755785AbcISFuk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2016 01:50:40 -0400
+Date: Mon, 19 Sep 2016 15:50:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] libxfs: remove ustat() use, factor mount checks into
-	helper function
-Message-ID: <20160919055332.GD340@dastard>
-References: <ed60d5a2-0343-fd49-236e-52f9442291d2@redhat.com>
-	<a4e1e08e-1f5f-82b4-7dc2-52ede960aa39@sandeen.net>
+Subject: Re: [RFC] libxfs: cross-compile fixes
+Message-ID: <20160919055018.GC340@dastard>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+ <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a4e1e08e-1f5f-82b4-7dc2-52ede960aa39@sandeen.net>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+In-Reply-To: <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 08, 2016 at 09:16:11AM -0500, Eric Sandeen wrote:
-> ustat() has been deprecated for a very long time, and newer
-> architectures (aarch64, for one) have not implemented it.
-> If called, it always returns false, so we can no longer use
-> it to determine a device's mounted status.
-> 
-> We already have another mechanism for determining the mounted
-> status of a device in platform_check_iswritable; it iterates
-> over getmntent looking for the device, and checks its mount
-> options.  We can do the same thing to check for a simple mount,
-> and not caring about the "ro" mount option.
-> 
-> Because the loop is essentially the same, factor it into a
-> helper which accepts a VERBOSE flag to print info if the device
-> is found in the checked-for state, and a WRITABLE flag which
-> only checks specifically for a mounted and /writable/ device.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Sat, Sep 10, 2016 at 09:37:31AM +0200, Ralph Sennhauser wrote:
 > ---
 > 
-> Dave, up to you if you want to take all this in lieu of the
-> fixed-up patch from Felix, or if you'd like me to rebase this
-> once you have merged that patch.  Happy to do that if you'd like -
-> now that I think about it, that may be the cleaner progression
-> of changes.
+> Based on the earlier discussion this seems to be the preferred way of
+> handling things.
+> 
+> Should I split it into 3 patches?
+> Do you want something different to happen when cross-compiling?
+> 
+> Cheers
+> Ralph
+> 
+> ---
+>  configure.ac         |  3 +++
+>  include/builddefs.in |  1 +
+>  libxfs/Makefile      | 10 ++++++++--
+>  3 files changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/libxfs/Makefile b/libxfs/Makefile
+> index 62608bd..ad492e5 100644
+> --- a/libxfs/Makefile
+> +++ b/libxfs/Makefile
+> @@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
+>  
+>  LDIRT = gen_crc32table crc32table.h crc32selftest
+>  
+> +ifeq ($(CROSS_COMPILING),no)
+> +BUILD_CFLAGS:=$(CFLAGS)
+> +endif
 
-Rebase, please, as it does not apply to the current tree.
+This seems like the wrong place to define something like this. We
+define CFLAGS in include/builddefs.in, and I think BUILD_CFLAGS
+should be defined there, too. It should probably only drop the
+platform specific flags, rather than everything in the corss
+compiling case.
+
+> @@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
+>  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
+>  # disk.
+>  crc32selftest: gen_crc32table.c crc32table.h crc32.c
+> +ifeq ($(CROSS_COMPILING),no)
+>  	@echo "    [TEST]    CRC32"
+> -	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+> +	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+>  	$(Q) ./$@
+> +endif
+
+That looks wrong. If CROSS_COMPILING == no, then BUILD_CC has
+already been set to CC by the configure script, and CFLAGS is just
+fine to use here.
+
+I think what needs to be done here is that the crc32selftest /rule/
+needs to be conditional on CROSS_COMPILING, not the /execution/
+of the rule. If nothing is dependent on crc32selftest, then it won't
+get executed. i.e. this requires dependency manipulation, not
+execution changes.
+
+CRC_SRC = crc32table.h crc32.c
+ifeq ($(CROSS_COMPILING),no)
+	TARGETS = crc32selftest
+else
+	TARGETS = $CRC_SRC
+endif
+
+default: $TARGETS ltdepend $(LTLIBRARY)
+
+.....
+crc32selftest: gen_crc32table.c $CRC_SRC
+....
 
 Cheers,
 
@@ -68,8 +95,3 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
