@@ -1,107 +1,24 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 003A37CD3
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 03:06:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 544A0AC001
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 01:06:25 -0700 (PDT)
-Received: from mail-wm0-f45.google.com (mail-wm0-f45.google.com
-	[74.125.82.45]) by cuda.sgi.com with ESMTP id dcrM2RboZhO8TI7p
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Sep 2016 01:06:23 -0700 (PDT)
-Received: by mail-wm0-f45.google.com with SMTP id b130so76873953wmc.0
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 01:06:23 -0700 (PDT)
-Date: Wed, 21 Sep 2016 10:06:20 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Excessive xfs_inode allocations trigger OOM killer
-Message-ID: <20160921080620.GD10300@dhcp22.suse.cz>
-References: <87a8f2pd2d.fsf@mid.deneb.enyo.de> <20160920203039.GI340@dastard>
-	<87mvj2mgsg.fsf@mid.deneb.enyo.de> <20160920214612.GJ340@dastard>
-	<20160921080425.GC10300@dhcp22.suse.cz>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40158 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750971AbcISQLD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2016 12:11:03 -0400
+Date: Mon, 19 Sep 2016 09:11:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS reflink and development tip git trees updated
+Message-ID: <20160919161100.GA19849@infradead.org>
+References: <20160905053317.GA15302@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160921080425.GC10300@dhcp22.suse.cz>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Florian Weimer <fw@deneb.enyo.de>, xfs@oss.sgi.com
+In-Reply-To: <20160905053317.GA15302@birch.djwong.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-[fixup linux-mm address]
+Can you rebase (and repost the series) on top of the preparations
+in for-next that Dave just pushed out?
 
-On Wed 21-09-16 10:04:25, Michal Hocko wrote:
-> On Wed 21-09-16 07:46:12, Dave Chinner wrote:
-> > [cc Michal, linux-mm@kvack.org]
-> > 
-> > On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
-> [...]
-> > > [51669.515086] make invoked oom-killer: gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2, oom_score_adj=0
-> > > [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G          I     4.7.1fw #1
-> > > [51669.515093] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
-> > > [51669.515095]  0000000000000000 ffffffff812a7d39 0000000000000000 0000000000000000
-> > > [51669.515098]  ffffffff8114e4da ffff880018707d98 0000000000000000 000000000066ca81
-> > > [51669.515100]  ffffffff8170e88d ffffffff810fe69e ffff88033fc38728 0000000200000006
-> > > [51669.515102] Call Trace:
-> > > [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
-> > > [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
-> > > [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
-> > > [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
-> > > [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
-> > > [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
-> > > [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
-> > > [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
-> > > [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
-> > > [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
-> > > [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
-> > > [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
-> > > [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
-> > .....
-> > > [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M) 3*4096kB (M) = 15900kB
-> > > [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 183060kB
-> > > [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
-> > .....
-> > 
-> > Alright, that's what I suspected. high order allocation for a new
-> > kernel stack and memory is so fragmented that a contiguous
-> > allocation fails. Really, this is a memory reclaim issue, not an XFS
-> > issue.  There is lots of reclaimable memory available, but memory
-> > reclaim is:
-> > 
-> > 	a) not trying hard enough to reclaim reclaimable memory; and
-> > 	b) not waiting for memory compaction to rebuild contiguous
-> > 	   memory regions for high order allocations.
-> > 
-> > Instead, it is declaring OOM and kicking the killer to free memory
-> > held busy userspace.
-> 
-> Yes this was the case with 4.7 kernel. There is a workaround sitting in
-> the linus tree 6b4e3181d7bd ("mm, oom: prevent premature OOM killer
-> invocation for high order request") which should get to stable
-> eventually. More approapriate fix is currently in the linux-next.
-> 
-> Testing the same workload with linux-next would be very helpful.
-> 
-> Thanks!
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
-
--- 
-Michal Hocko
-SUSE Labs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+That should make reviewing a whole lot easier.
