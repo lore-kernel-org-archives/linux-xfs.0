@@ -1,158 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38970 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751449AbcISWL6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Sep 2016 18:11:58 -0400
-Subject: [PATCH 2/2] libxfs: factor mount checks into helper function
-References: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6e1172fd-077a-b6b8-dd4c-d2b5cf9334c6@sandeen.net>
-Date: Mon, 19 Sep 2016 17:11:56 -0500
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:36339 "EHLO
+        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936649AbcISDIj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Sep 2016 23:08:39 -0400
+Date: Mon, 19 Sep 2016 13:08:30 +1000
+From: Nicholas Piggin <npiggin@gmail.com>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+ detected
+Message-ID: <20160919130830.14bde3b0@roar.ozlabs.ibm.com>
+In-Reply-To: <20160918053337.GA32207@ZenIV.linux.org.uk>
+References: <20160908235521.GL2356@ZenIV.linux.org.uk>
+        <20160909015324.GD30056@dastard>
+        <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
+        <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+        <20160909023452.GO2356@ZenIV.linux.org.uk>
+        <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+        <20160909221945.GQ2356@ZenIV.linux.org.uk>
+        <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+        <20160914031648.GB2356@ZenIV.linux.org.uk>
+        <20160914133925.2fba4629@roar.ozlabs.ibm.com>
+        <20160918053337.GA32207@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org
 
-platform_check_ismounted switched to a getmntent() loop after
-ustat disappeared on some new platforms.
+On Sun, 18 Sep 2016 06:33:52 +0100
+Al Viro <viro@ZenIV.linux.org.uk> wrote:
 
-We also use a similar mechanism for determining the
-ro/rw-mounted status of a device in platform_check_iswritable.
+> [finally Cc'd to fsdevel - should've done that several iterations upthread]
+> 
+> On Wed, Sep 14, 2016 at 01:39:25PM +1000, Nicholas Piggin wrote:
+> 
+> > Should not be so bad, but I don't have hard numbers for you. PAGEVEC_SIZE
+> > is 14, and that's conceptually rather similar operation (walk radix tree;
+> > grab pages). OTOH many archs are heavier and do locking and vmas walking etc.
+> > 
+> > Documentation/features/vm/pte_special/arch-support.txt
+> > 
+> > But even for those, at 16 entries, the bulk of the cost *should* be hitting
+> > struct page cachelines and refcounting. The rest should mostly stay in cache.  
+> 
+> OK...  That's actually important only for vmsplice_to_pipe() and 16-page
+> array seems to be doing fine there.
+> 
+> Another question, now that you've finally resurfaced: could you reconstruct
+> the story with page-stealing and breakage(s) thereof that had lead to
+> commit 485ddb4b9741bafb70b22e5c1f9b4f37dc3e85bd
+> Author: Nick Piggin <npiggin@suse.de>
+> Date:   Tue Mar 27 08:55:08 2007 +0200
+> 
+>     1/2 splice: dont steal
+> 
+> I realize that it had been 9 years ago, but anything resembling a braindump
+> would be very welcome.  Note that there is a couple of ->splice_write()
+> instances that _do_ use ->steal() (fuse_dev_splice_write() and virtio_console
+> port_fops_splice_write()) and I wonder if they suffer from the same problems;
+> your commit message is rather short on details, unfortunately.  FUSE one
+> is especially interesting...
 
-Because the loops are essentially the same, factor them into a
-single helper which accepts a VERBOSE flag to print info if the
-device is found in the checked-for state, and a WRITABLE flag
-which only checks specifically for a mounted and /writable/ device.
+Without looking through all the patches again, I believe the issue was
+just that filesystems were not expecting (or at least, not audited to
+expect) pages being added to their pagecache in that particular state
+(they'd expect to go through ->readpage or see !uptodate in prepare_write).
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+If some wanted to attach metadata to uptodate pages for example, this
+may have caused a problem. It wasn't some big fundamental problem, just a
+mechanical one.
 
-V2: rebase, as the ustat-removal is already committed upstream.
-
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 2b67d1a..30aa276 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -45,8 +45,15 @@ static int max_block_alignment;
- 
- #define PROC_MOUNTED	"/proc/mounts"
- 
--int
--platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
-+/*
-+ * Check if the filesystem is mounted.  Be verbose if asked, and
-+ * optionally restrict check to /writable/ mounts (i.e. RO is OK)
-+ */
-+#define	CHECK_MOUNT_VERBOSE	0x1
-+#define	CHECK_MOUNT_WRITABLE	0x2
-+
-+static int
-+platform_check_mount(char *name, char *block, struct stat64 *s, int flags)
- {
- 	FILE		*f;
- 	struct stat64	st, mst;
-@@ -54,6 +61,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- 	char		mounts[MAXPATHLEN];
- 
- 	if (!s) {
-+		/* If either fails we are not mounted */
- 		if (stat64(block, &st) < 0)
- 			return 0;
- 		if ((st.st_mode & S_IFMT) != S_IFBLK)
-@@ -63,6 +71,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- 
- 	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
- 	if ((f = setmntent(mounts, "r")) == NULL) {
-+		/* Unexpected failure, warn unconditionally */
- 		fprintf(stderr,
- 		    _("%s: %s possibly contains a mounted filesystem\n"),
- 		    progname, name);
-@@ -73,48 +82,49 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- 			continue;
- 		if (mst.st_dev != s->st_rdev)
- 			continue;
-+		/* Found our device, is RO OK? */
-+		if ((flags & CHECK_MOUNT_WRITABLE) && hasmntopt(mnt, MNTOPT_RO))
-+			continue;
-+		else
-+			break;
-+	}
-+	endmntent(f);
-+
-+	/* No mounts contained the condition we were looking for */
-+	if (mnt == NULL)
-+		return 0;
- 
--		if (verbose)
-+	if (flags & CHECK_MOUNT_VERBOSE) {
-+		if (flags & CHECK_MOUNT_WRITABLE) {
- 			fprintf(stderr,
--				_("%s: %s contains a mounted filesystem\n"),
-+_("%s: %s contains a mounted and writable filesystem\n"),
- 				progname, name);
--		break;
--	}
--	endmntent(f);
--	return mnt != NULL;
-+		} else {
-+			fprintf(stderr,
-+_("%s: %s contains a mounted filesystem\n"),
-+				progname, name);
-+		}
-+ 	}
-+	return 1;
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s)
-+platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- {
--	FILE		*f;
--	struct stat64	mst;
--	struct mntent	*mnt;
--	char		mounts[MAXPATHLEN];
-+	int flags;
- 
--	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
--	if ((f = setmntent(mounts, "r")) == NULL) {
--		fprintf(stderr, _("%s: %s contains a possibly writable, "
--				"mounted filesystem\n"), progname, name);
--			return 1;
--	}
--	while ((mnt = getmntent(f)) != NULL) {
--		if (stat64(mnt->mnt_fsname, &mst) < 0)
--			continue;
--		if ((mst.st_mode & S_IFMT) != S_IFBLK)
--			continue;
--		if (mst.st_rdev == s->st_rdev
--		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
--			break;
--	}
--	endmntent(f);
-+	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
-+	return platform_check_mount(name, block, s, flags);
-+}
- 
--	if (mnt == NULL) {
--		fprintf(stderr, _("%s: %s contains a mounted and writable "
--				"filesystem\n"), progname, name);
--		return 1;
--	}
--	return 0;
-+int
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
-+{
-+	int flags;
-+
-+	/* Writable checks are always verbose */
-+	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
-+	return platform_check_mount(name, block, s, flags);
- }
- 
- int
-
-
+Thanks,
+Nick'
