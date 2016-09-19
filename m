@@ -1,90 +1,48 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 07B357CB3
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 14:48:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A34438F8035
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 12:48:48 -0700 (PDT)
-Received: from albireo.enyo.de (albireo.enyo.de [5.158.152.32]) by
-	cuda.sgi.com with ESMTP id fiWMDA0n6B8Ar68W (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 20 Sep 2016 12:48:45 -0700 (PDT)
-Received: from [172.17.203.2] (helo=deneb.enyo.de)
-	by albireo.enyo.de with esmtps
-	(TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128) id 1bmR22-00040o-UR
-	for xfs@oss.sgi.com; Tue, 20 Sep 2016 21:48:42 +0200
-Received: from fw by deneb.enyo.de with local (Exim 4.84_2)
-	(envelope-from <fw@deneb.enyo.de>) id 1bmR22-0004Ew-Qm
-	for xfs@oss.sgi.com; Tue, 20 Sep 2016 21:48:42 +0200
-From: Florian Weimer <fw@deneb.enyo.de>
-Subject: Excessive xfs_inode allocations trigger OOM killer
-Date: Tue, 20 Sep 2016 21:48:42 +0200
-Message-ID: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:65463 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755419AbcISALs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Sep 2016 20:11:48 -0400
+Date: Mon, 19 Sep 2016 10:11:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/6] fs: add iomap_file_dirty
+Message-ID: <20160919001143.GU30497@dastard>
+References: <147216784041.525.7722906502172299465.stgit@birch.djwong.org>
+ <147216786712.525.5901639662288553230.stgit@birch.djwong.org>
+ <20160905145751.GC7662@infradead.org>
 MIME-Version: 1.0
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160905145751.GC7662@infradead.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, viro@ZenIV.linux.org.uk, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-api@vger.kernel.org
 
-SSBoYXZlIGFuIGFtZDY0IDQuNy4xIHN5c3RlbSAodXBzdHJlYW0ga2VybmVsLCBwcmV0dHkgcmVn
-dWxhciBjb25maWcpCndpdGggYSBzbWFsbCBmaWxlIHN5c3RlbToKCkZpbGVzeXN0ZW0gICAgIDFL
-LWJsb2NrcyAgICAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBvbgovZGV2L3NkYTEgICAg
-ICA5MjI1OTUxODQgODAwMzk2NDY0IDEyMjE5ODcyMCAgODclIC8KRmlsZXN5c3RlbSAgICAgICAg
-SW5vZGVzICAgIElVc2VkICAgICBJRnJlZSBJVXNlJSBNb3VudGVkIG9uCi9kZXYvc2RhMSAgICAg
-IDUwNDExMDQ5NiAxNTMwNTA5NCA0ODg4MDU0MDIgICAgNCUgLwoKVGhlIG9kZCB0aGluZyBpcyB0
-aGF0IGFmdGVyIGEgd2hpbGUsIFhGUyBjb25zdW1lcyBhIGxvdCBvZiBtZW1vcnkKYWNjb3JkaW5n
-IHRvIHNsYWJ0b3A6CgogIE9CSlMgQUNUSVZFICBVU0UgT0JKIFNJWkUgIFNMQUJTIE9CSi9TTEFC
-IENBQ0hFIFNJWkUgTkFNRSAgICAgICAgICAgICAgICAgICAKNDEyMTIwOCA0MTIxMTc3ICA5OSUg
-ICAgMC44OEsgMTAzMDMwMiAgICAgICAgNCAgIDQxMjEyMDhLIHhmc19pbm9kZQo5ODYyODYgOTg1
-MjI5ICA5OSUgICAgMC4xOUsgIDQ2OTY2ICAgICAgIDIxICAgIDE4Nzg2NEsgZGVudHJ5CjcyMzI1
-NSA3MjMwNzYgIDk5JSAgICAwLjEwSyAgMTg1NDUgICAgICAgMzkgICAgIDc0MTgwSyBidWZmZXJf
-aGVhZAoyNzAyNjMgMjY5MjUxICA5OSUgICAgMC41NksgIDM4NjA5ICAgICAgICA3ICAgIDE1NDQz
-NksgcmFkaXhfdHJlZV9ub2RlCjE0MDMxMCAgNjc0MDkgIDQ4JSAgICAwLjM4SyAgMTQwMzEgICAg
-ICAgMTAgICAgIDU2MTI0SyBtbnRfY2FjaGUKCihJIGhhdmUgYXR0YWNoZWQgdGhlIC9wcm9jL21l
-bWluZm8gY29udGVudHMgaW4gY2FzZSBpdCBvZmZlcnMgZnVydGhlcgpjbHVlcy4pCgpDb25mcm9u
-dGVkIHdpdGggbGFyZ2UgbWVtb3J5IGFsbG9jYXRpb25zIChmcm9tIOKAnG1ha2UgLWoxMuKAnSBh
-bmQKY29tcGlsaW5nIEdDQywgc28gcGVyaGFwcyB+OCBHaUIgb2YgbWVtb3J5KSwgdGhlIE9PTSBr
-aWxsZXIga2lja3MgaW4KYW5kIGtpbGxzIHNvbWUgcmFuZG9tIHByb2Nlc3MuICBJIHdvdWxkIGhh
-dmUgZXhwZWN0ZWQgdGhhdCBzb21lCnhmc19pbm9kZXMgYXJlIGZyZWVkIGluc3RlYWQuCgpJIGRv
-bid0IHRoaW5rIHRoaXMgaXMgYW4gb3JkaW5hcnkgbWVtb3J5IGxlYWsuICBUaGUgbGFzdCB0aW1l
-IEkgc2F3CnNvbWV0aGluZyBsaWtlIHRoZSBzbGFidG9wIG91dHB1dCBhYm92ZSwgSSBjb3VsZCBk
-byDigJxzeXNjdGwKdm0uZHJvcF9jYWNoZXMgPSAz4oCdLCBhbmQgdGhlIGFtb3VudCBvZiBtZW1v
-cnkgYWxsb2NhdGVkIHJlcG9ydGVkIGJ5CnNsYWJ0b3Agd2FzIHJlZHVjZWQgY29uc2lkZXJhYmx5
-LiAgKEkgaGF2ZSBub3QgY2hlY2tlZCBpZiB0aGUgbWVtb3J5CndhcyBhY3R1YWxseSByZXR1cm5l
-ZCB0byB0aGUgc3lzdGVtLikgIEkgaGF2ZSBub3QgZG9uZSB0aGlzIG5vdyBzbwp0aGF0IEkgY2Fu
-IGdhdGhlciBmdXJ0aGVyIGRhdGEgZm9yIGRlYnVnZ2luZy4gIEkgYW0gbm90IHN1cmUgd2hhdAp0
-cmlnZ2VycyB0aGlzIGh1Z2UgYWxsb2NhdGlvbi4gIEl0IGNvdWxkIGJlIHJlbGF0ZWQgdG8gbXkg
-R251cyBtYWlsCnNwb29sICh3aGljaCBjb250YWlucyBsb3RzIGFuZCBsb3RzIG9mIHNtYWxsIGZp
-bGVzKS4KCk1lbVRvdGFsOiAgICAgICAxMjMwMDgwOCBrQgpNZW1GcmVlOiAgICAgICAgIDE3NDQx
-MzIga0IKTWVtQXZhaWxhYmxlOiAgIDEwMzI1MDc2IGtCCkJ1ZmZlcnM6ICAgICAgICAgICAgICAg
-MCBrQgpDYWNoZWQ6ICAgICAgICAgIDQ3MjY4OTIga0IKU3dhcENhY2hlZDogICAgICAgICAgIDMy
-IGtCCkFjdGl2ZTogICAgICAgICAgMzA5NDg2OCBrQgpJbmFjdGl2ZTogICAgICAgIDIzMDc5Njgg
-a0IKQWN0aXZlKGFub24pOiAgICAgMzAzNzM2IGtCCkluYWN0aXZlKGFub24pOiAgIDczODE4OCBr
-QgpBY3RpdmUoZmlsZSk6ICAgIDI3OTExMzIga0IKSW5hY3RpdmUoZmlsZSk6ICAxNTY5NzgwIGtC
-ClVuZXZpY3RhYmxlOiAgICAgICAgICAzMiBrQgpNbG9ja2VkOiAgICAgICAgICAgICAgMzIga0IK
-U3dhcFRvdGFsOiAgICAgIDE0NjQ1MjQ0IGtCClN3YXBGcmVlOiAgICAgICAxNDY0NDc5NiBrQgpE
-aXJ0eTogICAgICAgICAgICAgICAgMjgga0IKV3JpdGViYWNrOiAgICAgICAgICAgICAwIGtCCkFu
-b25QYWdlczogICAgICAgIDY3NjAxNiBrQgpNYXBwZWQ6ICAgICAgICAgICAyOTA5NTYga0IKU2ht
-ZW06ICAgICAgICAgICAgMzY1OTgwIGtCClNsYWI6ICAgICAgICAgICAgNDY0NjY5NiBrQgpTUmVj
-bGFpbWFibGU6ICAgIDQ1NDIxODgga0IKU1VucmVjbGFpbTogICAgICAgMTA0NTA4IGtCCktlcm5l
-bFN0YWNrOiAgICAgICAgODExMiBrQgpQYWdlVGFibGVzOiAgICAgICAgMTgxNDgga0IKTkZTX1Vu
-c3RhYmxlOiAgICAgICAgICAwIGtCCkJvdW5jZTogICAgICAgICAgICAgICAgMCBrQgpXcml0ZWJh
-Y2tUbXA6ICAgICAgICAgIDAga0IKQ29tbWl0TGltaXQ6ICAgIDIwNzk1NjQ4IGtCCkNvbW1pdHRl
-ZF9BUzogICAgNDkyNjM1MiBrQgpWbWFsbG9jVG90YWw6ICAgMzQzNTk3MzgzNjcga0IKVm1hbGxv
-Y1VzZWQ6ICAgICAgICAgICAwIGtCClZtYWxsb2NDaHVuazogICAgICAgICAgMCBrQgpIYXJkd2Fy
-ZUNvcnJ1cHRlZDogICAgIDAga0IKQW5vbkh1Z2VQYWdlczogICAgICAgICAwIGtCCkh1Z2VQYWdl
-c19Ub3RhbDogICAgICAgMApIdWdlUGFnZXNfRnJlZTogICAgICAgIDAKSHVnZVBhZ2VzX1JzdmQ6
-ICAgICAgICAwCkh1Z2VQYWdlc19TdXJwOiAgICAgICAgMApIdWdlcGFnZXNpemU6ICAgICAgIDIw
-NDgga0IKRGlyZWN0TWFwNGs6ICAgICAgNjA5NzkyIGtCCkRpcmVjdE1hcDJNOiAgICAxMTk2NDQx
-NiBrQgpEaXJlY3RNYXAxRzogICAgIDIwOTcxNTIga0IKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Sep 05, 2016 at 07:57:51AM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 25, 2016 at 04:31:07PM -0700, Christoph Hellwig wrote:
+> > Originally-from: Christoph Hellwig <hch@lst.de>
+> 
+> This should be a
+> 
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> so that git picks up authorship information correctly.
+> 
+> > XXX: might want a bigger name, and possible a better implementation
+> > that doesn't require two lookups in the radix tree.
+> 
+> And these need to be looked into.  I can take a stab at it, but I need
+> to get a few other things off my plate first.
+
+Seeing as it works and isn't too ugly to live, I think I'm going to
+merge this as is. When a better implementation comes along we
+can replace it with that...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
