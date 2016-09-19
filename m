@@ -1,71 +1,45 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8BED57CB5
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 15:15:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4FBE0304059
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 13:14:58 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ouE3gPTA2eLDyw3z for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2016 13:14:55 -0700 (PDT)
-Date: Wed, 21 Sep 2016 06:14:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: kernel BUG at fs/xfs/xfs_message.c:113!
-Message-ID: <20160920201453.GH340@dastard>
-References: <20160920163304.GA8999@linux.intel.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:35292 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750809AbcISGL0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Sep 2016 02:11:26 -0400
+Date: Mon, 19 Sep 2016 07:11:21 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: xfs_file_splice_read: possible circular locking dependency
+ detected
+Message-ID: <20160919061120.GK2356@ZenIV.linux.org.uk>
+References: <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
+ <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <20160909023452.GO2356@ZenIV.linux.org.uk>
+ <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+ <20160909221945.GQ2356@ZenIV.linux.org.uk>
+ <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+ <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <20160914133925.2fba4629@roar.ozlabs.ibm.com>
+ <20160918053337.GA32207@ZenIV.linux.org.uk>
+ <20160919130830.14bde3b0@roar.ozlabs.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160920163304.GA8999@linux.intel.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
+In-Reply-To: <20160919130830.14bde3b0@roar.ozlabs.ibm.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Nicholas Piggin <npiggin@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org
 
-On Tue, Sep 20, 2016 at 10:33:04AM -0600, Ross Zwisler wrote:
-> I'm consistently able to generate this kernel BUG with both v4.7 and v4.8-rc7.
-> This bug reproduces both with and without DAX.
-> Here is the BUG with v4.8-rc7, passed through kasan_symbolize.py:
+On Mon, Sep 19, 2016 at 01:08:30PM +1000, Nicholas Piggin wrote:
+
+> Without looking through all the patches again, I believe the issue was
+> just that filesystems were not expecting (or at least, not audited to
+> expect) pages being added to their pagecache in that particular state
+> (they'd expect to go through ->readpage or see !uptodate in prepare_write).
 > 
->   run fstests generic/026 at 2016-09-20 10:22:58
->   XFS (pmem0p2): Unmounting Filesystem
->   XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 309
+> If some wanted to attach metadata to uptodate pages for example, this
+> may have caused a problem. It wasn't some big fundamental problem, just a
+> mechanical one.
 
-It overran the block allocation reservation for the transaction.
-
-> I started hitting this issue when I started setting extsize via xfs_io on both
-> my TEST and SCRATCH xfstest directories.  Here's a quick snapshot of my
-> xfstests setup:
-> 
->   # parted -s -a optimal /dev/pmem0 mkpart Primary 2MiB 12GiB
->   # parted -s -a optimal /dev/pmem0 mkpart Primary 12GiB 16382MiB
->   # mkfs.xfs -f /dev/pmem0p1
->   # mkfs.xfs -f /dev/pmem0p2
->   # mount /dev/pmem0p1 /mnt/xfstests_test
->   # mount /dev/pmem0p2 /mnt/xfstests_scratch
->   # xfs_io -c 'extsize 2m' /mnt/xfstests_test
->   # xfs_io -c 'extsize 2m' /mnt/xfstests_scratch
-
-The test dir is the one that matters here - I can reproduce it
-locally so I'll have a look.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Umm...  Why not make it non-uptodate/locked, try to replace the original
+with it in pagecache and then do full-page ->write_begin immediately
+followed by full-page ->write_end?  Looks like that ought to work in
+all in-tree cases...
