@@ -1,75 +1,158 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 786E17CC9
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 16:57:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A2FB304059
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 14:57:40 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	PGGbIMGDP4kNfpKd for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2016 14:57:37 -0700 (PDT)
-Date: Wed, 21 Sep 2016 07:57:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Quick way to check if 32bit app can work with inode64
-Message-ID: <20160920215735.GK340@dastard>
-References: <CACNifpWojiF5XKwNgORqXCyuceRsGNQA+wEDWKpxdoEvJQ6+-w@mail.gmail.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from sandeen.net ([63.231.237.45]:38970 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751449AbcISWL6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Sep 2016 18:11:58 -0400
+Subject: [PATCH 2/2] libxfs: factor mount checks into helper function
+References: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6e1172fd-077a-b6b8-dd4c-d2b5cf9334c6@sandeen.net>
+Date: Mon, 19 Sep 2016 17:11:56 -0500
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACNifpWojiF5XKwNgORqXCyuceRsGNQA+wEDWKpxdoEvJQ6+-w@mail.gmail.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Marcin Sura <mailing-lists@sura.pl>
-Cc: xfs@oss.sgi.com
+In-Reply-To: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
 
-On Tue, Sep 20, 2016 at 08:20:42PM +0200, Marcin Sura wrote:
-> Hi Specialists!
-> 
-> I have a 32bit Java application reading and writing files to NFS share
-> mounted on Windows 2008R2 server 64bit. The filesystem behind NFS share is
-> of course XFS, created with default mkfs.xfs and mounted with inode64
-> option.
-> 
-> I don't have access to app source code.
+platform_check_ismounted switched to a getmntent() loop after
+ustat disappeared on some new platforms.
 
-That won't help - who knows how windows API calls translate to
-NFS operations.
+We also use a similar mechanism for determining the
+ro/rw-mounted status of a device in platform_check_iswritable.
 
-> Is there a quick and fast way to check if the app can be safely used with
-> inode64? Can I somehow force the files to be created with 64bit inodes
-> number, so the app can read then?
+Because the loops are essentially the same, factor them into a
+single helper which accepts a VERBOSE flag to print info if the
+device is found in the checked-for state, and a WRITABLE flag
+which only checks specifically for a mounted and /writable/ device.
 
-On the NFS server, create a multi-TB filesystem (>16TB to be sure), make a few hundred
-sub directories in the root, add a bunch of short files of known
-contents to each sub directory. Export. 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Mont it on the client, then check you can list and read all the
-files from the client, then have the client copy it all to a new set
-of subdirs, then verify the copy on both client and server.  IF that
-all works, then there's nothing obviously wrong with client side NFS
-support handling inodes numbers larger than 32 bit.
+V2: rebase, as the ustat-removal is already committed upstream.
 
-Now do the same thing with your java application, and see if it has
-problems listing and/or reading all the files...
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 2b67d1a..30aa276 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -45,8 +45,15 @@ static int max_block_alignment;
+ 
+ #define PROC_MOUNTED	"/proc/mounts"
+ 
+-int
+-platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
++/*
++ * Check if the filesystem is mounted.  Be verbose if asked, and
++ * optionally restrict check to /writable/ mounts (i.e. RO is OK)
++ */
++#define	CHECK_MOUNT_VERBOSE	0x1
++#define	CHECK_MOUNT_WRITABLE	0x2
++
++static int
++platform_check_mount(char *name, char *block, struct stat64 *s, int flags)
+ {
+ 	FILE		*f;
+ 	struct stat64	st, mst;
+@@ -54,6 +61,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ 	char		mounts[MAXPATHLEN];
+ 
+ 	if (!s) {
++		/* If either fails we are not mounted */
+ 		if (stat64(block, &st) < 0)
+ 			return 0;
+ 		if ((st.st_mode & S_IFMT) != S_IFBLK)
+@@ -63,6 +71,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ 
+ 	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
+ 	if ((f = setmntent(mounts, "r")) == NULL) {
++		/* Unexpected failure, warn unconditionally */
+ 		fprintf(stderr,
+ 		    _("%s: %s possibly contains a mounted filesystem\n"),
+ 		    progname, name);
+@@ -73,48 +82,49 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ 			continue;
+ 		if (mst.st_dev != s->st_rdev)
+ 			continue;
++		/* Found our device, is RO OK? */
++		if ((flags & CHECK_MOUNT_WRITABLE) && hasmntopt(mnt, MNTOPT_RO))
++			continue;
++		else
++			break;
++	}
++	endmntent(f);
++
++	/* No mounts contained the condition we were looking for */
++	if (mnt == NULL)
++		return 0;
+ 
+-		if (verbose)
++	if (flags & CHECK_MOUNT_VERBOSE) {
++		if (flags & CHECK_MOUNT_WRITABLE) {
+ 			fprintf(stderr,
+-				_("%s: %s contains a mounted filesystem\n"),
++_("%s: %s contains a mounted and writable filesystem\n"),
+ 				progname, name);
+-		break;
+-	}
+-	endmntent(f);
+-	return mnt != NULL;
++		} else {
++			fprintf(stderr,
++_("%s: %s contains a mounted filesystem\n"),
++				progname, name);
++		}
++ 	}
++	return 1;
+ }
+ 
+ int
+-platform_check_iswritable(char *name, char *block, struct stat64 *s)
++platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
+ {
+-	FILE		*f;
+-	struct stat64	mst;
+-	struct mntent	*mnt;
+-	char		mounts[MAXPATHLEN];
++	int flags;
+ 
+-	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
+-	if ((f = setmntent(mounts, "r")) == NULL) {
+-		fprintf(stderr, _("%s: %s contains a possibly writable, "
+-				"mounted filesystem\n"), progname, name);
+-			return 1;
+-	}
+-	while ((mnt = getmntent(f)) != NULL) {
+-		if (stat64(mnt->mnt_fsname, &mst) < 0)
+-			continue;
+-		if ((mst.st_mode & S_IFMT) != S_IFBLK)
+-			continue;
+-		if (mst.st_rdev == s->st_rdev
+-		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
+-			break;
+-	}
+-	endmntent(f);
++	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
++	return platform_check_mount(name, block, s, flags);
++}
+ 
+-	if (mnt == NULL) {
+-		fprintf(stderr, _("%s: %s contains a mounted and writable "
+-				"filesystem\n"), progname, name);
+-		return 1;
+-	}
+-	return 0;
++int
++platform_check_iswritable(char *name, char *block, struct stat64 *s)
++{
++	int flags;
++
++	/* Writable checks are always verbose */
++	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
++	return platform_check_mount(name, block, s, flags);
+ }
+ 
+ int
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
