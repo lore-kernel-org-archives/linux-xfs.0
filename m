@@ -1,145 +1,85 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39952 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751266AbcIUGqk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Sep 2016 02:46:40 -0400
-Date: Wed, 21 Sep 2016 14:46:38 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: xfs/032 find xfs corruption
-Message-ID: <20160921064638.GT12847@dhcp12-143.nay.redhat.com>
-References: <20160921042318.GR12847@dhcp12-143.nay.redhat.com>
- <20160921050804.GM340@dastard>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 67A8A7CB7
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 15:31:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3920E304039
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 13:31:15 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	6xXgUqMkBTA0KYoG for <xfs@oss.sgi.com>;
+	Tue, 20 Sep 2016 13:31:11 -0700 (PDT)
+Date: Wed, 21 Sep 2016 06:30:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Excessive xfs_inode allocations trigger OOM killer
+Message-ID: <20160920203039.GI340@dastard>
+References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160921050804.GM340@dastard>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+In-Reply-To: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Florian Weimer <fw@deneb.enyo.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 21, 2016 at 03:08:05PM +1000, Dave Chinner wrote:
-> On Wed, Sep 21, 2016 at 12:23:18PM +0800, Zorro Lang wrote:
-> > Hi,
-> > 
-> > xfs/032 trigger xfs(v4/v5) corruption after run it several times:
-> > [root@dhcp-13-149 xfstests-dev]# xfs_repair -n ~/xfs-032.img 
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >         - zero log...
-> >         - scan filesystem freespace and inode maps...
-> > sb_icount 64, counted 256
-> > sb_ifree 61, counted 242
-> > sb_fdblocks 1038280, counted 1035431
-> >         - found root inode chunk
-> > Phase 3 - for each AG...
-> >         - scan (but don't clear) agi unlinked lists...
-> >         - process known inodes and perform inode discovery...
-> >         - agno = 0
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> >         - process newly discovered inodes...
-> > Phase 4 - check for duplicate blocks...
-> >         - setting up duplicate extent list...
-> >         - check for inodes claiming duplicate blocks...
-> >         - agno = 0
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> > entry "d8" in shortform directory 1572896 references free inode 38
-> > would have junked entry "d8" in directory inode 1572896
-> > No modify flag set, skipping phase 5
-> > Phase 6 - check inode connectivity...
-> >         - traversing filesystem ...
-> > entry "d8" in shortform directory inode 1572896 points to free inode 38
-> > would junk entry
-> >         - traversal finished ...
-> >         - moving disconnected inodes to lost+found ...
-> > disconnected dir inode 524320, would move to lost+found
-> > Phase 7 - verify link counts...
-> > would have reset inode 1069090 nlinks from 2 to 1
-> > would have reset inode 1572896 nlinks from 4 to 3
-> > No modify flag set, skipping filesystem flush and exiting.
-> 
-> So, is the log dirty? if so, does mount/unmounting the filesystem
-> get rid of all the problems? When the image file check fails, does
-> an xfs_repair on the scratch device also fail, or is xfs_copy
-> failing to copy the filesystem cleanly for some reason?
-
-Hi Dave,
-
-Looks like mount/umount can help to resolve this problem:
-[root@dhcp-13-149 xfstests-dev]# mount -o loop ~/xfs-032.img /mnt/tmp/
-[root@dhcp-13-149 xfstests-dev]# xfs_info /mnt/tmp
-meta-data=/dev/loop0             isize=512    agcount=4, agsize=262144 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
-data     =                       bsize=1024   blocks=1048576, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal               bsize=1024   blocks=10240, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-[root@dhcp-13-149 xfstests-dev]# umount /mnt/tmp
-[root@dhcp-13-149 xfstests-dev]# xfs_repair -n ~/xfs-032.img
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-sb_icount 64, counted 256
-sb_ifree 61, counted 242
-sb_fdblocks 1038280, counted 1035431
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-entry "d8" in shortform directory 1572896 references free inode 38
-would have junked entry "d8" in directory inode 1572896
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "d8" in shortform directory inode 1572896 points to free inode 38
-would junk entry
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-disconnected dir inode 524320, would move to lost+found
-Phase 7 - verify link counts...
-would have reset inode 1069090 nlinks from 2 to 1
-would have reset inode 1572896 nlinks from 4 to 3
-No modify flag set, skipping filesystem flush and exiting.
-
-Sorry I didn't describe it clearly, the scratch device is ok, only the
-image file copied from the scratch device is corrupted.
-
-I just uploaded the metadump file to my dropbox, maybe you can download
-it by click below link (I haven't tried that before:):
-https://dl-web.dropbox.com/get/xfs-032.metadump.bz2?_subject_uid=593207464&w=AABxHzGf84uI5q8a4frh_WjK5bH7waQ49rESCBb4AX1gJw&dl=1&_download_id=705892621369384127364746769078756077441885137578537980037504362&_notify_domain=www.dropbox.com
-
-Thanks,
-Zorro
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gVHVlLCBTZXAgMjAsIDIwMTYgYXQgMDk6NDg6NDJQTSArMDIwMCwgRmxvcmlhbiBXZWltZXIg
+d3JvdGU6Cj4gSSBoYXZlIGFuIGFtZDY0IDQuNy4xIHN5c3RlbSAodXBzdHJlYW0ga2VybmVsLCBw
+cmV0dHkgcmVndWxhciBjb25maWcpCj4gd2l0aCBhIHNtYWxsIGZpbGUgc3lzdGVtOgo+IAo+IEZp
+bGVzeXN0ZW0gICAgIDFLLWJsb2NrcyAgICAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBv
+bgo+IC9kZXYvc2RhMSAgICAgIDkyMjU5NTE4NCA4MDAzOTY0NjQgMTIyMTk4NzIwICA4NyUgLwo+
+IEZpbGVzeXN0ZW0gICAgICAgIElub2RlcyAgICBJVXNlZCAgICAgSUZyZWUgSVVzZSUgTW91bnRl
+ZCBvbgo+IC9kZXYvc2RhMSAgICAgIDUwNDExMDQ5NiAxNTMwNTA5NCA0ODg4MDU0MDIgICAgNCUg
+LwoKU28gMTUgbWlsbGlvbiBpbm9kZXMuIEEgbG90IGZvciBhIHNtYWxsIGZpbGVzeXN0ZW0uCgo+
+IFRoZSBvZGQgdGhpbmcgaXMgdGhhdCBhZnRlciBhIHdoaWxlLCBYRlMgY29uc3VtZXMgYSBsb3Qg
+b2YgbWVtb3J5Cj4gYWNjb3JkaW5nIHRvIHNsYWJ0b3A6Cj4gCj4gICBPQkpTIEFDVElWRSAgVVNF
+IE9CSiBTSVpFICBTTEFCUyBPQkovU0xBQiBDQUNIRSBTSVpFIE5BTUUgICAgICAgICAgICAgICAg
+ICAgCj4gNDEyMTIwOCA0MTIxMTc3ICA5OSUgICAgMC44OEsgMTAzMDMwMiAgICAgICAgNCAgIDQx
+MjEyMDhLIHhmc19pbm9kZQo+IDk4NjI4NiA5ODUyMjkgIDk5JSAgICAwLjE5SyAgNDY5NjYgICAg
+ICAgMjEgICAgMTg3ODY0SyBkZW50cnkKPiA3MjMyNTUgNzIzMDc2ICA5OSUgICAgMC4xMEsgIDE4
+NTQ1ICAgICAgIDM5ICAgICA3NDE4MEsgYnVmZmVyX2hlYWQKPiAyNzAyNjMgMjY5MjUxICA5OSUg
+ICAgMC41NksgIDM4NjA5ICAgICAgICA3ICAgIDE1NDQzNksgcmFkaXhfdHJlZV9ub2RlCj4gMTQw
+MzEwICA2NzQwOSAgNDglICAgIDAuMzhLICAxNDAzMSAgICAgICAxMCAgICAgNTYxMjRLIG1udF9j
+YWNoZQoKVGhhdCdzIG5vdCBvZGQgYXQgYWxsLiBJdCBtZWFucyB5b3VyIHdvcmtsb2FkIGlzIHZp
+c2l0aW5nIG1pbGxpb25zCm9uIGlub2RlcyBpbiB5b3VyIGZpbGVzeXN0ZW0gYmV0d2VlbiBzZXJp
+b3VzIG1lbW9yeSBwcmVzc3VyZSBldmVudHMuCgo+IChJIGhhdmUgYXR0YWNoZWQgdGhlIC9wcm9j
+L21lbWluZm8gY29udGVudHMgaW4gY2FzZSBpdCBvZmZlcnMgZnVydGhlcgo+IGNsdWVzLikKPiAK
+PiBDb25mcm9udGVkIHdpdGggbGFyZ2UgbWVtb3J5IGFsbG9jYXRpb25zIChmcm9tIOKAnG1ha2Ug
+LWoxMuKAnSBhbmQKPiBjb21waWxpbmcgR0NDLCBzbyBwZXJoYXBzIH44IEdpQiBvZiBtZW1vcnkp
+LCB0aGUgT09NIGtpbGxlciBraWNrcyBpbgo+IGFuZCBraWxscyBzb21lIHJhbmRvbSBwcm9jZXNz
+LiAgSSB3b3VsZCBoYXZlIGV4cGVjdGVkIHRoYXQgc29tZQo+IHhmc19pbm9kZXMgYXJlIGZyZWVk
+IGluc3RlYWQuCgpUaGUgb29tIGtpbGxlciBpcyB1bnJlbGlhYmxlIGFuZCBvZnRlbiBiZWhhdmVz
+IHZlcnkgYmFkbHksIGFuZAp0aGF0J3MgdHlwaWNhbHkgbm90IGFuIFhGUyBwcm9ibGVtLgoKV2hh
+dCBpcyB0aGUgZnVsbCBvdXRwdXQgb2ZmIHRoZSBvb20ga2lsbGVyIGludm9jYXRpb25zIGZyb20g
+ZG1lc2c/Cgo+IEkgZG9uJ3QgdGhpbmsgdGhpcyBpcyBhbiBvcmRpbmFyeSBtZW1vcnkgbGVhay4K
+Ckl0J3Mgbm90IGEgbWVtb3J5IGxlYWsgYXQgYWxsLgoKPiBUaGUgbGFzdCB0aW1lIEkgc2F3Cj4g
+c29tZXRoaW5nIGxpa2UgdGhlIHNsYWJ0b3Agb3V0cHV0IGFib3ZlLCBJIGNvdWxkIGRvIOKAnHN5
+c2N0bAo+IHZtLmRyb3BfY2FjaGVzID0gM+KAnSwgYW5kIHRoZSBhbW91bnQgb2YgbWVtb3J5IGFs
+bG9jYXRlZCByZXBvcnRlZCBieQo+IHNsYWJ0b3Agd2FzIHJlZHVjZWQgY29uc2lkZXJhYmx5LiAg
+KEkgaGF2ZSBub3QgY2hlY2tlZCBpZiB0aGUgbWVtb3J5Cj4gd2FzIGFjdHVhbGx5IHJldHVybmVk
+IHRvIHRoZSBzeXN0ZW0uKSAgSSBoYXZlIG5vdCBkb25lIHRoaXMgbm93IHNvCj4gdGhhdCBJIGNh
+biBnYXRoZXIgZnVydGhlciBkYXRhIGZvciBkZWJ1Z2dpbmcuaQoKSG93IGxvbmcgZGlkIHRoZSBz
+eXNjdGwgdGFrZSB0byBydW4gdG8gZnJlZSB0aG9zZSBpbm9kZXM/IEEgZmV3CnNlY29uZHMsIG9y
+IG1pbnV0ZXM/Cgo+IEkgYW0gbm90IHN1cmUgd2hhdAo+IHRyaWdnZXJzIHRoaXMgaHVnZSBhbGxv
+Y2F0aW9uLiAgSXQgY291bGQgYmUgcmVsYXRlZCB0byBteSBHbnVzIG1haWwKPiBzcG9vbCAod2hp
+Y2ggY29udGFpbnMgbG90cyBhbmQgbG90cyBvZiBzbWFsbCBmaWxlcykuCgpPSyAtIGRvZXMgdGhh
+dCByZWd1bGFybHkgZGlydHkgbG90cyBvZiB0aG9zZSBzbWFsbCBmaWxlcz8gV2hhdCBzb3J0Cm9m
+IHN0b3JhZ2UgYXJlIHlvdSB1c2luZywgYW5kIHdoYXQgZnMgY29uZmlnPwoKaHR0cDovL3hmcy5v
+cmcvaW5kZXgucGhwL1hGU19GQVEjUTpfV2hhdF9pbmZvcm1hdGlvbl9zaG91bGRfSV9pbmNsdWRl
+X3doZW5fcmVwb3J0aW5nX2FfcHJvYmxlbS4zRgoKPiBEaXJ0eTogICAgICAgICAgICAgICAgMjgg
+a0IKPiBXcml0ZWJhY2s6ICAgICAgICAgICAgIDAga0IKClRoZXJlJ3Mgbm8gZGlydHkgZGF0YSwg
+YW5kIGRyb3BwaW5nIGNhY2hlcyBtYWtlcyBwcm9ncmVzcywgc28gdGhpcwpkb2Vzbid0IC9zb3Vu
+ZC8gbGlrZSByZWNsYWltIGlzIGdldHRpbmcgc3RhbGxlZCBieSBkaXJ0eSBvYmplY3QKd3JpdGVi
+YWNrLiBNb3JlIGluZm8gbmVlZGVkLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
+YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
