@@ -1,81 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:33753 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752814AbcIUIE2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 04:04:28 -0400
-Received: by mail-lf0-f45.google.com with SMTP id b71so6917591lfg.0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 01:04:27 -0700 (PDT)
-Date: Wed, 21 Sep 2016 10:04:25 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Excessive xfs_inode allocations trigger OOM killer
-Message-ID: <20160921080425.GC10300@dhcp22.suse.cz>
-References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
- <20160920203039.GI340@dastard>
- <87mvj2mgsg.fsf@mid.deneb.enyo.de>
- <20160920214612.GJ340@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:36288 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751643AbcITQ2b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Sep 2016 12:28:31 -0400
+Date: Wed, 21 Sep 2016 00:28:29 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs_copy: Fix meta UUID handling on multiple copies
+Message-ID: <20160920162829.GP12847@dhcp12-143.nay.redhat.com>
+References: <510aeea2-6f26-aeee-d899-57e55049958d@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160920214612.GJ340@dastard>
+In-Reply-To: <510aeea2-6f26-aeee-d899-57e55049958d@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Florian Weimer <fw@deneb.enyo.de>, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@vkack.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-On Wed 21-09-16 07:46:12, Dave Chinner wrote:
-> [cc Michal, linux-mm@kvack.org]
+On Tue, Sep 20, 2016 at 10:50:39AM -0500, Eric Sandeen wrote:
+> Zorro reported that when making multiple copies of a V5
+> filesystem with xfs_copy while generating new UUIDs, all
+> but the first copy were corrupt.
 > 
-> On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
-[...]
-> > [51669.515086] make invoked oom-killer: gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2, oom_score_adj=0
-> > [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G          I     4.7.1fw #1
-> > [51669.515093] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
-> > [51669.515095]  0000000000000000 ffffffff812a7d39 0000000000000000 0000000000000000
-> > [51669.515098]  ffffffff8114e4da ffff880018707d98 0000000000000000 000000000066ca81
-> > [51669.515100]  ffffffff8170e88d ffffffff810fe69e ffff88033fc38728 0000000200000006
-> > [51669.515102] Call Trace:
-> > [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
-> > [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
-> > [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
-> > [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
-> > [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
-> > [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
-> > [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
-> > [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
-> > [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
-> > [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
-> > [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
-> > [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
-> > [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
-> .....
-> > [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M) 3*4096kB (M) = 15900kB
-> > [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 183060kB
-> > [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
-> .....
+> Upon inspection, the corruption was related to incorrect UUIDs;
+> the original UUID, as stamped into every metadata structure,
+> was not preserved in the sb_meta_uuid field of the superblock
+> on any but the first copy.
 > 
-> Alright, that's what I suspected. high order allocation for a new
-> kernel stack and memory is so fragmented that a contiguous
-> allocation fails. Really, this is a memory reclaim issue, not an XFS
-> issue.  There is lots of reclaimable memory available, but memory
-> reclaim is:
+> This happened because sb_update_uuid was using the UUID present in
+> the ag_hdr structure as the unchanging meta-uuid which is to match
+> existing structures, but it also /updates/ that UUID with the
+> new identifying UUID present in tcarg.  So the newly-generated
+> UUIDs moved transitively from tcarg->uuid to ag_hdr->xfs_sb->sb_uuid
+> to ag_hdr->xfs_sb->sb_meta_uuid each time the function got called.
 > 
-> 	a) not trying hard enough to reclaim reclaimable memory; and
-> 	b) not waiting for memory compaction to rebuild contiguous
-> 	   memory regions for high order allocations.
+> Fix this by looking instead to the unchanging, original UUID
+> present in the xfs_sb_t we are given, which reflects the original
+> filesystem's metadata UUID, and copy /that/ UUID into each target
+> filesystem's meta_uuid field.
 > 
-> Instead, it is declaring OOM and kicking the killer to free memory
-> held busy userspace.
+> Most of this patch is changing comments and re-ordering tests
+> to match; the functional change is to simply use the *sb rather
+> than the *ag_hdr to identify the proper metadata UUID.
+> 
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Yes this was the case with 4.7 kernel. There is a workaround sitting in
-the linus tree 6b4e3181d7bd ("mm, oom: prevent premature OOM killer
-invocation for high order request") which should get to stable
-eventually. More approapriate fix is currently in the linux-next.
+I can't reproduce that bug again after merge this patch. V4 and V5
+XFS all test passed, different block size test passed too.
 
-Testing the same workload with linux-next would be very helpful.
+I didn't do regression test for this patch.
 
-Thanks!
+Thanks,
+Zorro
 
--- 
-Michal Hocko
-SUSE Labs
+> 
+> 
+> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> index 3c8998c..d8edfdd 100644
+> --- a/copy/xfs_copy.c
+> +++ b/copy/xfs_copy.c
+> @@ -494,27 +494,29 @@ write_wbuf(void)
+>  
+>  void
+>  sb_update_uuid(
+> -	xfs_sb_t	*sb,
+> -	ag_header_t	*ag_hdr,
+> -	thread_args	*tcarg)
+> +	xfs_sb_t	*sb,		/* Original fs superblock */
+> +	ag_header_t	*ag_hdr,	/* AG hdr to update for this copy */
+> +	thread_args	*tcarg)		/* Args for this thread, with UUID */
+>  {
+>  	/*
+>  	 * If this filesystem has CRCs, the original UUID is stamped into
+> -	 * all metadata.  If we are changing the UUID in the copy, we need
+> -	 * to copy the original UUID into the meta_uuid slot and set the
+> -	 * set the incompat flag if that hasn't already been done.
+> +	 * all metadata.  If we don't have an existing meta_uuid field in the
+> +	 * the original filesystem and we are changing the UUID in this copy,
+> +	 * we must copy the original sb_uuid to the sb_meta_uuid slot and set
+> +	 * the incompat flag for the feature on this copy.
+>  	 */
+> -	if (!uuid_equal(&tcarg->uuid, &ag_hdr->xfs_sb->sb_uuid) &&
+> -	    xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb)) {
+> +	if (xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb) &&
+> +	    !uuid_equal(&tcarg->uuid, &sb->sb_uuid)) {
+>  		__be32 feat;
+>  
+>  		feat = be32_to_cpu(ag_hdr->xfs_sb->sb_features_incompat);
+>  		feat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
+>  		ag_hdr->xfs_sb->sb_features_incompat = cpu_to_be32(feat);
+>  		platform_uuid_copy(&ag_hdr->xfs_sb->sb_meta_uuid,
+> -				   &ag_hdr->xfs_sb->sb_uuid);
+> +				   &sb->sb_uuid);
+>  	}
+>  
+> +	/* Copy the (possibly new) fs-identifier UUID into sb_uuid */
+>  	platform_uuid_copy(&ag_hdr->xfs_sb->sb_uuid, &tcarg->uuid);
+>  
+>  	/* We may have changed the UUID, so update the superblock CRC */
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
