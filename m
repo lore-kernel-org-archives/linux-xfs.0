@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 777E67CA0
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 12:53:03 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4ACC67CA7
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 10:50:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C39B8F8040
-	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 10:53:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EDF2F8F8037
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 08:50:41 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2oDIBTMG1lsfHLEE (version=TLSv1.2
+	cuda.sgi.com with ESMTP id GuOwNGZFyzemEsLY (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 21 Sep 2016 10:52:58 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 20 Sep 2016 08:50:41 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: fix segfault from uninitialized tp in mv_orphanage
-Message-ID: <bb6c5861-23eb-dbd9-bf47-393c9445c9a2@redhat.com>
-Date: Wed, 21 Sep 2016 12:52:56 -0500
+Subject: [PATCH] xfs_copy: Fix meta UUID handling on multiple copies
+Message-ID: <510aeea2-6f26-aeee-d899-57e55049958d@redhat.com>
+Date: Tue, 20 Sep 2016 10:50:39 -0500
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,55 +26,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: Consigliere <admin@russenmafia.at>, xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+Cc: Zorro Lang <zlang@redhat.com>
 
-After 9074815 xfs: better xfs_trans_alloc interface, mv_orphanage
-was passing an uninitialized *tp into libxfs_dir_lookup, because
-the trans_alloc() call which was present prior to the call got
-removed in that commit.
+Zorro reported that when making multiple copies of a V5
+filesystem with xfs_copy while generating new UUIDs, all
+but the first copy were corrupt.
 
-This ultimately led to testing an uninit tp var:
+Upon inspection, the corruption was related to incorrect UUIDs;
+the original UUID, as stamped into every metadata structure,
+was not preserved in the sb_meta_uuid field of the superblock
+on any but the first copy.
 
-Conditional jump or move depends on uninitialised value(s)
-   at 0x434D01: libxfs_trans_read_buf_map (trans.c:554)
-   by 0x45152E: libxfs_da_read_buf (xfs_da_btree.c:2610)
-   by 0x456ACB: xfs_dir3_block_read (xfs_dir2_block.c:136)
-   by 0x4570A8: xfs_dir2_block_lookup_int (xfs_dir2_block.c:675)
-   by 0x457DB7: xfs_dir2_block_lookup (xfs_dir2_block.c:623)
-   by 0x455F54: libxfs_dir_lookup (xfs_dir2.c:399)
-   by 0x421C46: mv_orphanage (phase6.c:1095)
-   by 0x4222C2: check_for_orphaned_inodes (phase6.c:3108)
-   by 0x423ABD: phase6 (phase6.c:3287)
-   by 0x42E4B2: main (xfs_repair.c:933)
+This happened because sb_update_uuid was using the UUID present in
+the ag_hdr structure as the unchanging meta-uuid which is to match
+existing structures, but it also /updates/ that UUID with the
+new identifying UUID present in tcarg.  So the newly-generated
+UUIDs moved transitively from tcarg->uuid to ag_hdr->xfs_sb->sb_uuid
+to ag_hdr->xfs_sb->sb_meta_uuid each time the function got called.
 
-and ended with a segfault as we tried to use that tp when
-searching for the buffer in xfs_trans_buf_item_match():
+Fix this by looking instead to the unchanging, original UUID
+present in the xfs_sb_t we are given, which reflects the original
+filesystem's metadata UUID, and copy /that/ UUID into each target
+filesystem's meta_uuid field.
 
-        list_for_each_entry(lidp, &tp->t_items, lid_trans) {
+Most of this patch is changing comments and re-ordering tests
+to match; the functional change is to simply use the *sb rather
+than the *ag_hdr to identify the proper metadata UUID.
 
-I think simply passing in NULL for this tp is sufficient to fix
-this; we'll just go read the buffer from disk in
-libxfs_trans_read_buf_map rather than trying to find it in an
-existing transaction.
-
-Reported-by: Consigliere <admin@russenmafia.at>
+Reported-by: Zorro Lang <zlang@redhat.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 973a5f8..5507af4 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1092,7 +1092,7 @@ mv_orphanage(
- 					irec->ino_startnum;
- 		nres = XFS_DIRENTER_SPACE_RES(mp, fnamelen) +
- 		       XFS_DIRENTER_SPACE_RES(mp, 2);
--		err = -libxfs_dir_lookup(tp, ino_p, &xfs_name_dotdot,
-+		err = -libxfs_dir_lookup(NULL, ino_p, &xfs_name_dotdot,
- 					&entry_ino_num, NULL);
- 		if (err) {
- 			ASSERT(err == ENOENT);
+
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 3c8998c..d8edfdd 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -494,27 +494,29 @@ write_wbuf(void)
+ 
+ void
+ sb_update_uuid(
+-	xfs_sb_t	*sb,
+-	ag_header_t	*ag_hdr,
+-	thread_args	*tcarg)
++	xfs_sb_t	*sb,		/* Original fs superblock */
++	ag_header_t	*ag_hdr,	/* AG hdr to update for this copy */
++	thread_args	*tcarg)		/* Args for this thread, with UUID */
+ {
+ 	/*
+ 	 * If this filesystem has CRCs, the original UUID is stamped into
+-	 * all metadata.  If we are changing the UUID in the copy, we need
+-	 * to copy the original UUID into the meta_uuid slot and set the
+-	 * set the incompat flag if that hasn't already been done.
++	 * all metadata.  If we don't have an existing meta_uuid field in the
++	 * the original filesystem and we are changing the UUID in this copy,
++	 * we must copy the original sb_uuid to the sb_meta_uuid slot and set
++	 * the incompat flag for the feature on this copy.
+ 	 */
+-	if (!uuid_equal(&tcarg->uuid, &ag_hdr->xfs_sb->sb_uuid) &&
+-	    xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb)) {
++	if (xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb) &&
++	    !uuid_equal(&tcarg->uuid, &sb->sb_uuid)) {
+ 		__be32 feat;
+ 
+ 		feat = be32_to_cpu(ag_hdr->xfs_sb->sb_features_incompat);
+ 		feat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
+ 		ag_hdr->xfs_sb->sb_features_incompat = cpu_to_be32(feat);
+ 		platform_uuid_copy(&ag_hdr->xfs_sb->sb_meta_uuid,
+-				   &ag_hdr->xfs_sb->sb_uuid);
++				   &sb->sb_uuid);
+ 	}
+ 
++	/* Copy the (possibly new) fs-identifier UUID into sb_uuid */
+ 	platform_uuid_copy(&ag_hdr->xfs_sb->sb_uuid, &tcarg->uuid);
+ 
+ 	/* We may have changed the UUID, so update the superblock CRC */
+
 
 _______________________________________________
 xfs mailing list
