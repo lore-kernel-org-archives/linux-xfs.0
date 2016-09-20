@@ -1,74 +1,115 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:36928 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755046AbcIQIUM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Sep 2016 04:20:12 -0400
-Date: Sat, 17 Sep 2016 09:20:07 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160917082007.GA6489@ZenIV.linux.org.uk>
-References: <20160909015324.GD30056@dastard>
- <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
- <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DC9F97CB3
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 01:10:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F71230404E
+	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 23:10:58 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id JQMGiAcTzHHK9oXe (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 19 Sep 2016 23:10:53 -0700 (PDT)
+Date: Mon, 19 Sep 2016 23:10:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
+Message-ID: <20160920061042.GL9314@birch.djwong.org>
+References: <1473755322-883-1-git-send-email-david@fromorbit.com>
+	<20160920041652.GK9314@birch.djwong.org>
+	<20160920055945.GG340@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160914042559.GC2356@ZenIV.linux.org.uk>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>
+In-Reply-To: <20160920055945.GG340@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Sep 14, 2016 at 05:25:59AM +0100, Al Viro wrote:
-> On Tue, Sep 13, 2016 at 08:49:58PM -0700, Linus Torvalds wrote:
->  
-> > I'd also like to simplify the splice code if at all possible.
+On Tue, Sep 20, 2016 at 03:59:45PM +1000, Dave Chinner wrote:
+> On Mon, Sep 19, 2016 at 09:16:52PM -0700, Darrick J. Wong wrote:
+> > On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
+> > > -	__uint32_t		xs_rmap_2_decrement;
+> > > -	__uint32_t		xs_rmap_2_lshift;
+> > > -	__uint32_t		xs_rmap_2_rshift;
+> > > -	__uint32_t		xs_rmap_2_split;
+> > > -	__uint32_t		xs_rmap_2_join;
+> > > -	__uint32_t		xs_rmap_2_alloc;
+> > > -	__uint32_t		xs_rmap_2_free;
+> > > -	__uint32_t		xs_rmap_2_moves;
+> > > +#define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+__XBTS_MAX)
+> > > +	__uint32_t		xs_abtb_2[__XBTS_MAX];
+> > > +#define XFSSTAT_END_ABTC_V2		(XFSSTAT_END_ABTB_V2+__XBTS_MAX)
+> > > +	__uint32_t		xs_abtc_2[__XBTS_MAX];
+> > > +#define XFSSTAT_END_BMBT_V2		(XFSSTAT_END_ABTC_V2+__XBTS_MAX)
+> > > +	__uint32_t		xs_bmbt_2[__XBTS_MAX];
+> > > +#define XFSSTAT_END_IBT_V2		(XFSSTAT_END_BMBT_V2+__XBTS_MAX)
+> > > +	__uint32_t		xs_ibt_2[__XBTS_MAX];
+> > > +#define XFSSTAT_END_FIBT_V2		(XFSSTAT_END_IBT_V2+__XBTS_MAX)
+> > > +	__uint32_t		xs_fibt_2[__XBTS_MAX];
+> > > +#define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+__XBTS_MAX)
+> > > +	__uint32_t		xs_rmap_2[__XBTS_MAX];
+> > 
+> > Are you planning to merge this before or after the refcount btree?
 > 
-> Then pipe_buffer it is; it will take a bit of surgery, but I'd expect
-> the end result to be much simpler.  OK, so splice_pipe_desc switches
-> from the pages/partial_pages/ops/spd_release to pipe_bufs, and I'm
-> actually tempted to replace nr_pages with "the rest of ->pipe_bufs[] has
-> NULL ->page".  Then it becomes simply
-> struct splice_pipe_desc {
-> 	struct pipe_buffer *bufs;
-> 	int nbufs;
-> 	unsigned flags;
-> }, perhaps with struct pipe_buffer _bufs[INLINE_SPLICE_BUFS]; in the end.
-> struct partial_page simply dies...
+> Doesn't matter - either way I'll fix up one of them on merge into
+> the for-next tree...
+> 
+> > 
+> > >  #define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
+> > >  	__uint32_t		xs_qm_dqreclaims;
+> > >  	__uint32_t		xs_qm_dqreclaim_misses;
+> > > @@ -229,26 +165,58 @@ struct xfsstats {
+> > >  	__uint64_t		xs_read_bytes;
+> > >  };
+> > >  
+> > > +struct xfsstats {
+> > > +	union {
+> > > +		struct __xfsstats	s;
+> > > +		uint32_t		a[XFSSTAT_END_XQMSTAT];
+> > > +	};
+> > 
+> > /me wonders if there ought to be a build time check to make sure that
+> > these two are really the same size?  They look all right as is, but
+> > I can see myself forgetting to change something and screwing it up. :(
+> 
+> It isn't the same size, because struct __xfsstats has three u64
+> stats at the end that aren't part of the u32 array indexed by
+> XFSSTAT_END_XQMSTAT. If we get the calculation of
+> XFSSTAT_END_XQMSTAT wrong , then the output of the stats in the proc
+> and sysfs files is screwed up because it treats the stats as an
+> array of u32 items of that same size.  So it's fairly obvious when
+> it gets broken...
 
-Actually, we can do even better, and kill the sodding splice_pipe_desc
-entirely, along with skb_splice_bits() callback.
+Well ok, how about a build time check that the sizes are off by exactly how
+much we expect them to be?  I guess I'd eventually notice the /proc output
+looking weird after staring at bad numbers for long enough... ;)
 
-1) make splice_to_pipe() return on pipe overflow, flags be damned.  And
-lift pipe_lock()/looping/waking the readers up into callers.  Basically,
-what you've suggested earlier in the thread.  There are 2 kinds of callers -
-vmsplice_to_pipe() and assorted ->splice_read(), called from do_splice_to().
-pipe_lock and loop is lifted into vmsplice_to_pipe() and into do_splice();
-another caller of do_splice_to() already has a loop *and* couldn't wait
-on the pipe anyway - it uses an internal one.
+<shrug> Your call though. :)
 
-2) fuse_dev_splice_read() checks the amount of space in the pipe and
-either buggers off or calls splice_to_pipe().
+--D
 
-3) since the pipe is locked, skb_splice_bits() callbacks don't need to
-unlock/relock any socket locks.  All those callbacks are simply
-splice_to_pipe() and can be replaced with direct call of that sucker.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-4) since the pipe is locked, there's no point feeding the bits in one go;
-we can as well send them one by one.  That kills splice_to_pipe(),
-splice_pipe_desc and these on-stack arrays, along with the questions about
-their size.
-
-5) that iov_iter flavour is backed by pipe.  {__,}generic_file_splice_read()
-is gone - we simply set an iov_iter over our locked pipe and pass it to
-->read_iter().  That serves as ->splice_read() where generic_file_splice_read()
-used to be used, as well as nfs/ocfs2/gfs2/shmem instances.
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
