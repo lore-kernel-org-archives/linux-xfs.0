@@ -1,100 +1,123 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A0A7A7CB3
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 01:00:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 482698F8037
-	for <xfs@oss.sgi.com>; Mon, 19 Sep 2016 23:00:03 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lZj8spjHkFxWzAF3 for <xfs@oss.sgi.com>;
-	Mon, 19 Sep 2016 23:00:00 -0700 (PDT)
-Date: Tue, 20 Sep 2016 15:59:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: make xfs btree stats less huge
-Message-ID: <20160920055945.GG340@dastard>
-References: <1473755322-883-1-git-send-email-david@fromorbit.com>
-	<20160920041652.GK9314@birch.djwong.org>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40234 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753572AbcITLjS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Sep 2016 07:39:18 -0400
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4739C3D94B
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2016 11:39:18 +0000 (UTC)
+Received: from localhost (dhcp-12-196.nay.redhat.com [10.66.12.196])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8KBdHk9012216
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2016 07:39:17 -0400
+Date: Tue, 20 Sep 2016 19:39:16 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: xfs_copy V5 XFS to multi-targets cause targets corruption
+Message-ID: <20160920113916.GN12847@dhcp12-143.nay.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160920041652.GK9314@birch.djwong.org>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-xfs@vger.kernel.org
 
-On Mon, Sep 19, 2016 at 09:16:52PM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 13, 2016 at 06:28:42PM +1000, Dave Chinner wrote:
-> > -	__uint32_t		xs_rmap_2_decrement;
-> > -	__uint32_t		xs_rmap_2_lshift;
-> > -	__uint32_t		xs_rmap_2_rshift;
-> > -	__uint32_t		xs_rmap_2_split;
-> > -	__uint32_t		xs_rmap_2_join;
-> > -	__uint32_t		xs_rmap_2_alloc;
-> > -	__uint32_t		xs_rmap_2_free;
-> > -	__uint32_t		xs_rmap_2_moves;
-> > +#define XFSSTAT_END_ABTB_V2		(XFSSTAT_END_BUF+__XBTS_MAX)
-> > +	__uint32_t		xs_abtb_2[__XBTS_MAX];
-> > +#define XFSSTAT_END_ABTC_V2		(XFSSTAT_END_ABTB_V2+__XBTS_MAX)
-> > +	__uint32_t		xs_abtc_2[__XBTS_MAX];
-> > +#define XFSSTAT_END_BMBT_V2		(XFSSTAT_END_ABTC_V2+__XBTS_MAX)
-> > +	__uint32_t		xs_bmbt_2[__XBTS_MAX];
-> > +#define XFSSTAT_END_IBT_V2		(XFSSTAT_END_BMBT_V2+__XBTS_MAX)
-> > +	__uint32_t		xs_ibt_2[__XBTS_MAX];
-> > +#define XFSSTAT_END_FIBT_V2		(XFSSTAT_END_IBT_V2+__XBTS_MAX)
-> > +	__uint32_t		xs_fibt_2[__XBTS_MAX];
-> > +#define XFSSTAT_END_RMAP_V2		(XFSSTAT_END_FIBT_V2+__XBTS_MAX)
-> > +	__uint32_t		xs_rmap_2[__XBTS_MAX];
-> 
-> Are you planning to merge this before or after the refcount btree?
+Hi,
 
-Doesn't matter - either way I'll fix up one of them on merge into
-the for-next tree...
+I'm trying to change xfstests xfs/073. xfs_copy support to copy V5
+XFS without "-d" option now, xfs/073 can test V5 xfs without "-d"
+before, but there're two commits changed that behavior:
 
-> 
-> >  #define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
-> >  	__uint32_t		xs_qm_dqreclaims;
-> >  	__uint32_t		xs_qm_dqreclaim_misses;
-> > @@ -229,26 +165,58 @@ struct xfsstats {
-> >  	__uint64_t		xs_read_bytes;
-> >  };
-> >  
-> > +struct xfsstats {
-> > +	union {
-> > +		struct __xfsstats	s;
-> > +		uint32_t		a[XFSSTAT_END_XQMSTAT];
-> > +	};
-> 
-> /me wonders if there ought to be a build time check to make sure that
-> these two are really the same size?  They look all right as is, but
-> I can see myself forgetting to change something and screwing it up. :(
+  8346e53a common: append -d option to XFS_COPY_PROG when testing v5 xfs
+  c5223b92 filter: inode size output of mkfs.xfs can change
 
-It isn't the same size, because struct __xfsstats has three u64
-stats at the end that aren't part of the u32 array indexed by
-XFSSTAT_END_XQMSTAT. If we get the calculation of
-XFSSTAT_END_XQMSTAT wrong , then the output of the stats in the proc
-and sysfs files is screwed up because it treats the stats as an
-array of u32 items of that same size.  So it's fairly obvious when
-it gets broken...
+I haven't had a good idea to change that, so only do below simple
+change first:
+diff --git a/common/rc b/common/rc
+index 04039a4..1d03897 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3761,11 +3761,6 @@ init_rc()
+        # Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
+        xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
+        export XFS_IO_PROG="$XFS_IO_PROG -F"
+-
+-       # xfs_copy doesn't work on v5 xfs yet without -d option
+-       if [ "$FSTYP" == "xfs" ] && [[ $MKFS_OPTIONS =~ crc=1 ]]; then
+-               export XFS_COPY_PROG="$XFS_COPY_PROG -d"
+-       fi
+ }
+ 
+ # get real device path name by following link
+diff --git a/tests/xfs/073 b/tests/xfs/073
+index 9e29223..7228dd9 100755
+--- a/tests/xfs/073
++++ b/tests/xfs/073
+@@ -138,7 +138,7 @@ _require_loop
+ 
+ rm -f $seqres.full
+ 
+-_scratch_mkfs_xfs -m crc=0 -dsize=41m,agcount=2 >>$seqres.full 2>&1
++_scratch_mkfs_xfs -dsize=41m,agcount=2 >>$seqres.full 2>&1
+ _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
+ 
+ echo
+@@ -158,11 +158,7 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
+ 
+ echo 
+ echo === copying scratch device to single target, large ro device
+-mkfs_crc_opts="-m crc=0"
+-if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
+-       mkfs_crc_opts=""
+-fi
+-${MKFS_XFS_PROG} $mkfs_crc_opts -dfile,name=$imgs.source,size=100g \
++${MKFS_XFS_PROG} -dfile,name=$imgs.source,size=100g \
+        | _filter_mkfs 2>/dev/null
+ rmdir $imgs.source_dir 2>/dev/null
+ mkdir $imgs.source_dir
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Then I got problem when I ran xfs/073 with MKFS_OPTIONS="-m crc=1":
+[root@dhcp-13-149 xfstests-dev]# diff -Nurp tests/xfs/073.out results/xfs/073.out.bad 
+--- tests/xfs/073.out   2016-04-13 11:44:17.809000000 +0800
++++ results/xfs/073.out.bad     2016-09-20 19:12:40.194000000 +0800
+@@ -59,8 +59,5 @@ comparing new image directories to old
+ comparing new image geometry to old
+ unmounting and removing new image
+ checking new image
+-mounting new image on loopback
+-comparing new image files to old
+-comparing new image directories to old
+-comparing new image geometry to old
+-unmounting and removing new image
++_check_xfs_filesystem: filesystem on /mnt/test/9672.image2 is inconsistent (c) (see /root/git/xfstests-dev/results//xfs/073.full)
++_check_xfs_filesystem: filesystem on /mnt/test/9672.image2 is inconsistent (r) (see /root/git/xfstests-dev/results//xfs/073.full)
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+
+The last test stes of xfs/073 failed:
+echo === copying scratch device to multiple targets
+$XFS_COPY_PROG -d -L$imgs.log -b $SCRATCH_DEV $imgs.image1 $imgs.image2 \
+        | _filter_copy '#' $imgs.image1 '#' $imgs.image2
+_verify_copy $imgs.image1 $SCRATCH_DEV $SCRATCH_MNT
+_verify_copy $imgs.image2 $SCRATCH_DEV $SCRATCH_MNT
+
+
+The full output is too long, so I paste it to below link (this link will
+keep alive in one month):
+http://paste.fedoraproject.org/431361/74370897/
+
+I can't find this problem on V4 XFS(crc=0). I tested this bug with upstream
+linux v4.8-rc7(d2ffb01 Merge branch 'akpm' (patches from Andrew)) and xfsprogs
+v4.8-rc1(130093a xfsprogs: Release 4.8.0-rc1).
+
+This problem can be simply reproduced by below steps:
+1. mkfs.xfs -d name=fsfile,size=512m,file=1 -m crc=1
+2. xfs_copy fsfile target1 target2
+3. xfs_repair -n target2
+4. xfs_repair -n target1
+
+But these steps can't make target1 corrupted(in my test).
+
+Thanks,
+Zorro
