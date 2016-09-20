@@ -1,60 +1,90 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:49168 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753208AbcIRFet (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Sep 2016 01:34:49 -0400
-Date: Sun, 18 Sep 2016 06:33:52 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: xfs_file_splice_read: possible circular locking dependency
- detected
-Message-ID: <20160918053337.GA32207@ZenIV.linux.org.uk>
-References: <20160908235521.GL2356@ZenIV.linux.org.uk>
- <20160909015324.GD30056@dastard>
- <CA+55aFzohsUXj_3BeFNr2t50Wm=G+7toRDEz=Tk7VJqP3n1hXQ@mail.gmail.com>
- <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk>
- <20160914133925.2fba4629@roar.ozlabs.ibm.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 07B357CB3
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 14:48:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A34438F8035
+	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 12:48:48 -0700 (PDT)
+Received: from albireo.enyo.de (albireo.enyo.de [5.158.152.32]) by
+	cuda.sgi.com with ESMTP id fiWMDA0n6B8Ar68W (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 20 Sep 2016 12:48:45 -0700 (PDT)
+Received: from [172.17.203.2] (helo=deneb.enyo.de)
+	by albireo.enyo.de with esmtps
+	(TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128) id 1bmR22-00040o-UR
+	for xfs@oss.sgi.com; Tue, 20 Sep 2016 21:48:42 +0200
+Received: from fw by deneb.enyo.de with local (Exim 4.84_2)
+	(envelope-from <fw@deneb.enyo.de>) id 1bmR22-0004Ew-Qm
+	for xfs@oss.sgi.com; Tue, 20 Sep 2016 21:48:42 +0200
+From: Florian Weimer <fw@deneb.enyo.de>
+Subject: Excessive xfs_inode allocations trigger OOM killer
+Date: Tue, 20 Sep 2016 21:48:42 +0200
+Message-ID: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160914133925.2fba4629@roar.ozlabs.ibm.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Nicholas Piggin <npiggin@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com
 
-[finally Cc'd to fsdevel - should've done that several iterations upthread]
-
-On Wed, Sep 14, 2016 at 01:39:25PM +1000, Nicholas Piggin wrote:
-
-> Should not be so bad, but I don't have hard numbers for you. PAGEVEC_SIZE
-> is 14, and that's conceptually rather similar operation (walk radix tree;
-> grab pages). OTOH many archs are heavier and do locking and vmas walking etc.
-> 
-> Documentation/features/vm/pte_special/arch-support.txt
-> 
-> But even for those, at 16 entries, the bulk of the cost *should* be hitting
-> struct page cachelines and refcounting. The rest should mostly stay in cache.
-
-OK...  That's actually important only for vmsplice_to_pipe() and 16-page
-array seems to be doing fine there.
-
-Another question, now that you've finally resurfaced: could you reconstruct
-the story with page-stealing and breakage(s) thereof that had lead to
-commit 485ddb4b9741bafb70b22e5c1f9b4f37dc3e85bd
-Author: Nick Piggin <npiggin@suse.de>
-Date:   Tue Mar 27 08:55:08 2007 +0200
-
-    1/2 splice: dont steal
-
-I realize that it had been 9 years ago, but anything resembling a braindump
-would be very welcome.  Note that there is a couple of ->splice_write()
-instances that _do_ use ->steal() (fuse_dev_splice_write() and virtio_console
-port_fops_splice_write()) and I wonder if they suffer from the same problems;
-your commit message is rather short on details, unfortunately.  FUSE one
-is especially interesting...
+SSBoYXZlIGFuIGFtZDY0IDQuNy4xIHN5c3RlbSAodXBzdHJlYW0ga2VybmVsLCBwcmV0dHkgcmVn
+dWxhciBjb25maWcpCndpdGggYSBzbWFsbCBmaWxlIHN5c3RlbToKCkZpbGVzeXN0ZW0gICAgIDFL
+LWJsb2NrcyAgICAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBvbgovZGV2L3NkYTEgICAg
+ICA5MjI1OTUxODQgODAwMzk2NDY0IDEyMjE5ODcyMCAgODclIC8KRmlsZXN5c3RlbSAgICAgICAg
+SW5vZGVzICAgIElVc2VkICAgICBJRnJlZSBJVXNlJSBNb3VudGVkIG9uCi9kZXYvc2RhMSAgICAg
+IDUwNDExMDQ5NiAxNTMwNTA5NCA0ODg4MDU0MDIgICAgNCUgLwoKVGhlIG9kZCB0aGluZyBpcyB0
+aGF0IGFmdGVyIGEgd2hpbGUsIFhGUyBjb25zdW1lcyBhIGxvdCBvZiBtZW1vcnkKYWNjb3JkaW5n
+IHRvIHNsYWJ0b3A6CgogIE9CSlMgQUNUSVZFICBVU0UgT0JKIFNJWkUgIFNMQUJTIE9CSi9TTEFC
+IENBQ0hFIFNJWkUgTkFNRSAgICAgICAgICAgICAgICAgICAKNDEyMTIwOCA0MTIxMTc3ICA5OSUg
+ICAgMC44OEsgMTAzMDMwMiAgICAgICAgNCAgIDQxMjEyMDhLIHhmc19pbm9kZQo5ODYyODYgOTg1
+MjI5ICA5OSUgICAgMC4xOUsgIDQ2OTY2ICAgICAgIDIxICAgIDE4Nzg2NEsgZGVudHJ5CjcyMzI1
+NSA3MjMwNzYgIDk5JSAgICAwLjEwSyAgMTg1NDUgICAgICAgMzkgICAgIDc0MTgwSyBidWZmZXJf
+aGVhZAoyNzAyNjMgMjY5MjUxICA5OSUgICAgMC41NksgIDM4NjA5ICAgICAgICA3ICAgIDE1NDQz
+NksgcmFkaXhfdHJlZV9ub2RlCjE0MDMxMCAgNjc0MDkgIDQ4JSAgICAwLjM4SyAgMTQwMzEgICAg
+ICAgMTAgICAgIDU2MTI0SyBtbnRfY2FjaGUKCihJIGhhdmUgYXR0YWNoZWQgdGhlIC9wcm9jL21l
+bWluZm8gY29udGVudHMgaW4gY2FzZSBpdCBvZmZlcnMgZnVydGhlcgpjbHVlcy4pCgpDb25mcm9u
+dGVkIHdpdGggbGFyZ2UgbWVtb3J5IGFsbG9jYXRpb25zIChmcm9tIOKAnG1ha2UgLWoxMuKAnSBh
+bmQKY29tcGlsaW5nIEdDQywgc28gcGVyaGFwcyB+OCBHaUIgb2YgbWVtb3J5KSwgdGhlIE9PTSBr
+aWxsZXIga2lja3MgaW4KYW5kIGtpbGxzIHNvbWUgcmFuZG9tIHByb2Nlc3MuICBJIHdvdWxkIGhh
+dmUgZXhwZWN0ZWQgdGhhdCBzb21lCnhmc19pbm9kZXMgYXJlIGZyZWVkIGluc3RlYWQuCgpJIGRv
+bid0IHRoaW5rIHRoaXMgaXMgYW4gb3JkaW5hcnkgbWVtb3J5IGxlYWsuICBUaGUgbGFzdCB0aW1l
+IEkgc2F3CnNvbWV0aGluZyBsaWtlIHRoZSBzbGFidG9wIG91dHB1dCBhYm92ZSwgSSBjb3VsZCBk
+byDigJxzeXNjdGwKdm0uZHJvcF9jYWNoZXMgPSAz4oCdLCBhbmQgdGhlIGFtb3VudCBvZiBtZW1v
+cnkgYWxsb2NhdGVkIHJlcG9ydGVkIGJ5CnNsYWJ0b3Agd2FzIHJlZHVjZWQgY29uc2lkZXJhYmx5
+LiAgKEkgaGF2ZSBub3QgY2hlY2tlZCBpZiB0aGUgbWVtb3J5CndhcyBhY3R1YWxseSByZXR1cm5l
+ZCB0byB0aGUgc3lzdGVtLikgIEkgaGF2ZSBub3QgZG9uZSB0aGlzIG5vdyBzbwp0aGF0IEkgY2Fu
+IGdhdGhlciBmdXJ0aGVyIGRhdGEgZm9yIGRlYnVnZ2luZy4gIEkgYW0gbm90IHN1cmUgd2hhdAp0
+cmlnZ2VycyB0aGlzIGh1Z2UgYWxsb2NhdGlvbi4gIEl0IGNvdWxkIGJlIHJlbGF0ZWQgdG8gbXkg
+R251cyBtYWlsCnNwb29sICh3aGljaCBjb250YWlucyBsb3RzIGFuZCBsb3RzIG9mIHNtYWxsIGZp
+bGVzKS4KCk1lbVRvdGFsOiAgICAgICAxMjMwMDgwOCBrQgpNZW1GcmVlOiAgICAgICAgIDE3NDQx
+MzIga0IKTWVtQXZhaWxhYmxlOiAgIDEwMzI1MDc2IGtCCkJ1ZmZlcnM6ICAgICAgICAgICAgICAg
+MCBrQgpDYWNoZWQ6ICAgICAgICAgIDQ3MjY4OTIga0IKU3dhcENhY2hlZDogICAgICAgICAgIDMy
+IGtCCkFjdGl2ZTogICAgICAgICAgMzA5NDg2OCBrQgpJbmFjdGl2ZTogICAgICAgIDIzMDc5Njgg
+a0IKQWN0aXZlKGFub24pOiAgICAgMzAzNzM2IGtCCkluYWN0aXZlKGFub24pOiAgIDczODE4OCBr
+QgpBY3RpdmUoZmlsZSk6ICAgIDI3OTExMzIga0IKSW5hY3RpdmUoZmlsZSk6ICAxNTY5NzgwIGtC
+ClVuZXZpY3RhYmxlOiAgICAgICAgICAzMiBrQgpNbG9ja2VkOiAgICAgICAgICAgICAgMzIga0IK
+U3dhcFRvdGFsOiAgICAgIDE0NjQ1MjQ0IGtCClN3YXBGcmVlOiAgICAgICAxNDY0NDc5NiBrQgpE
+aXJ0eTogICAgICAgICAgICAgICAgMjgga0IKV3JpdGViYWNrOiAgICAgICAgICAgICAwIGtCCkFu
+b25QYWdlczogICAgICAgIDY3NjAxNiBrQgpNYXBwZWQ6ICAgICAgICAgICAyOTA5NTYga0IKU2ht
+ZW06ICAgICAgICAgICAgMzY1OTgwIGtCClNsYWI6ICAgICAgICAgICAgNDY0NjY5NiBrQgpTUmVj
+bGFpbWFibGU6ICAgIDQ1NDIxODgga0IKU1VucmVjbGFpbTogICAgICAgMTA0NTA4IGtCCktlcm5l
+bFN0YWNrOiAgICAgICAgODExMiBrQgpQYWdlVGFibGVzOiAgICAgICAgMTgxNDgga0IKTkZTX1Vu
+c3RhYmxlOiAgICAgICAgICAwIGtCCkJvdW5jZTogICAgICAgICAgICAgICAgMCBrQgpXcml0ZWJh
+Y2tUbXA6ICAgICAgICAgIDAga0IKQ29tbWl0TGltaXQ6ICAgIDIwNzk1NjQ4IGtCCkNvbW1pdHRl
+ZF9BUzogICAgNDkyNjM1MiBrQgpWbWFsbG9jVG90YWw6ICAgMzQzNTk3MzgzNjcga0IKVm1hbGxv
+Y1VzZWQ6ICAgICAgICAgICAwIGtCClZtYWxsb2NDaHVuazogICAgICAgICAgMCBrQgpIYXJkd2Fy
+ZUNvcnJ1cHRlZDogICAgIDAga0IKQW5vbkh1Z2VQYWdlczogICAgICAgICAwIGtCCkh1Z2VQYWdl
+c19Ub3RhbDogICAgICAgMApIdWdlUGFnZXNfRnJlZTogICAgICAgIDAKSHVnZVBhZ2VzX1JzdmQ6
+ICAgICAgICAwCkh1Z2VQYWdlc19TdXJwOiAgICAgICAgMApIdWdlcGFnZXNpemU6ICAgICAgIDIw
+NDgga0IKRGlyZWN0TWFwNGs6ICAgICAgNjA5NzkyIGtCCkRpcmVjdE1hcDJNOiAgICAxMTk2NDQx
+NiBrQgpEaXJlY3RNYXAxRzogICAgIDIwOTcxNTIga0IKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
