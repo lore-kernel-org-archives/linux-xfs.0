@@ -1,83 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52624 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751321AbcI3Uw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 16:52:59 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C26A57EA99
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 20:52:08 +0000 (UTC)
-Subject: [PATCH 1/5] xfs_io: fix inode command help and argsmax
-References: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <f485f5cb-084b-40e6-b7de-c469782b71b2@redhat.com>
-Date: Fri, 30 Sep 2016 15:52:08 -0500
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36177 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935898AbcIUS3r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 14:29:47 -0400
+Received: by mail-oi0-f68.google.com with SMTP id i193so4464486oib.3
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 11:29:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-3-git-send-email-amir73il@gmail.com> <CAJfpegvtCf7mPanvmhU8vmoyQTUsVo-O0bpNxwnt4abkJ5ZD6Q@mail.gmail.com>
+ <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Wed, 21 Sep 2016 20:29:44 +0200
+Message-ID: <CAJfpegsmc5a5=X11OZZ2__ghOBbe4kdWge10EFBEAG+ftrGGJQ@mail.gmail.com>
+Subject: Re: [PATCH v3 2/4] ovl: use vfs_clone_file_range() for copy up if possible
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-The short help implied that -n and -v were exclusive, and the longer
-help wasn't particularly clear.
+On Wed, Sep 21, 2016 at 7:01 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Wed, Sep 21, 2016 at 6:09 PM, Miklos Szeredi <miklos@szeredi.hu> wrote:
+>> On Wed, Sep 14, 2016 at 2:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+>>> When copying up within the same fs, try to use vfs_clone_file_range().
+>>> This is very efficient when lower and upper are on the same fs
+>>> with file reflink support. If vfs_clone_file_range() fails because
+>>> lower and upper are not on the same fs or if fs has no reflink support,
+>>> copy up falls back to the regular data copy code.
+>>>
+>>> Tested correct behavior when lower and upper are on:
+>>> 1. same ext4 (copy)
+>>> 2. same xfs + reflink patches + mkfs.xfs (copy)
+>>> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
+>>> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+>>>
+>>> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+>>> sparse files) takes less than 1 second in the xfs reflink setup vs.
+>>> 25 seconds on the rest of the setups.
+>>>
+>>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>>> ---
+>>>  fs/overlayfs/copy_up.c | 12 +++++++++++-
+>>>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+>>> index 43fdc27..ba039f8 100644
+>>> --- a/fs/overlayfs/copy_up.c
+>>> +++ b/fs/overlayfs/copy_up.c
+>>> @@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>>>                 goto out_fput;
+>>>         }
+>>>
+>>> +       /* Try to use clone_file_range to clone up within the same fs */
+>>> +       error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
+>>> +       if (!error)
+>>> +               goto out;
+>>> +       /* If we can clone but clone failed - abort */
+>>> +       if (error != -EXDEV && error != -EOPNOTSUPP)
+>>> +               goto out;
+>>
+>> Would be safer to fall back on any error.
+>>
+>
+> Agreed. Dave, since you suggested the 'softer' fall back, do you have
+> any objections?
+>
+>> Otherwise ACK.
+>>
+>
+> Will you be taking this to your tree?
 
-Further, argsmax is wrong; "-n -v num" is 3, not 2.
+Sure I can take it.
 
- # xfs_io -c "inode -n -v 123" /mnt/test2
- bad argument count 3 to inode, expected between 0 and 2 arguments
- # xfs_io -c "inode -vn 123" /mnt/test2
- 128:32
+>
+> Please note that this patch depends on patch v3 1/4,
+> because vfs_clone_file_range() in current mainline
+> fails to clone from lower to upper due to upper and lower being
+> private mount clones
+> and therefore not the same f_path.mnt.
 
-Fix up all of those issues.
+Right.  I didn't do a thorough audit of ->clone_file_range()
+implementations, but 1/4 is probably OK.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- io/open.c |   19 ++++++++-----------
- 1 files changed, 8 insertions(+), 11 deletions(-)
-
-diff --git a/io/open.c b/io/open.c
-index 3eaa013..5efa739 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -757,16 +757,13 @@ inode_help(void)
- {
- 	printf(_(
- "\n"
--"Query physical information about the inode"
-+"Query physical information about an inode"
- "\n"
--" Default:	-- Return true(1) or false(0) if any inode greater than\n"
--"		   32bits has been found in the filesystem\n"
--"[num]		-- Return inode number [num] or 0 if the inode [num] is in use\n"
--"		   or not\n"
--" -n [num]	-- Return the next valid inode after [num]\n"
--" -v		-- verbose mode\n"
--"		   Display the inode number and its physical size (in bits)\n"
--"		   according to the argument used\n"
-+" Default:	-- Return 1 if any inode number greater than 32 bits exists in\n"
-+"		   the filesystem, or 0 if none exist\n"
-+" num		-- Return inode number [num] if in use, or 0 if not in use\n"
-+" -n num	-- Return the next used inode after [num]\n"
-+" -v		-- Verbose mode - display returned inode number's size in bits\n"
- "\n"));
- }
- 
-@@ -956,9 +953,9 @@ open_init(void)
- 
- 	inode_cmd.name = "inode";
- 	inode_cmd.cfunc = inode_f;
--	inode_cmd.args = _("[-n | -v] [num]");
-+	inode_cmd.args = _("[-nv] [num]");
- 	inode_cmd.argmin = 0;
--	inode_cmd.argmax = 2;
-+	inode_cmd.argmax = 3;
- 	inode_cmd.flags = CMD_NOMAP_OK;
- 	inode_cmd.oneline =
- 		_("Query inode number usage in the filesystem");
--- 
-1.7.1
-
+Thanks,
+Miklos
