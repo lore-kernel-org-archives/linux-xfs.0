@@ -1,70 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36743 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752772AbcIWIis (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 04:38:48 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v4 1/3] vfs: allow vfs_clone_file_range() across mount points
-Date: Fri, 23 Sep 2016 11:38:10 +0300
-Message-Id: <1474619892-5113-2-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
-References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2530 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755850AbcIUVhe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 17:37:34 -0400
+Date: Thu, 22 Sep 2016 07:37:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] fstests: test xfs_copy V5 XFS without -d option
+Message-ID: <20160921213729.GN340@dastard>
+References: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1474455620-25982-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-unionfs@vger.kernel.org
-Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-FICLONE/FICLONERANGE ioctls return -EXDEV if src and dest
-files are not on the same mount point.
-Practically, clone only requires that src and dest files
-are on the same file system.
+On Wed, Sep 21, 2016 at 07:00:20PM +0800, Zorro Lang wrote:
+> From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
+> Before that, copy a V5 XFS will cause target fs corruption, and only
+> use "-d" option can resolve that problem.
 
-Move the check for same mount point to ioctl handler and keep
-only the check for same super block in the vfs helper.
+What has the kernel version got to do with xfs_copy support?
 
-A following patch is going to use the vfs_clone_file_range()
-helper in overlayfs to copy up between lower and upper
-mount points on the same file system.
+What matters is whether xfsprogs supports a specific feature bit in
+the XFS superblock - that is what indicates whether xfs_copy
+requires the "-d" option or not....
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/ioctl.c      | 2 ++
- fs/read_write.c | 8 ++++++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
+> +# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
+> +# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
+> +# bug.
+> +_require_xfs_copy()
+> +{
+> +	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+> +	. $tmp.mkfs
+> +
+> +	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
+> +	local rc=$?
+> +
+> +	rm -f $tmp.mkfs
+> +	rm -f $tmp.copy 2>/dev/null
+> +	if [ $rc -ne 0 ]; then
+> +		if [ $_fs_has_crcs -eq 1 ]; then
+> +			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
+> +		else
+> +			_fail "xfs_copy can't copy a V4 xfs"
+> +		fi
+> +	fi
+> +}
 
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index c415668..34d2994 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -223,6 +223,8 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
- 
- 	if (!src_file.file)
- 		return -EBADF;
-+	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
-+		return -EXDEV;
- 	ret = vfs_clone_file_range(src_file.file, off, dst_file, destoff, olen);
- 	fdput(src_file);
- 	return ret;
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 66215a7..9dc6e52 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1628,8 +1628,12 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- 	struct inode *inode_out = file_inode(file_out);
- 	int ret;
- 
--	if (inode_in->i_sb != inode_out->i_sb ||
--	    file_in->f_path.mnt != file_out->f_path.mnt)
-+	/*
-+	 * FICLONE/FICLONERANGE ioctls enforce that src and dest files
-+	 * are on the same mount point. Practically, they only need
-+	 * to be on the same file system.
-+	 */
-+	if (inode_in->i_sb != inode_out->i_sb)
- 		return -EXDEV;
- 
- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+Far too over engineered - the regression tests check whether the
+functionality works correctly, not the _requires* check. The
+_requires* check are just for determining whether the operation is
+supported or not.
+
+As I said above, xfs_copy on v5 filesystems do not require the
+"-d" option if xfs_admin can change the UUID on v5 filesystems.
+i.e. if this works:
+
+# xfs_admin -U generate /dev/pmem1
+Clearing log and setting UUID
+writing all SBs
+new UUID = b4e22c8b-1bfb-4307-a3f2-4f55b5c9d61d
+# echo $?
+0
+#
+
+Then xfs_copy does not require "-d" option. This works for both v4
+and v5 filesystems, so this check can be done when setting up the
+$XFS_COPY_PROG variable - there is no need for a _requires rule to
+check this in every test.
+
+-Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
