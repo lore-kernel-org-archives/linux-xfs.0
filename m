@@ -1,79 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2530 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:24576 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755850AbcIUVhe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 17:37:34 -0400
-Date: Thu, 22 Sep 2016 07:37:29 +1000
+        by vger.kernel.org with ESMTP id S1753799AbcIUVsT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 17:48:19 -0400
+Date: Thu, 22 Sep 2016 07:48:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fstests: test xfs_copy V5 XFS without -d option
-Message-ID: <20160921213729.GN340@dastard>
-References: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+Subject: Re: [PATCH v3 2/4] ovl: use vfs_clone_file_range() for copy up if
+ possible
+Message-ID: <20160921214814.GC10454@dastard>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-3-git-send-email-amir73il@gmail.com>
+ <CAJfpegvtCf7mPanvmhU8vmoyQTUsVo-O0bpNxwnt4abkJ5ZD6Q@mail.gmail.com>
+ <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Sep 21, 2016 at 07:00:20PM +0800, Zorro Lang wrote:
-> From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
-> Before that, copy a V5 XFS will cause target fs corruption, and only
-> use "-d" option can resolve that problem.
+On Wed, Sep 21, 2016 at 08:01:22PM +0300, Amir Goldstein wrote:
+> On Wed, Sep 21, 2016 at 6:09 PM, Miklos Szeredi <miklos@szeredi.hu> wrote:
+> > On Wed, Sep 14, 2016 at 2:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> >> When copying up within the same fs, try to use vfs_clone_file_range().
+> >> This is very efficient when lower and upper are on the same fs
+> >> with file reflink support. If vfs_clone_file_range() fails because
+> >> lower and upper are not on the same fs or if fs has no reflink support,
+> >> copy up falls back to the regular data copy code.
+> >>
+> >> Tested correct behavior when lower and upper are on:
+> >> 1. same ext4 (copy)
+> >> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> >> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
+> >> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+> >>
+> >> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> >> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> >> 25 seconds on the rest of the setups.
+> >>
+> >> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >> ---
+> >>  fs/overlayfs/copy_up.c | 12 +++++++++++-
+> >>  1 file changed, 11 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> >> index 43fdc27..ba039f8 100644
+> >> --- a/fs/overlayfs/copy_up.c
+> >> +++ b/fs/overlayfs/copy_up.c
+> >> @@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+> >>                 goto out_fput;
+> >>         }
+> >>
+> >> +       /* Try to use clone_file_range to clone up within the same fs */
+> >> +       error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
+> >> +       if (!error)
+> >> +               goto out;
+> >> +       /* If we can clone but clone failed - abort */
+> >> +       if (error != -EXDEV && error != -EOPNOTSUPP)
+> >> +               goto out;
+> >
+> > Would be safer to fall back on any error.
+> >
+> 
+> Agreed. Dave, since you suggested the 'softer' fall back, do you have
+> any objections?
 
-What has the kernel version got to do with xfs_copy support?
+If you get any error other than -EXDEV or -EOPNOTSUPP from a clone
+operation, there's somethign seriously wrong with the metadata of
+the inode or th eunderlying storage. You're not going to be able to
+copy the data if a clone fails for exactly the same reasons.
 
-What matters is whether xfsprogs supports a specific feature bit in
-the XFS superblock - that is what indicates whether xfs_copy
-requires the "-d" option or not....
+What's worse is that you might get a partial copy before failure, or
+there might not be a failure during copy at all because the fs uses
+delayed allocation and the corruption problem during allocation that
+prevented clone from working is not triggered until writeback time.
+i.e. you may not have anyone to report the fact that the copyup
+failed by the time the failure is known.
 
-> +# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
-> +# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
-> +# bug.
-> +_require_xfs_copy()
-> +{
-> +	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> +	. $tmp.mkfs
-> +
-> +	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
-> +	local rc=$?
-> +
-> +	rm -f $tmp.mkfs
-> +	rm -f $tmp.copy 2>/dev/null
-> +	if [ $rc -ne 0 ]; then
-> +		if [ $_fs_has_crcs -eq 1 ]; then
-> +			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
-> +		else
-> +			_fail "xfs_copy can't copy a V4 xfs"
-> +		fi
-> +	fi
-> +}
+Your choice, really - I'd much prefer that known hard errors are
+propagated immediately than leave them to chance and have a user
+then wonder where the $ANTI-DEITY their data has gone later on.
 
-Far too over engineered - the regression tests check whether the
-functionality works correctly, not the _requires* check. The
-_requires* check are just for determining whether the operation is
-supported or not.
+Cheers,
 
-As I said above, xfs_copy on v5 filesystems do not require the
-"-d" option if xfs_admin can change the UUID on v5 filesystems.
-i.e. if this works:
-
-# xfs_admin -U generate /dev/pmem1
-Clearing log and setting UUID
-writing all SBs
-new UUID = b4e22c8b-1bfb-4307-a3f2-4f55b5c9d61d
-# echo $?
-0
-#
-
-Then xfs_copy does not require "-d" option. This works for both v4
-and v5 filesystems, so this check can be done when setting up the
-$XFS_COPY_PROG variable - there is no need for a _requires rule to
-check this in every test.
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
