@@ -1,80 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:52420 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932337AbcIUWTn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 18:19:43 -0400
-Date: Thu, 22 Sep 2016 08:19:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair: fix segfault from uninitialized tp in
- mv_orphanage
-Message-ID: <20160921221938.GD10454@dastard>
-References: <bb6c5861-23eb-dbd9-bf47-393c9445c9a2@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39952 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751266AbcIUGqk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Sep 2016 02:46:40 -0400
+Date: Wed, 21 Sep 2016 14:46:38 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: xfs/032 find xfs corruption
+Message-ID: <20160921064638.GT12847@dhcp12-143.nay.redhat.com>
+References: <20160921042318.GR12847@dhcp12-143.nay.redhat.com>
+ <20160921050804.GM340@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bb6c5861-23eb-dbd9-bf47-393c9445c9a2@redhat.com>
+In-Reply-To: <20160921050804.GM340@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>, Consigliere <admin@russenmafia.at>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 21, 2016 at 12:52:56PM -0500, Eric Sandeen wrote:
-> After 9074815 xfs: better xfs_trans_alloc interface, mv_orphanage
-> was passing an uninitialized *tp into libxfs_dir_lookup, because
-> the trans_alloc() call which was present prior to the call got
-> removed in that commit.
+On Wed, Sep 21, 2016 at 03:08:05PM +1000, Dave Chinner wrote:
+> On Wed, Sep 21, 2016 at 12:23:18PM +0800, Zorro Lang wrote:
+> > Hi,
+> > 
+> > xfs/032 trigger xfs(v4/v5) corruption after run it several times:
+> > [root@dhcp-13-149 xfstests-dev]# xfs_repair -n ~/xfs-032.img 
+> > Phase 1 - find and verify superblock...
+> > Phase 2 - using internal log
+> >         - zero log...
+> >         - scan filesystem freespace and inode maps...
+> > sb_icount 64, counted 256
+> > sb_ifree 61, counted 242
+> > sb_fdblocks 1038280, counted 1035431
+> >         - found root inode chunk
+> > Phase 3 - for each AG...
+> >         - scan (but don't clear) agi unlinked lists...
+> >         - process known inodes and perform inode discovery...
+> >         - agno = 0
+> >         - agno = 1
+> >         - agno = 2
+> >         - agno = 3
+> >         - process newly discovered inodes...
+> > Phase 4 - check for duplicate blocks...
+> >         - setting up duplicate extent list...
+> >         - check for inodes claiming duplicate blocks...
+> >         - agno = 0
+> >         - agno = 1
+> >         - agno = 2
+> >         - agno = 3
+> > entry "d8" in shortform directory 1572896 references free inode 38
+> > would have junked entry "d8" in directory inode 1572896
+> > No modify flag set, skipping phase 5
+> > Phase 6 - check inode connectivity...
+> >         - traversing filesystem ...
+> > entry "d8" in shortform directory inode 1572896 points to free inode 38
+> > would junk entry
+> >         - traversal finished ...
+> >         - moving disconnected inodes to lost+found ...
+> > disconnected dir inode 524320, would move to lost+found
+> > Phase 7 - verify link counts...
+> > would have reset inode 1069090 nlinks from 2 to 1
+> > would have reset inode 1572896 nlinks from 4 to 3
+> > No modify flag set, skipping filesystem flush and exiting.
 > 
-> This ultimately led to testing an uninit tp var:
-> 
-> Conditional jump or move depends on uninitialised value(s)
->    at 0x434D01: libxfs_trans_read_buf_map (trans.c:554)
->    by 0x45152E: libxfs_da_read_buf (xfs_da_btree.c:2610)
->    by 0x456ACB: xfs_dir3_block_read (xfs_dir2_block.c:136)
->    by 0x4570A8: xfs_dir2_block_lookup_int (xfs_dir2_block.c:675)
->    by 0x457DB7: xfs_dir2_block_lookup (xfs_dir2_block.c:623)
->    by 0x455F54: libxfs_dir_lookup (xfs_dir2.c:399)
->    by 0x421C46: mv_orphanage (phase6.c:1095)
->    by 0x4222C2: check_for_orphaned_inodes (phase6.c:3108)
->    by 0x423ABD: phase6 (phase6.c:3287)
->    by 0x42E4B2: main (xfs_repair.c:933)
-> 
-> and ended with a segfault as we tried to use that tp when
-> searching for the buffer in xfs_trans_buf_item_match():
-> 
->         list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-> 
-> I think simply passing in NULL for this tp is sufficient to fix
-> this; we'll just go read the buffer from disk in
-> libxfs_trans_read_buf_map rather than trying to find it in an
-> existing transaction.
-> 
-> Reported-by: Consigliere <admin@russenmafia.at>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 973a5f8..5507af4 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1092,7 +1092,7 @@ mv_orphanage(
->  					irec->ino_startnum;
->  		nres = XFS_DIRENTER_SPACE_RES(mp, fnamelen) +
->  		       XFS_DIRENTER_SPACE_RES(mp, 2);
-> -		err = -libxfs_dir_lookup(tp, ino_p, &xfs_name_dotdot,
-> +		err = -libxfs_dir_lookup(NULL, ino_p, &xfs_name_dotdot,
->  					&entry_ino_num, NULL);
->  		if (err) {
->  			ASSERT(err == ENOENT);
+> So, is the log dirty? if so, does mount/unmounting the filesystem
+> get rid of all the problems? When the image file check fails, does
+> an xfs_repair on the scratch device also fail, or is xfs_copy
+> failing to copy the filesystem cleanly for some reason?
 
-Yup, looks fine. tp is definitely not valid in that scope, and we
-join the inode that we look up to the transaction when appropriate.
+Hi Dave,
 
-I'll push this in soon.
+Looks like mount/umount can help to resolve this problem:
+[root@dhcp-13-149 xfstests-dev]# mount -o loop ~/xfs-032.img /mnt/tmp/
+[root@dhcp-13-149 xfstests-dev]# xfs_info /mnt/tmp
+meta-data=/dev/loop0             isize=512    agcount=4, agsize=262144 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+data     =                       bsize=1024   blocks=1048576, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=1024   blocks=10240, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@dhcp-13-149 xfstests-dev]# umount /mnt/tmp
+[root@dhcp-13-149 xfstests-dev]# xfs_repair -n ~/xfs-032.img
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+sb_icount 64, counted 256
+sb_ifree 61, counted 242
+sb_fdblocks 1038280, counted 1035431
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+entry "d8" in shortform directory 1572896 references free inode 38
+would have junked entry "d8" in directory inode 1572896
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+entry "d8" in shortform directory inode 1572896 points to free inode 38
+would junk entry
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected dir inode 524320, would move to lost+found
+Phase 7 - verify link counts...
+would have reset inode 1069090 nlinks from 2 to 1
+would have reset inode 1572896 nlinks from 4 to 3
+No modify flag set, skipping filesystem flush and exiting.
 
-Cheers,
+Sorry I didn't describe it clearly, the scratch device is ok, only the
+image file copied from the scratch device is corrupted.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I just uploaded the metadump file to my dropbox, maybe you can download
+it by click below link (I haven't tried that before:):
+https://dl-web.dropbox.com/get/xfs-032.metadump.bz2?_subject_uid=593207464&w=AABxHzGf84uI5q8a4frh_WjK5bH7waQ49rESCBb4AX1gJw&dl=1&_download_id=705892621369384127364746769078756077441885137578537980037504362&_notify_domain=www.dropbox.com
+
+Thanks,
+Zorro
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
