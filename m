@@ -1,136 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57028 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:34986 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751712AbcI3UxE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 16:53:04 -0400
-Subject: [PATCH 2/5] xfs_io: factor out new get_last_inode() helper
-References: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
+        id S1755220AbcIUWHR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Sep 2016 18:07:17 -0400
+Subject: Re: [PATCH] fstests: test xfs_copy V5 XFS without -d option
+References: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+ <20160921213729.GN340@dastard>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <cc70dd3b-3566-7409-4fd5-84e1df05c451@sandeen.net>
-Date: Fri, 30 Sep 2016 15:53:03 -0500
+Message-ID: <4b37d061-43b5-74f6-b544-0f97693270c5@sandeen.net>
+Date: Wed, 21 Sep 2016 17:07:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20160921213729.GN340@dastard>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-The inode command by default finds the last allocated
-inode in the filesystem via bulkstat, and this specific
-function is open-coded after other cases are handled, leading
-to a fairly long inode_f function and confusing code flow.
+On 9/21/16 4:37 PM, Dave Chinner wrote:
+> On Wed, Sep 21, 2016 at 07:00:20PM +0800, Zorro Lang wrote:
+>> From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
+>> Before that, copy a V5 XFS will cause target fs corruption, and only
+>> use "-d" option can resolve that problem.
+> 
+> What has the kernel version got to do with xfs_copy support?
+> 
+> What matters is whether xfsprogs supports a specific feature bit in
+> the XFS superblock - that is what indicates whether xfs_copy
+> requires the "-d" option or not....
 
-Clean it up by factoring it into a new function, more refactoring
-will follow.
+For V5, xfs_copy went through a few stages:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- io/open.c |   68 +++++++++++++++++++++++++++++++++++++++---------------------
- 1 files changed, 44 insertions(+), 24 deletions(-)
+1) Corrupted the filesystem without -d
+2) Refused to run without -d
+3) Used meta_uuid to run without -d
+4) Fixed a bug with multiple targets
 
-diff --git a/io/open.c b/io/open.c
-index 5efa739..c8c82b7 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -767,14 +767,51 @@ inode_help(void)
- "\n"));
- }
- 
-+static __u64
-+get_last_inode(void)
-+{
-+	__u64			lastip = 0;
-+	__u64			lastgrp = 0;
-+	__s32			ocount = 0;
-+	__u64			last_ino;
-+	struct xfs_inogrp	igroup[1024];
-+	struct xfs_fsop_bulkreq	bulkreq;
-+
-+	bulkreq.lastip = &lastip;
-+	bulkreq.ubuffer = &igroup;
-+	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
-+	bulkreq.ocount = &ocount;
-+
-+	for (;;) {
-+		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
-+				&bulkreq)) {
-+			perror("XFS_IOC_FSINUMBERS");
-+			return 0;
-+		}
-+
-+		/* Did we reach the last inode? */
-+		if (ocount == 0)
-+			break;
-+
-+		/* last inode in igroup table */
-+		lastgrp = ocount;
-+	}
-+
-+	lastgrp--;
-+
-+	/* The last inode number in use */
-+	last_ino = igroup[lastgrp].xi_startino +
-+		  libxfs_highbit64(igroup[lastgrp].xi_allocmask);
-+
-+	return last_ino;
-+}
-+
- static int
- inode_f(
- 	  int			argc,
- 	  char			**argv)
- {
- 	__s32			count = 0;
--	__s32			lastgrp = 0;
--	__u64			last = 0;
- 	__u64			lastino = 0;
- 	__u64			userino = 0;
- 	char			*p;
-@@ -782,7 +819,6 @@ inode_f(
- 	int			verbose = 0;
- 	int			ret_next = 0;
- 	int			cmd = 0;
--	struct xfs_inogrp	igroup[1024];
- 	struct xfs_fsop_bulkreq	bulkreq;
- 	struct xfs_bstat	bstat;
- 
-@@ -854,29 +890,13 @@ inode_f(
- 		return command_usage(&inode_cmd);
- 	}
- 
--	bulkreq.lastip = &last;
--	bulkreq.icount = 1024; /* User-defined maybe!? */
--	bulkreq.ubuffer = &igroup;
--	bulkreq.ocount = &count;
--
--	for (;;) {
--		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
--				&bulkreq)) {
--			perror("XFS_IOC_FSINUMBERS");
--			exitcode = 1;
--			return 0;
--		}
--
--		if (count == 0)
--			break;
--
--		lastgrp = count;
-+	/* We are finding last inode in use */
-+	lastino = get_last_inode();
-+	if (!lastino) {
-+		exitcode = 1;
-+		return 0;
- 	}
- 
--	lastgrp--;
--	lastino = igroup[lastgrp].xi_startino +
--		  libxfs_highbit64(igroup[lastgrp].xi_allocmask);
--
- 	if (verbose)
- 		printf("%llu:%d\n", lastino,
- 			lastino > XFS_MAXINUMBER_32 ? 64 : 32);
--- 
-1.7.1
+So it probably comes down to tests identifying /broken/ xfs_copy
+instances.
 
+( 2) wasn't broken, it was just intentionally crippled, so I'm not sure
+how tests should handle that case.)
+
+Anyway, skip down ...
+
+>> +# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
+>> +# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
+>> +# bug.
+>> +_require_xfs_copy()
+>> +{
+>> +	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+>> +	. $tmp.mkfs
+>> +
+>> +	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
+>> +	local rc=$?
+>> +
+>> +	rm -f $tmp.mkfs
+>> +	rm -f $tmp.copy 2>/dev/null
+>> +	if [ $rc -ne 0 ]; then
+>> +		if [ $_fs_has_crcs -eq 1 ]; then
+>> +			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
+>> +		else
+>> +			_fail "xfs_copy can't copy a V4 xfs"
+>> +		fi
+>> +	fi
+>> +}
+> 
+> Far too over engineered - the regression tests check whether the
+> functionality works correctly, not the _requires* check. The
+> _requires* check are just for determining whether the operation is
+> supported or not.
+> 
+> As I said above, xfs_copy on v5 filesystems do not require the
+> "-d" option if xfs_admin can change the UUID on v5 filesystems.
+> i.e. if this works:
+> 
+> # xfs_admin -U generate /dev/pmem1
+> Clearing log and setting UUID
+> writing all SBs
+> new UUID = b4e22c8b-1bfb-4307-a3f2-4f55b5c9d61d
+> # echo $?
+> 0
+> #
+
+"works," meaning "doesn't corrupt" I guess, right?  3.2.2 actually
+allowed it to proceed, but corrupted the filesystem.  Then later it,
+too, was restricted on v5 filesystems, and later those restrictions
+were lifted.
+
+Honestly, (and Dave helped push me in this direction as well), I think
+the addition of "-d" should just be removed; we now have a binary that
+/works/ and there's no reason to avoid running broken binaries - the
+whole point of testing is to find out whether what you're testing works,
+or if it's broken.  Skipping tests because they might fail leaves you with
+missing information about the environment you're testing.
+
+-Eric
