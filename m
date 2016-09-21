@@ -1,67 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35414 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934979AbcIWIiy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 04:38:54 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v4 3/3] ovl: use vfs_clone_file_range() for copy up if possible
-Date: Fri, 23 Sep 2016 11:38:12 +0300
-Message-Id: <1474619892-5113-4-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
-References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12358 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934051AbcIUWdv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 18:33:51 -0400
+Date: Thu, 22 Sep 2016 08:33:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 2/4] ovl: use vfs_clone_file_range() for copy up if
+ possible
+Message-ID: <20160921223331.GE10454@dastard>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-3-git-send-email-amir73il@gmail.com>
+ <CAJfpegvtCf7mPanvmhU8vmoyQTUsVo-O0bpNxwnt4abkJ5ZD6Q@mail.gmail.com>
+ <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
+ <20160921214814.GC10454@dastard>
+ <20160921215724.GV2356@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160921215724.GV2356@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-unionfs@vger.kernel.org
-Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Amir Goldstein <amir73il@gmail.com>, Miklos Szeredi <miklos@szeredi.hu>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-When copying up within the same fs, try to use vfs_clone_file_range().
-This is very efficient when lower and upper are on the same fs
-with file reflink support. If vfs_clone_file_range() fails for any
-reason, copy up falls back to the regular data copy code.
+On Wed, Sep 21, 2016 at 10:57:24PM +0100, Al Viro wrote:
+> On Thu, Sep 22, 2016 at 07:48:15AM +1000, Dave Chinner wrote:
+> 
+> > If you get any error other than -EXDEV or -EOPNOTSUPP from a clone
+> > operation, there's somethign seriously wrong with the metadata of
+> > the inode or the underlying storage.
+> 
+> Such as -ENOSPC?
 
-Tested correct behavior when lower and upper are on:
-1. same ext4 (copy)
-2. same xfs + reflink patches + mkfs.xfs (copy)
-3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
-4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+Yup, that's a fatal error, too.  i.e. if a clone returns ENOSPC
+because there isn't space for the extra metadata, then the fallback
+data copy is almost certainly going to fail with ENOSPC when trying
+to reserve/allocate space for both the extra data copy and the extra
+metadata....
 
-For comparison, on my laptop, xfstest overlay/001 (copy up of large
-sparse files) takes less than 1 second in the xfs reflink setup vs.
-25 seconds on the rest of the setups.
+Cheers,
 
-Acked-by: Miklos Szeredi <mszeredi@redhat.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/overlayfs/copy_up.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 43fdc27..93f0a34 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -136,6 +136,13 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
- 		goto out_fput;
- 	}
- 
-+	/* Try to use clone_file_range to clone up within the same fs */
-+	error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
-+	if (!error)
-+		goto out;
-+	/* Couldn't clone, so now we try to copy the data */
-+	error = 0;
-+
- 	/* FIXME: copy up sparse files efficiently */
- 	while (len) {
- 		size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
-@@ -161,6 +168,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
- 		len -= bytes;
- 	}
- 
-+out:
- 	fput(new_file);
- out_fput:
- 	fput(old_file);
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
