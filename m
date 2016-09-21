@@ -1,78 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38740 "EHLO mx1.redhat.com"
+Received: from albireo.enyo.de ([5.158.152.32]:58115 "EHLO albireo.enyo.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752618AbcIUEXV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Sep 2016 00:23:21 -0400
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6A619C05490D
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 04:23:20 +0000 (UTC)
-Received: from localhost (dhcp-12-196.nay.redhat.com [10.66.12.196])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8L4NJUG003514
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 00:23:19 -0400
-Date: Wed, 21 Sep 2016 12:23:18 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: xfs/032 find xfs corruption
-Message-ID: <20160921042318.GR12847@dhcp12-143.nay.redhat.com>
+        id S1751011AbcIUGPH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Sep 2016 02:15:07 -0400
+From: Florian Weimer <fw@deneb.enyo.de>
+Subject: Re: Excessive xfs_inode allocations trigger OOM killer
+References: <87a8f2pd2d.fsf@mid.deneb.enyo.de> <20160920203039.GI340@dastard>
+        <87mvj2mgsg.fsf@mid.deneb.enyo.de> <20160920214612.GJ340@dastard>
+Date: Wed, 21 Sep 2016 07:45:20 +0200
+In-Reply-To: <20160920214612.GJ340@dastard> (Dave Chinner's message of "Wed,
+        21 Sep 2016 07:46:12 +1000")
+Message-ID: <8737ktlsb3.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@vkack.org, Michal Hocko <mhocko@kernel.org>
 
-Hi,
+* Dave Chinner:
 
-xfs/032 trigger xfs(v4/v5) corruption after run it several times:
-[root@dhcp-13-149 xfstests-dev]# xfs_repair -n ~/xfs-032.img 
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-sb_icount 64, counted 256
-sb_ifree 61, counted 242
-sb_fdblocks 1038280, counted 1035431
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-entry "d8" in shortform directory 1572896 references free inode 38
-would have junked entry "d8" in directory inode 1572896
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "d8" in shortform directory inode 1572896 points to free inode 38
-would junk entry
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-disconnected dir inode 524320, would move to lost+found
-Phase 7 - verify link counts...
-would have reset inode 1069090 nlinks from 2 to 1
-would have reset inode 1572896 nlinks from 4 to 3
-No modify flag set, skipping filesystem flush and exiting.
+> [cc Michal, linux-mm@kvack.org]
+>
+> On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
+>> * Dave Chinner:
+>> 
+>> >>   OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME 
+>> >> 4121208 4121177  99%    0.88K 1030302        4   4121208K xfs_inode
+>> >> 986286 985229  99%    0.19K  46966       21    187864K dentry
+>> >> 723255 723076  99%    0.10K  18545       39     74180K buffer_head
+>> >> 270263 269251  99%    0.56K  38609        7    154436K radix_tree_node
+>> >> 140310  67409  48%    0.38K  14031       10     56124K mnt_cache
+>> >
+>> > That's not odd at all. It means your workload is visiting millions
+>> > on inodes in your filesystem between serious memory pressure events.
+>> 
+>> Okay.
+>> 
+>> >> (I have attached the /proc/meminfo contents in case it offers further
+>> >> clues.)
+>> >> 
+>> >> Confronted with large memory allocations (from “make -j12” and
+>> >> compiling GCC, so perhaps ~8 GiB of memory), the OOM killer kicks in
+>> >> and kills some random process.  I would have expected that some
+>> >> xfs_inodes are freed instead.
+>> >
+>> > The oom killer is unreliable and often behaves very badly, and
+>> > that's typicaly not an XFS problem.
+>> >
+>> > What is the full output off the oom killer invocations from dmesg?
+>> 
+>> I've attached the dmesg output (two events).
+>
+> Copied from the traces you attached (I've left them intact below for
+> reference):
+>
+>> [51669.515086] make invoked oom-killer: gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2, oom_score_adj=0
+>> [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G          I     4.7.1fw #1
+>> [51669.515093] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
+>> [51669.515095]  0000000000000000 ffffffff812a7d39 0000000000000000 0000000000000000
+>> [51669.515098]  ffffffff8114e4da ffff880018707d98 0000000000000000 000000000066ca81
+>> [51669.515100]  ffffffff8170e88d ffffffff810fe69e ffff88033fc38728 0000000200000006
+>> [51669.515102] Call Trace:
+>> [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
+>> [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
+>> [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
+>> [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
+>> [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
+>> [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
+>> [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
+>> [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
+>> [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
+>> [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
+>> [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
+>> [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
+>> [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
+> .....
+>> [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M) 3*4096kB (M) = 15900kB
+>> [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 183060kB
+>> [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
+> .....
+>
+> Alright, that's what I suspected. high order allocation for a new
+> kernel stack and memory is so fragmented that a contiguous
+> allocation fails. Really, this is a memory reclaim issue, not an XFS
+> issue.  There is lots of reclaimable memory available, but memory
+> reclaim is:
+>
+> 	a) not trying hard enough to reclaim reclaimable memory; and
+> 	b) not waiting for memory compaction to rebuild contiguous
+> 	   memory regions for high order allocations.
+>
+> Instead, it is declaring OOM and kicking the killer to free memory
+> held busy userspace.
 
-xfs/032 try to test different sectorsize and blocksize, I hit this bug
-on different size everytime. V4 and V5 XFS all can trigger this bug.
+Thanks.
 
-Test on upstream linux 4.8-rc7, xfsprogs v4.8.0-rc1.
+I have put the full kernel config here:
 
-Even merged Eric's patch:
- [PATCH] xfs_copy: Fix meta UUID handling on multiple copies
-I still can reproduce this bug.
-
-Thanks,
-Zorro
+  <http://static.enyo.de/fw/volatile/config-4.7.1fw>
