@@ -1,704 +1,454 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:51376 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758933AbcIWTJ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 15:09:57 -0400
-Date: Fri, 23 Sep 2016 20:09:55 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH 10/11] new iov_iter flavour: pipe-backed
-Message-ID: <20160923190955.GH2356@ZenIV.linux.org.uk>
-References: <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
- <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DF5437CA2
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 17:47:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8AA6C30404E
+	for <xfs@oss.sgi.com>; Wed, 21 Sep 2016 15:47:29 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	HtMjTWFf8j4MBu3r for <xfs@oss.sgi.com>;
+	Wed, 21 Sep 2016 15:47:22 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: remote attribute blocks aren't really userdata
+Date: Thu, 22 Sep 2016 08:46:50 +1000
+Message-Id: <1474498010-29452-1-git-send-email-david@fromorbit.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-iov_iter variant for passing data into pipe.  copy_to_iter()
-copies data into page(s) it has allocated and stuffs them into
-the pipe; copy_page_to_iter() stuffs there a reference to the
-page given to it.  Both will try to coalesce if possible.
-iov_iter_zero() is similar to copy_to_iter(); iov_iter_get_pages()
-and friends will do as copy_to_iter() would have and return the
-pages where the data would've been copied.  iov_iter_advance()
-will truncate everything past the spot it has advanced to.
+From: Dave Chinner <dchinner@redhat.com>
 
-New primitive: iov_iter_pipe(), used for initializing those.
-pipe should be locked all along.
+When adding a new remote attribute, we write the attribute to the
+new extent before the allocation transaction is committed. This
+means we cannot reuse busy extents as that violates crash
+consistency semantics. Hence we currently treat remote attribute
+extent allocation like userdata because it has the same overwrite
+ordering constraints as userdata.
 
-Running out of space acts as fault would for iovec-backed ones;
-in other words, giving it to ->read_iter() may result in short
-read if the pipe overflows, or -EFAULT if it happens with nothing
-copied there.
+Unfortunately, this also allows the allocator to incorrectly apply
+extent size hints to the remote attribute extent allocation. This
+results in interesting failures, such as transaction block
+reservation overruns and in-memory inode attribute fork corruption.
 
-In other words, ->read_iter() on those acts pretty much like
-->splice_read().  Moreover, all generic_file_splice_read() users,
-as well as many other ->splice_read() instances can be switched
-to that scheme - that'll happen in the next commit.
+To fix this, we need to separate the busy extent reuse configuration
+from the userdata configuration. This changes the definition of
+XFS_BMAPI_METADATA slightly - it now means that allocation is
+metadata and reuse of busy extents is acceptible due to the metadata
+ordering semantics of the journal. If this flag is not set, it
+means the allocation is that has unordered data writeback, and hence
+busy extent reuse is not allowed. It no longer implies the
+allocation is for user data, just that the data write will not be
+strictly ordered. This matches the semantics for both user data
+and remote attribute block allocation.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+As such, This patch changes the "userdata" field to a "datatype"
+field, and adds a "no busy reuse" flag to the field.
+When we detect an unordered data extent allocation, we immediately set
+the no reuse flag. We then set the "user data" flags based on the
+inode fork we are allocating the extent to. Hence we only set
+userdata flags on data fork allocations now and consider attribute
+fork remote extents to be an unordered metadata extent.
+
+The result is that remote attribute extents now have the expected
+allocation semantics, and the data fork allocation behaviour is
+completely unchanged.
+
+It should be noted that there may be other ways to fix this (e.g.
+use ordered metadata buffers for the remote attribute extent data
+write) but they are more invasive and difficult to validate both
+from a design and implementation POV. Hence this patch takes the
+simple, obvious route to fixing the problem...
+
+Reported-and-tested-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
-[this certainly needs to be documented in more details]
- fs/splice.c            |   2 +-
- include/linux/splice.h |   1 +
- include/linux/uio.h    |  14 +-
- lib/iov_iter.c         | 390 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 401 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 23 ++++++++++++-----------
+ fs/xfs/libxfs/xfs_alloc.h | 17 +++++++++++++++--
+ fs/xfs/libxfs/xfs_bmap.c  | 41 ++++++++++++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_bmap.h  |  2 +-
+ fs/xfs/xfs_bmap_util.c    |  2 +-
+ fs/xfs/xfs_extent_busy.c  |  2 +-
+ fs/xfs/xfs_filestream.c   |  9 ++++++---
+ fs/xfs/xfs_trace.h        |  8 ++++----
+ 8 files changed, 66 insertions(+), 38 deletions(-)
 
-diff --git a/fs/splice.c b/fs/splice.c
-index 085ad37..0daa7d1 100644
---- a/fs/splice.c
-+++ b/fs/splice.c
-@@ -524,7 +524,7 @@ ssize_t generic_file_splice_read(struct file *in, loff_t *ppos,
- }
- EXPORT_SYMBOL(generic_file_splice_read);
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 2620a86..ca75dc9 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -258,7 +258,7 @@ xfs_alloc_compute_diff(
+ 	xfs_agblock_t	wantbno,	/* target starting block */
+ 	xfs_extlen_t	wantlen,	/* target length */
+ 	xfs_extlen_t	alignment,	/* target alignment */
+-	char		userdata,	/* are we allocating data? */
++	int		datatype,	/* are we allocating data? */
+ 	xfs_agblock_t	freebno,	/* freespace's starting block */
+ 	xfs_extlen_t	freelen,	/* freespace's length */
+ 	xfs_agblock_t	*newbnop)	/* result: best start block from free */
+@@ -269,6 +269,7 @@ xfs_alloc_compute_diff(
+ 	xfs_extlen_t	newlen1=0;	/* length with newbno1 */
+ 	xfs_extlen_t	newlen2=0;	/* length with newbno2 */
+ 	xfs_agblock_t	wantend;	/* end of target extent */
++	bool		userdata = xfs_alloc_is_userdata(datatype);
  
--static const struct pipe_buf_operations default_pipe_buf_ops = {
-+const struct pipe_buf_operations default_pipe_buf_ops = {
- 	.can_merge = 0,
- 	.confirm = generic_pipe_buf_confirm,
- 	.release = generic_pipe_buf_release,
-diff --git a/include/linux/splice.h b/include/linux/splice.h
-index 58b300f..00a2116 100644
---- a/include/linux/splice.h
-+++ b/include/linux/splice.h
-@@ -85,4 +85,5 @@ extern void splice_shrink_spd(struct splice_pipe_desc *);
- extern void spd_release_page(struct splice_pipe_desc *, unsigned int);
+ 	ASSERT(freelen >= wantlen);
+ 	freeend = freebno + freelen;
+@@ -924,7 +925,7 @@ xfs_alloc_find_best_extent(
  
- extern const struct pipe_buf_operations page_cache_pipe_buf_ops;
-+extern const struct pipe_buf_operations default_pipe_buf_ops;
+ 			sdiff = xfs_alloc_compute_diff(args->agbno, args->len,
+ 						       args->alignment,
+-						       args->userdata, *sbnoa,
++						       args->datatype, *sbnoa,
+ 						       *slena, &new);
+ 
+ 			/*
+@@ -1108,7 +1109,7 @@ restart:
+ 			if (args->len < blen)
+ 				continue;
+ 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
+-				args->alignment, args->userdata, ltbnoa,
++				args->alignment, args->datatype, ltbnoa,
+ 				ltlena, &ltnew);
+ 			if (ltnew != NULLAGBLOCK &&
+ 			    (args->len > blen || ltdiff < bdiff)) {
+@@ -1261,7 +1262,7 @@ restart:
+ 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
+ 			xfs_alloc_fix_len(args);
+ 			ltdiff = xfs_alloc_compute_diff(args->agbno, args->len,
+-				args->alignment, args->userdata, ltbnoa,
++				args->alignment, args->datatype, ltbnoa,
+ 				ltlena, &ltnew);
+ 
+ 			error = xfs_alloc_find_best_extent(args,
+@@ -1278,7 +1279,7 @@ restart:
+ 			args->len = XFS_EXTLEN_MIN(gtlena, args->maxlen);
+ 			xfs_alloc_fix_len(args);
+ 			gtdiff = xfs_alloc_compute_diff(args->agbno, args->len,
+-				args->alignment, args->userdata, gtbnoa,
++				args->alignment, args->datatype, gtbnoa,
+ 				gtlena, &gtnew);
+ 
+ 			error = xfs_alloc_find_best_extent(args,
+@@ -1338,7 +1339,7 @@ restart:
+ 	}
+ 	rlen = args->len;
+ 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
+-				     args->userdata, ltbnoa, ltlena, &ltnew);
++				     args->datatype, ltbnoa, ltlena, &ltnew);
+ 	ASSERT(ltnew >= ltbno);
+ 	ASSERT(ltnew + rlen <= ltbnoa + ltlena);
+ 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
+@@ -1617,9 +1618,9 @@ xfs_alloc_ag_vextent_small(
+ 			goto error0;
+ 		if (fbno != NULLAGBLOCK) {
+ 			xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
+-					     args->userdata);
++			      xfs_alloc_allow_busy_reuse(args->datatype));
+ 
+-			if (args->userdata) {
++			if (xfs_alloc_is_userdata(args->datatype)) {
+ 				xfs_buf_t	*bp;
+ 
+ 				bp = xfs_btree_get_bufs(args->mp, args->tp,
+@@ -2099,7 +2100,7 @@ xfs_alloc_fix_freelist(
+ 	 * somewhere else if we are not being asked to try harder at this
+ 	 * point
+ 	 */
+-	if (pag->pagf_metadata && args->userdata &&
++	if (pag->pagf_metadata && xfs_alloc_is_userdata(args->datatype) &&
+ 	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
+ 		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+ 		goto out_agbp_relse;
+@@ -2675,7 +2676,7 @@ xfs_alloc_vextent(
+ 		 * Try near allocation first, then anywhere-in-ag after
+ 		 * the first a.g. fails.
+ 		 */
+-		if ((args->userdata & XFS_ALLOC_INITIAL_USER_DATA) &&
++		if ((args->datatype & XFS_ALLOC_INITIAL_USER_DATA) &&
+ 		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
+ 			args->fsbno = XFS_AGB_TO_FSB(mp,
+ 					((mp->m_agfrotor / rotorstep) %
+@@ -2808,7 +2809,7 @@ xfs_alloc_vextent(
  #endif
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 1b5d1cd..c4fe1ab 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -13,6 +13,7 @@
- #include <uapi/linux/uio.h>
  
- struct page;
-+struct pipe_inode_info;
- 
- struct kvec {
- 	void *iov_base; /* and that should *never* hold a userland pointer */
-@@ -23,6 +24,7 @@ enum {
- 	ITER_IOVEC = 0,
- 	ITER_KVEC = 2,
- 	ITER_BVEC = 4,
-+	ITER_PIPE = 8,
- };
- 
- struct iov_iter {
-@@ -33,8 +35,12 @@ struct iov_iter {
- 		const struct iovec *iov;
- 		const struct kvec *kvec;
- 		const struct bio_vec *bvec;
-+		struct pipe_inode_info *pipe;
-+	};
-+	union {
-+		unsigned long nr_segs;
-+		int idx;
- 	};
--	unsigned long nr_segs;
- };
+ 		/* Zero the extent if we were asked to do so */
+-		if (args->userdata & XFS_ALLOC_USERDATA_ZERO) {
++		if (args->datatype & XFS_ALLOC_USERDATA_ZERO) {
+ 			error = xfs_zero_extent(args->ip, args->fsbno, args->len);
+ 			if (error)
+ 				goto error0;
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index f7c5201..7c404a6 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -85,20 +85,33 @@ typedef struct xfs_alloc_arg {
+ 	xfs_extlen_t	len;		/* output: actual size of extent */
+ 	xfs_alloctype_t	type;		/* allocation type XFS_ALLOCTYPE_... */
+ 	xfs_alloctype_t	otype;		/* original allocation type */
++	int		datatype;	/* mask defining data type treatment */
+ 	char		wasdel;		/* set if allocation was prev delayed */
+ 	char		wasfromfl;	/* set if allocation is from freelist */
+-	char		userdata;	/* mask defining userdata treatment */
+ 	xfs_fsblock_t	firstblock;	/* io first block allocated */
+ 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+ 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+ } xfs_alloc_arg_t;
  
  /*
-@@ -64,7 +70,7 @@ static inline struct iovec iov_iter_iovec(const struct iov_iter *iter)
- }
- 
- #define iov_for_each(iov, iter, start)				\
--	if (!((start).type & ITER_BVEC))			\
-+	if (!((start).type & (ITER_BVEC | ITER_PIPE)))		\
- 	for (iter = (start);					\
- 	     (iter).count &&					\
- 	     ((iov = iov_iter_iovec(&(iter))), 1);		\
-@@ -94,6 +100,8 @@ void iov_iter_kvec(struct iov_iter *i, int direction, const struct kvec *kvec,
- 			unsigned long nr_segs, size_t count);
- void iov_iter_bvec(struct iov_iter *i, int direction, const struct bio_vec *bvec,
- 			unsigned long nr_segs, size_t count);
-+void iov_iter_pipe(struct iov_iter *i, int direction, struct pipe_inode_info *pipe,
-+			size_t count);
- ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
- 			size_t maxsize, unsigned maxpages, size_t *start);
- ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-@@ -109,7 +117,7 @@ static inline size_t iov_iter_count(struct iov_iter *i)
- 
- static inline bool iter_is_iovec(struct iov_iter *i)
- {
--	return !(i->type & (ITER_BVEC | ITER_KVEC));
-+	return !(i->type & (ITER_BVEC | ITER_KVEC | ITER_PIPE));
- }
- 
- /*
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 9e8c738..02efc898 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -3,8 +3,11 @@
- #include <linux/pagemap.h>
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
-+#include <linux/splice.h>
- #include <net/checksum.h>
- 
-+#define PIPE_PARANOIA /* for now */
-+
- #define iterate_iovec(i, n, __v, __p, skip, STEP) {	\
- 	size_t left;					\
- 	size_t wanted = n;				\
-@@ -290,6 +293,82 @@ done:
- 	return wanted - bytes;
- }
- 
-+#ifdef PIPE_PARANOIA
-+static bool sanity(const struct iov_iter *i)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	int idx = i->idx;
-+	int delta = (pipe->curbuf + pipe->nrbufs - idx) & (pipe->buffers - 1);
-+	if (i->iov_offset) {
-+		struct pipe_buffer *p;
-+		if (unlikely(delta != 1) || unlikely(!pipe->nrbufs))
-+			goto Bad;	// must be at the last buffer...
-+
-+		p = &pipe->bufs[idx];
-+		if (unlikely(p->offset + p->len != i->iov_offset))
-+			goto Bad;	// ... at the end of segment
-+	} else {
-+		if (delta)
-+			goto Bad;	// must be right after the last buffer
-+	}
-+	return true;
-+Bad:
-+	WARN_ON(1);
-+	return false;
-+}
-+#else
-+#define sanity(i) true
-+#endif
-+
-+static inline int next_idx(int idx, struct pipe_inode_info *pipe)
-+{
-+	return (idx + 1) & (pipe->buffers - 1);
-+}
-+
-+static size_t copy_page_to_iter_pipe(struct page *page, size_t offset, size_t bytes,
-+			 struct iov_iter *i)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	struct pipe_buffer *buf;
-+	size_t off;
-+	int idx;
-+
-+	if (unlikely(bytes > i->count))
-+		bytes = i->count;
-+
-+	if (unlikely(!bytes))
-+		return 0;
-+
-+	if (!sanity(i))
-+		return 0;
-+
-+	off = i->iov_offset;
-+	idx = i->idx;
-+	buf = &pipe->bufs[idx];
-+	if (off) {
-+		if (offset == off && buf->page == page) {
-+			/* merge with the last one */
-+			buf->len += bytes;
-+			i->iov_offset += bytes;
-+			goto out;
-+		}
-+		idx = next_idx(idx, pipe);
-+		buf = &pipe->bufs[idx];
-+	}
-+	if (idx == pipe->curbuf && pipe->nrbufs)
-+		return 0;
-+	pipe->nrbufs++;
-+	buf->ops = &page_cache_pipe_buf_ops;
-+	get_page(buf->page = page);
-+	buf->offset = offset;
-+	buf->len = bytes;
-+	i->iov_offset = offset + bytes;
-+	i->idx = idx;
-+out:
-+	i->count -= bytes;
-+	return bytes;
-+}
-+
- /*
-  * Fault in the first iovec of the given iov_iter, to a maximum length
-  * of bytes. Returns 0 on success, or non-zero if the memory could not be
-@@ -376,9 +455,98 @@ static void memzero_page(struct page *page, size_t offset, size_t len)
- 	kunmap_atomic(addr);
- }
- 
-+static inline bool allocated(struct pipe_buffer *buf)
-+{
-+	return buf->ops == &default_pipe_buf_ops;
-+}
-+
-+static inline void data_start(const struct iov_iter *i, int *idxp, size_t *offp)
-+{
-+	size_t off = i->iov_offset;
-+	int idx = i->idx;
-+	if (off && (!allocated(&i->pipe->bufs[idx]) || off == PAGE_SIZE)) {
-+		idx = next_idx(idx, i->pipe);
-+		off = 0;
-+	}
-+	*idxp = idx;
-+	*offp = off;
-+}
-+
-+static size_t push_pipe(struct iov_iter *i, size_t size,
-+			int *idxp, size_t *offp)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	size_t off;
-+	int idx;
-+	ssize_t left;
-+
-+	if (unlikely(size > i->count))
-+		size = i->count;
-+	if (unlikely(!size))
-+		return 0;
-+
-+	left = size;
-+	data_start(i, &idx, &off);
-+	*idxp = idx;
-+	*offp = off;
-+	if (off) {
-+		left -= PAGE_SIZE - off;
-+		if (left <= 0) {
-+			pipe->bufs[idx].len += size;
-+			return size;
-+		}
-+		pipe->bufs[idx].len = PAGE_SIZE;
-+		idx = next_idx(idx, pipe);
-+	}
-+	while (idx != pipe->curbuf || !pipe->nrbufs) {
-+		struct page *page = alloc_page(GFP_USER);
-+		if (!page)
-+			break;
-+		pipe->nrbufs++;
-+		pipe->bufs[idx].ops = &default_pipe_buf_ops;
-+		pipe->bufs[idx].page = page;
-+		pipe->bufs[idx].offset = 0;
-+		if (left <= PAGE_SIZE) {
-+			pipe->bufs[idx].len = left;
-+			return size;
-+		}
-+		pipe->bufs[idx].len = PAGE_SIZE;
-+		left -= PAGE_SIZE;
-+		idx = next_idx(idx, pipe);
-+	}
-+	return size - left;
-+}
-+
-+static size_t copy_pipe_to_iter(const void *addr, size_t bytes,
-+				struct iov_iter *i)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	size_t n, off;
-+	int idx;
-+
-+	if (!sanity(i))
-+		return 0;
-+
-+	bytes = n = push_pipe(i, bytes, &idx, &off);
-+	if (unlikely(!n))
-+		return 0;
-+	for ( ; n; idx = next_idx(idx, pipe), off = 0) {
-+		size_t chunk = min_t(size_t, n, PAGE_SIZE - off);
-+		memcpy_to_page(pipe->bufs[idx].page, off, addr, chunk);
-+		i->idx = idx;
-+		i->iov_offset = off + chunk;
-+		n -= chunk;
-+		addr += chunk;
-+	}
-+	i->count -= bytes;
-+	return bytes;
-+}
-+
- size_t copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i)
- {
- 	const char *from = addr;
-+	if (unlikely(i->type & ITER_PIPE))
-+		return copy_pipe_to_iter(addr, bytes, i);
- 	iterate_and_advance(i, bytes, v,
- 		__copy_to_user(v.iov_base, (from += v.iov_len) - v.iov_len,
- 			       v.iov_len),
-@@ -394,6 +562,10 @@ EXPORT_SYMBOL(copy_to_iter);
- size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
- {
- 	char *to = addr;
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return 0;
-+	}
- 	iterate_and_advance(i, bytes, v,
- 		__copy_from_user((to += v.iov_len) - v.iov_len, v.iov_base,
- 				 v.iov_len),
-@@ -409,6 +581,10 @@ EXPORT_SYMBOL(copy_from_iter);
- size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
- {
- 	char *to = addr;
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return 0;
-+	}
- 	iterate_and_advance(i, bytes, v,
- 		__copy_from_user_nocache((to += v.iov_len) - v.iov_len,
- 					 v.iov_base, v.iov_len),
-@@ -429,14 +605,20 @@ size_t copy_page_to_iter(struct page *page, size_t offset, size_t bytes,
- 		size_t wanted = copy_to_iter(kaddr + offset, bytes, i);
- 		kunmap_atomic(kaddr);
- 		return wanted;
--	} else
-+	} else if (likely(!(i->type & ITER_PIPE)))
- 		return copy_page_to_iter_iovec(page, offset, bytes, i);
-+	else
-+		return copy_page_to_iter_pipe(page, offset, bytes, i);
- }
- EXPORT_SYMBOL(copy_page_to_iter);
- 
- size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes,
- 			 struct iov_iter *i)
- {
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return 0;
-+	}
- 	if (i->type & (ITER_BVEC|ITER_KVEC)) {
- 		void *kaddr = kmap_atomic(page);
- 		size_t wanted = copy_from_iter(kaddr + offset, bytes, i);
-@@ -447,8 +629,34 @@ size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes,
- }
- EXPORT_SYMBOL(copy_page_from_iter);
- 
-+static size_t pipe_zero(size_t bytes, struct iov_iter *i)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	size_t n, off;
-+	int idx;
-+
-+	if (!sanity(i))
-+		return 0;
-+
-+	bytes = n = push_pipe(i, bytes, &idx, &off);
-+	if (unlikely(!n))
-+		return 0;
-+
-+	for ( ; n; idx = next_idx(idx, pipe), off = 0) {
-+		size_t chunk = min_t(size_t, n, PAGE_SIZE - off);
-+		memzero_page(pipe->bufs[idx].page, off, chunk);
-+		i->idx = idx;
-+		i->iov_offset = off + chunk;
-+		n -= chunk;
-+	}
-+	i->count -= bytes;
-+	return bytes;
-+}
-+
- size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
- {
-+	if (unlikely(i->type & ITER_PIPE))
-+		return pipe_zero(bytes, i);
- 	iterate_and_advance(i, bytes, v,
- 		__clear_user(v.iov_base, v.iov_len),
- 		memzero_page(v.bv_page, v.bv_offset, v.bv_len),
-@@ -463,6 +671,11 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
- 		struct iov_iter *i, unsigned long offset, size_t bytes)
- {
- 	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		kunmap_atomic(kaddr);
-+		WARN_ON(1);
-+		return 0;
-+	}
- 	iterate_all_kinds(i, bytes, v,
- 		__copy_from_user_inatomic((p += v.iov_len) - v.iov_len,
- 					  v.iov_base, v.iov_len),
-@@ -475,8 +688,55 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
- }
- EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
- 
-+static void pipe_advance(struct iov_iter *i, size_t size)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	struct pipe_buffer *buf;
-+	size_t off;
-+	int idx;
-+	
-+	if (unlikely(i->count < size))
-+		size = i->count;
-+
-+	idx = i->idx;
-+	off = i->iov_offset;
-+	if (size || off) {
-+		/* take it relative to the beginning of buffer */
-+		size += off - pipe->bufs[idx].offset;
-+		while (1) {
-+			buf = &pipe->bufs[idx];
-+			if (size > buf->len) {
-+				size -= buf->len;
-+				idx = next_idx(idx, pipe);
-+				off = 0;
-+			} else {
-+				buf->len = size;
-+				i->idx = idx;
-+				i->iov_offset = off = buf->offset + size;
-+				break;
-+			}
-+		}
-+		idx = next_idx(idx, pipe);
-+	}
-+	if (pipe->nrbufs) {
-+		int unused = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
-+		/* [curbuf,unused) is in use.  Free [idx,unused) */
-+		while (idx != unused) {
-+			buf = &pipe->bufs[idx];
-+			buf->ops->release(pipe, buf);
-+			buf->ops = NULL;
-+			idx = next_idx(idx, pipe);
-+			pipe->nrbufs--;
-+		}
-+	}
-+}
-+
- void iov_iter_advance(struct iov_iter *i, size_t size)
- {
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		pipe_advance(i, size);
-+		return;
-+	}
- 	iterate_and_advance(i, size, v, 0, 0, 0)
- }
- EXPORT_SYMBOL(iov_iter_advance);
-@@ -486,6 +746,8 @@ EXPORT_SYMBOL(iov_iter_advance);
+- * Defines for userdata
++ * Defines for datatype
   */
- size_t iov_iter_single_seg_count(const struct iov_iter *i)
+ #define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
+ #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
+ #define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
++#define XFS_ALLOC_NOBUSY		(1 << 3)/* Busy extents not allowed */
++
++static inline bool
++xfs_alloc_is_userdata(int datatype)
++{
++	return (datatype & ~XFS_ALLOC_NOBUSY) != 0;
++}
++
++static inline bool
++xfs_alloc_allow_busy_reuse(int datatype)
++{
++	return (datatype & XFS_ALLOC_NOBUSY) == 0;
++}
+ 
+ /* freespace limit calculations */
+ #define XFS_ALLOC_AGFL_RESERVE	4
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6fd4586..9d7f61d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3348,7 +3348,8 @@ xfs_bmap_adjacent(
+ 
+ 	mp = ap->ip->i_mount;
+ 	nullfb = *ap->firstblock == NULLFSBLOCK;
+-	rt = XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata;
++	rt = XFS_IS_REALTIME_INODE(ap->ip) &&
++		xfs_alloc_is_userdata(ap->datatype);
+ 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
+ 	/*
+ 	 * If allocating at eof, and there's a previous real block,
+@@ -3624,7 +3625,7 @@ xfs_bmap_btalloc(
  {
-+	if (unlikely(i->type & ITER_PIPE))
-+		return i->count;	// it is a silly place, anyway
- 	if (i->nr_segs == 1)
- 		return i->count;
- 	else if (i->type & ITER_BVEC)
-@@ -521,6 +783,19 @@ void iov_iter_bvec(struct iov_iter *i, int direction,
- }
- EXPORT_SYMBOL(iov_iter_bvec);
+ 	xfs_mount_t	*mp;		/* mount point structure */
+ 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+-	xfs_extlen_t	align;		/* minimum allocation alignment */
++	xfs_extlen_t	align = 0;	/* minimum allocation alignment */
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+ 	xfs_agnumber_t	ag;
+ 	xfs_alloc_arg_t	args;
+@@ -3647,7 +3648,8 @@ xfs_bmap_btalloc(
+ 	else if (mp->m_dalign)
+ 		stripe_align = mp->m_dalign;
  
-+void iov_iter_pipe(struct iov_iter *i, int direction,
-+			struct pipe_inode_info *pipe,
-+			size_t count)
-+{
-+	BUG_ON(direction != ITER_PIPE);
-+	i->type = direction;
-+	i->pipe = pipe;
-+	i->idx = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
-+	i->iov_offset = 0;
-+	i->count = count;
-+}
-+EXPORT_SYMBOL(iov_iter_pipe);
-+
- unsigned long iov_iter_alignment(const struct iov_iter *i)
+-	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
++	if (xfs_alloc_is_userdata(ap->datatype))
++		align = xfs_get_extsz_hint(ap->ip);
+ 	if (unlikely(align)) {
+ 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+ 						align, 0, ap->eof, 0, ap->conv,
+@@ -3660,7 +3662,8 @@ xfs_bmap_btalloc(
+ 	nullfb = *ap->firstblock == NULLFSBLOCK;
+ 	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
+ 	if (nullfb) {
+-		if (ap->userdata && xfs_inode_is_filestream(ap->ip)) {
++		if (xfs_alloc_is_userdata(ap->datatype) &&
++		    xfs_inode_is_filestream(ap->ip)) {
+ 			ag = xfs_filestream_lookup_ag(ap->ip);
+ 			ag = (ag != NULLAGNUMBER) ? ag : 0;
+ 			ap->blkno = XFS_AGB_TO_FSB(mp, ag, 0);
+@@ -3700,7 +3703,8 @@ xfs_bmap_btalloc(
+ 		 * enough for the request.  If one isn't found, then adjust
+ 		 * the minimum allocation size to the largest space found.
+ 		 */
+-		if (ap->userdata && xfs_inode_is_filestream(ap->ip))
++		if (xfs_alloc_is_userdata(ap->datatype) &&
++		    xfs_inode_is_filestream(ap->ip))
+ 			error = xfs_bmap_btalloc_filestreams(ap, &args, &blen);
+ 		else
+ 			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
+@@ -3784,8 +3788,8 @@ xfs_bmap_btalloc(
+ 	args.minleft = ap->minleft;
+ 	args.wasdel = ap->wasdel;
+ 	args.resv = XFS_AG_RESV_NONE;
+-	args.userdata = ap->userdata;
+-	if (ap->userdata & XFS_ALLOC_USERDATA_ZERO)
++	args.datatype = ap->datatype;
++	if (ap->datatype & XFS_ALLOC_USERDATA_ZERO)
+ 		args.ip = ap->ip;
+ 
+ 	error = xfs_alloc_vextent(&args);
+@@ -3879,7 +3883,8 @@ STATIC int
+ xfs_bmap_alloc(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
  {
- 	unsigned long res = 0;
-@@ -529,6 +804,11 @@ unsigned long iov_iter_alignment(const struct iov_iter *i)
- 	if (!size)
- 		return 0;
- 
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		if (i->iov_offset && allocated(&i->pipe->bufs[i->idx]))
-+			return size | i->iov_offset;
-+		return size;
-+	}
- 	iterate_all_kinds(i, size, v,
- 		(res |= (unsigned long)v.iov_base | v.iov_len, 0),
- 		res |= v.bv_offset | v.bv_len,
-@@ -545,6 +825,11 @@ unsigned long iov_iter_gap_alignment(const struct iov_iter *i)
- 	if (!size)
- 		return 0;
- 
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return ~0U;
-+	}
-+
- 	iterate_all_kinds(i, size, v,
- 		(res |= (!res ? 0 : (unsigned long)v.iov_base) |
- 			(size != v.iov_len ? size : 0), 0),
-@@ -557,6 +842,47 @@ unsigned long iov_iter_gap_alignment(const struct iov_iter *i)
+-	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
++	if (XFS_IS_REALTIME_INODE(ap->ip) &&
++	    xfs_alloc_is_userdata(ap->datatype))
+ 		return xfs_bmap_rtalloc(ap);
+ 	return xfs_bmap_btalloc(ap);
  }
- EXPORT_SYMBOL(iov_iter_gap_alignment);
+@@ -4204,15 +4209,21 @@ xfs_bmapi_allocate(
+ 	}
  
-+static inline size_t __pipe_get_pages(struct iov_iter *i,
-+				size_t maxsize,
-+				struct page **pages,
-+				int idx,
-+				size_t *start)
-+{
-+	struct pipe_inode_info *pipe = i->pipe;
-+	size_t n = push_pipe(i, maxsize, &idx, start);
-+	if (!n)
-+		return 0;
-+
-+	maxsize = n;
-+	n += *start;
-+	while (n >= PAGE_SIZE) {
-+		*pages++ = pipe->bufs[idx].page;
-+		idx = next_idx(idx, pipe);
-+		n -= PAGE_SIZE;
-+	}
-+
-+	return maxsize;
-+}
-+
-+static ssize_t pipe_get_pages(struct iov_iter *i,
-+		   struct page **pages, size_t maxsize, unsigned maxpages,
-+		   size_t *start)
-+{
-+	unsigned npages;
-+	size_t capacity;
-+	int idx;
-+
-+	if (!sanity(i))
-+		return 0;
-+
-+	data_start(i, &idx, start);
-+	/* some of this one + all after this one */
-+	npages = ((i->pipe->curbuf - idx - 1) & (i->pipe->buffers - 1)) + 1;
-+	capacity = min(npages,maxpages) * PAGE_SIZE - *start;
-+
-+	return __pipe_get_pages(i, min(maxsize, capacity), pages, idx, start);
-+}
-+
- ssize_t iov_iter_get_pages(struct iov_iter *i,
- 		   struct page **pages, size_t maxsize, unsigned maxpages,
- 		   size_t *start)
-@@ -567,6 +893,8 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
- 	if (!maxsize)
- 		return 0;
+ 	/*
+-	 * Indicate if this is the first user data in the file, or just any
+-	 * user data. And if it is userdata, indicate whether it needs to
+-	 * be initialised to zero during allocation.
++	 * Set the data type being allocated. For the data fork, the first data
++	 * in the file is treated differently to all other allocations. For the
++	 * attribute fork, we only need to ensure the allocated range is not on
++	 * the busy list.
+ 	 */
+ 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
+-		bma->userdata = (bma->offset == 0) ?
+-			XFS_ALLOC_INITIAL_USER_DATA : XFS_ALLOC_USERDATA;
++		bma->datatype = XFS_ALLOC_NOBUSY;
++		if (whichfork == XFS_DATA_FORK) {
++			if (bma->offset == 0)
++				bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
++			else
++				bma->datatype |= XFS_ALLOC_USERDATA;
++		}
+ 		if (bma->flags & XFS_BMAPI_ZERO)
+-			bma->userdata |= XFS_ALLOC_USERDATA_ZERO;
++			bma->datatype |= XFS_ALLOC_USERDATA_ZERO;
+ 	}
  
-+	if (unlikely(i->type & ITER_PIPE))
-+		return pipe_get_pages(i, pages, maxsize, maxpages, start);
- 	iterate_all_kinds(i, maxsize, v, ({
- 		unsigned long addr = (unsigned long)v.iov_base;
- 		size_t len = v.iov_len + (*start = addr & (PAGE_SIZE - 1));
-@@ -602,6 +930,37 @@ static struct page **get_pages_array(size_t n)
- 	return p;
- }
+ 	bma->minlen = (bma->flags & XFS_BMAPI_CONTIG) ? bma->length : 1;
+@@ -4482,7 +4493,7 @@ xfs_bmapi_write(
+ 	bma.tp = tp;
+ 	bma.ip = ip;
+ 	bma.total = total;
+-	bma.userdata = 0;
++	bma.datatype = 0;
+ 	bma.dfops = dfops;
+ 	bma.firstblock = firstblock;
  
-+static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
-+		   struct page ***pages, size_t maxsize,
-+		   size_t *start)
-+{
-+	struct page **p;
-+	size_t n;
-+	int idx;
-+	int npages;
-+
-+	if (!sanity(i))
-+		return 0;
-+
-+	data_start(i, &idx, start);
-+	/* some of this one + all after this one */
-+	npages = ((i->pipe->curbuf - idx - 1) & (i->pipe->buffers - 1)) + 1;
-+	n = npages * PAGE_SIZE - *start;
-+	if (maxsize > n)
-+		maxsize = n;
-+	else
-+		npages = DIV_ROUND_UP(maxsize + *start, PAGE_SIZE);
-+	p = get_pages_array(npages);
-+	if (!p)
-+		return -ENOMEM;
-+	n = __pipe_get_pages(i, maxsize, p, idx, start);
-+	if (n)
-+		*pages = p;
-+	else
-+		kvfree(p);
-+	return n;
-+}
-+
- ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
- 		   struct page ***pages, size_t maxsize,
- 		   size_t *start)
-@@ -614,6 +973,8 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
- 	if (!maxsize)
- 		return 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index d660069..8395f6e 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -54,7 +54,7 @@ struct xfs_bmalloca {
+ 	bool			wasdel;	/* replacing a delayed allocation */
+ 	bool			aeof;	/* allocated space at eof */
+ 	bool			conv;	/* overwriting unwritten extents */
+-	char			userdata;/* userdata mask */
++	int			datatype;/* data type being allocated */
+ 	int			flags;
+ };
  
-+	if (unlikely(i->type & ITER_PIPE))
-+		return pipe_get_pages_alloc(i, pages, maxsize, start);
- 	iterate_all_kinds(i, maxsize, v, ({
- 		unsigned long addr = (unsigned long)v.iov_base;
- 		size_t len = v.iov_len + (*start = addr & (PAGE_SIZE - 1));
-@@ -655,6 +1016,10 @@ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
- 	__wsum sum, next;
- 	size_t off = 0;
- 	sum = *csum;
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return 0;
-+	}
- 	iterate_and_advance(i, bytes, v, ({
- 		int err = 0;
- 		next = csum_and_copy_from_user(v.iov_base, 
-@@ -693,6 +1058,10 @@ size_t csum_and_copy_to_iter(const void *addr, size_t bytes, __wsum *csum,
- 	__wsum sum, next;
- 	size_t off = 0;
- 	sum = *csum;
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		WARN_ON(1);	/* for now */
-+		return 0;
-+	}
- 	iterate_and_advance(i, bytes, v, ({
- 		int err = 0;
- 		next = csum_and_copy_to_user((from += v.iov_len) - v.iov_len,
-@@ -732,7 +1101,20 @@ int iov_iter_npages(const struct iov_iter *i, int maxpages)
- 	if (!size)
- 		return 0;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 4ece4f2..e827d65 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -182,7 +182,7 @@ xfs_bmap_rtalloc(
+ 					XFS_TRANS_DQ_RTBCOUNT, (long) ralen);
  
--	iterate_all_kinds(i, size, v, ({
-+	if (unlikely(i->type & ITER_PIPE)) {
-+		struct pipe_inode_info *pipe = i->pipe;
-+		size_t off;
-+		int idx;
-+
-+		if (!sanity(i))
-+			return 0;
-+
-+		data_start(i, &idx, &off);
-+		/* some of this one + all after this one */
-+		npages = ((pipe->curbuf - idx - 1) & (pipe->buffers - 1)) + 1;
-+		if (npages >= maxpages)
-+			return maxpages;
-+	} else iterate_all_kinds(i, size, v, ({
- 		unsigned long p = (unsigned long)v.iov_base;
- 		npages += DIV_ROUND_UP(p + v.iov_len, PAGE_SIZE)
- 			- p / PAGE_SIZE;
-@@ -757,6 +1139,10 @@ EXPORT_SYMBOL(iov_iter_npages);
- const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags)
- {
- 	*new = *old;
-+	if (unlikely(new->type & ITER_PIPE)) {
-+		WARN_ON(1);
-+		return NULL;
-+	}
- 	if (new->type & ITER_BVEC)
- 		return new->bvec = kmemdup(new->bvec,
- 				    new->nr_segs * sizeof(struct bio_vec),
+ 		/* Zero the extent if we were asked to do so */
+-		if (ap->userdata & XFS_ALLOC_USERDATA_ZERO) {
++		if (ap->datatype & XFS_ALLOC_USERDATA_ZERO) {
+ 			error = xfs_zero_extent(ap->ip, ap->blkno, ap->length);
+ 			if (error)
+ 				return error;
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index c263e07..162dc18 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -384,7 +384,7 @@ restart:
+ 		 * If this is a metadata allocation, try to reuse the busy
+ 		 * extent instead of trimming the allocation.
+ 		 */
+-		if (!args->userdata &&
++		if (!xfs_alloc_is_userdata(args->datatype) &&
+ 		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
+ 			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
+ 							  busyp, fbno, flen,
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index c8005fd..043ca380 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -371,7 +371,8 @@ xfs_filestream_new_ag(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_extlen_t		minlen = ap->length;
+ 	xfs_agnumber_t		startag = 0;
+-	int			flags, err = 0;
++	int			flags = 0;
++	int			err = 0;
+ 	struct xfs_mru_cache_elem *mru;
+ 
+ 	*agp = NULLAGNUMBER;
+@@ -387,8 +388,10 @@ xfs_filestream_new_ag(
+ 		startag = (item->ag + 1) % mp->m_sb.sb_agcount;
+ 	}
+ 
+-	flags = (ap->userdata ? XFS_PICK_USERDATA : 0) |
+-	        (ap->dfops->dop_low ? XFS_PICK_LOWSPACE : 0);
++	if (xfs_alloc_is_userdata(ap->datatype))
++		flags |= XFS_PICK_USERDATA;
++	if (ap->dfops->dop_low)
++		flags |= XFS_PICK_LOWSPACE;
+ 
+ 	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 993e2d2..2be97c0 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1624,7 +1624,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		__field(char, wasdel)
+ 		__field(char, wasfromfl)
+ 		__field(int, resv)
+-		__field(char, userdata)
++		__field(int, datatype)
+ 		__field(xfs_fsblock_t, firstblock)
+ 	),
+ 	TP_fast_assign(
+@@ -1645,13 +1645,13 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		__entry->wasdel = args->wasdel;
+ 		__entry->wasfromfl = args->wasfromfl;
+ 		__entry->resv = args->resv;
+-		__entry->userdata = args->userdata;
++		__entry->datatype = args->datatype;
+ 		__entry->firstblock = args->firstblock;
+ 	),
+ 	TP_printk("dev %d:%d agno %u agbno %u minlen %u maxlen %u mod %u "
+ 		  "prod %u minleft %u total %u alignment %u minalignslop %u "
+ 		  "len %u type %s otype %s wasdel %d wasfromfl %d resv %d "
+-		  "userdata %d firstblock 0x%llx",
++		  "userdata 0x%xfirstblock 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->agbno,
+@@ -1669,7 +1669,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+ 		  __entry->wasdel,
+ 		  __entry->wasfromfl,
+ 		  __entry->resv,
+-		  __entry->userdata,
++		  __entry->datatype,
+ 		  (unsigned long long)__entry->firstblock)
+ )
+ 
 -- 
-2.9.3
+2.8.0.rc3
 
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
