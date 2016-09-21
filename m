@@ -1,104 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35406 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbcIJHhs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Sep 2016 03:37:48 -0400
-Received: by mail-wm0-f65.google.com with SMTP id a6so5649092wmc.2
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Sep 2016 00:37:47 -0700 (PDT)
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Subject: [RFC] libxfs: cross-compile fixes
-Date: Sat, 10 Sep 2016 09:37:31 +0200
-Message-Id: <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
-In-Reply-To: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36494 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755366AbcIUDIn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Sep 2016 23:08:43 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E00E88E69C
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 03:08:42 +0000 (UTC)
+Received: from localhost (dhcp12-196.nay.redhat.com [10.66.12.196] (may be forged))
+        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8L38fwB008646
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2016 23:08:42 -0400
+Date: Wed, 21 Sep 2016 11:08:41 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: xfs/181 trigger xfs corruption on ppc64le
+Message-ID: <20160921030841.GQ12847@dhcp12-143.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>
 
----
+Hi,
 
-Based on the earlier discussion this seems to be the preferred way of
-handling things.
+There's a XFS (v4/v5) corruption from xfs/181. If run xfs/181 on ppc64le
+10~100 times (more or less) with 1k or 4k block size, it'll trigger a
+corruption:
+*** xfs_repair -n output ***
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+attribute entry #0 in attr block 0, inode 25194 is INCOMPLETE
+problem with attribute contents in inode 25194
+would clear attr fork
+bad nblocks 33 for inode 25194, would reset to 0
+bad anextents 1 for inode 25194, would reset to 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify link counts...
+No modify flag set, skipping filesystem flush and exiting.
+*** end xfs_repair output
 
-Should I split it into 3 patches?
-Do you want something different to happen when cross-compiling?
+The ppc64le machine has 64k page size. Above corruption only can be reproduced
+on ppc64le machine until now. The full output (on v4 1k blksize XFS) as below:
+http://paste.fedoraproject.org/431761/14744268/
 
-Cheers
-Ralph
 
----
- configure.ac         |  3 +++
- include/builddefs.in |  1 +
- libxfs/Makefile      | 10 ++++++++--
- 3 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 79053e5..89334d6 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -10,11 +10,14 @@ AC_PROG_LIBTOOL
- 
- AC_PROG_CC
- if test $cross_compiling = no; then
-+  CROSS_COMPILING=no
-   BUILD_CC="$CC"
-   AC_SUBST(BUILD_CC)
- else
-+  CROSS_COMPILING=yes
-   AC_CHECK_PROGS(BUILD_CC, gcc cc)
- fi
-+AC_SUBST(CROSS_COMPILING)
- 
- AC_ARG_ENABLE(shared,
- [ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7153d7a..0c4ce36 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -26,6 +26,7 @@ MALLOCLIB = @malloc_lib@
- LOADERFLAGS = @LDFLAGS@
- LTLDFLAGS = @LDFLAGS@
- CFLAGS = @CFLAGS@
-+CROSS_COMPILING = @CROSS_COMPILING@
- 
- LIBRT = @librt@
- LIBUUID = @libuuid@
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 62608bd..ad492e5 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
- 
- LDIRT = gen_crc32table crc32table.h crc32selftest
- 
-+ifeq ($(CROSS_COMPILING),no)
-+BUILD_CFLAGS:=$(CFLAGS)
-+endif
-+
- default: crc32selftest ltdepend $(LTLIBRARY)
- 
- crc32table.h: gen_crc32table.c
- 	@echo "    [CC]     gen_crc32table"
--	$(Q) $(BUILD_CC) $(CFLAGS) -o gen_crc32table $<
-+	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
- 	@echo "    [GENERATE] $@"
- 	$(Q) ./gen_crc32table > crc32table.h
- 
-@@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
- # busted CRC calculation at build time and hence avoid putting bad CRCs down on
- # disk.
- crc32selftest: gen_crc32table.c crc32table.h crc32.c
-+ifeq ($(CROSS_COMPILING),no)
- 	@echo "    [TEST]    CRC32"
--	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-+	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
- 	$(Q) ./$@
-+endif
- 
- # set up include/xfs header directory
- include $(BUILDRULES)
--- 
-2.7.3
+Then I tried to test with 64k blocksize, I got another problem which easiler
+to reproduce, ppc64 and aarch64 which have 64 pagesize all can trigger this
+problem too:
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+agi unlinked bucket 0 is 1088 in ag 0 (inode=1088)
+agi unlinked bucket 1 is 1089 in ag 0 (inode=1089)
+agi unlinked bucket 2 is 1090 in ag 0 (inode=1090)
+agi unlinked bucket 3 is 1091 in ag 0 (inode=1091)
+...
+...
+agi unlinked bucket 60 is 1084 in ag 0 (inode=1084)
+agi unlinked bucket 61 is 1085 in ag 0 (inode=1085)
+agi unlinked bucket 62 is 1086 in ag 0 (inode=1086)
+agi unlinked bucket 63 is 1087 in ag 0 (inode=1087)
+sb_ifree 124, counted 6
+sb_fdblocks 237036, counted 245112
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+Metadata corruption detected at xfs_attr3_leaf block 0x3f80/0x10000
+wrong FS UUID, inode 1145 attr block 16256
+problem with attribute contents in inode 1145
+would clear attr fork
+bad nblocks 1 for inode 1145, would reset to 0
+bad anextents 1 for inode 1145, would reset to 0
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 2
+        - agno = 3
+        - agno = 1
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected inode 1027, would move to lost+found
+disconnected inode 1028, would move to lost+found
+disconnected inode 1029, would move to lost+found
+disconnected inode 1030, would move to lost+found
+...
+...
+disconnected inode 1140, would move to lost+found
+disconnected inode 1141, would move to lost+found
+disconnected inode 1142, would move to lost+found
+disconnected inode 1143, would move to lost+found
+disconnected inode 1144, would move to lost+found
+Phase 7 - verify link counts...
+would have reset inode 1027 nlinks from 0 to 1
+would have reset inode 1028 nlinks from 0 to 1
+would have reset inode 1029 nlinks from 0 to 1
+would have reset inode 1030 nlinks from 0 to 1
+...
+...
+would have reset inode 1141 nlinks from 0 to 1
+would have reset inode 1142 nlinks from 0 to 1
+would have reset inode 1143 nlinks from 0 to 1
+would have reset inode 1144 nlinks from 0 to 1
+No modify flag set, skipping filesystem flush and exiting.
 
+Thanks,
+Zorro
