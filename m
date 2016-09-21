@@ -1,143 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36494 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755366AbcIUDIn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Sep 2016 23:08:43 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E00E88E69C
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 03:08:42 +0000 (UTC)
-Received: from localhost (dhcp12-196.nay.redhat.com [10.66.12.196] (may be forged))
-        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8L38fwB008646
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Sep 2016 23:08:42 -0400
-Date: Wed, 21 Sep 2016 11:08:41 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: xfs/181 trigger xfs corruption on ppc64le
-Message-ID: <20160921030841.GQ12847@dhcp12-143.nay.redhat.com>
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:33753 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752814AbcIUIE2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 04:04:28 -0400
+Received: by mail-lf0-f45.google.com with SMTP id b71so6917591lfg.0
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 01:04:27 -0700 (PDT)
+Date: Wed, 21 Sep 2016 10:04:25 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Excessive xfs_inode allocations trigger OOM killer
+Message-ID: <20160921080425.GC10300@dhcp22.suse.cz>
+References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
+ <20160920203039.GI340@dastard>
+ <87mvj2mgsg.fsf@mid.deneb.enyo.de>
+ <20160920214612.GJ340@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20160920214612.GJ340@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Florian Weimer <fw@deneb.enyo.de>, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@vkack.org
 
-Hi,
+On Wed 21-09-16 07:46:12, Dave Chinner wrote:
+> [cc Michal, linux-mm@kvack.org]
+> 
+> On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
+[...]
+> > [51669.515086] make invoked oom-killer: gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2, oom_score_adj=0
+> > [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G          I     4.7.1fw #1
+> > [51669.515093] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
+> > [51669.515095]  0000000000000000 ffffffff812a7d39 0000000000000000 0000000000000000
+> > [51669.515098]  ffffffff8114e4da ffff880018707d98 0000000000000000 000000000066ca81
+> > [51669.515100]  ffffffff8170e88d ffffffff810fe69e ffff88033fc38728 0000000200000006
+> > [51669.515102] Call Trace:
+> > [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
+> > [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
+> > [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
+> > [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
+> > [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
+> > [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
+> > [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
+> > [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
+> > [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
+> > [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
+> > [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
+> > [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
+> > [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
+> .....
+> > [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M) 3*4096kB (M) = 15900kB
+> > [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 183060kB
+> > [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
+> .....
+> 
+> Alright, that's what I suspected. high order allocation for a new
+> kernel stack and memory is so fragmented that a contiguous
+> allocation fails. Really, this is a memory reclaim issue, not an XFS
+> issue.  There is lots of reclaimable memory available, but memory
+> reclaim is:
+> 
+> 	a) not trying hard enough to reclaim reclaimable memory; and
+> 	b) not waiting for memory compaction to rebuild contiguous
+> 	   memory regions for high order allocations.
+> 
+> Instead, it is declaring OOM and kicking the killer to free memory
+> held busy userspace.
 
-There's a XFS (v4/v5) corruption from xfs/181. If run xfs/181 on ppc64le
-10~100 times (more or less) with 1k or 4k block size, it'll trigger a
-corruption:
-*** xfs_repair -n output ***
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-attribute entry #0 in attr block 0, inode 25194 is INCOMPLETE
-problem with attribute contents in inode 25194
-would clear attr fork
-bad nblocks 33 for inode 25194, would reset to 0
-bad anextents 1 for inode 25194, would reset to 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
-*** end xfs_repair output
+Yes this was the case with 4.7 kernel. There is a workaround sitting in
+the linus tree 6b4e3181d7bd ("mm, oom: prevent premature OOM killer
+invocation for high order request") which should get to stable
+eventually. More approapriate fix is currently in the linux-next.
 
-The ppc64le machine has 64k page size. Above corruption only can be reproduced
-on ppc64le machine until now. The full output (on v4 1k blksize XFS) as below:
-http://paste.fedoraproject.org/431761/14744268/
+Testing the same workload with linux-next would be very helpful.
 
+Thanks!
 
-
-Then I tried to test with 64k blocksize, I got another problem which easiler
-to reproduce, ppc64 and aarch64 which have 64 pagesize all can trigger this
-problem too:
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-agi unlinked bucket 0 is 1088 in ag 0 (inode=1088)
-agi unlinked bucket 1 is 1089 in ag 0 (inode=1089)
-agi unlinked bucket 2 is 1090 in ag 0 (inode=1090)
-agi unlinked bucket 3 is 1091 in ag 0 (inode=1091)
-...
-...
-agi unlinked bucket 60 is 1084 in ag 0 (inode=1084)
-agi unlinked bucket 61 is 1085 in ag 0 (inode=1085)
-agi unlinked bucket 62 is 1086 in ag 0 (inode=1086)
-agi unlinked bucket 63 is 1087 in ag 0 (inode=1087)
-sb_ifree 124, counted 6
-sb_fdblocks 237036, counted 245112
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-Metadata corruption detected at xfs_attr3_leaf block 0x3f80/0x10000
-wrong FS UUID, inode 1145 attr block 16256
-problem with attribute contents in inode 1145
-would clear attr fork
-bad nblocks 1 for inode 1145, would reset to 0
-bad anextents 1 for inode 1145, would reset to 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 2
-        - agno = 3
-        - agno = 1
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-disconnected inode 1027, would move to lost+found
-disconnected inode 1028, would move to lost+found
-disconnected inode 1029, would move to lost+found
-disconnected inode 1030, would move to lost+found
-...
-...
-disconnected inode 1140, would move to lost+found
-disconnected inode 1141, would move to lost+found
-disconnected inode 1142, would move to lost+found
-disconnected inode 1143, would move to lost+found
-disconnected inode 1144, would move to lost+found
-Phase 7 - verify link counts...
-would have reset inode 1027 nlinks from 0 to 1
-would have reset inode 1028 nlinks from 0 to 1
-would have reset inode 1029 nlinks from 0 to 1
-would have reset inode 1030 nlinks from 0 to 1
-...
-...
-would have reset inode 1141 nlinks from 0 to 1
-would have reset inode 1142 nlinks from 0 to 1
-would have reset inode 1143 nlinks from 0 to 1
-would have reset inode 1144 nlinks from 0 to 1
-No modify flag set, skipping filesystem flush and exiting.
-
-Thanks,
-Zorro
+-- 
+Michal Hocko
+SUSE Labs
