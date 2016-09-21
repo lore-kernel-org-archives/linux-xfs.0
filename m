@@ -1,85 +1,136 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67A8A7CB7
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 15:31:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3920E304039
-	for <xfs@oss.sgi.com>; Tue, 20 Sep 2016 13:31:15 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	6xXgUqMkBTA0KYoG for <xfs@oss.sgi.com>;
-	Tue, 20 Sep 2016 13:31:11 -0700 (PDT)
-Date: Wed, 21 Sep 2016 06:30:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Excessive xfs_inode allocations trigger OOM killer
-Message-ID: <20160920203039.GI340@dastard>
-References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Florian Weimer <fw@deneb.enyo.de>
-Cc: xfs@oss.sgi.com
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60284 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750846AbcIULA0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Sep 2016 07:00:26 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] fstests: test xfs_copy V5 XFS without -d option
+Date: Wed, 21 Sep 2016 19:00:20 +0800
+Message-Id: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Zorro Lang <zlang@redhat.com>
 
-T24gVHVlLCBTZXAgMjAsIDIwMTYgYXQgMDk6NDg6NDJQTSArMDIwMCwgRmxvcmlhbiBXZWltZXIg
-d3JvdGU6Cj4gSSBoYXZlIGFuIGFtZDY0IDQuNy4xIHN5c3RlbSAodXBzdHJlYW0ga2VybmVsLCBw
-cmV0dHkgcmVndWxhciBjb25maWcpCj4gd2l0aCBhIHNtYWxsIGZpbGUgc3lzdGVtOgo+IAo+IEZp
-bGVzeXN0ZW0gICAgIDFLLWJsb2NrcyAgICAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBv
-bgo+IC9kZXYvc2RhMSAgICAgIDkyMjU5NTE4NCA4MDAzOTY0NjQgMTIyMTk4NzIwICA4NyUgLwo+
-IEZpbGVzeXN0ZW0gICAgICAgIElub2RlcyAgICBJVXNlZCAgICAgSUZyZWUgSVVzZSUgTW91bnRl
-ZCBvbgo+IC9kZXYvc2RhMSAgICAgIDUwNDExMDQ5NiAxNTMwNTA5NCA0ODg4MDU0MDIgICAgNCUg
-LwoKU28gMTUgbWlsbGlvbiBpbm9kZXMuIEEgbG90IGZvciBhIHNtYWxsIGZpbGVzeXN0ZW0uCgo+
-IFRoZSBvZGQgdGhpbmcgaXMgdGhhdCBhZnRlciBhIHdoaWxlLCBYRlMgY29uc3VtZXMgYSBsb3Qg
-b2YgbWVtb3J5Cj4gYWNjb3JkaW5nIHRvIHNsYWJ0b3A6Cj4gCj4gICBPQkpTIEFDVElWRSAgVVNF
-IE9CSiBTSVpFICBTTEFCUyBPQkovU0xBQiBDQUNIRSBTSVpFIE5BTUUgICAgICAgICAgICAgICAg
-ICAgCj4gNDEyMTIwOCA0MTIxMTc3ICA5OSUgICAgMC44OEsgMTAzMDMwMiAgICAgICAgNCAgIDQx
-MjEyMDhLIHhmc19pbm9kZQo+IDk4NjI4NiA5ODUyMjkgIDk5JSAgICAwLjE5SyAgNDY5NjYgICAg
-ICAgMjEgICAgMTg3ODY0SyBkZW50cnkKPiA3MjMyNTUgNzIzMDc2ICA5OSUgICAgMC4xMEsgIDE4
-NTQ1ICAgICAgIDM5ICAgICA3NDE4MEsgYnVmZmVyX2hlYWQKPiAyNzAyNjMgMjY5MjUxICA5OSUg
-ICAgMC41NksgIDM4NjA5ICAgICAgICA3ICAgIDE1NDQzNksgcmFkaXhfdHJlZV9ub2RlCj4gMTQw
-MzEwICA2NzQwOSAgNDglICAgIDAuMzhLICAxNDAzMSAgICAgICAxMCAgICAgNTYxMjRLIG1udF9j
-YWNoZQoKVGhhdCdzIG5vdCBvZGQgYXQgYWxsLiBJdCBtZWFucyB5b3VyIHdvcmtsb2FkIGlzIHZp
-c2l0aW5nIG1pbGxpb25zCm9uIGlub2RlcyBpbiB5b3VyIGZpbGVzeXN0ZW0gYmV0d2VlbiBzZXJp
-b3VzIG1lbW9yeSBwcmVzc3VyZSBldmVudHMuCgo+IChJIGhhdmUgYXR0YWNoZWQgdGhlIC9wcm9j
-L21lbWluZm8gY29udGVudHMgaW4gY2FzZSBpdCBvZmZlcnMgZnVydGhlcgo+IGNsdWVzLikKPiAK
-PiBDb25mcm9udGVkIHdpdGggbGFyZ2UgbWVtb3J5IGFsbG9jYXRpb25zIChmcm9tIOKAnG1ha2Ug
-LWoxMuKAnSBhbmQKPiBjb21waWxpbmcgR0NDLCBzbyBwZXJoYXBzIH44IEdpQiBvZiBtZW1vcnkp
-LCB0aGUgT09NIGtpbGxlciBraWNrcyBpbgo+IGFuZCBraWxscyBzb21lIHJhbmRvbSBwcm9jZXNz
-LiAgSSB3b3VsZCBoYXZlIGV4cGVjdGVkIHRoYXQgc29tZQo+IHhmc19pbm9kZXMgYXJlIGZyZWVk
-IGluc3RlYWQuCgpUaGUgb29tIGtpbGxlciBpcyB1bnJlbGlhYmxlIGFuZCBvZnRlbiBiZWhhdmVz
-IHZlcnkgYmFkbHksIGFuZAp0aGF0J3MgdHlwaWNhbHkgbm90IGFuIFhGUyBwcm9ibGVtLgoKV2hh
-dCBpcyB0aGUgZnVsbCBvdXRwdXQgb2ZmIHRoZSBvb20ga2lsbGVyIGludm9jYXRpb25zIGZyb20g
-ZG1lc2c/Cgo+IEkgZG9uJ3QgdGhpbmsgdGhpcyBpcyBhbiBvcmRpbmFyeSBtZW1vcnkgbGVhay4K
-Ckl0J3Mgbm90IGEgbWVtb3J5IGxlYWsgYXQgYWxsLgoKPiBUaGUgbGFzdCB0aW1lIEkgc2F3Cj4g
-c29tZXRoaW5nIGxpa2UgdGhlIHNsYWJ0b3Agb3V0cHV0IGFib3ZlLCBJIGNvdWxkIGRvIOKAnHN5
-c2N0bAo+IHZtLmRyb3BfY2FjaGVzID0gM+KAnSwgYW5kIHRoZSBhbW91bnQgb2YgbWVtb3J5IGFs
-bG9jYXRlZCByZXBvcnRlZCBieQo+IHNsYWJ0b3Agd2FzIHJlZHVjZWQgY29uc2lkZXJhYmx5LiAg
-KEkgaGF2ZSBub3QgY2hlY2tlZCBpZiB0aGUgbWVtb3J5Cj4gd2FzIGFjdHVhbGx5IHJldHVybmVk
-IHRvIHRoZSBzeXN0ZW0uKSAgSSBoYXZlIG5vdCBkb25lIHRoaXMgbm93IHNvCj4gdGhhdCBJIGNh
-biBnYXRoZXIgZnVydGhlciBkYXRhIGZvciBkZWJ1Z2dpbmcuaQoKSG93IGxvbmcgZGlkIHRoZSBz
-eXNjdGwgdGFrZSB0byBydW4gdG8gZnJlZSB0aG9zZSBpbm9kZXM/IEEgZmV3CnNlY29uZHMsIG9y
-IG1pbnV0ZXM/Cgo+IEkgYW0gbm90IHN1cmUgd2hhdAo+IHRyaWdnZXJzIHRoaXMgaHVnZSBhbGxv
-Y2F0aW9uLiAgSXQgY291bGQgYmUgcmVsYXRlZCB0byBteSBHbnVzIG1haWwKPiBzcG9vbCAod2hp
-Y2ggY29udGFpbnMgbG90cyBhbmQgbG90cyBvZiBzbWFsbCBmaWxlcykuCgpPSyAtIGRvZXMgdGhh
-dCByZWd1bGFybHkgZGlydHkgbG90cyBvZiB0aG9zZSBzbWFsbCBmaWxlcz8gV2hhdCBzb3J0Cm9m
-IHN0b3JhZ2UgYXJlIHlvdSB1c2luZywgYW5kIHdoYXQgZnMgY29uZmlnPwoKaHR0cDovL3hmcy5v
-cmcvaW5kZXgucGhwL1hGU19GQVEjUTpfV2hhdF9pbmZvcm1hdGlvbl9zaG91bGRfSV9pbmNsdWRl
-X3doZW5fcmVwb3J0aW5nX2FfcHJvYmxlbS4zRgoKPiBEaXJ0eTogICAgICAgICAgICAgICAgMjgg
-a0IKPiBXcml0ZWJhY2s6ICAgICAgICAgICAgIDAga0IKClRoZXJlJ3Mgbm8gZGlydHkgZGF0YSwg
-YW5kIGRyb3BwaW5nIGNhY2hlcyBtYWtlcyBwcm9ncmVzcywgc28gdGhpcwpkb2Vzbid0IC9zb3Vu
-ZC8gbGlrZSByZWNsYWltIGlzIGdldHRpbmcgc3RhbGxlZCBieSBkaXJ0eSBvYmplY3QKd3JpdGVi
-YWNrLiBNb3JlIGluZm8gbmVlZGVkLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
-YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+>From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
+Before that, copy a V5 XFS will cause target fs corruption, and only
+use "-d" option can resolve that problem.
+
+For this old reason, xfstests use below patch to add '-d' option to
+xfs_copy, make sure xfs_copy always use that option if it try to copy
+a V5 XFS:
+
+  8346e53 common: append -d option to XFS_COPY_PROG when testing v5 xfs
+
+But xfs_copy full support v5 xfs now. So xfstest miss the coverage of
+copy a V5 XFS without '-d'. For test this feature I did below things:
+
+  1. Revert commit 8346e53
+  2. Add a new common function _require_xfs_copy(), if a test try to
+     use old xfsprogs to copy a V5 xfs, it'll skip that test.
+  3. Add above common function into all xfs_copy related cases.
+  4. xfs/073 test V4 xfs forcibly by specify "-m crc=0" in case. I
+     think it's useless now, so remove it.
+
+There's a xfs_copy related case I didn't add _require_xfs_copy()
+to it -- xfs/032, due to it tests "xfs_copy -d" directly.
+
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+ common/rc     | 27 ++++++++++++++++++++++-----
+ tests/xfs/073 |  9 +++------
+ tests/xfs/077 |  1 +
+ 3 files changed, 26 insertions(+), 11 deletions(-)
+
+diff --git a/common/rc b/common/rc
+index 13afc6a..9ba073b 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3789,11 +3789,6 @@ init_rc()
+ 	# Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
+ 	xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
+ 	export XFS_IO_PROG="$XFS_IO_PROG -F"
+-
+-	# xfs_copy doesn't work on v5 xfs yet without -d option
+-	if [ "$FSTYP" == "xfs" ] && [[ $MKFS_OPTIONS =~ crc=1 ]]; then
+-		export XFS_COPY_PROG="$XFS_COPY_PROG -d"
+-	fi
+ }
+ 
+ # get real device path name by following link
+@@ -3994,6 +3989,28 @@ _require_xfs_mkfs_without_validation()
+ 	fi
+ }
+ 
++# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
++# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
++# bug.
++_require_xfs_copy()
++{
++	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
++	. $tmp.mkfs
++
++	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
++	local rc=$?
++
++	rm -f $tmp.mkfs
++	rm -f $tmp.copy 2>/dev/null
++	if [ $rc -ne 0 ]; then
++		if [ $_fs_has_crcs -eq 1 ]; then
++			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
++		else
++			_fail "xfs_copy can't copy a V4 xfs"
++		fi
++	fi
++}
++
+ init_rc
+ 
+ ################################################################################
+diff --git a/tests/xfs/073 b/tests/xfs/073
+index 9e29223..02e45d5 100755
+--- a/tests/xfs/073
++++ b/tests/xfs/073
+@@ -134,11 +134,12 @@ _require_attrs
+ [ -n "$XFS_COPY_PROG" ] || _notrun "xfs_copy binary not yet installed"
+ 
+ _require_scratch
++_require_xfs_copy
+ _require_loop
+ 
+ rm -f $seqres.full
+ 
+-_scratch_mkfs_xfs -m crc=0 -dsize=41m,agcount=2 >>$seqres.full 2>&1
++_scratch_mkfs_xfs -dsize=41m,agcount=2 >>$seqres.full 2>&1
+ _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
+ 
+ echo
+@@ -158,11 +159,7 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
+ 
+ echo 
+ echo === copying scratch device to single target, large ro device
+-mkfs_crc_opts="-m crc=0"
+-if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
+-	mkfs_crc_opts=""
+-fi
+-${MKFS_XFS_PROG} $mkfs_crc_opts -dfile,name=$imgs.source,size=100g \
++${MKFS_XFS_PROG} -dfile,name=$imgs.source,size=100g \
+ 	| _filter_mkfs 2>/dev/null
+ rmdir $imgs.source_dir 2>/dev/null
+ mkdir $imgs.source_dir
+diff --git a/tests/xfs/077 b/tests/xfs/077
+index 007d05d..7bcbfb5 100755
+--- a/tests/xfs/077
++++ b/tests/xfs/077
+@@ -51,6 +51,7 @@ _cleanup()
+ _supported_fs xfs
+ _supported_os Linux
+ _require_scratch
++_require_xfs_copy
+ _require_xfs_crc
+ _require_meta_uuid
+ 
+-- 
+2.7.4
+
