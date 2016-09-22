@@ -1,181 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43021 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965908AbcIWQOC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 12:14:02 -0400
-Date: Fri, 23 Sep 2016 09:13:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
- systems
-Message-ID: <20160923161350.GN9314@birch.djwong.org>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-4-git-send-email-amir73il@gmail.com>
- <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34960 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbcIVJCK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2016 05:02:10 -0400
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="0OAP2g/MAC+5xKAE"
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+In-Reply-To: <1473856994-27463-5-git-send-email-amir73il@gmail.com>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com> <1473856994-27463-5-git-send-email-amir73il@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 22 Sep 2016 11:49:38 +0300
+Message-ID: <CAOQ4uxjhO0M4K4oNA0dGsN6-DHtJ7zFQVLe=T2qpuWb+eubaig@mail.gmail.com>
+Subject: Re: [PATCH v3 4/4] ovl: use vfs_copy_file_range() to copy up file data
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
+On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> Use vfs_copy_file_range() helper instead of calling do_splice_direct()
+> when copying up file data.
+> When copying up within the same fs, which supports copy_file_range(),
+> fs implementation can be more efficient then do_splice_direct().
+> vfs_copy_file_range() helper falls back to do_splice_direct() if
+> it cannot use the file system's copy_file_range() implementation.
+>
+> A previous change added a vfs_clone_file_range() call before
+> the data copy loop, so this change is only effective for filesystems
+> that support copy_file_range() and *do not* support clone_file_range().
+> At the moment, there are no such filesystems in the kernel that
+> can be used as overlayfs upper, so I tested this change by disabling
+> the vfs_clone_file_range() call.
+>
+> Tested correct behavior when lower and upper are on:
+> 1. same ext4 (copy)
+> 2. same xfs + reflink patches + mkfs.xfs (copy)
+> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
+> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
+>
+> For comparison, on my laptop, xfstest overlay/001 (copy up of large
+> sparse files) takes less than 1 second in the xfs reflink setup vs.
+> 25 seconds on the rest of the setups.
+>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/overlayfs/copy_up.c | 10 +++++-----
+>  fs/read_write.c        |  1 +
+>  2 files changed, 6 insertions(+), 5 deletions(-)
+>
+> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+> index ba039f8..a6d6bac 100644
+> --- a/fs/overlayfs/copy_up.c
+> +++ b/fs/overlayfs/copy_up.c
+> @@ -146,7 +146,6 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>         /* Can't clone, so now we try to copy the data */
+>         error = 0;
+>
+> -       /* FIXME: copy up sparse files efficiently */
+>         while (len) {
+>                 size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
+>                 long bytes;
+> @@ -159,15 +158,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+>                         break;
+>                 }
+>
+> -               bytes = do_splice_direct(old_file, &old_pos,
+> -                                        new_file, &new_pos,
+> -                                        this_len, SPLICE_F_MOVE);
+> +               bytes = vfs_copy_file_range(old_file, old_pos,
+> +                                           new_file, new_pos,
+> +                                           this_len, 0);
+>                 if (bytes <= 0) {
+>                         error = bytes;
+>                         break;
+>                 }
+> -               WARN_ON(old_pos != new_pos);
+>
+> +               old_pos += bytes;
+> +               new_pos += bytes;
+>                 len -= bytes;
+>         }
+>  out:
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 6975fe8..dfc083a 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1515,6 +1515,7 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>             file_out->f_op->copy_file_range)
+>                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+>                                                       pos_out, len, flags);
+> +       /* FIXME: copy sparse file range efficiently */
+>         if (ret == -EOPNOTSUPP)
+>                 ret = do_splice_direct(file_in, &pos_in, file_out, &pos_out,
+>                                 len > MAX_RW_COUNT ? MAX_RW_COUNT : len, 0);
+> --
+> 2.7.4
+>
 
---0OAP2g/MAC+5xKAE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Guys, I just hit a lockdep warning on nesting an mnt_want_write() with
+this patch
+because overlay already holds the write lock when getting to ovl_copy_up_data()
+I don't know how I missed it before.
 
-On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
-> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > copy_file_range syscall returns -EXDEV if src and dest
-> > file are not on the same file system.
-> > The vfs_copy_file_range() helper, however, knows how to copy
-> > across file systems with do_splice_direct().
-> >
-> > Move the enforcement of same file system from the vfs helper
-> > to the syscall code.
-> >
-> > A following patch is going to use the vfs_copy_file_range()
-> > helper in overlayfs to copy up between lower and upper
-> > not on the same file system.
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >  fs/read_write.c | 16 +++++++++++-----
-> >  1 file changed, 11 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 9dc6e52..6975fe8 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >             (file_out->f_flags & O_APPEND))
-> >                 return -EBADF;
-> >
-> > -       /* this could be relaxed once a method supports cross-fs copies */
-> > -       if (inode_in->i_sb != inode_out->i_sb)
-> > -               return -EXDEV;
-> > -
-> >         if (len == 0)
-> >                 return 0;
-> >
-> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >                 return ret;
-> >
-> >         ret = -EOPNOTSUPP;
-> > -       if (file_out->f_op->copy_file_range)
-> > +       /* copy_file_range() method does not support cross-fs copies */
-> > +       if (inode_in->i_sb == inode_out->i_sb &&
-> > +           file_out->f_op->copy_file_range)
-> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
-> >                                                       pos_out, len, flags);
-> >         if (ret == -EOPNOTSUPP)
-> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
-> >                 pos_out = f_out.file->f_pos;
-> >         }
-> >
-> > +       /*
-> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
-> > +        * fulfill the guaranty to userland that copy_file_range syscall
-> > +        * does not allow cross-fs copy
-> > +        */
-> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
-> > +               return -EXDEV;
-> 
-> Oops, that was supposed to be goto out;
-> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
-> until I have a reliable test on xfs to fall back from clone to copy range
+Is it really a problem to nest this lock?
+Should I factor our another set of _locked helpers from the
+vfs_{copy,clone}_file_range helpers?
 
-Ok, attached are two rough patches -- one to add the error injection point
-into the kernel, and a second one to add it to the xfs_io 'inject' command.
-Note that you'll have to format the XFS filesystem with rmapbt=1 since we
-can't otherwise avoid per-AG ENOSPC if rmap is enabled.
+===========
 
-The relevant xfstests commands are:
+[  675.814754] =============================================
+[  675.814755] [ INFO: possible recursive locking detected ]
+[  675.814757] 4.8.0-rc5+ #5 Tainted: G        W  O
+[  675.814758] ---------------------------------------------
+[  675.814759] xfs_io/15241 is trying to acquire lock:
+[  675.814760]  (sb_writers#7){.+.+.+}, at: [<ffffffffa2277144>]
+__sb_start_write+0xb4/0xf0
+[  675.814767]
+               but task is already holding lock:
+[  675.814768]  (sb_writers#7){.+.+.+}, at: [<ffffffffa2277144>]
+__sb_start_write+0xb4/0xf0
+[  675.814772]
+               other info that might help us debug this:
+[  675.814773]  Possible unsafe locking scenario:
 
-_require_xfs_io_error_injection "ag_resv_critical"
-_scratch_inject_error "ag_resv_critical"
+[  675.814774]        CPU0
+[  675.814775]        ----
+[  675.814775]   lock(sb_writers#7);
+[  675.814777]   lock(sb_writers#7);
+[  675.814779]
+                *** DEADLOCK ***
 
-See the xfs/325 test for a rough framework.  I'll work on cleaning up the
-patches and trying to get them into 4.9.
+[  675.814780]  May be due to missing lock nesting notation
 
---D
-
---0OAP2g/MAC+5xKAE
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="kernel.patch"
-
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index adf770f..e5ebc37 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -109,7 +109,9 @@ xfs_ag_resv_critical(
- 	trace_xfs_ag_resv_critical(pag, type, avail);
- 
- 	/* Critically low if less than 10% or max btree height remains. */
--	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
-+	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
-+			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL,
-+			XFS_RANDOM_AG_RESV_CRITICAL);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 8d8e1b07..e539194 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -95,7 +95,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
- #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
--#define XFS_ERRTAG_MAX					27
-+#define XFS_ERRTAG_AG_RESV_CRITICAL			27
-+#define XFS_ERRTAG_MAX					28
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -127,6 +128,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
- #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
- #define XFS_RANDOM_BMAP_FINISH_ONE			1
-+#define XFS_RANDOM_AG_RESV_CRITICAL			1
- 
- #ifdef DEBUG
- extern int xfs_error_test_active;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7881142..ead31f8 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1124,7 +1124,8 @@ xfs_reflink_ag_has_free_space(
- 		return 0;
- 
- 	pag = xfs_perag_get(mp, agno);
--	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL))
-+	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL) ||
-+	    xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA))
- 		error = -ENOSPC;
- 	xfs_perag_put(pag);
- 	return error;
-
---0OAP2g/MAC+5xKAE
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="xfsprogs.patch"
-
-diff --git a/io/inject.c b/io/inject.c
-index 56642b8..5d5e4ae 100644
---- a/io/inject.c
-+++ b/io/inject.c
-@@ -84,7 +84,9 @@ error_tag(char *name)
- 		{ XFS_ERRTAG_REFCOUNT_FINISH_ONE,	"refcount_finish_one" },
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
- 		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
--#define XFS_ERRTAG_MAX                                  27
-+#define XFS_ERRTAG_AG_RESV_CRITICAL			27
-+		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
-+#define XFS_ERRTAG_MAX                                  28
- 		{ XFS_ERRTAG_MAX,			NULL }
- 	};
- 	int	count;
-
---0OAP2g/MAC+5xKAE--
+[  675.814782] 4 locks held by xfs_io/15241:
+[  675.814783]  #0:  (sb_writers#7){.+.+.+}, at: [<ffffffffa2277144>]
+__sb_start_write+0xb4/0xf0
+[  675.814787]  #1:  (&type->s_vfs_rename_key){+.+.+.}, at:
+[<ffffffffa227f992>] lock_rename+0x32/0x100
+[  675.814791]  #2:  (&type->i_mutex_dir_key#2/1){+.+.+.}, at:
+[<ffffffffa227fa40>] lock_rename+0xe0/0x100
+[  675.814796]  #3:  (&type->i_mutex_dir_key#2/5){+.+.+.}, at:
+[<ffffffffa227fa55>] lock_rename+0xf5/0x100
+[  675.814800]
+               stack backtrace:
+[  675.814802] CPU: 2 PID: 15241 Comm: xfs_io Tainted: G        W  O
+ 4.8.0-rc5+ #5
+[  675.814804] Hardware name: Dell Inc. Latitude E7450/0D8H72, BIOS
+A13 05/17/2016
+[  675.814805]  0000000000000086 00000000029bfc05 ffff9cd454ab78b0
+ffffffffa2474d83
+[  675.814808]  ffffffffa3a7b6f0 ffff9cd4685f0000 ffff9cd454ab7980
+ffffffffa20ed54d
+[  675.814810]  0000000000000296 0000000400000246 ffff9cd400000000
+ffffffffa3392101
+[  675.814813] Call Trace:
+[  675.814816]  [<ffffffffa2474d83>] dump_stack+0x85/0xc2
+[  675.814820]  [<ffffffffa20ed54d>] __lock_acquire+0x148d/0x14f0
+[  675.814822]  [<ffffffffa22ec170>] ? dquot_file_open+0x40/0x50
+[  675.814825]  [<ffffffffa20eda70>] lock_acquire+0x100/0x1f0
+[  675.814826]  [<ffffffffa2277144>] ? __sb_start_write+0xb4/0xf0
+[  675.814829]  [<ffffffffa20e6b1f>] percpu_down_read+0x4f/0xa0
+[  675.814830]  [<ffffffffa2277144>] ? __sb_start_write+0xb4/0xf0
+[  675.814832]  [<ffffffffa2277144>] __sb_start_write+0xb4/0xf0
+[  675.814834]  [<ffffffffa23cdd2d>] ? security_file_permission+0x3d/0xc0
+[  675.814837]  [<ffffffffa229ba88>] mnt_want_write_file+0x28/0x60
+[  675.814839]  [<ffffffffa2274dd2>] vfs_copy_file_range+0xc2/0x270
+[  675.814844]  [<ffffffffc0c797f6>] ovl_copy_up_one+0x4d6/0x710 [overlay]
+[  675.814847]  [<ffffffffc0c79b16>] ovl_copy_up+0xe6/0x118 [overlay]
+[  675.814850]  [<ffffffffc0c75d6d>] ovl_open_maybe_copy_up+0x8d/0xd0 [overlay]
+[  675.814852]  [<ffffffffc0c73303>] ovl_d_real+0xd3/0x130 [overlay]
+[  675.814854]  [<ffffffffa227209f>] vfs_open+0x6f/0x80
+[  675.814856]  [<ffffffffa2284698>] path_openat+0x2a8/0xb80
+[  675.814858]  [<ffffffffa22864e1>] do_filp_open+0x91/0x100
+[  675.814861]  [<ffffffffa292abe7>] ? _raw_spin_unlock+0x27/0x40
+[  675.814862]  [<ffffffffa2297f39>] ? __alloc_fd+0xf9/0x210
+[  675.814864]  [<ffffffffa2272494>] do_sys_open+0x124/0x210
+[  675.814867]  [<ffffffffa227259e>] SyS_open+0x1e/0x20
+[  675.814868]  [<ffffffffa292b540>] entry_SYSCALL_64_fastpath+0x23/0xc1
