@@ -1,145 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38660 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751057AbcIWE3C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 00:29:02 -0400
-Date: Fri, 23 Sep 2016 12:28:59 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] fstests: make some xfs project quota tests generic
-Message-ID: <20160923042859.GW27776@eguan.usersys.redhat.com>
-References: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
- <20160923042500.GV27776@eguan.usersys.redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:43021 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965908AbcIWQOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 12:14:02 -0400
+Date: Fri, 23 Sep 2016 09:13:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
+ systems
+Message-ID: <20160923161350.GN9314@birch.djwong.org>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-4-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="0OAP2g/MAC+5xKAE"
 Content-Disposition: inline
-In-Reply-To: <20160923042500.GV27776@eguan.usersys.redhat.com>
+In-Reply-To: <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Fri, Sep 23, 2016 at 12:25:00PM +0800, Eryu Guan wrote:
-> On Thu, Sep 22, 2016 at 05:51:03PM -0500, Eric Sandeen wrote:
-> > This patch makes some xfs project quota tests generic,
-> > so that there is at least some coverage on ext4 for this
-> > (semi-)new feature.
-> > 
-> > It requires bleeding edge xfsprogs, so that xfs_quota and 
-> > xfs_io's chproj command can operate on "foreign" filesystems,
-> > and requires relatively new e2fsprogs to enable the project
-> > quota feature on-disk.
-> > 
-> > The mechanism for enabling project quota on ext4 is a bit
-> > arcane, but hopefully I've encapsulated it reasonably well here.
-> > 
-> > Changes:
-> > 
-> > * look for "project" feature in _require_prjquota
-> > * look for accounting not enforcement (-P) in _require_prjquota
-> > * add a _scratch_enable_pquota to turn on project quota feature
-> > * s/pquota/quota/ in _qmount_option for ext4
-> > * add helper to test for xfs_io chproj on foreign filesystems
-> > * switch from block to inode quota in xfs/133 because empty
-> >   ext4 dirs consume one block
-> > * cosmetic/generic changes for mkfs, require tests, etc.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+--0OAP2g/MAC+5xKAE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
+> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > copy_file_range syscall returns -EXDEV if src and dest
+> > file are not on the same file system.
+> > The vfs_copy_file_range() helper, however, knows how to copy
+> > across file systems with do_splice_direct().
+> >
+> > Move the enforcement of same file system from the vfs helper
+> > to the syscall code.
+> >
+> > A following patch is going to use the vfs_copy_file_range()
+> > helper in overlayfs to copy up between lower and upper
+> > not on the same file system.
+> >
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 > > ---
-> > 
-> > Eryu, would you like to do the move-to-generic/ since you'll need
-> > to renumber them anyway? :)
-> > 
-> > Note -
-> > This requires the previous patch I sent to the fstests list,
-> > 
-> > [PATCH 2/3 V2] modify xfs/ quota tests to work on generic filesystems
-> > 
-> > diff --git a/common/quota b/common/quota
-> > index afc1606..556eba6 100644
-> > --- a/common/quota
-> > +++ b/common/quota
-> > @@ -92,12 +92,16 @@ _require_xfs_quota_foreign()
-> >  }
-> >  
-> >  #
-> > -# checks that the XFS project quota support in the kernel is enabled.
-> > +# checks that the project quota support in the kernel is enabled.
-> >  #
-> >  _require_prjquota()
-> >  {
-> >      [ -n "$1" ] && _dev="$1" || _dev="$TEST_DEV"
-> > -    src/feature -p $_dev
-> > +    if [ "$FSTYP" == "ext4" ]; then
-> > +	dumpe2fs -h $_dev 2>&1 | grep -qw project || \
-> > +		_notrun "Project quota not available on this ext4"
-> > +    fi
-> > +    src/feature -P $_dev
-> >      [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
-> >      if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
-> >  	_notrun "Project quotas not supported on realtime filesystem"
-> > @@ -105,6 +109,16 @@ _require_prjquota()
-> >  }
-> >  
-> >  #
-> > +# ext4 (for now) is unique in that we must enable the project quota feature
-> > +# prior to mount.  This is a relatively new feature ...
-> > +_scratch_enable_pquota()
-> > +{
-> > +	[ "$FSTYP" != "ext4" ] && return
-> > +
-> > +	tune2fs -O quota,project $SCRATCH_DEV >>$seqres.full 2>&1
-> > +}
-> > +
-> > +#
-> >  # checks for user nobody in /etc/passwd and /etc/group.
-> >  #
-> >  _require_nobody()
-> > @@ -197,6 +211,8 @@ _qmount()
-> >  #
-> >  _qmount_option()
-> >  {
-> > +	OPTS=$1
-> > +
-> >  	# Replace any user defined quota options
-> >  	# with the quota option that we want.
-> >  	# Simplest to do this rather than delete existing ones first because
-> > @@ -210,16 +226,23 @@ _qmount_option()
-> >  		-e 's/gquota/QUOTA/g'      \
-> >  		-e 's/grpquota/QUOTA/g'    \
-> >  		-e 's/pquota/QUOTA/g'      \
+> >  fs/read_write.c | 16 +++++++++++-----
+> >  1 file changed, 11 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 9dc6e52..6975fe8 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >             (file_out->f_flags & O_APPEND))
+> >                 return -EBADF;
+> >
+> > -       /* this could be relaxed once a method supports cross-fs copies */
+> > -       if (inode_in->i_sb != inode_out->i_sb)
+> > -               return -EXDEV;
+> > -
+> >         if (len == 0)
+> >                 return 0;
+> >
+> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >                 return ret;
+> >
+> >         ret = -EOPNOTSUPP;
+> > -       if (file_out->f_op->copy_file_range)
+> > +       /* copy_file_range() method does not support cross-fs copies */
+> > +       if (inode_in->i_sb == inode_out->i_sb &&
+> > +           file_out->f_op->copy_file_range)
+> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+> >                                                       pos_out, len, flags);
+> >         if (ret == -EOPNOTSUPP)
+> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+> >                 pos_out = f_out.file->f_pos;
+> >         }
+> >
+> > +       /*
+> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
+> > +        * fulfill the guaranty to userland that copy_file_range syscall
+> > +        * does not allow cross-fs copy
+> > +        */
+> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
+> > +               return -EXDEV;
+> 
+> Oops, that was supposed to be goto out;
+> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
+> until I have a reliable test on xfs to fall back from clone to copy range
 
-Seems we need the same fix here too?
+Ok, attached are two rough patches -- one to add the error injection point
+into the kernel, and a second one to add it to the xfs_io 'inject' command.
+Note that you'll have to format the XFS filesystem with rmapbt=1 since we
+can't otherwise avoid per-AG ENOSPC if rmap is enabled.
 
-Thanks,
-Eryu
+The relevant xfstests commands are:
 
-> > -		-e 's/prjquota/QUOTA/g'      \
-> > +		-e 's/prjquota/QUOTA/g'    \
-> >  		-e 's/quota/QUOTA/g'       \
-> >  		-e 's/uqnoenforce/QUOTA/g' \
-> >  		-e 's/gqnoenforce/QUOTA/g' \
-> >  		-e 's/pqnoenforce/QUOTA/g' \
-> >  		-e 's/qnoenforce/QUOTA/g'  \
-> > -		-e "s/QUOTA/$1/g"`
-> > +		-e "s/QUOTA/$OPTS/g"`
-> >  
-> > +	# ext4 doesn't _do_ "-o pquota/prjquota" because reasons
-> > +	# Switch it to "quota" to enable mkfs-time pquota
-> > +	if [ "$FSTYP" == "ext4" ]; then
-> > +		OPTS=`echo $OPTS \
-> > +		| sed	-e 's/pquota/quota/g'	\
-> > +			-e 's/prjquota/quota/g'`
-> > +	fi
-> 
-> This replaces "grpquota" to "grquota" and mount failed because of
-> unknown mount option "grquota". The following change works for me:
-> 
-> -             | sed   -e 's/pquota/quota/g'   \
-> +             | sed   -e 's/\bpquota/quota/g' \
-> 
-> If you can give me an ack (or another fix), I can fold it into the
-> original patch.
-> 
-> Thanks,
-> Eryu
+_require_xfs_io_error_injection "ag_resv_critical"
+_scratch_inject_error "ag_resv_critical"
+
+See the xfs/325 test for a rough framework.  I'll work on cleaning up the
+patches and trying to get them into 4.9.
+
+--D
+
+--0OAP2g/MAC+5xKAE
+Content-Type: text/x-diff; charset=us-ascii
+Content-Disposition: attachment; filename="kernel.patch"
+
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index adf770f..e5ebc37 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -109,7 +109,9 @@ xfs_ag_resv_critical(
+ 	trace_xfs_ag_resv_critical(pag, type, avail);
+ 
+ 	/* Critically low if less than 10% or max btree height remains. */
+-	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
++	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
++			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL,
++			XFS_RANDOM_AG_RESV_CRITICAL);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 8d8e1b07..e539194 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -95,7 +95,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
+ #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+-#define XFS_ERRTAG_MAX					27
++#define XFS_ERRTAG_AG_RESV_CRITICAL			27
++#define XFS_ERRTAG_MAX					28
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -127,6 +128,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
+ #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+ #define XFS_RANDOM_BMAP_FINISH_ONE			1
++#define XFS_RANDOM_AG_RESV_CRITICAL			1
+ 
+ #ifdef DEBUG
+ extern int xfs_error_test_active;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 7881142..ead31f8 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1124,7 +1124,8 @@ xfs_reflink_ag_has_free_space(
+ 		return 0;
+ 
+ 	pag = xfs_perag_get(mp, agno);
+-	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL))
++	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL) ||
++	    xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA))
+ 		error = -ENOSPC;
+ 	xfs_perag_put(pag);
+ 	return error;
+
+--0OAP2g/MAC+5xKAE
+Content-Type: text/x-diff; charset=us-ascii
+Content-Disposition: attachment; filename="xfsprogs.patch"
+
+diff --git a/io/inject.c b/io/inject.c
+index 56642b8..5d5e4ae 100644
+--- a/io/inject.c
++++ b/io/inject.c
+@@ -84,7 +84,9 @@ error_tag(char *name)
+ 		{ XFS_ERRTAG_REFCOUNT_FINISH_ONE,	"refcount_finish_one" },
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+ 		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
+-#define XFS_ERRTAG_MAX                                  27
++#define XFS_ERRTAG_AG_RESV_CRITICAL			27
++		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
++#define XFS_ERRTAG_MAX                                  28
+ 		{ XFS_ERRTAG_MAX,			NULL }
+ 	};
+ 	int	count;
+
+--0OAP2g/MAC+5xKAE--
