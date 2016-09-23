@@ -1,126 +1,177 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:24326 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935150AbcIWA33 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2016 20:29:29 -0400
-Date: Fri, 23 Sep 2016 10:29:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: master branch updated to 4.8.0-rc2 
-Message-ID: <20160923002925.GP340@dastard>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 05F797CA1
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2016 12:09:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F922AC004
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2016 10:08:56 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QrvDNHTOvI1eZJCD (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 23 Sep 2016 10:08:54 -0700 (PDT)
+Date: Fri, 23 Sep 2016 13:08:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfs: rework log recovery to submit buffers on LSN
+	boundaries
+Message-ID: <20160923170851.GA18135@bfoster.bfoster>
+References: <1470935467-52772-1-git-send-email-bfoster@redhat.com>
+	<1470935467-52772-2-git-send-email-bfoster@redhat.com>
+	<20160829011631.GK19025@dastard>
+	<20160829181721.GA54904@bfoster.bfoster>
+	<20160920001330.GF340@dastard>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="U+BazGySraz5kW0T"
 Content-Disposition: inline
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+In-Reply-To: <20160920001330.GF340@dastard>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
+On Tue, Sep 20, 2016 at 10:13:30AM +1000, Dave Chinner wrote:
+> [ sorry to take so long to get back to this, Brian, I missed your
+> reply and only yesterday when I was sorting out for-next updates
+> that I still had this on my "for-review" patch stack. ]
+> 
 
---U+BazGySraz5kW0T
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+No problem. I've been away anyways..
 
-Hi Folks,
+> On Mon, Aug 29, 2016 at 02:17:22PM -0400, Brian Foster wrote:
+> > On Mon, Aug 29, 2016 at 11:16:31AM +1000, Dave Chinner wrote:
+> > > On Thu, Aug 11, 2016 at 01:11:03PM -0400, Brian Foster wrote:
+> > > i.e. We are very careful to write commit records in the correct
+> > > order because that is what determines recovery order, but we don't
+> > > care what order we write the actual contents of the checkpoints or
+> > > whether they interleave with other checkpoints.  As such, ophdrs
+> > > change transactions and LSNs without having actually completed
+> > > recovery of a checkpoint. 
+> > > 
+> > > I think writeback should occur when all the transactions with a
+> > > given lsn have been committed. I'm not sure there's a simple way to
+> > > track and detect this, but using the ophdrs to detect a change of
+> > > lsn to trigger buffer writeback does not look correct to me at this
+> > > point in time.
+> > > 
+> > 
+> > That is precisely the intent of this patch. What I think could be a
+> > problem is something like the following, if possible:
+> > 
+> >                     CA         CB                  CC CD
+> > +---------+--------+--+-------+--+--------+-------+--+--+
+> >   trans A   trans B    trans C    trans C  trans D
+> 
+> Yes, that's possible.
+> 
 
-The xfsprogs repository at:
+Ok.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> > Assume that trans A and trans B are within the same record and trans C
+> > is in a separate record. In that case, we commit trans A which populates
+> > buffer_list. We lookup trans C, note a new LSN and drain buffer_list.
+> > Then we ultimately commit trans B, which has the same metadata LSN as
+> > trans A and thus is a path to the original problem if trans B happened
+> > to modify any of the same blocks as trans A.
+> 
+> Yes, that's right, we still are exposed to the same problem, and
+> there's much more convoluted versions of it possible.
+> 
+> > Do note however that this is just an occurrence of the problem with log
+> > recovery as implemented today (once we update metadata LSNs, and is
+> > likely rare as I haven't been able to reproduce corruption in many
+> > tries).
+> 
+> Yeah, it's damn hard to intentionally cause interleaving of
+> checkpoint and commit records these days because of the delayed
+> logging does aggregation in memory rather than in the log buffers
+> themselves.
+> 
 
-has just been updated and tagged as a second release candidate
-(v4.8.0-rc2). Many fixes included, please test.
+Makes sense.
 
--Dave.
+> > If that analysis is correct, I think a straightforward solution
+> > might be to defer submission to the lookup of a transaction with a new
+> > LSN that _also_ corresponds with processing of a commit record based on
+> > where we are in the on-disk log. E.g.:
+> > 
+> > 	if (log->l_recovery_lsn != trans->r_lsn &&
+> > 	    oh_flags & XLOG_COMMIT_TRANS) {
+> > 		error = xfs_buf_delwri_submit(buffer_list);
+> > 		...
+> > 	}
+> > 
+> > So in the above, we'd submit buffers for A and B once we visit the
+> > commit record for trans C. Thoughts?
+> 
+> Sounds plausible - let me just check I understood by repeating it
+> back. Given the above case, we start with log->l_recovery_lsn set to
+> the lsn before trans A and an empty buffer list.
+> 
+> 1. We now recover trans A and trans B into their respective structures,
+> but we don't don't add their dirty buffers to the delwri list yet -
+> they are kept internal to the trans.
+> 
+> 2. We then see commit A, and because the buffer list is empty we
+> simply add them to the buffer list and update log->l_recovery_lsn to
+> point at the transaction LSN.
+> 
 
-The new head of the master branch is commit:
+Right...
 
-c1a14cc xfsprogs: Release 4.8.0-rc2
+> 3. We now see trans C, and start recovering it into an internal buffer
+> list.
+> 
+> 4. Then we process commit B, see that there are already queued buffers
+> and so check the transaction LSN against log->l_recovery_lsn. They
+> are the same, so we simply add the transactions dirty buffers to
+> the buffer list.
+> 
 
-New Commits:
+Maybe just weird wording here, but to be precise (and pedantic), the
+top-level check is for the current LSN change, not necessarily whether
+the buffer_list is empty or not. The behavior is the same either way.
 
-Bill O'Donnell (3):
-      [bb80e3d] libxcmd: populate fs table with xfs entries first, foreign =
-entries last
-      [6983238] xfs_quota: print and path output formatting: maintain rever=
-se compatibility
-      [2ba39cd] xfs_quota: add case for foreign fs, disabled regardless of =
-foreign_allowed
+> 5. We continue processing transaction C, and start on transaction D.
+> We then see commit C. Buffer list is populated, so we check
+> transaction lsn against log->l_recovery_lsn. They are different.
+> At this point we know we have fully processed all the transactions
+> that are associated with log->l_recovery_lsn, hence we can submit
+> the buffer_list and mark it empty again.
+> 
+> 6. At this point we jump back to step 2, this time processing commit
+> C onwards....
+> 
+> 7. At the end of log recovery, we commit the remaining buffer list
+> from the last transaction we recovered from the log.
+> 
+> Did I understand it right? If so, I think this will work just fine.
+> 
 
-Dave Chinner (1):
-      [c1a14cc] xfsprogs: Release 4.8.0-rc2
+Yep, I think so. I'll send an updated version.
 
-Eric Sandeen (10):
-      [7f510af] libxfs: move iswritable "fatal" decision to caller
-      [b04647e] xfs_repair: exit with status 2 if log dirtiness is unknown
-      [7e59be6] xfs_quota: Enable 3 more foreign commands
-      [cb35671] xfs_quota: un-flag non-foreign-capable commands
-      [2f7d042] xfs_quota: fix free command for foreign fs
-      [73b54bb] xfs_io: allow chattr & chproj on foreign filesystems
-      [f10a5ab] mkfs.xfs: clarify ftype defaults in manpage
-      [4d457e2] libxfs: factor mount checks into helper function
-      [e5c4ab5] xfs_repair: fix segfault from uninitialized tp in mv_orphan=
-age
-      [cbca895] xfs_copy: Fix meta UUID handling on multiple copies
+Brian
 
-Hou Tao (1):
-      [4fd2b07] xfs_logprint: remove the printing of transaction type
+> Thanks, Brian!
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-
-Code Diffstat:
-
- VERSION                    |  2 +-
- configure.ac               |  2 +-
- copy/xfs_copy.c            | 20 +++++++------
- doc/CHANGES                | 10 +++++++
- include/path.h             |  1 +
- io/attr.c                  |  2 +-
- io/open.c                  |  2 +-
- libxcmd/paths.c            | 12 +++++++-
- libxfs/darwin.c            |  2 +-
- libxfs/freebsd.c           |  6 ++--
- libxfs/init.c              |  4 ++-
- libxfs/init.h              |  3 +-
- libxfs/irix.c              |  2 +-
- libxfs/linux.c             | 80 +++++++++++++++++++++++++++---------------=
--------
- logprint/log_misc.c        | 50 ++-----------------------------
- logprint/log_print_trans.c |  4 +--
- logprint/logprint.h        |  2 --
- man/man8/mkfs.xfs.8        | 10 +++----
- quota/edit.c               |  3 ++
- quota/free.c               | 60 +++++++++++++++++++++++--------------
- quota/init.c               | 18 +++++++----
- quota/path.c               | 37 +++++++++++++++--------
- quota/state.c              |  1 -
- repair/phase2.c            |  3 +-
- repair/phase6.c            |  2 +-
- 25 files changed, 181 insertions(+), 157 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---U+BazGySraz5kW0T
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX5HdlAAoJEK3oKUf0dfodMhIP/3jn2dy2FnphmM6VXVOTjxWc
-MvixCofPsewPHtyUuOZDRu5FIzImQ7Ay446bgSY+nSxyY8gcho1+9170uC+0+Xqd
-GQI6Bh7mNqHR+poFCNcD7WZ7xIzPsRVS2JhDLMhfOjUA5p8gjXddjSrgXflq4mTF
-NIgNKzxtsMIrSHyE8LGlWfaGx7apk2VMauxinNwKB7RnGeJrwBhqKzU9bAErUOmm
-sd7SiL8V2Rlmkb2oQCHJ13iWjK2xLKrm4tT1FF/cpAK6sxn94umVnN1EN2Zcr7oQ
-RdnUW6tLKLQbzE8F/lFTjHvpan6L3rUmH2DMwzTvDb8rkltXeURSacxFt8FMUYPK
-F4lL+2fl2gL2wy9ebJCIIfswW+XmQPlhxMMCLNTpLRsB4BH73jaWr1jg0o2hfhLw
-xsMc212sQVGCaZKcyQBu+sbiNjvd63VBZIo5bPUQJcf9O6azzuKy41OcFO/ynqsx
-PZti7SGwaXD7w4OV5Tk6K2hsnSWRGj7yTJDzxTXulNlmBxl7IEiwPThUhZDw8MvC
-ubCSqKG1zXxwBjI6NCLOW0F46lfKcoSMFBPvwEE/4ysCWeO+HfcuRckNc+lqSChD
-TvmUDd+X7GT+rTZBnJMnvDIqVDXx3x7aeAjm6Bk4Pk6hoF3HE15hPUfgdyhNcuJT
-4Bb1T/xk4pmVev7IwzIk
-=/khV
------END PGP SIGNATURE-----
-
---U+BazGySraz5kW0T--
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
