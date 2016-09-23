@@ -1,104 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:51310 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161434AbcIWTG6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 15:06:58 -0400
-Date: Fri, 23 Sep 2016 20:06:55 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH 08/11] cifs: don't use memcpy() to copy struct iov_iter
-Message-ID: <20160923190655.GF2356@ZenIV.linux.org.uk>
-References: <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
- <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36743 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752772AbcIWIis (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 04:38:48 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v4 1/3] vfs: allow vfs_clone_file_range() across mount points
+Date: Fri, 23 Sep 2016 11:38:10 +0300
+Message-Id: <1474619892-5113-2-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
+References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-unionfs@vger.kernel.org
+Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-it's not 70s anymore.
+FICLONE/FICLONERANGE ioctls return -EXDEV if src and dest
+files are not on the same mount point.
+Practically, clone only requires that src and dest files
+are on the same file system.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Move the check for same mount point to ioctl handler and keep
+only the check for same super block in the vfs helper.
+
+A following patch is going to use the vfs_clone_file_range()
+helper in overlayfs to copy up between lower and upper
+mount points on the same file system.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
-[obviously should be separated; trivial cleanup almost unrelated to series]
- fs/cifs/file.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+ fs/ioctl.c      | 2 ++
+ fs/read_write.c | 8 ++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/cifs/file.c b/fs/cifs/file.c
-index 579e41b..42b99af 100644
---- a/fs/cifs/file.c
-+++ b/fs/cifs/file.c
-@@ -2478,7 +2478,7 @@ cifs_write_from_iter(loff_t offset, size_t len, struct iov_iter *from,
- 	size_t cur_len;
- 	unsigned long nr_pages, num_pages, i;
- 	struct cifs_writedata *wdata;
--	struct iov_iter saved_from;
-+	struct iov_iter saved_from = *from;
- 	loff_t saved_offset = offset;
- 	pid_t pid;
- 	struct TCP_Server_Info *server;
-@@ -2489,7 +2489,6 @@ cifs_write_from_iter(loff_t offset, size_t len, struct iov_iter *from,
- 		pid = current->tgid;
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index c415668..34d2994 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -223,6 +223,8 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
  
- 	server = tlink_tcon(open_file->tlink)->ses->server;
--	memcpy(&saved_from, from, sizeof(struct iov_iter));
+ 	if (!src_file.file)
+ 		return -EBADF;
++	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
++		return -EXDEV;
+ 	ret = vfs_clone_file_range(src_file.file, off, dst_file, destoff, olen);
+ 	fdput(src_file);
+ 	return ret;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 66215a7..9dc6e52 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1628,8 +1628,12 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	struct inode *inode_out = file_inode(file_out);
+ 	int ret;
  
- 	do {
- 		unsigned int wsize, credits;
-@@ -2551,8 +2550,7 @@ cifs_write_from_iter(loff_t offset, size_t len, struct iov_iter *from,
- 			kref_put(&wdata->refcount,
- 				 cifs_uncached_writedata_release);
- 			if (rc == -EAGAIN) {
--				memcpy(from, &saved_from,
--				       sizeof(struct iov_iter));
-+				*from = saved_from;
- 				iov_iter_advance(from, offset - saved_offset);
- 				continue;
- 			}
-@@ -2576,7 +2574,7 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
- 	struct cifs_sb_info *cifs_sb;
- 	struct cifs_writedata *wdata, *tmp;
- 	struct list_head wdata_list;
--	struct iov_iter saved_from;
-+	struct iov_iter saved_from = *from;
- 	int rc;
+-	if (inode_in->i_sb != inode_out->i_sb ||
+-	    file_in->f_path.mnt != file_out->f_path.mnt)
++	/*
++	 * FICLONE/FICLONERANGE ioctls enforce that src and dest files
++	 * are on the same mount point. Practically, they only need
++	 * to be on the same file system.
++	 */
++	if (inode_in->i_sb != inode_out->i_sb)
+ 		return -EXDEV;
  
- 	/*
-@@ -2597,8 +2595,6 @@ ssize_t cifs_user_writev(struct kiocb *iocb, struct iov_iter *from)
- 	if (!tcon->ses->server->ops->async_writev)
- 		return -ENOSYS;
- 
--	memcpy(&saved_from, from, sizeof(struct iov_iter));
--
- 	rc = cifs_write_from_iter(iocb->ki_pos, iov_iter_count(from), from,
- 				  open_file, cifs_sb, &wdata_list);
- 
-@@ -2631,13 +2627,11 @@ restart_loop:
- 			/* resend call if it's a retryable error */
- 			if (rc == -EAGAIN) {
- 				struct list_head tmp_list;
--				struct iov_iter tmp_from;
-+				struct iov_iter tmp_from = saved_from;
- 
- 				INIT_LIST_HEAD(&tmp_list);
- 				list_del_init(&wdata->list);
- 
--				memcpy(&tmp_from, &saved_from,
--				       sizeof(struct iov_iter));
- 				iov_iter_advance(&tmp_from,
- 						 wdata->offset - iocb->ki_pos);
- 
+ 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
 -- 
-2.9.3
+2.7.4
 
