@@ -1,84 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33244 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754016AbcIWIiv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 04:38:51 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v4 2/3] vfs: call vfs_clone_file_range() under mnt_want_write()
-Date: Fri, 23 Sep 2016 11:38:11 +0300
-Message-Id: <1474619892-5113-3-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
-References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:51146 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759329AbcIWTBe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 15:01:34 -0400
+Date: Fri, 23 Sep 2016 20:01:32 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [PATCH 01/11] fix memory leaks in tracing_buffers_splice_read()
+Message-ID: <20160923190132.GY2356@ZenIV.linux.org.uk>
+References: <20160909023452.GO2356@ZenIV.linux.org.uk>
+ <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+ <20160909221945.GQ2356@ZenIV.linux.org.uk>
+ <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+ <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
+ <20160923190032.GA25771@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-unionfs@vger.kernel.org
-Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-Move mnt_want_write() out of the vfs helper and up into
-the ioctl handler.
-Taking mnt_want_write() outside the vfs helper is the standard
-in most namei.c syscalls.
-This change will allow overlayfs code to use the helper for
-copy up.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/ioctl.c      | 9 +++++++++
- fs/read_write.c | 5 -----
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ kernel/trace/trace.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index 34d2994..9299832 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -15,6 +15,7 @@
- #include <linux/writeback.h>
- #include <linux/buffer_head.h>
- #include <linux/falloc.h>
-+#include <linux/mount.h>
- #include "internal.h"
+diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+index dade4c9..9016f98 100644
+--- a/kernel/trace/trace.c
++++ b/kernel/trace/trace.c
+@@ -6163,9 +6163,6 @@ tracing_buffers_splice_read(struct file *file, loff_t *ppos,
+ 		return -EBUSY;
+ #endif
  
- #include <asm/ioctls.h>
-@@ -225,7 +226,15 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
- 		return -EBADF;
- 	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
- 		return -EXDEV;
-+
-+	ret = mnt_want_write_file(dst_file);
-+	if (ret)
-+		goto out_fput;
-+
- 	ret = vfs_clone_file_range(src_file.file, off, dst_file, destoff, olen);
-+
-+	mnt_drop_write_file(dst_file);
-+out_fput:
- 	fdput(src_file);
- 	return ret;
- }
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 9dc6e52..90bc18b 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1660,10 +1660,6 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- 	if (pos_in + len > i_size_read(inode_in))
+-	if (splice_grow_spd(pipe, &spd))
+-		return -ENOMEM;
+-
+ 	if (*ppos & (PAGE_SIZE - 1))
  		return -EINVAL;
  
--	ret = mnt_want_write_file(file_out);
--	if (ret)
--		return ret;
--
- 	ret = file_in->f_op->clone_file_range(file_in, pos_in,
- 			file_out, pos_out, len);
- 	if (!ret) {
-@@ -1671,7 +1667,6 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- 		fsnotify_modify(file_out);
+@@ -6175,6 +6172,9 @@ tracing_buffers_splice_read(struct file *file, loff_t *ppos,
+ 		len &= PAGE_MASK;
  	}
  
--	mnt_drop_write_file(file_out);
++	if (splice_grow_spd(pipe, &spd))
++		return -ENOMEM;
++
+  again:
+ 	trace_access_lock(iter->cpu_file);
+ 	entries = ring_buffer_entries_cpu(iter->trace_buffer->buffer, iter->cpu_file);
+@@ -6232,19 +6232,21 @@ tracing_buffers_splice_read(struct file *file, loff_t *ppos,
+ 	/* did we read anything? */
+ 	if (!spd.nr_pages) {
+ 		if (ret)
+-			return ret;
++			goto out;
+ 
++		ret = -EAGAIN;
+ 		if ((file->f_flags & O_NONBLOCK) || (flags & SPLICE_F_NONBLOCK))
+-			return -EAGAIN;
++			goto out;
+ 
+ 		ret = wait_on_pipe(iter, true);
+ 		if (ret)
+-			return ret;
++			goto out;
+ 
+ 		goto again;
+ 	}
+ 
+ 	ret = splice_to_pipe(pipe, &spd);
++out:
+ 	splice_shrink_spd(&spd);
+ 
  	return ret;
- }
- EXPORT_SYMBOL(vfs_clone_file_range);
 -- 
-2.7.4
+2.9.3
 
