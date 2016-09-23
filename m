@@ -1,133 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40190 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966101AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 16:31:03 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2BA3A7CDF8
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:03 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV23J022230
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 5/5] xfs: log recovery tracepoints to track current lsn and buffer submission
-Date: Fri, 23 Sep 2016 16:31:00 -0400
-Message-Id: <1474662660-61550-6-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
-References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42126 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035308AbcIWPTq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 11:19:46 -0400
+Date: Fri, 23 Sep 2016 08:19:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
+ systems
+Message-ID: <20160923151921.GM9314@birch.djwong.org>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-4-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Log recovery has particular rules around buffer submission along with
-tricky corner cases where independent transactions can share an LSN. As
-such, it can be difficult to follow when/why buffers are submitted
-during recovery.
+On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
+> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > copy_file_range syscall returns -EXDEV if src and dest
+> > file are not on the same file system.
+> > The vfs_copy_file_range() helper, however, knows how to copy
+> > across file systems with do_splice_direct().
+> >
+> > Move the enforcement of same file system from the vfs helper
+> > to the syscall code.
+> >
+> > A following patch is going to use the vfs_copy_file_range()
+> > helper in overlayfs to copy up between lower and upper
+> > not on the same file system.
+> >
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
+> >  fs/read_write.c | 16 +++++++++++-----
+> >  1 file changed, 11 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 9dc6e52..6975fe8 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >             (file_out->f_flags & O_APPEND))
+> >                 return -EBADF;
+> >
+> > -       /* this could be relaxed once a method supports cross-fs copies */
+> > -       if (inode_in->i_sb != inode_out->i_sb)
+> > -               return -EXDEV;
+> > -
+> >         if (len == 0)
+> >                 return 0;
+> >
+> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >                 return ret;
+> >
+> >         ret = -EOPNOTSUPP;
+> > -       if (file_out->f_op->copy_file_range)
+> > +       /* copy_file_range() method does not support cross-fs copies */
+> > +       if (inode_in->i_sb == inode_out->i_sb &&
+> > +           file_out->f_op->copy_file_range)
+> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+> >                                                       pos_out, len, flags);
+> >         if (ret == -EOPNOTSUPP)
+> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+> >                 pos_out = f_out.file->f_pos;
+> >         }
+> >
+> > +       /*
+> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
+> > +        * fulfill the guaranty to userland that copy_file_range syscall
+> > +        * does not allow cross-fs copy
+> > +        */
+> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
+> > +               return -EXDEV;
+> 
+> Oops, that was supposed to be goto out;
+> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
+> until I have a reliable test on xfs to fall back from clone to copy range
 
-Add a couple tracepoints to post the current LSN of a record when a new
-record is being processed and when a buffer is being skipped due to LSN
-ordering. Also, update the recover item class to include the LSN of the
-current transaction for the item being processed.
+I could just create another error injection point that'll make XFS pretend
+that it's out of space.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c |  2 ++
- fs/xfs/xfs_trace.h       | 31 +++++++++++++++++++++++++++++--
- 2 files changed, 31 insertions(+), 2 deletions(-)
+--D
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9667d7d..846483d 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2804,6 +2804,7 @@ xlog_recover_buffer_pass2(
- 	 */
- 	lsn = xlog_recover_get_buf_lsn(mp, bp);
- 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
-+		trace_xfs_log_recover_buf_skip(log, buf_f);
- 		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
- 		goto out_release;
- 	}
-@@ -4319,6 +4320,7 @@ xlog_recover_process_data(
- 	if (xlog_header_check_recover(log->l_mp, rhead))
- 		return -EIO;
- 
-+	trace_xfs_log_recover_record(log, rhead, pass);
- 	while ((dp < end) && num_logops) {
- 
- 		ohead = (struct xlog_op_header *)dp;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index c2a875f..993e2d2 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1985,6 +1985,29 @@ DEFINE_EVENT(xfs_swap_extent_class, name, \
- DEFINE_SWAPEXT_EVENT(xfs_swap_extent_before);
- DEFINE_SWAPEXT_EVENT(xfs_swap_extent_after);
- 
-+TRACE_EVENT(xfs_log_recover_record,
-+	TP_PROTO(struct xlog *log, struct xlog_rec_header *rhead, int pass),
-+	TP_ARGS(log, rhead, pass),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_lsn_t, lsn)
-+		__field(int, len)
-+		__field(int, num_logops)
-+		__field(int, pass)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = log->l_mp->m_super->s_dev;
-+		__entry->lsn = be64_to_cpu(rhead->h_lsn);
-+		__entry->len = be32_to_cpu(rhead->h_len);
-+		__entry->num_logops = be32_to_cpu(rhead->h_num_logops);
-+		__entry->pass = pass;
-+	),
-+	TP_printk("dev %d:%d lsn 0x%llx len 0x%x num_logops 0x%x pass %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->lsn, __entry->len, __entry->num_logops,
-+		   __entry->pass)
-+)
-+
- DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
- 	TP_PROTO(struct xlog *log, struct xlog_recover *trans,
- 		struct xlog_recover_item *item, int pass),
-@@ -1993,6 +2016,7 @@ DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
- 		__field(dev_t, dev)
- 		__field(unsigned long, item)
- 		__field(xlog_tid_t, tid)
-+		__field(xfs_lsn_t, lsn)
- 		__field(int, type)
- 		__field(int, pass)
- 		__field(int, count)
-@@ -2002,15 +2026,17 @@ DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
- 		__entry->dev = log->l_mp->m_super->s_dev;
- 		__entry->item = (unsigned long)item;
- 		__entry->tid = trans->r_log_tid;
-+		__entry->lsn = trans->r_lsn;
- 		__entry->type = ITEM_TYPE(item);
- 		__entry->pass = pass;
- 		__entry->count = item->ri_cnt;
- 		__entry->total = item->ri_total;
- 	),
--	TP_printk("dev %d:%d trans 0x%x, pass %d, item 0x%p, item type %s "
--		  "item region count/total %d/%d",
-+	TP_printk("dev %d:%d tid 0x%x lsn 0x%llx, pass %d, item 0x%p, "
-+		  "item type %s item region count/total %d/%d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->tid,
-+		  __entry->lsn,
- 		  __entry->pass,
- 		  (void *)__entry->item,
- 		  __print_symbolic(__entry->type, XFS_LI_TYPE_DESC),
-@@ -2069,6 +2095,7 @@ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel_add);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel_ref_inc);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_recover);
-+DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_skip);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_inode_buf);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_reg_buf);
- DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_dquot_buf);
--- 
-2.5.5
-
+> 
+> > +
+> >         ret = vfs_copy_file_range(f_in.file, pos_in, f_out.file, pos_out, len,
+> >                                   flags);
+> >         if (ret > 0) {
+> > --
+> > 2.7.4
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
