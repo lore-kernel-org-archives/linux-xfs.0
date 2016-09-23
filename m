@@ -1,192 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35504 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934935AbcIUPDp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Sep 2016 11:03:45 -0400
-Date: Wed, 21 Sep 2016 23:03:42 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] fstests: test xfs_copy V5 XFS without -d option
-Message-ID: <20160921150342.GN27776@eguan.usersys.redhat.com>
-References: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:51126 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760377AbcIWTAi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 15:00:38 -0400
+Date: Fri, 23 Sep 2016 20:00:32 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [RFC][CFT] splice_read reworked
+Message-ID: <20160923190032.GA25771@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <20160909023452.GO2356@ZenIV.linux.org.uk>
+ <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+ <20160909221945.GQ2356@ZenIV.linux.org.uk>
+ <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+ <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1474455620-25982-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <20160917190023.GA8039@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Wed, Sep 21, 2016 at 07:00:20PM +0800, Zorro Lang wrote:
-> From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
-> Before that, copy a V5 XFS will cause target fs corruption, and only
-> use "-d" option can resolve that problem.
-> 
-> For this old reason, xfstests use below patch to add '-d' option to
-> xfs_copy, make sure xfs_copy always use that option if it try to copy
-> a V5 XFS:
-> 
->   8346e53 common: append -d option to XFS_COPY_PROG when testing v5 xfs
-> 
-> But xfs_copy full support v5 xfs now. So xfstest miss the coverage of
-> copy a V5 XFS without '-d'. For test this feature I did below things:
-> 
->   1. Revert commit 8346e53
->   2. Add a new common function _require_xfs_copy(), if a test try to
->      use old xfsprogs to copy a V5 xfs, it'll skip that test.
->   3. Add above common function into all xfs_copy related cases.
->   4. xfs/073 test V4 xfs forcibly by specify "-m crc=0" in case. I
->      think it's useless now, so remove it.
-> 
-> There's a xfs_copy related case I didn't add _require_xfs_copy()
-> to it -- xfs/032, due to it tests "xfs_copy -d" directly.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
->  common/rc     | 27 ++++++++++++++++++++++-----
->  tests/xfs/073 |  9 +++------
->  tests/xfs/077 |  1 +
->  3 files changed, 26 insertions(+), 11 deletions(-)
-> 
-> diff --git a/common/rc b/common/rc
-> index 13afc6a..9ba073b 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -3789,11 +3789,6 @@ init_rc()
->  	# Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
->  	xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
->  	export XFS_IO_PROG="$XFS_IO_PROG -F"
-> -
-> -	# xfs_copy doesn't work on v5 xfs yet without -d option
-> -	if [ "$FSTYP" == "xfs" ] && [[ $MKFS_OPTIONS =~ crc=1 ]]; then
-> -		export XFS_COPY_PROG="$XFS_COPY_PROG -d"
-> -	fi
->  }
->  
->  # get real device path name by following link
-> @@ -3994,6 +3989,28 @@ _require_xfs_mkfs_without_validation()
->  	fi
->  }
->  
-> +# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
-> +# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
-> +# bug.
-> +_require_xfs_copy()
+	The series is supposed to solve the locking order problems for
+->splice_read() and get rid of code duplication between the read-side
+methods.
+	pipe_lock is lifted out of ->splice_read() instances, along with
+waiting for empty space in pipe, etc. - we do that stuff in callers.
+	A new variant of iov_iter is introduced - it's backed by a pipe,
+copy_to_iter() results in allocating pages and copying into those,
+copy_page_to_iter() just sticks a reference to that page into pipe.
+Running out of space in pipe yields a short read, as a fault in iovec-backed
+iov_iter would have.  Enough primitives are implemented for normal
+->read_iter() instances to work.
+	generic_file_splice_read() switched to feeding such iov_iter to
+->read_iter() instance.  That turns out to be enough to kill almost all
+->splice_read() instances; the only ones _not_ using generic_file_splice_read()
+or default_file_splice_read() (== no zero-copy fallback) are
+fuse_dev_splice_read(), 3 instances in kernel/{relay.c,trace/trace.c} and
+sock_splice_read().  It's almost certainly possible to convert fuse one
+and the same might be possible to do to socket one.  relay and tracing
+stuff is just plain weird; might or might not be doable.
 
-I'd suggest name it as _require_xfs_copy_crc, which indicates we need
-xfs_copy crc support, like _require_xfs_mkfs_crc.
+	Something hopefully working is in
+git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git #work.splice_read
 
-> +{
-> +	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+Several commits in that pipe (#1, #8 and #9) are trivial cleanups and fixes
+for crap caught while doing the rest, probably ought to be separated.
 
-Assuming we have $SCRATCH_DEV defined in a common helper doesn't seem
-right to me. Actually you don't have to use $SCRATCH_DEV in this test
+Shortlog:
+Al Viro (11):
+      fix memory leaks in tracing_buffers_splice_read()
+      splice_to_pipe(): don't open-code wakeup_pipe_readers()
+      splice: switch get_iovec_page_array() to iov_iter
+      splice: lift pipe_lock out of splice_to_pipe()
+      skb_splice_bits(): get rid of callback
+      new helper: add_to_pipe()
+      fuse_dev_splice_read(): switch to add_to_pipe()
+      cifs: don't use memcpy() to copy struct iov_iter
+      fuse_ioctl_copy_user(): don't open-code copy_page_{to,from}_iter()
+      new iov_iter flavour: pipe-backed
+      switch generic_file_splice_read() to use of ->read_iter()
 
-	touch $tmp.img
-	$MKFS_XFS_PROG -d file,name=$tmp.img,size=32m
+Diffstat:
+ drivers/staging/lustre/lustre/llite/file.c         |  70 +--
+ .../staging/lustre/lustre/llite/llite_internal.h   |  15 +-
+ drivers/staging/lustre/lustre/llite/vvp_internal.h |  14 -
+ drivers/staging/lustre/lustre/llite/vvp_io.c       |  45 +-
+ fs/cifs/file.c                                     |  14 +-
+ fs/coda/file.c                                     |  23 +-
+ fs/fuse/dev.c                                      |  48 +-
+ fs/fuse/file.c                                     |  30 +-
+ fs/gfs2/file.c                                     |  28 +-
+ fs/nfs/file.c                                      |  25 +-
+ fs/nfs/internal.h                                  |   2 -
+ fs/nfs/nfs4file.c                                  |   2 +-
+ fs/ocfs2/file.c                                    |  34 +-
+ fs/ocfs2/ocfs2_trace.h                             |   2 -
+ fs/splice.c                                        | 578 +++++++--------------
+ fs/xfs/xfs_file.c                                  |  41 +-
+ fs/xfs/xfs_trace.h                                 |   1 -
+ include/linux/fs.h                                 |   2 -
+ include/linux/skbuff.h                             |   8 +-
+ include/linux/splice.h                             |   3 +
+ include/linux/uio.h                                |  14 +-
+ kernel/trace/trace.c                               |  14 +-
+ lib/iov_iter.c                                     | 390 +++++++++++++-
+ mm/shmem.c                                         | 115 +---
+ net/core/skbuff.c                                  |  28 +-
+ net/ipv4/tcp.c                                     |   3 +-
+ net/kcm/kcmsock.c                                  |  16 +-
+ net/unix/af_unix.c                                 |  17 +-
+ 28 files changed, 648 insertions(+), 934 deletions(-)
 
-then test copy on this image
+	It's not all I would like to do there (in particular, I hadn't
+done fuse splice_read conversion to read_iter, even though it does appear
+to be doable; that'll take copy_page_to_iter_nosteal() as a new primitive
++ considerable amount of massage in fs/fuse/dev.c), but it should at least
+	* make pipe lock the outermost
+	* switch generic_file_splice_read() to ->read_iter(), making
+it suitable for lustre/coda/gfs2/ocfs2/xfs/shmem without any wrappers
+	* somewhat simplify socket ->splice_read() guts (not by much - to
+start doing that right we'd need the same new primitive)
+	* remove a considerable pile of code.
+	* get rid of a bunch of splice_{grow,shrink}_spd/splice_to_pipe
+callers; remaining ones are in default_file_splice_read() (trivially
+killable by conversion to iov_iter_get_pages_alloc(), followed by the same
+build iovec array + use kernel_readv as we do now + iov_iter_advance to
+the length returned by kernel_readv), kernel/relay and kernel/trace/trace.c
+ones (should switch to add_to_pipe(), AFAICS) and skb_splice_bits()
+(again, a matter of copy_page_to_iter_nosteal(), which will take out
+spd_can_coalesce/spd_fill_page in there as well).  Once the remaining ones
+are taken care of, splice_pipe_desc and friends will go away.
 
-	$XFS_COPY_PROG $tmp.img $tmp.copy
+	In its current form it survives LTP, xfstests and overlayfs testsuite;
+if anybody has additional tests for splice and friends, I would like to hear
+about such.  It really needs more beating, though.
 
-> +	. $tmp.mkfs
-> +
-> +	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
-> +	local rc=$?
-> +
-> +	rm -f $tmp.mkfs
-> +	rm -f $tmp.copy 2>/dev/null
-> +	if [ $rc -ne 0 ]; then
-> +		if [ $_fs_has_crcs -eq 1 ]; then
-> +			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
-> +		else
-> +			_fail "xfs_copy can't copy a V4 xfs"
-
-I don't think this kind of "_fail" belongs to a "_require" helper, it
-should be done in tests.
-
-> +		fi
-> +	fi
-> +}
-> +
-
-After going through this function, I find that it's not always checking
-if xfs_copy has crc support, it checks the crc support only when
-_scratch_mkfs creates a crc enabled fs. This information is "hidden" in
-the helper, and this behavior doesn't match the function name and the
-comments.
-
-So I'd suggest the following, what do you think?
-
-Create a new helper _require_xfs_copy_crc() as I suggested above, which
-always checks if xfs_copy has crc support. Then call this helper from
-xfs/073 and xfs/077 only when we're testing v5 XFS. i.e.
-
-_scratch_mkfs_xfs -dsize=41m,agcount=2 | _filter_mkfs 2>$tmp.mkfs >>$seqres.full
-. $tmp.mkfs
-# we need xfs_copy CRC support if we're testing CRC enabled fs
-if [ $_fs_has_crcs -eq 1 ]; then
-	_require_xfs_copy_crc
-fi
- _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
-
-So it's clear why we need xfs_copy crc support, this information is not
-"buried" in the original _require_xfs_copy_crc.
-
-Thanks,
-Eryu
-
->  init_rc
->  
->  ################################################################################
-> diff --git a/tests/xfs/073 b/tests/xfs/073
-> index 9e29223..02e45d5 100755
-> --- a/tests/xfs/073
-> +++ b/tests/xfs/073
-> @@ -134,11 +134,12 @@ _require_attrs
->  [ -n "$XFS_COPY_PROG" ] || _notrun "xfs_copy binary not yet installed"
->  
->  _require_scratch
-> +_require_xfs_copy
->  _require_loop
->  
->  rm -f $seqres.full
->  
-> -_scratch_mkfs_xfs -m crc=0 -dsize=41m,agcount=2 >>$seqres.full 2>&1
-> +_scratch_mkfs_xfs -dsize=41m,agcount=2 >>$seqres.full 2>&1
->  _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
->  
->  echo
-> @@ -158,11 +159,7 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
->  
->  echo 
->  echo === copying scratch device to single target, large ro device
-> -mkfs_crc_opts="-m crc=0"
-> -if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
-> -	mkfs_crc_opts=""
-> -fi
-> -${MKFS_XFS_PROG} $mkfs_crc_opts -dfile,name=$imgs.source,size=100g \
-> +${MKFS_XFS_PROG} -dfile,name=$imgs.source,size=100g \
->  	| _filter_mkfs 2>/dev/null
->  rmdir $imgs.source_dir 2>/dev/null
->  mkdir $imgs.source_dir
-> diff --git a/tests/xfs/077 b/tests/xfs/077
-> index 007d05d..7bcbfb5 100755
-> --- a/tests/xfs/077
-> +++ b/tests/xfs/077
-> @@ -51,6 +51,7 @@ _cleanup()
->  _supported_fs xfs
->  _supported_os Linux
->  _require_scratch
-> +_require_xfs_copy
->  _require_xfs_crc
->  _require_meta_uuid
->  
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Please, help with review and testing.
