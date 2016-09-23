@@ -1,57 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47246 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40190 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757328AbcIWMUm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 08:20:42 -0400
-Subject: Re: [PATCH] fstests: make some xfs project quota tests generic
-References: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
- <20160923042500.GV27776@eguan.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a834fc9c-c406-022f-8304-2ed54c65bc9b@sandeen.net>
-Date: Fri, 23 Sep 2016 07:20:40 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160923042500.GV27776@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+        id S966101AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Sep 2016 16:31:03 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2BA3A7CDF8
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:03 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV23J022230
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 5/5] xfs: log recovery tracepoints to track current lsn and buffer submission
+Date: Fri, 23 Sep 2016 16:31:00 -0400
+Message-Id: <1474662660-61550-6-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 9/22/16 11:25 PM, Eryu Guan wrote:
->> @@ -210,16 +226,23 @@ _qmount_option()
->> >  		-e 's/gquota/QUOTA/g'      \
->> >  		-e 's/grpquota/QUOTA/g'    \
->> >  		-e 's/pquota/QUOTA/g'      \
->> > -		-e 's/prjquota/QUOTA/g'      \
->> > +		-e 's/prjquota/QUOTA/g'    \
->> >  		-e 's/quota/QUOTA/g'       \
->> >  		-e 's/uqnoenforce/QUOTA/g' \
->> >  		-e 's/gqnoenforce/QUOTA/g' \
->> >  		-e 's/pqnoenforce/QUOTA/g' \
->> >  		-e 's/qnoenforce/QUOTA/g'  \
->> > -		-e "s/QUOTA/$1/g"`
->> > +		-e "s/QUOTA/$OPTS/g"`
->> >  
->> > +	# ext4 doesn't _do_ "-o pquota/prjquota" because reasons
->> > +	# Switch it to "quota" to enable mkfs-time pquota
->> > +	if [ "$FSTYP" == "ext4" ]; then
->> > +		OPTS=`echo $OPTS \
->> > +		| sed	-e 's/pquota/quota/g'	\
->> > +			-e 's/prjquota/quota/g'`
->> > +	fi
-> This replaces "grpquota" to "grquota" and mount failed because of
-> unknown mount option "grquota". The following change works for me:
-> 
-> -             | sed   -e 's/pquota/quota/g'   \
-> +             | sed   -e 's/\bpquota/quota/g' \
-> 
-> If you can give me an ack (or another fix), I can fold it into the
-> original patch.
+Log recovery has particular rules around buffer submission along with
+tricky corner cases where independent transactions can share an LSN. As
+such, it can be difficult to follow when/why buffers are submitted
+during recovery.
 
-Eek .. yes, feel free to change that (and the other, unless you want
-to make it a separate commit) - sorry, not sure how I missed that.
+Add a couple tracepoints to post the current LSN of a record when a new
+record is being processed and when a buffer is being skipped due to LSN
+ordering. Also, update the recover item class to include the LSN of the
+current transaction for the item being processed.
 
-Thanks,
--Eric
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c |  2 ++
+ fs/xfs/xfs_trace.h       | 31 +++++++++++++++++++++++++++++--
+ 2 files changed, 31 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9667d7d..846483d 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2804,6 +2804,7 @@ xlog_recover_buffer_pass2(
+ 	 */
+ 	lsn = xlog_recover_get_buf_lsn(mp, bp);
+ 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
++		trace_xfs_log_recover_buf_skip(log, buf_f);
+ 		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
+ 		goto out_release;
+ 	}
+@@ -4319,6 +4320,7 @@ xlog_recover_process_data(
+ 	if (xlog_header_check_recover(log->l_mp, rhead))
+ 		return -EIO;
+ 
++	trace_xfs_log_recover_record(log, rhead, pass);
+ 	while ((dp < end) && num_logops) {
+ 
+ 		ohead = (struct xlog_op_header *)dp;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c2a875f..993e2d2 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1985,6 +1985,29 @@ DEFINE_EVENT(xfs_swap_extent_class, name, \
+ DEFINE_SWAPEXT_EVENT(xfs_swap_extent_before);
+ DEFINE_SWAPEXT_EVENT(xfs_swap_extent_after);
+ 
++TRACE_EVENT(xfs_log_recover_record,
++	TP_PROTO(struct xlog *log, struct xlog_rec_header *rhead, int pass),
++	TP_ARGS(log, rhead, pass),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_lsn_t, lsn)
++		__field(int, len)
++		__field(int, num_logops)
++		__field(int, pass)
++	),
++	TP_fast_assign(
++		__entry->dev = log->l_mp->m_super->s_dev;
++		__entry->lsn = be64_to_cpu(rhead->h_lsn);
++		__entry->len = be32_to_cpu(rhead->h_len);
++		__entry->num_logops = be32_to_cpu(rhead->h_num_logops);
++		__entry->pass = pass;
++	),
++	TP_printk("dev %d:%d lsn 0x%llx len 0x%x num_logops 0x%x pass %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->lsn, __entry->len, __entry->num_logops,
++		   __entry->pass)
++)
++
+ DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
+ 	TP_PROTO(struct xlog *log, struct xlog_recover *trans,
+ 		struct xlog_recover_item *item, int pass),
+@@ -1993,6 +2016,7 @@ DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
+ 		__field(dev_t, dev)
+ 		__field(unsigned long, item)
+ 		__field(xlog_tid_t, tid)
++		__field(xfs_lsn_t, lsn)
+ 		__field(int, type)
+ 		__field(int, pass)
+ 		__field(int, count)
+@@ -2002,15 +2026,17 @@ DECLARE_EVENT_CLASS(xfs_log_recover_item_class,
+ 		__entry->dev = log->l_mp->m_super->s_dev;
+ 		__entry->item = (unsigned long)item;
+ 		__entry->tid = trans->r_log_tid;
++		__entry->lsn = trans->r_lsn;
+ 		__entry->type = ITEM_TYPE(item);
+ 		__entry->pass = pass;
+ 		__entry->count = item->ri_cnt;
+ 		__entry->total = item->ri_total;
+ 	),
+-	TP_printk("dev %d:%d trans 0x%x, pass %d, item 0x%p, item type %s "
+-		  "item region count/total %d/%d",
++	TP_printk("dev %d:%d tid 0x%x lsn 0x%llx, pass %d, item 0x%p, "
++		  "item type %s item region count/total %d/%d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->tid,
++		  __entry->lsn,
+ 		  __entry->pass,
+ 		  (void *)__entry->item,
+ 		  __print_symbolic(__entry->type, XFS_LI_TYPE_DESC),
+@@ -2069,6 +2095,7 @@ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel_add);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_cancel_ref_inc);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_recover);
++DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_skip);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_inode_buf);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_reg_buf);
+ DEFINE_LOG_RECOVER_BUF_ITEM(xfs_log_recover_buf_dquot_buf);
+-- 
+2.5.5
+
