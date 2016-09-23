@@ -1,53 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36500 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934261AbcIVPoD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2016 11:44:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAJfpeguhoMkkBWD7s6V-2jHaAvKrEn+sz8h0emcr7isR8yzKHg@mail.gmail.com>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-5-git-send-email-amir73il@gmail.com> <CAOQ4uxjhO0M4K4oNA0dGsN6-DHtJ7zFQVLe=T2qpuWb+eubaig@mail.gmail.com>
- <CAJfpeguhoMkkBWD7s6V-2jHaAvKrEn+sz8h0emcr7isR8yzKHg@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 22 Sep 2016 18:44:00 +0300
-Message-ID: <CAOQ4uxh-6q_t5umF=pN8YjJ+9Az9et2GL240KZMqCeYGvSmycg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/4] ovl: use vfs_copy_file_range() to copy up file data
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:44560 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965005AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Sep 2016 16:31:03 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 97FA833884C
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:02 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV2ov022223
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 3/5] xfs: don't warn on buffers not being recovered due to LSN
+Date: Fri, 23 Sep 2016 16:30:58 -0400
+Message-Id: <1474662660-61550-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Dave Chinner <david@fromorbit.com>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Sep 22, 2016 at 5:49 PM, Miklos Szeredi <miklos@szeredi.hu> wrote:
-> On Thu, Sep 22, 2016 at 10:49 AM, Amir Goldstein <amir73il@gmail.com> wrote:
->> Guys, I just hit a lockdep warning on nesting an mnt_want_write() with
->> this patch
->> because overlay already holds the write lock when getting to ovl_copy_up_data()
->> I don't know how I missed it before.
->>
->> Is it really a problem to nest this lock?
->> Should I factor our another set of _locked helpers from the
->> vfs_{copy,clone}_file_range helpers?
->>
->
-> vfs_{copy,clone}_file_range should call sb_start_write() instead of
-> mnt_want_write_file(), the checks against FMODE_WRITE + S_ISREG ensure
-> that the __mnt_want_write() part is already held on the file.
+The log recovery buffer validation function is invoked in cases where a
+buffer update may be skipped due to LSN ordering. If the validation
+function happens to come across directory conversion situations (e.g., a
+dir3 block to data conversion), it may warn about seeing a buffer log
+format of one type and a buffer with a magic number of another.
 
-Wait a minute, I think you got the solution but mixed it up a bit.
-IIUC, vfs_{clone,copy} should call __mnt_want_write_file()
-instead of mnt_want_write_file(), which will skip sb_start_write()
-because file is already open for write and no lockdep warning
-and no problem.
+This warning is not valid as the buffer update is ultimately skipped.
+This is indicated by a current_lsn of NULLCOMMITLSN provided by the
+caller. As such, update xlog_recover_validate_buf_type() to only warn in
+such cases when a buffer update is expected.
 
-Am I missing something?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 58 ++++++++++++++++++++++--------------------------
+ 1 file changed, 26 insertions(+), 32 deletions(-)
 
->
-> That still leaves the lockdep warning.  We could do
-> __vfs_{copy,clone}_file_range() variants without the
-> sb_start_write()/sb_end_write() and add the non-underscore variants as
-> static inline to fs.h that do call the sb_start/end_write.
->
-> Thanks,
-> Miklos
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index bf325f2..9be7630 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2367,6 +2367,7 @@ xlog_recover_validate_buf_type(
+ 	__uint32_t		magic32;
+ 	__uint16_t		magic16;
+ 	__uint16_t		magicda;
++	char			*warnmsg = NULL;
+ 
+ 	/*
+ 	 * We can only do post recovery validation on items on CRC enabled
+@@ -2405,31 +2406,27 @@ xlog_recover_validate_buf_type(
+ 			bp->b_ops = &xfs_rmapbt_buf_ops;
+ 			break;
+ 		default:
+-			xfs_warn(mp, "Bad btree block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad btree block magic!";
+ 			break;
+ 		}
+ 		break;
+ 	case XFS_BLFT_AGF_BUF:
+ 		if (magic32 != XFS_AGF_MAGIC) {
+-			xfs_warn(mp, "Bad AGF block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad AGF block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_agf_buf_ops;
+ 		break;
+ 	case XFS_BLFT_AGFL_BUF:
+ 		if (magic32 != XFS_AGFL_MAGIC) {
+-			xfs_warn(mp, "Bad AGFL block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad AGFL block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_agfl_buf_ops;
+ 		break;
+ 	case XFS_BLFT_AGI_BUF:
+ 		if (magic32 != XFS_AGI_MAGIC) {
+-			xfs_warn(mp, "Bad AGI block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad AGI block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_agi_buf_ops;
+@@ -2439,8 +2436,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_GDQUOT_BUF:
+ #ifdef CONFIG_XFS_QUOTA
+ 		if (magic16 != XFS_DQUOT_MAGIC) {
+-			xfs_warn(mp, "Bad DQUOT block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad DQUOT block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dquot_buf_ops;
+@@ -2452,16 +2448,14 @@ xlog_recover_validate_buf_type(
+ 		break;
+ 	case XFS_BLFT_DINO_BUF:
+ 		if (magic16 != XFS_DINODE_MAGIC) {
+-			xfs_warn(mp, "Bad INODE block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad INODE block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_inode_buf_ops;
+ 		break;
+ 	case XFS_BLFT_SYMLINK_BUF:
+ 		if (magic32 != XFS_SYMLINK_MAGIC) {
+-			xfs_warn(mp, "Bad symlink block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad symlink block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_symlink_buf_ops;
+@@ -2469,8 +2463,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DIR_BLOCK_BUF:
+ 		if (magic32 != XFS_DIR2_BLOCK_MAGIC &&
+ 		    magic32 != XFS_DIR3_BLOCK_MAGIC) {
+-			xfs_warn(mp, "Bad dir block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad dir block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dir3_block_buf_ops;
+@@ -2478,8 +2471,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DIR_DATA_BUF:
+ 		if (magic32 != XFS_DIR2_DATA_MAGIC &&
+ 		    magic32 != XFS_DIR3_DATA_MAGIC) {
+-			xfs_warn(mp, "Bad dir data magic!");
+-			ASSERT(0);
++			warnmsg = "Bad dir data magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dir3_data_buf_ops;
+@@ -2487,8 +2479,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DIR_FREE_BUF:
+ 		if (magic32 != XFS_DIR2_FREE_MAGIC &&
+ 		    magic32 != XFS_DIR3_FREE_MAGIC) {
+-			xfs_warn(mp, "Bad dir3 free magic!");
+-			ASSERT(0);
++			warnmsg = "Bad dir3 free magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dir3_free_buf_ops;
+@@ -2496,8 +2487,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DIR_LEAF1_BUF:
+ 		if (magicda != XFS_DIR2_LEAF1_MAGIC &&
+ 		    magicda != XFS_DIR3_LEAF1_MAGIC) {
+-			xfs_warn(mp, "Bad dir leaf1 magic!");
+-			ASSERT(0);
++			warnmsg = "Bad dir leaf1 magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
+@@ -2505,8 +2495,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DIR_LEAFN_BUF:
+ 		if (magicda != XFS_DIR2_LEAFN_MAGIC &&
+ 		    magicda != XFS_DIR3_LEAFN_MAGIC) {
+-			xfs_warn(mp, "Bad dir leafn magic!");
+-			ASSERT(0);
++			warnmsg = "Bad dir leafn magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dir3_leafn_buf_ops;
+@@ -2514,8 +2503,7 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_DA_NODE_BUF:
+ 		if (magicda != XFS_DA_NODE_MAGIC &&
+ 		    magicda != XFS_DA3_NODE_MAGIC) {
+-			xfs_warn(mp, "Bad da node magic!");
+-			ASSERT(0);
++			warnmsg = "Bad da node magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_da3_node_buf_ops;
+@@ -2523,24 +2511,21 @@ xlog_recover_validate_buf_type(
+ 	case XFS_BLFT_ATTR_LEAF_BUF:
+ 		if (magicda != XFS_ATTR_LEAF_MAGIC &&
+ 		    magicda != XFS_ATTR3_LEAF_MAGIC) {
+-			xfs_warn(mp, "Bad attr leaf magic!");
+-			ASSERT(0);
++			warnmsg = "Bad attr leaf magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_attr3_leaf_buf_ops;
+ 		break;
+ 	case XFS_BLFT_ATTR_RMT_BUF:
+ 		if (magic32 != XFS_ATTR3_RMT_MAGIC) {
+-			xfs_warn(mp, "Bad attr remote magic!");
+-			ASSERT(0);
++			warnmsg = "Bad attr remote magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
+ 		break;
+ 	case XFS_BLFT_SB_BUF:
+ 		if (magic32 != XFS_SB_MAGIC) {
+-			xfs_warn(mp, "Bad SB block magic!");
+-			ASSERT(0);
++			warnmsg = "Bad SB block magic!";
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_sb_buf_ops;
+@@ -2557,6 +2542,15 @@ xlog_recover_validate_buf_type(
+ 			 xfs_blft_from_flags(buf_f));
+ 		break;
+ 	}
++
++	/*
++	 * Don't warn in the case of a NULL current LSN as this means the buffer
++	 * is more recent than the change in the log and will be skipped.
++	 */
++	if (warnmsg && current_lsn != NULLCOMMITLSN) {
++		xfs_warn(mp, warnmsg);
++		ASSERT(0);
++	}
+ }
+ 
+ /*
+-- 
+2.5.5
+
