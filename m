@@ -1,88 +1,132 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36177 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935898AbcIUS3r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Sep 2016 14:29:47 -0400
-Received: by mail-oi0-f68.google.com with SMTP id i193so4464486oib.3
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 11:29:45 -0700 (PDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 765287CA0
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2016 19:16:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 463AE304043
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2016 17:16:13 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1AorcCtwo5TEKZ47 for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2016 17:16:06 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: quiesce the filesystem after recovery on readonly mount
+Date: Fri, 23 Sep 2016 10:11:40 +1000
+Message-Id: <1474589500-13584-1-git-send-email-david@fromorbit.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-3-git-send-email-amir73il@gmail.com> <CAJfpegvtCf7mPanvmhU8vmoyQTUsVo-O0bpNxwnt4abkJ5ZD6Q@mail.gmail.com>
- <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Wed, 21 Sep 2016 20:29:44 +0200
-Message-ID: <CAJfpegsmc5a5=X11OZZ2__ghOBbe4kdWge10EFBEAG+ftrGGJQ@mail.gmail.com>
-Subject: Re: [PATCH v3 2/4] ovl: use vfs_clone_file_range() for copy up if possible
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 21, 2016 at 7:01 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> On Wed, Sep 21, 2016 at 6:09 PM, Miklos Szeredi <miklos@szeredi.hu> wrote:
->> On Wed, Sep 14, 2016 at 2:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
->>> When copying up within the same fs, try to use vfs_clone_file_range().
->>> This is very efficient when lower and upper are on the same fs
->>> with file reflink support. If vfs_clone_file_range() fails because
->>> lower and upper are not on the same fs or if fs has no reflink support,
->>> copy up falls back to the regular data copy code.
->>>
->>> Tested correct behavior when lower and upper are on:
->>> 1. same ext4 (copy)
->>> 2. same xfs + reflink patches + mkfs.xfs (copy)
->>> 3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
->>> 4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
->>>
->>> For comparison, on my laptop, xfstest overlay/001 (copy up of large
->>> sparse files) takes less than 1 second in the xfs reflink setup vs.
->>> 25 seconds on the rest of the setups.
->>>
->>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->>> ---
->>>  fs/overlayfs/copy_up.c | 12 +++++++++++-
->>>  1 file changed, 11 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
->>> index 43fdc27..ba039f8 100644
->>> --- a/fs/overlayfs/copy_up.c
->>> +++ b/fs/overlayfs/copy_up.c
->>> @@ -136,6 +136,16 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
->>>                 goto out_fput;
->>>         }
->>>
->>> +       /* Try to use clone_file_range to clone up within the same fs */
->>> +       error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
->>> +       if (!error)
->>> +               goto out;
->>> +       /* If we can clone but clone failed - abort */
->>> +       if (error != -EXDEV && error != -EOPNOTSUPP)
->>> +               goto out;
->>
->> Would be safer to fall back on any error.
->>
->
-> Agreed. Dave, since you suggested the 'softer' fall back, do you have
-> any objections?
->
->> Otherwise ACK.
->>
->
-> Will you be taking this to your tree?
+From: Dave Chinner <dchinner@redhat.com>
 
-Sure I can take it.
+Recently we've had a number of reports where log recovery on a v5
+filesystem has reported corruptions that looked to be caused by
+recovery being re-run over the top of an already-recovered
+metadata. This has uncovered a bug in recovery (fixed elsewhere)
+but the vector that caused this was largely unknown.
 
->
-> Please note that this patch depends on patch v3 1/4,
-> because vfs_clone_file_range() in current mainline
-> fails to clone from lower to upper due to upper and lower being
-> private mount clones
-> and therefore not the same f_path.mnt.
+A kdump test started tripping over this problem - the system
+would be crashed, the kdump kernel and environment would boot and
+dump the kernel core image, and then the system would reboot. After
+reboot, the root filesystem was triggering log recovery and
+corruptions were being detected. The metadumps indicated the above
+log recovery issue.
 
-Right.  I didn't do a thorough audit of ->clone_file_range()
-implementations, but 1/4 is probably OK.
+What is happening is that the kdump kernel and environment is
+mounting the root device read-only to find the binaries needed to do
+it's work. The result of this is that it is running log recovery.
+However, because there were unlinked files and EFIs to be processed
+by recovery, the completion of phase 1 of log recovery could not
+mark the log clean. And because it's a read-only mount, the unmount
+process does not write records to the log to mark it clean, either.
+Hence on the next mount of the filesystem, log recovery was run
+again across all the metadata that had already been recovered and
+this is what triggered corruption warnings.
 
-Thanks,
-Miklos
+To avoid this problem, we need to ensure that a read-only mount
+always updates the log when it completes the second phase of
+recovery. We already handle this sort of issue with rw->ro remount
+transitions, so the solution is as simple as quiescing the
+filesystem at the appropriate time during the mount process. This
+results in the log being marked clean so the mount behaviour
+recorded in the logs on repeated RO mounts will change (i.e. log
+recovery will no longer be run on every mount until a RW mount is
+done). This is a user visible change in behaviour, but it is
+harmless.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_mount.c | 14 ++++++++++++++
+ fs/xfs/xfs_super.c |  2 +-
+ fs/xfs/xfs_super.h |  1 +
+ 3 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index faeead6..56e85a6 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -934,6 +934,20 @@ xfs_mountfs(
+ 	}
+ 
+ 	/*
++	 * Now the log is fully replayed, we can transition to full read-only
++	 * mode for read-only mounts. This will sync all the metadata and clean
++	 * the log so that the recovery we just performed does not have to be
++	 * replayed again on the next mount.
++	 *
++	 * We use the same quiesce mechanism as the rw->ro remount, as they are
++	 * semantically identical operations.
++	 */
++	if ((mp->m_flags & (XFS_MOUNT_RDONLY|XFS_MOUNT_NORECOVERY)) ==
++							XFS_MOUNT_RDONLY) {
++		xfs_quiesce_attr(mp);
++	}
++
++	/*
+ 	 * Complete the quota initialisation, post-log-replay component.
+ 	 */
+ 	if (quotamount) {
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3409753..2d092f9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1137,7 +1137,7 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+  * Note: xfs_log_quiesce() stops background log work - the callers must ensure
+  * it is started again when appropriate.
+  */
+-static void
++void
+ xfs_quiesce_attr(
+ 	struct xfs_mount	*mp)
+ {
+diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+index 529bce9..b6418ab 100644
+--- a/fs/xfs/xfs_super.h
++++ b/fs/xfs/xfs_super.h
+@@ -61,6 +61,7 @@ struct xfs_mount;
+ struct xfs_buftarg;
+ struct block_device;
+ 
++extern void xfs_quiesce_attr(struct xfs_mount *mp);
+ extern void xfs_flush_inodes(struct xfs_mount *mp);
+ extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+ extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
+-- 
+2.8.0.rc3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
