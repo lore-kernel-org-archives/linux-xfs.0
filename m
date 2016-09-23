@@ -1,147 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40188 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40168 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966066AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 16:31:03 -0400
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CA3127EABF
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:02 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
-        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV2HB001652
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 4/5] xfs: update metadata LSN in buffers during log recovery
-Date: Fri, 23 Sep 2016 16:30:59 -0400
-Message-Id: <1474662660-61550-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
-References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+        id S1034057AbcIWB6R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Sep 2016 21:58:17 -0400
+Date: Fri, 23 Sep 2016 09:58:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] fstests: make some xfs project quota tests generic
+Message-ID: <20160923015814.GS27776@eguan.usersys.redhat.com>
+References: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-Log recovery is currently broken for v5 superblocks in that it never
-updates the metadata LSN of buffers written out during recovery. The
-metadata LSN is recorded in various bits of metadata to provide recovery
-ordering criteria that prevents transient corruption states reported by
-buffer write verifiers. Without such ordering logic, buffer updates can
-be replayed out of order and lead to false positive transient corruption
-states. This is generally not a corruption vector on its own, but
-corruption detection shuts down the filesystem and ultimately prevents a
-mount if it occurs during log recovery. This requires an xfs_repair run
-that clears the log and potentially loses filesystem updates.
+On Thu, Sep 22, 2016 at 05:51:03PM -0500, Eric Sandeen wrote:
+> This patch makes some xfs project quota tests generic,
+> so that there is at least some coverage on ext4 for this
+> (semi-)new feature.
+> 
+> It requires bleeding edge xfsprogs, so that xfs_quota and 
+> xfs_io's chproj command can operate on "foreign" filesystems,
+> and requires relatively new e2fsprogs to enable the project
+> quota feature on-disk.
+> 
+> The mechanism for enabling project quota on ext4 is a bit
+> arcane, but hopefully I've encapsulated it reasonably well here.
+> 
+> Changes:
+> 
+> * look for "project" feature in _require_prjquota
+> * look for accounting not enforcement (-P) in _require_prjquota
+> * add a _scratch_enable_pquota to turn on project quota feature
+> * s/pquota/quota/ in _qmount_option for ext4
+> * add helper to test for xfs_io chproj on foreign filesystems
+> * switch from block to inode quota in xfs/133 because empty
+>   ext4 dirs consume one block
+> * cosmetic/generic changes for mkfs, require tests, etc.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Eryu, would you like to do the move-to-generic/ since you'll need
+> to renumber them anyway? :)
 
-This problem is avoided in most cases as metadata writes during normal
-filesystem operation update the metadata LSN appropriately. The problem
-with log recovery not updating metadata LSNs manifests if the system
-happens to crash shortly after log recovery itself. In this scenario, it
-is possible for log recovery to complete all metadata I/O such that the
-filesystem is consistent. If a crash occurs after that point but before
-the log tail is pushed forward by subsequent operations, however, the
-next mount performs the same log recovery over again. If a buffer is
-updated multiple times in the dirty range of the log, an earlier update
-in the log might not be valid based on the current state of the
-associated buffer after all of the updates in the log had been replayed
-(before the previous crash). If a verifier happens to detect such a
-problem, the filesystem claims corruption and immediately shuts down.
+Yeah, sure, I can do that :)
 
-This commonly manifests in practice as directory block verifier failures
-such as the following, likely due to directory verifiers being
-particularly detailed in their checks as compared to most others:
+> 
+> Note -
+> This requires the previous patch I sent to the fstests list,
+> 
+> [PATCH 2/3 V2] modify xfs/ quota tests to work on generic filesystems
 
-  ...
-  Mounting V5 Filesystem
-  XFS (dm-0): Starting recovery (logdev: internal)
-  XFS (dm-0): Internal error XFS_WANT_CORRUPTED_RETURN at line ... of \
-    file fs/xfs/libxfs/xfs_dir2_data.c.  Caller xfs_dir3_data_verify ...
-  ...
+Thanks!
 
-Update log recovery to update the metadata LSN of recovered buffers.
-Since metadata LSNs are already updated by write verifer functions via
-attached log items, attach a dummy log item to the buffer during
-validation and explicitly set the LSN of the current transaction. This
-ensures that the metadata LSN of a buffer is updated based on whether
-the recovery I/O actually completes, and if so, that subsequent recovery
-attempts identify that the buffer is already up to date with respect to
-the current transaction.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 41 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 38 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9be7630..9667d7d 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -44,6 +44,7 @@
- #include "xfs_error.h"
- #include "xfs_dir2.h"
- #include "xfs_rmap_item.h"
-+#include "xfs_buf_item.h"
- 
- #define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
- 
-@@ -381,6 +382,15 @@ xlog_recover_iodone(
- 						SHUTDOWN_META_IO_ERROR);
- 		}
- 	}
-+
-+	/*
-+	 * On v5 supers, a bli could be attached to update the metadata LSN.
-+	 * Clean it up.
-+	 */
-+	if (bp->b_fspriv)
-+		xfs_buf_item_relse(bp);
-+	ASSERT(bp->b_fspriv == NULL);
-+
- 	bp->b_iodone = NULL;
- 	xfs_buf_ioend(bp);
- }
-@@ -2544,13 +2554,38 @@ xlog_recover_validate_buf_type(
- 	}
- 
- 	/*
--	 * Don't warn in the case of a NULL current LSN as this means the buffer
--	 * is more recent than the change in the log and will be skipped.
-+	 * Nothing else to do in the case of a NULL current LSN as this means
-+	 * the buffer is more recent than the change in the log and will be
-+	 * skipped.
- 	 */
--	if (warnmsg && current_lsn != NULLCOMMITLSN) {
-+	if (current_lsn == NULLCOMMITLSN)
-+		return;
-+
-+	if (warnmsg) {
- 		xfs_warn(mp, warnmsg);
- 		ASSERT(0);
- 	}
-+
-+	/*
-+	 * We must update the metadata LSN of the buffer as it is written out to
-+	 * ensure that older transactions never replay over this one and corrupt
-+	 * the buffer. This can occur if log recovery is interrupted at some
-+	 * point after the current transaction completes, at which point a
-+	 * subsequent mount starts recovery from the beginning.
-+	 *
-+	 * Write verifiers update the metadata LSN from log items attached to
-+	 * the buffer. Therefore, initialize a bli purely to carry the LSN to
-+	 * the verifier. We'll clean it up in our ->iodone() callback.
-+	 */
-+	if (bp->b_ops) {
-+		struct xfs_buf_log_item	*bip;
-+
-+		ASSERT(!bp->b_iodone || bp->b_iodone == xlog_recover_iodone);
-+		bp->b_iodone = xlog_recover_iodone;
-+		xfs_buf_item_init(bp, mp);
-+		bip = bp->b_fspriv;
-+		bip->bli_item.li_lsn = current_lsn;
-+	}
- }
- 
- /*
--- 
-2.5.5
-
+Eryu
