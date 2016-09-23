@@ -1,65 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15072 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755275AbcINWvH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Sep 2016 18:51:07 -0400
-Date: Wed, 14 Sep 2016 16:51:05 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 12/12] ext2: use iomap to implement DAX
-Message-ID: <20160914225105.GB29323@linux.intel.com>
-References: <1473847291-18913-1-git-send-email-hch@lst.de>
- <1473847291-18913-13-git-send-email-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39818 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S966025AbcIWWV6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 18:21:58 -0400
+Date: Sat, 24 Sep 2016 08:21:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: quiesce the filesystem after recovery on readonly
+ mount
+Message-ID: <20160923222153.GQ340@dastard>
+References: <1474589500-13584-1-git-send-email-david@fromorbit.com>
+ <af65b5ae-2ff8-c344-0e04-cbbef3efe197@sandeen.net>
+ <f693b1a2-1cdb-ed9f-caa0-af9407034927@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1473847291-18913-13-git-send-email-hch@lst.de>
+In-Reply-To: <f693b1a2-1cdb-ed9f-caa0-af9407034927@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org, ross.zwisler@linux.intel.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 12:01:31PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Sep 23, 2016 at 11:24:53AM -0500, Eric Sandeen wrote:
+> On 9/22/16 8:39 PM, Eric Sandeen wrote:
+> > On 9/22/16 7:11 PM, Dave Chinner wrote:
+> >> From: Dave Chinner <dchinner@redhat.com>
+> 
+> ...
+> 
+> >> To avoid this problem, we need to ensure that a read-only mount
+> >> always updates the log when it completes the second phase of
+> >> recovery. We already handle this sort of issue with rw->ro remount
+> >> transitions, so the solution is as simple as quiescing the
+> >> filesystem at the appropriate time during the mount process. This
+> >> results in the log being marked clean so the mount behaviour
+> >> recorded in the logs on repeated RO mounts will change (i.e. log
+> >> recovery will no longer be run on every mount until a RW mount is
+> >> done). This is a user visible change in behaviour, but it is
+> >> harmless.
+> > 
+> > Excellent idea :)
+> > 
+> > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Actually ...  after playing with this a bit ...
+> 
+> Should we restrict this to only when the log got
+> replayed, with a !XFS_LAST_UNMOUNT_WAS_CLEAN(mp) test?
+> 
+> Maybe it's harmless as it is, but it seems we should restrict
+> it to the log-got-replayed case.
 
-Now that ext2 is using IOMAP, we need to select FS_IOMAP when EXT2_FS is
-selected else we get a build error:
+Well, writing another unmount record should be harmless. The thing
+is that the quiesce call also serves to shut down periodic log
+functions that are started when the second phase of recovery is run,
+These are started regardless of whether the mount was clean or not.
+Hence we are currently running periodic log work on ro mounts and
+tryin gto cover/sync the log every so often. For rw mounts this is
+needed, but for ro mounts once we know everything is clean we can
+shut them down, jus tlike we do for a rw->ro remount.
 
-fs/built-in.o: In function `ext2_dax_fault':
-/home/rzwisler/project/review/fs/ext2/file.c:112: undefined reference to `iomap_dax_fault'
-fs/built-in.o: In function `ext2_dax_write_iter':
-/home/rzwisler/project/review/fs/ext2/file.c:75: undefined reference to `iomap_dax_rw'
-fs/built-in.o: In function `ext2_dax_read_iter':
-/home/rzwisler/project/review/fs/ext2/file.c:45: undefined reference to `iomap_dax_rw'
-Makefile:949: recipe for target 'vmlinux' failed
-make: *** [vmlinux] Error 1
+So I think that just treating the ro mount like a rw mount followed
+by a rw->ro transition after potential mount time modifications are
+complete is the best approach for consistency of RO behaviour....
 
-With the following patch squashed into this commit:
+Cheers,
 
-Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-
----
->From 9c084641049990339b40bfd52a0aebf300d896ea Mon Sep 17 00:00:00 2001
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Date: Wed, 14 Sep 2016 16:48:36 -0600
-Subject: [PATCH] ext2: build in FS_IOMAP support needed by ext2
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/ext2/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/ext2/Kconfig b/fs/ext2/Kconfig
-index c634874e..3391f48 100644
---- a/fs/ext2/Kconfig
-+++ b/fs/ext2/Kconfig
-@@ -1,5 +1,6 @@
- config EXT2_FS
- 	tristate "Second extended fs support"
-+	select FS_IOMAP
- 	help
- 	  Ext2 is a standard Linux file system for hard disks.
- 
+Dave.
 -- 
-2.9.0
-
+Dave Chinner
+david@fromorbit.com
