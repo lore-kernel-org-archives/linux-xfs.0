@@ -1,178 +1,232 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:34876 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752156AbcIVG26 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Sep 2016 02:28:58 -0400
-Received: by mail-wm0-f44.google.com with SMTP id l132so307714916wmf.0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Sep 2016 23:28:57 -0700 (PDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 80AB97CBC
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2016 14:02:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 35BCF304043
+	for <xfs@oss.sgi.com>; Fri, 23 Sep 2016 12:02:58 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id AKTyc2oD5DBVUjmk (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 23 Sep 2016 12:02:54 -0700 (PDT)
+Date: Fri, 23 Sep 2016 20:02:50 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [PATCH 03/11] splice: switch get_iovec_page_array() to iov_iter
+Message-ID: <20160923190250.GA2356@ZenIV.linux.org.uk>
+References: <20160909023452.GO2356@ZenIV.linux.org.uk>
+	<CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
+	<20160909221945.GQ2356@ZenIV.linux.org.uk>
+	<CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
+	<20160914031648.GB2356@ZenIV.linux.org.uk>
+	<CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+	<20160914042559.GC2356@ZenIV.linux.org.uk>
+	<20160917082007.GA6489@ZenIV.linux.org.uk>
+	<20160917190023.GA8039@ZenIV.linux.org.uk>
+	<20160923190032.GA25771@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-From: Simon Becks <beckssimon5@gmail.com>
-Date: Thu, 22 Sep 2016 08:28:55 +0200
-Message-ID: <CAKA=zHrnLZj2FitHtZEsrWHYjQZ_XpMeuea+OF2ADCF9ea13tg@mail.gmail.com>
-Subject: restore files from xfs on top of rebuild raid5
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: linux-xfs@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, CAI Qian <caiqian@redhat.com>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org
 
-Good morning,
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/splice.c | 135 ++++++++++++++++--------------------------------------------
+ 1 file changed, 36 insertions(+), 99 deletions(-)
 
-i was stupid enough to format my raid5 disks with xfs and broke the
-raid instantly :/
+diff --git a/fs/splice.c b/fs/splice.c
+index 36e9353..31c52e0 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -1434,106 +1434,32 @@ static long do_splice(struct file *in, loff_t __user *off_in,
+ 	return -EINVAL;
+ }
+ 
+-/*
+- * Map an iov into an array of pages and offset/length tupples. With the
+- * partial_page structure, we can map several non-contiguous ranges into
+- * our ones pages[] map instead of splitting that operation into pieces.
+- * Could easily be exported as a generic helper for other users, in which
+- * case one would probably want to add a 'max_nr_pages' parameter as well.
+- */
+-static int get_iovec_page_array(const struct iovec __user *iov,
+-				unsigned int nr_vecs, struct page **pages,
+-				struct partial_page *partial, bool aligned,
++static int get_iovec_page_array(struct iov_iter *from,
++				struct page **pages,
++				struct partial_page *partial,
+ 				unsigned int pipe_buffers)
+ {
+-	int buffers = 0, error = 0;
+-
+-	while (nr_vecs) {
+-		unsigned long off, npages;
+-		struct iovec entry;
+-		void __user *base;
+-		size_t len;
+-		int i;
+-
+-		error = -EFAULT;
+-		if (copy_from_user(&entry, iov, sizeof(entry)))
+-			break;
+-
+-		base = entry.iov_base;
+-		len = entry.iov_len;
+-
+-		/*
+-		 * Sanity check this iovec. 0 read succeeds.
+-		 */
+-		error = 0;
+-		if (unlikely(!len))
+-			break;
+-		error = -EFAULT;
+-		if (!access_ok(VERIFY_READ, base, len))
+-			break;
+-
+-		/*
+-		 * Get this base offset and number of pages, then map
+-		 * in the user pages.
+-		 */
+-		off = (unsigned long) base & ~PAGE_MASK;
+-
+-		/*
+-		 * If asked for alignment, the offset must be zero and the
+-		 * length a multiple of the PAGE_SIZE.
+-		 */
+-		error = -EINVAL;
+-		if (aligned && (off || len & ~PAGE_MASK))
+-			break;
+-
+-		npages = (off + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
+-		if (npages > pipe_buffers - buffers)
+-			npages = pipe_buffers - buffers;
+-
+-		error = get_user_pages_fast((unsigned long)base, npages,
+-					0, &pages[buffers]);
+-
+-		if (unlikely(error <= 0))
+-			break;
+-
+-		/*
+-		 * Fill this contiguous range into the partial page map.
+-		 */
+-		for (i = 0; i < error; i++) {
+-			const int plen = min_t(size_t, len, PAGE_SIZE - off);
+-
+-			partial[buffers].offset = off;
+-			partial[buffers].len = plen;
+-
+-			off = 0;
+-			len -= plen;
++	int buffers = 0;
++	while (iov_iter_count(from)) {
++		ssize_t copied;
++		size_t start;
++
++		copied = iov_iter_get_pages(from, pages + buffers, ~0UL,
++					pipe_buffers - buffers, &start);
++		if (copied <= 0)
++			return buffers ? buffers : copied;
++
++		iov_iter_advance(from, copied);
++		while (copied) {
++			int size = min_t(int, copied, PAGE_SIZE - start);
++			partial[buffers].offset = start;
++			partial[buffers].len = size;
++			copied -= size;
++			start = 0;
+ 			buffers++;
+ 		}
+-
+-		/*
+-		 * We didn't complete this iov, stop here since it probably
+-		 * means we have to move some of this into a pipe to
+-		 * be able to continue.
+-		 */
+-		if (len)
+-			break;
+-
+-		/*
+-		 * Don't continue if we mapped fewer pages than we asked for,
+-		 * or if we mapped the max number of pages that we have
+-		 * room for.
+-		 */
+-		if (error < npages || buffers == pipe_buffers)
+-			break;
+-
+-		nr_vecs--;
+-		iov++;
+ 	}
+-
+-	if (buffers)
+-		return buffers;
+-
+-	return error;
++	return buffers;
+ }
+ 
+ static int pipe_to_user(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
+@@ -1587,10 +1513,13 @@ static long vmsplice_to_user(struct file *file, const struct iovec __user *uiov,
+  * as splice-from-memory, where the regular splice is splice-from-file (or
+  * to file). In both cases the output is a pipe, naturally.
+  */
+-static long vmsplice_to_pipe(struct file *file, const struct iovec __user *iov,
++static long vmsplice_to_pipe(struct file *file, const struct iovec __user *uiov,
+ 			     unsigned long nr_segs, unsigned int flags)
+ {
+ 	struct pipe_inode_info *pipe;
++	struct iovec iovstack[UIO_FASTIOV];
++	struct iovec *iov = iovstack;
++	struct iov_iter from;
+ 	struct page *pages[PIPE_DEF_BUFFERS];
+ 	struct partial_page partial[PIPE_DEF_BUFFERS];
+ 	struct splice_pipe_desc spd = {
+@@ -1607,11 +1536,18 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *iov,
+ 	if (!pipe)
+ 		return -EBADF;
+ 
+-	if (splice_grow_spd(pipe, &spd))
++	ret = import_iovec(WRITE, uiov, nr_segs,
++			   ARRAY_SIZE(iovstack), &iov, &from);
++	if (ret < 0)
++		return ret;
++
++	if (splice_grow_spd(pipe, &spd)) {
++		kfree(iov);
+ 		return -ENOMEM;
++	}
+ 
+-	spd.nr_pages = get_iovec_page_array(iov, nr_segs, spd.pages,
+-					    spd.partial, false,
++	spd.nr_pages = get_iovec_page_array(&from, spd.pages,
++					    spd.partial,
+ 					    spd.nr_pages_max);
+ 	if (spd.nr_pages <= 0)
+ 		ret = spd.nr_pages;
+@@ -1619,6 +1555,7 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *iov,
+ 		ret = splice_to_pipe(pipe, &spd);
+ 
+ 	splice_shrink_spd(&spd);
++	kfree(iov);
+ 	return ret;
+ }
+ 
+-- 
+2.9.3
 
-Now i tried to rebuild the raid5 with 3 disks but have issues to
-restore the filesystem on top or even restore files with photorec.
-
-Any help is greatly appreciated. Some details:
-
-The old raid was in the form (sda6, sdb6, sdc6):
-
-/dev/sdc6:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 342ec726:3804270d:5917dd5f:c24883a9
-           Name : TS-XLB6C:2
-  Creation Time : Fri Dec 23 17:58:59 2011
-     Raid Level : raid5
-   Raid Devices : 3
-
- Avail Dev Size : 1923497952 (917.20 GiB 984.83 GB)
-     Array Size : 1923496960 (1834.39 GiB 1969.66 GB)
-  Used Dev Size : 1923496960 (917.19 GiB 984.83 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1968 sectors, after=992 sectors
-          State : active
-    Device UUID : d27a69d0:456f3704:8e17ac75:78939886
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Wed Jul 27 19:08:08 2016
-       Checksum : de9dbd10 - correct
-         Events : 11543
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
-
-As all md superblocks were gone, i recreated it and got:
-
-/dev/mapper/sdb6:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : da61174d:9567c4df:fcea79f1:38024893
-           Name : grml:42  (local to host grml)
-  Creation Time : Thu Sep 22 05:14:11 2016
-     Raid Level : raid5
-   Raid Devices : 3
-
- Avail Dev Size : 1923497952 (917.20 GiB 984.83 GB)
-     Array Size : 1923496960 (1834.39 GiB 1969.66 GB)
-  Used Dev Size : 1923496960 (917.19 GiB 984.83 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-   Unused Space : before=1960 sectors, after=992 sectors
-          State : clean
-    Device UUID : d0c61415:186b446b:ca34a8c6:69ed5b18
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Thu Sep 22 05:14:11 2016
-  Bad Block Log : 512 entries available at offset 72 sectors
-       Checksum : bba25a31 - correct
-         Events : 1
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-
-Now i tried xfs_repair on the raid but got:
-
-
->> root@grml ~ # xfs_repair /dev/md42
->> Phase 1 - find and verify superblock...
->> bad primary superblock - bad magic number !!!
->>
->> attempting to find secondary superblock...
->> ...........................................
->> found candidate secondary superblock...
->> unable to verify superblock, continuing...
->> found candidate secondary superblock...
->> error reading superblock 22 -- seek to offset 2031216754688 failed
->> unable to verify superblock, continuing...
->> found candidate secondary superblock...
->> unable to verify superblock, continuing...
->> ..found candidate secondary superblock...
->> verified secondary superblock...
->> writing modified primary superblock
->>         - reporting progress in intervals of 15 minutes
->> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
->> calculated value 2048
->> resetting superblock root inode pointer to 2048
->> sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
->
-> Those big ones strike me as imaginary numbers.
->
->> with calculated value 2049
->> resetting superblock realtime bitmap ino pointer to 2049
->> sb realtime summary inode 18446744073709551615 (NULLFSINO)
->> inconsistent with calculated value 2050
->> resetting superblock realtime summary ino pointer to 2050
->> Phase 2 - using internal log
->>         - zero log...
->> totally zeroed log
->>         - scan filesystem freespace and inode maps...
->> bad magic number
->> bad magic number
->> bad magic number
->> Metadata corruption detected at block 0x8/0x1000
->> bad magic number
->> Metadata corruption detected at block 0x23d3f408/0x1000
->> bad magic numberbad magic number
->>
->> Metadata corruption detected at block 0x2afe5808/0x1000
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> bad magic number
->> Metadata corruption detected at block 0x10/0x1000
->> Metadata corruption detected at block 0xe54c808/0x1000
->> bad magic # 0x494e81f6 for agf 0
->> bad version # 16908289 for agf 0
->> bad sequence # 99 for agf 0
->> bad length 99 for agf 0, should be 15027328
->> flfirst 1301384768 in agf 0 too large (max = 1024)
->> bad magic # 0x494e81f6 for agi 0
->> bad version # 16908289 for agi 0
->> bad sequence # 99 for agi 0
->> bad length # 99 for agi 0, should be 15027328
->> reset bad agf for ag 0
->> reset bad agi for ag 0
->> Metadata corruption detected at block 0xd6f7b808/0x1000
->> Metadata corruption detected at block 0x2afe5810/0x1000
->> bad on-disk superblock 6 - bad magic number
->> primary/secondary superblock 6 conflict - AG superblock geometry info
->> conflicts with filesystem geometry
->> zeroing unused portion of secondary superblock (AG #6)
->> [1]    23110 segmentation fault  xfs_repair /dev/md42
-
-
-But it ends with a segfault. How screwed am I? Am i even on the right
-track with the underlying raid?
-
-thank you.
-
-simon
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
