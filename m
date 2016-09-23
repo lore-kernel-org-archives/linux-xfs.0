@@ -1,101 +1,142 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42126 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035308AbcIWPTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 11:19:46 -0400
-Date: Fri, 23 Sep 2016 08:19:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
- systems
-Message-ID: <20160923151921.GM9314@birch.djwong.org>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-4-git-send-email-amir73il@gmail.com>
- <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 887C77CA0
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2016 20:40:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E4BA30404E
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2016 18:40:02 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id cEPSq1gXmu9vGNAJ for <xfs@oss.sgi.com>;
+	Thu, 22 Sep 2016 18:39:59 -0700 (PDT)
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 1D0982B51
+	for <xfs@oss.sgi.com>; Thu, 22 Sep 2016 20:39:38 -0500 (CDT)
+Subject: Re: [PATCH] xfs: quiesce the filesystem after recovery on readonly
+	mount
+References: <1474589500-13584-1-git-send-email-david@fromorbit.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <af65b5ae-2ff8-c344-0e04-cbbef3efe197@sandeen.net>
+Date: Thu, 22 Sep 2016 20:39:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+In-Reply-To: <1474589500-13584-1-git-send-email-david@fromorbit.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
-> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > copy_file_range syscall returns -EXDEV if src and dest
-> > file are not on the same file system.
-> > The vfs_copy_file_range() helper, however, knows how to copy
-> > across file systems with do_splice_direct().
-> >
-> > Move the enforcement of same file system from the vfs helper
-> > to the syscall code.
-> >
-> > A following patch is going to use the vfs_copy_file_range()
-> > helper in overlayfs to copy up between lower and upper
-> > not on the same file system.
-> >
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >  fs/read_write.c | 16 +++++++++++-----
-> >  1 file changed, 11 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 9dc6e52..6975fe8 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >             (file_out->f_flags & O_APPEND))
-> >                 return -EBADF;
-> >
-> > -       /* this could be relaxed once a method supports cross-fs copies */
-> > -       if (inode_in->i_sb != inode_out->i_sb)
-> > -               return -EXDEV;
-> > -
-> >         if (len == 0)
-> >                 return 0;
-> >
-> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >                 return ret;
-> >
-> >         ret = -EOPNOTSUPP;
-> > -       if (file_out->f_op->copy_file_range)
-> > +       /* copy_file_range() method does not support cross-fs copies */
-> > +       if (inode_in->i_sb == inode_out->i_sb &&
-> > +           file_out->f_op->copy_file_range)
-> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
-> >                                                       pos_out, len, flags);
-> >         if (ret == -EOPNOTSUPP)
-> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
-> >                 pos_out = f_out.file->f_pos;
-> >         }
-> >
-> > +       /*
-> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
-> > +        * fulfill the guaranty to userland that copy_file_range syscall
-> > +        * does not allow cross-fs copy
-> > +        */
-> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
-> > +               return -EXDEV;
+On 9/22/16 7:11 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Oops, that was supposed to be goto out;
-> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
-> until I have a reliable test on xfs to fall back from clone to copy range
-
-I could just create another error injection point that'll make XFS pretend
-that it's out of space.
-
---D
-
+> Recently we've had a number of reports where log recovery on a v5
+> filesystem has reported corruptions that looked to be caused by
+> recovery being re-run over the top of an already-recovered
+> metadata. This has uncovered a bug in recovery (fixed elsewhere)
+> but the vector that caused this was largely unknown.
 > 
-> > +
-> >         ret = vfs_copy_file_range(f_in.file, pos_in, f_out.file, pos_out, len,
-> >                                   flags);
-> >         if (ret > 0) {
-> > --
-> > 2.7.4
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> A kdump test started tripping over this problem - the system
+> would be crashed, the kdump kernel and environment would boot and
+> dump the kernel core image, and then the system would reboot. After
+> reboot, the root filesystem was triggering log recovery and
+> corruptions were being detected. The metadumps indicated the above
+> log recovery issue.
+> 
+> What is happening is that the kdump kernel and environment is
+> mounting the root device read-only to find the binaries needed to do
+> it's work. The result of this is that it is running log recovery.
+> However, because there were unlinked files and EFIs to be processed
+> by recovery, the completion of phase 1 of log recovery could not
+> mark the log clean. And because it's a read-only mount, the unmount
+> process does not write records to the log to mark it clean, either.
+> Hence on the next mount of the filesystem, log recovery was run
+> again across all the metadata that had already been recovered and
+> this is what triggered corruption warnings.
+> 
+> To avoid this problem, we need to ensure that a read-only mount
+> always updates the log when it completes the second phase of
+> recovery. We already handle this sort of issue with rw->ro remount
+> transitions, so the solution is as simple as quiescing the
+> filesystem at the appropriate time during the mount process. This
+> results in the log being marked clean so the mount behaviour
+> recorded in the logs on repeated RO mounts will change (i.e. log
+> recovery will no longer be run on every mount until a RW mount is
+> done). This is a user visible change in behaviour, but it is
+> harmless.
+
+Excellent idea :)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.c | 14 ++++++++++++++
+>  fs/xfs/xfs_super.c |  2 +-
+>  fs/xfs/xfs_super.h |  1 +
+>  3 files changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index faeead6..56e85a6 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -934,6 +934,20 @@ xfs_mountfs(
+>  	}
+>  
+>  	/*
+> +	 * Now the log is fully replayed, we can transition to full read-only
+> +	 * mode for read-only mounts. This will sync all the metadata and clean
+> +	 * the log so that the recovery we just performed does not have to be
+> +	 * replayed again on the next mount.
+> +	 *
+> +	 * We use the same quiesce mechanism as the rw->ro remount, as they are
+> +	 * semantically identical operations.
+> +	 */
+> +	if ((mp->m_flags & (XFS_MOUNT_RDONLY|XFS_MOUNT_NORECOVERY)) ==
+> +							XFS_MOUNT_RDONLY) {
+> +		xfs_quiesce_attr(mp);
+> +	}
+> +
+> +	/*
+>  	 * Complete the quota initialisation, post-log-replay component.
+>  	 */
+>  	if (quotamount) {
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 3409753..2d092f9 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1137,7 +1137,7 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+>   * Note: xfs_log_quiesce() stops background log work - the callers must ensure
+>   * it is started again when appropriate.
+>   */
+> -static void
+> +void
+>  xfs_quiesce_attr(
+>  	struct xfs_mount	*mp)
+>  {
+> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+> index 529bce9..b6418ab 100644
+> --- a/fs/xfs/xfs_super.h
+> +++ b/fs/xfs/xfs_super.h
+> @@ -61,6 +61,7 @@ struct xfs_mount;
+>  struct xfs_buftarg;
+>  struct block_device;
+>  
+> +extern void xfs_quiesce_attr(struct xfs_mount *mp);
+>  extern void xfs_flush_inodes(struct xfs_mount *mp);
+>  extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+>  extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
