@@ -1,188 +1,275 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45332 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40184 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753112AbcIVOwX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Sep 2016 10:52:23 -0400
-Subject: Re: restore files from xfs on top of rebuild raid5
-References: <CAKA=zHr+p883eBj_8FjSi9RdDTfUkOhU1J_WenFmLOzRWoEFjw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4268f609-d5fd-4336-360a-3b3f8cd2ef67@sandeen.net>
-Date: Thu, 22 Sep 2016 09:52:21 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAKA=zHr+p883eBj_8FjSi9RdDTfUkOhU1J_WenFmLOzRWoEFjw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+        id S966073AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Sep 2016 16:31:03 -0400
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A179A7EABE
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:02 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV2km032581
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/5] xfs: rework log recovery to submit buffers on LSN boundaries
+Date: Fri, 23 Sep 2016 16:30:56 -0400
+Message-Id: <1474662660-61550-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Simon Becks <beckssimon5@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 9/22/16 3:46 AM, Simon Becks wrote:
-> Good morning,
-> 
-> i was stupid enough to format my raid5 disks with xfs and broke the
-> raid instantly :/
+The fix to log recovery to update the metadata LSN in recovered buffers
+introduces the requirement that a buffer is submitted only once per
+current LSN. Log recovery currently submits buffers on transaction
+boundaries. This is not sufficient as the abstraction between log
+records and transactions allows for various scenarios where multiple
+transactions can share the same current LSN. If independent transactions
+share an LSN and both modify the same buffer, log recovery can
+incorrectly skip updates and leave the filesystem in an inconsisent
+state.
 
-I don't know what that means.  What did you actually /do/?
+In preparation for proper metadata LSN updates during log recovery,
+update log recovery to submit buffers for write on LSN change boundaries
+rather than transaction boundaries. Explicitly track the current LSN in
+a new struct xlog field to handle the various corner cases of when the
+current LSN may or may not change.
 
-"format my raid5 disks with xfs" sounds like you ran mkfs.xfs on
-a raid5 device, but given that you're trying to recover data from
-damaged storage below, I must misunderstand you.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_priv.h    |  3 +-
+ fs/xfs/xfs_log_recover.c | 82 +++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 66 insertions(+), 19 deletions(-)
 
--Eric
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 765f084..2b6eec5 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -413,7 +413,8 @@ struct xlog {
+ 	/* log record crc error injection factor */
+ 	uint32_t		l_badcrc_factor;
+ #endif
+-
++	/* log recovery lsn tracking (for buffer submission */
++	xfs_lsn_t		l_recovery_lsn;
+ };
+ 
+ #define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e8638fd..e24fb7b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3846,14 +3846,13 @@ STATIC int
+ xlog_recover_commit_trans(
+ 	struct xlog		*log,
+ 	struct xlog_recover	*trans,
+-	int			pass)
++	int			pass,
++	struct list_head	*buffer_list)
+ {
+ 	int				error = 0;
+-	int				error2;
+ 	int				items_queued = 0;
+ 	struct xlog_recover_item	*item;
+ 	struct xlog_recover_item	*next;
+-	LIST_HEAD			(buffer_list);
+ 	LIST_HEAD			(ra_list);
+ 	LIST_HEAD			(done_list);
+ 
+@@ -3876,7 +3875,7 @@ xlog_recover_commit_trans(
+ 			items_queued++;
+ 			if (items_queued >= XLOG_RECOVER_COMMIT_QUEUE_MAX) {
+ 				error = xlog_recover_items_pass2(log, trans,
+-						&buffer_list, &ra_list);
++						buffer_list, &ra_list);
+ 				list_splice_tail_init(&ra_list, &done_list);
+ 				items_queued = 0;
+ 			}
+@@ -3894,15 +3893,14 @@ out:
+ 	if (!list_empty(&ra_list)) {
+ 		if (!error)
+ 			error = xlog_recover_items_pass2(log, trans,
+-					&buffer_list, &ra_list);
++					buffer_list, &ra_list);
+ 		list_splice_tail_init(&ra_list, &done_list);
+ 	}
+ 
+ 	if (!list_empty(&done_list))
+ 		list_splice_init(&done_list, &trans->r_itemq);
+ 
+-	error2 = xfs_buf_delwri_submit(&buffer_list);
+-	return error ? error : error2;
++	return error;
+ }
+ 
+ STATIC void
+@@ -4085,7 +4083,8 @@ xlog_recovery_process_trans(
+ 	char			*dp,
+ 	unsigned int		len,
+ 	unsigned int		flags,
+-	int			pass)
++	int			pass,
++	struct list_head	*buffer_list)
+ {
+ 	int			error = 0;
+ 	bool			freeit = false;
+@@ -4109,7 +4108,8 @@ xlog_recovery_process_trans(
+ 		error = xlog_recover_add_to_cont_trans(log, trans, dp, len);
+ 		break;
+ 	case XLOG_COMMIT_TRANS:
+-		error = xlog_recover_commit_trans(log, trans, pass);
++		error = xlog_recover_commit_trans(log, trans, pass,
++						  buffer_list);
+ 		/* success or fail, we are now done with this transaction. */
+ 		freeit = true;
+ 		break;
+@@ -4191,10 +4191,12 @@ xlog_recover_process_ophdr(
+ 	struct xlog_op_header	*ohead,
+ 	char			*dp,
+ 	char			*end,
+-	int			pass)
++	int			pass,
++	struct list_head	*buffer_list)
+ {
+ 	struct xlog_recover	*trans;
+ 	unsigned int		len;
++	int			error;
+ 
+ 	/* Do we understand who wrote this op? */
+ 	if (ohead->oh_clientid != XFS_TRANSACTION &&
+@@ -4221,8 +4223,39 @@ xlog_recover_process_ophdr(
+ 		return 0;
+ 	}
+ 
++	/*
++	 * The recovered buffer queue is drained only once we know that all
++	 * recovery items for the current LSN have been processed. This is
++	 * required because:
++	 *
++	 * - Buffer write submission updates the metadata LSN of the buffer.
++	 * - Log recovery skips items with a metadata LSN >= the current LSN of
++	 *   the recovery item.
++	 * - Separate recovery items against the same metadata buffer can share
++	 *   a current LSN. I.e., consider that the LSN of a recovery item is
++	 *   defined as the starting LSN of the first record in which its
++	 *   transaction appears, that a record can hold multiple transactions,
++	 *   and/or that a transaction can span multiple records.
++	 *
++	 * In other words, we are allowed to submit a buffer from log recovery
++	 * once per current LSN. Otherwise, we may incorrectly skip recovery
++	 * items and cause corruption.
++	 *
++	 * We don't know up front whether buffers are updated multiple times per
++	 * LSN. Therefore, track the current LSN of each commit log record as it
++	 * is processed and drain the queue when it changes. Use commit records
++	 * because they are ordered correctly by the logging code.
++	 */
++	if (log->l_recovery_lsn != trans->r_lsn &&
++	    ohead->oh_flags & XLOG_COMMIT_TRANS) {
++		error = xfs_buf_delwri_submit(buffer_list);
++		if (error)
++			return error;
++		log->l_recovery_lsn = trans->r_lsn;
++	}
++
+ 	return xlog_recovery_process_trans(log, trans, dp, len,
+-					   ohead->oh_flags, pass);
++					   ohead->oh_flags, pass, buffer_list);
+ }
+ 
+ /*
+@@ -4240,7 +4273,8 @@ xlog_recover_process_data(
+ 	struct hlist_head	rhash[],
+ 	struct xlog_rec_header	*rhead,
+ 	char			*dp,
+-	int			pass)
++	int			pass,
++	struct list_head	*buffer_list)
+ {
+ 	struct xlog_op_header	*ohead;
+ 	char			*end;
+@@ -4262,7 +4296,7 @@ xlog_recover_process_data(
+ 
+ 		/* errors will abort recovery */
+ 		error = xlog_recover_process_ophdr(log, rhash, rhead, ohead,
+-						    dp, end, pass);
++						   dp, end, pass, buffer_list);
+ 		if (error)
+ 			return error;
+ 
+@@ -4685,7 +4719,8 @@ xlog_recover_process(
+ 	struct hlist_head	rhash[],
+ 	struct xlog_rec_header	*rhead,
+ 	char			*dp,
+-	int			pass)
++	int			pass,
++	struct list_head	*buffer_list)
+ {
+ 	int			error;
+ 	__le32			crc;
+@@ -4732,7 +4767,8 @@ xlog_recover_process(
+ 	if (error)
+ 		return error;
+ 
+-	return xlog_recover_process_data(log, rhash, rhead, dp, pass);
++	return xlog_recover_process_data(log, rhash, rhead, dp, pass,
++					 buffer_list);
+ }
+ 
+ STATIC int
+@@ -4793,9 +4829,11 @@ xlog_do_recovery_pass(
+ 	char			*offset;
+ 	xfs_buf_t		*hbp, *dbp;
+ 	int			error = 0, h_size, h_len;
++	int			error2 = 0;
+ 	int			bblks, split_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
+ 	struct hlist_head	rhash[XLOG_RHASH_SIZE];
++	LIST_HEAD		(buffer_list);
+ 
+ 	ASSERT(head_blk != tail_blk);
+ 	rhead_blk = 0;
+@@ -4981,7 +5019,7 @@ xlog_do_recovery_pass(
+ 			}
+ 
+ 			error = xlog_recover_process(log, rhash, rhead, offset,
+-						     pass);
++						     pass, &buffer_list);
+ 			if (error)
+ 				goto bread_err2;
+ 
+@@ -5012,7 +5050,8 @@ xlog_do_recovery_pass(
+ 		if (error)
+ 			goto bread_err2;
+ 
+-		error = xlog_recover_process(log, rhash, rhead, offset, pass);
++		error = xlog_recover_process(log, rhash, rhead, offset, pass,
++					     &buffer_list);
+ 		if (error)
+ 			goto bread_err2;
+ 
+@@ -5025,10 +5064,17 @@ xlog_do_recovery_pass(
+  bread_err1:
+ 	xlog_put_bp(hbp);
+ 
++	/*
++	 * Submit buffers that have been added from the last record processed,
++	 * regardless of error status.
++	 */
++	if (!list_empty(&buffer_list))
++		error2 = xfs_buf_delwri_submit(&buffer_list);
++
+ 	if (error && first_bad)
+ 		*first_bad = rhead_blk;
+ 
+-	return error;
++	return error ? error : error2;
+ }
+ 
+ /*
+-- 
+2.5.5
 
-> Now i tried to rebuild the raid5 with 3 disks but have issues to
-> restore the filesystem on top or even restore files with photorec.
-> 
-> Any help is greatly appreciated. Some details:
-> 
-> The old raid was in the form (sda6, sdb6, sdc6):
-> 
-> /dev/sdc6:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 342ec726:3804270d:5917dd5f:c24883a9
->            Name : TS-XLB6C:2
->   Creation Time : Fri Dec 23 17:58:59 2011
->      Raid Level : raid5
->    Raid Devices : 3
-> 
->  Avail Dev Size : 1923497952 (917.20 GiB 984.83 GB)
->      Array Size : 1923496960 (1834.39 GiB 1969.66 GB)
->   Used Dev Size : 1923496960 (917.19 GiB 984.83 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=1968 sectors, after=992 sectors
->           State : active
->     Device UUID : d27a69d0:456f3704:8e17ac75:78939886
-> 
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Wed Jul 27 19:08:08 2016
->        Checksum : de9dbd10 - correct
->          Events : 11543
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 0
->    Array State : AAA ('A' == active, '.' == missing, 'R' == replacing)
-> 
-> As all md superblocks were gone, i recreated it and got:
-> 
-> /dev/mapper/sdb6:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : da61174d:9567c4df:fcea79f1:38024893
->            Name : grml:42  (local to host grml)
->   Creation Time : Thu Sep 22 05:14:11 2016
->      Raid Level : raid5
->    Raid Devices : 3
-> 
->  Avail Dev Size : 1923497952 (917.20 GiB 984.83 GB)
->      Array Size : 1923496960 (1834.39 GiB 1969.66 GB)
->   Used Dev Size : 1923496960 (917.19 GiB 984.83 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->    Unused Space : before=1960 sectors, after=992 sectors
->           State : clean
->     Device UUID : d0c61415:186b446b:ca34a8c6:69ed5b18
-> 
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Thu Sep 22 05:14:11 2016
->   Bad Block Log : 512 entries available at offset 72 sectors
->        Checksum : bba25a31 - correct
->          Events : 1
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 0
-> 
-> Now i tried xfs_repair on the raid but got:
-> 
-> 
-> root@grml ~ # xfs_repair /dev/md42
-> Phase 1 - find and verify superblock...
-> bad primary superblock - bad magic number !!!
->>>
-> attempting to find secondary superblock...
-> ...........................................
-> found candidate secondary superblock...
-> unable to verify superblock, continuing...
-> found candidate secondary superblock...
-> error reading superblock 22 -- seek to offset 2031216754688 failed
-> unable to verify superblock, continuing...
-> found candidate secondary superblock...
-> unable to verify superblock, continuing...
-> ..found candidate secondary superblock...
-> verified secondary superblock...
-> writing modified primary superblock
->         - reporting progress in intervals of 15 minutes
-> sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
-> calculated value 2048
-> resetting superblock root inode pointer to 2048
-> sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent
-> with calculated value 2049
-> resetting superblock realtime bitmap ino pointer to 2049
-> sb realtime summary inode 18446744073709551615 (NULLFSINO)
-> inconsistent with calculated value 2050
-> resetting superblock realtime summary ino pointer to 2050
-> Phase 2 - using internal log
->         - zero log...
-> totally zeroed log
->         - scan filesystem freespace and inode maps...
-> bad magic number
-> bad magic number
-> bad magic number
-> Metadata corruption detected at block 0x8/0x1000
-> bad magic number
-> Metadata corruption detected at block 0x23d3f408/0x1000
-> bad magic numberbad magic number
->>>
-> Metadata corruption detected at block 0x2afe5808/0x1000
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> bad magic number
-> Metadata corruption detected at block 0x10/0x1000
-> Metadata corruption detected at block 0xe54c808/0x1000
-> bad magic # 0x494e81f6 for agf 0
-> bad version # 16908289 for agf 0
-> bad sequence # 99 for agf 0
-> bad length 99 for agf 0, should be 15027328
-> flfirst 1301384768 in agf 0 too large (max = 1024)
-> bad magic # 0x494e81f6 for agi 0
-> bad version # 16908289 for agi 0
-> bad sequence # 99 for agi 0
-> bad length # 99 for agi 0, should be 15027328
-> reset bad agf for ag 0
-> reset bad agi for ag 0
-> Metadata corruption detected at block 0xd6f7b808/0x1000
-> Metadata corruption detected at block 0x2afe5810/0x1000
-> bad on-disk superblock 6 - bad magic number
-> primary/secondary superblock 6 conflict - AG superblock geometry info
-> conflicts with filesystem geometry
-> zeroing unused portion of secondary superblock (AG #6)
-> [1]    23110 segmentation fault  xfs_repair /dev/md42
-> 
-> 
-> But it ends with a segfault. How screwed am I? Am i even on the right
-> track with the underlying raid?
-> 
-> thank you.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
