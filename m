@@ -1,137 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44312 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750784AbcIWEZD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 00:25:03 -0400
-Date: Fri, 23 Sep 2016 12:25:00 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] fstests: make some xfs project quota tests generic
-Message-ID: <20160923042500.GV27776@eguan.usersys.redhat.com>
-References: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ffeed0c4-7e77-a7a0-1426-0890bf38a52f@redhat.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35414 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934979AbcIWIiy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 04:38:54 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v4 3/3] ovl: use vfs_clone_file_range() for copy up if possible
+Date: Fri, 23 Sep 2016 11:38:12 +0300
+Message-Id: <1474619892-5113-4-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
+References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-unionfs@vger.kernel.org
+Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org
 
-On Thu, Sep 22, 2016 at 05:51:03PM -0500, Eric Sandeen wrote:
-> This patch makes some xfs project quota tests generic,
-> so that there is at least some coverage on ext4 for this
-> (semi-)new feature.
-> 
-> It requires bleeding edge xfsprogs, so that xfs_quota and 
-> xfs_io's chproj command can operate on "foreign" filesystems,
-> and requires relatively new e2fsprogs to enable the project
-> quota feature on-disk.
-> 
-> The mechanism for enabling project quota on ext4 is a bit
-> arcane, but hopefully I've encapsulated it reasonably well here.
-> 
-> Changes:
-> 
-> * look for "project" feature in _require_prjquota
-> * look for accounting not enforcement (-P) in _require_prjquota
-> * add a _scratch_enable_pquota to turn on project quota feature
-> * s/pquota/quota/ in _qmount_option for ext4
-> * add helper to test for xfs_io chproj on foreign filesystems
-> * switch from block to inode quota in xfs/133 because empty
->   ext4 dirs consume one block
-> * cosmetic/generic changes for mkfs, require tests, etc.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> Eryu, would you like to do the move-to-generic/ since you'll need
-> to renumber them anyway? :)
-> 
-> Note -
-> This requires the previous patch I sent to the fstests list,
-> 
-> [PATCH 2/3 V2] modify xfs/ quota tests to work on generic filesystems
-> 
-> diff --git a/common/quota b/common/quota
-> index afc1606..556eba6 100644
-> --- a/common/quota
-> +++ b/common/quota
-> @@ -92,12 +92,16 @@ _require_xfs_quota_foreign()
->  }
->  
->  #
-> -# checks that the XFS project quota support in the kernel is enabled.
-> +# checks that the project quota support in the kernel is enabled.
->  #
->  _require_prjquota()
->  {
->      [ -n "$1" ] && _dev="$1" || _dev="$TEST_DEV"
-> -    src/feature -p $_dev
-> +    if [ "$FSTYP" == "ext4" ]; then
-> +	dumpe2fs -h $_dev 2>&1 | grep -qw project || \
-> +		_notrun "Project quota not available on this ext4"
-> +    fi
-> +    src/feature -P $_dev
->      [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
->      if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
->  	_notrun "Project quotas not supported on realtime filesystem"
-> @@ -105,6 +109,16 @@ _require_prjquota()
->  }
->  
->  #
-> +# ext4 (for now) is unique in that we must enable the project quota feature
-> +# prior to mount.  This is a relatively new feature ...
-> +_scratch_enable_pquota()
-> +{
-> +	[ "$FSTYP" != "ext4" ] && return
-> +
-> +	tune2fs -O quota,project $SCRATCH_DEV >>$seqres.full 2>&1
-> +}
-> +
-> +#
->  # checks for user nobody in /etc/passwd and /etc/group.
->  #
->  _require_nobody()
-> @@ -197,6 +211,8 @@ _qmount()
->  #
->  _qmount_option()
->  {
-> +	OPTS=$1
-> +
->  	# Replace any user defined quota options
->  	# with the quota option that we want.
->  	# Simplest to do this rather than delete existing ones first because
-> @@ -210,16 +226,23 @@ _qmount_option()
->  		-e 's/gquota/QUOTA/g'      \
->  		-e 's/grpquota/QUOTA/g'    \
->  		-e 's/pquota/QUOTA/g'      \
-> -		-e 's/prjquota/QUOTA/g'      \
-> +		-e 's/prjquota/QUOTA/g'    \
->  		-e 's/quota/QUOTA/g'       \
->  		-e 's/uqnoenforce/QUOTA/g' \
->  		-e 's/gqnoenforce/QUOTA/g' \
->  		-e 's/pqnoenforce/QUOTA/g' \
->  		-e 's/qnoenforce/QUOTA/g'  \
-> -		-e "s/QUOTA/$1/g"`
-> +		-e "s/QUOTA/$OPTS/g"`
->  
-> +	# ext4 doesn't _do_ "-o pquota/prjquota" because reasons
-> +	# Switch it to "quota" to enable mkfs-time pquota
-> +	if [ "$FSTYP" == "ext4" ]; then
-> +		OPTS=`echo $OPTS \
-> +		| sed	-e 's/pquota/quota/g'	\
-> +			-e 's/prjquota/quota/g'`
-> +	fi
+When copying up within the same fs, try to use vfs_clone_file_range().
+This is very efficient when lower and upper are on the same fs
+with file reflink support. If vfs_clone_file_range() fails for any
+reason, copy up falls back to the regular data copy code.
 
-This replaces "grpquota" to "grquota" and mount failed because of
-unknown mount option "grquota". The following change works for me:
+Tested correct behavior when lower and upper are on:
+1. same ext4 (copy)
+2. same xfs + reflink patches + mkfs.xfs (copy)
+3. same xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink)
+4. different xfs + reflink patches + mkfs.xfs -m reflink=1 (copy)
 
--             | sed   -e 's/pquota/quota/g'   \
-+             | sed   -e 's/\bpquota/quota/g' \
+For comparison, on my laptop, xfstest overlay/001 (copy up of large
+sparse files) takes less than 1 second in the xfs reflink setup vs.
+25 seconds on the rest of the setups.
 
-If you can give me an ack (or another fix), I can fold it into the
-original patch.
+Acked-by: Miklos Szeredi <mszeredi@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/overlayfs/copy_up.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Thanks,
-Eryu
+diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+index 43fdc27..93f0a34 100644
+--- a/fs/overlayfs/copy_up.c
++++ b/fs/overlayfs/copy_up.c
+@@ -136,6 +136,13 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 		goto out_fput;
+ 	}
+ 
++	/* Try to use clone_file_range to clone up within the same fs */
++	error = vfs_clone_file_range(old_file, 0, new_file, 0, len);
++	if (!error)
++		goto out;
++	/* Couldn't clone, so now we try to copy the data */
++	error = 0;
++
+ 	/* FIXME: copy up sparse files efficiently */
+ 	while (len) {
+ 		size_t this_len = OVL_COPY_UP_CHUNK_SIZE;
+@@ -161,6 +168,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
+ 		len -= bytes;
+ 	}
+ 
++out:
+ 	fput(new_file);
+ out_fput:
+ 	fput(old_file);
+-- 
+2.7.4
+
