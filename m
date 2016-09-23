@@ -1,58 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56932 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965835AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 16:31:03 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 68477C7EE3
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:02 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
-        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV2eT017441
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 0/5] fix log recovery for v5 superblocks
-Date: Fri, 23 Sep 2016 16:30:55 -0400
-Message-Id: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35797 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbcIWH57 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 03:57:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <1473856994-27463-4-git-send-email-amir73il@gmail.com>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com> <1473856994-27463-4-git-send-email-amir73il@gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 23 Sep 2016 10:57:56 +0300
+Message-ID: <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file systems
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-Hi all,
+On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> copy_file_range syscall returns -EXDEV if src and dest
+> file are not on the same file system.
+> The vfs_copy_file_range() helper, however, knows how to copy
+> across file systems with do_splice_direct().
+>
+> Move the enforcement of same file system from the vfs helper
+> to the syscall code.
+>
+> A following patch is going to use the vfs_copy_file_range()
+> helper in overlayfs to copy up between lower and upper
+> not on the same file system.
+>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/read_write.c | 16 +++++++++++-----
+>  1 file changed, 11 insertions(+), 5 deletions(-)
+>
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 9dc6e52..6975fe8 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>             (file_out->f_flags & O_APPEND))
+>                 return -EBADF;
+>
+> -       /* this could be relaxed once a method supports cross-fs copies */
+> -       if (inode_in->i_sb != inode_out->i_sb)
+> -               return -EXDEV;
+> -
+>         if (len == 0)
+>                 return 0;
+>
+> @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+>                 return ret;
+>
+>         ret = -EOPNOTSUPP;
+> -       if (file_out->f_op->copy_file_range)
+> +       /* copy_file_range() method does not support cross-fs copies */
+> +       if (inode_in->i_sb == inode_out->i_sb &&
+> +           file_out->f_op->copy_file_range)
+>                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+>                                                       pos_out, len, flags);
+>         if (ret == -EOPNOTSUPP)
+> @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+>                 pos_out = f_out.file->f_pos;
+>         }
+>
+> +       /*
+> +        * vfs_copy_file_range() can do cross-fs copy, but we want to
+> +        * fulfill the guaranty to userland that copy_file_range syscall
+> +        * does not allow cross-fs copy
+> +        */
+> +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
+> +               return -EXDEV;
 
-Here's v2 of the series to fix up log recovery to update metadata LSNs
-and handle buffer submission correctly. This is mostly similar to v1.
-The primary functional change is a fixup to patch 1, that came out of
-the discussion with Dave, to drain queued buffers on LSN changes of
-commit log records (as opposed to all LSN changes). Otherwise, fixes
-include some light refactoring and comment reworks. Thoughts, reviews,
-flames appreciated.
+Oops, that was supposed to be goto out;
+Anyway, I am holding back on the vfs_copy_file_range() patches sub set
+until I have a reliable test on xfs to fall back from clone to copy range
 
-Brian
-
-v2:
-- Rebased to for-next.
-- Limit LSN change trigger to log commit records.
-- Comment rewrite/fixups.
-- Refactor buffer validation handling of NULL current lsn callers
-  (skipped bufs).
-v1: http://oss.sgi.com/pipermail/xfs/2016-August/050840.html
-
-Brian Foster (5):
-  xfs: rework log recovery to submit buffers on LSN boundaries
-  xfs: pass current lsn to log recovery buffer validation
-  xfs: don't warn on buffers not being recovered due to LSN
-  xfs: update metadata LSN in buffers during log recovery
-  xfs: log recovery tracepoints to track current lsn and buffer
-    submission
-
- fs/xfs/xfs_log_priv.h    |   3 +-
- fs/xfs/xfs_log_recover.c | 191 +++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_trace.h       |  31 +++++++-
- 3 files changed, 166 insertions(+), 59 deletions(-)
-
--- 
-2.5.5
-
+> +
+>         ret = vfs_copy_file_range(f_in.file, pos_in, f_out.file, pos_out, len,
+>                                   flags);
+>         if (ret > 0) {
+> --
+> 2.7.4
+>
