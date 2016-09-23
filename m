@@ -1,97 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40186 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([134.134.136.65]:45380 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966025AbcIWUbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 16:31:03 -0400
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9CAF97EAB9
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 20:31:02 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-125.bos.redhat.com [10.18.41.125])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8NKV2NA020958
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Sep 2016 16:31:02 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/5] xfs: pass current lsn to log recovery buffer validation
-Date: Fri, 23 Sep 2016 16:30:57 -0400
-Message-Id: <1474662660-61550-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
-References: <1474662660-61550-1-git-send-email-bfoster@redhat.com>
+        id S1754951AbcIWVCq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Sep 2016 17:02:46 -0400
+Date: Fri, 23 Sep 2016 15:02:37 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160923210237.GA23346@linux.intel.com>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+ <1473438884-674-7-git-send-email-hch@lst.de>
+ <20160909225557.GF30056@dastard>
+ <20160910073646.GA18547@lst.de>
+ <20160913155126.GA10622@linux.intel.com>
+ <20160914070633.GA17278@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160914070633.GA17278@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-The current LSN must be available to the buffer validation function to
-provide the ability to update the metadata LSN of the buffer. Pass the
-current_lsn value down to xlog_recover_validate_buf_type() in
-preparation.
+On Wed, Sep 14, 2016 at 09:06:33AM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 13, 2016 at 09:51:26AM -0600, Ross Zwisler wrote:
+> > I'm working on this right now.  I expect that most/all of the infrastructure
+> > between the bh+get_block_t version and the iomap version to be shared, it'll
+> > just be a matter of having a PMD version of the iomap fault handler.  This
+> > should be pretty minor.
+> 
+> Yes, I looked at it (although I didn't do any work yet), and the work
+> should be fairly easy.
+> 
+> > Let's see how it goes, but right now my plan is to have both - I'd like to
+> > keep feature parity between ext2/ext4 and XFS, and that means having PMD
+> > faults in ext4 via bh+get_block_t until they move over to iomap.
+> > 
+> > Regarding coordination, the PMD v2 series hasn't gotten much review so far, so
+> > I'm not sure it'll go in for v4.9.  At this point I'm planning on just
+> > rebasing on top of your iomap series, though if it gets taken sooner I
+> > wouldn't object.
+> 
+> So let's do iomap first.  I've got stable ext2 support, as well as support
+> for the block device, although I'm not sure what the proper testing
+> protocol for that is.  I've started ext4 and read / zero was easy, but
+> now I'm stuck in the convoluted mess that is the ext4 direct I/O and
+> DAX path.
+> 
+> Maybe we should get the iomap work into 4.9 and then convert over ext4
+> as well as adding PMD fault support in the next release.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+I was doing some testing of my PMD patches, and was surprised to see that
+ext4 + PMDs + generic/074 now takes 23 minutes to complete.  With ext4 and
+PTEs faults this test takes ~50 seconds in the same setup, and XFS + PMDs
+takes 27 seconds.
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e24fb7b..bf325f2 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2360,7 +2360,8 @@ static void
- xlog_recover_validate_buf_type(
- 	struct xfs_mount	*mp,
- 	struct xfs_buf		*bp,
--	xfs_buf_log_format_t	*buf_f)
-+	xfs_buf_log_format_t	*buf_f,
-+	xfs_lsn_t		current_lsn)
- {
- 	struct xfs_da_blkinfo	*info = bp->b_addr;
- 	__uint32_t		magic32;
-@@ -2569,7 +2570,8 @@ xlog_recover_do_reg_buffer(
- 	struct xfs_mount	*mp,
- 	xlog_recover_item_t	*item,
- 	struct xfs_buf		*bp,
--	xfs_buf_log_format_t	*buf_f)
-+	xfs_buf_log_format_t	*buf_f,
-+	xfs_lsn_t		current_lsn)
- {
- 	int			i;
- 	int			bit;
-@@ -2642,7 +2644,7 @@ xlog_recover_do_reg_buffer(
- 	/* Shouldn't be any more regions */
- 	ASSERT(i == item->ri_total);
- 
--	xlog_recover_validate_buf_type(mp, bp, buf_f);
-+	xlog_recover_validate_buf_type(mp, bp, buf_f, current_lsn);
- }
- 
- /*
-@@ -2685,7 +2687,7 @@ xlog_recover_do_dquot_buffer(
- 	if (log->l_quotaoffs_flag & type)
- 		return false;
- 
--	xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
-+	xlog_recover_do_reg_buffer(mp, item, bp, buf_f, NULLCOMMITLSN);
- 	return true;
- }
- 
-@@ -2773,7 +2775,7 @@ xlog_recover_buffer_pass2(
- 	 */
- 	lsn = xlog_recover_get_buf_lsn(mp, bp);
- 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
--		xlog_recover_validate_buf_type(mp, bp, buf_f);
-+		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
- 		goto out_release;
- 	}
- 
-@@ -2789,7 +2791,7 @@ xlog_recover_buffer_pass2(
- 		if (!dirty)
- 			goto out_release;
- 	} else {
--		xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
-+		xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
- 	}
- 
- 	/*
--- 
-2.5.5
+The root cause is that ext4 is using the direct I/O path for reads and writes,
+and that the DIO path thinks it needs to flush dirty data from the radix tree
+on each I/O.
 
+Each read ends up writing back PMDs via:
+
+  vfs_read()
+    __vfs_read()
+      new_sync_read
+        generic_file_read_iter()
+          filemap_write_and_wait_range()
+
+I believe we have an analogous problem for writes.
+
+This results in us flushing 12 TiB worth of data during the generic/074 test,
+one cache line at a time...
+
+With your recent changes to detangle the DAX and DIO faults paths in XFS, we
+avoid this because XFS no longer uses generic_file_read_iter(), but instead
+uses xfs_file_write_iter() which skips the writeback and instead just calls
+xfs_file_dax_write() to do the I/O.
+
+This is obviously an existing issue in ext4 that we need to address.  Even
+with the PTE path we are doing tons of unnecessary flushing, but the move from
+flushing PTEs to flushing PMDs is what killed us.
+
+I can just add a hack to hop over the writeback in generic_file_read_iter(),
+but I hesitate to do this because it seems like the correct thing to do is to
+separate the ext4 DAX & DIO paths, which I think you are already doing.
+
+I believe that my DAX PMD patches are ready to go, but because of this issue
+they currently only support XFS.  I'm tempted to send them out as they are
+right now since they add a bunch of complexity to DAX that we need to review,
+and that review can fully happen with only XFS support. We can add ext4
+support back in later when it's ready.
+
+Thoughts?
