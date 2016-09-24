@@ -1,91 +1,703 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from albireo.enyo.de ([5.158.152.32]:46155 "EHLO albireo.enyo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161674AbcIZRdQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Sep 2016 13:33:16 -0400
-From: Florian Weimer <fw@deneb.enyo.de>
-Subject: Re: Excessive xfs_inode allocations trigger OOM killer
-References: <87a8f2pd2d.fsf@mid.deneb.enyo.de> <20160920203039.GI340@dastard>
-        <87mvj2mgsg.fsf@mid.deneb.enyo.de> <20160920214612.GJ340@dastard>
-        <20160921080425.GC10300@dhcp22.suse.cz>
-Date: Mon, 26 Sep 2016 19:33:09 +0200
-In-Reply-To: <20160921080425.GC10300@dhcp22.suse.cz> (Michal Hocko's message
-        of "Wed, 21 Sep 2016 10:04:25 +0200")
-Message-ID: <878tuetvl6.fsf@mid.deneb.enyo.de>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:57182 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750697AbcIXEBT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Sep 2016 00:01:19 -0400
+Date: Sat, 24 Sep 2016 05:01:17 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [PATCH 10/12] new iov_iter flavour: pipe-backed
+Message-ID: <20160924040117.GP2356@ZenIV.linux.org.uk>
+References: <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
+ <20160923190032.GA25771@ZenIV.linux.org.uk>
+ <20160923190326.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+ <20160923201025.GJ2356@ZenIV.linux.org.uk>
+ <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-* Michal Hocko:
+iov_iter variant for passing data into pipe.  copy_to_iter()
+copies data into page(s) it has allocated and stuffs them into
+the pipe; copy_page_to_iter() stuffs there a reference to the
+page given to it.  Both will try to coalesce if possible.
+iov_iter_zero() is similar to copy_to_iter(); iov_iter_get_pages()
+and friends will do as copy_to_iter() would have and return the
+pages where the data would've been copied.  iov_iter_advance()
+will truncate everything past the spot it has advanced to.
 
-> On Wed 21-09-16 07:46:12, Dave Chinner wrote:
->> [cc Michal, linux-mm@kvack.org]
->> 
->> On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
-> [...]
->> > [51669.515086] make invoked oom-killer:
->> > gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2,
->> > oom_score_adj=0
->> > [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G I 4.7.1fw #1
->> > [51669.515093] Hardware name: System manufacturer System Product
->> > Name/P6X58D-E, BIOS 0701 05/10/2011
->> > [51669.515095] 0000000000000000 ffffffff812a7d39 0000000000000000
->> > 0000000000000000
->> > [51669.515098] ffffffff8114e4da ffff880018707d98 0000000000000000
->> > 000000000066ca81
->> > [51669.515100] ffffffff8170e88d ffffffff810fe69e ffff88033fc38728
->> > 0000000200000006
->> > [51669.515102] Call Trace:
->> > [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
->> > [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
->> > [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
->> > [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
->> > [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
->> > [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
->> > [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
->> > [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
->> > [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
->> > [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
->> > [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
->> > [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
->> > [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
->> .....
->> > [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB
->> > (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M)
->> > 3*4096kB (M) = 15900kB
->> > [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB
->> > 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB =
->> > 183060kB
->> > [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB
->> > 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
->> .....
->> 
->> Alright, that's what I suspected. high order allocation for a new
->> kernel stack and memory is so fragmented that a contiguous
->> allocation fails. Really, this is a memory reclaim issue, not an XFS
->> issue.  There is lots of reclaimable memory available, but memory
->> reclaim is:
->> 
->> 	a) not trying hard enough to reclaim reclaimable memory; and
->> 	b) not waiting for memory compaction to rebuild contiguous
->> 	   memory regions for high order allocations.
->> 
->> Instead, it is declaring OOM and kicking the killer to free memory
->> held busy userspace.
->
-> Yes this was the case with 4.7 kernel. There is a workaround sitting in
-> the linus tree 6b4e3181d7bd ("mm, oom: prevent premature OOM killer
-> invocation for high order request") which should get to stable
-> eventually. More approapriate fix is currently in the linux-next.
->
-> Testing the same workload with linux-next would be very helpful.
+New primitive: iov_iter_pipe(), used for initializing those.
+pipe should be locked all along.
 
-I'm not sure if I can reproduce this issue in a sufficiently reliable
-way, but I can try.  (I still have not found the process which causes
-the xfs_inode allocations go up.)
+Running out of space acts as fault would for iovec-backed ones;
+in other words, giving it to ->read_iter() may result in short
+read if the pipe overflows, or -EFAULT if it happens with nothing
+copied there.
 
-Is linux-next still the tree to test?
+In other words, ->read_iter() on those acts pretty much like
+->splice_read().  Moreover, all generic_file_splice_read() users,
+as well as many other ->splice_read() instances can be switched
+to that scheme - that'll happen in the next commit.
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/splice.c            |   2 +-
+ include/linux/splice.h |   1 +
+ include/linux/uio.h    |  14 +-
+ lib/iov_iter.c         | 390 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 401 insertions(+), 6 deletions(-)
+
+diff --git a/fs/splice.c b/fs/splice.c
+index e13d935..589a1d5 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -524,7 +524,7 @@ ssize_t generic_file_splice_read(struct file *in, loff_t *ppos,
+ }
+ EXPORT_SYMBOL(generic_file_splice_read);
+ 
+-static const struct pipe_buf_operations default_pipe_buf_ops = {
++const struct pipe_buf_operations default_pipe_buf_ops = {
+ 	.can_merge = 0,
+ 	.confirm = generic_pipe_buf_confirm,
+ 	.release = generic_pipe_buf_release,
+diff --git a/include/linux/splice.h b/include/linux/splice.h
+index 58b300f..00a2116 100644
+--- a/include/linux/splice.h
++++ b/include/linux/splice.h
+@@ -85,4 +85,5 @@ extern void splice_shrink_spd(struct splice_pipe_desc *);
+ extern void spd_release_page(struct splice_pipe_desc *, unsigned int);
+ 
+ extern const struct pipe_buf_operations page_cache_pipe_buf_ops;
++extern const struct pipe_buf_operations default_pipe_buf_ops;
+ #endif
+diff --git a/include/linux/uio.h b/include/linux/uio.h
+index 1b5d1cd..c4fe1ab 100644
+--- a/include/linux/uio.h
++++ b/include/linux/uio.h
+@@ -13,6 +13,7 @@
+ #include <uapi/linux/uio.h>
+ 
+ struct page;
++struct pipe_inode_info;
+ 
+ struct kvec {
+ 	void *iov_base; /* and that should *never* hold a userland pointer */
+@@ -23,6 +24,7 @@ enum {
+ 	ITER_IOVEC = 0,
+ 	ITER_KVEC = 2,
+ 	ITER_BVEC = 4,
++	ITER_PIPE = 8,
+ };
+ 
+ struct iov_iter {
+@@ -33,8 +35,12 @@ struct iov_iter {
+ 		const struct iovec *iov;
+ 		const struct kvec *kvec;
+ 		const struct bio_vec *bvec;
++		struct pipe_inode_info *pipe;
++	};
++	union {
++		unsigned long nr_segs;
++		int idx;
+ 	};
+-	unsigned long nr_segs;
+ };
+ 
+ /*
+@@ -64,7 +70,7 @@ static inline struct iovec iov_iter_iovec(const struct iov_iter *iter)
+ }
+ 
+ #define iov_for_each(iov, iter, start)				\
+-	if (!((start).type & ITER_BVEC))			\
++	if (!((start).type & (ITER_BVEC | ITER_PIPE)))		\
+ 	for (iter = (start);					\
+ 	     (iter).count &&					\
+ 	     ((iov = iov_iter_iovec(&(iter))), 1);		\
+@@ -94,6 +100,8 @@ void iov_iter_kvec(struct iov_iter *i, int direction, const struct kvec *kvec,
+ 			unsigned long nr_segs, size_t count);
+ void iov_iter_bvec(struct iov_iter *i, int direction, const struct bio_vec *bvec,
+ 			unsigned long nr_segs, size_t count);
++void iov_iter_pipe(struct iov_iter *i, int direction, struct pipe_inode_info *pipe,
++			size_t count);
+ ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
+ 			size_t maxsize, unsigned maxpages, size_t *start);
+ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
+@@ -109,7 +117,7 @@ static inline size_t iov_iter_count(struct iov_iter *i)
+ 
+ static inline bool iter_is_iovec(struct iov_iter *i)
+ {
+-	return !(i->type & (ITER_BVEC | ITER_KVEC));
++	return !(i->type & (ITER_BVEC | ITER_KVEC | ITER_PIPE));
+ }
+ 
+ /*
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 9e8c738..405fdd6 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -3,8 +3,11 @@
+ #include <linux/pagemap.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
++#include <linux/splice.h>
+ #include <net/checksum.h>
+ 
++#define PIPE_PARANOIA /* for now */
++
+ #define iterate_iovec(i, n, __v, __p, skip, STEP) {	\
+ 	size_t left;					\
+ 	size_t wanted = n;				\
+@@ -290,6 +293,82 @@ done:
+ 	return wanted - bytes;
+ }
+ 
++#ifdef PIPE_PARANOIA
++static bool sanity(const struct iov_iter *i)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	int idx = i->idx;
++	int delta = (pipe->curbuf + pipe->nrbufs - idx) & (pipe->buffers - 1);
++	if (i->iov_offset) {
++		struct pipe_buffer *p;
++		if (unlikely(delta != 1) || unlikely(!pipe->nrbufs))
++			goto Bad;	// must be at the last buffer...
++
++		p = &pipe->bufs[idx];
++		if (unlikely(p->offset + p->len != i->iov_offset))
++			goto Bad;	// ... at the end of segment
++	} else {
++		if (delta)
++			goto Bad;	// must be right after the last buffer
++	}
++	return true;
++Bad:
++	WARN_ON(1);
++	return false;
++}
++#else
++#define sanity(i) true
++#endif
++
++static inline int next_idx(int idx, struct pipe_inode_info *pipe)
++{
++	return (idx + 1) & (pipe->buffers - 1);
++}
++
++static size_t copy_page_to_iter_pipe(struct page *page, size_t offset, size_t bytes,
++			 struct iov_iter *i)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	struct pipe_buffer *buf;
++	size_t off;
++	int idx;
++
++	if (unlikely(bytes > i->count))
++		bytes = i->count;
++
++	if (unlikely(!bytes))
++		return 0;
++
++	if (!sanity(i))
++		return 0;
++
++	off = i->iov_offset;
++	idx = i->idx;
++	buf = &pipe->bufs[idx];
++	if (off) {
++		if (offset == off && buf->page == page) {
++			/* merge with the last one */
++			buf->len += bytes;
++			i->iov_offset += bytes;
++			goto out;
++		}
++		idx = next_idx(idx, pipe);
++		buf = &pipe->bufs[idx];
++	}
++	if (idx == pipe->curbuf && pipe->nrbufs)
++		return 0;
++	pipe->nrbufs++;
++	buf->ops = &page_cache_pipe_buf_ops;
++	get_page(buf->page = page);
++	buf->offset = offset;
++	buf->len = bytes;
++	i->iov_offset = offset + bytes;
++	i->idx = idx;
++out:
++	i->count -= bytes;
++	return bytes;
++}
++
+ /*
+  * Fault in the first iovec of the given iov_iter, to a maximum length
+  * of bytes. Returns 0 on success, or non-zero if the memory could not be
+@@ -376,9 +455,98 @@ static void memzero_page(struct page *page, size_t offset, size_t len)
+ 	kunmap_atomic(addr);
+ }
+ 
++static inline bool allocated(struct pipe_buffer *buf)
++{
++	return buf->ops == &default_pipe_buf_ops;
++}
++
++static inline void data_start(const struct iov_iter *i, int *idxp, size_t *offp)
++{
++	size_t off = i->iov_offset;
++	int idx = i->idx;
++	if (off && (!allocated(&i->pipe->bufs[idx]) || off == PAGE_SIZE)) {
++		idx = next_idx(idx, i->pipe);
++		off = 0;
++	}
++	*idxp = idx;
++	*offp = off;
++}
++
++static size_t push_pipe(struct iov_iter *i, size_t size,
++			int *idxp, size_t *offp)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	size_t off;
++	int idx;
++	ssize_t left;
++
++	if (unlikely(size > i->count))
++		size = i->count;
++	if (unlikely(!size))
++		return 0;
++
++	left = size;
++	data_start(i, &idx, &off);
++	*idxp = idx;
++	*offp = off;
++	if (off) {
++		left -= PAGE_SIZE - off;
++		if (left <= 0) {
++			pipe->bufs[idx].len += size;
++			return size;
++		}
++		pipe->bufs[idx].len = PAGE_SIZE;
++		idx = next_idx(idx, pipe);
++	}
++	while (idx != pipe->curbuf || !pipe->nrbufs) {
++		struct page *page = alloc_page(GFP_USER);
++		if (!page)
++			break;
++		pipe->nrbufs++;
++		pipe->bufs[idx].ops = &default_pipe_buf_ops;
++		pipe->bufs[idx].page = page;
++		pipe->bufs[idx].offset = 0;
++		if (left <= PAGE_SIZE) {
++			pipe->bufs[idx].len = left;
++			return size;
++		}
++		pipe->bufs[idx].len = PAGE_SIZE;
++		left -= PAGE_SIZE;
++		idx = next_idx(idx, pipe);
++	}
++	return size - left;
++}
++
++static size_t copy_pipe_to_iter(const void *addr, size_t bytes,
++				struct iov_iter *i)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	size_t n, off;
++	int idx;
++
++	if (!sanity(i))
++		return 0;
++
++	bytes = n = push_pipe(i, bytes, &idx, &off);
++	if (unlikely(!n))
++		return 0;
++	for ( ; n; idx = next_idx(idx, pipe), off = 0) {
++		size_t chunk = min_t(size_t, n, PAGE_SIZE - off);
++		memcpy_to_page(pipe->bufs[idx].page, off, addr, chunk);
++		i->idx = idx;
++		i->iov_offset = off + chunk;
++		n -= chunk;
++		addr += chunk;
++	}
++	i->count -= bytes;
++	return bytes;
++}
++
+ size_t copy_to_iter(const void *addr, size_t bytes, struct iov_iter *i)
+ {
+ 	const char *from = addr;
++	if (unlikely(i->type & ITER_PIPE))
++		return copy_pipe_to_iter(addr, bytes, i);
+ 	iterate_and_advance(i, bytes, v,
+ 		__copy_to_user(v.iov_base, (from += v.iov_len) - v.iov_len,
+ 			       v.iov_len),
+@@ -394,6 +562,10 @@ EXPORT_SYMBOL(copy_to_iter);
+ size_t copy_from_iter(void *addr, size_t bytes, struct iov_iter *i)
+ {
+ 	char *to = addr;
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return 0;
++	}
+ 	iterate_and_advance(i, bytes, v,
+ 		__copy_from_user((to += v.iov_len) - v.iov_len, v.iov_base,
+ 				 v.iov_len),
+@@ -409,6 +581,10 @@ EXPORT_SYMBOL(copy_from_iter);
+ size_t copy_from_iter_nocache(void *addr, size_t bytes, struct iov_iter *i)
+ {
+ 	char *to = addr;
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return 0;
++	}
+ 	iterate_and_advance(i, bytes, v,
+ 		__copy_from_user_nocache((to += v.iov_len) - v.iov_len,
+ 					 v.iov_base, v.iov_len),
+@@ -429,14 +605,20 @@ size_t copy_page_to_iter(struct page *page, size_t offset, size_t bytes,
+ 		size_t wanted = copy_to_iter(kaddr + offset, bytes, i);
+ 		kunmap_atomic(kaddr);
+ 		return wanted;
+-	} else
++	} else if (likely(!(i->type & ITER_PIPE)))
+ 		return copy_page_to_iter_iovec(page, offset, bytes, i);
++	else
++		return copy_page_to_iter_pipe(page, offset, bytes, i);
+ }
+ EXPORT_SYMBOL(copy_page_to_iter);
+ 
+ size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes,
+ 			 struct iov_iter *i)
+ {
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return 0;
++	}
+ 	if (i->type & (ITER_BVEC|ITER_KVEC)) {
+ 		void *kaddr = kmap_atomic(page);
+ 		size_t wanted = copy_from_iter(kaddr + offset, bytes, i);
+@@ -447,8 +629,34 @@ size_t copy_page_from_iter(struct page *page, size_t offset, size_t bytes,
+ }
+ EXPORT_SYMBOL(copy_page_from_iter);
+ 
++static size_t pipe_zero(size_t bytes, struct iov_iter *i)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	size_t n, off;
++	int idx;
++
++	if (!sanity(i))
++		return 0;
++
++	bytes = n = push_pipe(i, bytes, &idx, &off);
++	if (unlikely(!n))
++		return 0;
++
++	for ( ; n; idx = next_idx(idx, pipe), off = 0) {
++		size_t chunk = min_t(size_t, n, PAGE_SIZE - off);
++		memzero_page(pipe->bufs[idx].page, off, chunk);
++		i->idx = idx;
++		i->iov_offset = off + chunk;
++		n -= chunk;
++	}
++	i->count -= bytes;
++	return bytes;
++}
++
+ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
+ {
++	if (unlikely(i->type & ITER_PIPE))
++		return pipe_zero(bytes, i);
+ 	iterate_and_advance(i, bytes, v,
+ 		__clear_user(v.iov_base, v.iov_len),
+ 		memzero_page(v.bv_page, v.bv_offset, v.bv_len),
+@@ -463,6 +671,11 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
+ 		struct iov_iter *i, unsigned long offset, size_t bytes)
+ {
+ 	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
++	if (unlikely(i->type & ITER_PIPE)) {
++		kunmap_atomic(kaddr);
++		WARN_ON(1);
++		return 0;
++	}
+ 	iterate_all_kinds(i, bytes, v,
+ 		__copy_from_user_inatomic((p += v.iov_len) - v.iov_len,
+ 					  v.iov_base, v.iov_len),
+@@ -475,8 +688,55 @@ size_t iov_iter_copy_from_user_atomic(struct page *page,
+ }
+ EXPORT_SYMBOL(iov_iter_copy_from_user_atomic);
+ 
++static void pipe_advance(struct iov_iter *i, size_t size)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	struct pipe_buffer *buf;
++	size_t off;
++	int idx;
++	
++	if (unlikely(i->count < size))
++		size = i->count;
++
++	idx = i->idx;
++	off = i->iov_offset;
++	if (size || off) {
++		/* take it relative to the beginning of buffer */
++		size += off - pipe->bufs[idx].offset;
++		while (1) {
++			buf = &pipe->bufs[idx];
++			if (size > buf->len) {
++				size -= buf->len;
++				idx = next_idx(idx, pipe);
++				off = 0;
++			} else {
++				buf->len = size;
++				i->idx = idx;
++				i->iov_offset = off = buf->offset + size;
++				break;
++			}
++		}
++		idx = next_idx(idx, pipe);
++	}
++	if (pipe->nrbufs) {
++		int unused = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
++		/* [curbuf,unused) is in use.  Free [idx,unused) */
++		while (idx != unused) {
++			buf = &pipe->bufs[idx];
++			buf->ops->release(pipe, buf);
++			buf->ops = NULL;
++			idx = next_idx(idx, pipe);
++			pipe->nrbufs--;
++		}
++	}
++}
++
+ void iov_iter_advance(struct iov_iter *i, size_t size)
+ {
++	if (unlikely(i->type & ITER_PIPE)) {
++		pipe_advance(i, size);
++		return;
++	}
+ 	iterate_and_advance(i, size, v, 0, 0, 0)
+ }
+ EXPORT_SYMBOL(iov_iter_advance);
+@@ -486,6 +746,8 @@ EXPORT_SYMBOL(iov_iter_advance);
+  */
+ size_t iov_iter_single_seg_count(const struct iov_iter *i)
+ {
++	if (unlikely(i->type & ITER_PIPE))
++		return i->count;	// it is a silly place, anyway
+ 	if (i->nr_segs == 1)
+ 		return i->count;
+ 	else if (i->type & ITER_BVEC)
+@@ -521,6 +783,19 @@ void iov_iter_bvec(struct iov_iter *i, int direction,
+ }
+ EXPORT_SYMBOL(iov_iter_bvec);
+ 
++void iov_iter_pipe(struct iov_iter *i, int direction,
++			struct pipe_inode_info *pipe,
++			size_t count)
++{
++	BUG_ON(direction != ITER_PIPE);
++	i->type = direction;
++	i->pipe = pipe;
++	i->idx = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
++	i->iov_offset = 0;
++	i->count = count;
++}
++EXPORT_SYMBOL(iov_iter_pipe);
++
+ unsigned long iov_iter_alignment(const struct iov_iter *i)
+ {
+ 	unsigned long res = 0;
+@@ -529,6 +804,11 @@ unsigned long iov_iter_alignment(const struct iov_iter *i)
+ 	if (!size)
+ 		return 0;
+ 
++	if (unlikely(i->type & ITER_PIPE)) {
++		if (i->iov_offset && allocated(&i->pipe->bufs[i->idx]))
++			return size | i->iov_offset;
++		return size;
++	}
+ 	iterate_all_kinds(i, size, v,
+ 		(res |= (unsigned long)v.iov_base | v.iov_len, 0),
+ 		res |= v.bv_offset | v.bv_len,
+@@ -545,6 +825,11 @@ unsigned long iov_iter_gap_alignment(const struct iov_iter *i)
+ 	if (!size)
+ 		return 0;
+ 
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return ~0U;
++	}
++
+ 	iterate_all_kinds(i, size, v,
+ 		(res |= (!res ? 0 : (unsigned long)v.iov_base) |
+ 			(size != v.iov_len ? size : 0), 0),
+@@ -557,6 +842,47 @@ unsigned long iov_iter_gap_alignment(const struct iov_iter *i)
+ }
+ EXPORT_SYMBOL(iov_iter_gap_alignment);
+ 
++static inline size_t __pipe_get_pages(struct iov_iter *i,
++				size_t maxsize,
++				struct page **pages,
++				int idx,
++				size_t *start)
++{
++	struct pipe_inode_info *pipe = i->pipe;
++	size_t n = push_pipe(i, maxsize, &idx, start);
++	if (!n)
++		return 0;
++
++	maxsize = n;
++	n += *start;
++	while (n >= PAGE_SIZE) {
++		get_page(*pages++ = pipe->bufs[idx].page);
++		idx = next_idx(idx, pipe);
++		n -= PAGE_SIZE;
++	}
++
++	return maxsize;
++}
++
++static ssize_t pipe_get_pages(struct iov_iter *i,
++		   struct page **pages, size_t maxsize, unsigned maxpages,
++		   size_t *start)
++{
++	unsigned npages;
++	size_t capacity;
++	int idx;
++
++	if (!sanity(i))
++		return 0;
++
++	data_start(i, &idx, start);
++	/* some of this one + all after this one */
++	npages = ((i->pipe->curbuf - idx - 1) & (i->pipe->buffers - 1)) + 1;
++	capacity = min(npages,maxpages) * PAGE_SIZE - *start;
++
++	return __pipe_get_pages(i, min(maxsize, capacity), pages, idx, start);
++}
++
+ ssize_t iov_iter_get_pages(struct iov_iter *i,
+ 		   struct page **pages, size_t maxsize, unsigned maxpages,
+ 		   size_t *start)
+@@ -567,6 +893,8 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
+ 	if (!maxsize)
+ 		return 0;
+ 
++	if (unlikely(i->type & ITER_PIPE))
++		return pipe_get_pages(i, pages, maxsize, maxpages, start);
+ 	iterate_all_kinds(i, maxsize, v, ({
+ 		unsigned long addr = (unsigned long)v.iov_base;
+ 		size_t len = v.iov_len + (*start = addr & (PAGE_SIZE - 1));
+@@ -602,6 +930,37 @@ static struct page **get_pages_array(size_t n)
+ 	return p;
+ }
+ 
++static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
++		   struct page ***pages, size_t maxsize,
++		   size_t *start)
++{
++	struct page **p;
++	size_t n;
++	int idx;
++	int npages;
++
++	if (!sanity(i))
++		return 0;
++
++	data_start(i, &idx, start);
++	/* some of this one + all after this one */
++	npages = ((i->pipe->curbuf - idx - 1) & (i->pipe->buffers - 1)) + 1;
++	n = npages * PAGE_SIZE - *start;
++	if (maxsize > n)
++		maxsize = n;
++	else
++		npages = DIV_ROUND_UP(maxsize + *start, PAGE_SIZE);
++	p = get_pages_array(npages);
++	if (!p)
++		return -ENOMEM;
++	n = __pipe_get_pages(i, maxsize, p, idx, start);
++	if (n)
++		*pages = p;
++	else
++		kvfree(p);
++	return n;
++}
++
+ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ 		   struct page ***pages, size_t maxsize,
+ 		   size_t *start)
+@@ -614,6 +973,8 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
+ 	if (!maxsize)
+ 		return 0;
+ 
++	if (unlikely(i->type & ITER_PIPE))
++		return pipe_get_pages_alloc(i, pages, maxsize, start);
+ 	iterate_all_kinds(i, maxsize, v, ({
+ 		unsigned long addr = (unsigned long)v.iov_base;
+ 		size_t len = v.iov_len + (*start = addr & (PAGE_SIZE - 1));
+@@ -655,6 +1016,10 @@ size_t csum_and_copy_from_iter(void *addr, size_t bytes, __wsum *csum,
+ 	__wsum sum, next;
+ 	size_t off = 0;
+ 	sum = *csum;
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return 0;
++	}
+ 	iterate_and_advance(i, bytes, v, ({
+ 		int err = 0;
+ 		next = csum_and_copy_from_user(v.iov_base, 
+@@ -693,6 +1058,10 @@ size_t csum_and_copy_to_iter(const void *addr, size_t bytes, __wsum *csum,
+ 	__wsum sum, next;
+ 	size_t off = 0;
+ 	sum = *csum;
++	if (unlikely(i->type & ITER_PIPE)) {
++		WARN_ON(1);	/* for now */
++		return 0;
++	}
+ 	iterate_and_advance(i, bytes, v, ({
+ 		int err = 0;
+ 		next = csum_and_copy_to_user((from += v.iov_len) - v.iov_len,
+@@ -732,7 +1101,20 @@ int iov_iter_npages(const struct iov_iter *i, int maxpages)
+ 	if (!size)
+ 		return 0;
+ 
+-	iterate_all_kinds(i, size, v, ({
++	if (unlikely(i->type & ITER_PIPE)) {
++		struct pipe_inode_info *pipe = i->pipe;
++		size_t off;
++		int idx;
++
++		if (!sanity(i))
++			return 0;
++
++		data_start(i, &idx, &off);
++		/* some of this one + all after this one */
++		npages = ((pipe->curbuf - idx - 1) & (pipe->buffers - 1)) + 1;
++		if (npages >= maxpages)
++			return maxpages;
++	} else iterate_all_kinds(i, size, v, ({
+ 		unsigned long p = (unsigned long)v.iov_base;
+ 		npages += DIV_ROUND_UP(p + v.iov_len, PAGE_SIZE)
+ 			- p / PAGE_SIZE;
+@@ -757,6 +1139,10 @@ EXPORT_SYMBOL(iov_iter_npages);
+ const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags)
+ {
+ 	*new = *old;
++	if (unlikely(new->type & ITER_PIPE)) {
++		WARN_ON(1);
++		return NULL;
++	}
+ 	if (new->type & ITER_BVEC)
+ 		return new->bvec = kmemdup(new->bvec,
+ 				    new->nr_segs * sizeof(struct bio_vec),
+-- 
+2.9.3
+
