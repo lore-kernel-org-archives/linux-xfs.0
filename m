@@ -1,72 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33145 "EHLO
-        mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935875AbcIZNtU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 09:49:20 -0400
-Received: by mail-pa0-f68.google.com with SMTP id oz2so8831917pac.0
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Sep 2016 06:49:20 -0700 (PDT)
+Received: from zeniv.linux.org.uk ([195.92.253.2]:57116 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753791AbcIXD7L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 23:59:11 -0400
+Date: Sat, 24 Sep 2016 04:59:08 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 04/11] splice: lift pipe_lock out of splice_to_pipe()
+Message-ID: <20160924035908.GM2356@ZenIV.linux.org.uk>
+References: <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
+ <20160923190032.GA25771@ZenIV.linux.org.uk>
+ <20160923190326.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+ <20160923201025.GJ2356@ZenIV.linux.org.uk>
+ <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160924040022.GO2356@ZenIV.linux.org.uk>
-References: <20160914031648.GB2356@ZenIV.linux.org.uk> <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk> <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk> <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk> <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
- <20160924040022.GO2356@ZenIV.linux.org.uk>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Mon, 26 Sep 2016 15:49:16 +0200
-Message-ID: <CAELBmZBt_J6bcwseaDwvc0j7LJh8tKtXoBbkSb1LVnkOSYW5jg@mail.gmail.com>
-Subject: Re: [PATCH 06/12] new helper: add_to_pipe()
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Sat, Sep 24, 2016 at 6:00 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> single-buffer analogue of splice_to_pipe(); vmsplice_to_pipe() switched
-> to that, leaving splice_to_pipe() only for ->splice_read() instances
-> (and that only until they are converted as well).
->
-> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-> ---
->  fs/splice.c            | 113 ++++++++++++++++++++++++++++---------------------
->  include/linux/splice.h |   2 +
->  2 files changed, 67 insertions(+), 48 deletions(-)
->
+On Fri, Sep 23, 2016 at 01:36:12PM -0700, Linus Torvalds wrote:
+> On Fri, Sep 23, 2016 at 1:10 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> >
+> > OTOH, considering the quality of documentation, I'm somewhat tempted to go
+> > for "sleep only if it had been completely full when we entered; once there's
+> > some space feed as much as fits and be done with that".  OTTH, I'm not sure
+> > that no userland cr^Hode will manage to be hurt by that variant...
+> 
+> Let's just try it.
+> 
+> If that then doesn't work, we can introduce your odd code (with a
+> *big* comment). Ok?
 
-[...]
-
-> @@ -1523,26 +1553,13 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *uiov,
->         if (ret < 0)
->                 return ret;
->
-> -       if (splice_grow_spd(pipe, &spd)) {
-> -               kfree(iov);
-> -               return -ENOMEM;
-> -       }
-> -
->         pipe_lock(pipe);
->         ret = wait_for_space(pipe, flags);
-> -       if (!ret) {
-> -               spd.nr_pages = get_iovec_page_array(&from, spd.pages,
-> -                                                   spd.partial,
-> -                                                   spd.nr_pages_max);
-> -               if (spd.nr_pages <= 0)
-> -                       ret = spd.nr_pages;
-> -               else
-> -                       ret = splice_to_pipe(pipe, &spd);
-> -               pipe_unlock(pipe);
-> -               if (ret > 0)
-> -                       wakeup_pipe_readers(pipe);
-> -       }
-> -       splice_shrink_spd(&spd);
-> +       if (!ret)
-> +               ret = iter_to_pipe(&from, pipe, buf_flag);
-> +       pipe_unlock(pipe);
-
-Ah, here it is :)
-
-Thanks,
-Miklos
+	FWIW, updated (with fixes) and force-pushed.  Added piece:
+default_file_splice_read() converted to iov_iter.  Seems to work, after
+fixing a braino in __pipe_get_pages().  Changed: #4 (sleep only in the
+beginning, as described above), #6 (context changes from #4), #10 (missing
+get_page() added in __pipe_get_pages()), #11 (removed pointless truncation
+of len - ->read_iter() can bloody well handle that on its own) and added #12.
+Stands at 28 files changed, 657 insertions(+), 1009 deletions(-) now...
