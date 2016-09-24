@@ -1,114 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36102 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162426AbcIZSRp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 14:17:45 -0400
+Received: from zeniv.linux.org.uk ([195.92.253.2]:57218 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751617AbcIXEC2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Sep 2016 00:02:28 -0400
+Date: Sat, 24 Sep 2016 05:02:26 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: [PATCH 12/12] switch default_file_splice_read() to use of
+ pipe-backed iov_iter
+Message-ID: <20160924040226.GR2356@ZenIV.linux.org.uk>
+References: <20160914031648.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
+ <20160923190032.GA25771@ZenIV.linux.org.uk>
+ <20160923190326.GB2356@ZenIV.linux.org.uk>
+ <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+ <20160923201025.GJ2356@ZenIV.linux.org.uk>
+ <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
-References: <1474619892-5113-1-git-send-email-amir73il@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 26 Sep 2016 21:17:41 +0300
-Message-ID: <CAOQ4uxgFnusvpXca=RMH1+wzgrMA=2s5v7JSgA9zunCX44GAZg@mail.gmail.com>
-Subject: Re: [PATCH v4 0/4] ovl: efficient copy up by reflink
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-unionfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Fri, Sep 23, 2016 at 11:38 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> This is the 4rd revision of implementing overlayfs
-> copy up by reflink.
->
-> Btrfs has file reflink support and XFS is about to gain
-> file reflink support soon. It is very useful to use reflink
-> to implement copy up of regular file data when possible.
->
-> For example, on my laptop, xfstest overlay/001 (copy up of 4G
-> sparse files) takes less than 1 second with copy up by reflink
-> vs. 25 seconds with regular copy up.
->
-> This series includes 3 patches:
-> - patches 1,2 are re-factoring patches to allow using the
->   vfs_clone_file_range() helper from file system code.
+we only use iov_iter_get_pages_alloc() and iov_iter_advance() -
+pages are filled by kernel_readv() via a kvec array (as we used
+to do all along), so iov_iter here is used only as a way of
+arranging for those pages to be in pipe.
 
-Christoph, Dave,
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/splice.c | 111 ++++++++++++++++++++++--------------------------------------
+ 1 file changed, 40 insertions(+), 71 deletions(-)
 
-Can you please ack the 2 vfs_clone_file_range() changes?
+diff --git a/fs/splice.c b/fs/splice.c
+index 58c322a..0df907b 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -361,7 +361,7 @@ const struct pipe_buf_operations nosteal_pipe_buf_ops = {
+ };
+ EXPORT_SYMBOL(nosteal_pipe_buf_ops);
+ 
+-static ssize_t kernel_readv(struct file *file, const struct iovec *vec,
++static ssize_t kernel_readv(struct file *file, const struct kvec *vec,
+ 			    unsigned long vlen, loff_t offset)
+ {
+ 	mm_segment_t old_fs;
+@@ -397,96 +397,65 @@ static ssize_t default_file_splice_read(struct file *in, loff_t *ppos,
+ 				 struct pipe_inode_info *pipe, size_t len,
+ 				 unsigned int flags)
+ {
++	struct kvec *vec, __vec[PIPE_DEF_BUFFERS];
++	struct iov_iter to;
++	struct page **pages;
+ 	unsigned int nr_pages;
+-	unsigned int nr_freed;
+-	size_t offset;
+-	struct page *pages[PIPE_DEF_BUFFERS];
+-	struct partial_page partial[PIPE_DEF_BUFFERS];
+-	struct iovec *vec, __vec[PIPE_DEF_BUFFERS];
++	size_t offset, dummy, copied = 0;
+ 	ssize_t res;
+-	size_t this_len;
+-	int error;
+ 	int i;
+-	struct splice_pipe_desc spd = {
+-		.pages = pages,
+-		.partial = partial,
+-		.nr_pages_max = PIPE_DEF_BUFFERS,
+-		.flags = flags,
+-		.ops = &default_pipe_buf_ops,
+-		.spd_release = spd_release_page,
+-	};
+ 
+-	if (splice_grow_spd(pipe, &spd))
++	if (pipe->nrbufs == pipe->buffers)
++		return -EAGAIN;
++
++	/*
++	 * Try to keep page boundaries matching to source pagecache ones -
++	 * it probably won't be much help, but...
++	 */
++	offset = *ppos & ~PAGE_MASK;
++
++	iov_iter_pipe(&to, ITER_PIPE | READ, pipe, len + offset);
++
++	res = iov_iter_get_pages_alloc(&to, &pages, len + offset, &dummy);
++	if (res <= 0)
+ 		return -ENOMEM;
+ 
+-	res = -ENOMEM;
++	nr_pages = res / PAGE_SIZE;
++
+ 	vec = __vec;
+-	if (spd.nr_pages_max > PIPE_DEF_BUFFERS) {
+-		vec = kmalloc(spd.nr_pages_max * sizeof(struct iovec), GFP_KERNEL);
+-		if (!vec)
+-			goto shrink_ret;
++	if (nr_pages > PIPE_DEF_BUFFERS) {
++		vec = kmalloc(nr_pages * sizeof(struct kvec), GFP_KERNEL);
++		if (unlikely(!vec)) {
++			res = -ENOMEM;
++			goto out;
++		}
+ 	}
+ 
+-	offset = *ppos & ~PAGE_MASK;
+-	nr_pages = (len + offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
+-
+-	for (i = 0; i < nr_pages && i < spd.nr_pages_max && len; i++) {
+-		struct page *page;
+-
+-		page = alloc_page(GFP_USER);
+-		error = -ENOMEM;
+-		if (!page)
+-			goto err;
++	pipe->bufs[to.idx].offset = offset;
++	pipe->bufs[to.idx].len -= offset;
+ 
+-		this_len = min_t(size_t, len, PAGE_SIZE - offset);
+-		vec[i].iov_base = (void __user *) page_address(page);
++	for (i = 0; i < nr_pages; i++) {
++		size_t this_len = min_t(size_t, len, PAGE_SIZE - offset);
++		vec[i].iov_base = page_address(pages[i]) + offset;
+ 		vec[i].iov_len = this_len;
+-		spd.pages[i] = page;
+-		spd.nr_pages++;
+ 		len -= this_len;
+ 		offset = 0;
+ 	}
+ 
+-	res = kernel_readv(in, vec, spd.nr_pages, *ppos);
+-	if (res < 0) {
+-		error = res;
+-		goto err;
+-	}
+-
+-	error = 0;
+-	if (!res)
+-		goto err;
+-
+-	nr_freed = 0;
+-	for (i = 0; i < spd.nr_pages; i++) {
+-		this_len = min_t(size_t, vec[i].iov_len, res);
+-		spd.partial[i].offset = 0;
+-		spd.partial[i].len = this_len;
+-		if (!this_len) {
+-			__free_page(spd.pages[i]);
+-			spd.pages[i] = NULL;
+-			nr_freed++;
+-		}
+-		res -= this_len;
+-	}
+-	spd.nr_pages -= nr_freed;
+-
+-	res = splice_to_pipe(pipe, &spd);
+-	if (res > 0)
++	res = kernel_readv(in, vec, nr_pages, *ppos);
++	if (res > 0) {
++		copied = res;
+ 		*ppos += res;
++	}
+ 
+-shrink_ret:
+ 	if (vec != __vec)
+ 		kfree(vec);
+-	splice_shrink_spd(&spd);
++out:
++	for (i = 0; i < nr_pages; i++)
++		put_page(pages[i]);
++	kvfree(pages);
++	iov_iter_advance(&to, copied);	/* truncates and discards */
+ 	return res;
+-
+-err:
+-	for (i = 0; i < spd.nr_pages; i++)
+-		__free_page(spd.pages[i]);
+-
+-	res = error;
+-	goto shrink_ret;
+ }
+ 
+ /*
+-- 
+2.9.3
 
-Thanks,
-Amir.
-
-> - patch 3 utilizes the helper for overlay copy up
->
-> These changes passed the unionmount-testsuite (over tmpfs)
-> They passed the overlay/??? xfstests over the following underlying fs:
-> 1. ext4 (copy up)
-> 2. xfs + reflink patches + mkfs.xfs (copy up)
-> 3. xfs + reflink patches + mkfs.xfs -m reflink=1 (reflink up)
->
-> Dave Chinner suggested the following implementation for copy up:
-> 1. try to clone_file_range() entire length
-> 2. fallback to trying copy_file_range() in small chunks
-> 3. fallback to do_splice_direct() in small chunks
->
-> This is a good general implementation to cover the future use cases of
-> filesystems that can do either clone_file_range() or copy_file_range()
-> and for filesystems that may fail clone_file_range() and succeed
-> to copy_file_range().
->
-> However, currently, the only in-tree file systems that support
-> clone/copy_file_range are btrfs, xfs (soon), cifs and nfs.
-> btrfs and xfs use the same implementation for clone and copy range,
-> so copy_file_range() in small chunks is only useful in extreme
-> ENOSPC cases.
-> cifs supports only clone_file_range() so copy_file_range() step is moot.
-> nfs does have a different implementation for clone_file_range() and
-> copy_file_range(), but neither nfs nor cifs are supported as lower layer
-> for overlayfs.
->
-> For this posting, I decided to leave out the copy_file_range() patches
-> until a reliable use case to test them presents itself.
->
-> Miklos,
->
-> Please pick these patches to your tree for clear and immediate benefit to
-> copy up performance on filesystems with reflink support.
->
-> Thanks,
-> Amir.
->
-> V4:
-> - Fix recursive mnt_want_write()
-> - Leave out the vfs_copy_file_range() patches
->
-> V3:
-> - Address style comments from Dave Chinner
->
-> V2:
-> - Re-factor vfs helpers so they can be called from copy up
-> - Single call to vfs_clone_file_range() and fallback to
->   vfs_copy_file_range() loop
->
-> V1:
-> - Replace iteravite call to copy_file_range() with
->   a single call to clone_file_range()
->
-> V0:
-> - Call clone_file_range() and fallback to do_splice_direct()
->
->
-> Amir Goldstein (3):
->   vfs: allow vfs_clone_file_range() across mount points
->   vfs: call vfs_clone_file_range() under mnt_want_write()
->   ovl: use vfs_clone_file_range() for copy up if possible
->
->  fs/ioctl.c             | 11 +++++++++++
->  fs/overlayfs/copy_up.c |  8 ++++++++
->  fs/read_write.c        | 13 ++++++-------
->  3 files changed, 25 insertions(+), 7 deletions(-)
->
-> --
-> 2.7.4
->
