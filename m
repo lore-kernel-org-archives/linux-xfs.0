@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54534 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:54544 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753315AbcIXPTZ (ORCPT
+        with ESMTP id S1757905AbcIXPTZ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Sep 2016 11:19:25 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] xfs: kill xfs_reflink_is_cow_pending
-Date: Sat, 24 Sep 2016 08:19:20 -0700
-Message-Id: <1474730361-5234-2-git-send-email-hch@lst.de>
+Subject: [PATCH 2/2] xfs: rewrite the COW writeback mapping code
+Date: Sat, 24 Sep 2016 08:19:21 -0700
+Message-Id: <1474730361-5234-3-git-send-email-hch@lst.de>
 In-Reply-To: <1474730361-5234-1-git-send-email-hch@lst.de>
 References: <1474730361-5234-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,175 +15,185 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Instead enhance xfs_reflink_find_cow_mapping to properly deal with the
-fact that we might not have a COW mapping at the offset, and just
-return false in this case.
-
-This avoids code duplication, makes xfs_reflink_find_cow_mapping more
-robust, and last but not least halves the number of extent map lookups
-needed in COW writeback operations.
+Add a new xfs_map_cow helper that does a single consistent lookup in the
+COW fork extent map, and remove the existing COW handling code from
+xfs_map_blocks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c    | 28 ++++++++++++++++------------
- fs/xfs/xfs_reflink.c | 42 +++++++++++-------------------------------
- fs/xfs/xfs_reflink.h |  3 +--
- 3 files changed, 28 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_aops.c | 119 +++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 69 insertions(+), 50 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d8ce18b..1933803 100644
+index 1933803..2a3f4c1 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -379,10 +379,13 @@ xfs_map_blocks(
+@@ -357,15 +357,11 @@ xfs_map_blocks(
+ 	int			error = 0;
+ 	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+ 	int			nimaps = 1;
+-	int			whichfork;
+-	bool			need_alloc;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	whichfork = (type == XFS_IO_COW ? XFS_COW_FORK : XFS_DATA_FORK);
+-	need_alloc = (type == XFS_IO_DELALLOC);
+-
++	ASSERT(type != XFS_IO_COW);
+ 	if (type == XFS_IO_UNWRITTEN)
+ 		bmapi_flags |= XFS_BMAPI_IGSTATE;
+ 
+@@ -378,36 +374,26 @@ xfs_map_blocks(
+ 		count = mp->m_super->s_maxbytes - offset;
  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
--	if (type == XFS_IO_COW)
--		error = xfs_reflink_find_cow_mapping(ip, offset, imap,
--						     &need_alloc);
--	else {
-+	if (type == XFS_IO_COW) {
-+		if (!xfs_reflink_find_cow_mapping(ip, offset, imap,
-+						     &need_alloc)) {
-+			WARN_ON_ONCE(1);
-+			return -EIO;
-+		}
-+	} else {
- 		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				       imap, &nimaps, bmapi_flags);
- 		/*
-@@ -712,13 +715,14 @@ xfs_is_cow_io(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset)
- {
--	bool			is_cow;
-+	struct xfs_bmbt_irec	imap;
-+	bool			is_cow, need_alloc;
- 
- 	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
- 		return false;
- 
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	is_cow = xfs_reflink_is_cow_pending(ip, offset);
-+	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
+-
+-	if (type == XFS_IO_COW) {
+-		if (!xfs_reflink_find_cow_mapping(ip, offset, imap,
+-						     &need_alloc)) {
+-			WARN_ON_ONCE(1);
+-			return -EIO;
+-		}
+-	} else {
+-		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-				       imap, &nimaps, bmapi_flags);
+-		/*
+-		 * Truncate an overwrite extent if there's a pending CoW
+-		 * reservation before the end of this extent.  This forces us
+-		 * to come back to writepage to take care of the CoW.
+-		 */
+-		if (nimaps && type == XFS_IO_OVERWRITE)
+-			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+-	}
++	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
++				imap, &nimaps, bmapi_flags);
++	/*
++	 * Truncate an overwrite extent if there's a pending CoW
++	 * reservation before the end of this extent.  This forces us
++	 * to come back to writepage to take care of the CoW.
++	 */
++	if (nimaps && type == XFS_IO_OVERWRITE)
++		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
  
- 	return is_cow;
-@@ -1316,12 +1320,12 @@ __xfs_get_blocks(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	if (error)
+ 		return error;
  
--	if (create && direct)
--		is_cow = xfs_reflink_is_cow_pending(ip, offset);
--	if (is_cow)
--		error = xfs_reflink_find_cow_mapping(ip, offset, &imap,
--						     &need_alloc);
--	else {
-+	if (create && direct) {
-+		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap,
-+					&need_alloc);
-+	}
-+
-+	if (!is_cow) {
- 		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 					&imap, &nimaps, XFS_BMAPI_ENTIRE);
- 		/*
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 6f87b1e..a1ba7f5 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -429,26 +429,31 @@ advloop:
+-	if (need_alloc &&
++	if (type == XFS_IO_DELALLOC &&
+ 	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+-		error = xfs_iomap_write_allocate(ip, whichfork, offset,
++		error = xfs_iomap_write_allocate(ip, XFS_DATA_FORK, offset,
+ 				imap);
+ 		if (!error)
+-			trace_xfs_map_blocks_alloc(ip, offset, count, type,
+-					imap);
++			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+ 		return error;
+ 	}
+ 
+@@ -707,27 +693,6 @@ xfs_check_page_type(
+ 	return false;
  }
  
- /*
-- * Determine if there's a CoW reservation at a byte offset of an inode.
-+ * Find the CoW reservation (and whether or not it needs block allocation)
-+ * for a given byte offset of a file.
-  */
- bool
--xfs_reflink_is_cow_pending(
-+xfs_reflink_find_cow_mapping(
- 	struct xfs_inode		*ip,
--	xfs_off_t			offset)
-+	xfs_off_t			offset,
-+	struct xfs_bmbt_irec		*imap,
-+	bool				*need_alloc)
- {
-+	struct xfs_bmbt_irec		irec;
- 	struct xfs_ifork		*ifp;
- 	struct xfs_bmbt_rec_host	*gotp;
--	struct xfs_bmbt_irec		irec;
- 	xfs_fileoff_t			bno;
- 	xfs_extnum_t			idx;
- 
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
-+
- 	if (!xfs_is_reflink_inode(ip))
- 		return false;
- 
-+	/* Find the extent in the CoW fork. */
- 	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
- 	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
+-/*
+- * Figure out if CoW is pending at this offset.
+- */
+-static bool
+-xfs_is_cow_io(
+-	struct xfs_inode	*ip,
+-	xfs_off_t		offset)
+-{
+-	struct xfs_bmbt_irec	imap;
+-	bool			is_cow, need_alloc;
 -
- 	if (!gotp)
- 		return false;
- 
-@@ -456,31 +461,6 @@ xfs_reflink_is_cow_pending(
- 	if (bno >= irec.br_startoff + irec.br_blockcount ||
- 	    bno < irec.br_startoff)
- 		return false;
--	return true;
+-	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
+-		return false;
+-
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	return is_cow;
 -}
 -
--/*
-- * Find the CoW reservation (and whether or not it needs block allocation)
-- * for a given byte offset of a file.
-- */
--int
--xfs_reflink_find_cow_mapping(
--	struct xfs_inode		*ip,
--	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap,
--	bool				*need_alloc)
--{
--	struct xfs_bmbt_irec		irec;
--	struct xfs_ifork		*ifp;
--	struct xfs_bmbt_rec_host	*gotp;
--	xfs_fileoff_t			bno;
--	xfs_extnum_t			idx;
--
--	/* Find the extent in the CoW fork. */
--	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
--	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
--	xfs_bmbt_get_all(gotp, &irec);
- 
- 	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
- 			&irec);
-@@ -489,7 +469,7 @@ xfs_reflink_find_cow_mapping(
- 	*imap = irec;
- 	*need_alloc = !!(isnullstartblock(irec.br_startblock));
- 
--	return 0;
-+	return true;
+ STATIC void
+ xfs_vm_invalidatepage(
+ 	struct page		*page,
+@@ -804,6 +769,56 @@ out_invalidate:
+ 	return;
  }
  
++static int
++xfs_map_cow(
++	struct xfs_writepage_ctx *wpc,
++	struct inode		*inode,
++	loff_t			offset,
++	unsigned int		*new_type)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_bmbt_irec	imap;
++	bool			is_cow = false, need_alloc = false;
++	int			error;
++
++	/*
++	 * If we already have a valid COW mapping keep using it.
++	 */
++	if (wpc->io_type == XFS_IO_COW) {
++		wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap, offset);
++		if (wpc->imap_valid) {
++			*new_type = XFS_IO_COW;
++			return 0;
++		}
++	}
++
++	/*
++	 * Else we need to check if there is a COW mapping at this offset.
++	 */
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	if (!is_cow)
++		return 0;
++
++	/*
++	 * And if the COW mapping has a delayed extent here we need to
++	 * allocate real space for it now.
++	 */
++	if (need_alloc) {
++		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
++				&imap);
++		if (error)
++			return error;
++	}
++
++	wpc->io_type = *new_type = XFS_IO_COW;
++	wpc->imap_valid = true;
++	wpc->imap = imap;
++	return 0;
++}
++
  /*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 398e726..6519f19 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -30,8 +30,7 @@ extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, xfs_fileoff_t end_fsb);
- extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip, xfs_off_t pos,
- 		xfs_off_t len);
--extern bool xfs_reflink_is_cow_pending(struct xfs_inode *ip, xfs_off_t offset);
--extern int xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-+extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
- 		struct xfs_bmbt_irec *imap, bool *need_alloc);
- extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+  * We implement an immediate ioend submission policy here to avoid needing to
+  * chain multiple ioends and hence nest mempool allocations which can violate
+@@ -876,8 +891,12 @@ xfs_writepage_map(
+ 			continue;
+ 		}
+ 
+-		if (xfs_is_cow_io(XFS_I(inode), offset))
+-			new_type = XFS_IO_COW;
++		if (xfs_sb_version_hasreflink(&XFS_I(inode)->i_mount->m_sb)) {
++			error = xfs_map_cow(wpc, inode, offset, &new_type);
++			if (error)
++				goto out;
++		}
++
+ 		if (wpc->io_type != new_type) {
+ 			wpc->io_type = new_type;
+ 			wpc->imap_valid = false;
 -- 
 2.1.4
 
