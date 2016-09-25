@@ -1,32 +1,43 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49587 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034180AbcIYOeb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Sep 2016 10:34:31 -0400
-Date: Sun, 25 Sep 2016 07:34:29 -0700
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 650E27CBA
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 09:35:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DAEB7AC002
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 07:35:06 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id Cu0FRWgYJG1uEdAl (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 07:35:05 -0700 (PDT)
+Date: Sun, 25 Sep 2016 07:35:05 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_io: allow chattr & chproj on foreign filesystems
-Message-ID: <20160925143429.GE29268@infradead.org>
-References: <e1471cdf-9f83-91d1-9e93-f3877baeccb5@redhat.com>
+Subject: Re: [PATCH V2] mkfs.xfs: clarify ftype defaults in manpage
+Message-ID: <20160925143505.GF29268@infradead.org>
+References: <1f98ea1d-893c-d1c0-2307-3f5a9b478238@redhat.com>
+	<5a728f87-665a-1b1a-84b5-ab420cfa4250@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e1471cdf-9f83-91d1-9e93-f3877baeccb5@redhat.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
-
-On Fri, Sep 16, 2016 at 08:00:39PM -0500, Eric Sandeen wrote:
-> Now that FS_IOC_FSSETXATTR is a generic vfs call, these
-> functions can be used on non-xfs filesystems, and this is
-> needed for generic project quota testing.
-> 
-> (not all flags are valid on all filesystems.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <5a728f87-665a-1b1a-84b5-ab420cfa4250@sandeen.net>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
 Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
