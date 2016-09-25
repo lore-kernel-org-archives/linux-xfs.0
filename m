@@ -1,35 +1,67 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34980 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756269AbcIZJbX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 05:31:23 -0400
-Received: by mail-pf0-f195.google.com with SMTP id 6so8885535pfl.2
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Sep 2016 02:31:23 -0700 (PDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0A0967CA1
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 16:38:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C2D3E8F8052
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 14:38:23 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	as4kHpDGsNl2BiX4 for <xfs@oss.sgi.com>;
+	Sun, 25 Sep 2016 14:38:21 -0700 (PDT)
+Date: Mon, 26 Sep 2016 07:38:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] libxcmd: fix counting of xfs entries in fs_table_insert
+Message-ID: <20160925213818.GR340@dastard>
+References: <1474798162-25960-1-git-send-email-eguan@redhat.com>
+	<20160925143155.GB29268@infradead.org>
+	<20160925145816.GD27776@eguan.usersys.redhat.com>
+	<20160925161256.GA25791@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20160923190806.GG2356@ZenIV.linux.org.uk>
-References: <20160909023452.GO2356@ZenIV.linux.org.uk> <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk> <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk> <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk> <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190806.GG2356@ZenIV.linux.org.uk>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Mon, 26 Sep 2016 11:31:19 +0200
-Message-ID: <CAELBmZDinbMbDQ3pCuMA=DNc0D76nCrLgvqcvQbAxnM5+yGUJg@mail.gmail.com>
-Subject: Re: [PATCH 09/11] fuse_ioctl_copy_user(): don't open-code copy_page_{to,from}_iter()
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160925161256.GA25791@infradead.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, billodo@redhat.com, Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Sep 23, 2016 at 9:08 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-> ---
-> [another cleanup, will be moved out of that branch]
+On Sun, Sep 25, 2016 at 09:12:56AM -0700, Christoph Hellwig wrote:
+> On Sun, Sep 25, 2016 at 10:58:16PM +0800, Eryu Guan wrote:
+> > It's already part of xfs/244, I noticed this bug because xfs/244 kept
+> > running. I just put the minimum steps in commit log. So I think we're
+> > good :)
+> 
+> But only as part of xfs/244 which doesn't work for v5 file systems.
+> To have good coverage we should not rely on testing an old format.
+> That beeing said I can't see a good reason for why xfs/244 should not
+> be run for v5 file systems, so I'll look into that instead.
 
-Picked up and pushed to fuse.git #for-next
+It's because it's testing the projid32bit mkfs option works
+correctly. i.e. that project IDs > 16 bits fail on a a
+filesystem that only supports 16 bit project IDs. v5 filesystems
+only support 32 bit project IDs, so setting a > 16bit ID will
+succeed, not fail like the test is expecting.
 
-Thanks,
-Miklos
+A new test would be simplest.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
