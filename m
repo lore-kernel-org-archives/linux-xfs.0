@@ -1,20 +1,20 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 35D137CB9
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 10:56:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 07F66304043
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 08:56:11 -0700 (PDT)
-Received: from mout.perfora.net (mout.perfora.net [74.208.4.194]) by
-	cuda.sgi.com with ESMTP id uU2SBG8TmdirJpNI (version=TLSv1.2
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BE02C7CA4
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 09:15:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 402CFAC003
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 07:15:20 -0700 (PDT)
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.197]) by
+	cuda.sgi.com with ESMTP id BXts6hADSDIj1fsR (version=TLSv1.2
 	cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 08:56:09 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 07:15:13 -0700 (PDT)
 Received: from infong900.perfora.net ([74.208.180.79]) by mrelay.perfora.net
-	(mreueus003) with ESMTPA (Nemesis) id 0LkzY3-1bDTvJ0JDJ-00amv3 for
-	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 17:56:08 +0200
-Date: Sun, 25 Sep 2016 11:56:07 -0400
-Subject: Is it possible to make $15,000 in one week?
+	(mreueus001) with ESMTPA (Nemesis) id 0Mfoag-1bZmaK2AoW-00NCj9 for
+	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 16:15:12 +0200
+Date: Sun, 25 Sep 2016 10:15:12 -0400
+Subject: Your First $1000 in next 17 Minutes
 From: "500Eboard" <site-admin@500eboard.com>
-Message-ID: <20160925155607.19eba7bff241@www.500eboard.com>
+Message-ID: <20160925141511.13b8a8ee0705@www.500eboard.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -37,21 +37,37 @@ This is a message from Unregistered ( mailto: ) from the 500Eboard ( http:/=
 
 The message is as follows:
 
-In 3 minutes from now, you will gain full access =
+Hey, =
 
-to the most advanced trading system in the world =
 
-that makes $15,000 per week for its members.
+Great News. If you haven=92t made a dime online yet. Then this =
 
-No, you don't need to pay for it =96 it's FREE.
+is one serious chance. Earn your first $1,000 in next 17 =
 
-Reveal the secret now!
+minutes just to test a simple App. =
 
->> http://ow.ly/Fo0y304xuJZ
 
-See you on board,
+Click Below to quickly make $1000 =
 
-Goerge Vanz
+
+>>  http://ow.ly/ejdC304tX9M =
+
+
+Not Bad! $1,000 dollar just to test a simple App even your =
+
+Grand Mother can do that. =
+
+
+Click Below for $1,000 guaranteed =
+
+
+>>  http://ow.ly/ejdC304tX9M =
+
+
+Regards, =
+
+
+James Hook
 
 500Eboard takes no responsibility for messages sent through its system.
 
