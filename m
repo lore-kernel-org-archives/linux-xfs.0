@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5BCB07CA1
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 12:09:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A0E337CA0
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 05:10:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D2298F804B
-	for <xfs@oss.sgi.com>; Thu, 15 Sep 2016 10:09:55 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Mx3T2ZDvIlsRn4XS (version=TLSv1.2
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 640508F8040
+	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 03:10:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Fv6GhxcDljjeCZ83 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 15 Sep 2016 10:09:52 -0700 (PDT)
-Date: Thu, 15 Sep 2016 10:09:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/3] mm, dax: add VM_DAX flag for DAX VMAs
-Message-ID: <20160915170942.GJ9314@birch.djwong.org>
-References: <147392246509.9873.17750323049785100997.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<147392247875.9873.4205533916442000884.stgit@dwillia2-desk3.amr.corp.intel.com>
-	<20160915082615.GA9772@lst.de>
-	<CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jTw3cXpmmJRh7t16Xy2uYofDe+fJ+X_jnz+Q=o0uGneg@mail.gmail.com>
+	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 03:10:09 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] libxcmd: fix counting of xfs entries in fs_table_insert
+Date: Sun, 25 Sep 2016 18:09:22 +0800
+Message-Id: <1474798162-25960-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +21,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-nvdimm@lists.01.org" <linux-nvdimm@ml01.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Nicholas Piggin <npiggin@gmail.com>, XFS Developers <xfs@oss.sgi.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
+Cc: billodo@redhat.com, Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Sep 15, 2016 at 10:01:03AM -0700, Dan Williams wrote:
-> On Thu, Sep 15, 2016 at 1:26 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Wed, Sep 14, 2016 at 11:54:38PM -0700, Dan Williams wrote:
-> >> The DAX property, page cache bypass, of a VMA is only detectable via the
-> >> vma_is_dax() helper to check the S_DAX inode flag.  However, this is
-> >> only available internal to the kernel and is a property that userspace
-> >> applications would like to interrogate.
-> >
-> > They have absolutely no business knowing such an implementation detail.
-> 
-> Hasn't that train already left the station with FS_XFLAG_DAX?
+Commit bb80e3d6cd04 ("libxcmd: populate fs table with xfs entries
+first, foreign entries last") adds a new counter "xfs_fs_count" and
+increases the counter when inserting an XFS entry.
 
-Seeing as FS_IOC_FSGETXATTR is a "generic" ioctl now, why not just
-implement it for all the DAX fses and block devices?  Aside from xflags,
-the other fields are probably all zero for non-xfs (aside from project
-quota id I guess).
+But it missed a counter when fs_count is zero (inserting the first
+path) and the entry has no FS_FOREIGN bit set, i.e. the first XFS
+entry doesn't increase xfs_fs_count.
 
-(Yeah, sort of awkward, I know...)
+This results in args_command() mess and infinite loop in xfs/244
+when testing v4 XFS (xfs/244 notrun on v5 XFS, but this bug still
+reproduces on v5 XFS). e.g.
 
---D
+  mkfs -t xfs -f /dev/sda5
+  mount -o pquota /dev/sda5 /mnt/xfs
+  mkdir /mnt/xfs/project
+  touch /mnt/xfs/project/testfile
+  xfs_quota -x -c "project -s -p /mnt/xfs/project/testfile 1" /dev/sda5
 
-> The other problem with hiding the DAX property is that it turns out to
-> not be a transparent acceleration feature.  See xfs/086 xfs/088
-> xfs/089 xfs/091 which fail with DAX and, as far as I understand, it is
-> due to the fact that DAX disallows delayed allocation behavior.
-> 
-> If behavior changes I think we should indicate that to userspace and
-> VM_DAX is certainly more useful to userspace than some of the other vm
-> internals we already export in those flags.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Fix it by increasing xfs_fs_count when flags has no FS_FOREIGN bit.
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ libxcmd/paths.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 3455217..97f47cf 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -147,7 +147,6 @@ fs_table_insert(
+ 		memmove(&fs_table[xfs_fs_count + 1], &fs_table[xfs_fs_count],
+ 			sizeof(fs_path_t)*(fs_count - xfs_fs_count));
+ 		fs_path = &fs_table[xfs_fs_count];
+-		xfs_fs_count++;
+ 	}
+ 	fs_path->fs_dir = dir;
+ 	fs_path->fs_prid = prid;
+@@ -159,6 +158,8 @@ fs_table_insert(
+ 	fs_path->fs_logdev = logdev;
+ 	fs_path->fs_rtdev = rtdev;
+ 	fs_count++;
++	if (!(flags & FS_FOREIGN))
++		xfs_fs_count++;
+ 
+ 	return 0;
+ 
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
