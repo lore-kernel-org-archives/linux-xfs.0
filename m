@@ -1,46 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49532 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934881AbcIYOb5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Sep 2016 10:31:57 -0400
-Date: Sun, 25 Sep 2016 07:31:55 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libxcmd: fix counting of xfs entries in fs_table_insert
-Message-ID: <20160925143155.GB29268@infradead.org>
-References: <1474798162-25960-1-git-send-email-eguan@redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:47326 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941132AbcIZAFT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 25 Sep 2016 20:05:19 -0400
+Date: Mon, 26 Sep 2016 02:05:16 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160926000516.GA32138@lst.de>
+References: <1473438884-674-1-git-send-email-hch@lst.de> <1473438884-674-7-git-send-email-hch@lst.de> <20160913231039.GF26002@linux.intel.com> <20160914071910.GC17278@lst.de> <20160914170759.GA14196@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1474798162-25960-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <20160914170759.GA14196@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, billodo@redhat.com, xfs@oss.sgi.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Sun, Sep 25, 2016 at 06:09:22PM +0800, Eryu Guan wrote:
-> Commit bb80e3d6cd04 ("libxcmd: populate fs table with xfs entries
-> first, foreign entries last") adds a new counter "xfs_fs_count" and
-> increases the counter when inserting an XFS entry.
-> 
-> But it missed a counter when fs_count is zero (inserting the first
-> path) and the entry has no FS_FOREIGN bit set, i.e. the first XFS
-> entry doesn't increase xfs_fs_count.
-> 
-> This results in args_command() mess and infinite loop in xfs/244
-> when testing v4 XFS (xfs/244 notrun on v5 XFS, but this bug still
-> reproduces on v5 XFS). e.g.
-> 
->   mkfs -t xfs -f /dev/sda5
->   mount -o pquota /dev/sda5 /mnt/xfs
->   mkdir /mnt/xfs/project
->   touch /mnt/xfs/project/testfile
->   xfs_quota -x -c "project -s -p /mnt/xfs/project/testfile 1" /dev/sda5
-> 
-> Fix it by increasing xfs_fs_count when flags has no FS_FOREIGN bit.
+On Wed, Sep 14, 2016 at 11:07:59AM -0600, Ross Zwisler wrote:
+> I'll bite - why do you think adding a space before labels is a "fairly
+> horrible style"?
 
-Looks ifne,
+It introduces single whitespace indentation in a source base that is
+all about tabs and uses whitespaces very sparingly (some people use
+it to align function arguments, while others also consistently use tabs).
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It's also a bit annoying when touching these error label chains for any
+sort of major change.
 
-Can I assume you'll add the above test to xfstests?
+> Adding them gives a tangible benefit for unified diffs and
+> patches because it's much more useful to know that a change is in a given
+> function than that it follows a label called "out", which could be defined
+> many times in a given file.  Again, the example:
+
+Yes, but this is just diff beeing stupid.  There is no reason why diff
+couldn't handle this properly even without the space, and in fact at
+least git diff can be tought easily to do just that.
+
+There are a few threads about this label style going on on lkml in
+the last week, and one of them mentions the git diff tweak.  Try searching
+for "Clarify and complete chapter 7".
