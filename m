@@ -1,219 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57156 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750697AbcIXEAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Sep 2016 00:00:24 -0400
-Date: Sat, 24 Sep 2016 05:00:22 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH 06/12] new helper: add_to_pipe()
-Message-ID: <20160924040022.GO2356@ZenIV.linux.org.uk>
-References: <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
- <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk>
- <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk>
- <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42067 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966279AbcIZQd3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 12:33:29 -0400
+Date: Mon, 26 Sep 2016 09:33:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
+ systems
+Message-ID: <20160926163313.GP9314@birch.djwong.org>
+References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
+ <1473856994-27463-4-git-send-email-amir73il@gmail.com>
+ <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
+ <20160923161350.GN9314@birch.djwong.org>
+ <CAOQ4uxidPrUho=BTjzEjKqDXXwX605bDSfpXoVUh=YXU0=EHCg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxidPrUho=BTjzEjKqDXXwX605bDSfpXoVUh=YXU0=EHCg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-single-buffer analogue of splice_to_pipe(); vmsplice_to_pipe() switched
-to that, leaving splice_to_pipe() only for ->splice_read() instances
-(and that only until they are converted as well).
+On Fri, Sep 23, 2016 at 09:52:42PM +0300, Amir Goldstein wrote:
+> On Fri, Sep 23, 2016 at 7:13 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
+> >> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> >> > copy_file_range syscall returns -EXDEV if src and dest
+> >> > file are not on the same file system.
+> >> > The vfs_copy_file_range() helper, however, knows how to copy
+> >> > across file systems with do_splice_direct().
+> >> >
+> >> > Move the enforcement of same file system from the vfs helper
+> >> > to the syscall code.
+> >> >
+> >> > A following patch is going to use the vfs_copy_file_range()
+> >> > helper in overlayfs to copy up between lower and upper
+> >> > not on the same file system.
+> >> >
+> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >> > ---
+> >> >  fs/read_write.c | 16 +++++++++++-----
+> >> >  1 file changed, 11 insertions(+), 5 deletions(-)
+> >> >
+> >> > diff --git a/fs/read_write.c b/fs/read_write.c
+> >> > index 9dc6e52..6975fe8 100644
+> >> > --- a/fs/read_write.c
+> >> > +++ b/fs/read_write.c
+> >> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >> >             (file_out->f_flags & O_APPEND))
+> >> >                 return -EBADF;
+> >> >
+> >> > -       /* this could be relaxed once a method supports cross-fs copies */
+> >> > -       if (inode_in->i_sb != inode_out->i_sb)
+> >> > -               return -EXDEV;
+> >> > -
+> >> >         if (len == 0)
+> >> >                 return 0;
+> >> >
+> >> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+> >> >                 return ret;
+> >> >
+> >> >         ret = -EOPNOTSUPP;
+> >> > -       if (file_out->f_op->copy_file_range)
+> >> > +       /* copy_file_range() method does not support cross-fs copies */
+> >> > +       if (inode_in->i_sb == inode_out->i_sb &&
+> >> > +           file_out->f_op->copy_file_range)
+> >> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
+> >> >                                                       pos_out, len, flags);
+> >> >         if (ret == -EOPNOTSUPP)
+> >> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+> >> >                 pos_out = f_out.file->f_pos;
+> >> >         }
+> >> >
+> >> > +       /*
+> >> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
+> >> > +        * fulfill the guaranty to userland that copy_file_range syscall
+> >> > +        * does not allow cross-fs copy
+> >> > +        */
+> >> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
+> >> > +               return -EXDEV;
+> >>
+> >> Oops, that was supposed to be goto out;
+> >> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
+> >> until I have a reliable test on xfs to fall back from clone to copy range
+> >
+> > Ok, attached are two rough patches -- one to add the error injection point
+> > into the kernel, and a second one to add it to the xfs_io 'inject' command.
+> > Note that you'll have to format the XFS filesystem with rmapbt=1 since we
+> > can't otherwise avoid per-AG ENOSPC if rmap is enabled.
+> >
+> > The relevant xfstests commands are:
+> >
+> > _require_xfs_io_error_injection "ag_resv_critical"
+> > _scratch_inject_error "ag_resv_critical"
+> >
+> > See the xfs/325 test for a rough framework.  I'll work on cleaning up the
+> > patches and trying to get them into 4.9.
+> >
+> 
+> Thanks, Darrick, but I'm not sure that's enough. does the framework allow
+> to inject an error for a specific AG? otherwise, the code will not
+> fall back from
+> failing full reflink to partial copy partial reflink.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
- fs/splice.c            | 113 ++++++++++++++++++++++++++++---------------------
- include/linux/splice.h |   2 +
- 2 files changed, 67 insertions(+), 48 deletions(-)
+The error injector (as far as I know) cannot inject errors only for a
+specific AG.  However, since your goal is to have the reflink partially
+succeed, I could set up the injector to fail only a fraction of the
+time.  The difficulty here is that what we /probably/ need is to have it
+ENOSPC after N extents, where 0 < N <= nr_file_extents.  Tricky since
+the probabilistic nature means that it could inject during the first
+XFS_TEST_ERROR call.
 
-diff --git a/fs/splice.c b/fs/splice.c
-index 02daa61..e13d935 100644
---- a/fs/splice.c
-+++ b/fs/splice.c
-@@ -203,8 +203,6 @@ ssize_t splice_to_pipe(struct pipe_inode_info *pipe,
- 		buf->len = spd->partial[page_nr].len;
- 		buf->private = spd->partial[page_nr].private;
- 		buf->ops = spd->ops;
--		if (spd->flags & SPLICE_F_GIFT)
--			buf->flags |= PIPE_BUF_FLAG_GIFT;
- 
- 		pipe->nrbufs++;
- 		page_nr++;
-@@ -225,6 +223,27 @@ out:
- }
- EXPORT_SYMBOL_GPL(splice_to_pipe);
- 
-+ssize_t add_to_pipe(struct pipe_inode_info *pipe, struct pipe_buffer *buf)
-+{
-+	int ret;
-+
-+	if (unlikely(!pipe->readers)) {
-+		send_sig(SIGPIPE, current, 0);
-+		ret = -EPIPE;
-+	} else if (pipe->nrbufs == pipe->buffers) {
-+		ret = -EAGAIN;
-+	} else {
-+		int newbuf = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
-+		pipe->bufs[newbuf] = *buf;
-+		pipe->nrbufs++;
-+		return buf->len;
-+	}
-+	buf->ops->release(pipe, buf);
-+	buf->ops = NULL;
-+	return ret;
-+}
-+EXPORT_SYMBOL(add_to_pipe);
-+
- void spd_release_page(struct splice_pipe_desc *spd, unsigned int i)
- {
- 	put_page(spd->pages[i]);
-@@ -1415,33 +1434,50 @@ static long do_splice(struct file *in, loff_t __user *off_in,
- 	return -EINVAL;
- }
- 
--static int get_iovec_page_array(const struct iov_iter *from,
--				struct page **pages,
--				struct partial_page *partial,
--				unsigned int pipe_buffers)
-+static int iter_to_pipe(struct iov_iter *from,
-+			struct pipe_inode_info *pipe,
-+			unsigned flags)
- {
--	struct iov_iter i = *from;
--	int buffers = 0;
--	while (iov_iter_count(&i)) {
-+	struct pipe_buffer buf = {
-+		.ops = &user_page_pipe_buf_ops,
-+		.flags = flags
-+	};
-+	size_t total = 0;
-+	int ret = 0;
-+	bool failed = false;
-+
-+	while (iov_iter_count(from) && !failed) {
-+		struct page *pages[16];
- 		ssize_t copied;
- 		size_t start;
-+		int n;
- 
--		copied = iov_iter_get_pages(&i, pages + buffers, ~0UL,
--					pipe_buffers - buffers, &start);
--		if (copied <= 0)
--			return buffers ? buffers : copied;
-+		copied = iov_iter_get_pages(from, pages, ~0UL, 16, &start);
-+		if (copied <= 0) {
-+			ret = copied;
-+			break;
-+		}
- 
--		iov_iter_advance(&i, copied);
--		while (copied) {
-+		for (n = 0; copied; n++, start = 0) {
- 			int size = min_t(int, copied, PAGE_SIZE - start);
--			partial[buffers].offset = start;
--			partial[buffers].len = size;
-+			if (!failed) {
-+				buf.page = pages[n];
-+				buf.offset = start;
-+				buf.len = size;
-+				ret = add_to_pipe(pipe, &buf);
-+				if (unlikely(ret < 0)) {
-+					failed = true;
-+				} else {
-+					iov_iter_advance(from, ret);
-+					total += ret;
-+				}
-+			} else {
-+				put_page(pages[n]);
-+			}
- 			copied -= size;
--			start = 0;
--			buffers++;
- 		}
- 	}
--	return buffers;
-+	return total ? total : ret;
- }
- 
- static int pipe_to_user(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
-@@ -1502,17 +1538,11 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *uiov,
- 	struct iovec iovstack[UIO_FASTIOV];
- 	struct iovec *iov = iovstack;
- 	struct iov_iter from;
--	struct page *pages[PIPE_DEF_BUFFERS];
--	struct partial_page partial[PIPE_DEF_BUFFERS];
--	struct splice_pipe_desc spd = {
--		.pages = pages,
--		.partial = partial,
--		.nr_pages_max = PIPE_DEF_BUFFERS,
--		.flags = flags,
--		.ops = &user_page_pipe_buf_ops,
--		.spd_release = spd_release_page,
--	};
- 	long ret;
-+	unsigned buf_flag = 0;
-+
-+	if (flags & SPLICE_F_GIFT)
-+		buf_flag = PIPE_BUF_FLAG_GIFT;
- 
- 	pipe = get_pipe_info(file);
- 	if (!pipe)
-@@ -1523,26 +1553,13 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *uiov,
- 	if (ret < 0)
- 		return ret;
- 
--	if (splice_grow_spd(pipe, &spd)) {
--		kfree(iov);
--		return -ENOMEM;
--	}
--
- 	pipe_lock(pipe);
- 	ret = wait_for_space(pipe, flags);
--	if (!ret) {
--		spd.nr_pages = get_iovec_page_array(&from, spd.pages,
--						    spd.partial,
--						    spd.nr_pages_max);
--		if (spd.nr_pages <= 0)
--			ret = spd.nr_pages;
--		else
--			ret = splice_to_pipe(pipe, &spd);
--		pipe_unlock(pipe);
--		if (ret > 0)
--			wakeup_pipe_readers(pipe);
--	}
--	splice_shrink_spd(&spd);
-+	if (!ret)
-+		ret = iter_to_pipe(&from, pipe, buf_flag);
-+	pipe_unlock(pipe);
-+	if (ret > 0)
-+		wakeup_pipe_readers(pipe);
- 	kfree(iov);
- 	return ret;
- }
-diff --git a/include/linux/splice.h b/include/linux/splice.h
-index da2751d..58b300f 100644
---- a/include/linux/splice.h
-+++ b/include/linux/splice.h
-@@ -72,6 +72,8 @@ extern ssize_t __splice_from_pipe(struct pipe_inode_info *,
- 				  struct splice_desc *, splice_actor *);
- extern ssize_t splice_to_pipe(struct pipe_inode_info *,
- 			      struct splice_pipe_desc *);
-+extern ssize_t add_to_pipe(struct pipe_inode_info *,
-+			      struct pipe_buffer *);
- extern ssize_t splice_direct_to_actor(struct file *, struct splice_desc *,
- 				      splice_direct_actor *);
- 
--- 
-2.9.3
+Or change the function such that the error injector function only gets
+called if the file offset > 0.  Then you can prepare a specially crafted
+file such that you'll always get at least a partial reflink before
+ENOSPC.  Note that the reflink functions won't return where an error
+happened, so you'll end up recopying the entire range regardless.
 
+--D
