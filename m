@@ -1,206 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47126 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933166AbcIZVJG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 17:09:06 -0400
-Date: Mon, 26 Sep 2016 14:08:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: kill xfs_reflink_is_cow_pending
-Message-ID: <20160926210849.GC14092@birch.djwong.org>
-References: <1474730361-5234-1-git-send-email-hch@lst.de>
- <1474730361-5234-2-git-send-email-hch@lst.de>
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:35547 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966653AbcIZUCP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 16:02:15 -0400
+Received: by mail-lf0-f45.google.com with SMTP id l131so156622236lfl.2
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Sep 2016 13:02:13 -0700 (PDT)
+Date: Mon, 26 Sep 2016 22:02:10 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Excessive xfs_inode allocations trigger OOM killer
+Message-ID: <20160926200209.GA23827@dhcp22.suse.cz>
+References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
+ <20160920203039.GI340@dastard>
+ <87mvj2mgsg.fsf@mid.deneb.enyo.de>
+ <20160920214612.GJ340@dastard>
+ <20160921080425.GC10300@dhcp22.suse.cz>
+ <878tuetvl6.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1474730361-5234-2-git-send-email-hch@lst.de>
+In-Reply-To: <878tuetvl6.fsf@mid.deneb.enyo.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Florian Weimer <fw@deneb.enyo.de>
+Cc: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Sat, Sep 24, 2016 at 08:19:20AM -0700, Christoph Hellwig wrote:
-> Instead enhance xfs_reflink_find_cow_mapping to properly deal with the
-> fact that we might not have a COW mapping at the offset, and just
-> return false in this case.
+On Mon 26-09-16 19:33:09, Florian Weimer wrote:
+> * Michal Hocko:
 > 
-> This avoids code duplication, makes xfs_reflink_find_cow_mapping more
-> robust, and last but not least halves the number of extent map lookups
-> needed in COW writeback operations.
-
-Hooray!
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c    | 28 ++++++++++++++++------------
->  fs/xfs/xfs_reflink.c | 42 +++++++++++-------------------------------
->  fs/xfs/xfs_reflink.h |  3 +--
->  3 files changed, 28 insertions(+), 45 deletions(-)
+> > On Wed 21-09-16 07:46:12, Dave Chinner wrote:
+> >> [cc Michal, linux-mm@kvack.org]
+> >> 
+> >> On Tue, Sep 20, 2016 at 10:56:31PM +0200, Florian Weimer wrote:
+> > [...]
+> >> > [51669.515086] make invoked oom-killer:
+> >> > gfp_mask=0x27000c0(GFP_KERNEL_ACCOUNT|__GFP_NOTRACK), order=2,
+> >> > oom_score_adj=0
+> >> > [51669.515092] CPU: 1 PID: 1202 Comm: make Tainted: G I 4.7.1fw #1
+> >> > [51669.515093] Hardware name: System manufacturer System Product
+> >> > Name/P6X58D-E, BIOS 0701 05/10/2011
+> >> > [51669.515095] 0000000000000000 ffffffff812a7d39 0000000000000000
+> >> > 0000000000000000
+> >> > [51669.515098] ffffffff8114e4da ffff880018707d98 0000000000000000
+> >> > 000000000066ca81
+> >> > [51669.515100] ffffffff8170e88d ffffffff810fe69e ffff88033fc38728
+> >> > 0000000200000006
+> >> > [51669.515102] Call Trace:
+> >> > [51669.515108]  [<ffffffff812a7d39>] ? dump_stack+0x46/0x5d
+> >> > [51669.515113]  [<ffffffff8114e4da>] ? dump_header.isra.12+0x51/0x176
+> >> > [51669.515116]  [<ffffffff810fe69e>] ? oom_kill_process+0x32e/0x420
+> >> > [51669.515119]  [<ffffffff811003a0>] ? page_alloc_cpu_notify+0x40/0x40
+> >> > [51669.515120]  [<ffffffff810fdcdc>] ? find_lock_task_mm+0x2c/0x70
+> >> > [51669.515122]  [<ffffffff810fea6d>] ? out_of_memory+0x28d/0x2d0
+> >> > [51669.515125]  [<ffffffff81103137>] ? __alloc_pages_nodemask+0xb97/0xc90
+> >> > [51669.515128]  [<ffffffff81076d9c>] ? copy_process.part.54+0xec/0x17a0
+> >> > [51669.515131]  [<ffffffff81123318>] ? handle_mm_fault+0xaa8/0x1900
+> >> > [51669.515133]  [<ffffffff81078614>] ? _do_fork+0xd4/0x320
+> >> > [51669.515137]  [<ffffffff81084ecc>] ? __set_current_blocked+0x2c/0x40
+> >> > [51669.515140]  [<ffffffff810013ce>] ? do_syscall_64+0x3e/0x80
+> >> > [51669.515144]  [<ffffffff8151433c>] ? entry_SYSCALL64_slow_path+0x25/0x25
+> >> .....
+> >> > [51669.515194] DMA: 1*4kB (U) 1*8kB (U) 1*16kB (U) 0*32kB 2*64kB
+> >> > (U) 1*128kB (U) 1*256kB (U) 0*512kB 1*1024kB (U) 1*2048kB (M)
+> >> > 3*4096kB (M) = 15900kB
+> >> > [51669.515202] DMA32: 45619*4kB (UME) 73*8kB (UM) 0*16kB 0*32kB
+> >> > 0*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB =
+> >> > 183060kB
+> >> > [51669.515209] Normal: 39979*4kB (UE) 0*8kB 0*16kB 0*32kB 0*64kB
+> >> > 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 159916kB
+> >> .....
+> >> 
+> >> Alright, that's what I suspected. high order allocation for a new
+> >> kernel stack and memory is so fragmented that a contiguous
+> >> allocation fails. Really, this is a memory reclaim issue, not an XFS
+> >> issue.  There is lots of reclaimable memory available, but memory
+> >> reclaim is:
+> >> 
+> >> 	a) not trying hard enough to reclaim reclaimable memory; and
+> >> 	b) not waiting for memory compaction to rebuild contiguous
+> >> 	   memory regions for high order allocations.
+> >> 
+> >> Instead, it is declaring OOM and kicking the killer to free memory
+> >> held busy userspace.
+> >
+> > Yes this was the case with 4.7 kernel. There is a workaround sitting in
+> > the linus tree 6b4e3181d7bd ("mm, oom: prevent premature OOM killer
+> > invocation for high order request") which should get to stable
+> > eventually. More approapriate fix is currently in the linux-next.
+> >
+> > Testing the same workload with linux-next would be very helpful.
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index d8ce18b..1933803 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -379,10 +379,13 @@ xfs_map_blocks(
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  
-> -	if (type == XFS_IO_COW)
-> -		error = xfs_reflink_find_cow_mapping(ip, offset, imap,
-> -						     &need_alloc);
-> -	else {
-> +	if (type == XFS_IO_COW) {
-> +		if (!xfs_reflink_find_cow_mapping(ip, offset, imap,
-> +						     &need_alloc)) {
-> +			WARN_ON_ONCE(1);
-> +			return -EIO;
-> +		}
-
-I squinted at this for a second but then realized it goes away in the
-next patch anyway.
-
-> +	} else {
->  		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
->  				       imap, &nimaps, bmapi_flags);
->  		/*
-> @@ -712,13 +715,14 @@ xfs_is_cow_io(
->  	struct xfs_inode	*ip,
->  	xfs_off_t		offset)
->  {
-> -	bool			is_cow;
-> +	struct xfs_bmbt_irec	imap;
-> +	bool			is_cow, need_alloc;
->  
->  	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
->  		return false;
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
-> -	is_cow = xfs_reflink_is_cow_pending(ip, offset);
-> +	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
->  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  
->  	return is_cow;
-> @@ -1316,12 +1320,12 @@ __xfs_get_blocks(
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  
-> -	if (create && direct)
-> -		is_cow = xfs_reflink_is_cow_pending(ip, offset);
-> -	if (is_cow)
-> -		error = xfs_reflink_find_cow_mapping(ip, offset, &imap,
-> -						     &need_alloc);
-> -	else {
-> +	if (create && direct) {
-> +		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap,
-> +					&need_alloc);
-> +	}
-> +
-> +	if (!is_cow) {
->  		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
->  					&imap, &nimaps, XFS_BMAPI_ENTIRE);
->  		/*
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 6f87b1e..a1ba7f5 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -429,26 +429,31 @@ advloop:
->  }
->  
->  /*
-> - * Determine if there's a CoW reservation at a byte offset of an inode.
-> + * Find the CoW reservation (and whether or not it needs block allocation)
-> + * for a given byte offset of a file.
->   */
->  bool
-> -xfs_reflink_is_cow_pending(
-> +xfs_reflink_find_cow_mapping(
->  	struct xfs_inode		*ip,
-> -	xfs_off_t			offset)
-> +	xfs_off_t			offset,
-> +	struct xfs_bmbt_irec		*imap,
-> +	bool				*need_alloc)
->  {
-> +	struct xfs_bmbt_irec		irec;
->  	struct xfs_ifork		*ifp;
->  	struct xfs_bmbt_rec_host	*gotp;
-> -	struct xfs_bmbt_irec		irec;
->  	xfs_fileoff_t			bno;
->  	xfs_extnum_t			idx;
->  
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
-> +
->  	if (!xfs_is_reflink_inode(ip))
->  		return false;
->  
-> +	/* Find the extent in the CoW fork. */
->  	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
->  	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
-> -
->  	if (!gotp)
->  		return false;
->  
-> @@ -456,31 +461,6 @@ xfs_reflink_is_cow_pending(
->  	if (bno >= irec.br_startoff + irec.br_blockcount ||
->  	    bno < irec.br_startoff)
->  		return false;
-> -	return true;
-> -}
-> -
-> -/*
-> - * Find the CoW reservation (and whether or not it needs block allocation)
-> - * for a given byte offset of a file.
-> - */
-> -int
-> -xfs_reflink_find_cow_mapping(
-> -	struct xfs_inode		*ip,
-> -	xfs_off_t			offset,
-> -	struct xfs_bmbt_irec		*imap,
-> -	bool				*need_alloc)
-> -{
-> -	struct xfs_bmbt_irec		irec;
-> -	struct xfs_ifork		*ifp;
-> -	struct xfs_bmbt_rec_host	*gotp;
-> -	xfs_fileoff_t			bno;
-> -	xfs_extnum_t			idx;
-> -
-> -	/* Find the extent in the CoW fork. */
-> -	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> -	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
-> -	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
-> -	xfs_bmbt_get_all(gotp, &irec);
->  
->  	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
->  			&irec);
-> @@ -489,7 +469,7 @@ xfs_reflink_find_cow_mapping(
->  	*imap = irec;
->  	*need_alloc = !!(isnullstartblock(irec.br_startblock));
->  
-> -	return 0;
-> +	return true;
-
-Otherwise looks resonable enough, so
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 398e726..6519f19 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -30,8 +30,7 @@ extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
->  		xfs_fileoff_t offset_fsb, xfs_fileoff_t end_fsb);
->  extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip, xfs_off_t pos,
->  		xfs_off_t len);
-> -extern bool xfs_reflink_is_cow_pending(struct xfs_inode *ip, xfs_off_t offset);
-> -extern int xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> +extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
->  		struct xfs_bmbt_irec *imap, bool *need_alloc);
->  extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
->  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
-> -- 
-> 2.1.4
+> I'm not sure if I can reproduce this issue in a sufficiently reliable
+> way, but I can try.  (I still have not found the process which causes
+> the xfs_inode allocations go up.)
 > 
+> Is linux-next still the tree to test?
+
+Yes it contains all the compaction related fixes which we believe to
+address recent higher order OOMs.
+
+-- 
+Michal Hocko
+SUSE Labs
