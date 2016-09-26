@@ -1,67 +1,53 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D21D77CA0
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 14:20:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A39048F8040
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 12:20:14 -0700 (PDT)
-Received: from mail-pf0-f195.google.com (mail-pf0-f195.google.com
-	[209.85.192.195]) by cuda.sgi.com with ESMTP id
-	NvIeOFzBqpyvdSsC (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 12:20:12 -0700 (PDT)
-Received: by mail-pf0-f195.google.com with SMTP id q2so8019580pfj.0
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 12:20:12 -0700 (PDT)
-Date: Mon, 26 Sep 2016 00:50:06 +0530
-From: Sudip Midya <midya.sudip@gmail.com>
-Subject: [PATCH] mm: remove unnecessary rcu_lock/unlock around
-	radix_tree_tagged lockless function. The function queue_delayed_work is
-	already protected with interrupts disabled, hence no need to add
-	rcu_lock/unlock.
-Message-ID: <20160925192005.GA6517@sudip-Dell-System-Vostro-3450>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:29181 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933166AbcIZVw4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 17:52:56 -0400
+Date: Mon, 26 Sep 2016 14:52:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 58/71] xfs: garbage collect old cowextsz reservations
+Message-ID: <20160926215209.GE14092@birch.djwong.org>
+References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
+ <147216829394.867.16281333542262043955.stgit@birch.djwong.org>
+ <20160924194234.GA1878@infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, david@fromorbit.com, hch@infradead.org
+In-Reply-To: <20160924194234.GA1878@infradead.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
 
-Signed-off-by: Sudip Midya <midya.sudip@gmail.com>
----
- fs/xfs/xfs_icache.c | 2 --
- 1 file changed, 2 deletions(-)
+On Sat, Sep 24, 2016 at 12:42:34PM -0700, Christoph Hellwig wrote:
+> On Thu, Aug 25, 2016 at 04:38:14PM -0700, Darrick J. Wong wrote:
+> > Trim CoW reservations made on behalf of a cowextsz hint if they get too
+> > old or we run low on quota, so long as we don't have dirty data awaiting
+> > writeback or directio operations in progress.
+> 
+> FYI, at least in your latest tree we only ever seem to set
+> xfs_inode_set_cowblocks_tag in xfs_swap_extents, so this effectively
+> isn't used during normal fs usage.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index fb39a66..887c868 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -153,12 +153,10 @@ xfs_reclaim_work_queue(
- 	struct xfs_mount        *mp)
- {
- 
--	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
- 		queue_delayed_work(mp->m_reclaim_workqueue, &mp->m_reclaim_work,
- 			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
- 	}
--	rcu_read_unlock();
- }
- 
- /*
--- 
-1.9.1
+The tag should be set at the end of __xfs_iomap_write_delay if we're
+creating a DA reservation in the CoW fork. 
 
+> Also any reason we can't use the same infrastructure as our normal
+> speculative preallocation here?
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+The two functions /could/ be merged but I'm hesitant to combine them
+because they run as different workqueue items.
+
+Setting speculative_cow_prealloc_lifetime to a (much) higher value than
+speculative_prealloc_lifetime has been useful for combatting CoW
+fragmentation on VM hosts where the VMs experience bursty write
+behaviors and we can keep the utilization ratios low enough that we
+don't start to run out of space.  IOWs, it benefits us to keep the CoW
+fork reservations around for as long as we can unless we run out of
+blocks or hit inode reclaim.
+
+Regular speculative preallocations, otoh, can be removed quicker since
+file size changes don't happen much.
+
+--D
