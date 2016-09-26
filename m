@@ -1,95 +1,119 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:45380 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754951AbcIWVCq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Sep 2016 17:02:46 -0400
-Date: Fri, 23 Sep 2016 15:02:37 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
-Message-ID: <20160923210237.GA23346@linux.intel.com>
-References: <1473438884-674-1-git-send-email-hch@lst.de>
- <1473438884-674-7-git-send-email-hch@lst.de>
- <20160909225557.GF30056@dastard>
- <20160910073646.GA18547@lst.de>
- <20160913155126.GA10622@linux.intel.com>
- <20160914070633.GA17278@lst.de>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BF6507CAF
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 08:35:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FD1EAC002
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 06:35:18 -0700 (PDT)
+Received: from mail-pa0-f68.google.com (mail-pa0-f68.google.com
+	[209.85.220.68]) by cuda.sgi.com with ESMTP id IW4SQxBScPJyBz0G
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Sep 2016 06:35:15 -0700 (PDT)
+Received: by mail-pa0-f68.google.com with SMTP id j3so801500paj.2
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 06:35:15 -0700 (PDT)
+Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com.
+	[209.85.220.43]) by smtp.gmail.com with ESMTPSA id
+	r66sm31342905pfb.54.2016.09.26.06.35.13 for <xfs@oss.sgi.com>
+	(version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 26 Sep 2016 06:35:13 -0700 (PDT)
+Received: by mail-pa0-f43.google.com with SMTP id qn7so45758251pac.3
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 06:35:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160914070633.GA17278@lst.de>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
+In-Reply-To: <20160924035951.GN2356@ZenIV.linux.org.uk>
+References: <20160914031648.GB2356@ZenIV.linux.org.uk>
+	<CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+	<20160914042559.GC2356@ZenIV.linux.org.uk>
+	<20160917082007.GA6489@ZenIV.linux.org.uk>
+	<20160917190023.GA8039@ZenIV.linux.org.uk>
+	<20160923190032.GA25771@ZenIV.linux.org.uk>
+	<20160923190326.GB2356@ZenIV.linux.org.uk>
+	<CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+	<20160923201025.GJ2356@ZenIV.linux.org.uk>
+	<CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+	<20160924035951.GN2356@ZenIV.linux.org.uk>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Mon, 26 Sep 2016 15:35:12 +0200
+Message-ID: <CAELBmZCBo49dvi5mPK2NAYnSz0tv=kktTvcygW44e2hRJNpGkQ@mail.gmail.com>
+Subject: Re: [PATCH 04/12] splice: lift pipe_lock out of splice_to_pipe()
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: Jens Axboe <axboe@kernel.dk>, CAI Qian <caiqian@redhat.com>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Wed, Sep 14, 2016 at 09:06:33AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 13, 2016 at 09:51:26AM -0600, Ross Zwisler wrote:
-> > I'm working on this right now.  I expect that most/all of the infrastructure
-> > between the bh+get_block_t version and the iomap version to be shared, it'll
-> > just be a matter of having a PMD version of the iomap fault handler.  This
-> > should be pretty minor.
-> 
-> Yes, I looked at it (although I didn't do any work yet), and the work
-> should be fairly easy.
-> 
-> > Let's see how it goes, but right now my plan is to have both - I'd like to
-> > keep feature parity between ext2/ext4 and XFS, and that means having PMD
-> > faults in ext4 via bh+get_block_t until they move over to iomap.
-> > 
-> > Regarding coordination, the PMD v2 series hasn't gotten much review so far, so
-> > I'm not sure it'll go in for v4.9.  At this point I'm planning on just
-> > rebasing on top of your iomap series, though if it gets taken sooner I
-> > wouldn't object.
-> 
-> So let's do iomap first.  I've got stable ext2 support, as well as support
-> for the block device, although I'm not sure what the proper testing
-> protocol for that is.  I've started ext4 and read / zero was easy, but
-> now I'm stuck in the convoluted mess that is the ext4 direct I/O and
-> DAX path.
-> 
-> Maybe we should get the iomap work into 4.9 and then convert over ext4
-> as well as adding PMD fault support in the next release.
+On Sat, Sep 24, 2016 at 5:59 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
+> * splice_to_pipe() stops at pipe overflow and does *not* take pipe_lock
+> * ->splice_read() instances do the same
+> * vmsplice_to_pipe() and do_splice() (ultimate callers of splice_to_pipe())
+>   arrange for waiting, looping, etc. themselves.
+>
+> That should make pipe_lock the outermost one.
+>
+> Unfortunately, existing rules for the amount passed by vmsplice_to_pipe()
+> and do_splice() are quite ugly _and_ userland code can be easily broken
+> by changing those.  It's not even "no more than the maximal capacity of
+> this pipe" - it's "once we'd fed pipe->nr_buffers pages into the pipe,
+> leave instead of waiting".
+>
+> Considering how poorly these rules are documented, let's try "wait for some
+> space to appear, unless given SPLICE_F_NONBLOCK, then push into pipe
+> and if we run into overflow, we are done".
+>
+> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+> ---
+>  fs/fuse/dev.c |   2 -
+>  fs/splice.c   | 138 +++++++++++++++++++++++++++-------------------------------
+>  2 files changed, 63 insertions(+), 77 deletions(-)
+>
 
-I was doing some testing of my PMD patches, and was surprised to see that
-ext4 + PMDs + generic/074 now takes 23 minutes to complete.  With ext4 and
-PTEs faults this test takes ~50 seconds in the same setup, and XFS + PMDs
-takes 27 seconds.
+[...]
 
-The root cause is that ext4 is using the direct I/O path for reads and writes,
-and that the DIO path thinks it needs to flush dirty data from the radix tree
-on each I/O.
+> @@ -1546,14 +1528,20 @@ static long vmsplice_to_pipe(struct file *file, const struct iovec __user *uiov,
+>                 return -ENOMEM;
+>         }
+>
+> -       spd.nr_pages = get_iovec_page_array(&from, spd.pages,
+> -                                           spd.partial,
+> -                                           spd.nr_pages_max);
+> -       if (spd.nr_pages <= 0)
+> -               ret = spd.nr_pages;
+> -       else
+> -               ret = splice_to_pipe(pipe, &spd);
+> -
+> +       pipe_lock(pipe);
+> +       ret = wait_for_space(pipe, flags);
+> +       if (!ret) {
+> +               spd.nr_pages = get_iovec_page_array(&from, spd.pages,
+> +                                                   spd.partial,
+> +                                                   spd.nr_pages_max);
+> +               if (spd.nr_pages <= 0)
+> +                       ret = spd.nr_pages;
+> +               else
+> +                       ret = splice_to_pipe(pipe, &spd);
+> +               pipe_unlock(pipe);
+> +               if (ret > 0)
+> +                       wakeup_pipe_readers(pipe);
+> +       }
 
-Each read ends up writing back PMDs via:
+Unbalanced pipe_lock()?
 
-  vfs_read()
-    __vfs_read()
-      new_sync_read
-        generic_file_read_iter()
-          filemap_write_and_wait_range()
+Also, while it doesn't hurt, the constification of the "from" argument
+of get_iovec_page_array() looks only noise in this patch.
 
-I believe we have an analogous problem for writes.
+Thanks,
+Miklos
 
-This results in us flushing 12 TiB worth of data during the generic/074 test,
-one cache line at a time...
-
-With your recent changes to detangle the DAX and DIO faults paths in XFS, we
-avoid this because XFS no longer uses generic_file_read_iter(), but instead
-uses xfs_file_write_iter() which skips the writeback and instead just calls
-xfs_file_dax_write() to do the I/O.
-
-This is obviously an existing issue in ext4 that we need to address.  Even
-with the PTE path we are doing tons of unnecessary flushing, but the move from
-flushing PTEs to flushing PMDs is what killed us.
-
-I can just add a hack to hop over the writeback in generic_file_read_iter(),
-but I hesitate to do this because it seems like the correct thing to do is to
-separate the ext4 DAX & DIO paths, which I think you are already doing.
-
-I believe that my DAX PMD patches are ready to go, but because of this issue
-they currently only support XFS.  I'm tempted to send them out as they are
-right now since they add a bunch of complexity to DAX that we need to review,
-and that review can fully happen with only XFS support. We can add ext4
-support back in later when it's ready.
-
-Thoughts?
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
