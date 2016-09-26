@@ -1,122 +1,217 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43539 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:21575 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753315AbcIXPGt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Sep 2016 11:06:49 -0400
-Date: Sat, 24 Sep 2016 08:06:35 -0700
+        with ESMTP id S965205AbcIZVgG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Sep 2016 17:36:06 -0400
+Date: Mon, 26 Sep 2016 14:35:57 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 3/4] vfs: allow vfs_copy_file_range() across file
- systems
-Message-ID: <20160924150635.GO9314@birch.djwong.org>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-4-git-send-email-amir73il@gmail.com>
- <CAOQ4uxiZBE_2qy86b6x19opLcGbMzhtqrWBkFZqHeQnZgHtJfQ@mail.gmail.com>
- <20160923161350.GN9314@birch.djwong.org>
- <CAOQ4uxidPrUho=BTjzEjKqDXXwX605bDSfpXoVUh=YXU0=EHCg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: rewrite the COW writeback mapping code
+Message-ID: <20160926213557.GD14092@birch.djwong.org>
+References: <1474730361-5234-1-git-send-email-hch@lst.de>
+ <1474730361-5234-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxidPrUho=BTjzEjKqDXXwX605bDSfpXoVUh=YXU0=EHCg@mail.gmail.com>
+In-Reply-To: <1474730361-5234-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, linux-unionfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 23, 2016 at 09:52:42PM +0300, Amir Goldstein wrote:
-> On Fri, Sep 23, 2016 at 7:13 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Fri, Sep 23, 2016 at 10:57:56AM +0300, Amir Goldstein wrote:
-> >> On Wed, Sep 14, 2016 at 3:43 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> >> > copy_file_range syscall returns -EXDEV if src and dest
-> >> > file are not on the same file system.
-> >> > The vfs_copy_file_range() helper, however, knows how to copy
-> >> > across file systems with do_splice_direct().
-> >> >
-> >> > Move the enforcement of same file system from the vfs helper
-> >> > to the syscall code.
-> >> >
-> >> > A following patch is going to use the vfs_copy_file_range()
-> >> > helper in overlayfs to copy up between lower and upper
-> >> > not on the same file system.
-> >> >
-> >> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> >> > ---
-> >> >  fs/read_write.c | 16 +++++++++++-----
-> >> >  1 file changed, 11 insertions(+), 5 deletions(-)
-> >> >
-> >> > diff --git a/fs/read_write.c b/fs/read_write.c
-> >> > index 9dc6e52..6975fe8 100644
-> >> > --- a/fs/read_write.c
-> >> > +++ b/fs/read_write.c
-> >> > @@ -1502,10 +1502,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >> >             (file_out->f_flags & O_APPEND))
-> >> >                 return -EBADF;
-> >> >
-> >> > -       /* this could be relaxed once a method supports cross-fs copies */
-> >> > -       if (inode_in->i_sb != inode_out->i_sb)
-> >> > -               return -EXDEV;
-> >> > -
-> >> >         if (len == 0)
-> >> >                 return 0;
-> >> >
-> >> > @@ -1514,7 +1510,9 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >> >                 return ret;
-> >> >
-> >> >         ret = -EOPNOTSUPP;
-> >> > -       if (file_out->f_op->copy_file_range)
-> >> > +       /* copy_file_range() method does not support cross-fs copies */
-> >> > +       if (inode_in->i_sb == inode_out->i_sb &&
-> >> > +           file_out->f_op->copy_file_range)
-> >> >                 ret = file_out->f_op->copy_file_range(file_in, pos_in, file_out,
-> >> >                                                       pos_out, len, flags);
-> >> >         if (ret == -EOPNOTSUPP)
-> >> > @@ -1569,6 +1567,14 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
-> >> >                 pos_out = f_out.file->f_pos;
-> >> >         }
-> >> >
-> >> > +       /*
-> >> > +        * vfs_copy_file_range() can do cross-fs copy, but we want to
-> >> > +        * fulfill the guaranty to userland that copy_file_range syscall
-> >> > +        * does not allow cross-fs copy
-> >> > +        */
-> >> > +       if (file_inode(f_in.file)->i_sb != file_inode(f_out.file)->i_sb)
-> >> > +               return -EXDEV;
-> >>
-> >> Oops, that was supposed to be goto out;
-> >> Anyway, I am holding back on the vfs_copy_file_range() patches sub set
-> >> until I have a reliable test on xfs to fall back from clone to copy range
-> >
-> > Ok, attached are two rough patches -- one to add the error injection point
-> > into the kernel, and a second one to add it to the xfs_io 'inject' command.
-> > Note that you'll have to format the XFS filesystem with rmapbt=1 since we
-> > can't otherwise avoid per-AG ENOSPC if rmap is enabled.
-> >
-> > The relevant xfstests commands are:
-> >
-> > _require_xfs_io_error_injection "ag_resv_critical"
-> > _scratch_inject_error "ag_resv_critical"
-> >
-> > See the xfs/325 test for a rough framework.  I'll work on cleaning up the
-> > patches and trying to get them into 4.9.
-> >
+On Sat, Sep 24, 2016 at 08:19:21AM -0700, Christoph Hellwig wrote:
+> Add a new xfs_map_cow helper that does a single consistent lookup in the
+> COW fork extent map, and remove the existing COW handling code from
+> xfs_map_blocks.
 > 
-> Thanks, Darrick, but I'm not sure that's enough. does the framework allow
-> to inject an error for a specific AG? otherwise, the code will not
-> fall back from
-> failing full reflink to partial copy partial reflink.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c | 119 +++++++++++++++++++++++++++++++-----------------------
+>  1 file changed, 69 insertions(+), 50 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 1933803..2a3f4c1 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -357,15 +357,11 @@ xfs_map_blocks(
+>  	int			error = 0;
+>  	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+>  	int			nimaps = 1;
+> -	int			whichfork;
+> -	bool			need_alloc;
+>  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	whichfork = (type == XFS_IO_COW ? XFS_COW_FORK : XFS_DATA_FORK);
+> -	need_alloc = (type == XFS_IO_DELALLOC);
+> -
+> +	ASSERT(type != XFS_IO_COW);
+>  	if (type == XFS_IO_UNWRITTEN)
+>  		bmapi_flags |= XFS_BMAPI_IGSTATE;
+>  
+> @@ -378,36 +374,26 @@ xfs_map_blocks(
+>  		count = mp->m_super->s_maxbytes - offset;
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> -
+> -	if (type == XFS_IO_COW) {
+> -		if (!xfs_reflink_find_cow_mapping(ip, offset, imap,
+> -						     &need_alloc)) {
+> -			WARN_ON_ONCE(1);
+> -			return -EIO;
+> -		}
+> -	} else {
+> -		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+> -				       imap, &nimaps, bmapi_flags);
+> -		/*
+> -		 * Truncate an overwrite extent if there's a pending CoW
+> -		 * reservation before the end of this extent.  This forces us
+> -		 * to come back to writepage to take care of the CoW.
+> -		 */
+> -		if (nimaps && type == XFS_IO_OVERWRITE)
+> -			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+> -	}
+> +	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+> +				imap, &nimaps, bmapi_flags);
+> +	/*
+> +	 * Truncate an overwrite extent if there's a pending CoW
+> +	 * reservation before the end of this extent.  This forces us
+> +	 * to come back to writepage to take care of the CoW.
+> +	 */
+> +	if (nimaps && type == XFS_IO_OVERWRITE)
+> +		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  
+>  	if (error)
+>  		return error;
+>  
+> -	if (need_alloc &&
+> +	if (type == XFS_IO_DELALLOC &&
+>  	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+> -		error = xfs_iomap_write_allocate(ip, whichfork, offset,
+> +		error = xfs_iomap_write_allocate(ip, XFS_DATA_FORK, offset,
+>  				imap);
+>  		if (!error)
+> -			trace_xfs_map_blocks_alloc(ip, offset, count, type,
+> -					imap);
+> +			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+>  		return error;
+>  	}
+>  
+> @@ -707,27 +693,6 @@ xfs_check_page_type(
+>  	return false;
+>  }
+>  
+> -/*
+> - * Figure out if CoW is pending at this offset.
+> - */
+> -static bool
+> -xfs_is_cow_io(
+> -	struct xfs_inode	*ip,
+> -	xfs_off_t		offset)
+> -{
+> -	struct xfs_bmbt_irec	imap;
+> -	bool			is_cow, need_alloc;
+> -
+> -	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
+> -		return false;
+> -
+> -	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> -	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
+> -	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> -
+> -	return is_cow;
+> -}
+> -
+>  STATIC void
+>  xfs_vm_invalidatepage(
+>  	struct page		*page,
+> @@ -804,6 +769,56 @@ out_invalidate:
+>  	return;
+>  }
+>  
+> +static int
+> +xfs_map_cow(
+> +	struct xfs_writepage_ctx *wpc,
+> +	struct inode		*inode,
+> +	loff_t			offset,
+> +	unsigned int		*new_type)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_bmbt_irec	imap;
+> +	bool			is_cow = false, need_alloc = false;
+> +	int			error;
+> +
+> +	/*
+> +	 * If we already have a valid COW mapping keep using it.
+> +	 */
+> +	if (wpc->io_type == XFS_IO_COW) {
+> +		wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap, offset);
+> +		if (wpc->imap_valid) {
+> +			*new_type = XFS_IO_COW;
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Else we need to check if there is a COW mapping at this offset.
+> +	 */
+> +	xfs_ilock(ip, XFS_ILOCK_SHARED);
+> +	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
+> +	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> +
+> +	if (!is_cow)
+> +		return 0;
+> +
+> +	/*
+> +	 * And if the COW mapping has a delayed extent here we need to
+> +	 * allocate real space for it now.
+> +	 */
+> +	if (need_alloc) {
+> +		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
+> +				&imap);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	wpc->io_type = *new_type = XFS_IO_COW;
+> +	wpc->imap_valid = true;
+> +	wpc->imap = imap;
+> +	return 0;
+> +}
+> +
+>  /*
+>   * We implement an immediate ioend submission policy here to avoid needing to
+>   * chain multiple ioends and hence nest mempool allocations which can violate
+> @@ -876,8 +891,12 @@ xfs_writepage_map(
+>  			continue;
+>  		}
+>  
+> -		if (xfs_is_cow_io(XFS_I(inode), offset))
+> -			new_type = XFS_IO_COW;
+> +		if (xfs_sb_version_hasreflink(&XFS_I(inode)->i_mount->m_sb)) {
 
-You could change XFS_RANDOM_AG_RESV_CRITICAL to a non-1 value to make it
-fail randomly (instead of all the time) and reflink a sparse file with a
-large number of extents.  This...
+This could be:
 
-#define XFS_RANDOM_AG_RESV_CRITICAL 2
+if (xfs_is_reflink_inode(XFS_I(inode))) {
 
-...would make it fail half the time.
+since we don't have to care about COW mappings unless the inode also has
+shared extents.  The code you got this from seems to have this bug too;
+I'll just fix this when I push the patch onto my stack.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +			error = xfs_map_cow(wpc, inode, offset, &new_type);
+> +			if (error)
+> +				goto out;
+> +		}
+> +
+>  		if (wpc->io_type != new_type) {
+>  			wpc->io_type = new_type;
+>  			wpc->imap_valid = false;
+> -- 
+> 2.1.4
+> 
