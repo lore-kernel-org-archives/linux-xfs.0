@@ -1,49 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57116 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753791AbcIXD7L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 23:59:11 -0400
-Date: Sat, 24 Sep 2016 04:59:08 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 04/11] splice: lift pipe_lock out of splice_to_pipe()
-Message-ID: <20160924035908.GM2356@ZenIV.linux.org.uk>
-References: <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
- <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk>
- <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk>
- <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:38070 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030465AbcIZO2t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Sep 2016 10:28:49 -0400
+Date: Mon, 26 Sep 2016 16:28:42 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 06/10] dax: provide an iomap based fault handler
+Message-ID: <20160926142842.GF7733@quack2.suse.cz>
+References: <1473438884-674-1-git-send-email-hch@lst.de>
+ <1473438884-674-7-git-send-email-hch@lst.de>
+ <20160909225557.GF30056@dastard>
+ <20160910073646.GA18547@lst.de>
+ <20160913155126.GA10622@linux.intel.com>
+ <20160914070633.GA17278@lst.de>
+ <20160923210237.GA23346@linux.intel.com>
+ <20160926000805.GA32252@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+In-Reply-To: <20160926000805.GA32252@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@ml01.01.org
 
-On Fri, Sep 23, 2016 at 01:36:12PM -0700, Linus Torvalds wrote:
-> On Fri, Sep 23, 2016 at 1:10 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > OTOH, considering the quality of documentation, I'm somewhat tempted to go
-> > for "sleep only if it had been completely full when we entered; once there's
-> > some space feed as much as fits and be done with that".  OTTH, I'm not sure
-> > that no userland cr^Hode will manage to be hurt by that variant...
+On Mon 26-09-16 02:08:05, Christoph Hellwig wrote:
+> On Fri, Sep 23, 2016 at 03:02:37PM -0600, Ross Zwisler wrote:
+> > I can just add a hack to hop over the writeback in generic_file_read_iter(),
+> > but I hesitate to do this because it seems like the correct thing to do is to
+> > separate the ext4 DAX & DIO paths, which I think you are already doing.
 > 
-> Let's just try it.
-> 
-> If that then doesn't work, we can introduce your odd code (with a
-> *big* comment). Ok?
+> I've started on it, and the read path works fine.  I'm a bit stuck on
+> the write side as my attempts at it seems to corrupt data fairly easily
+> when running xfstests.
 
-	FWIW, updated (with fixes) and force-pushed.  Added piece:
-default_file_splice_read() converted to iov_iter.  Seems to work, after
-fixing a braino in __pipe_get_pages().  Changed: #4 (sleep only in the
-beginning, as described above), #6 (context changes from #4), #10 (missing
-get_page() added in __pipe_get_pages()), #11 (removed pointless truncation
-of len - ->read_iter() can bloody well handle that on its own) and added #12.
-Stands at 28 files changed, 657 insertions(+), 1009 deletions(-) now...
+Well, I have a bunch of data corruption fixes for DAX sitting in my tree
+which I was able to trigger. E.g. there are some missing invalidations of
+blockdev aliases, also some races between fault vs write path the can lead
+to data loss. But at least the second fix requires clearing of dirty bits
+in the radix tree for DAX and that is a big pile of patches I have to sift
+through mm people (and related mm parts are in constant churn due to PMD
+pages in pagecache work so it is a mess).
+
+> > I believe that my DAX PMD patches are ready to go, but because of this issue
+> > they currently only support XFS.  I'm tempted to send them out as they are
+> > right now since they add a bunch of complexity to DAX that we need to review,
+> > and that review can fully happen with only XFS support. We can add ext4
+> > support back in later when it's ready.
+> 
+> Yes, please send them out.  We really should move ext4 over to iomap for
+> DAX.  I'd love to get some help from someone more familar with ext4,
+> and can send my code dump to get started.
+
+Yeah, I'd also just implement it for iomap path and XFS as a start and then
+I'll port ext4 over to iomap infrastructure for DAX. There should be no
+principial problem.
+
+									Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
