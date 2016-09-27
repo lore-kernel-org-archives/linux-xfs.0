@@ -1,21 +1,18 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B799B7CA1
-	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 09:16:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C417AC005
-	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 07:16:21 -0700 (PDT)
-Received: from IND01-BO1-obe.outbound.protection.outlook.com
-	(mail-bo1ind01on0068.outbound.protection.outlook.com
-	[104.47.101.68]) by cuda.sgi.com with ESMTP id KEbOkqq5ao0CrcRx
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 27 Sep 2016 07:16:18 -0700 (PDT)
-From: Hanna Watson <hanna.watson@edsonlinetech.com>
-Subject: PTC Users Leads & Info
-Date: Tue, 27 Sep 2016 14:15:44 +0000
-Message-ID: <MAXPR01MB0474BF02730BE7DCD30F8D0584CC0@MAXPR01MB0474.INDPRD01.PROD.OUTLOOK.COM>
-Content-Language: en-US
+	by oss.sgi.com (Postfix) with ESMTP id 2F0EE7CA1
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 22:53:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A567DAC001
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 20:53:52 -0700 (PDT)
+Received: from gsmold.com ([14.217.203.117]) by cuda.sgi.com with SMTP id
+	kBW2xwZ6DKUabGND for <xfs@oss.sgi.com>;
+	Mon, 26 Sep 2016 19:03:50 -0700 (PDT)
+From: "gsmold160801@163.com" <gsmold160801@163.com>
+Subject: PVC Door Board Extrusion Mould
 MIME-Version: 1.0
+Date: Tue, 27 Sep 2016 09:59:01 +0800
+Message-Id: <20160927020355.D8855D8007F@cuda.sgi.com>
+Reply-To: gsmold160801@163.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,207 +21,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8882132411631236697=="
+Content-Type: multipart/mixed; boundary="===============8332478816821087048=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============8882132411631236697==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_"
+--===============8332478816821087048==
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
 
---_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-
-
-Hope this email finds you well
-
-
-
-I would like to know if you would be interested in acquiring fresh and veri=
-fied contacts of PTC Software Users and Technician's list for your marketin=
-g campaign?
-
-
-
-Database Reach: Worldwide.
-
-
-
-Last updated: In every quarter to maintain 90% data quality and 95% accurac=
-y.
-
-
-
-Data Field: Name, Job Title, Verified Phone Number, Verified Email Address,=
- Company Name & Address Employee Size, Revenue size, SIC Code, Industry Typ=
-e etc.,
-
-
-
-We also provide other technology users like: Salesforce,CRM, Nortel, SAP,Or=
-acle,EMC,Netapp  etc.
-
-
-
-Please review and let me know your thoughts on this so that I can send some=
- samples and give you further information.
-
-
-
-Await your response!
-
-
-
-Thanks
-
-Hanna Watson
-
-Data Specialist
-
-
-
-If you don't wish to receive emails from us reply back with "REMOVE ME".
-
-
-
---_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
-//www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
->
-<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Calibri Light";
-	panose-1:2 15 3 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:8.0pt;
-	margin-left:0in;
-	line-height:107%;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;}
-p.MsoNoSpacing, li.MsoNoSpacing, div.MsoNoSpacing
-	{mso-style-priority:1;
-	margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri",sans-serif;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri",sans-serif;}
-.MsoPapDefault
-	{mso-style-type:export-only;
-	margin-bottom:8.0pt;
-	line-height:107%;}
-@page WordSection1
-	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"EN-US">
-<div class=3D"WordSection1">
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Hi,<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Hope this email finds you well
-<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">I would like to know if you would be interested in acquirin=
-g fresh and verified contacts of PTC Software Users and Technician&#8217;s =
-list for your marketing campaign?<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif;background:white">Database Reach: Worldwide.</span><span sty=
-le=3D"font-family:&quot;Calibri Light&quot;,sans-serif"><o:p></o:p></span><=
-/p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">&nbsp;<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif;background:white">Last updated: In every quarter to maintain=
- 90% data quality and 95% accuracy.</span><span style=3D"font-family:&quot;=
-Calibri Light&quot;,sans-serif"><o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Data Field: Name, Job Title, Verified Phone Number, Verifie=
-d Email Address, Company Name &amp; Address Employee Size, Revenue size, SI=
-C Code, Industry Type etc.,<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">We also provide other technology users like: Salesforce,CRM=
-, Nortel, SAP,Oracle,EMC,Netapp&nbsp; etc.<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Please review and let me know your thoughts on this so that=
- I can send some samples and give you further information.<o:p></o:p></span=
-></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Await your response!<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Thanks<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Hanna Watson<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">Data Specialist<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif;color:gray"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif">If you don't wish to receive emails from us reply back with=
- &quot;REMOVE ME&quot;.<o:p></o:p></span></p>
-<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
-ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
-</div>
-</body>
-</html>
-
---_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_--
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
+L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
+Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
+bnQ9Ik1TSFRNTCAxMS4wMC4xMDU4Ni41ODkiPjwvSEVBRD4NCjxCT0RZPg0KPERJViANCnN0eWxl
+PSJGT05ULVNJWkU6IDEzcHg7IEZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJQU5UOiBub3Jt
+YWw7IFdISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9S
+TTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVC1T
+VFlMRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiBy
+Z2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdp
+ZHRoOiAwcHgiPkRlYXIgDQpUb29sIE1hbmFnZXIsJm5ic3A7PC9ESVY+DQo8RElWIA0Kc3R5bGU9
+IkZPTlQtU0laRTogMTNweDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVZBUklBTlQ6IG5vcm1h
+bDsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JN
+OiBub25lOyBGT05ULVdFSUdIVDogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05ULVNU
+WUxFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJn
+YigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lk
+dGg6IDBweCI+PEJSPjwvRElWPg0KPERJViANCnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZPTlQt
+RkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJQU5UOiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3JtYWw7
+IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5v
+cm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVItU1BB
+Q0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlO
+REVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxCUj48L0RJVj4NCjxE
+SVYgDQpzdHlsZT0iRk9OVC1TSVpFOiAxM3B4OyBGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtVkFS
+SUFOVDogbm9ybWFsOyBXSElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVY
+VC1UUkFOU0ZPUk06IG5vbmU7IEZPTlQtV0VJR0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDI1
+NSk7IEZPTlQtU1RZTEU6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VO
+RC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0
+LXN0cm9rZS13aWR0aDogMHB4Ij5HUyANCk1hY2hpbmluaW5nIG9mZmVycyBjb21wb25lbnRzIGZv
+ciBleHRydXNpb24gcHJvZHVjdGlvbiBhcyBhcyBmb2xsb3dpbmc6PC9ESVY+DQo8RElWIA0Kc3R5
+bGU9IkZPTlQtU0laRTogMTNweDsgRk9OVC1GQU1JTFk6IEFyaWFsOyBGT05ULVZBUklBTlQ6IG5v
+cm1hbDsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09SRC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNG
+T1JNOiBub25lOyBGT05ULVdFSUdIVDogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05U
+LVNUWUxFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6
+IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Ut
+d2lkdGg6IDBweCI+PEJSPjwvRElWPg0KPERJViANCnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZP
+TlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJQU5UOiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3Jt
+YWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6
+IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVIt
+U1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhU
+LUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjEsIA0KTmFtZTom
+bmJzcDs8U1BBTiANCnN0eWxlPSJDT0xPUjogICFpbXBvcnRhbnQ7IExJTkUtSEVJR0hUOiAxLjUi
+Pk5FWiZuYnNwO0NPLUVYVFJVU0lPTiZuYnNwO00xODwvU1BBTj48L0RJVj4NCjxESVYgDQpzdHls
+ZT0iRk9OVC1TSVpFOiAxM3B4OyBGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtVkFSSUFOVDogbm9y
+bWFsOyBXSElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZP
+Uk06IG5vbmU7IEZPTlQtV0VJR0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQt
+U1RZTEU6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjog
+cmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13
+aWR0aDogMHB4Ij48U1BBTiANCnN0eWxlPSJDT0xPUjogICFpbXBvcnRhbnQ7IExJTkUtSEVJR0hU
+OiAxLjUiPjIsIE1hdGVyaWFsOiBOT0tPUk8gDQo0MzEuJm5ic3A7PC9TUEFOPjwvRElWPg0KPERJ
+ViANCnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJ
+QU5UOiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhU
+LVRSQU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1
+KTsgRk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5E
+LUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQt
+c3Ryb2tlLXdpZHRoOiAwcHgiPjxTUEFOIA0Kc3R5bGU9IkNPTE9SOiAgIWltcG9ydGFudDsgTElO
+RS1IRUlHSFQ6IDEuNSI+MywgRk9CU2hlbnpoZW4gcHJpY2U6PFNQQU4gDQpjbGFzcz1BcHBsZS1j
+b252ZXJ0ZWQtc3BhY2U+Jm5ic3A7PC9TUEFOPjwvU1BBTj48U1BBTiANCnN0eWxlPSJMSU5FLUhF
+SUdIVDogMS41OyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwwKSI+VVNEMjIuMDA8L1NQ
+QU4+PFNQQU4gDQpzdHlsZT0iQ09MT1I6ICAhaW1wb3J0YW50OyBMSU5FLUhFSUdIVDogMS41Ij4u
+Jm5ic3A7PC9TUEFOPjwvRElWPg0KPERJViANCnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZPTlQt
+RkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJQU5UOiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3JtYWw7
+IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRSQU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5v
+cm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVItU1BB
+Q0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlO
+REVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiPjxTUEFOIA0Kc3R5bGU9
+IkNPTE9SOiAgIWltcG9ydGFudDsgTElORS1IRUlHSFQ6IDEuNSI+PEJSPjwvU1BBTj48L0RJVj4N
+CjxESVYgDQpzdHlsZT0iRk9OVC1TSVpFOiAxM3B4OyBGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQt
+VkFSSUFOVDogbm9ybWFsOyBXSElURS1TUEFDRTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsg
+VEVYVC1UUkFOU0ZPUk06IG5vbmU7IEZPTlQtV0VJR0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMCww
+LDI1NSk7IEZPTlQtU1RZTEU6IG5vcm1hbDsgTEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dS
+T1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10
+ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48U1BBTiANCnN0eWxlPSJDT0xPUjogICFpbXBvcnRhbnQ7
+IExJTkUtSEVJR0hUOiAxLjUiPlNob3VsZCBhbnkgUkZRIGZvciBzdWNoIHBhcnQsIA0KcGxlYXNl
+IHNlbmQgYW5kIHNlZSBob3cgd2UgY2FuIGJlbmVmaXQgeW91ISEhPC9TUEFOPjwvRElWPg0KPERJ
+ViANCnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJ
+QU5UOiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhU
+LVRSQU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1
+KTsgRk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5E
+LUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQt
+c3Ryb2tlLXdpZHRoOiAwcHgiPjxCUj48L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1TSVpFOiAx
+M3B4OyBGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtVkFSSUFOVDogbm9ybWFsOyBXSElURS1TUEFD
+RTogbm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IEZPTlQt
+V0VJR0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQtU1RZTEU6IG5vcm1hbDsg
+TEVUVEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1
+KTsgVEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48SU1H
+IA0KYm9yZGVyPTAgaHNwYWNlPTAgYWx0PSIiIA0Kc3JjPSJjaWQ6aW1nMC5qcGciIA0KYWxpZ249
+YmFzZWxpbmU+PC9ESVY+DQo8RElWIA0Kc3R5bGU9IkZPTlQtU0laRTogMTNweDsgRk9OVC1GQU1J
+TFk6IEFyaWFsOyBGT05ULVZBUklBTlQ6IG5vcm1hbDsgV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09S
+RC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBGT05ULVdFSUdIVDogbm9ybWFs
+OyBDT0xPUjogcmdiKDAsMCwyNTUpOyBGT05ULVNUWUxFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5H
+OiBub3JtYWw7IEJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5U
+OiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCI+PEJSPjwvRElWPg0KPERJViAN
+CnN0eWxlPSJGT05ULVNJWkU6IDEzcHg7IEZPTlQtRkFNSUxZOiBBcmlhbDsgRk9OVC1WQVJJQU5U
+OiBub3JtYWw7IFdISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4OyBURVhULVRS
+QU5TRk9STTogbm9uZTsgRk9OVC1XRUlHSFQ6IG5vcm1hbDsgQ09MT1I6IHJnYigwLDAsMjU1KTsg
+Rk9OVC1TVFlMRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNP
+TE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ry
+b2tlLXdpZHRoOiAwcHgiPjxCUj48L0RJVj4NCjxESVYgDQpzdHlsZT0iRk9OVC1TSVpFOiAxM3B4
+OyBGT05ULUZBTUlMWTogQXJpYWw7IEZPTlQtVkFSSUFOVDogbm9ybWFsOyBXSElURS1TUEFDRTog
+bm9ybWFsOyBXT1JELVNQQUNJTkc6IDBweDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IEZPTlQtV0VJ
+R0hUOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDI1NSk7IEZPTlQtU1RZTEU6IG5vcm1hbDsgTEVU
+VEVSLVNQQUNJTkc6IG5vcm1hbDsgQkFDS0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsg
+VEVYVC1JTkRFTlQ6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48QlI+PC9E
+SVY+DQo8RElWIA0Kc3R5bGU9IldISVRFLVNQQUNFOiBub3JtYWw7IFdPUkQtU1BBQ0lORzogMHB4
+OyBURVhULVRSQU5TRk9STTogbm9uZTsgQ09MT1I6IHJnYigwLDAsMjU1KTsgRk9OVDogMTRweC8y
+MXB4IEFyaWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2Io
+MjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRo
+OiAwcHgiPjxCUj48L0RJVj4NCjxESVYgDQpzdHlsZT0iV0hJVEUtU1BBQ0U6IG5vcm1hbDsgV09S
+RC1TUEFDSU5HOiAwcHg7IFRFWFQtVFJBTlNGT1JNOiBub25lOyBDT0xPUjogcmdiKDAsMCwyNTUp
+OyBGT05UOiAxNHB4LzIxcHggQXJpYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IEJBQ0tHUk9V
+TkQtQ09MT1I6IHJnYigyNTUsMjU1LDI1NSk7IFRFWFQtSU5ERU5UOiAwcHg7IC13ZWJraXQtdGV4
+dC1zdHJva2Utd2lkdGg6IDBweCI+DQo8RElWIHN0eWxlPSJGT05ULVNJWkU6IDEycHg7IExJTkUt
+SEVJR0hUOiAxOHB4Ij48QlI+PC9ESVY+DQo8SFIgDQpzdHlsZT0iQk9YLVNJWklORzogYm9yZGVy
+LWJveDsgRk9OVC1TSVpFOiAxMnB4OyBIRUlHSFQ6IDFweDsgV0lEVEg6IDIxMHB4OyBMSU5FLUhF
+SUdIVDogMThweCIgDQphbGlnbj1sZWZ0IGNvbG9yPSNiNWM0ZGYgU0laRT0xPg0KDQo8RElWIHN0
+eWxlPSJGT05ULVNJWkU6IDEycHg7IExJTkUtSEVJR0hUOiAxOHB4Ij48Rk9OVCBjb2xvcj0jMDAw
+MGZmPlRoZSBWZXJ5IA0KQmVzdCBSZWdhcmRzPC9GT05UPg0KPERJVj48Rk9OVCBjb2xvcj0jMDAw
+MGZmPjxCUj48L0ZPTlQ+PC9ESVY+DQo8RElWPjxGT05UIGNvbG9yPSMwMDAwZmY+PEJSPjwvRk9O
+VD48L0RJVj4NCjxESVY+PEZPTlQgY29sb3I9IzAwMDA4MD5Bbml0YSBaaGVuZyhTYWxlcyk8L0ZP
+TlQ+PC9ESVY+DQo8RElWPjxGT05UIGNvbG9yPSMwMDAwODA+R1MgTWFjaGluaW5nIGZyb20gRG9u
+Z2d1YW4sIENoaW5hPC9GT05UPjwvRElWPg0KPERJVj48Rk9OVCBjb2xvcj0jMDAwMDgwPk1hbnVm
+YWN0dXJlciBvZiZuYnNwOzxTUEFOIA0Kc3R5bGU9IkJBQ0tHUk9VTkQtQ09MT1I6IHJnYigyNTUs
+MjU1LDApIj5leHRydXNpb24gZGllczwvU1BBTj48L0ZPTlQ+PC9ESVY+DQo8RElWPjxGT05UIGNv
+bG9yPSMwMDAwODA+PFNQQU4gDQpzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBDT0xPUjogICFpbXBv
+cnRhbnQ7IExJTkUtSEVJR0hUOiAxLjUiPldlYnNpdGU6PC9TUEFOPjxTUEFOIA0Kc3R5bGU9IkZP
+TlQtU0laRTogMTBwdDsgTElORS1IRUlHSFQ6IDEuNTsgQkFDS0dST1VORC1DT0xPUjogd2luZG93
+Ij4mbmJzcDs8L1NQQU4+PEEgDQpzdHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBURVhULURFQ09SQVRJ
+T046IG5vbmUgIWltcG9ydGFudDsgTElORS1IRUlHSFQ6IDEuNTsgQkFDS0dST1VORC1DT0xPUjog
+d2luZG93IiANCmhyZWY9ImZpbGU6Ly8vQzovVXNlcnMvbGVub3ZvL0FwcERhdGEvUm9hbWluZy9G
+b3htYWlsNy9UZW1wLTEwODIwLTIwMTYwOTI2MTgwMzAxL3d3dy5ncy1tYWNoaW5pbmcuY29tIj53
+d3cuZ3MtbWFjaGluaW5nLmNvbTwvQT48U1BBTiANCnN0eWxlPSJGT05ULVNJWkU6IDEwcHQ7IENP
+TE9SOiAgIWltcG9ydGFudDsgTElORS1IRUlHSFQ6IDEuNSI+Jm5ic3A7PC9TUEFOPjwvRk9OVD48
+L0RJVj4NCjxESVY+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTBwdDsgQ09MT1I6ICAhaW1wb3J0
+YW50OyBMSU5FLUhFSUdIVDogMS41Ij48Rk9OVCANCmNvbG9yPSMwMDAwODA+VGVsOiArODYtNzY5
+LTgxMTI0MTY3IEZheDogDQorODYtNzY5LTgxMTI0MTY4PC9GT05UPjwvU1BBTj48L0RJVj48L0RJ
+Vj48L0RJVj48L0JPRFk+PC9IVE1MPg0KDQo=
 
 
---===============8882132411631236697==
+--===============8332478816821087048==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -235,4 +179,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8882132411631236697==--
+--===============8332478816821087048==--
