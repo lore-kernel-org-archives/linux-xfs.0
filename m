@@ -1,50 +1,55 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 591AC7CBD
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 11:13:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BD1F8F8040
-	for <xfs@oss.sgi.com>; Sun, 25 Sep 2016 09:13:00 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id A1uADh29I5wkxEUG (version=TLSv1.2
-	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 25 Sep 2016 09:12:58 -0700 (PDT)
-Date: Sun, 25 Sep 2016 09:12:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libxcmd: fix counting of xfs entries in fs_table_insert
-Message-ID: <20160925161256.GA25791@infradead.org>
-References: <1474798162-25960-1-git-send-email-eguan@redhat.com>
-	<20160925143155.GB29268@infradead.org>
-	<20160925145816.GD27776@eguan.usersys.redhat.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27465 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751018AbcI0FYR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 01:24:17 -0400
+Date: Mon, 26 Sep 2016 22:23:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: XFS reflink and development tip git trees updated
+Message-ID: <20160927052344.GD3059@birch.djwong.org>
+References: <20160905053317.GA15302@birch.djwong.org>
+ <20160919161100.GA19849@infradead.org>
+ <20160920043942.GE10172@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160925145816.GD27776@eguan.usersys.redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, billodo@redhat.com, xfs@oss.sgi.com
+In-Reply-To: <20160920043942.GE10172@birch.djwong.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, xfs@oss.sgi.com, amir73il@gmail.com
 
-On Sun, Sep 25, 2016 at 10:58:16PM +0800, Eryu Guan wrote:
-> It's already part of xfs/244, I noticed this bug because xfs/244 kept
-> running. I just put the minimum steps in commit log. So I think we're
-> good :)
+Ok, here's this week's for-4.9 branch:
 
-But only as part of xfs/244 which doesn't work for v5 file systems.
-To have good coverage we should not rely on testing an old format.
-That beeing said I can't see a good reason for why xfs/244 should not
-be run for v5 file systems, so I'll look into that instead.
+https://github.com/djwong/linux/tree/for-dave-for-4.9-5
+https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-5
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+The kernel tree includes Christoph's fixes for copy-on-write,
+refactoring of a refcount btree function to use _btree_query_range (and
+inclusion of the required diff_two_keys/init_high_key helpers), and
+removal of the (totally broken) always_cow debug switch.  It also
+contains a new error injection point to make reflink fail with ENOSPC.
+
+The xfsprogs tree incorporates the libxfs changes in the kernel tree
+but is largely the same as last week's for-4.9-2 branch.  The only
+change in userspace programs is that xfs_io can trigger the
+above-mentioned error injection point.
+
+---
+
+The WTF trees have been rebased to 4.8-rc8 and xfsprogs for-next:
+https://github.com/djwong/linux/tree/djwong-wtf
+https://github.com/djwong/xfsprogs/tree/djwong-wtf
+
+These two trees contain all the changes noted above as well as in-kernel
+scrubbing of directory and extended attribute data.  xfs_scrub has been
+modified to take advantage of them, and can now fall back a little more
+gracefully when kernel scrubbing is unavailable.
+
+(Note that the WTF tree doesn't reflect the iomap rework that's in the
+4.9 for-next tree; I'll rebase WTF against 4.9 after the merge window
+closes.  Unfortunately that's the only way to pick up scrub or realtime
+rmap support.)
+
+--D
