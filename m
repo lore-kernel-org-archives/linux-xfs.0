@@ -1,19 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 60E497CA0
-	for <xfs@oss.sgi.com>; Fri, 30 Sep 2016 16:27:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 34B7E304067
-	for <xfs@oss.sgi.com>; Fri, 30 Sep 2016 14:27:38 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id E1EbXlrf2zwVCydJ for <xfs@oss.sgi.com>;
-	Fri, 30 Sep 2016 14:27:33 -0700 (PDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: =?UTF-8?Q?[ANNOUNCE]_-_Reminder=2c_TODAY:_Mailing_list_migration_to?=
-	=?UTF-8?Q?_vger.kernel.org=e2=80=8b?=
-Message-ID: <a57b9f50-8a64-4eed-1773-b889cc221a56@sandeen.net>
-Date: Fri, 30 Sep 2016 16:27:33 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0D1757CA1
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 23:14:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 84DDDAC002
+	for <xfs@oss.sgi.com>; Mon, 26 Sep 2016 21:14:25 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id ZhxhGSUPATy0JyYK (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 26 Sep 2016 21:14:20 -0700 (PDT)
+Date: Tue, 27 Sep 2016 05:14:14 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 04/12] splice: lift pipe_lock out of splice_to_pipe()
+Message-ID: <20160927041414.GK19539@ZenIV.linux.org.uk>
+References: <20160914042559.GC2356@ZenIV.linux.org.uk>
+	<20160917082007.GA6489@ZenIV.linux.org.uk>
+	<20160917190023.GA8039@ZenIV.linux.org.uk>
+	<20160923190032.GA25771@ZenIV.linux.org.uk>
+	<20160923190326.GB2356@ZenIV.linux.org.uk>
+	<CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+	<20160923201025.GJ2356@ZenIV.linux.org.uk>
+	<CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+	<20160924035951.GN2356@ZenIV.linux.org.uk>
+	<CAELBmZCBo49dvi5mPK2NAYnSz0tv=kktTvcygW44e2hRJNpGkQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAELBmZCBo49dvi5mPK2NAYnSz0tv=kktTvcygW44e2hRJNpGkQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +38,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Jens Axboe <axboe@kernel.dk>, CAI Qian <caiqian@redhat.com>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-The XFS mailing list is moving to linux-xfs at vger.kernel.org
-today.  By the end of the day, we plan to disable the
-list hosted on the oss sgi server.
+On Mon, Sep 26, 2016 at 03:35:12PM +0200, Miklos Szeredi wrote:
+> > -       if (spd.nr_pages <= 0)
+> > -               ret = spd.nr_pages;
+> > -       else
+> > -               ret = splice_to_pipe(pipe, &spd);
+> > -
+> > +       pipe_lock(pipe);
+> > +       ret = wait_for_space(pipe, flags);
+> > +       if (!ret) {
+> > +               spd.nr_pages = get_iovec_page_array(&from, spd.pages,
+> > +                                                   spd.partial,
+> > +                                                   spd.nr_pages_max);
+> > +               if (spd.nr_pages <= 0)
+> > +                       ret = spd.nr_pages;
+> > +               else
+> > +                       ret = splice_to_pipe(pipe, &spd);
+> > +               pipe_unlock(pipe);
+		    ^^^^^^^^^^^^^^^^
+> > +               if (ret > 0)
+> > +                       wakeup_pipe_readers(pipe);
+> > +       }
+> 
+> Unbalanced pipe_lock()?
 
-I will mass-unsubscribe the entire oss list, and will set it up to
-bounce back any new messages, to effectively disable the oss list.
-The mass unsubscriptions will send a one-time email explaining that
-the list has gone away, and will contain information about the new list.
+Reordering braindamage; fixed.
 
-I apologize that reply-alls which contain the old list will bounce back
-to you; just watch out for that, I guess, and try to trim cc's if
-you see the sgi list present.  I plan to add the bounce so that
-nonsubscribers who didn't see these announcements will know that the
-list has moved.
+> Also, while it doesn't hurt, the constification of the "from" argument
+> of get_iovec_page_array() looks only noise in this patch.
 
-Unfortunately we are unable to transfer the current subscriber list
-to vger, so anyone who wishes to remain subscribed to the xfs mailing
-list will need to manually subscribe to the list on vger dot kernel.org.
+Rudiment of earlier variant, when we did a non-trivial loop in the caller.
+Not needed anymore, removed.
 
-Please see the URL:
-
-vger.kernel.org/vger-lists.html#linux-xfs
-
-for details and a helpful link.
-
-The kernel.org list is active now, so please start making
-the mental and technological transition to using that list for
-new emails in the coming weeks.
-
-In addition to list migration, we will also be moving all other
-resources - git, ftp, etc away from the sgi server and onto
-kernel.org infrastructure in coming weeks.
-
-This is the last reminder about the move.  Thanks for hosting the
-list for so long, SGI!  So long and thanks for all the emails.  ;)
-
-Any followup questions about all this ... use the new list!
-
-Thanks,
--Eric
+Fixed variant force-pushed to the same branch
 
 _______________________________________________
 xfs mailing list
