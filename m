@@ -1,156 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17193 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932181AbcI1C4r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:56:47 -0400
-Subject: [PATCH 29/63] xfs: support bmapping delalloc extents in the CoW fork
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:56:43 -0700
-Message-ID: <147503140356.30303.12828947594015143895.stgit@birch.djwong.org>
-In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mga14.intel.com ([192.55.52.115]:12934 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933955AbcI0UsY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:48:24 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 07/11] dax: coordinate locking for offsets in PMD range
+Date: Tue, 27 Sep 2016 14:47:58 -0600
+Message-Id: <1475009282-9818-8-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Allow the creation of delayed allocation extents in the CoW fork.  In
-a subsequent patch we'll wire up iomap_begin to actually do this via
-reflink helper functions.
+DAX radix tree locking currently locks entries based on the unique
+combination of the 'mapping' pointer and the pgoff_t 'index' for the entry.
+This works for PTEs, but as we move to PMDs we will need to have all the
+offsets within the range covered by the PMD to map to the same bit lock.
+To accomplish this, for ranges covered by a PMD entry we will instead lock
+based on the page offset of the beginning of the PMD entry.  The 'mapping'
+pointer is still used in the same way.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   12 ++++++++----
- fs/xfs/libxfs/xfs_bmap.h |    7 ++++---
- fs/xfs/xfs_iomap.c       |    2 +-
- fs/xfs/xfs_trace.h       |    6 +++---
- 4 files changed, 16 insertions(+), 11 deletions(-)
+ fs/dax.c            | 37 ++++++++++++++++++++++++-------------
+ include/linux/dax.h |  2 +-
+ mm/filemap.c        |  2 +-
+ 3 files changed, 26 insertions(+), 15 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3388058..5749618 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2760,6 +2760,7 @@ xfs_bmap_add_extent_unwritten_real(
- STATIC void
- xfs_bmap_add_extent_hole_delay(
- 	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_bmbt_irec_t		*new)	/* new data to add to file extents */
- {
-@@ -2771,8 +2772,10 @@ xfs_bmap_add_extent_hole_delay(
- 	int			state;  /* state bits, accessed thru macros */
- 	xfs_filblks_t		temp=0;	/* temp for indirect calculations */
+diff --git a/fs/dax.c b/fs/dax.c
+index baef586..406feea 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -64,10 +64,17 @@ static int __init init_dax_wait_table(void)
+ }
+ fs_initcall(init_dax_wait_table);
  
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	state = 0;
-+	if (whichfork == XFS_COW_FORK)
-+		state |= BMAP_COWFORK;
- 	ASSERT(isnullstartblock(new->br_startblock));
++static pgoff_t dax_entry_start(pgoff_t index, void *entry)
++{
++	if (RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
++		index &= (PMD_MASK >> PAGE_SHIFT);
++	return index;
++}
++
+ static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
+-					      pgoff_t index)
++					      pgoff_t entry_start)
+ {
+-	unsigned long hash = hash_long((unsigned long)mapping ^ index,
++	unsigned long hash = hash_long((unsigned long)mapping ^ entry_start,
+ 				       DAX_WAIT_TABLE_BITS);
+ 	return wait_table + hash;
+ }
+@@ -285,7 +292,7 @@ EXPORT_SYMBOL_GPL(dax_do_io);
+  */
+ struct exceptional_entry_key {
+ 	struct address_space *mapping;
+-	unsigned long index;
++	pgoff_t entry_start;
+ };
+ 
+ struct wait_exceptional_entry_queue {
+@@ -301,7 +308,7 @@ static int wake_exceptional_entry_func(wait_queue_t *wait, unsigned int mode,
+ 		container_of(wait, struct wait_exceptional_entry_queue, wait);
+ 
+ 	if (key->mapping != ewait->key.mapping ||
+-	    key->index != ewait->key.index)
++	    key->entry_start != ewait->key.entry_start)
+ 		return 0;
+ 	return autoremove_wake_function(wait, mode, sync, NULL);
+ }
+@@ -359,12 +366,10 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ {
+ 	void *entry, **slot;
+ 	struct wait_exceptional_entry_queue ewait;
+-	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
++	wait_queue_head_t *wq;
+ 
+ 	init_wait(&ewait.wait);
+ 	ewait.wait.func = wake_exceptional_entry_func;
+-	ewait.key.mapping = mapping;
+-	ewait.key.index = index;
+ 
+ 	for (;;) {
+ 		entry = __radix_tree_lookup(&mapping->page_tree, index, NULL,
+@@ -375,6 +380,11 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 				*slotp = slot;
+ 			return entry;
+ 		}
++
++		wq = dax_entry_waitqueue(mapping,
++				dax_entry_start(index, entry));
++		ewait.key.mapping = mapping;
++		ewait.key.entry_start = dax_entry_start(index, entry);
+ 		prepare_to_wait_exclusive(wq, &ewait.wait,
+ 					  TASK_UNINTERRUPTIBLE);
+ 		spin_unlock_irq(&mapping->tree_lock);
+@@ -447,10 +457,11 @@ restart:
+ 	return entry;
+ }
+ 
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
++void dax_wake_mapping_entry_waiter(void *entry, struct address_space *mapping,
+ 				   pgoff_t index, bool wake_all)
+ {
+-	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
++	wait_queue_head_t *wq = dax_entry_waitqueue(mapping,
++						dax_entry_start(index, entry));
  
  	/*
-@@ -2790,7 +2793,7 @@ xfs_bmap_add_extent_hole_delay(
- 	 * Check and set flags if the current (right) segment exists.
- 	 * If it doesn't exist, we're converting the hole at end-of-file.
- 	 */
--	if (*idx < ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
-+	if (*idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
- 		state |= BMAP_RIGHT_VALID;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
+ 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
+@@ -462,7 +473,7 @@ void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ 		struct exceptional_entry_key key;
  
-@@ -4146,6 +4149,7 @@ xfs_bmapi_read(
- int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-+	int			whichfork,
- 	xfs_fileoff_t		aoff,
- 	xfs_filblks_t		len,
- 	struct xfs_bmbt_irec	*got,
-@@ -4154,7 +4158,7 @@ xfs_bmapi_reserve_delalloc(
- 	int			eof)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	xfs_extlen_t		alen;
- 	xfs_extlen_t		indlen;
- 	char			rt = XFS_IS_REALTIME_INODE(ip);
-@@ -4213,7 +4217,7 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, lastx, got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
- 	/*
- 	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index adb64fb..75b1a1f 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -234,9 +234,10 @@ struct xfs_bmbt_rec_host *
- 	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
- 		int fork, int *eofp, xfs_extnum_t *lastxp,
- 		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
--int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, xfs_fileoff_t aoff,
--		xfs_filblks_t len, struct xfs_bmbt_irec *got,
--		struct xfs_bmbt_irec *prev, xfs_extnum_t *lastx, int eof);
-+int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
-+		xfs_fileoff_t aoff, xfs_filblks_t len,
-+		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *prev,
-+		xfs_extnum_t *lastx, int eof);
- 
- /* The XFS_BMAP_EXTENT_* in xfs_log_format.h must match these. */
- enum xfs_bmap_intent_type {
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c08253e..59c7beb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -609,7 +609,7 @@ xfs_file_iomap_begin_delay(
+ 		key.mapping = mapping;
+-		key.index = index;
++		key.entry_start = dax_entry_start(index, entry);
+ 		__wake_up(wq, TASK_NORMAL, wake_all ? 0 : 1, &key);
  	}
+ }
+@@ -480,7 +491,7 @@ void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
+ 	}
+ 	unlock_slot(mapping, slot);
+ 	spin_unlock_irq(&mapping->tree_lock);
+-	dax_wake_mapping_entry_waiter(mapping, index, false);
++	dax_wake_mapping_entry_waiter(entry, mapping, index, false);
+ }
  
- retry:
--	error = xfs_bmapi_reserve_delalloc(ip, offset_fsb,
-+	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
- 			end_fsb - offset_fsb, &got,
- 			&prev, &idx, eof);
- 	switch (error) {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 0ec3fbe..4fdfa82 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3327,16 +3327,17 @@ DEFINE_INODE_ERROR_EVENT(xfs_reflink_dirty_page_error);
+ static void put_locked_mapping_entry(struct address_space *mapping,
+@@ -505,7 +516,7 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ 		return;
  
- /* copy on write */
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_around_shared);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_alloc);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_found);
-+DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
+ 	/* We have to wake up next waiter for the radix tree entry lock */
+-	dax_wake_mapping_entry_waiter(mapping, index, false);
++	dax_wake_mapping_entry_waiter(entry, mapping, index, false);
+ }
  
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow_range);
--DEFINE_INODE_IREC_EVENT(xfs_reflink_reserve_cow_extent);
- DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_allocate_cow_extent);
+ /*
+@@ -532,7 +543,7 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
+ 	radix_tree_delete(&mapping->page_tree, index);
+ 	mapping->nrexceptional--;
+ 	spin_unlock_irq(&mapping->tree_lock);
+-	dax_wake_mapping_entry_waiter(mapping, index, true);
++	dax_wake_mapping_entry_waiter(entry, mapping, index, true);
  
- DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
--DEFINE_SIMPLE_IO_EVENT(xfs_iomap_cow_delay);
+ 	return 1;
+ }
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index add6c4b..4065601 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -21,7 +21,7 @@ int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			struct iomap_ops *ops);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+-void dax_wake_mapping_entry_waiter(struct address_space *mapping,
++void dax_wake_mapping_entry_waiter(void *entry, struct address_space *mapping,
+ 				   pgoff_t index, bool wake_all);
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
-@@ -3344,7 +3345,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap_piece);
- 
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_reserve_cow_range_error);
--DEFINE_INODE_ERROR_EVENT(xfs_reflink_reserve_cow_extent_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
+ #ifdef CONFIG_FS_DAX
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 8a287df..35e880d 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -617,7 +617,7 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 			if (node)
+ 				workingset_node_pages_dec(node);
+ 			/* Wakeup waiters for exceptional entry lock */
+-			dax_wake_mapping_entry_waiter(mapping, page->index,
++			dax_wake_mapping_entry_waiter(p, mapping, page->index,
+ 						      false);
+ 		}
+ 	}
+-- 
+2.7.4
 
