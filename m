@@ -1,93 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18856 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756502AbcI1CyV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:54:21 -0400
-Subject: [PATCH 07/63] xfs: add refcount btree support to growfs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:54:14 -0700
-Message-ID: <147503125466.30303.11873524512005903411.stgit@birch.djwong.org>
-In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mga14.intel.com ([192.55.52.115]:12934 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964874AbcI0UsZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:48:25 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 10/11] xfs: use struct iomap based DAX PMD fault path
+Date: Tue, 27 Sep 2016 14:48:01 -0600
+Message-Id: <1475009282-9818-11-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Modify the growfs code to initialize new refcount btree blocks.
+Switch xfs_filemap_pmd_fault() from using dax_pmd_fault() to the new and
+improved iomap_dax_pmd_fault().  Also, now that it has no more users,
+remove xfs_get_blocks_dax_fault().
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 ---
- fs/xfs/xfs_fsops.c |   38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ fs/xfs/xfs_aops.c | 25 +++++--------------------
+ fs/xfs/xfs_aops.h |  3 ---
+ fs/xfs/xfs_file.c |  2 +-
+ 3 files changed, 6 insertions(+), 24 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 94ac06f..c2fe6bf 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -259,6 +259,11 @@ xfs_growfs_data_private(
- 		agf->agf_longest = cpu_to_be32(tmpsize);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
- 			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
-+		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+			agf->agf_refcount_root = cpu_to_be32(
-+					xfs_refc_block(mp));
-+			agf->agf_refcount_level = cpu_to_be32(1);
-+		}
- 
- 		error = xfs_bwrite(bp);
- 		xfs_buf_relse(bp);
-@@ -450,6 +455,17 @@ xfs_growfs_data_private(
- 			rrec->rm_offset = 0;
- 			be16_add_cpu(&block->bb_numrecs, 1);
- 
-+			/* account for refc btree root */
-+			if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+				rrec = XFS_RMAP_REC_ADDR(block, 5);
-+				rrec->rm_startblock = cpu_to_be32(
-+						xfs_refc_block(mp));
-+				rrec->rm_blockcount = cpu_to_be32(1);
-+				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
-+				rrec->rm_offset = 0;
-+				be16_add_cpu(&block->bb_numrecs, 1);
-+			}
-+
- 			error = xfs_bwrite(bp);
- 			xfs_buf_relse(bp);
- 			if (error)
-@@ -507,6 +523,28 @@ xfs_growfs_data_private(
- 				goto error0;
- 		}
- 
-+		/*
-+		 * refcount btree root block
-+		 */
-+		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+			bp = xfs_growfs_get_hdr_buf(mp,
-+				XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
-+				BTOBB(mp->m_sb.sb_blocksize), 0,
-+				&xfs_refcountbt_buf_ops);
-+			if (!bp) {
-+				error = -ENOMEM;
-+				goto error0;
-+			}
-+
-+			xfs_btree_init_block(mp, bp, XFS_REFC_CRC_MAGIC,
-+					     0, 0, agno,
-+					     XFS_BTREE_CRC_BLOCKS);
-+
-+			error = xfs_bwrite(bp);
-+			xfs_buf_relse(bp);
-+			if (error)
-+				goto error0;
-+		}
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 4a28fa9..39c754f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1170,8 +1170,7 @@ __xfs_get_blocks(
+ 	sector_t		iblock,
+ 	struct buffer_head	*bh_result,
+ 	int			create,
+-	bool			direct,
+-	bool			dax_fault)
++	bool			direct)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -1265,12 +1264,8 @@ __xfs_get_blocks(
+ 		if (ISUNWRITTEN(&imap))
+ 			set_buffer_unwritten(bh_result);
+ 		/* direct IO needs special help */
+-		if (create) {
+-			if (dax_fault)
+-				ASSERT(!ISUNWRITTEN(&imap));
+-			else
+-				xfs_map_direct(inode, bh_result, &imap, offset);
+-		}
++		if (create)
++			xfs_map_direct(inode, bh_result, &imap, offset);
  	}
- 	xfs_trans_agblocks_delta(tp, nfree);
+ 
  	/*
+@@ -1310,7 +1305,7 @@ xfs_get_blocks(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
+ }
+ 
+ int
+@@ -1320,17 +1315,7 @@ xfs_get_blocks_direct(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
+-}
+-
+-int
+-xfs_get_blocks_dax_fault(
+-	struct inode		*inode,
+-	sector_t		iblock,
+-	struct buffer_head	*bh_result,
+-	int			create)
+-{
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 1950e3b..6779e9d 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -57,9 +57,6 @@ int	xfs_get_blocks(struct inode *inode, sector_t offset,
+ 		       struct buffer_head *map_bh, int create);
+ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+ 			      struct buffer_head *map_bh, int create);
+-int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+-			         struct buffer_head *map_bh, int create);
+-
+ int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+ 		ssize_t size, void *private);
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 882f264..e86b2be 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1539,7 +1539,7 @@ xfs_filemap_pmd_fault(
+ 	}
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	ret = dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault);
++	ret = iomap_dax_pmd_fault(vma, addr, pmd, flags, &xfs_iomap_ops);
+ 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 
+ 	if (flags & FAULT_FLAG_WRITE)
+-- 
+2.7.4
 
