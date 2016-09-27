@@ -1,97 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:3621 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:51385 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933955AbcI0UsP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Sep 2016 16:48:15 -0400
+        id S934791AbcI0UsS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:48:18 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v3 00/11] re-enable DAX PMD support
-Date: Tue, 27 Sep 2016 14:47:51 -0600
-Message-Id: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 03/11] dax: remove buffer_size_valid()
+Date: Tue, 27 Sep 2016 14:47:54 -0600
+Message-Id: <1475009282-9818-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-locking.  This series allows DAX PMDs to participate in the DAX radix tree
-based locking scheme so that they can be re-enabled.
+Now that ext4 properly sets bh.b_size when we call get_block() for a hole,
+rely on that value and remove the buffer_size_valid() sanity check.
 
-Jan and Christoph, can you please help review these changes?
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 22 +---------------------
+ 1 file changed, 1 insertion(+), 21 deletions(-)
 
-Andrew, when the time is right can you please push these changes to Linus via
-the -mm tree?
-
-In some simple mmap I/O testing with FIO the use of PMD faults more than
-doubles I/O performance as compared with PTE faults.  Here is the FIO script I
-used for my testing:
-
-  [global]
-  bs=4k
-  size=2G
-  directory=/mnt/pmem0
-  ioengine=mmap
-  [randrw]
-  rw=randrw
-
-Here are the performance results with XFS using only pte faults:
-   READ: io=1022.7MB, aggrb=557610KB/s, minb=557610KB/s, maxb=557610KB/s, mint=1878msec, maxt=1878msec
-  WRITE: io=1025.4MB, aggrb=559084KB/s, minb=559084KB/s, maxb=559084KB/s, mint=1878msec, maxt=1878msec
-
-Here are performance numbers for that same test using PMD faults:
-   READ: io=1022.7MB, aggrb=1406.7MB/s, minb=1406.7MB/s, maxb=1406.7MB/s, mint=727msec, maxt=727msec
-  WRITE: io=1025.4MB, aggrb=1410.4MB/s, minb=1410.4MB/s, maxb=1410.4MB/s, mint=727msec, maxt=727msec
-
-This was done on a random lab machine with a PMEM device made from memmap'd
-RAM.  To get XFS to use PMD faults, I did the following:
-
-  mkfs.xfs -f -d su=2m,sw=1 /dev/pmem0
-  mount -o dax /dev/pmem0 /mnt/pmem0
-  xfs_io -c "extsize 2m" /mnt/pmem0
-
-Changes since v2:
-- Removed the struct buffer_head + get_block_t based dax_pmd_fault() handler.
-  All DAX PMD faults will now happen via the new struct iomap based
-  iomap_dax_pmd_fault().
-- Added a new struct iomap based PMD path which is now used by XFS.
-- Now that it is using struct iomap, ext2 no longer needs to modified so that
-  ext2_get_block() will give us the size of a hole.
-- Remove support for DAX PMD faults for ext2.  I can't get them to reliably
-  happen in my testing.
-- Removed unused xfs_get_blocks_dax_fault() wrapper
-- Added a bunch of comments around my changes in dax.c.
-
-This was built upon xfs/for-next with PMD performance fixes from Toshi Kani and
-Dan Williams.  Dan's patch has already been merged for v4.8, and Toshi's
-patches are currently queued in Andrew Morton's mm tree for v4.9 inclusion.
-
-Here is a tree containing my changes and all the fixes that I've been testing:
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v3
-
-Ross Zwisler (11):
-  ext4: allow DAX writeback for hole punch
-  ext4: tell DAX the size of allocation holes
-  dax: remove buffer_size_valid()
-  ext2: remove support for DAX PMD faults
-  dax: make 'wait_table' global variable static
-  dax: consistent variable naming for DAX entries
-  dax: coordinate locking for offsets in PMD range
-  dax: remove dax_pmd_fault()
-  dax: add struct iomap based DAX PMD support
-  xfs: use struct iomap based DAX PMD fault path
-  dax: remove "depends on BROKEN" from FS_DAX_PMD
-
- fs/Kconfig          |   1 -
- fs/dax.c            | 696 +++++++++++++++++++++++++++++-----------------------
- fs/ext2/file.c      |  24 +-
- fs/ext4/inode.c     |   7 +-
- fs/xfs/xfs_aops.c   |  25 +-
- fs/xfs/xfs_aops.h   |   3 -
- fs/xfs/xfs_file.c   |   2 +-
- include/linux/dax.h |  37 ++-
- mm/filemap.c        |   6 +-
- 9 files changed, 434 insertions(+), 367 deletions(-)
-
+diff --git a/fs/dax.c b/fs/dax.c
+index cc025f8..9b9be8a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -123,19 +123,6 @@ static bool buffer_written(struct buffer_head *bh)
+ 	return buffer_mapped(bh) && !buffer_unwritten(bh);
+ }
+ 
+-/*
+- * When ext4 encounters a hole, it returns without modifying the buffer_head
+- * which means that we can't trust b_size.  To cope with this, we set b_state
+- * to 0 before calling get_block and, if any bit is set, we know we can trust
+- * b_size.  Unfortunate, really, since ext4 knows precisely how long a hole is
+- * and would save us time calling get_block repeatedly.
+- */
+-static bool buffer_size_valid(struct buffer_head *bh)
+-{
+-	return bh->b_state != 0;
+-}
+-
+-
+ static sector_t to_sector(const struct buffer_head *bh,
+ 		const struct inode *inode)
+ {
+@@ -177,8 +164,6 @@ static ssize_t dax_io(struct inode *inode, struct iov_iter *iter,
+ 				rc = get_block(inode, block, bh, rw == WRITE);
+ 				if (rc)
+ 					break;
+-				if (!buffer_size_valid(bh))
+-					bh->b_size = 1 << blkbits;
+ 				bh_max = pos - first + bh->b_size;
+ 				bdev = bh->b_bdev;
+ 				/*
+@@ -1012,12 +997,7 @@ int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 
+ 	bdev = bh.b_bdev;
+ 
+-	/*
+-	 * If the filesystem isn't willing to tell us the length of a hole,
+-	 * just fall back to PTEs.  Calling get_block 512 times in a loop
+-	 * would be silly.
+-	 */
+-	if (!buffer_size_valid(&bh) || bh.b_size < PMD_SIZE) {
++	if (bh.b_size < PMD_SIZE) {
+ 		dax_pmd_dbg(&bh, address, "allocated block too small");
+ 		return VM_FAULT_FALLBACK;
+ 	}
 -- 
 2.7.4
 
