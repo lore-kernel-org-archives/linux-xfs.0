@@ -1,24 +1,21 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F0B177CA1
-	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 16:00:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C16C4304039
-	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 14:00:30 -0700 (PDT)
-Received: from gproxy10-pub.mail.unifiedlayer.com
-	(gproxy10-pub.mail.unifiedlayer.com [69.89.20.226]) by
-	cuda.sgi.com with SMTP id Hnr582wnoGRPjcbc for
-	<xfs@oss.sgi.com>; Tue, 27 Sep 2016 14:00:27 -0700 (PDT)
-Received: from [106.51.140.243] (port=8960 helo=AkshathaPC)
-	by host441.hostmonster.com with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.86_1) (envelope-from <amy.walsh@precisedatalists.com>)
-	id 1bowg3-00040v-5X
-	for xfs@oss.sgi.com; Tue, 27 Sep 2016 12:00:23 -0600
-From: "Amy Walsh" <amy.walsh@precisedatalists.com>
-Subject: Right Contacts
-Date: Tue, 27 Sep 2016 14:00:24 -0400
-Message-ID: <!&!AAAAAAAAAAAYAAAAAAAAAJLs7F0CSzZBnWOzexWG8WDCgAAAEAAAAPGqzlyVwEdPjX+9BWCsTCABAAAAAA==@precisedatalists.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B799B7CA1
+	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 09:16:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C417AC005
+	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 07:16:21 -0700 (PDT)
+Received: from IND01-BO1-obe.outbound.protection.outlook.com
+	(mail-bo1ind01on0068.outbound.protection.outlook.com
+	[104.47.101.68]) by cuda.sgi.com with ESMTP id KEbOkqq5ao0CrcRx
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 27 Sep 2016 07:16:18 -0700 (PDT)
+From: Hanna Watson <hanna.watson@edsonlinetech.com>
+Subject: PTC Users Leads & Info
+Date: Tue, 27 Sep 2016 14:15:44 +0000
+Message-ID: <MAXPR01MB0474BF02730BE7DCD30F8D0584CC0@MAXPR01MB0474.INDPRD01.PROD.OUTLOOK.COM>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,298 +24,207 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5514833914741766144=="
+Content-Type: multipart/mixed; boundary="===============8882132411631236697=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is a multipart message in MIME format.
-
---===============5514833914741766144==
+--===============8882132411631236697==
+Content-Language: en-US
 Content-Type: multipart/alternative;
-	boundary="----=_NextPart_000_0A11_01D218C7.7EA8B5B0"
-Content-Language: en-us
+	boundary="_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_"
 
-This is a multipart message in MIME format.
-
-------=_NextPart_000_0A11_01D218C7.7EA8B5B0
-Content-Type: text/plain;
-	charset="utf-8"
+--_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-Hi ,
-
-Hope you are doing well. We are a leading business contacts provider and =
-can provide you the most comprehensive and accurate business contacts =
-across the globe in all industry sectors.
-
-By acquiring our business contacts you can directly connect with your =
-target audience.=20
-
-Kindly fill your target audience with following details so that I can =
-send you few sample, updated records and further details at no cost for =
-your data evaluation.
-
-Target Industry            :
-
-Target Job title             :
-
-Target Geography        :
-
-Looking forward to hear from you.
-
-Best Regards,
-
-=E2=80=8B Amy Walsh
-
-Sales Consultant
-
- P Before printing this e-mail message, ask yourself whether you really =
-need a hard copy.
-
-=20
-
-If you do not wish to hear from us again, please respond back with =
-=E2=80=9CUnsubscribe=E2=80=9D and we will honor your request.
-
-Disclaimer: If you have received this electronic mail by error or if =
-you're not the right person to speak with in this regard, I'd appreciate =
-if you would be so kind as to forward this email to the right person or =
-the=20
-
-=20
+Hi,
 
 
-------=_NextPart_000_0A11_01D218C7.7EA8B5B0
-Content-Type: text/html;
-	charset="utf-8"
+
+Hope this email finds you well
+
+
+
+I would like to know if you would be interested in acquiring fresh and veri=
+fied contacts of PTC Software Users and Technician's list for your marketin=
+g campaign?
+
+
+
+Database Reach: Worldwide.
+
+
+
+Last updated: In every quarter to maintain 90% data quality and 95% accurac=
+y.
+
+
+
+Data Field: Name, Job Title, Verified Phone Number, Verified Email Address,=
+ Company Name & Address Employee Size, Revenue size, SIC Code, Industry Typ=
+e etc.,
+
+
+
+We also provide other technology users like: Salesforce,CRM, Nortel, SAP,Or=
+acle,EMC,Netapp  etc.
+
+
+
+Please review and let me know your thoughts on this so that I can send some=
+ samples and give you further information.
+
+
+
+Await your response!
+
+
+
+Thanks
+
+Hanna Watson
+
+Data Specialist
+
+
+
+If you don't wish to receive emails from us reply back with "REMOVE ME".
+
+
+
+--_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_
+Content-Type: text/html; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
-xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
-xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
-xmlns=3D"http://www.w3.org/TR/REC-html40">
-
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
 <head>
-<meta http-equiv=3DContent-Type content=3D"text/html; charset=3Dutf-8">
-<meta name=3DGenerator content=3D"Microsoft Word 12 (filtered medium)">
-<style>
-<!--
- /* Font Definitions */
- @font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Calibri Light";
+	panose-1:2 15 3 2 2 2 4 3 2 4;}
 @font-face
 	{font-family:Calibri;
 	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:Tahoma;
-	panose-1:2 11 6 4 3 5 4 4 2 4;}
-@font-face
-	{font-family:Webdings;
-	panose-1:5 3 1 2 1 5 9 6 7 3;}
-@font-face
-	{font-family:"Comic Sans MS";
-	panose-1:3 15 7 2 3 3 2 2 2 4;}
- /* Style Definitions */
- p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-p
-	{mso-style-priority:99;
-	mso-margin-top-alt:auto;
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
 	margin-right:0in;
-	mso-margin-bottom-alt:auto;
+	margin-bottom:8.0pt;
 	margin-left:0in;
-	font-size:12.0pt;
-	font-family:"Times New Roman","serif";}
-p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
-	{mso-style-priority:99;
-	mso-style-link:"Balloon Text Char";
+	line-height:107%;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;}
+p.MsoNoSpacing, li.MsoNoSpacing, div.MsoNoSpacing
+	{mso-style-priority:1;
 	margin:0in;
 	margin-bottom:.0001pt;
-	font-size:8.0pt;
-	font-family:"Tahoma","sans-serif";}
-span.BalloonTextChar
-	{mso-style-name:"Balloon Text Char";
-	mso-style-priority:99;
-	mso-style-link:"Balloon Text";
-	font-family:"Tahoma","sans-serif";}
-span.EmailStyle20
-	{mso-style-type:personal;
-	font-family:"Calibri","sans-serif";
-	color:windowtext;}
-span.EmailStyle21
-	{mso-style-type:personal-reply;
-	font-family:"Calibri","sans-serif";
-	color:#1F497D;}
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;}
 .MsoChpDefault
 	{mso-style-type:export-only;
-	font-size:10.0pt;}
-@page Section1
+	font-family:"Calibri",sans-serif;}
+.MsoPapDefault
+	{mso-style-type:export-only;
+	margin-bottom:8.0pt;
+	line-height:107%;}
+@page WordSection1
 	{size:8.5in 11.0in;
 	margin:1.0in 1.0in 1.0in 1.0in;}
-div.Section1
-	{page:Section1;}
--->
-</style>
-<!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
 </xml><![endif]--><!--[if gte mso 9]><xml>
- <o:shapelayout v:ext=3D"edit">
-  <o:idmap v:ext=3D"edit" data=3D"1" />
- </o:shapelayout></xml><![endif]-->
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
 </head>
-
-<body lang=3DEN-US link=3Dblue vlink=3Dpurple>
-
-<div class=3DSection1>
-
-<p class=3DMsoNormal><span =
-style=3D'font-size:13.5pt;color:#365F91;background:white'>Hi&nbsp;,</span=
-><span
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white'><span =
-style=3D'font-family:"Calibri","sans-serif";
-color:#365F91'>Hope you are doing well. We are a leading business =
-contacts
-provider and can provide you the most comprehensive and accurate =
-business
-contacts across the globe in all industry sectors.</span><span
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white'><span =
-style=3D'font-family:"Calibri","sans-serif";
-color:#365F91'>By acquiring our business contacts you can directly =
-connect with
-your target audience.&nbsp;</span><span =
-style=3D'font-size:7.5pt;font-family:
-"Arial","sans-serif"'><o:p></o:p></span></p>
-
-<p style=3D'text-align:justify;background:white'><span =
-style=3D'font-family:"Calibri","sans-serif";
-color:#365F91'>Kindly fill your target audience with following details =
-so that
-I can send you few sample, updated records and further details at no =
-cost for
-your data evaluation.</span><span =
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white;pt'><b><span =
-style=3D'font-family:
-"Calibri","sans-serif";color:#365F91'>Target
-Industry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; :</span></b><span
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white;pt'><b><span =
-style=3D'font-family:
-"Calibri","sans-serif";color:#365F91'>Target Job
-title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp; :</span></b><span
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white;pt'><b><span =
-style=3D'font-family:
-"Calibri","sans-serif";color:#365F91'>Target
-Geography&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :</span></b><span
-style=3D'font-size:7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></s=
-pan></p>
-
-<p style=3D'text-align:justify;background:white'><span =
-style=3D'font-family:"Calibri","sans-serif";
-color:#365F91'>Looking forward to hear from you.</span><span =
-style=3D'font-size:
-7.5pt;font-family:"Arial","sans-serif"'><o:p></o:p></span></p>
-
-<p style=3D'text-align:justify;background:white'><span =
-style=3D'font-family:"Calibri","sans-serif";
-color:#365F91'>Best Regards,</span><span =
-style=3D'font-size:7.5pt;font-family:
-"Arial","sans-serif"'><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'background:white'><b><span =
-style=3D'font-size:9.5pt;
-font-family:"Arial","sans-serif";color:blue'>=E2=80=8B</span> =
-</b><b><span
-style=3D'font-size:10.0pt;font-family:"Comic Sans MS";color:#44546A'>Amy =
-Walsh<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'background:white'><b><span =
-style=3D'font-size:10.0pt;
-font-family:"Comic Sans MS";color:#44546A'>Sales =
-Consultant<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal align=3Dcenter =
-style=3D'text-align:center;text-autospace:none'><b><span
-lang=3DEN =
-style=3D'font-size:22.0pt;color:green'>&nbsp;</span></b><b><u><span
-lang=3DEN =
-style=3D'font-size:22.0pt;font-family:Webdings;color:green'>P</span></u><=
-/b><u><span
-lang=3DEN style=3D'color:green'> <b>Before printing this e-mail message, =
-ask
-yourself whether you really need a hard copy.</b></span></u><b><span
-style=3D'font-size:13.0pt;color:#365F91'><o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal align=3Dcenter =
-style=3D'text-align:center;text-autospace:none'><span
-style=3D'color:#365F91'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal align=3Dcenter =
-style=3D'text-align:center;line-height:115%;
-background:white;text-autospace:none'><span =
-style=3D'font-size:7.5pt;line-height:
-115%;font-family:"Arial","sans-serif";color:#BFBFBF'>If you do not wish =
-to hear
-from us again, please respond back with =E2=80=9CUnsubscribe=E2=80=9D =
-and we will honor your
-request.</span><span =
-style=3D'font-size:12.0pt;line-height:115%;font-family:"Times New =
-Roman","serif";
-color:black'><o:p></o:p></span></p>
-
-<p class=3DMsoNormal align=3Dcenter =
-style=3D'text-align:center;line-height:115%;
-background:white;text-autospace:none'><span =
-style=3D'font-size:7.5pt;line-height:
-115%;font-family:"Arial","sans-serif";color:#BFBFBF'>Disclaimer: If you =
-have received
-this electronic mail by error or if you're not the right person to speak =
-with
-in this regard, I'd appreciate if you would be so kind as to forward =
-this email
-to the right person or the </span><o:p></o:p></p>
-
-<p class=3DMsoNormal><o:p>&nbsp;</o:p></p>
-
+<body lang=3D"EN-US">
+<div class=3D"WordSection1">
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Hi,<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Hope this email finds you well
+<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">I would like to know if you would be interested in acquirin=
+g fresh and verified contacts of PTC Software Users and Technician&#8217;s =
+list for your marketing campaign?<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif;background:white">Database Reach: Worldwide.</span><span sty=
+le=3D"font-family:&quot;Calibri Light&quot;,sans-serif"><o:p></o:p></span><=
+/p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">&nbsp;<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif;background:white">Last updated: In every quarter to maintain=
+ 90% data quality and 95% accuracy.</span><span style=3D"font-family:&quot;=
+Calibri Light&quot;,sans-serif"><o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Data Field: Name, Job Title, Verified Phone Number, Verifie=
+d Email Address, Company Name &amp; Address Employee Size, Revenue size, SI=
+C Code, Industry Type etc.,<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">We also provide other technology users like: Salesforce,CRM=
+, Nortel, SAP,Oracle,EMC,Netapp&nbsp; etc.<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Please review and let me know your thoughts on this so that=
+ I can send some samples and give you further information.<o:p></o:p></span=
+></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Await your response!<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Thanks<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Hanna Watson<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">Data Specialist<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif;color:gray"><o:p>&nbsp;</o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif">If you don't wish to receive emails from us reply back with=
+ &quot;REMOVE ME&quot;.<o:p></o:p></span></p>
+<p class=3D"MsoNoSpacing"><span style=3D"font-family:&quot;Calibri Light&qu=
+ot;,sans-serif"><o:p>&nbsp;</o:p></span></p>
 </div>
-
 </body>
-
 </html>
 
-------=_NextPart_000_0A11_01D218C7.7EA8B5B0--
+--_000_MAXPR01MB0474BF02730BE7DCD30F8D0584CC0MAXPR01MB0474INDP_--
 
 
---===============5514833914741766144==
+--===============8882132411631236697==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -329,4 +235,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============5514833914741766144==--
+--===============8882132411631236697==--
