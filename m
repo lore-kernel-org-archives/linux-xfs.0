@@ -1,59 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18903 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756059AbcI1Cy2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:54:28 -0400
-Subject: [PATCH 08/63] xfs: account for the refcount btree in the alloc/free
- log reservation
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:54:20 -0700
-Message-ID: <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
-In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mga14.intel.com ([192.55.52.115]:3621 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934391AbcI0UsQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Sep 2016 16:48:16 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 01/11] ext4: allow DAX writeback for hole punch
+Date: Tue, 27 Sep 2016 14:47:52 -0600
+Message-Id: <1475009282-9818-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-Every time we allocate or free an extent, we might need to split the
-refcount btree.  Reserve some blocks in the transaction to handle
-this possibility.
+Currently when doing a DAX hole punch with ext4 we fail to do a writeback.
+This is because the logic around filemap_write_and_wait_range() in
+ext4_punch_hole() only looks for dirty page cache pages in the radix tree,
+not for dirty DAX exceptional entries.
 
-(Reproduced by generic/167 over NFS atop XFS)
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-[darrick.wong@oracle.com: add commit message]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Cc: <stable@vger.kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/ext4/inode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 7c840e1..a59838f 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -67,7 +67,8 @@ xfs_calc_buf_res(
-  * Per-extent log reservation for the btree changes involved in freeing or
-  * allocating an extent.  In classic XFS there were two trees that will be
-  * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-- * (rmapbt).  The number of blocks reserved is based on the formula:
-+ * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
-+ * blocks reserved is based on the formula:
-  *
-  * num trees * ((2 blocks/level * max depth) - 1)
-  *
-@@ -83,6 +84,8 @@ xfs_allocfree_log_count(
- 	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
- 
- 	return blocks;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 3131747..0900cb4 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3890,7 +3890,7 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
  }
+ 
+ /*
+- * ext4_punch_hole: punches a hole in a file by releaseing the blocks
++ * ext4_punch_hole: punches a hole in a file by releasing the blocks
+  * associated with the given offset and length
+  *
+  * @inode:  File inode
+@@ -3919,7 +3919,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
+ 	 * Write out all dirty pages to avoid race conditions
+ 	 * Then release them.
+ 	 */
+-	if (mapping->nrpages && mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
++	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+ 		ret = filemap_write_and_wait_range(mapping, offset,
+ 						   offset + length - 1);
+ 		if (ret)
+-- 
+2.7.4
 
