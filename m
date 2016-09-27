@@ -1,111 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:51272 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161383AbcIWTE7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Sep 2016 15:04:59 -0400
-Date: Fri, 23 Sep 2016 20:04:57 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [PATCH 07/11] fuse_dev_splice_read(): switch to add_to_pipe()
-Message-ID: <20160923190457.GE2356@ZenIV.linux.org.uk>
-References: <20160909023452.GO2356@ZenIV.linux.org.uk>
- <CA+55aFwHQMjO4-vtfB9-ytc=o+DRo-HXVGckvXLboUxgpwb7_g@mail.gmail.com>
- <20160909221945.GQ2356@ZenIV.linux.org.uk>
- <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com>
- <20160914031648.GB2356@ZenIV.linux.org.uk>
- <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk>
- <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:54600 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755142AbcI0SKa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Sep 2016 14:10:30 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] libxfs: remove unused libxfs_iget arg
+Message-ID: <355fec5f-f7ef-8472-c71b-7bfa9d9ab8bd@redhat.com>
+Date: Tue, 27 Sep 2016 13:10:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: xfs-oss <xfs@oss.sgi.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+libxfs_iget() is always called with bno == 0.
+Which is probably a good thing, because it then passes
+bno to xfs_iread as iget_flags!
+
+So remove the libxfs_iget arg, and explicitly pass
+0 to xfs_iread for flags.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/fuse/dev.c | 46 +++++++++-------------------------------------
- 1 file changed, 9 insertions(+), 37 deletions(-)
 
-diff --git a/fs/fuse/dev.c b/fs/fuse/dev.c
-index eaf56c6..0a6a808 100644
---- a/fs/fuse/dev.c
-+++ b/fs/fuse/dev.c
-@@ -1342,9 +1342,8 @@ static ssize_t fuse_dev_splice_read(struct file *in, loff_t *ppos,
- 				    struct pipe_inode_info *pipe,
- 				    size_t len, unsigned int flags)
- {
--	int ret;
-+	int total, ret;
- 	int page_nr = 0;
--	int do_wakeup = 0;
- 	struct pipe_buffer *bufs;
- 	struct fuse_copy_state cs;
- 	struct fuse_dev *fud = fuse_get_dev(in);
-@@ -1363,50 +1362,23 @@ static ssize_t fuse_dev_splice_read(struct file *in, loff_t *ppos,
- 	if (ret < 0)
+(or should we just rename/re-type bno to a flags arg?)
+
+diff --git a/db/attrset.c b/db/attrset.c
+index ec9da5a..ad3c8f3 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -151,7 +151,7 @@ attr_set_f(
+ 		value = NULL;
+ 	}
+ 
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip, 0)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
  		goto out;
+@@ -226,7 +226,7 @@ attr_remove_f(
  
--	ret = 0;
--
--	if (!pipe->readers) {
--		send_sig(SIGPIPE, current, 0);
--		if (!ret)
--			ret = -EPIPE;
--		goto out_unlock;
--	}
--
- 	if (pipe->nrbufs + cs.nr_segs > pipe->buffers) {
- 		ret = -EIO;
--		goto out_unlock;
-+		goto out;
- 	}
+ 	name = argv[optind];
  
--	while (page_nr < cs.nr_segs) {
--		int newbuf = (pipe->curbuf + pipe->nrbufs) & (pipe->buffers - 1);
--		struct pipe_buffer *buf = pipe->bufs + newbuf;
--
--		buf->page = bufs[page_nr].page;
--		buf->offset = bufs[page_nr].offset;
--		buf->len = bufs[page_nr].len;
-+	for (ret = total = 0; page_nr < cs.nr_segs; total += ret) {
- 		/*
- 		 * Need to be careful about this.  Having buf->ops in module
- 		 * code can Oops if the buffer persists after module unload.
- 		 */
--		buf->ops = &nosteal_pipe_buf_ops;
--
--		pipe->nrbufs++;
--		page_nr++;
--		ret += buf->len;
--
--		if (pipe->files)
--			do_wakeup = 1;
--	}
--
--out_unlock:
--
--	if (do_wakeup) {
--		smp_mb();
--		if (waitqueue_active(&pipe->wait))
--			wake_up_interruptible(&pipe->wait);
--		kill_fasync(&pipe->fasync_readers, SIGIO, POLL_IN);
-+		bufs[page_nr].ops = &nosteal_pipe_buf_ops;
-+		ret = add_to_pipe(pipe, &bufs[page_nr++]);
-+		if (unlikely(ret < 0))
-+			break;
- 	}
--
-+	if (total)
-+		ret = total;
- out:
- 	for (; page_nr < cs.nr_segs; page_nr++)
- 		put_page(bufs[page_nr].page);
--- 
-2.9.3
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip, 0)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+ 		goto out;
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 8141d97..0a8edeb 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -139,7 +139,7 @@ extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+ 
+ /* Inode Cache Interfaces */
+ extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+-				uint, struct xfs_inode **, xfs_daddr_t);
++				uint, struct xfs_inode **);
+ extern void	libxfs_iput(struct xfs_inode *);
+ 
+ #define IRELE(ip) libxfs_iput(ip)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index aa30522..1103e2c 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1330,7 +1330,7 @@ extern kmem_zone_t	*xfs_inode_zone;
+ 
+ int
+ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+-		xfs_inode_t **ipp, xfs_daddr_t bno)
++		xfs_inode_t **ipp)
+ {
+ 	xfs_inode_t	*ip;
+ 	int		error = 0;
+@@ -1341,7 +1341,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 
+ 	ip->i_ino = ino;
+ 	ip->i_mount = mp;
+-	error = xfs_iread(mp, tp, ip, bno);
++	error = xfs_iread(mp, tp, ip, 0);
+ 	if (error) {
+ 		kmem_zone_free(xfs_inode_zone, ip);
+ 		*ipp = NULL;
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index a4d9782..ea60d03 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -224,9 +224,9 @@ libxfs_trans_iget(
+ 	xfs_inode_log_item_t	*iip;
+ 
+ 	if (tp == NULL)
+-		return libxfs_iget(mp, tp, ino, lock_flags, ipp, 0);
++		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
+ 
+-	error = libxfs_iget(mp, tp, ino, lock_flags, &ip, 0);
++	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
+ 	if (error)
+ 		return error;
+ 	ASSERT(ip != NULL);
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 5507af4..06eed16 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -929,7 +929,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * would have been cleared in phase3 and phase4.
+ 	 */
+ 
+-	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
++	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
+ 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+ 			i, ORPHANAGE);
+ 
+@@ -953,7 +953,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * use iget/ijoin instead of trans_iget because the ialloc
+ 	 * wrapper can commit the transaction and start a new one
+ 	 */
+-/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
++/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
+ 		do_error(_("%d - couldn't iget root inode to make %s\n"),
+ 			i, ORPHANAGE);*/
+ 
+@@ -1067,7 +1067,7 @@ mv_orphanage(
+ 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+ 				(unsigned long long)ino);
+ 
+-	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip, 0);
++	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
+ 	if (err)
+ 		do_error(_("%d - couldn't iget orphanage inode\n"), err);
+ 	/*
+@@ -1079,7 +1079,7 @@ mv_orphanage(
+ 		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+ 					(unsigned long long)ino, ++incr);
+ 
+-	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, 0)))
++	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
+ 	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
+@@ -2820,7 +2820,7 @@ process_dir_inode(
+ 
+ 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
+ 
+-	error = -libxfs_iget(mp, NULL, ino, 0, &ip, 0);
++	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
+ 	if (error) {
+ 		if (!no_modify)
+ 			do_error(
 
