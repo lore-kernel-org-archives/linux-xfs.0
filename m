@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19872 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933939AbcI1C6K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:58:10 -0400
-Subject: [PATCH 42/63] xfs: add dedupe range vfs function
+Received: from userp1040.oracle.com ([156.151.31.81]:17608 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933939AbcI1C6S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:58:18 -0400
+Subject: [PATCH 43/63] xfs: teach get_bmapx about shared extents and the CoW
+ fork
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:58:06 -0700
-Message-ID: <147503148670.30303.7329267157997002433.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 19:58:13 -0700
+Message-ID: <147503149320.30303.9720221974285402096.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,347 +19,278 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Define a VFS function which allows userspace to request that the
-kernel reflink a range of blocks between two files if the ranges'
-contents match.  The function fits the new VFS ioctl that standardizes
-the checking for the btrfs EXTENT SAME ioctl.
+Teach xfs_getbmapx how to report shared extents and CoW fork contents
+accurately in the bmap output by querying the refcount btree
+appropriately.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: Plug into the VFS function pointers instead of handling ioctls
-directly, and lock the pages so they don't disappear while we're
-trying to compare them.
----
- fs/xfs/libxfs/xfs_fs.h |   30 +++++++++++
- fs/xfs/xfs_file.c      |   48 +++++++++++++++++-
- fs/xfs/xfs_reflink.c   |  127 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_reflink.h   |    5 ++
- 4 files changed, 204 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h |    4 +
+ fs/xfs/xfs_bmap_util.c |  141 +++++++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 130 insertions(+), 15 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 788e006..6230230 100644
+index 6230230..b1af423 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -542,8 +542,38 @@ struct xfs_clone_args {
- 	__u64 dest_offset;
- };
+@@ -81,14 +81,16 @@ struct getbmapx {
+ #define BMV_IF_PREALLOC		0x4	/* rtn status BMV_OF_PREALLOC if req */
+ #define BMV_IF_DELALLOC		0x8	/* rtn status BMV_OF_DELALLOC if req */
+ #define BMV_IF_NO_HOLES		0x10	/* Do not return holes */
++#define BMV_IF_COWFORK		0x20	/* return CoW fork rather than data */
+ #define BMV_IF_VALID	\
+ 	(BMV_IF_ATTRFORK|BMV_IF_NO_DMAPI_READ|BMV_IF_PREALLOC|	\
+-	 BMV_IF_DELALLOC|BMV_IF_NO_HOLES)
++	 BMV_IF_DELALLOC|BMV_IF_NO_HOLES|BMV_IF_COWFORK)
  
-+/* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl definitions */
-+#define XFS_EXTENT_DATA_SAME	0
-+#define XFS_EXTENT_DATA_DIFFERS	1
-+
-+/* from struct btrfs_ioctl_file_extent_same_info */
-+struct xfs_extent_data_info {
-+	__s64 fd;		/* in - destination file */
-+	__u64 logical_offset;	/* in - start of extent in destination */
-+	__u64 bytes_deduped;	/* out - total # of bytes we were able
-+				 * to dedupe from this file */
-+	/* status of this dedupe operation:
-+	 * < 0 for error
-+	 * == XFS_EXTENT_DATA_SAME if dedupe succeeds
-+	 * == XFS_EXTENT_DATA_DIFFERS if data differs
-+	 */
-+	__s32 status;		/* out - see above description */
-+	__u32 reserved;
-+};
-+
-+/* from struct btrfs_ioctl_file_extent_same_args */
-+struct xfs_extent_data {
-+	__u64 logical_offset;	/* in - start of extent in source */
-+	__u64 length;		/* in - length of extent */
-+	__u16 dest_count;	/* in - total elements in info array */
-+	__u16 reserved1;
-+	__u32 reserved2;
-+	struct xfs_extent_data_info info[0];
-+};
-+
- #define XFS_IOC_CLONE		 _IOW (0x94, 9, int)
- #define XFS_IOC_CLONE_RANGE	 _IOW (0x94, 13, struct xfs_clone_args)
-+#define XFS_IOC_FILE_EXTENT_SAME _IOWR(0x94, 54, struct xfs_extent_data)
+ /*	bmv_oflags values - returned for each non-header segment */
+ #define BMV_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
+ #define BMV_OF_DELALLOC		0x2	/* segment = delayed allocation */
+ #define BMV_OF_LAST		0x4	/* segment is the last in the file */
++#define BMV_OF_SHARED		0x8	/* segment shared with another file */
  
- #ifndef HAVE_BBMACROS
  /*
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3db3f34..450bf2b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1007,7 +1007,8 @@ xfs_file_share_range(
- 	loff_t		pos_in,
- 	struct file	*file_out,
- 	loff_t		pos_out,
--	u64		len)
-+	u64		len,
-+	bool		is_dedupe)
+  * Structure for XFS_IOC_FSSETDM.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index e827d65..427e824 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -42,6 +42,9 @@
+ #include "xfs_icache.h"
+ #include "xfs_log.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_iomap.h"
++#include "xfs_reflink.h"
++#include "xfs_refcount.h"
+ 
+ /* Kernel only BMAP related definitions and functions */
+ 
+@@ -389,11 +392,13 @@ xfs_bmap_count_blocks(
+ STATIC int
+ xfs_getbmapx_fix_eof_hole(
+ 	xfs_inode_t		*ip,		/* xfs incore inode pointer */
++	int			whichfork,
+ 	struct getbmapx		*out,		/* output structure */
+ 	int			prealloced,	/* this is a file with
+ 						 * preallocated data space */
+ 	__int64_t		end,		/* last block requested */
+-	xfs_fsblock_t		startblock)
++	xfs_fsblock_t		startblock,
++	bool			moretocome)
  {
- 	struct inode	*inode_in;
- 	struct inode	*inode_out;
-@@ -1016,6 +1017,7 @@ xfs_file_share_range(
- 	loff_t		isize;
- 	int		same_inode;
- 	loff_t		blen;
-+	unsigned int	flags = 0;
+ 	__int64_t		fixlen;
+ 	xfs_mount_t		*mp;		/* file system mount point */
+@@ -418,8 +423,9 @@ xfs_getbmapx_fix_eof_hole(
+ 		else
+ 			out->bmv_block = xfs_fsb_to_db(ip, startblock);
+ 		fileblock = XFS_BB_TO_FSB(ip->i_mount, out->bmv_offset);
+-		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-		if (xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
++		ifp = XFS_IFORK_PTR(ip, whichfork);
++		if (!moretocome &&
++		    xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
+ 		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
+ 			out->bmv_oflags |= BMV_OF_LAST;
+ 	}
+@@ -427,6 +433,73 @@ xfs_getbmapx_fix_eof_hole(
+ 	return 1;
+ }
  
- 	inode_in = file_inode(file_in);
- 	inode_out = file_inode(file_out);
-@@ -1053,6 +1055,15 @@ xfs_file_share_range(
- 	    pos_in + len > isize)
- 		return -EINVAL;
- 
-+	/* Don't allow dedupe past EOF in the dest file */
-+	if (is_dedupe) {
-+		loff_t	disize;
-+
-+		disize = i_size_read(inode_out);
-+		if (pos_out >= disize || pos_out + len > disize)
-+			return -EINVAL;
-+	}
-+
- 	/* If we're linking to EOF, continue to the block boundary. */
- 	if (pos_in + len == isize)
- 		blen = ALIGN(isize, bs) - pos_in;
-@@ -1076,8 +1087,10 @@ xfs_file_share_range(
- 	if (ret)
- 		goto out_unlock;
- 
-+	if (is_dedupe)
-+		flags |= XFS_REFLINK_DEDUPE;
- 	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
--			pos_out, len);
-+			pos_out, len, flags);
- 	if (ret < 0)
- 		goto out_unlock;
- 
-@@ -1097,7 +1110,7 @@ xfs_file_copy_range(
- 	int		error;
- 
- 	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out,
--				     len);
-+				     len, false);
- 	if (error)
- 		return error;
- 	return len;
-@@ -1112,7 +1125,33 @@ xfs_file_clone_range(
- 	u64		len)
- {
- 	return xfs_file_share_range(file_in, pos_in, file_out, pos_out,
--				     len);
-+				     len, false);
-+}
-+
-+#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
-+STATIC ssize_t
-+xfs_file_dedupe_range(
-+	struct file	*src_file,
-+	u64		loff,
-+	u64		len,
-+	struct file	*dst_file,
-+	u64		dst_loff)
++/* Adjust the reported bmap around shared/unshared extent transitions. */
++STATIC int
++xfs_getbmap_adjust_shared(
++	struct xfs_inode		*ip,
++	int				whichfork,
++	struct xfs_bmbt_irec		*map,
++	struct getbmapx			*out,
++	struct xfs_bmbt_irec		*next_map)
 +{
-+	int		error;
++	struct xfs_mount		*mp = ip->i_mount;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			ebno;
++	xfs_extlen_t			elen;
++	xfs_extlen_t			nlen;
++	int				error;
 +
-+	/*
-+	 * Limit the total length we will dedupe for each operation.
-+	 * This is intended to bound the total time spent in this
-+	 * ioctl to something sane.
-+	 */
-+	if (len > XFS_MAX_DEDUPE_LEN)
-+		len = XFS_MAX_DEDUPE_LEN;
++	next_map->br_blockcount = 0;
 +
-+	error = xfs_file_share_range(src_file, loff, dst_file, dst_loff,
-+				     len, true);
++	/* Only written data blocks can be shared. */
++	if (!xfs_is_reflink_inode(ip) || whichfork != XFS_DATA_FORK ||
++	    map->br_startblock == DELAYSTARTBLOCK ||
++	    map->br_startblock == HOLESTARTBLOCK ||
++	    ISUNWRITTEN(map))
++		return 0;
++
++	agno = XFS_FSB_TO_AGNO(mp, map->br_startblock);
++	agbno = XFS_FSB_TO_AGBNO(mp, map->br_startblock);
++	error = xfs_reflink_find_shared(mp, agno, agbno, map->br_blockcount,
++			&ebno, &elen, true);
 +	if (error)
 +		return error;
-+	return len;
- }
- 
- STATIC int
-@@ -1776,6 +1815,7 @@ const struct file_operations xfs_file_operations = {
- 	.fallocate	= xfs_file_fallocate,
- 	.copy_file_range = xfs_file_copy_range,
- 	.clone_file_range = xfs_file_clone_range,
-+	.dedupe_file_range = xfs_file_dedupe_range,
- };
- 
- const struct file_operations xfs_dir_file_operations = {
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index a2b5ad5..58f91bb 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1275,6 +1275,111 @@ xfs_reflink_remap_blocks(
- }
- 
- /*
-+ * Read a page's worth of file data into the page cache.  Return the page
-+ * locked.
-+ */
-+static struct page *
-+xfs_get_page(
-+	struct inode	*inode,
-+	xfs_off_t	offset)
-+{
-+	struct address_space	*mapping;
-+	struct page		*page;
-+	pgoff_t			n;
 +
-+	n = offset >> PAGE_SHIFT;
-+	mapping = inode->i_mapping;
-+	page = read_mapping_page(mapping, n, NULL);
-+	if (IS_ERR(page))
-+		return page;
-+	if (!PageUptodate(page)) {
-+		put_page(page);
-+		return ERR_PTR(-EIO);
-+	}
-+	lock_page(page);
-+	return page;
-+}
-+
-+/*
-+ * Compare extents of two files to see if they are the same.
-+ */
-+static int
-+xfs_compare_extents(
-+	struct inode	*src,
-+	xfs_off_t	srcoff,
-+	struct inode	*dest,
-+	xfs_off_t	destoff,
-+	xfs_off_t	len,
-+	bool		*is_same)
-+{
-+	xfs_off_t	src_poff;
-+	xfs_off_t	dest_poff;
-+	void		*src_addr;
-+	void		*dest_addr;
-+	struct page	*src_page;
-+	struct page	*dest_page;
-+	xfs_off_t	cmp_len;
-+	bool		same;
-+	int		error;
-+
-+	error = -EINVAL;
-+	same = true;
-+	while (len) {
-+		src_poff = srcoff & (PAGE_SIZE - 1);
-+		dest_poff = destoff & (PAGE_SIZE - 1);
-+		cmp_len = min(PAGE_SIZE - src_poff,
-+			      PAGE_SIZE - dest_poff);
-+		cmp_len = min(cmp_len, len);
-+		ASSERT(cmp_len > 0);
-+
-+		trace_xfs_reflink_compare_extents(XFS_I(src), srcoff, cmp_len,
-+				XFS_I(dest), destoff);
-+
-+		src_page = xfs_get_page(src, srcoff);
-+		if (IS_ERR(src_page)) {
-+			error = PTR_ERR(src_page);
-+			goto out_error;
-+		}
-+		dest_page = xfs_get_page(dest, destoff);
-+		if (IS_ERR(dest_page)) {
-+			error = PTR_ERR(dest_page);
-+			unlock_page(src_page);
-+			put_page(src_page);
-+			goto out_error;
-+		}
-+		src_addr = kmap_atomic(src_page);
-+		dest_addr = kmap_atomic(dest_page);
-+
-+		flush_dcache_page(src_page);
-+		flush_dcache_page(dest_page);
-+
-+		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
-+			same = false;
-+
-+		kunmap_atomic(dest_addr);
-+		kunmap_atomic(src_addr);
-+		unlock_page(dest_page);
-+		unlock_page(src_page);
-+		put_page(dest_page);
-+		put_page(src_page);
-+
-+		if (!same)
-+			break;
-+
-+		srcoff += cmp_len;
-+		destoff += cmp_len;
-+		len -= cmp_len;
++	*next_map = *map;
++	if (agbno == ebno) {
++		/*
++		 * Shared extent at (agbno, elen).  Shrink the reported
++		 * extent length and prepare to move the start of map[i]
++		 * to agbno+elen, with the aim of (re)formatting the new
++		 * map[i] the next time through the inner loop.
++		 */
++		out->bmv_length = XFS_FSB_TO_BB(mp, elen);
++		out->bmv_oflags |= BMV_OF_SHARED;
++		next_map->br_startblock += elen;
++		next_map->br_startoff += elen;
++		next_map->br_blockcount -= elen;
++		map->br_blockcount -= elen;
++	} else {
++		/*
++		 * There's an unshared extent (agbno, ebno - agbno)
++		 * followed by shared extent at (ebno, elen).  Shrink
++		 * the reported extent length to cover only the unshared
++		 * extent and prepare to move up the start of map[i] to
++		 * ebno, with the aim of (re)formatting the new map[i]
++		 * the next time through the inner loop.
++		 */
++		nlen = ebno - agbno;
++		out->bmv_length = XFS_FSB_TO_BB(mp, nlen);
++		next_map->br_startblock += nlen;
++		next_map->br_startoff += nlen;
++		next_map->br_blockcount -= nlen;
++		map->br_blockcount -= nlen;
 +	}
 +
-+	*is_same = same;
 +	return 0;
-+
-+out_error:
-+	trace_xfs_reflink_compare_extents_error(XFS_I(dest), error, _RET_IP_);
-+	return error;
 +}
 +
-+/*
-  * Link a range of blocks from one file to another.
-  */
- int
-@@ -1283,12 +1388,14 @@ xfs_reflink_remap_range(
- 	xfs_off_t		srcoff,
- 	struct xfs_inode	*dest,
- 	xfs_off_t		destoff,
--	xfs_off_t		len)
-+	xfs_off_t		len,
-+	unsigned int		flags)
- {
- 	struct xfs_mount	*mp = src->i_mount;
- 	xfs_fileoff_t		sfsbno, dfsbno;
- 	xfs_filblks_t		fsblen;
- 	int			error;
-+	bool			is_same;
+ /*
+  * Get inode's extents as described in bmv, and format for output.
+  * Calls formatter to fill the user's buffer until all extents
+@@ -459,12 +532,23 @@ xfs_getbmap(
+ 	int			iflags;		/* interface flags */
+ 	int			bmapi_flags;	/* flags for xfs_bmapi */
+ 	int			cur_ext = 0;
++	struct xfs_bmbt_irec	inject_map;
  
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return -EOPNOTSUPP;
-@@ -1300,6 +1407,9 @@ xfs_reflink_remap_range(
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
- 		return -EINVAL;
+ 	mp = ip->i_mount;
+ 	iflags = bmv->bmv_iflags;
+-	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
  
-+	if (flags & ~XFS_REFLINK_ALL)
+-	if (whichfork == XFS_ATTR_FORK) {
++	if ((iflags & BMV_IF_ATTRFORK) && (iflags & BMV_IF_COWFORK))
 +		return -EINVAL;
 +
- 	trace_xfs_reflink_remap_range(src, srcoff, len, dest, destoff);
++	if (iflags & BMV_IF_ATTRFORK)
++		whichfork = XFS_ATTR_FORK;
++	else if (iflags & BMV_IF_COWFORK)
++		whichfork = XFS_COW_FORK;
++	else
++		whichfork = XFS_DATA_FORK;
++
++	switch (whichfork) {
++	case XFS_ATTR_FORK:
+ 		if (XFS_IFORK_Q(ip)) {
+ 			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
+ 			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
+@@ -480,7 +564,15 @@ xfs_getbmap(
  
- 	/* Lock both files against IO */
-@@ -1311,6 +1421,21 @@ xfs_reflink_remap_range(
- 		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
+ 		prealloced = 0;
+ 		fixlen = 1LL << 32;
+-	} else {
++		break;
++	case XFS_COW_FORK:
++		if (ip->i_cformat != XFS_DINODE_FMT_EXTENTS)
++			return -EINVAL;
++
++		prealloced = 0;
++		fixlen = XFS_ISIZE(ip);
++		break;
++	default:
+ 		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+ 		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+ 		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+@@ -494,6 +586,7 @@ xfs_getbmap(
+ 			prealloced = 0;
+ 			fixlen = XFS_ISIZE(ip);
+ 		}
++		break;
  	}
  
-+	/*
-+	 * Check that the extents are the same.
-+	 */
-+	if (flags & XFS_REFLINK_DEDUPE) {
-+		is_same = false;
-+		error = xfs_compare_extents(VFS_I(src), srcoff, VFS_I(dest),
-+				destoff, len, &is_same);
-+		if (error)
-+			goto out_error;
-+		if (!is_same) {
-+			error = -EBADE;
-+			goto out_error;
-+		}
-+	}
-+
- 	error = xfs_reflink_set_inode_flag(src, dest);
- 	if (error)
- 		goto out_error;
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c35ce29..df82b20 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -43,7 +43,10 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
- extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-+#define XFS_REFLINK_DEDUPE	1	/* only reflink if contents match */
-+#define XFS_REFLINK_ALL		(XFS_REFLINK_DEDUPE)
- extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
--		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len);
-+		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
-+		unsigned int flags);
+ 	if (bmv->bmv_length == -1) {
+@@ -520,7 +613,8 @@ xfs_getbmap(
+ 		return -ENOMEM;
  
- #endif /* __XFS_REFLINK_H */
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	if (whichfork == XFS_DATA_FORK) {
++	switch (whichfork) {
++	case XFS_DATA_FORK:
+ 		if (!(iflags & BMV_IF_DELALLOC) &&
+ 		    (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size)) {
+ 			error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+@@ -538,8 +632,14 @@ xfs_getbmap(
+ 		}
+ 
+ 		lock = xfs_ilock_data_map_shared(ip);
+-	} else {
++		break;
++	case XFS_COW_FORK:
++		lock = XFS_ILOCK_SHARED;
++		xfs_ilock(ip, lock);
++		break;
++	case XFS_ATTR_FORK:
+ 		lock = xfs_ilock_attr_map_shared(ip);
++		break;
+ 	}
+ 
+ 	/*
+@@ -581,7 +681,8 @@ xfs_getbmap(
+ 			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
++		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
++				cur_ext < bmv->bmv_count; i++) {
+ 			out[cur_ext].bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+@@ -614,9 +715,16 @@ xfs_getbmap(
+ 				goto out_free_map;
+ 			}
+ 
+-			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
+-					prealloced, bmvend,
+-					map[i].br_startblock))
++			/* Is this a shared block? */
++			error = xfs_getbmap_adjust_shared(ip, whichfork,
++					&map[i], &out[cur_ext], &inject_map);
++			if (error)
++				goto out_free_map;
++
++			if (!xfs_getbmapx_fix_eof_hole(ip, whichfork,
++					&out[cur_ext], prealloced, bmvend,
++					map[i].br_startblock,
++					inject_map.br_blockcount != 0))
+ 				goto out_free_map;
+ 
+ 			bmv->bmv_offset =
+@@ -636,11 +744,16 @@ xfs_getbmap(
+ 				continue;
+ 			}
+ 
+-			nexleft--;
++			if (inject_map.br_blockcount) {
++				map[i] = inject_map;
++				i--;
++			} else
++				nexleft--;
+ 			bmv->bmv_entries++;
+ 			cur_ext++;
+ 		}
+-	} while (nmap && nexleft && bmv->bmv_length);
++	} while (nmap && nexleft && bmv->bmv_length &&
++		 cur_ext < bmv->bmv_count);
+ 
+  out_free_map:
+ 	kmem_free(map);
 
