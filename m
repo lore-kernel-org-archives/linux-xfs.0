@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 22D8D7CA1
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 00:56:11 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6AF547CA6
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:30:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA0A3304032
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:56:10 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id 0GuuKmdBpiaFJVff (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:56:06 -0700 (PDT)
-Subject: Re: [PATCH 1/3] block: invalidate the page cache when issuing
-	BLKZEROOUT.
-References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
-	<147510957761.8940.14476876584539116975.stgit@birch.djwong.org>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <95e7b8a5-49dd-ea06-5fba-8831ef08ca5a@suse.de>
-Date: Thu, 29 Sep 2016 07:56:03 +0200
-MIME-Version: 1.0
-In-Reply-To: <147510957761.8940.14476876584539116975.stgit@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C3C20AC003
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UEggXi68FQoR5BBh (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:50 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v26 12/21] richacl: Update the file masks in chmod()
+Date: Thu, 29 Sep 2016 01:29:31 +0200
+Message-Id: <1475105380-22837-13-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +23,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, axboe@kernel.dk, akpm@linux-foundation.org
-Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-T24gMDkvMjkvMjAxNiAwMjozOSBBTSwgRGFycmljayBKLiBXb25nIHdyb3RlOgo+IEludmFsaWRh
-dGUgdGhlIHBhZ2UgY2FjaGUgKGFzIGEgcmVndWxhciBPX0RJUkVDVCB3cml0ZSB3b3VsZCBkbykg
-dG8gYXZvaWQKPiByZXR1cm5pbmcgc3RhbGUgY2FjaGUgY29udGVudHMgYXQgYSBsYXRlciB0aW1l
-Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IERhcnJpY2sgSi4gV29uZyA8ZGFycmljay53b25nQG9yYWNs
-ZS5jb20+Cj4gUmV2aWV3ZWQtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgo+IFJl
-dmlld2VkLWJ5OiBNYXJ0aW4gSy4gUGV0ZXJzZW4gPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29t
-Pgo+IC0tLQo+ICBibG9jay9pb2N0bC5jIHwgICAxOCArKysrKysrKysrKystLS0tLS0KPiAgMSBm
-aWxlIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pCj4gClJldmlld2Vk
-LWJ5OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5jb20+CgpDaGVlcnMsCgpIYW5uZXMKLS0g
-CkRyLiBIYW5uZXMgUmVpbmVja2UJCSAgICAgIHpTZXJpZXMgJiBTdG9yYWdlCmhhcmVAc3VzZS5k
-ZQkJCSAgICAgICs0OSA5MTEgNzQwNTMgNjg4ClNVU0UgTElOVVggUHJvZHVjdHMgR21iSCwgTWF4
-ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkdGOiBKLiBIYXduLCBKLiBHdWlsZCwgRi4gSW1l
-bmTDtnJmZmVyLCBIUkIgMTY3NDYgKEFHIE7DvHJuYmVyZykKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Doing a chmod() sets the file mode, which includes the file permission
+bits.  When a file has a richacl, the permissions that the richacl
+grants need to be limited to what the new file permission bits allow.
+
+This is done by setting the file masks in the richacl to what the file
+permission bits map to.  The richacl access check algorithm takes the
+file masks into account, which ensures that the richacl cannot grant too
+many permissions.
+
+It is possible to explicitly add permissions to the file masks which go
+beyond what the file permission bits can grant (like the
+RICHACE_WRITE_ACL permission).  The POSIX.1 standard calls this an
+alternate file access control mechanism.  A subsequent chmod() would
+ensure that those permissions are disabled again.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Acked-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 71 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |  1 +
+ 2 files changed, 72 insertions(+)
+
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 731c468..a199245 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -541,3 +541,74 @@ restart:
+ 	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
+ }
+ EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
++
++/**
++ * __richacl_chmod  -  update the file masks to reflect the new mode
++ * @acl:	access control list
++ * @mode:	new file permission bits including the file type
++ *
++ * Return a copy of @acl where the file masks have been replaced by the file
++ * masks corresponding to the file permission bits in @mode, or returns @acl
++ * itself if the file masks are already up to date.  Takes over a reference
++ * to @acl.
++ */
++static struct richacl *
++__richacl_chmod(struct richacl *acl, umode_t mode)
++{
++	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++	unsigned int owner_mask, group_mask, other_mask;
++	struct richacl *clone;
++
++	owner_mask = richacl_mode_to_mask(mode >> 6) & ~x;
++	group_mask = richacl_mode_to_mask(mode >> 3) & ~x;
++	other_mask = richacl_mode_to_mask(mode)      & ~x;
++
++	if (acl->a_owner_mask == owner_mask &&
++	    acl->a_group_mask == group_mask &&
++	    acl->a_other_mask == other_mask &&
++	    (acl->a_flags & RICHACL_MASKED) &&
++	    (acl->a_flags & RICHACL_WRITE_THROUGH))
++		return acl;
++
++	clone = richacl_clone(acl, GFP_KERNEL);
++	richacl_put(acl);
++	if (!clone)
++		return ERR_PTR(-ENOMEM);
++
++	clone->a_flags |= (RICHACL_WRITE_THROUGH | RICHACL_MASKED);
++	clone->a_owner_mask = owner_mask;
++	clone->a_group_mask = group_mask;
++	clone->a_other_mask = other_mask;
++
++	return clone;
++}
++
++/**
++ * richacl_chmod  -  filesystem chmod helper
++ * @inode:	inode whose file permission bits to change
++ * @mode:	new file permission bits including the file type
++ *
++ * Helper for filesystems to use to perform a chmod on the richacl of an inode.
++ */
++int
++richacl_chmod(struct inode *inode, umode_t mode)
++{
++	struct richacl *acl;
++	int retval;
++
++	if (S_ISLNK(mode))
++		return -EOPNOTSUPP;
++	if (!inode->i_op->set_richacl)
++		return -EOPNOTSUPP;
++	acl = get_richacl(inode);
++	if (IS_ERR_OR_NULL(acl))
++		return PTR_ERR(acl);
++	acl = __richacl_chmod(acl, mode);
++	if (IS_ERR(acl))
++		return PTR_ERR(acl);
++	retval = inode->i_op->set_richacl(inode, acl);
++	richacl_put(acl);
++
++	return retval;
++}
++EXPORT_SYMBOL(richacl_chmod);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 207fe06..3cd5e53 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -189,5 +189,6 @@ extern int richacl_masks_to_mode(const struct richacl *);
+ extern unsigned int richacl_mode_to_mask(umode_t);
+ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
++extern int richacl_chmod(struct inode *, umode_t);
+ 
+ #endif /* __RICHACL_H */
+-- 
+2.7.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
