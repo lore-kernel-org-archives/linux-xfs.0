@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18068 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964876AbcI1DAH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 23:00:07 -0400
-Subject: [PATCH 60/63] xfs: recognize the reflink feature bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:20401 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964876AbcI1DAO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 23:00:14 -0400
+Subject: [PATCH 61/63] xfs: various swapext cleanups
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 20:00:03 -0700
-Message-ID: <147503160360.30303.15080783541885534418.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 20:00:09 -0700
+Message-ID: <147503160974.30303.8562472846604180499.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,53 +18,65 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Add the reflink feature flag to the set of recognized feature flags.
-This enables users to write to reflink filesystems.
+Replace structure typedefs with struct expressions and fix some
+whitespace issues that result.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- fs/xfs/xfs_super.c         |    7 +++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_bmap_util.c |   32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d65e403..d30593f 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -459,7 +459,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
--		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
-+		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2152ab6..0e95485 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1604,6 +1604,9 @@ xfs_fs_fill_super(
- 			"DAX unsupported by block device. Turning off DAX.");
- 			mp->m_flags &= ~XFS_MOUNT_DAX;
- 		}
-+		if (xfs_sb_version_hasreflink(&mp->m_sb))
-+			xfs_alert(mp,
-+		"DAX and reflink have not been tested together!");
- 	}
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 268639a..b58a935 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1551,8 +1551,8 @@ xfs_insert_file_space(
+  */
+ static int
+ xfs_swap_extents_check_format(
+-	xfs_inode_t	*ip,	/* target inode */
+-	xfs_inode_t	*tip)	/* tmp inode */
++	struct xfs_inode	*ip,	/* target inode */
++	struct xfs_inode	*tip)	/* tmp inode */
+ {
  
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-@@ -1617,6 +1620,10 @@ xfs_fs_fill_super(
- 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
- 	}
+ 	/* Should never get a local format */
+@@ -1638,22 +1638,22 @@ xfs_swap_extent_flush(
  
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		xfs_alert(mp,
-+	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-+
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+ int
+ xfs_swap_extents(
+-	xfs_inode_t	*ip,	/* target inode */
+-	xfs_inode_t	*tip,	/* tmp inode */
+-	xfs_swapext_t	*sxp)
++	struct xfs_inode	*ip,	/* target inode */
++	struct xfs_inode	*tip,	/* tmp inode */
++	struct xfs_swapext	*sxp)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_trans_t	*tp;
+-	xfs_bstat_t	*sbp = &sxp->sx_stat;
+-	xfs_ifork_t	*tempifp, *ifp, *tifp;
+-	int		src_log_flags, target_log_flags;
+-	int		error = 0;
+-	int		aforkblks = 0;
+-	int		taforkblks = 0;
+-	__uint64_t	tmp;
+-	int		lock_flags;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct xfs_bstat	*sbp = &sxp->sx_stat;
++	struct xfs_ifork	*tempifp, *ifp, *tifp;
++	int			src_log_flags, target_log_flags;
++	int			error = 0;
++	int			aforkblks = 0;
++	int			taforkblks = 0;
++	__uint64_t		tmp;
++	int			lock_flags;
+ 	struct xfs_ifork	*cowfp;
+-	__uint64_t	f;
++	__uint64_t		f;
+ 
+ 	/* XXX: we can't do this with rmap, will fix later */
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
 
