@@ -1,65 +1,71 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:38665 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752336AbcI0Vrh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 17:47:37 -0400
-Date: Wed, 28 Sep 2016 07:47:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 04/11] ext2: remove support for DAX PMD faults
-Message-ID: <20160927214720.GD27872@dastard>
-References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475009282-9818-5-git-send-email-ross.zwisler@linux.intel.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E647B7CDD
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:30:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B8E0430404E
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:41 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1QBdEDgASpATGvdt (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:40 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v26 10/21] vfs: Add get_richacl and set_richacl inode
+	operations
+Date: Thu, 29 Sep 2016 01:29:29 +0200
+Message-Id: <1475105380-22837-11-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1475009282-9818-5-git-send-email-ross.zwisler@linux.intel.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Tue, Sep 27, 2016 at 02:47:55PM -0600, Ross Zwisler wrote:
-> DAX PMD support was added via the following commit:
-> 
-> commit e7b1ea2ad658 ("ext2: huge page fault support")
-> 
-> I believe this path to be untested as ext2 doesn't reliably provide block
-> allocations that are aligned to 2MiB.  In my testing I've been unable to
-> get ext2 to actually fault in a PMD.  It always fails with a "pfn
-> unaligned" message because the sector returned by ext2_get_block() isn't
-> aligned.
-> 
-> I've tried various settings for the "stride" and "stripe_width" extended
-> options to mkfs.ext2, without any luck.
-> 
-> Since we can't reliably get PMDs, remove support so that we don't have an
-> untested code path that we may someday traverse when we happen to get an
-> aligned block allocation.  This should also make 4k DAX faults in ext2 a
-> bit faster since they will no longer have to call the PMD fault handler
-> only to get a response of VM_FAULT_FALLBACK.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-....
-> @@ -154,7 +133,6 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
->  
->  static const struct vm_operations_struct ext2_dax_vm_ops = {
->  	.fault		= ext2_dax_fault,
-> -	.pmd_fault	= ext2_dax_pmd_fault,
->  	.page_mkwrite	= ext2_dax_fault,
->  	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
->  };
+These operations are similar to the get_acl and set_acl operations for
+POSIX ACLs.  The distinction between access and default ACLs doesn't exist
+for richacls.
 
-Would it be better to put a comment mentioning this here? So as the
-years go by, this reminds people not to bother trying to implement
-it?
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Steve French <steve.french@primarydata.com>
+---
+ include/linux/fs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-/*
- * .pmd_fault is not supported for DAX because allocation in ext2
- * cannot be reliably aligned to huge page sizes and so pmd faults
- * will always fail and fail back to regular faults.
- */
-
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 15c32a0..e24d269 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1747,6 +1747,7 @@ struct inode_operations {
+ 	const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
+ 	int (*permission) (struct inode *, int);
+ 	struct posix_acl * (*get_acl)(struct inode *, int);
++	struct richacl * (*get_richacl)(struct inode *);
+ 
+ 	int (*readlink) (struct dentry *, char __user *,int);
+ 
+@@ -1775,6 +1776,7 @@ struct inode_operations {
+ 			   umode_t create_mode, int *opened);
+ 	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
+ 	int (*set_acl)(struct inode *, struct posix_acl *, int);
++	int (*set_richacl)(struct inode *, struct richacl *);
+ } ____cacheline_aligned;
+ 
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
