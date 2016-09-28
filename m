@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16411 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756372AbcI1Cxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:53:49 -0400
-Subject: [PATCH 02/63] xfs: return an error when an inline directory is too
- small
+Received: from aserp1040.oracle.com ([141.146.126.69]:19143 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756059AbcI1CzS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:55:18 -0400
+Subject: [PATCH 16/63] xfs: refcount btree requires more reserved space
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:53:43 -0700
-Message-ID: <147503122305.30303.17555276635568155992.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 19:55:14 -0700
+Message-ID: <147503131428.30303.6767320163313186333.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -17,31 +16,89 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org
 
-If the size of an inline directory is so small that it doesn't
-even cover the required header size, return an error to userspace
-instead of ASSERTing and returning 0 like everything's ok.
+The reference count btree is allocated from the free space, which
+means that we have to ensure that an AG can't run out of free space
+while performing a refcount operation.  In the pathological case each
+AG block has its own refcntbt record, so we have to keep that much
+space available.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reported-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_dir2_readdir.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+v2: Calculate the maximum possible size of the rmap and refcount
+btrees based on minimally-full btree blocks.  This increases the
+per-AG block reservations to handle the worst case btree size.
+---
+ fs/xfs/libxfs/xfs_alloc.c          |    3 +++
+ fs/xfs/libxfs/xfs_refcount_btree.c |   23 +++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_refcount_btree.h |    4 ++++
+ 3 files changed, 30 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index f44f799..2981698 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -84,7 +84,8 @@ xfs_dir2_sf_getdents(
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index be7e3fc..9d9a46e 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -38,6 +38,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_refcount_btree.h"
  
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ struct workqueue_struct *xfs_alloc_wq;
  
--	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
-+	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
-+		return -EFSCORRUPTED;
+@@ -128,6 +129,8 @@ xfs_alloc_ag_max_usable(
+ 		blocks++;		/* finobt root block */
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		blocks++; 		/* rmap root block */
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		blocks++;		/* refcount root block */
  
- 	/*
- 	 * If the block number in the offset is out of range, we're done.
+ 	return mp->m_sb.sb_agblocks - blocks;
+ }
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index c4550bd..547e686 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -402,3 +402,26 @@ xfs_refcountbt_compute_maxlevels(
+ 	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(mp,
+ 			mp->m_refc_mnr, mp->m_sb.sb_agblocks);
+ }
++
++/* Calculate the refcount btree size for some records. */
++xfs_extlen_t
++xfs_refcountbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_refc_mnr, len);
++}
++
++/*
++ * Calculate the maximum refcount btree size.
++ */
++xfs_extlen_t
++xfs_refcountbt_max_size(
++	struct xfs_mount	*mp)
++{
++	/* Bail out if we're uninitialized, which can happen in mkfs. */
++	if (mp->m_refc_mxr[0] == 0)
++		return 0;
++
++	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
++}
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index 9e9ad7c..780b02f 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -64,4 +64,8 @@ extern int xfs_refcountbt_maxrecs(struct xfs_mount *mp, int blocklen,
+ 		bool leaf);
+ extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+ 
++extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
++extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
++
+ #endif	/* __XFS_REFCOUNT_BTREE_H__ */
 
