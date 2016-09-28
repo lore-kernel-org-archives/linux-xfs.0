@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17481 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:17495 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933939AbcI1C5k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:57:40 -0400
-Subject: [PATCH 37/63] xfs: cancel CoW reservations and clear inode reflink
- flag when freeing blocks
+        with ESMTP id S933939AbcI1C5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:57:45 -0400
+Subject: [PATCH 38/63] xfs: cancel pending CoW reservations when destroying
+ inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:57:35 -0700
-Message-ID: <147503145516.30303.8096168526472457811.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 19:57:41 -0700
+Message-ID: <147503146128.30303.2317369406970493928.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,45 +19,48 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-When we're freeing blocks (truncate, punch, etc.), clear all CoW
-reservations in the range being freed.  If the file block count
-drops to zero, also clear the inode reflink flag.
+When destroying the inode, cancel all pending reservations in the CoW
+fork so that all the reserved blocks go back to the free pile.  In
+theory this sort of cleanup is only needed to clean up after write
+errors.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ fs/xfs/xfs_super.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0c25a76..8c971fd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 204b794..26b45b3 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
 @@ -49,6 +49,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
+ #include "xfs_rmap_item.h"
+ #include "xfs_refcount_item.h"
+ #include "xfs_bmap_item.h"
 +#include "xfs_reflink.h"
  
- kmem_zone_t *xfs_inode_zone;
+ #include <linux/namei.h>
+ #include <linux/init.h>
+@@ -938,6 +939,7 @@ xfs_fs_destroy_inode(
+ 	struct inode		*inode)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
++	int			error;
  
-@@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
- 			goto out;
- 	}
+ 	trace_xfs_destroy_inode(ip);
  
-+	/* Remove all pending CoW reservations. */
-+	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
-+			last_block);
-+	if (error)
-+		goto out;
+@@ -945,6 +947,12 @@ xfs_fs_destroy_inode(
+ 	XFS_STATS_INC(ip->i_mount, vn_rele);
+ 	XFS_STATS_INC(ip->i_mount, vn_remove);
+ 
++	error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
++	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
++		xfs_warn(ip->i_mount, "Error %d while evicting CoW blocks "
++				"for inode %llu.",
++				error, ip->i_ino);
 +
-+	/*
-+	 * Clear the reflink flag if we truncated everything.
-+	 */
-+	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
-+		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+
- 	/*
- 	 * Always re-log the inode so that our permanent transaction can keep
- 	 * on rolling it forward in the log.
+ 	xfs_inactive(ip);
+ 
+ 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
 
