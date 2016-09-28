@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4323C7CA1
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 00:57:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EA2B47CF8
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:31:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B8AB2AC002
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:57:17 -0700 (PDT)
-Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
-	ESMTP id jBCu5YcIt6yObQlW (version=TLSv1
-	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:57:15 -0700 (PDT)
-Subject: Re: [PATCH 3/3] block: implement (some of) fallocate for block devices
-References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
-	<147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <7f5bf66e-cbe7-3ec3-3325-0a2e01a54593@suse.de>
-Date: Thu, 29 Sep 2016 07:57:13 +0200
-MIME-Version: 1.0
-In-Reply-To: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AD78E304059
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vXAiT2dOEwSzMNtm (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:21 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v26 18/21] vfs: Add richacl permission checking
+Date: Thu, 29 Sep 2016 01:29:37 +0200
+Message-Id: <1475105380-22837-19-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,40 +23,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, axboe@kernel.dk, akpm@linux-foundation.org
-Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-T24gMDkvMjkvMjAxNiAwMjozOSBBTSwgRGFycmljayBKLiBXb25nIHdyb3RlOgo+IEFmdGVyIG11
-Y2ggZGlzY3Vzc2lvbiwgaXQgc2VlbXMgdGhhdCB0aGUgZmFsbG9jYXRlIGZlYXR1cmUgZmxhZwo+
-IEZBTExPQ19GTF9aRVJPX1JBTkdFIG1hcHMgbmljZWx5IHRvIFNDU0kgV1JJVEUgU0FNRTsgYW5k
-IHRoZSBmZWF0dXJlCj4gRkFMTE9DX0ZMX1BVTkNIX0hPTEUgbWFwcyBuaWNlbHkgdG8gdGhlIGRl
-dmljZXMgdGhhdCBoYXZlIGJlZW4KPiB3aGl0ZWxpc3RlZCBmb3IgemVyb2luZyBTQ1NJIFVOTUFQ
-LiAgUHVuY2ggc3RpbGwgcmVxdWlyZXMgdGhhdAo+IEZBTExPQ19GTF9LRUVQX1NJWkUgaXMgc2V0
-LiAgQSBsZW5ndGggdGhhdCBnb2VzIHBhc3QgdGhlIGVuZCBvZiB0aGUKPiBkZXZpY2Ugd2lsbCBi
-ZSBjbGFtcGVkIHRvIHRoZSBkZXZpY2Ugc2l6ZSBpZiBLRUVQX1NJWkUgaXMgc2V0OyBvciB3aWxs
-Cj4gcmV0dXJuIC1FSU5WQUwgaWYgbm90LiAgQm90aCBzdGFydCBhbmQgbGVuZ3RoIG11c3QgYmUg
-YWxpZ25lZCB0byB0aGUKPiBkZXZpY2UncyBsb2dpY2FsIGJsb2NrIHNpemUuCj4gCj4gU2luY2Ug
-dGhlIHNlbWFudGljcyBvZiBmYWxsb2NhdGUgYXJlIGZhaXJseSB3ZWxsIGVzdGFibGlzaGVkIGFs
-cmVhZHksCj4gd2lyZSB1cCB0aGUgdHdvIHBpZWNlcy4gIFRoZSBvdGhlciBmYWxsb2NhdGUgdmFy
-aWFudHMgKGNvbGxhcHNlIHJhbmdlLAo+IGluc2VydCByYW5nZSwgYW5kIGFsbG9jYXRlIGJsb2Nr
-cykgYXJlIG5vdCBzdXBwb3J0ZWQuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFycmljayBKLiBXb25n
-IDxkYXJyaWNrLndvbmdAb3JhY2xlLmNvbT4KPiAtLS0KPiB2MjogSW5jb3Jwb3JhdGUgZmVlZGJh
-Y2sgZnJvbSBDaHJpc3RvcGggJiBMaW51cy4gIFRlbnRhdGl2ZWx5IGFkZAo+IGEgcmVxdWlyZW1l
-bnQgdGhhdCB0aGUgZmFsbG9jYXRlIGFyZ3VtZW50cyBiZSBhbGlnbmVkIHRvIGxvZ2ljYWwgYmxv
-Y2sKPiBzaXplLCBhbmQgcHV0IGluIGEgZmV3IFhYWCBjb21tZW50cyBhaGVhZCBvZiBMU0YgZGlz
-Y3Vzc2lvbi4KPiB2MzogRm9yd2FyZCBwb3J0IHRvIDQuNy4KPiB2NDogRm9yd2FyZCBwb3J0IHRv
-IDQuOC4KPiAtLS0KPiAgZnMvYmxvY2tfZGV2LmMgfCAgIDc4ICsrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCj4gIGZzL29wZW4uYyAgICAgIHwg
-ICAgMyArLQo+ICAyIGZpbGVzIGNoYW5nZWQsIDgwIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
-LSkKPiAKUmV2aWV3ZWQtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4KCkNoZWVy
-cywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBSZWluZWNrZQkJICAgICAgelNlcmllcyAmIFN0b3Jh
-Z2UKaGFyZUBzdXNlLmRlCQkJICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBQcm9k
-dWN0cyBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEouIEhhd24sIEou
-IEd1aWxkLCBGLiBJbWVuZMO2cmZmZXIsIEhSQiAxNjc0NiAoQUcgTsO8cm5iZXJnKQoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+Hook the richacl permission checking function into the vfs.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/namei.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 52 insertions(+), 2 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index 7b8e00d7..9808154c 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -34,6 +34,7 @@
+ #include <linux/device_cgroup.h>
+ #include <linux/fs_struct.h>
+ #include <linux/posix_acl.h>
++#include <linux/richacl.h>
+ #include <linux/hash.h>
+ #include <linux/bitops.h>
+ #include <linux/init_task.h>
+@@ -257,7 +258,43 @@ void putname(struct filename *name)
+ 		__putname(name);
+ }
+ 
+-static int check_acl(struct inode *inode, int mask)
++static int check_richacl(struct inode *inode, int mask)
++{
++#ifdef CONFIG_FS_RICHACL
++	if (mask & MAY_NOT_BLOCK) {
++		struct base_acl *base_acl;
++
++		base_acl = rcu_dereference(inode->i_acl);
++		if (!base_acl)
++			goto no_acl;
++		/* no ->get_richacl() calls in RCU mode... */
++		if (is_uncached_acl(base_acl))
++			return -ECHILD;
++		return richacl_permission(inode, richacl(base_acl),
++					  mask & ~MAY_NOT_BLOCK);
++	} else {
++		struct richacl *acl;
++
++		acl = get_richacl(inode);
++		if (IS_ERR(acl))
++			return PTR_ERR(acl);
++		if (acl) {
++			int error = richacl_permission(inode, acl, mask);
++			richacl_put(acl);
++			return error;
++		}
++	}
++no_acl:
++#endif
++	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
++		    MAY_CHMOD | MAY_SET_TIMES)) {
++		/* File permission bits cannot grant this. */
++		return -EACCES;
++	}
++	return -EAGAIN;
++}
++
++static int check_posix_acl(struct inode *inode, int mask)
+ {
+ #ifdef CONFIG_FS_POSIX_ACL
+ 	if (mask & MAY_NOT_BLOCK) {
+@@ -295,11 +332,24 @@ static int acl_permission_check(struct inode *inode, int mask)
+ {
+ 	unsigned int mode = inode->i_mode;
+ 
++	/*
++	 * With POSIX ACLs, the (mode & S_IRWXU) bits exactly match the owner
++	 * permissions, and we can skip checking posix acls for the owner.
++	 * With richacls, the owner may be granted fewer permissions than the
++	 * mode bits seem to suggest (for example, append but not write), and
++	 * we always need to check the richacl.
++	 */
++
++	if (IS_RICHACL(inode)) {
++		int error = check_richacl(inode, mask);
++		if (error != -EAGAIN)
++			return error;
++	}
+ 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
+ 		mode >>= 6;
+ 	else {
+ 		if (IS_POSIXACL(inode) && (mode & S_IRWXG)) {
+-			int error = check_acl(inode, mask);
++			int error = check_posix_acl(inode, mask);
+ 			if (error != -EAGAIN)
+ 				return error;
+ 		}
+-- 
+2.7.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
