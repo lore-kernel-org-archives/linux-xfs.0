@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20284 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964876AbcI1C7y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:59:54 -0400
-Subject: [PATCH 58/63] xfs: don't mix reflink and DAX mode for now
+Received: from userp1040.oracle.com ([156.151.31.81]:18008 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964938AbcI1DAC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 23:00:02 -0400
+Subject: [PATCH 59/63] xfs: simulate per-AG reservations being critically low
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:59:51 -0700
-Message-ID: <147503159106.30303.15446494618167648273.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 19:59:57 -0700
+Message-ID: <147503159726.30303.3109533140586620403.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,73 +18,53 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Since we don't have a strategy for handling both DAX and reflink,
-for now we'll just prohibit both being set at the same time.
+Create an error injection point that enables us to simulate being
+critically low on per-AG block reservations.  This should enable us to
+simulate this specific ENOSPC condition so that we can test falling back
+to a regular file copy.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |    4 ++++
- fs/xfs/xfs_file.c             |    4 ++++
- fs/xfs/xfs_ioctl.c            |    4 ++++
- fs/xfs/xfs_iops.c             |    1 +
- 4 files changed, 13 insertions(+)
+ fs/xfs/libxfs/xfs_ag_resv.c |    4 +++-
+ fs/xfs/xfs_error.h          |    4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index f1b9d97..8de9a3a 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -407,6 +407,10 @@ xfs_dinode_verify(
- 	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
- 		return false;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index adf770f..e5ebc37 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -109,7 +109,9 @@ xfs_ag_resv_critical(
+ 	trace_xfs_ag_resv_critical(pag, type, avail);
  
-+	/* don't let reflink and dax mix */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags2 & XFS_DIFLAG2_DAX))
-+		return false;
-+
- 	return true;
+ 	/* Critically low if less than 10% or max btree height remains. */
+-	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
++	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
++			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL,
++			XFS_RANDOM_AG_RESV_CRITICAL);
  }
  
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 912f1d8..349f328 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1050,6 +1050,10 @@ xfs_file_share_range(
- 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
- 		return -EINVAL;
+ /*
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 8d8e1b07..05f8666 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -95,7 +95,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
+ #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+-#define XFS_ERRTAG_MAX					27
++#define XFS_ERRTAG_AG_RESV_CRITICAL			27
++#define XFS_ERRTAG_MAX					28
  
-+	/* Don't share DAX file data for now. */
-+	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+		return -EINVAL;
-+
- 	/* Are we going all the way to the end? */
- 	isize = i_size_read(inode_in);
- 	if (isize == 0)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c65d9ea..8b9f31c5 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1038,6 +1038,10 @@ xfs_ioctl_setattr_xflags(
- 	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
- 		return -EINVAL;
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -127,6 +128,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
+ #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+ #define XFS_RANDOM_BMAP_FINISH_ONE			1
++#define XFS_RANDOM_AG_RESV_CRITICAL			4
  
-+	/* Don't allow us to set DAX mode for a reflinked file for now. */
-+	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
-+		return -EINVAL;
-+
- 	/*
- 	 * Can't modify an immutable/append-only file unless
- 	 * we have appropriate permission.
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index dc3f5ba5..6d6b219 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1153,6 +1153,7 @@ xfs_diflags_to_iflags(
- 		inode->i_flags |= S_NOATIME;
- 	if (S_ISREG(inode->i_mode) &&
- 	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
-+	    !xfs_is_reflink_inode(ip) &&
- 	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
- 	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
- 		inode->i_flags |= S_DAX;
+ #ifdef DEBUG
+ extern int xfs_error_test_active;
 
