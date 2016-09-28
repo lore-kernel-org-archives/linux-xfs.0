@@ -1,56 +1,56 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43729 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935681AbcI0QxE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Sep 2016 12:53:04 -0400
-Date: Tue, 27 Sep 2016 18:52:53 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: XFS assertion during testing
-Message-ID: <20160927165253.GA19586@quack2.suse.cz>
-References: <20160927120309.GF1139@quack2.suse.cz>
- <20160927154653.GQ9314@birch.djwong.org>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2E4997CA1
+	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 21:09:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A3713AC003
+	for <xfs@oss.sgi.com>; Tue, 27 Sep 2016 19:09:50 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id CecLIo8D8GC7Z1C5 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 27 Sep 2016 19:09:49 -0700 (PDT)
+Date: Tue, 27 Sep 2016 19:09:48 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] libxfs: remove unused libxfs_iget arg
+Message-ID: <20160928020948.GB4428@infradead.org>
+References: <355fec5f-f7ef-8472-c71b-7bfa9d9ab8bd@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160927154653.GQ9314@birch.djwong.org>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
+In-Reply-To: <355fec5f-f7ef-8472-c71b-7bfa9d9ab8bd@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue 27-09-16 08:46:53, Darrick J. Wong wrote:
-> On Tue, Sep 27, 2016 at 02:03:09PM +0200, Jan Kara wrote:
-> > Hi,
-> > 
-> > I've hit the following assertion:
-> > 
-> > XFS: Assertion failed: dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count),
-> > file: fs/xfs/xfs_dir2_readdir.c, line: 87
-> > 
-> > during my testing. Now take this with a grain of salt since this is with my
-> > DAX patches applied on top of for-next branch of Dave's tree from
-> > yesterday. But I didn't touch XFS directory code even remotely which is why
-> > I'm reporting this.
-> > 
-> > The error happened while running xfstest xfs/083 on 20G ramdisk with dax
-> > enabled.
+On Tue, Sep 27, 2016 at 01:10:28PM -0500, Eric Sandeen wrote:
+> libxfs_iget() is always called with bno == 0.
+> Which is probably a good thing, because it then passes
+> bno to xfs_iread as iget_flags!
 > 
-> xfs/083 == "corrupt random stuff and see if anything notices" test,
-> which is why you get asserts in the directory code while testing DAX. :)
-
-Yeah, I just figured out it should not BUG, as it basically took down the
-machine (due to bugging when holding locks...) and that's impractical even
-for debugging runs.
-
-> That assert probably ought to be:
+> So remove the libxfs_iget arg, and explicitly pass
+> 0 to xfs_iread for flags.
 > 
-> if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
-> 	return -EFSCORRUPTED;
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> (or should we just rename/re-type bno to a flags arg?)
 
-Yeah, that would have been nice ;)
+Killing it seems fine to me.  Any argument not actually used is just
+asking for bugs like the one you just fixed.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
