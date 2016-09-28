@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5485F7CA1
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 21:19:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF0E9304032
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 19:19:37 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id SUH4pTO4qapKsAH3 (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 84B637CC7
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:31:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 563348F8033
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:07 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wEjeotzlo1LjFItx (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 19:19:35 -0700 (PDT)
-Date: Wed, 28 Sep 2016 19:19:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/3] block: implement (some of) fallocate for block devices
-Message-ID: <20160929021900.GA4901@birch.djwong.org>
-References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
-	<147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:06 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v26 15/21] richacl: Automatic Inheritance
+Date: Thu, 29 Sep 2016 01:29:34 +0200
+Message-Id: <1475105380-22837-16-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,152 +23,190 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: axboe@kernel.dk, akpm@linux-foundation.org
-Cc: linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-After much discussion, it seems that the fallocate feature flag
-FALLOC_FL_ZERO_RANGE maps nicely to SCSI WRITE SAME; and the feature
-FALLOC_FL_PUNCH_HOLE maps nicely to the devices that have been
-whitelisted for zeroing SCSI UNMAP.  Punch still requires that
-FALLOC_FL_KEEP_SIZE is set.  A length that goes past the end of the
-device will be clamped to the device size if KEEP_SIZE is set; or will
-return -EINVAL if not.  Both start and length must be aligned to the
-device's logical block size.
+Automatic Inheritance (AI) allows changes to the acl of a directory to
+propagate down to children.
 
-Since the semantics of fallocate are fairly well established already,
-wire up the two pieces.  The other fallocate variants (collapse range,
-insert range, and allocate blocks) are not supported.
+This is mostly implemented in user space: when a process changes the
+permissions of a directory and Automatic Inheritance is enabled for that
+directory, the process must propagate those changes to all children,
+recursively.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+The kernel enables this by keeping track of which permissions have been
+inherited at create time.  In addition, it makes sure that permission
+propagation is turned off when the permissions are set explicitly (for
+example, upon create or chmod).
+
+Automatic Inheritance works as follows:
+
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
+   is not set, the file or directory is not affected by AI.
+
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
+   and a file or subdirectory is created in that directory, the
+   inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
+   inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
+   allows user space to distinguish between aces which have been
+   inherited and aces which have been explicitly added.
+
+ - When the RICHACL_PROTECTED acl flag in the acl of a file or directory
+   is set, AI will not modify the acl.  This does not affect propagation
+   of permissions from the file to its children (if the file is a
+   directory).
+
+Linux does not have a way of creating files or directories without setting the
+file permission bits, so all files created inside a directory with
+RICHACL_AUTO_INHERIT set will have the RICHACL_PROTECTED flag set.  This
+effectively disables Automatic Inheritance.
+
+Protocols which support creating files without specifying permissions can
+explicitly clear the RICHACL_PROTECTED flag after creating a file and reset the
+file masks to "undo" applying the create mode; see richacl_compute_max_masks().
+They should set the RICHACL_DEFAULTED flag.  (A mechanism that would allow to
+indicate to the kernel to ignore the create mode in the first place when there
+are inherited permissions would be nice to have.)
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
-v2: Incorporate feedback from Christoph & Linus.  Tentatively add
-a requirement that the fallocate arguments be aligned to logical block
-size, and put in a few XXX comments ahead of LSF discussion.
-v3: Forward port to 4.7.
-v4: Forward port to 4.8.
----
- fs/block_dev.c |   75 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/open.c      |    3 +-
- 2 files changed, 77 insertions(+), 1 deletion(-)
+ fs/richacl.c                 | 20 +++++++++++++++++++-
+ include/linux/richacl.h      | 12 ++++++++++++
+ include/uapi/linux/richacl.h | 11 ++++++++++-
+ 3 files changed, 41 insertions(+), 2 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 08ae993..7b6d096 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -30,6 +30,7 @@
- #include <linux/cleancache.h>
- #include <linux/dax.h>
- #include <linux/badblocks.h>
-+#include <linux/falloc.h>
- #include <asm/uaccess.h>
- #include "internal.h"
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 8051181..4edce8b 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -567,7 +567,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	    acl->a_group_mask == group_mask &&
+ 	    acl->a_other_mask == other_mask &&
+ 	    (acl->a_flags & RICHACL_MASKED) &&
+-	    (acl->a_flags & RICHACL_WRITE_THROUGH))
++	    (acl->a_flags & RICHACL_WRITE_THROUGH) &&
++	    (!richacl_is_auto_inherit(acl) || richacl_is_protected(acl)))
+ 		return acl;
  
-@@ -1787,6 +1788,79 @@ static const struct address_space_operations def_blk_aops = {
- 	.is_dirty_writeback = buffer_check_dirty_writeback,
- };
+ 	clone = richacl_clone(acl, GFP_KERNEL);
+@@ -579,6 +580,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	clone->a_owner_mask = owner_mask;
+ 	clone->a_group_mask = group_mask;
+ 	clone->a_other_mask = other_mask;
++	if (richacl_is_auto_inherit(clone))
++		clone->a_flags |= RICHACL_PROTECTED;
  
-+#define	BLKDEV_FALLOC_FL_SUPPORTED					\
-+		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
-+		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
+ 	return clone;
+ }
+@@ -794,6 +797,14 @@ richacl_inherit(const struct richacl *dir_acl, int isdir)
+ 			ace++;
+ 		}
+ 	}
++	if (richacl_is_auto_inherit(dir_acl)) {
++		acl->a_flags = RICHACL_AUTO_INHERIT;
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags |= RICHACE_INHERITED_ACE;
++	} else {
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags &= ~RICHACE_INHERITED_ACE;
++	}
+ 
+ 	return acl;
+ }
+@@ -822,6 +833,13 @@ richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
+ 			richacl_put(acl);
+ 			acl = NULL;
+ 		} else {
++			/*
++			 * We need to set RICHACL_PROTECTED because we are
++			 * doing an implicit chmod
++			 */
++			if (richacl_is_auto_inherit(acl))
++				acl->a_flags |= RICHACL_PROTECTED;
 +
-+static long blkdev_fallocate(struct file *file, int mode, loff_t start,
-+			     loff_t len)
+ 			richacl_compute_max_masks(acl);
+ 			/*
+ 			 * Ensure that the acl will not grant any permissions
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 6354ef0..737513b 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -81,6 +81,18 @@ extern void set_cached_richacl(struct inode *, struct richacl *);
+ extern void forget_cached_richacl(struct inode *);
+ extern struct richacl *get_richacl(struct inode *);
+ 
++static inline int
++richacl_is_auto_inherit(const struct richacl *acl)
 +{
-+	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
-+	struct request_queue *q = bdev_get_queue(bdev);
-+	struct address_space *mapping;
-+	loff_t end = start + len - 1;
-+	loff_t isize;
-+	int error;
-+
-+	/* Fail if we don't recognize the flags. */
-+	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
-+		return -EOPNOTSUPP;
-+
-+	/* Don't go off the end of the device. */
-+	isize = i_size_read(bdev->bd_inode);
-+	if (start >= isize)
-+		return -EINVAL;
-+	if (end >= isize) {
-+		if (mode & FALLOC_FL_KEEP_SIZE) {
-+			len = isize - start;
-+			end = start + len - 1;
-+		} else
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * Don't allow IO that isn't aligned to logical block size.
-+	 */
-+	if ((start | len) & (bdev_logical_block_size(bdev) - 1))
-+		return -EINVAL;
-+
-+	/* Invalidate the page cache, including dirty pages. */
-+	mapping = bdev->bd_inode->i_mapping;
-+	truncate_inode_pages_range(mapping, start, end);
-+
-+	switch (mode) {
-+	case FALLOC_FL_ZERO_RANGE:
-+	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
-+		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
-+					    GFP_KERNEL, false);
-+		break;
-+	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
-+		/* Only punch if the device can do zeroing discard. */
-+		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
-+			return -EOPNOTSUPP;
-+		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
-+					     GFP_KERNEL, 0);
-+		break;
-+	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
-+		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
-+					     GFP_KERNEL, 0);
-+		break;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Invalidate again; if someone wandered in and dirtied a page,
-+	 * the caller will be given -EBUSY.  The third argument is
-+	 * inclusive, so the rounding here is safe.
-+	 */
-+	return invalidate_inode_pages2_range(mapping,
-+					     start >> PAGE_SHIFT,
-+					     end >> PAGE_SHIFT);
++	return acl->a_flags & RICHACL_AUTO_INHERIT;
 +}
 +
- const struct file_operations def_blk_fops = {
- 	.open		= blkdev_open,
- 	.release	= blkdev_close,
-@@ -1801,6 +1875,7 @@ const struct file_operations def_blk_fops = {
- #endif
- 	.splice_read	= generic_file_splice_read,
- 	.splice_write	= iter_file_splice_write,
-+	.fallocate	= blkdev_fallocate,
- };
++static inline int
++richacl_is_protected(const struct richacl *acl)
++{
++	return acl->a_flags & RICHACL_PROTECTED;
++}
++
+ /**
+  * richace_is_owner  -  check if @ace is an OWNER@ entry
+  */
+diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+index 1ed48ac..8849a53 100644
+--- a/include/uapi/linux/richacl.h
++++ b/include/uapi/linux/richacl.h
+@@ -18,6 +18,9 @@
+ #define __UAPI_RICHACL_H
  
- int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
-diff --git a/fs/open.c b/fs/open.c
-index 4fd6e25..01b6092 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -289,7 +289,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	 * Let individual file system decide if it supports preallocation
- 	 * for directories or not.
- 	 */
--	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
-+	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
-+	    !S_ISBLK(inode->i_mode))
- 		return -ENODEV;
+ /* a_flags values */
++#define RICHACL_AUTO_INHERIT			0x01
++#define RICHACL_PROTECTED			0x02
++#define RICHACL_DEFAULTED			0x04
+ #define RICHACL_WRITE_THROUGH			0x40
+ #define RICHACL_MASKED				0x80
  
- 	/* Check for wrap through zero too */
+@@ -31,6 +34,7 @@
+ #define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
+ #define RICHACE_INHERIT_ONLY_ACE		0x0008
+ #define RICHACE_IDENTIFIER_GROUP		0x0040
++#define RICHACE_INHERITED_ACE			0x0080
+ #define RICHACE_SPECIAL_WHO			0x4000
+ 
+ /* e_mask bitflags */
+@@ -60,6 +64,9 @@
+ #define RICHACE_EVERYONE_SPECIAL_ID		2
+ 
+ #define RICHACL_VALID_FLAGS (					\
++	RICHACL_AUTO_INHERIT |					\
++	RICHACL_PROTECTED |					\
++	RICHACL_DEFAULTED |					\
+ 	RICHACL_WRITE_THROUGH |					\
+ 	RICHACL_MASKED )
+ 
+@@ -69,13 +76,15 @@
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+ 	RICHACE_INHERIT_ONLY_ACE |				\
+ 	RICHACE_IDENTIFIER_GROUP |				\
++	RICHACE_INHERITED_ACE |					\
+ 	RICHACE_SPECIAL_WHO )
+ 
+ #define RICHACE_INHERITANCE_FLAGS (				\
+ 	RICHACE_FILE_INHERIT_ACE |				\
+ 	RICHACE_DIRECTORY_INHERIT_ACE |				\
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+-	RICHACE_INHERIT_ONLY_ACE )
++	RICHACE_INHERIT_ONLY_ACE |				\
++	RICHACE_INHERITED_ACE )
+ 
+ /* Valid RICHACE_* flags for directories and non-directories */
+ #define RICHACE_VALID_MASK (					\
+-- 
+2.7.4
 
 _______________________________________________
 xfs mailing list
