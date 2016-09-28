@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18008 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:18068 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964938AbcI1DAC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 23:00:02 -0400
-Subject: [PATCH 59/63] xfs: simulate per-AG reservations being critically low
+        with ESMTP id S964876AbcI1DAH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 23:00:07 -0400
+Subject: [PATCH 60/63] xfs: recognize the reflink feature bit
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 27 Sep 2016 19:59:57 -0700
-Message-ID: <147503159726.30303.3109533140586620403.stgit@birch.djwong.org>
+Date: Tue, 27 Sep 2016 20:00:03 -0700
+Message-ID: <147503160360.30303.15080783541885534418.stgit@birch.djwong.org>
 In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,53 +18,53 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Create an error injection point that enables us to simulate being
-critically low on per-AG block reservations.  This should enable us to
-simulate this specific ENOSPC condition so that we can test falling back
-to a regular file copy.
+Add the reflink feature flag to the set of recognized feature flags.
+This enables users to write to reflink filesystems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c |    4 +++-
- fs/xfs/xfs_error.h          |    4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ fs/xfs/xfs_super.c         |    7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index adf770f..e5ebc37 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -109,7 +109,9 @@ xfs_ag_resv_critical(
- 	trace_xfs_ag_resv_critical(pag, type, avail);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index d65e403..d30593f 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -459,7 +459,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2152ab6..0e95485 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1604,6 +1604,9 @@ xfs_fs_fill_super(
+ 			"DAX unsupported by block device. Turning off DAX.");
+ 			mp->m_flags &= ~XFS_MOUNT_DAX;
+ 		}
++		if (xfs_sb_version_hasreflink(&mp->m_sb))
++			xfs_alert(mp,
++		"DAX and reflink have not been tested together!");
+ 	}
  
- 	/* Critically low if less than 10% or max btree height remains. */
--	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
-+	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
-+			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL,
-+			XFS_RANDOM_AG_RESV_CRITICAL);
- }
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+@@ -1617,6 +1620,10 @@ xfs_fs_fill_super(
+ 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+ 	}
  
- /*
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 8d8e1b07..05f8666 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -95,7 +95,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
- #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
--#define XFS_ERRTAG_MAX					27
-+#define XFS_ERRTAG_AG_RESV_CRITICAL			27
-+#define XFS_ERRTAG_MAX					28
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -127,6 +128,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
- #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
- #define XFS_RANDOM_BMAP_FINISH_ONE			1
-+#define XFS_RANDOM_AG_RESV_CRITICAL			4
- 
- #ifdef DEBUG
- extern int xfs_error_test_active;
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		xfs_alert(mp,
++	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
++
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
 
