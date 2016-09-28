@@ -1,198 +1,91 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E8247CA1
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 12:39:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4595C304039
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 10:39:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TfBxJHPa0jtgAq6B for <xfs@oss.sgi.com>;
-	Wed, 28 Sep 2016 10:39:48 -0700 (PDT)
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 1FA182B51
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 12:39:19 -0500 (CDT)
-Subject: Re: [PATCH 3/6] xfs: detect AGFL size mismatches
-References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
-	<1472783257-15941-4-git-send-email-david@fromorbit.com>
-	<28b962d6-aa0c-076d-be74-99006252eab4@sandeen.net>
-	<20160914212651.GN30497@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6db94874-c1a3-ee0c-c82b-719e25e3ec3e@sandeen.net>
-Date: Wed, 28 Sep 2016 12:39:47 -0500
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37318 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752032AbcI1Tpd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2016 15:45:33 -0400
+Date: Wed, 28 Sep 2016 12:45:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/63] xfs: account for the refcount btree in the
+ alloc/free log reservation
+Message-ID: <20160928194519.GU14092@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+ <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
+ <20160928162005.GC8852@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20160914212651.GN30497@dastard>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160928162005.GC8852@bfoster.bfoster>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Brian Foster <bfoster@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On 9/14/16 4:26 PM, Dave Chinner wrote:
+On Wed, Sep 28, 2016 at 12:20:05PM -0400, Brian Foster wrote:
+> On Tue, Sep 27, 2016 at 07:54:20PM -0700, Darrick J. Wong wrote:
+> > Every time we allocate or free an extent, we might need to split the
+> > refcount btree.  Reserve some blocks in the transaction to handle
+> > this possibility.
+> > 
+> 
+> I'm probably not far along enough to grok how this all works, but I'm a
+> bit confused by the requirement here. Why is generic block
+> allocation/free a refcountbt matter? E.g., the function below is used
+> for things like inode chunk allocation and whatnot, aren't those
+> irrelevant to the refcountbt?
 
-> Bad wrap case:
-> 
-> 	flfirst = 10	(invalid!)
-> 	fllast = 0
-> 	flcount = 2
-> 	agfl_size = 10
-> 	active = 0 - 10 + 1
-> 	       = -9 + agfl_size
-> 	       = 1 (correct as flfirst is invalid!)
+The original reason (pre-deferred ops) was that
+xfs_allocfree_log_count() was used for calculating log reservations both
+for user data and for metadata allocation activities, and we tried to
+cram everything into one giant transaction.  As you point out, this can
+lead to unnecessarily large transaction reservations.  Nowadays we
+roll transactions with deferred ops and the refcount finish_one code
+preemptively rolls the transaction if it thinks it might be close to the
+overflow point.  I've been thinking we could just remove this since
+refcount updates are their own transaction anyway.
 
-Ok, I guess maybe I got confused w.r.t. the actual accounting vs.
-the expected/correct accounting.
+Will try reverting and report back. :)
 
-I saw "active = 1" and thought no, that's wrong, there are 2.
-But active is what it /should/ be not what it /is/ ?
+--D
 
-More comments would help I suppose, around either the first assignment
-or the variable declaration, for this and for flcount.
-
-(I guess flcount is actual number on the list, active is what
-it /should/ be?)
-
-> 	if (flfirst > agfl_size)		not true
-> 	if (flfirst == agfl_size)		true, warn
 > 
-> 	if (fllast > agfl_size)			not true
-> 	if (fllast == agfl_size)		not true
+> Brian
 > 
-> 	if (flcount > agfl_size + 1)		not true
-> 	if (flcount == agfl_size)		not true
-> 
-> 	if (active <= 0)			not true
-> 	if (flcount > active + 1)		not true
-> 	if (flcount < active)			not true
-> 	if (flcount != active)			true, warn
-> 
-> So, two correction needed warnings, which is correct because both
-> flfirst and flcount need fixing due to being off by one.
-
-ok
- 
-> The bad fllast case:
-> 
-> 	flfirst = 5
-> 	fllast = 10	(invalid!)
-> 	flcount = 6	
-> 	agfl_size = 10
-> 	active = fllast - flfirst + 1
-> 	       = 10 - 5 + 1
-> 	       = 6 (invalid as fllast is out of range)
-> 
-> 	if (flfirst > agfl_size)		not true
-> 	if (flfirst == agfl_size)		not true
-> 
-> 	if (fllast > agfl_size)			not true
-> 	if (fllast == agfl_size)		true, warn
-> 
-> 	if (flcount > agfl_size + 1)		not true
-> 	if (flcount == agfl_size)		not true
-> 
-> 	if (active <= 0)			not true
-> 	if (flcount > active + 1)		not true
-> 	if (flcount < active)			not true
-> 	if (flcount != active)			not true
-> 
-> So we've got a warning that a fllast correction will take place,
-> which will also correct the flcount once the fllast index is
-> updated.
-> 
-> But I think the case you are concerned about is a corner case of
-> this one - a full AGFL, right?  Something that, in practice, will
-> never happen as no single transaction will free or require a full
-> AGFL worth of blocks in a single allocation/free operation.
-
-Actually no, I hadn't caught that one ;)
-
-> As such, I didn't actually consider it or test that case, so, it may
-> be wrong.  Let's run the numbers:
-> 
-> 	flfirst = 0
-> 	fllast = 10	(invalid!)
-> 	flcount = 11	(invalid!)
-> 	agfl_size = 10
-> 	active = fllast - flfirst + 1
-> 	       = 10 - 0 + 1
-> 	       = 11 (invalid as fllast is out of range)
-> 
-> 	if (flfirst > agfl_size)		not true
-> 	if (flfirst == agfl_size)		not true
-> 
-> 	if (fllast > agfl_size)			not true
-> 	if (fllast == agfl_size)		true, warn
-> 
-> 	if (flcount > agfl_size + 1)		not true
-> 	if (flcount == agfl_size)		not true
-> 
-> 	if (active <= 0)			not true
-> 	if (flcount > active + 1)		not true
-> 	if (flcount < active)			not true
-> 	if (flcount != active)			not true
-> 
-> So it issues the same fllast warning as the not full, not wrapped
-> case, and that correction also fixes up the flcount. Maybe it's the
-> full wrapped case, which may be a pure flcount error?
-> 
-> 	flfirst = 5
-> 	fllast = 4
-> 	flcount = 11	(invalid!)
-> 	agfl_size = 10
-> 	active = fllast - flfirst + 1
-> 	       = 4 - 5 + 1
-> 	       = 10 (different to flcount!)
-> 
-> 	if (flfirst > agfl_size)		not true
-> 	if (flfirst == agfl_size)		not true
-> 
-> 	if (fllast > agfl_size)			not true
-> 	if (fllast == agfl_size)		not true
-> 
-> 	if (flcount > agfl_size + 1)		not true
-> 	if (flcount == agfl_size)		not true
-> 					(yes, that should warn)
-> 
-> 	if (active <= 0)			not true
-> 	if (flcount > active + 1)		not true
-> 	if (flcount < active)			not true
-> 	if (flcount != active)			true, warn
-> 
-> So we do get a warning about the flcount being wrong because it's
-> only one block different to the calculated active size (and hence it
-> will be corrected), but no warning from the flcount being out of
-> range by one block. So, yes, I think you are right, Eric, that the
-> check should be against agfl_size + 1, even it it means we get
-> multiple warnings...
-
-Ah, ok :)  So this is essentially:
-
--	if (flcount == agfl_size)
-+	if (flcount == agfl_size + 1)
-		xfs_warn(mp, "AGF %u: freelist count needs correction(1)",
-			be32_to_cpu(agf->agf_seqno));
-
-for your patch, right.  Glad we agree.  :)
-
--Eric
-
-> Thanks for thinking about this case!
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> > (Reproduced by generic/167 over NFS atop XFS)
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > [darrick.wong@oracle.com: add commit message]
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > index 7c840e1..a59838f 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > @@ -67,7 +67,8 @@ xfs_calc_buf_res(
+> >   * Per-extent log reservation for the btree changes involved in freeing or
+> >   * allocating an extent.  In classic XFS there were two trees that will be
+> >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
+> > - * (rmapbt).  The number of blocks reserved is based on the formula:
+> > + * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
+> > + * blocks reserved is based on the formula:
+> >   *
+> >   * num trees * ((2 blocks/level * max depth) - 1)
+> >   *
+> > @@ -83,6 +84,8 @@ xfs_allocfree_log_count(
+> >  	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
+> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
+> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
+> >  
+> >  	return blocks;
+> >  }
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
