@@ -1,39 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45458 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932747AbcI0UPD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 16:15:03 -0400
-Date: Tue, 27 Sep 2016 13:15:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 58/71] xfs: garbage collect old cowextsz reservations
-Message-ID: <20160927201501.GA19796@infradead.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
- <147216829394.867.16281333542262043955.stgit@birch.djwong.org>
- <20160924194234.GA1878@infradead.org>
- <20160926215209.GE14092@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17142 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932181AbcI1C4e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:56:34 -0400
+Subject: [PATCH 27/63] xfs: don't allow reflinked dir/dev/fifo/socket/pipe
+ files
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 27 Sep 2016 19:56:30 -0700
+Message-ID: <147503139083.30303.7026157192083016476.stgit@birch.djwong.org>
+In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160926215209.GE14092@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, david@fromorbit.com, linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Sep 26, 2016 at 02:52:09PM -0700, Darrick J. Wong wrote:
-> On Sat, Sep 24, 2016 at 12:42:34PM -0700, Christoph Hellwig wrote:
-> > On Thu, Aug 25, 2016 at 04:38:14PM -0700, Darrick J. Wong wrote:
-> > > Trim CoW reservations made on behalf of a cowextsz hint if they get too
-> > > old or we run low on quota, so long as we don't have dirty data awaiting
-> > > writeback or directio operations in progress.
-> > 
-> > FYI, at least in your latest tree we only ever seem to set
-> > xfs_inode_set_cowblocks_tag in xfs_swap_extents, so this effectively
-> > isn't used during normal fs usage.
-> 
-> The tag should be set at the end of __xfs_iomap_write_delay if we're
-> creating a DA reservation in the CoW fork. 
+Only non-rt files can be reflinked, so check that when we load an
+inode.  Also, don't leak the attr fork if there's a failure.
 
-We'll need to add that call then, as your current tree still doesn't
-have it.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |   23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index bbcc8c7..7699a03 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -121,6 +121,26 @@ xfs_iformat_fork(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
++	if (unlikely(xfs_is_reflink_inode(ip) &&
++	    (VFS_I(ip)->i_mode & S_IFMT) != S_IFREG)) {
++		xfs_warn(ip->i_mount,
++			"corrupt dinode %llu, wrong file type for reflink.",
++			ip->i_ino);
++		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
++				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
++		return -EFSCORRUPTED;
++	}
++
++	if (unlikely(xfs_is_reflink_inode(ip) &&
++	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
++		xfs_warn(ip->i_mount,
++			"corrupt dinode %llu, has reflink+realtime flag set.",
++			ip->i_ino);
++		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
++				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
++		return -EFSCORRUPTED;
++	}
++
+ 	switch (VFS_I(ip)->i_mode & S_IFMT) {
+ 	case S_IFIFO:
+ 	case S_IFCHR:
+@@ -208,7 +228,8 @@ xfs_iformat_fork(
+ 			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
+ 					     XFS_ERRLEVEL_LOW,
+ 					     ip->i_mount, dip);
+-			return -EFSCORRUPTED;
++			error = -EFSCORRUPTED;
++			break;
+ 		}
+ 
+ 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+
