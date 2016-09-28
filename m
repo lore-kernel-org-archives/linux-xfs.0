@@ -1,143 +1,353 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34126 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49304 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932652AbcI1QUP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Sep 2016 12:20:15 -0400
-Date: Wed, 28 Sep 2016 12:20:13 -0400
+        id S932652AbcI1QUU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Sep 2016 12:20:20 -0400
+Date: Wed, 28 Sep 2016 12:20:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/63] xfs: add refcount btree operations
-Message-ID: <20160928162012.GD8852@bfoster.bfoster>
+Subject: Re: [PATCH 10/63] xfs: create refcount update intent log items
+Message-ID: <20160928162017.GE8852@bfoster.bfoster>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503126699.30303.3194028804178091894.stgit@birch.djwong.org>
+ <147503127360.30303.13509008550712587655.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147503126699.30303.3194028804178091894.stgit@birch.djwong.org>
+In-Reply-To: <147503127360.30303.13509008550712587655.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 27, 2016 at 07:54:27PM -0700, Darrick J. Wong wrote:
-> Implement the generic btree operations required to manipulate refcount
-> btree blocks.  The implementation is similar to the bmapbt, though it
-> will only allocate and free blocks from the AG.
-> 
-> Since the refcount root and level fields are separate from the
-> existing roots and levels array, they need a separate logging flag.
+On Tue, Sep 27, 2016 at 07:54:33PM -0700, Darrick J. Wong wrote:
+> Create refcount update intent/done log items to record redo
+> information in the log.  Because we need to roll transactions between
+> updating the bmbt mapping and updating the reverse mapping, we also
+> have to track the status of the metadata updates that will be recorded
+> in the post-roll transactions, just in case we crash before committing
+> the final transaction.  This mechanism enables log recovery to finish
+> what was already started.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> [hch: fix logging of AGF refcount btree fields]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> v2: Remove init_rec_from_key since we no longer need it, and add
-> tracepoints when refcount btree operations fail.
-> ---
->  fs/xfs/Makefile                    |    1 
->  fs/xfs/libxfs/xfs_alloc.c          |    3 
->  fs/xfs/libxfs/xfs_format.h         |   10 +-
->  fs/xfs/libxfs/xfs_refcount.c       |  177 ++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_refcount.h       |   30 +++++
->  fs/xfs/libxfs/xfs_refcount_btree.c |  226 ++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_fsops.c                 |    1 
->  7 files changed, 446 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/libxfs/xfs_refcount.c
->  create mode 100644 fs/xfs/libxfs/xfs_refcount.h
+>  fs/xfs/Makefile                |    1 
+>  fs/xfs/libxfs/xfs_log_format.h |   59 ++++++
+>  fs/xfs/xfs_refcount_item.c     |  406 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_refcount_item.h     |  102 ++++++++++
+>  fs/xfs/xfs_super.c             |   18 ++
+>  5 files changed, 584 insertions(+), 2 deletions(-)
+>  create mode 100644 fs/xfs/xfs_refcount_item.c
+>  create mode 100644 fs/xfs/xfs_refcount_item.h
 > 
 > 
 ...
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-> index 359cf0c..c4550bd 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> new file mode 100644
+> index 0000000..ac52b02
+> --- /dev/null
+> +++ b/fs/xfs/xfs_refcount_item.c
+> @@ -0,0 +1,406 @@
 ...
-> @@ -106,12 +279,65 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
->  	.verify_write		= xfs_refcountbt_write_verify,
->  };
->  
-> +#if defined(DEBUG) || defined(XFS_WARN)
-> +STATIC int
-> +xfs_refcountbt_keys_inorder(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*k1,
-> +	union xfs_btree_key	*k2)
+> +/*
+> + * This is called to fill in the vector of log iovecs for the
+> + * given cud log item. We use only 1 iovec, and we point that
+> + * at the cud_log_format structure embedded in the cud item.
+> + * It is at this point that we assert that all of the extent
+> + * slots in the cud item have been filled.
+> + */
+> +STATIC void
+> +xfs_cud_item_format(
+> +	struct xfs_log_item	*lip,
+> +	struct xfs_log_vec	*lv)
 > +{
-> +	return be32_to_cpu(k1->refc.rc_startblock) <
-> +	       be32_to_cpu(k2->refc.rc_startblock);
-> +}
+> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
+> +	struct xfs_log_iovec	*vecp = NULL;
 > +
-> +STATIC int
-> +xfs_refcountbt_recs_inorder(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_rec	*r1,
-> +	union xfs_btree_rec	*r2)
-> +{
-> +	struct xfs_refcount_irec	a, b;
+> +	cudp->cud_format.cud_type = XFS_LI_CUD;
+> +	cudp->cud_format.cud_size = 1;
 > +
-> +	int ret = be32_to_cpu(r1->refc.rc_startblock) +
-> +		be32_to_cpu(r1->refc.rc_blockcount) <=
-> +		be32_to_cpu(r2->refc.rc_startblock);
-> +	if (!ret) {
-> +		a.rc_startblock = be32_to_cpu(r1->refc.rc_startblock);
-> +		a.rc_blockcount = be32_to_cpu(r1->refc.rc_blockcount);
-> +		a.rc_refcount = be32_to_cpu(r1->refc.rc_refcount);
-> +		b.rc_startblock = be32_to_cpu(r2->refc.rc_startblock);
-> +		b.rc_blockcount = be32_to_cpu(r2->refc.rc_blockcount);
-> +		b.rc_refcount = be32_to_cpu(r2->refc.rc_refcount);
-> +		a = a; b = b;
+> +	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_CUD_FORMAT, &cudp->cud_format,
+> +			sizeof(struct xfs_rud_log_format));
 
-What's that about ^?
-
-> +		trace_xfs_refcount_rec_order_error(cur->bc_mp,
-> +				cur->bc_private.a.agno, &a, &b);
-> +	}
-> +
-> +	return ret;
-> +}
-> +#endif
-> +
->  static const struct xfs_btree_ops xfs_refcountbt_ops = {
->  	.rec_len		= sizeof(struct xfs_refcount_rec),
->  	.key_len		= sizeof(struct xfs_refcount_key),
->  
->  	.dup_cursor		= xfs_refcountbt_dup_cursor,
-> +	.set_root		= xfs_refcountbt_set_root,
-> +	.alloc_block		= xfs_refcountbt_alloc_block,
-> +	.free_block		= xfs_refcountbt_free_block,
-> +	.get_minrecs		= xfs_refcountbt_get_minrecs,
-> +	.get_maxrecs		= xfs_refcountbt_get_maxrecs,
-> +	.init_key_from_rec	= xfs_refcountbt_init_key_from_rec,
-> +	.init_high_key_from_rec	= xfs_refcountbt_init_high_key_from_rec,
-> +	.init_rec_from_cur	= xfs_refcountbt_init_rec_from_cur,
-> +	.init_ptr_from_cur	= xfs_refcountbt_init_ptr_from_cur,
-> +	.key_diff		= xfs_refcountbt_key_diff,
->  	.buf_ops		= &xfs_refcountbt_buf_ops,
-> +	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
-> +#if defined(DEBUG) || defined(XFS_WARN)
-> +	.keys_inorder		= xfs_refcountbt_keys_inorder,
-> +	.recs_inorder		= xfs_refcountbt_recs_inorder,
-> +#endif
->  };
->  
->  /*
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index c2fe6bf..4b4059b 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -263,6 +263,7 @@ xfs_growfs_data_private(
->  			agf->agf_refcount_root = cpu_to_be32(
->  					xfs_refc_block(mp));
->  			agf->agf_refcount_level = cpu_to_be32(1);
-> +			agf->agf_refcount_blocks = cpu_to_be32(1);
-
-Looks like this should have come earlier..?
+They're the same size, but:	      xfs_cud_log_format
 
 Brian
 
->  		}
+> +}
+> +
+> +/*
+> + * Pinning has no meaning for an cud item, so just return.
+> + */
+> +STATIC void
+> +xfs_cud_item_pin(
+> +	struct xfs_log_item	*lip)
+> +{
+> +}
+> +
+> +/*
+> + * Since pinning has no meaning for an cud item, unpinning does
+> + * not either.
+> + */
+> +STATIC void
+> +xfs_cud_item_unpin(
+> +	struct xfs_log_item	*lip,
+> +	int			remove)
+> +{
+> +}
+> +
+> +/*
+> + * There isn't much you can do to push on an cud item.  It is simply stuck
+> + * waiting for the log to be flushed to disk.
+> + */
+> +STATIC uint
+> +xfs_cud_item_push(
+> +	struct xfs_log_item	*lip,
+> +	struct list_head	*buffer_list)
+> +{
+> +	return XFS_ITEM_PINNED;
+> +}
+> +
+> +/*
+> + * The CUD is either committed or aborted if the transaction is cancelled. If
+> + * the transaction is cancelled, drop our reference to the CUI and free the
+> + * CUD.
+> + */
+> +STATIC void
+> +xfs_cud_item_unlock(
+> +	struct xfs_log_item	*lip)
+> +{
+> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
+> +
+> +	if (lip->li_flags & XFS_LI_ABORTED) {
+> +		xfs_cui_release(cudp->cud_cuip);
+> +		kmem_zone_free(xfs_cud_zone, cudp);
+> +	}
+> +}
+> +
+> +/*
+> + * When the cud item is committed to disk, all we need to do is delete our
+> + * reference to our partner cui item and then free ourselves. Since we're
+> + * freeing ourselves we must return -1 to keep the transaction code from
+> + * further referencing this item.
+> + */
+> +STATIC xfs_lsn_t
+> +xfs_cud_item_committed(
+> +	struct xfs_log_item	*lip,
+> +	xfs_lsn_t		lsn)
+> +{
+> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
+> +
+> +	/*
+> +	 * Drop the CUI reference regardless of whether the CUD has been
+> +	 * aborted. Once the CUD transaction is constructed, it is the sole
+> +	 * responsibility of the CUD to release the CUI (even if the CUI is
+> +	 * aborted due to log I/O error).
+> +	 */
+> +	xfs_cui_release(cudp->cud_cuip);
+> +	kmem_zone_free(xfs_cud_zone, cudp);
+> +
+> +	return (xfs_lsn_t)-1;
+> +}
+> +
+> +/*
+> + * The CUD dependency tracking op doesn't do squat.  It can't because
+> + * it doesn't know where the free extent is coming from.  The dependency
+> + * tracking has to be handled by the "enclosing" metadata object.  For
+> + * example, for inodes, the inode is locked throughout the extent freeing
+> + * so the dependency should be recorded there.
+> + */
+> +STATIC void
+> +xfs_cud_item_committing(
+> +	struct xfs_log_item	*lip,
+> +	xfs_lsn_t		lsn)
+> +{
+> +}
+> +
+> +/*
+> + * This is the ops vector shared by all cud log items.
+> + */
+> +static const struct xfs_item_ops xfs_cud_item_ops = {
+> +	.iop_size	= xfs_cud_item_size,
+> +	.iop_format	= xfs_cud_item_format,
+> +	.iop_pin	= xfs_cud_item_pin,
+> +	.iop_unpin	= xfs_cud_item_unpin,
+> +	.iop_unlock	= xfs_cud_item_unlock,
+> +	.iop_committed	= xfs_cud_item_committed,
+> +	.iop_push	= xfs_cud_item_push,
+> +	.iop_committing = xfs_cud_item_committing,
+> +};
+> +
+> +/*
+> + * Allocate and initialize an cud item with the given number of extents.
+> + */
+> +struct xfs_cud_log_item *
+> +xfs_cud_init(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_cui_log_item		*cuip)
+> +
+> +{
+> +	struct xfs_cud_log_item	*cudp;
+> +
+> +	cudp = kmem_zone_zalloc(xfs_cud_zone, KM_SLEEP);
+> +	xfs_log_item_init(mp, &cudp->cud_item, XFS_LI_CUD, &xfs_cud_item_ops);
+> +	cudp->cud_cuip = cuip;
+> +	cudp->cud_format.cud_cui_id = cuip->cui_format.cui_id;
+> +
+> +	return cudp;
+> +}
+> diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+> new file mode 100644
+> index 0000000..7b8f56b
+> --- /dev/null
+> +++ b/fs/xfs/xfs_refcount_item.h
+> @@ -0,0 +1,102 @@
+> +/*
+> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#ifndef	__XFS_REFCOUNT_ITEM_H__
+> +#define	__XFS_REFCOUNT_ITEM_H__
+> +
+> +/*
+> + * There are (currently) two pairs of refcount btree redo item types:
+> + * increase and decrease.  The log items for these are CUI (refcount
+> + * update intent) and CUD (refcount update done).  The redo item type
+> + * is encoded in the flags field of each xfs_map_extent.
+> + *
+> + * *I items should be recorded in the *first* of a series of rolled
+> + * transactions, and the *D items should be recorded in the same
+> + * transaction that records the associated refcountbt updates.
+> + *
+> + * Should the system crash after the commit of the first transaction
+> + * but before the commit of the final transaction in a series, log
+> + * recovery will use the redo information recorded by the intent items
+> + * to replay the refcountbt metadata updates.
+> + */
+> +
+> +/* kernel only CUI/CUD definitions */
+> +
+> +struct xfs_mount;
+> +struct kmem_zone;
+> +
+> +/*
+> + * Max number of extents in fast allocation path.
+> + */
+> +#define	XFS_CUI_MAX_FAST_EXTENTS	16
+> +
+> +/*
+> + * Define CUI flag bits. Manipulated by set/clear/test_bit operators.
+> + */
+> +#define	XFS_CUI_RECOVERED		1
+> +
+> +/*
+> + * This is the "refcount update intent" log item.  It is used to log
+> + * the fact that some reverse mappings need to change.  It is used in
+> + * conjunction with the "refcount update done" log item described
+> + * below.
+> + *
+> + * These log items follow the same rules as struct xfs_efi_log_item;
+> + * see the comments about that structure (in xfs_extfree_item.h) for
+> + * more details.
+> + */
+> +struct xfs_cui_log_item {
+> +	struct xfs_log_item		cui_item;
+> +	atomic_t			cui_refcount;
+> +	atomic_t			cui_next_extent;
+> +	unsigned long			cui_flags;	/* misc flags */
+> +	struct xfs_cui_log_format	cui_format;
+> +};
+> +
+> +static inline size_t
+> +xfs_cui_log_item_sizeof(
+> +	unsigned int		nr)
+> +{
+> +	return offsetof(struct xfs_cui_log_item, cui_format) +
+> +			xfs_cui_log_format_sizeof(nr);
+> +}
+> +
+> +/*
+> + * This is the "refcount update done" log item.  It is used to log the
+> + * fact that some refcountbt updates mentioned in an earlier cui item
+> + * have been performed.
+> + */
+> +struct xfs_cud_log_item {
+> +	struct xfs_log_item		cud_item;
+> +	struct xfs_cui_log_item		*cud_cuip;
+> +	struct xfs_cud_log_format	cud_format;
+> +};
+> +
+> +extern struct kmem_zone	*xfs_cui_zone;
+> +extern struct kmem_zone	*xfs_cud_zone;
+> +
+> +struct xfs_cui_log_item *xfs_cui_init(struct xfs_mount *, uint);
+> +struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
+> +		struct xfs_cui_log_item *);
+> +int xfs_cui_copy_format(struct xfs_log_iovec *buf,
+> +		struct xfs_cui_log_format *dst_cui_fmt);
+> +void xfs_cui_item_free(struct xfs_cui_log_item *);
+> +void xfs_cui_release(struct xfs_cui_log_item *);
+> +
+> +#endif	/* __XFS_REFCOUNT_ITEM_H__ */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 2d092f9..abe69c6 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -47,6 +47,7 @@
+>  #include "xfs_sysfs.h"
+>  #include "xfs_ondisk.h"
+>  #include "xfs_rmap_item.h"
+> +#include "xfs_refcount_item.h"
 >  
->  		error = xfs_bwrite(bp);
+>  #include <linux/namei.h>
+>  #include <linux/init.h>
+> @@ -1788,8 +1789,23 @@ xfs_init_zones(void)
+>  	if (!xfs_rui_zone)
+>  		goto out_destroy_rud_zone;
+>  
+> +	xfs_cud_zone = kmem_zone_init(sizeof(struct xfs_cud_log_item),
+> +			"xfs_cud_item");
+> +	if (!xfs_cud_zone)
+> +		goto out_destroy_rui_zone;
+> +
+> +	xfs_cui_zone = kmem_zone_init(
+> +			xfs_cui_log_item_sizeof(XFS_CUI_MAX_FAST_EXTENTS),
+> +			"xfs_cui_item");
+> +	if (!xfs_cui_zone)
+> +		goto out_destroy_cud_zone;
+> +
+>  	return 0;
+>  
+> + out_destroy_cud_zone:
+> +	kmem_zone_destroy(xfs_cud_zone);
+> + out_destroy_rui_zone:
+> +	kmem_zone_destroy(xfs_rui_zone);
+>   out_destroy_rud_zone:
+>  	kmem_zone_destroy(xfs_rud_zone);
+>   out_destroy_icreate_zone:
+> @@ -1832,6 +1848,8 @@ xfs_destroy_zones(void)
+>  	 * destroy caches.
+>  	 */
+>  	rcu_barrier();
+> +	kmem_zone_destroy(xfs_cui_zone);
+> +	kmem_zone_destroy(xfs_cud_zone);
+>  	kmem_zone_destroy(xfs_rui_zone);
+>  	kmem_zone_destroy(xfs_rud_zone);
+>  	kmem_zone_destroy(xfs_icreate_zone);
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
