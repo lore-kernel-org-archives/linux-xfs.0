@@ -1,134 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:3621 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935241AbcI0UsW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Sep 2016 16:48:22 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v3 06/11] dax: consistent variable naming for DAX entries
-Date: Tue, 27 Sep 2016 14:47:57 -0600
-Message-Id: <1475009282-9818-7-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:16525 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756502AbcI1CyJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:54:09 -0400
+Subject: [PATCH 05/63] xfs: refcount btree add more reserved blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 27 Sep 2016 19:54:02 -0700
+Message-ID: <147503124203.30303.12757234426644427539.stgit@birch.djwong.org>
+In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-No functional change.
+Since XFS reserves a small amount of space in each AG as the minimum
+free space needed for an operation, save some more space in case we
+touch the refcount btree.
 
-Consistently use the variable name 'entry' instead of 'ret' for DAX radix
-tree entries.  This was already happening in most of the code, so update
-get_unlocked_mapping_entry(), grab_mapping_entry() and
-dax_unlock_mapping_entry().
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/dax.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c  |   13 +++++++++++++
+ fs/xfs/libxfs/xfs_format.h |    2 ++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index ac28cdf..baef586 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -357,7 +357,7 @@ static inline void *unlock_slot(struct address_space *mapping, void **slot)
- static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 					pgoff_t index, void ***slotp)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 275d345..aa0e1ca 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -52,10 +52,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+ 
++unsigned int
++xfs_refc_block(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
++
+ xfs_extlen_t
+ xfs_prealloc_blocks(
+ 	struct xfs_mount	*mp)
  {
--	void *ret, **slot;
-+	void *entry, **slot;
- 	struct wait_exceptional_entry_queue ewait;
- 	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
- 
-@@ -367,13 +367,13 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 	ewait.key.index = index;
- 
- 	for (;;) {
--		ret = __radix_tree_lookup(&mapping->page_tree, index, NULL,
-+		entry = __radix_tree_lookup(&mapping->page_tree, index, NULL,
- 					  &slot);
--		if (!ret || !radix_tree_exceptional_entry(ret) ||
-+		if (!entry || !radix_tree_exceptional_entry(entry) ||
- 		    !slot_locked(mapping, slot)) {
- 			if (slotp)
- 				*slotp = slot;
--			return ret;
-+			return entry;
- 		}
- 		prepare_to_wait_exclusive(wq, &ewait.wait,
- 					  TASK_UNINTERRUPTIBLE);
-@@ -396,13 +396,13 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		return xfs_refc_block(mp) + 1;
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return XFS_RMAP_BLOCK(mp) + 1;
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 57c52a6..622055b 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1455,6 +1455,8 @@ typedef __be32 xfs_rmap_ptr_t;
   */
- static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index)
- {
--	void *ret, **slot;
-+	void *entry, **slot;
+ #define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
  
- restart:
- 	spin_lock_irq(&mapping->tree_lock);
--	ret = get_unlocked_mapping_entry(mapping, index, &slot);
-+	entry = get_unlocked_mapping_entry(mapping, index, &slot);
- 	/* No entry for given index? Make sure radix tree is big enough. */
--	if (!ret) {
-+	if (!entry) {
- 		int err;
++unsigned int xfs_refc_block(struct xfs_mount *mp);
++
  
- 		spin_unlock_irq(&mapping->tree_lock);
-@@ -410,10 +410,10 @@ restart:
- 				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
- 		if (err)
- 			return ERR_PTR(err);
--		ret = (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |
-+		entry = (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |
- 			       RADIX_DAX_ENTRY_LOCK);
- 		spin_lock_irq(&mapping->tree_lock);
--		err = radix_tree_insert(&mapping->page_tree, index, ret);
-+		err = radix_tree_insert(&mapping->page_tree, index, entry);
- 		radix_tree_preload_end();
- 		if (err) {
- 			spin_unlock_irq(&mapping->tree_lock);
-@@ -425,11 +425,11 @@ restart:
- 		/* Good, we have inserted empty locked entry into the tree. */
- 		mapping->nrexceptional++;
- 		spin_unlock_irq(&mapping->tree_lock);
--		return ret;
-+		return entry;
- 	}
- 	/* Normal page in radix tree? */
--	if (!radix_tree_exceptional_entry(ret)) {
--		struct page *page = ret;
-+	if (!radix_tree_exceptional_entry(entry)) {
-+		struct page *page = entry;
- 
- 		get_page(page);
- 		spin_unlock_irq(&mapping->tree_lock);
-@@ -442,9 +442,9 @@ restart:
- 		}
- 		return page;
- 	}
--	ret = lock_slot(mapping, slot);
-+	entry = lock_slot(mapping, slot);
- 	spin_unlock_irq(&mapping->tree_lock);
--	return ret;
-+	return entry;
- }
- 
- void dax_wake_mapping_entry_waiter(struct address_space *mapping,
-@@ -469,11 +469,11 @@ void dax_wake_mapping_entry_waiter(struct address_space *mapping,
- 
- void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
- {
--	void *ret, **slot;
-+	void *entry, **slot;
- 
- 	spin_lock_irq(&mapping->tree_lock);
--	ret = __radix_tree_lookup(&mapping->page_tree, index, NULL, &slot);
--	if (WARN_ON_ONCE(!ret || !radix_tree_exceptional_entry(ret) ||
-+	entry = __radix_tree_lookup(&mapping->page_tree, index, NULL, &slot);
-+	if (WARN_ON_ONCE(!entry || !radix_tree_exceptional_entry(entry) ||
- 			 !slot_locked(mapping, slot))) {
- 		spin_unlock_irq(&mapping->tree_lock);
- 		return;
--- 
-2.7.4
+ /*
+  * BMAP Btree format definitions
 
