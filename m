@@ -1,71 +1,53 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E647B7CDD
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:30:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B8E0430404E
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:41 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1QBdEDgASpATGvdt (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:40 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v26 10/21] vfs: Add get_richacl and set_richacl inode
-	operations
-Date: Thu, 29 Sep 2016 01:29:29 +0200
-Message-Id: <1475105380-22837-11-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19118 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756059AbcI1CzM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Sep 2016 22:55:12 -0400
+Subject: [PATCH 15/63] xfs: add refcount btree block detection to log
+ recovery
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 27 Sep 2016 19:55:08 -0700
+Message-ID: <147503130803.30303.10365999535497314472.stgit@birch.djwong.org>
+In-Reply-To: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-These operations are similar to the get_acl and set_acl operations for
-POSIX ACLs.  The distinction between access and default ACLs doesn't exist
-for richacls.
+Identify refcountbt blocks in the log correctly so that we can
+validate them during log recovery.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Steve French <steve.french@primarydata.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux/fs.h | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/xfs_log_recover.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 15c32a0..e24d269 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1747,6 +1747,7 @@ struct inode_operations {
- 	const char * (*get_link) (struct dentry *, struct inode *, struct delayed_call *);
- 	int (*permission) (struct inode *, int);
- 	struct posix_acl * (*get_acl)(struct inode *, int);
-+	struct richacl * (*get_richacl)(struct inode *);
- 
- 	int (*readlink) (struct dentry *, char __user *,int);
- 
-@@ -1775,6 +1776,7 @@ struct inode_operations {
- 			   umode_t create_mode, int *opened);
- 	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
- 	int (*set_acl)(struct inode *, struct posix_acl *, int);
-+	int (*set_richacl)(struct inode *, struct richacl *);
- } ____cacheline_aligned;
- 
- ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
--- 
-2.7.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index f6abc60..0f01127 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2245,6 +2245,7 @@ xlog_recover_get_buf_lsn(
+ 	case XFS_ABTB_MAGIC:
+ 	case XFS_ABTC_MAGIC:
+ 	case XFS_RMAP_CRC_MAGIC:
++	case XFS_REFC_CRC_MAGIC:
+ 	case XFS_IBT_CRC_MAGIC:
+ 	case XFS_IBT_MAGIC: {
+ 		struct xfs_btree_block *btb = blk;
+@@ -2418,6 +2419,9 @@ xlog_recover_validate_buf_type(
+ 		case XFS_RMAP_CRC_MAGIC:
+ 			bp->b_ops = &xfs_rmapbt_buf_ops;
+ 			break;
++		case XFS_REFC_CRC_MAGIC:
++			bp->b_ops = &xfs_refcountbt_buf_ops;
++			break;
+ 		default:
+ 			warnmsg = "Bad btree block magic!";
+ 			break;
+
