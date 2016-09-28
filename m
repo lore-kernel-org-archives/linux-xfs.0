@@ -1,92 +1,149 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50057 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755671AbcINRTA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Sep 2016 13:19:00 -0400
-Date: Wed, 14 Sep 2016 10:18:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] xfs_repair: update the manual content about
- xfs_repair exit status
-Message-ID: <20160914171845.GF9314@birch.djwong.org>
-References: <1473872451-17249-1-git-send-email-zlang@redhat.com>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1FD287CA1
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:29:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C2B7AC002
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:29:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id PcG9Bggp2FEuTCqn (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:29:48 -0700 (PDT)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v25 00/21] Richacls (Core and Ext4)
+Date: Thu, 29 Sep 2016 01:29:19 +0200
+Message-Id: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1473872451-17249-1-git-send-email-zlang@redhat.com>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
-On Thu, Sep 15, 2016 at 01:00:51AM +0800, Zorro Lang wrote:
-> The man 8 xfs_repair said "xfs_repair run without the -n option will
-> always return a status code of 0". That's not correct.
-> 
-> xfs_repair will return 2 if it finds a fs log which needs to be
-> replayed or cleared, 1 if runtime error is encountered, and 0 for
-> all other cases.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> V3 add more description for return status 1, suggest the user to run
-> xfs_repair again if it return 1.
-> 
-> Thanks,
-> Zorro
-> 
->  man/man8/xfs_repair.8 | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> index 1b4d9e3..314f2c2 100644
-> --- a/man/man8/xfs_repair.8
-> +++ b/man/man8/xfs_repair.8
-> @@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
->  This message refers to a large directory.
->  If the directory were small, the message would read "junking entry ...".
->  .SH EXIT STATUS
-> +.TP
->  .B xfs_repair \-n
-> -(no modify node)
-> +(no modify mode)
->  will return a status of 1 if filesystem corruption was detected and
->  0 if no filesystem corruption was detected.
-> +.TP
->  .B xfs_repair
-> -run without the \-n option will always return a status code of 0.
-> +run without the \-n option will return a status code of 2 if it finds a
-> +filesystem log which needs to be replayed (by a mount/umount cycle) or
-> +cleared (by -L option), 1 if a runtime error is encountered, filesystem
-> +may be even more broken than before, so repair needs to be run again,
-> +and 0 in all other cases, whether or not filesystem corruption was detected.
+Here is another update of the richacl patches.  Changes since the last posting
+(http://lwn.net/Articles/697320/):
 
-Hm.  I never did manage to reply with any suggested wording of my own
-yesterday.  I dislike the runon sentence that this is becoming.  How
-about this?
+ * Rebase on top of the VFS for-next branch
+   (git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git for-next;
+   hash 6731cb0f).
 
-"xfs_repair -n (no modify mode) will return a status code of 1 if it is
-unable to show that the filesystem is clean, whether due to corruption
-or runtime errors.  A status code of 0 is returned if the filesystem
-was clean.
+   (This patch queue does not conflict with the xattr inode operation removal
+   patches.)
+   
+ * Adjust for the {inode_change_ok => setattr_prepare} rename.
 
-"xfs_repair run without the -n option will return one of three status
-codes.  If the filesystem log is dirty, a status code of 2 will be
-returned.  The dirty log must be replayed by a mount/umount cycle or
-cleared with the -L option.  If xfs_repair was unable to fix corruption
-or encountered a runtime error, a status code of 1 will be returned.
-A status code of 0 is returned if the filesystem is now clean."
+The complete patch queue is available here:
 
---D
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+	richacl-2016-09-29
 
->  .SH BUGS
->  The filesystem to be checked and repaired must have been
->  unmounted cleanly using normal system administration procedures
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/samba
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (19):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Permission check algorithm
+  richacl: Compute maximum file masks from an acl
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+  vfs: Move check_posix_acl and check_richacl out of fs/namei.c
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+ fs/9p/acl.c                                     |   8 +-
+ fs/Kconfig                                      |   3 +
+ fs/Makefile                                     |   1 +
+ fs/attr.c                                       |  79 +-
+ fs/ext4/Kconfig                                 |  11 +
+ fs/ext4/Makefile                                |   1 +
+ fs/ext4/ext4.h                                  |   6 +-
+ fs/ext4/file.c                                  |   3 +
+ fs/ext4/ialloc.c                                |  11 +-
+ fs/ext4/inode.c                                 |   5 +-
+ fs/ext4/namei.c                                 |   5 +
+ fs/ext4/richacl.c                               | 134 ++++
+ fs/ext4/richacl.h                               |  40 +
+ fs/ext4/super.c                                 |  49 +-
+ fs/ext4/xattr.c                                 |   7 +
+ fs/f2fs/acl.c                                   |   4 +-
+ fs/inode.c                                      |  43 +-
+ fs/jffs2/acl.c                                  |   6 +-
+ fs/namei.c                                      | 114 +--
+ fs/nfs/nfs3acl.c                                |  14 +-
+ fs/posix_acl.c                                  |  97 ++-
+ fs/richacl.c                                    | 937 ++++++++++++++++++++++++
+ fs/richacl_xattr.c                              | 222 ++++++
+ include/linux/acl.h                             |  15 +
+ include/linux/fs.h                              |  63 +-
+ include/linux/posix_acl.h                       |  24 +-
+ include/linux/richacl.h                         | 218 ++++++
+ include/linux/richacl_xattr.h                   |  31 +
+ include/uapi/linux/Kbuild                       |   2 +
+ include/uapi/linux/fs.h                         |   3 +-
+ include/uapi/linux/richacl.h                    | 152 ++++
+ include/uapi/linux/richacl_xattr.h              |  44 ++
+ include/uapi/linux/xattr.h                      |   2 +
+ 34 files changed, 2195 insertions(+), 161 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/acl.h
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
+-- 
+2.7.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
