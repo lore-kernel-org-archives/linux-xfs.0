@@ -1,47 +1,50 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A3A797CAE
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 20:16:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 74EC8304048
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:16:31 -0700 (PDT)
-Received: from NAM01-BN3-obe.outbound.protection.outlook.com
-	(mail-bn3nam01on0047.outbound.protection.outlook.com
-	[104.47.33.47]) by cuda.sgi.com with ESMTP id cRLTDcu7URkNtYz7
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 28 Sep 2016 18:16:29 -0700 (PDT)
-Subject: Re: [PATCH 1/3] block: invalidate the page cache when issuing
-	BLKZEROOUT.
-References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
-	<147510957761.8940.14476876584539116975.stgit@birch.djwong.org>
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Message-ID: <58a6bc29-42d5-92f2-30bf-89168faa8eb0@sandisk.com>
-Date: Wed, 28 Sep 2016 18:16:13 -0700
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:20172 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750751AbcI1E4B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2016 00:56:01 -0400
+Date: Wed, 28 Sep 2016 14:55:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 00/11] re-enable DAX PMD support
+Message-ID: <20160928045550.GF27872@dastard>
+References: <1475009282-9818-1-git-send-email-ross.zwisler@linux.intel.com>
+ <20160928020842.GA4428@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <147510957761.8940.14476876584539116975.stgit@birch.djwong.org>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, axboe@kernel.dk, akpm@linux-foundation.org
-Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160928020842.GA4428@infradead.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
 
-On 09/28/16 17:39, Darrick J. Wong wrote:
-> Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
-> returning stale cache contents at a later time.
+On Tue, Sep 27, 2016 at 07:08:42PM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 27, 2016 at 02:47:51PM -0600, Ross Zwisler wrote:
+> > DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+> > locking.  This series allows DAX PMDs to participate in the DAX radix tree
+> > based locking scheme so that they can be re-enabled.
+> > 
+> > Jan and Christoph, can you please help review these changes?
+> 
+> About to get on a plane, so it might take a bit to do a real review.
+> In general this looks fine, but I guess the first two ext4 patches
+> should just go straight to Ted independent of the rest?
+> 
+> Also Jan just posted a giant DAX patchbomb, we'll need to find a way
+> to integrate all that work, and maybe prioritize things if we want
+> to get bits into 4.9 still.
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+I'm not going to have time to do much review or testing of the DAX
+changes (apart from the cursor comments I've already made) because
+of the huge pile of XFS reflink changes I've got ot get through
+first. However, I've already got the iomap dax bits in the XFS tree
+so I can pull everything through there if review and testing is
+covered otherwise......
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
