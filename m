@@ -1,101 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37501 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934848AbcI2XNT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 19:13:19 -0400
-Date: Thu, 29 Sep 2016 16:13:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/63] xfs: account for the refcount btree in the
- alloc/free log reservation
-Message-ID: <20160929231307.GA21076@birch.djwong.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:51742 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932897AbcI2QsL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 12:48:11 -0400
+Date: Thu, 29 Sep 2016 09:48:10 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/63] vfs: support FS_XFLAG_COWEXTSIZE and get/set of
+ CoW extent size hint
+Message-ID: <20160929164810.GA4546@infradead.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
- <20160928162005.GC8852@bfoster.bfoster>
- <20160929211823.GH14092@birch.djwong.org>
+ <147503121698.30303.9684501453641572309.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160929211823.GH14092@birch.djwong.org>
+In-Reply-To: <147503121698.30303.9684501453641572309.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 02:18:23PM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 28, 2016 at 12:20:05PM -0400, Brian Foster wrote:
-> > On Tue, Sep 27, 2016 at 07:54:20PM -0700, Darrick J. Wong wrote:
-> > > Every time we allocate or free an extent, we might need to split the
-> > > refcount btree.  Reserve some blocks in the transaction to handle
-> > > this possibility.
-> > > 
-> > 
-> > I'm probably not far along enough to grok how this all works, but I'm a
-> > bit confused by the requirement here. Why is generic block
-> > allocation/free a refcountbt matter? E.g., the function below is used
-> > for things like inode chunk allocation and whatnot, aren't those
-> > irrelevant to the refcountbt?
+On Tue, Sep 27, 2016 at 07:53:37PM -0700, Darrick J. Wong wrote:
+> Introduce XFLAGs for the new XFS CoW extent size hint, and actually
+> plumb the CoW extent size hint into the fsxattr structure.
 > 
-> Overnight tests seem to run ok, so I'll remove this patch.  If it
-> becomes a problem we can always put it back in.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I spoke too soon.  Running the (upcoming) xfs/900 test with a block size
-of 1k actually /does/ cause a perfect storm wherein a refcount
-adjustment of a large range of blocks causes full tree splits in two
-separate extents in two separate refcount tree blocks; allocating new
-refcount tree blocks causes rmap btree splits; and all the allocation
-activity causes the freespace btrees to split.  By the time we finish
-running around doing all that we've blown the reservation.
+Looks fine,
 
-So I guess I'll put this patch back in, with a better explanation
-in the changelog.
-
---D
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > (Reproduced by generic/167 over NFS atop XFS)
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > [darrick.wong@oracle.com: add commit message]
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
-> > >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > index 7c840e1..a59838f 100644
-> > > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > > @@ -67,7 +67,8 @@ xfs_calc_buf_res(
-> > >   * Per-extent log reservation for the btree changes involved in freeing or
-> > >   * allocating an extent.  In classic XFS there were two trees that will be
-> > >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-> > > - * (rmapbt).  The number of blocks reserved is based on the formula:
-> > > + * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
-> > > + * blocks reserved is based on the formula:
-> > >   *
-> > >   * num trees * ((2 blocks/level * max depth) - 1)
-> > >   *
-> > > @@ -83,6 +84,8 @@ xfs_allocfree_log_count(
-> > >  	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
-> > >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-> > > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > > +		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
-> > >  
-> > >  	return blocks;
-> > >  }
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
