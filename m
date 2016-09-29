@@ -1,355 +1,181 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49304 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932652AbcI1QUU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Sep 2016 12:20:20 -0400
-Date: Wed, 28 Sep 2016 12:20:18 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 10/63] xfs: create refcount update intent log items
-Message-ID: <20160928162017.GE8852@bfoster.bfoster>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503127360.30303.13509008550712587655.stgit@birch.djwong.org>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3EF257CB9
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 19:40:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A8F08AC005
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 17:40:23 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Kjh9orwRud4iSnIL (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 17:40:21 -0700 (PDT)
+Subject: [PATCH 3/3] block: implement (some of) fallocate for block devices
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Sep 2016 17:39:51 -0700
+Message-ID: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+In-Reply-To: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
+References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147503127360.30303.13509008550712587655.stgit@birch.djwong.org>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
+Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-On Tue, Sep 27, 2016 at 07:54:33PM -0700, Darrick J. Wong wrote:
-> Create refcount update intent/done log items to record redo
-> information in the log.  Because we need to roll transactions between
-> updating the bmbt mapping and updating the reverse mapping, we also
-> have to track the status of the metadata updates that will be recorded
-> in the post-roll transactions, just in case we crash before committing
-> the final transaction.  This mechanism enables log recovery to finish
-> what was already started.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile                |    1 
->  fs/xfs/libxfs/xfs_log_format.h |   59 ++++++
->  fs/xfs/xfs_refcount_item.c     |  406 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_refcount_item.h     |  102 ++++++++++
->  fs/xfs/xfs_super.c             |   18 ++
->  5 files changed, 584 insertions(+), 2 deletions(-)
->  create mode 100644 fs/xfs/xfs_refcount_item.c
->  create mode 100644 fs/xfs/xfs_refcount_item.h
-> 
-> 
-...
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> new file mode 100644
-> index 0000000..ac52b02
-> --- /dev/null
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -0,0 +1,406 @@
-...
-> +/*
-> + * This is called to fill in the vector of log iovecs for the
-> + * given cud log item. We use only 1 iovec, and we point that
-> + * at the cud_log_format structure embedded in the cud item.
-> + * It is at this point that we assert that all of the extent
-> + * slots in the cud item have been filled.
-> + */
-> +STATIC void
-> +xfs_cud_item_format(
-> +	struct xfs_log_item	*lip,
-> +	struct xfs_log_vec	*lv)
-> +{
-> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
-> +	struct xfs_log_iovec	*vecp = NULL;
-> +
-> +	cudp->cud_format.cud_type = XFS_LI_CUD;
-> +	cudp->cud_format.cud_size = 1;
-> +
-> +	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_CUD_FORMAT, &cudp->cud_format,
-> +			sizeof(struct xfs_rud_log_format));
+After much discussion, it seems that the fallocate feature flag
+FALLOC_FL_ZERO_RANGE maps nicely to SCSI WRITE SAME; and the feature
+FALLOC_FL_PUNCH_HOLE maps nicely to the devices that have been
+whitelisted for zeroing SCSI UNMAP.  Punch still requires that
+FALLOC_FL_KEEP_SIZE is set.  A length that goes past the end of the
+device will be clamped to the device size if KEEP_SIZE is set; or will
+return -EINVAL if not.  Both start and length must be aligned to the
+device's logical block size.
 
-They're the same size, but:	      xfs_cud_log_format
+Since the semantics of fallocate are fairly well established already,
+wire up the two pieces.  The other fallocate variants (collapse range,
+insert range, and allocate blocks) are not supported.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: Incorporate feedback from Christoph & Linus.  Tentatively add
+a requirement that the fallocate arguments be aligned to logical block
+size, and put in a few XXX comments ahead of LSF discussion.
+v3: Forward port to 4.7.
+v4: Forward port to 4.8.
+---
+ fs/block_dev.c |   78 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/open.c      |    3 +-
+ 2 files changed, 80 insertions(+), 1 deletion(-)
 
-> +}
-> +
-> +/*
-> + * Pinning has no meaning for an cud item, so just return.
-> + */
-> +STATIC void
-> +xfs_cud_item_pin(
-> +	struct xfs_log_item	*lip)
-> +{
-> +}
-> +
-> +/*
-> + * Since pinning has no meaning for an cud item, unpinning does
-> + * not either.
-> + */
-> +STATIC void
-> +xfs_cud_item_unpin(
-> +	struct xfs_log_item	*lip,
-> +	int			remove)
-> +{
-> +}
-> +
-> +/*
-> + * There isn't much you can do to push on an cud item.  It is simply stuck
-> + * waiting for the log to be flushed to disk.
-> + */
-> +STATIC uint
-> +xfs_cud_item_push(
-> +	struct xfs_log_item	*lip,
-> +	struct list_head	*buffer_list)
-> +{
-> +	return XFS_ITEM_PINNED;
-> +}
-> +
-> +/*
-> + * The CUD is either committed or aborted if the transaction is cancelled. If
-> + * the transaction is cancelled, drop our reference to the CUI and free the
-> + * CUD.
-> + */
-> +STATIC void
-> +xfs_cud_item_unlock(
-> +	struct xfs_log_item	*lip)
-> +{
-> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
-> +
-> +	if (lip->li_flags & XFS_LI_ABORTED) {
-> +		xfs_cui_release(cudp->cud_cuip);
-> +		kmem_zone_free(xfs_cud_zone, cudp);
-> +	}
-> +}
-> +
-> +/*
-> + * When the cud item is committed to disk, all we need to do is delete our
-> + * reference to our partner cui item and then free ourselves. Since we're
-> + * freeing ourselves we must return -1 to keep the transaction code from
-> + * further referencing this item.
-> + */
-> +STATIC xfs_lsn_t
-> +xfs_cud_item_committed(
-> +	struct xfs_log_item	*lip,
-> +	xfs_lsn_t		lsn)
-> +{
-> +	struct xfs_cud_log_item	*cudp = CUD_ITEM(lip);
-> +
-> +	/*
-> +	 * Drop the CUI reference regardless of whether the CUD has been
-> +	 * aborted. Once the CUD transaction is constructed, it is the sole
-> +	 * responsibility of the CUD to release the CUI (even if the CUI is
-> +	 * aborted due to log I/O error).
-> +	 */
-> +	xfs_cui_release(cudp->cud_cuip);
-> +	kmem_zone_free(xfs_cud_zone, cudp);
-> +
-> +	return (xfs_lsn_t)-1;
-> +}
-> +
-> +/*
-> + * The CUD dependency tracking op doesn't do squat.  It can't because
-> + * it doesn't know where the free extent is coming from.  The dependency
-> + * tracking has to be handled by the "enclosing" metadata object.  For
-> + * example, for inodes, the inode is locked throughout the extent freeing
-> + * so the dependency should be recorded there.
-> + */
-> +STATIC void
-> +xfs_cud_item_committing(
-> +	struct xfs_log_item	*lip,
-> +	xfs_lsn_t		lsn)
-> +{
-> +}
-> +
-> +/*
-> + * This is the ops vector shared by all cud log items.
-> + */
-> +static const struct xfs_item_ops xfs_cud_item_ops = {
-> +	.iop_size	= xfs_cud_item_size,
-> +	.iop_format	= xfs_cud_item_format,
-> +	.iop_pin	= xfs_cud_item_pin,
-> +	.iop_unpin	= xfs_cud_item_unpin,
-> +	.iop_unlock	= xfs_cud_item_unlock,
-> +	.iop_committed	= xfs_cud_item_committed,
-> +	.iop_push	= xfs_cud_item_push,
-> +	.iop_committing = xfs_cud_item_committing,
-> +};
-> +
-> +/*
-> + * Allocate and initialize an cud item with the given number of extents.
-> + */
-> +struct xfs_cud_log_item *
-> +xfs_cud_init(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_cui_log_item		*cuip)
-> +
-> +{
-> +	struct xfs_cud_log_item	*cudp;
-> +
-> +	cudp = kmem_zone_zalloc(xfs_cud_zone, KM_SLEEP);
-> +	xfs_log_item_init(mp, &cudp->cud_item, XFS_LI_CUD, &xfs_cud_item_ops);
-> +	cudp->cud_cuip = cuip;
-> +	cudp->cud_format.cud_cui_id = cuip->cui_format.cui_id;
-> +
-> +	return cudp;
-> +}
-> diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-> new file mode 100644
-> index 0000000..7b8f56b
-> --- /dev/null
-> +++ b/fs/xfs/xfs_refcount_item.h
-> @@ -0,0 +1,102 @@
-> +/*
-> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#ifndef	__XFS_REFCOUNT_ITEM_H__
-> +#define	__XFS_REFCOUNT_ITEM_H__
-> +
-> +/*
-> + * There are (currently) two pairs of refcount btree redo item types:
-> + * increase and decrease.  The log items for these are CUI (refcount
-> + * update intent) and CUD (refcount update done).  The redo item type
-> + * is encoded in the flags field of each xfs_map_extent.
-> + *
-> + * *I items should be recorded in the *first* of a series of rolled
-> + * transactions, and the *D items should be recorded in the same
-> + * transaction that records the associated refcountbt updates.
-> + *
-> + * Should the system crash after the commit of the first transaction
-> + * but before the commit of the final transaction in a series, log
-> + * recovery will use the redo information recorded by the intent items
-> + * to replay the refcountbt metadata updates.
-> + */
-> +
-> +/* kernel only CUI/CUD definitions */
-> +
-> +struct xfs_mount;
-> +struct kmem_zone;
-> +
-> +/*
-> + * Max number of extents in fast allocation path.
-> + */
-> +#define	XFS_CUI_MAX_FAST_EXTENTS	16
-> +
-> +/*
-> + * Define CUI flag bits. Manipulated by set/clear/test_bit operators.
-> + */
-> +#define	XFS_CUI_RECOVERED		1
-> +
-> +/*
-> + * This is the "refcount update intent" log item.  It is used to log
-> + * the fact that some reverse mappings need to change.  It is used in
-> + * conjunction with the "refcount update done" log item described
-> + * below.
-> + *
-> + * These log items follow the same rules as struct xfs_efi_log_item;
-> + * see the comments about that structure (in xfs_extfree_item.h) for
-> + * more details.
-> + */
-> +struct xfs_cui_log_item {
-> +	struct xfs_log_item		cui_item;
-> +	atomic_t			cui_refcount;
-> +	atomic_t			cui_next_extent;
-> +	unsigned long			cui_flags;	/* misc flags */
-> +	struct xfs_cui_log_format	cui_format;
-> +};
-> +
-> +static inline size_t
-> +xfs_cui_log_item_sizeof(
-> +	unsigned int		nr)
-> +{
-> +	return offsetof(struct xfs_cui_log_item, cui_format) +
-> +			xfs_cui_log_format_sizeof(nr);
-> +}
-> +
-> +/*
-> + * This is the "refcount update done" log item.  It is used to log the
-> + * fact that some refcountbt updates mentioned in an earlier cui item
-> + * have been performed.
-> + */
-> +struct xfs_cud_log_item {
-> +	struct xfs_log_item		cud_item;
-> +	struct xfs_cui_log_item		*cud_cuip;
-> +	struct xfs_cud_log_format	cud_format;
-> +};
-> +
-> +extern struct kmem_zone	*xfs_cui_zone;
-> +extern struct kmem_zone	*xfs_cud_zone;
-> +
-> +struct xfs_cui_log_item *xfs_cui_init(struct xfs_mount *, uint);
-> +struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
-> +		struct xfs_cui_log_item *);
-> +int xfs_cui_copy_format(struct xfs_log_iovec *buf,
-> +		struct xfs_cui_log_format *dst_cui_fmt);
-> +void xfs_cui_item_free(struct xfs_cui_log_item *);
-> +void xfs_cui_release(struct xfs_cui_log_item *);
-> +
-> +#endif	/* __XFS_REFCOUNT_ITEM_H__ */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 2d092f9..abe69c6 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -47,6 +47,7 @@
->  #include "xfs_sysfs.h"
->  #include "xfs_ondisk.h"
->  #include "xfs_rmap_item.h"
-> +#include "xfs_refcount_item.h"
->  
->  #include <linux/namei.h>
->  #include <linux/init.h>
-> @@ -1788,8 +1789,23 @@ xfs_init_zones(void)
->  	if (!xfs_rui_zone)
->  		goto out_destroy_rud_zone;
->  
-> +	xfs_cud_zone = kmem_zone_init(sizeof(struct xfs_cud_log_item),
-> +			"xfs_cud_item");
-> +	if (!xfs_cud_zone)
-> +		goto out_destroy_rui_zone;
-> +
-> +	xfs_cui_zone = kmem_zone_init(
-> +			xfs_cui_log_item_sizeof(XFS_CUI_MAX_FAST_EXTENTS),
-> +			"xfs_cui_item");
-> +	if (!xfs_cui_zone)
-> +		goto out_destroy_cud_zone;
-> +
->  	return 0;
->  
-> + out_destroy_cud_zone:
-> +	kmem_zone_destroy(xfs_cud_zone);
-> + out_destroy_rui_zone:
-> +	kmem_zone_destroy(xfs_rui_zone);
->   out_destroy_rud_zone:
->  	kmem_zone_destroy(xfs_rud_zone);
->   out_destroy_icreate_zone:
-> @@ -1832,6 +1848,8 @@ xfs_destroy_zones(void)
->  	 * destroy caches.
->  	 */
->  	rcu_barrier();
-> +	kmem_zone_destroy(xfs_cui_zone);
-> +	kmem_zone_destroy(xfs_cud_zone);
->  	kmem_zone_destroy(xfs_rui_zone);
->  	kmem_zone_destroy(xfs_rud_zone);
->  	kmem_zone_destroy(xfs_icreate_zone);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 08ae993..0c808fc 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -30,6 +30,7 @@
+ #include <linux/cleancache.h>
+ #include <linux/dax.h>
+ #include <linux/badblocks.h>
++#include <linux/falloc.h>
+ #include <asm/uaccess.h>
+ #include "internal.h"
+ 
+@@ -1787,6 +1788,82 @@ static const struct address_space_operations def_blk_aops = {
+ 	.is_dirty_writeback = buffer_check_dirty_writeback,
+ };
+ 
++#define	BLKDEV_FALLOC_FL_SUPPORTED					\
++		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
++		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
++
++static long blkdev_fallocate(struct file *file, int mode, loff_t start,
++			     loff_t len)
++{
++	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct address_space *mapping;
++	loff_t end = start + len - 1;
++	loff_t isize;
++	int error;
++
++	/* Fail if we don't recognize the flags. */
++	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
++		return -EOPNOTSUPP;
++
++	/* Don't go off the end of the device. */
++	isize = i_size_read(bdev->bd_inode);
++	if (start >= isize)
++		return -EINVAL;
++	if (end > isize) {
++		if (mode & FALLOC_FL_KEEP_SIZE) {
++			len = isize - start;
++			end = start + len - 1;
++		} else
++			return -EINVAL;
++	}
++
++	/*
++	 * Don't allow IO that isn't aligned to logical block size.
++	 */
++	if ((start | len) & (bdev_logical_block_size(bdev) - 1))
++		return -EINVAL;
++
++	/* Invalidate the page cache, including dirty pages. */
++	mapping = bdev->bd_inode->i_mapping;
++	truncate_inode_pages_range(mapping, start, end);
++
++	switch (mode) {
++	case FALLOC_FL_ZERO_RANGE:
++	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
++		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
++					    GFP_KERNEL, false);
++		if (error)
++			return error;
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
++		/* Only punch if the device can do zeroing discard. */
++		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
++			return -EOPNOTSUPP;
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		if (error)
++			return error;
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		if (error)
++			return error;
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	/*
++	 * Invalidate again; if someone wandered in and dirtied a page,
++	 * the caller will be given -EBUSY;
++	 */
++	return invalidate_inode_pages2_range(mapping,
++					     start >> PAGE_SHIFT,
++					     end >> PAGE_SHIFT);
++}
++
+ const struct file_operations def_blk_fops = {
+ 	.open		= blkdev_open,
+ 	.release	= blkdev_close,
+@@ -1801,6 +1878,7 @@ const struct file_operations def_blk_fops = {
+ #endif
+ 	.splice_read	= generic_file_splice_read,
+ 	.splice_write	= iter_file_splice_write,
++	.fallocate	= blkdev_fallocate,
+ };
+ 
+ int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
+diff --git a/fs/open.c b/fs/open.c
+index 4fd6e25..01b6092 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -289,7 +289,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	 * Let individual file system decide if it supports preallocation
+ 	 * for directories or not.
+ 	 */
+-	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
++	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
++	    !S_ISBLK(inode->i_mode))
+ 		return -ENODEV;
+ 
+ 	/* Check for wrap through zero too */
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
