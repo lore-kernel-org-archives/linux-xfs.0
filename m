@@ -1,76 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:22216 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753431AbcI2G2F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 02:28:05 -0400
-Date: Thu, 29 Sep 2016 16:27:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs/130: don't modify files after failed mount
-Message-ID: <20160929062729.GL9806@dastard>
-References: <147511610789.12284.10323409415801065382.stgit@birch.djwong.org>
- <147511611421.12284.6952703843128702262.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147511611421.12284.6952703843128702262.stgit@birch.djwong.org>
+Received: from mga07.intel.com ([134.134.136.100]:31582 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934933AbcI2Wtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Sep 2016 18:49:39 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 03/12] dax: remove buffer_size_valid()
+Date: Thu, 29 Sep 2016 16:49:21 -0600
+Message-Id: <1475189370-31634-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Wed, Sep 28, 2016 at 07:28:34PM -0700, Darrick J. Wong wrote:
-> In xfs/130, we try to mount a filesystem with the expectation that it
-> will fail.  Therefore, it is inappropriate to try to write to the
-> mountpoint, since it could otherwise be writable.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Now that ext4 properly sets bh.b_size when we call get_block() for a hole,
+rely on that value and remove the buffer_size_valid() sanity check.
 
-fixes the failure I've been seeing.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 22 +---------------------
+ 1 file changed, 1 insertion(+), 21 deletions(-)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-> ---
->  tests/xfs/130     |    9 +++------
->  tests/xfs/130.out |    1 -
->  2 files changed, 3 insertions(+), 7 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/130 b/tests/xfs/130
-> index 554d078..48f6a84 100755
-> --- a/tests/xfs/130
-> +++ b/tests/xfs/130
-> @@ -79,12 +79,9 @@ seq 0 $((agcount - 1)) | while read ag; do
->  done
->  
->  echo "+ mount image"
-> -_scratch_mount
-> -
-> -echo "+ reflink more"
-> -_cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file4" 2> /dev/null && \
-> -	_fail "should not be able to reflink with busted refcount btree"
-> -umount "${SCRATCH_MNT}"
-> +_scratch_mount >> $seqres.full 2>&1 && \
-> +	echo "Should not be able to mount with broken refcountbt."
-> +_scratch_unmount >> $seqres.full 2>&1
->  
->  echo "+ repair fs"
->  _disable_dmesg_check
-> diff --git a/tests/xfs/130.out b/tests/xfs/130.out
-> index 58d153b..a0eab98 100644
-> --- a/tests/xfs/130.out
-> +++ b/tests/xfs/130.out
-> @@ -5,7 +5,6 @@ QA output created by 130
->  + check fs
->  + corrupt image
->  + mount image
-> -+ reflink more
->  + repair fs
->  + mount image (2)
->  + chattr -R -i
-> 
-> 
-
+diff --git a/fs/dax.c b/fs/dax.c
+index cc025f8..9b9be8a 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -123,19 +123,6 @@ static bool buffer_written(struct buffer_head *bh)
+ 	return buffer_mapped(bh) && !buffer_unwritten(bh);
+ }
+ 
+-/*
+- * When ext4 encounters a hole, it returns without modifying the buffer_head
+- * which means that we can't trust b_size.  To cope with this, we set b_state
+- * to 0 before calling get_block and, if any bit is set, we know we can trust
+- * b_size.  Unfortunate, really, since ext4 knows precisely how long a hole is
+- * and would save us time calling get_block repeatedly.
+- */
+-static bool buffer_size_valid(struct buffer_head *bh)
+-{
+-	return bh->b_state != 0;
+-}
+-
+-
+ static sector_t to_sector(const struct buffer_head *bh,
+ 		const struct inode *inode)
+ {
+@@ -177,8 +164,6 @@ static ssize_t dax_io(struct inode *inode, struct iov_iter *iter,
+ 				rc = get_block(inode, block, bh, rw == WRITE);
+ 				if (rc)
+ 					break;
+-				if (!buffer_size_valid(bh))
+-					bh->b_size = 1 << blkbits;
+ 				bh_max = pos - first + bh->b_size;
+ 				bdev = bh->b_bdev;
+ 				/*
+@@ -1012,12 +997,7 @@ int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+ 
+ 	bdev = bh.b_bdev;
+ 
+-	/*
+-	 * If the filesystem isn't willing to tell us the length of a hole,
+-	 * just fall back to PTEs.  Calling get_block 512 times in a loop
+-	 * would be silly.
+-	 */
+-	if (!buffer_size_valid(&bh) || bh.b_size < PMD_SIZE) {
++	if (bh.b_size < PMD_SIZE) {
+ 		dax_pmd_dbg(&bh, address, "allocated block too small");
+ 		return VM_FAULT_FALLBACK;
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
