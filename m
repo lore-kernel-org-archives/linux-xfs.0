@@ -1,82 +1,100 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26000 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934107AbcI2VSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 17:18:31 -0400
-Date: Thu, 29 Sep 2016 14:18:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/63] xfs: account for the refcount btree in the
- alloc/free log reservation
-Message-ID: <20160929211823.GH14092@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
- <20160928162005.GC8852@bfoster.bfoster>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B7E3E7CA1
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 17:50:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 22190AC003
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 15:50:16 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id gak8Szr4FvTQkcdI (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 15:50:10 -0700 (PDT)
+Date: Thu, 29 Sep 2016 23:50:03 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 10/12] new iov_iter flavour: pipe-backed
+Message-ID: <20160929225003.GQ19539@ZenIV.linux.org.uk>
+References: <20160914042559.GC2356@ZenIV.linux.org.uk>
+	<20160917082007.GA6489@ZenIV.linux.org.uk>
+	<20160917190023.GA8039@ZenIV.linux.org.uk>
+	<20160923190032.GA25771@ZenIV.linux.org.uk>
+	<20160923190326.GB2356@ZenIV.linux.org.uk>
+	<CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
+	<20160923201025.GJ2356@ZenIV.linux.org.uk>
+	<CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
+	<20160924040117.GP2356@ZenIV.linux.org.uk>
+	<CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160928162005.GC8852@bfoster.bfoster>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Jens Axboe <axboe@kernel.dk>, CAI Qian <caiqian@redhat.com>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Wed, Sep 28, 2016 at 12:20:05PM -0400, Brian Foster wrote:
-> On Tue, Sep 27, 2016 at 07:54:20PM -0700, Darrick J. Wong wrote:
-> > Every time we allocate or free an extent, we might need to split the
-> > refcount btree.  Reserve some blocks in the transaction to handle
-> > this possibility.
-> > 
+On Thu, Sep 29, 2016 at 10:53:55PM +0200, Miklos Szeredi wrote:
+
+> The EFAULT logic seems to be missing across the board.  And callers
+> don't expect a zero return value.  Most will loop indefinitely.
+
+Nope.  copy_page_to_iter() *never* returns -EFAULT.  Including the iovec
+one - check copy_page_to_iter_iovec().  Any caller that does not expect
+a zero return value from that primitive is a bug, triggerable as soon as
+you feed it an iovec with NULL ->iov_base.
+
+> Again, unexpected zero return if this is the first page.  Should
+> return -ENOMEM?  Some callers only expect -EFAULT, though.
+
+For copy_to_iter() and zero_iter() it's definitely "return zero".  For
+get_pages...  Hell knows; those probably ought to return -EFAULT, but
+I'll need to look some more at the callers.  It should end up triggering
+a short read as the end result (or, as usual, EFAULT on zero-length read).
+
+> > +               /* take it relative to the beginning of buffer */
+> > +               size += off - pipe->bufs[idx].offset;
+> > +               while (1) {
+> > +                       buf = &pipe->bufs[idx];
+> > +                       if (size > buf->len) {
+> > +                               size -= buf->len;
+> > +                               idx = next_idx(idx, pipe);
+> > +                               off = 0;
 > 
-> I'm probably not far along enough to grok how this all works, but I'm a
-> bit confused by the requirement here. Why is generic block
-> allocation/free a refcountbt matter? E.g., the function below is used
-> for things like inode chunk allocation and whatnot, aren't those
-> irrelevant to the refcountbt?
+> off is unused and reassigned before breaking out of the loop.
 
-Overnight tests seem to run ok, so I'll remove this patch.  If it
-becomes a problem we can always put it back in.
+True.
 
---D
-
+> [...]
 > 
-> Brian
+> > +       if (unlikely(i->type & ITER_PIPE)) {
+> > +               struct pipe_inode_info *pipe = i->pipe;
+> > +               size_t off;
+> > +               int idx;
+> > +
+> > +               if (!sanity(i))
+> > +                       return 0;
+> > +
+> > +               data_start(i, &idx, &off);
+> > +               /* some of this one + all after this one */
+> > +               npages = ((pipe->curbuf - idx - 1) & (pipe->buffers - 1)) + 1;
 > 
-> > (Reproduced by generic/167 over NFS atop XFS)
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > [darrick.wong@oracle.com: add commit message]
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 7c840e1..a59838f 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -67,7 +67,8 @@ xfs_calc_buf_res(
-> >   * Per-extent log reservation for the btree changes involved in freeing or
-> >   * allocating an extent.  In classic XFS there were two trees that will be
-> >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-> > - * (rmapbt).  The number of blocks reserved is based on the formula:
-> > + * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
-> > + * blocks reserved is based on the formula:
-> >   *
-> >   * num trees * ((2 blocks/level * max depth) - 1)
-> >   *
-> > @@ -83,6 +84,8 @@ xfs_allocfree_log_count(
-> >  	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
-> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
-> >  
-> >  	return blocks;
-> >  }
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It's supposed to take i->count into account, no?  And that calculation
+> will result in really funny things if the pipe is full.  And we can't
+> return -EFAULT here, since that's not expected by callers...
+
+It should look at i->count, in principle.  OTOH, overestimating the amount
+is not really a problem for possible users of such iov_iter.  I'll look
+into that.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
