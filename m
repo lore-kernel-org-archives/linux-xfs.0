@@ -1,105 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:56716 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56910 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934851AbcI2Wtf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Sep 2016 18:49:35 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 00/12] re-enable DAX PMD support
-Date: Thu, 29 Sep 2016 16:49:18 -0600
-Message-Id: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+        id S1752479AbcI2NEo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Sep 2016 09:04:44 -0400
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4CF69C0921B0
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2016 13:04:44 +0000 (UTC)
+Received: from redhat.com (vpn-54-24.rdu2.redhat.com [10.10.54.24])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8TD4eF4019707
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2016 09:04:43 -0400
+Date: Thu, 29 Sep 2016 15:04:40 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
+Message-ID: <20160929130440.xwxfq45bffm7ltlh@redhat.com>
+References: <1475154050-28771-1-git-send-email-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475154050-28771-1-git-send-email-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-locking.  This series allows DAX PMDs to participate in the DAX radix tree
-based locking scheme so that they can be re-enabled.
+Sorry, git send-email returned me an error while sending this, but looks like it
+actually worked, so, Sorry for the several posts of the same patch ='(
 
-Ted, can you please take the ext2 + ext4 patches through your tree?  Dave,
-can you please take the rest through the XFS tree?
 
-Changes since v3:
- - Corrected dax iomap code namespace for functions defined in fs/dax.c.
-   (Dave Chinner)
- - Added leading "dax" namespace to new static functions in fs/dax.c.
-   (Dave Chinner)
- - Made all DAX PMD code in fs/dax.c conditionally compiled based on
-   CONFIG_FS_DAX_PMD.  Otherwise a stub in include/linux/dax.h that just
-   returns VM_FAULT_FALLBACK will be used.  (Dave Chinner)
- - Removed dynamic debugging messages from DAX PMD fault path.  Debugging
-   tracepoints will be added later to both the PTE and PMD paths via a
-   later patch set. (Dave Chinner)
- - Added a comment to ext2_dax_vm_ops explaining why we don't support DAX
-   PMD faults in ext2. (Dave Chinner)
-
-This was built upon xfs/for-next with PMD performance fixes from Toshi Kani
-and Dan Williams.  Dan's patch has already been merged for v4.8, and
-Toshi's patches are currently queued in Andrew Morton's mm tree for v4.9
-inclusion.
-
-Here is a tree containing my changes and all the fixes that I've been testing:
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v4
-
-This tree has passed xfstests for ext2, ext4 and XFS both with and without DAX,
-and has passed targeted testing where I inserted, removed and flushed DAX PTEs
-and PMDs in every combination I could think of.
-
-Previously reported performance numbers:
-
-In some simple mmap I/O testing with FIO the use of PMD faults more than
-doubles I/O performance as compared with PTE faults.  Here is the FIO script I
-used for my testing:
-
-  [global]
-  bs=4k
-  size=2G
-  directory=/mnt/pmem0
-  ioengine=mmap
-  [randrw]
-  rw=randrw
-
-Here are the performance results with XFS using only pte faults:
-   READ: io=1022.7MB, aggrb=557610KB/s, minb=557610KB/s, maxb=557610KB/s, mint=1878msec, maxt=1878msec
-  WRITE: io=1025.4MB, aggrb=559084KB/s, minb=559084KB/s, maxb=559084KB/s, mint=1878msec, maxt=1878msec
-
-Here are performance numbers for that same test using PMD faults:
-   READ: io=1022.7MB, aggrb=1406.7MB/s, minb=1406.7MB/s, maxb=1406.7MB/s, mint=727msec, maxt=727msec
-  WRITE: io=1025.4MB, aggrb=1410.4MB/s, minb=1410.4MB/s, maxb=1410.4MB/s, mint=727msec, maxt=727msec
-
-This was done on a random lab machine with a PMEM device made from memmap'd
-RAM.  To get XFS to use PMD faults, I did the following:
-
-  mkfs.xfs -f -d su=2m,sw=1 /dev/pmem0
-  mount -o dax /dev/pmem0 /mnt/pmem0
-  xfs_io -c "extsize 2m" /mnt/pmem0
-
-Ross Zwisler (12):
-  ext4: allow DAX writeback for hole punch
-  ext4: tell DAX the size of allocation holes
-  dax: remove buffer_size_valid()
-  ext2: remove support for DAX PMD faults
-  dax: make 'wait_table' global variable static
-  dax: consistent variable naming for DAX entries
-  dax: coordinate locking for offsets in PMD range
-  dax: remove dax_pmd_fault()
-  dax: correct dax iomap code namespace
-  dax: add struct iomap based DAX PMD support
-  xfs: use struct iomap based DAX PMD fault path
-  dax: remove "depends on BROKEN" from FS_DAX_PMD
-
- fs/Kconfig          |   1 -
- fs/dax.c            | 650 +++++++++++++++++++++++++++-------------------------
- fs/ext2/file.c      |  35 +--
- fs/ext4/inode.c     |   7 +-
- fs/xfs/xfs_aops.c   |  25 +-
- fs/xfs/xfs_aops.h   |   3 -
- fs/xfs/xfs_file.c   |  10 +-
- include/linux/dax.h |  48 +++-
- mm/filemap.c        |   6 +-
- 9 files changed, 402 insertions(+), 383 deletions(-)
 
 -- 
-2.7.4
-
+Carlos
