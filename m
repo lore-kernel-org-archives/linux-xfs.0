@@ -1,54 +1,88 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CBB827CA1
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 11:34:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3DD94AC003
-	for <xfs@oss.sgi.com>; Tue,  6 Sep 2016 09:34:44 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 7AMuCt7aQi4mDiLE (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Sep 2016 09:34:42 -0700 (PDT)
-Date: Tue, 6 Sep 2016 09:34:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 34/71] xfs: support bmapping delalloc extents in the CoW
-	fork
-Message-ID: <20160906163413.GC16696@birch.djwong.org>
-References: <147216791538.867.12413509832420924168.stgit@birch.djwong.org>
-	<147216814006.867.6404376654574855233.stgit@birch.djwong.org>
-	<20160906152553.GA9760@infradead.org>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52908 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753693AbcI2HyR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Sep 2016 03:54:17 -0400
+Date: Thu, 29 Sep 2016 15:54:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: BUG: Internal error xfs_trans_cancel at line 984 of file
+ fs/xfs/xfs_trans.c
+Message-ID: <20160929075414.GX27776@eguan.usersys.redhat.com>
+References: <20160829103754.GH27776@eguan.usersys.redhat.com>
+ <20160830023905.GU19025@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160906152553.GA9760@infradead.org>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, xfs@oss.sgi.com
+In-Reply-To: <20160830023905.GU19025@dastard>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 06, 2016 at 08:25:53AM -0700, Christoph Hellwig wrote:
-> FYI, this has some major conflicts with the iomap updates - we'll need
-> to know from Dave which one should go in first.
+On Tue, Aug 30, 2016 at 12:39:05PM +1000, Dave Chinner wrote:
+> On Mon, Aug 29, 2016 at 06:37:54PM +0800, Eryu Guan wrote:
+> > Hi,
+> > 
+> > I've hit an XFS internal error then filesystem shutdown with 4.8-rc3
+> > kernel but not with 4.8-rc2
+> .....
+> > I attached a script too to reproduce it. Please note that the XFS
+> > partition needs about 40G frees space, and it may take hours to finish
+> > based on your memory setup on your host.
+> 
+> Ugh. can you try to narrow the cause so it takes less time to
+> reproduce? This is almost certainly one of two things:
+> 
+> 	1) a ENOSPC issue where an AG is almost-but-not-quite full,
+> 	but fixing up the freelist results in there being not enough
+> 	blocks left to allocate the data extent; or
+> 
+> 	2) we've split a delalloc extent so many times that we've
+> 	run out of indirect block reservation and we hit ENOSPC as a
+> 	result.
 
-While we're combining patches, I think it makes sense to modify
-_iomap_write_allocate so that when it's converting a data fork
-delalloc reservation into a real extent that it should look for an
-adjacent (file offset-wise) real extent in the CoW fork and feed that
-to the allocator in the hopes of allocating all the blocks in the same
-part of the disk.  Or better yet as one big(ger) extent record.
+[Sorry for getting back on this after so long time..]
 
---D
+> 
+> For the latter, I suspect a test case where we take a large delalloc
+> range and use sync_file_range to do single page writeback to "binary
+> split" the delalloc range. i.e. start with a 128MB delalloc, then
+> sync a 4k block at offset 64MB, then 4k at 32MB, then 16MB, then
+> 8MB, ... all the way down to writing the first block in the file,
+> and also all the way up to the final block in the file.
+> 
+> Then write every second 4k block to cause worse case growth of the
+> bmbt and hopefully then exhaust the indirect block reservation for
+> that delalloc region...
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Seems it's only reproducible on certain hosts, and I haven't been able
+to work out an efficient & reliable reproducer. I tried to tuned the
+parameters of bash-shared-mapping run, but failed to find a efficient
+parameter conbination. Also tried to write a script (attached, not sure
+if it's correct) based on the second case above, but still cannot
+reproduce it.
+
+By adding debug logs, I got the following stack trace, it's
+xfs_bmbt_alloc_block() returns first ENOSPC:
+
+        if (!args.wasdel && args.tp->t_blk_res == 0) {
+		error = -ENOSPC;
+		goto error0;
+	}
+
+[  783.154400] xfs_bmbt_alloc_block: set -ENOSPC and returned                                                                                                                                  
+[  783.183011] __xfs_btree_split: cur->bc_ops->alloc_block returned -28                                                                                                                        
+[  783.214758] xfs_btree_split: workqueue result returned -28                                                                                                                                  
+[  783.239319] xfs_btree_make_block_unfull: xfs_btree_split returned -28                                                                                                                       
+[  783.268190] xfs_btree_insrec: xfs_btree_make_block_unfull returned -28                                                                                                                      
+[  783.297550] xfs_btree_insert: xfs_btree_insrec returned -28                                                                                                                                 
+[  783.322672] xfs_bmap_add_extent_hole_real: case 0 xfs_btree_insert returned -28                                                                                                             
+[  783.355441] xfs_bmapi_allocate: xfs_bmap_add_extent_hole_real returned -28                                                                                                                  
+[  783.386272] xfs_bmapi_write: xfs_bmapi_allocate returned -28                                                                                                                                
+[  783.411332] xfs_iomap_write_allocate: goto trans_cancel after xfs_bmapi_write, error=-28
+
+Not sure if this helps.
+
+Thanks,
+Eryu
