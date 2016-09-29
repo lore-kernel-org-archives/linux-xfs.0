@@ -1,62 +1,35 @@
-Return-Path: <fstests-owner@vger.kernel.org>
-Subject: [PATCH 3/9] xfs/{207,327}: fsxattr no longer has the reflink flag
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 19:23:22 -0700
-Message-ID: <147520220203.26891.8744952857184153983.stgit@birch.djwong.org>
-In-Reply-To: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
-References: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:60134 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbcI2RIA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 13:08:00 -0400
+Date: Thu, 29 Sep 2016 10:07:59 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 45/63] xfs: unshare a range of blocks via fallocate
+Message-ID: <20160929170759.GJ4546@infradead.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+ <147503150585.30303.6967077248029323904.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Sender: fstests-owner@vger.kernel.org
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-List-ID: <xfs>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147503150585.30303.6967077248029323904.stgit@birch.djwong.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-The FS_XFLAG_REFLINK flag was removed from struct fsxattr prior to
-the inclusion of reflink in XFS, so remove it from the test outputs.
-Note that the inode flag still exists; it's simply not presented
-to userspace any more.
+On Tue, Sep 27, 2016 at 07:58:25PM -0700, Darrick J. Wong wrote:
+> Now that we have an fallocate flag to unshare a range of blocks, make
+> XFS actually implement it.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/207.out |    4 ++--
- tests/xfs/327.out |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+There is unshared flag in here.  Instead it performs an unshare
+without passing any flag, which will break existing users of fallocate
+like the NFS server.
 
+> v2: NFS doesn't pass around struct file pointers, which means that our
+> unshare functions all crash when filp == NULL.  We don't need filp
+> anyway, so remove all the parts where we pass filp around.
 
-diff --git a/tests/xfs/207.out b/tests/xfs/207.out
-index 434b8d9..f6dc17d 100644
---- a/tests/xfs/207.out
-+++ b/tests/xfs/207.out
-@@ -11,8 +11,8 @@ Check extsz and cowextsz settings on 1Mbyte file
- [0] SCRATCH_MNT/test-207/file2
- [1048576] SCRATCH_MNT/test-207/file2
- Set cowextsize and check flag
--fsxattr.xflags = 0x20000 [----------------C]
-+fsxattr.xflags = 0x10000 [---------------C]
- [1048576] SCRATCH_MNT/test-207/file3
- Unset cowextsize and check flag
--fsxattr.xflags = 0x0 [-----------------]
-+fsxattr.xflags = 0x0 [----------------]
- [0] SCRATCH_MNT/test-207/file3
-diff --git a/tests/xfs/327.out b/tests/xfs/327.out
-index c88d623..5b3cba2 100644
---- a/tests/xfs/327.out
-+++ b/tests/xfs/327.out
-@@ -3,11 +3,11 @@ Format filesystem
- Create files
- Check files
- 8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.0
--[reflink] SCRATCH_MNT/file.0 
-+[] SCRATCH_MNT/file.0 
- 8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.64
--[reflink] SCRATCH_MNT/file.64 
-+[] SCRATCH_MNT/file.64 
- 8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.128
--[reflink] SCRATCH_MNT/file.128 
-+[] SCRATCH_MNT/file.128 
- CoW all files
- Repair filesystem
- Check files again
-
+NFSD passes a file pointer just fine.  Note that it really should
+matter, but this comment confused me.
