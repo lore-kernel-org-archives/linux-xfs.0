@@ -1,184 +1,54 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3474C7CCC
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:31:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D1C738F8035
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Z6uApMT91lzHGVS1 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:16 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v26 17/21] richacl: Add richacl xattr handler
-Date: Thu, 29 Sep 2016 01:29:36 +0200
-Message-Id: <1475105380-22837-18-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17207 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754342AbcI2C2f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2016 22:28:35 -0400
+Subject: [PATCH 1/3] xfs/122: decrease the log update done item sizes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 28 Sep 2016 19:28:27 -0700
+Message-ID: <147511610789.12284.10323409415801065382.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Add richacl xattr handler implementing the xattr operations based on the
-get_richacl and set_richacl inode operations.
+Redundant fields were removed from the rmap/refcount/bmap update done
+log items, so fix the size tests.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/richacl.c                  | 22 ++++++++++++++++
- fs/richacl_xattr.c            | 61 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h       |  1 +
- include/linux/richacl_xattr.h |  2 ++
- 4 files changed, 86 insertions(+)
+ tests/xfs/122.out |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 4edce8b..1945691 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -543,6 +543,28 @@ restart:
- EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
- 
- /**
-+ * set_richacl  -  set the richacl of an inode
-+ * @inode:	inode whose richacl to set
-+ * @acl:	access control list
-+ */
-+int
-+set_richacl(struct inode *inode, struct richacl *acl)
-+{
-+	if (!IS_RICHACL(inode))
-+		return -EOPNOTSUPP;
-+	if (!inode->i_op->set_richacl)
-+		return -EOPNOTSUPP;
-+
-+	if (!uid_eq(current_fsuid(), inode->i_uid) &&
-+	    inode_permission(inode, MAY_CHMOD) &&
-+	    !capable(CAP_FOWNER))
-+		return -EPERM;
-+
-+	return inode->i_op->set_richacl(inode, acl);
-+}
-+EXPORT_SYMBOL(set_richacl);
-+
-+/**
-  * __richacl_chmod  -  update the file masks to reflect the new mode
-  * @acl:	access control list
-  * @mode:	new file permission bits including the file type
-diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
-index dc1ad36..5eb4aba 100644
---- a/fs/richacl_xattr.c
-+++ b/fs/richacl_xattr.c
-@@ -18,7 +18,9 @@
- #include <linux/fs.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-+#include <linux/xattr.h>
- #include <linux/richacl_xattr.h>
-+#include <uapi/linux/xattr.h>
- 
- /**
-  * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
-@@ -159,3 +161,62 @@ richacl_to_xattr(struct user_namespace *user_ns,
- 	return real_size;
- }
- EXPORT_SYMBOL_GPL(richacl_to_xattr);
-+
-+static bool
-+richacl_xattr_list(struct dentry *dentry)
-+{
-+	return IS_RICHACL(d_backing_inode(dentry));
-+}
-+
-+static int
-+richacl_xattr_get(const struct xattr_handler *handler,
-+		  struct dentry *unused, struct inode *inode,
-+		  const char *name, void *buffer, size_t buffer_size)
-+{
-+	struct richacl *acl;
-+	int error;
-+
-+	if (*name)
-+		return -EINVAL;
-+	if (!IS_RICHACL(inode))
-+		return -EOPNOTSUPP;
-+	if (S_ISLNK(inode->i_mode))
-+		return -EOPNOTSUPP;
-+	acl = get_richacl(inode);
-+	if (IS_ERR(acl))
-+		return PTR_ERR(acl);
-+	if (acl == NULL)
-+		return -ENODATA;
-+	error = richacl_to_xattr(current_user_ns(), acl, buffer, buffer_size);
-+	richacl_put(acl);
-+	return error;
-+}
-+
-+static int
-+richacl_xattr_set(const struct xattr_handler *handler,
-+		  struct dentry *unused, struct inode *inode,
-+		  const char *name, const void *value, size_t size,
-+		  int flags)
-+{
-+	struct richacl *acl = NULL;
-+	int ret;
-+
-+	if (value) {
-+		acl = richacl_from_xattr(current_user_ns(), value, size,
-+					 -EINVAL);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
-+	}
-+
-+	ret = set_richacl(inode, acl);
-+	richacl_put(acl);
-+	return ret;
-+}
-+
-+struct xattr_handler richacl_xattr_handler = {
-+	.name = XATTR_NAME_RICHACL,
-+	.list = richacl_xattr_list,
-+	.get = richacl_xattr_get,
-+	.set = richacl_xattr_set,
-+};
-+EXPORT_SYMBOL(richacl_xattr_handler);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index 737513b..7530920 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -205,5 +205,6 @@ extern int richacl_chmod(struct inode *, umode_t);
- extern int richacl_equiv_mode(const struct richacl *, umode_t *);
- extern struct richacl *richacl_inherit(const struct richacl *, int);
- extern struct richacl *richacl_create(umode_t *, struct inode *);
-+extern int set_richacl(struct inode *, struct richacl *);
- 
- #endif /* __RICHACL_H */
-diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
-index 0efa14b..6c6adb1 100644
---- a/include/linux/richacl_xattr.h
-+++ b/include/linux/richacl_xattr.h
-@@ -26,4 +26,6 @@ extern size_t richacl_xattr_size(const struct richacl *);
- extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
- 			    void *, size_t);
- 
-+extern struct xattr_handler richacl_xattr_handler;
-+
- #endif /* __RICHACL_XATTR_H */
--- 
-2.7.4
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index ae84283..67f7698 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -64,10 +64,10 @@ sizeof(struct xfs_btree_block) = 72
+ sizeof(struct xfs_btree_block_lhdr) = 64
+ sizeof(struct xfs_btree_block_shdr) = 48
+ sizeof(struct xfs_bud_log_format) = 16
+-sizeof(struct xfs_bui_log_format) = 48
++sizeof(struct xfs_bui_log_format) = 16
+ sizeof(struct xfs_clone_args) = 32
+ sizeof(struct xfs_cud_log_format) = 16
+-sizeof(struct xfs_cui_log_format) = 32
++sizeof(struct xfs_cui_log_format) = 16
+ sizeof(struct xfs_da3_blkinfo) = 56
+ sizeof(struct xfs_da3_intnode) = 64
+ sizeof(struct xfs_da3_node_hdr) = 64
+@@ -94,7 +94,7 @@ sizeof(struct xfs_rtrmap_key) = 24
+ sizeof(struct xfs_rtrmap_rec) = 32
+ sizeof(struct xfs_rtrmap_root) = 4
+ sizeof(struct xfs_rud_log_format) = 16
+-sizeof(struct xfs_rui_log_format) = 48
++sizeof(struct xfs_rui_log_format) = 16
+ sizeof(struct xfs_scrub_metadata) = 64
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+
