@@ -1,38 +1,176 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17336 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933484AbcI2Ut1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 16:49:27 -0400
-Date: Thu, 29 Sep 2016 13:48:55 -0700
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7A4E57CA0
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:17:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8902FAC004
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:12 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id S6bp4HsxBCfhCw34 (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:10 -0700 (PDT)
+Subject: [PATCH 3/3] block: implement (some of) fallocate for block devices
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/63] xfs: log refcount intent items
-Message-ID: <20160929204855.GG14092@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503128015.30303.2237183364098745952.stgit@birch.djwong.org>
- <20160929165601.GE4546@infradead.org>
+Date: Thu, 29 Sep 2016 14:16:40 -0700
+Message-ID: <147518379992.22791.8849838163218235007.stgit@birch.djwong.org>
+In-Reply-To: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+References: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160929165601.GE4546@infradead.org>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
+Cc: hch@infradead.org, Hannes Reinecke <hare@suse.com>, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-On Thu, Sep 29, 2016 at 09:56:01AM -0700, Christoph Hellwig wrote:
-> > +/* The XFS_REFCOUNT_EXTENT_* in xfs_log_format.h must match these. */
-> > +enum xfs_refcount_intent_type {
-> > +	XFS_REFCOUNT_INCREASE = 1,
-> > +	XFS_REFCOUNT_DECREASE,
-> > +	XFS_REFCOUNT_ALLOC_COW,
-> > +	XFS_REFCOUNT_FREE_COW,
-> > +};
-> 
-> That's a nightmare for maintability!  Either we use
-> XFS_REFCOUNT_EXTENT_* directly, or we need a helper to convert
-> between them.
+After much discussion, it seems that the fallocate feature flag
+FALLOC_FL_ZERO_RANGE maps nicely to SCSI WRITE SAME; and the feature
+FALLOC_FL_PUNCH_HOLE maps nicely to the devices that have been
+whitelisted for zeroing SCSI UNMAP.  Punch still requires that
+FALLOC_FL_KEEP_SIZE is set.  A length that goes past the end of the
+device will be clamped to the device size if KEEP_SIZE is set; or will
+return -EINVAL if not.  Both start and length must be aligned to the
+device's logical block size.
 
-I'll simply use the values directly.
+Since the semantics of fallocate are fairly well established already,
+wire up the two pieces.  The other fallocate variants (collapse range,
+insert range, and allocate blocks) are not supported.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+---
+ fs/block_dev.c |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/open.c      |    3 +-
+ 2 files changed, 79 insertions(+), 1 deletion(-)
+
+
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 08ae993..777fd9b 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -30,6 +30,7 @@
+ #include <linux/cleancache.h>
+ #include <linux/dax.h>
+ #include <linux/badblocks.h>
++#include <linux/falloc.h>
+ #include <asm/uaccess.h>
+ #include "internal.h"
+ 
+@@ -1787,6 +1788,81 @@ static const struct address_space_operations def_blk_aops = {
+ 	.is_dirty_writeback = buffer_check_dirty_writeback,
+ };
+ 
++#define	BLKDEV_FALLOC_FL_SUPPORTED					\
++		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
++		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
++
++static long blkdev_fallocate(struct file *file, int mode, loff_t start,
++			     loff_t len)
++{
++	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct address_space *mapping;
++	loff_t end = start + len - 1;
++	loff_t isize;
++	int error;
++
++	/* Fail if we don't recognize the flags. */
++	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
++		return -EOPNOTSUPP;
++
++	/* Don't go off the end of the device. */
++	isize = i_size_read(bdev->bd_inode);
++	if (start >= isize)
++		return -EINVAL;
++	if (end >= isize) {
++		if (mode & FALLOC_FL_KEEP_SIZE) {
++			len = isize - start;
++			end = start + len - 1;
++		} else
++			return -EINVAL;
++	}
++
++	/*
++	 * Don't allow IO that isn't aligned to logical block size.
++	 */
++	if ((start | len) & (bdev_logical_block_size(bdev) - 1))
++		return -EINVAL;
++
++	/* Invalidate the page cache, including dirty pages. */
++	mapping = bdev->bd_inode->i_mapping;
++	truncate_inode_pages_range(mapping, start, end);
++
++	switch (mode) {
++	case FALLOC_FL_ZERO_RANGE:
++	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
++		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
++					    GFP_KERNEL, false);
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
++		/* Only punch if the device can do zeroing discard. */
++		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
++			return -EOPNOTSUPP;
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
++		if (!blk_queue_discard(q))
++			return -EOPNOTSUPP;
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++	if (error)
++		return error;
++
++	/*
++	 * Invalidate again; if someone wandered in and dirtied a page,
++	 * the caller will be given -EBUSY.  The third argument is
++	 * inclusive, so the rounding here is safe.
++	 */
++	return invalidate_inode_pages2_range(mapping,
++					     start >> PAGE_SHIFT,
++					     end >> PAGE_SHIFT);
++}
++
+ const struct file_operations def_blk_fops = {
+ 	.open		= blkdev_open,
+ 	.release	= blkdev_close,
+@@ -1801,6 +1877,7 @@ const struct file_operations def_blk_fops = {
+ #endif
+ 	.splice_read	= generic_file_splice_read,
+ 	.splice_write	= iter_file_splice_write,
++	.fallocate	= blkdev_fallocate,
+ };
+ 
+ int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
+diff --git a/fs/open.c b/fs/open.c
+index 4fd6e25..01b6092 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -289,7 +289,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	 * Let individual file system decide if it supports preallocation
+ 	 * for directories or not.
+ 	 */
+-	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
++	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
++	    !S_ISBLK(inode->i_mode))
+ 		return -ENODEV;
+ 
+ 	/* Check for wrap through zero too */
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
