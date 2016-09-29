@@ -1,45 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:56716 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934948AbcI2Wtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Sep 2016 18:49:39 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 05/12] dax: make 'wait_table' global variable static
-Date: Thu, 29 Sep 2016 16:49:23 -0600
-Message-Id: <1475189370-31634-6-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:36352 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753509AbcI2G2U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 02:28:20 -0400
+Date: Thu, 29 Sep 2016 16:27:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs/{207,327}: fsxattr no longer has the reflink flag
+Message-ID: <20160929062755.GM9806@dastard>
+References: <147511610789.12284.10323409415801065382.stgit@birch.djwong.org>
+ <147511612047.12284.3645173774395982911.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147511612047.12284.3645173774395982911.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-The global 'wait_table' variable is only used within fs/dax.c, and
-generates the following sparse warning:
+On Wed, Sep 28, 2016 at 07:28:40PM -0700, Darrick J. Wong wrote:
+> The FS_XFLAG_REFLINK flag was removed from struct fsxattr prior to
+> the inclusion of reflink in XFS, so remove it from the test outputs.
+> Note that the inode flag still exists; it's simply not presented
+> to userspace any more.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-fs/dax.c:39:19: warning: symbol 'wait_table' was not declared. Should it be static?
+Fixes the failures I've seen
 
-Make it static so it has scope local to fs/dax.c, and to make sparse happy.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/dax.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> ---
+>  tests/xfs/207.out |    4 ++--
+>  tests/xfs/327.out |    6 +++---
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> 
+> diff --git a/tests/xfs/207.out b/tests/xfs/207.out
+> index 434b8d9..f6dc17d 100644
+> --- a/tests/xfs/207.out
+> +++ b/tests/xfs/207.out
+> @@ -11,8 +11,8 @@ Check extsz and cowextsz settings on 1Mbyte file
+>  [0] SCRATCH_MNT/test-207/file2
+>  [1048576] SCRATCH_MNT/test-207/file2
+>  Set cowextsize and check flag
+> -fsxattr.xflags = 0x20000 [----------------C]
+> +fsxattr.xflags = 0x10000 [---------------C]
+>  [1048576] SCRATCH_MNT/test-207/file3
+>  Unset cowextsize and check flag
+> -fsxattr.xflags = 0x0 [-----------------]
+> +fsxattr.xflags = 0x0 [----------------]
+>  [0] SCRATCH_MNT/test-207/file3
+> diff --git a/tests/xfs/327.out b/tests/xfs/327.out
+> index c88d623..5b3cba2 100644
+> --- a/tests/xfs/327.out
+> +++ b/tests/xfs/327.out
+> @@ -3,11 +3,11 @@ Format filesystem
+>  Create files
+>  Check files
+>  8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.0
+> -[reflink] SCRATCH_MNT/file.0 
+> +[] SCRATCH_MNT/file.0 
+>  8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.64
+> -[reflink] SCRATCH_MNT/file.64 
+> +[] SCRATCH_MNT/file.64 
+>  8fa14cdd754f91cc6554c9e71929cce7  SCRATCH_MNT/file.128
+> -[reflink] SCRATCH_MNT/file.128 
+> +[] SCRATCH_MNT/file.128 
+>  CoW all files
+>  Repair filesystem
+>  Check files again
+> 
+> 
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 9b9be8a..ac28cdf 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -52,7 +52,7 @@
- #define DAX_WAIT_TABLE_BITS 12
- #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
- 
--wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
-+static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
- 
- static int __init init_dax_wait_table(void)
- {
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
