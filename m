@@ -1,82 +1,38 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA0FC7CA1
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 15:33:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABD18304062
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 13:33:28 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id pbDF9nx2jcw5iW94 (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 13:33:27 -0700 (PDT)
-Date: Thu, 29 Sep 2016 13:33:20 -0700
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17336 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933484AbcI2Ut1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 16:49:27 -0400
+Date: Thu, 29 Sep 2016 13:48:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: aio completions vs file_accessed race, was: Re: [PATCH 7/8] xfs:
-	split direct I/O and DAX path
-Message-ID: <20160929203320.GE14092@birch.djwong.org>
-References: <1466609236-23801-1-git-send-email-hch@lst.de>
-	<1466609236-23801-8-git-send-email-hch@lst.de>
-	<20160929025351.GB4901@birch.djwong.org>
-	<20160929083824.GA12799@lst.de> <20160929201834.GA5872@lst.de>
-	<20160929201849.GB5872@lst.de>
+Subject: Re: [PATCH 11/63] xfs: log refcount intent items
+Message-ID: <20160929204855.GG14092@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+ <147503128015.30303.2237183364098745952.stgit@birch.djwong.org>
+ <20160929165601.GE4546@infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160929201849.GB5872@lst.de>
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, xfs@oss.sgi.com
+In-Reply-To: <20160929165601.GE4546@infradead.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 10:18:49PM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 29, 2016 at 10:18:34PM +0200, Christoph Hellwig wrote:
-> > Can you try the patch below?  That just moves the file_accessed call
-> > before the I/O, similar to how we handle timestamp updates on the write
-> > side.  generic_file_read_iter will also need a similar update.
+On Thu, Sep 29, 2016 at 09:56:01AM -0700, Christoph Hellwig wrote:
+> > +/* The XFS_REFCOUNT_EXTENT_* in xfs_log_format.h must match these. */
+> > +enum xfs_refcount_intent_type {
+> > +	XFS_REFCOUNT_INCREASE = 1,
+> > +	XFS_REFCOUNT_DECREASE,
+> > +	XFS_REFCOUNT_ALLOC_COW,
+> > +	XFS_REFCOUNT_FREE_COW,
+> > +};
 > 
-> And now with patch:
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 349f328..6919412 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -270,6 +270,8 @@ xfs_file_dio_aio_read(
->  		return -EINVAL;
->  	}
->  
-> +	file_accessed(iocb->ki_filp);
-> +
->  	/*
->  	 * Locking is a bit tricky here. If we take an exclusive lock for direct
->  	 * IO, we effectively serialise all new concurrent read IO to this file
-> @@ -324,7 +326,6 @@ xfs_file_dio_aio_read(
->  	}
->  	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
->  
-> -	file_accessed(iocb->ki_filp);
->  	return ret;
->  }
->  
+> That's a nightmare for maintability!  Either we use
+> XFS_REFCOUNT_EXTENT_* directly, or we need a helper to convert
+> between them.
 
-I noticed that g/323 only breaks when the XFS is on a real disk; on
-pmem it works fine with or without the patch.
-
-That said, it makes the crash go away and the patch looks ok, so:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
+I'll simply use the values directly.
 
 --D
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
