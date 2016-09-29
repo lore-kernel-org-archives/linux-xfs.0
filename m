@@ -1,175 +1,78 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36644 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934171AbcI2UyB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 16:54:01 -0400
-Received: by mail-pa0-f67.google.com with SMTP id cd13so2027735pac.3
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Sep 2016 13:54:00 -0700 (PDT)
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0E4D07CA0
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:17:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 300D8AC002
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:56 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id di3f657wYpSBfHjf (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:51 -0700 (PDT)
+Subject: [PATCH v11 0/3] fallocate for block devices
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 29 Sep 2016 14:16:16 -0700
+Message-ID: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20160924040117.GP2356@ZenIV.linux.org.uk>
-References: <20160914031648.GB2356@ZenIV.linux.org.uk> <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
- <20160914042559.GC2356@ZenIV.linux.org.uk> <20160917082007.GA6489@ZenIV.linux.org.uk>
- <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk> <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk> <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
- <20160924040117.GP2356@ZenIV.linux.org.uk>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Thu, 29 Sep 2016 22:53:55 +0200
-Message-ID: <CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
-Subject: Re: [PATCH 10/12] new iov_iter flavour: pipe-backed
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
+Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-On Sat, Sep 24, 2016 at 6:01 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> iov_iter variant for passing data into pipe.  copy_to_iter()
-> copies data into page(s) it has allocated and stuffs them into
-> the pipe; copy_page_to_iter() stuffs there a reference to the
-> page given to it.  Both will try to coalesce if possible.
-> iov_iter_zero() is similar to copy_to_iter(); iov_iter_get_pages()
-> and friends will do as copy_to_iter() would have and return the
-> pages where the data would've been copied.  iov_iter_advance()
-> will truncate everything past the spot it has advanced to.
->
-> New primitive: iov_iter_pipe(), used for initializing those.
-> pipe should be locked all along.
->
-> Running out of space acts as fault would for iovec-backed ones;
-> in other words, giving it to ->read_iter() may result in short
-> read if the pipe overflows, or -EFAULT if it happens with nothing
-> copied there.
+Hi Andrew & others,
 
-This is the hardest part of the whole set.  I've been trying to
-understand it, but the modular arithmetic makes it really tricky to
-read.  Couldn't we have more small inline helpers like next_idx()?
+This is a resend of the patchset to fix page cache coherency with
+BLKZEROOUT and implement fallocate for block devices.  This time I'm
+sending it direct to Andrew for inclusion because the block layer
+maintainer has not been responsive over the past year of submissions.
+Can this please go upstream for 4.9?
 
-Specific comments inline.
+The first patch is still a fix to the existing BLKZEROOUT ioctl to
+invalidate the page cache if the zeroing command to the underlying
+device succeeds.  Without this patch we still have the pagecache
+coherence bug that's been in the kernel forever.
 
-[...]
+The second patch changes the internal block device functions to reject
+attempts to discard or zeroout that are not aligned to the logical
+block size.  Previously, we only checked that the start/len parameters
+were 512-byte aligned, which caused kernel BUG_ONs for unaligned IOs
+to 4k-LBA devices.
 
-> +static size_t copy_page_to_iter_pipe(struct page *page, size_t offset, size_t bytes,
-> +                        struct iov_iter *i)
-> +{
-> +       struct pipe_inode_info *pipe = i->pipe;
-> +       struct pipe_buffer *buf;
-> +       size_t off;
-> +       int idx;
-> +
-> +       if (unlikely(bytes > i->count))
-> +               bytes = i->count;
-> +
-> +       if (unlikely(!bytes))
-> +               return 0;
-> +
-> +       if (!sanity(i))
-> +               return 0;
-> +
-> +       off = i->iov_offset;
-> +       idx = i->idx;
-> +       buf = &pipe->bufs[idx];
-> +       if (off) {
-> +               if (offset == off && buf->page == page) {
-> +                       /* merge with the last one */
-> +                       buf->len += bytes;
-> +                       i->iov_offset += bytes;
-> +                       goto out;
-> +               }
-> +               idx = next_idx(idx, pipe);
-> +               buf = &pipe->bufs[idx];
-> +       }
-> +       if (idx == pipe->curbuf && pipe->nrbufs)
-> +               return 0;
+The third patch creates an fallocate handler for block devices, wires
+up the FALLOC_FL_PUNCH_HOLE flag to zeroing-discard, and connects
+FALLOC_FL_ZERO_RANGE to write-same so that we can have a consistent
+fallocate interface between files and block devices.  It also allows
+the combination of PUNCH_HOLE and NO_HIDE_STALE to invoke non-zeroing
+discard.
 
-The EFAULT logic seems to be missing across the board.  And callers
-don't expect a zero return value.  Most will loop indefinitely.
+Test cases for the new block device fallocate are now in xfstests as
+generic/349-351.
 
-[...]
+Comments and questions are, as always, welcome.  Patches are against
+4.8-rc8.
 
-> +static size_t push_pipe(struct iov_iter *i, size_t size,
-> +                       int *idxp, size_t *offp)
-> +{
-> +       struct pipe_inode_info *pipe = i->pipe;
-> +       size_t off;
-> +       int idx;
-> +       ssize_t left;
-> +
-> +       if (unlikely(size > i->count))
-> +               size = i->count;
-> +       if (unlikely(!size))
-> +               return 0;
-> +
-> +       left = size;
-> +       data_start(i, &idx, &off);
-> +       *idxp = idx;
-> +       *offp = off;
-> +       if (off) {
-> +               left -= PAGE_SIZE - off;
-> +               if (left <= 0) {
-> +                       pipe->bufs[idx].len += size;
-> +                       return size;
-> +               }
-> +               pipe->bufs[idx].len = PAGE_SIZE;
-> +               idx = next_idx(idx, pipe);
-> +       }
-> +       while (idx != pipe->curbuf || !pipe->nrbufs) {
-> +               struct page *page = alloc_page(GFP_USER);
-> +               if (!page)
-> +                       break;
+v7: Strengthen parameter checking and fix various code issues pointed
+out by Linus and Christoph.
+v8: More code rearranging, rebase to 4.6-rc3, and dig into alignment
+issues.
+v9: Forward port to 4.7.
+v10: Forward port to 4.8.  Remove the extra call to
+invalidate_inode_pages2_range per Bart Van Assche's request.
+v11: Minor fallocate code cleanups suggested by Bart Van Assche.
 
-Again, unexpected zero return if this is the first page.  Should
-return -ENOMEM?  Some callers only expect -EFAULT, though.
+--D
 
-[...]
-
-> +static void pipe_advance(struct iov_iter *i, size_t size)
-> +{
-> +       struct pipe_inode_info *pipe = i->pipe;
-> +       struct pipe_buffer *buf;
-> +       size_t off;
-> +       int idx;
-> +
-> +       if (unlikely(i->count < size))
-> +               size = i->count;
-> +
-> +       idx = i->idx;
-> +       off = i->iov_offset;
-> +       if (size || off) {
-> +               /* take it relative to the beginning of buffer */
-> +               size += off - pipe->bufs[idx].offset;
-> +               while (1) {
-> +                       buf = &pipe->bufs[idx];
-> +                       if (size > buf->len) {
-> +                               size -= buf->len;
-> +                               idx = next_idx(idx, pipe);
-> +                               off = 0;
-
-off is unused and reassigned before breaking out of the loop.
-
-[...]
-
-> @@ -732,7 +1101,20 @@ int iov_iter_npages(const struct iov_iter *i, int maxpages)
->         if (!size)
->                 return 0;
->
-> -       iterate_all_kinds(i, size, v, ({
-> +       if (unlikely(i->type & ITER_PIPE)) {
-> +               struct pipe_inode_info *pipe = i->pipe;
-> +               size_t off;
-> +               int idx;
-> +
-> +               if (!sanity(i))
-> +                       return 0;
-> +
-> +               data_start(i, &idx, &off);
-> +               /* some of this one + all after this one */
-> +               npages = ((pipe->curbuf - idx - 1) & (pipe->buffers - 1)) + 1;
-
-It's supposed to take i->count into account, no?  And that calculation
-will result in really funny things if the pipe is full.  And we can't
-return -EFAULT here, since that's not expected by callers...
-
-Thanks,
-Miklos
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
