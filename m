@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 653147CA2
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 16:20:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18C92304062
-	for <xfs@oss.sgi.com>; Tue, 13 Sep 2016 14:20:49 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	C6b4rfp9m975RDPb for <xfs@oss.sgi.com>;
-	Tue, 13 Sep 2016 14:20:47 -0700 (PDT)
-Date: Wed, 14 Sep 2016 07:20:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [INFO] xfs: kernel debugging with trace_printk()
-Message-ID: <20160913212011.GI30497@dastard>
-References: <20160906082045.GJ30056@dastard>
-	<e5b07fd7-3c4e-e183-008b-877b0c237b72@gentoo.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 938147CA1
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 04:15:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 64A488F8035
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 02:15:09 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39]) by
+	cuda.sgi.com with ESMTP id uGPD09VA3NifCAGA (version=TLSv1.2
+	cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 02:15:07 -0700 (PDT)
+Subject: Bug#839129: xfsprogs: xfs_fsr XFS_IOC_SWAPEXT failed: ino=[xxxxxxx]:
+	Invalid argument
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.839129.B.14751404126321@bugs.debian.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <e5b07fd7-3c4e-e183-008b-877b0c237b72@gentoo.org>
+From: Daniele Di Domizio <daniele.didomizio@eurac.edu>
+Message-ID: <147513949292.17377.13641668789408577436.reportbug@calc06.gm.eurac.edu>
+Date: Thu, 29 Sep 2016 10:58:12 +0200
+Reply-To: Daniele Di Domizio <daniele.didomizio@eurac.edu>,
+	839129@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +31,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Joshua Kinard <kumba@gentoo.org>
-Cc: xfs@oss.sgi.com
+To: Debian Bug Tracking System <submit@bugs.debian.org>
 
-On Tue, Sep 13, 2016 at 11:02:01AM -0400, Joshua Kinard wrote:
-> On 09/06/2016 04:20, Dave Chinner wrote:
-> [snip]
-> 
-> But this assumes one can even get to a working shell prompt from which one can
-> run commands, like 'trace-cmd'.
+Package: xfsprogs
+Version: 4.3.0+nmu1
+Severity: important
 
-Well, yes. This is, after all, a filesystem development discussion
-list, not a "I've got b0rken old hardware that won't boot" support
-list, so the assumption that there is a working shell available for
-debugging is a pretty good one to make...
+xfs_fsr reports this error when launched from command line (or from a cron job):
 
-Cheers,
+# xfs_fsr /dev/sda2
+/ start inode=0
+XFS_IOC_SWAPEXT failed: ino=134390661: Invalid argument
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This error message is also logged in the kernel log:
+
+[1876280.379978] XFS (sda2): xfs_swap_extents: inode 0x802a385 format is incompatible for exchanging.
+
+
+-- System Information:
+Debian Release: stretch/sid
+  APT prefers testing
+  APT policy: (500, 'testing')
+Architecture: amd64 (x86_64)
+
+Kernel: Linux 4.6.0-1-amd64 (SMP w/8 CPU cores)
+Locale: LANG=en_US.UTF-8, LC_CTYPE=en_US.UTF-8 (charmap=UTF-8)
+Shell: /bin/sh linked to /bin/dash
+Init: sysvinit (via /sbin/init)
+
+Versions of packages xfsprogs depends on:
+ii  libblkid1     2.28.1-1
+ii  libc6         2.23-5
+ii  libreadline5  5.2+dfsg-3+b1
+ii  libuuid1      2.28.1-1
+
+xfsprogs recommends no packages.
+
+Versions of packages xfsprogs suggests:
+ii  acl      2.2.52-3
+ii  attr     1:2.4.47-2
+pn  quota    <none>
+ii  xfsdump  3.1.6+nmu1
+
+-- no debconf information
 
 _______________________________________________
 xfs mailing list
