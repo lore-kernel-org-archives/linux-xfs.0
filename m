@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0E4D07CA0
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:17:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 300D8AC002
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:56 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id di3f657wYpSBfHjf (version=TLSv1.2
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 863D77CA1
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:17:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0DF528F8033
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:10 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 4z78649k7uaNqEsM (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:51 -0700 (PDT)
-Subject: [PATCH v11 0/3] fallocate for block devices
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:07 -0700 (PDT)
+Subject: [PATCH 2/3] block: require write_same and discard requests align to
+	logical block size
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 14:16:16 -0700
-Message-ID: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+Date: Thu, 29 Sep 2016 14:16:30 -0700
+Message-ID: <147518379026.22791.4437508871355153928.stgit@birch.djwong.org>
+In-Reply-To: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+References: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,50 +30,75 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
-Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
+Cc: hch@infradead.org, Hannes Reinecke <hare@suse.com>, tytso@mit.edu, snitzer@redhat.com, martin.petersen@oracle.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
 
-Hi Andrew & others,
+Make sure that the offset and length arguments that we're using to
+construct WRITE SAME and DISCARD requests are actually aligned to the
+logical block size.  Failure to do this causes other errors in other
+parts of the block layer or the SCSI layer because disks don't support
+partial logical block writes.
 
-This is a resend of the patchset to fix page cache coherency with
-BLKZEROOUT and implement fallocate for block devices.  This time I'm
-sending it direct to Andrew for inclusion because the block layer
-maintainer has not been responsive over the past year of submissions.
-Can this please go upstream for 4.9?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+---
+ block/blk-lib.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-The first patch is still a fix to the existing BLKZEROOUT ioctl to
-invalidate the page cache if the zeroing command to the underlying
-device succeeds.  Without this patch we still have the pagecache
-coherence bug that's been in the kernel forever.
 
-The second patch changes the internal block device functions to reject
-attempts to discard or zeroout that are not aligned to the logical
-block size.  Previously, we only checked that the start/len parameters
-were 512-byte aligned, which caused kernel BUG_ONs for unaligned IOs
-to 4k-LBA devices.
-
-The third patch creates an fallocate handler for block devices, wires
-up the FALLOC_FL_PUNCH_HOLE flag to zeroing-discard, and connects
-FALLOC_FL_ZERO_RANGE to write-same so that we can have a consistent
-fallocate interface between files and block devices.  It also allows
-the combination of PUNCH_HOLE and NO_HIDE_STALE to invoke non-zeroing
-discard.
-
-Test cases for the new block device fallocate are now in xfstests as
-generic/349-351.
-
-Comments and questions are, as always, welcome.  Patches are against
-4.8-rc8.
-
-v7: Strengthen parameter checking and fix various code issues pointed
-out by Linus and Christoph.
-v8: More code rearranging, rebase to 4.6-rc3, and dig into alignment
-issues.
-v9: Forward port to 4.7.
-v10: Forward port to 4.8.  Remove the extra call to
-invalidate_inode_pages2_range per Bart Van Assche's request.
-v11: Minor fallocate code cleanups suggested by Bart Van Assche.
-
---D
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 083e56f..46fe924 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -31,6 +31,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	unsigned int granularity;
+ 	enum req_op op;
+ 	int alignment;
++	sector_t bs_mask;
+ 
+ 	if (!q)
+ 		return -ENXIO;
+@@ -50,6 +51,10 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		op = REQ_OP_DISCARD;
+ 	}
+ 
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
++
+ 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+ 	granularity = max(q->limits.discard_granularity >> 9, 1U);
+ 	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
+@@ -150,10 +155,15 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
+ 	unsigned int max_write_same_sectors;
+ 	struct bio *bio = NULL;
+ 	int ret = 0;
++	sector_t bs_mask;
+ 
+ 	if (!q)
+ 		return -ENXIO;
+ 
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
++
+ 	/* Ensure that max_write_same_sectors doesn't overflow bi_size */
+ 	max_write_same_sectors = UINT_MAX >> 9;
+ 
+@@ -202,6 +212,11 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 	int ret;
+ 	struct bio *bio = NULL;
+ 	unsigned int sz;
++	sector_t bs_mask;
++
++	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
++	if ((sector | nr_sects) & bs_mask)
++		return -EINVAL;
+ 
+ 	while (nr_sects != 0) {
+ 		bio = next_bio(bio, min(nr_sects, (sector_t)BIO_MAX_PAGES),
 
 _______________________________________________
 xfs mailing list
