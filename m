@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 60A8E7CB4
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:31:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 324B78F8033
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8C6LDRP8pSqlzpnQ (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:31:01 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v26 14/21] richacl: Create-time inheritance
-Date: Thu, 29 Sep 2016 01:29:33 +0200
-Message-Id: <1475105380-22837-15-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4323C7CA1
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 00:57:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B8AB2AC002
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:57:17 -0700 (PDT)
+Received: from mx2.suse.de (mx2.suse.de [195.135.220.15]) by cuda.sgi.com with
+	ESMTP id jBCu5YcIt6yObQlW (version=TLSv1
+	cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 22:57:15 -0700 (PDT)
+Subject: Re: [PATCH 3/3] block: implement (some of) fallocate for block devices
+References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
+	<147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <7f5bf66e-cbe7-3ec3-3325-0a2e01a54593@suse.de>
+Date: Thu, 29 Sep 2016 07:57:13 +0200
+MIME-Version: 1.0
+In-Reply-To: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,204 +25,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, axboe@kernel.dk, akpm@linux-foundation.org
+Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-When a new file is created, it can inherit an acl from its parent
-directory; this is similar to how default acls work in POSIX ACLs.
-
-As with POSIX ACLs, if a file inherits an acl from its parent directory,
-the intersection between the create mode and the permissions granted by
-the inherited acl determines the file masks and file permission bits,
-and the umask is ignored.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
----
- fs/richacl.c            | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   2 +
- 2 files changed, 153 insertions(+)
-
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 1022983..8051181 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -716,3 +716,154 @@ richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(richacl_equiv_mode);
-+
-+static inline bool
-+ace_inherits_to_directory(const struct richace *ace)
-+{
-+	if (ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+		return true;
-+	if ((ace->e_flags & RICHACE_FILE_INHERIT_ACE) &&
-+	    !(ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE))
-+		return true;
-+	return false;
-+}
-+
-+/**
-+ * richacl_inherit  -  compute the inherited acl of a new file
-+ * @dir_acl:	acl of the containing directory
-+ * @isdir:	inherit by a directory or non-directory?
-+ *
-+ * A directory can have acl entries which files and/or directories created
-+ * inside the directory will inherit.  This function computes the acl for such
-+ * a new file.  If there is no inheritable acl, it will return %NULL.
-+ */
-+struct richacl *
-+richacl_inherit(const struct richacl *dir_acl, int isdir)
-+{
-+	const struct richace *dir_ace;
-+	struct richacl *acl = NULL;
-+	struct richace *ace;
-+	int count = 0;
-+
-+	if (isdir) {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			if (dir_ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			else if (dir_ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERIT_ONLY_ACE;
-+			else
-+				ace->e_flags |= RICHACE_INHERIT_ONLY_ACE;
-+			ace++;
-+		}
-+	} else {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			/*
-+			 * RICHACE_DELETE_CHILD is meaningless for
-+			 * non-directories, so clear it.
-+			 */
-+			ace->e_mask &= ~RICHACE_DELETE_CHILD;
-+			ace++;
-+		}
-+	}
-+
-+	return acl;
-+}
-+
-+/*
-+ * richacl_inherit_inode  -  compute inherited acl and file mode
-+ * @dir_acl:	acl of the containing directory
-+ * @mode_p:	mode of the new inode
-+ *
-+ * The file permission bits in @mode_p must be set to the create mode by the
-+ * caller.
-+ *
-+ * If there is an inheritable acl, the maximum permissions that the acl grants
-+ * are computed and the file masks of the new acl are set accordingly.
-+ */
-+static struct richacl *
-+richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
-+{
-+	struct richacl *acl;
-+	umode_t mode = *mode_p;
-+
-+	acl = richacl_inherit(dir_acl, S_ISDIR(mode));
-+	if (acl) {
-+		if (richacl_equiv_mode(acl, &mode) == 0) {
-+			*mode_p &= mode;
-+			richacl_put(acl);
-+			acl = NULL;
-+		} else {
-+			richacl_compute_max_masks(acl);
-+			/*
-+			 * Ensure that the acl will not grant any permissions
-+			 * beyond the create mode.
-+			 */
-+			acl->a_flags |= RICHACL_MASKED;
-+			acl->a_owner_mask &=
-+				richacl_mode_to_mask(mode >> 6);
-+			acl->a_group_mask &=
-+				richacl_mode_to_mask(mode >> 3);
-+			acl->a_other_mask &=
-+				richacl_mode_to_mask(mode);
-+		}
-+	} else
-+		*mode_p &= ~current_umask();
-+
-+	return acl;
-+}
-+
-+/**
-+ * richacl_create  -  filesystem create helper
-+ * @mode_p:	mode of the new inode
-+ * @dir:	containing directory
-+ *
-+ * Compute the inherited acl for a new inode.  If there is no acl to inherit,
-+ * apply the umask.  Use when creating a new inode on a richacl enabled file
-+ * system.
-+ */
-+struct richacl *richacl_create(umode_t *mode_p, struct inode *dir)
-+{
-+	struct richacl *dir_acl, *acl = NULL;
-+
-+	if (S_ISLNK(*mode_p))
-+		return NULL;
-+	dir_acl = get_richacl(dir);
-+	if (dir_acl) {
-+		if (IS_ERR(dir_acl))
-+			return dir_acl;
-+		acl = richacl_inherit_inode(dir_acl, mode_p);
-+		richacl_put(dir_acl);
-+	} else
-+		*mode_p &= ~current_umask();
-+	return acl;
-+}
-+EXPORT_SYMBOL_GPL(richacl_create);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index a865f37..6354ef0 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -191,5 +191,7 @@ extern int richacl_permission(struct inode *, const struct richacl *, int);
- extern void richacl_compute_max_masks(struct richacl *);
- extern int richacl_chmod(struct inode *, umode_t);
- extern int richacl_equiv_mode(const struct richacl *, umode_t *);
-+extern struct richacl *richacl_inherit(const struct richacl *, int);
-+extern struct richacl *richacl_create(umode_t *, struct inode *);
- 
- #endif /* __RICHACL_H */
--- 
-2.7.4
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDkvMjkvMjAxNiAwMjozOSBBTSwgRGFycmljayBKLiBXb25nIHdyb3RlOgo+IEFmdGVyIG11
+Y2ggZGlzY3Vzc2lvbiwgaXQgc2VlbXMgdGhhdCB0aGUgZmFsbG9jYXRlIGZlYXR1cmUgZmxhZwo+
+IEZBTExPQ19GTF9aRVJPX1JBTkdFIG1hcHMgbmljZWx5IHRvIFNDU0kgV1JJVEUgU0FNRTsgYW5k
+IHRoZSBmZWF0dXJlCj4gRkFMTE9DX0ZMX1BVTkNIX0hPTEUgbWFwcyBuaWNlbHkgdG8gdGhlIGRl
+dmljZXMgdGhhdCBoYXZlIGJlZW4KPiB3aGl0ZWxpc3RlZCBmb3IgemVyb2luZyBTQ1NJIFVOTUFQ
+LiAgUHVuY2ggc3RpbGwgcmVxdWlyZXMgdGhhdAo+IEZBTExPQ19GTF9LRUVQX1NJWkUgaXMgc2V0
+LiAgQSBsZW5ndGggdGhhdCBnb2VzIHBhc3QgdGhlIGVuZCBvZiB0aGUKPiBkZXZpY2Ugd2lsbCBi
+ZSBjbGFtcGVkIHRvIHRoZSBkZXZpY2Ugc2l6ZSBpZiBLRUVQX1NJWkUgaXMgc2V0OyBvciB3aWxs
+Cj4gcmV0dXJuIC1FSU5WQUwgaWYgbm90LiAgQm90aCBzdGFydCBhbmQgbGVuZ3RoIG11c3QgYmUg
+YWxpZ25lZCB0byB0aGUKPiBkZXZpY2UncyBsb2dpY2FsIGJsb2NrIHNpemUuCj4gCj4gU2luY2Ug
+dGhlIHNlbWFudGljcyBvZiBmYWxsb2NhdGUgYXJlIGZhaXJseSB3ZWxsIGVzdGFibGlzaGVkIGFs
+cmVhZHksCj4gd2lyZSB1cCB0aGUgdHdvIHBpZWNlcy4gIFRoZSBvdGhlciBmYWxsb2NhdGUgdmFy
+aWFudHMgKGNvbGxhcHNlIHJhbmdlLAo+IGluc2VydCByYW5nZSwgYW5kIGFsbG9jYXRlIGJsb2Nr
+cykgYXJlIG5vdCBzdXBwb3J0ZWQuCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFycmljayBKLiBXb25n
+IDxkYXJyaWNrLndvbmdAb3JhY2xlLmNvbT4KPiAtLS0KPiB2MjogSW5jb3Jwb3JhdGUgZmVlZGJh
+Y2sgZnJvbSBDaHJpc3RvcGggJiBMaW51cy4gIFRlbnRhdGl2ZWx5IGFkZAo+IGEgcmVxdWlyZW1l
+bnQgdGhhdCB0aGUgZmFsbG9jYXRlIGFyZ3VtZW50cyBiZSBhbGlnbmVkIHRvIGxvZ2ljYWwgYmxv
+Y2sKPiBzaXplLCBhbmQgcHV0IGluIGEgZmV3IFhYWCBjb21tZW50cyBhaGVhZCBvZiBMU0YgZGlz
+Y3Vzc2lvbi4KPiB2MzogRm9yd2FyZCBwb3J0IHRvIDQuNy4KPiB2NDogRm9yd2FyZCBwb3J0IHRv
+IDQuOC4KPiAtLS0KPiAgZnMvYmxvY2tfZGV2LmMgfCAgIDc4ICsrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCj4gIGZzL29wZW4uYyAgICAgIHwg
+ICAgMyArLQo+ICAyIGZpbGVzIGNoYW5nZWQsIDgwIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
+LSkKPiAKUmV2aWV3ZWQtYnk6IEhhbm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmNvbT4KCkNoZWVy
+cywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBSZWluZWNrZQkJICAgICAgelNlcmllcyAmIFN0b3Jh
+Z2UKaGFyZUBzdXNlLmRlCQkJICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBMSU5VWCBQcm9k
+dWN0cyBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcKR0Y6IEouIEhhd24sIEou
+IEd1aWxkLCBGLiBJbWVuZMO2cmZmZXIsIEhSQiAxNjc0NiAoQUcgTsO8cm5iZXJnKQoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
