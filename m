@@ -1,38 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52504 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934267AbcI2QtV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 12:49:21 -0400
-Date: Thu, 29 Sep 2016 09:49:20 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/63] xfs: define tracepoints for refcount btree
- activities
-Message-ID: <20160929164920.GC4546@infradead.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26593 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755591AbcI2UNp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 16:13:45 -0400
+Date: Thu, 29 Sep 2016 13:13:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 46/63] xfs: CoW shared EOF block when truncating file
+Message-ID: <20160929201317.GC14092@birch.djwong.org>
 References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503122918.30303.16146439086000365868.stgit@birch.djwong.org>
+ <147503151218.30303.13404244896095456650.stgit@birch.djwong.org>
+ <20160929172918.GA18008@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147503122918.30303.16146439086000365868.stgit@birch.djwong.org>
+In-Reply-To: <20160929172918.GA18008@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-> +#ifndef XFS_REFCOUNT_IREC_PLACEHOLDER
-> +#define XFS_REFCOUNT_IREC_PLACEHOLDER
-> +/* Placeholder definition to avoid breaking bisectability. */
-> +struct xfs_refcount_irec {
-> +	xfs_agblock_t	rc_startblock;	/* starting block number */
-> +	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
-> +	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
-> +};
-> +#endif
+On Thu, Sep 29, 2016 at 10:29:18AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 27, 2016 at 07:58:32PM -0700, Darrick J. Wong wrote:
+> > When shrinking a file, the VFS zeroes everything in the associated
+> > page between the new EOF and the previous EOF to avoid leaking data.
+> > If this block is shared we need to CoW it before the VFS does its
+> > zeroing to avoid corrupting the other files.
+> 
+> This shouldn't be needed. Zeroing the EOF block goes through the
+> iomap interface, which should handle the COW case properly.
 
-Oh well, I had hoped we could get rid of these place holder by folding
-the tracepoint patches into their actual users.
+Yep.  One more patch gone, yay! :)
 
-But except for that this looks fine:
+Will run a full regression test tonight, but the test that extends a
+reflinked file via truncate passes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
