@@ -1,106 +1,82 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 863D77CA1
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:17:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0DF528F8033
-	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:10 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 4z78649k7uaNqEsM (version=TLSv1.2
-	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:17:07 -0700 (PDT)
-Subject: [PATCH 2/3] block: require write_same and discard requests align to
-	logical block size
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:26000 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934107AbcI2VSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 17:18:31 -0400
+Date: Thu, 29 Sep 2016 14:18:23 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 14:16:30 -0700
-Message-ID: <147518379026.22791.4437508871355153928.stgit@birch.djwong.org>
-In-Reply-To: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
-References: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+Subject: Re: [PATCH 08/63] xfs: account for the refcount btree in the
+ alloc/free log reservation
+Message-ID: <20160929211823.GH14092@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+ <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
+ <20160928162005.GC8852@bfoster.bfoster>
 MIME-Version: 1.0
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
-Cc: hch@infradead.org, Hannes Reinecke <hare@suse.com>, tytso@mit.edu, snitzer@redhat.com, martin.petersen@oracle.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160928162005.GC8852@bfoster.bfoster>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Brian Foster <bfoster@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Make sure that the offset and length arguments that we're using to
-construct WRITE SAME and DISCARD requests are actually aligned to the
-logical block size.  Failure to do this causes other errors in other
-parts of the block layer or the SCSI layer because disks don't support
-partial logical block writes.
+On Wed, Sep 28, 2016 at 12:20:05PM -0400, Brian Foster wrote:
+> On Tue, Sep 27, 2016 at 07:54:20PM -0700, Darrick J. Wong wrote:
+> > Every time we allocate or free an extent, we might need to split the
+> > refcount btree.  Reserve some blocks in the transaction to handle
+> > this possibility.
+> > 
+> 
+> I'm probably not far along enough to grok how this all works, but I'm a
+> bit confused by the requirement here. Why is generic block
+> allocation/free a refcountbt matter? E.g., the function below is used
+> for things like inode chunk allocation and whatnot, aren't those
+> irrelevant to the refcountbt?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- block/blk-lib.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Overnight tests seem to run ok, so I'll remove this patch.  If it
+becomes a problem we can always put it back in.
 
+--D
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 083e56f..46fe924 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -31,6 +31,7 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	unsigned int granularity;
- 	enum req_op op;
- 	int alignment;
-+	sector_t bs_mask;
- 
- 	if (!q)
- 		return -ENXIO;
-@@ -50,6 +51,10 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		op = REQ_OP_DISCARD;
- 	}
- 
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
-+
- 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
- 	granularity = max(q->limits.discard_granularity >> 9, 1U);
- 	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
-@@ -150,10 +155,15 @@ int blkdev_issue_write_same(struct block_device *bdev, sector_t sector,
- 	unsigned int max_write_same_sectors;
- 	struct bio *bio = NULL;
- 	int ret = 0;
-+	sector_t bs_mask;
- 
- 	if (!q)
- 		return -ENXIO;
- 
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
-+
- 	/* Ensure that max_write_same_sectors doesn't overflow bi_size */
- 	max_write_same_sectors = UINT_MAX >> 9;
- 
-@@ -202,6 +212,11 @@ static int __blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	int ret;
- 	struct bio *bio = NULL;
- 	unsigned int sz;
-+	sector_t bs_mask;
-+
-+	bs_mask = (bdev_logical_block_size(bdev) >> 9) - 1;
-+	if ((sector | nr_sects) & bs_mask)
-+		return -EINVAL;
- 
- 	while (nr_sects != 0) {
- 		bio = next_bio(bio, min(nr_sects, (sector_t)BIO_MAX_PAGES),
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> Brian
+> 
+> > (Reproduced by generic/167 over NFS atop XFS)
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > [darrick.wong@oracle.com: add commit message]
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> > index 7c840e1..a59838f 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> > @@ -67,7 +67,8 @@ xfs_calc_buf_res(
+> >   * Per-extent log reservation for the btree changes involved in freeing or
+> >   * allocating an extent.  In classic XFS there were two trees that will be
+> >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
+> > - * (rmapbt).  The number of blocks reserved is based on the formula:
+> > + * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
+> > + * blocks reserved is based on the formula:
+> >   *
+> >   * num trees * ((2 blocks/level * max depth) - 1)
+> >   *
+> > @@ -83,6 +84,8 @@ xfs_allocfree_log_count(
+> >  	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
+> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
+> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
+> >  
+> >  	return blocks;
+> >  }
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
