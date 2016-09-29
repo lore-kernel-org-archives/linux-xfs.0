@@ -1,65 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30958 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755680AbcI3CXV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 22:23:21 -0400
-Subject: [PATCH 2/9] xfs/130: don't modify files after failed mount
+Received: from aserp1040.oracle.com ([141.146.126.69]:38014 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934123AbcI2Rl2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 13:41:28 -0400
+Date: Thu, 29 Sep 2016 10:40:59 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 19:23:15 -0700
-Message-ID: <147520219573.26891.13193477741708431386.stgit@birch.djwong.org>
-In-Reply-To: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
-References: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
+Subject: Re: [PATCH 43/63] xfs: teach get_bmapx about shared extents and the
+ CoW fork
+Message-ID: <20160929174059.GX14092@birch.djwong.org>
+References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
+ <147503149320.30303.9720221974285402096.stgit@birch.djwong.org>
+ <20160929170537.GI4546@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160929170537.GI4546@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-In xfs/130, we try to mount a filesystem with the expectation that it
-will fail.  Therefore, it is inappropriate to try to write to the
-mountpoint, since it could otherwise be writable.
+On Thu, Sep 29, 2016 at 10:05:37AM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 27, 2016 at 07:58:13PM -0700, Darrick J. Wong wrote:
+> > +#define BMV_IF_COWFORK		0x20	/* return CoW fork rather than data */
+> 
+> I think exposing an implementation detail like the COW fork that has
+> no on-disk equivalent is a bad idea and would feel much better if this
+> part of the patch was dropped.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- tests/xfs/130     |    9 +++------
- tests/xfs/130.out |    1 -
- 2 files changed, 3 insertions(+), 7 deletions(-)
+There are a few xfstests that check the contents of the CoW extent fork
+to make sure it's working properly.  How about a compromise -- leave the
+flag in, but return -EINVAL unless CONFIG_XFS_DEBUG=y ?
 
-
-diff --git a/tests/xfs/130 b/tests/xfs/130
-index 554d078..48f6a84 100755
---- a/tests/xfs/130
-+++ b/tests/xfs/130
-@@ -79,12 +79,9 @@ seq 0 $((agcount - 1)) | while read ag; do
- done
- 
- echo "+ mount image"
--_scratch_mount
--
--echo "+ reflink more"
--_cp_reflink "${SCRATCH_MNT}/file1" "${SCRATCH_MNT}/file4" 2> /dev/null && \
--	_fail "should not be able to reflink with busted refcount btree"
--umount "${SCRATCH_MNT}"
-+_scratch_mount >> $seqres.full 2>&1 && \
-+	echo "Should not be able to mount with broken refcountbt."
-+_scratch_unmount >> $seqres.full 2>&1
- 
- echo "+ repair fs"
- _disable_dmesg_check
-diff --git a/tests/xfs/130.out b/tests/xfs/130.out
-index 58d153b..a0eab98 100644
---- a/tests/xfs/130.out
-+++ b/tests/xfs/130.out
-@@ -5,7 +5,6 @@ QA output created by 130
- + check fs
- + corrupt image
- + mount image
--+ reflink more
- + repair fs
- + mount image (2)
- + chattr -R -i
-
+--D
