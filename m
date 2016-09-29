@@ -1,159 +1,94 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38682 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751443AbcISWI0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Sep 2016 18:08:26 -0400
-Subject: [PATCH 1/2] libxfs: move iswritable "fatal" decision to caller
-References: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <62f0019d-c2fb-bda8-8549-a6985d4be6a4@sandeen.net>
-Date: Mon, 19 Sep 2016 17:08:24 -0500
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 990657CA0
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 16:16:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62967304039
+	for <xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:55 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id bNR5msXjWmakTBCm (version=TLSv1.2
+	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Sep 2016 14:16:53 -0700 (PDT)
+Subject: [PATCH 1/3] block: invalidate the page cache when issuing BLKZEROOUT.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 29 Sep 2016 14:16:23 -0700
+Message-ID: <147518378313.22791.16649519283678515021.stgit@birch.djwong.org>
+In-Reply-To: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
+References: <147518377601.22791.14436504108602322570.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <bf987720-16ef-164a-2b0f-ba7cbb13b399@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: axboe@kernel.dk, akpm@linux-foundation.org, darrick.wong@oracle.com
+Cc: hch@infradead.org, Hannes Reinecke <hare@suse.com>, tytso@mit.edu, snitzer@redhat.com, martin.petersen@oracle.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, hare@suse.de, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com, Christoph Hellwig <hch@lst.de>
 
-Simplify platform_check_iswritable by moving the "fatal decision
-up to the (one) caller.  In other words, simply return whether
-mounted+writable is true, and return 1 if so.  Caller decides
-what to do with that info based on /its/ "fatal" argument.
+Invalidate the page cache (as a regular O_DIRECT write would do) to avoid
+returning stale cache contents at a later time.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
+ block/ioctl.c |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-V2: Rebase
 
-diff --git a/libxfs/darwin.c b/libxfs/darwin.c
-index 017e190..19d2ab6 100644
---- a/libxfs/darwin.c
-+++ b/libxfs/darwin.c
-@@ -33,7 +33,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
+diff --git a/block/ioctl.c b/block/ioctl.c
+index ed2397f..755119c 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -225,7 +225,8 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+ 		unsigned long arg)
  {
- 	int	fd, writable;
+ 	uint64_t range[2];
+-	uint64_t start, len;
++	struct address_space *mapping;
++	uint64_t start, end, len;
  
-diff --git a/libxfs/freebsd.c b/libxfs/freebsd.c
-index 6c9f089..9e22183 100644
---- a/libxfs/freebsd.c
-+++ b/libxfs/freebsd.c
-@@ -66,7 +66,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
+ 	if (!(mode & FMODE_WRITE))
+ 		return -EBADF;
+@@ -235,18 +236,23 @@ static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
  
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
-         int cnt, i;
-         struct statfs *fsinfo;
-@@ -74,7 +74,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-         if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
- 		fprintf(stderr, _("%s: %s contains a possibly writable, "
- 				"mounted filesystem\n"), progname, name);
--			return fatal;
-+			return 1;
- 	}
+ 	start = range[0];
+ 	len = range[1];
++	end = start + len - 1;
  
-         for (i = 0; i < cnt; i++) {
-@@ -88,7 +88,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-         if (i == cnt) {
- 		fprintf(stderr, _("%s: %s contains a mounted and writable "
- 				"filesystem\n"), progname, name);
--		return fatal;
-+		return 1;
- 	}
- 	return 0;
- }
-diff --git a/libxfs/init.c b/libxfs/init.c
-index c13b123..828ae3e 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -75,7 +75,9 @@ check_isactive(char *name, char *block, int fatal)
- 		return 0;
- 	if (platform_check_ismounted(name, block, &st, 0) == 0)
- 		return 0;
--	return platform_check_iswritable(name, block, &st, fatal);
-+	if (platform_check_iswritable(name, block, &st))
-+		return fatal ? 1 : 0;
-+	return 0;
- }
+ 	if (start & 511)
+ 		return -EINVAL;
+ 	if (len & 511)
+ 		return -EINVAL;
+-	start >>= 9;
+-	len >>= 9;
+-
+-	if (start + len > (i_size_read(bdev->bd_inode) >> 9))
++	if (end >= (uint64_t)i_size_read(bdev->bd_inode))
++		return -EINVAL;
++	if (end < start)
+ 		return -EINVAL;
  
- /* libxfs_device_to_fd:
-diff --git a/libxfs/init.h b/libxfs/init.h
-index 112febb..4dda3ee 100644
---- a/libxfs/init.h
-+++ b/libxfs/init.h
-@@ -22,8 +22,7 @@ struct stat64;
- 
- extern int platform_check_ismounted (char *path, char *block,
- 					struct stat64 *sptr, int verbose);
--extern int platform_check_iswritable (char *path, char *block,
--					struct stat64 *sptr, int fatal);
-+extern int platform_check_iswritable (char *path, char *block, struct stat64 *sptr);
- extern int platform_set_blocksize (int fd, char *path, dev_t device, int bsz, int fatal);
- extern void platform_flush_device (int fd, dev_t device);
- extern char *platform_findrawpath(char *path);
-diff --git a/libxfs/irix.c b/libxfs/irix.c
-index 65aaa7e..c23ebe0 100644
---- a/libxfs/irix.c
-+++ b/libxfs/irix.c
-@@ -31,7 +31,7 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
- 	return 1;
- }
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 44bc1f9..2b67d1a 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -85,9 +85,8 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- }
- 
- int
--platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
- {
--	int		sts = 0;
- 	FILE		*f;
- 	struct stat64	mst;
- 	struct mntent	*mnt;
-@@ -97,7 +96,7 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
- 	if ((f = setmntent(mounts, "r")) == NULL) {
- 		fprintf(stderr, _("%s: %s contains a possibly writable, "
- 				"mounted filesystem\n"), progname, name);
--			return fatal;
-+			return 1;
- 	}
- 	while ((mnt = getmntent(f)) != NULL) {
- 		if (stat64(mnt->mnt_fsname, &mst) < 0)
-@@ -108,13 +107,14 @@ platform_check_iswritable(char *name, char *block, struct stat64 *s, int fatal)
- 		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
- 			break;
- 	}
-+	endmntent(f);
+-	return blkdev_issue_zeroout(bdev, start, len, GFP_KERNEL, false);
++	/* Invalidate the page cache, including dirty pages */
++	mapping = bdev->bd_inode->i_mapping;
++	truncate_inode_pages_range(mapping, start, end);
 +
- 	if (mnt == NULL) {
- 		fprintf(stderr, _("%s: %s contains a mounted and writable "
- 				"filesystem\n"), progname, name);
--		sts = fatal;
-+		return 1;
- 	}
--	endmntent(f);
--	return sts;
-+	return 0;
++	return blkdev_issue_zeroout(bdev, start >> 9, len >> 9, GFP_KERNEL,
++				    false);
  }
  
- int
+ static int put_ushort(unsigned long arg, unsigned short val)
 
-
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
