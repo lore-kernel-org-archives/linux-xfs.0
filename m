@@ -1,91 +1,97 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37318 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752032AbcI1Tpd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Sep 2016 15:45:33 -0400
-Date: Wed, 28 Sep 2016 12:45:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/63] xfs: account for the refcount btree in the
- alloc/free log reservation
-Message-ID: <20160928194519.GU14092@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <147503126083.30303.8391218762410608178.stgit@birch.djwong.org>
- <20160928162005.GC8852@bfoster.bfoster>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 517A17CA1
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 20:42:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B24AFAC002
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:42:27 -0700 (PDT)
+Received: from NAM01-BY2-obe.outbound.protection.outlook.com
+	(mail-by2nam01on0075.outbound.protection.outlook.com
+	[104.47.34.75]) by cuda.sgi.com with ESMTP id 8J1sgYt6XnOTeHQ9
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Sep 2016 18:42:24 -0700 (PDT)
+Subject: Re: [PATCH 3/3] block: implement (some of) fallocate for block devices
+References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
+	<147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Message-ID: <62c7d047-166c-75e0-5b00-f2bfdcf03cb1@sandisk.com>
+Date: Wed, 28 Sep 2016 18:42:14 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160928162005.GC8852@bfoster.bfoster>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, axboe@kernel.dk, akpm@linux-foundation.org
+Cc: hch@infradead.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, linux-block@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Sep 28, 2016 at 12:20:05PM -0400, Brian Foster wrote:
-> On Tue, Sep 27, 2016 at 07:54:20PM -0700, Darrick J. Wong wrote:
-> > Every time we allocate or free an extent, we might need to split the
-> > refcount btree.  Reserve some blocks in the transaction to handle
-> > this possibility.
-> > 
-> 
-> I'm probably not far along enough to grok how this all works, but I'm a
-> bit confused by the requirement here. Why is generic block
-> allocation/free a refcountbt matter? E.g., the function below is used
-> for things like inode chunk allocation and whatnot, aren't those
-> irrelevant to the refcountbt?
+On 09/28/16 17:39, Darrick J. Wong wrote:
+> +	if (end > isize) {
+> +		if (mode & FALLOC_FL_KEEP_SIZE) {
+> +			len = isize - start;
+> +			end = start + len - 1;
+> +		} else
+> +			return -EINVAL;
+> +	}
 
-The original reason (pre-deferred ops) was that
-xfs_allocfree_log_count() was used for calculating log reservations both
-for user data and for metadata allocation activities, and we tried to
-cram everything into one giant transaction.  As you point out, this can
-lead to unnecessarily large transaction reservations.  Nowadays we
-roll transactions with deferred ops and the refcount finish_one code
-preemptively rolls the transaction if it thinks it might be close to the
-overflow point.  I've been thinking we could just remove this since
-refcount updates are their own transaction anyway.
+If FALLOC_FL_KEEP_SIZE has been set and end == isize the above code 
+won't reduce end to isize - 1. Shouldn't "end > isize" be changed into 
+"end >= isize" ?
 
-Will try reverting and report back. :)
+> +	switch (mode) {
+> +	case FALLOC_FL_ZERO_RANGE:
+> +	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
+> +		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
+> +					    GFP_KERNEL, false);
+> +		if (error)
+> +			return error;
+> +		break;
+> +	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
+> +		/* Only punch if the device can do zeroing discard. */
+> +		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
+> +			return -EOPNOTSUPP;
+> +		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
+> +					     GFP_KERNEL, 0);
+> +		if (error)
+> +			return error;
+> +		break;
+> +	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
+> +		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
+> +					     GFP_KERNEL, 0);
+> +		if (error)
+> +			return error;
+> +		break;
+> +	default:
+> +		return -EOPNOTSUPP;
+> +	}
 
---D
+Have you considered to move "if (error) return error" out of the switch 
+statement?
 
-> 
-> Brian
-> 
-> > (Reproduced by generic/167 over NFS atop XFS)
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > [darrick.wong@oracle.com: add commit message]
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_resv.c |    5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> > index 7c840e1..a59838f 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> > @@ -67,7 +67,8 @@ xfs_calc_buf_res(
-> >   * Per-extent log reservation for the btree changes involved in freeing or
-> >   * allocating an extent.  In classic XFS there were two trees that will be
-> >   * modified (bnobt + cntbt).  With rmap enabled, there are three trees
-> > - * (rmapbt).  The number of blocks reserved is based on the formula:
-> > + * (rmapbt).  With reflink, there are four trees (refcountbt).  The number of
-> > + * blocks reserved is based on the formula:
-> >   *
-> >   * num trees * ((2 blocks/level * max depth) - 1)
-> >   *
-> > @@ -83,6 +84,8 @@ xfs_allocfree_log_count(
-> >  	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
-> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> >  		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
-> > +	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
-> >  
-> >  	return blocks;
-> >  }
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	/*
+> +	 * Invalidate again; if someone wandered in and dirtied a page,
+> +	 * the caller will be given -EBUSY;
+> +	 */
+> +	return invalidate_inode_pages2_range(mapping,
+> +					     start >> PAGE_SHIFT,
+> +					     end >> PAGE_SHIFT);
+
+A comment might be appropriate here that since end is inclusive and 
+since the third argument of invalidate_inode_pages2_range() is inclusive 
+that rounding down will yield the correct result.
+
+Bart.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
