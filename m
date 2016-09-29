@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0F27D7CCC
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 18:30:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C7E118F8033
-	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PffmVFRNsRuVYULa (version=TLSv1.2
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5485F7CA1
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 21:19:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EF0E9304032
+	for <xfs@oss.sgi.com>; Wed, 28 Sep 2016 19:19:37 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id SUH4pTO4qapKsAH3 (version=TLSv1.2
 	cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 16:30:45 -0700 (PDT)
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v26 11/21] vfs: Cache richacl in struct inode
-Date: Thu, 29 Sep 2016 01:29:30 +0200
-Message-Id: <1475105380-22837-12-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
-References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+	<xfs@oss.sgi.com>; Wed, 28 Sep 2016 19:19:35 -0700 (PDT)
+Date: Wed, 28 Sep 2016 19:19:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 3/3] block: implement (some of) fallocate for block devices
+Message-ID: <20160929021900.GA4901@birch.djwong.org>
+References: <147510957066.8940.13803086684642725401.stgit@birch.djwong.org>
+	<147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <147510959149.8940.2897845352082568677.stgit@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,206 +26,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andreas Gruenbacher <agruenba@redhat.com>, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
+To: axboe@kernel.dk, akpm@linux-foundation.org
+Cc: linux-block@vger.kernel.org, tytso@mit.edu, martin.petersen@oracle.com, snitzer@redhat.com, linux-api@vger.kernel.org, bfoster@redhat.com, xfs@oss.sgi.com, hch@infradead.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, bart.vanassche@sandisk.com
 
-Cache richacls in struct inode so that this doesn't have to be done
-individually in each filesystem.  This is similar to POSIX ACLs.
+After much discussion, it seems that the fallocate feature flag
+FALLOC_FL_ZERO_RANGE maps nicely to SCSI WRITE SAME; and the feature
+FALLOC_FL_PUNCH_HOLE maps nicely to the devices that have been
+whitelisted for zeroing SCSI UNMAP.  Punch still requires that
+FALLOC_FL_KEEP_SIZE is set.  A length that goes past the end of the
+device will be clamped to the device size if KEEP_SIZE is set; or will
+return -EINVAL if not.  Both start and length must be aligned to the
+device's logical block size.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Since the semantics of fallocate are fairly well established already,
+wire up the two pieces.  The other fallocate variants (collapse range,
+insert range, and allocate blocks) are not supported.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/inode.c              | 13 +++++---
- fs/richacl.c            | 81 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/fs.h      |  5 ++-
- include/linux/richacl.h | 11 +++++++
- 4 files changed, 105 insertions(+), 5 deletions(-)
+v2: Incorporate feedback from Christoph & Linus.  Tentatively add
+a requirement that the fallocate arguments be aligned to logical block
+size, and put in a few XXX comments ahead of LSF discussion.
+v3: Forward port to 4.7.
+v4: Forward port to 4.8.
+---
+ fs/block_dev.c |   75 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/open.c      |    3 +-
+ 2 files changed, 77 insertions(+), 1 deletion(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index e836c12..7cb968c 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -181,8 +181,11 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
- 	inode->i_private = NULL;
- 	inode->i_mapping = mapping;
- 	INIT_HLIST_HEAD(&inode->i_dentry);	/* buggered by rcu freeing */
--#ifdef CONFIG_FS_POSIX_ACL
--	inode->i_acl = inode->i_default_acl = ACL_NOT_CACHED;
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
-+	inode->i_acl = ACL_NOT_CACHED;
-+# if defined(CONFIG_FS_POSIX_ACL)
-+	inode->i_default_acl = ACL_NOT_CACHED;
-+# endif
- #endif
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 08ae993..7b6d096 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -30,6 +30,7 @@
+ #include <linux/cleancache.h>
+ #include <linux/dax.h>
+ #include <linux/badblocks.h>
++#include <linux/falloc.h>
+ #include <asm/uaccess.h>
+ #include "internal.h"
  
- #ifdef CONFIG_FSNOTIFY
-@@ -238,17 +241,19 @@ void __destroy_inode(struct inode *inode)
- 		atomic_long_dec(&inode->i_sb->s_remove_count);
- 	}
- 
--#ifdef CONFIG_FS_POSIX_ACL
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
- 	if (inode->i_acl && !is_uncached_acl(inode->i_acl))
- 		base_acl_put(inode->i_acl);
-+# if defined(CONFIG_FS_POSIX_ACL)
- 	if (inode->i_default_acl && !is_uncached_acl(inode->i_default_acl))
- 		base_acl_put(inode->i_default_acl);
-+# endif
- #endif
- 	this_cpu_dec(nr_inodes);
- }
- EXPORT_SYMBOL(__destroy_inode);
- 
--#ifdef CONFIG_FS_POSIX_ACL
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
- struct base_acl *__get_cached_acl(struct base_acl **p)
- {
- 	struct base_acl *base_acl;
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 57a4048..731c468 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -20,6 +20,87 @@
- #include <linux/slab.h>
- #include <linux/richacl.h>
- 
-+void set_cached_richacl(struct inode *inode, struct richacl *acl)
-+{
-+	struct base_acl *old;
-+
-+	old = xchg(&inode->i_acl, &richacl_get(acl)->a_base);
-+	if (!is_uncached_acl(old))
-+		base_acl_put(old);
-+}
-+EXPORT_SYMBOL_GPL(set_cached_richacl);
-+
-+void forget_cached_richacl(struct inode *inode)
-+{
-+	__forget_cached_acl(&inode->i_acl);
-+}
-+EXPORT_SYMBOL_GPL(forget_cached_richacl);
-+
-+struct richacl *get_richacl(struct inode *inode)
-+{
-+	struct base_acl *sentinel, *base_acl;
-+	struct richacl *acl;
-+
-+	if (!IS_RICHACL(inode))
-+		return NULL;
-+
-+	/*
-+	 * The sentinel is used to detect when another operation like
-+	 * set_cached_richacl() or forget_cached_richacl() races with
-+	 * get_richacl().
-+	 * It is guaranteed that is_uncached_acl(sentinel) is true.
-+	 */
-+
-+	base_acl = __get_cached_acl(&inode->i_acl);
-+	if (!is_uncached_acl(base_acl))
-+		return richacl(base_acl);
-+
-+	sentinel = uncached_acl_sentinel(current);
-+
-+	/*
-+	 * If the ACL isn't being read yet, set our sentinel.  Otherwise, the
-+	 * current value of the ACL will not be ACL_NOT_CACHED and so our own
-+	 * sentinel will not be set; another task will update the cache.  We
-+	 * could wait for that other task to complete its job, but it's easier
-+	 * to just call ->get_acl to fetch the ACL ourself.  (This is going to
-+	 * be an unlikely race.)
-+	 */
-+	if (cmpxchg(&inode->i_acl, ACL_NOT_CACHED, sentinel) != ACL_NOT_CACHED)
-+		/* fall through */ ;
-+
-+	/*
-+	 * Normally, the ACL returned by ->get_richacl will be cached.
-+	 * A filesystem can prevent that by calling
-+	 * forget_cached_richacl(inode) in ->get_richacl.
-+	 *
-+	 * If the filesystem doesn't have a ->get_richacl function at all,
-+	 * we'll just create the negative cache entry.
-+	 */
-+	if (!inode->i_op->get_richacl) {
-+		set_cached_richacl(inode, NULL);
-+		return NULL;
-+	}
-+
-+	acl = inode->i_op->get_richacl(inode);
-+	if (IS_ERR(acl)) {
-+		/*
-+		 * Remove our sentinel so that we don't block future attempts
-+		 * to cache the ACL.
-+		 */
-+		cmpxchg(&inode->i_acl, sentinel, ACL_NOT_CACHED);
-+		return acl;
-+	}
-+
-+	/*
-+	 * Cache the result, but only if our sentinel is still in place.
-+	 */
-+	richacl_get(acl);
-+	if (unlikely(cmpxchg(&inode->i_acl, sentinel, &acl->a_base) != sentinel))
-+		richacl_put(acl);
-+	return acl;
-+}
-+EXPORT_SYMBOL_GPL(get_richacl);
-+
- /**
-  * richacl_alloc  -  allocate a richacl
-  * @count:	number of entries
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e24d269..0b3dac9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -585,6 +585,7 @@ struct base_acl {
- 	struct rcu_head ba_rcu;
+@@ -1787,6 +1788,79 @@ static const struct address_space_operations def_blk_aops = {
+ 	.is_dirty_writeback = buffer_check_dirty_writeback,
  };
- struct posix_acl;
-+struct richacl;
- #define ACL_NOT_CACHED ((void *)(-1))
- #define ACL_DONT_CACHE ((void *)(-3))
  
-@@ -616,9 +617,11 @@ struct inode {
- 	kgid_t			i_gid;
- 	unsigned int		i_flags;
- 
--#if defined(CONFIG_FS_POSIX_ACL)
-+#if defined(CONFIG_FS_POSIX_ACL) || defined(CONFIG_FS_RICHACL)
- 	struct base_acl		*i_acl;
-+# if defined(CONFIG_FS_POSIX_ACL)
- 	struct base_acl		*i_default_acl;
-+# endif
- #endif
- 
- 	const struct inode_operations	*i_op;
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index d535206..207fe06 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -70,6 +70,17 @@ richacl_put(struct richacl *acl)
- 	base_acl_put(&acl->a_base);
- }
- 
-+static inline struct richacl *
-+richacl(struct base_acl *base_acl)
++#define	BLKDEV_FALLOC_FL_SUPPORTED					\
++		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
++		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_NO_HIDE_STALE)
++
++static long blkdev_fallocate(struct file *file, int mode, loff_t start,
++			     loff_t len)
 +{
-+	BUILD_BUG_ON(offsetof(struct richacl, a_base) != 0);
-+	return container_of(base_acl, struct richacl, a_base);
++	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct address_space *mapping;
++	loff_t end = start + len - 1;
++	loff_t isize;
++	int error;
++
++	/* Fail if we don't recognize the flags. */
++	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
++		return -EOPNOTSUPP;
++
++	/* Don't go off the end of the device. */
++	isize = i_size_read(bdev->bd_inode);
++	if (start >= isize)
++		return -EINVAL;
++	if (end >= isize) {
++		if (mode & FALLOC_FL_KEEP_SIZE) {
++			len = isize - start;
++			end = start + len - 1;
++		} else
++			return -EINVAL;
++	}
++
++	/*
++	 * Don't allow IO that isn't aligned to logical block size.
++	 */
++	if ((start | len) & (bdev_logical_block_size(bdev) - 1))
++		return -EINVAL;
++
++	/* Invalidate the page cache, including dirty pages. */
++	mapping = bdev->bd_inode->i_mapping;
++	truncate_inode_pages_range(mapping, start, end);
++
++	switch (mode) {
++	case FALLOC_FL_ZERO_RANGE:
++	case FALLOC_FL_ZERO_RANGE | FALLOC_FL_KEEP_SIZE:
++		error = blkdev_issue_zeroout(bdev, start >> 9, len >> 9,
++					    GFP_KERNEL, false);
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
++		/* Only punch if the device can do zeroing discard. */
++		if (!blk_queue_discard(q) || !q->limits.discard_zeroes_data)
++			return -EOPNOTSUPP;
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		break;
++	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE | FALLOC_FL_NO_HIDE_STALE:
++		error = blkdev_issue_discard(bdev, start >> 9, len >> 9,
++					     GFP_KERNEL, 0);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++	if (error)
++		return error;
++
++	/*
++	 * Invalidate again; if someone wandered in and dirtied a page,
++	 * the caller will be given -EBUSY.  The third argument is
++	 * inclusive, so the rounding here is safe.
++	 */
++	return invalidate_inode_pages2_range(mapping,
++					     start >> PAGE_SHIFT,
++					     end >> PAGE_SHIFT);
 +}
 +
-+extern void set_cached_richacl(struct inode *, struct richacl *);
-+extern void forget_cached_richacl(struct inode *);
-+extern struct richacl *get_richacl(struct inode *);
-+
- /**
-  * richace_is_owner  -  check if @ace is an OWNER@ entry
-  */
--- 
-2.7.4
+ const struct file_operations def_blk_fops = {
+ 	.open		= blkdev_open,
+ 	.release	= blkdev_close,
+@@ -1801,6 +1875,7 @@ const struct file_operations def_blk_fops = {
+ #endif
+ 	.splice_read	= generic_file_splice_read,
+ 	.splice_write	= iter_file_splice_write,
++	.fallocate	= blkdev_fallocate,
+ };
+ 
+ int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
+diff --git a/fs/open.c b/fs/open.c
+index 4fd6e25..01b6092 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -289,7 +289,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+ 	 * Let individual file system decide if it supports preallocation
+ 	 * for directories or not.
+ 	 */
+-	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
++	if (!S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode) &&
++	    !S_ISBLK(inode->i_mode))
+ 		return -ENODEV;
+ 
+ 	/* Check for wrap through zero too */
 
 _______________________________________________
 xfs mailing list
