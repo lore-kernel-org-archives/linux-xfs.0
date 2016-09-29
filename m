@@ -1,47 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:8633 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:56716 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934861AbcI2Wth (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S934691AbcI2Wth (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 29 Sep 2016 18:49:37 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 02/12] ext4: tell DAX the size of allocation holes
-Date: Thu, 29 Sep 2016 16:49:20 -0600
-Message-Id: <1475189370-31634-3-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 01/12] ext4: allow DAX writeback for hole punch
+Date: Thu, 29 Sep 2016 16:49:19 -0600
+Message-Id: <1475189370-31634-2-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-When DAX calls _ext4_get_block() and the file offset points to a hole we
-currently don't set bh->b_size.  This is current worked around via
-buffer_size_valid() in fs/dax.c.
-
-_ext4_get_block() has the hole size information from ext4_map_blocks(), so
-populate bh->b_size so we can remove buffer_size_valid() in a later patch.
+Currently when doing a DAX hole punch with ext4 we fail to do a writeback.
+This is because the logic around filemap_write_and_wait_range() in
+ext4_punch_hole() only looks for dirty page cache pages in the radix tree,
+not for dirty DAX exceptional entries.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Reviewed-by: Jan Kara <jack@suse.cz>
+Cc: <stable@vger.kernel.org>
 ---
- fs/ext4/inode.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/ext4/inode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 0900cb4..9075fac 100644
+index 3131747..0900cb4 100644
 --- a/fs/ext4/inode.c
 +++ b/fs/ext4/inode.c
-@@ -759,6 +759,9 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
- 		ext4_update_bh_state(bh, map.m_flags);
- 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 		ret = 0;
-+	} else if (ret == 0) {
-+		/* hole case, need to fill in bh->b_size */
-+		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 	}
- 	return ret;
+@@ -3890,7 +3890,7 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
  }
+ 
+ /*
+- * ext4_punch_hole: punches a hole in a file by releaseing the blocks
++ * ext4_punch_hole: punches a hole in a file by releasing the blocks
+  * associated with the given offset and length
+  *
+  * @inode:  File inode
+@@ -3919,7 +3919,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
+ 	 * Write out all dirty pages to avoid race conditions
+ 	 * Then release them.
+ 	 */
+-	if (mapping->nrpages && mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
++	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+ 		ret = filemap_write_and_wait_range(mapping, offset,
+ 						   offset + length - 1);
+ 		if (ret)
 -- 
 2.7.4
 
