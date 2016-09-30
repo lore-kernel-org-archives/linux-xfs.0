@@ -1,100 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34986 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:57156 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755220AbcIUWHR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Sep 2016 18:07:17 -0400
-Subject: Re: [PATCH] fstests: test xfs_copy V5 XFS without -d option
-References: <1474455620-25982-1-git-send-email-zlang@redhat.com>
- <20160921213729.GN340@dastard>
+        id S1751321AbcI3UyW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 16:54:22 -0400
+Subject: [PATCH 3/5] xfs_io: move inode command arg handling to top
+References: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4b37d061-43b5-74f6-b544-0f97693270c5@sandeen.net>
-Date: Wed, 21 Sep 2016 17:07:15 -0500
+Message-ID: <796ceb5c-bd7c-61b3-2c1c-031b2a41db34@sandeen.net>
+Date: Fri, 30 Sep 2016 15:54:21 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160921213729.GN340@dastard>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 9/21/16 4:37 PM, Dave Chinner wrote:
-> On Wed, Sep 21, 2016 at 07:00:20PM +0800, Zorro Lang wrote:
->> From linux v4.3 and xfsprogs v4.2, xfs_copy support to copy a V5 XFS.
->> Before that, copy a V5 XFS will cause target fs corruption, and only
->> use "-d" option can resolve that problem.
-> 
-> What has the kernel version got to do with xfs_copy support?
-> 
-> What matters is whether xfsprogs supports a specific feature bit in
-> the XFS superblock - that is what indicates whether xfs_copy
-> requires the "-d" option or not....
+As it stands, collecting the inode number and testing args
+validity is all tangled up; for example the test for
+"-n" having no inode is buried in an else after a large
+code block which handles something else.
 
-For V5, xfs_copy went through a few stages:
+Get inode number argument collection and testing out of the
+way before doing anything else.
 
-1) Corrupted the filesystem without -d
-2) Refused to run without -d
-3) Used meta_uuid to run without -d
-4) Fixed a bug with multiple targets
+Clean up the error message if a non-numeric inode arg is given.
 
-So it probably comes down to tests identifying /broken/ xfs_copy
-instances.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ io/open.c |   40 +++++++++++++++++++++-------------------
+ 1 files changed, 21 insertions(+), 19 deletions(-)
 
-( 2) wasn't broken, it was just intentionally crippled, so I'm not sure
-how tests should handle that case.)
+diff --git a/io/open.c b/io/open.c
+index c8c82b7..ba8b243 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -813,7 +813,7 @@ inode_f(
+ {
+ 	__s32			count = 0;
+ 	__u64			lastino = 0;
+-	__u64			userino = 0;
++	__u64			userino = NULLFSINO;
+ 	char			*p;
+ 	int			c;
+ 	int			verbose = 0;
+@@ -835,27 +835,32 @@ inode_f(
+ 		}
+ 	}
+ 
+-	/*
+-	 * Inode number can be passed with or without extra arguments, so we
+-	 * should handle inode numbers passed by user out of getopt()
+-	 */
++	/* Last arg (if present) should be an inode number */
+ 	if (optind < argc) {
+-
+-		if (ret_next) {
+-			cmd = XFS_IOC_FSBULKSTAT;
+-		} else {
+-			if ((argc > 2) && !verbose)
+-				return command_usage(&inode_cmd);
+-			else
+-				cmd = XFS_IOC_FSBULKSTAT_SINGLE;
+-		}
+-
+ 		userino = strtoull(argv[optind], &p, 10);
+ 		if ((*p != '\0')) {
+-			printf(_("[num] must be a numeric value\n"));
++			printf(_("%s is not a numeric inode value\n"),
++				argv[optind]);
+ 			exitcode = 1;
+ 			return 0;
+ 		}
++		optind++;
++	}
++
++	/* Extra junk? */
++	if (optind < argc)
++		return command_usage(&inode_cmd);
++
++	/* -n option requires an inode number */
++	if (ret_next && userino == NULLFSINO)
++		return command_usage(&inode_cmd);
++
++	if (userino != NULLFSINO) {
++
++		if (ret_next)	/* get next inode */
++			cmd = XFS_IOC_FSBULKSTAT;
++		else		/* get this inode */
++			cmd = XFS_IOC_FSBULKSTAT_SINGLE;
+ 
+ 		bulkreq.lastip = &userino;
+ 		bulkreq.icount = 1;
+@@ -885,9 +890,6 @@ inode_f(
+ 			printf("%llu\n", userino);
+ 		return 0;
+ 
+-	/* -n option must not be used stand alone */
+-	} else if (ret_next) {
+-		return command_usage(&inode_cmd);
+ 	}
+ 
+ 	/* We are finding last inode in use */
+-- 
+1.7.1
 
-Anyway, skip down ...
-
->> +# Make sure xfs_copy full support to copy V5 XFS, due to old xfs_copy can't
->> +# yet copy V5 xfs without '-d'. But if xfs_copy can't copy V4 XFS, that's a
->> +# bug.
->> +_require_xfs_copy()
->> +{
->> +	_scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
->> +	. $tmp.mkfs
->> +
->> +	${XFS_COPY_PROG} $SCRATCH_DEV $tmp.copy >/dev/null 2>&1
->> +	local rc=$?
->> +
->> +	rm -f $tmp.mkfs
->> +	rm -f $tmp.copy 2>/dev/null
->> +	if [ $rc -ne 0 ]; then
->> +		if [ $_fs_has_crcs -eq 1 ]; then
->> +			_notrun "This test requires xfs_copy support to copy V5 xfs without -d"
->> +		else
->> +			_fail "xfs_copy can't copy a V4 xfs"
->> +		fi
->> +	fi
->> +}
-> 
-> Far too over engineered - the regression tests check whether the
-> functionality works correctly, not the _requires* check. The
-> _requires* check are just for determining whether the operation is
-> supported or not.
-> 
-> As I said above, xfs_copy on v5 filesystems do not require the
-> "-d" option if xfs_admin can change the UUID on v5 filesystems.
-> i.e. if this works:
-> 
-> # xfs_admin -U generate /dev/pmem1
-> Clearing log and setting UUID
-> writing all SBs
-> new UUID = b4e22c8b-1bfb-4307-a3f2-4f55b5c9d61d
-> # echo $?
-> 0
-> #
-
-"works," meaning "doesn't corrupt" I guess, right?  3.2.2 actually
-allowed it to proceed, but corrupted the filesystem.  Then later it,
-too, was restricted on v5 filesystems, and later those restrictions
-were lifted.
-
-Honestly, (and Dave helped push me in this direction as well), I think
-the addition of "-d" should just be removed; we now have a binary that
-/works/ and there's no reason to avoid running broken binaries - the
-whole point of testing is to find out whether what you're testing works,
-or if it's broken.  Skipping tests because they might fail leaves you with
-missing information about the environment you're testing.
-
--Eric
