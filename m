@@ -1,91 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43237 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935036AbcI3DLa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:11:30 -0400
-Subject: [PATCH 53/63] xfs: add shared rmap map/unmap/convert log item types
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:11:24 -0700
-Message-ID: <147520508464.29434.7580776188595193285.stgit@birch.djwong.org>
-In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42820 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752451AbcI3HUH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 03:20:07 -0400
+Date: Fri, 30 Sep 2016 00:20:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 26/63] xfs: define tracepoints for reflink activities
+Message-ID: <20160930072006.GM18305@infradead.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520490964.29434.15859805604672051994.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147520490964.29434.15859805604672051994.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Wire up some rmap log redo item type codes to map, unmap, or convert
-shared data block extents.  The actual log item recovery comes in a
-later patch.
+On Thu, Sep 29, 2016 at 08:08:29PM -0700, Darrick J. Wong wrote:
+> Define all the tracepoints we need to inspect the runtime operation
+> of reflink/dedupe/copy-on-write.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_log_format.h |    3 +++
- fs/xfs/xfs_rmap_item.c         |    3 +++
- fs/xfs/xfs_trans_rmap.c        |    9 +++++++++
- 3 files changed, 15 insertions(+)
+Looks fine,
 
-
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 364ce6f..083cdd6 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -635,8 +635,11 @@ struct xfs_map_extent {
- 
- /* rmap me_flags: upper bits are flags, lower byte is type code */
- #define XFS_RMAP_EXTENT_MAP		1
-+#define XFS_RMAP_EXTENT_MAP_SHARED	2
- #define XFS_RMAP_EXTENT_UNMAP		3
-+#define XFS_RMAP_EXTENT_UNMAP_SHARED	4
- #define XFS_RMAP_EXTENT_CONVERT		5
-+#define XFS_RMAP_EXTENT_CONVERT_SHARED	6
- #define XFS_RMAP_EXTENT_ALLOC		7
- #define XFS_RMAP_EXTENT_FREE		8
- #define XFS_RMAP_EXTENT_TYPE_MASK	0xFF
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 0432a45..19d817e 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -441,8 +441,11 @@ xfs_rui_recover(
- 				   XFS_FSB_TO_DADDR(mp, rmap->me_startblock));
- 		switch (rmap->me_flags & XFS_RMAP_EXTENT_TYPE_MASK) {
- 		case XFS_RMAP_EXTENT_MAP:
-+		case XFS_RMAP_EXTENT_MAP_SHARED:
- 		case XFS_RMAP_EXTENT_UNMAP:
-+		case XFS_RMAP_EXTENT_UNMAP_SHARED:
- 		case XFS_RMAP_EXTENT_CONVERT:
-+		case XFS_RMAP_EXTENT_CONVERT_SHARED:
- 		case XFS_RMAP_EXTENT_ALLOC:
- 		case XFS_RMAP_EXTENT_FREE:
- 			op_ok = true;
-diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
-index 5a50ef8..9ead064 100644
---- a/fs/xfs/xfs_trans_rmap.c
-+++ b/fs/xfs/xfs_trans_rmap.c
-@@ -48,12 +48,21 @@ xfs_trans_set_rmap_flags(
- 	case XFS_RMAP_MAP:
- 		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
- 		break;
-+	case XFS_RMAP_MAP_SHARED:
-+		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
-+		break;
- 	case XFS_RMAP_UNMAP:
- 		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
- 		break;
-+	case XFS_RMAP_UNMAP_SHARED:
-+		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
-+		break;
- 	case XFS_RMAP_CONVERT:
- 		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
- 		break;
-+	case XFS_RMAP_CONVERT_SHARED:
-+		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
-+		break;
- 	case XFS_RMAP_ALLOC:
- 		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
- 		break;
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
