@@ -1,54 +1,156 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:33283 "EHLO
-        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932646AbcI3NdD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 09:33:03 -0400
-Date: Fri, 30 Sep 2016 09:32:53 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20160923190032.GA25771@ZenIV.linux.org.uk>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <CA+55aFzTOOB6oEVaaGD0N7Uznk-W9+ULPwzsxS_L_oZqGVSeLA@mail.gmail.com> <20160914031648.GB2356@ZenIV.linux.org.uk> <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com> <20160914042559.GC2356@ZenIV.linux.org.uk> <20160917082007.GA6489@ZenIV.linux.org.uk> <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk>
-Subject: Re: [RFC][CFT] splice_read reworked
+Return-Path: <xfs-bounces@oss.sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 800807CA1
+	for <xfs@oss.sgi.com>; Fri, 30 Sep 2016 11:11:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 536A4304066
+	for <xfs@oss.sgi.com>; Fri, 30 Sep 2016 09:11:31 -0700 (PDT)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id v3xYmc6yLZviA989 for <xfs@oss.sgi.com>;
+	Fri, 30 Sep 2016 09:11:23 -0700 (PDT)
+Date: Fri, 30 Sep 2016 12:11:22 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH v25 00/21] Richacls (Core and Ext4)
+Message-ID: <20160930161122.GA3857@fieldses.org>
+References: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <1475105380-22837-1-git-send-email-agruenba@redhat.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-api@vger.kernel.org, Trond Myklebust <trond.myklebust@primarydata.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, linux-ext4@vger.kernel.org, Anna Schumaker <anna.schumaker@netapp.com>
 
+Could we finally get this merged?  What more is this waiting on?
 
+--b.
 
------ Original Message -----
-> From: "Al Viro" <viro@ZenIV.linux.org.uk>
-> To: "Linus Torvalds" <torvalds@linux-foundation.org>
-> Cc: "Dave Chinner" <david@fromorbit.com>, "CAI Qian" <caiqian@redhat.com>, "linux-xfs" <linux-xfs@vger.kernel.org>,
-> xfs@oss.sgi.com, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
-> Sent: Friday, September 23, 2016 3:00:32 PM
-> Subject: [RFC][CFT] splice_read reworked
+On Thu, Sep 29, 2016 at 01:29:19AM +0200, Andreas Gruenbacher wrote:
+> Here is another update of the richacl patches.  Changes since the last posting
+> (http://lwn.net/Articles/697320/):
 > 
-> The series is supposed to solve the locking order problems for
-> ->splice_read() and get rid of code duplication between the read-side
-> methods.
-> 	pipe_lock is lifted out of ->splice_read() instances, along with
-> waiting for empty space in pipe, etc. - we do that stuff in callers.
-> 	A new variant of iov_iter is introduced - it's backed by a pipe,
-> copy_to_iter() results in allocating pages and copying into those,
-> copy_page_to_iter() just sticks a reference to that page into pipe.
-> Running out of space in pipe yields a short read, as a fault in iovec-backed
-> iov_iter would have.  Enough primitives are implemented for normal
-> ->read_iter() instances to work.
-> 	generic_file_splice_read() switched to feeding such iov_iter to
-> ->read_iter() instance.  That turns out to be enough to kill almost all
-> ->splice_read() instances; the only ones _not_ using
-> generic_file_splice_read()
-> or default_file_splice_read() (== no zero-copy fallback) are
-> fuse_dev_splice_read(), 3 instances in kernel/{relay.c,trace/trace.c} and
-> sock_splice_read().  It's almost certainly possible to convert fuse one
-> and the same might be possible to do to socket one.  relay and tracing
-> stuff is just plain weird; might or might not be doable.
+>  * Rebase on top of the VFS for-next branch
+>    (git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git for-next;
+>    hash 6731cb0f).
 > 
-> 	Something hopefully working is in
-> git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git #work.splice_read
-Tested-by: CAI Qian <caiqian@redhat.com>
+>    (This patch queue does not conflict with the xattr inode operation removal
+>    patches.)
+>    
+>  * Adjust for the {inode_change_ok => setattr_prepare} rename.
+> 
+> The complete patch queue is available here:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+> 	richacl-2016-09-29
+> 
+> 
+> The richacl user-space utilitites, man pages, and test suite are available
+> here:
+> 
+>   https://github.com/andreas-gruenbacher/richacl
+> 
+> 
+> Changes to other user-space packages for richacl:
+> 
+>   https://github.com/andreas-gruenbacher/coreutils
+>   https://github.com/andreas-gruenbacher/e2fsprogs
+>   https://github.com/andreas-gruenbacher/samba
+>   https://github.com/andreas-gruenbacher/xfsprogs-dev
+>   https://github.com/andreas-gruenbacher/nfs-utils
+> 
+> 
+> Please see the richacl homepage for more information:
+> 
+>   http://www.bestbits.at/richacl/
+> 
+> 
+> Thanks,
+> Andreas
+> 
+> Andreas Gruenbacher (19):
+>   vfs: Add IS_ACL() and IS_RICHACL() tests
+>   vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+>   vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+>   vfs: Add permission flags for setting file attributes
+>   richacl: In-memory representation and helper functions
+>   richacl: Permission mapping functions
+>   richacl: Permission check algorithm
+>   richacl: Compute maximum file masks from an acl
+>   vfs: Cache base_acl objects in inodes
+>   vfs: Add get_richacl and set_richacl inode operations
+>   vfs: Cache richacl in struct inode
+>   richacl: Update the file masks in chmod()
+>   richacl: Check if an acl is equivalent to a file mode
+>   richacl: Create-time inheritance
+>   richacl: Automatic Inheritance
+>   richacl: xattr mapping functions
+>   richacl: Add richacl xattr handler
+>   vfs: Add richacl permission checking
+>   vfs: Move check_posix_acl and check_richacl out of fs/namei.c
+> 
+> Aneesh Kumar K.V (2):
+>   ext4: Add richacl support
+>   ext4: Add richacl feature flag
+> 
+>  drivers/staging/lustre/lustre/llite/llite_lib.c |   2 +-
+>  fs/9p/acl.c                                     |   8 +-
+>  fs/Kconfig                                      |   3 +
+>  fs/Makefile                                     |   1 +
+>  fs/attr.c                                       |  79 +-
+>  fs/ext4/Kconfig                                 |  11 +
+>  fs/ext4/Makefile                                |   1 +
+>  fs/ext4/ext4.h                                  |   6 +-
+>  fs/ext4/file.c                                  |   3 +
+>  fs/ext4/ialloc.c                                |  11 +-
+>  fs/ext4/inode.c                                 |   5 +-
+>  fs/ext4/namei.c                                 |   5 +
+>  fs/ext4/richacl.c                               | 134 ++++
+>  fs/ext4/richacl.h                               |  40 +
+>  fs/ext4/super.c                                 |  49 +-
+>  fs/ext4/xattr.c                                 |   7 +
+>  fs/f2fs/acl.c                                   |   4 +-
+>  fs/inode.c                                      |  43 +-
+>  fs/jffs2/acl.c                                  |   6 +-
+>  fs/namei.c                                      | 114 +--
+>  fs/nfs/nfs3acl.c                                |  14 +-
+>  fs/posix_acl.c                                  |  97 ++-
+>  fs/richacl.c                                    | 937 ++++++++++++++++++++++++
+>  fs/richacl_xattr.c                              | 222 ++++++
+>  include/linux/acl.h                             |  15 +
+>  include/linux/fs.h                              |  63 +-
+>  include/linux/posix_acl.h                       |  24 +-
+>  include/linux/richacl.h                         | 218 ++++++
+>  include/linux/richacl_xattr.h                   |  31 +
+>  include/uapi/linux/Kbuild                       |   2 +
+>  include/uapi/linux/fs.h                         |   3 +-
+>  include/uapi/linux/richacl.h                    | 152 ++++
+>  include/uapi/linux/richacl_xattr.h              |  44 ++
+>  include/uapi/linux/xattr.h                      |   2 +
+>  34 files changed, 2195 insertions(+), 161 deletions(-)
+>  create mode 100644 fs/ext4/richacl.c
+>  create mode 100644 fs/ext4/richacl.h
+>  create mode 100644 fs/richacl.c
+>  create mode 100644 fs/richacl_xattr.c
+>  create mode 100644 include/linux/acl.h
+>  create mode 100644 include/linux/richacl.h
+>  create mode 100644 include/linux/richacl_xattr.h
+>  create mode 100644 include/uapi/linux/richacl.h
+>  create mode 100644 include/uapi/linux/richacl_xattr.h
+> 
+> -- 
+> 2.7.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
