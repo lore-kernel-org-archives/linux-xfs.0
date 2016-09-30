@@ -1,25 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45323 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbcI3Hru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 03:47:50 -0400
-Date: Fri, 30 Sep 2016 00:47:49 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 39/63] xfs: cancel pending CoW reservations when
- destroying inodes
-Message-ID: <20160930074749.GF951@infradead.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:23063 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934946AbcI3ADR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 20:03:17 -0400
+Date: Fri, 30 Sep 2016 10:01:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
+Message-ID: <20160930000147.GH27872@dastard>
+References: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
+In-Reply-To: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Looks fine,
+On Thu, Sep 29, 2016 at 03:03:19PM +0200, Carlos Maiolino wrote:
+> I have been working in a bug still regarding xfs fail_at_unmount configuration,
+> where, even though the configuration is enable, an unmount attempt will still
+> hang if the AIL buf items are locked as a result of a previous failed attempt to
+> flush these items.
+> 
+> Currently, if there is a failure while trying to flush inode buffers to disk,
+> these items are kept in AIL with FLUSHING status and with the locks held, making
+> them unable to be retried. Either during unmount, where they will be retried and
+> 'failed', or if using a thin provisioned device, the pool is actually extended, to
+> accomodate these not-yet-flushed items, instead of retrying to flush such items,
+> xfs is unable to retry them, once they are already locked.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+[....]
+
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 892c2ac..cce0373 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -517,7 +517,26 @@ xfs_inode_item_push(
+>  	 * the AIL.
+>  	 */
+>  	if (!xfs_iflock_nowait(ip)) {
+> -		rval = XFS_ITEM_FLUSHING;
+> +		int error;
+> +		struct xfs_dinode *dip;
+> +
+> +		error = xfs_imap_to_bp(ip->i_mount, NULL, &ip->i_imap, &dip,
+> +				       &bp, XBF_TRYLOCK, 0);
+
+So now, when we have tens of thousands of inodes in flushing state,
+we'll hammer the buffer cache doing lookups to determine the state
+of the buffer. That's a large amount of additional runtime overhead
+that is unnecessary - this is only needed at unmount, according to
+the problem description.
+
+> +		if (error) {
+> +			rval = XFS_ITEM_FLUSHING;
+> +			goto out_unlock;
+> +		}
+
+If we are stuck in a shutdown situation, then xfs_imap_to_bp() will
+detect a shutdown and return -EIO here. So this doesn't for an
+unmount with a stuck inode in a shutdown situation.
+
+> +
+> +		if (!(bp->b_flags & XBF_WRITE_FAIL)) {
+> +			rval = XFS_ITEM_FLUSHING;
+> +			xfs_buf_relse(bp);
+> +			goto out_unlock;
+> +		}
+
+So if the last write of the buffer was OK, do nothing? How does
+that get the inode unlocked if we've failed to flush at unmount?
+
+> +
+> +		if (!xfs_buf_delwri_queue(bp, buffer_list))
+> +			rval = XFS_ITEM_FLUSHING;
+> +
+> +		xfs_buf_relse(bp);
+>  		goto out_unlock;
+
+
+Ok, I'm pretty sure that this just addresses a symptom of the
+underlying problem, not solve the root cause. e.g. dquot flushing
+has exactly the same problem.
+
+The underlying problem is that when the buffer was failed, the
+callbacks attached to the buffer were not run. Hence the inodes
+locked and attached to the buffer were not aborted and unlocked
+when the buffer IO was failed. That's the underlying problem that
+needs fixing - this cannot be solved sanely by trying to guess why
+an inode is flush locked when walking the AIL....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
