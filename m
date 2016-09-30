@@ -1,127 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:32847 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932413AbcI3J43 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 05:56:29 -0400
-Date: Fri, 30 Sep 2016 02:56:27 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 10/12] dax: add struct iomap based DAX PMD support
-Message-ID: <20160930095627.GB5299@infradead.org>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com>
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36435 "EHLO
+        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932413AbcI3J5Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 05:57:25 -0400
+Received: by mail-pa0-f67.google.com with SMTP id cd13so2790081pac.3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 02:57:24 -0700 (PDT)
+Date: Fri, 30 Sep 2016 17:57:17 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 2e405cd
+Message-ID: <20160930095717.GI2462@eguan.usersys.redhat.com>
+References: <20160926004917.GU340@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20160926004917.GU340@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-> -/*
-> - * We use lowest available bit in exceptional entry for locking, other two
-> - * bits to determine entry type. In total 3 special bits.
-> - */
-> -#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
-> -#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
-> -#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
-> -#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
-> -#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-> -#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-> -#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
-> -		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
-> -		RADIX_TREE_EXCEPTIONAL_ENTRY))
-> -
+On Mon, Sep 26, 2016 at 10:49:17AM +1000, Dave Chinner wrote:
+> Hi folks,
+> 
+> The for-next branch of the xfs kernel repository at
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-Please split the move of these constants into a separate patch.
+I tested this update (and the update from last week) through all my
+usual tests (except some long-term stress tests). Tests all passed,
+results all look good.
 
-> -static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index)
-> +static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
-> +		unsigned long new_type)
->  {
-> +	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
->  	void *entry, **slot;
->  
->  restart:
->  	spin_lock_irq(&mapping->tree_lock);
->  	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-> +
-> +	if (entry && new_type == RADIX_DAX_PMD) {
-> +		if (!radix_tree_exceptional_entry(entry) ||
-> +				RADIX_DAX_TYPE(entry) == RADIX_DAX_PTE) {
-> +			spin_unlock_irq(&mapping->tree_lock);
-> +			return ERR_PTR(-EEXIST);
-> +		}
-> +	} else if (entry && new_type == RADIX_DAX_PTE) {
-> +		if (radix_tree_exceptional_entry(entry) &&
-> +		    RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD &&
-> +		    (unsigned long)entry & (RADIX_DAX_HZP|RADIX_DAX_EMPTY)) {
-> +			pmd_downgrade = true;
-> +		}
-> +	}
+BTW, I start testing for-next branch because I find that it's much
+easier to do bisection here if there's any regression, than on linus
+tree, where all updates merge all together. 
 
-	Would be nice to use switch on the type here:
+Thanks,
+Eryu
 
-	old_type = RADIX_DAX_TYPE(entry);
+> 
+> has just been updated. This includes a bunch of log recovery fixes
+> for v5 filesystems.
+> 
+> REMINDER: xfs@oss.sgi.com is going at the end of the month. Please
+> change your XFS list subscription to linux-xfs@vger.kernel.org,
+> otherwise things will go silent for you....
+> 
+> -Dave.
+> 
+> The new head of the for-next branch is commit:
+> 
+> 2e405cd Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
+> 
+> New Commits:
+> 
+> Brian Foster (5):
+>       [12818d2] xfs: rework log recovery to submit buffers on LSN boundaries
+>       [22db9af] xfs: pass current lsn to log recovery buffer validation
+>       [040c52c] xfs: don't warn on buffers not being recovered due to LSN
+>       [60a4a22] xfs: update metadata LSN in buffers during log recovery
+>       [5cd9cee] xfs: log recovery tracepoints to track current lsn and buffer submission
+> 
+> Dave Chinner (3):
+>       [292378e] xfs: remote attribute blocks aren't really userdata
+>       [ddeb14f] xfs: quiesce the filesystem after recovery on readonly mount
+>       [2e405cd] Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
+> 
+> 
+> Code Diffstat:
+> 
+>  fs/xfs/libxfs/xfs_alloc.c |  23 +++---
+>  fs/xfs/libxfs/xfs_alloc.h |  17 ++++-
+>  fs/xfs/libxfs/xfs_bmap.c  |  41 +++++++----
+>  fs/xfs/libxfs/xfs_bmap.h  |   2 +-
+>  fs/xfs/xfs_bmap_util.c    |   2 +-
+>  fs/xfs/xfs_extent_busy.c  |   2 +-
+>  fs/xfs/xfs_filestream.c   |   9 ++-
+>  fs/xfs/xfs_log_priv.h     |   3 +-
+>  fs/xfs/xfs_log_recover.c  | 191 ++++++++++++++++++++++++++++++++++---------------
+>  fs/xfs/xfs_mount.c        |  14 ++++
+>  fs/xfs/xfs_super.c        |   2 +-
+>  fs/xfs/xfs_super.h        |   1 +
+>  fs/xfs/xfs_trace.h        |  39 ++++++++--
+>  13 files changed, 248 insertions(+), 98 deletions(-)
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-	if (entry) {
-		switch (new_type) {
-		case RADIX_DAX_PMD:
-			if (!radix_tree_exceptional_entry(entry) ||
-			    oldentry == RADIX_DAX_PTE) {
-			    	entry = ERR_PTR(-EEXIST);
-				goto out_unlock;
-			}
-			break;
-		case RADIX_DAX_PTE:
-			if (radix_tree_exceptional_entry(entry) &&
-			    old_entry = RADIX_DAX_PMD &&
-			    (unsigned long)entry & 
-			      (RADIX_DAX_HZP|RADIX_DAX_EMPTY))
-			      	..
 
-Btw, why are only RADIX_DAX_PTE and RADIX_DAX_PMD in the type mask,
-and not RADIX_DAX_HZP and RADIX_DAX_EMPTY?  With that we could use the
-above old_entry local variable over this function and make it a lot les
-of a mess.
 
->  static void *dax_insert_mapping_entry(struct address_space *mapping,
->  				      struct vm_fault *vmf,
-> -				      void *entry, sector_t sector)
-> +				      void *entry, sector_t sector,
-> +				      unsigned long new_type, bool hzp)
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-And then we could also drop the hzp argument here..
-
->  #ifdef CONFIG_FS_IOMAP
-> +static inline sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
-> +{
-> +	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-> +}
-
-Please split adding this new helper into a separate patch.
-
-> +#if defined(CONFIG_FS_DAX_PMD)
-
-Please use #ifdef here.
-
-> +#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-> +#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-> +
-> +/* entries begin locked */
-> +#define RADIX_DAX_ENTRY(sector, type) ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |\
-> +	type | (unsigned long)sector << RADIX_DAX_SHIFT | RADIX_DAX_ENTRY_LOCK))
-> +#define RADIX_DAX_HZP_ENTRY() ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | \
-> +	RADIX_DAX_PMD | RADIX_DAX_HZP | RADIX_DAX_EMPTY | RADIX_DAX_ENTRY_LOCK))
-> +#define RADIX_DAX_EMPTY_ENTRY(type) ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | \
-> +		type | RADIX_DAX_EMPTY | RADIX_DAX_ENTRY_LOCK))
-> +
-> +#define RADIX_DAX_ORDER(type) (type == RADIX_DAX_PMD ? PMD_SHIFT-PAGE_SHIFT : 0)
-
-All these macros don't properly brace their arguments.  I think
-you'd make your life a lot easier by making them inline functions.
-
-> +#if defined(CONFIG_FS_DAX_PMD)
-
-#ifdef, please
