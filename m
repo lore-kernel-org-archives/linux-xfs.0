@@ -1,96 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36435 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932413AbcI3J5Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 05:57:25 -0400
-Received: by mail-pa0-f67.google.com with SMTP id cd13so2790081pac.3
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 02:57:24 -0700 (PDT)
-Date: Fri, 30 Sep 2016 17:57:17 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 2e405cd
-Message-ID: <20160930095717.GI2462@eguan.usersys.redhat.com>
-References: <20160926004917.GU340@dastard>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25404 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932430AbcI3SFU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 14:05:20 -0400
+Date: Fri, 30 Sep 2016 11:04:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 42/63] xfs: add clone file and clone range vfs functions
+Message-ID: <20160930180452.GR14092@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520501393.29434.5617758777691039165.stgit@birch.djwong.org>
+ <20160930075141.GC17618@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160926004917.GU340@dastard>
+In-Reply-To: <20160930075141.GC17618@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Sep 26, 2016 at 10:49:17AM +1000, Dave Chinner wrote:
-> Hi folks,
+On Fri, Sep 30, 2016 at 12:51:41AM -0700, Christoph Hellwig wrote:
+> On Thu, Sep 29, 2016 at 08:10:14PM -0700, Darrick J. Wong wrote:
+> > Define two VFS functions which allow userspace to reflink a range of
+> > blocks between two files or to reflink one file's contents to another.
+> > These functions fit the new VFS ioctls that standardize the checking
+> > for the btrfs CLONE and CLONE RANGE ioctls.
 > 
-> The for-next branch of the xfs kernel repository at
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+> FYI, I really believe the way forward is to make sure vfs_copy_range
+> calls the clone handler first if present and handles all the differences
+> between the two.  The only thing that held me back from doing that
+> is the complete lack of test coverage for the copy functionality.
 
-I tested this update (and the update from last week) through all my
-usual tests (except some long-term stress tests). Tests all passed,
-results all look good.
+I've been pondering if there's some way to leverage the existing pile of
+clone/clonerange interface tests for copy_file_range without essentially
+duplicating all the existing generic/* clone tests, but this time calling
+c_f_r instead of _cp_reflink or _reflink_range.  OTOH maybe it's good to
+keep them separate since they are separate interfaces.
 
-BTW, I start testing for-next branch because I find that it's much
-easier to do bisection here if there's any regression, than on linus
-tree, where all updates merge all together. 
-
-Thanks,
-Eryu
+--D
 
 > 
-> has just been updated. This includes a bunch of log recovery fixes
-> for v5 filesystems.
+> Otherwise this looks fine to me:
 > 
-> REMINDER: xfs@oss.sgi.com is going at the end of the month. Please
-> change your XFS list subscription to linux-xfs@vger.kernel.org,
-> otherwise things will go silent for you....
-> 
-> -Dave.
-> 
-> The new head of the for-next branch is commit:
-> 
-> 2e405cd Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
-> 
-> New Commits:
-> 
-> Brian Foster (5):
->       [12818d2] xfs: rework log recovery to submit buffers on LSN boundaries
->       [22db9af] xfs: pass current lsn to log recovery buffer validation
->       [040c52c] xfs: don't warn on buffers not being recovered due to LSN
->       [60a4a22] xfs: update metadata LSN in buffers during log recovery
->       [5cd9cee] xfs: log recovery tracepoints to track current lsn and buffer submission
-> 
-> Dave Chinner (3):
->       [292378e] xfs: remote attribute blocks aren't really userdata
->       [ddeb14f] xfs: quiesce the filesystem after recovery on readonly mount
->       [2e405cd] Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
-> 
-> 
-> Code Diffstat:
-> 
->  fs/xfs/libxfs/xfs_alloc.c |  23 +++---
->  fs/xfs/libxfs/xfs_alloc.h |  17 ++++-
->  fs/xfs/libxfs/xfs_bmap.c  |  41 +++++++----
->  fs/xfs/libxfs/xfs_bmap.h  |   2 +-
->  fs/xfs/xfs_bmap_util.c    |   2 +-
->  fs/xfs/xfs_extent_busy.c  |   2 +-
->  fs/xfs/xfs_filestream.c   |   9 ++-
->  fs/xfs/xfs_log_priv.h     |   3 +-
->  fs/xfs/xfs_log_recover.c  | 191 ++++++++++++++++++++++++++++++++++---------------
->  fs/xfs/xfs_mount.c        |  14 ++++
->  fs/xfs/xfs_super.c        |   2 +-
->  fs/xfs/xfs_super.h        |   1 +
->  fs/xfs/xfs_trace.h        |  39 ++++++++--
->  13 files changed, 248 insertions(+), 98 deletions(-)
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
-
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
