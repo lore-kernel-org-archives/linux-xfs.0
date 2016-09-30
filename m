@@ -1,65 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58700 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751372AbcI3DDv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Sep 2016 23:03:51 -0400
-Date: Thu, 29 Sep 2016 21:03:43 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
-Message-ID: <20160930030343.GA12464@linux.intel.com>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
- <20160929234345.GG27872@dastard>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48035 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752140AbcI3DFt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:05:49 -0400
+Subject: [PATCH 01/63] vfs: support FS_XFLAG_COWEXTSIZE and get/set of CoW
+ extent size hint
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 29 Sep 2016 20:05:41 -0700
+Message-ID: <147520474174.29434.4219258758809697838.stgit@birch.djwong.org>
+In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20160929234345.GG27872@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
-> Finally: none of the patches in your tree have reviewed-by tags.
-> That says to me that none of this code has been reviewed yet.
-> Reviewed-by tags are non-negotiable requirement for anything going
-> through my trees. I don't have time right now to review this code,
-> so you're going to need to chase up other reviewers before merging.
-> 
-> And, really, this is getting very late in the cycle to be merging
-> new code - we're less than one working day away from the merge
-> window opening and we've missed the last linux-next build. I'd
-> suggest that we'd might be best served by slipping this to the PMD
-> support code to the next cycle when there's no time pressure for
-> review and we can get a decent linux-next soak on the code.
+Introduce XFLAGs for the new XFS CoW extent size hint, and actually
+plumb the CoW extent size hint into the fsxattr structure.
 
-I absolutely support your policy of only sending code to Linux that has passed
-peer review.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ include/uapi/linux/fs.h |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-However, I do feel compelled to point out that this is not new code.  I didn't
-just spring it on everyone in the hours before the v4.8 merge window.  I
-posted the first version of this patch set on August 15th, *seven weeks ago*:
 
-https://lkml.org/lkml/2016/8/15/613
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 3b00f7c..cf39876 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -157,7 +157,8 @@ struct fsxattr {
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+ 	__u32		fsx_nextents;	/* nextents field value (get)	*/
+ 	__u32		fsx_projid;	/* project identifier (get/set) */
+-	unsigned char	fsx_pad[12];
++	__u32		fsx_cowextsize;	/* CoW extsize field value (get/set)*/
++	unsigned char	fsx_pad[8];
+ };
+ 
+ /*
+@@ -178,6 +179,7 @@ struct fsxattr {
+ #define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+ #define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+ #define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
++#define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+ 
+ /* the read-only stuff doesn't really belong here, but any other place is
 
-This was the day after v4.7-rc2 was released.
-
-Since then I have responded promptly to the little review feedback that I've
-received.  I've also reviewed and tested other DAX changes, like the struct
-iomap changes from Christoph.  Those changes were first posted to the mailing
-list on September 9th, four weeks after mine.  Nevertheless, I was happy to
-rebase my changes on top of his, which meant a full rewrite of the DAX PMD
-fault handler so it would be based on struct iomap.  His changes are going to
-be merged for v4.9, and mine are not.
-
-Please, help me understand what I can do to get my code reviewed.  Do I need
-to more aggressively ping my patch series, asking people by name for reviews?
-Do we need to rework our code flow to Linus so that the DAX changes go through
-a filesystem tree like XFS or ext4, and ask the developers of that filesystem
-to help with reviews?  Something else?
-
-I'm honestly very frustrated by this because I've done my best to be open to
-constructive criticism and I've tried to respond promptly to the feedback that
-I've received.  In the end, though, a system where it's a requirement that all
-upstreamed code be peer reviewed but in which I can't get any feedback is
-essentially a system where I'm not allowed to contribute.
