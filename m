@@ -1,100 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49042 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49661 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752998AbcI3DJp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:09:45 -0400
-Subject: [PATCH 36/63] xfs: report shared extent mappings to userspace
- correctly
+        with ESMTP id S935817AbcI3DMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:12:07 -0400
+Subject: [PATCH 59/63] xfs: simulate per-AG reservations being critically low
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:09:33 -0700
-Message-ID: <147520497371.29434.896034046646341403.stgit@birch.djwong.org>
+Date: Thu, 29 Sep 2016 20:12:03 -0700
+Message-ID: <147520512357.29434.13990134651991752941.stgit@birch.djwong.org>
 In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Report shared extents through the iomap interface so that FIEMAP flags
-shared blocks accurately.  Have xfs_vm_bmap return zero for reflinked
-files because the bmap-based swap code requires static block mappings,
-which is incompatible with copy on write.
+Create an error injection point that enables us to simulate being
+critically low on per-AG block reservations.  This should enable us to
+simulate this specific ENOSPC condition so that we can test falling back
+to a regular file copy.
 
-NOTE: Existing userspace bmap users such as lilo will have the same
-problem with reflink files.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: combine the fiemap and bmap reporting patches because they're both
-related and trivially short.
----
- fs/xfs/xfs_aops.c  |   11 +++++++++++
- fs/xfs/xfs_iomap.c |   12 +++++++++++-
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag_resv.c |    4 +++-
+ fs/xfs/xfs_error.h          |    4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index aa23993..1d0435a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1509,6 +1509,17 @@ xfs_vm_bmap(
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index adf770f..e5ebc37 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -109,7 +109,9 @@ xfs_ag_resv_critical(
+ 	trace_xfs_ag_resv_critical(pag, type, avail);
  
- 	trace_xfs_vm_bmap(XFS_I(inode));
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+
-+	/*
-+	 * The swap code (ab-)uses ->bmap to get a block mapping and then
-+	 * bypasseѕ the file system for actual I/O.  We really can't allow
-+	 * that on reflinks inodes, so we have to skip out here.  And yes,
-+	 * 0 is the magic code for a bmap error..
-+	 */
-+	if (xfs_is_reflink_inode(ip)) {
-+		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-+		return 0;
-+	}
- 	filemap_write_and_wait(mapping);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 	return generic_block_bmap(mapping, block, xfs_get_blocks);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ad6939d..765849e 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -961,6 +961,7 @@ xfs_file_iomap_begin(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_bmbt_irec	imap;
- 	xfs_fileoff_t		offset_fsb, end_fsb;
-+	bool			shared, trimmed;
- 	int			nimaps = 1, error = 0;
- 	unsigned		lockmode;
- 
-@@ -989,7 +990,14 @@ xfs_file_iomap_begin(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
--			       &nimaps, XFS_BMAPI_ENTIRE);
-+			       &nimaps, 0);
-+	if (error) {
-+		xfs_iunlock(ip, lockmode);
-+		return error;
-+	}
-+
-+	/* Trim the mapping to the nearest shared extent boundary. */
-+	error = xfs_reflink_trim_around_shared(ip, &imap, &shared, &trimmed);
- 	if (error) {
- 		xfs_iunlock(ip, lockmode);
- 		return error;
-@@ -1028,6 +1036,8 @@ xfs_file_iomap_begin(
- 	}
- 
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
-+	if (shared)
-+		iomap->flags |= IOMAP_F_SHARED;
- 	return 0;
+ 	/* Critically low if less than 10% or max btree height remains. */
+-	return avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS;
++	return XFS_TEST_ERROR(avail < orig / 10 || avail < XFS_BTREE_MAXLEVELS,
++			pag->pag_mount, XFS_ERRTAG_AG_RESV_CRITICAL,
++			XFS_RANDOM_AG_RESV_CRITICAL);
  }
  
+ /*
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 8d8e1b07..05f8666 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -95,7 +95,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_ERRTAG_REFCOUNT_CONTINUE_UPDATE		24
+ #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+-#define XFS_ERRTAG_MAX					27
++#define XFS_ERRTAG_AG_RESV_CRITICAL			27
++#define XFS_ERRTAG_MAX					28
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -127,6 +128,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ #define XFS_RANDOM_REFCOUNT_CONTINUE_UPDATE		1
+ #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+ #define XFS_RANDOM_BMAP_FINISH_ONE			1
++#define XFS_RANDOM_AG_RESV_CRITICAL			4
+ 
+ #ifdef DEBUG
+ extern int xfs_error_test_active;
 
