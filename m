@@ -1,81 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49562 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750776AbcI3DLy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:11:54 -0400
-Subject: [PATCH 57/63] xfs: check for invalid inode reflink flags
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:11:50 -0700
-Message-ID: <147520511076.29434.10817761072405321509.stgit@birch.djwong.org>
-In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:42961 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754024AbcI3HYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 03:24:41 -0400
+Date: Fri, 30 Sep 2016 00:24:40 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 19/63] xfs: create bmbt update intent log items
+Message-ID: <20160930072440.GA13587@infradead.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520485900.29434.2840092953627910158.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147520485900.29434.2840092953627910158.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-We don't support sharing blocks on the realtime device.  Flag inodes
-with the reflink or cowextsize flags set when the reflink feature is
-disabled.
+On Thu, Sep 29, 2016 at 08:07:39PM -0700, Darrick J. Wong wrote:
+> Create bmbt update intent/done log items to record redo information in
+> the log.  Because we roll transactions multiple times for reflink
+> operations, we also have to track the status of the metadata updates
+> that will be recorded in the post-roll transactions in case we crash
+> before committing the final transaction.  This mechanism enables log
+> recovery to finish what was already started.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_inode_buf.c |   16 ++++++++++++++++
- fs/xfs/xfs_ioctl.c            |    4 ++++
- 2 files changed, 20 insertions(+)
+Looks fine:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index a3e8038..f1b9d97 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -375,6 +375,9 @@ xfs_dinode_verify(
- 	struct xfs_inode	*ip,
- 	struct xfs_dinode	*dip)
- {
-+	uint16_t		flags;
-+	uint64_t		flags2;
-+
- 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
- 		return false;
- 
-@@ -391,6 +394,19 @@ xfs_dinode_verify(
- 		return false;
- 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
- 		return false;
-+
-+	flags = be16_to_cpu(dip->di_flags);
-+	flags2 = be64_to_cpu(dip->di_flags2);
-+
-+	/* don't allow reflink/cowextsize if we don't have reflink */
-+	if ((flags2 & (XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)) &&
-+            !xfs_sb_version_hasreflink(&mp->m_sb))
-+		return false;
-+
-+	/* don't let reflink and realtime mix */
-+	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
-+		return false;
-+
- 	return true;
- }
- 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1388a127..c65d9ea 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1034,6 +1034,10 @@ xfs_ioctl_setattr_xflags(
- 			return -EINVAL;
- 	}
- 
-+	/* Don't allow us to set realtime mode for a reflinked file. */
-+	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
-+		return -EINVAL;
-+
- 	/*
- 	 * Can't modify an immutable/append-only file unless
- 	 * we have appropriate permission.
+but the amount of boilerplate code we add for each log item really
+worries me.  We should think of a way to avoid all that code
+duplication.
 
