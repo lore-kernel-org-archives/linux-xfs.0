@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41690 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:41707 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbcI3Itu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 04:49:50 -0400
-Date: Fri, 30 Sep 2016 10:49:47 +0200
+        id S1752790AbcI3IuJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 04:50:09 -0400
+Date: Fri, 30 Sep 2016 10:50:01 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 04/12] ext2: remove support for DAX PMD faults
-Message-ID: <20160930084947.GB19738@lst.de>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com> <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 05/12] dax: make 'wait_table' global variable static
+Message-ID: <20160930085000.GC19738@lst.de>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com> <1475189370-31634-6-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475189370-31634-6-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
