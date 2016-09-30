@@ -1,31 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50996 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:55647 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbcI3I2z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 04:28:55 -0400
-Date: Fri, 30 Sep 2016 01:28:54 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 62/63] xfs: refactor swapext code
-Message-ID: <20160930082854.GO32335@infradead.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520514595.29434.16757984122949209084.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147520514595.29434.16757984122949209084.stgit@birch.djwong.org>
+        with ESMTP id S1751161AbcI3Iqo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 04:46:44 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] xfs: update atime before I/O in xfs_file_dio_aio_read
+Date: Fri, 30 Sep 2016 10:46:33 +0200
+Message-Id: <1475225194-3702-2-git-send-email-hch@lst.de>
+In-Reply-To: <1475225194-3702-1-git-send-email-hch@lst.de>
+References: <1475225194-3702-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 08:12:26PM -0700, Darrick J. Wong wrote:
-> Refactor the swapext function to pull out the fork swapping piece
-> into a separate function.  In the next patch we'll add in the bit
-> we need to make it work with rmap filesystems.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+After the call to __blkdev_direct_IO the final reference to the file
+might have been dropped by aio_complete already, and the call to
+file_accessed might cause a use after free.
 
-Looks fine,
+Instead update the access time before the I/O, similar to how we
+update the time stamps before writes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_file.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index ef01bd3..301fb3c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -270,6 +270,8 @@ xfs_file_dio_aio_read(
+ 		return -EINVAL;
+ 	}
+ 
++	file_accessed(iocb->ki_filp);
++
+ 	/*
+ 	 * Locking is a bit tricky here. If we take an exclusive lock for direct
+ 	 * IO, we effectively serialise all new concurrent read IO to this file
+@@ -324,7 +326,6 @@ xfs_file_dio_aio_read(
+ 	}
+ 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
+ 
+-	file_accessed(iocb->ki_filp);
+ 	return ret;
+ }
+ 
+-- 
+2.1.4
+
