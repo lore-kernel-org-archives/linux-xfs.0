@@ -1,31 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36958 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751321AbcI3Uu6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 16:50:58 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8D97510550
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 20:50:58 +0000 (UTC)
-Received: from Liberator.example.com (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u8UKovsK002513
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 16:50:58 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/5] xfs_io: address various "inode" command issues
-Message-ID: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
-Date: Fri, 30 Sep 2016 15:50:58 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:42439 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbcI3VIh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 17:08:37 -0400
+Date: Fri, 30 Sep 2016 14:08:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 23/63] xfs: implement deferred bmbt map/unmap operations
+Message-ID: <20160930210801.GY14092@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520489048.29434.18226996933853750466.stgit@birch.djwong.org>
+ <20160930073404.GD13587@infradead.org>
+ <20160930173800.GN14092@birch.djwong.org>
+ <1475267688.23804.125.camel@filmlight.ltd.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475267688.23804.125.camel@filmlight.ltd.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Roger Willcocks <roger@filmlight.ltd.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-With these 5 patches the fstest I sent yesterday will
-pass.
+On Fri, Sep 30, 2016 at 09:34:48PM +0100, Roger Willcocks wrote:
+> On Fri, 2016-09-30 at 10:38 -0700, Darrick J. Wong wrote:
+> > On Fri, Sep 30, 2016 at 12:34:04AM -0700, Christoph Hellwig wrote:
+> > > > +/* Deferred mapping is only for real extents in the data fork. */
+> > > > +static bool
+> > > > +xfs_bmap_is_update_needed(
+> > > > +	int			whichfork,
+> > > > +	struct xfs_bmbt_irec	*bmap)
+> > > > +{
+> > > > +	ASSERT(whichfork == XFS_DATA_FORK);
+> > > > +
+> > > > +	return  bmap->br_startblock != HOLESTARTBLOCK &&
+> > > > +		bmap->br_startblock != DELAYSTARTBLOCK;
+> > > > +}
+> > > 
+> > > Passing in an argument just to assert on it seems weird.
+> > > And except for that a better name might be xfs_bmbt_is_real or similar,
+> > > and I bet we'd have other users for it as well.
+> > 
+> > xfs_bmap_*map_extent are the only callers, and the only whichfork
+> > values are XFS_DATA_FORK.  I might as well just tear out all those
+> > asserts since they're never going to trigger anyway.
+> > 
+> 
+> Um, isn't that the point of an assertion ?
 
-A lot of it is code re-org, but there a couple small bugs
-resolved as well.
+There's no point in checking whichfork since all callers pass
+XFS_DATA_FORK, making the function argument unnecessary.
+
+--D
+
+> 
+> --
+> Roger
+> 
+> 
+> 
