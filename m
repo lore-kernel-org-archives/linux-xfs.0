@@ -1,34 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38687 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751827AbcI3HIu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 03:08:50 -0400
-Date: Fri, 30 Sep 2016 00:08:49 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/63] vfs: add a FALLOC_FL_UNSHARE mode to fallocate to
- unshare a range of blocks
-Message-ID: <20160930070849.GD18305@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49312 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935685AbcI3DKm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:10:42 -0400
+Subject: [PATCH 45/63] xfs: swap inode reflink flags when swapping inode
+ extents
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 29 Sep 2016 20:10:33 -0700
+Message-ID: <147520503333.29434.7259139315186878604.stgit@birch.djwong.org>
+In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520474825.29434.11791614565389664342.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147520474825.29434.11791614565389664342.stgit@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 08:05:48PM -0700, Darrick J. Wong wrote:
-> Add a new fallocate mode flag that explicitly unshares blocks on
-> filesystems that support such features.  The new flag can only
-> be used with an allocate-mode fallocate call.
+When we're swapping the extents of two inodes, be sure to swap the
+reflink inode flag too.
 
-We will also need a manpage addition for this.  And while we're at
-it an explanation of fallocate on COW files for btrfs, ocfs2 and
-XFS as I don't think we are very coherent or obvious at the moment.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_bmap_util.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Well, maybe that's just future work.  For now:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 6a95a3a..a835e12 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1652,6 +1652,8 @@ xfs_swap_extents(
+ 	int		taforkblks = 0;
+ 	__uint64_t	tmp;
+ 	int		lock_flags;
++	struct xfs_ifork	*cowfp;
++	__uint64_t	f;
+ 
+ 	/* XXX: we can't do this with rmap, will fix later */
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+@@ -1865,6 +1867,19 @@ xfs_swap_extents(
+ 		break;
+ 	}
+ 
++	/* Do we have to swap reflink flags? */
++	if ((ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK) ^
++	    (tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK)) {
++		f = ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
++		cowfp = ip->i_cowfp;
++		ip->i_cowfp = tip->i_cowfp;
++		tip->i_cowfp = cowfp;
++	}
++
+ 	xfs_trans_log_inode(tp, ip,  src_log_flags);
+ 	xfs_trans_log_inode(tp, tip, target_log_flags);
+ 
+
