@@ -1,112 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41305 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:55024 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752169AbcIGWkD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Sep 2016 18:40:03 -0400
-Subject: Re: [BUG] xfsprogs-4.7.0: issues cross-compiling for musl
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
- <20160907222753.GR30056@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e9241262-fdfa-d10c-3fa2-3c4ef752a8bc@sandeen.net>
-Date: Wed, 7 Sep 2016 17:40:01 -0500
+        id S932515AbcI3OyP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 10:54:15 -0400
+Date: Fri, 30 Sep 2016 10:54:13 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
+Message-ID: <20160930145413.GB27528@bfoster.bfoster>
+References: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
+ <20160930000147.GH27872@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20160907222753.GR30056@dastard>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160930000147.GH27872@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-
-
-On 9/7/16 5:27 PM, Dave Chinner wrote:
-> On Wed, Sep 07, 2016 at 11:42:56AM +0200, Ralph Sennhauser wrote:
->> To get xfsprogs to cross-compile for musl some hacks were needed.
->>
->> 1) d_namlen isn't available with musl
+On Fri, Sep 30, 2016 at 10:01:47AM +1000, Dave Chinner wrote:
+> On Thu, Sep 29, 2016 at 03:03:19PM +0200, Carlos Maiolino wrote:
+> > I have been working in a bug still regarding xfs fail_at_unmount configuration,
+> > where, even though the configuration is enable, an unmount attempt will still
+> > hang if the AIL buf items are locked as a result of a previous failed attempt to
+> > flush these items.
+> > 
+> > Currently, if there is a failure while trying to flush inode buffers to disk,
+> > these items are kept in AIL with FLUSHING status and with the locks held, making
+> > them unable to be retried. Either during unmount, where they will be retried and
+> > 'failed', or if using a thin provisioned device, the pool is actually extended, to
+> > accomodate these not-yet-flushed items, instead of retrying to flush such items,
+> > xfs is unable to retry them, once they are already locked.
 > 
-> musl problem. It needs to define _DIRENT_HAVE_D_RECLEN and friends
-> to tell applications what the struct dirent it defines contains.
+> [....]
 > 
-> (Haven't we been through this before?)
 
-(yes: http://www.openwall.com/lists/musl/2016/01/15/9)
+So this was originally written simply as a hack/experiment to test a
+theory about what could be going wrong here, based on Carlos'
+investigation so far into the issue. It wasn't really intended to be
+posted as a proposed fix, so I'm going to skip over the details...
 
-what *does* it contain?
-
-We do already have:
-
- #ifdef _DIRENT_HAVE_D_RECLEN
- 		*total += dirent->d_reclen;
- #else
-		*total += dirent->d_namlen + sizeof(*dirent);
- #endif
-
-but you'd like:
-
- #ifdef _DIRENT_HAVE_D_RECLEN
- 		*total += dirent->d_reclen;
- #else
--		*total += dirent->d_namlen + sizeof(*dirent);
-+		*total += strlen(dirent->d_name) + sizeof(*dirent);
- #endif
-
-but musl *does* have d_reclen:
-
-http://git.musl-libc.org/cgit/musl/tree/include/dirent.h
-
-so if it simply advertised that fact we'd be good...
-
-Whatever happened to that request from January above?
-
-That said, I suppose strlen is fine to use here, so I guess I don't
-see a strong reason to object to this change.
-
->> 2) crc32selftest doesn't make sense in case of cross-compilation, the
->> same can be said if building for a different host with the native
->> toolchain. So maybe an --disable-crc32selftest configure option could
->> be used here.
->>
->> 3) The CFLAGS passed to BUILD_CC weren't understood by the native
->> compiler. Set BUILD_CFLAGS to CFLAGS if not cross-compiling or let it
->> blank anyway?
+...
 > 
-> Ah, yes, we've definitely been through this before. Last time I said
-> "send patches" and they never appeared.
+> Ok, I'm pretty sure that this just addresses a symptom of the
+> underlying problem, not solve the root cause. e.g. dquot flushing
+> has exactly the same problem.
 > 
-> As it is, I'm really hesitant to remove the crc32c sanity check,
-> mainly because we've just been through a XFS corruption drill where
-> one in 10^6 crc calculations would end up wrong because of a bug in
-> a compiler.
+
+Agree.
+
+> The underlying problem is that when the buffer was failed, the
+> callbacks attached to the buffer were not run. Hence the inodes
+> locked and attached to the buffer were not aborted and unlocked
+> when the buffer IO was failed. That's the underlying problem that
+> needs fixing - this cannot be solved sanely by trying to guess why
+> an inode is flush locked when walking the AIL....
 > 
-> Can we "auto detect" cross compilation in the makefile and avoid the
-> check only in that situation? configure options are really only a
-> last resort...
 
-That sounds like the right path to me.
+Are you making the assumption that the filesystem is already shutdown in
+this scenario? I assume so, otherwise I'm not sure simply running the
+callbacks (that remove items from the AIL) is really appropriate.
 
-Or cross-compile it but don't run it, and let package managers run
-it at install time?  ;)
+My _unconfirmed suspicion_ is that the core problem is that any log
+items that are flush locked upon AIL push remain flush locked in the
+event of I/O error (independent of fs shutdown, which is not guaranteed
+after a metadata I/O error). E.g., consider the case of a transient
+error or error configuration that expects more than one retry cycle
+through xfsaild. IOW, the current AIL error retry mechanism doesn't work
+for flush locked items.
 
->> 4) sys/ustat.h is missing in musl.
-> 
-> Yup, been reported before. I'm about to commit a fix for that,
-> mainly because certain new arches don't even implement the ustat
-> system call, and glibc completely fucks up the handling of that.
-> i.e. programs that call ustat don't fail at build time, the syscall
-> is stubbed to print "not supported, will fail" at runtime. Hence
-> nobody noticed that the xfsprogs code calling ustat was actually
-> broken until a week ago...
+(FWIW, another experiment I was thinking about was an optional
+error-specific log item callback that would be specified and invoked in
+the event of any metadata I/O error to release things like flush locks
+and prepare for another retry, but I think that is complicated by the
+fact that the in-core struct has already been flushed to the buffer.)
 
-Partly because we only checked for success, not failure, but nobody
-rationally expected -ENOSYS any more than they expected the
-Spanish Inquisition...
+But stepping back from all that, this is just a theory based on Carlos'
+investigation so far and could easily be wrong. I haven't debugged the
+issue and so I'm not totally confident I actually understand the root
+cause. As such, I'm not sure it's worth getting further into the weeds
+until we have a root cause analysis.
 
--Eric
+Carlos,
+
+Unless you completely disagree and are confident you have a handle on
+the problem (in which case you can just ignore me and send a new patch
+:), I'd suggest that what we probably need here is a detailed writeup of
+the root cause. E.g., a step by step progression of what happens to the
+log item in relation to the I/O errors and shutdown (if one actually
+occurs), preferably backed by tracepoint data. Just my .02.
+
+Brian
 
 > Cheers,
 > 
 > Dave.
-> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
