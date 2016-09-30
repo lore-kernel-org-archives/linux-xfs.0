@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41861 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:41889 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933905AbcI3DGU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:06:20 -0400
-Subject: [PATCH 05/63] xfs: introduce refcount btree definitions
+        with ESMTP id S933905AbcI3DG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:06:26 -0400
+Subject: [PATCH 07/63] xfs: define the on-disk refcount btree format
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:06:07 -0700
-Message-ID: <147520476731.29434.9663185657622571410.stgit@birch.djwong.org>
+Date: Thu, 29 Sep 2016 20:06:20 -0700
+Message-ID: <147520478005.29434.17173458348560586927.stgit@birch.djwong.org>
 In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,311 +18,557 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Add new per-AG refcount btree definitions to the per-AG structures.
+Start constructing the refcount btree implementation by establishing
+the on-disk format and everything needed to read, write, and
+manipulate the refcount btree blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_alloc.c      |    5 +++++
- fs/xfs/libxfs/xfs_btree.c      |    5 +++--
- fs/xfs/libxfs/xfs_btree.h      |    4 ++++
- fs/xfs/libxfs/xfs_format.h     |   31 +++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_rmap_btree.c |   22 ++++++++++++++++++++--
- fs/xfs/libxfs/xfs_types.h      |    2 +-
- fs/xfs/xfs_inode.h             |    5 +++++
- fs/xfs/xfs_mount.h             |    3 +++
- fs/xfs/xfs_pnfs.c              |    7 +++++++
- fs/xfs/xfs_stats.c             |    1 +
- fs/xfs/xfs_stats.h             |   18 +++++++++++++++++-
- 11 files changed, 93 insertions(+), 10 deletions(-)
+ fs/xfs/Makefile                    |    1 
+ fs/xfs/libxfs/xfs_btree.c          |    3 +
+ fs/xfs/libxfs/xfs_btree.h          |   12 ++
+ fs/xfs/libxfs/xfs_format.h         |   36 +++++++
+ fs/xfs/libxfs/xfs_refcount_btree.c |  178 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_refcount_btree.h |   67 ++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c             |    9 ++
+ fs/xfs/libxfs/xfs_shared.h         |    2 
+ fs/xfs/libxfs/xfs_trans_resv.c     |    2 
+ fs/xfs/libxfs/xfs_trans_resv.h     |    1 
+ fs/xfs/xfs_mount.c                 |    2 
+ fs/xfs/xfs_mount.h                 |    3 +
+ fs/xfs/xfs_ondisk.h                |    3 +
+ fs/xfs/xfs_trace.h                 |   11 --
+ 14 files changed, 319 insertions(+), 11 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.c
+ create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.h
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index ca75dc9..275d345 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2458,6 +2458,10 @@ xfs_agf_verify(
- 	    be32_to_cpu(agf->agf_btreeblks) > be32_to_cpu(agf->agf_length))
- 		return false;
- 
-+	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
-+	    be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS)
-+		return false;
-+
- 	return true;;
- 
- }
-@@ -2578,6 +2582,7 @@ xfs_alloc_read_agf(
- 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
- 		pag->pagf_levels[XFS_BTNUM_RMAPi] =
- 			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-+		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
- 		spin_lock_init(&pag->pagb_lock);
- 		pag->pagb_count = 0;
- 		pag->pagb_tree = RB_ROOT;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 584e87e..8d749f2 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -55,6 +55,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_ag_resv.o \
+ 				   xfs_rmap.o \
+ 				   xfs_rmap_btree.o \
++				   xfs_refcount_btree.o \
+ 				   xfs_sb.o \
+ 				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o \
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index aa1752f..f8bab9b 100644
+index f8bab9b..5c8e6f2 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -45,9 +45,10 @@ kmem_zone_t	*xfs_btree_cur_zone;
-  */
- static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
- 	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
--	  XFS_FIBT_MAGIC },
-+	  XFS_FIBT_MAGIC, 0 },
- 	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
--	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
-+	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC,
-+	  XFS_REFC_CRC_MAGIC }
- };
- #define xfs_btree_magic(cur) \
- 	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
+@@ -1217,6 +1217,9 @@ xfs_btree_set_refs(
+ 	case XFS_BTNUM_RMAP:
+ 		xfs_buf_set_ref(bp, XFS_RMAP_BTREE_REF);
+ 		break;
++	case XFS_BTNUM_REFC:
++		xfs_buf_set_ref(bp, XFS_REFC_BTREE_REF);
++		break;
+ 	default:
+ 		ASSERT(0);
+ 	}
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 3f8556a..e7ef1d9 100644
+index e7ef1d9..c2b01d1 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -72,6 +72,7 @@ union xfs_btree_rec {
- #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
- #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
- #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
-+#define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
+@@ -49,6 +49,7 @@ union xfs_btree_key {
+ 	struct xfs_inobt_key		inobt;
+ 	struct xfs_rmap_key		rmap;
+ 	struct xfs_rmap_key		__rmap_bigkey[2];
++	struct xfs_refcount_key		refc;
+ };
+ 
+ union xfs_btree_rec {
+@@ -57,6 +58,7 @@ union xfs_btree_rec {
+ 	struct xfs_alloc_rec		alloc;
+ 	struct xfs_inobt_rec		inobt;
+ 	struct xfs_rmap_rec		rmap;
++	struct xfs_refcount_rec		refc;
+ };
  
  /*
-  * For logging record fields.
-@@ -105,6 +106,7 @@ do {    \
- 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(__mp, ibt, stat); break; \
- 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(__mp, fibt, stat); break; \
- 	case XFS_BTNUM_RMAP: __XFS_BTREE_STATS_INC(__mp, rmap, stat); break; \
-+	case XFS_BTNUM_REFC: __XFS_BTREE_STATS_INC(__mp, refcbt, stat); break; \
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
- 	}       \
- } while (0)
-@@ -127,6 +129,8 @@ do {    \
- 		__XFS_BTREE_STATS_ADD(__mp, fibt, stat, val); break; \
- 	case XFS_BTNUM_RMAP:	\
- 		__XFS_BTREE_STATS_ADD(__mp, rmap, stat, val); break; \
-+	case XFS_BTNUM_REFC:	\
-+		__XFS_BTREE_STATS_ADD(__mp, refcbt, stat, val); break; \
- 	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break; \
- 	}       \
- } while (0)
+@@ -221,6 +223,15 @@ union xfs_btree_irec {
+ 	struct xfs_bmbt_irec		b;
+ 	struct xfs_inobt_rec_incore	i;
+ 	struct xfs_rmap_irec		r;
++	struct xfs_refcount_irec	rc;
++};
++
++/* Per-AG btree private information. */
++union xfs_btree_cur_private {
++	struct {
++		unsigned long	nr_ops;		/* # record updates */
++		int		shape_changes;	/* # of extent splits */
++	} refc;
+ };
+ 
+ /*
+@@ -247,6 +258,7 @@ typedef struct xfs_btree_cur
+ 			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
+ 			struct xfs_defer_ops *dfops;	/* deferred updates */
+ 			xfs_agnumber_t	agno;	/* ag number */
++			union xfs_btree_cur_private	priv;
+ 		} a;
+ 		struct {			/* needed for BMAP */
+ 			struct xfs_inode *ip;	/* pointer to our inode */
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 270fb5c..57c52a6 100644
+index 622055b..97c74f4 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -456,6 +456,7 @@ xfs_sb_has_compat_feature(
+@@ -1457,6 +1457,42 @@ typedef __be32 xfs_rmap_ptr_t;
  
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-+#define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
-@@ -546,6 +547,12 @@ static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
- }
+ unsigned int xfs_refc_block(struct xfs_mount *mp);
  
-+static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
++/*
++ * Data record/key structure
++ *
++ * Each record associates a range of physical blocks (starting at
++ * rc_startblock and ending rc_blockcount blocks later) with a reference
++ * count (rc_refcount).  Extents that are being used to stage a copy on
++ * write (CoW) operation are recorded in the refcount btree with a
++ * refcount of 1.  All other records must have a refcount > 1 and must
++ * track an extent mapped only by file data forks.
++ *
++ * Extents with a single owner (attributes, metadata, non-shared file
++ * data) are not tracked here.  Free space is also not tracked here.
++ * This is consistent with pre-reflink XFS.
++ */
++struct xfs_refcount_rec {
++	__be32		rc_startblock;	/* starting block number */
++	__be32		rc_blockcount;	/* count of blocks */
++	__be32		rc_refcount;	/* number of inodes linked here */
++};
++
++struct xfs_refcount_key {
++	__be32		rc_startblock;	/* starting block number */
++};
++
++struct xfs_refcount_irec {
++	xfs_agblock_t	rc_startblock;	/* starting block number */
++	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
++	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
++};
++
++#define MAXREFCOUNT	((xfs_nlink_t)~0U)
++#define MAXREFCEXTLEN	((xfs_extlen_t)~0U)
++
++/* btree pointer type */
++typedef __be32 xfs_refcount_ptr_t;
++
+ 
+ /*
+  * BMAP Btree format definitions
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+new file mode 100644
+index 0000000..359cf0c
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -0,0 +1,178 @@
++/*
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_btree.h"
++#include "xfs_bmap.h"
++#include "xfs_refcount_btree.h"
++#include "xfs_alloc.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_cksum.h"
++#include "xfs_trans.h"
++#include "xfs_bit.h"
++
++static struct xfs_btree_cur *
++xfs_refcountbt_dup_cursor(
++	struct xfs_btree_cur	*cur)
 +{
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
++	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
++			cur->bc_private.a.agbp, cur->bc_private.a.agno,
++			cur->bc_private.a.dfops);
 +}
 +
- /*
-  * end of superblock version macros
-  */
-@@ -641,14 +648,17 @@ typedef struct xfs_agf {
- 	uuid_t		agf_uuid;	/* uuid of filesystem */
- 
- 	__be32		agf_rmap_blocks;	/* rmapbt blocks used */
--	__be32		agf_padding;		/* padding */
-+	__be32		agf_refcount_blocks;	/* refcountbt blocks used */
++STATIC bool
++xfs_refcountbt_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++	struct xfs_perag	*pag = bp->b_pag;
++	unsigned int		level;
 +
-+	__be32		agf_refcount_root;	/* refcount tree root block */
-+	__be32		agf_refcount_level;	/* refcount btree levels */
- 
- 	/*
- 	 * reserve some contiguous space for future logged fields before we add
- 	 * the unlogged fields. This makes the range logging via flags and
- 	 * structure offsets much simpler.
- 	 */
--	__be64		agf_spare64[15];
-+	__be64		agf_spare64[14];
- 
- 	/* unlogged fields, written during buffer writeback. */
- 	__be64		agf_lsn;	/* last write sequence */
-@@ -1041,9 +1051,14 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-  * 16 bits of the XFS_XFLAG_s range.
-  */
- #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
-+#define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
-+#define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
- #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
-+#define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
-+#define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
- 
--#define XFS_DIFLAG2_ANY		(XFS_DIFLAG2_DAX)
-+#define XFS_DIFLAG2_ANY \
-+	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
- 
- /*
-  * Inode number format:
-@@ -1353,7 +1368,8 @@ struct xfs_owner_info {
- #define XFS_RMAP_OWN_AG		(-5ULL)	/* AG freespace btree blocks */
- #define XFS_RMAP_OWN_INOBT	(-6ULL)	/* Inode btree blocks */
- #define XFS_RMAP_OWN_INODES	(-7ULL)	/* Inode chunk */
--#define XFS_RMAP_OWN_MIN	(-8ULL) /* guard */
-+#define XFS_RMAP_OWN_REFC	(-8ULL) /* refcount tree */
-+#define XFS_RMAP_OWN_MIN	(-9ULL) /* guard */
- 
- #define XFS_RMAP_NON_INODE_OWNER(owner)	(!!((owner) & (1ULL << 63)))
- 
-@@ -1434,6 +1450,13 @@ typedef __be32 xfs_rmap_ptr_t;
- 	 XFS_IBT_BLOCK(mp) + 1)
- 
- /*
-+ * Reference Count Btree format definitions
-+ *
-+ */
-+#define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
++	if (block->bb_magic != cpu_to_be32(XFS_REFC_CRC_MAGIC))
++		return false;
 +
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return false;
++	if (!xfs_btree_sblock_v5hdr_verify(bp))
++		return false;
++
++	level = be16_to_cpu(block->bb_level);
++	if (pag && pag->pagf_init) {
++		if (level >= pag->pagf_refcount_level)
++			return false;
++	} else if (level >= mp->m_refc_maxlevels)
++		return false;
++
++	return xfs_btree_sblock_verify(bp, mp->m_refc_mxr[level != 0]);
++}
++
++STATIC void
++xfs_refcountbt_read_verify(
++	struct xfs_buf	*bp)
++{
++	if (!xfs_btree_sblock_verify_crc(bp))
++		xfs_buf_ioerror(bp, -EFSBADCRC);
++	else if (!xfs_refcountbt_verify(bp))
++		xfs_buf_ioerror(bp, -EFSCORRUPTED);
++
++	if (bp->b_error) {
++		trace_xfs_btree_corrupt(bp, _RET_IP_);
++		xfs_verifier_error(bp);
++	}
++}
++
++STATIC void
++xfs_refcountbt_write_verify(
++	struct xfs_buf	*bp)
++{
++	if (!xfs_refcountbt_verify(bp)) {
++		trace_xfs_btree_corrupt(bp, _RET_IP_);
++		xfs_buf_ioerror(bp, -EFSCORRUPTED);
++		xfs_verifier_error(bp);
++		return;
++	}
++	xfs_btree_sblock_calc_crc(bp);
++
++}
++
++const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
++	.name			= "xfs_refcountbt",
++	.verify_read		= xfs_refcountbt_read_verify,
++	.verify_write		= xfs_refcountbt_write_verify,
++};
++
++static const struct xfs_btree_ops xfs_refcountbt_ops = {
++	.rec_len		= sizeof(struct xfs_refcount_rec),
++	.key_len		= sizeof(struct xfs_refcount_key),
++
++	.dup_cursor		= xfs_refcountbt_dup_cursor,
++	.buf_ops		= &xfs_refcountbt_buf_ops,
++};
 +
 +/*
-  * BMAP Btree format definitions
-  *
-  * This includes both the root block definition that sits inside an inode fork
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 17b8eeb..9c0585e 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -512,6 +512,24 @@ void
- xfs_rmapbt_compute_maxlevels(
- 	struct xfs_mount		*mp)
- {
--	mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
--			mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
-+	/*
-+	 * On a non-reflink filesystem, the maximum number of rmap
-+	 * records is the number of blocks in the AG, hence the max
-+	 * rmapbt height is log_$maxrecs($agblocks).  However, with
-+	 * reflink each AG block can have up to 2^32 (per the refcount
-+	 * record format) owners, which means that theoretically we
-+	 * could face up to 2^64 rmap records.
-+	 *
-+	 * That effectively means that the max rmapbt height must be
-+	 * XFS_BTREE_MAXLEVELS.  "Fortunately" we'll run out of AG
-+	 * blocks to feed the rmapbt long before the rmapbt reaches
-+	 * maximum height.  The reflink code uses ag_resv_critical to
-+	 * disallow reflinking when less than 10% of the per-AG metadata
-+	 * block reservation since the fallback is a regular file copy.
-+	 */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		mp->m_rmap_maxlevels = XFS_BTREE_MAXLEVELS;
-+	else
-+		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
-+				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
- }
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 3d50364..be7b6de 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -109,7 +109,7 @@ typedef enum {
- 
- typedef enum {
- 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
--	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
-+	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_MAX
- } xfs_btnum_t;
- 
- struct xfs_name {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 8f30d25..a8658e6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -202,6 +202,11 @@ xfs_get_initial_prid(struct xfs_inode *dp)
- 	return XFS_PROJID_DEFAULT;
- }
- 
-+static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
++ * Allocate a new refcount btree cursor.
++ */
++struct xfs_btree_cur *
++xfs_refcountbt_init_cursor(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agbp,
++	xfs_agnumber_t		agno,
++	struct xfs_defer_ops	*dfops)
 +{
-+	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
++	struct xfs_btree_cur	*cur;
++
++	ASSERT(agno != NULLAGNUMBER);
++	ASSERT(agno < mp->m_sb.sb_agcount);
++	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
++
++	cur->bc_tp = tp;
++	cur->bc_mp = mp;
++	cur->bc_btnum = XFS_BTNUM_REFC;
++	cur->bc_blocklog = mp->m_sb.sb_blocklog;
++	cur->bc_ops = &xfs_refcountbt_ops;
++
++	cur->bc_nlevels = be32_to_cpu(agf->agf_refcount_level);
++
++	cur->bc_private.a.agbp = agbp;
++	cur->bc_private.a.agno = agno;
++	cur->bc_private.a.dfops = dfops;
++	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
++
++	cur->bc_private.a.priv.refc.nr_ops = 0;
++	cur->bc_private.a.priv.refc.shape_changes = 0;
++
++	return cur;
 +}
 +
++/*
++ * Calculate the number of records in a refcount btree block.
++ */
++int
++xfs_refcountbt_maxrecs(
++	struct xfs_mount	*mp,
++	int			blocklen,
++	bool			leaf)
++{
++	blocklen -= XFS_REFCOUNT_BLOCK_LEN;
++
++	if (leaf)
++		return blocklen / sizeof(struct xfs_refcount_rec);
++	return blocklen / (sizeof(struct xfs_refcount_key) +
++			   sizeof(xfs_refcount_ptr_t));
++}
++
++/* Compute the maximum height of a refcount btree. */
++void
++xfs_refcountbt_compute_maxlevels(
++	struct xfs_mount		*mp)
++{
++	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(mp,
++			mp->m_refc_mnr, mp->m_sb.sb_agblocks);
++}
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+new file mode 100644
+index 0000000..9e9ad7c
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -0,0 +1,67 @@
++/*
++ * Copyright (C) 2016 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_REFCOUNT_BTREE_H__
++#define	__XFS_REFCOUNT_BTREE_H__
++
++/*
++ * Reference Count Btree on-disk structures
++ */
++
++struct xfs_buf;
++struct xfs_btree_cur;
++struct xfs_mount;
++
++/*
++ * Btree block header size
++ */
++#define XFS_REFCOUNT_BLOCK_LEN	XFS_BTREE_SBLOCK_CRC_LEN
++
++/*
++ * Record, key, and pointer address macros for btree blocks.
++ *
++ * (note that some of these may appear unused, but they are used in userspace)
++ */
++#define XFS_REFCOUNT_REC_ADDR(block, index) \
++	((struct xfs_refcount_rec *) \
++		((char *)(block) + \
++		 XFS_REFCOUNT_BLOCK_LEN + \
++		 (((index) - 1) * sizeof(struct xfs_refcount_rec))))
++
++#define XFS_REFCOUNT_KEY_ADDR(block, index) \
++	((struct xfs_refcount_key *) \
++		((char *)(block) + \
++		 XFS_REFCOUNT_BLOCK_LEN + \
++		 ((index) - 1) * sizeof(struct xfs_refcount_key)))
++
++#define XFS_REFCOUNT_PTR_ADDR(block, index, maxrecs) \
++	((xfs_refcount_ptr_t *) \
++		((char *)(block) + \
++		 XFS_REFCOUNT_BLOCK_LEN + \
++		 (maxrecs) * sizeof(struct xfs_refcount_key) + \
++		 ((index) - 1) * sizeof(xfs_refcount_ptr_t)))
++
++extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
++		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
++		struct xfs_defer_ops *dfops);
++extern int xfs_refcountbt_maxrecs(struct xfs_mount *mp, int blocklen,
++		bool leaf);
++extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
++
++#endif	/* __XFS_REFCOUNT_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 4aecc5f..a70aec9 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -38,6 +38,8 @@
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_log.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_bmap.h"
++#include "xfs_refcount_btree.h"
+ 
  /*
-  * In-core inode flags.
+  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+@@ -737,6 +739,13 @@ xfs_sb_mount_common(
+ 	mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
+ 	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
+ 
++	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
++			true);
++	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
++			false);
++	mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
++	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
++
+ 	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+ 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
+ 					sbp->sb_inopblock);
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index 0c5b30b..c6f4eb4 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -39,6 +39,7 @@ extern const struct xfs_buf_ops xfs_agf_buf_ops;
+ extern const struct xfs_buf_ops xfs_agfl_buf_ops;
+ extern const struct xfs_buf_ops xfs_allocbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_rmapbt_buf_ops;
++extern const struct xfs_buf_ops xfs_refcountbt_buf_ops;
+ extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
+ extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
+ extern const struct xfs_buf_ops xfs_bmbt_buf_ops;
+@@ -122,6 +123,7 @@ int	xfs_log_calc_minimum_size(struct xfs_mount *);
+ #define	XFS_INO_REF		2
+ #define	XFS_ATTR_BTREE_REF	1
+ #define	XFS_DQUOT_REF		1
++#define	XFS_REFC_BTREE_REF	1
+ 
+ /*
+  * Flags for xfs_trans_ichgtime().
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 301ef2f..7c840e1 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -73,7 +73,7 @@ xfs_calc_buf_res(
+  *
+  * Keep in mind that max depth is calculated separately for each type of tree.
   */
+-static uint
++uint
+ xfs_allocfree_log_count(
+ 	struct xfs_mount *mp,
+ 	uint		num_ops)
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 0eb46ed..36a1511 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -102,5 +102,6 @@ struct xfs_trans_resv {
+ #define	XFS_ATTRRM_LOG_COUNT		3
+ 
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
++uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
+ 
+ #endif	/* __XFS_TRANS_RESV_H__ */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 56e85a6..3f64615 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -43,6 +43,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_sysfs.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_refcount_btree.h"
+ 
+ 
+ static DEFINE_MUTEX(xfs_uuid_table_mutex);
+@@ -684,6 +685,7 @@ xfs_mountfs(
+ 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+ 	xfs_ialloc_compute_maxlevels(mp);
+ 	xfs_rmapbt_compute_maxlevels(mp);
++	xfs_refcountbt_compute_maxlevels(mp);
+ 
+ 	xfs_set_maxicount(mp);
+ 
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 041d949..8fab496 100644
+index 8fab496..0be14a7 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -399,6 +399,9 @@ typedef struct xfs_perag {
- 	struct xfs_ag_resv	pag_meta_resv;
- 	/* Blocks reserved for just AGFL-based metadata. */
- 	struct xfs_ag_resv	pag_agfl_resv;
-+
-+	/* reference count */
-+	__uint8_t		pagf_refcount_level;
- } xfs_perag_t;
+@@ -124,10 +124,13 @@ typedef struct xfs_mount {
+ 	uint			m_inobt_mnr[2];	/* min inobt btree records */
+ 	uint			m_rmap_mxr[2];	/* max rmap btree records */
+ 	uint			m_rmap_mnr[2];	/* min rmap btree records */
++	uint			m_refc_mxr[2];	/* max refc btree records */
++	uint			m_refc_mnr[2];	/* min refc btree records */
+ 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+ 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+ 	uint			m_in_maxlevels;	/* max inobt btree levels. */
+ 	uint			m_rmap_maxlevels; /* max rmap btree levels */
++	uint			m_refc_maxlevels; /* max refcount btree level */
+ 	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
+ 	uint			m_alloc_set_aside; /* space we can't use */
+ 	uint			m_ag_max_usable; /* max space per AG */
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index 69e2986..0c381d7 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -49,6 +49,8 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_key,		4);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_rec,		12);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_timestamp,		8);
+@@ -56,6 +58,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
++	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
+ 	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
  
- static inline struct xfs_ag_resv *
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 0f14b2e..93a7aaf 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -114,6 +114,13 @@ xfs_fs_map_blocks(
- 		return -ENXIO;
+ 	/* dir/attr trees */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 8446338..c7b9853 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -39,16 +39,7 @@ struct xfs_buf_log_format;
+ struct xfs_inode_log_format;
+ struct xfs_bmbt_irec;
+ struct xfs_btree_cur;
+-
+-#ifndef XFS_REFCOUNT_IREC_PLACEHOLDER
+-#define XFS_REFCOUNT_IREC_PLACEHOLDER
+-/* Placeholder definition to avoid breaking bisectability. */
+-struct xfs_refcount_irec {
+-	xfs_agblock_t	rc_startblock;	/* starting block number */
+-	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
+-	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
+-};
+-#endif
++struct xfs_refcount_irec;
  
- 	/*
-+	 * The pNFS block layout spec actually supports reflink like
-+	 * functionality, but the Linux pNFS server doesn't implement it yet.
-+	 */
-+	if (xfs_is_reflink_inode(ip))
-+		return -ENXIO;
-+
-+	/*
- 	 * Lock out any other I/O before we flush and invalidate the pagecache,
- 	 * and then hand out a layout to the remote system.  This is very
- 	 * similar to direct I/O, except that the synchronization is much more
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index 6e812fe0..12d48cd 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -62,6 +62,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
- 		{ "ibt2",		XFSSTAT_END_IBT_V2		},
- 		{ "fibt2",		XFSSTAT_END_FIBT_V2		},
- 		{ "rmapbt",		XFSSTAT_END_RMAP_V2		},
-+		{ "refcntbt",		XFSSTAT_END_REFCOUNT		},
- 		/* we print both series of quota information together */
- 		{ "qm",			XFSSTAT_END_QM			},
- 	};
-diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-index 657865f..79ad2e6 100644
---- a/fs/xfs/xfs_stats.h
-+++ b/fs/xfs/xfs_stats.h
-@@ -213,7 +213,23 @@ struct xfsstats {
- 	__uint32_t		xs_rmap_2_alloc;
- 	__uint32_t		xs_rmap_2_free;
- 	__uint32_t		xs_rmap_2_moves;
--#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_RMAP_V2+6)
-+#define XFSSTAT_END_REFCOUNT		(XFSSTAT_END_RMAP_V2 + 15)
-+	__uint32_t		xs_refcbt_2_lookup;
-+	__uint32_t		xs_refcbt_2_compare;
-+	__uint32_t		xs_refcbt_2_insrec;
-+	__uint32_t		xs_refcbt_2_delrec;
-+	__uint32_t		xs_refcbt_2_newroot;
-+	__uint32_t		xs_refcbt_2_killroot;
-+	__uint32_t		xs_refcbt_2_increment;
-+	__uint32_t		xs_refcbt_2_decrement;
-+	__uint32_t		xs_refcbt_2_lshift;
-+	__uint32_t		xs_refcbt_2_rshift;
-+	__uint32_t		xs_refcbt_2_split;
-+	__uint32_t		xs_refcbt_2_join;
-+	__uint32_t		xs_refcbt_2_alloc;
-+	__uint32_t		xs_refcbt_2_free;
-+	__uint32_t		xs_refcbt_2_moves;
-+#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_REFCOUNT + 6)
- 	__uint32_t		xs_qm_dqreclaims;
- 	__uint32_t		xs_qm_dqreclaim_misses;
- 	__uint32_t		xs_qm_dquot_dups;
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
 
