@@ -1,34 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36565 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752376AbcI3LO5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 07:14:57 -0400
-Received: by mail-oi0-f65.google.com with SMTP id h186so2661022oia.3
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 04:14:57 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]:51340 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932105AbcI3Lq7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 07:46:59 -0400
+Date: Fri, 30 Sep 2016 04:46:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
+Message-ID: <20160930114656.GA16447@infradead.org>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxhht5OFOxypn-0LzwaVSqsQPNo0rTsdWp-ubzvw0a=1PQ@mail.gmail.com>
-References: <1473856994-27463-1-git-send-email-amir73il@gmail.com>
- <1473856994-27463-3-git-send-email-amir73il@gmail.com> <CAJfpegvtCf7mPanvmhU8vmoyQTUsVo-O0bpNxwnt4abkJ5ZD6Q@mail.gmail.com>
- <CAOQ4uxjEUghU=-RDBOn5zg6hrM1pn1FseEspO8hCLcSnH4WNGA@mail.gmail.com>
- <CAJfpegsmc5a5=X11OZZ2__ghOBbe4kdWge10EFBEAG+ftrGGJQ@mail.gmail.com> <CAOQ4uxhht5OFOxypn-0LzwaVSqsQPNo0rTsdWp-ubzvw0a=1PQ@mail.gmail.com>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Fri, 30 Sep 2016 13:14:55 +0200
-Message-ID: <CAJfpegvFeOuY7o_m+P93mDdvBs5GquqOwauqENTqZ3MOaR0K0A@mail.gmail.com>
-Subject: Re: [PATCH v3 2/4] ovl: use vfs_clone_file_range() for copy up if possible
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, "linux-unionfs@vger.kernel.org" <linux-unionfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 11:00 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+On Thu, Sep 29, 2016 at 04:49:18PM -0600, Ross Zwisler wrote:
+> DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+> locking.  This series allows DAX PMDs to participate in the DAX radix tree
+> based locking scheme so that they can be re-enabled.
 
-> Will you be able to queue v4 patches for 4.9?
-
-Queued to
-
- git://git.kernel.org/pub/scm/linux/kernel/git/mszeredi/vfs.git #overlayfs-next
-
-Thanks,
-Miklos
+This seems to pass xfstests fine, so with the various cleanups noted
+in the individual patches this looks fine to me.
