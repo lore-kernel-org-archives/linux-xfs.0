@@ -1,282 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43491 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754038AbcI3DMg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:12:36 -0400
-Subject: [PATCH 63/63] xfs: implement swapext for rmap filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:12:32 -0700
-Message-ID: <147520515235.29434.670243172998762041.stgit@birch.djwong.org>
-In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16814 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S964779AbcI3GtE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Sep 2016 02:49:04 -0400
+Date: Fri, 30 Sep 2016 16:48:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
+Message-ID: <20160930064858.GJ27872@dastard>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <20160929234345.GG27872@dastard>
+ <20160930030343.GA12464@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160930030343.GA12464@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Implement swapext for filesystems that have reverse mapping.  Back in
-the reflink patches, we augmented the bmap code with a 'REMAP' flag
-that updates only the bmbt and doesn't touch the allocator and
-implemented log redo items for those two operations.  Now we can
-rewrite extent swapping as a (looong) series of remap operations.
+On Thu, Sep 29, 2016 at 09:03:43PM -0600, Ross Zwisler wrote:
+> On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
+> > Finally: none of the patches in your tree have reviewed-by tags.
+> > That says to me that none of this code has been reviewed yet.
+> > Reviewed-by tags are non-negotiable requirement for anything going
+> > through my trees. I don't have time right now to review this code,
+> > so you're going to need to chase up other reviewers before merging.
+> > 
+> > And, really, this is getting very late in the cycle to be merging
+> > new code - we're less than one working day away from the merge
+> > window opening and we've missed the last linux-next build. I'd
+> > suggest that we'd might be best served by slipping this to the PMD
+> > support code to the next cycle when there's no time pressure for
+> > review and we can get a decent linux-next soak on the code.
+> 
+> I absolutely support your policy of only sending code to Linux that has passed
+> peer review.
+> 
+> However, I do feel compelled to point out that this is not new code.  I didn't
+> just spring it on everyone in the hours before the v4.8 merge window.  I
+> posted the first version of this patch set on August 15th, *seven weeks ago*:
+> 
+> https://lkml.org/lkml/2016/8/15/613
+>
+> This was the day after v4.7-rc2 was released.
 
-This is far less efficient than the fork swapping method implemented
-in the past, so we only switch this on for rmap.
+I understand, Ross. We've all been there - welcome to the club. :/
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_trans_space.h |    9 ++
- fs/xfs/xfs_bmap_util.c          |  162 ++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trace.h              |    5 +
- 3 files changed, 173 insertions(+), 3 deletions(-)
+The problem is there are lots of people writing code and very few
+people who spent time reviewing it. And for many of those reviewers,
+they also have to spend time on other code bases, whether it be the
+distro's they maintain, the userspace that the kernel code needs to
+function, or even the test code needed to make this all work
+properly.
 
+Stuff that spans multiple subsystems such as DAX (i.e. vm,
+filesystems and block devices) are particularly troublesome in this
+respect because there are very few people with expertise in all
+three aspects and hence able to review a change that spans all three
+subsystems. Those people also tend to be the busiest and have to
+prioritise what they do.
 
-diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-index 41e0428..7917f6e 100644
---- a/fs/xfs/libxfs/xfs_trans_space.h
-+++ b/fs/xfs/libxfs/xfs_trans_space.h
-@@ -21,6 +21,8 @@
- /*
-  * Components of space reservations.
-  */
-+#define XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)    \
-+		(((mp)->m_rmap_mxr[0]) - ((mp)->m_rmap_mnr[0]))
- #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
- 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
- #define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
-@@ -28,6 +30,13 @@
- 	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
- 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
- 	  XFS_EXTENTADD_SPACE_RES(mp,w))
-+#define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
-+	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
-+	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
-+	  XFS_EXTENTADD_SPACE_RES(mp,w) + \
-+	 ((b + XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp) - 1) / \
-+	  XFS_MAX_CONTIG_RMAPS_PER_BLOCK(mp)) * \
-+	  (mp)->m_rmap_maxlevels)
- #define	XFS_DAENTER_1B(mp,w)	\
- 	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
- #define	XFS_DAENTER_DBS(mp,w)	\
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index b5564f2..0bd217f 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1573,6 +1573,13 @@ xfs_swap_extents_check_format(
- 		return -EINVAL;
- 
- 	/*
-+	 * If we have to use the (expensive) rmap swap method, we can
-+	 * handle any number of extents and any format.
-+	 */
-+	if (xfs_sb_version_hasrmapbt(&ip->i_mount->m_sb))
-+		return 0;
-+
-+	/*
- 	 * if the target inode is in extent form and the temp inode is in btree
- 	 * form then we will end up with the target inode in the wrong format
- 	 * as we already know there are less extents in the temp inode.
-@@ -1641,6 +1648,130 @@ xfs_swap_extent_flush(
- 	return 0;
- }
- 
-+/*
-+ * Move extents from one file to another, when rmap is enabled.
-+ */
-+STATIC int
-+xfs_swap_extent_rmap(
-+	struct xfs_trans		**tpp,
-+	struct xfs_inode		*ip,
-+	struct xfs_inode		*tip)
-+{
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_bmbt_irec		uirec;
-+	struct xfs_bmbt_irec		tirec;
-+	xfs_fileoff_t			offset_fsb;
-+	xfs_fileoff_t			end_fsb;
-+	xfs_filblks_t			count_fsb;
-+	xfs_fsblock_t			firstfsb;
-+	struct xfs_defer_ops		dfops;
-+	int				error;
-+	xfs_filblks_t			ilen;
-+	xfs_filblks_t			rlen;
-+	int				nimaps;
-+	__uint64_t			tip_flags2;
-+
-+	/*
-+	 * If the source file has shared blocks, we must flag the donor
-+	 * file as having shared blocks so that we get the shared-block
-+	 * rmap functions when we go to fix up the rmaps.  The flags
-+	 * will be switch for reals later.
-+	 */
-+	tip_flags2 = tip->i_d.di_flags2;
-+	if (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK)
-+		tip->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
-+
-+	offset_fsb = 0;
-+	end_fsb = XFS_B_TO_FSB(ip->i_mount, i_size_read(VFS_I(ip)));
-+	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
-+
-+	while (count_fsb) {
-+		/* Read extent from the donor file */
-+		nimaps = 1;
-+		error = xfs_bmapi_read(tip, offset_fsb, count_fsb, &tirec,
-+				&nimaps, 0);
-+		if (error)
-+			goto out;
-+		ASSERT(nimaps == 1);
-+		ASSERT(tirec.br_startblock != DELAYSTARTBLOCK);
-+
-+		trace_xfs_swap_extent_rmap_remap(tip, &tirec);
-+		ilen = tirec.br_blockcount;
-+
-+		/* Unmap the old blocks in the source file. */
-+		while (tirec.br_blockcount) {
-+			xfs_defer_init(&dfops, &firstfsb);
-+			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
-+
-+			/* Read extent from the source file */
-+			nimaps = 1;
-+			error = xfs_bmapi_read(ip, tirec.br_startoff,
-+					tirec.br_blockcount, &irec,
-+					&nimaps, 0);
-+			if (error)
-+				goto out_defer;
-+			ASSERT(nimaps == 1);
-+			ASSERT(tirec.br_startoff == irec.br_startoff);
-+			trace_xfs_swap_extent_rmap_remap_piece(ip, &irec);
-+
-+			/* Trim the extent. */
-+			uirec = tirec;
-+			uirec.br_blockcount = rlen = min_t(xfs_filblks_t,
-+					tirec.br_blockcount,
-+					irec.br_blockcount);
-+			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
-+
-+			/* Remove the mapping from the donor file. */
-+			error = xfs_bmap_unmap_extent((*tpp)->t_mountp, &dfops,
-+					tip, XFS_DATA_FORK, &uirec);
-+			if (error)
-+				goto out_defer;
-+
-+			/* Remove the mapping from the source file. */
-+			error = xfs_bmap_unmap_extent((*tpp)->t_mountp, &dfops,
-+					ip, XFS_DATA_FORK, &irec);
-+			if (error)
-+				goto out_defer;
-+
-+			/* Map the donor file's blocks into the source file. */
-+			error = xfs_bmap_map_extent((*tpp)->t_mountp, &dfops,
-+					ip, XFS_DATA_FORK, &uirec);
-+			if (error)
-+				goto out_defer;
-+
-+			/* Map the source file's blocks into the donor file. */
-+			error = xfs_bmap_map_extent((*tpp)->t_mountp, &dfops,
-+					tip, XFS_DATA_FORK, &irec);
-+			if (error)
-+				goto out_defer;
-+
-+			error = xfs_defer_finish(tpp, &dfops, ip);
-+			if (error)
-+				goto out_defer;
-+
-+			tirec.br_startoff += rlen;
-+			if (tirec.br_startblock != HOLESTARTBLOCK &&
-+			    tirec.br_startblock != DELAYSTARTBLOCK)
-+				tirec.br_startblock += rlen;
-+			tirec.br_blockcount -= rlen;
-+		}
-+
-+		/* Roll on... */
-+		count_fsb -= ilen;
-+		offset_fsb += ilen;
-+	}
-+
-+	tip->i_d.di_flags2 = tip_flags2;
-+	return 0;
-+
-+out_defer:
-+	xfs_defer_cancel(&dfops);
-+out:
-+	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
-+	tip->i_d.di_flags2 = tip_flags2;
-+	return error;
-+}
-+
- /* Swap the extents of two files by swapping data forks. */
- STATIC int
- xfs_swap_extent_forks(
-@@ -1791,6 +1922,7 @@ xfs_swap_extents(
- 	int			lock_flags;
- 	struct xfs_ifork	*cowfp;
- 	__uint64_t		f;
-+	int			resblks;
- 
- 	/*
- 	 * Lock the inodes against other IO, page faults and truncate to
-@@ -1821,7 +1953,28 @@ xfs_swap_extents(
- 	if (error)
- 		goto out_unlock;
- 
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-+	/*
-+	 * Extent "swapping" with rmap requires a permanent reservation and
-+	 * a block reservation because it's really just a remap operation
-+	 * performed with log redo items!
-+	 */
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		/*
-+		 * Conceptually this shouldn't affect the shape of either
-+		 * bmbt, but since we atomically move extents one by one,
-+		 * we reserve enough space to rebuild both trees.
-+		 */
-+		resblks = XFS_SWAP_RMAP_SPACE_RES(mp,
-+				XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK),
-+				XFS_DATA_FORK) +
-+			  XFS_SWAP_RMAP_SPACE_RES(mp,
-+				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
-+				XFS_DATA_FORK);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
-+				0, 0, &tp);
-+	} else
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0,
-+				0, 0, &tp);
- 	if (error)
- 		goto out_unlock;
- 
-@@ -1880,8 +2033,11 @@ xfs_swap_extents(
- 	src_log_flags = XFS_ILOG_CORE;
- 	target_log_flags = XFS_ILOG_CORE;
- 
--	error = xfs_swap_extent_forks(tp, ip, tip, &src_log_flags,
--			&target_log_flags);
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		error = xfs_swap_extent_rmap(&tp, ip, tip);
-+	else
-+		error = xfs_swap_extent_forks(tp, ip, tip, &src_log_flags,
-+				&target_log_flags);
- 	if (error)
- 		goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 30778ad..f7f104c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3370,6 +3370,11 @@ DEFINE_INODE_EVENT(xfs_reflink_cancel_pending_cow);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cancel_cow);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_pending_cow_error);
- 
-+/* rmap swapext tracepoints */
-+DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap);
-+DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
-+DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+Consider the XFS side of review in recent times: in the past 4
+months, there's been ~30,000 lines of code change between kernel and
+userspace.  And there's already another 15,000+ lines of code in the
+backlog for the next 2-3 months.  That review load is falling on 3-4
+people, who all have other work to do as well. This is for work that
+was started well over a year ago, and that picked up from work that
+was originally done 3 years ago. We're swamped on pure XFS review
+right now, let alone all the other infratructure stuff we need to
+get reviewed at the same time...
 
+Having someone say "lets get sorted after the merge window" is far
+better than having your patches ignored - it tells you someone wants
+your code and is actually planning to review it in the near term!
+Have patience. Keep the patches up to date, keep building what you
+need to build on top of them. Missing a merge window is not the end
+of the world.
+
+> Since then I have responded promptly to the little review feedback that I've
+> received.  I've also reviewed and tested other DAX changes, like the struct
+> iomap changes from Christoph.
+
+And I'm grateful for your doing that - it sped the process up a lot
+because they then weren't blocked waiting for me to get to them. As
+a result, I owe you some review time in return but unfortunately I
+can't fully return the favour immediately. If more people treated
+review as a selfless act that should be returned in kind, then we
+wouldn't have a review bottleneck like we do...
+
+> Those changes were first posted to the mailing
+> list on September 9th, four weeks after mine.  Nevertheless, I was happy to
+> rebase my changes on top of his, which meant a full rewrite of the DAX PMD
+> fault handler so it would be based on struct iomap.  His changes are going to
+> be merged for v4.9, and mine are not.
+
+Yes, this can happen, too - core infrastructure changes can appear
+suddenly and be implemented very quickly, but that does not mean
+there hasn't been a lot of background work and effort put into the
+code. The iomap code goes way back. Back to early 2010, in fact:
+
+http://lkml.iu.edu/hypermail/linux/kernel/1005.1/02720.html
+
+At that time I implemented a working multipage write IO path for
+XFS, and Christoph integrated that int various OEM products shortly
+afterwards. Yes, there have been iomap based XFS implementations out
+there in production for over 5 years now, but that code was not
+clean enough to even consider merging.
+
+Another reference in 2013, when someone proposed a hack for embedded
+systems to optimise the write path:
+
+https://lkml.org/lkml/2013/7/23/809
+
+Then Christoph introduced the struct iomap for pNFS and the XFS
+block layout driver in late 2013, and when DAX first came along I
+really wanted iomaps to be used up front rather than buffer heads
+for block mapping.
+
+Now we've finally got iomaps in the IO path and that's rapidly
+cascading through all the XFS IO interfaces and into other
+filesystems. This is exactly what we first talked about 6 years ago.
+
+So while it might look like the iomap infrastructure has come out of
+nowhere, it's really been a long, long road to get to this point. We
+work to a different time scale over here - it's not uncommon to be
+planning 5 years ahead for new XFS features. We know how long it
+takes to develop, test, review and stabilise significant new
+features, so while it might look like something appears and is
+committed quickly, that's because you haven't seen the work that has
+been done leading up to patches being presented for review and
+merge.
+
+Hopefully this will give you some more perspective on why I think
+slipping a single release isn't something to get worried about. :)
+
+> Please, help me understand what I can do to get my code reviewed.  Do I need
+> to more aggressively ping my patch series, asking people by name for reviews?
+
+On the XFS and fstests lists, if nobody has responded within a few
+days (usually a week) then it's OK to ping it and see if anyone has
+time to review it. In general, a single ping is enough if the
+patchset is in good shape. Fix it all, repost, ping in a week if
+there's no followup. Repeat until merge.
+
+> Do we need to rework our code flow to Linus so that the DAX changes go through
+> a filesystem tree like XFS or ext4, and ask the developers of that filesystem
+> to help with reviews?  Something else?
+
+The question we have to ask here is whether a lack of development
+support from a filesystem stop us from driving the DAX
+implementation forward?  I've said it before, and I'll say it again:
+I'm happy to drive DAX on XFS forwards at the rate at which we can
+sustain review via the XFS tree and I don't care if we break support
+on ext2 or ext4. If we keep having to wait for ext4 to fix stuff to
+catch up with what we want/need to do then progress will continue to
+be sporadic and frustrating.  Perhaps it's time to stop waiting for
+ext4 to play catchup every time we take a step forwards....
+
+> I'm honestly very frustrated by this because I've done my best to be open to
+> constructive criticism and I've tried to respond promptly to the feedback that
+> I've received.  In the end, though, a system where it's a requirement that all
+> upstreamed code be peer reviewed but in which I can't get any feedback is
+> essentially a system where I'm not allowed to contribute.
+
+There's always been a review bottleneck, and everyone ends up on the
+end of that frustration from time to time. Delays will happen - it's
+just part of the process we all need to deal with. I used to get
+frustrated, too, but now I just accept it, roll with it and we've
+made it an acceptible part of the process to ping patches when it
+looks like they have been forgotten...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
