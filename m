@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40512 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41934 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752250AbcI3JOk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 05:14:40 -0400
-Date: Fri, 30 Sep 2016 11:14:36 +0200
+        id S932088AbcI3Jhw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 05:37:52 -0400
+Date: Fri, 30 Sep 2016 11:37:47 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
-Message-ID: <20160930091436.ohsrxhzewcqe6zdq@redhat.com>
+Message-ID: <20160930093747.nvflglv6d4ajaz6i@redhat.com>
 References: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
  <20160930000147.GH27872@dastard>
 MIME-Version: 1.0
@@ -19,22 +19,6 @@ List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 30, 2016 at 10:01:47AM +1000, Dave Chinner wrote:
-> On Thu, Sep 29, 2016 at 03:03:19PM +0200, Carlos Maiolino wrote:
-> > I have been working in a bug still regarding xfs fail_at_unmount configuration,
-> > where, even though the configuration is enable, an unmount attempt will still
-> > hang if the AIL buf items are locked as a result of a previous failed attempt to
-> > flush these items.
-> > 
-> > Currently, if there is a failure while trying to flush inode buffers to disk,
-> > these items are kept in AIL with FLUSHING status and with the locks held, making
-> > them unable to be retried. Either during unmount, where they will be retried and
-> > 'failed', or if using a thin provisioned device, the pool is actually extended, to
-> > accomodate these not-yet-flushed items, instead of retrying to flush such items,
-> > xfs is unable to retry them, once they are already locked.
-> 
-> [....]
-> 
 > > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
 > > index 892c2ac..cce0373 100644
 > > --- a/fs/xfs/xfs_inode_item.c
@@ -55,6 +39,15 @@ On Fri, Sep 30, 2016 at 10:01:47AM +1000, Dave Chinner wrote:
 > of the buffer. That's a large amount of additional runtime overhead
 > that is unnecessary - this is only needed at unmount, according to
 > the problem description.
+
+Ah, btw, this is not only needed at unmount time, if we have such buffer IO
+failures, and the sysadmin extends the underlying thin pool, the buffers will
+still be hanging around without progress, never being retried.
+
+But anyway, I'll work in the directions you pointed.
+
+cheers
+
 > 
 > > +		if (error) {
 > > +			rval = XFS_ITEM_FLUSHING;
@@ -94,17 +87,16 @@ On Fri, Sep 30, 2016 at 10:01:47AM +1000, Dave Chinner wrote:
 > needs fixing - this cannot be solved sanely by trying to guess why
 > an inode is flush locked when walking the AIL....
 > 
-
-Thanks for the comments, I shall work in that direction now
-
-Cheers
-
 > Cheers,
 > 
 > Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 Carlos
