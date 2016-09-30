@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41683 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:41690 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbcI3Iti (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Sep 2016 04:49:38 -0400
-Date: Fri, 30 Sep 2016 10:49:34 +0200
+        id S1751161AbcI3Itu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 04:49:50 -0400
+Date: Fri, 30 Sep 2016 10:49:47 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 03/12] dax: remove buffer_size_valid()
-Message-ID: <20160930084934.GA19738@lst.de>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com> <1475189370-31634-4-git-send-email-ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 04/12] ext2: remove support for DAX PMD faults
+Message-ID: <20160930084947.GB19738@lst.de>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com> <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1475189370-31634-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
