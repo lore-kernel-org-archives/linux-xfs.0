@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49098 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49711 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752998AbcI3DJ4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:09:56 -0400
-Subject: [PATCH 39/63] xfs: cancel pending CoW reservations when destroying
- inodes
+        with ESMTP id S964826AbcI3DMR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:12:17 -0400
+Subject: [PATCH 60/63] xfs: recognize the reflink feature bit
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:09:52 -0700
-Message-ID: <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
+Date: Thu, 29 Sep 2016 20:12:10 -0700
+Message-ID: <147520512997.29434.12091596971723209819.stgit@birch.djwong.org>
 In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,48 +18,53 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-When destroying the inode, cancel all pending reservations in the CoW
-fork so that all the reserved blocks go back to the free pile.  In
-theory this sort of cleanup is only needed to clean up after write
-errors.
+Add the reflink feature flag to the set of recognized feature flags.
+This enables users to write to reflink filesystems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_super.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ fs/xfs/xfs_super.c         |    7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 94f610a..7a40855 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -459,7 +459,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 204b794..26b45b3 100644
+index 2152ab6..0e95485 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -49,6 +49,7 @@
- #include "xfs_rmap_item.h"
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
-+#include "xfs_reflink.h"
+@@ -1604,6 +1604,9 @@ xfs_fs_fill_super(
+ 			"DAX unsupported by block device. Turning off DAX.");
+ 			mp->m_flags &= ~XFS_MOUNT_DAX;
+ 		}
++		if (xfs_sb_version_hasreflink(&mp->m_sb))
++			xfs_alert(mp,
++		"DAX and reflink have not been tested together!");
+ 	}
  
- #include <linux/namei.h>
- #include <linux/init.h>
-@@ -938,6 +939,7 @@ xfs_fs_destroy_inode(
- 	struct inode		*inode)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
-+	int			error;
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+@@ -1617,6 +1620,10 @@ xfs_fs_fill_super(
+ 	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+ 	}
  
- 	trace_xfs_destroy_inode(ip);
- 
-@@ -945,6 +947,12 @@ xfs_fs_destroy_inode(
- 	XFS_STATS_INC(ip->i_mount, vn_rele);
- 	XFS_STATS_INC(ip->i_mount, vn_remove);
- 
-+	error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-+	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
-+		xfs_warn(ip->i_mount, "Error %d while evicting CoW blocks "
-+				"for inode %llu.",
-+				error, ip->i_ino);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		xfs_alert(mp,
++	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
 +
- 	xfs_inactive(ip);
- 
- 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
 
