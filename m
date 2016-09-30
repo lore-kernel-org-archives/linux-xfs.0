@@ -1,15 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49069 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752998AbcI3DJu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:09:50 -0400
-Subject: [PATCH 38/63] xfs: cancel CoW reservations and clear inode reflink
- flag when freeing blocks
+Received: from userp1040.oracle.com ([156.151.31.81]:41756 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750776AbcI3DFl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:05:41 -0400
+Subject: [PATCH v10 00/63] xfs: add reflink and dedupe support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 29 Sep 2016 20:09:46 -0700
-Message-ID: <147520498644.29434.5014643991183828847.stgit@birch.djwong.org>
-In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+Date: Thu, 29 Sep 2016 20:05:29 -0700
+Message-ID: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -19,45 +16,55 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-When we're freeing blocks (truncate, punch, etc.), clear all CoW
-reservations in the range being freed.  If the file block count
-drops to zero, also clear the inode reflink flag.
+Hi all,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_inode.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+This is the tenth revision of a patchset that adds to XFS kernel
+support for mapping multiple file logical blocks to the same physical
+block (reflink/deduplication).  There shouldn't be any incompatible on-disk
+format changes, pending a thorough review of the patches within.
 
+NOTE: This patchset contains all the review fixes from the v9 posting,
+and no other changes.  If you were in the middle of reviewing patches,
+you can continue from wherever you left off.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0c25a76..8c971fd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -49,6 +49,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_reflink.h"
- 
- kmem_zone_t *xfs_inode_zone;
- 
-@@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
- 			goto out;
- 	}
- 
-+	/* Remove all pending CoW reservations. */
-+	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
-+			last_block);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * Clear the reflink flag if we truncated everything.
-+	 */
-+	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
-+		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-+
- 	/*
- 	 * Always re-log the inode so that our permanent transaction can keep
- 	 * on rolling it forward in the log.
+The reflink implementation features a simple per-AG b+tree containing
+tuples of (physical block, blockcount, refcount) with the key being
+the physical block.  Copy on Write (CoW) is implemented by creating a
+separate CoW extent mapping fork and using the existing delayed
+allocation mechanism to try to allocate as large of a replacement
+extent as possible before committing the new data to media.  A CoW
+extent size hint allows administrators to influence the size of the
+replacement extents, and certain writes can be "promoted" to CoW when
+it would be advantageous to reduce fragmentation.  The userspace
+interface to reflink and dedupe are the VFS FICLONE, FICLONERANGE, and
+FIDEDUPERANGE ioctls, which were previously private to btrfs.
 
+Next comes the reference count B+tree, which tracks the reference
+counts of shared extents (refcount > 1) and extents being used to
+stage a copy-on-write operation (refcount == 1).  We define new log
+redo item pairs both for refcount updates and for inode fork updates;
+these plug into the deferred ops framework created for the reverse
+mapping patches.
+
+After that comes the reflink code, which handles the actual
+copy-on-write behavior that is required for block sharing; and
+connections to the VFS file ops for reflink, dedupe, and
+copy_file_range.
+
+At the very end of the patchset is a reimplementation of the swap
+extents code that uses reverse mapping and block mapping deferred ops
+to implement xfs_swap_extent for filesystems with reverse-mapping.
+
+The patches contained within are also available as git trees.  The
+kernel patches[1] apply against Dave Chinner's for-next branch, and for
+user tools you'll want to use the xfsprogs dev branch[2].  I do not
+intend to mail out userspace patches until after the merge window and
+libxfs-apply resync happens.  The clone group xfstests should all pass.
+
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://github.com/djwong/linux/tree/for-dave-for-4.9-8
+[2] https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-8
