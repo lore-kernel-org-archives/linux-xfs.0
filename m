@@ -1,44 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27884 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933908AbcI2RXo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 13:23:44 -0400
-Date: Thu, 29 Sep 2016 10:23:05 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:30928 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755519AbcI3CXP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 22:23:15 -0400
+Subject: [PATCH 1/9] xfs/122: decrease the log update done item sizes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v9 00/63] xfs: add reflink and dedupe support
-Message-ID: <20160929172305.GW14092@birch.djwong.org>
-References: <147503120985.30303.14151302091684456858.stgit@birch.djwong.org>
- <20160929134631.GA17558@infradead.org>
+Date: Thu, 29 Sep 2016 19:23:09 -0700
+Message-ID: <147520218943.26891.3120182590574773598.stgit@birch.djwong.org>
+In-Reply-To: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
+References: <147520218309.26891.10856487889060965097.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20160929134631.GA17558@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Thu, Sep 29, 2016 at 06:46:31AM -0700, Christoph Hellwig wrote:
-> Your tree only compiles with a few new warnings for me:
-> 
-> fs/xfs/xfs_reflink.c: In function ‘xfs_reflink_recover_cow_ag’:
-> fs/xfs/xfs_reflink.c:839:8: warning: missing braces around initializer
-> [-Wmissing-braces]
->   union xfs_btree_irec  low = {0};
->         ^
-> s/xfs/xfs_reflink.c:839:8: warning: (near initialization for
-> ‘low.a’) [-Wmissing-braces]
-> fs/xfs/xfs_reflink.c:840:8: warning: missing braces around initializer
-> [-Wmissing-braces]
->   union xfs_btree_irec  high = {0};
->         ^
-> fs/xfs/xfs_reflink.c:840:8: warning: (near initialization for
-> ‘high.a’) [-Wmissing-braces]
+Redundant fields were removed from the rmap/refcount/bmap update done
+log items, so fix the size tests.
 
-Hmm, now you're the second person to complain about this.  Evidently
-gcc 5.4 doesn't care about this, but older versions (Dave said 4.9.3
-also spat these warnings) do care.  Will push out fix.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ tests/xfs/122.out |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
---D
+
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index ae84283..67f7698 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -64,10 +64,10 @@ sizeof(struct xfs_btree_block) = 72
+ sizeof(struct xfs_btree_block_lhdr) = 64
+ sizeof(struct xfs_btree_block_shdr) = 48
+ sizeof(struct xfs_bud_log_format) = 16
+-sizeof(struct xfs_bui_log_format) = 48
++sizeof(struct xfs_bui_log_format) = 16
+ sizeof(struct xfs_clone_args) = 32
+ sizeof(struct xfs_cud_log_format) = 16
+-sizeof(struct xfs_cui_log_format) = 32
++sizeof(struct xfs_cui_log_format) = 16
+ sizeof(struct xfs_da3_blkinfo) = 56
+ sizeof(struct xfs_da3_intnode) = 64
+ sizeof(struct xfs_da3_node_hdr) = 64
+@@ -94,7 +94,7 @@ sizeof(struct xfs_rtrmap_key) = 24
+ sizeof(struct xfs_rtrmap_rec) = 32
+ sizeof(struct xfs_rtrmap_root) = 4
+ sizeof(struct xfs_rud_log_format) = 16
+-sizeof(struct xfs_rui_log_format) = 48
++sizeof(struct xfs_rui_log_format) = 16
+ sizeof(struct xfs_scrub_metadata) = 64
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+
