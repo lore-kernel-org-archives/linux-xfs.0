@@ -1,152 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54600 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52624 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755142AbcI0SKa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Sep 2016 14:10:30 -0400
+        id S1751321AbcI3Uw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Sep 2016 16:52:59 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C26A57EA99
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Sep 2016 20:52:08 +0000 (UTC)
+Subject: [PATCH 1/5] xfs_io: fix inode command help and argsmax
+References: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] libxfs: remove unused libxfs_iget arg
-Message-ID: <355fec5f-f7ef-8472-c71b-7bfa9d9ab8bd@redhat.com>
-Date: Tue, 27 Sep 2016 13:10:28 -0500
+Message-ID: <f485f5cb-084b-40e6-b7de-c469782b71b2@redhat.com>
+Date: Fri, 30 Sep 2016 15:52:08 -0500
 MIME-Version: 1.0
+In-Reply-To: <9f126dc7-3b1e-a1ed-7f23-48410a76adc2@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs-oss <xfs@oss.sgi.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-libxfs_iget() is always called with bno == 0.
-Which is probably a good thing, because it then passes
-bno to xfs_iread as iget_flags!
+The short help implied that -n and -v were exclusive, and the longer
+help wasn't particularly clear.
 
-So remove the libxfs_iget arg, and explicitly pass
-0 to xfs_iread for flags.
+Further, argsmax is wrong; "-n -v num" is 3, not 2.
+
+ # xfs_io -c "inode -n -v 123" /mnt/test2
+ bad argument count 3 to inode, expected between 0 and 2 arguments
+ # xfs_io -c "inode -vn 123" /mnt/test2
+ 128:32
+
+Fix up all of those issues.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ io/open.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-(or should we just rename/re-type bno to a flags arg?)
-
-diff --git a/db/attrset.c b/db/attrset.c
-index ec9da5a..ad3c8f3 100644
---- a/db/attrset.c
-+++ b/db/attrset.c
-@@ -151,7 +151,7 @@ attr_set_f(
- 		value = NULL;
- 	}
- 
--	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip, 0)) {
-+	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
- 		dbprintf(_("failed to iget inode %llu\n"),
- 			(unsigned long long)iocur_top->ino);
- 		goto out;
-@@ -226,7 +226,7 @@ attr_remove_f(
- 
- 	name = argv[optind];
- 
--	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip, 0)) {
-+	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
- 		dbprintf(_("failed to iget inode %llu\n"),
- 			(unsigned long long)iocur_top->ino);
- 		goto out;
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 8141d97..0a8edeb 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -139,7 +139,7 @@ extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
- 
- /* Inode Cache Interfaces */
- extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
--				uint, struct xfs_inode **, xfs_daddr_t);
-+				uint, struct xfs_inode **);
- extern void	libxfs_iput(struct xfs_inode *);
- 
- #define IRELE(ip) libxfs_iput(ip)
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index aa30522..1103e2c 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1330,7 +1330,7 @@ extern kmem_zone_t	*xfs_inode_zone;
- 
- int
- libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
--		xfs_inode_t **ipp, xfs_daddr_t bno)
-+		xfs_inode_t **ipp)
+diff --git a/io/open.c b/io/open.c
+index 3eaa013..5efa739 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -757,16 +757,13 @@ inode_help(void)
  {
- 	xfs_inode_t	*ip;
- 	int		error = 0;
-@@ -1341,7 +1341,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 	printf(_(
+ "\n"
+-"Query physical information about the inode"
++"Query physical information about an inode"
+ "\n"
+-" Default:	-- Return true(1) or false(0) if any inode greater than\n"
+-"		   32bits has been found in the filesystem\n"
+-"[num]		-- Return inode number [num] or 0 if the inode [num] is in use\n"
+-"		   or not\n"
+-" -n [num]	-- Return the next valid inode after [num]\n"
+-" -v		-- verbose mode\n"
+-"		   Display the inode number and its physical size (in bits)\n"
+-"		   according to the argument used\n"
++" Default:	-- Return 1 if any inode number greater than 32 bits exists in\n"
++"		   the filesystem, or 0 if none exist\n"
++" num		-- Return inode number [num] if in use, or 0 if not in use\n"
++" -n num	-- Return the next used inode after [num]\n"
++" -v		-- Verbose mode - display returned inode number's size in bits\n"
+ "\n"));
+ }
  
- 	ip->i_ino = ino;
- 	ip->i_mount = mp;
--	error = xfs_iread(mp, tp, ip, bno);
-+	error = xfs_iread(mp, tp, ip, 0);
- 	if (error) {
- 		kmem_zone_free(xfs_inode_zone, ip);
- 		*ipp = NULL;
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index a4d9782..ea60d03 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -224,9 +224,9 @@ libxfs_trans_iget(
- 	xfs_inode_log_item_t	*iip;
+@@ -956,9 +953,9 @@ open_init(void)
  
- 	if (tp == NULL)
--		return libxfs_iget(mp, tp, ino, lock_flags, ipp, 0);
-+		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
- 
--	error = libxfs_iget(mp, tp, ino, lock_flags, &ip, 0);
-+	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
- 	if (error)
- 		return error;
- 	ASSERT(ip != NULL);
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 5507af4..06eed16 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -929,7 +929,7 @@ mk_orphanage(xfs_mount_t *mp)
- 	 * would have been cleared in phase3 and phase4.
- 	 */
- 
--	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
-+	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
- 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
- 			i, ORPHANAGE);
- 
-@@ -953,7 +953,7 @@ mk_orphanage(xfs_mount_t *mp)
- 	 * use iget/ijoin instead of trans_iget because the ialloc
- 	 * wrapper can commit the transaction and start a new one
- 	 */
--/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip, 0)))
-+/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
- 		do_error(_("%d - couldn't iget root inode to make %s\n"),
- 			i, ORPHANAGE);*/
- 
-@@ -1067,7 +1067,7 @@ mv_orphanage(
- 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
- 				(unsigned long long)ino);
- 
--	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip, 0);
-+	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
- 	if (err)
- 		do_error(_("%d - couldn't iget orphanage inode\n"), err);
- 	/*
-@@ -1079,7 +1079,7 @@ mv_orphanage(
- 		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
- 					(unsigned long long)ino, ++incr);
- 
--	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, 0)))
-+	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
- 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
- 
- 	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
-@@ -2820,7 +2820,7 @@ process_dir_inode(
- 
- 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
- 
--	error = -libxfs_iget(mp, NULL, ino, 0, &ip, 0);
-+	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
- 	if (error) {
- 		if (!no_modify)
- 			do_error(
+ 	inode_cmd.name = "inode";
+ 	inode_cmd.cfunc = inode_f;
+-	inode_cmd.args = _("[-n | -v] [num]");
++	inode_cmd.args = _("[-nv] [num]");
+ 	inode_cmd.argmin = 0;
+-	inode_cmd.argmax = 2;
++	inode_cmd.argmax = 3;
+ 	inode_cmd.flags = CMD_NOMAP_OK;
+ 	inode_cmd.oneline =
+ 		_("Query inode number usage in the filesystem");
+-- 
+1.7.1
 
