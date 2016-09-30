@@ -1,174 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44840 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754676AbcIHOQN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Sep 2016 10:16:13 -0400
-Subject: [PATCH 2/2] libxfs: remove ustat() use, factor mount checks into
- helper function
-References: <ed60d5a2-0343-fd49-236e-52f9442291d2@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a4e1e08e-1f5f-82b4-7dc2-52ede960aa39@sandeen.net>
-Date: Thu, 8 Sep 2016 09:16:11 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:41870 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932259AbcI3DGT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Sep 2016 23:06:19 -0400
+Subject: [PATCH 06/63] xfs: refcount btree add more reserved blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 29 Sep 2016 20:06:13 -0700
+Message-ID: <147520477374.29434.8282061055355055365.stgit@birch.djwong.org>
+In-Reply-To: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <ed60d5a2-0343-fd49-236e-52f9442291d2@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-ustat() has been deprecated for a very long time, and newer
-architectures (aarch64, for one) have not implemented it.
-If called, it always returns false, so we can no longer use
-it to determine a device's mounted status.
+Since XFS reserves a small amount of space in each AG as the minimum
+free space needed for an operation, save some more space in case we
+touch the refcount btree.
 
-We already have another mechanism for determining the mounted
-status of a device in platform_check_iswritable; it iterates
-over getmntent looking for the device, and checks its mount
-options.  We can do the same thing to check for a simple mount,
-and not caring about the "ro" mount option.
-
-Because the loop is essentially the same, factor it into a
-helper which accepts a VERBOSE flag to print info if the device
-is found in the checked-for state, and a WRITABLE flag which
-only checks specifically for a mounted and /writable/ device.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
+ fs/xfs/libxfs/xfs_alloc.c  |   13 +++++++++++++
+ fs/xfs/libxfs/xfs_format.h |    2 ++
+ 2 files changed, 15 insertions(+)
 
-Dave, up to you if you want to take all this in lieu of the
-fixed-up patch from Felix, or if you'd like me to rebase this
-once you have merged that patch.  Happy to do that if you'd like -
-now that I think about it, that may be the cleaner progression
-of changes.
 
-Thanks,
--Eric
-
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 67b615b..fad9a4a 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -48,14 +48,24 @@ static int max_block_alignment;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 275d345..aa0e1ca 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -52,10 +52,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
  
- #define PROC_MOUNTED	"/proc/mounts"
- 
--int
--platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
-+/*
-+ * Check if the filesystem is mounted.  Be verbose if asked, and
-+ * optionally restrict check to writable mounts.
-+ */
-+#define	CHECK_MOUNT_VERBOSE	0x1
-+#define	CHECK_MOUNT_WRITABLE	0x2
++unsigned int
++xfs_refc_block(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return XFS_RMAP_BLOCK(mp) + 1;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		return XFS_FIBT_BLOCK(mp) + 1;
++	return XFS_IBT_BLOCK(mp) + 1;
++}
 +
-+static int
-+platform_check_mount(char *name, char *block, struct stat64 *s, int flags)
+ xfs_extlen_t
+ xfs_prealloc_blocks(
+ 	struct xfs_mount	*mp)
  {
--	/* Pad ust; pre-2.6.28 linux copies out too much in 32bit compat mode */
--	struct ustat	ust[2];
- 	struct stat64	st;
-+	struct stat64	mst;
-+	FILE		*f;
-+	struct mntent	*mnt;
-+	char		mounts[MAXPATHLEN];
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		return xfs_refc_block(mp) + 1;
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return XFS_RMAP_BLOCK(mp) + 1;
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 57c52a6..622055b 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1455,6 +1455,8 @@ typedef __be32 xfs_rmap_ptr_t;
+  */
+ #define	XFS_REFC_CRC_MAGIC	0x52334643	/* 'R3FC' */
  
- 	if (!s) {
-+		/* If either fails we are neither mounted nor writable */
- 		if (stat64(block, &st) < 0)
- 			return 0;
- 		if ((st.st_mode & S_IFMT) != S_IFBLK)
-@@ -63,47 +73,64 @@ platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
- 		s = &st;
- 	}
++unsigned int xfs_refc_block(struct xfs_mount *mp);
++
  
--	if (ustat(s->st_rdev, ust) >= 0) {
--		if (verbose)
--			fprintf(stderr,
--				_("%s: %s contains a mounted filesystem\n"),
--				progname, name);
--		return 1;
--	}
--	return 0;
--}
--
--int
--platform_check_iswritable(char *name, char *block, struct stat64 *s)
--{
--	FILE		*f;
--	struct stat64	mst;
--	struct mntent	*mnt;
--	char		mounts[MAXPATHLEN];
--
- 	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
- 	if ((f = setmntent(mounts, "r")) == NULL) {
-+		/* Unexpected failure, warn unconditionally */
- 		fprintf(stderr, _("%s: %s contains a possibly writable, "
- 				"mounted filesystem\n"), progname, name);
--			return 1;
-+		return 1;
- 	}
-+
- 	while ((mnt = getmntent(f)) != NULL) {
- 		if (stat64(mnt->mnt_fsname, &mst) < 0)
- 			continue;
- 		if ((mst.st_mode & S_IFMT) != S_IFBLK)
- 			continue;
--		if (mst.st_rdev == s->st_rdev
--		    && hasmntopt(mnt, MNTOPT_RO) != NULL)
--			break;
-+		if (mst.st_rdev == s->st_rdev) {
-+			/* Found our device */
-+			if (!(flags & CHECK_MOUNT_WRITABLE) ||
-+			    !hasmntopt(mnt, MNTOPT_RO))
-+				break;
-+		}
- 	}
- 	endmntent(f);
- 
--	if (mnt == NULL) {
--		fprintf(stderr, _("%s: %s contains a mounted and writable "
--				"filesystem\n"), progname, name);
--		return 1;
-+	/* No mounts contained the condition we were looking for */
-+	if (mnt == NULL)
-+		return 0;
-+
-+	if (flags & CHECK_MOUNT_VERBOSE) {
-+		if (flags & CHECK_MOUNT_WRITABLE) {
-+			fprintf(stderr,
-+_("%s: %s contains a mounted and writable filesystem\n"),
-+				progname, name);
-+		} else {
-+			fprintf(stderr,
-+_("%s: %s contains a mounted filesystem\n"),
-+				progname, name);
-+		}
- 	}
--	return 0;
-+
-+	return 1;
-+}
-+
-+int
-+platform_check_ismounted(char *name, char *block, struct stat64 *s, int verbose)
-+{
-+	int flags;
-+
-+	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
-+	return platform_check_mount(name, block, s, flags);
-+}
-+
-+int
-+platform_check_iswritable(char *name, char *block, struct stat64 *s)
-+{
-+	int flags;
-+
-+	/* Writable checks are always verbose */
-+	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
-+	return platform_check_mount(name, block, s, flags);
- }
- 
- int
+ /*
+  * BMAP Btree format definitions
 
