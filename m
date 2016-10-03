@@ -1,77 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:38784 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752609AbcJCSyy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 14:54:54 -0400
-Date: Mon, 3 Oct 2016 19:54:48 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC] O_DIRECT vs EFAULT (was Re: [PATCH 10/12] new iov_iter
- flavour: pipe-backed)
-Message-ID: <20161003185448.GV19539@ZenIV.linux.org.uk>
-References: <20160923190326.GB2356@ZenIV.linux.org.uk>
- <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk>
- <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
- <20160924040117.GP2356@ZenIV.linux.org.uk>
- <CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
- <20160929225003.GQ19539@ZenIV.linux.org.uk>
- <CAJfpegs9He0bWX3VWkr2EY-7X3-pAhNAUT=mQad-zxtWkQt_SQ@mail.gmail.com>
- <20161003033409.GT19539@ZenIV.linux.org.uk>
- <CA+55aFw+Tfw4bZr0AZv2ujBx4uQcKyrorLwUgV4uUqYQe6Jw7w@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:49602 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750991AbcJCXFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 19:05:09 -0400
+Date: Mon, 3 Oct 2016 17:05:06 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
+Message-ID: <20161003230506.GA15947@linux.intel.com>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <20160929234345.GG27872@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+55aFw+Tfw4bZr0AZv2ujBx4uQcKyrorLwUgV4uUqYQe6Jw7w@mail.gmail.com>
+In-Reply-To: <20160929234345.GG27872@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Oct 03, 2016 at 10:07:39AM -0700, Linus Torvalds wrote:
-> On Sun, Oct 2, 2016 at 8:34 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> >
-> > Linus, do you have any objections against such behaviour change?  AFAICS,
-> > all it takes is this:
-> >
-> > diff --git a/fs/direct-io.c b/fs/direct-io.c
-> > index 7c3ce73..3a8ebda 100644
-> > --- a/fs/direct-io.c
-> > +++ b/fs/direct-io.c
-> > @@ -246,6 +246,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
-> >                 if ((dio->op == REQ_OP_READ) &&
-> >                     ((offset + transferred) > dio->i_size))
-> >                         transferred = dio->i_size - offset;
-> > +               if (ret == -EFAULT)
-> > +                       ret = 0;
+On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
+> On Thu, Sep 29, 2016 at 04:49:18PM -0600, Ross Zwisler wrote:
+> > DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+> > locking.  This series allows DAX PMDs to participate in the DAX radix tree
+> > based locking scheme so that they can be re-enabled.
+> > 
+> > Ted, can you please take the ext2 + ext4 patches through your tree?  Dave,
+> > can you please take the rest through the XFS tree?
 > 
-> I don't think that's right. To me it looks like the short read case
-> might have changed "transferred" back to zero, in which case we do
-> *not* want to skip the EFAULT.
+> That will make merging this difficult, because later patches in the
+> series are dependent on the ext2/ext4 patches early in the series.
+> I'd much prefer they all go through the one tree to avoid issues
+> like this.
 
-There's this in do_blockdev_direct_IO():
-        /* Once we sampled i_size check for reads beyond EOF */
-        dio->i_size = i_size_read(inode);
-        if (iov_iter_rw(iter) == READ && offset >= dio->i_size) {
-                if (dio->flags & DIO_LOCKING)
-                        mutex_unlock(&inode->i_mutex);
-                kmem_cache_free(dio_cache, dio);
-                retval = 0;
-                goto out;
-        }
-so that shouldn't happen.  Said that,
+I think that at least some of the ext2 patches at least will be merged in v4.9
+through Ted's tree because they are just bugfixes.  For whatever is left I'm
+happy to have it merged to v4.10 through the XFS tree, thank you.
 
-> But if there's some reason that can't happen (ie "dio->i_size" is
-> guaranteed to be larger than "offset"), then with a comment to that
-> effect it's ok.
+> > 
+> > Changes since v3:
+> >  - Corrected dax iomap code namespace for functions defined in fs/dax.c.
+> >    (Dave Chinner)
+> >  - Added leading "dax" namespace to new static functions in fs/dax.c.
+> >    (Dave Chinner)
+> >  - Made all DAX PMD code in fs/dax.c conditionally compiled based on
+> >    CONFIG_FS_DAX_PMD.  Otherwise a stub in include/linux/dax.h that just
+> >    returns VM_FAULT_FALLBACK will be used.  (Dave Chinner)
+> >  - Removed dynamic debugging messages from DAX PMD fault path.  Debugging
+> >    tracepoints will be added later to both the PTE and PMD paths via a
+> >    later patch set. (Dave Chinner)
+> >  - Added a comment to ext2_dax_vm_ops explaining why we don't support DAX
+> >    PMD faults in ext2. (Dave Chinner)
+> > 
+> > This was built upon xfs/for-next with PMD performance fixes from Toshi Kani
+> > and Dan Williams.  Dan's patch has already been merged for v4.8, and
+> > Toshi's patches are currently queued in Andrew Morton's mm tree for v4.9
+> > inclusion.
 > 
-> Otherwise I think it would need to be something like
-> 
->         /* If we were partially successful, ignore later EFAULT */
->         if (transferred && ret == -EFAULT)
->                 ret = 0;
+> the xfs/for-next branch is not a stable branch - it can rebase at
+> any time just like linux-next can. The topic branches that I merge
+> into the for-next branch, OTOH, are usually stable. i.e. The topic
+> branch you should be basing this on is "iomap-4.9-dax".
 
-... it's certainly less brittle that way.  I'd probably still put it under
-the same if (dio->result) and write it as
-	if (unlikely(ret == -EFAULT) && transferred)
-though.
+Thanks, I didn't realize that.  I'll rebase onto iomap-4.9-dax, then on a
+v4.9-rc when things become more stable.
+
+> And then you'll also see that there are already ext2 patches in this
+> topic branch to convert it to iomap for DAX. So I'm quite happy to
+> take the ext2/4 patches in this series in the same way.
+> 
+> The patches from Dan and Toshi: is you patch series dependent on
+> them? Do I need to take them as well?
+
+Nope, Dan and Toshi's patches are just performance fixes, and should be merged
+through other trees for v4.9.
+
+> > Previously reported performance numbers:
+> > 
+> >   [global]
+> >   bs=4k
+> >   size=2G
+> >   directory=/mnt/pmem0
+> >   ioengine=mmap
+> >   [randrw]
+> >   rw=randrw
+> > 
+> > Here are the performance results with XFS using only pte faults:
+> >    READ: io=1022.7MB, aggrb=557610KB/s, minb=557610KB/s, maxb=557610KB/s, mint=1878msec, maxt=1878msec
+> >   WRITE: io=1025.4MB, aggrb=559084KB/s, minb=559084KB/s, maxb=559084KB/s, mint=1878msec, maxt=1878msec
+> > 
+> > Here are performance numbers for that same test using PMD faults:
+> >    READ: io=1022.7MB, aggrb=1406.7MB/s, minb=1406.7MB/s, maxb=1406.7MB/s, mint=727msec, maxt=727msec
+> >   WRITE: io=1025.4MB, aggrb=1410.4MB/s, minb=1410.4MB/s, maxb=1410.4MB/s, mint=727msec, maxt=727msec
+> 
+> The numbers look good - how much of that is from lower filesystem
+> allocation overhead and how much of it is from fewer page faults?
+> You can probably determine this by creating the test file with
+> write() to ensure it is fully allocated and so all the filesystem
+> is doing on both the read and write paths is mapping allocated
+> regions....
+
+Perhaps I'm doing something wrong, but I think that the first time I run the
+test I get all allocating writes because that's when the file is first
+created.  The file stays around between runs, though, so every run thereafter
+should already have a fully allocated file, so the only overhead difference
+should be page faults?  Does this sound correct?
+
+If that's true, the performance gain seems to be almost entirely due to fewer
+page faults.  For both the 4k case and the 2M case there isn't a noticeable
+performance difference between the unallocated vs fully allocated cases.
