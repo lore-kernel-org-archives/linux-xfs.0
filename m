@@ -1,71 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46976 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41868 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752249AbcJCSyG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 14:54:06 -0400
-Date: Mon, 3 Oct 2016 12:54:03 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
-Message-ID: <20161003185403.GD2044@linux.intel.com>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
- <20160929234345.GG27872@dastard>
- <20160930030343.GA12464@linux.intel.com>
- <20160930040055.GE9309@birch.djwong.org>
+        id S1751657AbcJCTEM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 15:04:12 -0400
+Date: Mon, 3 Oct 2016 15:04:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 24/63] xfs: when replaying bmap operations, don't let
+ unlinked inodes get reaped
+Message-ID: <20161003190409.GB49915@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520489698.29434.13242363533695270347.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160930040055.GE9309@birch.djwong.org>
+In-Reply-To: <147520489698.29434.13242363533695270347.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 09:00:55PM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 29, 2016 at 09:03:43PM -0600, Ross Zwisler wrote:
-> > On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
-> > > Finally: none of the patches in your tree have reviewed-by tags.
-> > > That says to me that none of this code has been reviewed yet.
-> > > Reviewed-by tags are non-negotiable requirement for anything going
-> > > through my trees. I don't have time right now to review this code,
-> > > so you're going to need to chase up other reviewers before merging.
-> > > 
-> > > And, really, this is getting very late in the cycle to be merging
-> > > new code - we're less than one working day away from the merge
-> > > window opening and we've missed the last linux-next build. I'd
-> > > suggest that we'd might be best served by slipping this to the PMD
-> > > support code to the next cycle when there's no time pressure for
-> > > review and we can get a decent linux-next soak on the code.
-> > 
-> > I absolutely support your policy of only sending code to Linux that has passed
-> > peer review.
-> > 
-> > However, I do feel compelled to point out that this is not new code.  I didn't
-> > just spring it on everyone in the hours before the v4.8 merge window.  I
-> > posted the first version of this patch set on August 15th, *seven weeks ago*:
-> > 
-> > https://lkml.org/lkml/2016/8/15/613
-> > 
-> > This was the day after v4.7-rc2 was released.
-> > 
-> > Since then I have responded promptly to the little review feedback
-> > that I've received.  I've also reviewed and tested other DAX changes,
-> > like the struct iomap changes from Christoph.  Those changes were
-> > first posted to the mailing list on September 9th, four weeks after
-> > mine.  Nevertheless, I was happy to rebase my changes on top of his,
-> > which meant a full rewrite of the DAX PMD fault handler so it would be
-> > based on struct iomap.  His changes are going to be merged for v4.9,
-> > and mine are not.
+On Thu, Sep 29, 2016 at 08:08:17PM -0700, Darrick J. Wong wrote:
+> Log recovery will iget an inode to replay BUI items and iput the inode
+> when it's done.  Unfortunately, the iput will see that i_nlink == 0
+> and decide to truncate & free the inode, which prevents us from
+> replaying subsequent BUIs.  We can't skip the BUIs because we have to
+> replay all the redo items to ensure that atomic operations complete.
 > 
-> I'm not knocking the iomap migration, but it did cause a fair amount of
-> churn in the XFS reflink patchset -- and that's for a filesystem that
-> already /had/ iomap implemented.  It'd be neat to have all(?) the DAX
-> filesystems (ext[24], XFS) move over to iomap so that you wouldn't have
-> to support multiple ways of talking to FSes.  AFAICT ext4 hasn't gotten
-> iomap, which complicates things.  But that's my opinion, maybe you're
-> fine with supporting iomap and not-iomap.
 
-I agree that we want to move everything over to be iomap based.   I think
-Christoph is already working on moving ext4 over, but as of this set PMD
-support explicitly depends on the iomap interface, and I'm itching to remove
-the struct buffer_head + get_block_t PTE path and I/O path as well.
+The way this is written sort of implies that the inodes will
+unconditionally have i_nlink == 0 in this context. That is not the case,
+right? I.e., we're just trying to cover the case where bui recovery has
+to deal with an inode that happens to be on the unlinked list..?
+
+> Since unlinked inode recovery will reap the inode anyway, we can
+> safely introduce a new inode flag to indicate that an inode is in this
+> 'unlinked recovery' state and should not be auto-reaped in the
+> drop_inode path.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_bmap_item.c   |    1 +
+>  fs/xfs/xfs_inode.c       |    8 ++++++++
+>  fs/xfs/xfs_inode.h       |    6 ++++++
+>  fs/xfs/xfs_log_recover.c |    1 +
+>  4 files changed, 16 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index ddda7c3..b1a220f 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -456,6 +456,7 @@ xfs_bui_recover(
+>  	if (error)
+>  		goto err_inode;
+>  
+> +	xfs_iflags_set(ip, XFS_IRECOVER_UNLINKED);
+
+If so, I find the name of the flag a bit confusing because we set it
+unconditionally. Perhaps just XFS_IRECOVER or XFS_IRECOVERY is
+sufficient?
+
+>  	xfs_defer_init(&dfops, &firstfsb);
+>  
+>  	/* Process deferred bmap item. */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index e08eaea..0c25a76 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1855,6 +1855,14 @@ xfs_inactive(
+>  	if (mp->m_flags & XFS_MOUNT_RDONLY)
+>  		return;
+>  
+> +	/*
+> +	 * If this unlinked inode is in the middle of recovery, don't
+> +	 * truncate and free the inode just yet; log recovery will take
+> +	 * care of that.  See the comment for this inode flag.
+> +	 */
+> +	if (xfs_iflags_test(ip, XFS_IRECOVER_UNLINKED))
+> +		return;
+> +
+
+Also, it might be better to push this one block of code down since the
+following block still deals with i_nlink > 0 properly (not that it will
+likely affect the code as it is now, since we only handle eofblocks
+trimming atm).
+
+Brian
+
+>  	if (VFS_I(ip)->i_nlink != 0) {
+>  		/*
+>  		 * force is true because we are evicting an inode from the
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index a8658e6..46632f1 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -222,6 +222,12 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+>  #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+>  #define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
+>  #define XFS_IEOFBLOCKS		(1 << 10)/* has the preallocblocks tag set */
+> +/*
+> + * If this unlinked inode is in the middle of recovery, don't let drop_inode
+> + * truncate and free the inode.  This can happen if we iget the inode during
+> + * log recovery to replay a bmap operation on the inode.
+> + */
+> +#define XFS_IRECOVER_UNLINKED	(1 << 11)
+>  
+>  /*
+>   * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 9697e94..b121f02 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -4969,6 +4969,7 @@ xlog_recover_process_one_iunlink(
+>  	if (error)
+>  		goto fail_iput;
+>  
+> +	xfs_iflags_clear(ip, XFS_IRECOVER_UNLINKED);
+>  	ASSERT(VFS_I(ip)->i_nlink == 0);
+>  	ASSERT(VFS_I(ip)->i_mode != 0);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
