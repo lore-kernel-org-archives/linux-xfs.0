@@ -1,111 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:56539 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751021AbcJCDcj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2016 23:32:39 -0400
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1bqtzW-0007ZH-1f
-        for linux-xfs@vger.kernel.org; Mon, 03 Oct 2016 14:32:34 +1100
-Date: Mon, 3 Oct 2016 14:32:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: v4.8.0-rc3 released
-Message-ID: <20161003033233.GM27872@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:44086 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbcJCRV4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 13:21:56 -0400
+Date: Mon, 3 Oct 2016 10:21:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: XFS reflink trees updated for 4.9
+Message-ID: <20161003172123.GD21076@birch.djwong.org>
+References: <20161002190106.GC21076@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="oC1+HKm2/end4ao3"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161002190106.GC21076@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, amir73il@gmail.com
 
+On Sun, Oct 02, 2016 at 12:01:07PM -0700, Darrick J. Wong wrote:
+> Seeing as 4.8 is probably going out today, here's the latest for-4.9 branch:
+> 
+> https://github.com/djwong/linux/tree/for-dave-for-4.9-9
+> https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-9
+> https://github.com/djwong/xfstests/tree/djwong-devel
 
---oC1+HKm2/end4ao3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Rebased against yesterday's for-next:
 
-Hi Folks,
+https://github.com/djwong/linux/tree/for-dave-for-4.9-10
+https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-10
 
-The xfsprogs repository at:
+No code changes on my end, and seems to pass all the tests it did before.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+--D
 
-has just been updated and tagged as v4.8.0-rc3. This contains fixes
-for repair, libxcmd and libxfs, and a clean up the xfs_io inode
-command. If nothing else comes up in the next week, then the next
-update will be a full release.
-
--Dave.
-
-The new head of the master branch is commit:
-
-36617169e946 xfsprogs: Release 4.8.0-rc3
-
-New Commits:
-
-Darrick J. Wong (2):
-      [636f06d882cf] xfs_repair: fix bogosity when rmapping new AGFL blocks
-      [ef4332b8fbd3] xfs_repair: add freesp btree block overflow to the fre=
-e space
-
-Dave Chinner (1):
-      [36617169e946] xfsprogs: Release 4.8.0-rc3
-
-Eric Sandeen (6):
-      [81f8132ae361] libxfs: remove unused libxfs_iget arg
-      [870ecc222fb4] xfs_io: fix inode command help and argsmax
-      [d0e8bb48b7a6] xfs_io: factor out new get_last_inode() helper
-      [5afa1b2d0f2c] xfs_io: move inode command arg handling to top
-      [d5b046de584d] xfs_io: refactor inode command
-      [197069505b88] xfs_io: fix inode command with "-n" for bogus inode
-
-Eryu Guan (1):
-      [753a71d46f0f] libxcmd: fix counting of xfs entries in fs_table_insert
-
-
-Code Diffstat:
-
- VERSION                  |   2 +-
- configure.ac             |   2 +-
- db/attrset.c             |   4 +-
- doc/CHANGES              |   7 ++
- include/xfs_inode.h      |   2 +-
- io/open.c                | 178 ++++++++++++++++++++++++++++---------------=
--------
- libxcmd/paths.c          |   3 +-
- libxfs/libxfs_api_defs.h |   1 +
- libxfs/rdwr.c            |   4 +-
- libxfs/trans.c           |   4 +-
- repair/phase5.c          | 102 +++++++++++++++++++++--------
- repair/phase6.c          |  10 +--
- repair/rmap.c            |  15 +++--
- 13 files changed, 209 insertions(+), 125 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---oC1+HKm2/end4ao3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX8dFRAAoJEK3oKUf0dfodThEP/12hWOCF59OZr6fZgo70rvwP
-l1aQ6nUs9f2hvfyXaKiPYDSNMqj+hPYTbSdCL2b1zvlUfkE6cLnQE4e8x9GJKb8U
-KHwUWZTkROG5vZYJD0eUm3M8eEPk2fPdd/tWQBZv7naTgKKAHdBgtfYezUTxLIP2
-dzAIZ2PNr36SLvjXm1lEkCWMSq6N2WnWtJWkzQDUqx4V5/Bl/Ng2c0ZRhQtXPxYk
-8AM2E2dtXyvVuwcDyBBbtIfEaWFeQbj8zIBB4Xo0fRbnxgLRjUb5B2/LOz4REmoz
-gR87NDDz6RJGacUZ7ZpzHeZvg4TxjrXWZqA9b8Nu3Knic0QmpsYQnlAsxjTPV/HY
-r7K/K0Nb1ucoztEIpLksqauiwjthRBufizFQNpUC9AYBMwfy/ibHxqSyewKeWVVW
-HEaCJFMrQztpstnUxyCgM2Hwyr4Fq33CL7XPgVwFhY0F3Qh2fRslX+IMMbOVVPiY
-/Sd7zthnPCz4UG5TpmlwDuE1X/XR/28WW+MqkCncwZhMCz4adolxcUvMkTeNHKIh
-/kExOZ+fv9QXzns1fafOnqLKISBe9u2phfxsyO/v5V4bmNmLmRudYlSFvItuWCXy
-lBE85Ymmu8J+ZOw+eHUbPr7JviyCxS45IV8r8wMswjoFPc4ffVR9VakYQtXkkBUp
-dTTY7R+JRCSlGaWFEn1B
-=T/+p
------END PGP SIGNATURE-----
-
---oC1+HKm2/end4ao3--
+> 
+> I've rolled up all the comment fixes that have come in this week.
+> Thanks to everyone who's reviewed the patches (Dave, Christoph, and
+> Brian come to mind)!
+> 
+> I've also sped up stale CoW staging extent recovery by stashing all
+> those records in the right side of the refcount btree per a suggestion
+> from Dave on Friday afternoon.  It was a relatively small change, so
+> I didn't bother holding off, and everything still passes the same
+> tests they did before, AFAICT.
+> 
+> ---
+> 
+> Dave: the two xfs_repair patches I posted yesterday are for xfsprogs
+> 4.8.  One fixes some garbled rmap code that crashed when we
+> overestimated the freespace btree space requirements in phase5, and
+> needs to go in before the release.  The second patch re-adds the lost
+> blocks to the freesp btree so we get rid of those "sorry, lost XXX
+> blocks" messages.  That one isn't so urgent.
+> 
+> --D
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
