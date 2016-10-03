@@ -1,33 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54924 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751260AbcJCQh5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 12:37:57 -0400
-Date: Mon, 3 Oct 2016 18:37:54 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 10/12] dax: add struct iomap based DAX PMD support
-Message-ID: <20161003163754.GB1496@lst.de>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com> <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com> <20161003105949.GP6457@quack2.suse.cz>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37816 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751965AbcJCRyM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 13:54:12 -0400
+Received: by mail-wm0-f44.google.com with SMTP id b201so96127123wmb.0
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Oct 2016 10:54:12 -0700 (PDT)
+Date: Mon, 3 Oct 2016 19:54:09 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Excessive xfs_inode allocations trigger OOM killer
+Message-ID: <20161003175407.GA26788@dhcp22.suse.cz>
+References: <87a8f2pd2d.fsf@mid.deneb.enyo.de>
+ <20160920203039.GI340@dastard>
+ <87mvj2mgsg.fsf@mid.deneb.enyo.de>
+ <20160920214612.GJ340@dastard>
+ <20160921080425.GC10300@dhcp22.suse.cz>
+ <878tuetvl6.fsf@mid.deneb.enyo.de>
+ <20160926200209.GA23827@dhcp22.suse.cz>
+ <878tu5xrmx.fsf@mid.deneb.enyo.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161003105949.GP6457@quack2.suse.cz>
+In-Reply-To: <878tu5xrmx.fsf@mid.deneb.enyo.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Florian Weimer <fw@deneb.enyo.de>
+Cc: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Oct 03, 2016 at 12:59:49PM +0200, Jan Kara wrote:
-> I'm not quite sure if it is OK to call ->iomap_begin() without ever calling
-> ->iomap_end. Specifically the comment before iomap_apply() says:
+On Mon 03-10-16 19:35:18, Florian Weimer wrote:
+> * Michal Hocko:
 > 
-> "It is assumed that the filesystems will lock whatever resources they
-> require in the iomap_begin call, and release them in the iomap_end call."
+> >> I'm not sure if I can reproduce this issue in a sufficiently reliable
+> >> way, but I can try.  (I still have not found the process which causes
+> >> the xfs_inode allocations go up.)
+> >> 
+> >> Is linux-next still the tree to test?
+> >
+> > Yes it contains all the compaction related fixes which we believe to
+> > address recent higher order OOMs.
 > 
-> so what you do could result in unbalanced allocations / locks / whatever.
-> Christoph?
+> I tried 4.7.5 instead.  I could not reproduce the issue so far there.
+> Thanks to whoever fixed it. :)
 
-Indeed.  For XFS we only rely on iomap_end for error handling at the
-moment, but it is intended to be paired for locking, as cluster file
-systems like gfs2 requested this.
+The 4.7 stable tree contains a workaround rather than the full fix we
+would like to have in 4.9. So if you can then testing the current
+linux-next would be really appreciated.
+
+-- 
+Michal Hocko
+SUSE Labs
