@@ -1,73 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:45258 "EHLO
-        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751989AbcJCRtf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 13:49:35 -0400
-Date: Mon, 3 Oct 2016 13:49:25 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1937480340.100083.1475516965286.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20161003013737.GR19539@ZenIV.linux.org.uk>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20160917082007.GA6489@ZenIV.linux.org.uk> <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com> <20161003013737.GR19539@ZenIV.linux.org.uk>
-Subject: Re: [RFC][CFT] splice_read reworked
+Received: from mga09.intel.com ([134.134.136.24]:46976 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752249AbcJCSyG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 14:54:06 -0400
+Date: Mon, 3 Oct 2016 12:54:03 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
+Message-ID: <20161003185403.GD2044@linux.intel.com>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <20160929234345.GG27872@dastard>
+ <20160930030343.GA12464@linux.intel.com>
+ <20160930040055.GE9309@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160930040055.GE9309@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
 
+On Thu, Sep 29, 2016 at 09:00:55PM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 29, 2016 at 09:03:43PM -0600, Ross Zwisler wrote:
+> > On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
+> > > Finally: none of the patches in your tree have reviewed-by tags.
+> > > That says to me that none of this code has been reviewed yet.
+> > > Reviewed-by tags are non-negotiable requirement for anything going
+> > > through my trees. I don't have time right now to review this code,
+> > > so you're going to need to chase up other reviewers before merging.
+> > > 
+> > > And, really, this is getting very late in the cycle to be merging
+> > > new code - we're less than one working day away from the merge
+> > > window opening and we've missed the last linux-next build. I'd
+> > > suggest that we'd might be best served by slipping this to the PMD
+> > > support code to the next cycle when there's no time pressure for
+> > > review and we can get a decent linux-next soak on the code.
+> > 
+> > I absolutely support your policy of only sending code to Linux that has passed
+> > peer review.
+> > 
+> > However, I do feel compelled to point out that this is not new code.  I didn't
+> > just spring it on everyone in the hours before the v4.8 merge window.  I
+> > posted the first version of this patch set on August 15th, *seven weeks ago*:
+> > 
+> > https://lkml.org/lkml/2016/8/15/613
+> > 
+> > This was the day after v4.7-rc2 was released.
+> > 
+> > Since then I have responded promptly to the little review feedback
+> > that I've received.  I've also reviewed and tested other DAX changes,
+> > like the struct iomap changes from Christoph.  Those changes were
+> > first posted to the mailing list on September 9th, four weeks after
+> > mine.  Nevertheless, I was happy to rebase my changes on top of his,
+> > which meant a full rewrite of the DAX PMD fault handler so it would be
+> > based on struct iomap.  His changes are going to be merged for v4.9,
+> > and mine are not.
+> 
+> I'm not knocking the iomap migration, but it did cause a fair amount of
+> churn in the XFS reflink patchset -- and that's for a filesystem that
+> already /had/ iomap implemented.  It'd be neat to have all(?) the DAX
+> filesystems (ext[24], XFS) move over to iomap so that you wouldn't have
+> to support multiple ways of talking to FSes.  AFAICT ext4 hasn't gotten
+> iomap, which complicates things.  But that's my opinion, maybe you're
+> fine with supporting iomap and not-iomap.
 
-
------ Original Message -----
-> From: "Al Viro" <viro@ZenIV.linux.org.uk>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>, "linux-xfs"
-> <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
-> linux-fsdevel@vger.kernel.org
-> Sent: Sunday, October 2, 2016 9:37:37 PM
-> Subject: Re: [RFC][CFT] splice_read reworked
-> 
-> On Fri, Sep 30, 2016 at 02:33:23PM -0400, CAI Qian wrote:
-> 
-> OK, the immeditate trigger is
-> 	* sendfile() from something that uses seq_read to a regular file.
-> Does sb_start_write() around the call of do_splice_direct() (as always),
-> which ends up calling default_file_splice_read() (again, as usual), which
-> ends up calling ->read() of the source, i.e. seq_read().  No changes there.
->  
-> 	* sb_start_write() can be called under ->i_mutex.  The latter is
-> on overlayfs inode, the former is done to upper layer in that overlayfs.
-> Nothing new, again.
-> 
-> 	* ->i_mutex can be taken under ->cred_guard_mutex.  Yes, it can -
-> in open_exec().  Again, no changes.
-> 
-> 	* ->cred_guard_mutex can be taken in ->show() of a seq_file,
-> namely /proc/*/auxv...  Argh, ->cred_guard_mutex whack-a-mole strikes
-> again...
-> 
-> OK, I think essentially the same warning had been triggerable since _way_
-> back.  All changes around splice have no effect on it.
-> 
-> Look: to get a deadlock we need
-> 	(1) sendfile from /proc/<pid>/auxv to a regular file on upper layer of
-> overlayfs requesting not to freeze the target.
-> 	(2) attempt to freeze it blocking until (1) is done.
-> 	(3) directory modification on overlayfs trying to request not to freeze
-> the upper layer and blocking until (2) is done.
-> 	(4) execve() in <pid> holding ->cred_guard_mutex, trying to open
-> something in overlayfs and getting blocked on directory lock, held by (3).
-> 
-> Now (1) gets around to reading from /proc/<pid>/auxv, which blocks on
-> ->cred_guard_mutex.  Mentioning of seq_read itself holding locks is
-> irrelevant;
-> what matters is that ->read() grabs ->cred_guard_mutex.
-> 
-> We used to have similar problems in /proc/*/environ and /proc/*/mem; looks
-> like /proc/*/environ needs to get the treatment similar to e268337dfe26 and
-> b409e578d9a4.
-> 
-You are right. This is also reproducible on v4.8 mainline.
-    CAI Qian
+I agree that we want to move everything over to be iomap based.   I think
+Christoph is already working on moving ext4 over, but as of this set PMD
+support explicitly depends on the iomap interface, and I'm itching to remove
+the struct buffer_head + get_block_t PTE path and I/O path as well.
