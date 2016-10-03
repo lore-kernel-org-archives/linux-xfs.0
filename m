@@ -1,368 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37232 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753788AbcJDSin (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Oct 2016 14:38:43 -0400
-Date: Tue, 4 Oct 2016 14:38:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 31/63] xfs: create delalloc extents in CoW fork
-Message-ID: <20161004183838.GA32736@laptop.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520494160.29434.11953905127974164821.stgit@birch.djwong.org>
- <20161004163822.GD55212@bfoster.bfoster>
- <20161004173908.GA8642@birch.djwong.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:32886 "EHLO
+        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750822AbcJCOGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 10:06:36 -0400
+Date: Mon, 3 Oct 2016 10:06:27 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <19064316.41568.1475503587628.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161003014218.GS19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20160914042559.GC2356@ZenIV.linux.org.uk> <20160917082007.GA6489@ZenIV.linux.org.uk> <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <20161003014218.GS19539@ZenIV.linux.org.uk>
+Subject: Re: [RFC][CFT] splice_read reworked
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161004173908.GA8642@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Tue, Oct 04, 2016 at 10:39:09AM -0700, Darrick J. Wong wrote:
-> On Tue, Oct 04, 2016 at 12:38:23PM -0400, Brian Foster wrote:
-> > On Thu, Sep 29, 2016 at 08:09:01PM -0700, Darrick J. Wong wrote:
-> > > Wire up iomap_begin to detect shared extents and create delayed allocation
-> > > extents in the CoW fork:
-> > > 
-> > >  1) Check if we already have an extent in the COW fork for the area.
-> > >     If so nothing to do, we can move along.
-> > >  2) Look up block number for the current extent, and if there is none
-> > >     it's not shared move along.
-> > >  3) Unshare the current extent as far as we are going to write into it.
-> > >     For this we avoid an additional COW fork lookup and use the
-> > >     information we set aside in step 1) above.
-> > >  4) Goto 1) unless we've covered the whole range.
-> > > 
-> > > Last but not least, this updates the xfs_reflink_reserve_cow_range calling
-> > > convention to pass a byte offset and length, as that is what both callers
-> > > expect anyway.  This patch has been refactored considerably as part of the
-> > > iomap transition.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_iomap.c   |   12 ++-
-> > >  fs/xfs/xfs_reflink.c |  202 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_reflink.h |    9 ++
-> > >  3 files changed, 221 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > index 59c7beb..e8312b0 100644
-> > > --- a/fs/xfs/xfs_iomap.c
-> > > +++ b/fs/xfs/xfs_iomap.c
-> > > @@ -39,6 +39,7 @@
-> > >  #include "xfs_quota.h"
-> > >  #include "xfs_dquot_item.h"
-> > >  #include "xfs_dquot.h"
-> > > +#include "xfs_reflink.h"
-> > >  
-> > >  
-> > >  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
-> > > @@ -961,8 +962,15 @@ xfs_file_iomap_begin(
-> > >  	if (XFS_FORCED_SHUTDOWN(mp))
-> > >  		return -EIO;
-> > >  
-> > > -	if ((flags & IOMAP_WRITE) &&
-> > > -	    !IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-> > > +	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-> > > +		error = xfs_reflink_reserve_cow_range(ip, offset, length);
-> > > +		if (error < 0)
-> > > +			return error;
-> > > +	}
-> > > +
-> > > +	if ((flags & IOMAP_WRITE) && !IS_DAX(inode) &&
-> > > +		   !xfs_get_extsz_hint(ip)) {
-> > > +		/* Reserve delalloc blocks for regular writeback. */
-> > >  		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
-> > >  				iomap);
-> > >  	}
-> > 
-> > What about the short write case? E.g., do we have to clear out delalloc
-> > blocks from the cow fork in iomap_end() if we don't end up using them?
-> 
-> Nope, unused blocks sit around in the CoW fork (with the cowextsize hint
-> set, this happens all the time) so that a subsequent write to an
-> adjacent file offset lands in the same place as the successful write.
-> The unused extents get cleaned out when the inode is evicted, we run out
-> of disk space, or the garbage collector triggers.
-> 
 
-Interesting..  ok, I suppose I'll get to that bit eventually. :P Thanks.
 
-Brian
+----- Original Message -----
+> From: "Al Viro" <viro@ZenIV.linux.org.uk>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>, "linux-xfs"
+> <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> linux-fsdevel@vger.kernel.org
+> Sent: Sunday, October 2, 2016 9:42:18 PM
+> Subject: Re: [RFC][CFT] splice_read reworked
+> 
+> On Fri, Sep 30, 2016 at 01:42:17PM -0400, CAI Qian wrote:
+> 
+> > [ 1599.151286] ------------[ cut here ]------------
+> > [ 1599.156457] WARNING: CPU: 37 PID: 95143 at lib/iov_iter.c:316
+> > sanity+0x75/0x80
+> 
+> [snip]
+> 
+> > [ 1599.344171]  [<ffffffff813e9b45>] sanity+0x75/0x80
+> > [ 1599.349518]  [<ffffffff813ec739>] copy_page_to_iter+0xf9/0x1e0
+> > [ 1599.356027]  [<ffffffff8120691f>] shmem_file_read_iter+0x9f/0x340
+> > [ 1599.362829]  [<ffffffff812bbeb9>] generic_file_splice_read+0xb9/0x1b0
+> > [ 1599.370015]  [<ffffffff812bc206>] do_splice_to+0x76/0x90
+> > [ 1599.375941]  [<ffffffff812bc2db>] splice_direct_to_actor+0xbb/0x220
+> > [ 1599.382935]  [<ffffffff812bba80>] ? generic_pipe_buf_nosteal+0x10/0x10
+> > [ 1599.390220]  [<ffffffff812bc4d8>] do_splice_direct+0x98/0xd0
+> > [ 1599.396537]  [<ffffffff81281dd1>] do_sendfile+0x1d1/0x3b0
+> > [ 1599.402563]  [<ffffffff81282973>] SyS_sendfile64+0x73/0xd0
+> > [ 1599.408685]  [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+> > [ 1599.414820]  [<ffffffff817d927f>] entry_SYSCALL64_slow_path+0x25/0x25
+> 
+> IOW, sendfile from shmem...  How easily is that reproduced (IOW, did you
+> get any more of those)?
+> 
+It is pretty reproducible so far by just running the trinity from a docker
+container backed by overlayfs/xfs.
 
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index 7adbb83..05a7fe6 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -51,6 +51,7 @@
-> > >  #include "xfs_btree.h"
-> > >  #include "xfs_bmap_btree.h"
-> > >  #include "xfs_reflink.h"
-> > > +#include "xfs_iomap.h"
-> > >  
-> > >  /*
-> > >   * Copy on Write of Shared Blocks
-> > > @@ -112,3 +113,204 @@
-> > >   * ioend structure.  Better yet, the more ground we can cover with one
-> > >   * ioend, the better.
-> > >   */
-> > > +
-> > > +/*
-> > > + * Given an AG extent, find the lowest-numbered run of shared blocks within
-> > > + * that range and return the range in fbno/flen.
-> > > + */
-> > > +int
-> > > +xfs_reflink_find_shared(
-> > > +	struct xfs_mount	*mp,
-> > > +	xfs_agnumber_t		agno,
-> > > +	xfs_agblock_t		agbno,
-> > > +	xfs_extlen_t		aglen,
-> > > +	xfs_agblock_t		*fbno,
-> > > +	xfs_extlen_t		*flen,
-> > > +	bool			find_maximal)
-> > > +{
-> > > +	struct xfs_buf		*agbp;
-> > > +	struct xfs_btree_cur	*cur;
-> > > +	int			error;
-> > > +
-> > > +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-> > > +
-> > > +	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
-> > > +			find_maximal);
-> > > +
-> > > +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> > > +
-> > > +	xfs_buf_relse(agbp);
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Trim the mapping to the next block where there's a change in the
-> > > + * shared/unshared status.  More specifically, this means that we
-> > > + * find the lowest-numbered extent of shared blocks that coincides with
-> > > + * the given block mapping.  If the shared extent overlaps the start of
-> > > + * the mapping, trim the mapping to the end of the shared extent.  If
-> > > + * the shared region intersects the mapping, trim the mapping to the
-> > > + * start of the shared extent.  If there are no shared regions that
-> > > + * overlap, just return the original extent.
-> > > + */
-> > > +int
-> > > +xfs_reflink_trim_around_shared(
-> > > +	struct xfs_inode	*ip,
-> > > +	struct xfs_bmbt_irec	*irec,
-> > > +	bool			*shared,
-> > > +	bool			*trimmed)
-> > > +{
-> > > +	xfs_agnumber_t		agno;
-> > > +	xfs_agblock_t		agbno;
-> > > +	xfs_extlen_t		aglen;
-> > > +	xfs_agblock_t		fbno;
-> > > +	xfs_extlen_t		flen;
-> > > +	int			error = 0;
-> > > +
-> > > +	/* Holes, unwritten, and delalloc extents cannot be shared */
-> > > +	if (!xfs_is_reflink_inode(ip) ||
-> > > +	    ISUNWRITTEN(irec) ||
-> > > +	    irec->br_startblock == HOLESTARTBLOCK ||
-> > > +	    irec->br_startblock == DELAYSTARTBLOCK) {
-> > > +		*shared = false;
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	trace_xfs_reflink_trim_around_shared(ip, irec);
-> > > +
-> > > +	agno = XFS_FSB_TO_AGNO(ip->i_mount, irec->br_startblock);
-> > > +	agbno = XFS_FSB_TO_AGBNO(ip->i_mount, irec->br_startblock);
-> > > +	aglen = irec->br_blockcount;
-> > > +
-> > > +	error = xfs_reflink_find_shared(ip->i_mount, agno, agbno,
-> > > +			aglen, &fbno, &flen, true);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	*shared = *trimmed = false;
-> > > +	if (flen == 0) {
-> > 
-> > Preferable to use NULLAGBLOCK for this, imo.
-> 
-> Yeah, I will look into changing this.
-> 
-> > > +		/* No shared blocks at all. */
-> > > +		return 0;
-> > > +	} else if (fbno == agbno) {
-> > > +		/* The start of this extent is shared. */
-> > > +		irec->br_blockcount = flen;
-> > > +		*shared = true;
-> > > +		*trimmed = true;
-> > 
-> > Why do we set trimmed based solely on fbno == agbno? Is that valid if
-> > the bmapbt extent exactly matches the refcntbt extent and we thus don't
-> > actually modify the extent (e.g., br_blockcount == flen)? It's hard to
-> > tell because trimmed looks unused (to this point?), so I could just
-> > misunderstand the meaning.
-> 
-> You're right, we don't have to set trimmed if flen == aglen.
-> 
-> > > +		return 0;
-> > > +	} else {
-> > > +		/* There's a shared extent midway through this extent. */
-> > > +		irec->br_blockcount = fbno - agbno;
-> > 
-> > Don't we have to push the startblock forward in this case?
-> > 
-> > Oh, I see. We trim the unshared length to push the fileoffset fsb to the
-> > start of the shared region for the next iteration.
-> 
-> Yep.  I'll clarify the comment.
-> 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > +		*trimmed = true;
-> > > +		return 0;
-> > > +	}
-> > > +}
-> > > +
-> > > +/* Create a CoW reservation for a range of blocks within a file. */
-> > > +static int
-> > > +__xfs_reflink_reserve_cow(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_fileoff_t		*offset_fsb,
-> > > +	xfs_fileoff_t		end_fsb)
-> > > +{
-> > > +	struct xfs_bmbt_irec	got, prev, imap;
-> > > +	xfs_fileoff_t		orig_end_fsb;
-> > > +	int			nimaps, eof = 0, error = 0;
-> > > +	bool			shared = false, trimmed = false;
-> > > +	xfs_extnum_t		idx;
-> > > +
-> > > +	/* Already reserved?  Skip the refcount btree access. */
-> > > +	xfs_bmap_search_extents(ip, *offset_fsb, XFS_COW_FORK, &eof, &idx,
-> > > +			&got, &prev);
-> > > +	if (!eof && got.br_startoff <= *offset_fsb) {
-> > > +		end_fsb = orig_end_fsb = got.br_startoff + got.br_blockcount;
-> > > +		trace_xfs_reflink_cow_found(ip, &got);
-> > > +		goto done;
-> > > +	}
-> > > +
-> > > +	/* Read extent from the source file. */
-> > > +	nimaps = 1;
-> > > +	error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
-> > > +			&imap, &nimaps, 0);
-> > > +	if (error)
-> > > +		goto out_unlock;
-> > > +	ASSERT(nimaps == 1);
-> > > +
-> > > +	/* Trim the mapping to the nearest shared extent boundary. */
-> > > +	error = xfs_reflink_trim_around_shared(ip, &imap, &shared, &trimmed);
-> > > +	if (error)
-> > > +		goto out_unlock;
-> > > +
-> > > +	end_fsb = orig_end_fsb = imap.br_startoff + imap.br_blockcount;
-> > > +
-> > > +	/* Not shared?  Just report the (potentially capped) extent. */
-> > > +	if (!shared)
-> > > +		goto done;
-> > > +
-> > > +	/*
-> > > +	 * Fork all the shared blocks from our write offset until the end of
-> > > +	 * the extent.
-> > > +	 */
-> > > +	error = xfs_qm_dqattach_locked(ip, 0);
-> > > +	if (error)
-> > > +		goto out_unlock;
-> > > +
-> > > +retry:
-> > > +	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, *offset_fsb,
-> > > +			end_fsb - *offset_fsb, &got,
-> > > +			&prev, &idx, eof);
-> > > +	switch (error) {
-> > > +	case 0:
-> > > +		break;
-> > > +	case -ENOSPC:
-> > > +	case -EDQUOT:
-> > > +		/* retry without any preallocation */
-> > > +		trace_xfs_reflink_cow_enospc(ip, &imap);
-> > > +		if (end_fsb != orig_end_fsb) {
-> > > +			end_fsb = orig_end_fsb;
-> > > +			goto retry;
-> > > +		}
-> > > +		/*FALLTHRU*/
-> > > +	default:
-> > > +		goto out_unlock;
-> > > +	}
-> > > +
-> > > +	trace_xfs_reflink_cow_alloc(ip, &got);
-> > > +done:
-> > > +	*offset_fsb = end_fsb;
-> > > +out_unlock:
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/* Create a CoW reservation for part of a file. */
-> > > +int
-> > > +xfs_reflink_reserve_cow_range(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_off_t		offset,
-> > > +	xfs_off_t		count)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	xfs_fileoff_t		offset_fsb, end_fsb;
-> > > +	int			error;
-> > > +
-> > > +	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
-> > > +
-> > > +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > > +	end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> > > +
-> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > +	while (offset_fsb < end_fsb) {
-> > > +		error = __xfs_reflink_reserve_cow(ip, &offset_fsb, end_fsb);
-> > > +		if (error) {
-> > > +			trace_xfs_reflink_reserve_cow_range_error(ip, error,
-> > > +				_RET_IP_);
-> > > +			break;
-> > > +		}
-> > > +	}
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +
-> > > +	return error;
-> > > +}
-> > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > > index 820b151..f824f87 100644
-> > > --- a/fs/xfs/xfs_reflink.h
-> > > +++ b/fs/xfs/xfs_reflink.h
-> > > @@ -20,4 +20,13 @@
-> > >  #ifndef __XFS_REFLINK_H
-> > >  #define __XFS_REFLINK_H 1
-> > >  
-> > > +extern int xfs_reflink_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
-> > > +		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
-> > > +		xfs_extlen_t *flen, bool find_maximal);
-> > > +extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> > > +		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
-> > > +
-> > > +extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
-> > > +		xfs_off_t offset, xfs_off_t count);
-> > > +
-> > >  #endif /* __XFS_REFLINK_H */
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# su - test
+$ trinity
+
+   CAI Qian
