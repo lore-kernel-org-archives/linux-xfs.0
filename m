@@ -1,58 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34220 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751146AbcJCRHk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 13:07:40 -0400
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:45258 "EHLO
+        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751989AbcJCRtf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 13:49:35 -0400
+Date: Mon, 3 Oct 2016 13:49:25 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <1937480340.100083.1475516965286.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161003013737.GR19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20160917082007.GA6489@ZenIV.linux.org.uk> <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com> <20161003013737.GR19539@ZenIV.linux.org.uk>
+Subject: Re: [RFC][CFT] splice_read reworked
 MIME-Version: 1.0
-In-Reply-To: <20161003033409.GT19539@ZenIV.linux.org.uk>
-References: <20160917190023.GA8039@ZenIV.linux.org.uk> <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk> <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk> <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
- <20160924040117.GP2356@ZenIV.linux.org.uk> <CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
- <20160929225003.GQ19539@ZenIV.linux.org.uk> <CAJfpegs9He0bWX3VWkr2EY-7X3-pAhNAUT=mQad-zxtWkQt_SQ@mail.gmail.com>
- <20161003033409.GT19539@ZenIV.linux.org.uk>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 3 Oct 2016 10:07:39 -0700
-Message-ID: <CA+55aFw+Tfw4bZr0AZv2ujBx4uQcKyrorLwUgV4uUqYQe6Jw7w@mail.gmail.com>
-Subject: Re: [RFC] O_DIRECT vs EFAULT (was Re: [PATCH 10/12] new iov_iter
- flavour: pipe-backed)
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Sun, Oct 2, 2016 at 8:34 PM, Al Viro <viro@zeniv.linux.org.uk> wrote:
->
-> Linus, do you have any objections against such behaviour change?  AFAICS,
-> all it takes is this:
->
-> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> index 7c3ce73..3a8ebda 100644
-> --- a/fs/direct-io.c
-> +++ b/fs/direct-io.c
-> @@ -246,6 +246,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
->                 if ((dio->op == REQ_OP_READ) &&
->                     ((offset + transferred) > dio->i_size))
->                         transferred = dio->i_size - offset;
-> +               if (ret == -EFAULT)
-> +                       ret = 0;
 
-I don't think that's right. To me it looks like the short read case
-might have changed "transferred" back to zero, in which case we do
-*not* want to skip the EFAULT.
 
-But if there's some reason that can't happen (ie "dio->i_size" is
-guaranteed to be larger than "offset"), then with a comment to that
-effect it's ok.
-
-Otherwise I think it would need to be something like
-
-        /* If we were partially successful, ignore later EFAULT */
-        if (transferred && ret == -EFAULT)
-                ret = 0;
-
-or something. Yes?
-
-                Linus
+----- Original Message -----
+> From: "Al Viro" <viro@ZenIV.linux.org.uk>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>, "linux-xfs"
+> <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> linux-fsdevel@vger.kernel.org
+> Sent: Sunday, October 2, 2016 9:37:37 PM
+> Subject: Re: [RFC][CFT] splice_read reworked
+> 
+> On Fri, Sep 30, 2016 at 02:33:23PM -0400, CAI Qian wrote:
+> 
+> OK, the immeditate trigger is
+> 	* sendfile() from something that uses seq_read to a regular file.
+> Does sb_start_write() around the call of do_splice_direct() (as always),
+> which ends up calling default_file_splice_read() (again, as usual), which
+> ends up calling ->read() of the source, i.e. seq_read().  No changes there.
+>  
+> 	* sb_start_write() can be called under ->i_mutex.  The latter is
+> on overlayfs inode, the former is done to upper layer in that overlayfs.
+> Nothing new, again.
+> 
+> 	* ->i_mutex can be taken under ->cred_guard_mutex.  Yes, it can -
+> in open_exec().  Again, no changes.
+> 
+> 	* ->cred_guard_mutex can be taken in ->show() of a seq_file,
+> namely /proc/*/auxv...  Argh, ->cred_guard_mutex whack-a-mole strikes
+> again...
+> 
+> OK, I think essentially the same warning had been triggerable since _way_
+> back.  All changes around splice have no effect on it.
+> 
+> Look: to get a deadlock we need
+> 	(1) sendfile from /proc/<pid>/auxv to a regular file on upper layer of
+> overlayfs requesting not to freeze the target.
+> 	(2) attempt to freeze it blocking until (1) is done.
+> 	(3) directory modification on overlayfs trying to request not to freeze
+> the upper layer and blocking until (2) is done.
+> 	(4) execve() in <pid> holding ->cred_guard_mutex, trying to open
+> something in overlayfs and getting blocked on directory lock, held by (3).
+> 
+> Now (1) gets around to reading from /proc/<pid>/auxv, which blocks on
+> ->cred_guard_mutex.  Mentioning of seq_read itself holding locks is
+> irrelevant;
+> what matters is that ->read() grabs ->cred_guard_mutex.
+> 
+> We used to have similar problems in /proc/*/environ and /proc/*/mem; looks
+> like /proc/*/environ needs to get the treatment similar to e268337dfe26 and
+> b409e578d9a4.
+> 
+You are right. This is also reproducible on v4.8 mainline.
+    CAI Qian
