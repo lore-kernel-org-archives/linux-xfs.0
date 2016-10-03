@@ -1,340 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57930 "EHLO mx1.redhat.com"
+Received: from mga04.intel.com ([192.55.52.120]:58264 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754270AbcJDQiZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Oct 2016 12:38:25 -0400
-Date: Tue, 4 Oct 2016 12:38:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 31/63] xfs: create delalloc extents in CoW fork
-Message-ID: <20161004163822.GD55212@bfoster.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520494160.29434.11953905127974164821.stgit@birch.djwong.org>
+        id S1752232AbcJCVLO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 17:11:14 -0400
+Date: Mon, 3 Oct 2016 15:11:11 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 00/12] re-enable DAX PMD support
+Message-ID: <20161003211111.GB28177@linux.intel.com>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <20160929234345.GG27872@dastard>
+ <20160930030343.GA12464@linux.intel.com>
+ <20160930064858.GJ27872@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147520494160.29434.11953905127974164821.stgit@birch.djwong.org>
+In-Reply-To: <20160930064858.GJ27872@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 08:09:01PM -0700, Darrick J. Wong wrote:
-> Wire up iomap_begin to detect shared extents and create delayed allocation
-> extents in the CoW fork:
+On Fri, Sep 30, 2016 at 04:48:58PM +1000, Dave Chinner wrote:
+> On Thu, Sep 29, 2016 at 09:03:43PM -0600, Ross Zwisler wrote:
+> > On Fri, Sep 30, 2016 at 09:43:45AM +1000, Dave Chinner wrote:
+> > > Finally: none of the patches in your tree have reviewed-by tags.
+> > > That says to me that none of this code has been reviewed yet.
+> > > Reviewed-by tags are non-negotiable requirement for anything going
+> > > through my trees. I don't have time right now to review this code,
+> > > so you're going to need to chase up other reviewers before merging.
+> > > 
+> > > And, really, this is getting very late in the cycle to be merging
+> > > new code - we're less than one working day away from the merge
+> > > window opening and we've missed the last linux-next build. I'd
+> > > suggest that we'd might be best served by slipping this to the PMD
+> > > support code to the next cycle when there's no time pressure for
+> > > review and we can get a decent linux-next soak on the code.
+> > 
+> > I absolutely support your policy of only sending code to Linux that has passed
+> > peer review.
+> > 
+> > However, I do feel compelled to point out that this is not new code.  I didn't
+> > just spring it on everyone in the hours before the v4.8 merge window.  I
+> > posted the first version of this patch set on August 15th, *seven weeks ago*:
+> > 
+> > https://lkml.org/lkml/2016/8/15/613
+> >
+> > This was the day after v4.7-rc2 was released.
 > 
->  1) Check if we already have an extent in the COW fork for the area.
->     If so nothing to do, we can move along.
->  2) Look up block number for the current extent, and if there is none
->     it's not shared move along.
->  3) Unshare the current extent as far as we are going to write into it.
->     For this we avoid an additional COW fork lookup and use the
->     information we set aside in step 1) above.
->  4) Goto 1) unless we've covered the whole range.
+> I understand, Ross. We've all been there - welcome to the club. :/
 > 
-> Last but not least, this updates the xfs_reflink_reserve_cow_range calling
-> convention to pass a byte offset and length, as that is what both callers
-> expect anyway.  This patch has been refactored considerably as part of the
-> iomap transition.
+> The problem is there are lots of people writing code and very few
+> people who spent time reviewing it. And for many of those reviewers,
+> they also have to spend time on other code bases, whether it be the
+> distro's they maintain, the userspace that the kernel code needs to
+> function, or even the test code needed to make this all work
+> properly.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_iomap.c   |   12 ++-
->  fs/xfs/xfs_reflink.c |  202 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_reflink.h |    9 ++
->  3 files changed, 221 insertions(+), 2 deletions(-)
+> Stuff that spans multiple subsystems such as DAX (i.e. vm,
+> filesystems and block devices) are particularly troublesome in this
+> respect because there are very few people with expertise in all
+> three aspects and hence able to review a change that spans all three
+> subsystems. Those people also tend to be the busiest and have to
+> prioritise what they do.
 > 
+> Consider the XFS side of review in recent times: in the past 4
+> months, there's been ~30,000 lines of code change between kernel and
+> userspace.  And there's already another 15,000+ lines of code in the
+> backlog for the next 2-3 months.  That review load is falling on 3-4
+> people, who all have other work to do as well. This is for work that
+> was started well over a year ago, and that picked up from work that
+> was originally done 3 years ago. We're swamped on pure XFS review
+> right now, let alone all the other infratructure stuff we need to
+> get reviewed at the same time...
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 59c7beb..e8312b0 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -39,6 +39,7 @@
->  #include "xfs_quota.h"
->  #include "xfs_dquot_item.h"
->  #include "xfs_dquot.h"
-> +#include "xfs_reflink.h"
->  
->  
->  #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
-> @@ -961,8 +962,15 @@ xfs_file_iomap_begin(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	if ((flags & IOMAP_WRITE) &&
-> -	    !IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-> +	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-> +		error = xfs_reflink_reserve_cow_range(ip, offset, length);
-> +		if (error < 0)
-> +			return error;
-> +	}
-> +
-> +	if ((flags & IOMAP_WRITE) && !IS_DAX(inode) &&
-> +		   !xfs_get_extsz_hint(ip)) {
-> +		/* Reserve delalloc blocks for regular writeback. */
->  		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
->  				iomap);
->  	}
-
-What about the short write case? E.g., do we have to clear out delalloc
-blocks from the cow fork in iomap_end() if we don't end up using them?
-
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 7adbb83..05a7fe6 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -51,6 +51,7 @@
->  #include "xfs_btree.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_iomap.h"
->  
->  /*
->   * Copy on Write of Shared Blocks
-> @@ -112,3 +113,204 @@
->   * ioend structure.  Better yet, the more ground we can cover with one
->   * ioend, the better.
->   */
-> +
-> +/*
-> + * Given an AG extent, find the lowest-numbered run of shared blocks within
-> + * that range and return the range in fbno/flen.
-> + */
-> +int
-> +xfs_reflink_find_shared(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	xfs_agblock_t		agbno,
-> +	xfs_extlen_t		aglen,
-> +	xfs_agblock_t		*fbno,
-> +	xfs_extlen_t		*flen,
-> +	bool			find_maximal)
-> +{
-> +	struct xfs_buf		*agbp;
-> +	struct xfs_btree_cur	*cur;
-> +	int			error;
-> +
-> +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> +	if (error)
-> +		return error;
-> +
-> +	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-> +
-> +	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
-> +			find_maximal);
-> +
-> +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> +
-> +	xfs_buf_relse(agbp);
-> +	return error;
-> +}
-> +
-> +/*
-> + * Trim the mapping to the next block where there's a change in the
-> + * shared/unshared status.  More specifically, this means that we
-> + * find the lowest-numbered extent of shared blocks that coincides with
-> + * the given block mapping.  If the shared extent overlaps the start of
-> + * the mapping, trim the mapping to the end of the shared extent.  If
-> + * the shared region intersects the mapping, trim the mapping to the
-> + * start of the shared extent.  If there are no shared regions that
-> + * overlap, just return the original extent.
-> + */
-> +int
-> +xfs_reflink_trim_around_shared(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_irec	*irec,
-> +	bool			*shared,
-> +	bool			*trimmed)
-> +{
-> +	xfs_agnumber_t		agno;
-> +	xfs_agblock_t		agbno;
-> +	xfs_extlen_t		aglen;
-> +	xfs_agblock_t		fbno;
-> +	xfs_extlen_t		flen;
-> +	int			error = 0;
-> +
-> +	/* Holes, unwritten, and delalloc extents cannot be shared */
-> +	if (!xfs_is_reflink_inode(ip) ||
-> +	    ISUNWRITTEN(irec) ||
-> +	    irec->br_startblock == HOLESTARTBLOCK ||
-> +	    irec->br_startblock == DELAYSTARTBLOCK) {
-> +		*shared = false;
-> +		return 0;
-> +	}
-> +
-> +	trace_xfs_reflink_trim_around_shared(ip, irec);
-> +
-> +	agno = XFS_FSB_TO_AGNO(ip->i_mount, irec->br_startblock);
-> +	agbno = XFS_FSB_TO_AGBNO(ip->i_mount, irec->br_startblock);
-> +	aglen = irec->br_blockcount;
-> +
-> +	error = xfs_reflink_find_shared(ip->i_mount, agno, agbno,
-> +			aglen, &fbno, &flen, true);
-> +	if (error)
-> +		return error;
-> +
-> +	*shared = *trimmed = false;
-> +	if (flen == 0) {
-
-Preferable to use NULLAGBLOCK for this, imo.
-
-> +		/* No shared blocks at all. */
-> +		return 0;
-> +	} else if (fbno == agbno) {
-> +		/* The start of this extent is shared. */
-> +		irec->br_blockcount = flen;
-> +		*shared = true;
-> +		*trimmed = true;
-
-Why do we set trimmed based solely on fbno == agbno? Is that valid if
-the bmapbt extent exactly matches the refcntbt extent and we thus don't
-actually modify the extent (e.g., br_blockcount == flen)? It's hard to
-tell because trimmed looks unused (to this point?), so I could just
-misunderstand the meaning.
-
-> +		return 0;
-> +	} else {
-> +		/* There's a shared extent midway through this extent. */
-> +		irec->br_blockcount = fbno - agbno;
-
-Don't we have to push the startblock forward in this case?
-
-Oh, I see. We trim the unshared length to push the fileoffset fsb to the
-start of the shared region for the next iteration.
-
-Brian
-
-> +		*trimmed = true;
-> +		return 0;
-> +	}
-> +}
-> +
-> +/* Create a CoW reservation for a range of blocks within a file. */
-> +static int
-> +__xfs_reflink_reserve_cow(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		*offset_fsb,
-> +	xfs_fileoff_t		end_fsb)
-> +{
-> +	struct xfs_bmbt_irec	got, prev, imap;
-> +	xfs_fileoff_t		orig_end_fsb;
-> +	int			nimaps, eof = 0, error = 0;
-> +	bool			shared = false, trimmed = false;
-> +	xfs_extnum_t		idx;
-> +
-> +	/* Already reserved?  Skip the refcount btree access. */
-> +	xfs_bmap_search_extents(ip, *offset_fsb, XFS_COW_FORK, &eof, &idx,
-> +			&got, &prev);
-> +	if (!eof && got.br_startoff <= *offset_fsb) {
-> +		end_fsb = orig_end_fsb = got.br_startoff + got.br_blockcount;
-> +		trace_xfs_reflink_cow_found(ip, &got);
-> +		goto done;
-> +	}
-> +
-> +	/* Read extent from the source file. */
-> +	nimaps = 1;
-> +	error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
-> +			&imap, &nimaps, 0);
-> +	if (error)
-> +		goto out_unlock;
-> +	ASSERT(nimaps == 1);
-> +
-> +	/* Trim the mapping to the nearest shared extent boundary. */
-> +	error = xfs_reflink_trim_around_shared(ip, &imap, &shared, &trimmed);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +	end_fsb = orig_end_fsb = imap.br_startoff + imap.br_blockcount;
-> +
-> +	/* Not shared?  Just report the (potentially capped) extent. */
-> +	if (!shared)
-> +		goto done;
-> +
-> +	/*
-> +	 * Fork all the shared blocks from our write offset until the end of
-> +	 * the extent.
-> +	 */
-> +	error = xfs_qm_dqattach_locked(ip, 0);
-> +	if (error)
-> +		goto out_unlock;
-> +
-> +retry:
-> +	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, *offset_fsb,
-> +			end_fsb - *offset_fsb, &got,
-> +			&prev, &idx, eof);
-> +	switch (error) {
-> +	case 0:
-> +		break;
-> +	case -ENOSPC:
-> +	case -EDQUOT:
-> +		/* retry without any preallocation */
-> +		trace_xfs_reflink_cow_enospc(ip, &imap);
-> +		if (end_fsb != orig_end_fsb) {
-> +			end_fsb = orig_end_fsb;
-> +			goto retry;
-> +		}
-> +		/*FALLTHRU*/
-> +	default:
-> +		goto out_unlock;
-> +	}
-> +
-> +	trace_xfs_reflink_cow_alloc(ip, &got);
-> +done:
-> +	*offset_fsb = end_fsb;
-> +out_unlock:
-> +	return error;
-> +}
-> +
-> +/* Create a CoW reservation for part of a file. */
-> +int
-> +xfs_reflink_reserve_cow_range(
-> +	struct xfs_inode	*ip,
-> +	xfs_off_t		offset,
-> +	xfs_off_t		count)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_fileoff_t		offset_fsb, end_fsb;
-> +	int			error;
-> +
-> +	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
-> +
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> +
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	while (offset_fsb < end_fsb) {
-> +		error = __xfs_reflink_reserve_cow(ip, &offset_fsb, end_fsb);
-> +		if (error) {
-> +			trace_xfs_reflink_reserve_cow_range_error(ip, error,
-> +				_RET_IP_);
-> +			break;
-> +		}
-> +	}
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 820b151..f824f87 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -20,4 +20,13 @@
->  #ifndef __XFS_REFLINK_H
->  #define __XFS_REFLINK_H 1
->  
-> +extern int xfs_reflink_find_shared(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
-> +		xfs_extlen_t *flen, bool find_maximal);
-> +extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> +		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
-> +
-> +extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
-> +		xfs_off_t offset, xfs_off_t count);
-> +
->  #endif /* __XFS_REFLINK_H */
+> Having someone say "lets get sorted after the merge window" is far
+> better than having your patches ignored - it tells you someone wants
+> your code and is actually planning to review it in the near term!
+> Have patience. Keep the patches up to date, keep building what you
+> need to build on top of them. Missing a merge window is not the end
+> of the world.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Since then I have responded promptly to the little review feedback that I've
+> > received.  I've also reviewed and tested other DAX changes, like the struct
+> > iomap changes from Christoph.
+> 
+> And I'm grateful for your doing that - it sped the process up a lot
+> because they then weren't blocked waiting for me to get to them. As
+> a result, I owe you some review time in return but unfortunately I
+> can't fully return the favour immediately. If more people treated
+> review as a selfless act that should be returned in kind, then we
+> wouldn't have a review bottleneck like we do...
+> 
+> > Those changes were first posted to the mailing
+> > list on September 9th, four weeks after mine.  Nevertheless, I was happy to
+> > rebase my changes on top of his, which meant a full rewrite of the DAX PMD
+> > fault handler so it would be based on struct iomap.  His changes are going to
+> > be merged for v4.9, and mine are not.
+> 
+> Yes, this can happen, too - core infrastructure changes can appear
+> suddenly and be implemented very quickly, but that does not mean
+> there hasn't been a lot of background work and effort put into the
+> code. The iomap code goes way back. Back to early 2010, in fact:
+> 
+> http://lkml.iu.edu/hypermail/linux/kernel/1005.1/02720.html
+> 
+> At that time I implemented a working multipage write IO path for
+> XFS, and Christoph integrated that int various OEM products shortly
+> afterwards. Yes, there have been iomap based XFS implementations out
+> there in production for over 5 years now, but that code was not
+> clean enough to even consider merging.
+> 
+> Another reference in 2013, when someone proposed a hack for embedded
+> systems to optimise the write path:
+> 
+> https://lkml.org/lkml/2013/7/23/809
+> 
+> Then Christoph introduced the struct iomap for pNFS and the XFS
+> block layout driver in late 2013, and when DAX first came along I
+> really wanted iomaps to be used up front rather than buffer heads
+> for block mapping.
+> 
+> Now we've finally got iomaps in the IO path and that's rapidly
+> cascading through all the XFS IO interfaces and into other
+> filesystems. This is exactly what we first talked about 6 years ago.
+> 
+> So while it might look like the iomap infrastructure has come out of
+> nowhere, it's really been a long, long road to get to this point. We
+> work to a different time scale over here - it's not uncommon to be
+> planning 5 years ahead for new XFS features. We know how long it
+> takes to develop, test, review and stabilise significant new
+> features, so while it might look like something appears and is
+> committed quickly, that's because you haven't seen the work that has
+> been done leading up to patches being presented for review and
+> merge.
+> 
+> Hopefully this will give you some more perspective on why I think
+> slipping a single release isn't something to get worried about. :)
+> 
+> > Please, help me understand what I can do to get my code reviewed.  Do I need
+> > to more aggressively ping my patch series, asking people by name for reviews?
+> 
+> On the XFS and fstests lists, if nobody has responded within a few
+> days (usually a week) then it's OK to ping it and see if anyone has
+> time to review it. In general, a single ping is enough if the
+> patchset is in good shape. Fix it all, repost, ping in a week if
+> there's no followup. Repeat until merge.
+> 
+> > Do we need to rework our code flow to Linus so that the DAX changes go through
+> > a filesystem tree like XFS or ext4, and ask the developers of that filesystem
+> > to help with reviews?  Something else?
+> 
+> The question we have to ask here is whether a lack of development
+> support from a filesystem stop us from driving the DAX
+> implementation forward?  I've said it before, and I'll say it again:
+> I'm happy to drive DAX on XFS forwards at the rate at which we can
+> sustain review via the XFS tree and I don't care if we break support
+> on ext2 or ext4. If we keep having to wait for ext4 to fix stuff to
+> catch up with what we want/need to do then progress will continue to
+> be sporadic and frustrating.  Perhaps it's time to stop waiting for
+> ext4 to play catchup every time we take a step forwards....
+> 
+> > I'm honestly very frustrated by this because I've done my best to be open to
+> > constructive criticism and I've tried to respond promptly to the feedback that
+> > I've received.  In the end, though, a system where it's a requirement that all
+> > upstreamed code be peer reviewed but in which I can't get any feedback is
+> > essentially a system where I'm not allowed to contribute.
+> 
+> There's always been a review bottleneck, and everyone ends up on the
+> end of that frustration from time to time. Delays will happen - it's
+> just part of the process we all need to deal with. I used to get
+> frustrated, too, but now I just accept it, roll with it and we've
+> made it an acceptible part of the process to ping patches when it
+> looks like they have been forgotten...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+Thank you for the advice and perspective, Dave.  :)
+
+I've gotten a bunch of review feedback from Christoph and Jan (thank you!), so
+I'm busily addressing that.  Since we're now targeting v4.10 I'll also
+incorporate tracepoints so we can observe what's going on in our various fault
+paths.
