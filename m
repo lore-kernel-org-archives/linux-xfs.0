@@ -1,256 +1,293 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26822 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751495AbcJDAL3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2016 20:11:29 -0400
-Date: Mon, 3 Oct 2016 17:11:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 21/63] xfs: map an inode's offset to an exact physical
- block
-Message-ID: <20161004001119.GB14092@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520487612.29434.3808077462465308754.stgit@birch.djwong.org>
- <20161003190349.GA49915@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:39837 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752200AbcJCJ4s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 05:56:48 -0400
+Date: Mon, 3 Oct 2016 11:56:46 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 08/12] dax: remove dax_pmd_fault()
+Message-ID: <20161003095646.GN6457@quack2.suse.cz>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475189370-31634-9-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161003190349.GA49915@bfoster.bfoster>
+In-Reply-To: <1475189370-31634-9-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Oct 03, 2016 at 03:03:49PM -0400, Brian Foster wrote:
-> On Thu, Sep 29, 2016 at 08:07:56PM -0700, Darrick J. Wong wrote:
-> > Teach the bmap routine to know how to map a range of file blocks to a
-> > specific range of physical blocks, instead of simply allocating fresh
-> > blocks.  This enables reflink to map a file to blocks that are already
-> > in use.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_bmap.h |   10 +++++++
-> >  fs/xfs/xfs_trace.h       |   54 +++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 126 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 907d7b8d..9f145ed 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3877,6 +3877,55 @@ xfs_bmap_btalloc(
-> >  }
-> >  
-> >  /*
-> > + * For a remap operation, just "allocate" an extent at the address that the
-> > + * caller passed in, and ensure that the AGFL is the right size.  The caller
-> > + * will then map the "allocated" extent into the file somewhere.
-> > + */
-> > +STATIC int
-> > +xfs_bmap_remap_alloc(
-> > +	struct xfs_bmalloca	*ap)
-> > +{
-> > +	struct xfs_trans	*tp = ap->tp;
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	xfs_agblock_t		bno;
-> > +	struct xfs_alloc_arg	args;
-> > +	int			error;
-> > +
-> > +	/*
-> > +	 * validate that the block number is legal - the enables us to detect
-> > +	 * and handle a silent filesystem corruption rather than crashing.
-> > +	 */
-> > +	memset(&args, 0, sizeof(struct xfs_alloc_arg));
-> > +	args.tp = ap->tp;
-> > +	args.mp = ap->tp->t_mountp;
-> > +	bno = *ap->firstblock;
-> > +	args.agno = XFS_FSB_TO_AGNO(mp, bno);
-> > +	ASSERT(args.agno < mp->m_sb.sb_agcount);
-> > +	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
-> > +	ASSERT(args.agbno < mp->m_sb.sb_agblocks);
-> > +
-> > +	/* "Allocate" the extent from the range we passed in. */
-> > +	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
-> > +	ap->blkno = bno;
-> > +	ap->ip->i_d.di_nblocks += ap->length;
-> > +	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> > +
-> > +	/* Fix the freelist, like a real allocator does. */
-> > +	args.datatype = ap->datatype;
-> > +	args.pag = xfs_perag_get(args.mp, args.agno);
-> > +	ASSERT(args.pag);
-> > +
-> > +	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+On Thu 29-09-16 16:49:26, Ross Zwisler wrote:
+> dax_pmd_fault() is the old struct buffer_head + get_block_t based 2 MiB DAX
+> fault handler.  This fault handler has been disabled for several kernel
+> releases, and support for PMDs will be reintroduced using the struct iomap
+> interface instead.
 > 
-> Why the FREEING flag? 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-/*
- * The freelist fixing code will decline the allocation if
- * the size and shape of the free space doesn't allow for
- * allocating the extent and updating all the metadata that
- * happens during an allocation.  We're remapping, not
- * allocating, so skip that check by pretending to be freeing.
- */
+Looks good. You can add:
 
-> > +	if (error)
-> > +		goto error0;
-> > +error0:
-> > +	xfs_perag_put(args.pag);
-> > +	if (error)
-> > +		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> >   * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
-> >   * It figures out where to ask the underlying allocator to put the new extent.
-> >   */
-> > @@ -3884,6 +3933,8 @@ STATIC int
-> >  xfs_bmap_alloc(
-> >  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-> >  {
-> > +	if (ap->flags & XFS_BMAPI_REMAP)
-> > +		return xfs_bmap_remap_alloc(ap);
-> >  	if (XFS_IS_REALTIME_INODE(ap->ip) &&
-> >  	    xfs_alloc_is_userdata(ap->datatype))
-> >  		return xfs_bmap_rtalloc(ap);
-> > @@ -4442,6 +4493,12 @@ xfs_bmapi_write(
-> >  	ASSERT(len > 0);
-> >  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
-> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > +	if (whichfork == XFS_ATTR_FORK)
-> > +		ASSERT(!(flags & XFS_BMAPI_REMAP));
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  fs/dax.c            | 213 ----------------------------------------------------
+>  include/linux/dax.h |   6 +-
+>  2 files changed, 1 insertion(+), 218 deletions(-)
 > 
-> I think it's better to avoid conditionals if the only affected code
-> consists of ASSERT() statements (which can be compiled out). E.g., 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 406feea..b5e7b13 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -909,219 +909,6 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  }
+>  EXPORT_SYMBOL_GPL(dax_fault);
+>  
+> -#if defined(CONFIG_TRANSPARENT_HUGEPAGE)
+> -/*
+> - * The 'colour' (ie low bits) within a PMD of a page offset.  This comes up
+> - * more often than one might expect in the below function.
+> - */
+> -#define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
+> -
+> -static void __dax_dbg(struct buffer_head *bh, unsigned long address,
+> -		const char *reason, const char *fn)
+> -{
+> -	if (bh) {
+> -		char bname[BDEVNAME_SIZE];
+> -		bdevname(bh->b_bdev, bname);
+> -		pr_debug("%s: %s addr: %lx dev %s state %lx start %lld "
+> -			"length %zd fallback: %s\n", fn, current->comm,
+> -			address, bname, bh->b_state, (u64)bh->b_blocknr,
+> -			bh->b_size, reason);
+> -	} else {
+> -		pr_debug("%s: %s addr: %lx fallback: %s\n", fn,
+> -			current->comm, address, reason);
+> -	}
+> -}
+> -
+> -#define dax_pmd_dbg(bh, address, reason)	__dax_dbg(bh, address, reason, "dax_pmd")
+> -
+> -/**
+> - * dax_pmd_fault - handle a PMD fault on a DAX file
+> - * @vma: The virtual memory area where the fault occurred
+> - * @vmf: The description of the fault
+> - * @get_block: The filesystem method used to translate file offsets to blocks
+> - *
+> - * When a page fault occurs, filesystems may call this helper in their
+> - * pmd_fault handler for DAX files.
+> - */
+> -int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+> -		pmd_t *pmd, unsigned int flags, get_block_t get_block)
+> -{
+> -	struct file *file = vma->vm_file;
+> -	struct address_space *mapping = file->f_mapping;
+> -	struct inode *inode = mapping->host;
+> -	struct buffer_head bh;
+> -	unsigned blkbits = inode->i_blkbits;
+> -	unsigned long pmd_addr = address & PMD_MASK;
+> -	bool write = flags & FAULT_FLAG_WRITE;
+> -	struct block_device *bdev;
+> -	pgoff_t size, pgoff;
+> -	sector_t block;
+> -	int result = 0;
+> -	bool alloc = false;
+> -
+> -	/* dax pmd mappings require pfn_t_devmap() */
+> -	if (!IS_ENABLED(CONFIG_FS_DAX_PMD))
+> -		return VM_FAULT_FALLBACK;
+> -
+> -	/* Fall back to PTEs if we're going to COW */
+> -	if (write && !(vma->vm_flags & VM_SHARED)) {
+> -		split_huge_pmd(vma, pmd, address);
+> -		dax_pmd_dbg(NULL, address, "cow write");
+> -		return VM_FAULT_FALLBACK;
+> -	}
+> -	/* If the PMD would extend outside the VMA */
+> -	if (pmd_addr < vma->vm_start) {
+> -		dax_pmd_dbg(NULL, address, "vma start unaligned");
+> -		return VM_FAULT_FALLBACK;
+> -	}
+> -	if ((pmd_addr + PMD_SIZE) > vma->vm_end) {
+> -		dax_pmd_dbg(NULL, address, "vma end unaligned");
+> -		return VM_FAULT_FALLBACK;
+> -	}
+> -
+> -	pgoff = linear_page_index(vma, pmd_addr);
+> -	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> -	if (pgoff >= size)
+> -		return VM_FAULT_SIGBUS;
+> -	/* If the PMD would cover blocks out of the file */
+> -	if ((pgoff | PG_PMD_COLOUR) >= size) {
+> -		dax_pmd_dbg(NULL, address,
+> -				"offset + huge page size > file size");
+> -		return VM_FAULT_FALLBACK;
+> -	}
+> -
+> -	memset(&bh, 0, sizeof(bh));
+> -	bh.b_bdev = inode->i_sb->s_bdev;
+> -	block = (sector_t)pgoff << (PAGE_SHIFT - blkbits);
+> -
+> -	bh.b_size = PMD_SIZE;
+> -
+> -	if (get_block(inode, block, &bh, 0) != 0)
+> -		return VM_FAULT_SIGBUS;
+> -
+> -	if (!buffer_mapped(&bh) && write) {
+> -		if (get_block(inode, block, &bh, 1) != 0)
+> -			return VM_FAULT_SIGBUS;
+> -		alloc = true;
+> -		WARN_ON_ONCE(buffer_unwritten(&bh) || buffer_new(&bh));
+> -	}
+> -
+> -	bdev = bh.b_bdev;
+> -
+> -	if (bh.b_size < PMD_SIZE) {
+> -		dax_pmd_dbg(&bh, address, "allocated block too small");
+> -		return VM_FAULT_FALLBACK;
+> -	}
+> -
+> -	/*
+> -	 * If we allocated new storage, make sure no process has any
+> -	 * zero pages covering this hole
+> -	 */
+> -	if (alloc) {
+> -		loff_t lstart = pgoff << PAGE_SHIFT;
+> -		loff_t lend = lstart + PMD_SIZE - 1; /* inclusive */
+> -
+> -		truncate_pagecache_range(inode, lstart, lend);
+> -	}
+> -
+> -	if (!write && !buffer_mapped(&bh)) {
+> -		spinlock_t *ptl;
+> -		pmd_t entry;
+> -		struct page *zero_page = get_huge_zero_page();
+> -
+> -		if (unlikely(!zero_page)) {
+> -			dax_pmd_dbg(&bh, address, "no zero page");
+> -			goto fallback;
+> -		}
+> -
+> -		ptl = pmd_lock(vma->vm_mm, pmd);
+> -		if (!pmd_none(*pmd)) {
+> -			spin_unlock(ptl);
+> -			dax_pmd_dbg(&bh, address, "pmd already present");
+> -			goto fallback;
+> -		}
+> -
+> -		dev_dbg(part_to_dev(bdev->bd_part),
+> -				"%s: %s addr: %lx pfn: <zero> sect: %llx\n",
+> -				__func__, current->comm, address,
+> -				(unsigned long long) to_sector(&bh, inode));
+> -
+> -		entry = mk_pmd(zero_page, vma->vm_page_prot);
+> -		entry = pmd_mkhuge(entry);
+> -		set_pmd_at(vma->vm_mm, pmd_addr, pmd, entry);
+> -		result = VM_FAULT_NOPAGE;
+> -		spin_unlock(ptl);
+> -	} else {
+> -		struct blk_dax_ctl dax = {
+> -			.sector = to_sector(&bh, inode),
+> -			.size = PMD_SIZE,
+> -		};
+> -		long length = dax_map_atomic(bdev, &dax);
+> -
+> -		if (length < 0) {
+> -			dax_pmd_dbg(&bh, address, "dax-error fallback");
+> -			goto fallback;
+> -		}
+> -		if (length < PMD_SIZE) {
+> -			dax_pmd_dbg(&bh, address, "dax-length too small");
+> -			dax_unmap_atomic(bdev, &dax);
+> -			goto fallback;
+> -		}
+> -		if (pfn_t_to_pfn(dax.pfn) & PG_PMD_COLOUR) {
+> -			dax_pmd_dbg(&bh, address, "pfn unaligned");
+> -			dax_unmap_atomic(bdev, &dax);
+> -			goto fallback;
+> -		}
+> -
+> -		if (!pfn_t_devmap(dax.pfn)) {
+> -			dax_unmap_atomic(bdev, &dax);
+> -			dax_pmd_dbg(&bh, address, "pfn not in memmap");
+> -			goto fallback;
+> -		}
+> -		dax_unmap_atomic(bdev, &dax);
+> -
+> -		/*
+> -		 * For PTE faults we insert a radix tree entry for reads, and
+> -		 * leave it clean.  Then on the first write we dirty the radix
+> -		 * tree entry via the dax_pfn_mkwrite() path.  This sequence
+> -		 * allows the dax_pfn_mkwrite() call to be simpler and avoid a
+> -		 * call into get_block() to translate the pgoff to a sector in
+> -		 * order to be able to create a new radix tree entry.
+> -		 *
+> -		 * The PMD path doesn't have an equivalent to
+> -		 * dax_pfn_mkwrite(), though, so for a read followed by a
+> -		 * write we traverse all the way through dax_pmd_fault()
+> -		 * twice.  This means we can just skip inserting a radix tree
+> -		 * entry completely on the initial read and just wait until
+> -		 * the write to insert a dirty entry.
+> -		 */
+> -		if (write) {
+> -			/*
+> -			 * We should insert radix-tree entry and dirty it here.
+> -			 * For now this is broken...
+> -			 */
+> -		}
+> -
+> -		dev_dbg(part_to_dev(bdev->bd_part),
+> -				"%s: %s addr: %lx pfn: %lx sect: %llx\n",
+> -				__func__, current->comm, address,
+> -				pfn_t_to_pfn(dax.pfn),
+> -				(unsigned long long) dax.sector);
+> -		result |= vmf_insert_pfn_pmd(vma, address, pmd,
+> -				dax.pfn, write);
+> -	}
+> -
+> - out:
+> -	return result;
+> -
+> - fallback:
+> -	count_vm_event(THP_FAULT_FALLBACK);
+> -	result = VM_FAULT_FALLBACK;
+> -	goto out;
+> -}
+> -EXPORT_SYMBOL_GPL(dax_pmd_fault);
+> -#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+> -
+>  /**
+>   * dax_pfn_mkwrite - handle first write to DAX page
+>   * @vma: The virtual memory area where the fault occurred
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 4065601..d9a8350 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -48,16 +48,12 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
+>  }
+>  #endif
+>  
+> -#if defined(CONFIG_TRANSPARENT_HUGEPAGE)
+> -int dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
+> -				unsigned int flags, get_block_t);
+> -#else
+>  static inline int dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+>  				pmd_t *pmd, unsigned int flags, get_block_t gb)
+>  {
+>  	return VM_FAULT_FALLBACK;
+>  }
+> -#endif
+> +
+>  int dax_pfn_mkwrite(struct vm_area_struct *, struct vm_fault *);
+>  #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
+>  
+> -- 
+> 2.7.4
 > 
-> 	ASSERT(!((flags & XFS_BMAPI_REMAP) && whichfork == XFS_ATTR_FORK));
 > 
-> ... and so on, but not a big deal.
-
-<nod> I might as well fix that up too...
-
---D
-
-> Brian
-> 
-> > +	if (flags & XFS_BMAPI_REMAP) {
-> > +		ASSERT(!(flags & XFS_BMAPI_PREALLOC));
-> > +		ASSERT(!(flags & XFS_BMAPI_CONVERT));
-> > +	}
-> >  
-> >  	/* zeroing is for currently only for data extents, not metadata */
-> >  	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-> > @@ -4503,6 +4560,12 @@ xfs_bmapi_write(
-> >  		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-> >  
-> >  		/*
-> > +		 * Make sure we only reflink into a hole.
-> > +		 */
-> > +		if (flags & XFS_BMAPI_REMAP)
-> > +			ASSERT(inhole);
-> > +
-> > +		/*
-> >  		 * First, deal with the hole before the allocated space
-> >  		 * that we found, if any.
-> >  		 */
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> > index fcdb094..877b6f9 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.h
-> > +++ b/fs/xfs/libxfs/xfs_bmap.h
-> > @@ -97,6 +97,13 @@ struct xfs_extent_free_item
-> >   */
-> >  #define XFS_BMAPI_ZERO		0x080
-> >  
-> > +/*
-> > + * Map the inode offset to the block given in ap->firstblock.  Primarily
-> > + * used for reflink.  The range must be in a hole, and this flag cannot be
-> > + * turned on with PREALLOC or CONVERT, and cannot be used on the attr fork.
-> > + */
-> > +#define XFS_BMAPI_REMAP		0x100
-> > +
-> >  #define XFS_BMAPI_FLAGS \
-> >  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
-> >  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-> > @@ -105,7 +112,8 @@ struct xfs_extent_free_item
-> >  	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
-> >  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
-> >  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
-> > -	{ XFS_BMAPI_ZERO,	"ZERO" }
-> > +	{ XFS_BMAPI_ZERO,	"ZERO" }, \
-> > +	{ XFS_BMAPI_REMAP,	"REMAP" }
-> >  
-> >  
-> >  static inline int xfs_bmapi_aflag(int w)
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 195a168..8485984 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2965,6 +2965,60 @@ TRACE_EVENT(xfs_refcount_finish_one_leftover,
-> >  		  __entry->adjusted)
-> >  );
-> >  
-> > +/* simple inode-based error/%ip tracepoint class */
-> > +DECLARE_EVENT_CLASS(xfs_inode_error_class,
-> > +	TP_PROTO(struct xfs_inode *ip, int error, unsigned long caller_ip),
-> > +	TP_ARGS(ip, error, caller_ip),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_ino_t, ino)
-> > +		__field(int, error)
-> > +		__field(unsigned long, caller_ip)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> > +		__entry->ino = ip->i_ino;
-> > +		__entry->error = error;
-> > +		__entry->caller_ip = caller_ip;
-> > +	),
-> > +	TP_printk("dev %d:%d ino %llx error %d caller %ps",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->ino,
-> > +		  __entry->error,
-> > +		  (char *)__entry->caller_ip)
-> > +);
-> > +
-> > +#define DEFINE_INODE_ERROR_EVENT(name) \
-> > +DEFINE_EVENT(xfs_inode_error_class, name, \
-> > +	TP_PROTO(struct xfs_inode *ip, int error, \
-> > +		 unsigned long caller_ip), \
-> > +	TP_ARGS(ip, error, caller_ip))
-> > +
-> > +/* reflink allocator */
-> > +TRACE_EVENT(xfs_bmap_remap_alloc,
-> > +	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
-> > +		 xfs_extlen_t len),
-> > +	TP_ARGS(ip, fsbno, len),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_ino_t, ino)
-> > +		__field(xfs_fsblock_t, fsbno)
-> > +		__field(xfs_extlen_t, len)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> > +		__entry->ino = ip->i_ino;
-> > +		__entry->fsbno = fsbno;
-> > +		__entry->len = len;
-> > +	),
-> > +	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->ino,
-> > +		  __entry->fsbno,
-> > +		  __entry->len)
-> > +);
-> > +DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
-> > +
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> >  #undef TRACE_INCLUDE_PATH
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
