@@ -1,44 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43612 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751025AbcJBTBm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2016 15:01:42 -0400
-Date: Sun, 2 Oct 2016 12:01:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: XFS reflink trees updated for 4.9
-Message-ID: <20161002190106.GC21076@birch.djwong.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:56322 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751882AbcJCBhn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2016 21:37:43 -0400
+Date: Mon, 3 Oct 2016 02:37:37 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC][CFT] splice_read reworked
+Message-ID: <20161003013737.GR19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
+ <20160914042559.GC2356@ZenIV.linux.org.uk>
+ <20160917082007.GA6489@ZenIV.linux.org.uk>
+ <20160917190023.GA8039@ZenIV.linux.org.uk>
+ <20160923190032.GA25771@ZenIV.linux.org.uk>
+ <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com>
+ <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com>
+ <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, amir73il@gmail.com
+To: CAI Qian <caiqian@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-Seeing as 4.8 is probably going out today, here's the latest for-4.9 branch:
+On Fri, Sep 30, 2016 at 02:33:23PM -0400, CAI Qian wrote:
 
-https://github.com/djwong/linux/tree/for-dave-for-4.9-9
-https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-9
-https://github.com/djwong/xfstests/tree/djwong-devel
+OK, the immeditate trigger is
+	* sendfile() from something that uses seq_read to a regular file.
+Does sb_start_write() around the call of do_splice_direct() (as always),
+which ends up calling default_file_splice_read() (again, as usual), which
+ends up calling ->read() of the source, i.e. seq_read().  No changes there.
+ 
+	* sb_start_write() can be called under ->i_mutex.  The latter is
+on overlayfs inode, the former is done to upper layer in that overlayfs.
+Nothing new, again.
 
-I've rolled up all the comment fixes that have come in this week.
-Thanks to everyone who's reviewed the patches (Dave, Christoph, and
-Brian come to mind)!
+	* ->i_mutex can be taken under ->cred_guard_mutex.  Yes, it can -
+in open_exec().  Again, no changes.
 
-I've also sped up stale CoW staging extent recovery by stashing all
-those records in the right side of the refcount btree per a suggestion
-from Dave on Friday afternoon.  It was a relatively small change, so
-I didn't bother holding off, and everything still passes the same
-tests they did before, AFAICT.
+	* ->cred_guard_mutex can be taken in ->show() of a seq_file,
+namely /proc/*/auxv...  Argh, ->cred_guard_mutex whack-a-mole strikes
+again...
 
----
+OK, I think essentially the same warning had been triggerable since _way_
+back.  All changes around splice have no effect on it.
 
-Dave: the two xfs_repair patches I posted yesterday are for xfsprogs
-4.8.  One fixes some garbled rmap code that crashed when we
-overestimated the freespace btree space requirements in phase5, and
-needs to go in before the release.  The second patch re-adds the lost
-blocks to the freesp btree so we get rid of those "sorry, lost XXX
-blocks" messages.  That one isn't so urgent.
+Look: to get a deadlock we need
+	(1) sendfile from /proc/<pid>/auxv to a regular file on upper layer of
+overlayfs requesting not to freeze the target.
+	(2) attempt to freeze it blocking until (1) is done.
+	(3) directory modification on overlayfs trying to request not to freeze
+the upper layer and blocking until (2) is done.
+	(4) execve() in <pid> holding ->cred_guard_mutex, trying to open
+something in overlayfs and getting blocked on directory lock, held by (3).
 
---D
+Now (1) gets around to reading from /proc/<pid>/auxv, which blocks on
+->cred_guard_mutex.  Mentioning of seq_read itself holding locks is irrelevant;
+what matters is that ->read() grabs ->cred_guard_mutex.
+
+We used to have similar problems in /proc/*/environ and /proc/*/mem; looks
+like /proc/*/environ needs to get the treatment similar to e268337dfe26 and
+b409e578d9a4.
