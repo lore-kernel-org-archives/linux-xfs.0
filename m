@@ -1,74 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57438 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751021AbcJCDeQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2016 23:34:16 -0400
-Date: Mon, 3 Oct 2016 04:34:09 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: [RFC] O_DIRECT vs EFAULT (was Re: [PATCH 10/12] new iov_iter
- flavour: pipe-backed)
-Message-ID: <20161003033409.GT19539@ZenIV.linux.org.uk>
-References: <20160917190023.GA8039@ZenIV.linux.org.uk>
- <20160923190032.GA25771@ZenIV.linux.org.uk>
- <20160923190326.GB2356@ZenIV.linux.org.uk>
- <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
- <20160923201025.GJ2356@ZenIV.linux.org.uk>
- <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
- <20160924040117.GP2356@ZenIV.linux.org.uk>
- <CAELBmZDpm635PcTPQfnpLGs2P4bfT6JU+DEuFu9pBut=uzOLHw@mail.gmail.com>
- <20160929225003.GQ19539@ZenIV.linux.org.uk>
- <CAJfpegs9He0bWX3VWkr2EY-7X3-pAhNAUT=mQad-zxtWkQt_SQ@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:37658 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753017AbcJCJfR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Oct 2016 05:35:17 -0400
+Date: Mon, 3 Oct 2016 11:35:13 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 04/12] ext2: remove support for DAX PMD faults
+Message-ID: <20161003093513.GJ6457@quack2.suse.cz>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJfpegs9He0bWX3VWkr2EY-7X3-pAhNAUT=mQad-zxtWkQt_SQ@mail.gmail.com>
+In-Reply-To: <1475189370-31634-5-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Sep 30, 2016 at 09:30:21AM +0200, Miklos Szeredi wrote:
-> On Fri, Sep 30, 2016 at 12:50 AM, Al Viro <viro@zeniv.linux.org.uk> wrote:
-> > On Thu, Sep 29, 2016 at 10:53:55PM +0200, Miklos Szeredi wrote:
-> >
-> >> The EFAULT logic seems to be missing across the board.  And callers
-> >> don't expect a zero return value.  Most will loop indefinitely.
-> >
-> > Nope.  copy_page_to_iter() *never* returns -EFAULT.  Including the iovec
-> > one - check copy_page_to_iter_iovec().  Any caller that does not expect
-> > a zero return value from that primitive is a bug, triggerable as soon as
-> > you feed it an iovec with NULL ->iov_base.
+On Thu 29-09-16 16:49:22, Ross Zwisler wrote:
+> DAX PMD support was added via the following commit:
 > 
-> Right.
+> commit e7b1ea2ad658 ("ext2: huge page fault support")
 > 
-> I was actually looking at iov_iter_get_pages() callers...
+> I believe this path to be untested as ext2 doesn't reliably provide block
+> allocations that are aligned to 2MiB.  In my testing I've been unable to
+> get ext2 to actually fault in a PMD.  It always fails with a "pfn
+> unaligned" message because the sector returned by ext2_get_block() isn't
+> aligned.
+> 
+> I've tried various settings for the "stride" and "stripe_width" extended
+> options to mkfs.ext2, without any luck.
+> 
+> Since we can't reliably get PMDs, remove support so that we don't have an
+> untested code path that we may someday traverse when we happen to get an
+> aligned block allocation.  This should also make 4k DAX faults in ext2 a
+> bit faster since they will no longer have to call the PMD fault handler
+> only to get a response of VM_FAULT_FALLBACK.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-FWIW, that's interesting - O_DIRECT readv()/writev() reacts to fault anywhere
-as "nothing done, return -EFAULT now", rather than a short read/write.
-Despite that some IO is actually done.  Note, BTW, that we are not even
-consistent between the filesystems - local block ones do IO and give -EFAULT,
-while NFS, Lustre and FUSE do short read/write, reporting -EFAULT only upon
-shortening to nothing.  So does ceph, except that shortening might be for
-more than one page.
+Looks good. You can add:
 
-Considering how weak POSIX is in that area, we are probably not violating
-anything, but... it would be more convenient if we treated those as
-short read/write, same way for all filesystems.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Linus, do you have any objections against such behaviour change?  AFAICS,
-all it takes is this:
+								Honza
 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 7c3ce73..3a8ebda 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -246,6 +246,8 @@ static ssize_t dio_complete(struct dio *dio, ssize_t ret, bool is_async)
- 		if ((dio->op == REQ_OP_READ) &&
- 		    ((offset + transferred) > dio->i_size))
- 			transferred = dio->i_size - offset;
-+		if (ret == -EFAULT)
-+			ret = 0;
- 	}
- 
- 	if (ret == 0)
+> ---
+>  fs/ext2/file.c | 29 ++++++-----------------------
+>  1 file changed, 6 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+> index 0ca363d..0f257f8 100644
+> --- a/fs/ext2/file.c
+> +++ b/fs/ext2/file.c
+> @@ -107,27 +107,6 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  	return ret;
+>  }
+>  
+> -static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+> -						pmd_t *pmd, unsigned int flags)
+> -{
+> -	struct inode *inode = file_inode(vma->vm_file);
+> -	struct ext2_inode_info *ei = EXT2_I(inode);
+> -	int ret;
+> -
+> -	if (flags & FAULT_FLAG_WRITE) {
+> -		sb_start_pagefault(inode->i_sb);
+> -		file_update_time(vma->vm_file);
+> -	}
+> -	down_read(&ei->dax_sem);
+> -
+> -	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
+> -
+> -	up_read(&ei->dax_sem);
+> -	if (flags & FAULT_FLAG_WRITE)
+> -		sb_end_pagefault(inode->i_sb);
+> -	return ret;
+> -}
+> -
+>  static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+>  		struct vm_fault *vmf)
+>  {
+> @@ -154,7 +133,11 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+>  
+>  static const struct vm_operations_struct ext2_dax_vm_ops = {
+>  	.fault		= ext2_dax_fault,
+> -	.pmd_fault	= ext2_dax_pmd_fault,
+> +	/*
+> +	 * .pmd_fault is not supported for DAX because allocation in ext2
+> +	 * cannot be reliably aligned to huge page sizes and so pmd faults
+> +	 * will always fail and fail back to regular faults.
+> +	 */
+>  	.page_mkwrite	= ext2_dax_fault,
+>  	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
+>  };
+> @@ -166,7 +149,7 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+>  
+>  	file_accessed(file);
+>  	vma->vm_ops = &ext2_dax_vm_ops;
+> -	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+> +	vma->vm_flags |= VM_MIXEDMAP;
+>  	return 0;
+>  }
+>  #else
+> -- 
+> 2.7.4
+> 
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
