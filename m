@@ -1,159 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34667 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756546AbcJQHV6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 03:21:58 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3] xfs_io: add command line option -i to start an idle thread
-Date: Mon, 17 Oct 2016 10:20:51 +0300
-Message-Id: <1476688851-32647-1-git-send-email-amir73il@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:43633 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753217AbcJDINZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Oct 2016 04:13:25 -0400
+Date: Tue, 4 Oct 2016 10:13:24 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] fs: update atime before I/O in generic_file_read_iter
+Message-ID: <20161004081324.GC17515@quack2.suse.cz>
+References: <1475225194-3702-1-git-send-email-hch@lst.de>
+ <1475225194-3702-3-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475225194-3702-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-xfs_io -i will start by spawning an idle thread.
+On Fri 30-09-16 10:46:34, Christoph Hellwig wrote:
+> After the call to ->direct_IO the final reference to the file might have
+> been dropped by aio_complete already, and the call to file_accessed might
+> cause a use after free.
+> 
+> Instead update the access time before the I/O, similar to how we
+> update the time stamps before writes.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The purpose of this idle thread is to test io from a multi threaded
-process. With single threaded process, the file table is not shared
-and file structs are not reference counted. Spawning an idle thread
-can help detecting file struct reference leaks.
+The patch looks good. You can add:
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- io/Makefile       |  2 +-
- io/init.c         | 35 +++++++++++++++++++++++++++++++++--
- man/man8/xfs_io.8 |  8 +++++++-
- 3 files changed, 41 insertions(+), 4 deletions(-)
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-diff --git a/io/Makefile b/io/Makefile
-index 1997ca9..032a8c7 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -13,7 +13,7 @@ CFILES = init.c \
- 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
- 	sync.c truncate.c reflink.c
- 
--LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
-+LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/io/init.c b/io/init.c
-index 6b88cc6..2db48a2 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -16,6 +16,7 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
-+#include <pthread.h>
- #include "platform_defs.h"
- #include "command.h"
- #include "input.h"
-@@ -25,6 +26,7 @@
- char	*progname;
- int	exitcode;
- int	expert;
-+int	idlethread;
- size_t	pagesize;
- struct timeval stopwatch;
- 
-@@ -32,7 +34,7 @@ void
- usage(void)
- {
- 	fprintf(stderr,
--		_("Usage: %s [-adfmnrRstVx] [-p prog] [-c cmd]... file\n"),
-+		_("Usage: %s [-adfimnrRstTVx] [-p prog] [-c cmd]... file\n"),
- 		progname);
- 	exit(1);
- }
-@@ -141,7 +143,7 @@ init(
- 	pagesize = getpagesize();
- 	gettimeofday(&stopwatch, NULL);
- 
--	while ((c = getopt(argc, argv, "ac:dFfmp:nrRstTVx")) != EOF) {
-+	while ((c = getopt(argc, argv, "ac:dFfimp:nrRstTVx")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			flags |= IO_APPEND;
-@@ -158,6 +160,9 @@ init(
- 		case 'f':
- 			flags |= IO_CREAT;
- 			break;
-+		case 'i':
-+			idlethread = 1;
-+			break;
- 		case 'm':
- 			mode = strtoul(optarg, &sp, 0);
- 			if (!sp || sp == optarg) {
-@@ -213,12 +218,38 @@ init(
- 	add_check_command(init_check_command);
- }
- 
-+/*
-+ * The purpose of this idle thread is to test io from a multi threaded process.
-+ * With single threaded process, the file table is not shared and file structs
-+ * are not reference counted. Spawning an idle thread can help detecting file
-+ * struct reference leaks.
-+ */
-+void *
-+idle_loop(void *arg)
-+{
-+	for (;;)
-+		pause();
-+}
-+
-+void
-+start_idle_thread()
-+{
-+	pthread_t t;
-+
-+	if (pthread_create(&t, NULL, idle_loop, NULL)) {
-+		fprintf(stderr, "Error creating idle thread\n");
-+		exit(1);
-+	}
-+}
-+
- int
- main(
- 	int	argc,
- 	char	**argv)
- {
- 	init(argc, argv);
-+	if (idlethread)
-+		start_idle_thread();
- 	command_loop();
- 	return exitcode;
- }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index eb7b878..885df7f 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -4,7 +4,7 @@ xfs_io \- debug the I/O path of an XFS filesystem
- .SH SYNOPSIS
- .B xfs_io
- [
--.B \-adfmrRstxT
-+.B \-adfimrRstxT
- ] [
- .B \-c
- .I cmd
-@@ -51,6 +51,12 @@ read-only, initially. This is required if
- .I file
- is immutable or append-only.
- .TP
-+.B \-i
-+Start an idle thread. The purpose of this idle thread is to test io
-+from a multi threaded process. With single threaded process,
-+the file table is not shared and file structs are not reference counted.
-+Spawning an idle thread can help detecting file struct reference leaks.
-+.TP
- .B \-x
- Expert mode. Dangerous commands are only available in this mode.
- These commands also tend to require additional privileges.
+But frankly it looks like a nasty catch that iocb->ki_filp can go away
+under you in the AIO case. Do I get it right that this means there must be
+some other thread closing your fd while the read is running, right?
+
+Also it seems that file_end_write(file) call in aio_run_iocb() is prone to
+the same race?
+
+Won't we be better off to just to do additional get_file() / fput() pair in
+the AIO submission path so that whole AIO submission path is guaranteed to
+have struct file available? I understand this is very performance sensitive
+path but we'll be adding just two atomic ops...
+
+								Honza
 -- 
-2.7.4
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
