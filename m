@@ -1,180 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50756 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752791AbcJCOD7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 10:03:59 -0400
-Date: Mon, 3 Oct 2016 16:03:54 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] [RFC] Release buffer locks in case of IO error
-Message-ID: <20161003140354.4tyaxkrczygu4bc5@redhat.com>
-References: <1475154199-28880-1-git-send-email-cmaiolino@redhat.com>
- <20160930000147.GH27872@dastard>
- <20160930145413.GB27528@bfoster.bfoster>
- <20161001002104.GK27872@dastard>
- <20161001132728.GA56484@bfoster.bfoster>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:44580 "EHLO
+        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbcJDN3m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2016 09:29:42 -0400
+Date: Tue, 4 Oct 2016 09:29:35 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <1209071853.342152.1475587775353.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161003203539.GW19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20160923190032.GA25771@ZenIV.linux.org.uk> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <20161003014218.GS19539@ZenIV.linux.org.uk> <19064316.41568.1475503587628.JavaMail.zimbra@redhat.com> <37510012.118174.1475526739119.JavaMail.zimbra@redhat.com> <20161003203539.GW19539@ZenIV.linux.org.uk>
+Subject: Re: [RFC][CFT] splice_read reworked
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161001132728.GA56484@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-
-Hi folks,
-
-First I apologize if I caused any confusion with the root cause here, I will try
-to clear it a bit on the lines below, and I'll try to write some more detailed
-e-mail later explaining what I have until now, I just need to compact it and put
-my investigation notes in some way everybody else will understand;
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
 
-> > What you're now saying is that there is /another/ problem to do with
-> > the retry side of the code, were an item that is flush locked is not
-> > correctly resubmitted for IO, because the item is still flush
-> > locked.
-> > 
+
+----- Original Message -----
+> From: "Al Viro" <viro@ZenIV.linux.org.uk>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>, "linux-xfs"
+> <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> linux-fsdevel@vger.kernel.org
+> Sent: Monday, October 3, 2016 4:35:40 PM
+> Subject: Re: [RFC][CFT] splice_read reworked
 > 
-> Well, that's the only issue that I'm actually aware of and that was the
-> target of the experiment. What I'm saying, specifically, is Carlos' test
-> reproduces an unmount hang due to the broken AIL retry problem for flush
-> locked buffers. For example:
-
-This is basically all we are seeing, and is causing the problem, items that are
-flush locked are not being resubmitted for IO, and, in case of unmount, xfsaild
-keeps spinning on these locked items, once they can't be resubmitted.
-
-Just another example where this bug can be triggered, is still using dm-thin,
-but, instead of unmounting the filesystem and expect it to shutdown, we extend
-the POOL device, allowing more space, so the items can be properly flushed.
-
-In this case, the following steps can trigger the problem (using fake values
-just for make it simpler to understand):
-
-- Create a dm-thin POOL (ex: 100MB)
-- Create a dm-thin device overcommiting the POOL (ex: 200MB)
-- mkfs.xfs the dm-thin device
-- snapshot the dm-thin device
-- Mount the snapshot and fill it (using a single dd works here)
-
-- dd command will fail with an EIO, dm-thin will report it back to XFS, which will
-trigger metadata IO errors, and keep the AIL items locked and 'theoretically'
-trying to resubmit the buffers.
-
-- Extend dm-thin POOL to something big enough (let's say 500MB)
-
-
-
-At this point, the metadata IO errors stop to be reported by XFS, but even
-though we now have enough space, the AIL flush locked items are never
-resubmitted and xfsaild keeps spinning on them and they are never flushed.
-
-
-Here though, we might have 2 different behaviors
-
--xfs will lock up spinning in xfsaild if anyone tries to unmount the filesystem,
-the same behavior as before (without extending the dm-thin POOL)
-
-- If any IO is issued to the filesystem, after extending this (a simple `touch
-  /mnt/foobar` works), everything goes back to normal, items in AIL are
-  resubmitted, and the filesystem can be unmounted normally.
-
-I will try to explain it with call paths later, as soon as I reorganize my logs
-here.
-
-
-
+> On Mon, Oct 03, 2016 at 04:32:19PM -0400, CAI Qian wrote:
+> > > It is pretty reproducible so far by just running the trinity from a
+> > > docker
+> > > container backed by overlayfs/xfs.
+> > > 
+> > > # su - test
+> > > $ trinity
+> > Also, AFACIT, this is NOT reproducible on v4.8 mainline, but only with this
+> > splice_read reworked branch of vfs tree.
 > 
-> - Filesystem is humming along normally until the dm device shuts down,
->   as expected, and metadata writeback begins to fail.
-> - One of such failed items is a flush locked inode. We hit
->   xfs_buf_iodone_callback_error() and do not shut down the fs because
->   we're using the default error config (retry forever).
-> - The inode log item ends up back on the AIL in the flush locked state.
-> - An unmount occurs, some other item is retried, fails and triggers the
->   shutdown on umount check in *_iodone_callback_error().
-> - The unmount remains hung, despite the shutdown, because the AIL is
->   spinning on the flush locked inode item. It can't abort the item
->   because it cannot be retried, which would detect the shutdown state in
->   the iodone handler, issue the callbacks and remove it from the AIL.
+> I would be very surprised if mainline had somehow managed to trip sanity
+> checks added in vfs tree ;-)
 > 
-> This is the state I seemed to reproduce in the handful of times I ran
-> Carlos' reproducer. E.g., the filesystem does actually shut down
-> correctly on unmount, but the umount was still hung spinning on a flush
-> locked item. Hence the experiment to retry the apparently stuck inode
-> buffer. This tests the broken retry theory and seemingly works around
-> (not fixes) the problem.
+> Is there any way to record the sequence of syscalls leading to that?
 > 
-> With that (hopefully clarified), you're losing me with regard to the
-> separate "abort on permanent failure" problem. It's not clear to me
-> whether we're confusing the root cause of the same fundamental issue or
-> there is just another problem that I'm just not aware of. Assuming the
-> latter, could you please elaborate on that issue to clarify it from the
-> one described above?
-> 
-> > Ok, yes, now that it's clear this isn't actually addressing
-> > fail_at_unmount permanent errors, I can see that there is a retry
-> > problem here. However, I don't think this patch is
-> > the correct way to address that, either, because the buffer lookup
-> > cost is prohibitive.
-> > 
-> 
-> As mentioned, this was just a test to see if a resubmission would
-> unstick the fs and if so, start a discussion on a proper fix.
-> 
-> > I think the correct thing to do - again - is to run the iodone
-> > callbacks on a "retriable error". i.e. on an error that needs to be
-> > retried, we:
-> > 
-> > 	- run callbacks on each object attached to buffer
-> > 	- each object gets marked as "write fail"
-> > 	- each object remains flush locked
-> > 	- the position in the AI lof each object is unchanged
-> > 	- buffer remains marked with _XBF_WRITE_FAIL
-> > 
-> > We cannot unlock the flush lock until the state on disk
-> > matches the state we flushed from the in-memory object to the buffer
-> > that is failing, hence we need some other method for indicating a
-> > new submission is required.
-> > 
-> > If we then find an object flush locked on an AIL push, we:
-> > 
-> > 	- check the object for the "write fail" flag. If not set,
-> > 	  there's nothing more to do.
-> > 	- look up the underlying buffer, check the _XBF_WRITE_FAIL
-> > 	  flag. If that's not set, we've raced with another IO doing
-> > 	  a retry or new submission. Nothing more to do.
-> > 	- with the buffer now locked, walk all the objects attached
-> > 	  and clear the "write fail" flags. This is needed to
-> > 	  prevent attempting to resubmit the buffer for every object
-> > 	  attached to the buffer as the AIL push walks down the
-> > 	  list.
-> > 	- add the buffer to the delwri list.
-> > 
-> > At that point, the buffer will be retried, and if it succeeds the
-> > inodes will be unlocked and on we'll go. If the buffer runs out of
-> > retries, then we need to shut down the filesystem and abort all the
-> > objects attached to it.....
-> > 
-> 
-> This all sounds like a good idea to me, but I'll defer to Carlos and
-> whether he groks it enough to cook up a prototype. :)
-> 
-> Brian
-> 
-> > i.e. there are multiple problems here that need fixing, not one...
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, a bit long shot though.
 
--- 
-Carlos
+http://people.redhat.com/qcai/tmp/trinity-child113.log
+
+This one triggered the warning at lib/iov_iter.c:316 sanity+0x6b/0x6
+3 times at once.
+
+[ 2200.510753] ------------[ cut here ]------------
+[ 2200.515929] WARNING: CPU: 9 PID: 116624 at lib/iov_iter.c:316 sanity+0x6b/0x6f
+[ 2200.523999] Modules linked in: 8021q garp mrp fuse dlci vmw_vsock_vmci_transport vsock vmw_vmci af_key ieee802154_socket ieee802154 hidp cmtp kernelcapi bnep rfcomm bluetooth rfkill can_bcm can_raw can pptp gre l2tp_ppp l2tp_netlink l2tp_core ip6_udp_tunnel udp_tunnel pppoe pppox ppp_generic slhc nfnetlink scsi_transport_iscsi atm sctp veth ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype iptable_filter xt_conntrack nf_nat nf_conntrack br_netfilter bridge stp llc overlay intel_rapl sb_edac edac_core x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper cryptd iTCO_wdt iTCO_vendor_support pcspkr i2c_i801 i2c_smbus mei_me ipmi_ssif sg lpc_ich mei shpchp wmi ipmi_si ipmi_msghandler acpi_power_meter acpi_pad nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sr_mod sd_mod cdrom mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops crc32c_intel ttm ixgbe drm ahci mdio libahci ptp libata pps_core i2c_core dca fjes dm_mirror dm_region_hash dm_log dm_mod
+[ 2200.644251] CPU: 9 PID: 116624 Comm: trinity-c113 Not tainted 4.8.0-rc8-splice+ #1
+[ 2200.652708] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
+[ 2200.664062]  0000000000000286 00000000bad46fa7 ffff8803d1ca7b30 ffffffff813d2eac
+[ 2200.672368]  0000000000000000 0000000000000000 ffff8803d1ca7b70 ffffffff8109cf11
+[ 2200.680660]  0000013c2e32bdc8 ffffea000eea7540 0000000000001000 ffff88030e9a0000
+[ 2200.688954] Call Trace:
+[ 2200.691686]  [<ffffffff813d2eac>] dump_stack+0x85/0xc9
+[ 2200.697433]  [<ffffffff8109cf11>] __warn+0xd1/0xf0
+[ 2200.702777]  [<ffffffff8109d04d>] warn_slowpath_null+0x1d/0x20
+[ 2200.709285]  [<ffffffff81418c93>] sanity+0x6b/0x6f
+[ 2200.714630]  [<ffffffff813e9586>] copy_page_to_iter+0xf6/0x1e0
+[ 2200.721139]  [<ffffffff811e3906>] generic_file_read_iter+0x406/0x800
+[ 2200.728231]  [<ffffffff810f8afd>] ? down_read_nested+0x4d/0x80
+[ 2200.734798]  [<ffffffffa02c46ae>] ? xfs_ilock+0x1ae/0x260 [xfs]
+[ 2200.741433]  [<ffffffffa02b3f2f>] xfs_file_buffered_aio_read+0x6f/0x1b0 [xfs]
+[ 2200.749412]  [<ffffffffa02b46e8>] xfs_file_read_iter+0x68/0xc0 [xfs]
+[ 2200.756504]  [<ffffffff812bb359>] generic_file_splice_read+0xb9/0x1b0
+[ 2200.763691]  [<ffffffff812bb913>] do_splice_to+0x73/0x90
+[ 2200.769618]  [<ffffffff812bba1b>] splice_direct_to_actor+0xeb/0x220
+[ 2200.776610]  [<ffffffff812baee0>] ? generic_pipe_buf_nosteal+0x10/0x10
+[ 2200.783893]  [<ffffffff812bbbd9>] do_splice_direct+0x89/0xd0
+[ 2200.790207]  [<ffffffff8128261e>] do_sendfile+0x1ce/0x3b0
+[ 2200.796231]  [<ffffffff812831df>] SyS_sendfile64+0x6f/0xd0
+[ 2200.802351]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[ 2200.808471]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[ 2200.815723] ---[ end trace e02dda43787dce2a ]---
+[ 2200.821003] ------------[ cut here ]------------
+[ 2200.826168] WARNING: CPU: 9 PID: 116624 at lib/iov_iter.c:316 sanity+0x6b/0x6f
+[ 2200.834765] Modules linked in: 8021q garp mrp fuse dlci vmw_vsock_vmci_transport vsock vmw_vmci af_key ieee802154_socket ieee802154 hidp cmtp kernelcapi bnep rfcomm bluetooth rfkill can_bcm can_raw can pptp gre l2tp_ppp l2tp_netlink l2tp_core ip6_udp_tunnel udp_tunnel pppoe pppox ppp_generic slhc nfnetlink scsi_transport_iscsi atm sctp veth ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype iptable_filter xt_conntrack nf_nat nf_conntrack br_netfilter bridge stp llc overlay intel_rapl sb_edac edac_core x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper cryptd iTCO_wdt iTCO_vendor_support pcspkr i2c_i801 i2c_smbus mei_me ipmi_ssif sg lpc_ich mei shpchp wmi ipmi_si ipmi_msghandler acpi_power_meter acpi_pad nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sr_mod sd_mod cdrom mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops crc32c_intel ttm ixgbe drm ahci mdio libahci ptp libata pps_core i2c_core dca fjes dm_mirror dm_region_hash dm_log dm_mod
+[ 2200.951286] CPU: 9 PID: 116624 Comm: trinity-c113 Tainted: G        W       4.8.0-rc8-splice+ #1
+[ 2200.961088] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
+[ 2200.972443]  0000000000000286 00000000bad46fa7 ffff8803d1ca7b30 ffffffff813d2eac
+[ 2200.980747]  0000000000000000 0000000000000000 ffff8803d1ca7b70 ffffffff8109cf11
+[ 2200.989078]  0000013c00000000 ffffea000b711880 0000000000001000 ffff88030e9a0000
+[ 2200.997375] Call Trace:
+[ 2201.000107]  [<ffffffff813d2eac>] dump_stack+0x85/0xc9
+[ 2201.005842]  [<ffffffff8109cf11>] __warn+0xd1/0xf0
+[ 2201.011199]  [<ffffffff8109d04d>] warn_slowpath_null+0x1d/0x20
+[ 2201.017708]  [<ffffffff81418c93>] sanity+0x6b/0x6f
+[ 2201.023053]  [<ffffffff813e9586>] copy_page_to_iter+0xf6/0x1e0
+[ 2201.029562]  [<ffffffff811e3906>] generic_file_read_iter+0x406/0x800
+[ 2201.036654]  [<ffffffff810f8afd>] ? down_read_nested+0x4d/0x80
+[ 2201.043213]  [<ffffffffa02c46ae>] ? xfs_ilock+0x1ae/0x260 [xfs]
+[ 2201.049849]  [<ffffffffa02b3f2f>] xfs_file_buffered_aio_read+0x6f/0x1b0 [xfs]
+[ 2201.057828]  [<ffffffffa02b46e8>] xfs_file_read_iter+0x68/0xc0 [xfs]
+[ 2201.064919]  [<ffffffff812bb359>] generic_file_splice_read+0xb9/0x1b0
+[ 2201.072108]  [<ffffffff812bb913>] do_splice_to+0x73/0x90
+[ 2201.078034]  [<ffffffff812bba1b>] splice_direct_to_actor+0xeb/0x220
+[ 2201.085026]  [<ffffffff812baee0>] ? generic_pipe_buf_nosteal+0x10/0x10
+[ 2201.092309]  [<ffffffff812bbbd9>] do_splice_direct+0x89/0xd0
+[ 2201.098623]  [<ffffffff8128261e>] do_sendfile+0x1ce/0x3b0
+[ 2201.104646]  [<ffffffff812831df>] SyS_sendfile64+0x6f/0xd0
+[ 2201.110768]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[ 2201.116890]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[ 2201.124136] ---[ end trace e02dda43787dce2b ]---
+[ 2201.192680] ------------[ cut here ]------------
+[ 2201.203826] WARNING: CPU: 9 PID: 116624 at lib/iov_iter.c:316 sanity+0x6b/0x6f
+[ 2201.211899] Modules linked in: 8021q garp mrp fuse dlci vmw_vsock_vmci_transport vsock vmw_vmci af_key ieee802154_socket ieee802154 hidp cmtp kernelcapi bnep rfcomm bluetooth rfkill can_bcm can_raw can pptp gre l2tp_ppp l2tp_netlink l2tp_core ip6_udp_tunnel udp_tunnel pppoe pppox ppp_generic slhc nfnetlink scsi_transport_iscsi atm sctp veth ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype iptable_filter xt_conntrack nf_nat nf_conntrack br_netfilter bridge stp llc overlay intel_rapl sb_edac edac_core x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel lrw gf128mul glue_helper ablk_helper cryptd iTCO_wdt iTCO_vendor_support pcspkr i2c_i801 i2c_smbus mei_me ipmi_ssif sg lpc_ich mei shpchp wmi ipmi_si ipmi_msghandler acpi_power_meter acpi_pad nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sr_mod sd_mod cdrom mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops crc32c_intel ttm ixgbe drm ahci mdio libahci ptp libata pps_core i2c_core dca fjes dm_mirror dm_region_hash dm_log dm_mod
+[ 2201.329000] CPU: 9 PID: 116624 Comm: trinity-c113 Tainted: G        W       4.8.0-rc8-splice+ #1
+[ 2201.338805] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
+[ 2201.350160]  0000000000000286 00000000bad46fa7 ffff8803d1ca7b30 ffffffff813d2eac
+[ 2201.358455]  0000000000000000 0000000000000000 ffff8803d1ca7b70 ffffffff8109cf11
+[ 2201.366747]  0000013c00000000 ffffea000be93cc0 0000000000001000 ffff88030e9a0000
+[ 2201.375035] Call Trace:
+[ 2201.377767]  [<ffffffff813d2eac>] dump_stack+0x85/0xc9
+[ 2201.383499]  [<ffffffff8109cf11>] __warn+0xd1/0xf0
+[ 2201.388843]  [<ffffffff8109d04d>] warn_slowpath_null+0x1d/0x20
+[ 2201.395351]  [<ffffffff81418c93>] sanity+0x6b/0x6f
+[ 2201.400695]  [<ffffffff813e9586>] copy_page_to_iter+0xf6/0x1e0
+[ 2201.407204]  [<ffffffff811e3906>] generic_file_read_iter+0x406/0x800
+[ 2201.414294]  [<ffffffff810f8afd>] ? down_read_nested+0x4d/0x80
+[ 2201.420844]  [<ffffffffa02c46ae>] ? xfs_ilock+0x1ae/0x260 [xfs]
+[ 2201.427463]  [<ffffffffa02b3f2f>] xfs_file_buffered_aio_read+0x6f/0x1b0 [xfs]
+[ 2201.435451]  [<ffffffffa02b46e8>] xfs_file_read_iter+0x68/0xc0 [xfs]
+[ 2201.442542]  [<ffffffff812bb359>] generic_file_splice_read+0xb9/0x1b0
+[ 2201.449728]  [<ffffffff812bb913>] do_splice_to+0x73/0x90
+[ 2201.455655]  [<ffffffff812bba1b>] splice_direct_to_actor+0xeb/0x220
+[ 2201.462645]  [<ffffffff812baee0>] ? generic_pipe_buf_nosteal+0x10/0x10
+[ 2201.469928]  [<ffffffff812bbbd9>] do_splice_direct+0x89/0xd0
+[ 2201.476242]  [<ffffffff8128261e>] do_sendfile+0x1ce/0x3b0
+[ 2201.482264]  [<ffffffff812831df>] SyS_sendfile64+0x6f/0xd0
+[ 2201.488383]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[ 2201.494504]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[ 2201.501736] ---[ end trace e02dda43787dce2c ]---
+
+   CAI Qian
