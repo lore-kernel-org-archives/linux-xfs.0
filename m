@@ -1,152 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41763 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751913AbcJEI33 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Oct 2016 04:29:29 -0400
-Date: Wed, 5 Oct 2016 10:29:26 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/2] fs: update atime before I/O in generic_file_read_iter
-Message-ID: <20161005082926.GA7291@quack2.suse.cz>
-References: <1475225194-3702-1-git-send-email-hch@lst.de>
- <1475225194-3702-3-git-send-email-hch@lst.de>
- <20161004081324.GC17515@quack2.suse.cz>
- <20161004114830.GA2359@lst.de>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:55504 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751223AbcJDUMg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2016 16:12:36 -0400
+Date: Tue, 4 Oct 2016 21:12:33 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [RFC][CFT] splice_read reworked
+Message-ID: <20161004201232.GA19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com>
+ <20161003014218.GS19539@ZenIV.linux.org.uk>
+ <19064316.41568.1475503587628.JavaMail.zimbra@redhat.com>
+ <37510012.118174.1475526739119.JavaMail.zimbra@redhat.com>
+ <20161003203539.GW19539@ZenIV.linux.org.uk>
+ <1209071853.342152.1475587775353.JavaMail.zimbra@redhat.com>
+ <20161004142805.GX19539@ZenIV.linux.org.uk>
+ <307867218.381779.1475598088901.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="UugvWAfsgieZRqgk"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161004114830.GA2359@lst.de>
+In-Reply-To: <307867218.381779.1475598088901.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: CAI Qian <caiqian@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-
---UugvWAfsgieZRqgk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Tue 04-10-16 13:48:30, Christoph Hellwig wrote:
-> On Tue, Oct 04, 2016 at 10:13:24AM +0200, Jan Kara wrote:
-> > But frankly it looks like a nasty catch that iocb->ki_filp can go away
-> > under you in the AIO case. Do I get it right that this means there must be
-> > some other thread closing your fd while the read is running, right?
+On Tue, Oct 04, 2016 at 12:21:28PM -0400, CAI Qian wrote:
 > 
-> Yes, that's what generic/323 tests.
-> 
-> > Also it seems that file_end_write(file) call in aio_run_iocb() is prone to
-> > the same race?
-> 
-> Indeed.  That's easy to fix by moving the file_end_write to aio_complete,
-> though.
+> > Not enough information, unfortunately (descriptor in question opened
+> > outside of that log, sendfile(out_fd=578, in_fd=578, offset=0x7f8318a07000,
+> > count=0x3ffc00) doesn't tell what *offset was before the call) ;-/
+> > 
+> > Anyway, I've found and fixed a bug in pipe_advance(), which might or might
+> > not help with those.  Could you try vfs.git#work.splice_read (or #for-next)
+> > and see if these persist?
+> I am afraid that this can also reproduced in the latest #for-next . The warning
+> always showed up at the end of trinity run. I captured more information this time.
 
-Now that you speak about that I even had a patch for that (attached) but
-Benjamin didn't quite like the lockdep dance you have to do so the patch
-just got dropped... Now looking at the patch the lockdep annotation
-actually still has the use-after-free issue and I don't see an easy way of
-avoiding that. Any idea?
+OK, let's try to get more information about what's going on (this is on top
+of either for-next or work.splice_read):
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
-
---UugvWAfsgieZRqgk
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-aio-Fix-freeze-protection-of-aio-writes.patch"
-
->From df3f86d497e7fc11f3a03e26ee1333f2c03025e5 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Tue, 24 Nov 2015 14:19:22 +0100
-Subject: [PATCH] aio: Fix freeze protection of aio writes
-
-Currently we dropped freeze protection of aio writes just after IO was
-submitted. Thus aio write could be in flight while the filesystem was
-frozen and that could result in unexpected situation like aio completion
-wanting to convert extent type on frozen filesystem. Testcase from
-Dmitry triggering this is like:
-
-for ((i=0;i<60;i++));do fsfreeze -f /mnt ;sleep 1;fsfreeze -u /mnt;done &
-fio --bs=4k --ioengine=libaio --iodepth=128 --size=1g --direct=1 \
-    --runtime=60 --filename=/mnt/file --name=rand-write --rw=randwrite
-
-Fix the problem by dropping freeze protection only once IO is completed
-in aio_complete().
-
-Reported-by: Dmitry Monakhov <dmonakhov@openvz.org>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/aio.c           | 31 ++++++++++++++++++++++++++++---
- include/linux/fs.h |  1 +
- 2 files changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/fs/aio.c b/fs/aio.c
-index 155f84253f33..ee0871cb4677 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1065,6 +1065,19 @@ static void aio_complete(struct kiocb *kiocb, long res, long res2)
- 	unsigned tail, pos, head;
- 	unsigned long	flags;
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index c97d661..a9cb9ff 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -313,6 +313,15 @@ static bool sanity(const struct iov_iter *i)
+ 	}
+ 	return true;
+ Bad:
++	printk(KERN_ERR "idx = %d, offset = %zd\n", i->idx, i->iov_offset);
++	printk(KERN_ERR "curbuf = %d, nrbufs = %d, buffers = %d\n",
++			pipe->curbuf, pipe->nrbufs, pipe->buffers);
++	for (idx = 0; idx < pipe->buffers; idx++)
++		printk(KERN_ERR "[%p %p %d %d]\n",
++			pipe->bufs[idx].ops,
++			pipe->bufs[idx].page,
++			pipe->bufs[idx].offset,
++			pipe->bufs[idx].len);
+ 	WARN_ON(1);
+ 	return false;
+ }
+@@ -339,8 +348,11 @@ static size_t copy_page_to_iter_pipe(struct page *page, size_t offset, size_t by
+ 	if (unlikely(!bytes))
+ 		return 0;
  
-+	if (kiocb->ki_flags & IOCB_WRITE) {
-+		struct file *f = kiocb->ki_filp;
-+
-+		/*
-+		 * Tell lockdep we inherited freeze protection from submission
-+		 * thread.
-+		 */
-+		percpu_rwsem_acquire(
-+			&f->f_inode->i_sb->s_writers.rw_sem[SB_FREEZE_WRITE-1],
-+			1, _THIS_IP_);
-+		file_end_write(f);
+-	if (!sanity(i))
++	if (!sanity(i)) {
++		printk(KERN_ERR "page = %p, offset = %zd, size = %zd\n",
++			page, offset, bytes);
+ 		return 0;
 +	}
-+
- 	/*
- 	 * Special case handling for sync iocbs:
- 	 *  - events go directly into the iocb for fast handling
-@@ -1449,13 +1462,25 @@ rw_common:
  
- 		len = ret;
+ 	off = i->iov_offset;
+ 	idx = i->idx;
+@@ -518,6 +530,8 @@ static size_t copy_pipe_to_iter(const void *addr, size_t bytes,
+ 		addr += chunk;
+ 	}
+ 	i->count -= bytes;
++	if (!sanity(i))
++		printk(KERN_ERR "buggered after copy_to_iter\n");
+ 	return bytes;
+ }
  
--		if (rw == WRITE)
-+		if (rw == WRITE) {
- 			file_start_write(file);
-+			req->ki_flags |= IOCB_WRITE;
-+		}
+@@ -629,6 +643,8 @@ static size_t pipe_zero(size_t bytes, struct iov_iter *i)
+ 		n -= chunk;
+ 	}
+ 	i->count -= bytes;
++	if (!sanity(i))
++		printk(KERN_ERR "buggered after zero_iter\n");
+ 	return bytes;
+ }
  
- 		ret = iter_op(req, &iter);
+@@ -673,6 +689,8 @@ static void pipe_advance(struct iov_iter *i, size_t size)
+ 	struct pipe_buffer *buf;
+ 	int idx = i->idx;
+ 	size_t off = i->iov_offset;
++	struct iov_iter orig = *i;
++	size_t orig_size = size;
+ 	
+ 	if (unlikely(i->count < size))
+ 		size = i->count;
+@@ -702,6 +720,9 @@ static void pipe_advance(struct iov_iter *i, size_t size)
+ 			pipe->nrbufs--;
+ 		}
+ 	}
++	if (!sanity(i))
++		printk(KERN_ERR "buggered pipe_advance by %zd from [%d.%zd]",
++			orig_size, orig.idx, orig.iov_offset);
+ }
  
--		if (rw == WRITE)
--			file_end_write(file);
-+		if (rw == WRITE) {
-+			/*
-+			 * We release freeze protection in aio_complete(). Fool
-+			 * lockdep by telling it the lock got released so that
-+			 * it doesn't complain about held lock when we return
-+			 * to userspace.
-+			 */
-+			percpu_rwsem_release(
-+				&file->f_inode->i_sb->s_writers.rw_sem[SB_FREEZE_WRITE-1],
-+				1, _THIS_IP_);
-+		}
-+
- 		kfree(iovec);
- 		break;
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 3aa514254161..54af40ed6a26 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -319,6 +319,7 @@ struct writeback_control;
- #define IOCB_EVENTFD		(1 << 0)
- #define IOCB_APPEND		(1 << 1)
- #define IOCB_DIRECT		(1 << 2)
-+#define IOCB_WRITE		(1 << 3)
- 
- struct kiocb {
- 	struct file		*ki_filp;
--- 
-2.6.2
-
-
---UugvWAfsgieZRqgk--
+ void iov_iter_advance(struct iov_iter *i, size_t size)
