@@ -1,154 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:16949 "EHLO mga04.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55954 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751625AbcJCVQl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 17:16:41 -0400
-Date: Mon, 3 Oct 2016 15:16:38 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 10/12] dax: add struct iomap based DAX PMD support
-Message-ID: <20161003211638.GC28177@linux.intel.com>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com>
- <20160930095627.GB5299@infradead.org>
+        id S1753978AbcJDMoD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Oct 2016 08:44:03 -0400
+Date: Tue, 4 Oct 2016 08:44:01 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 24/63] xfs: when replaying bmap operations, don't let
+ unlinked inodes get reaped
+Message-ID: <20161004124400.GB55212@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520489698.29434.13242363533695270347.stgit@birch.djwong.org>
+ <20161003190409.GB49915@bfoster.bfoster>
+ <20161004002925.GC14092@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20160930095627.GB5299@infradead.org>
+In-Reply-To: <20161004002925.GC14092@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Fri, Sep 30, 2016 at 02:56:27AM -0700, Christoph Hellwig wrote:
-> > -/*
-> > - * We use lowest available bit in exceptional entry for locking, other two
-> > - * bits to determine entry type. In total 3 special bits.
-> > - */
-> > -#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
-> > -#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
-> > -#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
-> > -#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
-> > -#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-> > -#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-> > -#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
-> > -		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
-> > -		RADIX_TREE_EXCEPTIONAL_ENTRY))
-> > -
+On Mon, Oct 03, 2016 at 05:29:25PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 03, 2016 at 03:04:10PM -0400, Brian Foster wrote:
+> > On Thu, Sep 29, 2016 at 08:08:17PM -0700, Darrick J. Wong wrote:
+> > > Log recovery will iget an inode to replay BUI items and iput the inode
+> > > when it's done.  Unfortunately, the iput will see that i_nlink == 0
+> > > and decide to truncate & free the inode, which prevents us from
+> > > replaying subsequent BUIs.  We can't skip the BUIs because we have to
+> > > replay all the redo items to ensure that atomic operations complete.
+> > > 
+...
+> > 
+> > > Since unlinked inode recovery will reap the inode anyway, we can
+> > > safely introduce a new inode flag to indicate that an inode is in this
+> > > 'unlinked recovery' state and should not be auto-reaped in the
+> > > drop_inode path.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/xfs_bmap_item.c   |    1 +
+> > >  fs/xfs/xfs_inode.c       |    8 ++++++++
+> > >  fs/xfs/xfs_inode.h       |    6 ++++++
+> > >  fs/xfs/xfs_log_recover.c |    1 +
+> > >  4 files changed, 16 insertions(+)
+> > > 
+> > > 
+...
+> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > index e08eaea..0c25a76 100644
+> > > --- a/fs/xfs/xfs_inode.c
+> > > +++ b/fs/xfs/xfs_inode.c
+> > > @@ -1855,6 +1855,14 @@ xfs_inactive(
+> > >  	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> > >  		return;
+> > >  
+> > > +	/*
+> > > +	 * If this unlinked inode is in the middle of recovery, don't
+> > > +	 * truncate and free the inode just yet; log recovery will take
+> > > +	 * care of that.  See the comment for this inode flag.
+> > > +	 */
+> > > +	if (xfs_iflags_test(ip, XFS_IRECOVER_UNLINKED))
+> > > +		return;
+> > > +
+> > 
+> > Also, it might be better to push this one block of code down since the
+> > following block still deals with i_nlink > 0 properly (not that it will
+> > likely affect the code as it is now, since we only handle eofblocks
+> > trimming atm).
 > 
-> Please split the move of these constants into a separate patch.
-
-Will do for v5.
-
-> > -static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index)
-> > +static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
-> > +		unsigned long new_type)
-> >  {
-> > +	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
-> >  	void *entry, **slot;
-> >  
-> >  restart:
-> >  	spin_lock_irq(&mapping->tree_lock);
-> >  	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-> > +
-> > +	if (entry && new_type == RADIX_DAX_PMD) {
-> > +		if (!radix_tree_exceptional_entry(entry) ||
-> > +				RADIX_DAX_TYPE(entry) == RADIX_DAX_PTE) {
-> > +			spin_unlock_irq(&mapping->tree_lock);
-> > +			return ERR_PTR(-EEXIST);
-> > +		}
-> > +	} else if (entry && new_type == RADIX_DAX_PTE) {
-> > +		if (radix_tree_exceptional_entry(entry) &&
-> > +		    RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD &&
-> > +		    (unsigned long)entry & (RADIX_DAX_HZP|RADIX_DAX_EMPTY)) {
-> > +			pmd_downgrade = true;
-> > +		}
-> > +	}
+> I put the jump-out case there so that we touch the inode's bmap as little
+> as possible while we're recovering the inode.  Since the inode is still
+> around in memory, so we'll end up back there at a later point anyway.
 > 
-> 	Would be nice to use switch on the type here:
+
+I'm not quite following... it looks like we set the reclaim tag on the
+inode unconditionally after we get through xfs_inactive(). That implies
+the in-memory inode can go away at any point thereafter, unless somebody
+else comes along and happens to look for it. Hmm?
+
+Brian
+
+> --D
 > 
-> 	old_type = RADIX_DAX_TYPE(entry);
-> 
-> 	if (entry) {
-> 		switch (new_type) {
-> 		case RADIX_DAX_PMD:
-> 			if (!radix_tree_exceptional_entry(entry) ||
-> 			    oldentry == RADIX_DAX_PTE) {
-> 			    	entry = ERR_PTR(-EEXIST);
-> 				goto out_unlock;
-> 			}
-> 			break;
-> 		case RADIX_DAX_PTE:
-> 			if (radix_tree_exceptional_entry(entry) &&
-> 			    old_entry = RADIX_DAX_PMD &&
-> 			    (unsigned long)entry & 
-> 			      (RADIX_DAX_HZP|RADIX_DAX_EMPTY))
-> 			      	..
-
-Will do.  This definitely makes things less dense and more readable.
-
-> Btw, why are only RADIX_DAX_PTE and RADIX_DAX_PMD in the type mask,
-> and not RADIX_DAX_HZP and RADIX_DAX_EMPTY?  With that we could use the
-> above old_entry local variable over this function and make it a lot les
-> of a mess.
-
-So essentially in this revision of the series 'type' just means PMD or PTE
-(perhaps this should have been 'size' or something), and the Zero Page / Empty
-Entry / Regular DAX choice was something separate.  Jan also commented on
-this, and I agree there's room for improvement.  Let me try and rework it a
-bit for v5.
-
-> >  static void *dax_insert_mapping_entry(struct address_space *mapping,
-> >  				      struct vm_fault *vmf,
-> > -				      void *entry, sector_t sector)
-> > +				      void *entry, sector_t sector,
-> > +				      unsigned long new_type, bool hzp)
-> 
-> And then we could also drop the hzp argument here..
-
-Yep, that would be good.
-
-> >  #ifdef CONFIG_FS_IOMAP
-> > +static inline sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
-> > +{
-> > +	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-> > +}
-> 
-> Please split adding this new helper into a separate patch.
-
-Done for v5.
-
-> > +#if defined(CONFIG_FS_DAX_PMD)
-> 
-> Please use #ifdef here.
-
-Will do.
-
-> > +#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-> > +#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-> > +
-> > +/* entries begin locked */
-> > +#define RADIX_DAX_ENTRY(sector, type) ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |\
-> > +	type | (unsigned long)sector << RADIX_DAX_SHIFT | RADIX_DAX_ENTRY_LOCK))
-> > +#define RADIX_DAX_HZP_ENTRY() ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | \
-> > +	RADIX_DAX_PMD | RADIX_DAX_HZP | RADIX_DAX_EMPTY | RADIX_DAX_ENTRY_LOCK))
-> > +#define RADIX_DAX_EMPTY_ENTRY(type) ((void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | \
-> > +		type | RADIX_DAX_EMPTY | RADIX_DAX_ENTRY_LOCK))
-> > +
-> > +#define RADIX_DAX_ORDER(type) (type == RADIX_DAX_PMD ? PMD_SHIFT-PAGE_SHIFT : 0)
-> 
-> All these macros don't properly brace their arguments.  I think
-> you'd make your life a lot easier by making them inline functions.
-
-Oh, great point.  Will do, although depending on how the 'type' thing works
-out we may end up with just a dax_radix_entry(sector, type) inline function,
-where 'type' can be (RADIX_DAX_PMD | RADIX_DAX_EMPTY), etc.  That would
-prevent the need for a bunch of different ways of making a new entry.
-
-> > +#if defined(CONFIG_FS_DAX_PMD)
-> 
-> #ifdef, please
-
-Will do.
-
-Thank you for the review, Christoph.
+> > 
+> > Brian
+> > 
+> > >  	if (VFS_I(ip)->i_nlink != 0) {
+> > >  		/*
+> > >  		 * force is true because we are evicting an inode from the
+> > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > > index a8658e6..46632f1 100644
+> > > --- a/fs/xfs/xfs_inode.h
+> > > +++ b/fs/xfs/xfs_inode.h
+> > > @@ -222,6 +222,12 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+> > >  #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+> > >  #define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
+> > >  #define XFS_IEOFBLOCKS		(1 << 10)/* has the preallocblocks tag set */
+> > > +/*
+> > > + * If this unlinked inode is in the middle of recovery, don't let drop_inode
+> > > + * truncate and free the inode.  This can happen if we iget the inode during
+> > > + * log recovery to replay a bmap operation on the inode.
+> > > + */
+> > > +#define XFS_IRECOVER_UNLINKED	(1 << 11)
+> > >  
+> > >  /*
+> > >   * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > index 9697e94..b121f02 100644
+> > > --- a/fs/xfs/xfs_log_recover.c
+> > > +++ b/fs/xfs/xfs_log_recover.c
+> > > @@ -4969,6 +4969,7 @@ xlog_recover_process_one_iunlink(
+> > >  	if (error)
+> > >  		goto fail_iput;
+> > >  
+> > > +	xfs_iflags_clear(ip, XFS_IRECOVER_UNLINKED);
+> > >  	ASSERT(VFS_I(ip)->i_nlink == 0);
+> > >  	ASSERT(VFS_I(ip)->i_mode != 0);
+> > >  
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
