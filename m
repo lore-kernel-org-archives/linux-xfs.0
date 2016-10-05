@@ -1,113 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:55504 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751223AbcJDUMg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2016 16:12:36 -0400
-Date: Tue, 4 Oct 2016 21:12:33 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC][CFT] splice_read reworked
-Message-ID: <20161004201232.GA19539@ZenIV.linux.org.uk>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com>
- <20161003014218.GS19539@ZenIV.linux.org.uk>
- <19064316.41568.1475503587628.JavaMail.zimbra@redhat.com>
- <37510012.118174.1475526739119.JavaMail.zimbra@redhat.com>
- <20161003203539.GW19539@ZenIV.linux.org.uk>
- <1209071853.342152.1475587775353.JavaMail.zimbra@redhat.com>
- <20161004142805.GX19539@ZenIV.linux.org.uk>
- <307867218.381779.1475598088901.JavaMail.zimbra@redhat.com>
+Received: from mx6-phx2.redhat.com ([209.132.183.39]:47729 "EHLO
+        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753488AbcJEOJs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2016 10:09:48 -0400
+Date: Wed, 5 Oct 2016 10:09:39 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161004214219.GN4205@htj.duckdns.org>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <2131586457.763354.1475242373422.JavaMail.zimbra@redhat.com> <1415238593.811146.1475257337058.JavaMail.zimbra@redhat.com> <774397084.821469.1475260403929.JavaMail.zimbra@redhat.com> <20161003013737.GR19539@ZenIV.linux.org.uk> <1937480340.100083.1475516965286.JavaMail.zimbra@redhat.com> <1812816839.401734.1475602751170.JavaMail.zimbra@redhat.com> <20161004214219.GN4205@htj.duckdns.org>
+Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+ splice_read reworked)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <307867218.381779.1475598088901.JavaMail.zimbra@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: CAI Qian <caiqian@redhat.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: tj <tj@kernel.org>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Tue, Oct 04, 2016 at 12:21:28PM -0400, CAI Qian wrote:
+
+
+----- Original Message -----
+> From: "tj" <tj@kernel.org>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "Al Viro" <viro@ZenIV.linux.org.uk>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner"
+> <david@fromorbit.com>, "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin"
+> <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+> Sent: Tuesday, October 4, 2016 5:42:19 PM
+> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
 > 
-> > Not enough information, unfortunately (descriptor in question opened
-> > outside of that log, sendfile(out_fd=578, in_fd=578, offset=0x7f8318a07000,
-> > count=0x3ffc00) doesn't tell what *offset was before the call) ;-/
+> Hello, CAI.
+> 
+> On Tue, Oct 04, 2016 at 01:39:11PM -0400, CAI Qian wrote:
+> ...
+> > Not sure if related, but right after this lockdep happened and trinity
+> > running by a
+> > non-privileged user finished inside the container. The host's systemctl
+> > command just
+> > hang or timeout which renders the whole system unusable.
 > > 
-> > Anyway, I've found and fixed a bug in pipe_advance(), which might or might
-> > not help with those.  Could you try vfs.git#work.splice_read (or #for-next)
-> > and see if these persist?
-> I am afraid that this can also reproduced in the latest #for-next . The warning
-> always showed up at the end of trinity run. I captured more information this time.
-
-OK, let's try to get more information about what's going on (this is on top
-of either for-next or work.splice_read):
-
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index c97d661..a9cb9ff 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -313,6 +313,15 @@ static bool sanity(const struct iov_iter *i)
- 	}
- 	return true;
- Bad:
-+	printk(KERN_ERR "idx = %d, offset = %zd\n", i->idx, i->iov_offset);
-+	printk(KERN_ERR "curbuf = %d, nrbufs = %d, buffers = %d\n",
-+			pipe->curbuf, pipe->nrbufs, pipe->buffers);
-+	for (idx = 0; idx < pipe->buffers; idx++)
-+		printk(KERN_ERR "[%p %p %d %d]\n",
-+			pipe->bufs[idx].ops,
-+			pipe->bufs[idx].page,
-+			pipe->bufs[idx].offset,
-+			pipe->bufs[idx].len);
- 	WARN_ON(1);
- 	return false;
- }
-@@ -339,8 +348,11 @@ static size_t copy_page_to_iter_pipe(struct page *page, size_t offset, size_t by
- 	if (unlikely(!bytes))
- 		return 0;
- 
--	if (!sanity(i))
-+	if (!sanity(i)) {
-+		printk(KERN_ERR "page = %p, offset = %zd, size = %zd\n",
-+			page, offset, bytes);
- 		return 0;
-+	}
- 
- 	off = i->iov_offset;
- 	idx = i->idx;
-@@ -518,6 +530,8 @@ static size_t copy_pipe_to_iter(const void *addr, size_t bytes,
- 		addr += chunk;
- 	}
- 	i->count -= bytes;
-+	if (!sanity(i))
-+		printk(KERN_ERR "buggered after copy_to_iter\n");
- 	return bytes;
- }
- 
-@@ -629,6 +643,8 @@ static size_t pipe_zero(size_t bytes, struct iov_iter *i)
- 		n -= chunk;
- 	}
- 	i->count -= bytes;
-+	if (!sanity(i))
-+		printk(KERN_ERR "buggered after zero_iter\n");
- 	return bytes;
- }
- 
-@@ -673,6 +689,8 @@ static void pipe_advance(struct iov_iter *i, size_t size)
- 	struct pipe_buffer *buf;
- 	int idx = i->idx;
- 	size_t off = i->iov_offset;
-+	struct iov_iter orig = *i;
-+	size_t orig_size = size;
- 	
- 	if (unlikely(i->count < size))
- 		size = i->count;
-@@ -702,6 +720,9 @@ static void pipe_advance(struct iov_iter *i, size_t size)
- 			pipe->nrbufs--;
- 		}
- 	}
-+	if (!sanity(i))
-+		printk(KERN_ERR "buggered pipe_advance by %zd from [%d.%zd]",
-+			orig_size, orig.idx, orig.iov_offset);
- }
- 
- void iov_iter_advance(struct iov_iter *i, size_t size)
+> > # systemctl status docker
+> > Failed to get properties: Connection timed out
+> > 
+> > # systemctl reboot (hang)
+> > 
+> ...
+> > [ 5535.893675] INFO: lockdep is turned off.
+> > [ 5535.898085] INFO: task kworker/45:4:146035 blocked for more than 120
+> > seconds.
+> > [ 5535.906059]       Tainted: G        W       4.8.0-rc8-fornext+ #1
+> > [ 5535.912865] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
+> > this message.
+> > [ 5535.921613] kworker/45:4    D ffff880853e9b950 14048 146035      2
+> > 0x00000080
+> > [ 5535.929630] Workqueue: cgroup_destroy css_killed_work_fn
+> > [ 5535.935582]  ffff880853e9b950 0000000000000000 0000000000000000
+> > ffff88086c6da000
+> > [ 5535.943882]  ffff88086c9e2000 ffff880853e9c000 ffff880853e9baa0
+> > ffff88086c9e2000
+> > [ 5535.952205]  ffff880853e9ba98 0000000000000001 ffff880853e9b968
+> > ffffffff817cdaaf
+> > [ 5535.960522] Call Trace:
+> > [ 5535.963265]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+> > [ 5535.968817]  [<ffffffff817d33fb>] schedule_timeout+0x3db/0x6f0
+> > [ 5535.975346]  [<ffffffff817cf055>] ? wait_for_completion+0x45/0x130
+> > [ 5535.982256]  [<ffffffff817cf0d3>] wait_for_completion+0xc3/0x130
+> > [ 5535.988972]  [<ffffffff810d1fd0>] ? wake_up_q+0x80/0x80
+> > [ 5535.994804]  [<ffffffff8130de64>] drop_sysctl_table+0xc4/0xe0
+> > [ 5536.001227]  [<ffffffff8130de17>] drop_sysctl_table+0x77/0xe0
+> > [ 5536.007648]  [<ffffffff8130decd>] unregister_sysctl_table+0x4d/0xa0
+> > [ 5536.014654]  [<ffffffff8130deff>] unregister_sysctl_table+0x7f/0xa0
+> > [ 5536.021657]  [<ffffffff810f57f5>]
+> > unregister_sched_domain_sysctl+0x15/0x40
+> > [ 5536.029344]  [<ffffffff810d7704>] partition_sched_domains+0x44/0x450
+> > [ 5536.036447]  [<ffffffff817d0761>] ? __mutex_unlock_slowpath+0x111/0x1f0
+> > [ 5536.043844]  [<ffffffff81167684>] rebuild_sched_domains_locked+0x64/0xb0
+> > [ 5536.051336]  [<ffffffff8116789d>] update_flag+0x11d/0x210
+> > [ 5536.057373]  [<ffffffff817cf61f>] ? mutex_lock_nested+0x2df/0x450
+> > [ 5536.064186]  [<ffffffff81167acb>] ? cpuset_css_offline+0x1b/0x60
+> > [ 5536.070899]  [<ffffffff810fce3d>] ? trace_hardirqs_on+0xd/0x10
+> > [ 5536.077420]  [<ffffffff817cf61f>] ? mutex_lock_nested+0x2df/0x450
+> > [ 5536.084234]  [<ffffffff8115a9f5>] ? css_killed_work_fn+0x25/0x220
+> > [ 5536.091049]  [<ffffffff81167ae5>] cpuset_css_offline+0x35/0x60
+> > [ 5536.097571]  [<ffffffff8115aa2c>] css_killed_work_fn+0x5c/0x220
+> > [ 5536.104207]  [<ffffffff810bc83f>] process_one_work+0x1df/0x710
+> > [ 5536.110736]  [<ffffffff810bc7c0>] ? process_one_work+0x160/0x710
+> > [ 5536.117461]  [<ffffffff810bce9b>] worker_thread+0x12b/0x4a0
+> > [ 5536.123697]  [<ffffffff810bcd70>] ? process_one_work+0x710/0x710
+> > [ 5536.130426]  [<ffffffff810c3f7e>] kthread+0xfe/0x120
+> > [ 5536.135991]  [<ffffffff817d4baf>] ret_from_fork+0x1f/0x40
+> > [ 5536.142041]  [<ffffffff810c3e80>] ? kthread_create_on_node+0x230/0x230
+> 
+> This one seems to be the offender.  cgroup is trying to offline a
+> cpuset css, which takes place under cgroup_mutex.  The offlining ends
+> up trying to drain active usages of a sysctl table which apprently is
+> not happening.  Did something hang or crash while trying to generate
+> sysctl content?
+Hmm, I am not sure, since the trinity was running from an non-privileged
+user which can only read content from /proc or /sys.
+    CAI Qian
