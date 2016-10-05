@@ -1,54 +1,262 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43904 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756535AbcJGVJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:09:15 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 01/17] ext4: allow DAX writeback for hole punch
-Date: Fri,  7 Oct 2016 15:08:48 -0600
-Message-Id: <1475874544-24842-2-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+        id S1752015AbcJES0c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Oct 2016 14:26:32 -0400
+Date: Wed, 5 Oct 2016 14:26:29 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 34/63] xfs: support removing extents from CoW fork
+Message-ID: <20161005182629.GA4042@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520496094.29434.16759424174258286275.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147520496094.29434.16759424174258286275.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-Currently when doing a DAX hole punch with ext4 we fail to do a writeback.
-This is because the logic around filemap_write_and_wait_range() in
-ext4_punch_hole() only looks for dirty page cache pages in the radix tree,
-not for dirty DAX exceptional entries.
+On Thu, Sep 29, 2016 at 08:09:21PM -0700, Darrick J. Wong wrote:
+> Create a helper method to remove extents from the CoW fork without
+> any of the side effects (rmapbt/bmbt updates) of the regular extent
+> deletion routine.  We'll eventually use this to clear out the CoW fork
+> during ioend processing.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: Use bmapi_read to iterate and trim the CoW extents instead of
+> reading them raw via the iext code.
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c |  176 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_bmap.h |    1 
+>  2 files changed, 177 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 85a0c86..451f3e4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4906,6 +4906,7 @@ xfs_bmap_del_extent(
+>  		/*
+>  		 * Matches the whole extent.  Delete the entry.
+>  		 */
+> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+>  		xfs_iext_remove(ip, *idx, 1,
+>  				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0);
+>  		--*idx;
+> @@ -5123,6 +5124,181 @@ xfs_bmap_del_extent(
+>  }
+>  
+>  /*
+> + * xfs_bunmapi_cow() -- Remove the relevant parts of the CoW fork.
+> + *			See xfs_bmap_del_extent.
+> + * @ip: XFS inode.
+> + * @idx: Extent number to delete.
+> + * @del: Extent to remove.
+> + */
+> +int
+> +xfs_bunmapi_cow(
+> +	xfs_inode_t		*ip,
+> +	xfs_bmbt_irec_t		*del)
+> +{
+> +	xfs_filblks_t		da_new;	/* new delay-alloc indirect blocks */
+> +	xfs_filblks_t		da_old;	/* old delay-alloc indirect blocks */
+> +	xfs_fsblock_t		del_endblock = 0;/* first block past del */
+> +	xfs_fileoff_t		del_endoff;	/* first offset past del */
+> +	int			delay;	/* current block is delayed allocated */
+> +	xfs_bmbt_rec_host_t	*ep;	/* current extent entry pointer */
+> +	int			error;	/* error return value */
+> +	xfs_bmbt_irec_t		got;	/* current extent entry */
+> +	xfs_fileoff_t		got_endoff;	/* first offset past got */
+> +	xfs_ifork_t		*ifp;	/* inode fork pointer */
+> +	xfs_mount_t		*mp;	/* mount structure */
+> +	xfs_filblks_t		nblks;	/* quota/sb block count */
+> +	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+> +	/* REFERENCED */
+> +	uint			qfield;	/* quota field to update */
+> +	xfs_filblks_t		temp;	/* for indirect length calculations */
+> +	xfs_filblks_t		temp2;	/* for indirect length calculations */
+> +	int			state = BMAP_COWFORK;
+> +	int			eof;
+> +	xfs_extnum_t		eidx;
+> +
+> +	mp = ip->i_mount;
+> +	XFS_STATS_INC(mp, xs_del_exlist);
+> +
+> +	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
+> +			&eidx, &got, &new);
+> +
+> +	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK); ifp = ifp;
+> +	ASSERT((eidx >= 0) && (eidx < ifp->if_bytes /
+> +		(uint)sizeof(xfs_bmbt_rec_t)));
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Cc: <stable@vger.kernel.org>
----
- fs/ext4/inode.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The alignment above is a little wonky. E.g.:
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 3131747..0900cb4 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3890,7 +3890,7 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
- }
- 
- /*
-- * ext4_punch_hole: punches a hole in a file by releaseing the blocks
-+ * ext4_punch_hole: punches a hole in a file by releasing the blocks
-  * associated with the given offset and length
-  *
-  * @inode:  File inode
-@@ -3919,7 +3919,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
- 	 * Write out all dirty pages to avoid race conditions
- 	 * Then release them.
- 	 */
--	if (mapping->nrpages && mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
-+	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
- 		ret = filemap_write_and_wait_range(mapping, offset,
- 						   offset + length - 1);
- 		if (ret)
--- 
-2.7.4
+	ASSERT((eidx >= 0) &&
+	       (eidx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)));
 
+... but it sounds like hch plans to clean this up and rework it in the
+near future.
+
+> +	ASSERT(del->br_blockcount > 0);
+> +	ASSERT(got.br_startoff <= del->br_startoff);
+> +	del_endoff = del->br_startoff + del->br_blockcount;
+> +	got_endoff = got.br_startoff + got.br_blockcount;
+> +	ASSERT(got_endoff >= del_endoff);
+> +	delay = isnullstartblock(got.br_startblock);
+> +	ASSERT(isnullstartblock(del->br_startblock) == delay);
+> +	qfield = 0;
+> +	error = 0;
+> +	/*
+> +	 * If deleting a real allocation, must free up the disk space.
+> +	 */
+> +	if (!delay) {
+> +		nblks = del->br_blockcount;
+> +		qfield = XFS_TRANS_DQ_BCOUNT;
+> +		/*
+> +		 * Set up del_endblock and cur for later.
+> +		 */
+> +		del_endblock = del->br_startblock + del->br_blockcount;
+> +		da_old = da_new = 0;
+> +	} else {
+> +		da_old = startblockval(got.br_startblock);
+> +		da_new = 0;
+> +		nblks = 0;
+> +	}
+> +	qfield = qfield;
+> +	nblks = nblks;
+> +
+> +	/*
+> +	 * Set flag value to use in switch statement.
+> +	 * Left-contig is 2, right-contig is 1.
+> +	 */
+> +	switch (((got.br_startoff == del->br_startoff) << 1) |
+> +		(got_endoff == del_endoff)) {
+> +	case 3:
+> +		/*
+> +		 * Matches the whole extent.  Delete the entry.
+> +		 */
+> +		xfs_iext_remove(ip, eidx, 1, BMAP_COWFORK);
+> +		--eidx;
+> +		break;
+> +
+> +	case 2:
+> +		/*
+> +		 * Deleting the first part of the extent.
+> +		 */
+> +		trace_xfs_bmap_pre_update(ip, eidx, state, _THIS_IP_);
+> +		xfs_bmbt_set_startoff(ep, del_endoff);
+> +		temp = got.br_blockcount - del->br_blockcount;
+> +		xfs_bmbt_set_blockcount(ep, temp);
+> +		if (delay) {
+> +			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +				da_old);
+> +			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> +			trace_xfs_bmap_post_update(ip, eidx, state, _THIS_IP_);
+> +			da_new = temp;
+> +			break;
+> +		}
+> +		xfs_bmbt_set_startblock(ep, del_endblock);
+> +		trace_xfs_bmap_post_update(ip, eidx, state, _THIS_IP_);
+> +		break;
+> +
+> +	case 1:
+> +		/*
+> +		 * Deleting the last part of the extent.
+> +		 */
+> +		temp = got.br_blockcount - del->br_blockcount;
+> +		trace_xfs_bmap_pre_update(ip, eidx, state, _THIS_IP_);
+> +		xfs_bmbt_set_blockcount(ep, temp);
+> +		if (delay) {
+> +			temp = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +				da_old);
+> +			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> +			trace_xfs_bmap_post_update(ip, eidx, state, _THIS_IP_);
+> +			da_new = temp;
+> +			break;
+> +		}
+> +		trace_xfs_bmap_post_update(ip, eidx, state, _THIS_IP_);
+> +		break;
+> +
+> +	case 0:
+> +		/*
+> +		 * Deleting the middle of the extent.
+> +		 */
+> +		temp = del->br_startoff - got.br_startoff;
+> +		trace_xfs_bmap_pre_update(ip, eidx, state, _THIS_IP_);
+> +		xfs_bmbt_set_blockcount(ep, temp);
+> +		new.br_startoff = del_endoff;
+> +		temp2 = got_endoff - del_endoff;
+> +		new.br_blockcount = temp2;
+> +		new.br_state = got.br_state;
+> +		if (!delay) {
+> +			new.br_startblock = del_endblock;
+> +		} else {
+> +			temp = xfs_bmap_worst_indlen(ip, temp);
+> +			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+> +			temp2 = xfs_bmap_worst_indlen(ip, temp2);
+> +			new.br_startblock = nullstartblock((int)temp2);
+> +			da_new = temp + temp2;
+> +			while (da_new > da_old) {
+> +				if (temp) {
+> +					temp--;
+> +					da_new--;
+> +					xfs_bmbt_set_startblock(ep,
+> +						nullstartblock((int)temp));
+> +				}
+> +				if (da_new == da_old)
+> +					break;
+> +				if (temp2) {
+> +					temp2--;
+> +					da_new--;
+> +					new.br_startblock =
+> +						nullstartblock((int)temp2);
+> +				}
+> +			}
+
+xfs_bmap_split_indlen() ?
+
+Brian
+
+> +		}
+> +		trace_xfs_bmap_post_update(ip, eidx, state, _THIS_IP_);
+> +		xfs_iext_insert(ip, eidx + 1, 1, &new, state);
+> +		++eidx;
+> +		break;
+> +	}
+> +
+> +	/*
+> +	 * Account for change in delayed indirect blocks.
+> +	 * Nothing to do for disk quota accounting here.
+> +	 */
+> +	ASSERT(da_old >= da_new);
+> +	if (da_old > da_new)
+> +		xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new), false);
+> +
+> +	return error;
+> +}
+> +
+> +/*
+>   * Unmap (remove) blocks from a file.
+>   * If nexts is nonzero then the number of extents to remove is limited to
+>   * that value.  If not all extents in the block range can be removed then
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 75b1a1f..7c4ad01 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -221,6 +221,7 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
+>  		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
+>  		struct xfs_defer_ops *dfops, int *done);
+> +int	xfs_bunmapi_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *del);
+>  int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+>  		xfs_extnum_t num);
+>  uint	xfs_default_attroffset(struct xfs_inode *ip);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
