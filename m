@@ -1,495 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38120 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752197AbcJES1M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Oct 2016 14:27:12 -0400
-Date: Wed, 5 Oct 2016 14:27:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 37/63] xfs: implement CoW for directio writes
-Message-ID: <20161005182709.GC4042@bfoster.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520498004.29434.11046105793006225587.stgit@birch.djwong.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:42343 "EHLO
+        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752545AbcJES5K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2016 14:57:10 -0400
+Date: Wed, 5 Oct 2016 14:57:04 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com>
+In-Reply-To: <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20161003013737.GR19539@ZenIV.linux.org.uk> <1937480340.100083.1475516965286.JavaMail.zimbra@redhat.com> <1812816839.401734.1475602751170.JavaMail.zimbra@redhat.com> <20161004214219.GN4205@htj.duckdns.org> <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com> <20161005153014.GC26977@htj.duckdns.org> <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com>
+Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+ splice_read reworked)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147520498004.29434.11046105793006225587.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: tj <tj@kernel.org>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 08:09:40PM -0700, Darrick J. Wong wrote:
-> For O_DIRECT writes to shared blocks, we have to CoW them just like
-> we would with buffered writes.  For writes that are not block-aligned,
-> just bounce them to the page cache.
-> 
-> For block-aligned writes, however, we can do better than that.  Use
-> the same mechanisms that we employ for buffered CoW to set up a
-> delalloc reservation, allocate all the blocks at once, issue the
-> writes against the new blocks and use the same ioend functions to
-> remap the blocks after the write.  This should be fairly performant.
-> 
-> Christoph discovered that xfs_reflink_allocate_cow_range may stumble
-> over invalid entries in the extent array given that it drops the ilock
-> but still expects the index to be stable.  Simple fixing it to a new
-> lookup for every iteration still isn't correct given that
-> xfs_bmapi_allocate will trigger a BUG_ON() if hitting a hole, and
-> there is nothing preventing a xfs_bunmapi_cow call removing extents
-> once we dropped the ilock either.
-> 
-> This patch duplicates the inner loop of xfs_bmapi_allocate into a
-> helper for xfs_reflink_allocate_cow_range so that it can be done under
-> the same ilock critical section as our CoW fork delayed allocation.
-> The directio CoW warts will be revisited in a later patch.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> v2: Turns out that there's no way for xfs_end_io_direct_write to know
-> if the write completed successfully.  Therefore, do /not/ use the
-> ioend for dio cow post-processing; instead, move it to xfs_vm_do_dio
-> where we *can* tell if the write succeeded or not.
-> 
-> v3: Update the file size if we do a directio CoW across EOF.  This
-> can happen if the last block is shared, the cowextsize hint is set,
-> and we do a dio write past the end of the file.
-> 
-> v4: Christoph rewrote the allocate code to fix some concurrency
-> problems as part of migrating the code to support iomap.
-> ---
->  fs/xfs/xfs_aops.c    |   91 +++++++++++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_file.c    |   20 ++++++++-
->  fs/xfs/xfs_reflink.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_reflink.h |    2 +
->  fs/xfs/xfs_trace.h   |    1 
->  5 files changed, 208 insertions(+), 13 deletions(-)
+
+
+----- Original Message -----
+> From: "CAI Qian" <caiqian@redhat.com>
+> To: "tj" <tj@kernel.org>
+> Cc: "Al Viro" <viro@ZenIV.linux.org.uk>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner"
+> <david@fromorbit.com>, "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin"
+> <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+> Sent: Wednesday, October 5, 2016 11:54:48 AM
+> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
 > 
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1d0435a..62a95e4 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -40,6 +40,7 @@
->  /* flags for direct write completions */
->  #define XFS_DIO_FLAG_UNWRITTEN	(1 << 0)
->  #define XFS_DIO_FLAG_APPEND	(1 << 1)
-> +#define XFS_DIO_FLAG_COW	(1 << 2)
->  
->  /*
->   * structure owned by writepages passed to individual writepage calls
-> @@ -1191,18 +1192,24 @@ xfs_map_direct(
->  	struct inode		*inode,
->  	struct buffer_head	*bh_result,
->  	struct xfs_bmbt_irec	*imap,
-> -	xfs_off_t		offset)
-> +	xfs_off_t		offset,
-> +	bool			is_cow)
->  {
->  	uintptr_t		*flags = (uintptr_t *)&bh_result->b_private;
->  	xfs_off_t		size = bh_result->b_size;
->  
->  	trace_xfs_get_blocks_map_direct(XFS_I(inode), offset, size,
-> -		ISUNWRITTEN(imap) ? XFS_IO_UNWRITTEN : XFS_IO_OVERWRITE, imap);
-> +		ISUNWRITTEN(imap) ? XFS_IO_UNWRITTEN : is_cow ? XFS_IO_COW :
-> +		XFS_IO_OVERWRITE, imap);
->  
->  	if (ISUNWRITTEN(imap)) {
->  		*flags |= XFS_DIO_FLAG_UNWRITTEN;
->  		set_buffer_defer_completion(bh_result);
-> -	} else if (offset + size > i_size_read(inode) || offset + size < 0) {
-> +	} else if (is_cow) {
-> +		*flags |= XFS_DIO_FLAG_COW;
-> +		set_buffer_defer_completion(bh_result);
-> +	}
-> +	if (offset + size > i_size_read(inode) || offset + size < 0) {
->  		*flags |= XFS_DIO_FLAG_APPEND;
->  		set_buffer_defer_completion(bh_result);
->  	}
-> @@ -1248,6 +1255,44 @@ xfs_map_trim_size(
->  	bh_result->b_size = mapping_size;
->  }
->  
-> +/* Bounce unaligned directio writes to the page cache. */
-> +static int
-> +xfs_bounce_unaligned_dio_write(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		offset_fsb,
-> +	struct xfs_bmbt_irec	*imap)
-> +{
-> +	struct xfs_bmbt_irec	irec;
-> +	xfs_fileoff_t		delta;
-> +	bool			shared;
-> +	bool			x;
-> +	int			error;
-> +
-> +	irec = *imap;
-> +	if (offset_fsb > irec.br_startoff) {
-> +		delta = offset_fsb - irec.br_startoff;
-> +		irec.br_blockcount -= delta;
-> +		irec.br_startblock += delta;
-> +		irec.br_startoff = offset_fsb;
-> +	}
-> +	error = xfs_reflink_trim_around_shared(ip, &irec, &x, &shared);
-
-'shared' is the 3rd parameter.
-
-> +	if (error)
-> +		return error;
-> +	/*
-> +	 * Are we doing a DIO write to a shared block?  In
-> +	 * the ideal world we at least would fork full blocks,
-> +	 * but for now just fall back to buffered mode.  Yuck.
-> +	 * Use -EREMCHG ("remote address changed") to signal
-> +	 * this, since in general XFS doesn't do this sort of
-> +	 * fallback.
-> +	 */
-> +	if (shared) {
-> +		trace_xfs_reflink_bounce_dio_write(ip, imap);
-> +		return -EREMCHG;
-> +	}
-
-I get that this bumps the write back up to the buffered mechanism, but
-the purpose is not very clear. We have the !unaligned check back up in
-xfs_file_dio_aio_write(), in which case we do all of the cow allocation
-stuff. I presume in that case we should never fail this check (?).
-
-If the dio is unaligned, we skip that bit, get down to here and kick it
-back only if the extent happens to be shared..? Unless I missed it, I
-think this needs to be explained in the comments in both places,
-including probably updating the comment at the end of dio_aio_write()
-that states we don't fall back to buffered I/O on dio error. 
-
-> +	return 0;
-> +}
-> +
->  STATIC int
->  __xfs_get_blocks(
->  	struct inode		*inode,
-> @@ -1267,6 +1312,8 @@ __xfs_get_blocks(
->  	xfs_off_t		offset;
->  	ssize_t			size;
->  	int			new = 0;
-> +	bool			is_cow = false;
-> +	bool			need_alloc = false;
->  
->  	BUG_ON(create && !direct);
->  
-> @@ -1292,8 +1339,27 @@ __xfs_get_blocks(
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  
-> -	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-> -				&imap, &nimaps, XFS_BMAPI_ENTIRE);
-> +	if (create && direct) {
-> +		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap,
-> +					&need_alloc);
-> +	}
-
-Nits: no need for braces here and might be cleaner to check
-xfs_is_reflink_inode(ip) here, since !reflink is probably the common
-case.
-
-> +
-> +	if (!is_cow) {
-> +		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-> +					&imap, &nimaps, XFS_BMAPI_ENTIRE);
-> +		/*
-> +		 * Truncate an overwrite extent if there's a pending CoW
-> +		 * reservation before the end of this extent.  This forces us
-> +		 * to come back to writepage to take care of the CoW.
-
-writepage?
-
-> +		 */
-> +		if (create && direct && nimaps &&
-> +		    imap.br_startblock != HOLESTARTBLOCK &&
-> +		    imap.br_startblock != DELAYSTARTBLOCK &&
-> +		    !ISUNWRITTEN(&imap))
-> +			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb,
-> +					&imap);
-> +	}
-> +	ASSERT(!need_alloc);
->  	if (error)
->  		goto out_unlock;
->  
-> @@ -1345,6 +1411,13 @@ __xfs_get_blocks(
->  	if (imap.br_startblock != HOLESTARTBLOCK &&
->  	    imap.br_startblock != DELAYSTARTBLOCK &&
->  	    (create || !ISUNWRITTEN(&imap))) {
-> +		if (create && direct && !is_cow) {
-> +			error = xfs_bounce_unaligned_dio_write(ip, offset_fsb,
-> +					&imap);
-> +			if (error)
-> +				return error;
-> +		}
-> +
->  		xfs_map_buffer(inode, bh_result, &imap, offset);
->  		if (ISUNWRITTEN(&imap))
->  			set_buffer_unwritten(bh_result);
-> @@ -1353,7 +1426,8 @@ __xfs_get_blocks(
->  			if (dax_fault)
->  				ASSERT(!ISUNWRITTEN(&imap));
->  			else
-> -				xfs_map_direct(inode, bh_result, &imap, offset);
-> +				xfs_map_direct(inode, bh_result, &imap, offset,
-> +						is_cow);
->  		}
->  	}
->  
-> @@ -1479,7 +1553,10 @@ xfs_end_io_direct_write(
->  		trace_xfs_end_io_direct_write_unwritten(ip, offset, size);
->  
->  		error = xfs_iomap_write_unwritten(ip, offset, size);
-> -	} else if (flags & XFS_DIO_FLAG_APPEND) {
-> +	}
-> +	if (flags & XFS_DIO_FLAG_COW)
-> +		error = xfs_reflink_end_cow(ip, offset, size);
-> +	if (flags & XFS_DIO_FLAG_APPEND) {
->  		trace_xfs_end_io_direct_write_append(ip, offset, size);
->  
->  		error = xfs_setfilesize(ip, offset, size);
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index f99d7fa..025d52f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -38,6 +38,7 @@
->  #include "xfs_icache.h"
->  #include "xfs_pnfs.h"
->  #include "xfs_iomap.h"
-> +#include "xfs_reflink.h"
->  
->  #include <linux/dcache.h>
->  #include <linux/falloc.h>
-> @@ -672,6 +673,13 @@ xfs_file_dio_aio_write(
->  
->  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
->  
-> +	/* If this is a block-aligned directio CoW, remap immediately. */
-> +	if (xfs_is_reflink_inode(ip) && !unaligned_io) {
-> +		ret = xfs_reflink_allocate_cow_range(ip, iocb->ki_pos, count);
-> +		if (ret)
-> +			goto out;
-> +	}
-
-Is the fact that we do this allocation up front rather than via
-get_blocks() (like traditional direct write) one of the "warts" that
-needs cleaning, or for some other reason?
-
-> +
->  	data = *from;
->  	ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
->  			xfs_get_blocks_direct, xfs_end_io_direct_write,
-> @@ -812,10 +820,18 @@ xfs_file_write_iter(
->  
->  	if (IS_DAX(inode))
->  		ret = xfs_file_dax_write(iocb, from);
-> -	else if (iocb->ki_flags & IOCB_DIRECT)
-> +	else if (iocb->ki_flags & IOCB_DIRECT) {
-> +		/*
-> +		 * Allow DIO to fall back to buffered *only* in the case
-> +		 * that we're doing a reflink CoW.
-> +		 */
->  		ret = xfs_file_dio_aio_write(iocb, from);
-> -	else
-> +		if (ret == -EREMCHG)
-> +			goto buffered;
-> +	} else {
-> +buffered:
->  		ret = xfs_file_buffered_aio_write(iocb, from);
-> +	}
->  
->  	if (ret > 0) {
->  		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index d913ad1..c95cdc3 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -246,7 +246,8 @@ static int
->  __xfs_reflink_reserve_cow(
->  	struct xfs_inode	*ip,
->  	xfs_fileoff_t		*offset_fsb,
-> -	xfs_fileoff_t		end_fsb)
-> +	xfs_fileoff_t		end_fsb,
-> +	bool			*skipped)
->  {
->  	struct xfs_bmbt_irec	got, prev, imap;
->  	xfs_fileoff_t		orig_end_fsb;
-> @@ -279,8 +280,10 @@ __xfs_reflink_reserve_cow(
->  	end_fsb = orig_end_fsb = imap.br_startoff + imap.br_blockcount;
->  
->  	/* Not shared?  Just report the (potentially capped) extent. */
-> -	if (!shared)
-> +	if (!shared) {
-> +		*skipped = true;
->  		goto done;
-> +	}
->  
->  	/*
->  	 * Fork all the shared blocks from our write offset until the end of
-> @@ -326,6 +329,7 @@ xfs_reflink_reserve_cow_range(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb, end_fsb;
-> +	bool			skipped = false;
->  	int			error;
->  
->  	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
-> @@ -335,7 +339,8 @@ xfs_reflink_reserve_cow_range(
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	while (offset_fsb < end_fsb) {
-> -		error = __xfs_reflink_reserve_cow(ip, &offset_fsb, end_fsb);
-> +		error = __xfs_reflink_reserve_cow(ip, &offset_fsb, end_fsb,
-> +				&skipped);
->  		if (error) {
->  			trace_xfs_reflink_reserve_cow_range_error(ip, error,
->  				_RET_IP_);
-> @@ -347,6 +352,102 @@ xfs_reflink_reserve_cow_range(
->  	return error;
->  }
->  
-> +/* Allocate all CoW reservations covering a range of blocks in a file. */
-> +static int
-> +__xfs_reflink_allocate_cow(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		*offset_fsb,
-> +	xfs_fileoff_t		end_fsb)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_bmbt_irec	imap;
-> +	struct xfs_defer_ops	dfops;
-> +	struct xfs_trans	*tp;
-> +	xfs_fsblock_t		first_block;
-> +	xfs_fileoff_t		next_fsb;
-> +	int			nimaps = 1, error;
-> +	bool			skipped = false;
-> +
-> +	xfs_defer_init(&dfops, &first_block);
-> +
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
-> +			XFS_TRANS_RESERVE, &tp);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +
-> +	next_fsb = *offset_fsb;
-> +	error = __xfs_reflink_reserve_cow(ip, &next_fsb, end_fsb, &skipped);
-> +	if (error)
-> +		goto out_trans_cancel;
-
-Do we really need to do the delayed allocation that results from this?
-Couldn't we factor out the shared extent walking that allows us to just
-perform the real allocations below?
-
-It looks like speculative preallocation for dio is at least one strange
-side effect that can result from this...
-
-> +
-> +	if (skipped) {
-> +		*offset_fsb = next_fsb;
-> +		goto out_trans_cancel;
-> +	}
-> +
-> +	xfs_trans_ijoin(tp, ip, 0);
-> +	error = xfs_bmapi_write(tp, ip, *offset_fsb, next_fsb - *offset_fsb,
-> +			XFS_BMAPI_COWFORK, &first_block,
-> +			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
-> +			&imap, &nimaps, &dfops);
-> +	if (error)
-> +		goto out_trans_cancel;
-
-Should we be using unwritten extents (BMAPI_PREALLOC) to avoid stale
-data exposure similar to traditional direct write (or is the cow fork
-extent never accessible until it is remapped)?
-
-Brian
-
-> +
-> +	/* We might not have been able to map the whole delalloc extent */
-> +	*offset_fsb = min(*offset_fsb + imap.br_blockcount, next_fsb);
-> +
-> +	error = xfs_defer_finish(&tp, &dfops, NULL);
-> +	if (error)
-> +		goto out_trans_cancel;
-> +
-> +	error = xfs_trans_commit(tp);
-> +
-> +out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	return error;
-> +out_trans_cancel:
-> +	xfs_defer_cancel(&dfops);
-> +	xfs_trans_cancel(tp);
-> +	goto out_unlock;
-> +}
-> +
-> +/* Allocate all CoW reservations covering a part of a file. */
-> +int
-> +xfs_reflink_allocate_cow_range(
-> +	struct xfs_inode	*ip,
-> +	xfs_off_t		offset,
-> +	xfs_off_t		count)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> +	int			error;
-> +
-> +	ASSERT(xfs_is_reflink_inode(ip));
-> +
-> +	trace_xfs_reflink_allocate_cow_range(ip, offset, count);
-> +
-> +	/*
-> +	 * Make sure that the dquots are there.
-> +	 */
-> +	error = xfs_qm_dqattach(ip, 0);
-> +	if (error)
-> +		return error;
-> +
-> +	while (offset_fsb < end_fsb) {
-> +		error = __xfs_reflink_allocate_cow(ip, &offset_fsb, end_fsb);
-> +		if (error) {
-> +			trace_xfs_reflink_allocate_cow_range_error(ip, error,
-> +					_RET_IP_);
-> +			break;
-> +		}
-> +	}
-> +
-> +	return error;
-> +}
-> +
->  /*
->   * Find the CoW reservation (and whether or not it needs block allocation)
->   * for a given byte offset of a file.
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index bffa4be..c0c989a 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -28,6 +28,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
->  
->  extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
->  		xfs_off_t offset, xfs_off_t count);
-> +extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
-> +		xfs_off_t offset, xfs_off_t count);
->  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
->  		struct xfs_bmbt_irec *imap, bool *need_alloc);
->  extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 7612096..8e89223 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3332,7 +3332,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
->  
->  DEFINE_RW_EVENT(xfs_reflink_reserve_cow_range);
->  DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
-> -DEFINE_INODE_IREC_EVENT(xfs_reflink_allocate_cow_extent);
->  
->  DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
->  DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ----- Original Message -----
+> > From: "tj" <tj@kernel.org>
+> > To: "CAI Qian" <caiqian@redhat.com>
+> > Cc: "Al Viro" <viro@ZenIV.linux.org.uk>, "Linus Torvalds"
+> > <torvalds@linux-foundation.org>, "Dave Chinner"
+> > <david@fromorbit.com>, "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens
+> > Axboe" <axboe@kernel.dk>, "Nick Piggin"
+> > <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+> > Sent: Wednesday, October 5, 2016 11:30:14 AM
+> > Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+> > splice_read reworked)
+> > 
+> > Hello, CAI.
+> > 
+> > On Wed, Oct 05, 2016 at 10:09:39AM -0400, CAI Qian wrote:
+> > > > This one seems to be the offender.  cgroup is trying to offline a
+> > > > cpuset css, which takes place under cgroup_mutex.  The offlining ends
+> > > > up trying to drain active usages of a sysctl table which apprently is
+> > > > not happening.  Did something hang or crash while trying to generate
+> > > > sysctl content?
+> > >
+> > > Hmm, I am not sure, since the trinity was running from an non-privileged
+> > > user which can only read content from /proc or /sys.
+> > 
+> > So, userland, priviledged or not, can't cause this.  The ref is held
+> > only while the kernel code is operating to generate content or
+> > iterating, which shouldn't be affected by userland actions.  This is
+> > caused by kernel code hanging or crashing while holding a ref.
+> Right, the trinity calls many different random syscalls and options on those
+> /proc/ and /sys/ files and generate lots of different errno. It is likely
+> some of error-path out there causes hang or crash.
+Tejun,
+
+Not sure if this related, and there is always a lockdep regards procfs happened
+below unless masking by other lockdep issues before the cgroup hang. Also, this
+hang is always reproducible.
+
+[ 4787.875980] 
+[ 4787.877645] ======================================================
+[ 4787.884540] [ INFO: possible circular locking dependency detected ]
+[ 4787.891533] 4.8.0-rc8-usrns-scale+ #8 Tainted: G        W      
+[ 4787.898138] -------------------------------------------------------
+[ 4787.905130] trinity-c116/106905 is trying to acquire lock:
+[ 4787.911251]  (&p->lock){+.+.+.}, at: [<ffffffff812aca8c>] seq_read+0x4c/0x3e0
+[ 4787.919264] 
+[ 4787.919264] but task is already holding lock:
+[ 4787.925773]  (sb_writers#8){.+.+.+}, at: [<ffffffff81284367>] __sb_start_write+0xb7/0xf0
+[ 4787.934854] 
+[ 4787.934854] which lock already depends on the new lock.
+[ 4787.934854] 
+[ 4787.943981] 
+[ 4787.943981] the existing dependency chain (in reverse order) is:
+[ 4787.952333] 
+-> #3 (sb_writers#8){.+.+.+}:
+[ 4787.957050]        [<ffffffff810fd711>] __lock_acquire+0x3f1/0x7f0
+[ 4787.963960]        [<ffffffff810fe166>] lock_acquire+0xd6/0x240
+[ 4787.970577]        [<ffffffff810f769a>] percpu_down_read+0x4a/0xa0
+[ 4787.977487]        [<ffffffff81284367>] __sb_start_write+0xb7/0xf0
+[ 4787.984395]        [<ffffffff812a8974>] mnt_want_write+0x24/0x50
+[ 4787.991110]        [<ffffffffa05049af>] ovl_want_write+0x1f/0x30 [overlay]
+[ 4787.998799]        [<ffffffffa05070c2>] ovl_do_remove+0x42/0x4a0 [overlay]
+[ 4788.006483]        [<ffffffffa0507536>] ovl_rmdir+0x16/0x20 [overlay]
+[ 4788.013682]        [<ffffffff8128d357>] vfs_rmdir+0xb7/0x130
+[ 4788.020009]        [<ffffffff81292ed3>] do_rmdir+0x183/0x1f0
+[ 4788.026335]        [<ffffffff81293cf2>] SyS_unlinkat+0x22/0x30
+[ 4788.032853]        [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+[ 4788.039576]        [<ffffffff817d927f>] return_from_SYSCALL_64+0x0/0x7a
+[ 4788.046962] 
+-> #2 (&sb->s_type->i_mutex_key#16){++++++}:
+[ 4788.053140]        [<ffffffff810fd711>] __lock_acquire+0x3f1/0x7f0
+[ 4788.060049]        [<ffffffff810fe166>] lock_acquire+0xd6/0x240
+[ 4788.066664]        [<ffffffff817d60e7>] down_read+0x47/0x70
+[ 4788.072893]        [<ffffffff8128ce79>] lookup_slow+0xc9/0x200
+[ 4788.079410]        [<ffffffff81290b9c>] walk_component+0x1ec/0x310
+[ 4788.086315]        [<ffffffff81290e5f>] link_path_walk+0x19f/0x5f0
+[ 4788.093219]        [<ffffffff8129151d>] path_openat+0xdd/0xb80
+[ 4788.099748]        [<ffffffff81293511>] do_filp_open+0x91/0x100
+[ 4788.106362]        [<ffffffff81286f56>] do_open_execat+0x76/0x180
+[ 4788.113186]        [<ffffffff8128747b>] open_exec+0x2b/0x50
+[ 4788.119404]        [<ffffffff812ec61d>] load_elf_binary+0x28d/0x1120
+[ 4788.126511]        [<ffffffff81288487>] search_binary_handler+0x97/0x1c0
+[ 4788.134002]        [<ffffffff81289619>] do_execveat_common.isra.36+0x6a9/0x9f0
+[ 4788.142071]        [<ffffffff81289c4a>] SyS_execve+0x3a/0x50
+[ 4788.148398]        [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+[ 4788.155110]        [<ffffffff817d927f>] return_from_SYSCALL_64+0x0/0x7a
+[ 4788.162502] 
+-> #1 (&sig->cred_guard_mutex){+.+.+.}:
+[ 4788.168179]        [<ffffffff810fd711>] __lock_acquire+0x3f1/0x7f0
+[ 4788.175085]        [<ffffffff810fe166>] lock_acquire+0xd6/0x240
+[ 4788.181712]        [<ffffffff817d4557>] mutex_lock_killable_nested+0x87/0x500
+[ 4788.189695]        [<ffffffff81099599>] mm_access+0x29/0xa0
+[ 4788.195924]        [<ffffffff81302b6c>] proc_pid_auxv+0x1c/0x70
+[ 4788.202540]        [<ffffffff813039d0>] proc_single_show+0x50/0x90
+[ 4788.209445]        [<ffffffff812acb48>] seq_read+0x108/0x3e0
+[ 4788.215774]        [<ffffffff8127fb07>] __vfs_read+0x37/0x150
+[ 4788.222198]        [<ffffffff81280d35>] vfs_read+0x95/0x140
+[ 4788.228425]        [<ffffffff81282268>] SyS_read+0x58/0xc0
+[ 4788.234557]        [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+[ 4788.241268]        [<ffffffff817d927f>] return_from_SYSCALL_64+0x0/0x7a
+[ 4788.248660] 
+-> #0 (&p->lock){+.+.+.}:
+[ 4788.252987]        [<ffffffff810fc062>] validate_chain.isra.37+0xe72/0x1150
+[ 4788.260769]        [<ffffffff810fd711>] __lock_acquire+0x3f1/0x7f0
+[ 4788.267676]        [<ffffffff810fe166>] lock_acquire+0xd6/0x240
+[ 4788.274302]        [<ffffffff817d3807>] mutex_lock_nested+0x77/0x430
+[ 4788.281406]        [<ffffffff812aca8c>] seq_read+0x4c/0x3e0
+[ 4788.287633]        [<ffffffff81316b39>] kernfs_fop_read+0x129/0x1b0
+[ 4788.294659]        [<ffffffff8127fca3>] do_loop_readv_writev+0x83/0xc0
+[ 4788.301954]        [<ffffffff812811a8>] do_readv_writev+0x218/0x240
+[ 4788.308959]        [<ffffffff81281209>] vfs_readv+0x39/0x50
+[ 4788.315188]        [<ffffffff812bc6b1>] default_file_splice_read+0x1a1/0x2b0
+[ 4788.323070]        [<ffffffff812bc206>] do_splice_to+0x76/0x90
+[ 4788.329587]        [<ffffffff812bc2db>] splice_direct_to_actor+0xbb/0x220
+[ 4788.337173]        [<ffffffff812bc4d8>] do_splice_direct+0x98/0xd0
+[ 4788.344078]        [<ffffffff81281dd1>] do_sendfile+0x1d1/0x3b0
+[ 4788.350694]        [<ffffffff812829c9>] SyS_sendfile64+0xc9/0xd0
+[ 4788.357405]        [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+[ 4788.364119]        [<ffffffff817d927f>] return_from_SYSCALL_64+0x0/0x7a
+[ 4788.371511] 
+[ 4788.371511] other info that might help us debug this:
+[ 4788.371511] 
+[ 4788.380443] Chain exists of:
+  &p->lock --> &sb->s_type->i_mutex_key#16 --> sb_writers#8
+
+[ 4788.389881]  Possible unsafe locking scenario:
+[ 4788.389881] 
+[ 4788.396497]        CPU0                    CPU1
+[ 4788.401549]        ----                    ----
+[ 4788.406614]   lock(sb_writers#8);
+[ 4788.410352]                                lock(&sb->s_type->i_mutex_key#16);
+[ 4788.418354]                                lock(sb_writers#8);
+[ 4788.424902]   lock(&p->lock);
+[ 4788.428229] 
+[ 4788.428229]  *** DEADLOCK ***
+[ 4788.428229] 
+[ 4788.434836] 1 lock held by trinity-c116/106905:
+[ 4788.439888]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81284367>] __sb_start_write+0xb7/0xf0
+[ 4788.449473] 
+[ 4788.449473] stack backtrace:
+[ 4788.454334] CPU: 16 PID: 106905 Comm: trinity-c116 Tainted: G        W       4.8.0-rc8-usrns-scale+ #8
+[ 4788.464719] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
+[ 4788.476076]  0000000000000086 00000000cbfc6314 ffff8803ce78b760 ffffffff813d5e93
+[ 4788.484371]  ffffffff82a3fbd0 ffffffff82a94890 ffff8803ce78b7a0 ffffffff810fa6ec
+[ 4788.492663]  ffff8803ce78b7e0 ffff8802ead08000 0000000000000001 ffff8802ead08ca0
+[ 4788.500966] Call Trace:
+[ 4788.503694]  [<ffffffff813d5e93>] dump_stack+0x85/0xc2
+[ 4788.509426]  [<ffffffff810fa6ec>] print_circular_bug+0x1ec/0x260
+[ 4788.516128]  [<ffffffff810fc062>] validate_chain.isra.37+0xe72/0x1150
+[ 4788.523319]  [<ffffffff811d4491>] ? ___perf_sw_event+0x171/0x290
+[ 4788.530022]  [<ffffffff810fd711>] __lock_acquire+0x3f1/0x7f0
+[ 4788.536335]  [<ffffffff810fe166>] lock_acquire+0xd6/0x240
+[ 4788.542359]  [<ffffffff812aca8c>] ? seq_read+0x4c/0x3e0
+[ 4788.548188]  [<ffffffff812aca8c>] ? seq_read+0x4c/0x3e0
+[ 4788.554019]  [<ffffffff817d3807>] mutex_lock_nested+0x77/0x430
+[ 4788.560528]  [<ffffffff812aca8c>] ? seq_read+0x4c/0x3e0
+[ 4788.566358]  [<ffffffff812aca8c>] seq_read+0x4c/0x3e0
+[ 4788.571995]  [<ffffffff81316a10>] ? kernfs_fop_open+0x3a0/0x3a0
+[ 4788.578600]  [<ffffffff81316b39>] kernfs_fop_read+0x129/0x1b0
+[ 4788.585012]  [<ffffffff81316a10>] ? kernfs_fop_open+0x3a0/0x3a0
+[ 4788.591617]  [<ffffffff8127fca3>] do_loop_readv_writev+0x83/0xc0
+[ 4788.598318]  [<ffffffff81316a10>] ? kernfs_fop_open+0x3a0/0x3a0
+[ 4788.604924]  [<ffffffff812811a8>] do_readv_writev+0x218/0x240
+[ 4788.611347]  [<ffffffff813e9535>] ? push_pipe+0xd5/0x190
+[ 4788.617278]  [<ffffffff813ecec0>] ? iov_iter_get_pages_alloc+0x250/0x400
+[ 4788.624746]  [<ffffffff81281209>] vfs_readv+0x39/0x50
+[ 4788.630381]  [<ffffffff812bc6b1>] default_file_splice_read+0x1a1/0x2b0
+[ 4788.637668]  [<ffffffff8134ae20>] ? security_file_permission+0xa0/0xc0
+[ 4788.644954]  [<ffffffff812bc206>] do_splice_to+0x76/0x90
+[ 4788.650880]  [<ffffffff812bc2db>] splice_direct_to_actor+0xbb/0x220
+[ 4788.657872]  [<ffffffff812bba80>] ? generic_pipe_buf_nosteal+0x10/0x10
+[ 4788.665157]  [<ffffffff812bc4d8>] do_splice_direct+0x98/0xd0
+[ 4788.671472]  [<ffffffff81281dd1>] do_sendfile+0x1d1/0x3b0
+[ 4788.677499]  [<ffffffff812829c9>] SyS_sendfile64+0xc9/0xd0
+[ 4788.683622]  [<ffffffff81003f8c>] do_syscall_64+0x6c/0x1e0
+[ 4788.689744]  [<ffffffff817d927f>] entry_SYSCALL64_slow_path+0x25/0x25
