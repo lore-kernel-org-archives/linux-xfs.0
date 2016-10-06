@@ -1,47 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:49271 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49430 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756549AbcJGVJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:09:15 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 02/17] ext4: tell DAX the size of allocation holes
-Date: Fri,  7 Oct 2016 15:08:49 -0600
-Message-Id: <1475874544-24842-3-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+        id S1751346AbcJFQof (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Oct 2016 12:44:35 -0400
+Date: Thu, 6 Oct 2016 12:44:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 38/63] xfs: cancel CoW reservations and clear inode
+ reflink flag when freeing blocks
+Message-ID: <20161006164432.GC16893@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520498644.29434.5014643991183828847.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147520498644.29434.5014643991183828847.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-When DAX calls _ext4_get_block() and the file offset points to a hole we
-currently don't set bh->b_size.  This is current worked around via
-buffer_size_valid() in fs/dax.c.
+On Thu, Sep 29, 2016 at 08:09:46PM -0700, Darrick J. Wong wrote:
+> When we're freeing blocks (truncate, punch, etc.), clear all CoW
+> reservations in the range being freed.  If the file block count
+> drops to zero, also clear the inode reflink flag.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 0c25a76..8c971fd 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -49,6 +49,7 @@
+>  #include "xfs_trans_priv.h"
+>  #include "xfs_log.h"
+>  #include "xfs_bmap_btree.h"
+> +#include "xfs_reflink.h"
+>  
+>  kmem_zone_t *xfs_inode_zone;
+>  
+> @@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
+>  			goto out;
+>  	}
+>  
+> +	/* Remove all pending CoW reservations. */
+> +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
+> +			last_block);
+> +	if (error)
+> +		goto out;
+> +
+> +	/*
+> +	 * Clear the reflink flag if we truncated everything.
+> +	 */
+> +	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
+> +		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> +
 
-_ext4_get_block() has the hole size information from ext4_map_blocks(), so
-populate bh->b_size so we can remove buffer_size_valid() in a later patch.
+So this implies the reflink flag is more of an optimization than an
+accurate assessment of reflink state (e.g., we can have DIFLAG2_REFLINK
+w/o shared extents, but we should never have shared extents w/o the
+flag) because this wouldn't clear the flag on a partial truncate that
+happened to unmap all of the shared extents from the file.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/inode.c | 3 +++
- 1 file changed, 3 insertions(+)
+That seems fine, I'll just note there's one small potential conflict
+ahead where we (dis)allow setting the realtime state based on the
+reflink flag.
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 0900cb4..9075fac 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -759,6 +759,9 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
- 		ext4_update_bh_state(bh, map.m_flags);
- 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 		ret = 0;
-+	} else if (ret == 0) {
-+		/* hole case, need to fill in bh->b_size */
-+		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 	}
- 	return ret;
- }
--- 
-2.7.4
+Brian
 
+>  	/*
+>  	 * Always re-log the inode so that our permanent transaction can keep
+>  	 * on rolling it forward in the log.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
